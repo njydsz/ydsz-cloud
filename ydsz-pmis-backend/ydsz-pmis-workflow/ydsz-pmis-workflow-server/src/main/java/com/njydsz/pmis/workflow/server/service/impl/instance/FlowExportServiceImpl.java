@@ -10,7 +10,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.entity.FlowHisTaskDO;
@@ -162,7 +162,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     private FlowInstanceDO loadInstance(String instanceId) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
         return instance;
     }

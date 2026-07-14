@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -64,7 +64,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
     public String create(ProjectChangeCreateDTO dto) {
         validate(dto);
         if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY,
+            throw new SysException(BaseResultCode.DUPLICATE_KEY,
                     "error.project.msg_f3637e40", dto.getChangeCode());
         }
         ProjectChangeDO c = new ProjectChangeDO();
@@ -104,13 +104,13 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         ChangeStatus from = ChangeStatus.fromCode(c.getStatus());
         ChangeStatus to = ChangeStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.project.msg_0c941160", from.getDesc(), to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
@@ -140,7 +140,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         ProjectChangeDO c = getById(id);
         ChangeStatus st = ChangeStatus.fromCode(c.getStatus());
         if (st != ChangeStatus.DRAFT && st != ChangeStatus.REJECTED && st != ChangeStatus.CANCELLED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_3a1a0d4b", st.getDesc());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_3a1a0d4b", st.getDesc());
         }
         changeMapper.deleteById(id);
         log.info("[ProjectChange] 删除变更: id={}", id);
@@ -158,7 +158,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
     public ProjectChangeDO getById(String id) {
         ProjectChangeDO c = changeMapper.selectById(id);
         if (c == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_2cfba1ec");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.project.msg_2cfba1ec");
         }
         return c;
     }
@@ -256,16 +256,16 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     private void validate(ProjectChangeCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (ChangeType.fromCode(dto.getChangeType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7d505699", dto.getChangeType());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_7d505699", dto.getChangeType());
         }
         if (dto.getApplicantId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_98bc5a1a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_98bc5a1a");
         }
         if (dto.getScheduleImpactDays() != null && dto.getScheduleImpactDays() < -3650) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_40763f49");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_40763f49");
         }
     }
 

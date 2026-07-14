@@ -200,6 +200,50 @@ Get-ChildItem -Recurse -Filter "*.java" | ForEach-Object {
 
 ---
 
+## 4. 忽略单元测试覆盖率检查
+
+**级别**：项目决策（全局禁用）
+**生效范围**：所有后端 Maven 模块（`ydsz-pmis-backend/**`）
+**关联配置**：`ydsz-pmis-backend/pom.xml` `<skipJacoco>true</skipJacoco>`
+
+### 4.1 决策背景
+
+截至 2026-07，PMIS 项目已移除全部单元测试代码。项目当前的质量保障策略以集成测试、端到端测试和手动验收测试为主。在此背景下，JaCoCo 单元测试覆盖率采集和阈值检查不再适用，继续启用会导致构建噪音和 CI 阻断风险。
+
+### 4.2 禁用内容
+
+| # | 配置项 | 禁用前 | 禁用后 | 说明 |
+|---|--------|--------|--------|------|
+| 1 | `<skipJacoco>` | `false` | `true` | 全局跳过 JaCoCo prepare-agent 和 report goal |
+| 2 | `<skipJacocoCheck>` | `true` | `true` | 覆盖率阈值检查始终跳过（未变更） |
+| 3 | `jacoco-maven-plugin`（build/plugins） | 激活 | 移除 | 从 `<build><plugins>` 中移除插件声明，子模块不再继承 |
+| 4 | `jacoco-maven-plugin`（pluginManagement） | 保留 | 保留 | 保留在 pluginManagement 中，如需临时启用可通过 `-DskipJacoco=false` 激活 |
+
+### 4.3 临时启用方式
+
+如需在特定场景（如回归测试、审计）两时启用覆盖率采集：
+
+```bash
+mvn verify -DskipJacoco=false -DskipTests=false                           # 生成覆盖率报告
+mvn verify -DskipJacoco=false -DskipJacocoCheck=false -DskipTests=false   # 启用阈值检查
+```
+
+### 4.4 CI 流水线影响
+
+CI 流水线（`.github/workflows/backend-ci.yml`）的 `build` job 仅执行 `mvn -B -ntp -DskipTests compile`，不涉及 `verify` 阶段，因此 JaCoCo 禁用对 CI 无影响。SonarQube 扫描使用 `-DskipTests`，同样不受影响。
+
+### 4.5 后续恢复条件
+
+当项目重新引入单元测试后，按以下步骤恢复覆盖率检查：
+
+1. 编写并运行单元测试，确保 `mvn test` 通过。
+2. 将 `<skipJacoco>` 改回 `false`。
+3. 在 `<build><plugins>` 中重新添加 `jacoco-maven-plugin` 声明。
+4. 逐步提升覆盖率，达到阈值后将 `<skipJacocoCheck>` 改为 `false`。
+5. 更新本文档变更记录。
+
+---
+
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 作者 |
@@ -208,3 +252,4 @@ Get-ChildItem -Recurse -Filter "*.java" | ForEach-Object {
 | 2026-07-13 | 1.1 | 修复例外描述矛盾：@throws/@see/@param/@return 中的 FQN 均属违规（仅 {@link} 可保留）；新增 @ConditionalOnClass 例外；更新执行机制（CI 强制） | ydsz-pmis-team |
 | 2026-07-13 | 1.2 | 新增「禁止使用 @SuppressWarnings 注解」规范（Section 2） | ydsz-pmis-team |
 | 2026-07-14 | 1.3 | 新增「脚本执行优先使用 Python 而非 PowerShell」规范（Section 3） | ydsz-pmis-team |
+| 2026-07-14 | 1.4 | 新增「忽略单元测试覆盖率检查」规范（Section 4），全局禁用 JaCoCo | ydsz-pmis-team |

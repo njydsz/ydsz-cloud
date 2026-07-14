@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
@@ -37,7 +37,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     @Override
     public MsgPreferenceDO upsert(PreferenceUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannel())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 与通道不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 与通道不能为空");
         }
         String bizType = StringUtils.hasText(dto.getBizType()) ? dto.getBizType() : MessageConstants.DEFAULT_BIZ_TYPE;
         MsgPreferenceDO existing = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreferenceDO>()
@@ -118,7 +118,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "偏好 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "偏好 ID 不能为空");
         }
         msgPreferenceMapper.deleteById(id);
     }

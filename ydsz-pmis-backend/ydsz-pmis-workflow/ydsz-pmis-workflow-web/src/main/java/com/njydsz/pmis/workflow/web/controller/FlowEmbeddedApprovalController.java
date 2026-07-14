@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalActionDTO;
@@ -74,7 +74,7 @@ public class FlowEmbeddedApprovalController {
             }
         }
         if (uid == null) {
-            return BaseResponse.failed(StandardResultCode.UNAUTHORIZED, "未登录");
+            return BaseResponse.failed(BaseResultCode.UNAUTHORIZED, "未登录");
         }
         return BaseResponse.ok(embeddedApprovalService.loadPanel(businessType, businessId, uid));
     }

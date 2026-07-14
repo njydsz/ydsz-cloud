@@ -11,7 +11,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -98,11 +98,11 @@ public class ChannelRouter {
      */
     public MessageChannel route(String channel) {
         if (channel == null || channel.isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "消息通道不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "消息通道不能为空");
         }
         MessageChannel target = channelCache.get(channel.trim().toUpperCase());
         if (target == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "不支持的消息通道: " + channel);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "不支持的消息通道: " + channel);
         }
         return target;
     }
@@ -197,7 +197,7 @@ public class ChannelRouter {
      */
     public String dispatch(MsgLogDO logDO) {
         if (logDO == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "消息日志为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "消息日志为空");
         }
         MessageRequest request = new MessageRequest();
         request.setChannel(logDO.getChannel());

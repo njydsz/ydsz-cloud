@@ -8,7 +8,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.server.service.FlowFormFieldPermService;
@@ -75,7 +75,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                 case PERM_HIDDEN:
                     // HIDDEN 字段不允许提交
                     if (submitted.containsKey(fieldKey)) {
-                        throw new SysException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(BaseResultCode.BAD_REQUEST,
                                 "error.workflow.msg_form_field_hidden", fieldKey);
                     }
                     break;
@@ -85,7 +85,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                     if (submitted.containsKey(fieldKey)) {
                         Object existingVal = existing.get(fieldKey);
                         if (!Objects.equals(existingVal, submittedVal)) {
-                            throw new SysException(StandardResultCode.BAD_REQUEST,
+                            throw new SysException(BaseResultCode.BAD_REQUEST,
                                     "error.workflow.msg_form_field_readonly", fieldKey);
                         }
                     }
@@ -94,7 +94,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                 case PERM_REQUIRED:
                     // REQUIRED 字段不能为空
                     if (submittedVal == null || (submittedVal instanceof String s && s.isBlank())) {
-                        throw new SysException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(BaseResultCode.BAD_REQUEST,
                                 "error.workflow.msg_form_field_required", fieldKey);
                     }
                     break;

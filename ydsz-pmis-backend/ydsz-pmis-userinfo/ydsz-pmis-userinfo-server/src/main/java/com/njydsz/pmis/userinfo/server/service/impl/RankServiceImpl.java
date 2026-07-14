@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
 import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
@@ -43,7 +43,7 @@ public class RankServiceImpl implements RankService {
         }
         RankRateDO rate = rankRateMapper.selectEffective(levelCode, date);
         if (rate == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c23b2b34", levelCode);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.user.msg_c23b2b34", levelCode);
         }
         return rate;
     }

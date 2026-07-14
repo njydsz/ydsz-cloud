@@ -13,7 +13,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.AccountLockedEvent;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -149,17 +149,17 @@ public class AuthServiceImpl implements AuthService {
         LoginContextDTO ctx = buildContext(userAccountService.findByUsername(dto.getUsername()));
         if (ctx == null) {
             log.warn("[Auth] 用户不存在 username={}", dto.getUsername());
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
 
         // 3. 锁定检查
         if (ctx.getLockedUntil() != null && ctx.getLockedUntil() > System.currentTimeMillis()) {
-            throw new SysException(StandardResultCode.USER_LOCKED, "error.auth.msg_9d09bb97");
+            throw new SysException(BaseResultCode.USER_LOCKED, "error.auth.msg_9d09bb97");
         }
 
         // 4. 状态校验
         if (!"ENABLED".equalsIgnoreCase(ctx.getStatus())) {
-            throw new SysException(StandardResultCode.USER_DISABLED);
+            throw new SysException(BaseResultCode.USER_DISABLED);
         }
 
         // 5. 密码校验（兼容 BCrypt 与历史 MD5；MD5 校验通过后惰性升级为 BCrypt）
@@ -169,7 +169,7 @@ public class AuthServiceImpl implements AuthService {
                 : CryptoUtil.verifyPassword(dto.getPassword(), ctx.getPassword(), ctx.getSalt());
         if (!passwordOk) {
             recordLoginFailure(dto.getUsername());
-            throw new SysException(StandardResultCode.PASSWORD_INCORRECT);
+            throw new SysException(BaseResultCode.PASSWORD_INCORRECT);
         }
         // 惰性升级：历史 MD5 密码登录成功后升级为 BCrypt（失败不影响登录流程）
         if (!oldHashWasBcrypt) {
@@ -215,7 +215,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResultVO refresh(String refreshToken) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new SysException(StandardResultCode.TOKEN_INVALID);
+            throw new SysException(BaseResultCode.TOKEN_INVALID);
         }
 
         String userId = jwtTokenProvider.getUserId(refreshToken);
@@ -223,10 +223,10 @@ public class AuthServiceImpl implements AuthService {
         // 重新加载上下文（角色权限可能已变）
         LoginContextDTO ctx = buildContext(userAccountService.findById(userId));
         if (ctx == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         if (!"ENABLED".equalsIgnoreCase(ctx.getStatus())) {
-            throw new SysException(StandardResultCode.USER_DISABLED);
+            throw new SysException(BaseResultCode.USER_DISABLED);
         }
 
         String newToken = jwtTokenProvider.generateToken(
@@ -408,14 +408,14 @@ public class AuthServiceImpl implements AuthService {
      */
     private void validateCaptcha(String key, String code) {
         if (key == null || key.isBlank() || code == null || code.isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.auth.msg_e7006630");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.auth.msg_e7006630");
         }
         String stored = redisTemplate.opsForValue().get(CAPTCHA_KEY_PREFIX + key);
         if (stored == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.auth.msg_ffa59696");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.auth.msg_ffa59696");
         }
         if (!stored.equalsIgnoreCase(code)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.auth.msg_08e91fbb");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.auth.msg_08e91fbb");
         }
         // 一次性使用
         redisTemplate.delete(CAPTCHA_KEY_PREFIX + key);

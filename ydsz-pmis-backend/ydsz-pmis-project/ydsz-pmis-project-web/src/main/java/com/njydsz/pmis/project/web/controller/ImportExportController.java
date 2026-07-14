@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.server.service.ImportService;
 
@@ -64,7 +64,7 @@ public class ImportExportController {
     public void downloadTemplate(@PathVariable String bizType, HttpServletResponse response) throws IOException {
         // 白名单校验：防止非法 bizType 导致路径穿越或未预期的分派
         if (!ALLOWED_BIZ_TYPES.contains(bizType)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_f7d2a1b3", bizType);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_f7d2a1b3", bizType);
         }
         ImportService.TemplateBundle bundle = importService.buildTemplate(bizType);
 

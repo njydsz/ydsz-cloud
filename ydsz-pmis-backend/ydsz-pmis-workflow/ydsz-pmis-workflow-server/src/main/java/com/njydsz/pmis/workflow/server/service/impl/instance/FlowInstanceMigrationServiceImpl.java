@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationResultDTO;
@@ -78,7 +78,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     @Transactional(readOnly = true)
     public List<String> findRunningInstances(String definitionId, String tenantId) {
         if (definitionId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "definitionId 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "definitionId 不能为空");
         }
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         LambdaQueryWrapper<FlowInstanceDO> w = new LambdaQueryWrapper<>();
@@ -99,7 +99,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     @Transactional(readOnly = true)
     public Map<String, String> autoMapNodes(Long sourceDefId, Long targetDefId) {
         if (sourceDefId == null || targetDefId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "sourceDefId/targetDefId 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "sourceDefId/targetDefId 不能为空");
         }
         List<FlowNodeDO> sourceNodes = nodeMapper.selectByDefinitionId(String.valueOf(sourceDefId));
         List<FlowNodeDO> targetNodes = nodeMapper.selectByDefinitionId(String.valueOf(targetDefId));
@@ -144,11 +144,11 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         // 1. 参数校验
         if (dto == null || dto.getSourceDefinitionId() == null
                 || dto.getTargetDefinitionId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "sourceDefinitionId / targetDefinitionId 不能为空");
         }
         if (Objects.equals(dto.getSourceDefinitionId(), dto.getTargetDefinitionId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "源定义与目标定义不能相同");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "源定义与目标定义不能相同");
         }
 
         boolean dryRun = Boolean.TRUE.equals(dto.getDryRun()) || forceDry;
@@ -164,14 +164,14 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         // 2. 校验源/目标定义存在且 flowCode 一致
         FlowDefinitionDO sourceDef = definitionMapper.selectById(sourceDefId);
         if (sourceDef == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "源流程定义不存在: " + sourceDefId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "源流程定义不存在: " + sourceDefId);
         }
         FlowDefinitionDO targetDef = definitionMapper.selectById(targetDefId);
         if (targetDef == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "目标流程定义不存在: " + targetDefId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "目标流程定义不存在: " + targetDefId);
         }
         if (!Objects.equals(sourceDef.getFlowCode(), targetDef.getFlowCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "源定义与目标定义 flowCode 不一致: source="
                             + sourceDef.getFlowCode() + " target=" + targetDef.getFlowCode());
         }

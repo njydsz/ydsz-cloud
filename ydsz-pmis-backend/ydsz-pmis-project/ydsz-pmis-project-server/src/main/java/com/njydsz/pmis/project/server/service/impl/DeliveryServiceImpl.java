@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.domain.dto.DeliveryItemCreateDTO;
@@ -66,7 +66,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public void deleteStandard(String id) {
         DeliveryStandardDO s = standardMapper.selectById(id);
         if (s == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_ea3dc234");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_ea3dc234");
         }
         standardMapper.deleteById(id);
     }
@@ -76,7 +76,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public DeliveryStandardDO getStandardById(String id) {
         DeliveryStandardDO s = standardMapper.selectById(id);
         if (s == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_ea3dc234");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_ea3dc234");
         }
         return s;
     }
@@ -104,7 +104,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public String createItem(DeliveryItemCreateDTO dto) {
         validateItem(dto);
         if (itemMapper.selectByCode(dto.getItemCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY,
+            throw new SysException(BaseResultCode.DUPLICATE_KEY,
                     "error.execution.msg_6f4c0a13", dto.getItemCode());
         }
         DeliveryItemDO i = new DeliveryItemDO();
@@ -130,13 +130,13 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryItemStatus from = DeliveryItemStatus.fromCode(i.getStatus());
         DeliveryItemStatus to = DeliveryItemStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2e33226a", i.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_2e33226a", i.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_ba80cf32", from.getDesc(), to.getDesc());
         }
         // LocalDateTime now removed - unused
@@ -159,7 +159,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public void markTrCompleted(String itemId, Integer completed) {
         DeliveryItemDO i = getItemById(itemId);
         if (Integer.valueOf(1).equals(i.getTrRequired()) == false) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f693a197");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_f693a197");
         }
         itemMapper.updateTrCompleted(itemId, completed);
     }
@@ -169,7 +169,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryItemDO i = getItemById(id);
         DeliveryItemStatus st = DeliveryItemStatus.fromCode(i.getStatus());
         if (st == DeliveryItemStatus.ACCEPTED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_dfa7a85a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_dfa7a85a");
         }
         itemMapper.deleteById(id);
     }
@@ -179,7 +179,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public DeliveryItemDO getItemById(String id) {
         DeliveryItemDO i = itemMapper.selectById(id);
         if (i == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_2bb641ec");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_2bb641ec");
         }
         return i;
     }
@@ -223,30 +223,30 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     private void validateStandard(DeliveryStandardCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
         }
         if (DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
         }
     }
 
     private void validateItem(DeliveryItemCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (StringUtils.hasText(dto.getStage())
                 && DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
         }
         if (StringUtils.hasText(dto.getProjectType())
                 && ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
         }
     }
 }

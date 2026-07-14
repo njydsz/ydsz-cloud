@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.entity.FlowAdminRoleDO;
@@ -106,7 +106,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     @Transactional(rollbackFor = Exception.class)
     public void grantRole(String userId, String roleCode, String tenantId) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(roleCode)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 和角色编码不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 和角色编码不能为空");
         }
         // 检查是否已存在
         FlowAdminRoleDO existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);

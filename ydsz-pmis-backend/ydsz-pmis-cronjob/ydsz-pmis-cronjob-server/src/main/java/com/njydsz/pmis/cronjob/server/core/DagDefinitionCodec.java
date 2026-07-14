@@ -10,7 +10,7 @@ import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -85,29 +85,29 @@ public class DagDefinitionCodec {
      */
     public DagDefinition fromJson(String json) {
         if (json == null || json.isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
         }
         JSONObject root;
         try {
             root = YdszJson.parseMap(json);
         } catch (Exception e) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
         }
         if (root == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
         }
 
         // 解析 nodes
         List<DagNode> nodes = new ArrayList<>();
         List<Object> nodesArr = root.getJSONArray("nodes");
         if (nodesArr == null || nodesArr.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
         }
         for (int i = 0; i < nodesArr.size(); i++) {
             Map<String, Object> n = nodesArr.getJSONObject(i);
             String jobKey = n.getString("jobKey");
             if (jobKey == null || jobKey.isBlank()) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
             }
             nodes.add(new DagNode(
                     jobKey,
@@ -130,7 +130,7 @@ public class DagDefinitionCodec {
         // 校验节点 jobKey 唯一
         long distinctCount = nodes.stream().map(DagNode::jobKey).distinct().count();
         if (distinctCount != nodes.size()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_duplicate");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_duplicate");
         }
 
         // 解析 edges（可为空）
@@ -142,7 +142,7 @@ public class DagDefinitionCodec {
                 String from = e.getString("from");
                 String to = e.getString("to");
                 if (from == null || to == null) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_edge_invalid");
+                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_edge_invalid");
                 }
                 edges.add(new DagEdge(from, to,
                         e.getString("failStrategy"),
@@ -157,11 +157,11 @@ public class DagDefinitionCodec {
         }
         for (DagEdge edge : edges) {
             if (!nodeKeys.contains(edge.from())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "error.cronjob.msg_dag_edge_node_not_found", edge.from());
             }
             if (!nodeKeys.contains(edge.to())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "error.cronjob.msg_dag_edge_node_not_found", edge.to());
             }
         }

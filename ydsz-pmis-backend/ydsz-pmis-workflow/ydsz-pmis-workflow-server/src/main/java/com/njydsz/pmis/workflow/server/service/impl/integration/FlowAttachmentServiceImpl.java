@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentPreviewVO;
@@ -124,7 +124,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     public FlowAttachmentPreviewVO previewAttachment(String attachmentId) {
         FlowAttachmentDO attachment = attachmentMapper.selectById(attachmentId);
         if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c5d6e7f8", attachmentId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c5d6e7f8", attachmentId);
         }
 
         String ext = attachment.getFileExt() == null ? "" : attachment.getFileExt().toLowerCase();

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.common.excel.core.ExcelFacade;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
 import com.njydsz.pmis.project.domain.dto.RateCardImportDTO;
@@ -72,7 +72,7 @@ public class ImportServiceImpl implements ImportService {
             byte[] bytes = out.toByteArray();
             return new ImportService.TemplateBundle(RateCardImportDTO.class, bytes, "费率卡_导入模板.xlsx");
         }
-        throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
+        throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class ImportServiceImpl implements ImportService {
         if ("rate-card".equals(bizType)) {
             return importRateCard(file);
         }
-        throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
+        throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
     }
 
     /**
@@ -124,10 +124,10 @@ public class ImportServiceImpl implements ImportService {
      */
     private RateCardCreateDTO toCreateDTO(RateCardImportDTO src) {
         if (src.getLevel() == null || src.getLevel().isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
         }
         if (src.getUnitPrice() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d1b0b464");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d1b0b464");
         }
         RateCardCreateDTO dto = new RateCardCreateDTO();
         dto.setRateCode("RC-IMPORT-" + System.currentTimeMillis() + "-" + Math.abs(System.nanoTime() % 1000));
@@ -157,6 +157,6 @@ public class ImportServiceImpl implements ImportService {
                 log.debug("[ImportServiceImpl] 日期格式尝试失败 value={} format={}: {}", value, f, ignore.getMessage());
             }
         }
-        throw new SysException(StandardResultCode.BAD_REQUEST, field + " 日期格式错误: " + value + "，应为 yyyy-MM-dd 或 yyyy/MM/dd");
+        throw new SysException(BaseResultCode.BAD_REQUEST, field + " 日期格式错误: " + value + "，应为 yyyy-MM-dd 或 yyyy/MM/dd");
     }
 }

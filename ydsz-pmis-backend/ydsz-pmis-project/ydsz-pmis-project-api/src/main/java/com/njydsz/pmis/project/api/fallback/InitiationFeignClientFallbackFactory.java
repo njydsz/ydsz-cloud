@@ -3,7 +3,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.project.api.client.InitiationFeignClient;
 import com.njydsz.pmis.project.api.dto.InitiationCreateDTO;
 
@@ -28,22 +28,22 @@ public class InitiationFeignClientFallbackFactory implements FallbackFactory<Ini
         return new InitiationFeignClient() {
             @Override
             public BaseResponse<Void> markProcessing(String initiationId) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<Void> markApproved(String initiationId) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<Void> markRejected(String initiationId, String reason) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<String> create(InitiationCreateDTO dto) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

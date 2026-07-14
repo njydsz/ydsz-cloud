@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
@@ -57,14 +57,14 @@ public class RecallServiceImpl implements RecallService {
     @Transactional(rollbackFor = Exception.class)
     public boolean recallNotification(String userId, String notificationId) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(notificationId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 与通知 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 与通知 ID 不能为空");
         }
         MsgNotificationDO n = msgNotificationMapper.selectById(notificationId);
         if (n == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "通知不存在: " + notificationId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "通知不存在: " + notificationId);
         }
         if (!userId.equals(n.getReceiverId())) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "仅可撤回本人的通知");
+            throw new SysException(BaseResultCode.FORBIDDEN, "仅可撤回本人的通知");
         }
         n.setRecallStatus(RecallStatusEnum.RECALLED.name());
         n.setRecallAt(LocalDateTime.now());
@@ -78,7 +78,7 @@ public class RecallServiceImpl implements RecallService {
     @Override
     public boolean recallMessage(String logId) {
         if (!StringUtils.hasText(logId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "日志 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "日志 ID 不能为空");
         }
         messageLogService.markRecalled(logId);
         // P0-4: 查找消息并通过 WebSocket 推送撤回事件
@@ -105,27 +105,27 @@ public class RecallServiceImpl implements RecallService {
     @Transactional(rollbackFor = Exception.class)
     public boolean recallByMsgId(String msgId) {
         if (!StringUtils.hasText(msgId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "消息 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "消息 ID 不能为空");
         }
         // 按 msgId 查询消息日志
         MsgLogDO logDO = msgLogMapper.selectOne(new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getMsgId, msgId)
                 .last("LIMIT 1"));
         if (logDO == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "消息不存在: msgId=" + msgId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "消息不存在: msgId=" + msgId);
         }
         // 校验撤回时间窗口
         if (logDO.getCreatedAt() != null) {
             long minutesElapsed = Duration.between(
                     logDO.getCreatedAt(), LocalDateTime.now()).toMinutes();
             if (minutesElapsed > RECALL_WINDOW_MINUTES) {
-                throw new SysException(StandardResultCode.BIZ_ERROR,
+                throw new SysException(BaseResultCode.BIZ_ERROR,
                         "消息发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回");
             }
         }
         // 校验是否已撤回
         if (RecallStatusEnum.RECALLED.name().equals(logDO.getRecallStatus())) {
-            throw new SysException(StandardResultCode.BIZ_ERROR, "消息已撤回，无需重复操作");
+            throw new SysException(BaseResultCode.BIZ_ERROR, "消息已撤回，无需重复操作");
         }
         // 执行撤回
         logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());
@@ -146,7 +146,7 @@ public class RecallServiceImpl implements RecallService {
     @Transactional(rollbackFor = Exception.class)
     public int recallBatch(String bizType, String bizId) {
         if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "业务类型与单据 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "业务类型与单据 ID 不能为空");
         }
         // 通知批量撤回
         int notifCount = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotificationDO>()

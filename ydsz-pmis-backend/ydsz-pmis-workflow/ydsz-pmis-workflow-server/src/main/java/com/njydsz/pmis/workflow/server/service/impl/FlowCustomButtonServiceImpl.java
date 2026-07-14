@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
@@ -60,7 +60,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     public void saveCustomButtons(String definitionId, String nodeCode, List<Map<String, Object>> buttons) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
         }
         // 读取现有 ext JSON
         Map<String, Object> extJson = StringUtils.hasText(node.getExt())
@@ -86,7 +86,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                                               Map<String, Object> variables) {
         FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
         }
 
         // 获取节点自定义按钮
@@ -94,7 +94,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         Map<String, Object> button = buttons.stream()
                 .filter(b -> buttonCode.equals(String.valueOf(b.get("code"))))
                 .findFirst()
-                .orElseThrow(() -> new SysException(StandardResultCode.BAD_REQUEST,
+                .orElseThrow(() -> new SysException(BaseResultCode.BAD_REQUEST,
                         "error.workflow.msg_button_not_found", buttonCode));
 
         String action = String.valueOf(button.getOrDefault("action", "CUSTOM")).toUpperCase();
@@ -140,7 +140,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     taskService.transfer(transferDto);
                     result.put("result", "TRANSFERRED");
                 } else {
-                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
+                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
                 }
             }
             case "DELEGATE" -> {
@@ -155,7 +155,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     taskService.delegate(delegateDto);
                     result.put("result", "DELEGATED");
                 } else {
-                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
+                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
                 }
             }
             case "CUSTOM" -> {
@@ -165,7 +165,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 log.info("[CustomButton] 自定义按钮操作: taskId={} buttonCode={} callbackUrl={}",
                         taskId, buttonCode, button.get("callbackUrl"));
             }
-            default -> throw new SysException(StandardResultCode.BAD_REQUEST,
+            default -> throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_unknown_button_action", action);
         }
 

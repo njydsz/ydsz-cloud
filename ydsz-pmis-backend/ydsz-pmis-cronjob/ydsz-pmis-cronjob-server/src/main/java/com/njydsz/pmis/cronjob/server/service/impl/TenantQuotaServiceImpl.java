@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.job.TenantQuotaDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
@@ -89,7 +89,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentCount = countJobsByTenant(tenantId);
         if (currentCount >= maxJobs) {
-            throw new SysException(StandardResultCode.QUOTA_EXCEEDED,
+            throw new SysException(BaseResultCode.QUOTA_EXCEEDED,
                     "error.cronjob.msg_quota_jobs_exceeded",
                     tenantId, currentCount, maxJobs);
         }
@@ -111,7 +111,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentConcurrent = getConcurrentCount(tenantId);
         if (currentConcurrent >= maxConcurrent) {
-            throw new SysException(StandardResultCode.QUOTA_EXCEEDED,
+            throw new SysException(BaseResultCode.QUOTA_EXCEEDED,
                     "error.cronjob.msg_quota_concurrent_exceeded",
                     tenantId, currentConcurrent, maxConcurrent);
         }
@@ -133,7 +133,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         long currentDaily = getDailyCount(tenantId);
         if (currentDaily >= maxDaily) {
-            throw new SysException(StandardResultCode.QUOTA_EXCEEDED,
+            throw new SysException(BaseResultCode.QUOTA_EXCEEDED,
                     "error.cronjob.msg_quota_daily_exceeded",
                     tenantId, currentDaily, maxDaily);
         }

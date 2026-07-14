@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.dto.FlowAssigneeDTO;
@@ -228,7 +228,7 @@ public class FlowTaskCreateService {
     private FlowInstanceDO lookupInstance(String instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
         }
         return instance;
     }
@@ -794,7 +794,7 @@ public class FlowTaskCreateService {
         int depth = AUTO_PASS_DEPTH.get();
         if (depth >= MAX_AUTO_PASS_DEPTH) {
             log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
-            throw new SysException(StandardResultCode.INTERNAL_ERROR, "error.workflow.msg_fcd55e62");
+            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_fcd55e62");
         }
         AUTO_PASS_DEPTH.set(depth + 1);
         try {

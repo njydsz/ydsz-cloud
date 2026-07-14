@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.domain.enums.CanaryStatus;
@@ -49,11 +49,11 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         validatePercent(initialPercent);
         FlowDefinitionDO def = mustGetDef(definitionId);
         if (def.getIsPublish() == null || def.getIsPublish() != 1) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
         }
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_9ff06760");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_9ff06760");
         }
 
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
@@ -76,7 +76,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         FlowDefinitionDO def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (!CanaryStatus.CANARYING.name().equals(curStatus)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_f5374e71", curStatus);
         }
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
@@ -217,7 +217,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     /** 校验 percent 取值 */
     private void validatePercent(int percent) {
         if (percent < 0 || percent > 100) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_a9bb9120", percent);
         }
     }
@@ -230,11 +230,11 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      */
     private FlowDefinitionDO mustGetDef(String definitionId) {
         if (definitionId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_375a4677");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_375a4677");
         }
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
         }
         return def;
     }

@@ -15,7 +15,7 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.core.constant.PageConstants;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
@@ -64,7 +64,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(rollbackFor = Exception.class)
     public int send(NotificationSendDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "通知参数不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "通知参数不能为空");
         }
         List<String> receiverIds = resolveReceiverIds(dto);
         // P3-6: 先构建全部实体（预生成 ID），再批量 insert，避免逐条 INSERT 的数据库往返开销
@@ -96,7 +96,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query) {
         if (!StringUtils.hasText(userId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
         Page<MsgNotificationDO> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
@@ -232,7 +232,7 @@ public class NotificationServiceImpl implements NotificationService {
             receiverIds = List.of(dto.getReceiverId());
         }
         if (CollectionUtils.isEmpty(receiverIds)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "接收人不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "接收人不能为空");
         }
         return receiverIds;
     }

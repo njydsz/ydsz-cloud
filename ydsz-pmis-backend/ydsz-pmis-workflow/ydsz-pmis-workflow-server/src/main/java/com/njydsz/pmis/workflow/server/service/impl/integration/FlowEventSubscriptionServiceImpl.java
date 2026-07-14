@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.entity.FlowEventSubscriptionDO;
@@ -70,11 +70,11 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     public String createSubscription(String instanceId, FlowNodeDO node,
                                     Map<String, Object> variables, String boundaryTaskId) {
         if (instanceId == null || node == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "instanceId/node 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "instanceId/node 不能为空");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
 
         Map<String, Object> ext = parseExt(node);
@@ -113,7 +113,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     public int correlateMessage(String tenantId, String messageName,
                                  String correlationKey, String payload) {
         if (!StringUtils.hasText(messageName)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "messageName 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "messageName 不能为空");
         }
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
 
@@ -145,7 +145,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     @Transactional(rollbackFor = Exception.class)
     public int throwError(String tenantId, String instanceId, String errorCode, String payload) {
         if (!StringUtils.hasText(errorCode)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "errorCode 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "errorCode 不能为空");
         }
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
 

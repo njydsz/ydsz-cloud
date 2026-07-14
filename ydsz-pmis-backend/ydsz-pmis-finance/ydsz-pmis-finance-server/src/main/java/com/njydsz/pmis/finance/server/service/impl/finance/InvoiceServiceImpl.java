@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -47,55 +47,55 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(InvoiceCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getInvoiceCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_0bf89391");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_0bf89391");
         }
         if (dto.getContractId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_af96cf73");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_af96cf73");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_abaef3a6");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_abaef3a6");
         }
         if (InvoiceType.fromCode(dto.getInvoiceType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_e77a5692", dto.getInvoiceType());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_e77a5692", dto.getInvoiceType());
         }
         if (InvoiceBasis.fromCode(dto.getInvoiceBasis()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a5324fa7", dto.getInvoiceBasis());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_a5324fa7", dto.getInvoiceBasis());
         }
         if (invoiceMapper.selectByCode(dto.getInvoiceCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_9c944632", dto.getInvoiceCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_9c944632", dto.getInvoiceCode());
         }
         if (StringUtils.hasText(dto.getInvoiceNo())
                 && invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_bef09851", dto.getInvoiceNo());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_bef09851", dto.getInvoiceNo());
         }
         if ("RED_REVERSE".equalsIgnoreCase(dto.getInvoiceType())) {
             if (dto.getReversedById() == null) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_571d513d");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_571d513d");
             }
             InvoiceDO src = invoiceMapper.selectById(dto.getReversedById());
             if (src == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_12b7e014");
+                throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_12b7e014");
             }
             if (!InvoiceStatus.ISSUED.getCode().equals(src.getStatus())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_25f7c916");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_25f7c916");
             }
             if (dto.getAmount().compareTo(src.getAmount()) > 0) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2d897570");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_2d897570");
             }
         } else {
             // 正常开票：强制校验依据附件
             if ("MILESTONE".equalsIgnoreCase(dto.getInvoiceBasis())
                     || "FINAL".equalsIgnoreCase(dto.getInvoiceBasis())) {
                 if (!StringUtils.hasText(dto.getAcceptanceProofId())) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(BaseResultCode.BAD_REQUEST,
                             "error.execution.msg_ec948d12");
                 }
             }
             if ("OUTSOURCING".equalsIgnoreCase(dto.getInvoiceBasis())) {
                 if (!StringUtils.hasText(dto.getOutsourcingProofId())) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(BaseResultCode.BAD_REQUEST,
                             "error.execution.msg_a89c0a16");
                 }
             }
@@ -142,7 +142,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void approve(String id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
         }
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.APPROVED, dto.getComment(), dto.getOperatorId());
@@ -156,7 +156,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void reject(String id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
         }
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.REJECTED, dto.getComment(), dto.getOperatorId());
@@ -170,19 +170,19 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void issue(String id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_69724bea");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_69724bea");
         }
         InvoiceDO inv = getById(id);
         if (StringUtils.hasText(dto.getInvoiceNo())) {
             if (invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null
                     && !dto.getInvoiceNo().equals(inv.getInvoiceNo())) {
-                throw new SysException(StandardResultCode.DUPLICATE_KEY,
+                throw new SysException(BaseResultCode.DUPLICATE_KEY,
                         "error.execution.msg_67174829", dto.getInvoiceNo());
             }
             inv.setInvoiceNo(dto.getInvoiceNo());
         }
         if (!StringUtils.hasText(inv.getInvoiceNo())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_3ba9d565");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_3ba9d565");
         }
         transit(inv, InvoiceStatus.ISSUED, dto.getComment(), dto.getOperatorId());
         inv.setIssuedBy(dto.getOperatorId());
@@ -194,11 +194,11 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void redReverse(String id, String operatorId, String comment) {
         if (operatorId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }
         InvoiceDO inv = getById(id);
         if (!"NORMAL".equalsIgnoreCase(inv.getInvoiceType())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_8f692e44");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_8f692e44");
         }
         transit(inv, InvoiceStatus.RED_REVERSED, comment, operatorId);
         // 同时把被红冲的原发票（蓝字发票）置为 RED_REVERSED
@@ -214,7 +214,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void cancel(String id, String operatorId, String comment) {
         if (operatorId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.CANCELLED, comment, operatorId);
@@ -227,7 +227,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (!InvoiceStatus.DRAFT.getCode().equals(inv.getStatus())
                 && !InvoiceStatus.REJECTED.getCode().equals(inv.getStatus())
                 && !InvoiceStatus.CANCELLED.getCode().equals(inv.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_dd7be833");
         }
         invoiceMapper.deleteById(id);
@@ -237,7 +237,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(readOnly = true)
     public InvoiceDO getById(String id) {
         InvoiceDO inv = invoiceMapper.selectById(id);
-        if (inv == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_1b0f0829");
+        if (inv == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_1b0f0829");
         return inv;
     }
 
@@ -308,11 +308,11 @@ public class InvoiceServiceImpl implements InvoiceService {
     private void transit(InvoiceDO inv, InvoiceStatus target, String comment, String operatorId) {
         InvoiceStatus from = InvoiceStatus.fromCode(inv.getStatus());
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_2e33226a", inv.getStatus());
         }
         if (!from.canTransitTo(target)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_80c713df", from.getDesc(), target.getDesc());
         }
         invoiceMapper.updateStatus(inv.getId(), target.getCode(), operatorId, null);

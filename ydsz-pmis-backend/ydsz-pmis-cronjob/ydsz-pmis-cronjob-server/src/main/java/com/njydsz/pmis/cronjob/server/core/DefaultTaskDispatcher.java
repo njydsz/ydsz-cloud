@@ -48,7 +48,7 @@ import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.common.core.job.JobLoggerHolder;
 import com.njydsz.pmis.common.core.job.ProcessResult;
 import com.njydsz.pmis.common.core.job.ShardingContext;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
@@ -1413,7 +1413,7 @@ try {
             return next == null ? null : LocalDateTime.ofInstant(next,
                     ZoneId.systemDefault());
         } catch (IllegalArgumentException e) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }
     }
 

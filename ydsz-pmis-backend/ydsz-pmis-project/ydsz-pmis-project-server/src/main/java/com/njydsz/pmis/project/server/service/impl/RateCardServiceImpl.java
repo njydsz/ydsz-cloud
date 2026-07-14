@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
@@ -44,7 +44,7 @@ public class RateCardServiceImpl implements RateCardService {
     public String create(RateCardCreateDTO dto) {
         validate(dto);
         if (rateCardMapper.selectByCode(dto.getRateCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());
         }
         RateCardDO r = new RateCardDO();
         BeanUtils.copyProperties(dto, r);
@@ -62,9 +62,9 @@ public class RateCardServiceImpl implements RateCardService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(String id, RateCardCreateDTO dto) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateCardDO r = rateCardMapper.selectById(id);
-        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
+        if (r == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
         if (dto.getRateAmount() != null) r.setRateAmount(dto.getRateAmount());
         if (dto.getBillingUnit() != null) r.setBillingUnit(dto.getBillingUnit());
         if (dto.getCurrency() != null) r.setCurrency(dto.getCurrency());
@@ -80,16 +80,16 @@ public class RateCardServiceImpl implements RateCardService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         rateCardMapper.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public RateCardDO getById(String id) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateCardDO r = rateCardMapper.selectById(id);
-        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
+        if (r == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
         return r;
     }
 
@@ -120,21 +120,21 @@ public class RateCardServiceImpl implements RateCardService {
     }
 
     private void validate(RateCardCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRateCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_3fbd3c07");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_3fbd3c07");
         }
         if (!StringUtils.hasText(dto.getLevelCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
         }
         if (!StringUtils.hasText(dto.getBillingUnit())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_8e68458a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_8e68458a");
         }
         if (dto.getRateAmount() == null || dto.getRateAmount().signum() < 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4c1c6ba9");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_4c1c6ba9");
         }
         if (dto.getEffectiveDate() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_c10e0b62");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_c10e0b62");
         }
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.dto.alert.JobSlaSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.alert.JobSlaDO;
@@ -120,7 +120,7 @@ public class JobSlaServiceImpl implements JobSlaService {
     public JobSlaDO getSlaById(String id) {
         List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
         if (rules.isEmpty()) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
         }
         return aggregateSlaFromRules(id, rules);
     }
@@ -145,11 +145,11 @@ public class JobSlaServiceImpl implements JobSlaService {
     @Transactional(rollbackFor = Exception.class)
     public void toggleSla(String id, Integer enabled) {
         if (enabled == null || (enabled != 0 && enabled != 1)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_enabled");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_enabled");
         }
         List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
         if (rules.isEmpty()) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
         }
         for (JobAlertRuleDO rule : rules) {
             rule.setEnabled(enabled);
@@ -306,10 +306,10 @@ public class JobSlaServiceImpl implements JobSlaService {
     private void validateSlaConstraints(JobSlaSaveDTO dto) {
         if (dto.getMaxDurationMs() == null && dto.getMaxFailRate() == null
                 && dto.getMinSuccessRate() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_no_constraint");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_sla_no_constraint");
         }
         if (dto.getMaxDurationMs() != null && dto.getMaxDurationMs() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_duration");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_duration");
         }
         validateRateRange(dto.getMaxFailRate());
         validateRateRange(dto.getMinSuccessRate());
@@ -320,7 +320,7 @@ public class JobSlaServiceImpl implements JobSlaService {
             return;
         }
         if (rate.compareTo(BigDecimal.ZERO) < 0 || rate.compareTo(new BigDecimal("100")) > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_rate");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_rate");
         }
     }
 

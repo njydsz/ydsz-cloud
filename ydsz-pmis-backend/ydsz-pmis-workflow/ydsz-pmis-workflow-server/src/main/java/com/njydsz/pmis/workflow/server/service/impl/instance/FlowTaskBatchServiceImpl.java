@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 
@@ -46,7 +46,7 @@ public class FlowTaskBatchServiceImpl {
     @Transactional(rollbackFor = Exception.class)
     public void batchPass(List<String> taskIds, String userId, String comment) {
         if (taskIds == null || taskIds.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
         }
         for (String taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -74,7 +74,7 @@ public class FlowTaskBatchServiceImpl {
     public void batchReject(List<String> taskIds, String userId, String comment,
                             String targetNodeCode) {
         if (taskIds == null || taskIds.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
         }
         for (String taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -104,7 +104,7 @@ public class FlowTaskBatchServiceImpl {
     public void batchTransfer(List<String> taskIds, String userId, String comment,
                               String targetUserId, String targetUserName) {
         if (taskIds == null || taskIds.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
         }
         for (String taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -133,7 +133,7 @@ public class FlowTaskBatchServiceImpl {
      */
     public int batchUrge(List<String> instanceIds, String operatorId, String comment) {
         if (instanceIds == null || instanceIds.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
         }
         int success = 0;
         for (String instanceId : instanceIds) {

@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.auth.context;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.pmis.common.core.context.RequestContext;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.LoginUser;
 
@@ -72,9 +72,9 @@ public final class AuthContext {
         LoginUser user = getCurrentOrNull();
         if (user == null) {
             throw SysException.builder()
-                    .code(StandardResultCode.UNAUTHORIZED.getCode())
+                    .code(BaseResultCode.UNAUTHORIZED.getCode())
                     .key("error.common.msg_1923bd82")
-                    .httpStatus(StandardResultCode.UNAUTHORIZED.getHttpStatus().value())
+                    .httpStatus(BaseResultCode.UNAUTHORIZED.getHttpStatus().value())
                     .build();
         }
         return user;
@@ -156,10 +156,10 @@ public final class AuthContext {
         LoginUser user = getCurrent();
         if (!user.hasPermission(perm)) {
             throw SysException.builder()
-                    .code(StandardResultCode.FORBIDDEN.getCode())
+                    .code(BaseResultCode.FORBIDDEN.getCode())
                     .key("error.common.msg_1e40057e")
                     .params(perm)
-                    .httpStatus(StandardResultCode.FORBIDDEN.getHttpStatus().value())
+                    .httpStatus(BaseResultCode.FORBIDDEN.getHttpStatus().value())
                     .build();
         }
     }
@@ -178,9 +178,9 @@ public final class AuthContext {
             }
         }
         throw SysException.builder()
-                .code(StandardResultCode.FORBIDDEN.getCode())
+                .code(BaseResultCode.FORBIDDEN.getCode())
                 .key("error.common.msg_ad4fff48")
-                .httpStatus(StandardResultCode.FORBIDDEN.getHttpStatus().value())
+                .httpStatus(BaseResultCode.FORBIDDEN.getHttpStatus().value())
                 .build();
     }
 

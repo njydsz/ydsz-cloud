@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobHistoryDO;
@@ -67,7 +67,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     @Transactional(rollbackFor = Exception.class)
     public JobHistoryDO saveHistory(JobDO job, String changedBy) {
         if (job == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_required");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_required");
         }
         JobHistoryDO history = new JobHistoryDO();
         history.setJobId(job.getId());
@@ -145,22 +145,22 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     @Transactional(rollbackFor = Exception.class)
     public JobDO rollback(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_id_required");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_id_required");
         }
         if (version == null || version < 1) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_history_version_invalid");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_version_invalid");
         }
         // 查询目标历史版本
         JobHistoryDO targetHistory = jobHistoryMapper.selectByVersion(jobId, version);
         if (targetHistory == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
         }
         // 反序列化快照为 JobDO
         JobDO snapshotJob = YdszJson.parseMap(targetHistory.getSnapshot(), JobDO.class);
         // 查询当前任务（用于保留统计字段等）
         JobDO currentJob = jobMapper.selectById(jobId);
         if (currentJob == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         // 保留 id/jobKey/tenantId/统计字段/createdAt（这些字段不应被回滚覆盖）
         snapshotJob.setId(jobId);

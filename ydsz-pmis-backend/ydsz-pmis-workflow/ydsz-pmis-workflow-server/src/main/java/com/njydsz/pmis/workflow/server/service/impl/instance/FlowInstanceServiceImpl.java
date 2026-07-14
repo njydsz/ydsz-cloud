@@ -22,7 +22,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.pmis.common.security.DataScopeHelper;
@@ -145,7 +145,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (dto == null || !StringUtils.hasText(dto.getFlowCode())
                 || !StringUtils.hasText(dto.getBusinessType())
                 || !StringUtils.hasText(dto.getBusinessId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_208e3c66");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_208e3c66");
         }
 
         // 0. 幂等：同 business 已有活跃实例（RUNNING/SUSPENDED）则直接返回
@@ -171,7 +171,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 tenantId,
                 dto.getInitiatorId());
         if (def == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
+            throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_add8d012", dto.getFlowCode());
         }
 
@@ -260,7 +260,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void terminate(String instanceId, String reason) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_2246960b");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2246960b");
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = instance.getStartAt() == null
@@ -314,7 +314,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void suspend(String instanceId) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_543fc92f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_543fc92f");
         }
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.SUSPENDED.name(),
                 instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
@@ -338,7 +338,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void activate(String instanceId) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_ab594c75");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ab594c75");
         }
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.RUNNING.name(),
                 instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
@@ -434,11 +434,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可撤回
         if (!instance.getInitiatorId().equals(initiatorId)) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
         }
         // 校验：仅运行中可撤回
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
         }
         // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
         List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
@@ -446,7 +446,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
         if (anyProcessed) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c55fe642");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_c55fe642");
         }
         // 取消当前待办
         taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
@@ -456,7 +456,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             advancer.start(instanceId);
         } catch (Exception e) {
             log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
-            throw new SysException(StandardResultCode.INTERNAL_ERROR, "error.workflow.msg_3d726320", e.getMessage());
+            throw new SysException(BaseResultCode.INTERNAL_ERROR, "error.workflow.msg_3d726320", e.getMessage());
         }
         log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
         // P2-3: Prometheus 指标 — 撤回
@@ -485,11 +485,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可查询
         if (!instance.getInitiatorId().equals(initiatorId)) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
         }
         // 校验：仅运行中可查询
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
         }
         // 查历史已办节点
         List<Map<String, Object>> passedNodes = hisTaskMapper.listPassedNodes(instanceId);
@@ -520,11 +520,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可撤回
         if (!instance.getInitiatorId().equals(initiatorId)) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
         }
         // 校验：仅运行中可撤回
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
         }
         // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
         List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
@@ -532,7 +532,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
         if (anyProcessed) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c55fe642");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_c55fe642");
         }
         // 校验：targetNodeCode 必须在可撤回节点列表中
         List<Map<String, Object>> recallable = hisTaskMapper.listPassedNodes(instanceId);
@@ -546,7 +546,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             }
         }
         if (!recallableCodes.contains(targetNodeCode)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_e5f6a7b8", targetNodeCode);
         }
 
@@ -562,7 +562,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         } catch (Exception e) {
             log.error("[Flow] 撤回到指定节点失败: instanceId={} targetNodeCode={}",
                     instanceId, targetNodeCode, e);
-            throw new SysException(StandardResultCode.INTERNAL_ERROR,
+            throw new SysException(BaseResultCode.INTERNAL_ERROR,
                     "error.workflow.msg_3d726320", e.getMessage());
         }
 
@@ -602,7 +602,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
         // 1. 校验：仅 COMPLETED 状态可回滚
         if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_a1b2c3d4", instance.getFlowStatus());
         }
 
@@ -616,12 +616,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             isAdmin = user.isSuperAdmin() || user.hasPermission(PERM_INSTANCE_ROLLBACK);
         }
         if (!isInitiator && !isAdmin) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_b2c3d4e5");
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_b2c3d4e5");
         }
 
         // 3. 校验：回滚原因不能为空
         if (!StringUtils.hasText(reason)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d4e5f6a7");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d4e5f6a7");
         }
 
         // 4. 校验：时间窗口
@@ -629,7 +629,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (instance.getEndAt() != null) {
             long elapsedDays = Duration.between(instance.getEndAt(), LocalDateTime.now()).toDays();
             if (elapsedDays > days) {
-                throw new SysException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "error.workflow.msg_c3d4e5f6", days);
             }
         }
@@ -727,11 +727,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void setVariable(String instanceId, String key, Object value) {
         // P2-24: 合并写入单个变量并持久化
         if (!StringUtils.hasText(key)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_fae06125");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_fae06125");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.put(key, value);
@@ -748,7 +748,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.putAll(variables);
@@ -786,7 +786,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private FlowInstanceDO getByIdOrThrow(String id) {
         FlowInstanceDO instance = instanceMapper.selectById(id);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_67a10717", id);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", id);
         }
         return instance;
     }
@@ -871,7 +871,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 } catch (Exception e) {
                     log.error("[Flow] callActivity 启动子流程失败: instanceId={} node={} err={}",
                             instanceId, node.getNodeCode(), e.getMessage(), e);
-                    throw new SysException(StandardResultCode.INTERNAL_ERROR,
+                    throw new SysException(BaseResultCode.INTERNAL_ERROR,
                             "error.workflow.msg_f2bd498c", e.getMessage());
                 }
                 continue;
@@ -1030,14 +1030,14 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public List<Map<String, Object>> simulate(String flowCode, String version,
                                                Map<String, Object> variables, String tenantId) {
         if (!StringUtils.hasText(flowCode)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_ebccbe46");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ebccbe46");
         }
         // 解析租户
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         // 查询已发布流程定义
         FlowDefinitionDO def = definitionService.getPublished(flowCode, version, tid);
         if (def == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
+            throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_add8d012" + flowCode + " version=" + version);
         }
         // 查询节点 + 跳转
@@ -1068,7 +1068,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             }
         }
         if (startNode == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_69a69bcd");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_69a69bcd");
         }
 
         // 模拟遍历
@@ -1295,7 +1295,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public Map<String, Object> getFormRenderData(String instanceId, String taskId) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
         }
         String nodeCode;
         String nodeName;
@@ -1306,7 +1306,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             // 优先从任务获取节点信息
             FlowRunTaskDO task = taskMapper.selectById(taskId);
             if (task == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
+                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
             }
             nodeCode = task.getNodeCode();
             nodeName = task.getNodeName();
@@ -1383,13 +1383,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 1. 状态校验：仅 REJECTED 可重审
         FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
         if (status != FlowInstanceStatus.REJECTED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_7f4098fb",
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_7f4098fb",
                     "仅被驳回实例可重审，当前状态=" + instance.getFlowStatus());
         }
         // 2. 发起人校验
         if (instance.getInitiatorId() != null
                 && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_d65b2814",
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_d65b2814",
                     "仅发起人可重审");
         }
         // 3. 合并变量（保留历史变量，覆盖新增）
@@ -1460,13 +1460,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 1. 状态校验：仅非运行态可重做（RUNNING / SUSPENDED 不可）
         FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
         if (status == FlowInstanceStatus.RUNNING || status == FlowInstanceStatus.SUSPENDED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c9d0e1f2",
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_c9d0e1f2",
                     "运行中/挂起的实例不可重做，当前状态=" + instance.getFlowStatus());
         }
         // 2. 发起人校验
         if (instance.getInitiatorId() != null
                 && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_d65b2814",
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_d65b2814",
                     "仅发起人可重做");
         }
         // 3. 合并变量（保留原实例变量，覆盖新增）
@@ -1528,11 +1528,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     public Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos) {
         if (dtos == null || dtos.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_e4f5a6b7");
         }
         if (dtos.size() > BATCH_START_MAX_SIZE) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_f5a6b7c8",
                     dtos.size(), BATCH_START_MAX_SIZE);
         }

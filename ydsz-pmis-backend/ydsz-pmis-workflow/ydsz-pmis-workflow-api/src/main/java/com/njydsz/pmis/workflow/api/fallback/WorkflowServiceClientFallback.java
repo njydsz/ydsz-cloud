@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
         return new WorkflowServiceClient() {
             @Override
             public BaseResponse<String> startProcess(Map<String, Object> body) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override

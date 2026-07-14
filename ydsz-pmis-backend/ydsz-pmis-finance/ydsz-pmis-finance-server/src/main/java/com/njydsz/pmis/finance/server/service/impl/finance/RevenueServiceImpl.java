@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -43,24 +43,24 @@ public class RevenueServiceImpl implements RevenueService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(RevenueCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRevenueCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_378203d4");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_378203d4");
         }
         if (dto.getContractId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_af96cf73");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_af96cf73");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a853c0c6");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_a853c0c6");
         }
         if (RevenueRecognitionMethod.fromCode(dto.getRecognitionMethod()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9a58a1bc", dto.getRecognitionMethod());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_9a58a1bc", dto.getRecognitionMethod());
         }
         if (revenueMapper.selectByCode(dto.getRevenueCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_52c2d527", dto.getRevenueCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_52c2d527", dto.getRevenueCode());
         }
         RevenueDO r = new RevenueDO();
         BeanUtils.copyProperties(dto, r);
@@ -78,7 +78,7 @@ public class RevenueServiceImpl implements RevenueService {
     public void confirm(String id, String confirmedBy) {
         RevenueDO r = getById(id);
         if (!"DRAFT".equals(r.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_0f0b1394");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_0f0b1394");
         }
         revenueMapper.updateStatus(id, "CONFIRMED", confirmedBy);
         r.setConfirmedBy(confirmedBy);
@@ -92,7 +92,7 @@ public class RevenueServiceImpl implements RevenueService {
     public void reverse(String id) {
         RevenueDO r = getById(id);
         if (!"CONFIRMED".equals(r.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1971a360");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_1971a360");
         }
         revenueMapper.updateStatus(id, "REVERSED", null);
         log.info("[Revenue] 冲销收入: id={}", id);
@@ -103,7 +103,7 @@ public class RevenueServiceImpl implements RevenueService {
     public void delete(String id) {
         RevenueDO r = getById(id);
         if ("CONFIRMED".equals(r.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6891a16a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_6891a16a");
         }
         revenueMapper.deleteById(id);
     }
@@ -112,7 +112,7 @@ public class RevenueServiceImpl implements RevenueService {
     @Transactional(readOnly = true)
     public RevenueDO getById(String id) {
         RevenueDO r = revenueMapper.selectById(id);
-        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_4924d9b4");
+        if (r == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_4924d9b4");
         return r;
     }
 

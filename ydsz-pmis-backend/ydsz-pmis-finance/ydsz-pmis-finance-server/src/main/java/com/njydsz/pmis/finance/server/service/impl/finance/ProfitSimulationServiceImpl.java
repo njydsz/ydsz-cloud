@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -50,18 +50,18 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(ProfitSimulationCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getSimulationCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_dd45c4cb");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_dd45c4cb");
         }
         if (!StringUtils.hasText(dto.getSimulationName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_00a76083");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_00a76083");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (mapper.selectByCode(dto.getSimulationCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_0e48bb17", dto.getSimulationCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_0e48bb17", dto.getSimulationCode());
         }
         ProfitSimulationDO s = new ProfitSimulationDO();
         BeanUtils.copyProperties(dto, s);
@@ -101,15 +101,15 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(SimulationStatusDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         ProfitSimulationDO s = mapper.selectById(dto.getId());
-        if (s == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_a246acf1");
+        if (s == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_a246acf1");
         SimulationStatus from = SimulationStatus.fromCode(s.getStatus());
         SimulationStatus to = SimulationStatus.fromCode(dto.getTargetStatus());
-        if (to == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+        if (to == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         if (from == null || !from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_01c65a70", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         s.setStatus(to.getCode());
@@ -124,12 +124,12 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         ProfitSimulationDO s = mapper.selectById(id);
         if (s == null) return;
         SimulationStatus st = SimulationStatus.fromCode(s.getStatus());
         if (st == SimulationStatus.APPROVED || st == SimulationStatus.ARCHIVED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_feb72f89");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_feb72f89");
         }
         mapper.deleteById(id);
     }
@@ -137,9 +137,9 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     @Override
     @Transactional(readOnly = true)
     public ProfitSimulationDO getById(String id) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         ProfitSimulationDO s = mapper.selectById(id);
-        if (s == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_a246acf1");
+        if (s == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_a246acf1");
         return s;
     }
 

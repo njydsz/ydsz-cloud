@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
@@ -56,7 +56,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     @Transactional(rollbackFor = Exception.class)
     public boolean markRead(String msgId, String userId) {
         if (!StringUtils.hasText(msgId) || !StringUtils.hasText(userId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "消息 ID 和用户 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "消息 ID 和用户 ID 不能为空");
         }
         // 更新消息日志的 receipt_status
         int updated = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLogDO>()
@@ -104,7 +104,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     @Transactional(rollbackFor = Exception.class)
     public boolean markNotificationRead(String notificationId, String userId) {
         if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "通知 ID 和用户 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "通知 ID 和用户 ID 不能为空");
         }
         int updated = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotificationDO>()
                 .eq(MsgNotificationDO::getId, notificationId)

@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -61,7 +61,7 @@ public class ContractServiceImpl implements ContractService {
     public String create(ContractCreateDTO dto) {
         validate(dto);
         if (contractMapper.selectByCode(dto.getContractCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
         }
         ContractDO c = new ContractDO();
         BeanUtils.copyProperties(dto, c);
@@ -96,13 +96,13 @@ public class ContractServiceImpl implements ContractService {
         ContractStatus from = ContractStatus.fromCode(c.getStatus());
         ContractStatus to = ContractStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         contractMapper.updateStatus(c.getId(), to.getCode());
@@ -135,7 +135,7 @@ public class ContractServiceImpl implements ContractService {
     public ContractDO getById(String id) {
         ContractDO c = contractMapper.selectById(id);
         if (c == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         // P0-4: 越权防护 - 非超管只能查看自己创建的合同
         DataScopeHelper.requireOwner(c.getCreatedBy());
@@ -231,29 +231,29 @@ public class ContractServiceImpl implements ContractService {
      */
     private void validate(ContractCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_8d3e1723");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_8d3e1723");
         }
         if (!StringUtils.hasText(dto.getContractName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
         }
         if (!StringUtils.hasText(dto.getCustomerId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_6de1fd36");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_6de1fd36");
         }
         if (!StringUtils.hasText(dto.getContractType())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_fc52e1b0");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_fc52e1b0");
         }
         if (dto.getTotalAmount() == null || dto.getTotalAmount().signum() < 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_8ece143c");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_8ece143c");
         }
         if (!StringUtils.hasText(dto.getOwnerId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_26804acb");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_26804acb");
         }
         if (dto.getEffectiveDate() != null && dto.getExpireDate() != null
                 && dto.getExpireDate().isBefore(dto.getEffectiveDate())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_40094d71");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_40094d71");
         }
     }
 

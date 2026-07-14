@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -53,7 +53,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public String create(WbsTaskCreateDTO dto) {
         validate(dto);
         if (wbsTaskMapper.selectByCode(dto.getTaskCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_aecdf567", dto.getTaskCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_aecdf567", dto.getTaskCode());
         }
         WbsTaskDO t = new WbsTaskDO();
         BeanUtils.copyProperties(dto, t);
@@ -101,13 +101,13 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         WbsTaskStatus from = WbsTaskStatus.fromCode(t.getStatus());
         WbsTaskStatus to = WbsTaskStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2e33226a", t.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_2e33226a", t.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_28f70737", from.getDesc(), to.getDesc());
         }
         wbsTaskMapper.updateStatus(t.getId(), to.getCode());
@@ -136,7 +136,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         WbsTaskDO t = getById(id);
         if (progressPct != null) {
             if (progressPct.signum() < 0 || progressPct.compareTo(new BigDecimal("100")) > 0) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_627bf88e");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_627bf88e");
             }
             t.setProgressPct(progressPct);
         }
@@ -151,7 +151,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public void delete(String id) {
         WbsTaskDO t = getById(id);
         if (WbsTaskStatus.fromCode(t.getStatus()) == WbsTaskStatus.IN_PROGRESS) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_ce5c0a72");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_ce5c0a72");
         }
         wbsTaskMapper.deleteById(id);
         log.info("[WbsTask] 删除任务: id={}", id);
@@ -162,7 +162,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public WbsTaskDO getById(String id) {
         WbsTaskDO t = wbsTaskMapper.selectById(id);
         if (t == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c0d8369f");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_c0d8369f");
         }
         return t;
     }
@@ -283,22 +283,22 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     }
 
     private void validate(WbsTaskCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getTaskCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7839c13b");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_7839c13b");
         }
         if (!StringUtils.hasText(dto.getTaskName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f96f7bb7");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_f96f7bb7");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_779da94d");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_779da94d");
         }
         if (dto.getOwnerId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_26804acb");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_26804acb");
         }
         if (dto.getPlannedStartDate() != null && dto.getPlannedEndDate() != null
                 && dto.getPlannedEndDate().isBefore(dto.getPlannedStartDate())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b81e6502");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_b81e6502");
         }
     }
 }

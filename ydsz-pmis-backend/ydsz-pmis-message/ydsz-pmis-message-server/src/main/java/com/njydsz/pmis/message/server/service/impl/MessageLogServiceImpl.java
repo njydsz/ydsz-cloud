@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.constant.PageConstants;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
@@ -61,11 +61,11 @@ public class MessageLogServiceImpl implements MessageLogService {
     @Override
     public MsgLogDO getById(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "日志 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "日志 ID 不能为空");
         }
         MsgLogDO entity = msgLogMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "日志不存在: " + id);
+            throw new SysException(BaseResultCode.NOT_FOUND, "日志不存在: " + id);
         }
         return entity;
     }
@@ -95,7 +95,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         MsgLogDO entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RETRY)) {
-            throw new SysException(StandardResultCode.BIZ_ERROR,
+            throw new SysException(BaseResultCode.BIZ_ERROR,
                     "非法状态流转: " + current + " -> RETRY");
         }
         entity.setStatus(MessageStatusEnum.RETRY.name());
@@ -111,7 +111,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.DEAD)) {
             // 仅 RETRY 可流转到 DEAD；其他状态强制记录但仍校验，非法抛异常
-            throw new SysException(StandardResultCode.BIZ_ERROR,
+            throw new SysException(BaseResultCode.BIZ_ERROR,
                     "非法状态流转: " + current + " -> DEAD");
         }
         entity.setStatus(MessageStatusEnum.DEAD.name());
@@ -135,7 +135,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         MsgLogDO entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RECALLED)) {
-            throw new SysException(StandardResultCode.BIZ_ERROR,
+            throw new SysException(BaseResultCode.BIZ_ERROR,
                     "非法状态流转: " + current + " -> RECALLED");
         }
         entity.setStatus(MessageStatusEnum.RECALLED.name());
@@ -156,7 +156,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         MsgLogDO entity = getById(logId);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (current != MessageStatusEnum.DEAD) {
-            throw new SysException(StandardResultCode.BIZ_ERROR,
+            throw new SysException(BaseResultCode.BIZ_ERROR,
                     "仅死信可手动重发,当前状态: " + current);
         }
         try (MessageTraceContext ctx = MessageTraceContext.enter(entity.getTraceId())) {
@@ -243,7 +243,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         try {
             return MessageStatusEnum.valueOf(value);
         } catch (Exception e) {
-            throw new SysException(StandardResultCode.BIZ_ERROR, "非法消息状态: " + value);
+            throw new SysException(BaseResultCode.BIZ_ERROR, "非法消息状态: " + value);
         }
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.config.UnsubscribeQueryDTO;
@@ -64,7 +64,7 @@ public class UnsubscribeController {
     @PostMapping("/oneClick")
     public BaseResponse<MsgSubscriptionDO> oneClick(@RequestParam String token) {
         if (token == null || token.isBlank()) {
-            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "退订 token 不能为空");
+            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
         return BaseResponse.ok(unsubscribeService.unsubscribeByToken(token));
     }
@@ -83,7 +83,7 @@ public class UnsubscribeController {
     @GetMapping("/preview")
     public BaseResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
         if (token == null || token.isBlank()) {
-            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "退订 token 不能为空");
+            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
         return BaseResponse.ok(unsubscribeService.previewToken(token));
     }
@@ -119,7 +119,7 @@ public class UnsubscribeController {
         if (userId == null || userId.isBlank()
                 || topicCode == null || topicCode.isBlank()
                 || channel == null || channel.isBlank()) {
-            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         unsubscribeService.resubscribe(userId, topicCode, channel);
         return BaseResponse.ok();

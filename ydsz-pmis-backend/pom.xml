@@ -110,13 +110,13 @@
         <skipEnforcer>false</skipEnforcer>
 
         <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
-             默认开启 prepare-agent + report，check 默认跳过（单测补齐后 CI 启用）
+             项目已移除全部单元测试（2026-07），覆盖率采集与阈值检查均全局禁用。详见 coding-standards.md Section 4
              用法：
                mvn verify                          — 生成各模块 target/site/jacoco 报告
                mvn verify -DskipJacocoCheck=false  — 启用覆盖率阈值检查（CI 集成）
         -->
         <jacoco.version>0.8.13</jacoco.version>
-        <skipJacoco>false</skipJacoco>
+        <skipJacoco>true</skipJacoco>
         <skipJacocoCheck>true</skipJacocoCheck>
         <jacoco.line.coverage>0.60</jacoco.line.coverage>
         <jacoco.branch.coverage>0.50</jacoco.branch.coverage>
@@ -1325,7 +1325,7 @@
                 <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
                      - prepare-agent：注入 JaCoCo runtime agent 到 surefire/failsafe
                      - report：生成 HTML/XML 覆盖率报告到 target/site/jacoco
-                     - check：覆盖率阈值检查，默认跳过，CI 通过 -DskipJacocoCheck=false 启用
+                     - check：覆盖率阈值检查（项目已全局禁用，详见 coding-standards.md Section 4）
                 -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
@@ -1380,7 +1380,7 @@
             </plugins>
         </pluginManagement>
 
-        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + JaCoCo 覆盖率（所有子模块继承生效） -->
+        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则（所有子模块继承生效） JaCoCo 覆盖率已全局禁用（skipJacoco=true），不再在此激活 -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -1394,7 +1394,7 @@
                  报错：Boot Manifest-JAR contains absolute paths in classpath ... 'other' has different root
                  根因：JDK 9+ 默认拒绝 Manifest Class-Path 中的绝对路径
                  方案：通过 -Djdk.net.URLClassPath.disableClassPathURLCheck=true 关闭校验
-                 @{argLine} 占位符确保 JaCoCo prepare-agent 注入的 javaagent 参数不被覆盖
+                 @{argLine} 占位符确保 JaCoCo prepare-agent 注入的 javaagent 参数不被覆盖（JaCoCo 已禁用，保留占位符不影响）
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -1402,11 +1402,6 @@
                 <configuration>
                     <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true @{argLine}</argLine>
                 </configuration>
-            </plugin>
-            <!-- JaCoCo 覆盖率采集（P1-5）：所有子模块自动继承，生成 target/site/jacoco 报告 -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

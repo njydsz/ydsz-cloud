@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
@@ -55,7 +55,7 @@ public class WeightedVoteCountersignStrategy implements CountersignStrategy {
         task.setApproveFinished(finished);
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
-            throw new SysException(StandardResultCode.RESOURCE_CONFLICT,
+            throw new SysException(BaseResultCode.RESOURCE_CONFLICT,
                     "error.workflow.msg_199e8ba1", task.getId());
         }
         archiveService.completeAndArchive(task, dto.getComment());

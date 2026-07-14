@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -60,10 +60,10 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public String apply(ContractChangeDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_08a1df2a");
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.project.msg_08a1df2a");
         }
         ContractChangeDO c = new ContractChangeDO();
         BeanUtils.copyProperties(dto, c);
@@ -85,7 +85,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void submit(String id) {
         ContractChangeDO c = getById(id);
         if (!"DRAFT".equalsIgnoreCase(c.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
         }
         changeMapper.updateStatus(id, "SUBMITTED", null, null);
         log.info("[ContractChange] 提交审批: id={}", id);
@@ -105,7 +105,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void approve(String id, String approverId, String approverName) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
         }
         changeMapper.updateStatus(id, "APPROVED", approverId, approverName);
 
@@ -140,7 +140,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void reject(String id, String approverId, String approverName, String reason) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
         }
         changeMapper.updateStatus(id, "REJECTED", approverId, approverName);
         if (StringUtils.hasText(reason)) {
@@ -163,7 +163,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public ContractChangeDO getById(String id) {
         ContractChangeDO c = changeMapper.selectById(id);
         if (c == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_49023973");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.project.msg_49023973");
         }
         return c;
     }
@@ -213,16 +213,16 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     private void validate(ContractChangeDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getChangeCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_00a4ec00");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_00a4ec00");
         }
         if (!CHANGE_TYPES.contains(dto.getChangeType().toUpperCase())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_b246fa8c", dto.getChangeType());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_b246fa8c", dto.getChangeType());
         }
     }
 }

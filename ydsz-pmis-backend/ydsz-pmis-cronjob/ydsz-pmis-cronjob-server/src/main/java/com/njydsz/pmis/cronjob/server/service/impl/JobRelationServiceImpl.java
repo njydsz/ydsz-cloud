@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
@@ -54,12 +54,12 @@ public class JobRelationServiceImpl implements JobRelationService {
         validateJobExists(childJobId, "后继任务");
         // 校验自依赖
         if (parentJobId.equals(childJobId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_self_ref");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_self_ref");
         }
         // 环检测：添加 parent→child 后是否形成环
         List<JobRelationDO> existing = jobRelationMapper.selectAllRelations();
         if (dagParser.wouldCreateCycle(parentJobId, childJobId, existing)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_cycle",
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_cycle",
                     parentJobId, childJobId);
         }
         JobRelationDO relation = new JobRelationDO();
@@ -76,7 +76,7 @@ public class JobRelationServiceImpl implements JobRelationService {
     public void removeRelation(String relationId) {
         JobRelationDO relation = jobRelationMapper.selectById(relationId);
         if (relation == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_dag_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_dag_not_found");
         }
         jobRelationMapper.deleteById(relationId);
         log.info("[DagRelation] 删除依赖: id={} parent={} child={}",
@@ -103,7 +103,7 @@ public class JobRelationServiceImpl implements JobRelationService {
 
     private void validateJobExists(String jobId, String label) {
         if (jobMapper.selectById(jobId) == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_dag_job_not_found", label, jobId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_dag_job_not_found", label, jobId);
         }
     }
 }

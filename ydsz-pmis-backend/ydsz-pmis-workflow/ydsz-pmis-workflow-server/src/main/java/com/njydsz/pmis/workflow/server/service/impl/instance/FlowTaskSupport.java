@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
@@ -65,7 +65,7 @@ public class FlowTaskSupport {
     public FlowRunTaskDO getTaskOrThrow(String id) {
         FlowRunTaskDO task = taskMapper.selectById(id);
         if (task == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
         }
         return task;
     }

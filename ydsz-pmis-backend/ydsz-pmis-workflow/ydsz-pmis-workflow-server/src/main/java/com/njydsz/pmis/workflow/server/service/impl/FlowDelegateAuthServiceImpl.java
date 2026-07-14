@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
@@ -53,47 +53,47 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(rollbackFor = Exception.class)
     public String create(FlowDelegateAuthDO auth) {
         if (auth == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_fdf18ac3");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_fdf18ac3");
         }
         if (auth.getOwnerUserId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d65b2814");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d65b2814");
         }
         if (auth.getDelegateUserId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_9999d306");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_9999d306");
         }
         if (auth.getOwnerUserId().equals(auth.getDelegateUserId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5b0149dc");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5b0149dc");
         }
         if (auth.getStartTime() == null || auth.getEndTime() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_8a268764");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_8a268764");
         }
         if (!auth.getEndTime().isAfter(auth.getStartTime())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_0e756b4f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_0e756b4f");
         }
         if (!StringUtils.hasText(auth.getScopeType())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_4cfd103d");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_4cfd103d");
         }
         // scope 必填字段校验
         switch (auth.getScopeType()) {
             case "FLOW" -> {
                 if (!StringUtils.hasText(auth.getFlowCode())) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_2c8e3391");
+                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2c8e3391");
                 }
             }
             case "FLOW_NODE" -> {
                 if (!StringUtils.hasText(auth.getFlowCode())
                         || !StringUtils.hasText(auth.getNodeCode())) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(BaseResultCode.BAD_REQUEST,
                             "error.workflow.msg_8722656e");
                 }
             }
             case "ROLE" -> {
                 if (!StringUtils.hasText(auth.getRoleCode())) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_19801c0e");
+                    throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_19801c0e");
                 }
             }
             case "ALL" -> { /* no-op */ }
-            default -> throw new SysException(StandardResultCode.BAD_REQUEST,
+            default -> throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_b0022eba", auth.getScopeType());
         }
 
@@ -132,14 +132,14 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(rollbackFor = Exception.class)
     public void revoke(String authId, String ownerUserId) {
         if (authId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_7804c8f2");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_7804c8f2");
         }
         FlowDelegateAuthDO auth = authMapper.selectById(authId);
         if (auth == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
         }
         if (ownerUserId != null && !ownerUserId.equals(auth.getOwnerUserId())) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_f121ff85");
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_f121ff85");
         }
         int n = authMapper.updateStatus(authId, "REVOKED", LocalDateTime.now());
         log.info("[FlowDelegate] 撤回授权: authId={} owner={} affected={}", authId, auth.getOwnerUserId(), n);
@@ -149,18 +149,18 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(String authId, String status, String operatorId) {
         if (authId == null || !StringUtils.hasText(status)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_40437174");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_40437174");
         }
         if (!"ENABLED".equals(status) && !"DISABLED".equals(status)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_7678ad83");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_7678ad83");
         }
         FlowDelegateAuthDO auth = authMapper.selectById(authId);
         if (auth == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
         }
         // 权限校验：仅 owner 可改
         if (operatorId != null && !operatorId.equals(auth.getOwnerUserId())) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_d6a95488");
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_d6a95488");
         }
         int n = authMapper.updateStatus(authId, status, LocalDateTime.now());
         log.info("[FlowDelegate] 更新授权状态: authId={} status={} operator={} affected={}",

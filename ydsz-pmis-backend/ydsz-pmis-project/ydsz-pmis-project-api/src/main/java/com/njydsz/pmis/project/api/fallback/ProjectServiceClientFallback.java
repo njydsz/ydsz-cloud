@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.project.api.client.ProjectServiceClient;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,17 +29,17 @@ public class ProjectServiceClientFallback implements FallbackFactory<ProjectServ
         return new ProjectServiceClient() {
             @Override
             public BaseResponse<Map<String, Object>> timeEntryAbnormalStat(String initiationId, String month) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<Map<String, Object>> riskPage(int page, int size, String initiationId, String riskLevel) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<Map<String, Object>> evmDashboard(String initiationId) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.finance.domain.dto.ProfitSnapshotDTO;
@@ -41,7 +41,7 @@ public class ProfitServiceImpl implements ProfitService {
     public String generateSnapshot(ProfitSnapshotDTO dto) {
         if (dto == null || dto.getInitiationId() == null
                 || !StringUtils.hasText(dto.getPeriod())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_99e1d335");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_99e1d335");
         }
         ProfitSnapshotDO snap = snapshotMapper.selectByInitiationAndPeriod(
                 dto.getInitiationId(), dto.getPeriod());

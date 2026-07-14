@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
@@ -50,7 +50,7 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
     public String record(OpportunityFollowDTO dto) {
         validate(dto);
         if (opportunityMapper.selectById(dto.getOpportunityId()) == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_69bdeff3");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.project.msg_69bdeff3");
         }
         OpportunityFollowDO f = new OpportunityFollowDO();
         BeanUtils.copyProperties(dto, f);
@@ -90,13 +90,13 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
      */
     private void validate(OpportunityFollowDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (dto.getOpportunityId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
         }
         if (!StringUtils.hasText(dto.getFollowType())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_5b2e099f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_5b2e099f");
         }
     }
 }

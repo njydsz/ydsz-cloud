@@ -19,7 +19,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.core.constant.PageConstants;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -358,24 +358,24 @@ public class MessageServiceImpl implements MessageService {
         // ⑥ 限流 + 频率
         if (!rateLimitService.tryAcquire(buildRateLimitKey(ctx.channel, ctx.bizType), 1)) {
             messageMetrics.recordSend(ctx.channel, "FAILED", 0);
-            throw new SysException(StandardResultCode.RATE_LIMIT, "发送限流，请稍后重试");
+            throw new SysException(BaseResultCode.RATE_LIMIT, "发送限流，请稍后重试");
         }
         if (!rateLimitService.checkSendLimit(ctx.channel, ctx.receiver, ctx.templateCode,
                 TenantContext.getTenantId(), request.getPriority())) {
             messageMetrics.recordSend(ctx.channel, "RATE_LIMITED", 0);
-            throw new SysException(StandardResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
+            throw new SysException(BaseResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
         }
         if (StringUtils.hasText(ctx.receiver)
                 && !rateLimitService.checkFrequency(ctx.receiver, ctx.channel, ctx.bizType)) {
             messageMetrics.recordSend(ctx.channel, "FAILED", 0);
-            throw new SysException(StandardResultCode.RATE_LIMIT, "发送频率超限");
+            throw new SysException(BaseResultCode.RATE_LIMIT, "发送频率超限");
         }
 
         // ⑥-4 P2-20: Sender 配额管理
         String senderId = StringUtils.hasText(ctx.bizType) ? ctx.bizType : SystemConstants.SYSTEM_USER_ID;
         if (!senderQuotaService.checkQuota(senderId, ctx.channel)) {
             messageMetrics.recordSend(ctx.channel, "QUOTA_EXCEEDED", 0);
-            throw new SysException(StandardResultCode.RATE_LIMIT, "发送方配额已用尽: senderId=" + senderId);
+            throw new SysException(BaseResultCode.RATE_LIMIT, "发送方配额已用尽: senderId=" + senderId);
         }
         return ctx;
     }
@@ -1043,7 +1043,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageResult sendTransactionally(MessageRequest request) {
         if (request == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "消息请求不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "消息请求不能为空");
         }
         MessageQueueOperations mqProducer = mqProducerProvider.getIfAvailable();
         if (mqProducer == null) {

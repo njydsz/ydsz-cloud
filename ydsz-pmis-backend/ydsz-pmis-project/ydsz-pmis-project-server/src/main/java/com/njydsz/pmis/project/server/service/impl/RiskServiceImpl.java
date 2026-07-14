@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -46,21 +46,21 @@ public class RiskServiceImpl implements RiskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(RiskCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRiskCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_cad9859b");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_cad9859b");
         }
         if (!StringUtils.hasText(dto.getRiskTitle())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_def770be");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_def770be");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getOwnerId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_26804acb");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_26804acb");
         }
         if (riskMapper.selectByCode(dto.getRiskCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_25ba60bd", dto.getRiskCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_25ba60bd", dto.getRiskCode());
         }
         RiskDO r = new RiskDO();
         BeanUtils.copyProperties(dto, r);
@@ -81,16 +81,16 @@ public class RiskServiceImpl implements RiskService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(RiskStatusDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         RiskDO r = loadByIdDO(dto.getId());
         RiskStatus from = RiskStatus.fromCode(r.getStatus());
         RiskStatus to = RiskStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_95380062", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         riskMapper.updateStatus(dto.getId(), to.getCode());
@@ -105,7 +105,7 @@ public class RiskServiceImpl implements RiskService {
     public void delete(String id) {
         RiskDO r = loadByIdDO(id);
         if (RiskStatus.fromCode(r.getStatus()) == RiskStatus.OCCURRED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_0fa95df6");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_0fa95df6");
         }
         riskMapper.deleteById(id);
     }
@@ -172,7 +172,7 @@ public class RiskServiceImpl implements RiskService {
      */
     private RiskDO loadByIdDO(String id) {
         RiskDO r = riskMapper.selectById(id);
-        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_eed2ed24");
+        if (r == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_eed2ed24");
         return r;
     }
 

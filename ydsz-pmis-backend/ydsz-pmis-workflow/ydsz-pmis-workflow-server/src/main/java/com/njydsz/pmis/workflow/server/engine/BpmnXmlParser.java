@@ -17,7 +17,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
@@ -82,19 +82,19 @@ public class BpmnXmlParser {
      */
     public BpmnModel parse(String bpmnXml) {
         if (bpmnXml == null || bpmnXml.isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_30c8dc03");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_30c8dc03");
         }
         Document doc = parseDocument(bpmnXml);
         Element root = doc.getDocumentElement();
         if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_a2ed268d", root.getLocalName());
         }
 
         // 找 <process> 节点
         Element process = findChild(root, "process");
         if (process == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d7f0848f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d7f0848f");
         }
 
         BpmnModel model = new BpmnModel();
@@ -144,13 +144,13 @@ public class BpmnXmlParser {
 
         // 校验：节点编码唯一
         if (nodeByCode.size() != nodes.size()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d60cd229");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d60cd229");
         }
         // 校验：必须含开始节点
         boolean hasStart = nodes.stream()
                 .anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
         if (!hasStart) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a2f0efff");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a2f0efff");
         }
 
         model.setNodes(nodes);
@@ -189,7 +189,7 @@ public class BpmnXmlParser {
             throw e;
         } catch (Exception e) {
             log.error("[BpmnParser] 解析失败: {}", e.getMessage());
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_3db1015b", e.getMessage());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_3db1015b", e.getMessage());
         }
     }
 
@@ -226,7 +226,7 @@ public class BpmnXmlParser {
         // 解析阶段直接拒绝，强制用户改用 exclusiveGateway / parallelGateway / inclusiveGateway
         String normalized = localName == null ? "" : localName.toLowerCase();
         if ("eventbasedgateway".equals(normalized) || "complexgateway".equals(normalized)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_b1a3f7c2", localName);
         }
         FlowNodeDO node = new FlowNodeDO();

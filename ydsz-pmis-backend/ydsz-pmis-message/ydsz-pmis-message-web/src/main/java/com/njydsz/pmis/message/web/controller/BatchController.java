@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.batch.BatchProgressVO;
@@ -59,7 +59,7 @@ public class BatchController {
     @PostMapping("/send")
     public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {
-            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "批量发送参数为空");
+            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "批量发送参数为空");
         }
         return BaseResponse.ok(batchService.submitBatch(dto));
     }

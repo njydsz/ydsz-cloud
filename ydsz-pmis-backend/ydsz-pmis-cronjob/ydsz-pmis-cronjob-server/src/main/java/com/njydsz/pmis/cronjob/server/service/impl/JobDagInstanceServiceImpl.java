@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.dag.DagInstanceStatus;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
@@ -51,7 +51,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     public JobDagInstanceDO getInstanceById(String instanceId) {
         JobDagInstanceDO instance = jobDagInstanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
+            throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_instance_not_found", instanceId);
         }
         return instance;
@@ -86,7 +86,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
                 DagInstanceStatus.RUNNING.name(), DagInstanceStatus.PAUSED.name());
         if (rows == 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_instance_not_running", instanceId);
         }
         log.info("[JobDagInstance] 暂停 DAG 实例: instanceId={}", instanceId);
@@ -99,7 +99,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
                 DagInstanceStatus.PAUSED.name(), DagInstanceStatus.RUNNING.name());
         if (rows == 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_instance_not_running", instanceId);
         }
         log.info("[JobDagInstance] 恢复 DAG 实例: instanceId={}", instanceId);
@@ -118,7 +118,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
                     DagInstanceStatus.PAUSED.name(), DagInstanceStatus.CANCELED.name());
         }
         if (rows == 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_instance_not_running", instanceId);
         }
         log.info("[JobDagInstance] 取消 DAG 实例: instanceId={}", instanceId);
@@ -141,7 +141,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         // 2. 查询 DAG 定义（通过实例.dagId 关联）
         JobDagDO dag = jobDagMapper.selectById(instance.getDagId());
         if (dag == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
+            throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", instance.getDagId());
         }
 

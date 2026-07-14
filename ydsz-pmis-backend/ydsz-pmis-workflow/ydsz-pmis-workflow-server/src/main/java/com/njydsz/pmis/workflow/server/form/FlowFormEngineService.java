@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.json.YdszJson;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 
 import lombok.RequiredArgsConstructor;
@@ -86,7 +86,7 @@ public class FlowFormEngineService {
                 String fieldKey = entry.getKey();
                 String perm = entry.getValue();
                 if ("HIDDEN".equals(perm) && formData.containsKey(fieldKey)) {
-                    throw new SysException(StandardResultCode.VALIDATION_FAILED,
+                    throw new SysException(BaseResultCode.VALIDATION_FAILED,
                             "字段 " + fieldKey + " 不允许提交");
                 }
             }
@@ -99,7 +99,7 @@ public class FlowFormEngineService {
         List<FlowFormValidationError> errors = formValidator.validate(schema, formData);
         if (!errors.isEmpty()) {
             FlowFormValidationError first = errors.get(0);
-            throw new SysException(StandardResultCode.VALIDATION_FAILED,
+            throw new SysException(BaseResultCode.VALIDATION_FAILED,
                     "表单校验失败: " + first);
         }
     }

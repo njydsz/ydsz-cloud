@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.permission.PermissionFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.PermissionDO;
@@ -149,7 +149,7 @@ public class PermissionServiceImpl implements PermissionService {
     public PermissionDO getById(String id) {
         PermissionDO p = permissionMapper.selectById(id);
         if (p == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_bf562d6f");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.user.msg_bf562d6f");
         }
         return p;
     }
@@ -158,7 +158,7 @@ public class PermissionServiceImpl implements PermissionService {
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
     public String create(PermissionFormDTO dto) {
         if (permissionMapper.selectByCode(dto.getPermCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_7b343d30");
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.user.msg_7b343d30");
         }
         PermissionDO entity = new PermissionDO();
         BeanUtils.copyProperties(dto, entity);
@@ -173,11 +173,11 @@ public class PermissionServiceImpl implements PermissionService {
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
     public void update(PermissionFormDTO dto) {
         if (dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_965c9a30");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_965c9a30");
         }
         PermissionDO exists = permissionMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_bf562d6f");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.user.msg_bf562d6f");
         }
         PermissionDO entity = new PermissionDO();
         BeanUtils.copyProperties(dto, entity);
@@ -191,7 +191,7 @@ public class PermissionServiceImpl implements PermissionService {
         Long childCount = permissionMapper.selectCount(new LambdaQueryWrapper<PermissionDO>()
                 .eq(PermissionDO::getParentId, id));
         if (childCount != null && childCount > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_72018d8a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_72018d8a");
         }
         permissionMapper.deleteById(id);
     }

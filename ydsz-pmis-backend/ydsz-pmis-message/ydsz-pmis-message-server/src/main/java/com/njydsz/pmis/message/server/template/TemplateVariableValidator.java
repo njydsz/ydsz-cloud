@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.json.YdszJson;
 
@@ -104,7 +104,7 @@ public class TemplateVariableValidator {
         }
 
         if (!errors.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors));
         }
     }

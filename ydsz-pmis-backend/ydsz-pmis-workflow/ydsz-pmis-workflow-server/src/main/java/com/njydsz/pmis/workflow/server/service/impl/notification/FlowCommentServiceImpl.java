@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowCommentDO;
@@ -54,17 +54,17 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     @Transactional(rollbackFor = Exception.class)
     public String addComment(FlowCommentCreateDTO dto, String userId, String userName, String tenantId) {
         if (!StringUtils.hasText(userId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a7b8c9d0");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_a7b8c9d0");
         }
         // 回复场景：校验父评论存在且属于同一实例
         if (StringUtils.hasText(dto.getParentCommentId())) {
             FlowCommentDO parent = commentMapper.selectById(dto.getParentCommentId());
             if (parent == null || parent.getDeleted() == 1) {
-                throw new SysException(StandardResultCode.NOT_FOUND,
+                throw new SysException(BaseResultCode.NOT_FOUND,
                         "error.workflow.msg_f2a3b4c5", dto.getParentCommentId());
             }
             if (!parent.getInstanceId().equals(dto.getInstanceId())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(BaseResultCode.BAD_REQUEST,
                         "error.workflow.msg_a3b4c5d6");
             }
         }
@@ -155,7 +155,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
         }
         // 仅评论人本人可删除自己的评论
         if (!comment.getUserId().equals(userId)) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_b4c5d6e7");
+            throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_b4c5d6e7");
         }
         comment.setDeleted(1);
         commentMapper.updateById(comment);

@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
@@ -62,7 +62,7 @@ public class FlowSlaController {
     public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
-            return BaseResponse.failed(StandardResultCode.NOT_FOUND, "任务不存在: " + taskId);
+            return BaseResponse.failed(BaseResultCode.NOT_FOUND, "任务不存在: " + taskId);
         }
         boolean ok = slaService.processOverdue(task);
         return BaseResponse.ok(ok);

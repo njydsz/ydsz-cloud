@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -63,7 +63,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public List<MsgTemplateVersionDO> listVersions(String templateCode) {
         if (!StringUtils.hasText(templateCode)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "模板编码不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码不能为空");
         }
         return versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
                 .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
@@ -126,13 +126,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                 .eq(MsgTemplateVersionDO::getVersion, version)
                 .last("LIMIT 1"));
         if (versionDO == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "版本不存在: " + version);
+            throw new SysException(BaseResultCode.NOT_FOUND, "版本不存在: " + version);
         }
         MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
                 .eq(MsgTemplateDO::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
         if (template == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + templateCode);
+            throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + templateCode);
         }
         template.setContent(versionDO.getContent());
         templateMapper.updateById(template);
@@ -152,19 +152,19 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public String preview(TemplatePreviewDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "预览参数不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "预览参数不能为空");
         }
         String content = dto.getContent();
         if (!StringUtils.hasText(content)) {
             // 从模板加载
             if (!StringUtils.hasText(dto.getTemplateCode())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
             }
             MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
                     .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
+                throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
             }
             content = template.getContent();
         }
@@ -181,10 +181,10 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public MessageResult testSend(TemplateTestSendDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "模板编码不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码不能为空");
         }
         if (!StringUtils.hasText(dto.getTestReceiver())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "测试接收人不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "测试接收人不能为空");
         }
         MessageRequest request = new MessageRequest();
         request.setTemplateCode(dto.getTemplateCode());

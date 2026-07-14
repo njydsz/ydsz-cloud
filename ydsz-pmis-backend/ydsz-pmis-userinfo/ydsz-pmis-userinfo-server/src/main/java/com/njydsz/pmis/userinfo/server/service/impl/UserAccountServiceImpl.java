@@ -21,7 +21,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.constant.CacheConstants;
 import com.njydsz.pmis.common.core.constant.PageConstants;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.pmis.common.redis.service.BloomFilterService;
@@ -134,7 +134,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public UserAccountDO findById(String userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         return u;
     }
@@ -205,11 +205,11 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(rollbackFor = Exception.class)
     public String create(UserAccountDO user, String rawPassword) {
         if (findByUsername(user.getUsername()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_a633b7b9");
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.user.msg_a633b7b9");
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(rawPassword, user.getUsername());
         if (!r.pass()) {
-            throw new SysException(StandardResultCode.PASSWORD_WEAK, r.firstError());
+            throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         // BCrypt 哈希存储在 password 字段，salt 字段留空（BCrypt 自带盐）
         user.setPassword(CryptoUtil.hashPasswordBCrypt(rawPassword));
@@ -233,11 +233,11 @@ public class UserAccountServiceImpl implements UserAccountService {
             allEntries = true)
     public void update(UserAccountDO user) {
         if (user.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_668e9add");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_668e9add");
         }
         UserAccountDO exists = userAccountMapper.selectById(user.getId());
         if (exists == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         // 不可改用户名/密码
         user.setUsername(null);
@@ -253,14 +253,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void delete(String userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         // 禁止删除超级管理员：通过角色判断而非用户名，避免管理员改名后保护失效
         List<RoleDO> roles = roleService.listByUserId(userId);
         boolean isSuperAdmin = roles.stream()
                 .anyMatch(r -> "SUPER_ADMIN".equals(r.getRoleCode()));
         if (isSuperAdmin) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_5b101e42");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_5b101e42");
         }
         userAccountMapper.deleteById(userId);
         userRoleMapper.delete(new LambdaQueryWrapper<UserRoleDO>()
@@ -274,11 +274,11 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void resetPassword(String userId, String newPassword) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(newPassword, u.getUsername());
         if (!r.pass()) {
-            throw new SysException(StandardResultCode.PASSWORD_WEAK, r.firstError());
+            throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         // BCrypt 哈希存储在 password 字段，salt 字段留空（BCrypt 自带盐）
         u.setPassword(CryptoUtil.hashPasswordBCrypt(newPassword));
@@ -297,7 +297,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void toggleStatus(String userId, String status) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         u.setStatus(status);
         userAccountMapper.updateById(u);
@@ -331,25 +331,25 @@ public class UserAccountServiceImpl implements UserAccountService {
     @SuppressWarnings("deprecation")
     public LoginResult login(LoginRequest request) {
         if (request == null || !StringUtils.hasText(request.getUsername())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_0b62b5ce");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_0b62b5ce");
         }
         UserAccountDO u = findByUsername(request.getUsername());
         if (u == null) {
             publishAudit(request, null, LoginStatus.FAIL_USER_NOT_FOUND, "用户不存在", false, null);
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
 
         if (lockPolicy.isLocked(u.getLockedUntil())) {
             publishAudit(request, u.getId(), LoginStatus.FAIL_LOCKED,
                     "账号已锁定至 " + u.getLockedUntil(), false, null);
             long remain = lockPolicy.remainingMinutes(u.getLockedUntil());
-            throw new SysException(StandardResultCode.ACCOUNT_LOCKED,
+            throw new SysException(BaseResultCode.ACCOUNT_LOCKED,
                     "error.user.msg_2e463b61", remain);
         }
 
         if (!"ENABLED".equals(u.getStatus())) {
             publishAudit(request, u.getId(), LoginStatus.FAIL_DISABLED, "账号已停用", false, null);
-            throw new SysException(StandardResultCode.USER_DISABLED);
+            throw new SysException(BaseResultCode.USER_DISABLED);
         }
 
         // 兼容 BCrypt 与历史 MD5：BCrypt 格式用 BCrypt 校验；MD5 校验通过后惰性升级为 BCrypt
@@ -359,7 +359,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 : CryptoUtil.verifyPassword(request.getPassword(), u.getPassword(), u.getSalt());
         if (!passwordOk) {
             handleLoginFailure(u, "密码错误");
-            throw new SysException(StandardResultCode.PASSWORD_INCORRECT);
+            throw new SysException(BaseResultCode.PASSWORD_INCORRECT);
         }
         // 惰性升级：历史 MD5 密码登录成功后升级为 BCrypt（失败不影响登录流程）
         if (!oldHashWasBcrypt) {
@@ -382,7 +382,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             }
             if (!mfaPassed) {
                 publishAudit(request, u.getId(), LoginStatus.FAIL_MFA, "2FA 验证失败", true, false);
-                throw new SysException(StandardResultCode.MFA_INVALID);
+                throw new SysException(BaseResultCode.MFA_INVALID);
             }
         }
 
@@ -425,7 +425,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void changePassword(String userId, String oldPassword, String newPassword) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         // 兼容 BCrypt 与历史 MD5：BCrypt 格式用 BCrypt 校验，否则用 MD5 校验
         boolean oldHashWasBcrypt = CryptoUtil.isBCryptFormat(u.getPassword());
@@ -433,11 +433,11 @@ public class UserAccountServiceImpl implements UserAccountService {
                 ? CryptoUtil.verifyPasswordBCrypt(oldPassword, u.getPassword())
                 : CryptoUtil.verifyPassword(oldPassword, u.getPassword(), u.getSalt());
         if (!oldPasswordOk) {
-            throw new SysException(StandardResultCode.PASSWORD_INCORRECT, "error.user.msg_25562cd3");
+            throw new SysException(BaseResultCode.PASSWORD_INCORRECT, "error.user.msg_25562cd3");
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(newPassword, u.getUsername());
         if (!r.pass()) {
-            throw new SysException(StandardResultCode.PASSWORD_WEAK, r.firstError());
+            throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         if (PasswordPolicy.isExpired(u.getLastPwdChangeAt(), PWD_EXPIRE_DAYS) && u.getLastPwdChangeAt() != null) {
             // 强制改密场景下直接放行

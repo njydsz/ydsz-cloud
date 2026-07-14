@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -60,7 +60,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     @Transactional(rollbackFor = Exception.class)
     public CustomerCreditDO assess(CreditAssessmentDTO dto) {
         if (dto == null || dto.getCustomerId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "客户 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "客户 ID 不能为空");
         }
         // 1) 累计合同/开票/回款金额
         List<InvoiceDO> invoices = invoiceMapper.selectByCustomer(dto.getCustomerId());
@@ -155,7 +155,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     @Transactional(readOnly = true)
     public Map<String, Object> profile(String customerId) {
         if (customerId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "客户 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "客户 ID 不能为空");
         }
         CustomerCreditDO credit = getByCustomer(customerId);
         Map<String, Object> p = new HashMap<>();

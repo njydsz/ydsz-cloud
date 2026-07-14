@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
@@ -94,7 +94,7 @@ public class MessageController {
     @PostMapping("/sendAsync")
     public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
-            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "消息请求为空");
+            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "消息请求为空");
         }
         // P0-3: 先落库 PENDING 再投递 MQ，保证消息不丢失
         MessageResult result = messageService.sendAsync(request);
@@ -147,7 +147,7 @@ public class MessageController {
     public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {
         if (requests == null || requests.isEmpty()) {
-            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "消息列表为空");
+            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "消息列表为空");
         }
         return BaseResponse.ok(messageService.batchSend(requests, batchId));
     }

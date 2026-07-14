@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -53,7 +53,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
     public String create(ContractTemplateCreateDTO dto) {
         validate(dto);
         if (templateMapper.selectByCode(dto.getTemplateCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY,
+            throw new SysException(BaseResultCode.DUPLICATE_KEY,
                     "error.project.msg_ba4811d9", dto.getTemplateCode());
         }
         ContractTemplateDO t = new ContractTemplateDO();
@@ -81,13 +81,13 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         ContractTemplateStatus from = ContractTemplateStatus.fromCode(t.getStatus());
         ContractTemplateStatus to = ContractTemplateStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", t.getStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_2e33226a", t.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         // PUBLISHED -> DRAFT 视为重新编辑（仍允许）
@@ -107,7 +107,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         ContractTemplateDO t = getById(id);
         ContractTemplateStatus st = ContractTemplateStatus.fromCode(t.getStatus());
         if (st == ContractTemplateStatus.PUBLISHED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_0b4fd49f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_0b4fd49f");
         }
         templateMapper.deleteById(id);
         log.info("[ContractTemplate] 删除模板: id={}", id);
@@ -125,7 +125,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
     public ContractTemplateDO getById(String id) {
         ContractTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_e8185aa1");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.project.msg_e8185aa1");
         }
         return t;
     }
@@ -181,18 +181,18 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      */
     private void validate(ContractTemplateCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (ContractTemplateType.fromCode(dto.getContractType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d8bb22ac", dto.getContractType());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_d8bb22ac", dto.getContractType());
         }
         if (dto.getDefaultPaymentDays() != null && dto.getDefaultPaymentDays() < 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_435fcf5a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_435fcf5a");
         }
         if (dto.getDefaultPenaltyRate() != null) {
             BigDecimal r = dto.getDefaultPenaltyRate();
             if (r.signum() < 0 || r.compareTo(BigDecimal.ONE) > 0) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_200cb0f7");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "error.project.msg_200cb0f7");
             }
         }
     }

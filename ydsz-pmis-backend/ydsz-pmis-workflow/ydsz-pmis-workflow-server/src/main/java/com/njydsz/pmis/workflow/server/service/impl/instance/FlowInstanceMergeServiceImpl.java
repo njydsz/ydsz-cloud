@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
@@ -48,7 +48,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     @Transactional(rollbackFor = Exception.class)
     public String mergeInstances(List<String> instanceIds, String operatorId, String tenantId) {
         if (instanceIds == null || instanceIds.size() < 2) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5a6b7c8d");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5a6b7c8d");
         }
         String tid = tenantId != null ? tenantId : "1";
 
@@ -57,15 +57,15 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         for (String instanceId : instanceIds) {
             FlowInstanceDO instance = instanceMapper.selectById(instanceId);
             if (instance == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_9e8f0a1b", instanceId);
+                throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_9e8f0a1b", instanceId);
             }
             if (!"RUNNING".equals(instance.getFlowStatus())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_2b3c4d5e");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2b3c4d5e");
             }
             flowCodes.add(instance.getFlowCode());
         }
         if (flowCodes.size() > 1) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_6c7d8e9f");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_6c7d8e9f");
         }
 
         // 生成合并组 ID

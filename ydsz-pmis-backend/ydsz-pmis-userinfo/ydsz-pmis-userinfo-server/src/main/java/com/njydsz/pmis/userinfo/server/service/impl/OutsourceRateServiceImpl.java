@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateUpdateDTO;
@@ -82,29 +82,29 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
     @Transactional(rollbackFor = Exception.class)
     public void update(String id, OutsourceRateUpdateDTO dto) {
         if (id == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "外包职级费率 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "外包职级费率 ID 不能为空");
         }
         OutsourceRateDO exists = outsourceRateMapper.selectById(id);
         if (exists == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "外包职级费率不存在: " + id);
+            throw new SysException(BaseResultCode.NOT_FOUND, "外包职级费率不存在: " + id);
         }
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "外包职级费率参数不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "外包职级费率参数不能为空");
         }
         if (dto.getMonthlySalary() != null && dto.getMonthlySalary().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "月度薪资必须大于 0");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "月度薪资必须大于 0");
         }
         if (dto.getDailyRate() != null && dto.getDailyRate().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "人天单价必须大于 0");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "人天单价必须大于 0");
         }
         if (StringUtils.hasText(dto.getLevelSegment()) && !VALID_SEGMENTS.contains(dto.getLevelSegment())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "级别段位非法: " + dto.getLevelSegment());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "级别段位非法: " + dto.getLevelSegment());
         }
         // 日期校验
         LocalDate effective = dto.getEffectiveDate() != null ? dto.getEffectiveDate() : exists.getEffectiveDate();
         LocalDate expire = dto.getExpireDate() != null ? dto.getExpireDate() : exists.getExpireDate();
         if (expire != null && expire.isBefore(effective)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
         }
         // rate_code + version 唯一性校验（排除自身）
         String code = dto.getRateCode() != null ? dto.getRateCode() : exists.getRateCode();
@@ -114,7 +114,7 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
                 .eq(OutsourceRateDO::getVersion, ver)
                 .ne(OutsourceRateDO::getId, id));
         if (dup != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "外包级别编码已存在: " + code);
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "外包级别编码已存在: " + code);
         }
         OutsourceRateDO entity = new OutsourceRateDO();
         BeanUtils.copyProperties(dto, entity);
@@ -147,10 +147,10 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
         if (id == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "外包职级费率 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "外包职级费率 ID 不能为空");
         }
         if (outsourceRateMapper.selectById(id) == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "外包职级费率不存在: " + id);
+            throw new SysException(BaseResultCode.NOT_FOUND, "外包职级费率不存在: " + id);
         }
         outsourceRateMapper.deleteById(id);
         log.info("[OutsourceRate] 删除外包费率: id={}", id);
@@ -161,7 +161,7 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
     public OutsourceRateDO getById(String id) {
         OutsourceRateDO rate = outsourceRateMapper.selectById(id);
         if (rate == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "外包职级费率不存在: " + id);
+            throw new SysException(BaseResultCode.NOT_FOUND, "外包职级费率不存在: " + id);
         }
         return rate;
     }
@@ -218,7 +218,7 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
      */
     private BigDecimal calculateTotalCost(BigDecimal monthlySalary, BigDecimal travelReimbursement, BigDecimal travelAllowance) {
         if (monthlySalary == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "月度薪资不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "月度薪资不能为空");
         }
         BigDecimal reimbursement = travelReimbursement != null ? travelReimbursement : BigDecimal.ZERO;
         BigDecimal allowance = travelAllowance != null ? travelAllowance : BigDecimal.ZERO;
@@ -232,24 +232,24 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
      */
     private void validateCreate(OutsourceRateCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "外包职级费率参数不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "外包职级费率参数不能为空");
         }
         if (!StringUtils.hasText(dto.getRateCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "外包级别编码不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "外包级别编码不能为空");
         }
         if (!StringUtils.hasText(dto.getRateName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "外包级别名称不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "外包级别名称不能为空");
         }
         // monthlySalary 由 dailyRate × monthlyDays 服务端自动计算（见 create 方法），不在 create 入参校验
         if (dto.getDailyRate() == null || dto.getDailyRate().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "人天单价必须大于 0");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "人天单价必须大于 0");
         }
         validateSegment(dto.getLevelSegment());
         if (dto.getEffectiveDate() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "生效日期不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "生效日期不能为空");
         }
         if (dto.getExpireDate() != null && dto.getExpireDate().isBefore(dto.getEffectiveDate())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
         }
         // rate_code + version 唯一性校验
         Integer version = dto.getVersion() != null ? dto.getVersion() : DEFAULT_VERSION;
@@ -257,7 +257,7 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
                 .eq(OutsourceRateDO::getRateCode, dto.getRateCode())
                 .eq(OutsourceRateDO::getVersion, version));
         if (dup != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "外包级别编码已存在: " + dto.getRateCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "外包级别编码已存在: " + dto.getRateCode());
         }
     }
 
@@ -268,7 +268,7 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
      */
     private void validateSegment(String segment) {
         if (!StringUtils.hasText(segment) || !VALID_SEGMENTS.contains(segment)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "级别段位非法: " + segment);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "级别段位非法: " + segment);
         }
     }
 }

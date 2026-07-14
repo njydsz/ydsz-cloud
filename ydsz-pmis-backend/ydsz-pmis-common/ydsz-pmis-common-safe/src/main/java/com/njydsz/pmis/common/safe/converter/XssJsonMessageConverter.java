@@ -36,7 +36,7 @@ import com.njydsz.pmis.common.safe.xss.EscapeUtils;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ *
  * @see YdszJsonHttpMessageConverter
  * @see EscapeUtils
  */
@@ -50,14 +50,6 @@ public class XssJsonMessageConverter extends YdszJsonHttpMessageConverter implem
     private static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 10;
 
     /**
-     * 支持的媒体类型列表
-     */
-    private static final List<MediaType> SUPPORTED_MEDIA_TYPES = Arrays.asList(
-            MediaType.APPLICATION_JSON,
-            new MediaType("application", "*+json")
-    );
-
-    /**
      * 构造方法
      *
      * <p>使用默认配置创建 XSS 防护的消息转换器。
@@ -67,49 +59,26 @@ public class XssJsonMessageConverter extends YdszJsonHttpMessageConverter implem
     }
 
     /**
-     * 构造方法
-     *
-     * <p>使用指定的 ObjectMapper 创建 XSS 防护的消息转换器。
-     *
-     * @param objectMapper 待使用的 ObjectMapper
-     */
-        super(objectMapper);
-    }
-
-    /**
-     * 重写支持的媒体类型
-     *
-     * <p>返回此转换器支持的媒体类型列表：application/json 和 application/*+json
-     *
-     * @return 支持的媒体类型列表
-     */
-    @Override
-    public List<MediaType> getSupportedMediaTypes() {
-        return SUPPORTED_MEDIA_TYPES;
-    }
-
-    /**
      * 读取并反序列化 JSON 请求体
      *
      * <p>重写父类方法，在反序列化前对 JSON 字符串值进行 XSS 过滤。
      * 使用 {@link EscapeUtils#cleanJsonValue} 进行流式 JSON 解析和清洗，
      * 确保仅清洗字符串值，不破坏 JSON 结构。
      *
-     * @param type          目标类型
-     * @param contextClass  上下文类
+     * @param clazz         目标类型
      * @param inputMessage  HTTP 输入消息
      * @return 反序列化后的对象
      * @throws IOException                     IO异常
      * @throws HttpMessageNotReadableException 消息不可读异常
      */
     @Override
-    public Object read(Type type, Class<?> contextClass, HttpInputMessage inputMessage)
+    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
         byte[] originalBytes = inputMessage.getBody().readAllBytes();
 
         if (originalBytes == null || originalBytes.length == 0) {
             HttpInputMessage emptyInput = new XssByteArrayInputMessage(new byte[0], inputMessage.getHeaders());
-            return super.read(type, contextClass, emptyInput);
+            return super.readInternal(clazz, emptyInput);
         }
 
         String originalJson = new String(originalBytes, StandardCharsets.UTF_8);
@@ -121,16 +90,7 @@ public class XssJsonMessageConverter extends YdszJsonHttpMessageConverter implem
 
         byte[] cleanedBytes = cleanedJson.getBytes(StandardCharsets.UTF_8);
         HttpInputMessage cleanedInput = new XssByteArrayInputMessage(cleanedBytes, inputMessage.getHeaders());
-        return super.read(type, contextClass, cleanedInput);
-    }
-
-    /**
-     * 序列化对象为 JSON 响应体（不修改）
-     */
-    @Override
-    protected void writeInternal(Object object, HttpOutputMessage outputMessage)
-            throws IOException, HttpMessageNotReadableException {
-        super.writeInternal(object, outputMessage);
+        return super.readInternal(clazz, cleanedInput);
     }
 
     @Override

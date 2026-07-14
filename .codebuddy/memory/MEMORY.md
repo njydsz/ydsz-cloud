@@ -80,3 +80,10 @@
 - **规则文件**：`.trae/rules/prefer-python-over-powershell.md`（`alwaysApply: true`）。
 - **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 3）。
 - **新脚本约束**：所有新增脚本工具（`deploy/scripts/`、`scripts/`）默认使用 Python 实现。**既有 `.ps1` 脚本（如 `check-bom.ps1`、`strip-bom.ps1`、`build-images.ps1` 等）逐步迁移到 `.py`**，迁移完成前可保留作为 Windows 兼容入口；即便在例外场景下，所有涉及文件读写、文本处理的操作也必须通过 Python 包装执行。
+
+### 忽略单元测试覆盖率检查
+- **规则**：PMIS 项目全局禁用 JaCoCo 单元测试覆盖率采集和阈值检查。项目已移除全部单元测试代码（2026-07），覆盖率检查不再适用。
+- **配置**：`ydsz-pmis-backend/pom.xml` 中 `<skipJacoco>true</skipJacoco>` + `<skipJacocoCheck>true</skipJacocoCheck>`，并从 `<build><plugins>` 中移除 `jacoco-maven-plugin` 声明。
+- **临时启用**：`mvn verify -DskipJacoco=false -DskipTests=false` 可临时生成覆盖率报告。
+- **CI 影响**：CI 流水线仅执行 `mvn compile -DskipTests`，不涉及 verify 阶段，JaCoCo 禁用对 CI 无影响。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 4）。

@@ -34,7 +34,7 @@ package com.njydsz.pmis.common.core.response;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @see StandardResultCode
+ * @see BaseResultCode
  * @see BaseResponse#error(ResultCode)
  */
 public interface ResultCode {

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertLogDO;
@@ -53,7 +53,7 @@ public class AlertServiceImpl implements AlertService {
     public void updateRule(String id, AlertRuleSaveDTO dto) {
         JobAlertRuleDO exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
         validateRuleConstraints(dto);
         applyDtoToEntity(dto, exists);
@@ -66,7 +66,7 @@ public class AlertServiceImpl implements AlertService {
     public void deleteRule(String id) {
         JobAlertRuleDO exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
         jobAlertRuleMapper.deleteById(id);
         log.info("[Alert] 删除告警规则: ruleId={} ruleName={}", id, exists.getRuleName());
@@ -76,7 +76,7 @@ public class AlertServiceImpl implements AlertService {
     public JobAlertRuleDO getRuleById(String id) {
         JobAlertRuleDO rule = jobAlertRuleMapper.selectById(id);
         if (rule == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
         return rule;
     }
@@ -90,11 +90,11 @@ public class AlertServiceImpl implements AlertService {
     @Transactional(rollbackFor = Exception.class)
     public void toggleRule(String id, Integer enabled) {
         if (enabled == null || (enabled != 0 && enabled != 1)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_alert_invalid_enabled");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_invalid_enabled");
         }
         JobAlertRuleDO exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
+            throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
         exists.setEnabled(enabled);
         jobAlertRuleMapper.updateById(exists);
@@ -122,14 +122,14 @@ public class AlertServiceImpl implements AlertService {
     private void validateRuleConstraints(AlertRuleSaveDTO dto) {
         AlertType alertType = AlertType.parse(dto.getAlertType());
         if (alertType == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_alert_invalid_type");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_invalid_type");
         }
         if (alertType.requiresThreshold() && dto.getThreshold() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_alert_threshold_required",
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_threshold_required",
                     dto.getAlertType());
         }
         if (alertType.requiresTimeWindow() && dto.getTimeWindowMinutes() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_alert_window_required",
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_window_required",
                     dto.getAlertType());
         }
     }

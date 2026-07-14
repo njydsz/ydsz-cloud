@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
 import com.njydsz.pmis.literule.infra.mapper.DecisionTableMapper;
@@ -44,7 +44,7 @@ public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
     @Override
     public List<Map<String, Object>> evaluate(String tableCode, Map<String, Object> facts, String tenantId) {
         if (tableCode == null || tableCode.isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "决策表编码不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "决策表编码不能为空");
         }
         DecisionTableDO table = loadTable(tableCode, tenantId);
         log.info("[DMN] 评估决策表: tableCode={}, tenantId={}, factsKeys={}",
@@ -72,7 +72,7 @@ public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
         }
         List<DecisionTableDO> tables = decisionTableMapper.selectList(wrapper);
         if (tables == null || tables.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "决策表不存在或未启用: " + tableCode);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "决策表不存在或未启用: " + tableCode);
         }
         return tables.get(0);
     }

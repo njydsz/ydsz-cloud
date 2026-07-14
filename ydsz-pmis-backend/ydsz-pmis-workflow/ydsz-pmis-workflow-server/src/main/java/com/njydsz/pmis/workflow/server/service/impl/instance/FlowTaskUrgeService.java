@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
@@ -55,7 +55,7 @@ public class FlowTaskUrgeService {
     public List<String> urge(String instanceId, String operatorId, String comment) {
         if (operatorId != null && instanceId != null
                 && !urgeLimiter.tryAcquire(operatorId, Long.parseLong(instanceId), "INSTANCE")) {
-            throw new SysException(StandardResultCode.RATE_LIMIT, "error.workflow.msg_75474a57");
+            throw new SysException(BaseResultCode.RATE_LIMIT, "error.workflow.msg_75474a57");
         }
         List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         List<String> urged = new ArrayList<>();
@@ -81,7 +81,7 @@ public class FlowTaskUrgeService {
         if (operatorId != null && instanceId != null) {
             String nodeTarget = instanceId + ":" + nodeCode;
             if (!urgeLimiter.tryAcquire(operatorId, nodeTarget.hashCode() & Long.MAX_VALUE, "NODE")) {
-                throw new SysException(StandardResultCode.RATE_LIMIT, "error.workflow.msg_75474a57");
+                throw new SysException(BaseResultCode.RATE_LIMIT, "error.workflow.msg_75474a57");
             }
         }
         List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByNode(instanceId, nodeCode);

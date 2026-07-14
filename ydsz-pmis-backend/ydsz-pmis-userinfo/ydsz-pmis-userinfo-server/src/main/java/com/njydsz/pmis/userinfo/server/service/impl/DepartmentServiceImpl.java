@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
@@ -80,7 +80,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public DepartmentDO getById(String id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {
-            throw new SysException(StandardResultCode.DEPARTMENT_NOT_FOUND);
+            throw new SysException(BaseResultCode.DEPARTMENT_NOT_FOUND);
         }
         return d;
     }
@@ -92,14 +92,14 @@ public class DepartmentServiceImpl implements DepartmentService {
         // 编码唯一
         DepartmentDO exists = departmentMapper.selectByCode(dto.getDeptCode());
         if (exists != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_58b44529", dto.getDeptCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.user.msg_58b44529", dto.getDeptCode());
         }
         // 父部门校验
         String parentId = dto.getParentId() == null ? "0" : dto.getParentId();
         if (!"0".equals(parentId)) {
             DepartmentDO parent = departmentMapper.selectById(parentId);
             if (parent == null) {
-                throw new SysException(StandardResultCode.DEPARTMENT_NOT_FOUND, "error.user.msg_b2cadf60");
+                throw new SysException(BaseResultCode.DEPARTMENT_NOT_FOUND, "error.user.msg_b2cadf60");
             }
         }
         DepartmentDO entity = new DepartmentDO();
@@ -125,15 +125,15 @@ public class DepartmentServiceImpl implements DepartmentService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(DepartmentFormDTO dto) {
         if (dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_c04220b1");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_c04220b1");
         }
         DepartmentDO exists = departmentMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new SysException(StandardResultCode.DEPARTMENT_NOT_FOUND);
+            throw new SysException(BaseResultCode.DEPARTMENT_NOT_FOUND);
         }
         // 不允许将父部门改为自身或子部门
         if (dto.getParentId() != null && Objects.equals(dto.getParentId(), dto.getId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_abd06050");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_abd06050");
         }
         DepartmentDO entity = new DepartmentDO();
         BeanUtils.copyProperties(dto, entity);
@@ -146,12 +146,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void delete(String id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {
-            throw new SysException(StandardResultCode.DEPARTMENT_NOT_FOUND);
+            throw new SysException(BaseResultCode.DEPARTMENT_NOT_FOUND);
         }
         // 子部门校验
         List<DepartmentDO> children = departmentMapper.selectByParentId(id);
         if (!children.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_6b5e31bd");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.user.msg_6b5e31bd");
         }
         departmentMapper.deleteById(id);
     }

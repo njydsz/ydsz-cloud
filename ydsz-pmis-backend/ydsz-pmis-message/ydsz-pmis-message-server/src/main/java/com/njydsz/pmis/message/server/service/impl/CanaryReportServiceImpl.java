@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.message.domain.dto.canary.CanaryReportVO;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
@@ -47,7 +47,7 @@ public class CanaryReportServiceImpl implements CanaryReportService {
     @Override
     public CanaryReportVO getReport(String canaryKey, LocalDateTime start, LocalDateTime end) {
         if (!StringUtils.hasText(canaryKey)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "灰度键不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "灰度键不能为空");
         }
         LocalDateTime[] range = normalizeRange(start, end);
         LocalDateTime actualStart = range[0];

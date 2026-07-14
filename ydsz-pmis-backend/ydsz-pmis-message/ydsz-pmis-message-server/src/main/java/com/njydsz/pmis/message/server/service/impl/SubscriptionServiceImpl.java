@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.config.SubscriptionUpsertDTO;
@@ -48,7 +48,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public MsgSubscriptionDO upsert(SubscriptionUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId())
                 || !StringUtils.hasText(dto.getTopicCode()) || !StringUtils.hasText(dto.getChannel())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getUserId, dto.getUserId())
@@ -177,7 +177,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public MsgSubscriptionDO unsubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getUserId, userId)

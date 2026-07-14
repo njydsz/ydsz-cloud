@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -186,7 +186,7 @@ public class FeishuChannel implements MessageChannel {
         if (StringUtils.hasText(secret)) {
             Map<String, String> sign = appendSign(secret);
             if (sign == null) {
-                throw new SysException(StandardResultCode.INTERNAL_ERROR, "飞书加签失败,请检查 secret 配置");
+                throw new SysException(BaseResultCode.INTERNAL_ERROR, "飞书加签失败,请检查 secret 配置");
             }
             payload.put("timestamp", sign.get("timestamp"));
             payload.put("sign", sign.get("sign"));

@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.strategy;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
@@ -44,7 +44,7 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
         if (updated == 0) {
             // 乐观锁冲突，抛异常由调用方处理
             throw new SysException(
-                    StandardResultCode.RESOURCE_CONFLICT,
+                    BaseResultCode.RESOURCE_CONFLICT,
                     "error.workflow.msg_199e8ba1", task.getId());
         }
         archiveService.completeAndArchive(task, dto.getComment());

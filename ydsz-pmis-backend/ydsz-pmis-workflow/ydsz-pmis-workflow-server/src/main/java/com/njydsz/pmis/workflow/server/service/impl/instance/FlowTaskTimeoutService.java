@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.FlowTaskStatus;
@@ -56,7 +56,7 @@ public class FlowTaskTimeoutService {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_ecc09732", status);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ecc09732", status);
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = task.getCreatedAt() == null
@@ -91,7 +91,7 @@ public class FlowTaskTimeoutService {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_d0e1f2a3", status);
         }
         task.setTaskStatus(FlowTaskStatus.SUSPENDED.name());
@@ -112,7 +112,7 @@ public class FlowTaskTimeoutService {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_e1f2a3b4", status);
         }
         task.setTaskStatus(FlowTaskStatus.PENDING.name());

@@ -176,7 +176,7 @@ public class SafeConfiguration {
      * 仅在 mode=converter 时注册（与 Filter 和 Advice 模式互斥）。
      *
      * <p>过滤器通过 {@link HttpMessageConverters} 注册到 Spring MVC 的消息转换器链中，
-     * 替换默认的 MappingJackson2HttpMessageConverter，在反序列化前完成 XSS 清洗。
+     * 替换默认的 YdszJsonHttpMessageConverter，在反序列化前完成 XSS 清洗。
      *
      * @param properties XSS 配置属性
      * @return XSS JSON 消息转换器 Bean

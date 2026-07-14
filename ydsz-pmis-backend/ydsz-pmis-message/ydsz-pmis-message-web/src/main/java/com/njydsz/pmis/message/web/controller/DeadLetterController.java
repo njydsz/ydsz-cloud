@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
@@ -78,7 +78,7 @@ public class DeadLetterController {
     @PostMapping("/{logId}/resend")
     public BaseResponse<Void> resend(@PathVariable String logId) {
         if (logId == null || logId.isBlank()) {
-            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
+            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
         }
         messageLogService.resendDead(logId);
         return BaseResponse.ok();

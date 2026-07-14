@@ -8,7 +8,7 @@ import java.util.Map;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
@@ -89,7 +89,7 @@ public class BudgetGuard {
                 initiationId, bizType, delta, budget, used, purchaseUsed, expenseUsed, allocatedUsed, afterUsed, ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
 
         if (afterUsed.compareTo(budget) > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     String.format("[预算强管控] 项目[%s] 累计 %s 元已超出预算 %s 元（采购 %s + 费用 %s + 已归集 %s + 本次 %s）",
                             snap.get("projectCode"), afterUsed.toPlainString(), budget.toPlainString(),
                             purchaseUsed.toPlainString(), expenseUsed.toPlainString(),

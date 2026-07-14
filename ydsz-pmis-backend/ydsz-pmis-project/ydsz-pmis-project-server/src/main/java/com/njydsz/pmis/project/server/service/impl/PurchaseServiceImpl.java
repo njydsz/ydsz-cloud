@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -44,21 +44,21 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(PurchaseCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getPurchaseCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_5e907df2");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_5e907df2");
         }
         if (!StringUtils.hasText(dto.getItemName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f93c80f1");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_f93c80f1");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getApplicantId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
         }
         if (purchaseMapper.selectByCode(dto.getPurchaseCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_126ca992", dto.getPurchaseCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.execution.msg_126ca992", dto.getPurchaseCode());
         }
         PurchaseDO p = new PurchaseDO();
         BeanUtils.copyProperties(dto, p);
@@ -86,16 +86,16 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(ApprovalDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         PurchaseDO p = getById(dto.getId());
         ApprovalStatus from = ApprovalStatus.fromCode(p.getStatus());
         ApprovalStatus to = ApprovalStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.execution.msg_8d2ee457", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         purchaseMapper.updateStatus(dto.getId(), to.getCode(),
@@ -109,7 +109,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         PurchaseDO p = getById(id);
         ApprovalStatus s = ApprovalStatus.fromCode(p.getStatus());
         if (s == ApprovalStatus.APPROVED || s == ApprovalStatus.PAID) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_306554e9");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "error.execution.msg_306554e9");
         }
         purchaseMapper.deleteById(id);
     }
@@ -118,7 +118,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Transactional(readOnly = true)
     public PurchaseDO getById(String id) {
         PurchaseDO p = purchaseMapper.selectById(id);
-        if (p == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_df942bcd");
+        if (p == null) throw new SysException(BaseResultCode.NOT_FOUND, "error.execution.msg_df942bcd");
         return p;
     }
 

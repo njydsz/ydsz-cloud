@@ -31,7 +31,7 @@ import org.springframework.http.HttpStatus;
  * @see ResultCode
  * @see BaseResponse#error(ResultCode)
  */
-public enum StandardResultCode implements ResultCode {
+public enum BaseResultCode implements ResultCode {
 
     // ==================== 成功 ====================
     SUCCESS("A00000", "ok"),
@@ -114,7 +114,7 @@ public enum StandardResultCode implements ResultCode {
     private final String code;
     private final String msg;
 
-    StandardResultCode(String code, String msg) {
+    BaseResultCode(String code, String msg) {
         this.code = code;
         this.msg = msg;
     }

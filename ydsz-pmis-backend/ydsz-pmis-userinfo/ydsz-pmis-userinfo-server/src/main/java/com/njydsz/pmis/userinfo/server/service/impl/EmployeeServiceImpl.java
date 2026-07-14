@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -68,7 +68,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional(rollbackFor = Exception.class)
     public String create(EmployeeCreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "员工创建表单不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "员工创建表单不能为空");
         }
         // 雇佣类型默认 FULL_TIME
         String employeeType = StringUtils.hasText(dto.getEmployeeType())
@@ -78,7 +78,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         // empCode 唯一性校验（排除已删除）
         if (employeeMapper.selectByEmpCode(dto.getEmpCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "员工编码已存在: " + dto.getEmpCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "员工编码已存在: " + dto.getEmpCode());
         }
 
         EmployeeDO entity = new EmployeeDO();
@@ -107,14 +107,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional(rollbackFor = Exception.class)
     public void update(String id, EmployeeUpdateDTO dto) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "员工 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "员工 ID 不能为空");
         }
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "员工更新表单不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "员工更新表单不能为空");
         }
         EmployeeDO existing = employeeMapper.selectById(id);
         if (existing == null) {
-            throw new SysException(StandardResultCode.EMPLOYEE_NOT_FOUND);
+            throw new SysException(BaseResultCode.EMPLOYEE_NOT_FOUND);
         }
 
         // 雇佣类型：传入则校验，未传入沿用原值
@@ -126,7 +126,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // empCode 唯一性校验（排除自身与已删除）
         EmployeeDO sameCode = employeeMapper.selectByEmpCode(dto.getEmpCode());
         if (sameCode != null && !sameCode.getId().equals(id)) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "员工编码已存在: " + dto.getEmpCode());
+            throw new SysException(BaseResultCode.DUPLICATE_KEY, "员工编码已存在: " + dto.getEmpCode());
         }
 
         // 在职状态流转校验
@@ -134,7 +134,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 && StringUtils.hasText(existing.getWorkStatus())
                 && !dto.getWorkStatus().equals(existing.getWorkStatus())) {
             if (!canWorkStatusTransit(existing.getWorkStatus(), dto.getWorkStatus())) {
-                throw new SysException(StandardResultCode.BIZ_ERROR,
+                throw new SysException(BaseResultCode.BIZ_ERROR,
                         "在职状态不允许从 " + existing.getWorkStatus() + " 流转到 " + dto.getWorkStatus());
             }
         }
@@ -158,11 +158,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "员工 ID 不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "员工 ID 不能为空");
         }
         EmployeeDO existing = employeeMapper.selectById(id);
         if (existing == null) {
-            throw new SysException(StandardResultCode.EMPLOYEE_NOT_FOUND);
+            throw new SysException(BaseResultCode.EMPLOYEE_NOT_FOUND);
         }
         employeeMapper.deleteById(id);
         log.info("[Employee] 删除员工: id={}, empCode={}", id, existing.getEmpCode());
@@ -173,7 +173,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeDO getById(String id) {
         EmployeeDO entity = employeeMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(StandardResultCode.EMPLOYEE_NOT_FOUND);
+            throw new SysException(BaseResultCode.EMPLOYEE_NOT_FOUND);
         }
         return entity;
     }
@@ -291,7 +291,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     private void validateEmployeeType(String employeeType) {
         if (EmployeeType.fromCode(employeeType) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "无效的雇佣类型: " + employeeType);
+            throw new SysException(BaseResultCode.BAD_REQUEST, "无效的雇佣类型: " + employeeType);
         }
     }
 
@@ -305,24 +305,24 @@ public class EmployeeServiceImpl implements EmployeeService {
     private void validateRateIds(String employeeType, String partTimeRateId, String outsourceRateId) {
         if (EmployeeType.PART_TIME.getCode().equals(employeeType)) {
             if (!StringUtils.hasText(partTimeRateId)) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "兼职类型员工必须填写兼职费率 ID");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "兼职类型员工必须填写兼职费率 ID");
             }
             if (StringUtils.hasText(outsourceRateId)) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "兼职类型员工的外包费率 ID 必须为空");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "兼职类型员工的外包费率 ID 必须为空");
             }
         } else if (EmployeeType.OUTSOURCE.getCode().equals(employeeType)) {
             if (!StringUtils.hasText(outsourceRateId)) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "外包类型员工必须填写外包费率 ID");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "外包类型员工必须填写外包费率 ID");
             }
             if (StringUtils.hasText(partTimeRateId)) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "外包类型员工的兼职费率 ID 必须为空");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "外包类型员工的兼职费率 ID 必须为空");
             }
         } else {
             if (StringUtils.hasText(partTimeRateId)) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "非兼职类型员工的兼职费率 ID 必须为空");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "非兼职类型员工的兼职费率 ID 必须为空");
             }
             if (StringUtils.hasText(outsourceRateId)) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "非外包类型员工的外包费率 ID 必须为空");
+                throw new SysException(BaseResultCode.BAD_REQUEST, "非外包类型员工的外包费率 ID 必须为空");
             }
         }
     }

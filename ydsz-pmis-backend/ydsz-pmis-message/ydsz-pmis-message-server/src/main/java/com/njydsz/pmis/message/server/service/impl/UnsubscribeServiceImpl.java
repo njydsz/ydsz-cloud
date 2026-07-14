@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgSubscriptionDO;
@@ -81,7 +81,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     @Override
     public MsgSubscriptionDO unsubscribeByToken(String token) {
         if (!messageProperties.getUnsubscribe().isEnabled()) {
-            throw new SysException(StandardResultCode.BIZ_ERROR, "退订中心已关闭");
+            throw new SysException(BaseResultCode.BIZ_ERROR, "退订中心已关闭");
         }
         UnsubscribeTokenPayload payload = unsubscribeTokenUtil.parseAndVerify(token);
         log.info("[Unsubscribe] token 退订: user={} topic={} channel={}",
@@ -128,7 +128,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     @Override
     public void resubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getUserId, userId)
