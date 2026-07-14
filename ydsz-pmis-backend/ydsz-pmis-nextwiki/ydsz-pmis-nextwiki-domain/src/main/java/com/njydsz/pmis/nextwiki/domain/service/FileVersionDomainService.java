@@ -199,7 +199,7 @@ public class FileVersionDomainService {
     // ==================== 私有方法 ====================
 
     /**
-     * 清理超出保留数量的旧版本
+     * 清理超出保留数量的旧版本（批量删除，避免逐个 delete 的 N+1 问题）
      */
     @Transactional(rollbackFor = Exception.class)
     private void cleanupExcessVersions(String fileNodeId) {
@@ -208,12 +208,9 @@ public class FileVersionDomainService {
             return;
         }
 
-        int toDelete = count - MAX_VERSIONS;
-        List<FileVersion> oldest = versionRepository.findOldestVersions(fileNodeId, toDelete);
-        for (FileVersion v : oldest) {
-            versionRepository.deleteById(v.getId());
-            log.info("[FileVersionDomainService] 清理旧版本: fileNodeId={}, version={}",
-                    fileNodeId, v.getVersionNumber());
-        }
+        // 批量删除：保留最近 MAX_VERSIONS 个版本，删除其余
+        int deleted = versionRepository.deleteExcessVersions(fileNodeId, MAX_VERSIONS);
+        log.info("[FileVersionDomainService] 批量清理旧版本: fileNodeId={}, deleted={}",
+                fileNodeId, deleted);
     }
 }

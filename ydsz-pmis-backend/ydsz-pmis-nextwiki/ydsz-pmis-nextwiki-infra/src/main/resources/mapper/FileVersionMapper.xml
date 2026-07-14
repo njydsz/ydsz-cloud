@@ -52,4 +52,25 @@
         LIMIT #{limit}
     </select>
 
+    <update id="updateWithRevision">
+        UPDATE nw_file_version
+        SET
+            file_node_id = #{version.fileNodeId},
+            version_number = #{version.versionNumber},
+            storage_key = #{version.storageKey},
+            size = #{version.size},
+            file_hash = #{version.fileHash},
+            mime_type = #{version.mimeType},
+            remark = #{version.remark},
+            change_type = #{version.changeType},
+            is_active = #{version.isActive},
+            status = #{version.status},
+            updated_by = #{version.updatedBy},
+            updated_at = #{version.updatedAt},
+            revision = revision + 1
+        WHERE id = #{version.id}
+          AND deleted = 0
+          AND revision = #{version.revision}
+    </update>
+
 </mapper>

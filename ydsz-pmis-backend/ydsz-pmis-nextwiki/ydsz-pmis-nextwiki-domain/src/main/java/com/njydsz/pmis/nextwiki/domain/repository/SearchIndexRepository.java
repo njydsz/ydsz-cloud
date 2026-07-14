@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.domain.repository;
 
 import java.util.List;
 
+import com.njydsz.pmis.common.domain.query.PageResult;
 import com.njydsz.pmis.nextwiki.domain.entity.SearchIndex;
 
 /**
@@ -40,4 +41,17 @@ public interface SearchIndexRepository {
      * @param createdBy 创建人，传 null 查询全部
      */
     List<String> findAllFileNodeIds(String createdBy);
+
+    /**
+     * 数据库分页搜索索引（使用 LIMIT/OFFSET 在 SQL 层面分页）
+     *
+     * @param keyword   搜索关键词
+     * @param createdBy 创建人（权限过滤）
+     * @param scope     搜索范围：all / filename / content / tag
+     * @param page      页码（从 1 开始）
+     * @param pageSize  每页大小
+     * @return 分页搜索结果
+     */
+    PageResult<SearchIndex> searchPage(String keyword, String createdBy, String scope,
+                                        int page, int pageSize);
 }

@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.pmis.nextwiki.domain.entity.SearchIndex;
 
 /**
@@ -51,4 +52,32 @@ public interface SearchIndexMapper extends BaseMapper<SearchIndex> {
             "ORDER BY created_at ASC",
             "</script>"})
     List<String> selectAllFileNodeIds(@Param("createdBy") String createdBy);
+
+    /**
+     * 数据库分页搜索索引（支持 name/path/content/tags 多维度 LIKE 搜索）
+     * <p>
+     * 使用 LIMIT/OFFSET 在 SQL 层面分页，避免全量加载后内存分页。
+     *
+     * @param page      MyBatis-Plus 分页对象
+     * @param keyword   搜索关键词
+     * @param createdBy 创建人（权限过滤）
+     * @param scope     搜索范围：all / filename / content / tag
+     * @return 分页结果
+     */
+    IPage<SearchIndex> searchPage(IPage<SearchIndex> page,
+                                   @Param("keyword") String keyword,
+                                   @Param("createdBy") String createdBy,
+                                   @Param("scope") String scope);
+
+    /**
+     * 统计搜索结果总数（不分页）
+     *
+     * @param keyword   搜索关键词
+     * @param createdBy 创建人
+     * @param scope     搜索范围
+     * @return 匹配总数
+     */
+    long countSearchResults(@Param("keyword") String keyword,
+                             @Param("createdBy") String createdBy,
+                             @Param("scope") String scope);
 }

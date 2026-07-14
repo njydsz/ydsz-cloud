@@ -54,6 +54,11 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
     }
 
     @Override
+    public int deleteExcessVersions(String fileNodeId, int keepCount) {
+        return fileVersionMapper.deleteExcessVersions(fileNodeId, keepCount);
+    }
+
+    @Override
     public int countByFileNodeId(String fileNodeId) {
         return fileVersionMapper.countByFileNodeId(fileNodeId);
     }

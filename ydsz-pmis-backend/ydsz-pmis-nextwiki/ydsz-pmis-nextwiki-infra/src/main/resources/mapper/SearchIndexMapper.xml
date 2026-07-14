@@ -56,4 +56,57 @@
         SELECT * FROM nw_search_index WHERE deleted = 0 ORDER BY created_at ASC
     </select>
 
+    <!-- 数据库分页搜索索引（支持 name/path/content/tags 多维度 LIKE 搜索） -->
+    <select id="searchPage" resultMap="SearchIndexResult">
+        SELECT * FROM nw_search_index
+        WHERE deleted = 0
+        AND created_by = #{createdBy}
+        <choose>
+            <when test="scope == 'filename'">
+                AND (name ILIKE CONCAT('%', #{keyword}, '%')
+                     OR path ILIKE CONCAT('%', #{keyword}, '%'))
+            </when>
+            <when test="scope == 'content'">
+                AND content ILIKE CONCAT('%', #{keyword}, '%')
+            </when>
+            <when test="scope == 'tag'">
+                AND tags ILIKE CONCAT('%', #{keyword}, '%')
+            </when>
+            <otherwise>
+                AND (name ILIKE CONCAT('%', #{keyword}, '%')
+                     OR path ILIKE CONCAT('%', #{keyword}, '%')
+                     OR content ILIKE CONCAT('%', #{keyword}, '%')
+                     OR tags ILIKE CONCAT('%', #{keyword}, '%'))
+            </otherwise>
+        </choose>
+        ORDER BY
+            CASE WHEN name ILIKE CONCAT('%', #{keyword}, '%') THEN 0 ELSE 1 END,
+            updated_at DESC
+    </select>
+
+    <!-- 统计搜索结果总数 -->
+    <select id="countSearchResults" resultType="long">
+        SELECT COUNT(*) FROM nw_search_index
+        WHERE deleted = 0
+        AND created_by = #{createdBy}
+        <choose>
+            <when test="scope == 'filename'">
+                AND (name ILIKE CONCAT('%', #{keyword}, '%')
+                     OR path ILIKE CONCAT('%', #{keyword}, '%'))
+            </when>
+            <when test="scope == 'content'">
+                AND content ILIKE CONCAT('%', #{keyword}, '%')
+            </when>
+            <when test="scope == 'tag'">
+                AND tags ILIKE CONCAT('%', #{keyword}, '%')
+            </when>
+            <otherwise>
+                AND (name ILIKE CONCAT('%', #{keyword}, '%')
+                     OR path ILIKE CONCAT('%', #{keyword}, '%')
+                     OR content ILIKE CONCAT('%', #{keyword}, '%')
+                     OR tags ILIKE CONCAT('%', #{keyword}, '%'))
+            </otherwise>
+        </choose>
+    </select>
+
 </mapper>

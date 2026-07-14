@@ -43,6 +43,15 @@ public interface FileVersionRepository {
     void deleteById(String id);
 
     /**
+     * 批量删除超出保留数量的旧版本（保留最近 keepCount 个版本）
+     *
+     * @param fileNodeId 文件节点ID
+     * @param keepCount  保留的版本数量
+     * @return 实际删除的版本数
+     */
+    int deleteExcessVersions(String fileNodeId, int keepCount);
+
+    /**
      * 统计版本数
      */
     int countByFileNodeId(String fileNodeId);
