@@ -8,7 +8,6 @@ import com.njydsz.pmis.common.json.tree.JsonNode;
 import com.njydsz.pmis.common.json.tree.ObjectNode;
 import com.njydsz.pmis.common.json.tree.TextNode;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
-import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,9 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>递归遍历 JSON 对象的所有字符串值，使用 EscapeUtils 清理潜在的 XSS 脚本。
  * 基于 YdszJson {@link JsonNode} 实现，与 YdszJson 引擎保持一致。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 5.0.0
+ * @author ydsz-pmis-team
+ * @since 5.0.0
  */
 @Slf4j
 public class JsonBodyXssCleaner {
@@ -45,7 +43,6 @@ public class JsonBodyXssCleaner {
         }
     }
 
-    @SuppressWarnings(value = "unused")
     private JsonNode cleanNode(JsonNode node) {
         if (node == null || node.isNull()) {
             return node;

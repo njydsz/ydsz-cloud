@@ -7,27 +7,27 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 全局对象�?- 通用对象复用组件
+ * 全局对象。?- 通用对象复用组件
  *
- * <p>提供对象的借用与归还机制，实现对象的复用，减少 GC 压力�?
- * 采用单例模式管理多个类型特定的对象池�?/p>
+ * <p>提供对象的借用与归还机制，实现对象的复用，减少 GC 压力。?
+ * 采用单例模式管理多个类型特定的对象池。?/p>
  *
  * <h3>线程安全优化</h3>
  * <ul>
  *   <li>使用 ConcurrentLinkedQueue 替代 ArrayList + synchronized</li>
- *   <li>borrow/return 均为无锁操作，基�?CAS 实现</li>
+ *   <li>borrow/return 均为无锁操作，基。?CAS 实现</li>
  * </ul>
  *
  * <h3>核心功能</h3>
  * <ul>
- *   <li>通用对象�?- 支持任意类型对象的借还管理</li>
- *   <li>字符串池 - 字符�?intern 优化</li>
- *   <li>日期�?- Date 对象缓存复用</li>
+ *   <li>通用对象。?- 支持任意类型对象的借还管理</li>
+ *   <li>字符串池 - 字符。?intern 优化</li>
+ *   <li>日期。?- Date 对象缓存复用</li>
  * </ul>
  *
  * <h3>设计模式</h3>
  * <ul>
- *   <li>对象池模�?- 复用对象减少分配开销</li>
+ *   <li>对象池模。?- 复用对象减少分配开销</li>
  *   <li>单例模式 - 全局统一管理</li>
  * </ul>
  *
@@ -43,8 +43,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *     GlobalObjectPool.returnObject(User.class, user);
  * }
  *
- * // 字符�?intern
- * String pooledStr = GlobalObjectPool.StringPool.intern("常用字符�?);
+ * // 字符。?intern
+ * String pooledStr = GlobalObjectPool.StringPool.intern("常用字符。?);
  * }</pre>
  *
  * @see ObjectPool
@@ -53,10 +53,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class GlobalObjectPool {
 
-    /** 每个类型池的最大容�?*/
+    /** 每个类型池的最大容。?*/
     private static final int POOL_SIZE = 1000;
 
-    /** 类型到对象池的映�?*/
+    /** 类型到对象池的映。?*/
     private static final Map<Class<?>, TypeObjectPool<?>> POOLS = new ConcurrentHashMap<>();
 
     /**
@@ -66,7 +66,7 @@ public class GlobalObjectPool {
      *
      * @param clazz 对象类型
      * @param <T> 泛型参数
-     * @return 借用的对�?
+     * @return 借用的对。?
      */
     public static <T> T borrowObject(Class<T> clazz) {
         TypeObjectPool<T> pool = (TypeObjectPool<T>) POOLS.computeIfAbsent(clazz, k -> new TypeObjectPool<>(clazz));
@@ -74,9 +74,9 @@ public class GlobalObjectPool {
     }
 
     /**
-     * 归还对象到池�?
+     * 归还对象到池。?
      *
-     * <p>如果池未满则加入池中等待复用，否则丢�?/p>
+     * <p>如果池未满则加入池中等待复用，否则丢。?/p>
      *
      * @param clazz 对象类型
      * @param obj 要归还的对象
@@ -97,9 +97,9 @@ public class GlobalObjectPool {
     }
 
     /**
-     * 通用对象池实�?
+     * 通用对象池实。?
      *
-     * <p>使用 ConcurrentLinkedQueue 管理可用对象列表，支持无锁借用与归�?/p>
+     * <p>使用 ConcurrentLinkedQueue 管理可用对象列表，支持无锁借用与归。?/p>
      *
      * @param <T> 对象类型
      */
@@ -169,7 +169,7 @@ public class GlobalObjectPool {
     }
 
     /**
-     * 字符串池 - 提供字符�?intern 优化
+     * 字符串池 - 提供字符。?intern 优化
      *
      * <p>用于缓存常用字符串，减少内存占用</p>
      */
@@ -179,11 +179,11 @@ public class GlobalObjectPool {
         private static final AtomicInteger count = new AtomicInteger(0);
 
         /**
-         * 返回池中的字符串，如果不存在则添�?
+         * 返回池中的字符串，如果不存在则添。?
          *
          * <p>如果池已满，直接返回原字符串</p>
          *
-         * @param str 原始字符�?
+         * @param str 原始字符。?
          * @return 池中的字符串（可能是相同的引用）
          */
         public static String intern(String str) {
@@ -215,9 +215,9 @@ public class GlobalObjectPool {
     }
 
     /**
-     * 日期�?- 提供 Date 对象缓存
+     * 日期。?- 提供 Date 对象缓存
      *
-     * <p>用于缓存常用时间�?Date 对象</p>
+     * <p>用于缓存常用时间。?Date 对象</p>
      */
     public static final class DatePool {
         private static final Map<Long, Date> POOL = new ConcurrentHashMap<>();

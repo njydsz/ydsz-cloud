@@ -93,7 +93,7 @@
 
         <!-- Fastjson2（JSON 序列化，gateway 各 filter/config 使用） -->
 
-        <!-- 健康检�?-->
+        <!-- 健康检。?-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>

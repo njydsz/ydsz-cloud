@@ -6,10 +6,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 日志型实体基类（兼容�?com.njydsz.pmis.common.entity.LogBaseDO）�?
+ * 日志型实体基类（兼容。?com.njydsz.pmis.common.entity.LogBaseDO）。?
  *
  * <p>继承 {@link BaseAuditEntity}，仅包含审计字段（createdBy/createdAt/updatedBy/updatedAt），
- * 不含乐观锁版本号和逻辑删除标识，适用于日志表、操作记录表等�?
+ * 不含乐观锁版本号和逻辑删除标识，适用于日志表、操作记录表等。?
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

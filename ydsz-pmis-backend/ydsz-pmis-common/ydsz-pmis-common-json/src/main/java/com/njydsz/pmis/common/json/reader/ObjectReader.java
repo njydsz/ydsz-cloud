@@ -17,15 +17,15 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 高性能 Bean 反序列化器（FastJSON2 ObjectReader 移植版）
  * 
- * <p>预计算字段元数据，消除运行时反射，支持复杂类型（嵌套对象、集合、Map�?/p>
+ * <p>预计算字段元数据，消除运行时反射，支持复杂类型（嵌套对象、集合、Map。?/p>
  * 
- * <p><b>性能优化�?/b></p>
+ * <p><b>性能优化。?/b></p>
  * <ul>
- *   <li>构造函数缓�?+ 直接 MethodHandle 调用</li>
- *   <li>字段 setter 预计算，避免运行时查�?/li>
+ *   <li>构造函数缓。?+ 直接 MethodHandle 调用</li>
+ *   <li>字段 setter 预计算，避免运行时查。?/li>
  *   <li>类型代码分类，快速分发解析逻辑</li>
- *   <li>嵌套对象递归解析，支持任意深�?/li>
- *   <li>集合/Map 完整支持，自动类型转�?/li>
+ *   <li>嵌套对象递归解析，支持任意深。?/li>
+ *   <li>集合/Map 完整支持，自动类型转。?/li>
  * </ul>
  * 
  * @author YdszJson Team
@@ -66,7 +66,7 @@ public final class ObjectReader<T> {
     }
     
     /**
-     * 获取可序列化字段（排�?static/transient�?
+     * 获取可序列化字段（排。?static/transient。?
      */
     private Field[] getSerializableFields(Class<?> clazz) {
         Field[] allFields = clazz.getDeclaredFields();
@@ -92,7 +92,7 @@ public final class ObjectReader<T> {
     }
     
     /**
-     * �?JSONReader 反序列化对象
+     * 。?JSONReader 反序列化对象
      */
     public T readObject(JSONReader reader) {
         reader.skipWhitespace();
@@ -121,7 +121,7 @@ public final class ObjectReader<T> {
                 reader.pos++;
             }
             
-            // 检查对象结�?
+            // 检查对象结。?
             if (reader.pos >= len) break;
             if (buf[reader.pos] == '}') {
                 reader.pos++;
@@ -134,7 +134,7 @@ public final class ObjectReader<T> {
                 continue;
             }
             
-            // 读取字段�?
+            // 读取字段。?
             if (buf[reader.pos] != '"') {
                 reader.pos++;
                 continue;
@@ -160,7 +160,7 @@ public final class ObjectReader<T> {
                 }
             }
             
-            // 未匹配，跳过�?
+            // 未匹配，跳过。?
             if (!matched) {
                 reader.skipValue();
             }
@@ -170,7 +170,7 @@ public final class ObjectReader<T> {
     }
     
     /**
-     * 字段读取�?
+     * 字段读取。?
      */
     public static final class FieldReader {
         public final String fieldName;
@@ -182,7 +182,7 @@ public final class ObjectReader<T> {
         public final boolean isCollection;
         public final boolean isMap;
         public final boolean isBean;
-        public final Class<?> componentType; // List/Map 的元素类�?
+        public final Class<?> componentType; // List/Map 的元素类。?
         
         public FieldReader(Field field) {
             this.fieldName = field.getName();
@@ -296,7 +296,7 @@ public final class ObjectReader<T> {
                             ObjectReader<?> nestedReader = getOrCreateForType(targetType);
                             setter.invoke(target, nestedReader.readObject(reader));
                         } else {
-                            // 未知类型，跳�?
+                            // 未知类型，跳。?
                             reader.skipValue();
                         }
                         break;
@@ -339,7 +339,7 @@ public final class ObjectReader<T> {
         }
         
         private static Class<?> getComponentType(Field field) {
-            // 尝试从泛型获取元素类�?
+            // 尝试从泛型获取元素类。?
             Type genericType = field.getGenericType();
             if (genericType instanceof ParameterizedType) {
                 ParameterizedType pt = (ParameterizedType) genericType;
@@ -352,45 +352,14 @@ public final class ObjectReader<T> {
         }
     }
     
-    /** 对象读取器缓�?*/
+    /** Cache */
     private static final ConcurrentHashMap<Class<?>, ObjectReader<?>> CACHE = new ConcurrentHashMap<>(2048);
-    
-    
-    public static <T> ObjectReader<T> getOrCreate(Class<T> type) {
-        ObjectReader<?> cached = CACHE.get(type);
-        if (cached != null) {
-            return captureReader(cached);
-        }
-        ObjectReader<T> reader = new ObjectReader<>(type);
-        CACHE.put(type, reader);
-        return reader;
-    }
-
-    private static <T> ObjectReader<T> captureReader(ObjectReader<?> reader) {
-        return (ObjectReader<T>) reader;
-    }
 
     public static ObjectReader<?> getOrCreateForType(Class<?> type) {
-        ObjectReader<?> reader = CACHE.get(type);
-        if (reader == null) {
-            reader = createUntyped(type);
-            CACHE.put(type, reader);
-        }
-        return reader;
+        return CACHE.computeIfAbsent(type, t -> new ObjectReader<>(t));
     }
 
-    private static ObjectReader<?> createUntyped(Class<?> type) {
-        return new ObjectReader<>(type);
-    }
-    
     public static void clearCache() {
         CACHE.clear();
-    }
-    
-    // �?YdszDeserializationProvider 提供别名
-    public static class ObjectReaderCache {
-        public static <T> ObjectReader<T> getOrCreate(Class<T> type) {
-            return ObjectReader.getOrCreate(type);
-        }
     }
 }

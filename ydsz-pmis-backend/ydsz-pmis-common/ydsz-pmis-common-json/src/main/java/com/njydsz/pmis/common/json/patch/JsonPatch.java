@@ -49,15 +49,15 @@ public final class JsonPatch {
         Map<String, Object> target = YdszJsonParser.parseObject(targetJson);
 
         for (Object opObj : operations) {
-            if (!(opObj instanceof Map)) {
+            if (!(opObj instanceof Map<?, ?> rawOp)) {
                 continue;
             }
-            @SuppressWarnings("unchecked")
-            Map<String, Object> op = (Map<String, Object>) opObj;
-            String opType = (String) op.get("op");
-            String path = (String) op.get("path");
-            Object value = op.get("value");
-            String from = (String) op.get("from");
+            
+            
+            String opType = String.valueOf(rawOp.get("op");
+            String path = String.valueOf(rawOp.get("path");
+            Object value = rawOp.get("value");
+            String from = String.valueOf(rawOp.get("from");
 
             if (opType == null || path == null) {
                 throw new IllegalArgumentException("Patch operation must have 'op' and 'path'");
@@ -102,7 +102,7 @@ public final class JsonPatch {
     /**
      * 根据 JSON Pointer 路径获取值。
      */
-    @SuppressWarnings("unchecked")
+    
     private static Object getByPath(Map<String, Object> target, String path) {
         if (path == null || path.isEmpty() || path.equals("/")) {
             return target;
@@ -111,11 +111,11 @@ public final class JsonPatch {
         Object current = target;
         for (int i = 1; i < parts.length; i++) {
             String part = unescapeToken(parts[i]);
-            if (current instanceof Map) {
-                current = ((Map<String, Object>) current).get(part);
-            } else if (current instanceof List) {
+            if (current instanceof Map<?, ?> map) {
+                current = map.get(part);
+            } else if (current instanceof List<?> list) {
                 int idx = Integer.parseInt(part);
-                current = ((List<Object>) current).get(idx);
+                current = list.get(idx);
             }
             if (current == null) {
                 return null;
@@ -127,54 +127,54 @@ public final class JsonPatch {
     /**
      * 根据 JSON Pointer 路径设置值。
      */
-    @SuppressWarnings("unchecked")
+    
     private static void setByPath(Map<String, Object> target, String path, Object value) {
         String[] parts = path.split("/");
         Object current = target;
         for (int i = 1; i < parts.length - 1; i++) {
             String part = unescapeToken(parts[i]);
-            if (current instanceof Map) {
-                Map<String, Object> map = (Map<String, Object>) current;
+            if (current instanceof Map<?, ?> map) {
+                Map<?, ?> map = (Map<?, ?>) current;
                 Object next = map.get(part);
                 if (next == null) {
                     next = new java.util.LinkedHashMap<>();
                     map.put(part, next);
                 }
                 current = next;
-            } else if (current instanceof List) {
+            } else if (current instanceof List<?> list) {
                 int idx = Integer.parseInt(part);
-                current = ((List<Object>) current).get(idx);
+                current = list.get(idx);
             }
         }
         String lastPart = unescapeToken(parts[parts.length - 1]);
-        if (current instanceof Map) {
-            ((Map<String, Object>) current).put(lastPart, value);
-        } else if (current instanceof List) {
+        if (current instanceof Map<?, ?> map) {
+            map.put(lastPart, value);
+        } else if (current instanceof List<?> list) {
             int idx = Integer.parseInt(lastPart);
-            ((List<Object>) current).add(idx, value);
+            list.add(idx, value);
         }
     }
 
     /**
      * 根据 JSON Pointer 路径移除值。
      */
-    @SuppressWarnings("unchecked")
+    
     private static void removeByPath(Map<String, Object> target, String path) {
         String[] parts = path.split("/");
         Object current = target;
         for (int i = 1; i < parts.length - 1; i++) {
             String part = unescapeToken(parts[i]);
-            if (current instanceof Map) {
-                current = ((Map<String, Object>) current).get(part);
-            } else if (current instanceof List) {
-                current = ((List<Object>) current).get(Integer.parseInt(part));
+            if (current instanceof Map<?, ?> map) {
+                current = map.get(part);
+            } else if (current instanceof List<?> list) {
+                current = list.get(Integer.parseInt(part));
             }
         }
         String lastPart = unescapeToken(parts[parts.length - 1]);
-        if (current instanceof Map) {
-            ((Map<String, Object>) current).remove(lastPart);
-        } else if (current instanceof List) {
-            ((List<Object>) current).remove(Integer.parseInt(lastPart));
+        if (current instanceof Map<?, ?> map) {
+            map.remove(lastPart);
+        } else if (current instanceof List<?> list) {
+            list.remove(Integer.parseInt(lastPart));
         }
     }
 

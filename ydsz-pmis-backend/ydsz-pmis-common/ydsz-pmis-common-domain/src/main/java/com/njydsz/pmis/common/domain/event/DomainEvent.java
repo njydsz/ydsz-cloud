@@ -8,18 +8,18 @@ import java.util.UUID;
 /**
  * 领域事件基类
  *
- * <p>在领域驱动设计（DDD）中，领域事件（Domain Event）表示领域中已经发生的�?
- * 具有业务含义的重要事情。领域事件用于实现聚合之间的解耦通信�?
- * 以及将副作用从核心业务逻辑中分离出来�?
+ * <p>在领域驱动设计（DDD）中，领域事件（Domain Event）表示领域中已经发生的。?
+ * 具有业务含义的重要事情。领域事件用于实现聚合之间的解耦通信。?
+ * 以及将副作用从核心业务逻辑中分离出来。?
  *
- * <p><b>核心语义�?/b>
+ * <p><b>核心语义。?/b>
  * <ul>
- *   <li><b>已发生的事实�?/b>领域事件描述的是"已经发生的事�?，命名应使用过去时�?/li>
- *   <li><b>不可变性：</b>领域事件一旦创建，其状态不可改�?/li>
- *   <li><b>业务含义�?/b>领域事件应表达明确的业务语义，而非技术细�?/li>
+ *   <li><b>已发生的事实。?/b>领域事件描述的是"已经发生的事。?，命名应使用过去时。?/li>
+ *   <li><b>不可变性：</b>领域事件一旦创建，其状态不可改。?/li>
+ *   <li><b>业务含义。?/b>领域事件应表达明确的业务语义，而非技术细。?/li>
  * </ul>
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例。?/b>
  * <pre>{@code
  * public class OrderCreatedEvent extends DomainEvent {
  *     private final Long orderId;
@@ -72,17 +72,17 @@ public class DomainEvent implements Serializable {
     private final String aggregateId;
 
     /**
-     * 聚合根类�?
+     * 聚合根类。?
      */
     private final String aggregateType;
 
     /**
-     * 事件版本号（用于事件溯源�?
+     * 事件版本号（用于事件溯源。?
      */
     private final int version;
 
     /**
-     * 构造领域事�?
+     * 构造领域事。?
      *
      * @param eventType 事件类型
      */
@@ -116,7 +116,7 @@ public class DomainEvent implements Serializable {
      *
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类�?
+     * @param aggregateType 聚合根类。?
      */
     public DomainEvent(String eventType, String aggregateId, String aggregateType) {
         this.eventId = UUID.randomUUID().toString();
@@ -128,14 +128,14 @@ public class DomainEvent implements Serializable {
     }
 
     /**
-     * 构造领域事件（完整参数�?
+     * 构造领域事件（完整参数。?
      *
      * @param eventId       事件唯一标识
      * @param occurredAt    事件发生时间
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类�?
-     * @param version       事件版本�?
+     * @param aggregateType 聚合根类。?
+     * @param version       事件版本。?
      */
     public DomainEvent(String eventId, LocalDateTime occurredAt, String eventType,
                        String aggregateId, String aggregateType, int version) {
@@ -148,7 +148,7 @@ public class DomainEvent implements Serializable {
     }
 
     /**
-     * 工厂方法：创建领域事�?
+     * 工厂方法：创建领域事。?
      *
      * @param eventType 事件类型
      * @return 领域事件实例
@@ -174,7 +174,7 @@ public class DomainEvent implements Serializable {
      *
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类�?
+     * @param aggregateType 聚合根类。?
      * @return 领域事件实例
      */
     public static DomainEvent of(String eventType, String aggregateId, String aggregateType) {
@@ -244,9 +244,9 @@ public class DomainEvent implements Serializable {
     }
 
     /**
-     * DomainEvent 构建�?
+     * DomainEvent 构建。?
      *
-     * <p>提供链式调用方式创建不可变的领域事件�?
+     * <p>提供链式调用方式创建不可变的领域事件。?
      */
     public static class Builder {
         private String eventId;
@@ -292,9 +292,9 @@ public class DomainEvent implements Serializable {
         }
 
         /**
-         * 设置聚合根类�?
+         * 设置聚合根类。?
          *
-         * @param aggregateType 聚合根类�?
+         * @param aggregateType 聚合根类。?
          * @return 当前 Builder
          */
         public Builder aggregateType(String aggregateType) {

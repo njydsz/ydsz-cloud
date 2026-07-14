@@ -9,9 +9,9 @@ import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 /**
  * Domain 模块自动配置
  *
- * <p>激活领域模型层的配置属性绑定，包括�?
+ * <p>激活领域模型层的配置属性绑定，包括。?
  * <ul>
- *   <li>树形结构懒加载配置（TreeLazyConfig�?/li>
+ *   <li>树形结构懒加载配置（TreeLazyConfig。?/li>
  * </ul>
  *
  * @author Marvin Lee

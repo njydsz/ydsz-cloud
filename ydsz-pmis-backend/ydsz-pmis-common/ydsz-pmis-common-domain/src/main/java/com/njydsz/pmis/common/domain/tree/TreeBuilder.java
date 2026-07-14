@@ -9,33 +9,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 树形结构核心构建�?
+ * 树形结构核心构建。?
  *
- * <p>整合了构建、查询、扁平化、排序、校验、路径生成等全部能力，提供统一的对�?API�?
- * 内部维护缓存机制（cachedRoots + dirty 标记），避免重复构建�?
+ * <p>整合了构建、查询、扁平化、排序、校验、路径生成等全部能力，提供统一的对。?API。?
+ * 内部维护缓存机制（cachedRoots + dirty 标记），避免重复构建。?
  *
- * <p><b>核心能力�?/b>
+ * <p><b>核心能力。?/b>
  * <ul>
- *   <li>父子关系绑定、层级计算、路径生�?/li>
- *   <li>�?ID 查找、获取后�?祖先节点</li>
+ *   <li>父子关系绑定、层级计算、路径生。?/li>
+ *   <li>。?ID 查找、获取后。?祖先节点</li>
  *   <li>节点统计（总数、叶子数、深度）</li>
- *   <li>扁平化、按层级筛�?/li>
- *   <li>循环引用检�?/li>
+ *   <li>扁平化、按层级筛。?/li>
+ *   <li>循环引用检。?/li>
  *   <li>懒加载树构建</li>
  * </ul>
  *
- * <p><b>算法�?/b>O(n) 时间复杂度，通过 HashMap 缓存实现�?
+ * <p><b>算法。?/b>O(n) 时间复杂度，通过 HashMap 缓存实现。?
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例。?/b>
  * <pre>{@code
  * List<Menu> tree = new TreeBuilder<>(0L, allMenus).build();
  * // 查询
  * Menu node = treeBuilder.findById(1L);
- * // 扁平�?
+ * // 扁平。?
  * List<Menu> flat = treeBuilder.flatten();
  * }</pre>
  *
- * @param <T>  继承自TreeNode的具体类�?
+ * @param <T>  继承自TreeNode的具体类。?
  * @param <ID> ID类型
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -50,7 +50,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     /** 节点数量阈值，超过此值时使用迭代模式替代递归以防止栈溢出 */
     private static final int ITERATIVE_MODE_THRESHOLD = 10000;
 
-    /** 排序比较器，�?sort 字段升序排列，null 值排在最�?*/
+    /** 排序比较器，。?sort 字段升序排列，null 值排在最。?*/
     private static final Comparator<TreeNode<?, ?>> SORT_COMPARATOR = Comparator.comparing(
             TreeNode::getSort,
             Comparator.nullsLast(Integer::compareTo)
@@ -74,16 +74,16 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     /** 缓存的根节点列表 */
     private volatile List<T> cachedRoots;
-    /** 缓存的节点映射（ID -> Node�?*/
+    /** 缓存的节点映射（ID -> Node。?*/
     private volatile Map<ID, T> cachedNodeMap;
-    /** 缓存的全量扁平节点列�?*/
+    /** 缓存的全量扁平节点列。?*/
     private volatile List<T> cachedAllNodes;
-    /** 脏标记：true 表示需要重新构�?*/
+    /** 脏标记：true 表示需要重新构。?*/
     private volatile boolean dirty = true;
-    /** 构建锁，替代 synchronized(this) 以避�?JDK21 虚拟线程 Pinning */
+    /** 构建锁，替代 synchronized(this) 以避。?JDK21 虚拟线程 Pinning */
     private final ReentrantLock buildLock = new ReentrantLock();
 
-    // ── 构造方�?────────────────────────────────────────────────────────────────
+    // ── 构造方。?────────────────────────────────────────────────────────────────
 
     public TreeBuilder(ID rootId, List<T> nodeList) {
         this.rootId = rootId;
@@ -144,7 +144,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return this;
     }
 
-    /** 强制标记缓存为脏，下次调�?build() 时重�?*/
+    /** 强制标记缓存为脏，下次调。?build() 时重。?*/
     public void markDirty() {
         this.dirty = true;
     }
@@ -152,10 +152,10 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     // ── 核心构建 ────────────────────────────────────────────────────────────────
 
     /**
-     * 构建树形结构（带缓存�?
+     * 构建树形结构（带缓存。?
      *
-     * <p>使用双重检查锁（DCL）确保多线程环境下的缓存安全�?
-     * 每次调用返回独立的列表副本，防止外部篡改内部缓存�?
+     * <p>使用双重检查锁（DCL）确保多线程环境下的缓存安全。?
+     * 每次调用返回独立的列表副本，防止外部篡改内部缓存。?
      *
      * @return 构建完成的根节点列表
      */
@@ -185,7 +185,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             return;
         }
 
-        // 1. 初始化节点映�?
+        // 1. 初始化节点映。?
         Map<ID, T> nodeMap = new HashMap<>(nodeList.size());
         for (T node : nodeList) {
             ID id = idExtractor.apply(node);
@@ -194,17 +194,17 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             }
         }
 
-        // 2. 循环引用检�?
+        // 2. 循环引用检。?
         detectCyclicReference(nodeList, idExtractor, parentIdExtractor, nodeMap);
 
         // 3. 构建父子关系
         if (nodeList.size() > ITERATIVE_MODE_THRESHOLD) {
-            log.warn("节点数量 {} 超过阈�?{}，切换到迭代模式构建树形结构",
+            log.warn("节点数量 {} 超过阈。?{}，切换到迭代模式构建树形结构",
                     nodeList.size(), ITERATIVE_MODE_THRESHOLD);
         }
         buildRelations(nodeList, nodeMap);
 
-        // 4. 筛选根节点并排�?
+        // 4. 筛选根节点并排。?
         List<T> roots = nodeList.stream()
                 .filter(this::isRootNode)
                 .toList();
@@ -293,7 +293,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return cachedNodeMap != null ? cachedNodeMap.get(id) : null;
     }
 
-    /** 获取指定节点的所有后代节�?*/
+    /** 获取指定节点的所有后代节。?*/
     public List<T> getDescendants(T node) {
         ensureBuilt();
         List<T> descendants = new ArrayList<>();
@@ -312,7 +312,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return descendants;
     }
 
-    /** 获取指定节点的所有祖先节�?*/
+    /** 获取指定节点的所有祖先节。?*/
     public List<T> getAncestors(T node) {
         ensureBuilt();
         List<T> ancestors = new ArrayList<>();
@@ -343,7 +343,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return cachedAllNodes != null ? cachedAllNodes.size() : 0;
     }
 
-    /** 统计根节点数�?*/
+    /** 统计根节点数。?*/
     public int countRootNodes() {
         ensureBuilt();
         return cachedRoots != null ? cachedRoots.size() : 0;
@@ -388,7 +388,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 .count();
     }
 
-    /** 获取所有叶子节�?*/
+    /** 获取所有叶子节。?*/
     public List<T> getLeafNodes() {
         ensureBuilt();
         return cachedAllNodes.stream()
@@ -399,7 +399,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 .toList();
     }
 
-    // ── 扁平化与筛�?────────────────────────────────────────────────────────────
+    // ── 扁平化与筛。?────────────────────────────────────────────────────────────
 
     /** 将当前缓存的树形结构扁平化为列表 */
     public List<T> flatten() {
@@ -407,12 +407,12 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return new ArrayList<>(cachedAllNodes);
     }
 
-    /** 将指定树形结构扁平化为列�?*/
+    /** 将指定树形结构扁平化为列。?*/
     public static <T extends TreeNode<T, ?>> List<T> flatten(List<T> roots) {
         return flattenInternal(roots);
     }
 
-    /** 内部扁平化实�?*/
+    /** 内部扁平化实。?*/
     private static <T extends TreeNode<T, ?>> List<T> flattenInternal(List<T> roots) {
         List<T> result = new ArrayList<>();
         for (T root : roots) {
@@ -425,7 +425,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return result;
     }
 
-    /** 根据层级筛选节�?*/
+    /** 根据层级筛选节。?*/
     public List<T> filterByLevel(int level) {
         ensureBuilt();
         return cachedAllNodes.stream()
@@ -472,11 +472,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 depth++;
                 if (depth > maxDepth) {
                     throw new IllegalStateException(
-                            "检测到树中存在循环引用，涉及节�? " + nodeId);
+                            "检测到树中存在循环引用，涉及节。? " + nodeId);
                 }
                 if (!visited.add(parentId)) {
                     throw new IllegalStateException(
-                            "检测到树中存在循环引用，涉及节�? " + nodeId);
+                            "检测到树中存在循环引用，涉及节。? " + nodeId);
                 }
                 T parent = nodeMap.get(parentId);
                 parentId = parent != null ? parentIdExtractor.apply(parent) : null;
@@ -508,9 +508,9 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
     }
 
-    // ── 懒加�?──────────────────────────────────────────────────────────────────
+    // ── 懒加。?──────────────────────────────────────────────────────────────────
 
-    /** 构建懒加载树（使用默认最大深�?10�?*/
+    /** 构建懒加载树（使用默认最大深。?10。?*/
     public static <T extends TreeNode<T, ID>, ID extends Serializable>
     List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider) {
         return buildLazy(provider, new TreeLazyConfig().getMaxLazyDepth());
