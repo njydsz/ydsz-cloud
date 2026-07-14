@@ -5,7 +5,7 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
+
 
 /**
  * 领域事件发布。
@@ -30,9 +30,7 @@ import org.springframework.stereotype.Component;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
-@Component
 public class DomainEventPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(DomainEventPublisher.class);

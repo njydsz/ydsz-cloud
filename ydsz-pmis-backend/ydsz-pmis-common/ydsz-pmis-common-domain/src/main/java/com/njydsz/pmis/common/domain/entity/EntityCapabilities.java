@@ -108,13 +108,13 @@ public final class EntityCapabilities {
             if (!Annotation.class.isAssignableFrom(mpVersionClass)) {
                 return false;
             }
+            Class<? extends Annotation> annotationClass = mpVersionClass.asSubclass(Annotation.class);
+            return getAnnotatedField(entityClass, annotationClass).isPresent();
         } catch (ClassNotFoundException e) {
             return false;
         }
-    }
 
     /**
-     * 获取实体中被指定注解标记的字。
      *
      * <p>递归扫描实体类及其所有父类（直到 {@link Object}），
      * 返回第一个匹配的字段名

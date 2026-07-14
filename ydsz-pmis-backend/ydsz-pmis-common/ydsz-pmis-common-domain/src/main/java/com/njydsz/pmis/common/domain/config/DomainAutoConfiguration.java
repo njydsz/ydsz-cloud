@@ -1,9 +1,13 @@
 package com.njydsz.pmis.common.domain.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import com.njydsz.pmis.common.domain.event.DomainEventPublisher;
 import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 
 /**
@@ -22,4 +26,10 @@ import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 @ConditionalOnProperty(prefix = "ydsz.domain", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(TreeLazyConfig.class)
 public class DomainAutoConfiguration {
+
+    @Bean
+    @ConditionalOnBean(ApplicationEventPublisher.class)
+    public DomainEventPublisher domainEventPublisher(ApplicationEventPublisher eventPublisher) {
+        return new DomainEventPublisher(eventPublisher);
+    }
 }

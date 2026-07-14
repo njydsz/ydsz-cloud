@@ -98,6 +98,19 @@ public class AesGcmCrypto {
     }
 
     /**
+     * 加密并返回 Base64 字符串（带 keyId 参数，向后兼容）
+     *
+     * @param plaintext 明文
+     * @param keyId     业务 keyId（当前实现忽略此参数）
+     * @return Base64 编码的密文（IV || ciphertext+tag）
+     * @deprecated 使用 {@link #encrypt(String)} 替代
+     */
+    @Deprecated(since = "1.3.0", forRemoval = true)
+    public String encrypt(String plaintext, String keyId) {
+        return encrypt(plaintext);
+    }
+
+    /**
      * 解密 Base64 密文
      *
      * @param base64Ciphertext Base64 编码的密文
@@ -123,27 +136,42 @@ public class AesGcmCrypto {
         }
     }
 
-    private byte[] loadOrGenerateIv(String keyId) {
-        if (persistor != null) {
-            byte[] stored = persistor.load(keyId);
-            if (stored != null && stored.length == IV_LENGTH) {
-                return stored;
-            }
-        }
+    /**
+     * 解密 Base64 密文（带 keyId 参数，向后兼容）
+     *
+     * @param base64Ciphertext Base64 编码的密文
+     * @param keyId            业务 keyId（当前实现忽略此参数）
+     * @return 明文
+     * @deprecated 使用 {@link #decrypt(String)} 替代
+     */
+    @Deprecated(since = "1.3.0", forRemoval = true)
+    public String decrypt(String base64Ciphertext, String keyId) {
+        return decrypt(base64Ciphertext);
+    }
+
+    /**
+     * 生成随机 IV
+     *
+     * <p>GCM 模式下 IV 必须唯一（不可复用），使用 SecureRandom 生成 12 字节随机值。
+     * 12 字节 IV 空间为 2^96，在合理的使用周期内碰撞概率可忽略。</p>
+     *
+     * @return 12 字节随机 IV
+     */
+    private byte[] generateRandomIv() {
         byte[] iv = new byte[IV_LENGTH];
         random.nextBytes(iv);
-        if (persistor != null) {
-            persistor.save(keyId, iv);
-        }
         return iv;
     }
 
     /**
-     * Nonce 持久化器
+     * Nonce 持久化器（已废弃）
      *
-     * <p>实现可对接 Redis / Database / ZK 等存储。
-     * 注意：Nonce 永不复用至关重要，需保证 persistor 的写入是原子的（SETNX）。</p>
+     * <p>GCM 模式下 IV 不可复用，每次加密都应生成随机 IV。
+     * 此接口保留仅为向后兼容，不再有任何实际作用。</p>
+     *
+     * @deprecated GCM 安全要求 IV 不可复用，使用随机 IV 替代持久化方案
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public interface NoncePersistor {
         /**
          * 加载已存在的 Nonce
