@@ -1,11 +1,9 @@
 package com.njydsz.pmis.common.json.patch;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.json.parser.YdszJsonParser;
+
+import java.util.*;
 
 /**
  * JSON Patch 实现（RFC 6902）。
@@ -22,11 +20,15 @@ import com.njydsz.pmis.common.json.parser.YdszJsonParser;
  *
  * <p><b>使用示例：</b>
  * <pre>
- * String patch = "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Alice\"}]";
- * String json = "{\"name\":\"Bob\",\"age\":30}";
+ * String patch = "[{"op":"replace","path":"/name","value":"Alice"}]";
+ * String json = "{"name":"Bob","age":30}";
  * String result = JsonPatch.apply(patch, json);
  * // result: {"name":"Alice","age":30}
  * </pre>
+ *
+ * <p>所有 JSON 对象/数组都通过 {@link YdszJsonParser} 解析为
+ * {@code LinkedHashMap<String, Object>} / {@code ArrayList<Object>}，
+ * 因此路径遍历中的强制类型转换在运行时是安全的。</p>
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -52,8 +54,7 @@ public final class JsonPatch {
             if (!(opObj instanceof Map<?, ?> rawOp)) {
                 continue;
             }
-            
-            
+
             String opType = String.valueOf(rawOp.get("op"));
             String path = String.valueOf(rawOp.get("path"));
             Object value = rawOp.get("value");
@@ -84,7 +85,7 @@ public final class JsonPatch {
                     break;
                 case "test":
                     Object currentValue = getByPath(target, path);
-                    if (!java.util.Objects.equals(currentValue, value)) {
+                    if (!Objects.equals(currentValue, value)) {
                         throw new IllegalStateException(
                             "Test failed at path '" + path + "': expected "
                                 + YdszJson.toJson(value) + " but got "
@@ -101,8 +102,11 @@ public final class JsonPatch {
 
     /**
      * 根据 JSON Pointer 路径获取值。
+     *
+     * <p>由于经过 {@link YdszJsonParser} 解析后，所有 Map 节点的实际类型为
+     * {@code LinkedHashMap<String, Object>}、List 节点为 {@code ArrayList<Object>}，
+     * 故此处强制类型转换为运行时安全的。</p>
      */
-    
     private static Object getByPath(Map<String, Object> target, String path) {
         if (path == null || path.isEmpty() || path.equals("/")) {
             return target;
@@ -112,7 +116,7 @@ public final class JsonPatch {
         for (int i = 1; i < parts.length; i++) {
             String part = unescapeToken(parts[i]);
             if (current instanceof Map<?, ?>) {
-                current = map.get(part);
+                current = ((Map<?, ?>) current).get(part);
             } else if (current instanceof List<?> list) {
                 int idx = Integer.parseInt(part);
                 current = list.get(idx);
@@ -127,17 +131,16 @@ public final class JsonPatch {
     /**
      * 根据 JSON Pointer 路径设置值。
      */
-    
     private static void setByPath(Map<String, Object> target, String path, Object value) {
         String[] parts = path.split("/");
         Object current = target;
         for (int i = 1; i < parts.length - 1; i++) {
             String part = unescapeToken(parts[i]);
             if (current instanceof Map<?, ?>) {
-                Object next = cast(current).get(part);
+                Object next = ((Map<?, ?>) current).get(part);
                 if (next == null) {
-                    next = new java.util.LinkedHashMap<>();
-                    cast(current).put(part, next);
+                    next = new LinkedHashMap<String, Object>();
+                    ((Map<String, Object>) current).put(part, next);
                 }
                 current = next;
             } else if (current instanceof List<?> list) {
@@ -147,41 +150,38 @@ public final class JsonPatch {
         }
         String lastPart = unescapeToken(parts[parts.length - 1]);
         if (current instanceof Map<?, ?>) {
-            cast(current).put(lastPart, value);
-        } else if (current instanceof List<?> list) {
+            ((Map<String, Object>) current).put(lastPart, value);
+        } else if (current instanceof List<?>) {
             int idx = Integer.parseInt(lastPart);
-            cast(current).add(idx, value);
+            ((List<Object>) current).add(idx, value);
         }
     }
 
     /**
      * 根据 JSON Pointer 路径移除值。
      */
-    
     private static void removeByPath(Map<String, Object> target, String path) {
         String[] parts = path.split("/");
         Object current = target;
         for (int i = 1; i < parts.length - 1; i++) {
             String part = unescapeToken(parts[i]);
             if (current instanceof Map<?, ?>) {
-                current = map.get(part);
+                current = ((Map<?, ?>) current).get(part);
             } else if (current instanceof List<?> list) {
                 current = list.get(Integer.parseInt(part));
             }
         }
         String lastPart = unescapeToken(parts[parts.length - 1]);
         if (current instanceof Map<?, ?>) {
-            cast(current).remove(lastPart);
+            ((Map<String, Object>) current).remove(lastPart);
         } else if (current instanceof List<?> list) {
-            cast(current).remove(Integer.parseInt(lastPart));
+            list.remove(Integer.parseInt(lastPart));
         }
     }
 
     /**
      * 反转 JSON Pointer 转义（~1 → /，~0 → ~）。
      */
-    private static <T> T cast(Object o) { return (T) o; }
-
     private static String unescapeToken(String token) {
         return token.replace("~1", "/").replace("~0", "~");
     }
@@ -203,7 +203,7 @@ public final class JsonPatch {
         private final List<Object> operations = new ArrayList<>();
 
         public Builder add(String path, Object value) {
-            java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+            Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "add");
             op.put("path", path);
             op.put("value", value);
@@ -212,7 +212,7 @@ public final class JsonPatch {
         }
 
         public Builder remove(String path) {
-            java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+            Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "remove");
             op.put("path", path);
             operations.add(op);
@@ -220,7 +220,7 @@ public final class JsonPatch {
         }
 
         public Builder replace(String path, Object value) {
-            java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+            Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "replace");
             op.put("path", path);
             op.put("value", value);
@@ -229,7 +229,7 @@ public final class JsonPatch {
         }
 
         public Builder move(String from, String path) {
-            java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+            Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "move");
             op.put("from", from);
             op.put("path", path);
@@ -238,7 +238,7 @@ public final class JsonPatch {
         }
 
         public Builder copy(String from, String path) {
-            java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+            Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "copy");
             op.put("from", from);
             op.put("path", path);
@@ -247,7 +247,7 @@ public final class JsonPatch {
         }
 
         public Builder test(String path, Object value) {
-            java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+            Map<String, Object> op = new LinkedHashMap<>();
             op.put("op", "test");
             op.put("path", path);
             op.put("value", value);
