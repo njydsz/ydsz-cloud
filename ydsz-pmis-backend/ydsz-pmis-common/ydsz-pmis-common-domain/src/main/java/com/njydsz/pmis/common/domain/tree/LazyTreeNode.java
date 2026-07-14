@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.tree;
+ackage com.njydsz.pmis.common.domain.tree;
 
 import java.io.Serializable;
 import java.util.ArrayList;

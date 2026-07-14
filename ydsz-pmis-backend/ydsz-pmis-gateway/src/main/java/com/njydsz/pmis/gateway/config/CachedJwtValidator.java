@@ -1,21 +1,22 @@
 package com.njydsz.pmis.gateway.config;
 
-import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Component;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.token.TokenService;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * JWT 校验结果缓存（P1-7 + P2-12 增强）
  *
- * <p>使用 Caffeine 本地缓存 JWT 解析结果，避免每个请求重复执行
+ * <p>使用 ydsz-pmis-common-cache 本地缓存 JWT 解析结果，避免每个请求重复执行
  * {@code tokenService.parseAccessToken(token)} 的 CPU 开销。
  *
  * <h3>缓存策略</h3>
@@ -53,7 +54,7 @@ public class CachedJwtValidator {
     /** 缓存最大容量 */
     private static final long CACHE_MAX_SIZE = 10_000;
 
-    /** Caffeine 缓存实例 */
+    /** 本地缓存实例 */
     private final Cache<String, Optional<UserInfo>> claimsCache;
 
     /** Token 服务 */
@@ -71,8 +72,9 @@ public class CachedJwtValidator {
     public CachedJwtValidator(TokenService tokenService, GatewayMetrics gatewayMetrics) {
         this.tokenService = tokenService;
         this.gatewayMetrics = gatewayMetrics;
-        this.claimsCache = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofSeconds(CACHE_TTL_SECONDS))
+        this.claimsCache = YdszCache.<String, Optional<UserInfo>>newBuilder()
+                .type(CacheType.TTL)
+                .expireAfterWrite(CACHE_TTL_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAX_SIZE)
                 .recordStats()
                 .build();
@@ -175,7 +177,7 @@ public class CachedJwtValidator {
      * @return Caffeine 缓存统计快照的字符串表示
      */
     public String getCacheStats() {
-        return claimsCache.stats().toString();
+        return claimsCache.getStats().toString();
     }
 
     /**

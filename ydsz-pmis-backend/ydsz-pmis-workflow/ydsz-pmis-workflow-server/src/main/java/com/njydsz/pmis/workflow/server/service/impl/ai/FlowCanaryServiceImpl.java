@@ -195,7 +195,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
                 continue;
             }
             for (int i = 0; i < arr.size(); i++) {
-                JSONObject o = arr.getJSONObject(i);
+                Map<String, Object> o = arr.getJSONObject(i);
                 Map<String, Object> m = new HashMap<>();
                 m.put("definitionId", d.getId());
                 m.put("flowCode", d.getFlowCode());
@@ -253,7 +253,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         } else {
             arr = new JSONArray();
         }
-        JSONObject o = new JSONObject();
+        Map<String, Object> o = new JSONObject();
         o.put("operatorId", operatorId);
         o.put("operatorName", operatorName);
         o.put("fromPercent", fromPercent);

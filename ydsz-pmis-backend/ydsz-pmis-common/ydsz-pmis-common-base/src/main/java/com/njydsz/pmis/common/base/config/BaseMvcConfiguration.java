@@ -1,10 +1,9 @@
-﻿package com.njydsz.pmis.common.base.config;
+﻿﻿package com.njydsz.pmis.common.base.config;
 
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.cors.CorsConfiguration;
@@ -12,16 +11,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
-
 /**
  * MVC 基础配置（Web/App 共享）
  *
  * <p>子类提供具体的 {@link BaseCorsProperties} 和 {@link BaseTraceProperties} 实现，
  * 以及注册自己的拦截器和过滤器 Bean。
  *
- * <p>JSON 序列化统一使用 Jackson（大厂标准）。ObjectMapper 优先使用 Spring 容器中注入的实例，
- * 若不存在则使用 JsonUtils 的全局实例。Spring Boot 自动配置会基于该 ObjectMapper 创建 JSON 消息转换器。
+ * <p>JSON 序列化统一使用 YdszJson 引擎（通过 ydsz-pmis-common-json 的 YdszJsonHttpMessageConverter 自动注册）。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -53,20 +49,6 @@ public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
      */
     protected BaseCorsProperties getCorsProperties() {
         return corsProperties;
-    }
-
-    /**
-     * 注册 ObjectMapper Bean
-     *
-     * <p>优先使用 Spring 容器中已有的 ObjectMapper，若不存在则使用 JsonUtils 的全局实例。
-     * Spring Boot 自动配置会基于此 ObjectMapper 创建 JSON 消息转换器，无需手动注册 HttpMessageConverters。
-     *
-     * @return ObjectMapper 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public ObjectMapper objectMapper() {
-        return JsonUtils.getMapper();
     }
 
     /**

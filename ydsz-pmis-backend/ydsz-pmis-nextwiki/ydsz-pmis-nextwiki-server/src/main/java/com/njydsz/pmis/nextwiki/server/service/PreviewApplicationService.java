@@ -21,6 +21,7 @@ import com.njydsz.pmis.common.file.domain.FileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -153,7 +154,7 @@ public class PreviewApplicationService {
     private Path downloadToTemp(FileNode fileNode) throws Exception {
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配置").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
 
         Path tempDirPath = Path.of(tempDir);
@@ -200,13 +201,14 @@ public class PreviewApplicationService {
         boolean finished = process.waitFor(120, TimeUnit.SECONDS);
         if (!finished) {
             process.destroyForcibly();
-            throw BusinessException.builder().key("LibreOffice 转换超时").build();
+            throw new BusinessException(NextwikiExceptionCode.PREVIEW_GENERATION_FAILED);
         }
 
         int exitCode = process.exitValue();
         if (exitCode != 0) {
             String errorOutput = new String(process.getInputStream().readAllBytes());
-            throw BusinessException.builder().key("LibreOffice 转换失败: " + errorOutput).build();
+            throw BusinessException.of(NextwikiExceptionCode.PREVIEW_GENERATION_FAILED)
+                    .data("errorOutput", errorOutput);
         }
 
         String pdfName = fileNode.getName().substring(0,
@@ -218,7 +220,7 @@ public class PreviewApplicationService {
             if (pdfs != null && pdfs.length > 0) {
                 pdfFile = pdfs[0].toPath();
             } else {
-                throw BusinessException.builder().key("转换后 PDF 文件未找到").build();
+                throw new BusinessException(NextwikiExceptionCode.PREVIEW_NOT_READY);
             }
         }
 

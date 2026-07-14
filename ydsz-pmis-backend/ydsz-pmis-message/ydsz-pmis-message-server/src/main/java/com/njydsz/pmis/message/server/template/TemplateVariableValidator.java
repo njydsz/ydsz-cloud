@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.template;
+package com.njydsz.pmis.message.server.template;
 
 import java.util.ArrayList;
 import java.util.List;

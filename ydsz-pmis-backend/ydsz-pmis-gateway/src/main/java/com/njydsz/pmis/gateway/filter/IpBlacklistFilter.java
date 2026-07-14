@@ -1,9 +1,7 @@
 ﻿package com.njydsz.pmis.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -17,10 +15,12 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.gateway.config.GatewayConstants;
 import com.njydsz.pmis.gateway.config.GatewayIpUtils;
 
@@ -31,11 +31,11 @@ import reactor.core.publisher.Mono;
 /**
  * IP 黑名单全局过滤器（P2-11）
  *
- * <p>基于 Redis + Caffeine 二级缓存的动态 IP 黑名单。
+ * <p>基于 Redis + ydsz-pmis-common-cache 二级缓存的动态 IP 黑名单。
  *
  * <h3>两级缓存架构</h3>
  * <ol>
- *   <li>L1: Caffeine 本地缓存（TTL=10s）— 拦截 99% 的恶意 IP 请求，无网络开销</li>
+ *   <li>L1: ydsz-pmis-common-cache 本地缓存（TTL=10s）— 拦截 99% 的恶意 IP 请求，无网络开销</li>
  *   <li>L2: Redis 远程缓存 — 多实例共享黑名单，运维或安全系统动态写入</li>
  * </ol>
  *
@@ -73,8 +73,9 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
     private static final long LOCAL_CACHE_MAX_SIZE = 50_000;
 
     /** L1 本地缓存：IP → 是否在黑名单中 */
-    private final Cache<String, Boolean> localCache = Caffeine.newBuilder()
-            .expireAfterWrite(Duration.ofSeconds(LOCAL_CACHE_TTL_SECONDS))
+    private final Cache<String, Boolean> localCache = YdszCache.<String, Boolean>newBuilder()
+            .type(CacheType.TTL)
+            .expireAfterWrite(LOCAL_CACHE_TTL_SECONDS, TimeUnit.SECONDS)
             .maximumSize(LOCAL_CACHE_MAX_SIZE)
             .build();
 

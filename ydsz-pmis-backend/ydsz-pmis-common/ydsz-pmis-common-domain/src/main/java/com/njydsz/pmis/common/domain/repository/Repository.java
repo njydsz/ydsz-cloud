@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.repository;
+ackage com.njydsz.pmis.common.domain.repository;
 
 import java.io.Serializable;
 import java.util.Collection;

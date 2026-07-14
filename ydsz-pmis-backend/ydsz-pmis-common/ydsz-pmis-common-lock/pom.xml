@@ -64,17 +64,10 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--caffeine (for FallbackDistributedLock local lock cache)-->
+        <!--ydsz-pmis-common-cache（本地缓存框架，替代 Caffeine）-->
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <exclusions>
-                <!-- 排除传递依赖，避免与 gson 的 error_prone_annotations 版本冲突 -->
-                <exclusion>
-                    <groupId>com.google.errorprone</groupId>
-                    <artifactId>error_prone_annotations</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-cache</artifactId>
         </dependency>
         <!-- Redisson 分布式锁（可选，提供降级策略）-->
         <dependency>

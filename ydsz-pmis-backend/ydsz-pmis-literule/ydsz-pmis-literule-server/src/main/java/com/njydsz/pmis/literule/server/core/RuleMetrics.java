@@ -110,6 +110,22 @@ public class RuleMetrics {
         this.lastEvaluatedRules = count;
     }
 
+    /**
+     * 记录慢规则告警（P2-4）
+     *
+     * <p>单规则评估耗时超过 {@code thresholdMs} 时触发。默认实现仅 debug 日志，
+     * {@link MicrometerRuleMetrics} 会进一步暴露 Prometheus 计数器。
+     *
+     * @param ruleCode    规则编码
+     * @param elapsedMs   实际耗时
+     * @param thresholdMs 阈值
+     * @since 2.2.0
+     */
+    public void recordSlowRule(String ruleCode, long elapsedMs, long thresholdMs) {
+        log.debug("[LiteRule-Metrics] 慢规则: rule={}, elapsed={}ms, threshold={}ms",
+                ruleCode, elapsedMs, thresholdMs);
+    }
+
     public long getTotalEvaluations() { return totalEvaluations.get(); }
     public long getTotalTriggered() { return totalTriggered.get(); }
     public long getTotalErrors() { return totalErrors.get(); }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.repository.FileVersionRepository;
@@ -53,7 +54,7 @@ public class FileVersionDomainService {
                                       String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null || !fileNode.isFile()) {
-            throw BusinessException.builder().key("文件节点不存在或不是文件: " + fileNodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId);
         }
 
         // 取当前最大版本号
@@ -114,12 +115,12 @@ public class FileVersionDomainService {
     public FileVersion rollback(String fileNodeId, Integer targetVersion, String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null || !fileNode.isFile()) {
-            throw BusinessException.builder().key("文件节点不存在或不是文件: " + fileNodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId);
         }
 
         FileVersion target = versionRepository.findByFileNodeIdAndVersion(fileNodeId, targetVersion);
         if (target == null) {
-            throw BusinessException.builder().key("目标版本不存在: " + targetVersion).build();
+            throw BusinessException.of(NextwikiExceptionCode.VERSION_NOT_FOUND).data("targetVersion", targetVersion);
         }
 
         // 将当前活跃版本标记为非活跃

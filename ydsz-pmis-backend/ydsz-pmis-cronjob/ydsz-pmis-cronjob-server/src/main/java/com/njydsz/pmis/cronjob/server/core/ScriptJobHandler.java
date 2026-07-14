@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.handler;
+package com.njydsz.pmis.cronjob.server.core.handler;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -109,7 +109,7 @@ public class ScriptJobHandler implements JobHandler {
             throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
         }
 
-        JSONObject params = JsonUtils.parseMap(paramsJson);
+        Map<String, Object> params = JsonUtils.parseMap(paramsJson);
         String language = params.getString("language");
         if (!StringUtils.hasText(language)) {
             throw new IllegalArgumentException("SHELL 任务参数缺少 language（shell/python）");

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.dag;
+package com.njydsz.pmis.cronjob.server.core.dag;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -450,7 +450,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     private Map<String, Object> buildConditionContext(String dagInstanceId) {
         Map<String, Object> context = new HashMap<>();
         // 1. 从 contextJson 获取节点结果
-        JSONObject dagContext = getDagContext(dagInstanceId);
+        Map<String, Object> dagContext = getDagContext(dagInstanceId);
         for (String key : dagContext.keySet()) {
             context.put(key, dagContext.get(key));
         }
@@ -465,7 +465,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             if (existing instanceof JSONObject jo) {
                 jo.put("status", node.getNodeStatus());
             } else {
-                JSONObject jo = new JSONObject();
+                Map<String, Object> jo = new JSONObject();
                 jo.put("status", node.getNodeStatus());
                 jo.put("result", node.getResultJson());
                 context.put(node.getJobKey(), jo);
@@ -1075,7 +1075,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             } catch (Exception parseEx) {
                 parsed = nodeResultJson;
             }
-            JSONObject mergeFragment = new JSONObject();
+            Map<String, Object> mergeFragment = new JSONObject();
             mergeFragment.put(jobKey, parsed);
             String mergeJson = JsonUtils.toJson(mergeFragment);
 
@@ -1092,7 +1092,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     /**
      * 解析 contextJson，空值或异常时返回空 JSONObject。
      */
-    private JSONObject parseContextJson(String contextJson) {
+    private Map<String, Object> parseContextJson(String contextJson) {
         if (contextJson == null || contextJson.isBlank()) {
             return new JSONObject();
         }
@@ -1112,14 +1112,14 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      *
      * <p>业务侧可在节点执行时调用本方法获取上游节点的执行结果：
      * <pre>{@code
-     * JSONObject context = dagInstanceExecutor.getDagContext(dagInstanceId);
+     * Map<String, Object> context = dagInstanceExecutor.getDagContext(dagInstanceId);
      * Object upstreamResult = context.get("upstreamJobKey");
      * }</pre>
      *
      * @param dagInstanceId DAG 实例 ID
      * @return 上下文 JSON 对象（不可变副本）；实例不存在或无上下文返回空对象
      */
-    public JSONObject getDagContext(String dagInstanceId) {
+    public Map<String, Object> getDagContext(String dagInstanceId) {
         JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             return new JSONObject();

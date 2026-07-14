@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -6,8 +6,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -26,6 +24,7 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
 

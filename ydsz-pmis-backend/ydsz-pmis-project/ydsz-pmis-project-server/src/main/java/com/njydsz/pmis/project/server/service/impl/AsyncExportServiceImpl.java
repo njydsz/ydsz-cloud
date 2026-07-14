@@ -1,15 +1,12 @@
-﻿package com.njydsz.pmis.project.server.service.impl;
+﻿﻿package com.njydsz.pmis.project.server.service.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.data.domain.Page;
@@ -19,7 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.alibaba.excel.EasyExcel;
+import com.njydsz.pmis.common.excel.core.ExcelFacade;
 import com.njydsz.pmis.common.file.config.MinioConfig;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.project.server.service.AsyncExportService;
@@ -223,11 +220,9 @@ public class AsyncExportServiceImpl implements AsyncExportService {
      */
     private byte[] writeExcel(String exportType, ReportData data) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        List<List<String>> head = data.headers.stream()
-                .map(Collections::singletonList)
-                .collect(Collectors.toList());
-        EasyExcel.write(baos)
-                .head(head)
+        ExcelFacade.write(baos)
+                .head(data.headers)
+                .headRowNumber(0)
                 .sheet(exportType == null ? "导出数据" : exportType)
                 .doWrite(data.rows);
         return baos.toByteArray();

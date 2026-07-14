@@ -1,9 +1,7 @@
-﻿package com.njydsz.pmis.message.server.channel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
 import java.util.Base64;
 import java.util.Map;
-
-import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -19,6 +17,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.service.receipt.ReadReceiptService;
 

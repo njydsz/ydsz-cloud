@@ -375,9 +375,9 @@ class InferenceEngineTest {
         }
 
         @Test
-        @DisplayName("register(null) 不影响 ruleCount")
+        @DisplayName("register(null Rule) 不影响 ruleCount")
         void shouldNotIncreaseWhenRegisterNullRule() {
-            engine.register(null);
+            engine.register((Rule) null);
 
             assertThat(engine.ruleCount()).isZero();
         }

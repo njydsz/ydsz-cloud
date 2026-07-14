@@ -25,6 +25,7 @@ import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.server.health.NextwikiHealthIndicator;
 import com.njydsz.pmis.nextwiki.server.service.DownloadRateLimitService;
@@ -70,7 +71,7 @@ public class DownloadController {
 
         FileNode fileNode = fileNodeRepository.findById(nodeId);
         if (fileNode == null || !fileNode.isFile()) {
-            throw BusinessException.builder().key("文件节点不存在或不是文件: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         String ip = getClientIp(request);
@@ -78,12 +79,13 @@ public class DownloadController {
         DownloadRateLimitService.RateLimitResult rateResult =
                 rateLimitService.checkRateLimit(userId, ip, nodeId);
         if (!rateResult.isAllowed()) {
-            throw BusinessException.builder().key(rateResult.getMessage()).build();
+            throw BusinessException.of(NextwikiExceptionCode.RATE_LIMIT_EXCEEDED)
+                    .data("message", rateResult.getMessage());
         }
 
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配置").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
 
         setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
@@ -107,7 +109,7 @@ public class DownloadController {
 
         FileNode fileNode = fileNodeRepository.findById(nodeId);
         if (fileNode == null || !fileNode.isFile()) {
-            throw BusinessException.builder().key("文件节点不存在或不是文件: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         String ip = getClientIp(request);
@@ -132,12 +134,12 @@ public class DownloadController {
 
         String storageKey = rateLimitService.verifySignedUrl(sign, expireTime);
         if (storageKey == null) {
-            throw BusinessException.builder().key("签名URL无效或已过期").build();
+            throw new BusinessException(NextwikiExceptionCode.SIGN_URL_EXPIRED);
         }
 
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配置").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
 
         String fileName = extractFileNameFromStorageKey(storageKey);
@@ -148,7 +150,7 @@ public class DownloadController {
             response.getOutputStream().flush();
         } catch (Exception e) {
             log.error("[DownloadController] 签名URL下载失败: sign={}", sign, e);
-            throw BusinessException.builder().key("文件下载失败").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
         }
 
         log.info("[DownloadController] 签名URL下载: sign={}", sign);

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service.impl;
+package com.njydsz.pmis.common.auth.service.impl;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -7,16 +7,20 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.DataScopeInfo;
 import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.tree.ArrayNode;
+import com.njydsz.pmis.common.json.tree.JsonNode;
+import com.njydsz.pmis.common.json.tree.ObjectNode;
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
-import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
@@ -44,8 +48,8 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *
  * <p><b>缓存策略：</b>
  * <ul>
- *   <li>使用 Caffeine 做本地缓存，防止内存溢出</li>
- *   <li>缓存时间由 {@code roleDataCacheSeconds} 配置</li>
+ * <li>使用 ydsz-pmis-common-cache 做本地缓存，防止内存溢出</li>
+     * <li>缓存时间由 {@code roleDataCacheSeconds} 配置</li>
  *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
  * </ul>
  *
@@ -54,7 +58,7 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * @version 3.5.0
  * @see DataPermissionResolver
  * @see DataScopeInfo
- * @see Caffeine
+ * @see YdszCache
  */
 public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
 
@@ -75,9 +79,10 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
     private Cache<String, DataScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleDataCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return Caffeine.newBuilder().build();
+            return YdszCache.<String, DataScopeInfo>newBuilder().build();
         }
-        return Caffeine.newBuilder()
+        return YdszCache.<String, DataScopeInfo>newBuilder()
+                .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, DataScopeInfo value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {
@@ -201,7 +206,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             return null;
         }
         try {
-            JsonNode node = JsonUtils.getMapper().readTree(json);
+            JsonNode node = YdszJson.readTree(json);
             if (node == null || node.isNull()) {
                 return null;
             }
@@ -240,7 +245,9 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
         String tenantId = null;
         String userId = null;
         StringBuilder customSqlConditions = new StringBuilder();
-        for (JsonNode element : arr) {
+        Iterator<JsonNode> elements = arr.elements();
+        while (elements.hasNext()) {
+            JsonNode element = elements.next();
             if (element == null || element.isNull()) {
                 continue;
             }
@@ -333,7 +340,9 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             return Collections.emptySet();
         }
         Set<String> set = new HashSet<>();
-        for (JsonNode item : arr) {
+        Iterator<JsonNode> items = arr.elements();
+        while (items.hasNext()) {
+            JsonNode item = items.next();
             String v = item.asText(null);
             if (StringUtils.isNotBlank(v)) {
                 set.add(v.trim());
@@ -380,7 +389,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
     /**
      * 获取数据权限本地缓存实例。
      *
-     * @return Caffeine 缓存实例
+     * @return 本地缓存实例
      */
     public Cache<String, DataScopeInfo> getCache() {
         return cache;

@@ -14,6 +14,8 @@ import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileAcl;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiEnums.ShareStatus;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.pmis.nextwiki.domain.repository.FileAclRepository;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
@@ -50,7 +52,7 @@ public class ShareDomainService {
                                   LocalDateTime expireTime, Integer maxAccessCount, String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + fileNodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId);
         }
 
         // 生成分享码和提取码
@@ -66,7 +68,7 @@ public class ShareDomainService {
                 .expireTime(expireTime)
                 .maxAccessCount(maxAccessCount)
                 .accessCount(0)
-                .status("active")
+                .status(ShareStatus.ACTIVE.getCode())
                 .password(password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null)
                 .revision(0)
                 .deleted(0)
@@ -105,36 +107,40 @@ public class ShareDomainService {
     public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
         ShareLink shareLink = shareLinkRepository.findByShareCode(shareCode);
         if (shareLink == null) {
-            throw BusinessException.builder().key("分享链接不存在").build();
+            throw new BusinessException(NextwikiExceptionCode.SHARE_NOT_FOUND);
         }
 
-        if (!"active".equals(shareLink.getStatus())) {
-            throw BusinessException.builder().key("分享链接已失效").build();
+        ShareStatus currentStatus = ShareStatus.fromCode(shareLink.getStatus());
+        if (currentStatus == null || currentStatus.isTerminal()) {
+            // 非 ACTIVE 状态（已过期/已撤销）视为已失效
+            throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
         }
 
         // 检查过期时间
         if (shareLink.getExpireTime() != null && shareLink.getExpireTime().isBefore(LocalDateTime.now())) {
-            shareLink.setStatus("expired");
-            shareLinkRepository.update(shareLink);
-            throw BusinessException.builder().key("分享链接已过期").build();
+            if (currentStatus.canTransitTo(ShareStatus.EXPIRED)) {
+                shareLink.setStatus(ShareStatus.EXPIRED.getCode());
+                shareLinkRepository.update(shareLink);
+            }
+            throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
         }
 
         // 检查访问次数
         if (shareLink.getMaxAccessCount() != null
                 && shareLink.getAccessCount() != null
                 && shareLink.getAccessCount() >= shareLink.getMaxAccessCount()) {
-            throw BusinessException.builder().key("分享链接访问次数已用尽").build();
+            throw new BusinessException(NextwikiExceptionCode.SHARE_ACCESS_LIMIT);
         }
 
         // 验证提取码
         if (shareLink.getExtractCode() != null && !shareLink.getExtractCode().equals(extractCode)) {
-            throw BusinessException.builder().key("提取码错误").build();
+            throw new BusinessException(NextwikiExceptionCode.SHARE_EXTRACT_CODE_ERROR);
         }
 
         // 验证密码
         if (shareLink.getPassword() != null && !shareLink.getPassword().isEmpty()) {
             if (password == null || !passwordEncoder.matches(password, shareLink.getPassword())) {
-                throw BusinessException.builder().key("密码错误").build();
+                throw new BusinessException(NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
             }
         }
 
@@ -151,7 +157,7 @@ public class ShareDomainService {
     public void revoke(String shareId, String userId) {
         ShareLink shareLink = shareLinkRepository.findById(shareId);
         if (shareLink == null) {
-            throw BusinessException.builder().key("分享链接不存在").build();
+            throw new BusinessException(NextwikiExceptionCode.SHARE_NOT_FOUND);
         }
         shareLinkRepository.revoke(shareId);
         log.info("[ShareDomainService] 撤销分享: shareId={}, userId={}", shareId, userId);

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.annotation;
+ackage com.njydsz.pmis.common.domain.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

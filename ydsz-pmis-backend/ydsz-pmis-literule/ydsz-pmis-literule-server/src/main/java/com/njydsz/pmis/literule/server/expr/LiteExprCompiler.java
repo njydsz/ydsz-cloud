@@ -7,14 +7,20 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 
 /**
  * LiteExpr 编译器
  *
  * <p>负责将表达式文本编译为 AST，并提供：
  * <ul>
- *   <li><b>编译缓存</b>：{@code String → ExprNode} 缓存，避免重复解析</li>
+ *   <li><b>编译缓存</b>：{@code String → ExprNode} 缓存，避免重复解析。
+ *       基于 ydsz-pmis-common-cache 实现，上限 4096 条、1 小时访问过期（P2-3），
+ *       避免无界增长导致 OOM</li>
  *   <li><b>常量折叠</b>：编译期求值常量表达式（如 {@code 1 + 2} → {@code 3}）</li>
  *   <li><b>变量提取</b>：从 AST 中收集所有变量引用</li>
  *   <li><b>函数提取</b>：从 AST 中收集所有函数调用</li>
@@ -26,11 +32,27 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class LiteExprCompiler {
 
-    /** 编译缓存：表达式文本 → AST */
-    private final Map<String, ExprNode> cache = new ConcurrentHashMap<>(512);
-
     /** 缓存上限 */
     private static final int MAX_CACHE_SIZE = 4096;
+
+    /** 缓存访问后过期时间（小时） */
+    private static final long CACHE_EXPIRE_HOURS = 1L;
+
+    /**
+     * 编译缓存：表达式文本 → AST
+     *
+     * <p>P2-3 改用 ydsz-pmis-common-cache 替代 {@code ConcurrentHashMap}：
+     * <ul>
+     *   <li>{@code maximumSize(4096)} — 原硬编码常量从未被强制执行，导致无界增长 OOM 风险</li>
+     *   <li>{@code expireAfterAccess(1h)} — 长期未访问的表达式自动淘汰，避免规则下线后仍驻留</li>
+     *   <li>线程安全，{@code get(key, mapper)} 原子加载，避免 {@code computeIfAbsent} 的重入陷阱</li>
+     * </ul>
+     */
+    private final Cache<String, ExprNode> cache = YdszCache.<String, ExprNode>newBuilder()
+            .type(CacheType.TTL)
+            .maximumSize(MAX_CACHE_SIZE)
+            .expireAfterAccess(CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
+            .build();
 
     /**
      * 编译表达式（带缓存）
@@ -43,7 +65,7 @@ public class LiteExprCompiler {
         if (expression == null || expression.isBlank()) {
             throw new LiteExprException("表达式为空", 1, 1);
         }
-        return cache.computeIfAbsent(expression, this::compile0);
+        return cache.get(expression, this::compile0);
     }
 
     /**
@@ -66,14 +88,14 @@ public class LiteExprCompiler {
      * 清空编译缓存
      */
     public void clearCache() {
-        cache.clear();
+        cache.invalidateAll();
     }
 
     /**
-     * 当前缓存数量
+     * 当前缓存数量（估计值，本地缓存异步维护，非精确）
      */
-    public int cacheSize() {
-        return cache.size();
+    public long cacheSize() {
+        return cache.estimatedSize();
     }
 
     // ===== 常量折叠 =====

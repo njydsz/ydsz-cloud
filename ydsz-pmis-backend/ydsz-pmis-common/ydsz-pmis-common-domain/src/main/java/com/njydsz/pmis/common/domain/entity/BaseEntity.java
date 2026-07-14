@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.entity;
+ackage com.njydsz.pmis.common.domain.entity;
 
 import java.io.Serializable;
 

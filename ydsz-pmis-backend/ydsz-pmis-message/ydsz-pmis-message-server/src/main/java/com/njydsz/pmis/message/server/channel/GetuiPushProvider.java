@@ -1,10 +1,8 @@
-﻿package com.njydsz.pmis.message.server.channel.push;
+package com.njydsz.pmis.message.server.channel.push;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
@@ -18,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 
@@ -103,7 +102,7 @@ public class GetuiPushProvider implements PushProvider {
                     "body", request.getContent() == null ? "" : request.getContent())));
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
             ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
-            JSONObject json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
             String code = json.getString("code");
             if ("10000".equals(code)) {
                 String taskId = json.getString("data");
@@ -153,9 +152,9 @@ public class GetuiPushProvider implements PushProvider {
             body.put("timestamp", timestamp);
             body.put("appkey", config.getAppKey());
             ResponseEntity<String> resp = restTemplate.postForEntity(url, body, String.class);
-            JSONObject json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
             if ("10000".equals(json.getString("code"))) {
-                JSONObject data = json.getJSONObject("data");
+                Map<String, Object> data = json.getJSONObject("data");
                 cachedToken = data.getString("token");
                 tokenExpireAt = System.currentTimeMillis() + 23L * 3600 * 1000;
                 return cachedToken;

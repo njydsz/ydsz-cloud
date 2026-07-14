@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
+package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.ConnectException;
 import java.net.URI;
@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
+import java.util.Map;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
@@ -194,7 +195,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            JSONObject json = JsonUtils.parseMap(body);
+            Map<String, Object> json = JsonUtils.parseMap(body);
             int code = json.getIntValue("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 子任务远程执行业务失败: code={} message={}",
@@ -232,7 +233,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            JSONObject json = JsonUtils.parseMap(body);
+            Map<String, Object> json = JsonUtils.parseMap(body);
             int code = json.getIntValue("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 远程执行业务失败: code={} message={}", 

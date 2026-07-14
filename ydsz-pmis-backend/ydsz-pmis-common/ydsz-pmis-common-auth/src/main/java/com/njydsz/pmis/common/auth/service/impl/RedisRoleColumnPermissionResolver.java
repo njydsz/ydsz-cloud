@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service.impl;
+package com.njydsz.pmis.common.auth.service.impl;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -7,16 +7,16 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.cache.YdszCache;
-import com.njydsz.pmis.common.cache.api.Cache;
-import com.njydsz.pmis.common.cache.builder.CacheType;
-import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.cache.listener.RemovalCause;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
-import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
@@ -145,7 +145,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
             return ColumnScopeInfo.empty();
         }
         try {
-            JsonNode node = JsonUtils.getMapper().readTree(json);
+            JsonNode node = YdszJson.readTree(json);
             if (node == null || node.isNull() || node.isEmpty()) {
                 return ColumnScopeInfo.empty();
             }

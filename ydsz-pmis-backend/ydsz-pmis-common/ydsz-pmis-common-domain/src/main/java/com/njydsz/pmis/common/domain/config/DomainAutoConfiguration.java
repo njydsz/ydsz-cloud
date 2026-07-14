@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.config;
+ackage com.njydsz.pmis.common.domain.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

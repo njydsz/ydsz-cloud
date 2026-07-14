@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.entity;
+ackage com.njydsz.pmis.common.domain.entity;
 
 /**
  * 逻辑删除标识接口（软删除）

@@ -1,22 +1,25 @@
-﻿package com.njydsz.pmis.common.safe.sensitive;
+package com.njydsz.pmis.common.safe.sensitive;
 
-import java.io.IOException;
-
+import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.serializer.JsonSerializer;
+import com.njydsz.pmis.common.json.writer.JSONWriter;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
- * 敏感数据脱敏 Jackson 序列化器
+ * 敏感数据脱敏序列化器（基于 YdszJson 引擎）
  *
- * <p>基于 Jackson {@link JsonSerializer} 实现，在序列化 JSON 时自动对
+ * <p>实现 YdszJson {@link JsonSerializer}，在序列化 JSON 时自动对
  * 标注了 {@link SensitiveData} 注解的字段进行脱敏处理。
  *
  * <p><b>使用方式：</b>
  * <pre>{@code
  * public class UserVO {
  *     @SensitiveData(SensitiveType.PHONE)
- *     @JsonSerialize(using = SensitiveDataSerializer.class)
  *     private String phone;
  * }
+ *
+ * // 注册到 YdszJson 全局序列化器
+ * YdszJson.register(Object.class, SensitiveDataSerializer.INSTANCE);
  * }</pre>
  *
  * <p><b>注意事项：</b>
@@ -29,12 +32,12 @@ import com.njydsz.pmis.common.util.json.JsonUtils;
  *
  * @author Marvin Lee
  * @email limw1888@126.com
- * @version 4.0.0
+ * @version 5.0.0
  * @see SensitiveData
  * @see SensitiveType
  * @see SensitiveUtil
  */
-public class SensitiveDataSerializer extends JsonSerializer<Object> {
+public class SensitiveDataSerializer implements JsonSerializer<Object> {
 
     /**
      * 单例实例
@@ -42,21 +45,15 @@ public class SensitiveDataSerializer extends JsonSerializer<Object> {
     public static final SensitiveDataSerializer INSTANCE = new SensitiveDataSerializer();
 
     @Override
-    public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(Object value, JSONWriter out) {
         if (value == null) {
-            gen.writeNull();
-            return;
-        }
-
-        // 如果是简单类型（String 等），直接序列化
-        if (value instanceof String) {
-            gen.writeString((String) value);
+            out.write("null");
             return;
         }
 
         // 先脱敏处理，再序列化
         Object desensitized = SensitiveDataProcessor.process(value);
-        gen.writeObject(desensitized);
+        out.write(YdszJson.toJson(desensitized));
     }
 
     /**

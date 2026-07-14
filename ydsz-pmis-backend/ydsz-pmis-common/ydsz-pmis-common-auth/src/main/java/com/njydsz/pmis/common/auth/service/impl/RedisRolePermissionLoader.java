@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service.impl;
+package com.njydsz.pmis.common.auth.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,8 +23,8 @@ import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
-import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
@@ -327,7 +327,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             return null;
         }
         try {
-            return JsonUtils.getMapper().readTree(jsonData);
+            return YdszJson.readTree(jsonData);
         } catch (Exception e) {
             log.warn("【权限模块】解析角色权限 JSON 失败: roleCode={}, error={}", roleCode, e.getMessage());
             return null;
@@ -339,7 +339,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
      */
     private void readApiPermissionsSafe(String apiData, Set<String> apiPerms) {
         try {
-            JsonNode parsed = JsonUtils.getMapper().readTree(apiData);
+            JsonNode parsed = YdszJson.readTree(apiData);
             if (parsed != null && parsed.isObject()) {
                 if (!parsed.isEmpty()) {
                     readStringArray(parsed.get("apis"), apiPerms);
@@ -362,7 +362,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             if (StringUtils.isBlank(menuData)) {
                 return;
             }
-            JsonNode obj = JsonUtils.getMapper().readTree(menuData);
+            JsonNode obj = YdszJson.readTree(menuData);
             if (obj != null && !obj.isEmpty()) {
                 readStringArray(obj.get("menus"), menuPerms);
                 readStringArray(obj.get("buttons"), buttonPerms);
@@ -388,7 +388,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             if (StringUtils.isBlank(menuData)) {
                 return;
             }
-            JsonNode obj = JsonUtils.getMapper().readTree(menuData);
+            JsonNode obj = YdszJson.readTree(menuData);
             if (obj != null && !obj.isEmpty()) {
                 readStringArray(obj.get("apis"), apiPerms);
             }
@@ -402,7 +402,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
 
     private void readApiPermissions(String apiData, Set<String> apiPerms, String errorMessage) {
         try {
-            JsonNode parsed = JsonUtils.getMapper().readTree(apiData);
+            JsonNode parsed = YdszJson.readTree(apiData);
             if (parsed != null && parsed.isObject()) {
                 if (!parsed.isEmpty()) {
                     readStringArray(parsed.get("apis"), apiPerms);

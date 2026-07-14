@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.converter;
+package com.njydsz.pmis.common.safe.converter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

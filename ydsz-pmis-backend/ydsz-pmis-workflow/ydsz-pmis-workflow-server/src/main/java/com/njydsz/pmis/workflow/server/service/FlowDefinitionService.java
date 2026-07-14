@@ -25,9 +25,33 @@ public interface FlowDefinitionService {
     String deploy(FlowDeployProcessDTO dto);
 
     /**
-     * 发布流程
+     * 发布流程（默认不强制发布，HIGH 风险时阻断）。
+     *
+     * <p>等价于 {@link #publish(String, boolean) publish(definitionId, false)}。
+     *
+     * @param definitionId 流程定义 ID
      */
     void publish(String definitionId);
+
+    /**
+     * P1-4: 发布流程（带版本兼容性校验）。
+     *
+     * <p>发布前检测当前同 flowCode 是否有激活版本及其在途实例，并比对新旧版本节点编码差异：
+     * <ul>
+     *   <li>无激活版本或无在途实例 → 直接发布（NONE 风险）</li>
+     *   <li>有在途实例但节点未删除 → 记录警告日志后发布（LOW/MEDIUM 风险）</li>
+     *   <li>有在途实例卡在已删除节点（HIGH 风险）：
+     *     <ul>
+     *       <li>{@code force=false} 且 {@code workflow.publish.block-on-high-risk=true}（默认）→ 抛 SysException 阻断</li>
+     *       <li>{@code force=true} → 记录警告日志后强制发布（需管理员权限）</li>
+     *     </ul>
+     *   </li>
+     * </ul>
+     *
+     * @param definitionId 流程定义 ID
+     * @param force        true=跳过 HIGH 风险阻断（强制发布）；false=按配置阻断
+     */
+    void publish(String definitionId, boolean force);
 
     /**
      * 停用（失效）流程

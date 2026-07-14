@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core;
+﻿package com.njydsz.pmis.common.excel.core;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -91,7 +91,7 @@ public class ExcelTemplateWriter {
                         String dateFormat = getDateFormat(field);
                         valueFormatter.setCellValueFast(cell, value, dateFormat);
                     } catch (Exception e) {
-                        log.warn("模板写入字段值异常: {}.{}", clazz.getSimpleName(), field.getName(), e);
+                        log.warn("模板写入字段值异常", , field.getName(), e);
                         cell.setBlank();
                     }
                 }

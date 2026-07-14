@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
+package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -76,7 +76,7 @@ public class CrossClusterDispatcher {
                     .build();
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                JSONObject json = JsonUtils.parseMap(response.body());
+                Map<String, Object> json = JsonUtils.parseMap(response.body());
                 int code = json.getIntValue("code", -1);
                 if (code == 0) {
                     String logId = json.getString("data");

@@ -13,6 +13,7 @@ import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.FileTag;
 import com.njydsz.pmis.nextwiki.domain.entity.Tag;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.repository.TagRepository;
 
@@ -42,12 +43,12 @@ public class TagDomainService {
     @Transactional(rollbackFor = Exception.class)
     public Tag createTag(String name, String color, String userId) {
         if (name == null || name.trim().isEmpty()) {
-            throw BusinessException.builder().key("标签名称不能为空").build();
+            throw new BusinessException(NextwikiExceptionCode.TAG_NAME_EMPTY);
         }
 
         Tag existing = tagRepository.findByName(name.trim());
         if (existing != null) {
-            throw BusinessException.builder().key("标签名称已存在: " + name).build();
+            throw BusinessException.of(NextwikiExceptionCode.TAG_ALREADY_EXISTS).data("name", name);
         }
 
         Tag tag = Tag.builder()
@@ -95,7 +96,7 @@ public class TagDomainService {
 
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + fileNodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId);
         }
 
         for (String tagId : tagIds) {

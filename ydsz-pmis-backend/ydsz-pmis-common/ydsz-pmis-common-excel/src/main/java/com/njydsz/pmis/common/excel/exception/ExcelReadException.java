@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.exception;
+﻿package com.njydsz.pmis.common.excel.exception;
 
 /**
  * Excel 读取异常类
@@ -94,7 +94,7 @@ public class ExcelReadException extends ExcelException {
      */
     public static ExcelReadException fileNotFound(String filePath) {
         ExcelReadException ex = new ExcelReadException(ExcelExceptionCode.READ_FILE_NOT_FOUND,
-            "Excel文件不存在或无法访问: " + filePath);
+            "Excel文件不存在");
         ex.setContext(new Object[]{filePath});
         return ex;
     }

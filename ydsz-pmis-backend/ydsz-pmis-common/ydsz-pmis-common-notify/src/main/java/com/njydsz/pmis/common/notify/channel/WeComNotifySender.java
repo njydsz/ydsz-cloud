@@ -2,6 +2,7 @@
 
 import java.util.List;
 import java.util.Map;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 			// 校验企业微信响应 errcode
 			if (response != null && !response.isEmpty()) {
 				try {
-					JsonNode respJson = JsonUtils.getMapper().readTree(response);
+					JsonNode respJson = YdszJson.readTree(response);
 					int errcode = respJson.has("errcode") ? respJson.get("errcode").asInt(-1) : -1;
 					if (errcode != 0) {
 						String errmsg = respJson.has("errmsg") ? respJson.get("errmsg").asText() : "";

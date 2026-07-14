@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.repository.StorageQuotaRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -45,11 +46,15 @@ public class QuotaDomainService {
         if (!quota.hasSpace(requiredBytes)) {
             long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0;
             long limit = quota.getQuotaLimit() != null ? quota.getQuotaLimit() : 0;
-            throw BusinessException.builder().key("存储空间不足: " + String.format("已用 %s / 总量 %s / 本次需要 %s", formatSize(used), formatSize(limit), formatSize(requiredBytes))).build();
+            throw BusinessException.of(NextwikiExceptionCode.QUOTA_INSUFFICIENT)
+                    .data("used", formatSize(used))
+                    .data("limit", formatSize(limit))
+                    .data("required", formatSize(requiredBytes));
         }
 
         if (!quota.hasFileCountSlot()) {
-            throw BusinessException.builder().key("文件数量已达上限: " + quota.getFileCountLimit()).build();
+            throw BusinessException.of(NextwikiExceptionCode.QUOTA_FILE_LIMIT)
+                    .data("limit", quota.getFileCountLimit());
         }
     }
 
@@ -60,9 +65,9 @@ public class QuotaDomainService {
     public void addUsage(String scopeType, String scopeId, long bytes, int fileCount) {
         int affected = quotaRepository.addUsage(scopeType, scopeId, bytes, fileCount);
         if (affected == 0) {
-            throw BusinessException.builder().key(
-                    "存储空间不足或文件数量超限（并发竞争）: " + scopeType + ":" + scopeId
-            ).build();
+            throw BusinessException.of(NextwikiExceptionCode.QUOTA_INSUFFICIENT)
+                    .data("scopeType", scopeType)
+                    .data("scopeId", scopeId);
         }
         log.info("[QuotaDomainService] 增加用量: scope={}, bytes={}, fileCount={}",
                 scopeType + ":" + scopeId, formatSize(bytes), fileCount);

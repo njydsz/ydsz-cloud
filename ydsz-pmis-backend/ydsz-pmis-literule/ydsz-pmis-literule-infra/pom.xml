@@ -17,8 +17,8 @@
             <artifactId>ydsz-pmis-literule-domain</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-excel</artifactId>
         </dependency>
     </dependencies>
 </project>

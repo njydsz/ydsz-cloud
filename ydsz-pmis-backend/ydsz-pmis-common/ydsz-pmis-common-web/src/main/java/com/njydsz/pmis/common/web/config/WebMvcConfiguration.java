@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.config;
+﻿﻿package com.njydsz.pmis.common.web.config;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -86,11 +86,6 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         this.webTraceProperties = webTraceProperties;
         this.authenticationProvider = authenticationProvider;
         this.applicationName = applicationContext.getApplicationName();
-    }
-
-    protected void configureObjectMapper(ObjectMapper mapper) {
-        // Web端大数格式化：避免科学计数法
-        mapper.configure(StreamWriteFeature.WRITE_BIGDECIMAL_AS_PLAIN.mappedFeature(), true);
     }
 
     @Override

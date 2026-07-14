@@ -45,8 +45,8 @@
             <artifactId>jackson-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>easyexcel</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-excel</artifactId>
         </dependency>
     </dependencies>
 </project>

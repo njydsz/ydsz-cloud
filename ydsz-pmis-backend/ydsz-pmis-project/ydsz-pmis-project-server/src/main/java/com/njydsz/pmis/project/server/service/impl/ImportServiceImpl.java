@@ -13,7 +13,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.alibaba.excel.EasyExcel;
+import com.njydsz.pmis.common.excel.core.ExcelFacade;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
@@ -65,7 +65,8 @@ public class ImportServiceImpl implements ImportService {
             demo.setRemark("示例：L5 T&M 客户类型 ENT，半年期");
             sample.add(demo);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            EasyExcel.write(out, RateCardImportDTO.class)
+            ExcelFacade.write(out, RateCardImportDTO.class)
+                    .headRowNumber(0)
                     .sheet("费率卡")
                     .doWrite(sample);
             byte[] bytes = out.toByteArray();
@@ -86,10 +87,10 @@ public class ImportServiceImpl implements ImportService {
      * 导入费率卡
      */
     private ImportResult importRateCard(MultipartFile file) throws IOException {
-        List<RateCardImportDTO> rows = EasyExcel.read(file.getInputStream())
-                .head(RateCardImportDTO.class)
+        List<RateCardImportDTO> rows = ExcelFacade.read(file.getInputStream(), RateCardImportDTO.class)
+                .headRowNumber(0)
                 .sheet()
-                .doReadSync();
+                .doReadAll();
         int total = rows == null ? 0 : rows.size();
         int success = 0;
         List<FailureRow> failures = new ArrayList<>();

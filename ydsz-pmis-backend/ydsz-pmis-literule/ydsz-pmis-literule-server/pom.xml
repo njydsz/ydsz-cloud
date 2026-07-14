@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -22,9 +22,14 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-jdbc</artifactId>
         </dependency>
-        <dependency>
+                <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-lock</artifactId>
+        </dependency>
+        <!-- ydsz-pmis-common-cache（规则配置缓存，替代 Caffeine） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-cache</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -73,16 +78,12 @@
             <artifactId>hutool-all</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-excel</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -107,5 +108,9 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+            <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
+</dependencies>
 </project>

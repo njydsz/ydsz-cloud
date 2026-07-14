@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -16,9 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.server.channel.MessageChannel;

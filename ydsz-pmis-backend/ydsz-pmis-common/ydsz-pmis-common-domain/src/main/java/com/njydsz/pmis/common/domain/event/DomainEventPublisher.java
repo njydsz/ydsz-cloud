@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.event;
+ackage com.njydsz.pmis.common.domain.event;
 
 import java.util.Objects;
 

@@ -9,8 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
 import com.njydsz.pmis.common.safe.csrf.CsrfToken;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
@@ -18,7 +19,7 @@ import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
 /**
  * 基于内存的 CSRF 令牌存储库
  *
- * 使用 Caffeine 缓存管理令牌过期，ConcurrentHashMap 存储会话与令牌映射。
+ * 使用 ydsz-pmis-common-cache 缓存管理令牌过期，ConcurrentHashMap 存储会话与令牌映射。
  * 内置令牌生成逻辑，避免与 CsrfTokenGenerator 产生循环依赖。
  *
  * <p><b>注意：</b>此实现适用于单机部署。分布式环境下建议使用 Redis 实现。
@@ -39,7 +40,8 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
 
     public InMemoryCsrfTokenRepository(long expirationSeconds) {
         this.expirationSeconds = expirationSeconds;
-        this.tokenCache = Caffeine.newBuilder()
+        this.tokenCache = YdszCache.<String, CsrfToken>newBuilder()
+                .type(CacheType.TTL)
                 .expireAfterWrite(expirationSeconds * 2L, TimeUnit.SECONDS)
                 .build();
         this.sessionTokenMap = new ConcurrentHashMap<>();

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.handler;
+package com.njydsz.pmis.cronjob.server.core.handler;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -81,7 +81,7 @@ public class HttpJobHandler implements JobHandler {
             throw new IllegalArgumentException("HTTP 任务参数(paramsJson)为空");
         }
 
-        JSONObject params = JsonUtils.parseMap(paramsJson);
+        Map<String, Object> params = JsonUtils.parseMap(paramsJson);
         String url = params.getString("url");
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("HTTP 任务参数缺少 url");
@@ -111,7 +111,7 @@ public class HttpJobHandler implements JobHandler {
         requestBuilder.timeout(timeout);
 
         // 设置请求头
-        JSONObject headers = params.getJSONObject("headers");
+        Map<String, Object> headers = params.getJSONObject("headers");
         if (headers != null) {
             for (Map.Entry<String, Object> entry : headers.entrySet()) {
                 if (entry.getValue() != null) {
@@ -155,7 +155,7 @@ public class HttpJobHandler implements JobHandler {
                 method, url, status, responseBody == null ? 0 : responseBody.length());
 
         // 返回结构化结果
-        JSONObject result = new JSONObject();
+        Map<String, Object> result = new JSONObject();
         result.put("status", status);
         result.put("body", responseBody);
         result.put("url", url);

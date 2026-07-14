@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.event;
+package com.njydsz.pmis.common.auth.event;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 权限变更事件监听器
@@ -128,7 +128,7 @@ public class PermissionCacheInvalidationListener {
         public void onMessage(Message message, byte[] pattern) {
             try {
                 String body = new String(message.getBody());
-                JsonNode json = JsonUtils.getMapper().readTree(body);
+                JsonNode json = YdszJson.readTree(body);
                 String changeTypeName = json.has("changeType") ? json.get("changeType").asText(null) : null;
                 String roleCode = json.has("roleCode") ? json.get("roleCode").asText(null) : null;
 

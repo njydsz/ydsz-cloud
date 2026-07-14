@@ -233,25 +233,25 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private ChatResponse parseResponse(String json) {
-        JSONObject obj = JsonUtils.parseMap(json);
+        Map<String, Object> obj = JsonUtils.parseMap(json);
         String id = obj.getString("id");
         String model = obj.getString("model");
-        JSONArray choices = obj.getJSONArray("choices");
+        List<Object> choices = obj.getJSONArray("choices");
         if (choices == null || choices.isEmpty()) {
             throw new LlmException("LLM 响应无 choices", LlmException.ErrorType.INVALID_RESPONSE);
         }
-        JSONObject choice = choices.getJSONObject(0);
-        JSONObject message = choice.getJSONObject("message");
+        Map<String, Object> choice = choices.getJSONObject(0);
+        Map<String, Object> message = choice.getJSONObject("message");
         String finishReason = choice.getString("finish_reason");
         String content = message != null ? message.getString("content") : null;
 
         List<ToolCall> toolCalls = new ArrayList<>();
         if (message != null && message.containsKey("tool_calls")) {
-            JSONArray calls = message.getJSONArray("tool_calls");
+            List<Object> calls = message.getJSONArray("tool_calls");
             for (int i = 0; i < calls.size(); i++) {
-                JSONObject call = calls.getJSONObject(i);
+                Map<String, Object> call = calls.getJSONObject(i);
                 String callId = call.getString("id");
-                JSONObject function = call.getJSONObject("function");
+                Map<String, Object> function = call.getJSONObject("function");
                 String name = function.getString("name");
                 String argsStr = function.getString("arguments");
                 Map<String, Object> args = JsonUtils.fromJson(argsStr, Map.class);
@@ -261,7 +261,7 @@ public class OpenAiCompatibleClient implements LlmClient {
 
         TokenUsage usage = TokenUsage.zero();
         if (obj.containsKey("usage")) {
-            JSONObject usageObj = obj.getJSONObject("usage");
+            Map<String, Object> usageObj = obj.getJSONObject("usage");
             usage = new TokenUsage(
                     usageObj.getIntValue("prompt_tokens", 0),
                     usageObj.getIntValue("completion_tokens", 0));
@@ -276,21 +276,21 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     private ChatChunk parseChunk(String data) {
         try {
-            JSONObject obj = JsonUtils.parseMap(data);
+            Map<String, Object> obj = JsonUtils.parseMap(data);
             String id = obj.getString("id");
             String model = obj.getString("model");
-            JSONArray choices = obj.getJSONArray("choices");
+            List<Object> choices = obj.getJSONArray("choices");
             if (choices == null || choices.isEmpty()) {
                 return null;
             }
-            JSONObject choice = choices.getJSONObject(0);
-            JSONObject delta = choice.getJSONObject("delta");
+            Map<String, Object> choice = choices.getJSONObject(0);
+            Map<String, Object> delta = choice.getJSONObject("delta");
             String finishReason = choice.getString("finish_reason");
             String content = delta != null ? delta.getString("content") : null;
 
             TokenUsage usage = null;
             if (obj.containsKey("usage") && obj.get("usage") != null) {
-                JSONObject usageObj = obj.getJSONObject("usage");
+                Map<String, Object> usageObj = obj.getJSONObject("usage");
                 usage = new TokenUsage(
                         usageObj.getIntValue("prompt_tokens", 0),
                         usageObj.getIntValue("completion_tokens", 0));

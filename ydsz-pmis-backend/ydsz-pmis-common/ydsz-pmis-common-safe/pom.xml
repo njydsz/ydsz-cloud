@@ -19,7 +19,11 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-core</artifactId>
         </dependency>
-        <!-- Jackson 由 spring-boot-starter-web 传递依赖引入，无需显式声明 -->
+        <!-- ydsz-pmis-common-json（YdszJson 引擎，替代 Jackson） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
         <!--ydsz-pmis-common-redis-->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -58,10 +62,10 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--caffeine-->
+        <!--ydsz-pmis-common-cache（本地缓存框架，替代 Caffeine）-->
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-cache</artifactId>
         </dependency>
         <!--lombok-->
         <dependency>

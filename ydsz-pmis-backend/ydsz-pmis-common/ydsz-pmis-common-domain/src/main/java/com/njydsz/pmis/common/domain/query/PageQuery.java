@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.query;
+ackage com.njydsz.pmis.common.domain.query;
 
 import static lombok.AccessLevel.PROTECTED;
 

@@ -24,6 +24,7 @@ import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.service.FileVersionDomainService;
@@ -137,7 +138,7 @@ public class FileApplicationService {
         // 6. 正常上传到存储
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配置").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
         String storageKey = generateStorageKey(userId, fileName);
         FileStorage uploaded = storage.upload(null, storageKey, file);
@@ -150,9 +151,8 @@ public class FileApplicationService {
                 if (scanResult.isInfected()) {
                     // 检测到病毒，删除已上传的文件并拒绝
                     storage.delete(null, storageKey);
-                    throw BusinessException.builder()
-                            .key("文件病毒扫描未通过: " + scanResult.getMessage())
-                            .build();
+                    throw BusinessException.of(NextwikiExceptionCode.FILE_VIRUS_DETECTED)
+                            .data("message", scanResult.getMessage());
                 }
                 if (scanResult.isError()) {
                     // 扫描出错，不阻断流程，仅记录警告
@@ -286,7 +286,7 @@ public class FileApplicationService {
         permissionService.checkDelete(nodeId, userId);
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         String lockOwner = userId + ":" + System.nanoTime();
@@ -352,7 +352,7 @@ public class FileApplicationService {
         permissionService.checkRead(nodeId, userId);
         FileNode source = fileNodeRepository.findById(nodeId);
         if (source == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         FileNode parent = resolveParentNode(targetParentId, userId);
@@ -437,7 +437,7 @@ public class FileApplicationService {
     public FileNodeVO getFileInfo(String nodeId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
         return toVO(node);
     }
@@ -449,7 +449,7 @@ public class FileApplicationService {
     public void toggleStar(String nodeId, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
         node.setStarred(node.getStarred() == null || !node.getStarred());
         node.setUpdatedBy(userId);
@@ -466,26 +466,27 @@ public class FileApplicationService {
      */
     private void validateUpload(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw BusinessException.builder().key("上传文件为空").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_UPLOAD_EMPTY);
         }
         if (file.getSize() > maxFileSize) {
-            throw BusinessException.builder().key(
-                    "文件大小超过限制: " + maxFileSize / 1024 / 1024 + "MB").build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_TOO_LARGE)
+                    .data("maxSize", maxFileSize / 1024 / 1024 + "MB");
         }
         String filename = sanitizeFileName(file.getOriginalFilename());
         if (filename == null || filename.isEmpty()) {
-            throw BusinessException.builder().key("文件名为空").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_NAME_EMPTY);
         }
         String suffix = extractSuffix(filename);
         if (BLOCKED_EXTENSIONS.contains(suffix)) {
-            throw BusinessException.builder().key("不允许上传此类型文件: ." + suffix).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_TYPE_NOT_ALLOWED)
+                    .data("suffix", suffix);
         }
         // 白名单校验（如果配置了）
         if (allowedTypes != null && !allowedTypes.isEmpty()) {
             Set<String> allowed = Set.of(allowedTypes.toLowerCase().split(","));
             if (!allowed.contains(suffix)) {
-                throw BusinessException.builder().key(
-                        "文件类型不在允许列表: ." + suffix).build();
+                throw BusinessException.of(NextwikiExceptionCode.FILE_TYPE_NOT_ALLOWED)
+                        .data("suffix", suffix);
             }
         }
     }
@@ -499,10 +500,10 @@ public class FileApplicationService {
         }
         FileNode parent = fileNodeRepository.findById(parentId);
         if (parent == null) {
-            throw BusinessException.builder().key("父目录不存在: " + parentId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_FOLDER_NOT_FOUND).data("parentId", parentId);
         }
         if (!parent.isFolder()) {
-            throw BusinessException.builder().key("目标节点不是目录: " + parentId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_PARENT_NOT_FOLDER).data("parentId", parentId);
         }
         return parent;
     }

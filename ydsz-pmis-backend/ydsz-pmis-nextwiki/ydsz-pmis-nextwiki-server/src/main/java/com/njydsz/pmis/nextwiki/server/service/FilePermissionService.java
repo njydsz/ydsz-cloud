@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileAcl;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.service.ShareDomainService;
 
@@ -80,7 +81,7 @@ public class FilePermissionService {
     public void checkPermission(String nodeId, String userId, int permission, String action) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         // 文件所有者拥有全部权限
@@ -100,8 +101,9 @@ public class FilePermissionService {
         if (!hasPermission) {
             log.warn("[FilePermissionService] 权限不足: userId={}, nodeId={}, action={}",
                     userId, nodeId, action);
-            throw BusinessException.builder().key(
-                    "无" + action + "权限: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.PERMISSION_DENIED)
+                    .data("nodeId", nodeId)
+                    .data("action", action);
         }
     }
 

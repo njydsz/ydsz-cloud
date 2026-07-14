@@ -48,7 +48,7 @@ public class FlowFormEngineService {
             return null;
         }
         try {
-            JSONObject extJson = JsonUtils.parseMap(nodeExt);
+            Map<String, Object> extJson = JsonUtils.parseMap(nodeExt);
             if (extJson == null) {
                 return null;
             }

@@ -7,8 +7,9 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
 
@@ -98,20 +99,22 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
 
     /**
      * 本地缓存 clientId，作为 Redis 注册表的前置缓存
-     * <p>使用 Caffeine 缓存替代 ThreadLocal，通过 TTL 和最大容量自动清理，
+     * <p>使用 ydsz-pmis-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理，
      * 彻底避免线程池复用场景下的内存泄漏。
      * <p>缓存键格式：{@code threadId:lockKey}，确保不同线程的 clientId 互不干扰。
      */
-    private final Cache<String, String> clientIdCache = Caffeine.newBuilder()
+    private final Cache<String, String> clientIdCache = YdszCache.<String, String>newBuilder()
+            .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
 
     /**
      * 锁租约时间缓存，key 为 {@code threadId:lockKey}，value 为租约时间（毫秒）
-     * <p>使用 Caffeine 缓存替代 ThreadLocal，通过 TTL 和最大容量自动清理。
+     * <p>使用 ydsz-pmis-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理。
      */
-    private final Cache<String, Long> leaseTimeCache = Caffeine.newBuilder()
+    private final Cache<String, Long> leaseTimeCache = YdszCache.<String, Long>newBuilder()
+            .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();

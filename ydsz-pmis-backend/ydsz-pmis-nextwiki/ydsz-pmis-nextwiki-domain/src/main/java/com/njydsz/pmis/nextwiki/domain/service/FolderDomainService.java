@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 
@@ -52,7 +53,7 @@ public class FolderDomainService {
         boolean nameExists = children.stream()
                 .anyMatch(c -> c.getName().equalsIgnoreCase(name) && c.isFolder());
         if (nameExists) {
-            throw BusinessException.builder().key("同名目录已存在: " + name).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_ALREADY_EXISTS).data("name", name);
         }
 
         String path = buildPath(parent.getPath(), name);
@@ -103,17 +104,17 @@ public class FolderDomainService {
     public FileNode move(String nodeId, String targetParentId, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         // 防止将目录移动到自身或其子目录下
         if (node.isFolder() && isAncestorOrSelf(nodeId, targetParentId)) {
-            throw BusinessException.builder().key("不能将目录移动到自身或其子目录下").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_MOVE_TO_SELF);
         }
 
         FileNode targetParent = fileNodeRepository.findById(targetParentId);
         if (targetParent == null || !targetParent.isFolder()) {
-            throw BusinessException.builder().key("目标父目录不存在或不是目录").build();
+            throw new BusinessException(NextwikiExceptionCode.FILE_PARENT_NOT_FOLDER);
         }
 
         String oldPath = node.getPath();
@@ -156,7 +157,7 @@ public class FolderDomainService {
     public FileNode rename(String nodeId, String newName, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         String oldName = node.getName();
@@ -196,7 +197,7 @@ public class FolderDomainService {
     public void softDelete(String nodeId, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
         // 记录原始路径
@@ -271,7 +272,7 @@ public class FolderDomainService {
         }
         FileNode parent = fileNodeRepository.findById(parentId);
         if (parent == null) {
-            throw BusinessException.builder().key("父目录不存在: " + parentId).build();
+            throw BusinessException.of(NextwikiExceptionCode.FILE_FOLDER_NOT_FOUND).data("parentId", parentId);
         }
         return parent;
     }

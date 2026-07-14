@@ -14,9 +14,9 @@ import org.redisson.api.RedissonClient;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Ticker;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
@@ -27,12 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 多级缓存规则配置提供者（P1-1）
  *
- * <p>装饰器模式实现的 Caffeine (L1) + Redis (L2) 两级缓存，
+ * <p>装饰器模式实现的 ydsz-pmis-common-cache (L1) + Redis (L2) 两级缓存，
  * 对标银行风控/Drools 优化实践，减少 DB 压力。
  *
  * <p>缓存层级：
  * <ul>
- *   <li>L1（Caffeine 本地内存）：TTL 60s，最大 1000 条，命中后直接返回</li>
+ *   <li>L1（本地内存）：TTL 60s，最大 1000 条，命中后直接返回</li>
  *   <li>L2（Redis 分布式）：TTL 300s，L1 未命中时查询，命中后回填 L1</li>
  *   <li>DB：L1/L2 均未命中时查询数据库，命中后回填 L1 和 L2</li>
  * </ul>
@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>构造器参数 {@code redissonClient} 为 null 或 {@code l2Enabled=false} 时禁用 L2</li>
  * </ul>
  *
- * <p>并发安全：Caffeine 的 {@code cache.get(key, mapper)} 保证同一 key 仅一个线程执行加载，
+ * <p>并发安全：ydsz-pmis-common-cache 的 {@code cache.get(key, mapper)} 保证同一 key 仅一个线程执行加载，
  * 其余线程阻塞等待结果，天然防止缓存击穿。
  *
  * @author ydsz-pmis-team
@@ -72,7 +72,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     private static final String KEY_TENANT_ENABLED_PREFIX = "literule:rules:tenant:";
     /** L2 NULL 标记（Redis 中表示 null 结果） */
     private static final String L2_NULL_MARKER = "__NULL__";
-    /** L1 NULL 标记（Caffeine 中表示 null 结果，Caffeine 不缓存 null） */
+    /** L1 NULL 标记（本地缓存中表示 null 结果，不缓存 null） */
     private static final RuleDefinition L1_NULL_MARKER = RuleDefinition.builder()
             .code("__L1_NULL_MARKER__").build();
 
@@ -104,34 +104,34 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     public CachingRuleConfigProvider(RuleConfigProvider delegate,
                                       RedissonClient redissonClient,
                                       LiteRuleProperties properties) {
-        this(delegate, redissonClient, properties.getCache(), Ticker.systemTicker());
+        this(delegate, redissonClient, properties.getCache(), null);
     }
 
     /**
-     * 测试用构造器，可注入自定义 {@link Ticker} 以模拟 TTL 过期。
+     * 测试用构造器。
      *
      * @param delegate        被装饰的 RuleConfigProvider
      * @param redissonClient  Redisson 客户端（null 时禁用 L2）
      * @param cacheConfig     缓存配置
-     * @param ticker          Caffeine 时钟源
+     * @param unused          预留参数（原 Caffeine Ticker，已废弃）
      */
     CachingRuleConfigProvider(RuleConfigProvider delegate,
                               RedissonClient redissonClient,
                               LiteRuleProperties.CacheConfig cacheConfig,
-                              Ticker ticker) {
+                              Object unused) {
         this.delegate = delegate;
         // L2 启用条件：RedissonClient 非空 且 配置启用 L2
         this.redissonClient = (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
         this.cacheConfig = cacheConfig;
-        this.listCache = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofSeconds(cacheConfig.getL1TtlSeconds()))
+        this.listCache = YdszCache.<String, List<RuleDefinition>>newBuilder()
+                .type(CacheType.TTL)
+                .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
-                .ticker(ticker)
                 .build();
-        this.singleCache = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofSeconds(cacheConfig.getL1TtlSeconds()))
+        this.singleCache = YdszCache.<String, RuleDefinition>newBuilder()
+                .type(CacheType.TTL)
+                .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
-                .ticker(ticker)
                 .build();
         log.info("[LiteRule-Cache] 多级缓存已初始化 (L1 ttl={}s maxSize={}, L2 enabled={})",
                 cacheConfig.getL1TtlSeconds(), cacheConfig.getL1MaxSize(), this.redissonClient != null);
@@ -238,7 +238,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     /**
      * 从 L2 或 DB 加载列表
      *
-     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由 Caffeine.get 自动回填）。
+     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由缓存框架自动回填）。
      */
     private List<RuleDefinition> loadListFromL2OrDb(String l2Key, Supplier<List<RuleDefinition>> loader) {
         // 1. 尝试 L2
@@ -273,9 +273,9 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     /**
      * 从 L2 或 DB 加载单条
      *
-     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由 Caffeine.get 自动回填）。
+     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由缓存框架自动回填）。
      * null 结果使用 {@link #L1_NULL_MARKER}（L1）和 {@link #L2_NULL_MARKER}（L2）标记，
-     * 避免 Caffeine 不缓存 null 导致的缓存穿透。
+     * 避免不缓存 null 导致的缓存穿透。
      */
     private RuleDefinition loadSingleFromL2OrDb(String l2Key, Supplier<RuleDefinition> loader) {
         // 1. 尝试 L2
@@ -335,7 +335,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     }
 
     /**
-     * 清除 L1 缓存（本地 Caffeine）
+     * 清除 L1 缓存（本地）
      */
     private void invalidateL1() {
         listCache.invalidateAll();

@@ -1,7 +1,12 @@
-﻿package com.njydsz.pmis.common.safe.core;
+package com.njydsz.pmis.common.safe.core;
 
-import java.util.Map;
+import java.util.Iterator;
 
+import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.tree.ArrayNode;
+import com.njydsz.pmis.common.json.tree.JsonNode;
+import com.njydsz.pmis.common.json.tree.ObjectNode;
+import com.njydsz.pmis.common.json.tree.TextNode;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
@@ -11,11 +16,11 @@ import lombok.extern.slf4j.Slf4j;
  * JSON Body XSS 清理器
  *
  * <p>递归遍历 JSON 对象的所有字符串值，使用 EscapeUtils 清理潜在的 XSS 脚本。
- * 基于 Jackson {@link JsonNode} 实现，与 Jackson JSON 引擎保持一致。
+ * 基于 YdszJson {@link JsonNode} 实现，与 YdszJson 引擎保持一致。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
- * @version 4.0.0
+ * @version 5.0.0
  */
 @Slf4j
 public class JsonBodyXssCleaner {
@@ -31,17 +36,16 @@ public class JsonBodyXssCleaner {
             return json;
         }
         try {
-            ObjectMapper mapper = JsonUtils.getMapper();
-            JsonNode parsed = mapper.readTree(json);
+            JsonNode parsed = YdszJson.readTree(json);
             JsonNode cleaned = cleanNode(parsed);
             return JsonUtils.toJson(cleaned);
         } catch (Exception e) {
-            // 如果 JSON 解析失败，返回原始字符串
             log.debug("[JsonBodyXssCleaner] JSON解析失败，返回原始字符串: {}", e.getMessage());
             return json;
         }
     }
 
+    @SuppressWarnings(value = "unused")
     private JsonNode cleanNode(JsonNode node) {
         if (node == null || node.isNull()) {
             return node;
@@ -50,15 +54,19 @@ public class JsonBodyXssCleaner {
             return new TextNode(cleanString(node.asText()));
         }
         if (node.isObject()) {
-            ObjectNode cleaned = JsonUtils.getMapper().createObjectNode();
-            for (Map.Entry<String, JsonNode> entry : node.properties()) {
-                cleaned.set(entry.getKey(), cleanNode(entry.getValue()));
+            ObjectNode cleaned = new ObjectNode();
+            Iterator<String> fieldNames = node.fieldNames();
+            while (fieldNames.hasNext()) {
+                String fieldName = fieldNames.next();
+                cleaned.put(fieldName, cleanNode(node.get(fieldName)));
             }
             return cleaned;
         }
         if (node.isArray()) {
-            ArrayNode cleaned = JsonUtils.getMapper().createArrayNode();
-            for (JsonNode item : node) {
+            ArrayNode cleaned = new ArrayNode();
+            Iterator<JsonNode> elements = node.elements();
+            while (elements.hasNext()) {
+                JsonNode item = elements.next();
                 cleaned.add(cleanNode(item));
             }
             return cleaned;
@@ -68,9 +76,7 @@ public class JsonBodyXssCleaner {
 
     private String cleanString(String value) {
         String cleaned = EscapeUtils.clean(value);
-        // 如果清理后内容变化，说明有潜在 XSS
         if (!cleaned.equals(value)) {
-            // 进一步转义危险字符
             return value.replace("<", "&lt;").replace(">", "&gt;")
                     .replace("javascript:", "")
                     .replace("vbscript:", "")

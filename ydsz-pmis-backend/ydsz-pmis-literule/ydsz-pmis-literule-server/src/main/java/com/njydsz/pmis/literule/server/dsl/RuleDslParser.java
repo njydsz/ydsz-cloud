@@ -95,7 +95,7 @@ public final class RuleDslParser {
         if (jsonContent == null || jsonContent.isBlank()) {
             return emptyDsl();
         }
-        JSONObject raw = JsonUtils.parseMap(jsonContent);
+        Map<String, Object> raw = JsonUtils.parseMap(jsonContent);
         if (raw == null || raw.isEmpty()) {
             return emptyDsl();
         }

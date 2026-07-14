@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -58,7 +58,6 @@
         <resilience4j.version>2.4.0</resilience4j.version>
         <error-prone-annotations.version>2.41.0</error-prone-annotations.version>
         <fastjson2.version>2.0.62</fastjson2.version>
-        <caffeine.version>3.2.4</caffeine.version>
         <asm.version>9.7.1</asm.version>
     </properties>
 
@@ -332,14 +331,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
-            <!-- caffeine 版本覆盖 -->
-            <dependency>
-                <groupId>com.github.ben-manes.caffeine</groupId>
-                <artifactId>caffeine</artifactId>
-                <version>${caffeine.version}</version>
-            </dependency>
-
             <!-- error_prone_annotations 版本覆盖 -->
             <dependency>
                 <groupId>com.google.errorprone</groupId>
@@ -563,11 +554,6 @@
             </dependency>
 
             <!-- fastjson2 版本覆盖 -->
-            <dependency>
-                <groupId>com.alibaba.fastjson2</groupId>
-                <artifactId>fastjson2</artifactId>
-                <version>${fastjson2.version}</version>
-            </dependency>
 
             <!-- resilience4j 版本覆盖 -->
             <dependency>
@@ -668,11 +654,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>${caffeine.version}</version>
         </dependency>
     </dependencies>
 

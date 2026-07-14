@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel.sms;
+package com.njydsz.pmis.message.server.channel.sms;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -112,7 +112,7 @@ public class AliyunSmsProvider implements SmsProvider {
             String url = "https://" + config.getEndpoint() + "/?"
                     + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
-            JSONObject json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
             String code = json.getString("Code");
             if ("OK".equals(code)) {
                 String bizId = json.getString("BizId");
@@ -208,7 +208,7 @@ public class AliyunSmsProvider implements SmsProvider {
             params.put("Signature", signature);
             String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
-            JSONObject json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
             String code = json.getString("Code");
             if ("OK".equals(code)) {
                 String bizId = json.getString("BizId");
@@ -261,14 +261,14 @@ public class AliyunSmsProvider implements SmsProvider {
             params.put("Signature", signature);
             String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
-            JSONObject json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
             String code = json.getString("Code");
             if ("OK".equals(code)) {
-                JSONObject detail = json.getJSONObject("SmsSendDetailDTOs");
+                Map<String, Object> detail = json.getJSONObject("SmsSendDetailDTOs");
                 if (detail != null) {
                     var arr = detail.getJSONArray("SmsSendDetailDTO");
                     if (arr != null && !arr.isEmpty()) {
-                        JSONObject first = arr.getJSONObject(0);
+                        Map<String, Object> first = arr.getJSONObject(0);
                         String sendStatus = first.getString("SendStatus");
                         String errMsg = first.getString("ErrCode");
                         if ("DELIVERED".equals(sendStatus)) {

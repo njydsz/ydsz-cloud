@@ -1,9 +1,10 @@
-﻿package com.njydsz.pmis.cronjob.server.core.dag;
+package com.njydsz.pmis.cronjob.server.core.dag;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
@@ -40,10 +41,10 @@ public class DagDefinitionCodec {
         if (definition == null) {
             return null;
         }
-        JSONObject root = new JSONObject();
-        JSONArray nodesArr = new JSONArray();
+        Map<String, Object> root = new JSONObject();
+        List<Object> nodesArr = new JSONArray();
         for (DagNode node : definition.nodes()) {
-            JSONObject n = new JSONObject();
+            Map<String, Object> n = new JSONObject();
             n.put("jobKey", node.jobKey());
             n.put("jobId", node.jobId());
             n.put("label", node.label());
@@ -61,9 +62,9 @@ public class DagDefinitionCodec {
             n.put("approvalTimeoutMinutes", node.approvalTimeoutMinutes());
             nodesArr.add(n);
         }
-        JSONArray edgesArr = new JSONArray();
+        List<Object> edgesArr = new JSONArray();
         for (DagEdge edge : definition.edges()) {
-            JSONObject e = new JSONObject();
+            Map<String, Object> e = new JSONObject();
             e.put("from", edge.from());
             e.put("to", edge.to());
             e.put("failStrategy", edge.failStrategy());
@@ -98,12 +99,12 @@ public class DagDefinitionCodec {
 
         // 解析 nodes
         List<DagNode> nodes = new ArrayList<>();
-        JSONArray nodesArr = root.getJSONArray("nodes");
+        List<Object> nodesArr = root.getJSONArray("nodes");
         if (nodesArr == null || nodesArr.isEmpty()) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
         }
         for (int i = 0; i < nodesArr.size(); i++) {
-            JSONObject n = nodesArr.getJSONObject(i);
+            Map<String, Object> n = nodesArr.getJSONObject(i);
             String jobKey = n.getString("jobKey");
             if (jobKey == null || jobKey.isBlank()) {
                 throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
@@ -134,10 +135,10 @@ public class DagDefinitionCodec {
 
         // 解析 edges（可为空）
         List<DagEdge> edges = new ArrayList<>();
-        JSONArray edgesArr = root.getJSONArray("edges");
+        List<Object> edgesArr = root.getJSONArray("edges");
         if (edgesArr != null) {
             for (int i = 0; i < edgesArr.size(); i++) {
-                JSONObject e = edgesArr.getJSONObject(i);
+                Map<String, Object> e = edgesArr.getJSONObject(i);
                 String from = e.getString("from");
                 String to = e.getString("to");
                 if (from == null || to == null) {

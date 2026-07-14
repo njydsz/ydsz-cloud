@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core.strategy;
+﻿package com.njydsz.pmis.common.excel.core.strategy;
 
 /**
  * UserModelReadStrategy �?
@@ -69,7 +69,7 @@ public class UserModelReadStrategy implements ReadStrategy {
             int headRowNumber = metadata.getHeadRowNumber() != null ? metadata.getHeadRowNumber() : 1;
             Row headRow = sheet.getRow(headRowNumber);
             if (headRow == null) {
-                throw new IllegalStateException("表头行不存在: " + headRowNumber);
+                throw new IllegalStateException("表头行不存在");
             }
 
             List<String> headers = new ArrayList<>();
@@ -129,7 +129,7 @@ public class UserModelReadStrategy implements ReadStrategy {
         if (sheetName != null && !sheetName.isEmpty()) {
             Sheet sheet = workbook.getSheet(sheetName);
             if (sheet == null) {
-                throw new IllegalStateException("Sheet不存�? " + sheetName);
+                throw new IllegalStateException("Sheet不存在");
             }
             return sheet;
         }

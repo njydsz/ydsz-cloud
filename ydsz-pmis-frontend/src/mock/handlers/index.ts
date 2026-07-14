@@ -21,6 +21,7 @@ import { userHandlers } from './user'
 import { systemHandlers } from './system'
 
 import { chaosHandlers } from './chaos'
+import { nextwikiHandlers } from './nextwiki'
 
 /**
  * 全局 Mock 处理器列表
@@ -41,6 +42,7 @@ export const mockHandlers: MockHandler[] = [
   ...resourceHandlers,
   ...userHandlers,
   ...systemHandlers,
-  
+
   ...chaosHandlers,
+  ...nextwikiHandlers,
 ]

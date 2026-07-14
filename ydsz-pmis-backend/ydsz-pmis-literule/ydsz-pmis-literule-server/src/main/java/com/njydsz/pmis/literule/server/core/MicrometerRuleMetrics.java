@@ -104,4 +104,16 @@ public class MicrometerRuleMetrics extends RuleMetrics {
         lastEvaluatedRules = count;
         registry.gauge("literule_evaluated_rules", Tags.empty(), lastEvaluatedRules);
     }
+
+    /**
+     * 暴露慢规则计数器到 Prometheus（P2-4）
+     *
+     * <p>指标：{@code literule_slow_rule_total{rule_code,}}
+     */
+    @Override
+    public void recordSlowRule(String ruleCode, long elapsedMs, long thresholdMs) {
+        super.recordSlowRule(ruleCode, elapsedMs, thresholdMs);
+        registry.counter("literule_slow_rule_total",
+                Tags.of("rule_code", ruleCode == null ? "unknown" : ruleCode)).increment();
+    }
 }

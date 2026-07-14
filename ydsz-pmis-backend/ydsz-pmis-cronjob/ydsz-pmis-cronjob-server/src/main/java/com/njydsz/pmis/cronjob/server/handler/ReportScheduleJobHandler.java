@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.handler;
+package com.njydsz.pmis.cronjob.server.handler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -86,7 +86,7 @@ public class ReportScheduleJobHandler implements JobHandler {
         // 尝试 JSON 解析 {"type":"DAILY"}
         if (trimmed.startsWith("{")) {
             try {
-                JSONObject obj = JsonUtils.parseMap(trimmed);
+                Map<String, Object> obj = JsonUtils.parseMap(trimmed);
                 if (obj != null && obj.containsKey("type")) {
                     return obj.getString("type");
                 }

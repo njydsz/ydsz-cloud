@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.handler;
+package com.njydsz.pmis.cronjob.server.handler;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -59,7 +59,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
 
         if (paramsJson != null && !paramsJson.isBlank()) {
             try {
-                JSONObject obj = JsonUtils.parseMap(paramsJson);
+                Map<String, Object> obj = JsonUtils.parseMap(paramsJson);
                 if (obj != null) {
                     period = obj.getString("period");
                     recomputeAll = Boolean.TRUE.equals(obj.getBoolean("recomputeAll"));

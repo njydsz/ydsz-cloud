@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.dto;
+ackage com.njydsz.pmis.common.domain.dto;
 
 import java.io.Serializable;
 

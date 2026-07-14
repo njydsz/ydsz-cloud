@@ -16,20 +16,10 @@ import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.pmis.common.excel.core.ExcelFacade;
 import com.njydsz.pmis.project.server.service.AdvancedReportService;
 import com.njydsz.pmis.project.server.service.ReportExportService;
 import com.njydsz.pmis.project.server.service.ReportService;
@@ -300,71 +290,25 @@ public class ReportExportServiceImpl implements ReportExportService {
     // ----------------- XLSX 渲染 -----------------
 
     private byte[] renderXlsx(List<ColumnDef> cols, List<Map<String, Object>> rows) throws IOException {
-        try (SXSSFWorkbook wb = new SXSSFWorkbook(100)) {
-            Sheet sheet = wb.createSheet("Report");
-            // 标题行
-            CellStyle headerStyle = wb.createCellStyle();
-            Font headerFont = wb.createFont();
-            headerFont.setBold(true);
-            headerFont.setColor(IndexedColors.WHITE.getIndex());
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setAlignment(HorizontalAlignment.CENTER);
-            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-            applyBorders(headerStyle);
-
-            Row header = sheet.createRow(0);
-            header.setHeightInPoints(20);
-            for (int i = 0; i < cols.size(); i++) {
-                Cell cell = header.createCell(i);
-                cell.setCellValue(cols.get(i).header());
-                cell.setCellStyle(headerStyle);
-                sheet.setColumnWidth(i, cols.get(i).width() * 256);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        List<String> headers = new ArrayList<>();
+        for (ColumnDef col : cols) {
+            headers.add(col.header());
+        }
+        List<List<Object>> listRows = new ArrayList<>();
+        for (Map<String, Object> data : rows) {
+            List<Object> row = new ArrayList<>();
+            for (ColumnDef col : cols) {
+                row.add(data.get(col.name()));
             }
-
-            // 数据行
-            CellStyle dataStyle = wb.createCellStyle();
-            applyBorders(dataStyle);
-            for (int r = 0; r < rows.size(); r++) {
-                Map<String, Object> data = rows.get(r);
-                Row row = sheet.createRow(r + 1);
-                for (int c = 0; c < cols.size(); c++) {
-                    Cell cell = row.createCell(c);
-                    cell.setCellStyle(dataStyle);
-                    setCellValue(cell, data.get(cols.get(c).name()));
-                }
-            }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            wb.write(baos);
-            return baos.toByteArray();
+            listRows.add(row);
         }
-    }
-
-    private static void applyBorders(CellStyle style) {
-        style.setBorderTop(BorderStyle.THIN);
-        style.setBorderBottom(BorderStyle.THIN);
-        style.setBorderLeft(BorderStyle.THIN);
-        style.setBorderRight(BorderStyle.THIN);
-    }
-
-    private static void setCellValue(Cell cell, Object value) {
-        if (value == null) {
-            cell.setBlank();
-            return;
-        }
-        if (value instanceof Number) {
-            cell.setCellValue(((Number) value).doubleValue());
-        } else if (value instanceof Boolean) {
-            cell.setCellValue((Boolean) value);
-        } else if (value instanceof LocalDate) {
-            cell.setCellValue(((LocalDate) value).format(YMD));
-        } else if (value instanceof LocalDateTime) {
-            cell.setCellValue(((LocalDateTime) value).format(YMD_HMS));
-        } else {
-            cell.setCellValue(value.toString());
-        }
+        ExcelFacade.write(baos)
+                .head(headers)
+                .headRowNumber(0)
+                .sheet("Report")
+                .doWrite(listRows);
+        return baos.toByteArray();
     }
 
     // ----------------- CSV 渲染 -----------------

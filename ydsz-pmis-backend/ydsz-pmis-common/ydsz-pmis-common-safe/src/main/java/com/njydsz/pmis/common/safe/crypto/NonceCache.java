@@ -8,9 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.cache.listener.RemovalCause;
 
 /**
  * 防重放 Nonce 缓存。
@@ -56,7 +57,7 @@ public class NonceCache {
     private static final long DEFAULT_MAX_SIZE = 10000;
 
     /**
-     * nonce 缓存，使用 Caffeine 实现 TTL 自动过期
+     * nonce 缓存，使用 ydsz-pmis-common-cache 实现 TTL 自动过期
      */
     private final Cache<String, Long> cache;
 
@@ -90,7 +91,8 @@ public class NonceCache {
      */
     public NonceCache(long expireSeconds, long maxSize) {
         this.expireSeconds = expireSeconds;
-        this.cache = Caffeine.newBuilder()
+        this.cache = YdszCache.<String, Long>newBuilder()
+                .type(CacheType.TTL)
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
                 .maximumSize(maxSize)
                 .removalListener((String key, Long value, RemovalCause cause) -> {
@@ -135,7 +137,7 @@ public class NonceCache {
      */
     public boolean put(String nonce, long timestamp) {
         // 使用 putIfAbsent 保证原子性，避免并发请求同时通过检查
-        Long previous = cache.asMap().putIfAbsent(nonce, timestamp);
+        Long previous = cache.putIfAbsent(nonce, timestamp);
         if (previous != null) {
             rejectCount.incrementAndGet();
             return false;
@@ -245,7 +247,7 @@ public class NonceCache {
     /**
      * 定时清理过期 nonce。
      *
-     * <p>Caffeine 的 TTL 是懒清理（访问时触发），此定时任务
+     * <p>ydsz-pmis-common-cache 的 TTL 是懒清理（访问时触发），此定时任务
      * 主动触发清理，确保不占用内存。
      * 执行频率默认 60 秒，可通过 {@code ydsz.safe.nonce-clean-interval} 配置。
      */

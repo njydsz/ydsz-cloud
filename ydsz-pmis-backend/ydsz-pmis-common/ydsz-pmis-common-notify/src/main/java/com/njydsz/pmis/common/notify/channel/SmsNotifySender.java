@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -237,7 +238,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			return NotifySendResult.success("sent", channelName());
 		}
 		try {
-			JsonNode json = JsonUtils.getMapper().readTree(response);
+			JsonNode json = YdszJson.readTree(response);
 			String code = json.has("code") ? json.get("code").asText() : null;
 			if ("0".equals(code) || "OK".equals(code) || "SUCCESS".equals(code)) {
 				String messageId = json.has("messageId") ? json.get("messageId").asText() : null;

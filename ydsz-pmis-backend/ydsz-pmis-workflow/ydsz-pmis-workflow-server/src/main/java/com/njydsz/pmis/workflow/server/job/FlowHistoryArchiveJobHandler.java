@@ -88,7 +88,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Integer parseInteger(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            JSONObject obj = JsonUtils.parseMap(json);
+            Map<String, Object> obj = JsonUtils.parseMap(json);
             if (obj == null) return null;
             Integer v = obj.getInteger(key);
             return v == null || v <= 0 ? null : v;
@@ -101,7 +101,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Long parseLong(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            JSONObject obj = JsonUtils.parseMap(json);
+            Map<String, Object> obj = JsonUtils.parseMap(json);
             if (obj == null) return null;
             Long v = obj.getLong(key);
             return v == null || v <= 0 ? null : v;

@@ -264,7 +264,7 @@ public class LiteExprEvaluator implements ExpressionEvaluator {
     /**
      * 缓存大小
      */
-    public int cacheSize() {
+    public long cacheSize() {
         return compiler.cacheSize();
     }
 

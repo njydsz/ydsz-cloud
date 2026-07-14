@@ -551,6 +551,14 @@ public class LiteRuleProperties {
 
         /** 并行评估线程池大小，默认 CPU 核数 */
         private int parallelPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
+
+        /**
+         * 并行评估触发阈值
+         *
+         * <p>候选规则数 ≥ 此值时自动切换为并行评估。
+         * 默认 50，适用于规则数较大的场景。
+         */
+        private int parallelThreshold = 50;
     }
 
     /**

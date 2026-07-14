@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
+package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -78,7 +78,7 @@ public class WebhookEventDispatcher {
             if (webhooks.isEmpty()) {
                 return;
             }
-            JSONObject eventBody = new JSONObject();
+            Map<String, Object> eventBody = new JSONObject();
             eventBody.put("eventType", eventType);
             eventBody.put("jobKey", jobKey);
             eventBody.put("timestamp", LocalDateTime.now().toString());
@@ -106,7 +106,7 @@ public class WebhookEventDispatcher {
 
             // 添加自定义请求头
             if (webhook.getHeaders() != null && !webhook.getHeaders().isBlank()) {
-                JSONObject headers = JsonUtils.parseMap(webhook.getHeaders());
+                Map<String, Object> headers = JsonUtils.parseMap(webhook.getHeaders());
                 for (String key : headers.keySet()) {
                     builder.header(key, headers.getString(key));
                 }

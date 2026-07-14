@@ -149,5 +149,9 @@
             <artifactId>spring-boot-health</artifactId>
             <optional>true</optional>
         </dependency>
-    </dependencies>
+            <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
+</dependencies>
 </project>

@@ -1,22 +1,21 @@
-﻿package com.njydsz.pmis.message.server.channel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.netty.codec.LengthFieldFrameDecoder;
 import com.njydsz.pmis.common.netty.config.NettyProperties;
 import com.njydsz.pmis.common.netty.server.AbstractNettyServer;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 
 import io.netty.buffer.ByteBuf;

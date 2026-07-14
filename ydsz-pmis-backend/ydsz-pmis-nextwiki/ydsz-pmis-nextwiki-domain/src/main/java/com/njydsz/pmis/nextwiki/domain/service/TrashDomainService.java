@@ -12,6 +12,8 @@ import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiEnums.TrashStatus;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.repository.TrashItemRepository;
@@ -54,7 +56,7 @@ public class TrashDomainService {
                 .size(fileNode.getSize())
                 .deletedTime(now)
                 .purgeTime(now.plusDays(RETENTION_DAYS))
-                .status("in_trash")
+                .status(TrashStatus.IN_TRASH.getCode())
                 .revision(0)
                 .deleted(0)
                 .build();
@@ -74,16 +76,19 @@ public class TrashDomainService {
     public FileNode restore(String trashItemId, String userId) {
         TrashItem trashItem = trashItemRepository.findById(trashItemId);
         if (trashItem == null) {
-            throw BusinessException.builder().key("回收站条目不存在: " + trashItemId).build();
+            throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND).data("trashItemId", trashItemId);
         }
 
-        if (!"in_trash".equals(trashItem.getStatus())) {
-            throw BusinessException.builder().key("回收站条目状态不允许恢复: " + trashItem.getStatus()).build();
+        TrashStatus currentStatus = TrashStatus.fromCode(trashItem.getStatus());
+        if (currentStatus == null || !currentStatus.canTransitTo(TrashStatus.RESTORED)) {
+            throw BusinessException.of(NextwikiExceptionCode.TRASH_INVALID_STATUS)
+                    .data("trashItemId", trashItemId)
+                    .data("status", trashItem.getStatus());
         }
 
         fileNodeRepository.restore(trashItem.getFileNodeId());
 
-        trashItem.setStatus("restored");
+        trashItem.setStatus(TrashStatus.RESTORED.getCode());
         trashItem.setUpdatedBy(userId);
         trashItem.setUpdatedAt(LocalDateTime.now());
         trashItemRepository.update(trashItem);
@@ -123,12 +128,12 @@ public class TrashDomainService {
     public void purge(String trashItemId, String userId) {
         TrashItem trashItem = trashItemRepository.findById(trashItemId);
         if (trashItem == null) {
-            throw BusinessException.builder().key("回收站条目不存在: " + trashItemId).build();
+            throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND).data("trashItemId", trashItemId);
         }
 
         fileNodeRepository.physicalDelete(trashItem.getFileNodeId());
 
-        trashItem.setStatus("purged");
+        trashItem.setStatus(TrashStatus.PURGED.getCode());
         trashItem.setUpdatedBy(userId);
         trashItem.setUpdatedAt(LocalDateTime.now());
         trashItemRepository.update(trashItem);

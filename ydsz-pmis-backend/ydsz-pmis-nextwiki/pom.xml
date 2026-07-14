@@ -18,4 +18,40 @@
         <module>ydsz-pmis-nextwiki-server</module>
         <module>ydsz-pmis-nextwiki-web</module>
     </modules>
+
+    <properties>
+        <!-- Checkstyle 默认跳过：nextwiki 模块已修复 AvoidStarImport 违规（通配符 import 全部替换为具体 import），
+             但 checkstyle.xml 中 DesignForExtension / MissingThrowsDoc / MagicNumber 等规则
+             仍会触发大量违规，需后续逐步清理后再启用。
+             用法：mvn validate -DskipCheckstyle=false  — 手动启用 Checkstyle 检查 -->
+        <skipCheckstyle>true</skipCheckstyle>
+    </properties>
+
+    <build>
+        <plugins>
+            <!-- Checkstyle 静态检查：仅在 nextwiki 模块激活（不影响其他模块）
+                 继承父 POM <pluginManagement> 的 version / configLocation / failsOnError / violationSeverity 配置
+                 P0-P1：已修复 AvoidStarImport（通配符 import）违规
+                 P2-P3：DesignForExtension / MissingThrowsDoc / MagicNumber 待后续清理 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <skip>${skipCheckstyle}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle-validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipCheckstyle}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

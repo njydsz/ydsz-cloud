@@ -116,6 +116,19 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     private volatile RuleActionDispatcher actionDispatcher;
 
+    /**
+     * 并行规则评估器（可选，2.2.0 起 P2-2 大规则量并行优化）
+     *
+     * <p>非 null 且候选规则数 ≥ {@link #parallelThreshold} 且无断点时，
+     * 引擎将候选规则按互斥组分组并行评估，组内串行保持互斥语义。
+     * 并行评估期间通过 {@link TraceContext#withContext} 为每个工作线程传播 MDC traceId。
+     * 默认 null（串行评估，向后兼容）。
+     */
+    private volatile ParallelRuleEvaluator parallelEvaluator;
+
+    /** 并行评估触发阈值（候选规则数 ≥ 此值时启用并行），默认 50 */
+    private volatile int parallelThreshold = 50;
+
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
     private final AtomicLong totalTriggered = new AtomicLong(0);
@@ -269,6 +282,11 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         if (ruleIndexer.isIndexEnabled() && ruleIndexer.hasFieldIndex()) {
             Set<String> factKeys = context.getFacts().keySet();
             candidateRules = ruleIndexer.filterByFacts(candidateRules, factKeys);
+        }
+
+        // P2-2：并行评估路径（大规则量 + 无断点时自动启用）
+        if (shouldUseParallelEvaluation(candidateRules)) {
+            return evaluateInParallel(candidateRules, context, scenario);
         }
 
         // 遍历候选规则（索引模式下已按租户+环境+场景+互斥组+字段过滤）
@@ -1004,6 +1022,195 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
+     * 设置并行规则评估器（P2-2）
+     *
+     * <p>设置后，当候选规则数 ≥ {@link #parallelThreshold} 且无断点时，
+     * 引擎自动切换为并行评估模式。
+     *
+     * @param parallelEvaluator 并行评估器；null 表示始终串行
+     * @since 2.2.0
+     */
+    public void setParallelEvaluator(ParallelRuleEvaluator parallelEvaluator) {
+        this.parallelEvaluator = parallelEvaluator;
+        if (parallelEvaluator != null) {
+            log.info("[LiteRule-Performance] 并行评估器已注入 (threshold={})", parallelThreshold);
+        }
+    }
+
+    /**
+     * 设置并行评估触发阈值（P2-2）
+     *
+     * @param threshold 候选规则数阈值；< 1 时视为 1
+     * @since 2.2.0
+     */
+    public void setParallelThreshold(int threshold) {
+        this.parallelThreshold = Math.max(1, threshold);
+    }
+
+    /**
+     * 判断是否应使用并行评估（P2-2）
+     *
+     * <p>同时满足以下条件时返回 true：
+     * <ul>
+     *   <li>并行评估器已注入（{@code parallelEvaluator != null}）</li>
+     *   <li>候选规则数 ≥ {@link #parallelThreshold}</li>
+     *   <li>无断点调试 Hook（断点要求串行执行，无法并行化）</li>
+     * </ul>
+     *
+     * @param candidateRules 候选规则列表
+     * @return true 表示应使用并行评估
+     * @since 2.2.0
+     */
+    private boolean shouldUseParallelEvaluation(List<Rule> candidateRules) {
+        return parallelEvaluator != null
+                && candidateRules.size() >= parallelThreshold
+                && breakpointHook == null;
+    }
+
+    /**
+     * 并行评估候选规则（P2-2）
+     *
+     * <p>将候选规则委托给 {@link ParallelRuleEvaluator#evaluateParallel}，
+     * 按互斥组分组并行评估。每个工作线程通过 {@link TraceContext#withContext}
+     * 传播 MDC traceId，确保并行评估期间日志可追踪。
+     *
+     * <p>并行路径不支持断点调试（已由 {@link #shouldUseParallelEvaluation} 排除）。
+     * 互斥组短路由 {@link ParallelRuleEvaluator} 内部处理。
+     *
+     * @param candidateRules 候选规则列表
+     * @param context        规则上下文
+     * @param scenario       业务场景
+     * @return 触发的规则结果列表（按严重度倒序）
+     * @since 2.2.0
+     */
+    private List<RuleResult> evaluateInParallel(List<Rule> candidateRules,
+                                                 RuleContext context, String scenario) {
+        String traceId = TraceContext.getTraceId();
+        if (log.isDebugEnabled()) {
+            log.debug("[LiteRule-Parallel] 并行评估: rules={}, threshold={}",
+                    candidateRules.size(), parallelThreshold);
+        }
+        List<RuleResult> results = parallelEvaluator.evaluateParallel(
+                candidateRules, context,
+                (rule, ctx) -> evaluateSingleRule(rule, ctx, scenario, traceId));
+        // 记录本次评估遍历的规则数
+        if (metrics != null) {
+            metrics.recordEvaluatedRules(candidateRules.size());
+        }
+        // P1-1 规则与消息通知联动：评估完成后分发动作
+        if (actionDispatcher != null && !results.isEmpty()) {
+            actionDispatcher.dispatchActions(results, context);
+        }
+        return results;
+    }
+
+    /**
+     * 评估单条规则（并行路径专用，P2-2）
+     *
+     * <p>封装单规则评估的完整逻辑：MDC 传播 → 熔断检查 → 灰度路由 → 超时控制 →
+     * 统计/监控/轨迹记录。返回已触发的结果，未触发或被熔断时返回 null。
+     *
+     * <p>与串行路径的差异：
+     * <ul>
+     *   <li>不含断点调试（并行模式不支持）</li>
+     *   <li>不含互斥组跟踪（由 ParallelRuleEvaluator 处理）</li>
+     *   <li>含 MDC traceId 传播（工作线程需要显式设置）</li>
+     * </ul>
+     *
+     * @param rule     规则
+     * @param context  规则上下文
+     * @param scenario 业务场景
+     * @param traceId  MDC traceId（用于工作线程传播）
+     * @return 已触发的 RuleResult；未触发/被熔断返回 null
+     * @since 2.2.0
+     */
+    private RuleResult evaluateSingleRule(Rule rule, RuleContext context,
+                                           String scenario, String traceId) {
+        return TraceContext.withContext(traceId, () -> {
+            // 熔断检查
+            if (circuitBreaker != null && !circuitBreaker.allowEvaluate(rule.getCode())) {
+                log.debug("[LiteRule-Parallel] 规则 {} 已被熔断，跳过评估", rule.getCode());
+                return null;
+            }
+            long start = System.nanoTime();
+            RuleResult result = null;
+            Exception caughtException = null;
+            boolean routedToCanary = false;
+
+            // 灰度路由
+            RuleDefinition canaryDef = resolveCanaryDefinition(rule);
+            if (canaryDef != null) {
+                boolean goCanary = canaryRouter.shouldRouteToCanary(canaryDef, context);
+                canaryRouter.recordBucket(rule.getCode(), goCanary);
+                if (goCanary) {
+                    routedToCanary = true;
+                    Rule canaryRule = canaryRouter.buildCanaryRule(canaryDef);
+                    try {
+                        if (timeoutExecutor != null) {
+                            result = timeoutExecutor.evaluateWithTimeout(canaryRule, context, 0);
+                        } else {
+                            result = canaryRule.evaluate(context);
+                        }
+                    } catch (Exception e) {
+                        caughtException = e;
+                    }
+                    if (result != null) {
+                        canaryRouter.markCanary(result);
+                    }
+                }
+            }
+
+            // 主版本评估
+            if (!routedToCanary) {
+                try {
+                    if (timeoutExecutor != null) {
+                        result = timeoutExecutor.evaluateWithTimeout(rule, context, 0);
+                    } else {
+                        result = rule.evaluate(context);
+                    }
+                } catch (Exception e) {
+                    caughtException = e;
+                }
+            }
+
+            long elapsed = (System.nanoTime() - start) / 1_000_000;
+            boolean isTriggered = result != null && result.isTriggered();
+            boolean isError = caughtException != null
+                    || (result != null && result.getDescription() != null
+                        && result.getDescription().startsWith("评估超时"));
+            record(rule.getCode(), isTriggered, isError, elapsed);
+
+            // 熔断器记录
+            if (circuitBreaker != null) {
+                circuitBreaker.recordResult(rule.getCode(), !isError);
+            }
+            // 监控指标
+            if (metrics != null) {
+                try {
+                    metrics.recordEvaluation(rule.getCode(), scenario, isTriggered,
+                            result != null ? result.getSeverity() : null, isError, elapsed);
+                } catch (Exception me) {
+                    log.debug("[LiteRule-Parallel] 指标记录失败: {}", me.getMessage());
+                }
+            }
+            if (isError && caughtException != null) {
+                log.warn("[LiteRule-Parallel] 规则 {} 评估异常: {}",
+                        rule.getCode(), caughtException.getMessage());
+            }
+            // 异步 Trace
+            if (traceRecorder != null && traceRecorder.isEnabled()) {
+                try {
+                    RuleExecutionTrace trace = buildTrace(context, rule, result, elapsed, caughtException);
+                    traceRecorder.record(trace);
+                } catch (Exception te) {
+                    log.debug("[LiteRule-Parallel] Trace 记录失败: {}", te.getMessage());
+                }
+            }
+            return isTriggered ? result : null;
+        });
+    }
+
+    /**
      * 构建执行轨迹记录
      *
      * @param context   规则上下文
@@ -1057,6 +1264,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         }
         if (timeoutExecutor != null) {
             timeoutExecutor.shutdown();
+        }
+        if (parallelEvaluator != null) {
+            parallelEvaluator.shutdown();
         }
         if (modelInputRegistry != null) {
             modelInputRegistry.destroy();

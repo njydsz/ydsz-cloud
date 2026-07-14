@@ -98,6 +98,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Value("${workflow.designer.lock-timeout-minutes:30}")
     private long lockTimeoutMinutes;
 
+    /**
+     * P1-4: 发布流程时是否阻断 HIGH 风险（在途实例卡在已删除节点）。
+     *
+     * <p>true（默认）— HIGH 风险且 force=false 时抛 SysException 阻断发布；
+     * false — 仅记录警告日志，允许发布（不推荐，仅用于紧急场景）。
+     */
+    @Value("${workflow.publish.block-on-high-risk:true}")
+    private boolean blockOnHighRisk;
+
     public FlowDefinitionServiceImpl(
             FlowDefinitionMapper definitionMapper,
             FlowNodeMapper nodeMapper,
@@ -276,14 +285,145 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public void publish(String definitionId) {
+        publish(definitionId, false);
+    }
+
+    @Override
+    @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
+    public void publish(String definitionId, boolean force) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new SysException(StandardResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
+        // P1-4: 版本兼容性校验 — 检测在途实例是否会因节点删除而卡死
+        checkPublishCompatibility(def, force);
         definitionMapper.publish(definitionId, 1);
         // P0-3: 失效本地 + 集群缓存
         flowDefinitionCacheService.evict(definitionId);
-        log.info("[Flow] 发布流程: defId={}", definitionId);
+        log.info("[Flow] 发布流程: defId={} flowCode={} version={} force={}",
+                definitionId, def.getFlowCode(), def.getFlowVersion(), force);
+    }
+
+    /**
+     * P1-4: 发布前版本兼容性校验。
+     *
+     * <p>检测当前同 flowCode 的激活版本是否有在途实例，并比对新旧版本节点编码差异：
+     * <ul>
+     *   <li>无激活版本（首次发布）或无在途实例 → 直接放行（NONE 风险）</li>
+     *   <li>有在途实例但节点未删除 → 记录警告日志后放行（LOW/MEDIUM 风险）</li>
+     *   <li>有在途实例卡在已删除节点（HIGH 风险）：
+     *     <ul>
+     *       <li>{@code force=false} 且 {@link #blockOnHighRisk}=true → 抛 SysException 阻断</li>
+     *       <li>{@code force=true} 或 {@link #blockOnHighRisk}=false → 记录警告日志后放行</li>
+     *     </ul>
+     *   </li>
+     * </ul>
+     *
+     * @param def  待发布的流程定义
+     * @param force 是否强制发布（跳过 HIGH 风险阻断）
+     */
+    private void checkPublishCompatibility(FlowDefinitionDO def, boolean force) {
+        String flowCode = def.getFlowCode();
+        String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
+
+        // 1. 查询同 flowCode 的当前激活版本（已发布且非当前定义）
+        FlowDefinitionDO activeDef = definitionMapper.selectPublished(flowCode, null, tenantId);
+        if (activeDef == null || activeDef.getId().equals(def.getId())) {
+            // 无激活版本或当前定义已是激活版本 → 首次发布或重复发布，无需校验
+            log.debug("[Flow][P1-4] 无前序激活版本，跳过兼容性校验: flowCode={} defId={}",
+                    flowCode, def.getId());
+            return;
+        }
+
+        // 2. 调用变更影响分析评估风险
+        Map<String, Object> impact;
+        try {
+            impact = analyzeMigrationImpact(activeDef.getId(), def.getId());
+        } catch (Exception e) {
+            // 影响分析失败时不阻断发布（避免分析工具故障导致业务无法发布），仅记录警告
+            log.warn("[Flow][P1-4] 变更影响分析失败，跳过兼容性校验: oldDef={} newDef={} err={}",
+                    activeDef.getId(), def.getId(), e.getMessage());
+            return;
+        }
+
+        String riskLevel = (String) impact.get("riskLevel");
+        long runningTotal = extractLong(impact, "runningInstances", "total");
+        List<String> recommendations = extractStringList(impact, "recommendations");
+
+        // 3. 根据风险等级处理
+        if ("HIGH".equals(riskLevel)) {
+            if (force) {
+                log.warn("[Flow][P1-4] 强制发布 HIGH 风险流程: flowCode={} newDef={} oldDef={} "
+                                + "runningInstances={} recommendations={}",
+                        flowCode, def.getId(), activeDef.getId(), runningTotal, recommendations);
+            } else if (blockOnHighRisk) {
+                log.warn("[Flow][P1-4] 阻断 HIGH 风险发布: flowCode={} newDef={} oldDef={} "
+                                + "runningInstances={} recommendations={}",
+                        flowCode, def.getId(), activeDef.getId(), runningTotal, recommendations);
+                throw new SysException(StandardResultCode.BAD_REQUEST,
+                        "发布阻断：存在 " + runningTotal + " 个在途实例将因节点删除而卡死。"
+                                + "请先处理在途实例（强制流转/通知撤回/等待完成），"
+                                + "或使用 force=true 参数强制发布（需管理员权限）。"
+                                + "建议：" + String.join("；", recommendations));
+            } else {
+                log.warn("[Flow][P1-4] block-on-high-risk=false，放行 HIGH 风险发布: flowCode={} "
+                                + "newDef={} oldDef={} runningInstances={} recommendations={}",
+                        flowCode, def.getId(), activeDef.getId(), runningTotal, recommendations);
+            }
+        } else if ("MEDIUM".equals(riskLevel) || "LOW".equals(riskLevel)) {
+            log.warn("[Flow][P1-4] 发布 {} 风险流程: flowCode={} newDef={} oldDef={} "
+                            + "runningInstances={} recommendations={}",
+                    riskLevel, flowCode, def.getId(), activeDef.getId(),
+                    runningTotal, recommendations);
+        } else {
+            // NONE 风险 — 无在途实例，直接放行
+            log.info("[Flow][P1-4] 发布无风险: flowCode={} newDef={} oldDef={} runningInstances=0",
+                    flowCode, def.getId(), activeDef.getId());
+        }
+    }
+
+    /**
+     * P1-4: 从影响分析结果中提取 long 值（兼容嵌套 Map 结构）。
+     *
+     * @param root     根 Map
+     * @param keys     嵌套 key 路径（如 "runningInstances", "total"）
+     * @return 提取的 long 值，无法提取返回 0
+     */
+    private long extractLong(Map<String, Object> root, String... keys) {
+        Object current = root;
+        for (String key : keys) {
+            if (current instanceof Map) {
+                current = ((Map<?, ?>) current).get(key);
+            } else {
+                return 0L;
+            }
+        }
+        if (current instanceof Number) {
+            return ((Number) current).longValue();
+        }
+        return 0L;
+    }
+
+    /**
+     * P1-4: 从影响分析结果中提取 String 列表。
+     *
+     * @param root 根 Map
+     * @param key  列表对应的 key
+     * @return String 列表，无法提取返回空列表
+     */
+    private List<String> extractStringList(Map<String, Object> root, String key) {
+        Object value = root.get(key);
+        if (value instanceof List) {
+            List<String> result = new ArrayList<>();
+            for (Object item : (List<?>) value) {
+                if (item != null) {
+                    result.add(String.valueOf(item));
+                }
+            }
+            return result;
+        }
+        return Collections.emptyList();
     }
 
     @Override
@@ -548,7 +688,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 1. 提取 definition 元数据
-        JSONObject defJson = root.getJSONObject("definition");
+        Map<String, Object> defJson = root.getJSONObject("definition");
         if (defJson == null) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "JSON 缺少 definition 字段");
         }
@@ -570,11 +710,11 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         dto.setProviderTraceId(defJson.getString("providerTraceId"));
 
         // 3. 提取 nodes
-        JSONArray nodesJson = root.getJSONArray("nodes");
+        List<Object> nodesJson = root.getJSONArray("nodes");
         if (nodesJson != null && !nodesJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowNodeDTO> nodes = new ArrayList<>();
             for (int i = 0; i < nodesJson.size(); i++) {
-                JSONObject n = nodesJson.getJSONObject(i);
+                Map<String, Object> n = nodesJson.getJSONObject(i);
                 FlowDeployProcessDTO.FlowNodeDTO node = new FlowDeployProcessDTO.FlowNodeDTO();
                 node.setNodeCode(n.getString("nodeCode"));
                 node.setNodeName(n.getString("nodeName"));
@@ -587,11 +727,11 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 4. 提取 skips（从 ext.sourceRef 还原 fromNodeCode）
-        JSONArray skipsJson = root.getJSONArray("skips");
+        List<Object> skipsJson = root.getJSONArray("skips");
         if (skipsJson != null && !skipsJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowSkipDTO> skips = new ArrayList<>();
             for (int i = 0; i < skipsJson.size(); i++) {
-                JSONObject s = skipsJson.getJSONObject(i);
+                Map<String, Object> s = skipsJson.getJSONObject(i);
                 FlowDeployProcessDTO.FlowSkipDTO skip = new FlowDeployProcessDTO.FlowSkipDTO();
                 skip.setSkipName(s.getString("skipName"));
                 skip.setSkipType(s.getString("skipType"));
@@ -601,7 +741,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String ext = s.getString("ext");
                 if (StringUtils.hasText(ext)) {
                     try {
-                        JSONObject extJson = JsonUtils.parseMap(ext);
+                        Map<String, Object> extJson = JsonUtils.parseMap(ext);
                         if (extJson != null) {
                             skip.setFromNodeCode(extJson.getString("sourceRef"));
                         }
@@ -644,7 +784,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String source = null;
                 if (StringUtils.hasText(skip.getExt())) {
                     try {
-                        JSONObject extJson = JsonUtils.parseMap(skip.getExt());
+                        Map<String, Object> extJson = JsonUtils.parseMap(skip.getExt());
                         source = extJson != null ? extJson.getString("sourceRef") : null;
                     } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
@@ -1001,7 +1141,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                JSONObject extJson = JsonUtils.parseMap(skip.getExt());
+                Map<String, Object> extJson = JsonUtils.parseMap(skip.getExt());
                 sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
             } catch (Exception ignored) {
                 // ignore parse error
@@ -1020,7 +1160,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                JSONObject extJson = JsonUtils.parseMap(skip.getExt());
+                Map<String, Object> extJson = JsonUtils.parseMap(skip.getExt());
                 sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
             } catch (Exception ignored) {
                 // ignore

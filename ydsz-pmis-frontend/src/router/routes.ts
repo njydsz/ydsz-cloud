@@ -1,4 +1,4 @@
-﻿﻿﻿/**
+﻿﻿/**
  * @file 路由表定义
  * @description 定义前端静态路由（constantRoutes）与动态业务路由（asyncRoutes），
  *              静态路由包含登录/404/根布局默认页，动态路由按业务模块分组并通过权限码控制访问。
@@ -753,6 +753,50 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'MessagePreference',
         component: () => import('@/views/message/preference/index.vue'),
         meta: { title: 'route.messagePreference', icon: 'Setting', keepAlive: true, permCode: PC.MESSAGE_PREFERENCE_VIEW },
+      },
+    ],
+  },
+  {
+    path: '/nextwiki',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/nextwiki/files',
+    meta: { title: 'route.nextwiki', icon: 'Document' },
+    children: [
+      {
+        path: 'files',
+        name: 'NextwikiFiles',
+        component: () => import('@/views/nextwiki/files/index.vue'),
+        meta: { title: 'route.nextwikiFiles', icon: 'Folder', keepAlive: true, permCode: PC.NEXTWIKI_FILE_LIST },
+      },
+      {
+        path: 'starred',
+        name: 'NextwikiStarred',
+        component: () => import('@/views/nextwiki/starred/index.vue'),
+        meta: { title: 'route.nextwikiStarred', icon: 'Star', keepAlive: true, permCode: PC.NEXTWIKI_FILE_LIST },
+      },
+      {
+        path: 'shares',
+        name: 'NextwikiShares',
+        component: () => import('@/views/nextwiki/shares/index.vue'),
+        meta: { title: 'route.nextwikiShares', icon: 'Share', keepAlive: true, permCode: PC.NEXTWIKI_SHARE_LIST },
+      },
+      {
+        path: 'trash',
+        name: 'NextwikiTrash',
+        component: () => import('@/views/nextwiki/trash/index.vue'),
+        meta: { title: 'route.nextwikiTrash', icon: 'Delete', keepAlive: true, permCode: PC.NEXTWIKI_TRASH_LIST },
+      },
+      {
+        path: 'search',
+        name: 'NextwikiSearch',
+        component: () => import('@/views/nextwiki/search/index.vue'),
+        meta: { title: 'route.nextwikiSearch', icon: 'Search', keepAlive: true, permCode: PC.NEXTWIKI_SEARCH },
+      },
+      {
+        path: 'quota',
+        name: 'NextwikiQuota',
+        component: () => import('@/views/nextwiki/quota/index.vue'),
+        meta: { title: 'route.nextwikiQuota', icon: 'Coin', keepAlive: true, permCode: PC.NEXTWIKI_QUOTA_VIEW },
       },
     ],
   },

@@ -1,20 +1,20 @@
-﻿package com.njydsz.pmis.common.auth.desensitize;
+package com.njydsz.pmis.common.auth.desensitize;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 
-import com.njydsz.pmis.common.cache.YdszCache;
-import com.njydsz.pmis.common.cache.api.Cache;
-import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationRule;
-import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -164,8 +164,8 @@ public class ColumnDesensitizationService {
 
     private void parseAndMergeRules(String json, ColumnDesensitizationContext context) {
         try {
-            ObjectMapper mapper = JsonUtils.getMapper();
-            JsonNode root = mapper.readTree(json);
+            // Use JsonUtils static methods (YdszJson engine)
+            JsonNode root = YdszJson.readTree(json);
             if (root == null || root.isEmpty()) {
                 return;
             }

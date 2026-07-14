@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core;
+﻿package com.njydsz.pmis.common.excel.core;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -533,7 +533,7 @@ public class ExcelWriter {
             }
 
         } catch (Exception e) {
-            log.error("Excel写入异常, 当前行号: {}", currentRowIndex, e);
+            log.error("Excel写入异常", e);
             throw ExcelWriteException.dataWriteFailed(
                 currentRowIndex, null, null, e);
         }
@@ -1002,7 +1002,7 @@ public class ExcelWriter {
                         ultraFastCellWriter.writeFast(cell, value, prop.dateFormat);
                     }
                 } catch (Exception e) {
-                    log.warn("写入第{}行第{}列异常", rowNum, j, e);
+                    log.warn("写入第{}行第{}列异常", e);
                     cell.setBlank();
                 }
             }

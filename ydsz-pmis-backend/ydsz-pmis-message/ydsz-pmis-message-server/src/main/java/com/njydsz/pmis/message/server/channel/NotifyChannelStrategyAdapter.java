@@ -1,11 +1,11 @@
-﻿package com.njydsz.pmis.message.server.channel;
+package com.njydsz.pmis.message.server.channel;
 
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core.reader.sax;
+﻿package com.njydsz.pmis.common.excel.core.reader.sax;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -141,7 +141,7 @@ public class SuperFastExcelReader {
             }
 
             if (sheetStream == null) {
-                throw ExcelReadException.invalidFormat("unknown", "Sheet 不存�?);
+                throw ExcelReadException.invalidFormat("unknown", "Sheet 不存在");
             }
 
             try {

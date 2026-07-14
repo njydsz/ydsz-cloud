@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.alert;
+package com.njydsz.pmis.cronjob.server.core.alert;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -259,7 +259,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            JSONArray array = JsonUtils.parseList(channelsJson);
+            List<Object> array = JsonUtils.parseList(channelsJson);
             List<AlertChannel> channels = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 AlertChannel channel = AlertChannel.parse(array.getString(i));
@@ -286,7 +286,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            JSONArray array = JsonUtils.parseList(receiversJson);
+            List<Object> array = JsonUtils.parseList(receiversJson);
             List<String> receivers = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 String receiver = array.getString(i);
@@ -489,7 +489,7 @@ public class AlertDispatcher {
             return "INAPP";
         }
         try {
-            JSONArray array = JsonUtils.parseList(channelsJson);
+            List<Object> array = JsonUtils.parseList(channelsJson);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < array.size(); i++) {
                 if (i > 0) {
@@ -515,7 +515,7 @@ public class AlertDispatcher {
             return "[]";
         }
         String[] parts = channelsCsv.split(",");
-        JSONArray array = new JSONArray();
+        List<Object> array = new JSONArray();
         for (String part : parts) {
             String trimmed = part.trim();
             if (!trimmed.isEmpty()) {

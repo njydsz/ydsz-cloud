@@ -1,10 +1,8 @@
-﻿package com.njydsz.pmis.message.server.channel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.annotation.PostConstruct;
 
@@ -19,6 +17,7 @@ import org.springframework.web.client.RestClient;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
 

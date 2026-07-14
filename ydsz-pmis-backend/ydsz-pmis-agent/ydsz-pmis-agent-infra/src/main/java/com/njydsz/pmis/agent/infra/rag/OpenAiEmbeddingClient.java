@@ -81,15 +81,15 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
     }
 
     private List<List<Float>> parseEmbeddings(String json) {
-        JSONObject obj = JsonUtils.parseMap(json);
-        JSONArray data = obj.getJSONArray("data");
+        Map<String, Object> obj = JsonUtils.parseMap(json);
+        List<Object> data = obj.getJSONArray("data");
         if (data == null || data.isEmpty()) {
             throw new LlmException("Embedding 响应无 data", LlmException.ErrorType.INVALID_RESPONSE);
         }
         List<List<Float>> result = new ArrayList<>(data.size());
         for (int i = 0; i < data.size(); i++) {
-            JSONObject item = data.getJSONObject(i);
-            JSONArray embedding = item.getJSONArray("embedding");
+            Map<String, Object> item = data.getJSONObject(i);
+            List<Object> embedding = item.getJSONArray("embedding");
             List<Float> vector = new ArrayList<>(embedding.size());
             for (int j = 0; j < embedding.size(); j++) {
                 vector.add(embedding.getFloatValue(j));

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.service.impl.config;
+package com.njydsz.pmis.message.server.service.impl.config;
 
 import java.time.Duration;
 import java.util.Collections;

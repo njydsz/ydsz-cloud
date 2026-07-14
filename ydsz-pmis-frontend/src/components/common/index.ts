@@ -30,3 +30,9 @@ export { default as CommentEditor } from './CommentEditor.vue'
 export type { CommentAttachment, CommentMention } from './CommentEditor.vue'
 // P2-2: 嵌入式审批面板（业务页内嵌审批）
 export { default as EmbeddedApprovalPanel } from './EmbeddedApprovalPanel.vue'
+// 网盘知识库通用组件
+export { default as FileUploader } from './FileUploader.vue'
+export { default as FileTree } from './FileTree.vue'
+export { default as FilePreviewer } from './FilePreviewer.vue'
+export { default as QuotaProgressBar } from './QuotaProgressBar.vue'
+export { default as ShareLinkDialog } from './ShareLinkDialog.vue'

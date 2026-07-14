@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,9 +98,7 @@ public class DistributedLockService {
      */
     public void acquireLock(String lockKey, String ownerId) {
         if (!tryLockWithWait(lockKey, ownerId, DEFAULT_TIMEOUT, DEFAULT_WAIT_MS)) {
-            throw BusinessException.builder()
-                    .key("操作正在处理中，请稍后重试: " + lockKey)
-                    .build();
+            throw BusinessException.of(NextwikiExceptionCode.LOCK_BUSY).data("lockKey", lockKey);
         }
     }
 

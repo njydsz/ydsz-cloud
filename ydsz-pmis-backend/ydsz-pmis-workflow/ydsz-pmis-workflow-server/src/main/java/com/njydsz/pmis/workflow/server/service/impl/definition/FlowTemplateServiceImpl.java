@@ -661,7 +661,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             return null;
         }
         try {
-            JSONObject extJson = JsonUtils.parseMap(ext);
+            Map<String, Object> extJson = JsonUtils.parseMap(ext);
             if (extJson != null) {
                 String sourceRef = extJson.getString("sourceRef");
                 if (sourceRef != null && !sourceRef.isBlank()) {

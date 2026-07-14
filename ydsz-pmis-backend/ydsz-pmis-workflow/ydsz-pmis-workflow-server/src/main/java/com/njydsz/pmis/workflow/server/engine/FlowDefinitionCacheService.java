@@ -3,6 +3,8 @@
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -10,9 +12,9 @@ import com.njydsz.pmis.common.util.json.JsonUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Ticker;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
@@ -25,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 流程定义元数据缓存服务
  *
- * <p>P1: 使用 Caffeine 本地缓存流程节点和跳转定义，避免每次推进时重复查库。
+ * <p>P1: 使用 ydsz-pmis-common-cache 本地缓存流程节点和跳转定义，避免每次推进时重复查库。
  * <p>缓存策略：以 definitionId 为 key，缓存该定义下所有节点和 skip 列表，
  *   TTL 30 分钟，流程部署新版本时主动 evict。
  *
@@ -59,28 +61,28 @@ public class FlowDefinitionCacheService {
     public FlowDefinitionCacheService(FlowNodeMapper flowNodeMapper,
                                       FlowSkipMapper flowSkipMapper,
                                       @Lazy FlowDefinitionCacheBroadcaster broadcaster) {
-        this(flowNodeMapper, flowSkipMapper, broadcaster, Ticker.systemTicker());
+        this(flowNodeMapper, flowSkipMapper, broadcaster, null);
     }
 
     /**
-     * 测试用构造器，可注入自定义 {@link Ticker} 以模拟 TTL 过期。
+     * 测试用构造器。
      */
     FlowDefinitionCacheService(FlowNodeMapper flowNodeMapper,
                                FlowSkipMapper flowSkipMapper,
                                FlowDefinitionCacheBroadcaster broadcaster,
-                               Ticker ticker) {
+                               Object unused) {
         this.flowNodeMapper = flowNodeMapper;
         this.flowSkipMapper = flowSkipMapper;
         this.broadcaster = broadcaster;
-        this.nodeCache = Caffeine.newBuilder()
-                .expireAfterWrite(TTL)
+        this.nodeCache = YdszCache.<String, List<FlowNodeDO>>newBuilder()
+                .type(CacheType.TTL)
+                .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
-                .ticker(ticker)
                 .build();
-        this.skipCache = Caffeine.newBuilder()
-                .expireAfterWrite(TTL)
+        this.skipCache = YdszCache.<String, List<FlowSkipDO>>newBuilder()
+                .type(CacheType.TTL)
+                .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
-                .ticker(ticker)
                 .build();
     }
 
@@ -91,7 +93,7 @@ public class FlowDefinitionCacheService {
      *
      * <p>在流程部署新版本 / 编辑草稿 / 删除定义 / 发布 / 停用 / 迁移时调用。
      *
-     * <p>P0-3: 先执行本地 Caffeine 失效，再通过 Redis Pub/Sub 广播到集群其他节点，
+     * <p>P0-3: 先执行本地缓存失效，再通过 Redis Pub/Sub 广播到集群其他节点，
      * 确保集群环境下所有节点的本地缓存一致。
      *
      * @param definitionId 流程定义 ID
@@ -257,7 +259,7 @@ public class FlowDefinitionCacheService {
             return null;
         }
         try {
-            JSONObject extJson = JsonUtils.parseMap(skip.getExt());
+            Map<String, Object> extJson = JsonUtils.parseMap(skip.getExt());
             return extJson == null ? null : extJson.getString("sourceRef");
         } catch (Exception e) {
             log.warn("[FlowCache] 解析 skip.ext 失败: skipId={} err={}",

@@ -1,12 +1,13 @@
-﻿package com.njydsz.pmis.common.safe.xss;
+package com.njydsz.pmis.common.safe.xss;
 
-import java.io.IOException;
+import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
+import com.njydsz.pmis.common.json.reader.JSONReader;
 
 /**
- * XSS 防护 Jackson 反序列化器
+ * XSS 防护反序列化器（基于 YdszJson 引擎）
  *
- * <p>自定义 Jackson {@link StdDeserializer}，在 JSON 反序列化时对字符串值进行 XSS 清洗。
- * 通过注册到 Jackson ObjectMapper 的全局反序列化器，所有字符串字段在解析时自动过滤 XSS 攻击。
+ * <p>实现 YdszJson {@link JsonDeserializer}，在 JSON 反序列化时对字符串值进行 XSS 清洗。
+ * 通过注册到 YdszJson 的全局反序列化器，所有字符串字段在解析时自动过滤 XSS 攻击。
  *
  * <p>清洗规则委托给 {@link EscapeUtils#clean(String)}，包括：
  * <ul>
@@ -18,19 +19,13 @@ import java.io.IOException;
  *
  * @author Marvin Lee
  * @email limw1888@126.com
- * @version 4.0.0
+ * @version 5.0.0
  */
-public class XssStringDeserializer extends StdDeserializer<String> {
-
-    private static final long serialVersionUID = 1L;
-
-    public XssStringDeserializer() {
-        super(String.class);
-    }
+public class XssStringDeserializer implements JsonDeserializer<String> {
 
     @Override
-    public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        String value = p.getValueAsString();
+    public String deserialize(JSONReader in) {
+        String value = in.readString();
         if (value == null) {
             return null;
         }

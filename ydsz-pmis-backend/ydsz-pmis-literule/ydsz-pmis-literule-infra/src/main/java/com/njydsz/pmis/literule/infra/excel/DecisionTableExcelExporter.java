@@ -2,21 +2,13 @@ package com.njydsz.pmis.literule.infra.excel;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
+import com.njydsz.pmis.common.excel.core.ExcelFacade;
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.HitPolicy;
 
@@ -87,98 +79,99 @@ public class DecisionTableExcelExporter {
         if (definition == null) {
             throw new RuntimeException("决策表定义不能为 null");
         }
-        try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet(safeSheetName(definition.getTableCode()));
-            CellStyle headerStyle = createHeaderStyle(workbook);
-
+        try {
             List<DecisionTableDefinition.Column> conditionColumns =
                     nullToEmpty(definition.getConditionColumns());
             List<DecisionTableDefinition.Column> actionColumns =
                     nullToEmpty(definition.getActionColumns());
-            int totalCols = conditionColumns.size() + actionColumns.size();
+            int totalCols = Math.max(conditionColumns.size() + actionColumns.size(), 4);
+
+            List<List<Object>> allRows = new ArrayList<>();
 
             // 第 1 行：HitPolicy | TableCode | TableName
-            Row metaRow1 = sheet.createRow(0);
-            setCell(metaRow1, 0, "HitPolicy: " + hitPolicyName(definition.getHitPolicy()), headerStyle);
-            setCell(metaRow1, 1, "TableCode: " + nullToEmpty(definition.getTableCode()), headerStyle);
-            setCell(metaRow1, 2, "TableName: " + nullToEmpty(definition.getTableName()), headerStyle);
+            List<Object> metaRow1 = padRow(new ArrayList<>(), totalCols);
+            metaRow1.set(0, "HitPolicy: " + hitPolicyName(definition.getHitPolicy()));
+            metaRow1.set(1, "TableCode: " + nullToEmpty(definition.getTableCode()));
+            metaRow1.set(2, "TableName: " + nullToEmpty(definition.getTableName()));
+            allRows.add(metaRow1);
 
             // 第 2 行：Category | Description | Priority | Scope
-            Row metaRow2 = sheet.createRow(1);
-            setCell(metaRow2, 0, "Category: " + nullToEmpty(definition.getCategory()), headerStyle);
-            setCell(metaRow2, 1, "Description: " + nullToEmpty(definition.getDescription()), headerStyle);
-            setCell(metaRow2, 2, "Priority: " + definition.getPriority(), headerStyle);
+            List<Object> metaRow2 = padRow(new ArrayList<>(), totalCols);
+            metaRow2.set(0, "Category: " + nullToEmpty(definition.getCategory()));
+            metaRow2.set(1, "Description: " + nullToEmpty(definition.getDescription()));
+            metaRow2.set(2, "Priority: " + definition.getPriority());
             if (definition.getScope() != null && !definition.getScope().isBlank()) {
-                setCell(metaRow2, 3, "Scope: " + definition.getScope(), headerStyle);
+                metaRow2.set(3, "Scope: " + definition.getScope());
             }
+            allRows.add(metaRow2);
 
             // 第 3 行：列头（C:name / A:name）
-            Row headerRow = sheet.createRow(2);
+            List<Object> headerRow = padRow(new ArrayList<>(), totalCols);
             int colIdx = 0;
             for (DecisionTableDefinition.Column col : conditionColumns) {
-                setCell(headerRow, colIdx, CONDITION_PREFIX + nullToEmpty(col.getName()), headerStyle);
+                headerRow.set(colIdx, CONDITION_PREFIX + nullToEmpty(col.getName()));
                 colIdx++;
             }
             for (DecisionTableDefinition.Column col : actionColumns) {
-                setCell(headerRow, colIdx, ACTION_PREFIX + nullToEmpty(col.getName()), headerStyle);
+                headerRow.set(colIdx, ACTION_PREFIX + nullToEmpty(col.getName()));
                 colIdx++;
             }
+            allRows.add(headerRow);
 
             // 第 4 行：列显示名（label）
-            Row labelRow = sheet.createRow(3);
+            List<Object> labelRow = padRow(new ArrayList<>(), totalCols);
             colIdx = 0;
             for (DecisionTableDefinition.Column col : conditionColumns) {
-                setCell(labelRow, colIdx, nullToEmpty(col.getLabel()));
+                labelRow.set(colIdx, nullToEmpty(col.getLabel()));
                 colIdx++;
             }
             for (DecisionTableDefinition.Column col : actionColumns) {
-                setCell(labelRow, colIdx, nullToEmpty(col.getLabel()));
+                labelRow.set(colIdx, nullToEmpty(col.getLabel()));
                 colIdx++;
             }
+            allRows.add(labelRow);
 
             // 第 5 行：列类型
-            Row typeRow = sheet.createRow(4);
+            List<Object> typeRow = padRow(new ArrayList<>(), totalCols);
             colIdx = 0;
             for (DecisionTableDefinition.Column col : conditionColumns) {
-                setCell(typeRow, colIdx, nullToEmpty(col.getType()));
+                typeRow.set(colIdx, nullToEmpty(col.getType()));
                 colIdx++;
             }
             for (DecisionTableDefinition.Column col : actionColumns) {
-                setCell(typeRow, colIdx, nullToEmpty(col.getType()));
+                typeRow.set(colIdx, nullToEmpty(col.getType()));
                 colIdx++;
             }
+            allRows.add(typeRow);
 
             // 第 6 行起：决策行
             List<DecisionTableDefinition.Row> rows = nullToEmpty(definition.getRows());
-            int rowIdx = DATA_ROW_START;
             for (DecisionTableDefinition.Row row : rows) {
-                writeDataRow(sheet, rowIdx, row, conditionColumns, actionColumns);
-                rowIdx++;
+                allRows.add(buildDataRow(row, conditionColumns, actionColumns, totalCols));
             }
 
-            // 默认动作行（第一个单元格标记 DEFAULT，后续单元格为动作值）
+            // 默认动作行
             Map<String, Object> defaultActions = definition.getDefaultActions();
             if (defaultActions != null && !defaultActions.isEmpty()) {
-                Row defaultRow = sheet.createRow(rowIdx);
-                setCell(defaultRow, 0, DEFAULT_MARKER);
+                List<Object> defaultRow = padRow(new ArrayList<>(), totalCols);
+                defaultRow.set(0, DEFAULT_MARKER);
                 int actionStart = conditionColumns.size();
                 for (int i = 0; i < actionColumns.size(); i++) {
-                    DecisionTableDefinition.Column col = actionColumns.get(i);
-                    Object val = defaultActions.get(col.getName());
-                    setCell(defaultRow, actionStart + i, val == null ? "" : val.toString());
+                    Object val = defaultActions.get(actionColumns.get(i).getName());
+                    defaultRow.set(actionStart + i, val == null ? "" : val.toString());
                 }
+                allRows.add(defaultRow);
             }
 
-            // 自适应列宽
-            for (int i = 0; i < Math.max(totalCols, 4); i++) {
-                sheet.autoSizeColumn(i);
-            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ExcelFacade.write(out)
+                    .headRowNumber(0)
+                    .sheet(safeSheetName(definition.getTableCode()))
+                    .doWrite(allRows);
 
-            workbook.write(out);
             log.debug("[Excel导出] 决策表 {} 导出完成，共 {} 行", definition.getTableCode(), rows.size());
             return out.toByteArray();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("导出决策表 Excel 失败: " + definition.getTableCode(), e);
         }
     }
@@ -194,14 +187,48 @@ public class DecisionTableExcelExporter {
         if (excelBytes == null || excelBytes.length == 0) {
             throw new IllegalArgumentException("Excel 数据不能为空");
         }
-        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelBytes))) {
-            Sheet sheet = workbook.getSheetAt(0);
-            if (sheet == null) {
-                throw new IllegalArgumentException("Excel 文件不包含任何工作表");
+        try {
+            List<?> rawRows = ExcelFacade.read(new ByteArrayInputStream(excelBytes))
+                    .sheet(0)
+                    .headRowNumber(0)
+                    .doReadAll();
+
+            if (rawRows.isEmpty()) {
+                throw new IllegalArgumentException("Excel 文件不包含任何数据行");
             }
 
+            // 将每行转为 List<String>，同时提取 header 行（row 0）的值
+            List<List<String>> stringRows = new ArrayList<>();
+            List<String> headerValues = null;
+            for (Object rawRow : rawRows) {
+                if (rawRow instanceof Map) {
+                    Map<?, ?> map = (Map<?, ?>) rawRow;
+                    if (headerValues == null) {
+                        headerValues = new ArrayList<>();
+                        for (Object key : map.keySet()) {
+                            headerValues.add(key == null ? "" : key.toString());
+                        }
+                    }
+                    List<String> values = new ArrayList<>();
+                    for (Object val : map.values()) {
+                        values.add(val == null ? "" : val.toString());
+                    }
+                    stringRows.add(values);
+                }
+            }
+
+            // row 0 的值 = headerValues（从 Map keySet 提取）
+            // row 1+ 的值 = stringRows 各行的 values
+            List<String> row0 = headerValues != null ? headerValues : List.of();
+            List<String> row1 = stringRows.isEmpty() ? List.of() : stringRows.get(0);
+            List<String> row2 = stringRows.size() > 1 ? stringRows.get(1) : List.of();
+            List<String> row3 = stringRows.size() > 2 ? stringRows.get(2) : List.of();
+            List<String> row4 = stringRows.size() > 3 ? stringRows.get(3) : List.of();
+
             // 解析元数据
-            Map<String, String> meta = parseMetadata(sheet);
+            Map<String, String> meta = new LinkedHashMap<>();
+            parseMetaValues(row0, meta);
+            parseMetaValues(row1, meta);
             String tableCode = meta.getOrDefault("TableCode", "");
             String tableName = meta.getOrDefault("TableName", "");
             String category = meta.getOrDefault("Category", "");
@@ -211,39 +238,28 @@ public class DecisionTableExcelExporter {
             int priority = parseIntOrDefault(meta.getOrDefault("Priority", "100"), 100);
 
             // 解析列定义
-            Row headerRow = sheet.getRow(2);
-            Row labelRow = sheet.getRow(3);
-            Row typeRow = sheet.getRow(4);
-            if (headerRow == null || labelRow == null || typeRow == null) {
-                throw new IllegalArgumentException("Excel 缺少列定义行（第 3-5 行）");
+            if (row2.isEmpty()) {
+                throw new IllegalArgumentException("Excel 缺少列头行（第 3 行）");
             }
 
-            List<DecisionTableDefinition.Column> conditionColumns = new ArrayList<>();
-            List<DecisionTableDefinition.Column> actionColumns = new ArrayList<>();
-            int totalCols = 0;
-            // 统计有效列数（以 headerRow 为准，遇到空单元格停止）
-            while (totalCols < headerRow.getLastCellNum()) {
-                Cell cell = headerRow.getCell(totalCols);
-                if (cell == null || cell.getStringCellValue() == null || cell.getStringCellValue().isBlank()) {
-                    break;
-                }
-                totalCols++;
-            }
+            int totalCols = row2.size();
             if (totalCols == 0) {
                 throw new IllegalArgumentException("Excel 未定义任何列");
             }
 
+            List<DecisionTableDefinition.Column> conditionColumns = new ArrayList<>();
+            List<DecisionTableDefinition.Column> actionColumns = new ArrayList<>();
             for (int i = 0; i < totalCols; i++) {
-                String header = getCellAsString(headerRow.getCell(i));
-                String label = getCellAsString(labelRow.getCell(i));
-                String type = getCellAsString(typeRow.getCell(i));
-                if (header == null || header.isBlank()) {
+                String header = getOrEmpty(row2, i);
+                String label = getOrEmpty(row3, i);
+                String type = getOrEmpty(row4, i);
+                if (header.isBlank()) {
                     throw new IllegalArgumentException("第 " + (i + 1) + " 列头为空");
                 }
                 DecisionTableDefinition.Column column = DecisionTableDefinition.Column.builder()
                         .name(stripPrefix(header))
-                        .label(label == null ? "" : label)
-                        .type(type == null ? "string" : type)
+                        .label(label)
+                        .type(type.isBlank() ? "string" : type)
                         .build();
                 if (header.startsWith(CONDITION_PREFIX)) {
                     conditionColumns.add(column);
@@ -263,31 +279,25 @@ public class DecisionTableExcelExporter {
             }
 
             // 解析决策行 + 默认动作
-            List<DecisionTableDefinition.Row> rows = new ArrayList<>();
+            List<DecisionTableDefinition.Row> decisionRows = new ArrayList<>();
             Map<String, Object> defaultActions = new LinkedHashMap<>();
-            int lastRowIdx = sheet.getLastRowNum();
-            for (int r = DATA_ROW_START; r <= lastRowIdx; r++) {
-                Row row = sheet.getRow(r);
-                if (row == null) {
-                    continue;
-                }
-                String firstCell = getCellAsString(row.getCell(0));
+            for (int r = DATA_ROW_START - 1; r < stringRows.size(); r++) {
+                List<String> rowValues = stringRows.get(r);
+                String firstCell = getOrEmpty(rowValues, 0);
                 if (DEFAULT_MARKER.equalsIgnoreCase(firstCell)) {
-                    // 默认动作行
                     int actionStart = conditionColumns.size();
                     for (int i = 0; i < actionColumns.size(); i++) {
-                        Cell cell = row.getCell(actionStart + i);
-                        String val = getCellAsString(cell);
-                        if (val != null && !val.isEmpty()) {
+                        String val = getOrEmpty(rowValues, actionStart + i);
+                        if (!val.isEmpty()) {
                             defaultActions.put(actionColumns.get(i).getName(), val);
                         }
                     }
                     continue;
                 }
 
-                DecisionTableDefinition.Row decisionRow = parseDataRow(row, conditionColumns, actionColumns);
+                DecisionTableDefinition.Row decisionRow = parseDataRow(rowValues, conditionColumns, actionColumns);
                 if (decisionRow != null) {
-                    rows.add(decisionRow);
+                    decisionRows.add(decisionRow);
                 }
             }
 
@@ -299,7 +309,7 @@ public class DecisionTableExcelExporter {
                     .hitPolicy(hitPolicy)
                     .conditionColumns(conditionColumns)
                     .actionColumns(actionColumns)
-                    .rows(rows)
+                    .rows(decisionRows)
                     .defaultActions(defaultActions.isEmpty() ? null : defaultActions)
                     .enabled(true)
                     .priority(priority)
@@ -307,7 +317,7 @@ public class DecisionTableExcelExporter {
                     .version(1)
                     .build();
             log.debug("[Excel导入] 决策表 {} 导入完成，条件列={} 动作列={} 行数={}",
-                    tableCode, conditionColumns.size(), actionColumns.size(), rows.size());
+                    tableCode, conditionColumns.size(), actionColumns.size(), decisionRows.size());
             return def;
         } catch (IllegalArgumentException e) {
             throw e;
@@ -341,71 +351,49 @@ public class DecisionTableExcelExporter {
 
     // ============================== 私有方法 ==============================
 
-    private CellStyle createHeaderStyle(Workbook workbook) {
-        CellStyle style = workbook.createCellStyle();
-        Font font = workbook.createFont();
-        font.setBold(true);
-        style.setFont(font);
-        return style;
-    }
-
-    private void setCell(Row row, int colIdx, String value) {
-        setCell(row, colIdx, value, null);
-    }
-
-    private void setCell(Row row, int colIdx, String value, CellStyle style) {
-        Cell cell = row.createCell(colIdx);
-        cell.setCellValue(value == null ? "" : value);
-        if (style != null) {
-            cell.setCellStyle(style);
-        }
-    }
-
     /**
-     * 写入一行决策数据
+     * 构建决策数据行
      */
-    private void writeDataRow(Sheet sheet, int rowIdx, DecisionTableDefinition.Row row,
-                              List<DecisionTableDefinition.Column> conditionColumns,
-                              List<DecisionTableDefinition.Column> actionColumns) {
-        Row excelRow = sheet.createRow(rowIdx);
+    private List<Object> buildDataRow(DecisionTableDefinition.Row row,
+                                       List<DecisionTableDefinition.Column> conditionColumns,
+                                       List<DecisionTableDefinition.Column> actionColumns,
+                                       int totalCols) {
+        List<Object> dataRow = padRow(new ArrayList<>(), totalCols);
         Map<String, String> conditions = row.getConditions();
         Map<String, Object> actions = row.getActions();
 
         int colIdx = 0;
-        // 条件列
         for (DecisionTableDefinition.Column col : conditionColumns) {
             if (conditions != null && conditions.containsKey(col.getName())) {
-                setCell(excelRow, colIdx, conditions.get(col.getName()));
+                dataRow.set(colIdx, conditions.get(col.getName()));
             }
             colIdx++;
         }
-        // 动作列
         for (DecisionTableDefinition.Column col : actionColumns) {
             if (actions != null && actions.containsKey(col.getName())) {
                 Object val = actions.get(col.getName());
-                setCell(excelRow, colIdx, val == null ? "" : val.toString());
+                dataRow.set(colIdx, val == null ? "" : val.toString());
             }
             colIdx++;
         }
+        return dataRow;
     }
 
     /**
-     * 解析元数据（前两行）
+     * 将行填充到指定列数
      */
-    private Map<String, String> parseMetadata(Sheet sheet) {
-        Map<String, String> meta = new LinkedHashMap<>();
-        parseMetaRow(sheet.getRow(0), meta);
-        parseMetaRow(sheet.getRow(1), meta);
-        return meta;
+    private List<Object> padRow(List<Object> row, int totalCols) {
+        while (row.size() < totalCols) {
+            row.add("");
+        }
+        return row;
     }
 
-    private void parseMetaRow(Row row, Map<String, String> meta) {
-        if (row == null) {
-            return;
-        }
-        for (int i = 0; i < row.getLastCellNum(); i++) {
-            Cell cell = row.getCell(i);
-            String text = getCellAsString(cell);
+    /**
+     * 解析元数据值
+     */
+    private void parseMetaValues(List<String> values, Map<String, String> meta) {
+        for (String text : values) {
             if (text == null || text.isBlank()) {
                 continue;
             }
@@ -421,33 +409,28 @@ public class DecisionTableExcelExporter {
     /**
      * 解析一行为 DecisionTableDefinition.Row
      */
-    private DecisionTableDefinition.Row parseDataRow(Row row,
+    private DecisionTableDefinition.Row parseDataRow(List<String> rowValues,
                                                      List<DecisionTableDefinition.Column> conditionColumns,
                                                      List<DecisionTableDefinition.Column> actionColumns) {
         Map<String, String> conditions = new LinkedHashMap<>();
         Map<String, Object> actions = new LinkedHashMap<>();
         int colIdx = 0;
 
-        // 条件列
         for (DecisionTableDefinition.Column col : conditionColumns) {
-            Cell cell = row.getCell(colIdx);
-            String val = getCellAsString(cell);
-            if (val != null && !val.isEmpty()) {
+            String val = getOrEmpty(rowValues, colIdx);
+            if (!val.isEmpty()) {
                 conditions.put(col.getName(), val);
             }
             colIdx++;
         }
-        // 动作列
         for (DecisionTableDefinition.Column col : actionColumns) {
-            Cell cell = row.getCell(colIdx);
-            String val = getCellAsString(cell);
-            if (val != null && !val.isEmpty()) {
+            String val = getOrEmpty(rowValues, colIdx);
+            if (!val.isEmpty()) {
                 actions.put(col.getName(), val);
             }
             colIdx++;
         }
 
-        // 空行跳过
         if (conditions.isEmpty() && actions.isEmpty()) {
             return null;
         }
@@ -458,33 +441,12 @@ public class DecisionTableExcelExporter {
                 .build();
     }
 
-    private String getCellAsString(Cell cell) {
-        if (cell == null) {
-            return null;
+    private String getOrEmpty(List<String> list, int index) {
+        if (list == null || index < 0 || index >= list.size()) {
+            return "";
         }
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                double num = cell.getNumericCellValue();
-                if (num == Math.floor(num)) {
-                    return String.valueOf((long) num);
-                }
-                return String.valueOf(num);
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA:
-                try {
-                    return cell.getStringCellValue();
-                } catch (Exception e) {
-                    return String.valueOf(cell.getNumericCellValue());
-                }
-            case BLANK:
-            case _NONE:
-                return null;
-            default:
-                return null;
-        }
+        String val = list.get(index);
+        return val == null ? "" : val;
     }
 
     private String stripPrefix(String header) {
@@ -513,7 +475,6 @@ public class DecisionTableExcelExporter {
         if (tableCode == null || tableCode.isBlank()) {
             return "DecisionTable";
         }
-        // Excel sheet 名称禁止字符: / \ ? * [ ]
         return tableCode.replaceAll("[/\\\\?*\\[\\]]", "_");
     }
 

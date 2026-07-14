@@ -83,7 +83,7 @@ public class ThreadPoolHotUpdateListener {
      */
     private JSONObject parseConfig(String configInfo) {
         try {
-            JSONObject root = JsonUtils.parseMap(configInfo);
+            JSONObject root = JSONObject.from(JsonUtils.parseMap(configInfo));
             // 尝试 pmis.cronjob.executor 路径
             JSONObject pmis = root.getJSONObject("pmis");
             if (pmis != null) {

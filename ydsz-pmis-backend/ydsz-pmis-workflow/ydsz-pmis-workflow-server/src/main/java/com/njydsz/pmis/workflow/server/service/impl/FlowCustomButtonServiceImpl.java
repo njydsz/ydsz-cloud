@@ -63,7 +63,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
         }
         // 读取现有 ext JSON
-        JSONObject extJson = StringUtils.hasText(node.getExt())
+        Map<String, Object> extJson = StringUtils.hasText(node.getExt())
                 ? JsonUtils.parseMap(node.getExt()) : new JSONObject();
         // 写入 customButtons
         if (buttons == null || buttons.isEmpty()) {
@@ -184,7 +184,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             return List.of();
         }
         try {
-            JSONObject ext = JsonUtils.parseMap(extJson);
+            Map<String, Object> ext = JsonUtils.parseMap(extJson);
             Object buttons = ext.get("customButtons");
             if (buttons == null) {
                 return List.of();

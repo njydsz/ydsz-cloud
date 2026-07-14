@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.job;
+package com.njydsz.pmis.workflow.server.job;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -6,24 +6,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
-
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.core.job.JobHandler;
-import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.service.FlowNotificationService;
 import com.njydsz.pmis.workflow.server.service.FlowSlaService;
-import com.njydsz.pmis.workflow.server.service.FlowTaskService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,28 +24,19 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * GAP-P1: SLA 超时自动化任务处理器
  *
- * <p>定时扫描 pmis_flow_run_task 中已超期（due_at &lt; now）且状态为 PENDING/CLAIMED 的待办任务，
- * 根据节点 sla_config 配置的 action 执行自动化处理：
+ * <p>P1-3 重构后职责拆分：
  * <ul>
- *   <li>REMIND —— 发送催办通知（站内信+邮件，调用 notificationService.notifySlaTimeout）</li>
- *   <li>ESCALATE —— 升级办理人，将任务转交给 sla_config.adminUserId</li>
- *   <li>AUTO_PASS —— 自动通过任务并联动 FlowAdvancer 推进流程（taskService.pass）</li>
- *   <li>AUTO_REJECT —— 自动驳回任务并终止流程实例</li>
+ *   <li><b>单任务 SLA 处理</b> — 委托给 {@link FlowSlaService#processOverdue}，由 FlowSlaServiceImpl
+ *       统一实现完整闭环（NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT），包括提醒计数、间隔控制、
+ *       最终动作分发。消除原先两套实现不一致的问题（旧 markTimeout 会标记 TIMEOUT 终态导致流程卡死）。</li>
+ *   <li><b>子流程超时检测</b> — 扫描 pmis_flow_instance 中 due_at 已超期且状态为 RUNNING 的子流程实例，
+ *       自动终止子流程并同步终止父流程。此项为本 Handler 独有职责，不委托。</li>
  * </ul>
  *
- * <p>sla_config 为空时仅标记任务为 TIMEOUT 并记录日志。
- *
- * <p>容错策略：每个任务独立 try-catch，单个任务处理失败不影响其余任务。
+ * <p>容错策略：每个任务/实例独立 try-catch，单个处理失败不影响其余。
  *
  * <p>Bean 名称 = {@code flowTimeoutJobHandler}，
  * 可在 pmis_job 表配置：handler=flowTimeoutJobHandler, cron="0 0/5 * * * ?"（每 5 分钟扫描一次）。
- *
- * <p>说明：FlowRunTaskMapper 暂无 {@code timeoutTask} 专用方法，
- * 此处复用 {@link FlowRunTaskMapper#completeTask} 以 {@link FlowTaskStatus#TIMEOUT} 状态标记超时，
- * 与 {@code FlowTaskServiceImpl.timeoutTask} 内部实现保持一致。
- *
- * <p>增强：添加子流程超时检测逻辑，扫描 pmis_flow_instance 中 due_at 已超期且状态为 RUNNING 的子流程实例，
- * 自动终止子流程并同步父流程。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -61,17 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component("flowTimeoutJobHandler")
 @RequiredArgsConstructor
 public class FlowTimeoutJobHandler implements JobHandler {
-
-    /** SLA 动作：催办提醒 */
-    private static final String ACTION_REMIND = "REMIND";
-    /** SLA 动作：通知管理员（P1-3 闭环：保持任务活跃，等人工处理） */
-    private static final String ACTION_NOTIFY = "NOTIFY";
-    /** SLA 动作：升级办理人 */
-    private static final String ACTION_ESCALATE = "ESCALATE";
-    /** SLA 动作：自动通过 */
-    private static final String ACTION_AUTO_PASS = "AUTO_PASS";
-    /** SLA 动作：自动驳回 */
-    private static final String ACTION_AUTO_REJECT = "AUTO_REJECT";
 
     private final FlowRunTaskMapper taskMapper;
     private final FlowInstanceMapper instanceMapper;
@@ -269,7 +242,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
             return null;
         }
         try {
-            JSONObject obj = JsonUtils.parseMap(paramsJson);
+            Map<String, Object> obj = JsonUtils.parseMap(paramsJson);
             if (obj == null) {
                 return null;
             }

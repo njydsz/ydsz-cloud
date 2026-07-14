@@ -99,17 +99,10 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- EasyExcel（ExcelTemplate / ExcelUtil） -->
+        <!-- common-excel（ExcelTemplate / ExcelUtil） -->
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>easyexcel</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Apache POI（ExcelTemplate 使用 ss.usermodel） -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-excel</artifactId>
             <optional>true</optional>
         </dependency>
 

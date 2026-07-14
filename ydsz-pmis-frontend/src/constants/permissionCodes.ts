@@ -369,6 +369,43 @@ export const PC = {
   WORKFLOW_HISTORY_ARCHIVE_VIEW: 'workflow:history:archive:view',
   WORKFLOW_HISTORY_ARCHIVE_TRIGGER: 'workflow:history:archive:trigger',
   WORKFLOW_HISTORY_PURGE_TRIGGER: 'workflow:history:purge:trigger',
+
+  // ============= 网盘知识库(nextwiki) =============
+  NEXTWIKI_FILE_LIST: 'nextwiki:file:list',
+  NEXTWIKI_FILE_UPLOAD: 'nextwiki:file:upload',
+  NEXTWIKI_FILE_CREATE: 'nextwiki:file:create',
+  NEXTWIKI_FILE_UPDATE: 'nextwiki:file:update',
+  NEXTWIKI_FILE_DELETE: 'nextwiki:file:delete',
+  NEXTWIKI_FILE_MOVE: 'nextwiki:file:move',
+  NEXTWIKI_FILE_COPY: 'nextwiki:file:copy',
+  NEXTWIKI_FILE_STAR: 'nextwiki:file:star',
+  NEXTWIKI_FILE_VERSION: 'nextwiki:file:version',
+  NEXTWIKI_FILE_ROLLBACK: 'nextwiki:file:rollback',
+
+  NEXTWIKI_SHARE_LIST: 'nextwiki:share:list',
+  NEXTWIKI_SHARE_CREATE: 'nextwiki:share:create',
+  NEXTWIKI_SHARE_VERIFY: 'nextwiki:share:verify',
+  NEXTWIKI_SHARE_REVOKE: 'nextwiki:share:revoke',
+
+  NEXTWIKI_PREVIEW_VIEW: 'nextwiki:preview:view',
+  NEXTWIKI_PREVIEW_GENERATE: 'nextwiki:preview:generate',
+
+  NEXTWIKI_SEARCH: 'nextwiki:search',
+  NEXTWIKI_SEARCH_REBUILD: 'nextwiki:search:rebuild',
+
+  NEXTWIKI_DOWNLOAD: 'nextwiki:download',
+
+  NEXTWIKI_QUOTA_VIEW: 'nextwiki:quota:view',
+  NEXTWIKI_QUOTA_SET: 'nextwiki:quota:set',
+
+  NEXTWIKI_TAG_CREATE: 'nextwiki:tag:create',
+  NEXTWIKI_TAG_DELETE: 'nextwiki:tag:delete',
+  NEXTWIKI_TAG_BIND: 'nextwiki:tag:bind',
+
+  NEXTWIKI_TRASH_LIST: 'nextwiki:trash:list',
+  NEXTWIKI_TRASH_RESTORE: 'nextwiki:trash:restore',
+  NEXTWIKI_TRASH_PURGE: 'nextwiki:trash:purge',
+  NEXTWIKI_TRASH_EMPTY: 'nextwiki:trash:empty',
 } as const
 
 /** 权限码字面量联合类型（用于参数类型约束） */

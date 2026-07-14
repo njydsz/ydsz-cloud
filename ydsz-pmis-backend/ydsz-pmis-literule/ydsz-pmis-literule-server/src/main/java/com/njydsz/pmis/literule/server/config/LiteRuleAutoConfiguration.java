@@ -125,6 +125,7 @@ public class LiteRuleAutoConfiguration {
                                   ObjectProvider<ModelInputRegistry> modelRegistryProvider,
                                   ObjectProvider<FactProviderRegistry> factRegistryProvider,
                                   ObjectProvider<RuleActionDispatcher> actionDispatcherProvider,
+                                  ObjectProvider<ParallelRuleEvaluator> parallelEvaluatorProvider,
                                   ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
@@ -146,6 +147,13 @@ public class LiteRuleAutoConfiguration {
         RuleActionDispatcher actionDispatcher = actionDispatcherProvider.getIfAvailable();
         if (actionDispatcher != null) {
             engine.setActionDispatcher(actionDispatcher);
+        }
+
+        // P2-2 并行评估：可选注入并行评估器（pmis.literule.performance.parallel-enabled=true 时生效）
+        ParallelRuleEvaluator parallelEvaluator = parallelEvaluatorProvider.getIfAvailable();
+        if (parallelEvaluator != null) {
+            engine.setParallelEvaluator(parallelEvaluator);
+            engine.setParallelThreshold(properties.getPerformance().getParallelThreshold());
         }
 
         // P3-1 规则+模型融合：可选注入模型注册表

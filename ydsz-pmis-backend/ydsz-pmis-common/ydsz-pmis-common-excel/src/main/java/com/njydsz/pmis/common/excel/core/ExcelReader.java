@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core;
+﻿﻿package com.njydsz.pmis.common.excel.core;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -142,7 +142,7 @@ public class ExcelReader {
      * 指定要读取的Sheet名称
      *
      * <p>根据Sheet名称精确定位要读取的Sheet页�?
-     * 如果找不到对应名称的Sheet,会抛出异常�?/p>
+     * 如果找不到对应名称的Sheet,会抛出异常。</p>
      *
      * @param sheetName Sheet名称(区分大小�?
      * @return 当前读取器实�?
@@ -472,7 +472,7 @@ public class ExcelReader {
             }
         } catch (Exception e) {
             log.error("Excel 读取异常", e);
-            throw new RuntimeException("Excel 读取异常�? + e.getMessage(), e);
+            throw new RuntimeException("Excel 读取异常: " + e.getMessage(), e);
         }
     }
 
@@ -521,7 +521,7 @@ public class ExcelReader {
         try (XSSFWorkbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = getSheet(workbook);
             if (sheet == null) {
-                throw new IllegalArgumentException("Sheet不存�?);
+                throw new IllegalArgumentException("Sheet不存在");
             }
 
             parseSheet(sheet);
@@ -546,7 +546,7 @@ public class ExcelReader {
              HSSFWorkbook workbook = new HSSFWorkbook(fs)) {
             Sheet sheet = getSheet(workbook);
             if (sheet == null) {
-                throw new IllegalArgumentException("Sheet不存�?);
+                throw new IllegalArgumentException("Sheet不存在");
             }
 
             parseSheet(sheet);
@@ -682,7 +682,7 @@ public class ExcelReader {
     /**
      * 通知所有监听器读取结束
      *
-     * <p>读取完成后调�?无论是否发生异常�?
+     * <p>读取完成后调�?无论是否发生异常。�?
      * 用于资源清理和统计汇总�?/p>
      */
     private void notifyEnd() {

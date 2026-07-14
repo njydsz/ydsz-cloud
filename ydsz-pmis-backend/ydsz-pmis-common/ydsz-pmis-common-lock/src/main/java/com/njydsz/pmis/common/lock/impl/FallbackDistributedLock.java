@@ -7,8 +7,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.lock.core.DistributedLocker;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,9 +67,10 @@ public class FallbackDistributedLock implements DistributedLocker {
     private final boolean fallbackEnabled;
 
     /**
-     * 本地锁映射表（使用 Caffeine 缓存，自动过期清理，防止内存泄漏）
+     * 本地锁映射表（使用 ydsz-pmis-common-cache，自动过期清理，防止内存泄漏）
      */
-    private final Cache<String, ReentrantLock> localLocks = Caffeine.newBuilder()
+    private final Cache<String, ReentrantLock> localLocks = YdszCache.<String, ReentrantLock>newBuilder()
+            .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10000)
             .build();

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
@@ -163,8 +164,8 @@ public final class SensitiveFieldMask {
             return json;
         }
         try {
-            ObjectMapper mapper = JsonUtils.getMapper();
-            JsonNode parsed = mapper.readTree(json);
+            // Use JsonUtils static methods (YdszJson engine)
+            JsonNode parsed = YdszJson.readTree(json);
             maskJsonObject(parsed, patterns, new HashSet<>());
             return JsonUtils.toJson(parsed);
         } catch (Exception e) {
