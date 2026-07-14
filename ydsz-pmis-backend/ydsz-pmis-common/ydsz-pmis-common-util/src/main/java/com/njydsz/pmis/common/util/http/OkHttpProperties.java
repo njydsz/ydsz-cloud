@@ -1,6 +1,10 @@
 package com.njydsz.pmis.common.util.http;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * OkHttp 配置属性
@@ -24,8 +28,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
+@Validated
 @ConfigurationProperties(prefix = "ydsz.util.okhttp")
 public class OkHttpProperties {
 
@@ -34,6 +38,8 @@ public class OkHttpProperties {
      *
      * <p>连接池中允许的最大空闲连接数量。默认 50。
      */
+    @Min(1)
+    @Max(1000)
     private int maxIdleConnections = 50;
 
     /**
@@ -42,6 +48,8 @@ public class OkHttpProperties {
      * <p>空闲连接在连接池中的存活时间，超过此时间的连接将被回收。
      * 默认 5 分钟。
      */
+    @Min(1)
+    @Max(60)
     private long keepAliveDuration = 5;
 
     /**
@@ -49,6 +57,8 @@ public class OkHttpProperties {
      *
      * <p>建立 TCP 连接的超时时间。默认 5 秒。
      */
+    @Min(1)
+    @Max(300)
     private long connectTimeout = 5;
 
     /**
@@ -56,6 +66,8 @@ public class OkHttpProperties {
      *
      * <p>从服务器读取响应的超时时间。默认 30 秒。
      */
+    @Min(1)
+    @Max(600)
     private long readTimeout = 30;
 
     /**
@@ -63,6 +75,8 @@ public class OkHttpProperties {
      *
      * <p>向服务器发送请求体的超时时间。默认 30 秒。
      */
+    @Min(1)
+    @Max(600)
     private long writeTimeout = 30;
 
     public int getMaxIdleConnections() {

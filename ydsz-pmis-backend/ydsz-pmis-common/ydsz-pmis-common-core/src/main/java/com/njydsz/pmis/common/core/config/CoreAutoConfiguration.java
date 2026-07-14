@@ -1,8 +1,14 @@
 package com.njydsz.pmis.common.core.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Bean;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
 
 /**
  * Core 模块自动配置类
@@ -10,21 +16,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * <p>激活 {@link CoreProperties} 配置属性绑定，
  * 使 {@code ydsz.core.*} 配置项在 IDE 中获得自动补全和类型校验支持。</p>
  *
+ * <p>当 Spring {@link MessageSource} 可用时，自动注册 {@link SpringMessageResolver}
+ * 并绑定到 {@link BaseResponse}，使响应消息支持国际化。</p>
+ *
  * <p><b>启用条件：</b>当 {@code ydsz.core.enabled=true} 时生效（默认启用）。</p>
  *
- * <p><b>使用示例：</b></p>
- * <pre>{@code
- * # application.yml
- * ydsz:
- *   core:
- *     max-page-size: 500
- *     default-page-size: 20
- *     cache:
- *       default-expire-seconds: 3600
- * }</pre>
- *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration
@@ -33,14 +30,22 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 public class CoreAutoConfiguration {
 
     /**
-     * CoreProperties Bean 由 {@code @EnableConfigurationProperties} 自动注册。
+     * 注册 Spring 国际化消息解析器并绑定到 {@link BaseResponse}。
      *
-     * <p>如需在运行时访问配置，注入 {@link CoreProperties} 即可：
-     * <pre>{@code
-     * @Autowired
-     * private CoreProperties coreProperties;
+     * <p>当 classpath 上存在 {@link MessageSource} 且容器中有对应 Bean 时生效。
+     * 将 Spring 的 MessageSource 适配为 {@link BaseResponse.MessageResolver}，
+     * 使 {@code BaseResponse.success()} 和 {@code BaseResponse.error()} 中的消息
+     * 支持 i18n 国际化解析。</p>
      *
-     * int maxPageSize = coreProperties.getMaxPageSize();
-     * }</pre>
+     * @param messageSource Spring 消息源
+     * @return SpringMessageResolver 实例
      */
+    @Bean
+    @ConditionalOnClass(MessageSource.class)
+    @ConditionalOnBean(MessageSource.class)
+    public SpringMessageResolver springMessageResolver(MessageSource messageSource) {
+        SpringMessageResolver resolver = new SpringMessageResolver(messageSource);
+        BaseResponse.setResolver(resolver);
+        return resolver;
+    }
 }

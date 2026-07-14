@@ -1,6 +1,9 @@
 package com.njydsz.pmis.common.util.compress;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.*;
@@ -21,11 +24,10 @@ import java.util.zip.*;
  *   <li>流解压：unzipStream、gunzipStream</li>
  * </ul>
  *
- * <p><b>相比 Apache/Spring 的增强：</b>
+ * <p><b>安全防护：</b>
  * <ul>
- *   <li>无需额外依赖，使用 JDK 原生支持</li>
- *   <li>提供完整的 ZIP 和 GZIP 支持</li>
- *   <li>支持目录递归压缩和解压</li>
+ *   <li>Zip Slip 路径遍历攻击防护（所有解压方法均校验目标路径）</li>
+ *   <li>ZIP 炸弹防护（限制最大解压条目数、总解压大小、压缩比）</li>
  *   <li>所有方法 null 安全处理</li>
  * </ul>
  *
@@ -36,6 +38,26 @@ import java.util.zip.*;
 public class CompressUtils {
 
     private static final int BUFFER_SIZE = 8192;
+
+    /**
+     * ZIP 炸弹防护：最大解压条目数
+     */
+    private static final int MAX_ZIP_ENTRIES = 10_000;
+
+    /**
+     * ZIP 炸弹防护：最大总解压大小（1GB）
+     */
+    private static final long MAX_TOTAL_UNCOMPRESSED_SIZE = 1024L * 1024L * 1024L;
+
+    /**
+     * ZIP 炸弹防护：单条目最大解压大小（256MB）
+     */
+    private static final long MAX_ENTRY_UNCOMPRESSED_SIZE = 256L * 1024L * 1024L;
+
+    /**
+     * ZIP 炸弹防护：最大压缩比阈值（100:1）
+     */
+    private static final int MAX_COMPRESSION_RATIO = 100;
 
     private CompressUtils() {
         throw new UnsupportedOperationException("CompressUtils is a utility class and cannot be instantiated");
@@ -89,6 +111,17 @@ public class CompressUtils {
 
     /**
      * 解压 ZIP 文件
+     *
+     * <p><b>安全防护：</b>
+     * <ul>
+     *   <li>Zip Slip 路径遍历攻击防护：校验每个条目的目标路径是否在目标目录内</li>
+     *   <li>ZIP 炸弹防护：限制最大条目数、总解压大小、单条目大小和压缩比</li>
+     * </ul>
+     *
+     * @param zipFile     ZIP 文件
+     * @param destDirectory 目标目录
+     * @throws IOException 解压过程中发生 IO 异常
+     * @throws SecurityException 检测到 Zip Slip 攻击或 ZIP 炸弹时抛出
      */
     public static void unzip(File zipFile, File destDirectory) throws IOException {
         if (zipFile == null || destDirectory == null) {
@@ -99,11 +132,38 @@ public class CompressUtils {
             destDirectory.mkdirs();
         }
 
+        Path destDirPath = destDirectory.getCanonicalFile().toPath();
+        long totalUncompressedSize = 0L;
+        int entryCount = 0;
+        long zipFileSize = zipFile.length();
+
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
+                // ZIP 炸弹防护：条目数检查
+                entryCount++;
+                if (entryCount > MAX_ZIP_ENTRIES) {
+                    throw new SecurityException(
+                            "ZIP bomb detected: entry count exceeds limit " + MAX_ZIP_ENTRIES);
+                }
+
+                // ZIP 炸弹防护：单条目大小检查（已知压缩大小时）
+                if (entry.getSize() > MAX_ENTRY_UNCOMPRESSED_SIZE) {
+                    throw new SecurityException(
+                            "ZIP bomb detected: entry '" + entry.getName()
+                            + "' uncompressed size exceeds limit " + MAX_ENTRY_UNCOMPRESSED_SIZE);
+                }
+
                 File destFile = new File(destDirectory, entry.getName());
-                
+
+                // Zip Slip 防护：校验目标路径是否在目标目录内
+                Path destFilePath = destFile.getCanonicalFile().toPath();
+                if (!destFilePath.startsWith(destDirPath)) {
+                    throw new SecurityException(
+                            "Zip Slip vulnerability detected: entry '" + entry.getName()
+                            + "' tries to escape the target directory");
+                }
+
                 if (entry.isDirectory()) {
                     destFile.mkdirs();
                 } else {
@@ -111,12 +171,39 @@ public class CompressUtils {
                     if (parent != null && !parent.exists()) {
                         parent.mkdirs();
                     }
-                    
+
+                    long entryBytesWritten = 0;
                     try (FileOutputStream fos = new FileOutputStream(destFile)) {
                         byte[] buffer = new byte[BUFFER_SIZE];
                         int len;
                         while ((len = zis.read(buffer)) > 0) {
+                            // ZIP 炸弹防护：单条目大小检查（流式读取时）
+                            entryBytesWritten += len;
+                            if (entryBytesWritten > MAX_ENTRY_UNCOMPRESSED_SIZE) {
+                                throw new SecurityException(
+                                        "ZIP bomb detected: entry '" + entry.getName()
+                                        + "' exceeds single entry size limit " + MAX_ENTRY_UNCOMPRESSED_SIZE);
+                            }
+
+                            // ZIP 炸弹防护：总大小检查
+                            totalUncompressedSize += len;
+                            if (totalUncompressedSize > MAX_TOTAL_UNCOMPRESSED_SIZE) {
+                                throw new SecurityException(
+                                        "ZIP bomb detected: total uncompressed size exceeds limit "
+                                        + MAX_TOTAL_UNCOMPRESSED_SIZE);
+                            }
+
                             fos.write(buffer, 0, len);
+                        }
+                    }
+
+                    // ZIP 炸弹防护：压缩比检查
+                    if (zipFileSize > 0 && entryBytesWritten > 0) {
+                        long compressionRatio = entryBytesWritten / Math.max(zipFileSize / entryCount, 1);
+                        if (compressionRatio > MAX_COMPRESSION_RATIO) {
+                            throw new SecurityException(
+                                    "ZIP bomb detected: compression ratio " + compressionRatio
+                                    + " exceeds limit " + MAX_COMPRESSION_RATIO);
                         }
                     }
                 }
@@ -250,7 +337,7 @@ public class CompressUtils {
         if (str == null) {
             return null;
         }
-        return gzip(str.getBytes("UTF-8"));
+        return gzip(str.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -260,7 +347,7 @@ public class CompressUtils {
         if (data == null) {
             return null;
         }
-        return new String(gunzip(data), "UTF-8");
+        return new String(gunzip(data), StandardCharsets.UTF_8);
     }
 
     /**

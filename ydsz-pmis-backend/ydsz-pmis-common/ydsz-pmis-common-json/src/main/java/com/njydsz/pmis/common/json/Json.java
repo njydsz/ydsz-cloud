@@ -22,6 +22,7 @@ import com.njydsz.pmis.common.json.object.JsonArray;
 import com.njydsz.pmis.common.json.object.JsonObject;
 import com.njydsz.pmis.common.json.parser.JsonParser;
 import com.njydsz.pmis.common.json.pointer.JsonPointer;
+import com.njydsz.pmis.common.json.provider.SerializationProvider;
 import com.njydsz.pmis.common.json.reader.JSONReader;
 import com.njydsz.pmis.common.json.schema.SchemaValidator;
 import com.njydsz.pmis.common.json.schema.ValidationResult;
@@ -977,7 +978,8 @@ public class Json {
     /**
      * 使用指定配置序列化对象（不影响全局配置）。
      *
-     * <p>创建临时配置快照，序列化完成后恢复原配置。
+     * <p>通过保存/恢复当前线程的 ThreadLocal 序列化参数来实现单次配置，
+     * 不修改全局 {@link JsonConfig} 单例，保证线程安全。
      * 适用于需要为单次序列化指定不同配置的场景。</p>
      *
      * @param obj 要序列化的对象
@@ -989,17 +991,18 @@ public class Json {
         if (obj == null) {
             return null;
         }
-        JsonConfig globalConfig = JsonConfig.getInstance();
-        // 保存当前全局配置快照
-        JsonConfig snapshot = JsonConfig.copyOf(globalConfig);
+        if (config == null) {
+            return toJson(obj);
+        }
+        // 保存当前线程的序列化参数（不修改全局单例，避免并发污染）
+        SerializationProvider.ThreadLocalSnapshot snapshot = new SerializationProvider.ThreadLocalSnapshot();
         try {
-            // 应用临时配置
-            globalConfig.copyFrom(config).apply();
+            // 应用临时配置到当前线程的 ThreadLocal
+            config.apply();
             return toJson(obj);
         } finally {
-            // 恢复原配置
-            globalConfig.copyFrom(snapshot);
-            snapshot.apply();
+            // 恢复原始 ThreadLocal 参数
+            snapshot.restore();
         }
     }
 

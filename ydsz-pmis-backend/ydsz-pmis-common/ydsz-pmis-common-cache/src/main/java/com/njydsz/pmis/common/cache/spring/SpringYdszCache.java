@@ -70,11 +70,30 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
     if (storeValue != null) {
       return (T) fromStoreValue(storeValue);
     }
+    // 使用 computeIfAbsent 防止缓存击穿：同一 key 的并发请求只有一个执行 valueLoader
     try {
-      T newValue = valueLoader.call();
-      put(key, newValue);
-      return newValue;
-    } catch (Exception e) {
+      Object newStoreValue = delegate.computeIfAbsent(
+          key,
+          k -> {
+            try {
+              T v = valueLoader.call();
+              if (v == null && !isAllowNullValues()) {
+                return null;
+              }
+              return toStoreValue(v);
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          });
+      if (newStoreValue == null) {
+        return null;
+      }
+      return (T) fromStoreValue(newStoreValue);
+    } catch (RuntimeException e) {
+      Throwable cause = e.getCause();
+      if (cause != null) {
+        throw new ValueRetrievalException(key, valueLoader, cause);
+      }
       throw new ValueRetrievalException(key, valueLoader, e);
     }
   }

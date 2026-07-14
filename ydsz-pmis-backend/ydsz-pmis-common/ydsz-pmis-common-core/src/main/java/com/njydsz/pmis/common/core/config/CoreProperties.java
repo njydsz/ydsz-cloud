@@ -25,6 +25,7 @@ import lombok.Data;
  *       enabled: true
  *       header-name: X-Trace-Id
  *       generate-if-missing: true
+ *       id-type: snowflake   # uuid（默认）或 snowflake（有序）
  * }</pre>
  *
  * @author ydsz-pmis-team
@@ -61,5 +62,8 @@ public class CoreProperties {
 
         /** 请求头中缺失 TraceId 时是否自动生成 */
         private boolean generateIfMissing = true;
+
+        /** TraceId 生成策略：uuid（无序，默认）或 snowflake（有序，可排序日志） */
+        private String idType = "uuid";
     }
 }

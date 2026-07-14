@@ -76,7 +76,9 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     }
     frequencySketch.increment(key);
     if (node.queue == 1) {
-      moveToProtected(node);
+      // 安全提升：在 writeLock 内重新校验 node 是否仍在 data 中且 queue 未变，
+      // 避免并发 put 淘汰导致 node 已从链表移除后仍操作野指针
+      safeMoveToProtected(node, key);
     }
     hitCount.increment();
     return node.value;
@@ -161,26 +163,53 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     return false;
   }
 
+  /**
+   * 安全提升到 Protected 队列 — 在 writeLock 内重新校验 node 有效性
+   *
+   * <p>防止并发淘汰场景下操作已从链表移除的 Node（野指针）。
+   *
+   * @param node 待提升的节点
+   * @param key 缓存键（用于重新校验 data 中是否仍存在）
+   */
+  private void safeMoveToProtected(Node<K, V> node, K key) {
+    writeLock.lock();
+    try {
+      // 重新校验：node 仍在 data 中且仍为 probation 队列
+      Node<K, V> current = data.get(key);
+      if (current != node || current.queue != 1) {
+        // node 已被并发淘汰或队列已变更，跳过提升
+        return;
+      }
+      doMoveToProtected(node);
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
   private void moveToProtected(Node<K, V> node) {
     writeLock.lock();
     try {
       if (node.queue != 1) {
         return;
       }
-      remove(node);
-      node.queue = 2;
-      addFirst(protectedHead, node);
-      long pSize = protectedSize.incrementAndGet();
-      if (pSize > maxSize * 0.80) {
-        Node<K, V> demoted = removeLast(protectedHead);
-        if (demoted != null) {
-          demoted.queue = 1;
-          addFirst(probationHead, demoted);
-          protectedSize.decrementAndGet();
-        }
-      }
+      doMoveToProtected(node);
     } finally {
       writeLock.unlock();
+    }
+  }
+
+  private void doMoveToProtected(Node<K, V> node) {
+    remove(node);
+    node.queue = 2;
+    addFirst(protectedHead, node);
+    long pSize = protectedSize.incrementAndGet();
+    if (pSize > maxSize * 0.80) {
+      Node<K, V> demoted = removeLast(protectedHead);
+      if (demoted != null) {
+        demoted.queue = 1;
+        addFirst(probationHead, demoted);
+        protectedSize.decrementAndGet();
+      }
     }
   }
 

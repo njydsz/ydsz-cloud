@@ -202,10 +202,15 @@ public class OkHttpUtils {
 
     /**
      * 关闭客户端（应用关闭时调用）
+     *
+     * <p>安全关闭自建的 OkHttpClient 实例。若 OkHttp 不可用（client 为 null），则跳过关闭。
+     * springManagedClient 由 Spring 管理其生命周期，不做关闭。
      */
     public static void close() {
-        client.dispatcher().executorService().shutdown();
-        client.connectionPool().evictAll();
+        if (client != null) {
+            client.dispatcher().executorService().shutdown();
+            client.connectionPool().evictAll();
+        }
         if (insecureClient != null) {
             insecureClient.dispatcher().executorService().shutdown();
             insecureClient.connectionPool().evictAll();
@@ -354,6 +359,117 @@ public class OkHttpUtils {
 
     public static String doDelete(String url) throws IOException {
         return doDelete(url, null);
+    }
+
+    // ==================== PATCH 请求 ====================
+
+    /**
+     * PATCH 请求（JSON）
+     *
+     * @param url     请求 URL
+     * @param json    JSON 请求体
+     * @return 响应体字符串
+     * @throws IOException 请求异常
+     */
+    public static String doPatchJson(String url, String json) throws IOException {
+        return doPatchJson(url, json, null);
+    }
+
+    /**
+     * PATCH 请求（JSON，带请求头）
+     *
+     * @param url     请求 URL
+     * @param json    JSON 请求体
+     * @param headers 请求头
+     * @return 响应体字符串
+     * @throws IOException 请求异常
+     */
+    public static String doPatchJson(String url, String json, Map<String, String> headers) throws IOException {
+        RequestBody body = RequestBody.create(json, JSON_MEDIA_TYPE);
+
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .patch(body);
+
+        if (headers != null) {
+            headers.forEach(requestBuilder::addHeader);
+        }
+
+        Request request = requestBuilder.build();
+        return execute(request);
+    }
+
+    // ==================== 请求级超时 ====================
+
+    /**
+     * 执行带请求级超时的 GET 请求
+     *
+     * @param url              请求 URL
+     * @param param            查询参数
+     * @param connectTimeoutMs 连接超时（毫秒）
+     * @param readTimeoutMs    读取超时（毫秒）
+     * @return 响应体字符串
+     * @throws IOException 请求异常
+     */
+    public static String doGetWithTimeout(String url, Map<String, String> param,
+                                          long connectTimeoutMs, long readTimeoutMs) throws IOException {
+        HttpUrl.Builder urlBuilder = HttpUrl.get(url).newBuilder();
+        if (param != null) {
+            param.forEach(urlBuilder::addQueryParameter);
+        }
+
+        Request request = new Request.Builder()
+                .url(urlBuilder.build())
+                .build();
+
+        return executeWithTimeout(request, connectTimeoutMs, readTimeoutMs);
+    }
+
+    /**
+     * 执行带请求级超时的 POST JSON 请求
+     *
+     * @param url              请求 URL
+     * @param json             JSON 请求体
+     * @param connectTimeoutMs 连接超时（毫秒）
+     * @param readTimeoutMs    读取超时（毫秒）
+     * @return 响应体字符串
+     * @throws IOException 请求异常
+     */
+    public static String doPostJsonWithTimeout(String url, String json,
+                                               long connectTimeoutMs, long readTimeoutMs) throws IOException {
+        RequestBody body = RequestBody.create(json, JSON_MEDIA_TYPE);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+
+        return executeWithTimeout(request, connectTimeoutMs, readTimeoutMs);
+    }
+
+    /**
+     * 使用请求级超时执行请求
+     *
+     * @param request          OkHttp 请求对象
+     * @param connectTimeoutMs 连接超时（毫秒）
+     * @param readTimeoutMs    读取超时（毫秒）
+     * @return 响应体字符串
+     * @throws IOException 请求异常
+     */
+    private static String executeWithTimeout(Request request, long connectTimeoutMs, long readTimeoutMs)
+            throws IOException {
+        OkHttpClient baseClient = getClient();
+        OkHttpClient timedClient = baseClient.newBuilder()
+                .connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS)
+                .readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)
+                .build();
+
+        try (Response response = timedClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
+            }
+            ResponseBody body = response.body();
+            return body != null ? body.string() : "";
+        }
     }
 
     // ==================== 异步请求 ====================

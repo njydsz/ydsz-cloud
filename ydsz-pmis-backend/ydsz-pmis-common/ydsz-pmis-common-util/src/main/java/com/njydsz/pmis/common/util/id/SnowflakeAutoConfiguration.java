@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.env.Environment;
@@ -35,13 +36,16 @@ public class SnowflakeAutoConfiguration {
     private static final long MAX_WORKER_ID = SnowflakeUtils.MAX_WORKER_ID_PUBLIC;
     private static final long MAX_DATACENTER_ID = SnowflakeUtils.MAX_DATACENTER_ID_PUBLIC;
 
-    public SnowflakeAutoConfiguration(SnowflakeProperties properties, Environment environment) {
+    public SnowflakeAutoConfiguration(SnowflakeProperties properties, Environment environment,
+                                      ObjectProvider<WorkerIdRegistry> workerIdRegistryProvider) {
         try {
-            long workerId = resolveWorkerId(properties, environment);
+            WorkerIdRegistry registry = workerIdRegistryProvider.getIfAvailable();
+            long workerId = resolveWorkerId(properties, environment, registry);
             long datacenterId = resolveDatacenterId(properties, environment);
             SnowflakeUtils.init(workerId, datacenterId);
-            log.info("SnowflakeUtils auto-configured. Worker ID: {}, Datacenter ID: {}, Source: {}",
-                    workerId, datacenterId, properties.getWorkerIdSource());
+            log.info("SnowflakeUtils auto-configured. Worker ID: {}, Datacenter ID: {}, Source: {}, Registry: {}",
+                    workerId, datacenterId, properties.getWorkerIdSource(),
+                    registry != null ? registry.type() : "none");
         } catch (IllegalStateException e) {
             log.debug("SnowflakeUtils already initialized manually, skipping auto-configuration: {}", e.getMessage());
         }
@@ -50,8 +54,21 @@ public class SnowflakeAutoConfiguration {
     /**
      * 解析 workerId
      */
-    private long resolveWorkerId(SnowflakeProperties properties, Environment environment) {
+    private long resolveWorkerId(SnowflakeProperties properties, Environment environment, WorkerIdRegistry registry) {
         WorkerIdSource source = properties.getWorkerIdSource();
+
+        // 优先使用分布式注册中心获取 workerId
+        if (registry != null) {
+            try {
+                String nodeIp = InetAddress.getLocalHost().getHostAddress();
+                long workerId = registry.acquire(nodeIp, 300_000L);
+                log.info("WorkerId {} acquired from registry {} for node {}", workerId, registry.type(), nodeIp);
+                return validateWorkerId(workerId);
+            } catch (Exception e) {
+                log.warn("Failed to acquire workerId from registry {}, falling back to configured strategy: {}",
+                        registry.type(), e.getMessage());
+            }
+        }
 
         return switch (source) {
             case CONFIG -> {

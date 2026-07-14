@@ -74,10 +74,6 @@ public class PageRequest extends BaseRequest {
             "^[a-zA-Z0-9_.]+(\\s+(ASC|DESC))?(,\\s*[a-zA-Z0-9_.]+(\\s+(ASC|DESC))?)*$",
             Pattern.CASE_INSENSITIVE);
 
-    /**
-     * 仅校验单个字段名的安全性（不含排序方向）
-     */
-    private static final Pattern SAFE_FIELD_PATTERN = Pattern.compile("^[a-zA-Z0-9_.]+$");
 
     /**
      * 当前页码
@@ -130,17 +126,18 @@ public class PageRequest extends BaseRequest {
     }
 
     /**
-     * 获取安全的排序字段
-     * <p>防止SQL注入：仅允许字母、数字、下划线和点号（表名.字段名格式）
+     * 获取安全的排序表达式
+     * <p>防止SQL注入：使用 {@link #SAFE_SORT_PATTERN} 校验，
+     * 支持单字段名或多字段名+ASC/DESC 逗号分隔格式（如 "name ASC, age DESC"）。
+     * 与 {@link #validateSort()} 使用相同的校验规则，保证行为一致。
      *
-     * @return 安全的排序字段，不合法时返回 null
+     * @return 安全的排序表达式，不合法时返回 null
      */
     public String getSafeOrderBy() {
         if (orderBy == null || orderBy.isEmpty()) {
             return null;
         }
-        // 使用预编译 Pattern 校验，与 SAFE_SORT_PATTERN 保持一致
-        if (!SAFE_FIELD_PATTERN.matcher(orderBy).matches()) {
+        if (!SAFE_SORT_PATTERN.matcher(orderBy).matches()) {
             return null;
         }
         return orderBy;

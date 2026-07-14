@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.MDC;
 
+import com.njydsz.pmis.common.core.constant.TraceConstants;
 import com.njydsz.pmis.common.json.annotation.JsonField;
 import com.njydsz.pmis.common.json.annotation.JsonPropertyOrder;
 
@@ -119,7 +120,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public BaseResponse() {
         this.timestamp = CLOCK_HOLDER.get().millis();
-        this.traceId = MDC.get("traceId");
+        this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
     }
 
     /**
@@ -134,7 +135,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.msg = msg;
         this.data = data;
         this.timestamp = CLOCK_HOLDER.get().millis();
-        this.traceId = MDC.get("traceId");
+        this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
     }
 
     /**

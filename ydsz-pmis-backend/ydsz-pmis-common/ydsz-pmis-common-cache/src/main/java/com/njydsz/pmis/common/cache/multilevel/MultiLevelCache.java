@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.cache.multilevel;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -227,13 +228,42 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
 
   @Override
   public Map<K, V> getAll(Collection<K> keys) {
-    Map<K, V> result = new HashMap<>();
+    if (keys == null || keys.isEmpty()) {
+      return new HashMap<>();
+    }
+
+    Map<K, V> result = new HashMap<>(keys.size());
+    List<K> l1MissedKeys = new ArrayList<>(keys.size());
+
+    // 1. 批量查 L1
     for (K key : keys) {
-      V value = getIfPresent(key);
+      V value = l1Cache.getIfPresent(key);
       if (value != null) {
+        hitCount.increment();
+        l1HitCount.increment();
         result.put(key, value);
+      } else {
+        l1MissedKeys.add(key);
       }
     }
+
+    // 2. L1 未命中的 key 批量查 L2（利用 multiGet）
+    if (!l1MissedKeys.isEmpty()) {
+      Map<K, V> l2Results = l2Cache.getAll(l1MissedKeys);
+      for (K key : l1MissedKeys) {
+        V value = l2Results.get(key);
+        if (value != null) {
+          hitCount.increment();
+          l2HitCount.increment();
+          // 回填 L1
+          l1Cache.put(key, value);
+          result.put(key, value);
+        } else {
+          missCount.increment();
+        }
+      }
+    }
+
     return result;
   }
 

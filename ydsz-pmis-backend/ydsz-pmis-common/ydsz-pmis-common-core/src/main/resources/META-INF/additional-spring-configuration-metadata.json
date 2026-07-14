@@ -1,6 +1,12 @@
 {
   "properties": [
     {
+      "name": "ydsz.core.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Core 模块自动配置。",
+      "defaultValue": true
+    },
+    {
       "name": "ydsz.core.max-page-size",
       "type": "java.lang.Integer",
       "description": "最大每页记录数上限，防止一次性拉取过多数据导致性能问题。",
@@ -13,70 +19,22 @@
       "defaultValue": 10
     },
     {
-      "name": "ydsz.core.cache.default-expire-seconds",
-      "type": "java.lang.Long",
-      "description": "默认缓存过期时间（秒）。",
-      "defaultValue": 3600
-    },
-    {
-      "name": "ydsz.core.cache.short-expire-seconds",
-      "type": "java.lang.Long",
-      "description": "短效缓存过期时间（秒），适用于高频变动数据。",
-      "defaultValue": 300
-    },
-    {
-      "name": "ydsz.core.cache.medium-expire-seconds",
-      "type": "java.lang.Long",
-      "description": "中效缓存过期时间（秒），适用于中等频率变动数据。",
-      "defaultValue": 1800
-    },
-    {
-      "name": "ydsz.core.cache.long-expire-seconds",
-      "type": "java.lang.Long",
-      "description": "长效缓存过期时间（秒），适用于几乎不变的数据。",
-      "defaultValue": 86400
-    },
-    {
-      "name": "ydsz.core.i18n.enabled",
+      "name": "ydsz.core.trace.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用国际化（i18n）支持。",
+      "description": "是否启用链路追踪自动配置。",
       "defaultValue": true
     },
     {
-      "name": "ydsz.core.i18n.default-locale",
+      "name": "ydsz.core.trace.header-name",
       "type": "java.lang.String",
-      "description": "默认语言区域，当请求未指定语言时使用。",
-      "defaultValue": "zh_CN"
+      "description": "TraceId 请求头名称。",
+      "defaultValue": "X-Trace-Id"
     },
     {
-      "name": "ydsz.core.i18n.additional-locations",
-      "type": "java.util.List<java.lang.String>",
-      "description": "额外的 i18n 文件路径，支持 classpath: 和 classpath*: 前缀。",
-      "defaultValue": []
-    },
-    {
-      "name": "ydsz.core.token.access-token-expire-time",
-      "type": "java.lang.Long",
-      "description": "AccessToken 过期时间（毫秒）。",
-      "defaultValue": 86400000
-    },
-    {
-      "name": "ydsz.core.token.refresh-token-expire-time",
-      "type": "java.lang.Long",
-      "description": "RefreshToken 过期时间（毫秒）。",
-      "defaultValue": 604800000
-    },
-    {
-      "name": "ydsz.core.security.max-login-attempts",
-      "type": "java.lang.Integer",
-      "description": "最大登录尝试次数，超过后锁定账户。",
-      "defaultValue": 5
-    },
-    {
-      "name": "ydsz.core.security.login-lockout-duration",
-      "type": "java.lang.Long",
-      "description": "登录锁定时长（毫秒）。",
-      "defaultValue": 1800000
+      "name": "ydsz.core.trace.generate-if-missing",
+      "type": "java.lang.Boolean",
+      "description": "请求头中缺失 TraceId 时是否自动生成。",
+      "defaultValue": true
     }
   ]
 }

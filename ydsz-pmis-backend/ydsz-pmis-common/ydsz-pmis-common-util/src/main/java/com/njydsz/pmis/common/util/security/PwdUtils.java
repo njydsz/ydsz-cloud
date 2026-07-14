@@ -15,6 +15,18 @@ import com.njydsz.pmis.common.util.bytes.HexUtils;
  */
 public class PwdUtils {
 
+    /**
+     * 密码强度枚举
+     */
+    public enum PasswordStrength {
+        /** 弱密码 */
+        WEAK,
+        /** 中等密码 */
+        MEDIUM,
+        /** 强密码 */
+        STRONG
+    }
+
     private PwdUtils() {
         throw new UnsupportedOperationException("PwdUtils is a utility class and cannot be instantiated");
     }
@@ -229,11 +241,11 @@ public class PwdUtils {
     /**
      * 检查密码强度
      * @param password 密码
-     * @return 密码强度（WEAK/MEDIUM/STRONG）
+     * @return 密码强度枚举（WEAK/MEDIUM/STRONG）
      */
-    public static String checkPasswordStrength(String password) {
+    public static PasswordStrength checkPasswordStrength(String password) {
         if (password == null || password.isEmpty()) {
-            return "WEAK";
+            return PasswordStrength.WEAK;
         }
         
         int length = password.length();
@@ -258,11 +270,22 @@ public class PwdUtils {
         if (hasSpecial) score++;
         
         if (score >= 5) {
-            return "STRONG";
+            return PasswordStrength.STRONG;
         } else if (score >= 3) {
-            return "MEDIUM";
+            return PasswordStrength.MEDIUM;
         } else {
-            return "WEAK";
+            return PasswordStrength.WEAK;
         }
+    }
+
+    /**
+     * 检查密码强度（返回字符串，向后兼容）
+     * @param password 密码
+     * @return 密码强度字符串（WEAK/MEDIUM/STRONG）
+     * @deprecated 使用 {@link #checkPasswordStrength(String)} 返回枚举类型
+     */
+    @Deprecated
+    public static String checkPasswordStrengthStr(String password) {
+        return checkPasswordStrength(password).name();
     }
 }

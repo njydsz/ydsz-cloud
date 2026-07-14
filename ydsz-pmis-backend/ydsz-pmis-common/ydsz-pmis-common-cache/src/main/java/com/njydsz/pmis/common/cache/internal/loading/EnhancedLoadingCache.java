@@ -652,9 +652,11 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (!recordStats) {
       return new CacheStats(0, 0);
     }
+    CacheStats delegateStats = cache.getStats();
     return new CacheStats(
         hitCount.sum(),
         missCount.sum(),
+        delegateStats.getEvictionCount(),
         loadCount.sum(),
         loadSuccessCount.sum(),
         loadExceptionCount.sum(),

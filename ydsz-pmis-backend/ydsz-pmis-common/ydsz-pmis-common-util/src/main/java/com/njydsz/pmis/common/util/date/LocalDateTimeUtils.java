@@ -120,7 +120,11 @@ public class LocalDateTimeUtils {
      * @return LocalDateTime
      */
     public static LocalDateTime parse(String dateTimeStr, String pattern) {
-        return dateTimeStr == null ? null : LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(pattern));
+        if (dateTimeStr == null) {
+            return null;
+        }
+        DateTimeFormatter formatter = FORMATTER_CACHE.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);
+        return LocalDateTime.parse(dateTimeStr, formatter);
     }
 
     /**
@@ -146,7 +150,8 @@ public class LocalDateTimeUtils {
             return null;
         }
         try {
-            return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(pattern));
+            DateTimeFormatter formatter = FORMATTER_CACHE.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);
+            return LocalDateTime.parse(dateTimeStr, formatter);
         } catch (Exception e) {
             return null;
         }

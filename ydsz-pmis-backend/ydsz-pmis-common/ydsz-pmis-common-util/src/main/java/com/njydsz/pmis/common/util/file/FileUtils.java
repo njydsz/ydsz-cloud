@@ -700,17 +700,7 @@ public class FileUtils {
                     digest.update(buffer, 0, bytesRead);
                 }
             }
-            
-            byte[] hashBytes = digest.digest();
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            return hexString.toString();
+            return bytesToHex(digest.digest());
         } catch (IOException | NoSuchAlgorithmException e) {
             log.error("FileUtils -> calculateHash error for path {}: {}", filePath, e.getMessage());
             return StringUtils.EMPTY;
@@ -734,21 +724,29 @@ public class FileUtils {
         
         try {
             MessageDigest digest = MessageDigest.getInstance(algorithm);
-            byte[] hashBytes = digest.digest(data);
-            
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            return hexString.toString();
+            return bytesToHex(digest.digest(data));
         } catch (NoSuchAlgorithmException e) {
             log.error("FileUtils -> calculateHash error: {}", e.getMessage());
             return StringUtils.EMPTY;
         }
+    }
+
+    /**
+     * 将字节数组转换为十六进制字符串
+     *
+     * @param bytes 字节数组
+     * @return 十六进制字符串
+     */
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 
     /**
@@ -929,6 +927,8 @@ public class FileUtils {
 
     /**
      * 检查文件是否被占用
+     *
+     * <p>使用 try-with-resources 确保流正确关闭。
      */
     public static boolean isFileLocked(String filePath) {
         if (StringUtils.isBlank(filePath)) {
@@ -940,9 +940,7 @@ public class FileUtils {
             return false;
         }
         
-        try {
-            InputStream is = Files.newInputStream(path);
-            is.close();
+        try (InputStream is = Files.newInputStream(path)) {
             return false;
         } catch (IOException e) {
             return true;
@@ -973,20 +971,46 @@ public class FileUtils {
     }
 
     /**
+     * 默认下载连接超时（毫秒）
+     */
+    private static final int DEFAULT_DOWNLOAD_CONNECT_TIMEOUT_MS = 30_000;
+
+    /**
+     * 默认下载读取超时（毫秒）
+     */
+    private static final int DEFAULT_DOWNLOAD_READ_TIMEOUT_MS = 60_000;
+
+    /**
      * 下载网络文件到客户端（作为附件）
+     *
+     * <p>使用默认超时配置：连接超时 30 秒，读取超时 60 秒。
      *
      * @param url      文件网络地址
      * @param path     URL 中用于提取文件名的路径前缀
      * @param response HttpServletResponse，用于向客户端写入文件流
      */
     public static void downloadFile(String url, String path, HttpServletResponse response) {
+        downloadFile(url, path, response, DEFAULT_DOWNLOAD_CONNECT_TIMEOUT_MS, DEFAULT_DOWNLOAD_READ_TIMEOUT_MS);
+    }
+
+    /**
+     * 下载网络文件到客户端（作为附件，可自定义超时）
+     *
+     * @param url              文件网络地址
+     * @param path             URL 中用于提取文件名的路径前缀
+     * @param response         HttpServletResponse，用于向客户端写入文件流
+     * @param connectTimeoutMs 连接超时（毫秒）
+     * @param readTimeoutMs    读取超时（毫秒）
+     */
+    public static void downloadFile(String url, String path, HttpServletResponse response,
+                                    int connectTimeoutMs, int readTimeoutMs) {
         HttpURLConnection conn = null;
         try {
             URL httpUrl = URI.create(url).toURL();
             conn = (HttpURLConnection) httpUrl.openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(100000);
-            conn.setReadTimeout(200000);
+            conn.setConnectTimeout(connectTimeoutMs);
+            conn.setReadTimeout(readTimeoutMs);
             conn.setDoInput(true);
             conn.setUseCaches(false);
             conn.connect();
@@ -999,7 +1023,10 @@ public class FileUtils {
             response.setContentType("application/octet-stream");
             // 从 URL 路径末端提取文件名
             String fileName = url.replaceAll(path + "/", "");
-            response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()));
+            // RFC 5987 编码：支持非 ASCII 文件名
+            String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+            response.setHeader("Content-Disposition",
+                    "attachment;filename=\"" + encodedFileName + "\";filename*=UTF-8''" + encodedFileName);
             try (InputStream in = conn.getInputStream();
                  ServletOutputStream out = response.getOutputStream()) {
                 while ((len = in.read(buffer)) != -1) {

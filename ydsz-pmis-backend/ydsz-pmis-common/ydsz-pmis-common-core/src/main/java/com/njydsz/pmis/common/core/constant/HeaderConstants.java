@@ -329,11 +329,15 @@ public final class HeaderConstants {
      * <p>用于全链路请求追踪，贯穿网关、服务间调用、日志记录等场景。
      * 若请求未携带，由服务端自动生成并写入响应头。
      *
+     * <p>实际使用的 header 名为 {@code "X-Trace-Id"}，
+     * 统一常量定义在 {@link TraceConstants#TRACE_ID_HEADER}，
+     * 此处保留仅为向后兼容，推荐使用 {@link TraceConstants#TRACE_ID_HEADER}。</p>
+     *
      * @author ydsz-pmis-team
      * @since 1.0.0
-     * 
+     * @see TraceConstants#TRACE_ID_HEADER
      */
-    public static final String X_REQUEST_ID = "X-Request-Id";
+    public static final String X_REQUEST_ID = TraceConstants.TRACE_ID_HEADER;
 
     /**
      * HTTP/2 流 ID。

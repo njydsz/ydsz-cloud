@@ -28,13 +28,12 @@ public class DigestUtils {
     }
 
     /**
-     * 使用线程安全的 SecureRandom
-      *
- * @author ydsz-pmis-team
- * @since 1.0.0
- * 
- */
-    private static final ThreadLocal<SecureRandom> RANDOM_HOLDER = ThreadLocal.withInitial(SecureRandom::new);
+     * 使用共享的线程安全 SecureRandom 实例
+     *
+     * <p>SecureRandom 本身是线程安全的，无需 ThreadLocal 隔离。
+     * 相比 ThreadLocal 方案，避免了线程池场景下的内存泄漏风险。
+     */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
      * 流处理缓冲区大小（8KB）
@@ -62,7 +61,7 @@ public class DigestUtils {
             throw new IllegalArgumentException("numBytes argument must be a positive integer (1 or larger)");
         }
         byte[] bytes = new byte[numBytes];
-        RANDOM_HOLDER.get().nextBytes(bytes);
+        SECURE_RANDOM.nextBytes(bytes);
         return bytes;
     }
 

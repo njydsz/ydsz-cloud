@@ -128,26 +128,17 @@ public class ContextKey<T> {
      * <p>注意：返回的新 Key 是独立的，不会自动同步原 Key 的值变化。
      * 调用方需自行确保在使用时原 Key 的值已正确设置。</p>
      *
-     * @param mapper 映射函数
-     * @param <R>    目标类型
+     * @param mapper     映射函数
+     * @param targetType 目标类型 Class（用于类型安全，避免推断）
+     * @param <R>        目标类型
      * @return 目标类型 Key
      */
-    public <R> ContextKey<R> map(Function<T, R> mapper) {
+    public <R> ContextKey<R> map(Function<T, R> mapper, Class<R> targetType) {
         Objects.requireNonNull(mapper, "mapper must not be null");
+        Objects.requireNonNull(targetType, "targetType must not be null");
         T currentValue = this.get();
         R mappedValue = currentValue != null ? mapper.apply(currentValue) : null;
-        Class<R> targetType = deduceType(mappedValue);
         return ContextKey.of(name + "_mapped", targetType, mappedValue);
-    }
-
-    /**
-     * 推导值类型，避免 unchecked cast
-     */
-    private static <R> Class<R> deduceType(R value) {
-        if (value == null) {
-            return (Class<R>) Object.class;
-        }
-        return (Class<R>) value.getClass();
     }
 
     @Override

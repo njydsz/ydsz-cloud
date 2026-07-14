@@ -28,10 +28,10 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *
  * <p><b>FastJSON2 深度优化技术：</b></p>
  * <ul>
- *   <li>精确容量预分。- 基于对象结构预估 JSON 大小，避免StringBuilder 扩容</li>
- *   <li>快速数字编。- 直接写入字符数组，避免方法调用和边界检。</li>
- *   <li>UTF-8 编码优化 - 针对 ASCII 字符集优。</li>
- *   <li>热路径内。- 减少虚方法调用和方法调用。</li>
+ *   <li>精确容量预分配 - 基于对象结构预估 JSON 大小，避免 StringBuilder 扩容</li>
+ *   <li>快速数字编码 - 直接写入字符数组，避免方法调用和边界检查</li>
+ *   <li>UTF-8 编码优化 - 针对 ASCII 字符集优化</li>
+ *   <li>热路径内联 - 减少虚方法调用和方法调用开销</li>
  * </ul>
  *
  * @since 1.3.0
@@ -39,55 +39,55 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  */
 public final class SerializationProvider {
 
-    /** StringBuilder 池最大容。*/
+    /** StringBuilder 池最大容量*/
     private static final int MAX_SB_CAPACITY = 65536;
 
-    /** 。JSON 。StringBuilder 初始容量（适合简。Bean。*/
+    /** 小 JSON StringBuilder 初始容量（适合简单 Bean）*/
     private static final int SMALL_SB_CAPACITY = 1024;
 
-    /** 。JSON 。StringBuilder 初始容量（适合一。Bean。*/
+    /** 中 JSON StringBuilder 初始容量（适合一般 Bean）*/
     private static final int MEDIUM_SB_CAPACITY = 4096;
 
-    /** 。JSON 。StringBuilder 初始容量（适合大集。复杂嵌套。*/
+    /** 大 JSON StringBuilder 初始容量（适合大集合/复杂嵌套）*/
     private static final int LARGE_SB_CAPACITY = 16384;
 
     /**
      * StringBuilder 池（ThreadLocal 复用，大小分级策略）
      *
-     * <p>优化策略。/p>
+     * <p>优化策略：</p>
      * <ul>
-     *   <li>默认使用 MEDIUM_SB_CAPACITY。096），适合大多数场。</li>
-     *   <li>序列化完成后，如果容量超。MAX_SB_CAPACITY。5536），缩容。MEDIUM_SB_CAPACITY</li>
+     *   <li>默认使用 MEDIUM_SB_CAPACITY（4096），适合大多数场景</li>
+     *   <li>序列化完成后，如果容量超过 MAX_SB_CAPACITY（65536），缩容到 MEDIUM_SB_CAPACITY</li>
      *   <li>避免偶尔序列化大对象后，线程池中长期持有大缓冲区导致内存浪费</li>
      * </ul>
      */
     private static final ThreadLocal<StringBuilder> SB_POOL =
         ThreadLocal.withInitial(() -> new StringBuilder(MEDIUM_SB_CAPACITY));
 
-    /** FastJSON2 JSONWriter 池（ThreadLocal 复用。*/
+    /** JSONWriter 池（ThreadLocal 复用）*/
     static final ThreadLocal<JSONWriter> FAST_WRITER_POOL =
         ThreadLocal.withInitial(() -> new JSONWriter(4096));
 
-    /** 循环引用检。- 已序列化对象集合（使。IdentityHashMap 保证引用比较。*/
+    /** 循环引用检测 - 已序列化对象集合（使用 IdentityHashMap 保证引用比较）*/
     static final ThreadLocal<Set<Object>> SERIALIZING_OBJECTS =
         ThreadLocal.withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<>(64)));
 
-    /** 当前视图类（用于字段过滤，ThreadLocal 传递上下文。*/
+    /** 当前视图类（用于字段过滤，ThreadLocal 传递上下文）*/
     static final ThreadLocal<Class<?>> CURRENT_VIEW_CLASS = ThreadLocal.withInitial(() -> null);
 
-    /** 最近使用的列表元素序列化器缓存（ThreadLocal，避免每次列表序列化都查。ConcurrentHashMap。*/
+    /** 最近使用的列表元素序列化器缓存（ThreadLocal，避免每次列表序列化都查找 ConcurrentHashMap）*/
     private static final ThreadLocal<AsmSerializer<Object>> CACHED_LIST_SERIALIZER =
         ThreadLocal.withInitial(() -> null);
 
-    /** 最近使用的列表元素类型缓存（配。CACHED_LIST_SERIALIZER 使用。*/
+    /** 最近使用的列表元素类型缓存（配合 CACHED_LIST_SERIALIZER 使用）*/
     private static final ThreadLocal<Class<?>> CACHED_LIST_ELEMENT_CLASS =
         ThreadLocal.withInitial(() -> null);
 
-    /** 是否输出 null 值（ThreadLocal。*/
+    /** 是否输出 null 值（ThreadLocal）*/
     private static final ThreadLocal<Boolean> WRITE_NULLS =
         ThreadLocal.withInitial(() -> false);
 
-    /** 是否格式化输出（ThreadLocal。*/
+    /** 是否格式化输出（ThreadLocal）*/
     private static final ThreadLocal<Boolean> PRETTY_PRINT =
         ThreadLocal.withInitial(() -> false);
 
@@ -95,7 +95,7 @@ public final class SerializationProvider {
     private static final ThreadLocal<String> CIRCULAR_REFERENCE_STRATEGY =
         ThreadLocal.withInitial(() -> "REF");
 
-    /** 枚举是否使用序号序列化（ThreadLocal。*/
+    /** 枚举是否使用序号序列化（ThreadLocal）*/
     private static final ThreadLocal<Boolean> SERIALIZE_ENUM_USING_ORDINAL =
         ThreadLocal.withInitial(() -> false);
 
@@ -147,7 +147,7 @@ public final class SerializationProvider {
     }
 
     /**
-     * 清理当前线程。ThreadLocal 对象
+     * 清理当前线程的 ThreadLocal 对象
      *
      * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法</p>
      */
@@ -159,29 +159,29 @@ public final class SerializationProvider {
     }
 
     /**
-     * 获取适合指定预估大小。StringBuilder（大小分级策略）
+     * 获取适合指定预估大小的 StringBuilder（大小分级策略）
      *
-     * <p>根据预估。JSON 大小选择合适容量的 StringBuilder，避免：
+     * <p>根据预估的 JSON 大小选择合适容量的 StringBuilder，避免：
      * <ul>
-     *   <li>。JSON 使用于StringBuilder 浪费内存</li>
-     *   <li>。JSON 使用于StringBuilder 导致多次扩容</li>
+     *   <li>小 JSON 使用大 StringBuilder 浪费内存</li>
+     *   <li>大 JSON 使用小 StringBuilder 导致多次扩容</li>
      * </ul>
      * 分级阈值：
      * <ul>
-     *   <li>预估 。SMALL_SB_CAPACITY(1024)：小 JSON，适合简。Bean</li>
-     *   <li>预估 。MEDIUM_SB_CAPACITY(4096)：中 JSON，适合一。Bean</li>
-     *   <li>预估 。LARGE_SB_CAPACITY(16384)：大 JSON，适合大集。复杂嵌套</li>
-     *   <li>预估 > LARGE_SB_CAPACITY：超。JSON，按需分配</li>
+     *   <li>预估 < SMALL_SB_CAPACITY(1024)：小 JSON，适合简单 Bean</li>
+     *   <li>预估 < MEDIUM_SB_CAPACITY(4096)：中 JSON，适合一般 Bean</li>
+     *   <li>预估 < LARGE_SB_CAPACITY(16384)：大 JSON，适合大集合/复杂嵌套</li>
+     *   <li>预估 > LARGE_SB_CAPACITY：超大 JSON，按需分配</li>
      * </ul>
      * </p>
      *
-     * @param estimatedSize 预估。JSON 输出大小
-     * @return 适合大小。StringBuilder
+     * @param estimatedSize 预估的 JSON 输出大小
+     * @return 适合大小的 StringBuilder
      */
     private static StringBuilder getSizedStringBuilder(int estimatedSize) {
         StringBuilder sb = SB_POOL.get();
 
-        // 缩容保护：如果池。StringBuilder 过大，根据预估大小缩容到合适的级别
+        // 缩容保护：如果池中 StringBuilder 过大，根据预估大小缩容到合适的级别
         if (sb.capacity() > MAX_SB_CAPACITY) {
             int targetCapacity;
             if (estimatedSize <= SMALL_SB_CAPACITY) {
@@ -197,7 +197,7 @@ public final class SerializationProvider {
             SB_POOL.set(sb);
         }
 
-        // 扩容保护：如果预估大小超过当前容量，预分。
+        // 扩容保护：如果预估大小超过当前容量，预分配
         if (estimatedSize > sb.capacity()) {
             sb.ensureCapacity(estimatedSize);
         }
@@ -207,7 +207,7 @@ public final class SerializationProvider {
     }
 
     /**
-     * 序列化对。
+     * 序列化对象
      */
     public static String serialize(Object obj) {
         if (obj == null) {
@@ -216,7 +216,7 @@ public final class SerializationProvider {
 
         Class<?> clazz = obj.getClass();
 
-        // 快速路。：Bean 类型直接使用 ASM 序列化器，跳。StringBuilder 中转
+        // 快速路径：Bean 类型直接使用 ASM 序列化器，跳过 StringBuilder 中转
         if (!(obj instanceof Collection) && !(obj instanceof Map) && !clazz.isArray()) {
             try {
                 JSONWriter writer = FAST_WRITER_POOL.get();
@@ -228,14 +228,14 @@ public final class SerializationProvider {
             }
         }
 
-        // 快速路。：Collection 类型直接使用 JSONWriter，跳。StringBuilder 中转
+        // 快速路径：Collection 类型直接使用 JSONWriter，跳过 StringBuilder 中转
         if (obj instanceof Collection) {
             JSONWriter writer = FAST_WRITER_POOL.get();
             writer.reset();
             Collection<?> coll = (Collection<?>) obj;
             if (!coll.isEmpty()) {
                 writer.preAllocate(coll.size() * 64);
-                // 优化：使。ThreadLocal 缓存的序列化器，避免每次查找 ConcurrentHashMap
+                // 优化：使用 ThreadLocal 缓存的序列化器，避免每次查找 ConcurrentHashMap
                 AsmSerializer<Object> serializer = CACHED_LIST_SERIALIZER.get();
                 if (serializer == null) {
                     Object first = null;
@@ -265,7 +265,7 @@ public final class SerializationProvider {
             return writer.toString();
         }
 
-        // 快速路。：Map 类型直接使用 JSONWriter
+        // 快速路径：Map 类型直接使用 JSONWriter
         if (obj instanceof Map) {
             JSONWriter writer = FAST_WRITER_POOL.get();
             writer.reset();
@@ -303,7 +303,7 @@ public final class SerializationProvider {
      *
      * @param obj 对象
      * @param features 特性标志（位运算值）
-     * @return JSON 字符。
+     * @return JSON 字符串
      */
     public static String serialize(Object obj, long features) {
         if (obj == null) {
@@ -338,7 +338,7 @@ public final class SerializationProvider {
     }
 
     /**
-     * 格式化序列化（带缩进。
+     * 格式化序列化（带缩进）
      */
     public static String format(Object obj) {
         if (obj == null) {
@@ -363,9 +363,9 @@ public final class SerializationProvider {
     /**
      * 序列化对象（带视图过滤）
      *
-     * @param obj 要序列化的对。
-     * @param viewClass 视图。
-     * @return JSON 字符。
+     * @param obj 要序列化的对象
+     * @param viewClass 视图类
+     * @return JSON 字符串
      */
     public static String serializeWithView(Object obj, Class<?> viewClass) {
         if (obj == null) {
@@ -398,17 +398,17 @@ public final class SerializationProvider {
     /**
      * 序列化对象（带视图过滤和格式化）
      *
-     * @param obj 要序列化的对。
-     * @param viewClass 视图。
-     * @param pretty 是否格式。
-     * @return JSON 字符。
+     * @param obj 要序列化的对象
+     * @param viewClass 视图类
+     * @param pretty 是否格式化
+     * @return JSON 字符串
      */
     public static String serializeWithView(Object obj, Class<?> viewClass, boolean pretty) {
         if (obj == null) {
             return "null";
         }
 
-        // 格式化输出使用较大预估大。
+        // 格式化输出使用较大预估大小
         StringBuilder sb = getSizedStringBuilder(pretty ? LARGE_SB_CAPACITY : 256);
 
         Set<Object> objects = SERIALIZING_OBJECTS.get();
@@ -443,10 +443,10 @@ public final class SerializationProvider {
      * <ul>
      *   <li>无类级别注解</li>
      *   <li>无字段级别注入</li>
-     *   <li>无视图过。</li>
+     *   <li>无视图过滤</li>
      * </ul>
      *
-     * @return true 如果使用了快速路。
+     * @return true 如果使用了快速路径
      */
     private static boolean tryFastSerialize(Object obj, StringBuilder sb) {
         if (obj == null) {
@@ -462,7 +462,7 @@ public final class SerializationProvider {
             return false;
         }
 
-        // 检查是否可以使用快速路。
+        // 检查是否可以使用快速路径
         JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
         if (classAnnotation != null) {
             return false;
@@ -473,7 +473,7 @@ public final class SerializationProvider {
             return false;
         }
 
-        // 优先使用 ASM 序列化器（直。getter 调用，无反射开销。
+        // 优先使用 ASM 序列化器（直接 getter 调用，无反射开销）
         try {
             JSONWriter writer = FAST_WRITER_POOL.get();
             writer.reset();
@@ -484,7 +484,7 @@ public final class SerializationProvider {
         } catch (Exception e) {
         }
 
-        // 获取或创。BeanSerializer
+        // 获取或创建 BeanSerializer
         FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
         if (fields == null) {
             fields = FieldMetadataLoader.loadFields(clazz);
@@ -512,10 +512,10 @@ public final class SerializationProvider {
      * Bean 序列化信息（预计算）
      */
     static final class BeanSerializerInfo {
-        /** 有效字段数组（跳。shouldSkip 的字段） */
+        /** 有效字段数组（跳过 shouldSkip 的字段） */
         final FieldMeta[] validFields;
 
-        /** 预估。JSON 大小 */
+        /** 预估的 JSON 大小 */
         final int estimatedSize;
 
         BeanSerializerInfo(FieldMeta[] validFields, int estimatedSize) {
@@ -525,7 +525,7 @@ public final class SerializationProvider {
     }
 
     /**
-     * 获取或创。BeanSerializerInfo（FastJSON2 架构优化。
+     * 获取或创建 BeanSerializerInfo（架构优化）
      */
     static BeanSerializerInfo getOrCreateBeanSerializer(Class<?> clazz, FieldMeta[] fields) {
         BeanSerializerInfo info = BEAN_SERIALIZER_INFO_CACHE.get(clazz);
@@ -558,5 +558,43 @@ public final class SerializationProvider {
 
     private static AsmSerializer<Object> captureSerializer(AsmSerializer<?> serializer) {
         return (AsmSerializer<Object>) serializer;
+    }
+
+    /**
+     * ThreadLocal 快照（用于单次配置序列化的线程安全保存/恢复）。
+     *
+     * <p>构造时捕获当前线程所有 ThreadLocal 序列化参数，
+     * 调用 {@link #restore()} 恢复原始值。避免修改全局单例。</p>
+     *
+     * @since 1.4.0
+     */
+    public static final class ThreadLocalSnapshot {
+        private final PropertyNamingStrategy namingStrategy;
+        private final boolean writeNulls;
+        private final boolean prettyPrint;
+        private final String circularRefStrategy;
+        private final boolean serializeEnumUsingOrdinal;
+
+        /**
+         * 捕获当前线程的 ThreadLocal 序列化参数快照。
+         */
+        public ThreadLocalSnapshot() {
+            this.namingStrategy = SerializationProvider.getNamingStrategy();
+            this.writeNulls = SerializationProvider.isWriteNulls();
+            this.prettyPrint = SerializationProvider.isPrettyPrint();
+            this.circularRefStrategy = SerializationProvider.getCircularReferenceStrategy();
+            this.serializeEnumUsingOrdinal = SerializationProvider.isSerializeEnumUsingOrdinal();
+        }
+
+        /**
+         * 恢复快照中保存的 ThreadLocal 序列化参数。
+         */
+        public void restore() {
+            SerializationProvider.setNamingStrategy(namingStrategy);
+            SerializationProvider.setWriteNulls(writeNulls);
+            SerializationProvider.setPrettyPrint(prettyPrint);
+            SerializationProvider.setCircularReferenceStrategy(circularRefStrategy);
+            SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
+        }
     }
 }

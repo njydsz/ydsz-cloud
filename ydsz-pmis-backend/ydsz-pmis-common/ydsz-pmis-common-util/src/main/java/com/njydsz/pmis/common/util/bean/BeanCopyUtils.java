@@ -589,11 +589,23 @@ public class BeanCopyUtils {
      * 带容量限制的 computeIfAbsent，超过 {@link #MAX_CACHE_SIZE} 时全量清空后重新写入
      *
      * <p>防止动态类加载场景下缓存无限增长导致内存泄漏。
-     * 清空操作不是原子的，但并发下最多多放几个条目，不影响正确性。</p>
+     * 使用先检查后清空策略，在并发场景下 ConcurrentHashMap.computeIfAbsent 本身保证原子性。
+     * 清空操作虽然不是原子的，但 ConcurrentHashMap 的线程安全性确保不会抛出 ConcurrentModificationException。
+     *
+     * @param cache  缓存 Map
+     * @param key    缓存 key
+     * @param mapper 缓存值生成函数
+     * @param <K>    key 类型
+     * @param <V>    value 类型
+     * @return 缓存值
      */
     private static <K, V> V computeIfAbsentBounded(Map<K, V> cache, K key, Function<K, V> mapper) {
+        V existing = cache.get(key);
+        if (existing != null) {
+            return existing;
+        }
         if (cache.size() >= MAX_CACHE_SIZE) {
-            log.debug("【BeanCopyUtils】缓存达到上限 {}，执行全量清空", MAX_CACHE_SIZE);
+            log.debug("BeanCopyUtils 缓存达到上限 {}，执行全量清空", MAX_CACHE_SIZE);
             cache.clear();
         }
         return cache.computeIfAbsent(key, mapper);

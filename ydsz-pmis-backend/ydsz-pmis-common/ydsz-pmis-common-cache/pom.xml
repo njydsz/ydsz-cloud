@@ -17,10 +17,15 @@
       <groupId>com.njydsz.pmis</groupId>
       <artifactId>ydsz-pmis-common-core</artifactId>
     </dependency>
-    <!--common-util（传递引入 Jackson、SLF4J 等）-->
+    <!--common-util（传递引入 common-json、SLF4J 等）-->
     <dependency>
       <groupId>com.njydsz.pmis</groupId>
       <artifactId>ydsz-pmis-common-util</artifactId>
+    </dependency>
+    <!--common-json（统一 JSON 引擎，广播消息序列化）-->
+    <dependency>
+      <groupId>com.njydsz.pmis</groupId>
+      <artifactId>ydsz-pmis-common-json</artifactId>
     </dependency>
     <!--common-redis（多级缓存 L2 后端，可选）-->
     <dependency>

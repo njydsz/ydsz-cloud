@@ -1,8 +1,12 @@
 package com.njydsz.pmis.common.util.retry;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -27,6 +31,13 @@ import java.util.function.Predicate;
  * RetrySupport.withExponentialBackoff(3, 1000, 30000)
  *     .withJitter()
  *     .execute(() -> batchProcess());
+ *
+ * // 异步重试
+ * RetrySupport.withExponentialBackoff(3, 1000, 30000)
+ *     .retryOn(e -> e instanceof TimeoutException)
+ *     .executeAsync(() -> remoteService.call())
+ *     .thenAccept(result -> System.out.println("Success: " + result))
+ *     .exceptionally(e -> { System.err.println("Failed: " + e); return null; });
  * }</pre>
  *
  * @author ydsz-pmis-team
@@ -34,6 +45,15 @@ import java.util.function.Predicate;
  * 
  */
 public final class RetrySupport {
+
+    /**
+     * 异步重试默认线程池
+     */
+    private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "retry-async");
+        t.setDaemon(true);
+        return t;
+    });
 
     private RetrySupport() {
         throw new UnsupportedOperationException("Utility class");
@@ -82,6 +102,7 @@ public final class RetrySupport {
         private final long maxDelayMs;
         private Predicate<Throwable> retryPredicate;
         private boolean withJitter = false;
+        private Consumer<RetryEvent> retryCallback;
 
         private RetryBuilder(RetryStrategy strategy, int maxAttempts, long initialDelayMs, long maxDelayMs) {
             this.strategy = strategy;
@@ -110,6 +131,17 @@ public final class RetrySupport {
          */
         public RetryBuilder withJitter() {
             this.withJitter = true;
+            return this;
+        }
+
+        /**
+         * 设置重试回调（每次重试时触发）
+         *
+         * @param callback 重试回调
+         * @return 重试构建器
+         */
+        public RetryBuilder onRetry(Consumer<RetryEvent> callback) {
+            this.retryCallback = callback;
             return this;
         }
 
@@ -161,6 +193,11 @@ public final class RetrySupport {
                     // 计算延迟
                     long delay = calculateDelay(attempt);
 
+                    // 触发重试回调
+                    if (retryCallback != null) {
+                        retryCallback.accept(new RetryEvent(attempt + 1, delay, e));
+                    }
+
                     // 等待
                     sleep(delay);
 
@@ -177,6 +214,39 @@ public final class RetrySupport {
             }
 
             throw new RuntimeException("Retry exhausted without exception");
+        }
+
+        /**
+         * 异步执行有返回值的任务
+         *
+         * @param task 要执行的任务
+         * @param <T>  返回值类型
+         * @return CompletableFuture
+         */
+        public <T> CompletableFuture<T> executeAsync(Callable<T> task) {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return execute(task);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }, ASYNC_EXECUTOR);
+        }
+
+        /**
+         * 异步执行无返回值的任务
+         *
+         * @param task 要执行的任务
+         * @return CompletableFuture
+         */
+        public CompletableFuture<Void> executeAsyncRunnable(Runnable task) {
+            return CompletableFuture.runAsync(() -> {
+                try {
+                    execute(task);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }, ASYNC_EXECUTOR);
         }
 
         /**
@@ -216,6 +286,35 @@ public final class RetrySupport {
     }
 
     // ==================== 便捷方法 ====================
+
+    /**
+     * 重试事件
+     *
+     * <p>每次重试时通过回调传递给调用方，包含重试次数、延迟时间和异常信息。
+     */
+    public static class RetryEvent {
+        private final int attempt;
+        private final long delayMs;
+        private final Throwable exception;
+
+        RetryEvent(int attempt, long delayMs, Throwable exception) {
+            this.attempt = attempt;
+            this.delayMs = delayMs;
+            this.exception = exception;
+        }
+
+        public int getAttempt() {
+            return attempt;
+        }
+
+        public long getDelayMs() {
+            return delayMs;
+        }
+
+        public Throwable getException() {
+            return exception;
+        }
+    }
 
     /**
      * 计算指数退避延迟时间

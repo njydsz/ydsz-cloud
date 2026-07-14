@@ -146,7 +146,7 @@ public final class JsonParser {
                 pos++;
             }
 
-            String fieldName = new String(chars, start, pos - start);
+            String fieldName = decodeStringIfNeeded(chars, start, pos - start);
             pos++; // 跳过结束引号
 
             // 跳过冒号前的空白
@@ -177,7 +177,7 @@ public final class JsonParser {
 
         return result;
     }
-    
+
     /**
      * 解析 JSON 数组
      *
@@ -377,6 +377,7 @@ public final class JsonParser {
      */
     private static Number parseNumberFast(char[] chars, int pos) {
         int len = chars.length;
+        int startPos = pos;
 
         boolean negative = false;
         if (pos < len && chars[pos] == '-') {
@@ -434,6 +435,12 @@ public final class JsonParser {
                     bd = bd.scaleByPowerOfTen(scale);
                 }
                 return bd;
+            }
+            // 精度保护：intValue 超过 2^53 或 decimalDigits 超过 22 位时
+            // double 无法精确表示，回退到 Double.parseDouble 避免精度丢失
+            if (intValue > 9007199254740992L || decimalDigits > 22) {
+                String numStr = new String(chars, startPos, pos - startPos);
+                return Double.parseDouble(numStr);
             }
             double value = (double) intValue;
             if (decimalDigits > 0) {
@@ -494,7 +501,7 @@ public final class JsonParser {
                 pos++;
             }
             
-            String fieldName = new String(chars, fieldStart, pos - fieldStart);
+            String fieldName = decodeStringIfNeeded(chars, fieldStart, pos - fieldStart);
             pos++; // 跳过结束引号
             
             // 跳过冒号前的空白
@@ -585,6 +592,26 @@ public final class JsonParser {
         return result;
     }
     
+    /**
+     * 检查字符数组片段是否包含转义字符，若包含则解码转义序列，否则直接返回子串。
+     *
+     * <p>快速路径：先扫描是否有 '\' 字符，若无则直接 new String(chars, start, len)。</p>
+     * <p>慢速路径：复用 parseStringWithEscape 逻辑解码转义序列。</p>
+     *
+     * @param chars 字符数组
+     * @param start 起始位置
+     * @param length 长度
+     * @return 解码后的字符串
+     */
+    private static String decodeStringIfNeeded(char[] chars, int start, int length) {
+        for (int i = start; i < start + length; i++) {
+            if (chars[i] == '\\') {
+                return parseStringWithEscape(chars, start, start + length);
+            }
+        }
+        return new String(chars, start, length);
+    }
+
     /**
      * 解析字符串
      */
