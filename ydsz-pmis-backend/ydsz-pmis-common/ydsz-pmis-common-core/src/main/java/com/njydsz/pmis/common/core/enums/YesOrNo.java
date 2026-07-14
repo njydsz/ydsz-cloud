@@ -1,13 +1,13 @@
 package com.njydsz.pmis.common.core.enums;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 /**
  * 是/否枚举定义

@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import lombok.Data;
 
 /**
- * 动八赅量导乡
+ * Core赅量
  * <p>内듉 core 模拜法为需爭意合并汇名作为涽
  * \o@author ydsz-pmis-team
   * @since 1.0.0

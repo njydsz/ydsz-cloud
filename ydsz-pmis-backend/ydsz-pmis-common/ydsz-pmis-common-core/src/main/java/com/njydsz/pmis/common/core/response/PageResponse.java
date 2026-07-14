@@ -1,11 +1,9 @@
 package com.njydsz.pmis.common.core.response;
 
-import java.util.List;
-
-
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * 分页响应结果封装类
@@ -176,24 +174,6 @@ public class PageResponse<T> extends BaseResponse<T> {
             return 0L;
         }
         return (total + pageSize - 1) / pageSize;
-    }
-
-    /**
-     * 从 MyBatis-Plus Page 构建分页响应。
-     *
-     * <p>自动提取 Page 中的 total、current、size 和 records。
-     *
-     * @param page MyBatis-Plus 分页结果
-     * @param <T>  数据类型
-     * @return 分页响应对象
-     */
-            return success(0L, 1L, 10L, null);
-        }
-        Long total = page.getTotal();
-        Long pageNum = page.getCurrent();
-        Long pageSize = page.getSize();
-        T data = (T) page.getRecords();
-        return success(total, pageNum, pageSize, data);
     }
 
     // ============================== 向后兼容方法 ==============================
