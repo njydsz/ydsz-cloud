@@ -27,7 +27,6 @@ package com.njydsz.pmis.common.json.bytecode;
  *   <li>不支持时回退到传统循环实现</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

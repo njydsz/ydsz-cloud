@@ -43,7 +43,6 @@ import com.njydsz.pmis.common.json.annotation.JsonField;
  *   <li>命令模式 - 自定义序列化/反序列化方法</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

@@ -29,7 +29,6 @@ import java.io.Writer;
  *   <li>内存占用：仅 O(1) 内存</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

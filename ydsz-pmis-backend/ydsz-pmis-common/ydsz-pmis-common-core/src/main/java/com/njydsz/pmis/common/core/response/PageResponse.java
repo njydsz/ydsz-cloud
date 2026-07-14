@@ -187,8 +187,6 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @param <T>  数据类型
      * @return 分页响应对象
      */
-    public static <T> PageResponse<T> ofPage(Page<T> page) {
-        if (page == null) {
             return success(0L, 1L, 10L, null);
         }
         Long total = page.getTotal();

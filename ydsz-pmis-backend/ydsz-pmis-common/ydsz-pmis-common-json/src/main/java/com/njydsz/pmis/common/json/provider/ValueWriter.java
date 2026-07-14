@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
 /**
  * 类型特定的值写入器
  *
- * <p>从 YdszSerializationProvider 中提取的类型特定值写入逻辑。</p>
+ * <p>从 SerializationProvider 中提取的类型特定值写入逻辑。</p>
  *
  * <p><b>优化技术：</b></p>
  * <ul>
@@ -28,7 +28,6 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *   <li>循环引用检测 - 使用 IdentityHashMap 保证引用比较</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public final class ValueWriter {
@@ -390,7 +389,7 @@ public final class ValueWriter {
      * 优化列表序列化（使用 JSONWriter 直接写入，避免创建中间 String）
      */
     public static void writeListOptimized(List<?> list, StringBuilder sb) {
-        JSONWriter writer = YdszSerializationProvider.FAST_WRITER_POOL.get();
+        JSONWriter writer = SerializationProvider.FAST_WRITER_POOL.get();
         writer.reset();
         writer.writeCollection(list);
         sb.append(writer.toString());
@@ -465,7 +464,7 @@ public final class ValueWriter {
                 continue;
             }
 
-            Class<?> currentView = YdszSerializationProvider.CURRENT_VIEW_CLASS.get();
+            Class<?> currentView = SerializationProvider.CURRENT_VIEW_CLASS.get();
             if (currentView != null) {
                 JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);
                 if (viewAnnotation == null) {
@@ -540,7 +539,7 @@ public final class ValueWriter {
      */
     public static void writeBeanNoAnnotationOptimized(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {
         try {
-            JSONWriter writer = YdszSerializationProvider.FAST_WRITER_POOL.get();
+            JSONWriter writer = SerializationProvider.FAST_WRITER_POOL.get();
             writer.reset();
             if (AsmCodecCache.trySerialize(obj, writer)) {
                 sb.append(writer.toString());
@@ -550,7 +549,7 @@ public final class ValueWriter {
         }
 
         // 回退路径：使用 BeanSerializerInfo 预计算
-        YdszSerializationProvider.BeanSerializerInfo info = YdszSerializationProvider.getOrCreateBeanSerializer(clazz, fields);
+        SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields);
 
         // 精确容量预分配
         sb.ensureCapacity(info.estimatedSize);
@@ -991,7 +990,7 @@ public final class ValueWriter {
      * 写入 Bean 对象（带循环引用检测）
      */
     public static void writeBeanWithCycleDetection(Object obj, StringBuilder sb) {
-        Set<Object> current = YdszSerializationProvider.SERIALIZING_OBJECTS.get();
+        Set<Object> current = SerializationProvider.SERIALIZING_OBJECTS.get();
 
         if (current.contains(obj)) {
             sb.append("{\"$ref\":\"cycle\"}");

@@ -455,9 +455,16 @@
                 <version>${owasp-html-sanitizer.version}</version>
             </dependency>
 
+            <!-- Lombok (explicit version management for child modules) -->
+            <dependency>
+                <groupId>org.project.lombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
             <!-- lombok-mapstruct-binding -->
             <dependency>
-                <groupId>org.projectlombok</groupId>
+                <groupId>org.project.lombok</groupId>
                 <artifactId>lombok-mapstruct-binding</artifactId>
                 <version>${lombok-mapstruct.version}</version>
             </dependency>

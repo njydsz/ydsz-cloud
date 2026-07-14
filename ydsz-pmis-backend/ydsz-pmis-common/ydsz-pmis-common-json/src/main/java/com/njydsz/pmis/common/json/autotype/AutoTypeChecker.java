@@ -42,7 +42,6 @@ import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
  * AutoTypeChecker.addToBlacklist("com.example.DangerousClass");
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

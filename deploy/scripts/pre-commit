@@ -6,6 +6,7 @@
 #   1. 行内 FQN 违规检测（deploy/scripts/check-inline-fqn.sh --strict）
 #   2. @SuppressWarnings 注解检测
 #   3. 未使用 import 检测（简易 grep 方案）
+#   4. ydsz-pmis-common-json 品牌一致性门禁
 #
 # 安装方式：
 #   方式一（推荐）：运行 deploy/scripts/install-hooks.sh
@@ -124,6 +125,28 @@ if [ -f "$SUPPRESSFILE" ]; then
 fi
 
 TOTAL_COUNT=$((VIOLATION_COUNT + SUPPRESS_COUNT))
+
+# -----------------------------------------------------------------------------
+# 4. ydsz-pmis-common-json 品牌一致性门禁
+# -----------------------------------------------------------------------------
+BRAND_FAILED=0
+BRAND_SCRIPT="$REPO_ROOT/deploy/scripts/check-brand-consistency.sh"
+if [ -x "$BRAND_SCRIPT" ]; then
+    if ! "$BRAND_SCRIPT" >/dev/null 2>&1; then
+        BRAND_FAILED=1
+    fi
+elif [ -f "$BRAND_SCRIPT" ]; then
+    if ! bash "$BRAND_SCRIPT" >/dev/null 2>&1; then
+        BRAND_FAILED=1
+    fi
+fi
+
+if [ "$BRAND_FAILED" -eq 1 ]; then
+    echo ""
+    echo "❌ Pre-commit 检测到 ydsz-pmis-common-json 模块品牌残留违规。"
+    echo "请运行 'bash deploy/scripts/check-brand-consistency.sh' 查看详细命中并修复。"
+    TOTAL_COUNT=$((TOTAL_COUNT + 1))
+fi
 
 if [ "$TOTAL_COUNT" -gt 0 ]; then
     echo ""

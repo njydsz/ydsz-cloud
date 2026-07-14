@@ -12,11 +12,10 @@ import com.njydsz.pmis.common.json.cache.SerializerCache;
 /**
  * Pretty-print 格式化写入器
  *
- * <p>从 YdszSerializationProvider 中提取的格式化序列化逻辑。</p>
+ * <p>从 SerializationProvider 中提取的格式化序列化逻辑。</p>
  *
  * <p>提供带缩进的 JSON 格式化输出，调用 ValueWriter 进行值写入。</p>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public final class ValueFormatter {
@@ -138,7 +137,7 @@ public final class ValueFormatter {
             return;
         }
 
-        Class<?> currentView = YdszSerializationProvider.CURRENT_VIEW_CLASS.get();
+        Class<?> currentView = SerializationProvider.CURRENT_VIEW_CLASS.get();
         if (currentView != null) {
             List<FieldMeta> filteredFields = new ArrayList<>(fields.length);
             for (FieldMeta field : fields) {

@@ -8,7 +8,6 @@ package com.njydsz.pmis.common.json.metric;
  *
  * <p>此接口位于 common-json 模块，零外部依赖，确保引擎层不耦合具体监控框架。
  *
- * @author ydsz-pmis-team
  * @since 5.0.0
  */
 public interface JsonMetricsCallback {

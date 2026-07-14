@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
 /**
  * 字段元数据加载器和注解处理器
  *
- * <p>从 YdszSerializationProvider 中提取的字段元数据加载逻辑。</p>
+ * <p>从 SerializationProvider 中提取的字段元数据加载逻辑。</p>
  *
  * <p>负责：</p>
  * <ul>
@@ -23,7 +23,6 @@ import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
  *   <li>判断字段可见性（isFieldVisible）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public final class FieldMetadataLoader {

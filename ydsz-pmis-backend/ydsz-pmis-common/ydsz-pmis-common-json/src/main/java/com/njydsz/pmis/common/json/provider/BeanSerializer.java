@@ -23,7 +23,6 @@ import com.njydsz.pmis.common.json.cache.FieldMeta;
  *   <li>优化方式：~15ns/字段（仅 MethodHandle.invoke + append）</li>
  * </ul>
  * 
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @version 4.1.0
  */

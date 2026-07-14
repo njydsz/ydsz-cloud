@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-json</artifactId>
     <name>ydsz-pmis-common-json</name>
-    <description>PMIS 公共依赖 - 高性能 JSON 序列化/反序列化引擎（YdszJson，零外部 JSON 库依赖）</description>
+    <description>PMIS 公共依赖 - 高性能 JSON 序列化/反序列化引擎（Json，零外部 JSON 库依赖）</description>
 
     <properties>
         <asm.version>9.8</asm.version>

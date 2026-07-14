@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
  *
  * <p>对标 Jackson ObjectNode，支持动态添加/删除字段。</p>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

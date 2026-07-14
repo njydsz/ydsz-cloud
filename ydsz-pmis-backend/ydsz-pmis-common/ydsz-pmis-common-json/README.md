@@ -2,6 +2,8 @@
 
 PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、SIMD 向量化解析、Schema 校验、JsonPath 查询、JsonNode 树模型、Spring MVC 集成、340 个测试全覆盖。
 
+> **注**：本模块 Maven artifactId 仍为 `ydsz-pmis-common-json`（项目命名空间前缀），但**模块内所有公开 API 均已去 Ydsz 品牌化**——主入口类为 [`Json`](file:///d:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-common/ydsz-pmis-common-json/src/main/java/com/njydsz/pmis/common/json/Json.java)，所有注解使用 `@Json*` 前缀。详见下方"模块定位"和"核心能力"章节。
+
 ## 模块定位
 
 | 属性 | 值 |
@@ -10,6 +12,8 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | **类型** | 公共依赖库（不独立部署） |
 | **源文件数** | 91 |
 | **测试覆盖** | 340 个测试全部通过 |
+| **主入口类** | `com.njydsz.pmis.common.json.Json` |
+| **配置文件** | `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` → `JsonAutoConfiguration` |
 
 ## 核心能力
 
@@ -17,8 +21,8 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 类 | 说明 |
 |---|---|
-| `YdszJson` | JSON 统一入口（序列化 / 反序列化 / 树操作） |
-| `YdszJsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略） |
+| `Json` | JSON 统一入口（序列化 / 反序列化 / 树操作） |
+| `JsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略） |
 | `DeserializationConfig` | 反序列化配置 |
 
 ### ASM 字节码加速
@@ -32,9 +36,11 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 类 | 说明 |
 |---|---|
-| `JSONReader` / `JsonParser` / `YdszJsonParser` | JSON 解析器（流式 / 事件驱动） |
+| `JSONReader` / `JsonParser` / `JsonParser` | JSON 解析器（流式 / 事件驱动） |
 | `JSONWriter` / `JsonGenerator` | JSON 生成器（流式写入） |
 | `BeanSerializer` / `BeanReader` / `ObjectReader` | Bean 序列化 / 反序列化 |
+| `SerializerEngine` / `DeserializerEngine` | 序列化/反序列化引擎（Facade + 缓存管理） |
+| `SerializationProvider` / `DeserializationProvider` | 序列化/反序列化 Provider（核心实现） |
 
 ### 字段缓存
 
@@ -46,7 +52,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | `BeanSerializerCache` / `BeanSerializerInfo` | Bean 序列化器缓存 |
 | `SerializerCache` / `SerializerRegistry` | 序列化器注册表 |
 | `FieldMeta` | 字段元数据 |
-| `YdszJsonContext` / `YdszJsonCacheStats` | 上下文 / 缓存统计 |
+| `JsonContext` / `JsonCacheStats` | 上下文 / 缓存统计 |
 
 ### 字节码优化
 
@@ -54,7 +60,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 |---|---|
 | `ZeroCopyDeserializer` | 零拷贝反序列化器（避免不必要的字符串拷贝） |
 | `VectorSimdUtil` | SIMD 向量化解析（JDK 17+ Vector API） |
-| `BytesUtils` | 字节工具 |
+| `BytesUtil` | 字节工具 |
 
 ### 树模型
 
@@ -68,7 +74,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonType` / `TypeFactory` / `JsonTypeCode` | 类型系统 |
+| `JsonType` / `TypeFactory` / `JsonTypeCode` | 类型系统 |
 | `PropertyNamingStrategy` | 命名策略（camelCase / snake_case / kebab-case） |
 | `NumberUtils` | 数字解析工具 |
 
@@ -76,67 +82,98 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 注解 | 说明 |
 |---|---|
-| `@YdszJsonProperty` / `@YdszJsonField` | 字段映射 |
-| `@YdszJsonFormat` | 格式化（日期 / 数字） |
-| `@YdszJsonView` | 视图过滤 |
-| `@YdszJsonPropertyOrder` | 字段排序 |
-| `@YdszJsonCreator` / `@YdszJsonBuilder` | 构造器 / Builder |
-| `@YdszJsonTypeInfo` / `@YdszJsonSubTypes` / `@YdszJsonSubType` | 多态序列化 |
-| `@YdszJsonVisibility` | 可见性控制 |
-| `@YdszJsonClass` | 类型标记 |
+| `@JsonProperty` / `@JsonField` | 字段映射 |
+| `@JsonFormat` | 格式化（日期 / 数字） |
+| `@JsonView` | 视图过滤 |
+| `@JsonPropertyOrder` | 字段排序 |
+| `@JsonCreator` / `@JsonBuilder` | 构造器 / Builder |
+| `@JsonTypeInfo` / `@JsonSubTypes` / `@JsonSubType` | 多态序列化 |
+| `@JsonVisibility` | 可见性控制 |
+| `@JsonClass` | 类型标记 |
 
 ### 高级功能
 
 | 类 | 说明 |
 |---|---|
 | `JsonPointer` | JSON Pointer（RFC 6901） |
-| `YdszJsonPath` | JSONPath 查询 |
+| `JsonPath` | JSONPath 查询 |
 | `JsonMergePatch` | JSON Merge Patch（RFC 7396） |
-| `YdszJsonSchema` / `SchemaValidator` / `ValidationResult` | JSON Schema 校验 |
+| `JsonSchema` / `SchemaValidator` / `ValidationResult` | JSON Schema 校验 |
 | `AutoTypeChecker` | AutoType 安全检查（防反序列化漏洞） |
 
 ### Provider 与 Module
 
 | 类 | 说明 |
 |---|---|
-| `YdszSerializationProvider` / `YdszDeserializationProvider` | 序列化 / 反序列化 Provider |
+| `SerializationProvider` / `DeserializationProvider` | 序列化 / 反序列化 Provider |
 | `BeanSerializer` / `BeanDeserializerEngine` | Bean 引擎 |
 | `FieldMetadataLoader` / `CreatorResolver` / `BuilderResolver` | 字段加载 / 构造器解析 / Builder 解析 |
 | `PolymorphicTypeResolver` | 多态类型解析 |
 | `ValueWriter` / `ValueFormatter` / `TypeConverter` | 值写入 / 格式化 / 转换 |
-| `YdszJsonModule` / `YdszJsonModuleRegistry` | 模块系统 |
+| `JsonModule` / `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块系统 |
 | `StringInterner` | 字符串驻留池 |
 
 ### Spring 集成
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonHttpMessageConverter` | Spring MVC HttpMessageConverter |
-| `YdszJsonAutoConfiguration` | 自动配置 |
-| `YdszJsonProperties` / `YdszJsonModuleRegistrar` | 配置属性 / 模块注册器 |
+| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter |
+| `JsonAutoConfiguration` | 自动配置 |
+| `JsonProperties` / `JsonModuleRegistrar` | 配置属性 / 模块注册器 |
 
 ### 可观测性
 
 | 类 | 说明 |
 |---|---|
-| `YdszJsonMetrics` / `YdszJsonHealthIndicator` | 指标 / 健康检查 |
+| `JsonMetrics` / `JsonMetricsCallback` / `JsonHealthIndicator` | 指标回调 / 指标 / 健康检查 |
+
+### 异常体系
+
+| 类 | 说明 |
+|---|---|
+| `JsonException` | 顶层异常 |
+| `JsonSerializationException` | 序列化异常（继承自 `JsonException`） |
+| `JsonDeserializationException` | 反序列化异常（继承自 `JsonException`） |
 
 ## 使用示例
 
 ```java
+import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.json.tree.ObjectNode;
+import com.njydsz.pmis.common.json.jsonpath.JsonPath;
+
 // 序列化
-String json = YdszJson.toJSONString(obj);
+String json = Json.toJSONString(obj);
 
 // 反序列化
-User user = YdszJson.parseObject(json, User.class);
+User user = Json.parseObject(json, User.class);
 
 // 树操作
-ObjectNode root = YdszJson.parseObject(json);
+ObjectNode root = Json.parseObject(json);
 String name = root.getString("name");
 
 // JSONPath 查询
-List<String> emails = YdszJsonPath.read(json, "$.users[*].email");
+List<String> emails = JsonPath.read(json, "$.users[*].email");
 ```
+
+## Spring Boot 自动装配
+
+引入本模块依赖后，Spring Boot 应用会自动装配 `JsonHttpMessageConverter`，无需任何额外配置：
+
+```java
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    @GetMapping("/{id}")
+    public User getById(@PathVariable Long id) {
+        return userService.getById(id);
+    }
+    // 返回值由 JsonHttpMessageConverter 自动序列化为 JSON
+}
+```
+
+可自定义配置项见 `JsonProperties`（位于 `com.njydsz.pmis.common.json.spring.JsonProperties`）。
 
 ## 依赖
 
@@ -146,3 +183,28 @@ List<String> emails = YdszJsonPath.read(json, "$.users[*].email");
     <artifactId>ydsz-pmis-common-json</artifactId>
 </dependency>
 ```
+
+## 架构层级
+
+```
+Json (Facade, 用户接口)
+  └─ Engine 层（SerializerEngine / DeserializerEngine）
+       ├─ 缓存管理（SerializerCache、AsmCodecCache、FieldMeta、JsonContext）
+       └─ 性能监控（serializeCount、serializeTotalNanos）
+            └─ Provider 层（SerializationProvider / DeserializationProvider）
+                 ├─ ASM 字节码生成（AsmBeanCodecGenerator）
+                 ├─ 零拷贝反序列化（ZeroCopyDeserializer + JsonParser）
+                 ├─ 字段元数据加载（FieldMetadataLoader）
+                 ├─ 多态类型解析（PolymorphicTypeResolver）
+                 ├─ AutoType 安全检查（AutoTypeChecker）
+                 └─ Writer/Formatter/Converter
+```
+
+## 设计原则
+
+1. **零外部 JSON 库依赖**：纯 Java 实现，不引入 Jackson / FastJSON / Gson。
+2. **ASM 优先**：热路径生成字节码，避免反射开销。
+3. **零拷贝反序列化**：直接解析 JSON 到 Bean 字段，跳过 Map 中转。
+4. **ThreadLocal 池**：StringBuilder / JSONWriter / IdentityHashMap 复用，零分配热路径。
+5. **JIT 友好**：方法分派路径短，便于 JVM 内联。
+6. **类型安全**：AutoTypeChecker 防反序列化漏洞。

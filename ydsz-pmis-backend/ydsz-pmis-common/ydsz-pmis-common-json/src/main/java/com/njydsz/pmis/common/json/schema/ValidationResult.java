@@ -7,7 +7,6 @@ import java.util.*;
  * 
  * <p>包含验证是否通过以及错误信息列表。</p>
  * 
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

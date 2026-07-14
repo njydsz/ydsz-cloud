@@ -5,7 +5,6 @@ package com.njydsz.pmis.common.json.provider;
  *
  * <p>负责处理 JSON 值到 Java 类型的转换和解析。</p>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 final class TypeConverter {

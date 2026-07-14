@@ -23,7 +23,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *   <li>淘汰操作 - 写锁保护</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

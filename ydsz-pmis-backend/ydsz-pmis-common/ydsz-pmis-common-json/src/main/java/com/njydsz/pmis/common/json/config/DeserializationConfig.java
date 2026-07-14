@@ -17,7 +17,6 @@ import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
  *   <li>解析深度限制: 委托至 {@link com.njydsz.pmis.common.json.config.JsonConfig#getMaxDepth()}</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public class DeserializationConfig {

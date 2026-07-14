@@ -15,7 +15,6 @@ import com.njydsz.pmis.common.json.parser.JsonParser;
  *
  * <p>负责处理 Builder 模式的反序列化逻辑。</p>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 final class BuilderResolver {

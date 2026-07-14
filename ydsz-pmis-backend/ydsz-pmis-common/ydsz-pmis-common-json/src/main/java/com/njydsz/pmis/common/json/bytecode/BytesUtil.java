@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
  * <p>原类名为 VectorSimdUtil，但实际依赖 JVM 自动向量化而非显式 SIMD 指令，存在命名误导。
  * 重命名为 BytesUtil 以准确反映功能定位。</p>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

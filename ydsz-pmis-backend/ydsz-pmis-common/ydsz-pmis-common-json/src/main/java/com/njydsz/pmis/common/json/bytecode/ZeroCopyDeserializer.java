@@ -57,7 +57,6 @@ import com.njydsz.pmis.common.json.util.StringInterner;
  *   <li>对象。- ThreadLocal 复用集合对象</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

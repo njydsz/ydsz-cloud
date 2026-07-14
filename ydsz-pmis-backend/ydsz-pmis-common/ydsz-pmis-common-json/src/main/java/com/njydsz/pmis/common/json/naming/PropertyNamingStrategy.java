@@ -29,7 +29,6 @@ import java.io.Serializable;
  * String json = Json.toJson(user);
  * </pre>
  * 
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

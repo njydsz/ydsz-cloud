@@ -27,7 +27,6 @@ import java.util.Map;
  * int age = node.get("age").asInt();
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

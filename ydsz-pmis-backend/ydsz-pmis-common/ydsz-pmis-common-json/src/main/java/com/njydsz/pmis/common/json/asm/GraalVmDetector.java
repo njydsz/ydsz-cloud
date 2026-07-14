@@ -12,7 +12,6 @@ package com.njydsz.pmis.common.json.asm;
  *   <li>检查系统属性 {@code org.graalvm.nativeimage.imagecode} 是否设置</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public final class GraalVmDetector {

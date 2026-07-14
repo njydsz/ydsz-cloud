@@ -28,7 +28,6 @@ import com.njydsz.pmis.common.json.parser.JsonParser;
  * </pre>
  *
  * @see <a href="https://tools.ietf.org/html/rfc6901">RFC 6901</a>
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

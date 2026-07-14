@@ -30,7 +30,6 @@ import java.util.*;
  * {@code LinkedHashMap<String, Object>} / {@code ArrayList<Object>}，
  * 因此路径遍历中的强制类型转换在运行时是安全的。</p>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public final class JsonPatch {

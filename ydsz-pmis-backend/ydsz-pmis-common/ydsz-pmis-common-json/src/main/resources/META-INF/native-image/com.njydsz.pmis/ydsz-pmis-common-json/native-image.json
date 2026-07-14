@@ -1,6 +1,6 @@
 {
   "name": "ydsz-pmis-common-json",
-  "description": "YdszJson - High-performance JSON engine with ASM bytecode generation",
+  "description": "Json - High-performance JSON engine with ASM bytecode generation",
   "reflection": [
     {
       "name": "com.njydsz.pmis.common.json.cache.AsmCodecCache",
@@ -11,7 +11,7 @@
       "methods": [{"name": "<init>"}]
     },
     {
-      "name": "com.njydsz.pmis.common.json.config.YdszJsonConfig",
+      "name": "com.njydsz.pmis.common.json.config.JsonConfig",
       "methods": [{"name": "<init>"}]
     }
   ],

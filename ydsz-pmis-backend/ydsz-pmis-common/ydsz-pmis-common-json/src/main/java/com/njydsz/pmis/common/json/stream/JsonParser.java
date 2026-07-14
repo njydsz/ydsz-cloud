@@ -35,7 +35,6 @@ import com.njydsz.pmis.common.json.util.StringInterner;
  * }
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */

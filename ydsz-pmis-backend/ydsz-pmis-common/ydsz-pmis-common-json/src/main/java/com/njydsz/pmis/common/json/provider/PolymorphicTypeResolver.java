@@ -31,7 +31,6 @@ import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
  * // animal 是 Dog 实例
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */
