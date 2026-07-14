@@ -146,34 +146,34 @@ public enum BaseResultCode implements ResultCode {
      *
      * @return 对应的 HTTP 状态码
      */
-    public HttpStatus getHttpStatus() {
+    public int getHttpStatusCode() {
         return switch (this) {
             // 1xxxx 通用
             case BAD_REQUEST, VALIDATION_FAILED, MISSING_PARAMETER, UNSUPPORTED_MEDIA_TYPE,
                  BIZ_ERROR, CONTRACT_AMOUNT_EXCEED, COST_OVERFLOW, INVOICE_EXCEED,
                  PROFIT_NEGATIVE, BENCH_OVER_LIMIT, WORKFLOW_REJECT,
                  PASSWORD_WEAK, PASSWORD_REUSED,
-                 DB_CONSTRAINT_VIOLATION, DB_DATA_INTEGRITY -> HttpStatus.BAD_REQUEST;
-            case METHOD_NOT_ALLOWED -> HttpStatus.METHOD_NOT_ALLOWED;
+                 DB_CONSTRAINT_VIOLATION, DB_DATA_INTEGRITY -> 400;
+            case METHOD_NOT_ALLOWED -> 405;
             case NOT_FOUND, USER_NOT_FOUND, DEPARTMENT_NOT_FOUND, EMPLOYEE_NOT_FOUND,
                  PROJECT_NOT_FOUND, OPPORTUNITY_NOT_FOUND, CONTRACT_NOT_FOUND,
-                 PAYMENT_NOT_FOUND, WORKFLOW_NOT_FOUND -> HttpStatus.NOT_FOUND;
+                 PAYMENT_NOT_FOUND, WORKFLOW_NOT_FOUND -> 404;
             case DUPLICATE_KEY, USERNAME_DUPLICATE, TIMESHEET_DUPLICATE,
                  RESOURCE_CONFLICT, PROJECT_STATUS_INVALID,
-                 DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED -> HttpStatus.CONFLICT;
-            case RATE_LIMIT, QUOTA_EXCEEDED -> HttpStatus.TOO_MANY_REQUESTS;
-            case REQUEST_TIMEOUT -> HttpStatus.REQUEST_TIMEOUT;
-            case INTERNAL_ERROR, UNKNOWN, REPORT_GENERATE_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR;
-            case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED -> HttpStatus.SERVICE_UNAVAILABLE;
+                 DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED -> 409;
+            case RATE_LIMIT, QUOTA_EXCEEDED -> 429;
+            case REQUEST_TIMEOUT -> 408;
+            case INTERNAL_ERROR, UNKNOWN, REPORT_GENERATE_FAILED -> 500;
+            case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED -> 503;
             // 2xxxx 认证授权
             case UNAUTHORIZED, TOKEN_EXPIRED, TOKEN_INVALID,
                  PASSWORD_EXPIRED,
                  MFA_REQUIRED, MFA_INVALID, SESSION_KICKED,
-                 PASSWORD_INCORRECT -> HttpStatus.UNAUTHORIZED;
+                 PASSWORD_INCORRECT -> 401;
             case FORBIDDEN, DATA_SCOPE_FORBIDDEN, USER_DISABLED,
-                 WORKFLOW_NO_PERMISSION -> HttpStatus.FORBIDDEN;
-            case ACCOUNT_LOCKED, USER_LOCKED, TIMESHEET_LOCKED -> HttpStatus.LOCKED;
-            case SUCCESS -> HttpStatus.OK;
+                 WORKFLOW_NO_PERMISSION -> 403;
+            case ACCOUNT_LOCKED, USER_LOCKED, TIMESHEET_LOCKED -> 423;
+            case SUCCESS -> 200;
         };
     }
 }

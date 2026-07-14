@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.core.response;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

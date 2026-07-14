@@ -1,5 +1,2 @@
-﻿﻿com.njydsz.pmis.common.core.config.CoreAutoConfiguration
+com.njydsz.pmis.common.core.config.CoreAutoConfiguration
 com.njydsz.pmis.common.core.config.TraceAutoConfiguration
-com.njydsz.pmis.common.core.config.YdszSchedulingAutoConfiguration
-com.njydsz.pmis.common.core.context.TtlAsyncAutoConfiguration
-com.njydsz.pmis.common.core.concurrent.ThreadPoolRegistryAutoConfiguration
