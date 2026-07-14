@@ -4,13 +4,14 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -184,7 +185,8 @@ public class CacheExportImport {
    */
   public static <K extends Serializable, V extends Serializable> void exportCacheToText(
       Cache<K, V> cache, String filePath) throws IOException {
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+    try (BufferedWriter writer = new BufferedWriter(
+        new OutputStreamWriter(new FileOutputStream(filePath), StandardCharsets.UTF_8))) {
       for (K key : cache.keySet()) {
         V value = cache.getIfPresent(key);
         if (value != null) {
@@ -207,7 +209,8 @@ public class CacheExportImport {
    */
   public static <K, V> void importCacheFromText(
       Cache<K, V> cache, String filePath, TextParser<K, V> parser) throws IOException {
-    try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+    try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         String[] parts = line.split("\t", 2);

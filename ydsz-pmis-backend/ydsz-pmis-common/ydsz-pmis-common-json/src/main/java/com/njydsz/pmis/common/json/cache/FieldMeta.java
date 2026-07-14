@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 
+import com.njydsz.pmis.common.json.annotation.JsonAlias;
 import com.njydsz.pmis.common.json.annotation.JsonField;
 
 /**
@@ -108,6 +109,9 @@ public final class FieldMeta {
     /** 是否直接序列化字段 */
     public final boolean direct;
 
+    /** 反序列化别名列表（来自 @JsonAlias 注解） */
+    public final String[] aliases;
+
     /** 自定义序列化方法名 */
     public final String serializeUsing;
 
@@ -188,6 +192,10 @@ public final class FieldMeta {
             this.serializeUsing = "";
             this.deserializeUsing = "";
         }
+
+        // 加载 @JsonAlias 别名列表
+        JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
+        this.aliases = aliasAnnotation != null ? aliasAnnotation.value() : new String[0];
 
         field.setAccessible(true);
 

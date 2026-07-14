@@ -2,16 +2,20 @@ package com.njydsz.pmis.common.cache.internal.decorator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
@@ -22,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.api.CachePolicy;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
@@ -88,7 +93,10 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   private final boolean accessMode;
 
   /** 清理任务 Future */
-  private final java.util.concurrent.ScheduledFuture<?> cleanupFuture;
+  private final ScheduledFuture<?> cleanupFuture;
+
+  /** TTL 抖动比例（防雪崩），在原始 TTL 上加减 ±jitterRatio 的随机偏移 */
+  private final double jitterRatio;
 
   /** 命中计数 */
   private final AtomicLong hitCount = new AtomicLong(0);
@@ -111,34 +119,65 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
       long expireAfterAccessNanos,
       Expiry<? super K, ? super V> expiry,
       long cleanupIntervalSeconds) {
+    this(delegate, expireAfterWriteNanos, expireAfterAccessNanos, expiry, cleanupIntervalSeconds, 0.1);
+  }
+
+  /**
+   * 创建过期缓存装饰器（带 TTL 抖动）
+   *
+   * @param delegate 底层缓存
+   * @param expireAfterWriteNanos 写入后过期时间（纳秒），0 表示不使用
+   * @param expireAfterAccessNanos 访问后过期时间（纳秒），0 表示不使用
+   * @param expiry 自定义过期策略（可选，null 表示不使用）
+   * @param cleanupIntervalSeconds 清理间隔（秒）
+   * @param jitterRatio TTL 抖动比例（0-1，防雪崩），0 表示无抖动
+   */
+  public ExpirableCache(
+      Cache<K, V> delegate,
+      long expireAfterWriteNanos,
+      long expireAfterAccessNanos,
+      Expiry<? super K, ? super V> expiry,
+      long cleanupIntervalSeconds,
+      double jitterRatio) {
     this.delegate = delegate;
     this.expireAfterWriteNanos = expireAfterWriteNanos;
     this.expireAfterAccessNanos = expireAfterAccessNanos;
     this.expiry = expiry;
     this.accessMode = expireAfterAccessNanos > 0;
+    this.jitterRatio = Math.max(0, Math.min(1, jitterRatio));
     this.cleanupFuture =
         SHARED_CLEANER.scheduleAtFixedRate(
             this::cleanupExpired, cleanupIntervalSeconds, cleanupIntervalSeconds, TimeUnit.SECONDS);
     log.info(
-        "ExpirableCache 已创建，delegate={}, expireAfterWrite={}ns, expireAfterAccess={}ns, expiry={}",
+        "ExpirableCache 已创建，delegate={}, expireAfterWrite={}ns, expireAfterAccess={}ns, expiry={}, jitter={}",
         delegate.getClass().getSimpleName(),
         expireAfterWriteNanos,
         expireAfterAccessNanos,
-        expiry != null ? "enabled" : "disabled");
+        expiry != null ? "enabled" : "disabled",
+        jitterRatio);
   }
 
+  /** 计算 TTL 抖动后的实际过期时间（防雪崩） */
+  private long applyJitter(long ttlNanos) {
+    if (jitterRatio <= 0 || ttlNanos <= 0) {
+      return ttlNanos;
+    }
+    // 在 [1 - jitterRatio, 1 + jitterRatio] 范围内随机
+    double factor = 1.0 + (ThreadLocalRandom.current().nextDouble() * 2 - 1) * jitterRatio;
+    return Math.max(1, (long) (ttlNanos * factor));
+  }
   /** 计算条目的过期时间戳（纳秒） */
   private long computeExpiration(K key, V value) {
     long now = System.nanoTime();
     if (expiry != null) {
       long ttlNanos = expiry.expireAfterCreate(key, value, now);
-      return now + ttlNanos;
+      return now + applyJitter(ttlNanos);
     }
     if (expireAfterWriteNanos > 0) {
-      return now + expireAfterWriteNanos;
+      return now + applyJitter(expireAfterWriteNanos);
     }
     if (expireAfterAccessNanos > 0) {
-      return now + expireAfterAccessNanos;
+      return now + applyJitter(expireAfterAccessNanos);
     }
     return Long.MAX_VALUE;
   }
@@ -328,7 +367,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public Map<K, V> getAll(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
-      return java.util.Collections.emptyMap();
+      return Collections.emptyMap();
     }
     Map<K, V> result = new HashMap<>(keys.size());
     for (K key : keys) {
@@ -372,16 +411,16 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   }
 
   @Override
-  public com.njydsz.pmis.common.cache.api.CachePolicy policy() {
-    return new com.njydsz.pmis.common.cache.api.CachePolicy() {
+  public CachePolicy policy() {
+    return new CachePolicy() {
       @Override
-      public java.util.Optional<EvictionPolicy> eviction() {
+      public Optional<EvictionPolicy> eviction() {
         return delegate.policy().eviction();
       }
 
       @Override
-      public java.util.Optional<ExpirationPolicy> expiration() {
-        return java.util.Optional.of(
+      public Optional<ExpirationPolicy> expiration() {
+        return Optional.of(
             new ExpirationPolicy() {
               @Override
               public long getExpiresAfterWriteNanos() {

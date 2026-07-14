@@ -7,8 +7,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.pmis.common.cache.builder.CacheType;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * YdszCache Spring Boot 配置属性
@@ -45,20 +49,26 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
  * 
  */
 @ConfigurationProperties(prefix = "ydsz.cache")
+@Validated
 public class YdszCacheProperties {
 
+  @NotNull
   private CacheType type = CacheType.TINYLFU;
 
   private List<String> cacheNames = new ArrayList<>();
 
+  @Min(1)
   private long maximumSize = 1000;
 
+  @Min(0)
   private long expireAfterWrite = 30;
 
+  @NotNull
   private TimeUnit expireTimeUnit = TimeUnit.MINUTES;
 
   private boolean allowNullValues = true;
 
+  @Min(1)
   private int initialCapacity = 64;
 
   /** 访问后过期时间 */

@@ -74,20 +74,26 @@ public final class SecurityConstants {
     /**
      * XSS防护头部
      * <p>用于启用浏览器XSS过滤器，值为 "1; mode=block"
+     *
+     * @see HeaderConstants#X_XSS_PROTECTION
      */
-    public static final String SECURITY_HEADER_XSS_PROTECTION = "X-XSS-Protection";
+    public static final String SECURITY_HEADER_XSS_PROTECTION = HeaderConstants.X_XSS_PROTECTION;
 
     /**
      * Content-Type选项头部
      * <p>防止浏览器MIME类型嗅探，值为 "nosniff"
+     *
+     * @see HeaderConstants#X_CONTENT_TYPE_OPTIONS
      */
-    public static final String SECURITY_HEADER_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
+    public static final String SECURITY_HEADER_CONTENT_TYPE_OPTIONS = HeaderConstants.X_CONTENT_TYPE_OPTIONS;
 
     /**
      * 严格传输安全头部
      * <p>HSTS头部，强制HTTPS连接
+     *
+     * @see HeaderConstants#STRICT_TRANSPORT_SECURITY
      */
-    public static final String SECURITY_HEADER_STRICT_TRANSPORT = "Strict-Transport-Security";
+    public static final String SECURITY_HEADER_STRICT_TRANSPORT = HeaderConstants.STRICT_TRANSPORT_SECURITY;
 
     // ==================== CSRF防护配置 ====================
 

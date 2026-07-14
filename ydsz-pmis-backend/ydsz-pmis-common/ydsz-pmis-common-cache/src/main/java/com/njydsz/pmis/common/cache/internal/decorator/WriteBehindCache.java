@@ -1,6 +1,9 @@
 package com.njydsz.pmis.common.cache.internal.decorator;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.api.CachePolicy;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
@@ -65,11 +69,22 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   /** 待写入队列 */
   private final ConcurrentLinkedQueue<WriteOp<K, V>> writeQueue = new ConcurrentLinkedQueue<>();
 
+  /** 最大重试次数 */
+  private static final int MAX_RETRY = 3;
+
+  /** 重试延迟（毫秒） */
+  private static final long RETRY_DELAY_MS = 100;
+
+  /** 死信队列：写入失败的操作 */
+  private final ConcurrentLinkedQueue<WriteOp<K, V>> deadLetterQueue = new ConcurrentLinkedQueue<>();
+
   /** 统计 */
   private final AtomicLong asyncWriteCount = new AtomicLong(0);
   private final AtomicLong syncFallbackCount = new AtomicLong(0);
   private final AtomicLong batchFlushCount = new AtomicLong(0);
   private final AtomicLong queueOverflowCount = new AtomicLong(0);
+  private final AtomicLong retryCount = new AtomicLong(0);
+  private final AtomicLong deadLetterCount = new AtomicLong(0);
 
   /** 最大队列长度（超过后降级为同步写入） */
   private final int maxQueueSize;
@@ -158,21 +173,42 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
     return value;
   }
 
-  /** 批量刷新队列中的写操作到后端存储 */
+  /** 批量刷新队列中的写操作到后端存储（带重试 + 死信） */
   private void flushBatch() {
     int count = 0;
     WriteOp<K, V> op;
     while (count < batchSize && (op = writeQueue.poll()) != null) {
-      try {
-        if (op.type == OpType.WRITE) {
-          writer.write(op.key, op.value);
-        } else {
-          writer.delete(op.key, op.value);
+      boolean success = false;
+      for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
+        try {
+          if (op.type == OpType.WRITE) {
+            writer.write(op.key, op.value);
+          } else {
+            writer.delete(op.key, op.value);
+          }
+          success = true;
+          break;
+        } catch (Exception e) {
+          if (attempt < MAX_RETRY - 1) {
+            retryCount.incrementAndGet();
+            log.warn("Write-Behind 写入重试 {}/{}: key={}, op={}",
+                attempt + 1, MAX_RETRY, op.key, op.type, e);
+            try {
+              Thread.sleep(RETRY_DELAY_MS * (attempt + 1));
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+              break;
+            }
+          } else {
+            log.error("Write-Behind 写入失败，进入死信队列: key={}, op={}", op.key, op.type, e);
+          }
         }
-        count++;
-      } catch (Exception e) {
-        log.warn("Write-Behind 批量写入失败: key={}, op={}", op.key, op.type, e);
       }
+      if (!success) {
+        deadLetterQueue.offer(op);
+        deadLetterCount.incrementAndGet();
+      }
+      count++;
     }
     if (count > 0) {
       batchFlushCount.incrementAndGet();
@@ -182,13 +218,26 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   /** 获取统计信息 */
   public Map<String, Long> getWriteBehindStats() {
-    Map<String, Long> stats = new java.util.HashMap<>();
+    Map<String, Long> stats = new HashMap<>();
     stats.put("asyncWriteCount", asyncWriteCount.get());
     stats.put("syncFallbackCount", syncFallbackCount.get());
     stats.put("batchFlushCount", batchFlushCount.get());
     stats.put("queueOverflowCount", queueOverflowCount.get());
+    stats.put("retryCount", retryCount.get());
+    stats.put("deadLetterCount", deadLetterCount.get());
     stats.put("queueSize", (long) writeQueue.size());
+    stats.put("deadLetterQueueSize", (long) deadLetterQueue.size());
     return stats;
+  }
+
+  /** 获取死信队列中的操作（用于人工补偿） */
+  public List<WriteOp<K, V>> drainDeadLetterQueue() {
+    List<WriteOp<K, V>> result = new ArrayList<>();
+    WriteOp<K, V> op;
+    while ((op = deadLetterQueue.poll()) != null) {
+      result.add(op);
+    }
+    return result;
   }
 
   @Override
@@ -306,7 +355,7 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   }
 
   @Override
-  public com.njydsz.pmis.common.cache.api.CachePolicy policy() {
+  public CachePolicy policy() {
     return delegate.policy();
   }
 

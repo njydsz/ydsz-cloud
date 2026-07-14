@@ -26,7 +26,7 @@ import com.njydsz.pmis.common.core.response.BaseResponse;
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.core", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(CoreProperties.class)
+@EnableConfigurationProperties({CoreProperties.class, FilterIgnoreProperties.class})
 public class CoreAutoConfiguration {
 
     /**

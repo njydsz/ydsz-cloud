@@ -388,7 +388,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         return msg;
     }
 
-    // ==================== 工厂方法别名（兼容旧 Result API） ====================
+    // ==================== 工厂方法别名（已废弃，推荐使用 success/error 系列） ====================
 
     /**
      * 构建成功响应（无数据载荷）
@@ -396,7 +396,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T> 数据类型
      * @return 成功响应
      * @see #success()
+     * @deprecated 使用 {@link #success()} 替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> ok() {
         return success();
     }
@@ -408,7 +410,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>  数据类型
      * @return 成功响应
      * @see #success(Object)
+     * @deprecated 使用 {@link #success(Object)} 替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> ok(T data) {
         return success(data);
     }
@@ -420,7 +424,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param message 提示信息
      * @param <T>     数据类型
      * @return 成功响应
+     * @deprecated 使用 {@link #success(String, Object)} 替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> ok(T data, String message) {
         return of(SUCCESS, message, data);
     }
@@ -432,7 +438,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>     数据类型
      * @return 失败结果
      * @see #error(String)
+     * @deprecated 使用 {@link #error(String)} 替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> fail(String message) {
         return error(message);
     }
@@ -445,7 +453,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>     数据类型
      * @return 失败响应
      * @see #error(String, String)
+     * @deprecated 使用 {@link #error(String, String)} 替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> failed(String code, String message) {
         return error(code, message);
     }
@@ -457,7 +467,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>        数据类型
      * @return 失败结果
      * @see #error(ResultCode)
+     * @deprecated 使用 {@link #error(ResultCode)} 替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> failed(ResultCode resultCode) {
         return error(resultCode);
     }
@@ -470,7 +482,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @param <T>        数据类型
      * @return 失败响应
      * @see #error(ResultCode, String)
+     * @deprecated 使用 {@link #error(ResultCode, String)} 替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> failed(ResultCode resultCode, String message) {
         return error(resultCode, message);
     }
@@ -478,11 +492,21 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     /**
      * 构建失败响应（基于异常）
      *
+     * <p>保留异常类型信息，格式为 {@code "[异常类名] 异常消息"}，
+     * 便于前端和日志区分不同类型的错误。</p>
+     *
      * @param throwable 异常
      * @param <T>       数据类型
      * @return 失败响应
+     * @deprecated 使用 {@link #error(String)} 并传入更具体的错误信息替代
      */
+    @Deprecated
     public static <T> BaseResponse<T> failed(Throwable throwable) {
-        return error(throwable.getMessage());
+        String exceptionName = throwable.getClass().getSimpleName();
+        String message = throwable.getMessage();
+        String formattedMsg = (message != null && !message.isEmpty())
+                ? "[" + exceptionName + "] " + message
+                : "[" + exceptionName + "]";
+        return error(formattedMsg);
     }
 }

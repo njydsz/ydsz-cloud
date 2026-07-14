@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.api.CachePolicy;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
@@ -98,15 +99,15 @@ public class MemoryAwareEvictionCache<K, V> implements Cache<K, V>, AutoCloseabl
       double usedRatio = (double) heapUsage.getUsed() / heapUsage.getMax();
 
       if (usedRatio >= criticalThreshold) {
-        log.warn("内存使用率达到临界值: {:.2f}%, 清除全部缓存条目", usedRatio * 100);
+        log.warn("内存使用率达到临界值: {}%, 清除全部缓存条目", String.format("%.2f", usedRatio * 100));
         delegate.clear();
         criticalEvictCount.incrementAndGet();
       } else if (usedRatio >= evictThreshold) {
-        log.warn("内存使用率过高: {:.2f}%, 清除 50% 缓存条目", usedRatio * 100);
+        log.warn("内存使用率过高: {}%, 清除 50% 缓存条目", String.format("%.2f", usedRatio * 100));
         evictHalfEntries();
         evictCount.incrementAndGet();
       } else if (usedRatio >= warnThreshold) {
-        log.info("内存使用率告警: {:.2f}%", usedRatio * 100);
+        log.info("内存使用率告警: {}%", String.format("%.2f", usedRatio * 100));
       }
     } catch (Exception e) {
       log.warn("内存检查任务异常", e);
@@ -244,7 +245,7 @@ public class MemoryAwareEvictionCache<K, V> implements Cache<K, V>, AutoCloseabl
   }
 
   @Override
-  public com.njydsz.pmis.common.cache.api.CachePolicy policy() {
+  public CachePolicy policy() {
     return delegate.policy();
   }
 
