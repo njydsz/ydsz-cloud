@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.literule.server.config;
+package com.njydsz.pmis.literule.server.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -159,7 +159,7 @@ public class LiteRuleProperties {
      *
      * @since 1.5.2
      */
-    private String annotationScanBasePackages = "";
+    private String annotationScanBasePpackages = "";
 
     /**
      * 当前运行环境（P1-5 多环境隔离）

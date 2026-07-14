@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.channel;
+package com.njydsz.pmis.message.server.channel;
 
 import java.util.List;
 import java.util.Map;

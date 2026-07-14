@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.cache.internal.decorator;
+package com.njydsz.pmis.common.cache.internal.decorator;
 
 import java.util.ArrayList;
 import java.util.Collection;

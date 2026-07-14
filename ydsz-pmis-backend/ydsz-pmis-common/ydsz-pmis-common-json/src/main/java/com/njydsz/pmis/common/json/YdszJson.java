@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.json;
+package com.njydsz.pmis.common.json;
 
 import java.io.Writer;
 import java.lang.reflect.*;

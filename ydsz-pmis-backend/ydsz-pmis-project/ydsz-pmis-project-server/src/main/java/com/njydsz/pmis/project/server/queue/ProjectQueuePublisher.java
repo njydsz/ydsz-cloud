@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.queue;
+package com.njydsz.pmis.project.server.queue;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

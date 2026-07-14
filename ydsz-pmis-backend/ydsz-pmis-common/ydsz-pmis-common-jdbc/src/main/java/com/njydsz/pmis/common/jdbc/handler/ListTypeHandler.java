@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.jdbc.handler;
+package com.njydsz.pmis.common.jdbc.handler;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;

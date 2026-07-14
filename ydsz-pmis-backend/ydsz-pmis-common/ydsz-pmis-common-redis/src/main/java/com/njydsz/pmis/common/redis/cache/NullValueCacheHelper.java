@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.redis.cache;
+package com.njydsz.pmis.common.redis.cache;
 
 import java.time.Duration;
 import java.util.function.Supplier;

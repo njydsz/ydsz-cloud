@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.entity;
+﻿package com.njydsz.pmis.common.domain.entity;
 
 import java.io.Serializable;
 
@@ -13,28 +13,28 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 基础实体�?
+ * 基础实体�?
  *
- * <p>继承�?{@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本号和逻辑删除标识�?
- * 这是系统中最常用的实体基类，适用于大多数业务实体�?
+ * <p>继承�?{@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本号和逻辑删除标识�?
+ * 这是系统中最常用的实体基类，适用于大多数业务实体�?
  *
- * <p><b>设计原则�?/b>
+ * <p><b>设计原则�?/b>
  * <ul>
- *   <li>开闭原则：对扩展开放，对修改关�?/li>
- *   <li>单一职责：每个字段有且只有一个职�?/li>
- *   <li>依赖倒置：业务代码依赖抽象基类，不依赖具体实�?/li>
+ *   <li>开闭原则：对扩展开放，对修改关�?/li>
+ *   <li>单一职责：每个字段有且只有一个职�?/li>
+ *   <li>依赖倒置：业务代码依赖抽象基类，不依赖具体实�?/li>
  * </ul>
  *
  * <p><b>核心特性：</b>
  * <table>
- *   <tr><th>特�?/th><th>字段</th><th>说明</th></tr>
+ *   <tr><th>特�?/th><th>字段</th><th>说明</th></tr>
  *   <tr><td>审计字段</td><td>createdBy/createdAt/updatedBy/updatedAt</td><td>追踪数据变更</td></tr>
- *   <tr><td>乐观�?/td><td>revision</td><td>并发控制，防止更新冲�?/td></tr>
- *   <tr><td>逻辑删除</td><td>deleted</td><td>软删除，数据可恢�?/td></tr>
- *   <tr><td>状态标�?/td><td>status</td><td>业务状态启�?禁用</td></tr>
+ *   <tr><td>乐观�?/td><td>revision</td><td>并发控制，防止更新冲�?/td></tr>
+ *   <tr><td>逻辑删除</td><td>deleted</td><td>软删除，数据可恢�?/td></tr>
+ *   <tr><td>状态标�?/td><td>status</td><td>业务状态启�?禁用</td></tr>
  * </table>
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例�?/b>
  * <pre>{@code
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
@@ -50,24 +50,24 @@ import lombok.experimental.SuperBuilder;
  * }
  * }</pre>
  *
- * <p><b>数据库表结构�?/b>
+ * <p><b>数据库表结构�?/b>
  * <pre>{@code
  * CREATE TABLE sys_user (
  *     id BIGINT PRIMARY KEY COMMENT '主键ID',
- *     username VARCHAR(50) COMMENT '用户�?,
+ *     username VARCHAR(50) COMMENT '用户�?,
  *     email VARCHAR(100) COMMENT '邮箱',
- *     phone VARCHAR(20) COMMENT '手机�?,
- *     status INT DEFAULT 0 COMMENT '状�?,
- *     created_by VARCHAR(64) COMMENT '创建�?,
+ *     phone VARCHAR(20) COMMENT '手机�?,
+ *     status INT DEFAULT 0 COMMENT '状�?,
+ *     created_by VARCHAR(64) COMMENT '创建�?,
  *     created_at DATETIME COMMENT '创建时间',
- *     updated_by VARCHAR(64) COMMENT '更新�?,
+ *     updated_by VARCHAR(64) COMMENT '更新�?,
  *     updated_at DATETIME COMMENT '更新时间',
- *     revision INT DEFAULT 0 COMMENT '乐观锁版�?,
+ *     revision INT DEFAULT 0 COMMENT '乐观锁版�?,
  *     deleted INT DEFAULT 0 COMMENT '逻辑删除'
  * );
  * }</pre>
  *
- * @param <T> 主键ID类型，支�?Long、String、UUID �?
+ * @param <T> 主键ID类型，支�?Long、String、UUID �?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -76,8 +76,8 @@ import lombok.experimental.SuperBuilder;
  * @see BaseIdEntity
  * @see RootEntity
  *
- * <p><b>�?重构规划�?/b>当前继承�?{@code RootEntity �?BaseIdEntity �?BaseAuditEntity �?BaseEntity} �?4 层，增加理解成本�?
- * 长期建议：扁平化�?2-3 层，或用 {@code @Embedded AuditInfo} 组合替代继承�?
+ * <p><b>�?重构规划�?/b>当前继承�?{@code RootEntity �?BaseIdEntity �?BaseAuditEntity �?BaseEntity} �?4 层，增加理解成本�?
+ * 长期建议：扁平化�?2-3 层，或用 {@code @Embedded AuditInfo} 组合替代继承�?
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -93,18 +93,18 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      *
      * <p>用于并发控制，原理：
      * <ul>
-     *   <li>每次更新时自动递增�?1�?/li>
+     *   <li>每次更新时自动递增�?1�?/li>
      *   <li>更新 SQL 包含 WHERE 条件：revision = oldRevision</li>
      *   <li>若影响行数为0，说明版本已变化，抛出乐观锁异常</li>
      * </ul>
      *
-     * <p><b>配置方式�?/b>
+     * <p><b>配置方式�?/b>
      * <pre>
-     * // 方式1：字段注解（推荐�?
+     * // 方式1：字段注解（推荐�?
      * &#64;Version
      * private Integer revision;
      *
-     * // 方式2：配置方式（参�?ydsz-pmis-common-jdbc 模块�?
+     * // 方式2：配置方式（参�?ydsz-pmis-common-jdbc 模块�?
      * ydsz:
      *   sql-intercept:
      *     optimistic-lock:
@@ -120,20 +120,20 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
     /**
      * 逻辑删除标识
      *
-     * <p>用于实现软删除，原理�?
+     * <p>用于实现软删除，原理�?
      * <ul>
      *   <li>删除操作变为 UPDATE 设置 deleted = 1</li>
      *   <li>查询操作自动添加 WHERE deleted = 0 条件</li>
      *   <li>数据可恢复，适合重要业务数据</li>
      * </ul>
      *
-     * <p><b>配置方式�?/b>
+     * <p><b>配置方式�?/b>
      * <pre>
-     * // 方式1：字段注解（推荐�?
+     * // 方式1：字段注解（推荐�?
      * &#64;TableLogic
      * private Integer deleted;
      *
-     * // 方式2：配置方式（参�?ydsz-pmis-common-jdbc 模块�?
+     * // 方式2：配置方式（参�?ydsz-pmis-common-jdbc 模块�?
      * ydsz:
      *   sql-intercept:
      *     logical-delete:
@@ -147,12 +147,12 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
     private Integer deleted;
 
     /**
-     * 状态标�?
+     * 状态标�?
      *
-     * <p>用于标识实体的业务状态，子类可按需覆盖为具体业务状态枚举值�?
-     * 默认值为空，由各子类根据业务语义自行定义�?
+     * <p>用于标识实体的业务状态，子类可按需覆盖为具体业务状态枚举值�?
+     * 默认值为空，由各子类根据业务语义自行定义�?
      *
-     * <p><b>字段映射�?/b> status -> status
+     * <p><b>字段映射�?/b> status -> status
      */
     private String status;
 }

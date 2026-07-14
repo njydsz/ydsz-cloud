@@ -149,7 +149,7 @@ public class BudgetGuard {
      * 安全获取预算快照（本地 Service 调用 + try-catch 降级）
      *
      * <p>P1-9 重构：原通过 InitiationServiceClient Feign 自调用 project 服务自身，
-     * 违反 package-info.java 中"对外调用其他微服务"的设计原则，且引入不必要的网络开销。
+     * 违反 ppackage-info.java 中"对外调用其他微服务"的设计原则，且引入不必要的网络开销。
      * 现改为直接注入 {@link InitiationService} 走本地调用，保留 try-catch 以防数据库异常降级。
      *
      * @param initiationId 项目立项 ID

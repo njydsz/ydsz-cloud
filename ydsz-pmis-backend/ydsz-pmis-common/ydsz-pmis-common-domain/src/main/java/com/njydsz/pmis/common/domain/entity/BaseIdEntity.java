@@ -9,30 +9,30 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 主键基础实体�?
+ * 主键基础实体�?
  *
- * <p>仅包含主键ID的实体基类，适用于不需要审计字段和版本控制的简单场景�?
- * 这是实体继承层次结构中的第二层（第一层是 {@link Persistable} 接口）�?
+ * <p>仅包含主键ID的实体基类，适用于不需要审计字段和版本控制的简单场景�?
+ * 这是实体继承层次结构中的第二层（第一层是 {@link Persistable} 接口）�?
  *
- * <p><b>注意�?/b>此类仅实�?{@link Persistable} 而非 {@link RootEntity}�?
- * 因为它不包含乐观锁版本号（{@code revision}）和逻辑删除标识（{@code deleted}）�?
- * 需要这些能力的实体应继�?{@link BaseEntity}�?
+ * <p><b>注意�?/b>此类仅实�?{@link Persistable} 而非 {@link RootEntity}�?
+ * 因为它不包含乐观锁版本号（{@code revision}）和逻辑删除标识（{@code deleted}）�?
+ * 需要这些能力的实体应继�?{@link BaseEntity}�?
  *
- * <p><b>设计原则�?/b>
+ * <p><b>设计原则�?/b>
  * <ul>
- *   <li>最小化实体基类，仅包含最必要的字�?/li>
- *   <li>使用 MyBatis-Plus �?ASSIGN_ID 雪花算法生成19位Long类型ID</li>
- *   <li>支持泛型主键类型，可适配 Long、String、UUID �?/li>
+ *   <li>最小化实体基类，仅包含最必要的字�?/li>
+ *   <li>使用 MyBatis-Plus �?ASSIGN_ID 雪花算法生成19位Long类型ID</li>
+ *   <li>支持泛型主键类型，可适配 Long、String、UUID �?/li>
  * </ul>
  *
- * <p><b>使用场景�?/b>
+ * <p><b>使用场景�?/b>
  * <ul>
- *   <li>字典表、配置表等简单实�?/li>
+ *   <li>字典表、配置表等简单实�?/li>
  *   <li>不需要追踪创建人和创建时间的场景</li>
- *   <li>历史数据表、日志流水表�?/li>
+ *   <li>历史数据表、日志流水表�?/li>
  * </ul>
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例�?/b>
  * <pre>{@code
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
@@ -42,7 +42,7 @@ import lombok.experimental.SuperBuilder;
  *     private String description;
  * }
  *
- * // 或使�?String 类型主键
+ * // 或使�?String 类型主键
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
  * public class SysDict extends BaseIdEntity<String> {
@@ -51,7 +51,7 @@ import lombok.experimental.SuperBuilder;
  * }
  * }</pre>
  *
- * <p><b>数据库表结构�?/b>
+ * <p><b>数据库表结构�?/b>
  * <pre>{@code
  * CREATE TABLE sys_config (
  *     id BIGINT PRIMARY KEY,
@@ -61,7 +61,7 @@ import lombok.experimental.SuperBuilder;
  * );
  * }</pre>
  *
- * @param <T> 主键ID类型，支�?Long、String、UUID �?
+ * @param <T> 主键ID类型，支�?Long、String、UUID �?
  *
  * @author Marvin Lee
  * @email limw1888@126.com

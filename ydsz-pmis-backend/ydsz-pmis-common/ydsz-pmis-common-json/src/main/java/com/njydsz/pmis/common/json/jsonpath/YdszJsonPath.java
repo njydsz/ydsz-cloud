@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.json.jsonpath;
+package com.njydsz.pmis.common.json.jsonpath;
 
 import java.util.*;
 import java.util.regex.*;

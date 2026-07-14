@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.service.config;
+package com.njydsz.pmis.message.server.service.config;
 
 import java.lang.reflect.Method;
 import java.time.Duration;

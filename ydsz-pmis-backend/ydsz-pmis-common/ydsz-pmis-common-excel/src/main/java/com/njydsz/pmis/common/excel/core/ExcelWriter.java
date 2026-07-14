@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core;
+﻿package com.njydsz.pmis.common.excel.core;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -563,7 +563,7 @@ public class ExcelWriter {
      *
      * @return true 如果可以写入，false 如果已经完成过写入
      */
-    /** package-private */ boolean canWrite() {
+    /** ppackage-private */ boolean canWrite() {
         return !writeCompleted;
     }
 

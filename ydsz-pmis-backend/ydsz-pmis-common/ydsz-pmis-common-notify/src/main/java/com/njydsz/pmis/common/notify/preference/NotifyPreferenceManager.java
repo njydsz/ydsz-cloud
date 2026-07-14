@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.notify.preference;
+﻿package com.njydsz.pmis.common.notify.preference;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

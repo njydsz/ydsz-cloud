@@ -20,10 +20,10 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.nextwiki", "com.njydsz.pmis.common"})
+@SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.nextwiki", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePackages = {"com.njydsz.pmis.nextwiki.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePpackages = {"com.njydsz.pmis.nextwiki.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.nextwiki.infra.mapper")
 @EnableScheduling
 public class NextwikiApplication {

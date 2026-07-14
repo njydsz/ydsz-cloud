@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.feign.codec;
+﻿package com.njydsz.pmis.common.feign.codec;
 
 import java.io.IOException;
 import java.io.InputStream;

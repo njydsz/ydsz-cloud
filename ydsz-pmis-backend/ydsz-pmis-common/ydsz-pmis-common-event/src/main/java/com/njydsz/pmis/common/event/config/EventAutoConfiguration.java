@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.event.config;
+﻿package com.njydsz.pmis.common.event.config;
 
 import jakarta.annotation.PreDestroy;
 

@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.feign.codec;
+﻿package com.njydsz.pmis.common.feign.codec;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;

@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.consumer;
+﻿package com.njydsz.pmis.message.server.consumer;
 
 import java.time.Duration;
 import java.util.List;

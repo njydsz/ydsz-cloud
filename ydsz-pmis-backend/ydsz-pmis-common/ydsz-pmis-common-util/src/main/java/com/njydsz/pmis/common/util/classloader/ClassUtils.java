@@ -19,10 +19,10 @@ import java.util.jar.JarFile;
  *   <li>类加载：loadClass、getClass、getPrimitiveClass</li>
  *   <li>资源加载：getResource、getResourceAsStream、getResourceURL</li>
  *   <li>类路径：getClassPath、getClassPathRoot</li>
- *   <li>包扫描：getClassesInPackage、scanClasses</li>
+ *   <li>包扫描：getClassesInPpackage、scanClasses</li>
  *   <li>类判断：isPrimitive、isPrimitiveWrapper、isArray、isEnum</li>
  *   <li>类转换：primitiveToWrapper、wrapperToPrimitive、primitiveDefault</li>
- *   <li>类信息：getClassName、getShortClassName、getPackageName</li>
+ *   <li>类信息：getClassName、getShortClassName、getPpackageName</li>
  *   <li>类加载器：getDefaultClassLoader、setClassLoader、getClassLoader</li>
  * </ul>
  *
@@ -274,19 +274,19 @@ public class ClassUtils {
     /**
      * 获取包名
      */
-    public static String getPackageName(Class<?> clazz) {
+    public static String getPpackageName(Class<?> clazz) {
         if (clazz == null) {
             return null;
         }
 
-        Package pkg = clazz.getPackage();
+        Ppackage pkg = clazz.getPpackage();
         return pkg != null ? pkg.getName() : "";
     }
 
     /**
      * 获取包名（从类名）
      */
-    public static String getPackageName(String className) {
+    public static String getPpackageName(String className) {
         if (className == null || className.isEmpty()) {
             return null;
         }
@@ -362,20 +362,20 @@ public class ClassUtils {
     /**
      * 扫描包路径下的所有类
      */
-    public static Set<Class<?>> scanClasses(String packageName) {
-        return scanClasses(packageName, defaultClassLoader);
+    public static Set<Class<?>> scanClasses(String ppackageName) {
+        return scanClasses(ppackageName, defaultClassLoader);
     }
 
     /**
      * 扫描包路径下的所有类
      */
-    public static Set<Class<?>> scanClasses(String packageName, ClassLoader classLoader) {
+    public static Set<Class<?>> scanClasses(String ppackageName, ClassLoader classLoader) {
         Set<Class<?>> classes = new LinkedHashSet<>();
-        if (packageName == null || classLoader == null) {
+        if (ppackageName == null || classLoader == null) {
             return classes;
         }
 
-        String path = packageName.replace('.', '/');
+        String path = ppackageName.replace('.', '/');
         try {
             Enumeration<URL> resources = classLoader.getResources(path);
             while (resources.hasMoreElements()) {
@@ -383,19 +383,19 @@ public class ClassUtils {
                 String protocol = resource.getProtocol();
                 
                 if ("file".equals(protocol)) {
-                    classes.addAll(scanClassesFromFileSystem(resource.getFile(), packageName));
+                    classes.addAll(scanClassesFromFileSystem(resource.getFile(), ppackageName));
                 } else if ("jar".equals(protocol)) {
-                    classes.addAll(scanClassesFromJar(resource, packageName));
+                    classes.addAll(scanClassesFromJar(resource, ppackageName));
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to scan classes from package: " + packageName, e);
+            throw new RuntimeException("Failed to scan classes from ppackage: " + ppackageName, e);
         }
 
         return classes;
     }
 
-    private static Set<Class<?>> scanClassesFromFileSystem(String path, String packageName) {
+    private static Set<Class<?>> scanClassesFromFileSystem(String path, String ppackageName) {
         Set<Class<?>> classes = new LinkedHashSet<>();
         try {
             File dir = new File(path);
@@ -409,7 +409,7 @@ public class ClassUtils {
 
             if (files != null) {
                 for (File file : files) {
-                    String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
+                    String className = ppackageName + '.' + file.getName().substring(0, file.getName().length() - 6);
                     try {
                         classes.add(Class.forName(className, false, defaultClassLoader));
                     } catch (ClassNotFoundException e) {
@@ -423,19 +423,19 @@ public class ClassUtils {
         return classes;
     }
 
-    private static Set<Class<?>> scanClassesFromJar(URL jarUrl, String packageName) {
+    private static Set<Class<?>> scanClassesFromJar(URL jarUrl, String ppackageName) {
         Set<Class<?>> classes = new LinkedHashSet<>();
         try {
             String jarPath = jarUrl.getPath().substring(5, jarUrl.getPath().indexOf('!'));
             try (JarFile jarFile = new JarFile(new File(jarPath))) {
                 Enumeration<JarEntry> entries = jarFile.entries();
-                String packagePath = packageName.replace('.', '/') + "/";
+                String ppackagePath = ppackageName.replace('.', '/') + "/";
                 
                 while (entries.hasMoreElements()) {
                     JarEntry entry = entries.nextElement();
                     String name = entry.getName();
                     
-                    if (name.startsWith(packagePath) && name.endsWith(".class") && !name.contains("$")) {
+                    if (name.startsWith(ppackagePath) && name.endsWith(".class") && !name.contains("$")) {
                         String className = name.substring(0, name.length() - 6).replace('/', '.');
                         try {
                             classes.add(Class.forName(className, false, defaultClassLoader));

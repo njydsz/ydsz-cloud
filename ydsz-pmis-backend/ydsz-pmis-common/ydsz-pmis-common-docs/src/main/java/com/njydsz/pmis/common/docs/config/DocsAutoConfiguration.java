@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @EnableConfigurationProperties(DocsProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.docs", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ComponentScan(basePackages = "com.njydsz.pmis.common.docs")
+@ComponentScan(basePpackages = "com.njydsz.pmis.common.docs")
 public class DocsAutoConfiguration {
 
     public DocsAutoConfiguration(DocsProperties properties) {

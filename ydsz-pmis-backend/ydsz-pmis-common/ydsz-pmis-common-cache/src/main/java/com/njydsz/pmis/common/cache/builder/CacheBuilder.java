@@ -11,6 +11,7 @@ import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.api.LoadingCache;
 import com.njydsz.pmis.common.cache.internal.concurrent.ConcurrentCache;
 import com.njydsz.pmis.common.cache.internal.concurrent.StripedConcurrentCache;
+import com.njydsz.pmis.common.cache.internal.decorator.ExpirableCache;
 import com.njydsz.pmis.common.cache.internal.decorator.WriteThroughCache;
 import com.njydsz.pmis.common.cache.internal.lfu.LFUCache;
 import com.njydsz.pmis.common.cache.internal.loading.EnhancedLoadingCache;
@@ -136,7 +137,16 @@ public final class CacheBuilder<K, V> {
   private CacheWriter<? super K, ? super V> writer;
 
   /** 自定义过期策略 */
-    private Expiry<? super K, ? super V> expiry;
+  private Expiry<? super K, ? super V> expiry;
+
+  /** 弱引用键标志（与 type 正交，不覆盖 type） */
+  private boolean weakKeysFlag = false;
+
+  /** 弱引用值标志（与 type 正交，不覆盖 type） */
+  private boolean weakValuesFlag = false;
+
+  /** 软引用值标志（与 type 正交，不覆盖 type） */
+  private boolean softValuesFlag = false;
 
   /** 私有构造函数，通过 YdszCache.newBuilder() 创建 */
   private CacheBuilder() {}
@@ -384,7 +394,7 @@ public final class CacheBuilder<K, V> {
    * @return this
    */
   public CacheBuilder<K, V> weakKeys() {
-    this.type = CacheType.WEAK_KEY;
+    this.weakKeysFlag = true;
     return this;
   }
 
@@ -396,7 +406,7 @@ public final class CacheBuilder<K, V> {
    * @return this
    */
   public CacheBuilder<K, V> weakValues() {
-    this.type = CacheType.WEAK_VALUE;
+    this.weakValuesFlag = true;
     return this;
   }
 
@@ -408,12 +418,22 @@ public final class CacheBuilder<K, V> {
    * @return this
    */
   public CacheBuilder<K, V> softValues() {
-    this.type = CacheType.SOFT_VALUE;
+    this.softValuesFlag = true;
     return this;
   }
 
   /**
    * 构建缓存实例
+   *
+   * <p>构建顺序（装饰器叠加，正交组合）：
+   *
+   * <ol>
+   *   <li>创建基础淘汰缓存（LRU/TINYLFU/STRIPED 等）
+   *   <li>叠加弱/软引用装饰器（如启用）
+   *   <li>叠加过期装饰器 ExpirableCache（如启用了 expireAfterWrite/Access 或 Expiry）
+   *   <li>叠加写穿透装饰器 WriteThroughCache（如启用）
+   *   <li>添加删除监听器
+   * </ol>
    *
    * @return 缓存实例
    */
@@ -421,6 +441,33 @@ public final class CacheBuilder<K, V> {
     validate();
     Cache<K, V> cache = createBaseCache();
 
+    // 弱/软引用装饰器叠加（与淘汰策略正交）
+    if (weakKeysFlag) {
+      cache = wrapWithWeakKeys(cache);
+    }
+    if (weakValuesFlag) {
+      cache = wrapWithWeakValues(cache);
+    }
+    if (softValuesFlag) {
+      cache = wrapWithSoftValues(cache);
+    }
+
+    // 过期策略装饰器叠加（与淘汰策略正交）
+    boolean hasExpiration =
+        expireAfterWriteDuration > 0 || expireAfterAccessDuration > 0 || expiry != null;
+    if (hasExpiration && !(cache instanceof TTLCache) && !(cache instanceof EnhancedLoadingCache)) {
+      long writeNanos =
+          expireAfterWriteDuration > 0 && expireAfterWriteUnit != null
+              ? expireAfterWriteUnit.toNanos(expireAfterWriteDuration)
+              : 0;
+      long accessNanos =
+          expireAfterAccessDuration > 0 && expireAfterAccessUnit != null
+              ? expireAfterAccessUnit.toNanos(expireAfterAccessDuration)
+              : 0;
+      cache = new ExpirableCache<>(cache, writeNanos, accessNanos, expiry, 60);
+    }
+
+    // 写穿透装饰器
     if (writer != null) {
       cache = new WriteThroughCache<>(cache, writer);
     }
@@ -430,6 +477,30 @@ public final class CacheBuilder<K, V> {
     }
 
     return cache;
+  }
+
+  /** 用 WeakKeyCache 包装底层缓存 */
+  @SuppressWarnings("unchecked")
+  private Cache<K, V> wrapWithWeakKeys(Cache<K, V> cache) {
+    WeakKeyCache<K, V> weakCache = new WeakKeyCache<>();
+    cache.forEach(weakCache::put);
+    return weakCache;
+  }
+
+  /** 用 WeakValueCache 包装底层缓存 */
+  @SuppressWarnings("unchecked")
+  private Cache<K, V> wrapWithWeakValues(Cache<K, V> cache) {
+    WeakValueCache<K, V> weakCache = new WeakValueCache<>();
+    cache.forEach(weakCache::put);
+    return weakCache;
+  }
+
+  /** 用 SoftValueCache 包装底层缓存 */
+  @SuppressWarnings("unchecked")
+  private Cache<K, V> wrapWithSoftValues(Cache<K, V> cache) {
+    SoftValueCache<K, V> softCache = new SoftValueCache<>();
+    cache.forEach(softCache::put);
+    return softCache;
   }
 
   public WTinyLFUCache<K, V> buildWTinyLFU() {

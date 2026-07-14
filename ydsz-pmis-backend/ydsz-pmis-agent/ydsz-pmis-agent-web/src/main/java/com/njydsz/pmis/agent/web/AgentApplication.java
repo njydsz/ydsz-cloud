@@ -15,10 +15,10 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.agent", "com.njydsz.pmis.common"})
+@SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.agent", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePackages = {"com.njydsz.pmis.agent.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePpackages = {"com.njydsz.pmis.agent.api", "com.njydsz.pmis.common.feign"})
 public class AgentApplication {
 
     public static void main(String[] args) {

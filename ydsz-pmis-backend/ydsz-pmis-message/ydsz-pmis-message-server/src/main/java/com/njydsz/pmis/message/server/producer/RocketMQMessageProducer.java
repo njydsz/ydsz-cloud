@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.producer;
+package com.njydsz.pmis.message.server.producer;
 
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;

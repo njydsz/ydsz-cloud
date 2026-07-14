@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.entity;
+﻿package com.njydsz.pmis.common.domain.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -13,19 +13,19 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 审计字段基础实体�?
+ * 审计字段基础实体�?
  *
- * <p>继承�?{@link BaseIdEntity}，额外包含创建人、创建时间、更新人、更新时间等审计字段�?
- * 这些字段�?MyBatis-Plus 的自动填充功能管理，对业务代码透明�?
+ * <p>继承�?{@link BaseIdEntity}，额外包含创建人、创建时间、更新人、更新时间等审计字段�?
+ * 这些字段�?MyBatis-Plus 的自动填充功能管理，对业务代码透明�?
  *
- * <p><b>设计原则�?/b>
+ * <p><b>设计原则�?/b>
  * <ul>
  *   <li>审计字段对业务代码透明，由框架自动维护</li>
- *   <li>采用 LocalDateTime 作为时间类型，支持时区转�?/li>
- *   <li>使用 {@code @JsonFormat} 注解支持 JSON 序列化时的格式控�?/li>
+ *   <li>采用 LocalDateTime 作为时间类型，支持时区转�?/li>
+ *   <li>使用 {@code @JsonFormat} 注解支持 JSON 序列化时的格式控�?/li>
  * </ul>
  *
- * <p><b>审计字段说明�?/b>
+ * <p><b>审计字段说明�?/b>
  * <table>
  *   <tr><th>字段</th><th>类型</th><th>说明</th><th>填充时机</th></tr>
  *   <tr><td>createdBy</td><td>String</td><td>创建人ID</td><td>INSERT</td></tr>
@@ -34,7 +34,7 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>updatedAt</td><td>LocalDateTime</td><td>更新时间</td><td>INSERT/UPDATE</td></tr>
  * </table>
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例�?/b>
  * <pre>{@code
  * @Data
  * @EqualsAndHashCode(callSuper = true)
@@ -45,7 +45,7 @@ import lombok.experimental.SuperBuilder;
  * }
  * }</pre>
  *
- * <p><b>数据库表结构�?/b>
+ * <p><b>数据库表结构�?/b>
  * <pre>{@code
  * CREATE TABLE sys_user (
  *     id BIGINT PRIMARY KEY,
@@ -59,12 +59,12 @@ import lombok.experimental.SuperBuilder;
  * );
  * }</pre>
  *
- * <p><b>�?重构规划�?/b>当前审计字段（createdBy/createdAt/updatedBy/updatedAt）以继承方式内联于此类中�?
- * 未来计划提取�?{@code AuditInfo} 值对象，通过 {@code @Embedded} 组合方式替代继承�?
- * 这将降低继承链深度，提高实体类的组合灵活性，并使审计信息可独立复用�?
- * 迁移路径：BaseAuditEntity �?BaseIdEntity + @Embedded AuditInfo
+ * <p><b>�?重构规划�?/b>当前审计字段（createdBy/createdAt/updatedBy/updatedAt）以继承方式内联于此类中�?
+ * 未来计划提取�?{@code AuditInfo} 值对象，通过 {@code @Embedded} 组合方式替代继承�?
+ * 这将降低继承链深度，提高实体类的组合灵活性，并使审计信息可独立复用�?
+ * 迁移路径：BaseAuditEntity �?BaseIdEntity + @Embedded AuditInfo
  *
- * @param <T> 主键ID类型，支�?Long、String、UUID �?
+ * @param <T> 主键ID类型，支�?Long、String、UUID �?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -85,21 +85,21 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
     /**
      * 创建人ID
      *
-     * <p>记录创建该记录的用户ID，通常�?SecurityContext 安全上下文中获取�?
-     * 框架�?INSERT 操作时自动填充此字段�?
+     * <p>记录创建该记录的用户ID，通常�?SecurityContext 安全上下文中获取�?
+     * 框架�?INSERT 操作时自动填充此字段�?
      *
-     * <p><b>字段映射�?/b> created_by -> createdBy
+     * <p><b>字段映射�?/b> created_by -> createdBy
      */
     private String createdBy;
 
     /**
      * 创建时间
      *
-     * <p>记录创建该记录的时间戳�?
-     * 框架�?INSERT 操作时自动填充此字段�?
-     * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"�?
+     * <p>记录创建该记录的时间戳�?
+     * 框架�?INSERT 操作时自动填充此字段�?
+     * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"�?
      *
-     * <p><b>字段映射�?/b> created_at -> createdAt
+     * <p><b>字段映射�?/b> created_at -> createdAt
      */
     @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -107,30 +107,30 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
     /**
      * 更新人ID
      *
-     * <p>记录最后一次更新该记录的用户ID�?
-     * 框架�?INSERT/UPDATE 操作时自动填充此字段�?
+     * <p>记录最后一次更新该记录的用户ID�?
+     * 框架�?INSERT/UPDATE 操作时自动填充此字段�?
      *
-     * <p><b>字段映射�?/b> updated_by -> updatedBy
+     * <p><b>字段映射�?/b> updated_by -> updatedBy
      */
     private String updatedBy;
 
     /**
      * 更新时间
      *
-     * <p>记录最后一次更新该记录的时间戳�?
-     * 框架�?INSERT/UPDATE 操作时自动填充此字段�?
-     * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"�?
+     * <p>记录最后一次更新该记录的时间戳�?
+     * 框架�?INSERT/UPDATE 操作时自动填充此字段�?
+     * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"�?
      *
-     * <p><b>字段映射�?/b> updated_at -> updatedAt
+     * <p><b>字段映射�?/b> updated_at -> updatedAt
      */
     @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**
-     * 判断是否为新建实�?
+     * 判断是否为新建实�?
      *
-     * <p>根据 createdAt 是否�?null 判断是否为新建实体�?
-     * 用于业务逻辑判断，通常用于审计日志等场景�?
+     * <p>根据 createdAt 是否�?null 判断是否为新建实体�?
+     * 用于业务逻辑判断，通常用于审计日志等场景�?
      *
      * @return 新建实体返回true，否则返回false
      */
@@ -141,8 +141,8 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
     /**
      * 获取创建来源标识
      *
-     * <p>用于记录数据创建来源，如：API、BATCH、IMPORT 等�?
-     * 默认为空，子类可根据业务需要扩展�?
+     * <p>用于记录数据创建来源，如：API、BATCH、IMPORT 等�?
+     * 默认为空，子类可根据业务需要扩展�?
      *
      * @return 创建来源标识
      */

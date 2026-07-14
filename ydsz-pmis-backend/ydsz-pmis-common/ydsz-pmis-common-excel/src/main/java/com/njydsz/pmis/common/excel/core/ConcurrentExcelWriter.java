@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core;
+﻿package com.njydsz.pmis.common.excel.core;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -340,8 +340,8 @@ public class ConcurrentExcelWriter {
 
     private static final byte[] CONTENT_TYPES =
             ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-             "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
-             "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
+             "<Types xmlns=\"http://schemas.openxmlformats.org/ppackage/2006/content-types\">" +
+             "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-ppackage.relationships+xml\"/>" +
              "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
              "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
              "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>" +
@@ -350,13 +350,13 @@ public class ConcurrentExcelWriter {
 
     private static final byte[] RELS =
             ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-             "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+             "<Relationships xmlns=\"http://schemas.openxmlformats.org/ppackage/2006/relationships\">" +
              "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>" +
              "</Relationships>").getBytes(StandardCharsets.UTF_8);
 
     private static final byte[] WORKBOOK_RELS =
             ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-             "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+             "<Relationships xmlns=\"http://schemas.openxmlformats.org/ppackage/2006/relationships\">" +
              "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/>" +
              "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>" +
              "</Relationships>").getBytes(StandardCharsets.UTF_8);

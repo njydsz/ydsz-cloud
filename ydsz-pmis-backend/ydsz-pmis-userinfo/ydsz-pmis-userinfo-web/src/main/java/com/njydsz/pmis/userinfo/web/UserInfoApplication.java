@@ -13,13 +13,13 @@ import com.njydsz.pmis.common.auth.annotation.EnableYdszAuth;
  * <p>合并后 auth 不再通过 Feign 调用 user 加载登录上下文，改为本地 Service 直接调用，
  * 降低登录链路延迟与故障点。
  *
- * <p>P1-9: 移除 @EnableFeignClients(basePackages = "com.njydsz.pmis.userinfo.api")，
+ * <p>P1-9: 移除 @EnableFeignClients(basePpackages = "com.njydsz.pmis.userinfo.api")，
  * 因 UserAuthClient（唯一的自调用 FeignClient）已删除，userinfo 模块不再持有任何 FeignClient。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {
+@SpringBootApplication(scanBasePpackages = {
         "com.njydsz.pmis.userinfo",
         "com.njydsz.pmis.common"
 })

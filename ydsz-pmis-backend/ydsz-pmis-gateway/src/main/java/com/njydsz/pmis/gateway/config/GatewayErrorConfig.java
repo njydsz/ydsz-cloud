@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.gateway.config;
+﻿package com.njydsz.pmis.gateway.config;
 
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;

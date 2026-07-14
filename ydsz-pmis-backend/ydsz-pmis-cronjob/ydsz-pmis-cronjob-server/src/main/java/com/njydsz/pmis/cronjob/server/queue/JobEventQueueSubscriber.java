@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.cronjob.server.queue;
+package com.njydsz.pmis.cronjob.server.queue;
 
 import java.util.Map;
 

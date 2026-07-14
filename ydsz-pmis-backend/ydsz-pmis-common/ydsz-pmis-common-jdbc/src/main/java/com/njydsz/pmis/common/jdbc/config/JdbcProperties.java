@@ -20,7 +20,7 @@ import lombok.Data;
  * ydsz:
  *   jdbc:
  *     enabled: true
- *     mapper-scan-packages: com.njydsz.pmis.**.mapper
+ *     mapper-scan-ppackages: com.njydsz.pmis.**.mapper
  *     slow-sql:
  *       enabled: true
  *       threshold-millis: 1000
@@ -45,7 +45,7 @@ public class JdbcProperties {
     /**
      * Mapper 扫描包路径数组（默认 com.njydsz.pmis.**.mapper）
      */
-    private List<String> mapperScanPackages = Arrays.asList("com.njydsz.pmis.**.mapper");
+    private List<String> mapperScanPpackages = Arrays.asList("com.njydsz.pmis.**.mapper");
 
     /**
      * 慢 SQL 监控配置

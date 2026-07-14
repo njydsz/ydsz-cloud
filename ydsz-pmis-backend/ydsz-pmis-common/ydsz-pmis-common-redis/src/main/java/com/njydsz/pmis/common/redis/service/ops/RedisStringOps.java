@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.redis.service.ops;
+package com.njydsz.pmis.common.redis.service.ops;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.util.json;
+package com.njydsz.pmis.common.util.json;
 
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;

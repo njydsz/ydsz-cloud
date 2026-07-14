@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.notify.channel;
+package com.njydsz.pmis.common.notify.channel;
 
 import java.util.List;
 import java.util.Map;

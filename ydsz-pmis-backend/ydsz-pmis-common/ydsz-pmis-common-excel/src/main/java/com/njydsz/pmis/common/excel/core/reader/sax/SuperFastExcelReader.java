@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core.reader.sax;
+﻿package com.njydsz.pmis.common.excel.core.reader.sax;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -25,12 +25,12 @@ import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor.ObjectInstantia
 /**
  * 超高�?Excel 读取�?�?�?XML 流式解析实现
  *
- * <p>完全不依�?POI �?OPCPackage、SharedStringsTable、SAXParser 等组件，
+ * <p>完全不依�?POI �?OPCPpackage、SharedStringsTable、SAXParser 等组件，
  * 直接通过 ZipInputStream 解压 xlsx 文件，手动解�?XML 提取数据�?/p>
  *
  * <h3>核心优化</h3>
  * <ul>
- *   <li>�?POI 依赖 �?不使�?OPCPackage、SharedStringsTable、SAXParser</li>
+ *   <li>�?POI 依赖 �?不使�?OPCPpackage、SharedStringsTable、SAXParser</li>
  *   <li>手动 XML 解析 �?通过字符串匹配直接提取标签内容，避免 SAX 事件开销</li>
  *   <li>SST 按需加载 �?共享字符串表流式解析，不一次性加载到内存</li>
  *   <li>大文件流式处�?�?sheet XML 通过临时文件管道传递，避免 OOM</li>

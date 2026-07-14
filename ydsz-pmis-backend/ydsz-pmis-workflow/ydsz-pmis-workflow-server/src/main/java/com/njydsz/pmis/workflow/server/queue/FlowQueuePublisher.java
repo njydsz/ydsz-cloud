@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.queue;
+package com.njydsz.pmis.workflow.server.queue;
 
 import java.util.HashMap;
 import java.util.Map;

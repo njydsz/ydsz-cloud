@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.event.repository;
+package com.njydsz.pmis.common.event.repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

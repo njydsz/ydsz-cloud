@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.template;
+package com.njydsz.pmis.message.server.template;
 
 import java.util.Map;
 

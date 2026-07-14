@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.auth.aspect;
+package com.njydsz.pmis.common.auth.aspect;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;

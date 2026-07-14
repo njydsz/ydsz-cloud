@@ -17,13 +17,13 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {
+@SpringBootApplication(scanBasePpackages = {
         "com.njydsz.pmis.system",
         "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePpackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.system.infra.mapper")
 public class SystemApplication {
 

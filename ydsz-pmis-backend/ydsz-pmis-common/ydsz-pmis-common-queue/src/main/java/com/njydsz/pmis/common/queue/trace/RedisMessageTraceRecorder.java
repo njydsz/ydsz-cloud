@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.queue.trace;
+﻿package com.njydsz.pmis.common.queue.trace;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;

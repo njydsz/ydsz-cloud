@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.literule.server.core;
+package com.njydsz.pmis.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Comparator;

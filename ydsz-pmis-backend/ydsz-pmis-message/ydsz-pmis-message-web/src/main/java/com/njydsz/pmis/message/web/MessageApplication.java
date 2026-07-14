@@ -31,12 +31,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {
+@SpringBootApplication(scanBasePpackages = {
         "com.njydsz.pmis.message",
         "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = {"com.njydsz.pmis.message.api", "com.njydsz.pmis.common.feign"})
+@EnableFeignClients(basePpackages = {"com.njydsz.pmis.message.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.message.infra.mapper")
 @EnableAsync
 @EnableScheduling

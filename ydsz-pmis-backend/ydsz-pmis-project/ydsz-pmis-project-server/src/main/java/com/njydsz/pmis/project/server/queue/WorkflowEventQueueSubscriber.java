@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.queue;
+package com.njydsz.pmis.project.server.queue;
 
 import java.util.Map;
 

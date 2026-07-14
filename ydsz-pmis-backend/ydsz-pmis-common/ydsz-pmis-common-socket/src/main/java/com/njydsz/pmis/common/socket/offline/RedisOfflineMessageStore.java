@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.socket.offline;
+package com.njydsz.pmis.common.socket.offline;
 
 import java.util.ArrayList;
 import java.util.Collections;

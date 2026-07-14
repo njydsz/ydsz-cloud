@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.socket.cluster;
+package com.njydsz.pmis.common.socket.cluster;
 
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;

@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.socket.push;
+﻿package com.njydsz.pmis.common.socket.push;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 

@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.service.impl.core;
+package com.njydsz.pmis.message.server.service.impl.core;
 
 import java.time.LocalDateTime;
 import java.util.List;

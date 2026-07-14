@@ -209,7 +209,7 @@ public class ExpressionSandbox {
 
         // 3. 检测：是否出现"包路径 + 类名"链式引用
         //    如 a.b.c.d() 拆出 a, b, c, d；逐段检查
-        Set<String> foundForbiddenPackages = new LinkedHashSet<>();
+        Set<String> foundForbiddenPpackages = new LinkedHashSet<>();
         Set<String> foundForbiddenClasses = new LinkedHashSet<>();
         Set<String> foundForbiddenMethods = new LinkedHashSet<>();
         Set<String> unknownIdentifiers = new LinkedHashSet<>();
@@ -237,9 +237,9 @@ public class ExpressionSandbox {
 
             // 检测大写开头的类名：尝试往前拼包路径
             if (Character.isUpperCase(id.charAt(0))) {
-                String pkgPath = reconstructPackagePath(identifiers, identifierStartPositions, identifierEndPositions, i, masked);
-                if (isForbiddenPackage(pkgPath)) {
-                    foundForbiddenPackages.add(pkgPath);
+                String pkgPath = reconstructPpackagePath(identifiers, identifierStartPositions, identifierEndPositions, i, masked);
+                if (isForbiddenPpackage(pkgPath)) {
+                    foundForbiddenPpackages.add(pkgPath);
                 }
                 if (isForbiddenClass(id)) {
                     foundForbiddenClasses.add(id);
@@ -265,7 +265,7 @@ public class ExpressionSandbox {
         }
 
         // 4. 构造结果
-        if (foundForbiddenPackages.isEmpty()
+        if (foundForbiddenPpackages.isEmpty()
                 && foundForbiddenClasses.isEmpty()
                 && foundForbiddenMethods.isEmpty()) {
             // 若存在未识别标识符，降级为警告（不阻断，因为可能未被加入白名单）
@@ -275,8 +275,8 @@ public class ExpressionSandbox {
             return SandboxCheckResult.ok();
         }
         List<String> violations = new ArrayList<>();
-        if (!foundForbiddenPackages.isEmpty()) {
-            violations.add("禁止访问危险包: " + foundForbiddenPackages);
+        if (!foundForbiddenPpackages.isEmpty()) {
+            violations.add("禁止访问危险包: " + foundForbiddenPpackages);
         }
         if (!foundForbiddenClasses.isEmpty()) {
             violations.add("禁止访问危险类: " + foundForbiddenClasses);
@@ -328,7 +328,7 @@ public class ExpressionSandbox {
     /**
      * 重构包路径：向前扫描，拼出 "a.b.c" 形式的完整路径
      */
-    private String reconstructPackagePath(List<String> identifiers,
+    private String reconstructPpackagePath(List<String> identifiers,
                                           List<Integer> starts,
                                           List<Integer> ends,
                                           int index,
@@ -381,7 +381,7 @@ public class ExpressionSandbox {
     /**
      * 检测包路径前缀是否在黑名单中
      */
-    private boolean isForbiddenPackage(String path) {
+    private boolean isForbiddenPpackage(String path) {
         if (path == null) return false;
         String lower = path.toLowerCase(Locale.ROOT);
         for (String prefix : FORBIDDEN_PACKAGES) {

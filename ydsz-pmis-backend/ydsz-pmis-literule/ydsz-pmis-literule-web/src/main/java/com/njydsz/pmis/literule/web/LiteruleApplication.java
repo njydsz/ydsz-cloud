@@ -32,10 +32,10 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.literule", "com.njydsz.pmis.common"})
+@SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.literule", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePackages = {
+@EnableYdszFeign(basePpackages = {
         "com.njydsz.pmis.literule.api",
         "com.njydsz.pmis.common.feign",
         "com.njydsz.pmis.cronjob.api",

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.domain.vo;
+﻿package com.njydsz.pmis.project.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;

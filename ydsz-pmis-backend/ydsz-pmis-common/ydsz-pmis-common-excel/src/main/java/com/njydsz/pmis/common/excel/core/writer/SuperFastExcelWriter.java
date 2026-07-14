@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.excel.core.writer;
+﻿package com.njydsz.pmis.common.excel.core.writer;
 
 /**
  * SuperFastExcelWriter 类
@@ -36,7 +36,7 @@ public class SuperFastExcelWriter {
 
     private static final int ROW_BUFFER_SIZE = 1024 * 1024;
     private static final int ZIP_BUFFER_SIZE = 1024 * 1024;
-    /** package-private */ static final int FLUSH_THRESHOLD = 5000;
+    /** ppackage-private */ static final int FLUSH_THRESHOLD = 5000;
 
     private static final byte[] CONTENT_TYPES_BYTES;
     private static final byte[] RELS_BYTES;
@@ -47,8 +47,8 @@ public class SuperFastExcelWriter {
 
     static {
         CONTENT_TYPES_BYTES = ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
-                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
+                "<Types xmlns=\"http://schemas.openxmlformats.org/ppackage/2006/content-types\">" +
+                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-ppackage.relationships+xml\"/>" +
                 "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
                 "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
                 "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>" +
@@ -56,12 +56,12 @@ public class SuperFastExcelWriter {
                 "</Types>").getBytes(StandardCharsets.UTF_8);
 
         RELS_BYTES = ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+                "<Relationships xmlns=\"http://schemas.openxmlformats.org/ppackage/2006/relationships\">" +
                 "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>" +
                 "</Relationships>").getBytes(StandardCharsets.UTF_8);
 
         WORKBOOK_RELS_BYTES = ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+                "<Relationships xmlns=\"http://schemas.openxmlformats.org/ppackage/2006/relationships\">" +
                 "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/>" +
                 "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>" +
                 "</Relationships>").getBytes(StandardCharsets.UTF_8);

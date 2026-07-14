@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.realtime;
+package com.njydsz.pmis.message.server.realtime;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.file.domain;
+package com.njydsz.pmis.common.file.domain;
 
 import java.security.MessageDigest;
 import java.time.LocalDateTime;

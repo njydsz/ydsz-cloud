@@ -4,29 +4,29 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * 值对象标记接�?
+ * 值对象标记接�?
  *
  * <p>在领域驱动设计（DDD）中，值对象（Value Object）是通过其属性值来定义的对象，
- * 而非通过标识。值对象具有不可变性和相等性两个核心特征�?
+ * 而非通过标识。值对象具有不可变性和相等性两个核心特征�?
  *
- * <p><b>核心语义�?/b>
+ * <p><b>核心语义�?/b>
  * <ul>
  *   <li><b>无独立标识：</b>值对象的身份由其属性值决定，而非唯一ID</li>
- *   <li><b>不可变性：</b>值对象一旦创建，其状态不可改变，修改操作应返回新的实�?/li>
- *   <li><b>相等性：</b>两个值对象的所有属性值都相等时，它们就是相等�?/li>
+ *   <li><b>不可变性：</b>值对象一旦创建，其状态不可改变，修改操作应返回新的实�?/li>
+ *   <li><b>相等性：</b>两个值对象的所有属性值都相等时，它们就是相等�?/li>
  *   <li><b>可替换性：</b>相等的值对象可以互相替换，不影响业务逻辑</li>
  * </ul>
  *
- * <p><b>equals/hashCode 建议�?/b>
- * <p>值对象的 {@code equals} �?{@code hashCode} 应基于所有属性值实现，
+ * <p><b>equals/hashCode 建议�?/b>
+ * <p>值对象的 {@code equals} �?{@code hashCode} 应基于所有属性值实现，
  * 而非基于对象引用。本接口提供默认方法建议，实现类应确保：
  * <ul>
- *   <li>{@code equals} 比较所有业务属性�?/li>
- *   <li>{@code hashCode} 基于所有业务属性值计�?/li>
+ *   <li>{@code equals} 比较所有业务属性�?/li>
+ *   <li>{@code hashCode} 基于所有业务属性值计�?/li>
  *   <li>属性值相同则 equals 返回 true，hashCode 相同</li>
  * </ul>
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例�?/b>
  * <pre>{@code
  * public final class Money implements ValueObject {
  *     private final BigDecimal amount;
@@ -64,12 +64,12 @@ import java.util.Arrays;
 public interface ValueObject extends Serializable {
 
     /**
-     * 获取值对象的所有属性值，用于默认�?equals/hashCode 计算
+     * 获取值对象的所有属性值，用于默认�?equals/hashCode 计算
      *
-     * <p>实现类应返回包含所有业务属性值的数组�?
-     * 默认实现返回空数组，建议实现类覆盖此方法�?
+     * <p>实现类应返回包含所有业务属性值的数组�?
+     * 默认实现返回空数组，建议实现类覆盖此方法�?
      *
-     * @return 属性值数�?
+     * @return 属性值数�?
      */
     default Object[] getValues() {
         return new Object[]{};
@@ -78,10 +78,10 @@ public interface ValueObject extends Serializable {
     /**
      * 基于属性值的默认 equals 实现
      *
-     * <p>比较两个值对象的所有属性值是否相等�?
-     * 实现类可直接使用此默认实现，也可覆盖以提供更高效的实现�?
+     * <p>比较两个值对象的所有属性值是否相等�?
+     * 实现类可直接使用此默认实现，也可覆盖以提供更高效的实现�?
      *
-     * @param other 另一个对�?
+     * @param other 另一个对�?
      * @return 如果所有属性值相等则返回 true
      */
     default boolean valueEquals(Object other) {
@@ -98,10 +98,10 @@ public interface ValueObject extends Serializable {
     /**
      * 基于属性值的默认 hashCode 实现
      *
-     * <p>基于所有属性值计算哈希码，确保相等的值对象具有相同的哈希码�?
-     * 实现类可直接使用此默认实现，也可覆盖以提供更高效的实现�?
+     * <p>基于所有属性值计算哈希码，确保相等的值对象具有相同的哈希码�?
+     * 实现类可直接使用此默认实现，也可覆盖以提供更高效的实现�?
      *
-     * @return 基于属性值的哈希�?
+     * @return 基于属性值的哈希�?
      */
     default int valueHashCode() {
         return Arrays.deepHashCode(getValues());

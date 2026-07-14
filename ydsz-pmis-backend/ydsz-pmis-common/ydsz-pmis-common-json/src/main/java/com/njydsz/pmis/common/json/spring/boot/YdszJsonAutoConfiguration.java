@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.json.spring.boot;
+package com.njydsz.pmis.common.json.spring.boot;
 
 import java.util.List;
 

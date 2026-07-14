@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.consumer;
+package com.njydsz.pmis.message.server.consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

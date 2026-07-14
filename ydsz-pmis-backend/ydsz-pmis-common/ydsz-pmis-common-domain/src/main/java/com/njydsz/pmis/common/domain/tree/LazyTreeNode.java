@@ -18,20 +18,20 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * 懒加载树节点包装�?
+ * 懒加载树节点包装�?
  *
- * <p>包装实际的树节点，提供按需加载子节点的能力�?
- * 适用于数据量较大、不适合一次性加载全部节点的场景�?
+ * <p>包装实际的树节点，提供按需加载子节点的能力�?
+ * 适用于数据量较大、不适合一次性加载全部节点的场景�?
  *
  * <p><b>核心特性：</b>
  * <ul>
- *   <li>延迟加载：子节点仅在首次调用 {@code getChildren()} 时加�?/li>
- *   <li>加载状态跟踪：可通过 {@code isChildrenLoaded()} 检查加载状�?/li>
- *   <li>深度限制：防止无限递归，支持配置最大深�?/li>
- *   <li>线程安全：加载状态使�?volatile 保证可见�?/li>
+ *   <li>延迟加载：子节点仅在首次调用 {@code getChildren()} 时加�?/li>
+ *   <li>加载状态跟踪：可通过 {@code isChildrenLoaded()} 检查加载状�?/li>
+ *   <li>深度限制：防止无限递归，支持配置最大深�?/li>
+ *   <li>线程安全：加载状态使�?volatile 保证可见�?/li>
  * </ul>
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例�?/b>
  * <pre>{@code
  * LazyTreeNode<Menu, Long> node = ...;
  * // 首次调用触发加载
@@ -40,7 +40,7 @@ import lombok.ToString;
  * boolean loaded = node.isChildrenLoaded();
  * }</pre>
  *
- * @param <T>  继承自TreeNode的具体类�?
+ * @param <T>  继承自TreeNode的具体类�?
  * @param <ID> ID类型
  *
  * @author Marvin Lee
@@ -81,19 +81,19 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     private Integer depth;
 
     /**
-     * 最大允许深�?
+     * 最大允许深�?
      */
     @YdszJsonField(ignore = true)
     private transient Integer maxDepth;
 
     /**
-     * ID提取�?
+     * ID提取�?
      */
     @YdszJsonField(ignore = true)
     private transient Function<T, ID> idExtractor;
 
     /**
-     * 加载锁，替代 synchronized(this) 以避�?JDK21 虚拟线程 Pinning
+     * 加载锁，替代 synchronized(this) 以避�?JDK21 虚拟线程 Pinning
      */
     @YdszJsonField(ignore = true)
     @ToString.Exclude
@@ -104,9 +104,9 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
      * 创建懒加载节点（根节点版本）
      *
      * @param node       实际节点
-     * @param provider   节点提供�?
-     * @param maxDepth   最大深�?
-     * @param idExtractor ID提取�?
+     * @param provider   节点提供�?
+     * @param maxDepth   最大深�?
+     * @param idExtractor ID提取�?
      */
     public LazyTreeNode(T node, TreeNodeProvider<T, ID> provider, int maxDepth, Function<T, ID> idExtractor) {
         this.node = node;
@@ -120,10 +120,10 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     /**
      * 获取子节点（触发懒加载）
      *
-     * <p>首次调用时会通过 {@link TreeNodeProvider#getChildren(Object)} 加载子节点�?
-     * 后续调用直接返回已加载的缓存结果�?
+     * <p>首次调用时会通过 {@link TreeNodeProvider#getChildren(Object)} 加载子节点�?
+     * 后续调用直接返回已加载的缓存结果�?
      *
-     * @return 子节点列�?
+     * @return 子节点列�?
      */
     public List<LazyTreeNode<T, ID>> getChildren() {
         if (!childrenLoaded) {
@@ -141,7 +141,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 检查子节点是否已加�?
+     * 检查子节点是否已加�?
      *
      * @return 已加载返回true
      */
@@ -150,10 +150,10 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 触发加载子节�?
+     * 触发加载子节�?
      *
-     * <p>通过 provider 获取子节点并包装�?LazyTreeNode�?
-     * 如果当前深度已达�?maxDepth，则不会继续加载�?
+     * <p>通过 provider 获取子节点并包装�?LazyTreeNode�?
+     * 如果当前深度已达�?maxDepth，则不会继续加载�?
      */
     public void loadChildren() {
         ReentrantLock lock = getLoadLock();
@@ -166,7 +166,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 实际加载子节点的逻辑（调用方需持有 loadLock�?
+     * 实际加载子节点的逻辑（调用方需持有 loadLock�?
      */
     private void doLoadChildren() {
         if (childrenLoaded) {
@@ -180,7 +180,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
             return;
         }
 
-        // 检查是否达到最大深�?
+        // 检查是否达到最大深�?
         if (depth != null && maxDepth != null && depth >= maxDepth) {
             childrenLoaded = true;
             lazyChildren = Collections.emptyList();
@@ -208,7 +208,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 获取加载锁，处理反序列化�?loadLock �?null 的情�?
+     * 获取加载锁，处理反序列化�?loadLock �?null 的情�?
      */
     private ReentrantLock getLoadLock() {
         ReentrantLock lock = loadLock;
@@ -255,7 +255,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 判断是否为叶子节�?
+     * 判断是否为叶子节�?
      *
      * @return 叶子节点返回true
      */
@@ -264,9 +264,9 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 深度优先遍历（仅遍历已加载的节点�?
+     * 深度优先遍历（仅遍历已加载的节点�?
      *
-     * @param visitor 访问者函�?
+     * @param visitor 访问者函�?
      */
     public void traverseDFS(Consumer<LazyTreeNode<T, ID>> visitor) {
         visitor.accept(this);
@@ -278,9 +278,9 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 深度优先遍历（自动加载子节点�?
+     * 深度优先遍历（自动加载子节点�?
      *
-     * @param visitor 访问者函�?
+     * @param visitor 访问者函�?
      */
     public void traverseDFSWithLoad(Consumer<LazyTreeNode<T, ID>> visitor) {
         visitor.accept(this);

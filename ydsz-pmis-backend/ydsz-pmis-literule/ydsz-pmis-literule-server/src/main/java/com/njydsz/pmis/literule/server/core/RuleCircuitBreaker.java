@@ -1,5 +1,6 @@
-package com.njydsz.pmis.literule.server.core;
+ppackage com.njydsz.pmis.literule.server.core;
 
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,7 +19,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>HALF_OPEN 下评估成功则转为 CLOSED，失败则继续 OPEN</li>
  * </ul>
  *
- * <p>滑动窗口：基于总评估次数与总错误次数的累计比率（简化实现，避免窗口队列开销）。
+ * <p>滑动窗口（P2-5）：基于环形缓冲区记录最近 {@link #windowSize} 次评估结果，
+ * 仅计算窗口内的错误率，避免历史成功稀释近期突发错误导致熔断器永不触发。
+ * 对标 Resilience4j {@code BitSet} 滑动窗口实现。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -36,17 +39,72 @@ public class RuleCircuitBreaker {
         HALF_OPEN
     }
 
-    /** 单个规则的熔断器状态 */
+    /**
+     * 单个规则的熔断器状态
+     *
+     * <p>滑动窗口通过 {@code synchronized} 保护，原因：
+     * <ul>
+     *   <li>单规则评估的 {@code recordResult} 调用频率低（每次规则评估一次）</li>
+     *   <li>窗口操作涉及读-改-写（移除旧值、写入新值、更新计数器），需要原子性</li>
+     *   <li>相对于 ConcurrentHashMap 的 compute 原语，synchronized 更直观且无死锁风险</li>
+     * </ul>
+     */
     private static class BreakerState {
-        final AtomicLong totalEvaluations = new AtomicLong(0);
-        final AtomicLong totalErrors = new AtomicLong(0);
         final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
         final AtomicLong openedAt = new AtomicLong(0);
+
+        /** 滑动窗口：true=失败，false=成功 */
+        final boolean[] window;
+        /** 下一个写入位置（环形） */
+        int head = 0;
+        /** 窗口内已写入的记录数（≤ window.length） */
+        int count = 0;
+        /** 窗口内失败数 */
+        int failures = 0;
+
+        BreakerState(int windowSize) {
+            this.window = new boolean[windowSize];
+        }
+
+        /** 记录一次评估结果到滑动窗口 */
+        synchronized void record(boolean success) {
+            // 窗口已满时，移除最旧记录
+            if (count == window.length) {
+                if (window[head]) {
+                    failures--;
+                }
+            } else {
+                count++;
+            }
+            window[head] = !success;
+            if (!success) {
+                failures++;
+            }
+            head = (head + 1) % window.length;
+        }
+
+        /** 当前窗口错误率（0~1.0）；样本不足返回 -1 */
+        synchronized double errorRate(int minSamples) {
+            if (count < minSamples) {
+                return -1;
+            }
+            return (double) failures / count;
+        }
+
+        /** 重置滑动窗口（HALF_OPEN → CLOSED 时调用） */
+        synchronized void resetWindow() {
+            head = 0;
+            count = 0;
+            failures = 0;
+            Arrays.fill(window, false);
+        }
     }
 
     private final double errorRateThreshold;
     private final int minEvaluations;
     private final long openStateMs;
+    /** 滑动窗口大小（= minEvaluations，仅看最近 N 次评估） */
+    private final int windowSize;
 
     /** 每个规则一个独立熔断器 */
     private final ConcurrentMap<String, BreakerState> breakers = new ConcurrentHashMap<>();
@@ -55,7 +113,7 @@ public class RuleCircuitBreaker {
      * 构造熔断器
      *
      * @param errorRateThreshold 错误率阈值（0~1.0）
-     * @param minEvaluations     最小评估次数（达到后才计算错误率）
+     * @param minEvaluations     最小评估次数（达到后才计算错误率；同时作为滑动窗口大小）
      * @param openStateMs        OPEN 状态持续时间（毫秒）
      */
     public RuleCircuitBreaker(double errorRateThreshold, int minEvaluations, long openStateMs) {
@@ -68,6 +126,7 @@ public class RuleCircuitBreaker {
         this.errorRateThreshold = errorRateThreshold;
         this.minEvaluations = Math.max(1, minEvaluations);
         this.openStateMs = openStateMs;
+        this.windowSize = this.minEvaluations;
     }
 
     /**
@@ -107,19 +166,14 @@ public class RuleCircuitBreaker {
      * @param success   是否成功（false 表示异常）
      */
     public void recordResult(String ruleCode, boolean success) {
-        BreakerState state = breakers.computeIfAbsent(ruleCode, k -> new BreakerState());
-        state.totalEvaluations.incrementAndGet();
-        if (!success) {
-            state.totalErrors.incrementAndGet();
-        }
+        BreakerState state = breakers.computeIfAbsent(ruleCode, k -> new BreakerState(windowSize));
 
         State current = state.state.get();
         if (current == State.HALF_OPEN) {
             if (success) {
-                // HALF_OPEN 成功 → CLOSED，重置计数器
+                // HALF_OPEN 成功 → CLOSED，重置滑动窗口
                 state.state.set(State.CLOSED);
-                state.totalEvaluations.set(0);
-                state.totalErrors.set(0);
+                state.resetWindow();
                 log.info("[LiteRule-Breaker] 规则 {} 熔断器已恢复 CLOSED", ruleCode);
             } else {
                 // HALF_OPEN 失败 → 重新 OPEN
@@ -130,17 +184,17 @@ public class RuleCircuitBreaker {
             return;
         }
 
+        // 记录到滑动窗口（CLOSED 状态）
+        state.record(success);
+
         if (current == State.CLOSED) {
-            long total = state.totalEvaluations.get();
-            if (total >= minEvaluations) {
-                double errorRate = (double) state.totalErrors.get() / total;
-                if (errorRate >= errorRateThreshold) {
-                    if (state.state.compareAndSet(State.CLOSED, State.OPEN)) {
-                        state.openedAt.set(System.currentTimeMillis());
-                        log.warn("[LiteRule-Breaker] 规则 {} 熔断器 OPEN（错误率 {}%, {}/{})",
-                                ruleCode, String.format("%.2f", errorRate * 100),
-                                state.totalErrors.get(), total);
-                    }
+            double errorRate = state.errorRate(minEvaluations);
+            if (errorRate >= 0 && errorRate >= errorRateThreshold) {
+                if (state.state.compareAndSet(State.CLOSED, State.OPEN)) {
+                    state.openedAt.set(System.currentTimeMillis());
+                    log.warn("[LiteRule-Breaker] 规则 {} 熔断器 OPEN（滑动窗口错误率 {}%, 窗口={}/{})",
+                            ruleCode, String.format("%.2f", errorRate * 100),
+                            state.failures, state.count);
                 }
             }
         }

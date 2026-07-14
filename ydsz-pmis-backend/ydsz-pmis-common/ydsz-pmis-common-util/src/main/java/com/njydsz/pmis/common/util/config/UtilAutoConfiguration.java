@@ -11,8 +11,6 @@ import org.springframework.context.annotation.Bean;
 import com.njydsz.pmis.common.util.http.OkHttpProperties;
 import com.njydsz.pmis.common.util.http.OkHttpUtils;
 import com.njydsz.pmis.common.util.id.SnowflakeProperties;
-import com.njydsz.pmis.common.util.json.JsonMetrics;
-import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.spring.SpringContextHolder;
 
 import okhttp3.ConnectionPool;
@@ -44,23 +42,6 @@ public class UtilAutoConfiguration {
     @ConditionalOnMissingBean
     public SpringContextHolder springContextHolder() {
         return new SpringContextHolder();
-    }
-
-    /**
-     * 注册 JSON 处理指标收集器
-     *
-     * <p>同时绑定到 {@link JsonUtils} 静态工具类，供无 Spring 上下文场景使用。
-     * 当 classpath 存在 MeterRegistry 时，{@code JsonMetricsConfiguration} 会自动
-     * 启用 Prometheus 指标采集。
-     *
-     * @return JsonMetrics 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(JsonMetrics.class)
-    public JsonMetrics jsonMetrics() {
-        JsonMetrics jsonMetrics = new JsonMetrics();
-        YdszJson.setMetricsCallback(jsonMetrics);
-        return jsonMetrics;
     }
 
     /**

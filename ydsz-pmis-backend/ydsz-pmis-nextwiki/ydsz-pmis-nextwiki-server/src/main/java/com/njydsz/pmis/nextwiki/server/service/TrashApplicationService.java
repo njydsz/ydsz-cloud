@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.nextwiki.server.service;
+package com.njydsz.pmis.nextwiki.server.service;
 
 import java.util.List;
 

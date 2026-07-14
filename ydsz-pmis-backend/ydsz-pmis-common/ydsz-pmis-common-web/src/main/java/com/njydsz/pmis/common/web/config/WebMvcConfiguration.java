@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

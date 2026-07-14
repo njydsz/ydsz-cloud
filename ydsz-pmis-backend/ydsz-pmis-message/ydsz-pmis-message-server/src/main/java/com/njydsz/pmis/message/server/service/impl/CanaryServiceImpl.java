@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.service.impl.canary;
+﻿package com.njydsz.pmis.message.server.service.impl.canary;
 
 import java.util.ArrayList;
 import java.util.List;

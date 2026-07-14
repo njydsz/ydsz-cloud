@@ -31,7 +31,7 @@ import lombok.Data;
  *       version: 1.0.0
  *     groups:
  *       - name: default
- *         base-package: com.example.controller
+ *         base-ppackage: com.example.controller
  *     basic-auth:
  *       enabled: true
  *       username: admin
@@ -227,7 +227,7 @@ public class DocProperties {
         /**
          * 基础包路径，用于扫描 Controller
          */
-        private String basePackage = "";
+        private String basePpackage = "";
 
         /**
          * 基础路径匹配规则
@@ -242,7 +242,7 @@ public class DocProperties {
         /**
          * 扫描的包路径列表（支持多包扫描）
          */
-        private List<String> packages = new ArrayList<>();
+        private List<String> ppackages = new ArrayList<>();
 
         /**
          * 匹配的路径模式列表（支持多路径匹配）

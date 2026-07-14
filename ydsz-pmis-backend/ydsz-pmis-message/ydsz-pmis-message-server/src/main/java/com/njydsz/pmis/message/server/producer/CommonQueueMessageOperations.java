@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.message.server.producer;
+﻿package com.njydsz.pmis.message.server.producer;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

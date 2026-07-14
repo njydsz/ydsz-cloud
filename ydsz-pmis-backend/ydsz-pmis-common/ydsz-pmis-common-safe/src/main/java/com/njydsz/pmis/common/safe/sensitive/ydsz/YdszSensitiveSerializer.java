@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.safe.sensitive.ydsz;
+package com.njydsz.pmis.common.safe.sensitive.ydsz;
 
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataProcessor;
 import com.njydsz.pmis.common.json.YdszJson;

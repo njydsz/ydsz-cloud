@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.xss;
+﻿package com.njydsz.pmis.common.safe.xss;
 
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
 import com.njydsz.pmis.common.json.reader.JSONReader;

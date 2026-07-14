@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.literule.server.config;
+package com.njydsz.pmis.literule.server.config;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
@@ -579,7 +579,7 @@ public class LiteRuleAutoConfiguration {
      *
      * <p>容器刷新完成后扫描 {@code @LiteRule}（标注在 Rule Bean 上）与
      * {@code @RuleDefinitionMeta}（纯声明式表达式规则）并自动注册到引擎。
-     * 通过 {@code pmis.literule.annotation-scan-base-packages} 指定扫描基包（逗号分隔）。
+     * 通过 {@code pmis.literule.annotation-scan-base-ppackages} 指定扫描基包（逗号分隔）。
      *
      * @return LiteRuleAnnotationRegistrar 实例
      * @since 1.5.2
@@ -592,8 +592,8 @@ public class LiteRuleAutoConfiguration {
                                                                    LiteRuleProperties properties) {
         LiteRuleAnnotationRegistrar registrar =
                 new LiteRuleAnnotationRegistrar(ruleEngine, evaluator, applicationContext, properties);
-        log.info("[LiteRule-Annotation] 声明式规则注册器已初始化（scanBasePackages={}）",
-                properties.getAnnotationScanBasePackages());
+        log.info("[LiteRule-Annotation] 声明式规则注册器已初始化（scanBasePpackages={}）",
+                properties.getAnnotationScanBasePpackages());
         return registrar;
     }
 
