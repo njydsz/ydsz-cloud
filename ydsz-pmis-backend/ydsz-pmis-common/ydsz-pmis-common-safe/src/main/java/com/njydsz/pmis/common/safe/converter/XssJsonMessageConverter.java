@@ -3,29 +3,23 @@ package com.njydsz.pmis.common.safe.converter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
-import org.springframework.http.HttpOutputMessage;
-import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-
+import com.njydsz.pmis.common.json.spring.YdszJsonHttpMessageConverter;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
 
 /**
- * 带 XSS 防护的 Jackson HTTP 消息转换器
+ * 带 XSS 防护的 YdszJson HTTP 消息转换器
  *
- * <p>继承 {@link MappingJackson2HttpMessageConverter}，在反序列化 JSON 请求体时对字符串值进行 XSS 过滤。
- * 通过重写 {@link #read} 方法，在 Jackson 反序列化前对原始 JSON 字符串进行清洗，
+ * <p>继承 {@link YdszJsonHttpMessageConverter}，在反序列化 JSON 请求体时对字符串值进行 XSS 过滤。
+ * 通过重写 {@link #readInternal} 方法，在 YdszJson 反序列化前对原始 JSON 字符串进行清洗，
  * 确保所有字符串类型的值都经过 XSS 过滤。
  *
  * <p><b>过滤规则：</b>
@@ -43,13 +37,10 @@ import com.njydsz.pmis.common.safe.xss.EscapeUtils;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @see MappingJackson2HttpMessageConverter
+ * @see YdszJsonHttpMessageConverter
  * @see EscapeUtils
  */
-// NOTE: MappingJackson2HttpMessageConverter 在 Spring 7.0 已弃用并标记 forRemoval，
-// 待项目完成 Jackson 3.x 迁移后替换为 JacksonJsonHttpMessageConverter。
-// forRemoval=true 的弃用警告需要 "removal" 而非 "deprecation" 来抑制。
-public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter implements Ordered {
+public class XssJsonMessageConverter extends YdszJsonHttpMessageConverter implements Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(XssJsonMessageConverter.class);
 
@@ -150,7 +141,7 @@ public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter
     /**
      * 基于 ByteArrayInputStream 的 HttpInputMessage 实现
      *
-     * <p>用于包装清洗后的 JSON 字节数组，供 Jackson 反序列化使用。
+     * <p>用于包装清洗后的 JSON 字节数组，供 YdszJson 反序列化使用。
      */
     private static class XssByteArrayInputMessage implements HttpInputMessage {
 
