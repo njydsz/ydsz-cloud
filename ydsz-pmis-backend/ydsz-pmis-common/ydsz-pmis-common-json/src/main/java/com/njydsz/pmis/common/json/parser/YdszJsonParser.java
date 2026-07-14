@@ -49,6 +49,9 @@ public final class YdszJsonParser {
     private static final ThreadLocal<StringBuilder> SB_POOL =
         ThreadLocal.withInitial(() -> new StringBuilder(256));
 
+    /** 是否使用 BigDecimal 解析浮点数（避免精度丢失），默认 false */
+    private static volatile boolean useBigDecimal = false;
+
     private YdszJsonParser() {
         throw new UnsupportedOperationException("YdszJsonParser is a utility class");
     }
@@ -357,6 +360,19 @@ public final class YdszJsonParser {
     }
     
     /**
+     * 设置是否使用 BigDecimal 解析浮点数。
+     *
+     * <p>启用后，包含小数点的数字将被解析为 {@link java.math.BigDecimal}，
+     * 避免金融场景下的精度丢失。</p>
+     *
+     * @param enabled true 表示使用 BigDecimal
+     * @since 1.4.0
+     */
+    public static void setUseBigDecimal(boolean enabled) {
+        useBigDecimal = enabled;
+    }
+
+    /**
      * 快速解析数字（内联优化）
      */
     private static Number parseNumberFast(char[] chars, int pos) {
@@ -402,6 +418,23 @@ public final class YdszJsonParser {
         }
 
         if (decimalDigits > 0 || exp != 0) {
+            // BigDecimal 路径：金融场景精度保护
+            if (useBigDecimal) {
+                java.math.BigDecimal bd = java.math.BigDecimal.valueOf(intValue);
+                if (decimalDigits > 0) {
+                    java.math.BigDecimal decimal = java.math.BigDecimal.valueOf(decimalValue)
+                            .movePointLeft(decimalDigits);
+                    bd = bd.add(decimal);
+                }
+                if (negative) {
+                    bd = bd.negate();
+                }
+                if (exp != 0) {
+                    int scale = expNegative ? exp : -exp;
+                    bd = bd.scaleByPowerOfTen(scale);
+                }
+                return bd;
+            }
             double value = (double) intValue;
             if (decimalDigits > 0) {
                 value += (double) decimalValue / Math.pow(10, decimalDigits);

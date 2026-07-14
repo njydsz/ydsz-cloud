@@ -1,11 +1,11 @@
-package com.njydsz.pmis.workflow.server.engine;
+﻿package com.njydsz.pmis.workflow.server.engine;
 
 import java.util.Map;
 
 import com.njydsz.pmis.common.json.YdszJson;
 
 /**
- * 工作流引擎 JSON 工具（基于 YdszJson 引擎，统一使用 JsonUtils）
+ * 工作流引擎 JSON 工具（基于 YdszJson 引擎，统一使用 YdszJson）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

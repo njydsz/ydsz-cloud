@@ -19,7 +19,7 @@ public class CEPPatternFactory implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    // JsonUtils as JSON engine
+    // YdszJson as JSON engine
 
     /**
      * 时间窗口计数模式（如"3 分钟内 5 次登录失败"）

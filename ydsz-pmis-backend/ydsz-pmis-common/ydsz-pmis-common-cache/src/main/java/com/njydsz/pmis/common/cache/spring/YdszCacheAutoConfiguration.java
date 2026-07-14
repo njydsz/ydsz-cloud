@@ -3,8 +3,14 @@ package com.njydsz.pmis.common.cache.spring;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.pmis.common.cache.health.CacheHealthIndicator;
+import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
+import com.njydsz.pmis.common.cache.support.CacheWarmer;
 
 /**
  * YdszCache Spring Boot 自动配置
@@ -57,5 +63,25 @@ public class YdszCacheAutoConfiguration {
     // 设置 per-cache 配置
     cacheManager.setPerCacheConfigs(props.getCaches());
     return cacheManager;
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnProperty(name = "ydsz.cache.health-check.enabled", havingValue = "true", matchIfMissing = true)
+  public CacheHealthIndicator cacheHealthIndicator() {
+    return new CacheHealthIndicator();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public CacheThreadPoolManager cacheThreadPoolManager() {
+    return new CacheThreadPoolManager();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnProperty(name = "ydsz.cache.warmup.enabled", havingValue = "true")
+  public CacheWarmer cacheWarmer() {
+    return new CacheWarmer();
   }
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.desensitize;
+﻿package com.njydsz.pmis.common.auth.desensitize;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -164,7 +164,7 @@ public class ColumnDesensitizationService {
 
     private void parseAndMergeRules(String json, ColumnDesensitizationContext context) {
         try {
-            // Use JsonUtils static methods (YdszJson engine)
+            // Use YdszJson static methods (YdszJson engine)
             JsonNode root = YdszJson.readTree(json);
             if (root == null || root.isMissing()) {
                 return;

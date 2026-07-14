@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.impl;
+﻿package com.njydsz.pmis.message.server.channel.impl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +57,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     private static final String CHANNEL_TYPE = "PUSH";
 
     /** JSON 序列化器 */
-    // JsonUtils as JSON engine
+    // YdszJson as JSON engine
 
     /** userId → ChannelHandlerContext 映射（用于定向推送） */
     private final Map<String, ChannelHandlerContext> userChannelMap = new ConcurrentHashMap<>();

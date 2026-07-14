@@ -17,7 +17,7 @@ import feign.codec.Decoder;
 /**
  * 基于 Jackson 的 Feign JSON 解码器。
  *
- * <p>使用 {@link JsonUtils} 作为 JSON 反序列化实现，提供统一的 JSON 解码能力。
+ * <p>使用 {@link YdszJson} 作为 JSON 反序列化实现，提供统一的 JSON 解码能力。
  *
  * <p>支持的返回类型：
  * <ul>

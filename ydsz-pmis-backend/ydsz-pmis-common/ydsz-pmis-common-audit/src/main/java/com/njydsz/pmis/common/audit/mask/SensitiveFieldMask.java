@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.mask;
+﻿package com.njydsz.pmis.common.audit.mask;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -164,7 +164,7 @@ public final class SensitiveFieldMask {
             return json;
         }
         try {
-            // Use JsonUtils static methods (YdszJson engine)
+            // Use YdszJson static methods (YdszJson engine)
             JsonNode parsed = YdszJson.readTree(json);
             maskJsonObject(parsed, patterns, new HashSet<>());
             return YdszJson.toJson(parsed);

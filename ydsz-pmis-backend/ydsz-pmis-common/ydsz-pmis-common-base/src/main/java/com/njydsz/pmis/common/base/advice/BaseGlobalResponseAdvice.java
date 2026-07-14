@@ -24,7 +24,7 @@ import com.njydsz.pmis.common.json.YdszJson;
  *
  * <p><b>优化说明：</b>
  * <p>支持通过构造器注入自定义 ObjectMapper，提升可测试性和灵活性。
- * 若未注入，则使用 JsonUtils 的默认 ObjectMapper。
+ * 若未注入，则使用 YdszJson 的默认 ObjectMapper。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -38,7 +38,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
     private final ObjectMapper objectMapper;
 
     /**
-     * 默认构造器（使用 JsonUtils 的默认 ObjectMapper）
+     * 默认构造器（使用 YdszJson 的默认 ObjectMapper）
      */
     protected BaseGlobalResponseAdvice() {
         this.objectMapper = null;

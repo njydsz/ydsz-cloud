@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util;
+﻿package com.njydsz.pmis.common.util;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.json.type.YdszJsonType;
  */
 public final class CursorHelper {
 
-    // JsonUtils 作为 JSON 引擎（底层 YdszJson）
+    // YdszJson 作为 JSON 引擎（底层 YdszJson）
     private static final DateTimeFormatter DT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private CursorHelper() {

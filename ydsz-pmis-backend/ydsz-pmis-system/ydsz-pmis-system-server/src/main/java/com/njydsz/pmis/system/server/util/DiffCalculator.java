@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 public class DiffCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(DiffCalculator.class);
-    // JsonUtils as JSON engine
+    // YdszJson as JSON engine
 
     /**
      * 计算两个 JSON 对象的字段级差异。

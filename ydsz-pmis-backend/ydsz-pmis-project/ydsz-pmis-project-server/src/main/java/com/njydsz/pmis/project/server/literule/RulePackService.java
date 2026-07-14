@@ -51,7 +51,7 @@ public class RulePackService implements RulePackProvider {
     private final RulePackInstallMapper rulePackInstallMapper;
     private final RuleConfigProvider ruleConfigProvider;
 
-    private final // JsonUtils as JSON engine
+    private final // YdszJson as JSON engine
 
     /**
      * 发布规则集到市场

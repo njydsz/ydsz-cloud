@@ -15,7 +15,7 @@ import feign.codec.Encoder;
 /**
  * 基于 Jackson 的 Feign JSON 编码器。
  *
- * <p>使用 {@link JsonUtils} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
+ * <p>使用 {@link YdszJson} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
  *
  * @author Marvin Lee
  * @email limw1888@126.com

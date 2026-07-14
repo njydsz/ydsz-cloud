@@ -84,7 +84,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final SafeAlertProperties alertProperties;
 
     /** JSON 序列化器，用于生成限流响应体 */
-    // JsonUtils as JSON engine
+    // YdszJson as JSON engine
 
     public RateLimitFilter(RateLimitProperties properties,
                            RedisService redisService,
