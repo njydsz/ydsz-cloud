@@ -18,12 +18,12 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.connection.RedisStringCommands.SetOption;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.data.redis.core.types.Expiration;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
@@ -261,27 +261,36 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
     if (map == null || map.isEmpty()) {
       return;
     }
-    // 提前物化 entrySet 为 String/Object 键值对，避开 SessionCallback lambda 内
-    // RedisOperations<String, V> 的方法级 V 与外层类 V 冲突引发的函数描述符推断失败
+    // 提前物化 entrySet 为 String/Object 键值对（key 通过 buildKey() 序列化为 String，
+    // value 上转为 Object 避开外层 K/V 在 lambda 内被引用）
     java.util.List<java.util.Map.Entry<String, Object>> entries =
         new java.util.ArrayList<>(map.size());
     for (Map.Entry<K, V> e : map.entrySet()) {
       entries.add(new java.util.AbstractMap.SimpleEntry<>(buildKey(e.getKey()), e.getValue()));
     }
     // 使用 Pipeline 批量写入，减少网络往返
+    // 注：此处使用 RedisCallback（doInRedis(RedisConnection)）而非 SessionCallback，
+    //     因为 SessionCallback.execute 的方法级 <K, V> 泛型会与外层类 K/V 在 lambda
+    //     推断中产生不可调和的函数描述符冲突（已尝试多种显式注解均失败）。
     try {
       redisTemplate.executePipelined(
-          (SessionCallback<Object>)
-              (RedisOperations<String, Object> operations) -> {
+          (RedisCallback<Object>)
+              connection -> {
                 for (java.util.Map.Entry<String, Object> entry : entries) {
                   String redisKey = entry.getKey();
                   Object value = entry.getValue();
+                  byte[] keyBytes = redisTemplate.getStringSerializer().serialize(redisKey);
+                  byte[] valueBytes = redisTemplate.getValueSerializer().serialize(value);
                   if (ttlSeconds > 0) {
-                    operations
-                        .opsForValue()
-                        .set(redisKey, value, Duration.ofSeconds(ttlSeconds));
+                    connection
+                        .stringCommands()
+                        .set(
+                            keyBytes,
+                            valueBytes,
+                            Expiration.seconds(ttlSeconds),
+                            SetOption.UPSERT);
                   } else {
-                    operations.opsForValue().set(redisKey, value);
+                    connection.stringCommands().set(keyBytes, valueBytes);
                   }
                 }
                 return null;

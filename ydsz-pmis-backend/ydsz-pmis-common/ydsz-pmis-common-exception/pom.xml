@@ -19,10 +19,10 @@
             <artifactId>ydsz-pmis-common-core</artifactId>
         </dependency>
 
-        <!-- Jackson annotations for JSON serialization -->
+        <!-- ydsz-pmis-common-json 统一 JSON 引擎（替代 Jackson annotations） -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
         </dependency>
 
         <dependency>

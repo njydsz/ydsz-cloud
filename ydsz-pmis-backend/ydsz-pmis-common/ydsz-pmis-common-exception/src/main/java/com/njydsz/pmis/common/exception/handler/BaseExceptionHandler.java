@@ -176,10 +176,8 @@ public abstract class BaseExceptionHandler {
             if (includeExceptionInfo()) {
                 Map<String, Object> details = new LinkedHashMap<>();
                 details.put("stackTrace", getStackTraceString(throwable));
-                if (ex.getExtData() instanceof Map) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> extMap = (Map<String, Object>) ex.getExtData();
-                    extMap.forEach(details::put);
+                if (ex.getExtData() instanceof Map<?, ?> rawMap) {
+                    rawMap.forEach((k, v) -> details.put(String.valueOf(k), v));
                 }
                 info.setDetails(details);
             }
@@ -216,10 +214,10 @@ public abstract class BaseExceptionHandler {
                     .status(ex.getHttpStatus())
                     .detail(ex.getMessage())
                     .errorCode(ex.getCode());
-            if (ex.getExtData() instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> extMap = (Map<String, Object>) ex.getExtData();
-                builder.extensions(new LinkedHashMap<>(extMap));
+            if (ex.getExtData() instanceof Map<?, ?> rawMap) {
+                Map<String, Object> extMap = new LinkedHashMap<>();
+                rawMap.forEach((k, v) -> extMap.put(String.valueOf(k), v));
+                builder.extensions(extMap);
             }
         } else {
             builder.type(URI.create("https://pmis.njydsz.com/errors/system"))

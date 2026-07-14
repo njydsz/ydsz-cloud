@@ -8,6 +8,7 @@ import java.time.temporal.TemporalAccessor;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 import com.njydsz.pmis.common.json.annotation.JsonClass;
 import com.njydsz.pmis.common.json.annotation.JsonView;
@@ -34,6 +35,7 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  */
 public final class ValueWriter {
 
+    private static final Logger LOGGER = Logger.getLogger(ValueWriter.class.getName());
     /** 小整数缓存（0-9999） */
     static final String[] SMALL_INTS = new String[10000];
 
@@ -529,6 +531,7 @@ public final class ValueWriter {
                     writeValueDirect(value, sb);
                 }
             } catch (Exception e) {
+                LOGGER.fine("Failed to serialize field " + field.name + " of " + obj.getClass().getName() + ": " + e.getMessage());
             }
         }
 
@@ -556,9 +559,8 @@ public final class ValueWriter {
                 return;
             }
         } catch (Exception e) {
+            LOGGER.fine("ASM serialization failed in fast path for " + clazz.getName() + ": " + e.getMessage());
         }
-
-        // 回退路径：使用 BeanSerializerInfo 预计算
         SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields);
 
         // 精确容量预分配

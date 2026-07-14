@@ -89,9 +89,7 @@ public final class DeserializationProvider {
 
         // 深度检查（使用全局配置）
         DeserializationConfig config = DeserializationConfig.getInstance();
-        if (config.getMaxDepth() < DeserializationConfig.DEFAULT_MAX_DEPTH) {
-            validateDepth(json, config.getMaxDepth());
-        }
+        validateDepth(json, config.getMaxDepth());
 
         Object result = deserializeValue(json, actualType);
         return result != null ? clazz.cast(result) : null;

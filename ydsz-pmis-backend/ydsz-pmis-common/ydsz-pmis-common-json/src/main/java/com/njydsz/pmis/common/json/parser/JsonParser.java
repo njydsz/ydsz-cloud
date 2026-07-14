@@ -1008,10 +1008,63 @@ public final class JsonParser {
     }
     
     /**
-     * 解析 Object 字段（ASM 直接调用）
+     * 解析指定字段的值（ASM 直接调用）。
+     *
+     * <p>从 JSON 中查找指定字段名的值并解析为 Object。</p>
+     *
+     * @param json JSON 字符串
+     * @param fieldName 字段名
+     * @return 字段值，字段不存在时返回 null
      */
     public static Object parseObjectField(String json, String fieldName) {
-        return parseObject(json);
+        String fieldJson = "\"" + fieldName + "\":";
+        int fieldPos = findFieldPosition(json, fieldJson);
+        if (fieldPos == -1) return null;
+
+        int valueStart = fieldPos + fieldJson.length();
+        while (valueStart < json.length() && json.charAt(valueStart) <= ' ') {
+            valueStart++;
+        }
+
+        if (valueStart >= json.length()) {
+            return null;
+        }
+
+        char c = json.charAt(valueStart);
+        if (c == '"') {
+            return parseStringField(json, fieldName);
+        } else if (c == '{') {
+            int end = findEndPosition(json.toCharArray(), valueStart, '{', '}') + 1;
+            return parseObject(json.substring(valueStart, end));
+        } else if (c == '[') {
+            int end = findEndPosition(json.toCharArray(), valueStart, '[', ']') + 1;
+            return parseArray(json.substring(valueStart, end));
+        } else if (json.startsWith("true", valueStart)) {
+            return Boolean.TRUE;
+        } else if (json.startsWith("false", valueStart)) {
+            return Boolean.FALSE;
+        } else if (json.startsWith("null", valueStart)) {
+            return null;
+        } else {
+            // 数值
+            int valueEnd = valueStart;
+            while (valueEnd < json.length()
+                    && json.charAt(valueEnd) != ','
+                    && json.charAt(valueEnd) != '}'
+                    && json.charAt(valueEnd) != ']'
+                    && json.charAt(valueEnd) > ' ') {
+                valueEnd++;
+            }
+            String numStr = json.substring(valueStart, valueEnd);
+            try {
+                if (numStr.contains(".") || numStr.contains("e") || numStr.contains("E")) {
+                    return Double.parseDouble(numStr);
+                }
+                return Long.parseLong(numStr);
+            } catch (NumberFormatException e) {
+                return numStr;
+            }
+        }
     }
 
     /**

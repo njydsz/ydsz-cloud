@@ -5,16 +5,16 @@ import java.util.Set;
 import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 
 /**
- * JSON 反序列化安全配置（委托至 {@link AutoTypeChecker}）
+ * JSON 反序列化安全配置（委托至 {@link AutoTypeChecker} 和 {@link JsonConfig}）
  *
  * <p>此类为向后兼容的适配器，所有类型检查和白/黑名单管理均委托给
- * {@link AutoTypeChecker} 统一处理，消除双重安全检查的冗余。</p>
+ * {@link AutoTypeChecker} 统一处理，深度限制委托至 {@link JsonConfig#getMaxDepth()}。</p>
  *
  * <p><b>安全特性:</b></p>
  * <ul>
  *   <li>类型白名单: 通过 {@link AutoTypeChecker#addToWhitelist(String)} 管理</li>
  *   <li>类型黑名单: 通过 {@link AutoTypeChecker#addToBlacklist(String)} 管理</li>
- *   <li>解析深度限制: 委托至 {@link com.njydsz.pmis.common.json.config.JsonConfig#getMaxDepth()}</li>
+ *   <li>解析深度限制: 委托至 {@link JsonConfig#getMaxDepth()}，默认 256</li>
  * </ul>
  *
  * @since 1.3.0
@@ -23,11 +23,11 @@ public class DeserializationConfig {
     
     private static final DeserializationConfig INSTANCE = new DeserializationConfig();
     
-    public static final int DEFAULT_MAX_DEPTH = 64;
+    public static final int DEFAULT_MAX_DEPTH = 256;
     
     public static final int MAX_ALLOWED_DEPTH = 256;
     
-    private volatile int maxDepth = DEFAULT_MAX_DEPTH;
+    private volatile int maxDepth = DEFAULT_MAX_DEPTH; // 同步自 JsonConfig.maxDepth
     
     private volatile boolean whitelistEnabled = false;
     
@@ -93,8 +93,15 @@ public class DeserializationConfig {
         this.maxDepth = maxDepth;
     }
     
+    /**
+     * 获取最大解析深度。
+     *
+     * <p>优先返回 {@link JsonConfig#getMaxDepth()} 的值，确保全局统一。</p>
+     *
+     * @return 最大解析深度
+     */
     public int getMaxDepth() {
-        return maxDepth;
+        return JsonConfig.getInstance().getMaxDepth();
     }
     
     public boolean isTypeAllowed(String className) {
@@ -104,6 +111,7 @@ public class DeserializationConfig {
     public void clearAll() {
         maxDepth = DEFAULT_MAX_DEPTH;
         whitelistEnabled = false;
+        AutoTypeChecker.setSafeMode(true);
     }
     
     public String getSecurityStatus() {
