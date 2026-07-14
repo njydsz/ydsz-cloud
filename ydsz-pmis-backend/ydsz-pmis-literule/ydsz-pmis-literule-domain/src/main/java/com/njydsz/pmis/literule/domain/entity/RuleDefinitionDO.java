@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 
 import lombok.Data;
 
@@ -71,6 +72,15 @@ public class RuleDefinitionDO implements Serializable {
     private String mutexGroup;
 
     private Boolean drilldownAvailable;
+
+    /**
+     * 乐观锁版本号
+     *
+     * <p>并发更新规则时防止覆盖：UPDATE 自动追加 {@code WHERE version = #{oldVersion}}，
+     * 若记录已被其他事务修改，UPDATE 影响行数为 0，业务层应据此抛出乐观锁冲突异常。
+     * SQL DDL：{@code version INTEGER NOT NULL DEFAULT 1}。
+     */
+    @Version
     private Integer version;
 
     /** 租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用） */

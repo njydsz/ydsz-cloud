@@ -49,6 +49,10 @@ pmis:
     default-priority: NORMAL
     aggregate-scan-interval-ms: 60000
     retry-scan-interval-ms: 30000
+    # P2-5: 消息 TTL（秒），超过此时间的定时消息自动丢弃；0 表示不检查
+    message-ttl-seconds: 3600
+    # P2-6: 全部已读分批大小，避免长事务；0 表示不分批
+    mark-all-read-batch-size: 500
     sms:
       provider: ${PMIS_SMS_PROVIDER:mock}
     push:

@@ -190,6 +190,25 @@ services:
       requests: { cpu: 1000m, memory: 1536Mi }
       limits:   { cpu: 4000m, memory: 3Gi }
 
+  nextwiki:
+    enabled: true
+    name: nextwiki
+    port: 8800
+    replicas: 2
+    tag: ""
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+
 # -----------------------------------------------------------------------------
 #  前端
 # -----------------------------------------------------------------------------

@@ -28,12 +28,16 @@ public interface MsgNotificationMapper extends BaseMapper<MsgNotificationDO> {
     int markRead(@Param("id") String id, @Param("userId") String userId);
 
     /**
-     * 标记该用户所有未读通知为已读(XML 定义)
+     * 标记该用户所有未读通知为已读(XML 定义)。
      *
-     * @param userId 接收人 ID
-     * @return 影响行数
+     * <p>P2-6: 增加 {@code batchSize} 参数实现分批 UPDATE，避免单次 UPDATE
+     * 万级未读通知导致的长事务与行锁堆积。调用方需循环调用直到返回值 &lt; batchSize。
+     *
+     * @param userId    接收人 ID
+     * @param batchSize 单批最大处理条数（&lt;= 0 时不限制，兼容旧逻辑）
+     * @return 本批影响行数
      */
-    int markAllRead(@Param("userId") String userId);
+    int markAllRead(@Param("userId") String userId, @Param("batchSize") int batchSize);
 
     /**
      * 统计用户未读通知数(XML 定义)

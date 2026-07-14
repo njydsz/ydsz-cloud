@@ -37,7 +37,7 @@ public class FileOperatedEventListener {
     /**
      * 异步处理文件操作事件
      */
-    @Async
+    @Async("nextwikiTaskExecutor")
     @EventListener
     public void onFileOperated(FileOperatedEvent event) {
         log.info("[FileOperatedEventListener] 收到事件: operation={}, fileNodeId={}, fileName={}, operator={}",

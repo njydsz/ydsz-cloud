@@ -1,0 +1,292 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "NextWiki 知识文库仪表盘 - 文件上传/下载 / 存储配额 / 病毒扫描 / 预览延迟 / 分享链接 / 搜索 / JVM",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "文件上传 QPS",
+      "description": "rate(nextwiki_upload_total[5m]) 按结果(success/failed)分组",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 15, "stacking": {"mode": "none"}}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(rate(nextwiki_upload_total{result=\"success\"}[5m])) by (instance)",
+          "legendFormat": "成功 {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(rate(nextwiki_upload_total{result=\"failed\"}[5m])) by (instance)",
+          "legendFormat": "失败 {{instance}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "文件下载 QPS",
+      "description": "rate(nextwiki_download_total[5m]) 按结果分组",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 15, "stacking": {"mode": "none"}}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(rate(nextwiki_download_total{result=\"success\"}[5m])) by (instance)",
+          "legendFormat": "成功 {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(rate(nextwiki_download_total{result=\"failed\"}[5m])) by (instance)",
+          "legendFormat": "失败 {{instance}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "存储配额使用率",
+      "description": "nw_storage_quota_used / nw_storage_quota_total 各实例存储配额使用率",
+      "type": "gauge",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": null},
+            {"color": "yellow", "value": 0.7},
+            {"color": "orange", "value": 0.85},
+            {"color": "red", "value": 0.9}
+          ]},
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "horizontal",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "nw_storage_quota_used / nw_storage_quota_total",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "title": "病毒扫描状态",
+      "description": "nextwiki_virus_scan_status: 1=正常, 0=不可用",
+      "type": "stat",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {"options": {"0": {"color": "red", "index": 0, "text": "不可用"}, "1": {"color": "green", "index": 1, "text": "正常"}}, "type": "value"}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "red", "value": null},
+            {"color": "green", "value": 1}
+          ]},
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "nextwiki_virus_scan_status",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "title": "预览生成延迟",
+      "description": "histogram_quantile P50/P95/P99 of nextwiki_preview_duration_seconds_bucket",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 5}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "histogram_quantile(0.50, sum(rate(nextwiki_preview_duration_seconds_bucket[5m])) by (le, instance))",
+          "legendFormat": "P50 {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "histogram_quantile(0.95, sum(rate(nextwiki_preview_duration_seconds_bucket[5m])) by (le, instance))",
+          "legendFormat": "P95 {{instance}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "histogram_quantile(0.99, sum(rate(nextwiki_preview_duration_seconds_bucket[5m])) by (le, instance))",
+          "legendFormat": "P99 {{instance}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "分享链接创建数",
+      "description": "increase(nextwiki_share_link_created_total[1h]) 近 1 小时分享链接创建累计",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"drawStyle": "bars", "lineInterpolation": "linear", "fillOpacity": 50, "stacking": {"mode": "none"}}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["sum"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(increase(nextwiki_share_link_created_total[1h])) by (instance)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "搜索请求 QPS",
+      "description": "rate(nextwiki_search_total[5m]) 全文搜索请求速率",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 10}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(rate(nextwiki_search_total[5m])) by (instance)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "JVM 堆内存使用",
+      "description": "jvm_memory_used_bytes{area=\"heap\"} 各实例 JVM 堆内存使用量",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 10, "stacking": {"mode": "none"}}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "jvm_memory_used_bytes{job=~\".*nextwiki.*\",area=\"heap\"}",
+          "legendFormat": "已用 {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "jvm_memory_max_bytes{job=~\".*nextwiki.*\",area=\"heap\"}",
+          "legendFormat": "最大 {{instance}}",
+          "refId": "B"
+        }
+      ]
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["pmis", "nextwiki"],
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "query": "label_values(nextwiki_upload_total, instance)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {"selected": true, "text": "All", "value": "$__all"}
+      }
+    ]
+  },
+  "time": {"from": "now-24h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "NextWiki 知识文库",
+  "uid": "pmis-nextwiki",
+  "version": 1,
+  "weekStart": ""
+}

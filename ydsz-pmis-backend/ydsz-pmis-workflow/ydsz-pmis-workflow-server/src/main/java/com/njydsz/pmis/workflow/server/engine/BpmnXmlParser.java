@@ -237,6 +237,11 @@ public class BpmnXmlParser {
         }
         node.setNodeType(mapNodeType(localName));
 
+        // P0-2: 网关默认出边 — BPMN 2.0 规范中 exclusiveGateway / inclusiveGateway 的
+        // default 属性指向默认 sequenceFlow id（无条件匹配时走的边）。解析阶段捕获，
+        // 由 DefaultFlowAdvancer.resolvePassSkips 在所有条件都不匹配时使用。
+        String defaultFlowId = elem.getAttribute("default");
+
         // 解析 BPMN 扩展属性：assignee / candidateUsers / candidateGroups / dueDate 等
         String assignee = elem.getAttributeNS(BPMN_EXT_NS, "assignee");
         String candidateUsers = elem.getAttributeNS(BPMN_EXT_NS, "candidateUsers");
@@ -345,6 +350,11 @@ public class BpmnXmlParser {
         if (timeout != null && !timeout.isBlank()) ext.put("timeout", timeout.trim());
         if (escalateUser != null && !escalateUser.isBlank()) ext.put("escalateUser", escalateUser.trim());
         if (skipAnyNode != null && !skipAnyNode.isBlank()) ext.put("skipAnyNode", skipAnyNode.trim());
+
+        // P0-2: 网关默认出边 — 存入 node.ext.defaultFlowId 供推进器使用
+        if (defaultFlowId != null && !defaultFlowId.isBlank()) {
+            ext.put("defaultFlowId", defaultFlowId.trim());
+        }
 
         // P1-1: 解析 priority 写入 ext（任务节点优先级，1-100，待办默认按 priority DESC 排序）
         if (priorityStr != null && !priorityStr.isBlank()) {

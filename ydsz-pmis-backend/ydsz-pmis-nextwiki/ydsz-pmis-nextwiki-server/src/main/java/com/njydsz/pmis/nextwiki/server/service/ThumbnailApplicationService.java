@@ -43,7 +43,7 @@ public class ThumbnailApplicationService {
     /**
      * 异步生成缩略图
      */
-    @Async
+    @Async("nextwikiTaskExecutor")
     public void generateThumbnailAsync(String fileNodeId) {
         try {
             generateThumbnail(fileNodeId);

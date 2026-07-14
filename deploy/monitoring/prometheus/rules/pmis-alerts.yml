@@ -275,3 +275,66 @@ spec:
           annotations:
             summary: "RocketMQ 消费堆积 > 10000"
             description: "Topic {{ $labels.topic }} 消费堆积 {{ $value }} 条，消费者可能宕机或处理过慢。"
+
+    # =========================================================================
+    #  5. NextWiki 知识文库业务告警
+    # =========================================================================
+    - name: pmis-nextwiki
+      interval: 30s
+      rules:
+        # 存储配额即将耗尽（P1，> 90% 持续 5 分钟）
+        - alert: NwQuotaNearExhausted
+          expr: |
+            nw_storage_quota_used / nw_storage_quota_total > 0.9
+          for: 5m
+          labels:
+            severity: P1
+            category: business
+            team: pmis-nextwiki
+          annotations:
+            summary: "NextWiki 存储配额使用率 > 90%"
+            description: "当前存储配额使用率 {{ $value | humanizePercentage }}，即将耗尽，请扩容存储或清理冗余文件。"
+            runbook_url: "https://wiki.ydsz.cn/pmis/runbooks/nextwiki-quota"
+
+        # 病毒扫描服务不可用（P1，状态为 0 持续 5 分钟）
+        - alert: NwVirusScanUnavailable
+          expr: |
+            nextwiki_virus_scan_status == 0
+          for: 5m
+          labels:
+            severity: P1
+            category: availability
+            team: pmis-nextwiki
+          annotations:
+            summary: "NextWiki 病毒扫描服务不可用"
+            description: "病毒扫描服务状态为 0（不可用）已持续 5 分钟，存在恶意文件上传风险，请检查 ClamAV/扫描引擎状态。"
+            runbook_url: "https://wiki.ydsz.cn/pmis/runbooks/nextwiki-virus-scan"
+
+        # 文件上传失败率过高（P2，> 10%）
+        - alert: NwUploadFailureRate
+          expr: |
+            rate(nextwiki_upload_total{result="failed"}[5m])
+            / rate(nextwiki_upload_total[5m]) > 0.1
+          for: 5m
+          labels:
+            severity: P2
+            category: business
+            team: pmis-nextwiki
+          annotations:
+            summary: "NextWiki 文件上传失败率 > 10%"
+            description: "文件上传失败率 {{ $value | humanizePercentage }}，超过 10% 阈值，请检查存储后端、网络与权限配置。"
+            runbook_url: "https://wiki.ydsz.cn/pmis/runbooks/nextwiki-upload"
+
+        # LibreOffice 预览队列积压（P2，> 10 持续 5 分钟）
+        - alert: NwLibreOfficeQueueHigh
+          expr: |
+            nextwiki_preview_queue_size > 10
+          for: 5m
+          labels:
+            severity: P2
+            category: performance
+            team: pmis-nextwiki
+          annotations:
+            summary: "NextWiki 预览队列积压 > 10"
+            description: "LibreOffice 预览生成队列 {{ $value }} 超过 10 阈值，预览服务可能过载或卡死，请检查 LibreOffice worker 状态。"
+            runbook_url: "https://wiki.ydsz.cn/pmis/runbooks/nextwiki-preview-queue"

@@ -52,9 +52,15 @@
     <update id="markAllRead">
         UPDATE pmis_msg_notification
         SET read_status = 1, read_time = CURRENT_TIMESTAMP
-        WHERE receiver_id = #{userId}
-          AND read_status = 0
-          AND deleted = 0
+        WHERE id IN (
+            SELECT id FROM pmis_msg_notification
+            WHERE receiver_id = #{userId}
+              AND read_status = 0
+              AND deleted = 0
+            <if test="batchSize != null and batchSize > 0">
+              LIMIT #{batchSize}
+            </if>
+        )
     </update>
 
     <select id="countUnread" resultType="java.lang.Long">

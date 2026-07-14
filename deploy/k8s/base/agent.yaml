@@ -17,6 +17,14 @@ spec:
         app: ydsz-pmis-agent
         tier: backend
     spec:
+      # 优雅停机宽限期，给 @PreDestroy（SSE 心跳线程池、DAG 编排器）足够时间 drain
+      terminationGracePeriodSeconds: 60
+      # Pod 级安全上下文：非 root 运行
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: agent
           image: ydsz-pmis/agent:IMAGE_TAG
@@ -44,6 +52,15 @@ spec:
                 -XX:HeapDumpPath=/app/logs/heapdump
                 -Dfile.encoding=UTF-8
                 -Duser.timezone=Asia/Shanghai
+                -Djava.io.tmpdir=/tmp
+          # 容器级安全上下文：只读根文件系统 + 禁止提权 + drop ALL capabilities
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
           resources:
             requests:
               cpu: 1000m
@@ -51,19 +68,43 @@ spec:
             limits:
               cpu: 4000m
               memory: 3Gi
+          # 可写卷挂载（readOnlyRootFilesystem=true 时必需）
+          volumeMounts:
+            - name: app-logs
+              mountPath: /app/logs
+            - name: tmp
+              mountPath: /tmp
+          # preStop hook：给 Spring @PreDestroy 排空 SSE 连接 + DAG 线程池的时间
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
+          # startupProbe：Java 启动慢，避免 livenessProbe 在启动阶段误杀
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9007
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 9007
-            initialDelaySeconds: 30
+            initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 9007
-            initialDelaySeconds: 60
+            initialDelaySeconds: 0
             periodSeconds: 20
             failureThreshold: 5
+      volumes:
+        - name: app-logs
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

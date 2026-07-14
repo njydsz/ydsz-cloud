@@ -1,14 +1,19 @@
 package com.njydsz.pmis.nextwiki.domain.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
+import com.njydsz.pmis.nextwiki.domain.entity.SearchIndex;
+import com.njydsz.pmis.nextwiki.domain.entity.Tag;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.pmis.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.pmis.nextwiki.domain.repository.TagRepository;
 import com.njydsz.pmis.nextwiki.domain.vo.SearchResultVO;
 
@@ -38,6 +43,7 @@ public class SearchDomainService {
 
     private final FileNodeRepository fileNodeRepository;
     private final TagRepository tagRepository;
+    private final SearchIndexRepository searchIndexRepository;
 
     /**
      * 综合搜索
@@ -130,11 +136,63 @@ public class SearchDomainService {
 
     /**
      * 索引同步（文件上传/更新后调用）
+     * <p>
+     * 将文件节点信息写入 nw_search_index 表，供数据库 fallback 搜索使用。
+     *
+     * @param fileNodeId 文件节点ID
+     * @param content    提取的文本内容（可为 null）
+     * @param userId     操作人ID
      */
     public void indexFile(String fileNodeId, String content, String userId) {
         log.info("[SearchDomainService] 索引文件: fileNodeId={}", fileNodeId);
-        // 数据库搜索模式下无需额外索引，数据已在 nw_file_node 表中
-        // 当 ES 可用时，此处应将文件内容写入 ES 索引
+
+        FileNode node = fileNodeRepository.findById(fileNodeId);
+        if (node == null || node.getDeleted() != null && node.getDeleted() == 1) {
+            log.warn("[SearchDomainService] 文件节点不存在或已删除，跳过索引: {}", fileNodeId);
+            return;
+        }
+
+        // 查询标签
+        List<Tag> tags = tagRepository.findByFileNodeId(fileNodeId);
+        String tagNames = tags != null && !tags.isEmpty()
+                ? tags.stream().map(Tag::getName).collect(Collectors.joining(","))
+                : null;
+
+        // 构建可搜索内容
+        StringBuilder searchableContent = new StringBuilder();
+        if (node.getName() != null) {
+            searchableContent.append(node.getName());
+        }
+        if (node.getPath() != null) {
+            searchableContent.append(' ').append(node.getPath());
+        }
+        if (content != null && !content.isEmpty()) {
+            searchableContent.append(' ').append(content);
+        }
+        if (tagNames != null) {
+            searchableContent.append(' ').append(tagNames);
+        }
+
+        SearchIndex index = SearchIndex.builder()
+                .id(UUID.randomUUID().toString().replace("-", ""))
+                .fileNodeId(fileNodeId)
+                .name(node.getName())
+                .path(node.getPath())
+                .content(searchableContent.toString())
+                .suffix(node.getSuffix())
+                .mimeType(node.getMimeType())
+                .size(node.getSize())
+                .tags(tagNames)
+                .build();
+        index.setCreatedBy(node.getCreatedBy());
+        index.setCreatedAt(LocalDateTime.now());
+        index.setUpdatedBy(userId);
+        index.setUpdatedAt(LocalDateTime.now());
+        index.setRevision(0);
+        index.setDeleted(0);
+
+        searchIndexRepository.upsert(index);
+        log.info("[SearchDomainService] 索引写入成功: fileNodeId={}", fileNodeId);
     }
 
     /**
@@ -142,13 +200,33 @@ public class SearchDomainService {
      */
     public void removeIndex(String fileNodeId) {
         log.info("[SearchDomainService] 删除索引: fileNodeId={}", fileNodeId);
+        searchIndexRepository.deleteByFileNodeId(fileNodeId);
     }
 
     /**
      * 重建全量索引
+     * <p>
+     * 查询所有未删除的文件节点，逐个写入索引。
      */
     public void rebuildAllIndices() {
         log.info("[SearchDomainService] 重建全量索引（异步任务）");
+
+        List<String> fileNodeIds = searchIndexRepository.findAllFileNodeIds(null);
+        log.info("[SearchDomainService] 待索引文件数: {}", fileNodeIds.size());
+
+        int success = 0;
+        int failed = 0;
+        for (String fileNodeId : fileNodeIds) {
+            try {
+                indexFile(fileNodeId, null, null);
+                success++;
+            } catch (Exception e) {
+                log.error("[SearchDomainService] 索引重建失败: fileNodeId={}", fileNodeId, e);
+                failed++;
+            }
+        }
+
+        log.info("[SearchDomainService] 全量索引重建完成: success={}, failed={}", success, failed);
     }
 
     // ==================== 私有方法 ====================

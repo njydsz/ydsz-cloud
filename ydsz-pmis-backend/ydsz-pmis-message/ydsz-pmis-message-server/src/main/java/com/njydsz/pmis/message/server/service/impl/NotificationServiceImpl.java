@@ -23,6 +23,7 @@ import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
 import com.njydsz.pmis.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.pmis.message.domain.vo.NotificationGroupVO;
 import com.njydsz.pmis.message.infra.mapper.core.MsgNotificationMapper;
+import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.server.realtime.RealtimePushService;
 import com.njydsz.pmis.message.server.service.core.NotificationService;
 import com.njydsz.pmis.message.server.service.impl.NotificationSearchService;
@@ -52,6 +53,8 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationSearchService notificationSearchService;
     /** 消息撤回服务 */
     private final RecallService recallService;
+    /** P2-6: 全局配置（读取 markAllReadBatchSize） */
+    private final MessageProperties messageProperties;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -115,7 +118,26 @@ public class NotificationServiceImpl implements NotificationService {
         if (!StringUtils.hasText(userId)) {
             return 0;
         }
-        return msgNotificationMapper.markAllRead(userId);
+        // P2-6: 分批 UPDATE 避免长事务，每批独立事务（无外层 @Transactional）
+        int batchSize = messageProperties.getMarkAllReadBatchSize();
+        if (batchSize <= 0) {
+            // 配置为非正数时退化为单次全量 UPDATE（兼容兜底）
+            return msgNotificationMapper.markAllRead(userId, 0);
+        }
+        int total = 0;
+        int rounds = 0;
+        int maxRounds = 200; // 安全护栏：防止极端情况下死循环（200 * 500 = 10 万条）
+        while (rounds++ < maxRounds) {
+            int affected = msgNotificationMapper.markAllRead(userId, batchSize);
+            total += affected;
+            if (affected < batchSize) {
+                break;
+            }
+        }
+        if (total > batchSize) {
+            log.info("[Notification] markAllRead 分批完成: userId={} total={} rounds={}", userId, total, rounds - 1);
+        }
+        return total;
     }
 
     @Override

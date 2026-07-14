@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
@@ -75,7 +76,20 @@ public class PreviewApplicationService {
     /**
      * 生成预览（异步调用）
      */
+    @Async("nextwikiTaskExecutor")
     public void generatePreview(String fileNodeId) {
+        try {
+            doGeneratePreview(fileNodeId);
+        } catch (Exception e) {
+            // 异步方法不向调用方抛出异常，仅记录日志
+            log.error("[PreviewApplicationService] 预览生成失败: fileNodeId={}", fileNodeId, e);
+        }
+    }
+
+    /**
+     * 预览生成的实际执行逻辑
+     */
+    private void doGeneratePreview(String fileNodeId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null || !fileNode.isFile()) {
             log.warn("[PreviewApplicationService] 文件节点不存在或不是文件: {}", fileNodeId);
@@ -88,17 +102,21 @@ public class PreviewApplicationService {
             return;
         }
 
-        try {
-            if (OFFICE_SUFFIXES.contains(suffix)) {
+        if (OFFICE_SUFFIXES.contains(suffix)) {
+            try {
                 convertOfficeToPdf(fileNode);
-            } else if (IMAGE_SUFFIXES.contains(suffix)) {
-                generateImageThumbnail(fileNode);
-            } else if (DIRECT_PREVIEW_SUFFIXES.contains(suffix)) {
-                fileNode.setPreviewReady(true);
-                fileNodeRepository.update(fileNode);
+            } catch (Exception e) {
+                log.error("[PreviewApplicationService] Office 转 PDF 失败: fileNodeId={}", fileNodeId, e);
             }
-        } catch (Exception e) {
-            log.error("[PreviewApplicationService] 预览生成失败: fileNodeId={}", fileNodeId, e);
+        } else if (IMAGE_SUFFIXES.contains(suffix)) {
+            try {
+                generateImageThumbnail(fileNode);
+            } catch (Exception e) {
+                log.error("[PreviewApplicationService] 图片缩略图生成失败: fileNodeId={}", fileNodeId, e);
+            }
+        } else if (DIRECT_PREVIEW_SUFFIXES.contains(suffix)) {
+            fileNode.setPreviewReady(true);
+            fileNodeRepository.update(fileNode);
         }
     }
 

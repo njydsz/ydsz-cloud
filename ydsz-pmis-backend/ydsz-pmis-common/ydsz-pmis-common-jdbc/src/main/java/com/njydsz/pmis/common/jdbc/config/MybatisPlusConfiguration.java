@@ -24,6 +24,7 @@ import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.njydsz.pmis.common.jdbc.handler.CreatedAtHandler;
 import com.njydsz.pmis.common.jdbc.handler.CreatedByHandler;
@@ -46,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>配置 MyBatis Plus 的各种插件和拦截器，包括：
  * <ul>
- *   <li>乐观锁拦截器（自定义实现）：自动追加 revision 版本号条件，替代 @Version 注解</li>
+ *   <li>乐观锁拦截器：二选一——自定义实现（BaseEntity + revision 列）或内置 OptimisticLockerInnerInterceptor（@Version 注解）</li>
  *   <li>逻辑删除拦截器（自定义实现）：自动追加 deleted 过滤条件，替代 @TableLogic 注解</li>
  *   <li>字段填充拦截器：自动填充 createdBy、createdAt、updatedBy、updatedAt</li>
  *   <li>数据权限拦截器：实现行级和列级数据权限控制</li>
@@ -55,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>拦截器执行顺序（按添加顺序）：
  * <ol>
- *   <li>OptimisticLockInterceptor - 乐观锁（INSERT/UPDATE）</li>
+ *   <li>OptimisticLocker - 乐观锁（自定义 或 内置，二选一）</li>
  *   <li>LogicalDeleteInterceptor - 逻辑删除（SELECT/DELETE）</li>
  *   <li>FieldFillInterceptor - 字段填充</li>
  *   <li>DataPermissionInnerInterceptor - 数据权限</li>
@@ -67,7 +68,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>分页拦截器建议指定数据库类型，避免自动检测性能开销</li>
  *   <li>字段填充建议统一使用实体类注解方式，减少拦截器开销</li>
  *   <li>数据权限拦截器建议在复杂场景下添加缓存</li>
- *   <li>乐观锁和逻辑删除拦截器与 @Version/@TableLogic 注解互斥，启用后请移除实体类注解</li>
+ *   <li>自定义乐观锁拦截器（ydsz.jdbc.optimistic-lock.enable=true）与 @Version 注解互斥；默认使用内置 OptimisticLockerInnerInterceptor 处理 @Version 实体</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -136,14 +137,21 @@ public class MybatisPlusConfiguration {
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
-        // 1. 乐观锁拦截器（自定义实现）
+        // 1. 乐观锁拦截器
+        //    自定义实现（OptimisticLockInterceptor，基于 BaseEntity + revision 列）与
+        //    MyBatis-Plus 内置实现（OptimisticLockerInnerInterceptor，基于 @Version 注解）互斥。
+        //    优先使用自定义实现（若启用）；否则使用内置实现（覆盖 @Version 注解的实体）。
         if (Boolean.TRUE.equals(optimisticLockConfiguration.isEnable())) {
             OptimisticLockInterceptor optimisticLockInterceptor = new OptimisticLockInterceptor();
             optimisticLockInterceptor.setRevisionColumn(optimisticLockConfiguration.getRevisionColumn());
             optimisticLockInterceptor.setDefaultRevisionValue(optimisticLockConfiguration.getDefaultRevisionValue());
             interceptor.addInnerInterceptor(optimisticLockInterceptor);
-            log.debug("MyBatis Plus: OptimisticLock interceptor enabled (revisionColumn={})",
+            log.debug("MyBatis Plus: OptimisticLock interceptor (custom) enabled (revisionColumn={})",
                     optimisticLockConfiguration.getRevisionColumn());
+        } else {
+            // 内置乐观锁拦截器：处理 @Version 注解的实体（如 RuleDefinitionDO / RevenueDO / ContractDO 等）
+            interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+            log.debug("MyBatis Plus: OptimisticLockerInnerInterceptor (built-in) enabled for @Version entities");
         }
 
         // 2. 逻辑删除拦截器（自定义实现）

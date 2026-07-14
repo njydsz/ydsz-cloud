@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.PreDestroy;
 
+import org.slf4j.MDC;
+
+import com.njydsz.pmis.common.exception.observability.TraceContext;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;

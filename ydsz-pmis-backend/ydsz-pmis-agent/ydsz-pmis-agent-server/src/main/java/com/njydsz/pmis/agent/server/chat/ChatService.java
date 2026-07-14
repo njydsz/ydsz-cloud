@@ -21,6 +21,7 @@ import com.njydsz.pmis.agent.domain.model.ChatRequest;
 import com.njydsz.pmis.agent.domain.model.ChatResponse;
 import com.njydsz.pmis.agent.domain.model.TokenUsage;
 import com.njydsz.pmis.agent.server.config.AgentProperties;
+import com.njydsz.pmis.agent.server.metrics.AgentMetrics;
 
 /**
  * 对话服务
@@ -53,10 +54,12 @@ public class ChatService {
     private final AgentProperties properties;
     private final List<InputGuardrail> inputGuardrails;
     private final List<OutputGuardrail> outputGuardrails;
+    private final AgentMetrics metrics;
 
     public ChatService(LlmClient llmClient, ConversationMemory memory, AgentProperties properties,
                        List<InputGuardrail> inputGuardrails,
-                       List<OutputGuardrail> outputGuardrails) {
+                       List<OutputGuardrail> outputGuardrails,
+                       AgentMetrics metrics) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
@@ -66,6 +69,7 @@ public class ChatService {
         this.outputGuardrails = outputGuardrails != null
                 ? outputGuardrails.stream().sorted(Comparator.comparingInt(OutputGuardrail::getPriority)).toList()
                 : List.of();
+        this.metrics = metrics;
     }
 
     /**
@@ -92,6 +96,7 @@ public class ChatService {
         String sanitizedInput = applyInputGuardrails(userMessage);
         if (sanitizedInput == null) {
             log.warn("[Chat] 输入被安全护栏拒绝: convId={}", convId);
+            metrics.recordGuardrailRejection("input-guardrail", "input");
             ChatMessage rejectedMsg = ChatMessage.assistant(
                     "抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
             memory.save(convId, rejectedMsg);
@@ -109,16 +114,22 @@ public class ChatService {
                 .maxTokens(properties.getLlm().getMaxTokens())
                 .build();
 
+        String model = properties.getLlm().getDefaultModel();
+        String provider = llmClient.getProvider();
+        long startTime = System.currentTimeMillis();
         ChatResponse response;
         try {
             response = llmClient.chat(request);
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            metrics.recordLlmCall(provider, model, duration, null, e);
             log.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
             ChatMessage errorMsg = ChatMessage.assistant(
                     "[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
             memory.save(convId, errorMsg);
             throw e;
         }
+        metrics.recordLlmCall(provider, model, System.currentTimeMillis() - startTime, response, null);
 
         String output = applyOutputGuardrails(response.getContent());
         ChatMessage assistantMsg = ChatMessage.assistant(output, convId, response.getUsage());
@@ -149,6 +160,7 @@ public class ChatService {
         String sanitizedInput = applyInputGuardrails(userMessage);
         if (sanitizedInput == null) {
             log.warn("[Chat] 流式输入被安全护栏拒绝: convId={}", convId);
+            metrics.recordGuardrailRejection("input-guardrail", "input");
             memory.save(convId, ChatMessage.assistant(
                     "抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero()));
             chunkConsumer.accept(ChatChunk.content("", "guardrail",
@@ -168,6 +180,9 @@ public class ChatService {
                 .stream(true)
                 .build();
 
+        String model = properties.getLlm().getDefaultModel();
+        String provider = llmClient.getProvider();
+        long startTime = System.currentTimeMillis();
         StringBuilder contentBuilder = new StringBuilder();
         final TokenUsage[] usage = {TokenUsage.zero()};
 
@@ -182,11 +197,14 @@ public class ChatService {
                 chunkConsumer.accept(chunk);
             });
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            metrics.recordLlmStream(provider, model, duration, null, e);
             log.error("[Chat] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
             memory.save(convId, ChatMessage.assistant(
                     "[错误] LLM 流式调用失败: " + e.getMessage(), convId, TokenUsage.zero()));
             throw e;
         }
+        metrics.recordLlmStream(provider, model, System.currentTimeMillis() - startTime, usage[0], null);
 
         String output = applyOutputGuardrails(contentBuilder.toString());
         ChatMessage assistantMsg = ChatMessage.assistant(output, convId, usage[0]);
@@ -237,6 +255,7 @@ public class ChatService {
             GuardrailResult result = guard.check(sanitized);
             if (result.isRejected()) {
                 log.warn("[Chat] 输入护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
+                metrics.recordGuardrailRejection(guard.getName(), "input");
                 return null;
             }
             if (result.getSanitizedInput() != null) {
@@ -257,6 +276,7 @@ public class ChatService {
             GuardrailResult result = guard.check(sanitized);
             if (result.isRejected()) {
                 log.warn("[Chat] 输出护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
+                metrics.recordGuardrailRejection(guard.getName(), "output");
                 return "抱歉，我无法回答这个问题。";
             }
             if (result.getSanitizedInput() != null) {

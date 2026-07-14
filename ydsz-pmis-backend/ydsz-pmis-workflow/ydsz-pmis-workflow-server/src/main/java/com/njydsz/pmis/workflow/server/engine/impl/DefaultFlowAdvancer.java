@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
@@ -89,6 +90,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
+    @YdszDistributedLock(key = "'flow:instance:op:#{#instanceId}'", waitTime = 5, leaseTime = 60,
+            message = "流程正在处理中，请稍后重试")
     public FlowInstanceViewDTO start(String instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
@@ -126,6 +129,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
+    @YdszDistributedLock(key = "'flow:instance:op:#{#currentInstance.id}'", waitTime = 5, leaseTime = 60,
+            message = "流程正在处理中，请稍后重试")
     public List<FlowNodeDO> advance(FlowInstanceDO currentInstance,
                                      String currentNodeCode,
                                      String skipType,
@@ -212,10 +217,14 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                     // Redis 异常降级：回退到 countPendingByNode 逻辑
                     log.warn("[Flow] join 令牌异常，降级到 countPending: instanceId={} node={} err={}",
                             instId, joinCode, e.getMessage());
-                    int pending = taskMapper.countPendingByNode(instId, joinCode);
-                    if (pending > 0) {
-                        log.info("[Flow] 并行网关 join 等待（降级）: instanceId={} node={} pending={}",
-                                instId, joinCode, pending);
+                    // P0-2: 降级路径增强 — 统计所有入边源节点的活跃任务数，
+                    // 避免某分支已终止（CANCELLED/FAILED）但 join 永久等待。
+                    // 只统计 PENDING/CLAIMED 状态任务，已终止分支不计入。
+                    int activeIncoming = countActiveIncomingTasks(
+                            currentInstance.getDefinitionId(), instId, joinCode);
+                    if (activeIncoming > 0) {
+                        log.info("[Flow] 并行网关 join 等待（降级）: instanceId={} node={} activeIncoming={}",
+                                instId, joinCode, activeIncoming);
                         continue;
                     }
                 }
@@ -233,6 +242,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * 单节点退回（targetNodeCodes 为空或单元素）降级到原 advance 逻辑。
      */
     @Override
+    @YdszDistributedLock(key = "'flow:instance:op:#{#currentInstance.id}'", waitTime = 5, leaseTime = 60,
+            message = "流程正在处理中，请稍后重试")
     public List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
                                           String currentNodeCode,
                                           String skipType,
@@ -309,11 +320,28 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             }
         }
 
-        // 排他/包容网关兜底：如果无匹配且有默认出边，取第一条
+        // P0-2: 排他/包容网关默认出边 — BPMN 2.0 规范：取 gateway.default 属性指向的
+        // sequenceFlow，而非盲目取 all.get(0)，避免设计器边排序不确定导致走错分支。
+        // 兜底链：default 属性 → 无条件出边 → 空列表（流程结束）
         if ((isExclusive || isInclusive) && matched.isEmpty()) {
-            log.info("[Flow] {}无匹配条件，取默认出边: node={}",
-                    isExclusive ? "排他网关" : "包容网关", currentNode.getNodeCode());
-            matched.add(all.get(0));
+            FlowSkipDO defaultSkip = resolveDefaultSkip(currentNode, all);
+            if (defaultSkip != null) {
+                log.info("[Flow] {}无匹配条件，取 BPMN default 出边: node={} defaultFlowId={}",
+                        isExclusive ? "排他网关" : "包容网关",
+                        currentNode.getNodeCode(), extractSequenceFlowId(defaultSkip));
+                matched.add(defaultSkip);
+            } else {
+                // 未配置 default 属性时，取无条件的出边（BPMN 规范：default 边本身不能有 conditionExpression）
+                FlowSkipDO fallback = all.stream()
+                        .filter(s -> s.getSkipCondition() == null || s.getSkipCondition().isBlank())
+                        .findFirst().orElse(null);
+                if (fallback != null) {
+                    log.info("[Flow] {}无匹配条件且未配置 default，取无条件出边: node={}",
+                            isExclusive ? "排他网关" : "包容网关", currentNode.getNodeCode());
+                    matched.add(fallback);
+                }
+                // 若连无条件边也没有，matched 保持空，advance 返回空列表，流程结束
+            }
         }
 
         return matched;
@@ -394,6 +422,116 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         return node.getNodeType() != null
                 && (node.getNodeType() == FlowNodeType.PARALLEL.getCode()
                 || node.getNodeType() == FlowNodeType.INCLUSIVE.getCode());
+    }
+
+    /**
+     * P0-2: 解析网关默认出边
+     *
+     * <p>BPMN 2.0 规范：exclusiveGateway / inclusiveGateway 的 {@code default} 属性
+     * 指向一条无条件的 sequenceFlow。当所有带条件的出边都不匹配时，走这条默认边。
+     *
+     * @param gatewayNode 网关节点（ext 中可能含 defaultFlowId）
+     * @param allSkips 网关的所有 PASS 出边
+     * @return 默认出边，未配置或未找到时返回 null
+     */
+    private FlowSkipDO resolveDefaultSkip(FlowNodeDO gatewayNode, List<FlowSkipDO> allSkips) {
+        if (gatewayNode.getExt() == null || gatewayNode.getExt().isBlank()) {
+            return null;
+        }
+        try {
+            Map<String, Object> nodeExt = JsonUtils.parseMap(gatewayNode.getExt());
+            if (nodeExt == null) {
+                return null;
+            }
+            Object defaultFlowId = nodeExt.get("defaultFlowId");
+            if (defaultFlowId == null) {
+                return null;
+            }
+            String defaultId = String.valueOf(defaultFlowId);
+            for (FlowSkipDO skip : allSkips) {
+                String seqFlowId = extractSequenceFlowId(skip);
+                if (defaultId.equals(seqFlowId)) {
+                    return skip;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Flow] P0-2 解析默认出边失败: node={} err={}",
+                    gatewayNode.getNodeCode(), e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * P0-2: 从 FlowSkipDO.ext JSON 中提取 sequenceFlowId
+     *
+     * @param skip 跳转边
+     * @return sequenceFlowId，不存在时返回 null
+     */
+    private String extractSequenceFlowId(FlowSkipDO skip) {
+        if (skip.getExt() == null || skip.getExt().isBlank()) {
+            return null;
+        }
+        try {
+            Map<String, Object> ext = JsonUtils.parseMap(skip.getExt());
+            if (ext == null) {
+                return null;
+            }
+            Object val = ext.get("sequenceFlowId");
+            return val == null ? null : String.valueOf(val);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * P0-2: 从 FlowSkipDO.ext JSON 中提取 sourceRef（入边源节点编码）
+     *
+     * @param skip 跳转边
+     * @return 源节点编码，不存在时返回 null
+     */
+    private String extractSourceNodeCode(FlowSkipDO skip) {
+        if (skip.getExt() == null || skip.getExt().isBlank()) {
+            return null;
+        }
+        try {
+            Map<String, Object> ext = JsonUtils.parseMap(skip.getExt());
+            if (ext == null) {
+                return null;
+            }
+            Object val = ext.get("sourceRef");
+            return val == null ? null : String.valueOf(val);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * P0-2: 统计 join 节点的入边源节点中仍有活跃任务的数量（降级路径使用）
+     *
+     * <p>当 Redis 令牌服务异常时，通过查询任务表判断其他分支是否仍在处理中。
+     * 只统计 PENDING 状态的任务（已 CANCELLED/COMPLETED/FAILED 的不计入），
+     * 避免某分支已终止但 join 永久等待。
+     *
+     * @param definitionId 流程定义 ID
+     * @param instanceId 流程实例 ID
+     * @param joinNodeCode join 节点编码
+     * @return 仍有活跃任务的入边源节点数量
+     */
+    private int countActiveIncomingTasks(String definitionId, String instanceId, String joinNodeCode) {
+        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, joinNodeCode);
+        if (incoming == null || incoming.isEmpty()) {
+            return 0;
+        }
+        int active = 0;
+        for (FlowSkipDO skip : incoming) {
+            String sourceNodeCode = extractSourceNodeCode(skip);
+            if (sourceNodeCode == null || sourceNodeCode.isBlank()) {
+                continue;
+            }
+            int nodePending = taskMapper.countPendingByNode(instanceId, sourceNodeCode);
+            active += nodePending;
+        }
+        return active;
     }
 
     /** 判断节点是否有多个入边 */

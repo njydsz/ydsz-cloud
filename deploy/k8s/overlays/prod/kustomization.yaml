@@ -41,6 +41,8 @@ images:
     newTag: v1.3.0
   - name: ydsz-pmis/finance
     newTag: v1.3.0
+  - name: ydsz-pmis/nextwiki
+    newTag: v1.3.0
 
 patches:
   - path: patch-replicas.yaml

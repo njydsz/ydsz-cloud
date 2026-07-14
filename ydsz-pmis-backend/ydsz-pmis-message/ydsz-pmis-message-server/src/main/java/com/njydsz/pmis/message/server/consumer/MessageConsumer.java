@@ -240,18 +240,25 @@ public class MessageConsumer implements RocketMQListener<String> {
      * <p>根据 {@code scheduledAt} 字段判断，如果消息的调度发送时间距今超过 TTL，
      * 则视为过期消息（如定时消息错过了发送窗口）。
      *
+     * <p>P2-5: TTL 阈值从 {@link MessageProperties#getMessageTtlSeconds()} 读取，
+     * 默认 3600s；配置为 0 表示不检查 TTL。
+     *
      * @param request 消息请求
      * @return true 表示已过期
      */
     private boolean isMessageExpired(MessageRequest request) {
+        long ttlSeconds = messageProperties.getMessageTtlSeconds();
+        if (ttlSeconds <= 0) {
+            return false;
+        }
         if (request.getScheduledAt() == null) {
             return false;
         }
         try {
             long ageSeconds = Duration.between(request.getScheduledAt(), LocalDateTime.now()).getSeconds();
-            if (ageSeconds > MESSAGE_TTL_SECONDS) {
+            if (ageSeconds > ttlSeconds) {
                 log.warn("[MessageConsumer] 消息 TTL 过期: messageId={} age={}s ttl={}s",
-                        request.getMessageId(), ageSeconds, MESSAGE_TTL_SECONDS);
+                        request.getMessageId(), ageSeconds, ttlSeconds);
                 return true;
             }
         } catch (Exception e) {

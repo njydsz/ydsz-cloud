@@ -49,6 +49,15 @@ public class MessageProperties {
      */
     private long messageTtlSeconds = 3600L;
 
+    /**
+     * P2-6: markAllRead 分批处理单批大小。
+     *
+     * <p>用户「全部已读」操作时，若未读通知量巨大（如万级），单条 UPDATE 会导致
+     * 长事务与行锁堆积。改为按此批次大小循环 UPDATE，每批独立事务，避免长事务。
+     * 默认 500，范围建议 200~1000。
+     */
+    private int markAllReadBatchSize = 500;
+
     /** P2-9: 回执拉取开关（关闭后不再主动拉取回执，仅依赖服务商回调） */
     private boolean receiptPullEnabled = true;
 
