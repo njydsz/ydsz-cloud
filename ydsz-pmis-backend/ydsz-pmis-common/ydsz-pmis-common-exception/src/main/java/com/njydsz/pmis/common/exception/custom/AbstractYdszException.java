@@ -76,6 +76,7 @@ public abstract class AbstractYdszException extends RuntimeException {
     protected transient LocalDateTime timestamp;
     protected String path;
     protected transient Object extData;
+    protected String userMessage;
 
     protected AbstractYdszException() {
         super();
@@ -253,6 +254,14 @@ public abstract class AbstractYdszException extends RuntimeException {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getUserMessage() {
+        return userMessage != null ? userMessage : getMessage();
+    }
+
+    public void setUserMessage(String userMessage) {
+        this.userMessage = userMessage;
     }
 
     public Object getExtData() {
