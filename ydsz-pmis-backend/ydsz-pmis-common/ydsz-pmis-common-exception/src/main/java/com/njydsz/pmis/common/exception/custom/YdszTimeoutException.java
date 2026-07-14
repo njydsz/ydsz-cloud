@@ -200,6 +200,11 @@ public class YdszTimeoutException extends AbstractYdszException {
      */
     public static class YdszTimeoutExceptionBuilder extends YdszExceptionBuilder<YdszTimeoutException, YdszTimeoutExceptionBuilder> {
 
+        @Override
+        protected YdszTimeoutExceptionBuilder self() {
+            return this;
+        }
+
         public YdszTimeoutExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FAIL.getCode();

@@ -213,6 +213,11 @@ public class DegradeException extends AbstractYdszException {
 
     public static class DegradeExceptionBuilder extends YdszExceptionBuilder<DegradeException, DegradeExceptionBuilder> {
 
+        @Override
+        protected DegradeExceptionBuilder self() {
+            return this;
+        }
+
         public DegradeExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.SERVICE_DEGRADED.getCode();

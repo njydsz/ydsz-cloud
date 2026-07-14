@@ -203,6 +203,11 @@ public class ValidationException extends AbstractYdszException {
 
     public static class ValidationExceptionBuilder extends YdszExceptionBuilder<ValidationException, ValidationExceptionBuilder> {
 
+        @Override
+        protected ValidationExceptionBuilder self() {
+            return this;
+        }
+
         public ValidationExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.PARAM_ERROR.getCode();

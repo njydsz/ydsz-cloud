@@ -73,23 +73,22 @@
         <!-- L4 基础数据层 -->
         <module>ydsz-pmis-common-jdbc</module>
         <module>ydsz-pmis-common-redis</module>
-        <module>ydsz-pmis-common-lock</module>
         <module>ydsz-pmis-common-cache</module>
+        <module>ydsz-pmis-common-lock</module>
         <!-- L5 业务服务层 -->
         <module>ydsz-pmis-common-auth</module>
         <module>ydsz-pmis-common-safe</module>
         <module>ydsz-pmis-common-feign</module>
         <module>ydsz-pmis-common-audit</module>
-        <module>ydsz-pmis-common-file</module>
         <module>ydsz-pmis-common-notify</module>
         <module>ydsz-pmis-common-queue</module>
-        <module>ydsz-pmis-common-socket</module>
         <module>ydsz-pmis-common-netty</module>
+        <module>ydsz-pmis-common-socket</module>
+        <module>ydsz-pmis-common-file</module>
         <module>ydsz-pmis-common-docs</module>
         <module>ydsz-pmis-common-json</module>
         <module>ydsz-pmis-common-excel</module>
         <module>ydsz-pmis-common-search</module>
-        <!-- L5.5 可观测性层 -->
         <module>ydsz-pmis-common-sentry</module>
         <!-- L6 应用层 -->
         <module>ydsz-pmis-common-base</module>
@@ -552,67 +551,67 @@
                 <version>${fastjson2.version}</version>
             </dependency>
 
-<!-- resilience4j 版本覆盖 -->
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-spring-boot3</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-spring6</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-reactor</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-circuitbreaker</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-micrometer</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-framework-common</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-core</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-ratelimiter</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-retry</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-bulkhead</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-timelimiter</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-consumer</artifactId>
-    <version>${resilience4j.version}</version>
-</dependency>
+            <!-- resilience4j 版本覆盖 -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring6</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-micrometer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-framework-common</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-core</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-ratelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-retry</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bulkhead</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-timelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-consumer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
 
             <!-- jetbrains annotations -->
             <dependency>

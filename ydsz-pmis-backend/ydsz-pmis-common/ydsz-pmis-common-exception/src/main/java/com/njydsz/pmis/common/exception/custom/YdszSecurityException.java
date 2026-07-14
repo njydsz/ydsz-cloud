@@ -201,6 +201,11 @@ public class YdszSecurityException extends AbstractYdszException {
      */
     public static class YdszSecurityExceptionBuilder extends YdszExceptionBuilder<YdszSecurityException, YdszSecurityExceptionBuilder> {
 
+        @Override
+        protected YdszSecurityExceptionBuilder self() {
+            return this;
+        }
+
         public YdszSecurityExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FORBIDDEN.getCode();

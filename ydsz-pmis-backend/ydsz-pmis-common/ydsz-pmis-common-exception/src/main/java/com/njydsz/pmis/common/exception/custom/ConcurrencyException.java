@@ -103,6 +103,11 @@ public class ConcurrencyException extends AbstractYdszException {
      */
     public static class ConcurrencyExceptionBuilder extends YdszExceptionBuilder<ConcurrencyException, ConcurrencyExceptionBuilder> {
 
+        @Override
+        protected ConcurrencyExceptionBuilder self() {
+            return this;
+        }
+
         public ConcurrencyExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FAIL.getCode();

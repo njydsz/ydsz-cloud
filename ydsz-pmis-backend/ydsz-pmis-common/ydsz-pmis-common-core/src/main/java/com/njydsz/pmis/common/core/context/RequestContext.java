@@ -201,7 +201,11 @@ public final class RequestContext {
      */
     public static <T> Optional<T> getOptional(String key) {
         Object value = CONTEXT_HOLDER.get().get(key);
-        return Optional.ofNullable(value);
+        Optional<T> result = Optional.empty();
+        if (value != null) {
+            result = Optional.of((T) value);
+        }
+        return result;
     }
 
     /**

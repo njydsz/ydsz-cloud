@@ -204,6 +204,11 @@ public class InfrastructureException extends AbstractYdszException {
 
     public static class InfrastructureExceptionBuilder extends YdszExceptionBuilder<InfrastructureException, InfrastructureExceptionBuilder> {
 
+        @Override
+        protected InfrastructureExceptionBuilder self() {
+            return this;
+        }
+
         public InfrastructureExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();

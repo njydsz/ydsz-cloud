@@ -266,6 +266,11 @@ public class SysException extends AbstractYdszException {
      */
     public static class SysExceptionBuilder extends YdszExceptionBuilder<SysException, SysExceptionBuilder> {
 
+        @Override
+        protected SysExceptionBuilder self() {
+            return this;
+        }
+
         public SysExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();

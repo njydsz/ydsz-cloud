@@ -201,6 +201,11 @@ public class ExternalException extends AbstractYdszException {
      */
     public static class ExternalExceptionBuilder extends YdszExceptionBuilder<ExternalException, ExternalExceptionBuilder> {
 
+        @Override
+        protected ExternalExceptionBuilder self() {
+            return this;
+        }
+
         public ExternalExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FAIL.getCode();

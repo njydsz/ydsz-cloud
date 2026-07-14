@@ -120,6 +120,11 @@ public class BusinessException extends AbstractYdszException {
      */
     public static class BusinessExceptionBuilder extends YdszExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
 
+        @Override
+        protected BusinessExceptionBuilder self() {
+            return this;
+        }
+
         public BusinessExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FAIL.getCode();

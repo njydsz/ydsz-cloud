@@ -103,6 +103,11 @@ public class DuplicateException extends AbstractYdszException {
      */
     public static class DuplicateExceptionBuilder extends YdszExceptionBuilder<DuplicateException, DuplicateExceptionBuilder> {
 
+        @Override
+        protected DuplicateExceptionBuilder self() {
+            return this;
+        }
+
         public DuplicateExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FAIL.getCode();

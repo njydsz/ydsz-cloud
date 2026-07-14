@@ -103,6 +103,11 @@ public class RateLimitException extends AbstractYdszException {
      */
     public static class RateLimitExceptionBuilder extends YdszExceptionBuilder<RateLimitException, RateLimitExceptionBuilder> {
 
+        @Override
+        protected RateLimitExceptionBuilder self() {
+            return this;
+        }
+
         public RateLimitExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FAIL.getCode();

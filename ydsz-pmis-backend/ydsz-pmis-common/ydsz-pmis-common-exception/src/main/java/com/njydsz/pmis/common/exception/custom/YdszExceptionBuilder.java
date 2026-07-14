@@ -9,6 +9,9 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * <p>提取所有异常子类 Builder 中的重复代码，
  * 通过泛型实现链式调用和类型安全。
  *
+ * <p>使用 {@code self()} 抽象方法替代 {@code (B) this} 强制转换，
+ * 从根源消除 unchecked 警告。
+ *
  * <p><b>使用方式：</b>
  * <pre>{@code
  * // 子类 Builder 继承此类，仅需声明各自特有的默认值
@@ -18,6 +21,10 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  *         defaultHttpStatus(HttpStatus.BAD_REQUEST.value());
  *         defaultLevel(ExceptionLevel.ERROR);
  *         defaultCategory(ExceptionCategory.BUSINESS);
+ *     }
+ *     @Override
+ *     protected BusinessException self() {
+ *         return this;
  *     }
  *     @Override
  *     protected BusinessException doBuild(String code, String key, Object[] params, int httpStatus,
@@ -50,12 +57,21 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
     protected Object extData;
 
     /**
+     * 返回当前 Builder 实例，子类实现为 {@code return this;}
+     *
+     * <p>替代 {@code (B) this} 强制转换，从根源消除 unchecked 警告。
+     * 这是 CRTP（Curiously Recurring Template Pattern）的标准实现方式。
+     *
+     * @return 当前 Builder 实例
+     */
+    protected abstract B self();
+
+    /**
      * 子类构造函数中调用此方法设置默认值
      */
-    @SuppressWarnings("unchecked")
     protected B defaultCode(String code) {
         this.code = code;
-        return (B) this;
+        return self();
     }
 
     /**
@@ -64,40 +80,34 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
      * @param httpStatus HTTP 状态码
      * @return 当前 Builder
      */
-    @SuppressWarnings("unchecked")
     protected B defaultHttpStatus(int httpStatus) {
         this.httpStatus = httpStatus;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     protected B defaultLevel(ExceptionLevel level) {
         this.level = level;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     protected B defaultCategory(ExceptionCategory category) {
         this.category = category;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public B code(String code) {
         this.code = code;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public B key(String key) {
         this.key = key;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public B params(Object... params) {
         this.params = params;
-        return (B) this;
+        return self();
     }
 
     /**
@@ -106,16 +116,14 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
      * @param message 消息内容
      * @return 当前 Builder
      */
-    @SuppressWarnings("unchecked")
     public B message(String message) {
         this.message = message;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public B httpStatus(int httpStatus) {
         this.httpStatus = httpStatus;
-        return (B) this;
+        return self();
     }
 
     /**
@@ -124,28 +132,24 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
      * @param level 异常级别
      * @return 当前 Builder
      */
-    @SuppressWarnings("unchecked")
     public B level(ExceptionLevel level) {
         this.level = level;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public B category(ExceptionCategory category) {
         this.category = category;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public B cause(Throwable cause) {
         this.cause = cause;
-        return (B) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public B path(String path) {
         this.path = path;
-        return (B) this;
+        return self();
     }
 
     /**
@@ -154,10 +158,9 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
      * @param extData 扩展数据
      * @return 当前 Builder
      */
-    @SuppressWarnings("unchecked")
     public B extData(Object extData) {
         this.extData = extData;
-        return (B) this;
+        return self();
     }
 
     /**

@@ -204,6 +204,11 @@ public class CircuitBreakerException extends AbstractYdszException {
 
     public static class CircuitBreakerExceptionBuilder extends YdszExceptionBuilder<CircuitBreakerException, CircuitBreakerExceptionBuilder> {
 
+        @Override
+        protected CircuitBreakerExceptionBuilder self() {
+            return this;
+        }
+
         public CircuitBreakerExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode();
