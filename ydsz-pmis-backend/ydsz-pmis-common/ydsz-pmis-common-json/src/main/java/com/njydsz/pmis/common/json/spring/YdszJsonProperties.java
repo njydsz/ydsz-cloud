@@ -4,8 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
 
-import lombok.Data;
-
 /**
  * YdszJson 配置属性。
  *
@@ -32,7 +30,6 @@ import lombok.Data;
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
-@Data
 @ConfigurationProperties(prefix = "pmis.json")
 public class YdszJsonProperties {
 
@@ -72,21 +69,123 @@ public class YdszJsonProperties {
     /** 是否启用性能监控 */
     private boolean monitoringEnabled = false;
 
-    /**
-     * 获取安全模式状态。
-     *
-     * @return 是否启用安全模式
-     */
+    // --- enabled ---
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    // --- dateFormat ---
+
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    public void setDateFormat(String dateFormat) {
+        this.dateFormat = dateFormat;
+    }
+
+    // --- namingStrategy ---
+
+    public PropertyNamingStrategy getNamingStrategy() {
+        return namingStrategy;
+    }
+
+    public void setNamingStrategy(PropertyNamingStrategy namingStrategy) {
+        this.namingStrategy = namingStrategy;
+    }
+
+    // --- writeNulls ---
+
+    public boolean isWriteNulls() {
+        return writeNulls;
+    }
+
+    public void setWriteNulls(boolean writeNulls) {
+        this.writeNulls = writeNulls;
+    }
+
+    // --- prettyPrint ---
+
+    public boolean isPrettyPrint() {
+        return prettyPrint;
+    }
+
+    public void setPrettyPrint(boolean prettyPrint) {
+        this.prettyPrint = prettyPrint;
+    }
+
+    // --- circularReferenceStrategy ---
+
+    public String getCircularReferenceStrategy() {
+        return circularReferenceStrategy;
+    }
+
+    public void setCircularReferenceStrategy(String circularReferenceStrategy) {
+        this.circularReferenceStrategy = circularReferenceStrategy;
+    }
+
+    // --- serializeEnumUsingOrdinal ---
+
+    public boolean isSerializeEnumUsingOrdinal() {
+        return serializeEnumUsingOrdinal;
+    }
+
+    public void setSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
+        this.serializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
+    }
+
+    // --- maxJsonSize ---
+
+    public long getMaxJsonSize() {
+        return maxJsonSize;
+    }
+
+    public void setMaxJsonSize(long maxJsonSize) {
+        this.maxJsonSize = maxJsonSize;
+    }
+
+    // --- maxDepth ---
+
+    public int getMaxDepth() {
+        return maxDepth;
+    }
+
+    public void setMaxDepth(int maxDepth) {
+        this.maxDepth = maxDepth;
+    }
+
+    // --- fastPathEnabled ---
+
+    public boolean isFastPathEnabled() {
+        return fastPathEnabled;
+    }
+
+    public void setFastPathEnabled(boolean fastPathEnabled) {
+        this.fastPathEnabled = fastPathEnabled;
+    }
+
+    // --- safeMode ---
+
     public boolean isSafeMode() {
         return safeMode;
     }
 
-    /**
-     * 设置安全模式（显式 setter 确保 Lombok 生成）。
-     *
-     * @param safeMode 是否启用安全模式
-     */
     public void setSafeMode(boolean safeMode) {
         this.safeMode = safeMode;
+    }
+
+    // --- monitoringEnabled ---
+
+    public boolean isMonitoringEnabled() {
+        return monitoringEnabled;
+    }
+
+    public void setMonitoringEnabled(boolean monitoringEnabled) {
+        this.monitoringEnabled = monitoringEnabled;
     }
 }

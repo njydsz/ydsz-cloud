@@ -121,7 +121,6 @@ PMIS 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTT
 |---|---|
 | `UtilAutoConfiguration` | 总是激活 |
 | `SnowflakeAutoConfiguration` | Redis 可用时激活 |
-| `JsonMetricsConfiguration` | Micrometer 可用时激活 |
 
 ## 依赖
 
