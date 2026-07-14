@@ -68,3 +68,15 @@
 - **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 2）。
 - **检测脚本**：`deploy/scripts/check-inline-fqn.sh` 同时检测 `@SuppressWarnings`，`--strict` 模式阻断 PR。
 - **现有存量**：截至 2026-07-13，项目中存在约 208 处 `@SuppressWarnings` 用法，分布在 workflow、common-util、message、project 等模块，待后续批量修复。
+
+### 脚本执行优先使用 Python 而非 PowerShell
+- **规则**：在 ydsz-pmis 项目中执行脚本命令时（批量文件处理、文本替换、代码生成、数据转换、文件读写等），**必须优先使用 Python**，禁止使用 PowerShell。
+- **原因**：
+  1. **编码损坏**：PowerShell 默认使用 UTF-16 LE BOM 或系统 ANSI 编码读写文件，处理 UTF-8 无 BOM 的源代码文件时会转换为乱码。
+  2. **BOM 污染**：PowerShell 的 `Out-File`、`Set-Content` 等 cmdlet 默认添加 BOM 前缀，导致 Java 编译器、Git diff、Spotless 等工具出现兼容性问题。
+  3. **转义陷阱**：PowerShell 的引号转义规则与正则表达式交互混乱。
+  4. **跨平台不一致**：Windows PowerShell 5.x 与 PowerShell 7+ 行为差异大，脚本可移植性差。
+- **正确做法**：使用 Python `pathlib`、`io` 模块，固定 `encoding="utf-8"`，跨平台一致。
+- **规则文件**：`.trae/rules/prefer-python-over-powershell.md`（`alwaysApply: true`）。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 3）。
+- **新脚本约束**：所有新增脚本工具（`deploy/scripts/`、`scripts/`）默认使用 Python 实现。**既有 `.ps1` 脚本（如 `check-bom.ps1`、`strip-bom.ps1`、`build-images.ps1` 等）逐步迁移到 `.py`**，迁移完成前可保留作为 Windows 兼容入口；即便在例外场景下，所有涉及文件读写、文本处理的操作也必须通过 Python 包装执行。
