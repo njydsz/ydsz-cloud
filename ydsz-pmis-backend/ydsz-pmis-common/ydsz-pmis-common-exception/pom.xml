@@ -107,6 +107,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- gRPC (optional, for gRPC exception translation) -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

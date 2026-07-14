@@ -2,7 +2,6 @@ package com.njydsz.pmis.common.core.context;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * 强类型上下文键
@@ -118,25 +117,6 @@ public class ContextKey<T> {
      */
     public void remove() {
         RequestContext.remove(this);
-    }
-
-    /**
-     * 将值映射为另一种类型，常用于上下文中的派生计算
-     *
-     * <p>注意：返回的新 Key 是独立的，不会自动同步原 Key 的值变化。
-     * 调用方需自行确保在使用时原 Key 的值已正确设置。</p>
-     *
-     * @param mapper     映射函数
-     * @param targetType 目标类型 Class（用于类型安全，避免推断）
-     * @param <R>        目标类型
-     * @return 目标类型 Key
-     */
-    public <R> ContextKey<R> map(Function<T, R> mapper, Class<R> targetType) {
-        Objects.requireNonNull(mapper, "mapper must not be null");
-        Objects.requireNonNull(targetType, "targetType must not be null");
-        T currentValue = this.get();
-        R mappedValue = currentValue != null ? mapper.apply(currentValue) : null;
-        return ContextKey.of(name + "_mapped", targetType, mappedValue);
     }
 
     @Override

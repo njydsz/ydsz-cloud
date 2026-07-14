@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,8 +23,13 @@ import org.junit.jupiter.api.Test;
 @DisplayName("TraceId 生成测试")
 class TraceIdTest {
 
+    @AfterEach
+    void resetSupplier() {
+        TraceIdGenerator.resetToDefault();
+    }
+
     @Nested
-    @DisplayName("TraceIdGenerator (UUID)")
+    @DisplayName("TraceIdGenerator (默认 UUID 策略)")
     class TraceIdGeneratorTest {
 
         @Test
@@ -42,6 +48,33 @@ class TraceIdTest {
                 ids.add(TraceIdGenerator.generate());
             }
             assertThat(ids).hasSize(1000);
+        }
+
+        @Test
+        @DisplayName("setSupplier 注入后 generate 使用新策略")
+        void setSupplier_delegates() {
+            TraceIdGenerator.setSupplier(() -> "fixed-test-id");
+            assertThat(TraceIdGenerator.generate()).isEqualTo("fixed-test-id");
+        }
+
+        @Test
+        @DisplayName("setSupplier(null) 恢复默认 UUID 策略")
+        void setSupplier_null_resetsToDefault() {
+            TraceIdGenerator.setSupplier(() -> "temp-id");
+            TraceIdGenerator.setSupplier(null);
+            String traceId = TraceIdGenerator.generate();
+            assertThat(traceId).hasSize(32);
+            assertThat(traceId).matches("^[0-9a-f]{32}$");
+        }
+
+        @Test
+        @DisplayName("setSupplier 注入 Snowflake 后生成 16 位有序 ID")
+        void setSupplier_snowflake() {
+            SnowflakeTraceIdSupplier snowflake = new SnowflakeTraceIdSupplier(1, 1);
+            TraceIdGenerator.setSupplier(snowflake);
+            String traceId = TraceIdGenerator.generate();
+            assertThat(traceId).hasSize(16);
+            assertThat(traceId).matches("^[0-9a-f]{16}$");
         }
     }
 

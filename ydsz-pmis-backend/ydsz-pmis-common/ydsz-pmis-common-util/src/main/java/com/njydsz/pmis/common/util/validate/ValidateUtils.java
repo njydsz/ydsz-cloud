@@ -1,6 +1,12 @@
 package com.njydsz.pmis.common.util.validate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import jakarta.validation.ConstraintViolation;
@@ -517,16 +523,46 @@ public class ValidateUtils {
      */
     public static class ValidatorBuilder {
         private final List<String> errors = new ArrayList<>();
+        private Object target;
 
         /**
-         * 设置校验目标
+         * 设置校验目标对象
+         *
+         * <p>设置后，可调用 {@link #validateBean()} 对目标对象执行 Jakarta Validation 注解校验。
+         *
+         * @param target 校验目标对象
+         * @return 当前 Builder 实例
          */
         public ValidatorBuilder target(Object target) {
+            this.target = target;
             return this;
         }
 
         /**
-         * 设置字段名
+         * 对目标对象执行 Jakarta Validation 注解校验
+         *
+         * <p>需先通过 {@link #target(Object)} 设置目标对象。
+         * 校验结果中的违规消息将添加到错误列表中。
+         *
+         * @return 当前 Builder 实例
+         */
+        public ValidatorBuilder validateBean() {
+            if (target == null) {
+                errors.add("validation target is null");
+                return this;
+            }
+            Set<ConstraintViolation<Object>> violations = ValidateUtils.validateBean(target);
+            for (ConstraintViolation<Object> violation : violations) {
+                errors.add(violation.getPropertyPath() + " " + violation.getMessage());
+            }
+            return this;
+        }
+
+        /**
+         * 设置字段名（当前为占位方法，保留 API 兼容性）
+         *
+         * @param fieldName 字段名
+         * @return 当前 Builder 实例
          */
         public ValidatorBuilder field(String fieldName) {
             return this;

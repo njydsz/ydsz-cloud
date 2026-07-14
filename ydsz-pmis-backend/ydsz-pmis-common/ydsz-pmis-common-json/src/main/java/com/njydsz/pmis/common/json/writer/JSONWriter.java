@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.json.writer;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -170,10 +171,13 @@ public final class JSONWriter {
 
     /** 字符缓冲区（public for ASM 序列化器直接访问，消除 getBuffer() 方法调用开销） */
     public char[] buf;
-    
+
     /** 当前写入位置（public for ASM 序列化器直接访问，消除 getPosition()/setPosition() 方法调用开销） */
     public int pos;
-    
+
+    /** 特性标志位（Feature 枚举按位 OR 合并，参考 FastJSON2 / Jackson 设计） */
+    private long features;
+
     /** 外部 StringBuilder（如果使用 StringBuilder 模式） */
     private StringBuilder externalSb;
     
@@ -388,13 +392,13 @@ public final class JSONWriter {
      * @param value BigDecimal 值
      * @since 1.4.0
      */
-    public void writeBigDecimal(java.math.BigDecimal value) {
+    public void writeBigDecimal(BigDecimal value) {
         if (value == null) {
             write("null");
             return;
         }
         String str = value.toPlainString();
-        if (Feature.WriteBigDecimalAsString.isEnabled(features)) {
+        if (Feature.WriteBigDecimalAsString.isEnabled(this.features)) {
             writeString(str);
         } else {
             write(str);

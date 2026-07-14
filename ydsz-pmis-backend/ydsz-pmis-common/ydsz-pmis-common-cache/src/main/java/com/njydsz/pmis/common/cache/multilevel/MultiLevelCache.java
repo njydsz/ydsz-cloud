@@ -21,7 +21,6 @@ import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
-import com.njydsz.pmis.common.cache.support.CacheLoader;
 
 /**
  * 多级缓存 — L1 本地缓存 + L2 Redis 分布式缓存

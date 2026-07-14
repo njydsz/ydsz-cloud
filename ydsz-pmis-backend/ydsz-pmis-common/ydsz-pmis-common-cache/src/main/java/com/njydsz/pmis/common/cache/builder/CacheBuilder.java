@@ -4,14 +4,14 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.api.LoadingCache;
 import com.njydsz.pmis.common.cache.internal.concurrent.ConcurrentCache;
 import com.njydsz.pmis.common.cache.internal.concurrent.StripedConcurrentCache;
 import com.njydsz.pmis.common.cache.internal.decorator.ExpirableCache;
+import com.njydsz.pmis.common.cache.internal.decorator.MemoryAwareEvictionCache;
+import com.njydsz.pmis.common.cache.internal.decorator.SwrCacheDecorator;
+import com.njydsz.pmis.common.cache.internal.decorator.WriteBehindCache;
 import com.njydsz.pmis.common.cache.internal.decorator.WriteThroughCache;
 import com.njydsz.pmis.common.cache.internal.lfu.LFUCache;
 import com.njydsz.pmis.common.cache.internal.loading.EnhancedLoadingCache;
@@ -80,8 +80,6 @@ import com.njydsz.pmis.common.cache.support.Weigher;
  */
 public final class CacheBuilder<K, V> {
 
-  private static final Logger log = LoggerFactory.getLogger(CacheBuilder.class);
-
   /** 缓存类型（默认 TINYLFU，命中率最优） */
   private CacheType type = CacheType.TINYLFU;
 
@@ -138,6 +136,45 @@ public final class CacheBuilder<K, V> {
 
   /** 自定义过期策略 */
   private Expiry<? super K, ? super V> expiry;
+
+  /** SWR 新鲜期（-1 表示不启用 SWR） */
+  private long swrFreshPeriod = -1;
+
+  /** SWR 陈旧期 */
+  private long swrStalePeriod = -1;
+
+  /** SWR 时间单位 */
+  private TimeUnit swrTimeUnit;
+
+  /** SWR 数据加载器（可选，未设置则使用 loader） */
+  private CacheLoader<K, V> swrLoader;
+
+  /** 是否启用 Write-Behind 模式 */
+  private boolean writeBehindEnabled = false;
+
+  /** Write-Behind 刷新间隔（毫秒） */
+  private long writeBehindFlushIntervalMs = 5000;
+
+  /** Write-Behind 批量大小 */
+  private int writeBehindBatchSize = 100;
+
+  /** Write-Behind 最大队列长度 */
+  private int writeBehindMaxQueueSize = 10000;
+
+  /** 是否启用内存感知淘汰 */
+  private boolean memoryAwareEnabled = false;
+
+  /** 内存告警阈值（0-1） */
+  private double memoryWarnThreshold = 0.75;
+
+  /** 内存淘汰阈值（0-1） */
+  private double memoryEvictThreshold = 0.85;
+
+  /** 内存临界清除阈值（0-1） */
+  private double memoryCriticalThreshold = 0.95;
+
+  /** 内存检查间隔（秒） */
+  private long memoryCheckIntervalSeconds = 10;
 
   /** 弱引用键标志（与 type 正交，不覆盖 type） */
   private boolean weakKeysFlag = false;
@@ -244,6 +281,96 @@ public final class CacheBuilder<K, V> {
   public CacheBuilder<K, V> expireAfter(Expiry<? super K, ? super V> expiry) {
     this.expiry = expiry;
     return this;
+  }
+
+  /**
+   * 启用 SWR (Stale-While-Revalidate) 模式
+   *
+   * <p>在新鲜期内直接返回缓存值；超过新鲜期但在陈旧期内返回旧值并异步刷新； 超过陈旧期则同步加载。需要同时设置 loader。
+   *
+   * @param freshPeriod 新鲜期
+   * @param stalePeriod 陈旧期
+   * @param unit 时间单位
+   * @return this
+   */
+  public CacheBuilder<K, V> staleWhileRevalidate(
+      long freshPeriod, long stalePeriod, TimeUnit unit) {
+    this.swrFreshPeriod = freshPeriod;
+    this.swrStalePeriod = stalePeriod;
+    this.swrTimeUnit = unit;
+    return this;
+  }
+
+  /**
+   * 设置 SWR 数据加载器（可选，默认使用 loader）
+   *
+   * @param swrLoader SWR 数据加载器
+   * @return this
+   */
+  public CacheBuilder<K, V> swrLoader(CacheLoader<K, V> swrLoader) {
+    this.swrLoader = swrLoader;
+    return this;
+  }
+
+  /**
+   * 启用 Write-Behind 模式
+   *
+   * <p>写入操作先更新缓存，然后异步批量写入后端存储。 需要同时设置 writer。
+   *
+   * @param flushIntervalMs 批量刷新间隔（毫秒）
+   * @param batchSize 每批最大写入数量
+   * @param maxQueueSize 最大队列长度
+   * @return this
+   */
+  public CacheBuilder<K, V> writeBehind(
+      long flushIntervalMs, int batchSize, int maxQueueSize) {
+    this.writeBehindEnabled = true;
+    this.writeBehindFlushIntervalMs = flushIntervalMs;
+    this.writeBehindBatchSize = batchSize;
+    this.writeBehindMaxQueueSize = maxQueueSize;
+    return this;
+  }
+
+  /**
+   * 启用 Write-Behind 模式（默认参数）
+   *
+   * @return this
+   */
+  public CacheBuilder<K, V> writeBehind() {
+    return writeBehind(5000, 100, 10000);
+  }
+
+  /**
+   * 启用内存感知淘汰
+   *
+   * <p>当 JVM 堆内存使用率超过阈值时自动淘汰缓存条目。
+   *
+   * @param warnThreshold 告警阈值（0-1）
+   * @param evictThreshold 淘汰阈值（0-1）
+   * @param criticalThreshold 临界清除阈值（0-1）
+   * @param checkIntervalSeconds 检查间隔（秒）
+   * @return this
+   */
+  public CacheBuilder<K, V> memoryAware(
+      double warnThreshold,
+      double evictThreshold,
+      double criticalThreshold,
+      long checkIntervalSeconds) {
+    this.memoryAwareEnabled = true;
+    this.memoryWarnThreshold = warnThreshold;
+    this.memoryEvictThreshold = evictThreshold;
+    this.memoryCriticalThreshold = criticalThreshold;
+    this.memoryCheckIntervalSeconds = checkIntervalSeconds;
+    return this;
+  }
+
+  /**
+   * 启用内存感知淘汰（默认阈值）
+   *
+   * @return this
+   */
+  public CacheBuilder<K, V> memoryAware() {
+    return memoryAware(0.75, 0.85, 0.95, 10);
   }
 
   /**
@@ -430,7 +557,9 @@ public final class CacheBuilder<K, V> {
    * <ol>
    *   <li>创建基础淘汰缓存（LRU/TINYLFU/STRIPED 等）或引用缓存（WEAK/SOFT）
    *   <li>叠加过期装饰器 ExpirableCache（如启用了 expireAfterWrite/Access 或 Expiry）
-   *   <li>叠加写穿透装饰器 WriteThroughCache（如启用）
+   *   <li>叠加内存感知淘汰装饰器 MemoryAwareEvictionCache（如启用）
+   *   <li>叠加 SWR 装饰器 SwrCacheDecorator（如启用）
+   *   <li>叠加写策略装饰器 WriteThroughCache 或 WriteBehindCache（如启用）
    *   <li>添加删除监听器
    * </ol>
    *
@@ -455,8 +584,47 @@ public final class CacheBuilder<K, V> {
       cache = new ExpirableCache<>(cache, writeNanos, accessNanos, expiry, 60);
     }
 
-    // 写穿透装饰器
-    if (writer != null) {
+    // 内存感知淘汰装饰器
+    if (memoryAwareEnabled) {
+      cache =
+          new MemoryAwareEvictionCache<>(
+              cache,
+              memoryWarnThreshold,
+              memoryEvictThreshold,
+              memoryCriticalThreshold,
+              memoryCheckIntervalSeconds);
+    }
+
+    // SWR 装饰器
+    if (swrFreshPeriod > 0 && swrStalePeriod > 0 && swrTimeUnit != null) {
+      CacheLoader<K, V> effectiveLoader = swrLoader != null ? swrLoader : loader;
+      if (effectiveLoader == null) {
+        throw new IllegalStateException("loader or swrLoader must be set for SWR mode");
+      }
+      cache =
+          new SwrCacheDecorator<>(
+              cache,
+              effectiveLoader,
+              swrFreshPeriod,
+              swrStalePeriod,
+              swrTimeUnit,
+              taskExecutor != null ? taskExecutor : listenerExecutor);
+    }
+
+    // 写策略装饰器：WriteBehind 优先于 WriteThrough
+    if (writeBehindEnabled) {
+      if (writer == null) {
+        throw new IllegalStateException("writer must be set for Write-Behind mode");
+      }
+      cache =
+          new WriteBehindCache<>(
+              cache,
+              writer,
+              taskExecutor != null ? taskExecutor : listenerExecutor,
+              writeBehindFlushIntervalMs,
+              writeBehindBatchSize,
+              writeBehindMaxQueueSize);
+    } else if (writer != null) {
       cache = new WriteThroughCache<>(cache, writer);
     }
 

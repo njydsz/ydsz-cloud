@@ -60,6 +60,26 @@ public class ExceptionProperties {
     private boolean includeStackTrace = false;
 
     /**
+     * 是否启用异常告警
+     */
+    private boolean alertEnabled = true;
+
+    /**
+     * 是否启用错误码文档端点
+     */
+    private boolean docEndpointEnabled = true;
+
+    /**
+     * 告警去重时间窗口（秒）
+     */
+    private int alertDedupWindowSeconds = 60;
+
+    /**
+     * 告警全局静默期（秒，0=不静默）
+     */
+    private int alertSilencePeriodSeconds = 0;
+
+    /**
      * 响应格式枚举
      */
     public enum ResponseFormat {

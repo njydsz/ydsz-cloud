@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.pmis.common.core.trace.SnowflakeTraceIdSupplier;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 import com.njydsz.pmis.common.core.trace.TraceIdSupplier;
 
 /**
@@ -16,6 +17,10 @@ import com.njydsz.pmis.common.core.trace.TraceIdSupplier;
  * <p>注册 {@link TraceIdSupplier} Bean，提供 TraceId 的生成策略。
  * 支持 {@code uuid}（默认，无序）和 {@code snowflake}（有序，可排序日志）两种策略，
  * 通过 {@code ydsz.core.trace.id-type} 配置项切换。</p>
+ *
+ * <p>注册的 Bean 会通过 {@link TraceIdGenerator#setSupplier(TraceIdSupplier)} 注入到
+ * {@link TraceIdGenerator} 静态 holder，使所有调用 {@link TraceIdGenerator#generate()}
+ * 的模块自动使用配置的策略。</p>
  *
  * <p>业务方可提供自定义 {@link TraceIdSupplier} Bean 覆盖默认实现。</p>
  *
@@ -37,7 +42,9 @@ public class TraceAutoConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.core.trace", name = "id-type",
             havingValue = "uuid", matchIfMissing = true)
     public TraceIdSupplier uuidTraceIdSupplier() {
-        return () -> UUID.randomUUID().toString().replace("-", "");
+        TraceIdSupplier supplier = () -> UUID.randomUUID().toString().replace("-", "");
+        TraceIdGenerator.setSupplier(supplier);
+        return supplier;
     }
 
     /**
@@ -51,6 +58,8 @@ public class TraceAutoConfiguration {
     @ConditionalOnMissingBean(TraceIdSupplier.class)
     @ConditionalOnProperty(prefix = "ydsz.core.trace", name = "id-type", havingValue = "snowflake")
     public TraceIdSupplier snowflakeTraceIdSupplier() {
-        return new SnowflakeTraceIdSupplier();
+        TraceIdSupplier supplier = new SnowflakeTraceIdSupplier();
+        TraceIdGenerator.setSupplier(supplier);
+        return supplier;
     }
 }

@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -60,10 +59,8 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   private static final Logger log = LoggerFactory.getLogger(WriteBehindCache.class);
 
   private final Cache<K, V> delegate;
-  private final CacheWriter<K, V> writer;
-  private final Executor executor;
+  private final CacheWriter<? super K, ? super V> writer;
   private final ScheduledExecutorService batchExecutor;
-  private final long flushIntervalMs;
   private final int batchSize;
 
   /** 待写入队列 */
@@ -120,15 +117,13 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
    */
   public WriteBehindCache(
       Cache<K, V> delegate,
-      CacheWriter<K, V> writer,
+      CacheWriter<? super K, ? super V> writer,
       Executor executor,
       long flushIntervalMs,
       int batchSize,
       int maxQueueSize) {
     this.delegate = delegate;
     this.writer = writer;
-    this.executor = executor != null ? executor : ForkJoinPool.commonPool();
-    this.flushIntervalMs = flushIntervalMs;
     this.batchSize = batchSize;
     this.maxQueueSize = maxQueueSize;
 
@@ -299,7 +294,6 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public void putAll(Map<K, V> map) {
     delegate.putAll(map);
-    long now = System.currentTimeMillis();
     map.forEach((k, v) -> writeQueue.offer(new WriteOp<>(OpType.WRITE, k, v)));
   }
 

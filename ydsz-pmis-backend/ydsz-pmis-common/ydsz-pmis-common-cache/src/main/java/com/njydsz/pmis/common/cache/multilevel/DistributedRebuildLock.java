@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.cache.multilevel;
 
 import java.util.Collections;
 import java.util.UUID;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -98,7 +99,7 @@ public class DistributedRebuildLock {
     try {
       while (System.currentTimeMillis() < deadline) {
         Boolean acquired = redisTemplate.opsForValue()
-            .setIfAbsent(lockKey, lockValue, lockTtlSeconds, TimeUnit.SECONDS);
+            .setIfAbsent(lockKey, lockValue, Duration.ofSeconds(lockTtlSeconds));
         if (Boolean.TRUE.equals(acquired)) {
           log.debug("获取分布式重建锁成功: cache={}, key={}", cacheName, key);
           return lockValue;

@@ -11,6 +11,7 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.njydsz.pmis.common.core.constant.TraceConstants;
 import com.njydsz.pmis.common.core.context.RequestContext;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 
@@ -29,12 +30,11 @@ import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public class TraceFilter extends OncePerRequestFilter {
 
-    private static final String TRACE_ID_HEADER = "X-Trace-Id";
-    private static final String TRACE_ID_MDC_KEY = "traceId";
+    private static final String TRACE_ID_HEADER = TraceConstants.TRACE_ID_HEADER;
+    private static final String TRACE_ID_MDC_KEY = TraceConstants.MDC_TRACE_ID_KEY;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,

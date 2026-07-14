@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.util.http;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -14,7 +15,16 @@ import javax.net.ssl.X509TrustManager;
 import com.njydsz.pmis.common.util.classloader.ClassUtils;
 
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
+import okhttp3.Callback;
+import okhttp3.ConnectionPool;
+import okhttp3.FormBody;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * 高性能 OkHttp 工具类
@@ -198,6 +208,33 @@ public class OkHttpUtils {
             }
         }
         return insecureClient;
+    }
+
+    /**
+     * 获取 OkHttp 连接池统计信息
+     *
+     * <p>用于监控 OkHttp 客户端的连接池状态，包括空闲连接数、总连接数和调度器排队请求数。
+     * 可通过定时任务或 Micrometer Gauge 定期采集。
+     *
+     * @return 连接池统计 Map，包含 idleConnections、totalConnections、queuedCallsCount；如果 OkHttp 不可用返回空 Map
+     */
+    public static Map<String, Object> getConnectionPoolStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        if (!OKHTTP_AVAILABLE) {
+            return stats;
+        }
+        try {
+            OkHttpClient okClient = getClient();
+            if (okClient != null) {
+                stats.put("idleConnections", okClient.connectionPool().idleConnectionCount());
+                stats.put("totalConnections", okClient.connectionPool().connectionCount());
+                stats.put("queuedCallsCount", okClient.dispatcher().queuedCallsCount());
+                stats.put("runningCallsCount", okClient.dispatcher().runningCallsCount());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get OkHttp connection pool stats: {}", e.getMessage());
+        }
+        return stats;
     }
 
     /**
