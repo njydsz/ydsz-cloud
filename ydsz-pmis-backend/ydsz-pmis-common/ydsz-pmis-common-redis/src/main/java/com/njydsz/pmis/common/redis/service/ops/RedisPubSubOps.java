@@ -140,6 +140,28 @@ public class RedisPubSubOps {
     // ============================ 取消订阅操作 =============================
 
     /**
+     * 取消订阅（仅需订阅 ID）
+     *
+     * <p>无需传入频道名，直接通过订阅 ID 从监听容器中移除监听器。
+     *
+     * @param subscriptionId 订阅 ID（由 subscribe 返回）
+     */
+    public void unsubscribe(String subscriptionId) {
+        if (subscriptionId == null || listenerContainer == null) {
+            return;
+        }
+        try {
+            MessageListener listener = listenerMap.remove(subscriptionId);
+            if (listener != null) {
+                listenerContainer.removeMessageListener(listener);
+                log.info("【Redis】取消订阅成功 | subscriptionId={}", subscriptionId);
+            }
+        } catch (Exception e) {
+            log.error("【Redis】取消订阅失败 | subscriptionId={} | error={}", subscriptionId, e.getMessage());
+        }
+    }
+
+    /**
      * 取消订阅
      *
      * @param subscriptionId 订阅 ID（由 subscribe 返回）
@@ -157,6 +179,26 @@ public class RedisPubSubOps {
             }
         } catch (Exception e) {
             log.error("【Redis】取消订阅失败 | topic={} | subscriptionId={} | error={}", topic, subscriptionId, e.getMessage());
+        }
+    }
+
+    /**
+     * 取消模式订阅（仅需订阅 ID）
+     *
+     * @param subscriptionId 订阅 ID（由 patternSubscribe 返回）
+     */
+    public void patternUnsubscribe(String subscriptionId) {
+        if (subscriptionId == null || listenerContainer == null) {
+            return;
+        }
+        try {
+            MessageListener listener = listenerMap.remove(subscriptionId);
+            if (listener != null) {
+                listenerContainer.removeMessageListener(listener);
+                log.info("【Redis】取消模式订阅成功 | subscriptionId={}", subscriptionId);
+            }
+        } catch (Exception e) {
+            log.error("【Redis】取消模式订阅失败 | subscriptionId={} | error={}", subscriptionId, e.getMessage());
         }
     }
 

@@ -11,6 +11,8 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PreDestroy;
+
 import com.njydsz.pmis.common.redis.config.RedisProperties;
 import com.njydsz.pmis.common.redis.metrics.RedisMetricsCollector;
 
@@ -80,6 +82,14 @@ public class RedisDelayedQueue {
         this.redisTemplate = redisTemplate;
         this.redisProperties = redisProperties;
         this.metricsCollector = metricsCollector;
+    }
+
+    /**
+     * 优雅关闭：清理资源
+     */
+    @PreDestroy
+    public void shutdown() {
+        log.info("【RedisDelayedQueue】组件关闭");
     }
 
     /**

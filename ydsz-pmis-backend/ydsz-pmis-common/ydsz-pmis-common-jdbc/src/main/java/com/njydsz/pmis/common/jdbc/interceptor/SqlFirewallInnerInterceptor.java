@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.jdbc.interceptor;
 
 import java.sql.Connection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -63,14 +65,6 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     private static final Pattern DDL_PERMISSION_PATTERN = Pattern.compile(
             "\\b(GRANT|REVOKE)\\b", Pattern.CASE_INSENSITIVE);
 
-    /** DELETE 无 WHERE 检测正则 */
-    private static final Pattern DELETE_WITHOUT_WHERE_PATTERN = Pattern.compile(
-            "^\\s*DELETE\\s+FROM\\s+\\S+\\s*$", Pattern.CASE_INSENSITIVE);
-
-    /** UPDATE 无 WHERE 检测正则 */
-    private static final Pattern UPDATE_WITHOUT_WHERE_PATTERN = Pattern.compile(
-            "^\\s*UPDATE\\s+\\S+\\s+SET\\s+.*(?<!\\bWHERE\\b.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-
     /** 分号检测（排除字符串内的分号） */
     private static final Pattern SEMICOLON_PATTERN = Pattern.compile(
             ";\\s*", Pattern.CASE_INSENSITIVE);
@@ -82,7 +76,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     private boolean blockUpdateWithoutWhere = true;
     private boolean blockMultiStatement = true;
     private boolean blockPermissionOps = true;
-    private Set<String> allowTables = java.util.Collections.emptySet();
+    private Set<String> allowTables = Collections.emptySet();
 
     @Override
     public void beforePrepare(StatementHandler sh, Connection connection, Integer transactionTimeout) {
@@ -251,9 +245,9 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
 
     public void setAllowTables(Set<String> allowTables) {
         if (allowTables == null) {
-            this.allowTables = java.util.Collections.emptySet();
+            this.allowTables = Collections.emptySet();
         } else {
-            java.util.Set<String> normalized = new java.util.HashSet<>(allowTables.size());
+            Set<String> normalized = new HashSet<>(allowTables.size());
             for (String table : allowTables) {
                 if (table != null) {
                     normalized.add(table.trim().toLowerCase());

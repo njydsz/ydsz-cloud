@@ -80,6 +80,21 @@ public class RedisHealthIndicator implements HealthIndicator {
                         builder.withDetail("used_memory", info.getProperty("used_memory_human", "unknown"));
                         builder.withDetail("max_memory", info.getProperty("max_memory_human", "unlimited"));
                         builder.withDetail("version", info.getProperty("redis_version", "unknown"));
+                        builder.withDetail("connected_clients",
+                                info.getProperty("connected_clients", "unknown"));
+                        builder.withDetail("used_memory_peak",
+                                info.getProperty("used_memory_peak_human", "unknown"));
+                        builder.withDetail("mem_fragmentation_ratio",
+                                info.getProperty("mem_fragmentation_ratio", "unknown"));
+                        builder.withDetail("uptime_in_days",
+                                info.getProperty("uptime_in_days", "unknown"));
+                    }
+                    // 数据库 Key 数量
+                    try {
+                        Long dbSize = connection.serverCommands().dbSize();
+                        builder.withDetail("db_size", dbSize != null ? dbSize : -1);
+                    } catch (Exception ignored) {
+                        builder.withDetail("db_size", "unavailable");
                     }
                 } catch (Exception e) {
                     builder.withDetail("server_info", "unavailable");

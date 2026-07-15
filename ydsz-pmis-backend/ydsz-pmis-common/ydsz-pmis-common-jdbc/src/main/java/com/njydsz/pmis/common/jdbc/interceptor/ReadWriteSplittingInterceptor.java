@@ -2,7 +2,6 @@ package com.njydsz.pmis.common.jdbc.interceptor;
 
 import java.sql.Connection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;

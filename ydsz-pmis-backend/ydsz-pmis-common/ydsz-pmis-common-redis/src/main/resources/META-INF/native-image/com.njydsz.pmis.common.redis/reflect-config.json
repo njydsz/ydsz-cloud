@@ -1,6 +1,6 @@
 [
   {
-    "name": "com.njydsz.pmis.common.redis.serializer.JacksonRedisSerializer",
+    "name": "com.njydsz.pmis.common.redis.serializer.YdszJsonRedisSerializer",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true
   },

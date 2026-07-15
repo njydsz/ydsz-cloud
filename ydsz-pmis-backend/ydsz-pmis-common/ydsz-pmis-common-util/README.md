@@ -17,8 +17,7 @@ PMIS 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTT
 
 | 类 | 说明 |
 |---|---|
-| `SnowflakeIdGenerator` / `SnowflakeUtils` | 雪花算法 ID 生成器（workerId 自动分配） |
-| `IdGenerator` / `IdGeneratorFactory` | ID 生成器接口与工厂 |
+| `SnowflakeUtils` | 雪花算法 ID 生成器（workerId 自动分配） |
 | `WorkerIdRegistry` | WorkerId 注册中心（Redis 协调） |
 | `UUIDUtils` | UUID 工具（带连字符 / 不带连字符） |
 | `SequenceUtils` | 有界序列号生成 |

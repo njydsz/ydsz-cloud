@@ -805,6 +805,26 @@ public class RedisService implements BatchRedisOperations {
         return advancedOps.executeScript(script, keys, returnType, args);
     }
 
+    // ============================ Key 操作 =============================
+
+    /**
+     * 删除指定 Key
+     *
+     * @param key Redis Key
+     * @return true-删除成功，false-Key 不存在或删除失败
+     */
+    public boolean delete(String key) {
+        if (key == null) {
+            return false;
+        }
+        try {
+            return Boolean.TRUE.equals(redisTemplate.delete(key));
+        } catch (Exception e) {
+            log.error("【Redis】DELETE 操作失败 | key={} | error={}", key, e.getMessage());
+            return false;
+        }
+    }
+
     // ============================ BatchRedisOperations 接口实现 =============================
 
     @Override

@@ -272,4 +272,56 @@ public class YdszCacheableAspect {
         double jitter = 1.0 + ThreadLocalRandom.current().nextDouble(-0.1, 0.1);
         return Math.max(1, (long) (ttlSeconds * jitter));
     }
+
+    /**
+     * 环绕通知：拦截 {@link YdszCacheEvict} 注解方法
+     *
+     * <p>方法执行成功后删除对应的 Redis 缓存。
+     *
+     * @param joinPoint 切点
+     * @return 方法返回值
+     * @throws Throwable 原方法抛出的异常
+     */
+    @Around("@annotation(com.njydsz.pmis.common.redis.annotation.YdszCacheEvict)")
+    public Object aroundEvict(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        YdszCacheEvict annotation = method.getAnnotation(YdszCacheEvict.class);
+
+        Object result = joinPoint.proceed();
+
+        String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
+        redisService.delete(cacheKey);
+        log.debug("【YdszCacheEvict】缓存淘汰 | key={}", cacheKey);
+
+        return result;
+    }
+
+    /**
+     * 环绕通知：拦截 {@link YdszCachePut} 注解方法
+     *
+     * <p>方法执行成功后将返回值写入 Redis 缓存。与 {@link #around} 不同，
+     * 此方法不查询缓存，始终执行方法体。
+     *
+     * @param joinPoint 切点
+     * @return 方法返回值
+     * @throws Throwable 原方法抛出的异常
+     */
+    @Around("@annotation(com.njydsz.pmis.common.redis.annotation.YdszCachePut)")
+    public Object aroundPut(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        YdszCachePut annotation = method.getAnnotation(YdszCachePut.class);
+
+        Object result = joinPoint.proceed();
+
+        if (result != null) {
+            String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
+            Duration ttlDuration = Duration.of(annotation.ttl(), annotation.timeUnit().toChronoUnit());
+            redisService.set(cacheKey, result, ttlDuration);
+            log.debug("【YdszCachePut】缓存更新 | key={} | ttl={}s", cacheKey, annotation.ttl());
+        }
+
+        return result;
+    }
 }

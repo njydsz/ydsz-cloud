@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.jdbc.interceptor;
 
 import java.sql.Connection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -130,7 +132,7 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
     /**
      * 忽略逻辑删除拦截的表集合（小写化）
      */
-    private Set<String> ignoreTables = java.util.Collections.emptySet();
+    private Set<String> ignoreTables = Collections.emptySet();
 
     /**
      * 设置删除标记字段名
@@ -166,9 +168,9 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
      */
     public void setIgnoreTables(Set<String> ignoreTables) {
         if (ignoreTables == null || ignoreTables.isEmpty()) {
-            this.ignoreTables = java.util.Collections.emptySet();
+            this.ignoreTables = Collections.emptySet();
         } else {
-            java.util.Set<String> normalized = new java.util.HashSet<>(ignoreTables.size());
+            Set<String> normalized = new HashSet<>(ignoreTables.size());
             for (String table : ignoreTables) {
                 if (table != null) {
                     normalized.add(table.trim().toLowerCase());

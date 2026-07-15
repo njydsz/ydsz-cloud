@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.jdbc.config;
 
 import org.mybatis.spring.mapper.MapperScannerConfigurer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,7 @@ public class MapperScanConfiguration {
      * @return MapperScannerConfigurer 实例
      */
     @Bean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(MapperScannerConfigurer.class)
+    @ConditionalOnMissingBean(MapperScannerConfigurer.class)
     public MapperScannerConfigurer mapperScannerConfigurer(JdbcProperties jdbcProperties) {
         MapperScannerConfigurer scannerConfigurer = new MapperScannerConfigurer();
         String basePackages = String.join(",", jdbcProperties.getMapperScanPackages());

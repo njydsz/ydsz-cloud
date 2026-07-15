@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -150,7 +151,7 @@ public class MybatisPlusConfiguration {
      * @see PaginationInnerInterceptor
      */
     @Bean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(MybatisPlusInterceptor.class)
+    @ConditionalOnMissingBean(MybatisPlusInterceptor.class)
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
@@ -223,6 +224,18 @@ public class MybatisPlusConfiguration {
             firewall.setAllowTables(sqlFirewallProperties.getAllowTables());
             interceptor.addInnerInterceptor(firewall);
             log.debug("MyBatis Plus: SqlFirewall interceptor enabled");
+        }
+
+        // 读写分离状态日志
+        if (readWriteSplittingProperties != null && readWriteSplittingProperties.isEnabled()) {
+            log.info("MyBatis Plus: ReadWriteSplitting configured (master={}, slaves={})",
+                    readWriteSplittingProperties.getMasterDs(), readWriteSplittingProperties.getSlaveDsList());
+        }
+
+        // 数据库熔断器状态日志
+        if (circuitBreakerProperties != null && circuitBreakerProperties.isEnabled()) {
+            log.info("MyBatis Plus: DatabaseCircuitBreaker configured (threshold={}, openDuration={}ms)",
+                    circuitBreakerProperties.getFailureThreshold(), circuitBreakerProperties.getOpenDurationMillis());
         }
 
         return interceptor;
