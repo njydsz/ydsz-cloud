@@ -28,6 +28,7 @@ import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
 import com.njydsz.pmis.common.safe.util.ClientIpResolver;
+import com.njydsz.pmis.common.safe.filter.CachedBodyHttpServletRequestWrapper;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
@@ -191,19 +192,19 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
         }
 
         // 读取并缓存 JSON/XML 请求体（解决 InputStream 只能读取一次的问题）
-        CachedBodyHttpServletRequest wrappedRequest = null;
+        CachedBodyHttpServletRequestWrapper wrappedRequest = null;
         String bodyContent = null;
         String contentType = request.getContentType();
         if (contentType != null
                 && (contentType.contains("application/json") || contentType.contains("application/xml"))
-                && !(request instanceof CachedBodyHttpServletRequest)) {
+                && !(request instanceof CachedBodyHttpServletRequestWrapper)) {
             try {
                 byte[] bodyBytes = request.getInputStream().readAllBytes();
                 bodyContent = new String(bodyBytes, StandardCharsets.UTF_8);
                 if (bodyContent.length() > MAX_BODY_DETECT_LENGTH) {
                     bodyContent = bodyContent.substring(0, MAX_BODY_DETECT_LENGTH);
                 }
-                wrappedRequest = new CachedBodyHttpServletRequest(request, bodyBytes);
+                wrappedRequest = new CachedBodyHttpServletRequestWrapper(request, bodyBytes);
             } catch (IOException e) {
                 // 读取请求体失败，仅检测参数和请求头
             }
@@ -304,50 +305,4 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
     }
 
 
-    /**
-     * 缓存请求体的 HTTP 请求包装器，解决 InputStream 只能读取一次的问题。
-     *
-     * <p>在 Filter 中读取请求体进行安全检测后，通过此包装器将缓存的字节数组
-     * 重新提供给下游 Filter/Servlet，确保业务代码仍可正常读取请求体。
-     */
-    private static class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
-
-        private final byte[] cachedBody;
-
-        CachedBodyHttpServletRequest(HttpServletRequest request, byte[] cachedBody) {
-            super(request);
-            this.cachedBody = cachedBody != null ? cachedBody : new byte[0];
-        }
-
-        @Override
-        public ServletInputStream getInputStream() throws IOException {
-            final ByteArrayInputStream bis = new ByteArrayInputStream(cachedBody);
-            return new ServletInputStream() {
-                @Override
-                public boolean isFinished() {
-                    return bis.available() == 0;
-                }
-
-                @Override
-                public boolean isReady() {
-                    return true;
-                }
-
-                @Override
-                public void setReadListener(ReadListener listener) {
-                }
-
-                @Override
-                public int read() throws IOException {
-                    return bis.read();
-                }
-            };
-        }
-
-        @Override
-        public BufferedReader getReader() throws IOException {
-            return new BufferedReader(
-                    new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
-        }
-    }
 }

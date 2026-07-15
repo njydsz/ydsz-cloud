@@ -7,15 +7,15 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.event.model.OutboxMessage;
+import com.njydsz.pmis.common.event.model.OutboxStatus;
 import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.json.exception.JsonException;
+import com.njydsz.pmis.common.json.type.JsonType;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-
-import com.njydsz.pmis.common.json.type.JsonType;
-import com.njydsz.pmis.common.event.model.OutboxMessage;
-import com.njydsz.pmis.common.event.model.OutboxStatus;
 
 /**
  * Outbox 消息 JDBC 仓储
@@ -31,17 +31,14 @@ public class OutboxRepository {
     private static final JsonType<Map<String, String>> MAP_TYPE = new JsonType<>() {};
 
     private final JdbcTemplate jdbcTemplate;
-    private final ObjectMapper objectMapper;
     private final String tableName;
 
     /**
      * @param jdbcTemplate  JDBC 模板
-     * @param objectMapper   JSON 序列化器
      * @param tableName      Outbox 表名（默认 pmis_outbox）
      */
-    public OutboxRepository(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper, String tableName) {
+    public OutboxRepository(JdbcTemplate jdbcTemplate, String tableName) {
         this.jdbcTemplate = jdbcTemplate;
-        this.objectMapper = objectMapper;
         this.tableName = tableName;
     }
 
@@ -156,7 +153,7 @@ public class OutboxRepository {
         }
         try {
             return Json.toJson(headers);
-        } catch (JsonProcessingException e) {
+        } catch (JsonException e) {
             return null;
         }
     }
@@ -166,8 +163,8 @@ public class OutboxRepository {
             return Map.of();
         }
         try {
-            return objectMapper.readValue(json, MAP_TYPE);
-        } catch (JsonProcessingException e) {
+            return Json.fromJson(json, MAP_TYPE);
+        } catch (JsonException e) {
             return Map.of();
         }
     }

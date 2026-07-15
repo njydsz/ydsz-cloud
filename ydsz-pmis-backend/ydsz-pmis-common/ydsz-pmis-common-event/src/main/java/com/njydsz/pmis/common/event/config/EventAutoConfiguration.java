@@ -49,9 +49,8 @@ public class EventAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public OutboxRepository outboxRepository(JdbcTemplate jdbcTemplate,
-                                              ObjectMapper objectMapper,
                                               EventProperties properties) {
-        return new OutboxRepository(jdbcTemplate, objectMapper, properties.getTableName());
+        return new OutboxRepository(jdbcTemplate, properties.getTableName());
     }
 
     /**

@@ -31,8 +31,7 @@ import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
 import com.njydsz.pmis.common.safe.config.ApiSignatureProperties;
 import com.njydsz.pmis.common.safe.crypto.NonceCache;
-import com.njydsz.pmis.common.safe.util.ClientIpResolver;
-import com.njydsz.pmis.common.util.url.UrlPathUtils;
+import com.njydsz.pmis.common.safe.util.ClientIpResolver;import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
  * API 签名验证过滤器
@@ -151,12 +150,12 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
         }
 
         byte[] bodyBytes = new byte[0];
-        CachedBodyHttpServletRequest wrappedRequest = null;
+        CachedBodyHttpServletRequestWrapper wrappedRequest = null;
         String contentType = request.getContentType();
         if (contentType != null && contentType.contains("application/json")) {
             try {
                 bodyBytes = request.getInputStream().readAllBytes();
-                wrappedRequest = new CachedBodyHttpServletRequest(request, bodyBytes);
+                wrappedRequest = new CachedBodyHttpServletRequestWrapper(request, bodyBytes);
             } catch (IOException e) {
                 log.warn("【API签名验证】读取请求体失败 | uri={}", request.getRequestURI());
             }
@@ -266,47 +265,4 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
         return sb.toString();
     }
 
-    /**
-     * 缓存请求体的 HTTP 请求包装器
-     */
-    private static class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
-
-        private final byte[] cachedBody;
-
-        CachedBodyHttpServletRequest(HttpServletRequest request, byte[] cachedBody) {
-            super(request);
-            this.cachedBody = cachedBody != null ? cachedBody : new byte[0];
-        }
-
-        @Override
-        public ServletInputStream getInputStream() throws IOException {
-            ByteArrayInputStream bis = new ByteArrayInputStream(cachedBody);
-            return new ServletInputStream() {
-                @Override
-                public boolean isFinished() {
-                    return bis.available() == 0;
-                }
-
-                @Override
-                public boolean isReady() {
-                    return true;
-                }
-
-                @Override
-                public void setReadListener(ReadListener listener) {
-                }
-
-                @Override
-                public int read() throws IOException {
-                    return bis.read();
-                }
-            };
-        }
-
-        @Override
-        public BufferedReader getReader() throws IOException {
-            return new BufferedReader(
-                    new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
-        }
-    }
 }
