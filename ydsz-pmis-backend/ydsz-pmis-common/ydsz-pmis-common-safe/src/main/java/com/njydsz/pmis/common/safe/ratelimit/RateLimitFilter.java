@@ -24,6 +24,7 @@ import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
 import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
+import com.njydsz.pmis.common.safe.util.ClientIpResolver;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
@@ -131,7 +132,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             boolean allowed = result != null && result == 1L;
 
             if (!allowed) {
-                log.warn("【安全模块】请求被限流 | key={}, uri={}, ip={}", rateLimitKey, request.getRequestURI(), getClientIp(request));
+                log.warn("【安全模块】请求被限流 | key={}, uri={}, ip={}", rateLimitKey, request.getRequestURI(), ClientIpResolver.getClientIp(request));
                 publishRateLimitEvent(request);
                 writeRateLimitResponse(response);
                 return;
@@ -170,7 +171,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
      */
     private String resolveRateLimitKey(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        String clientIp = getClientIp(request);
+        String clientIp = ClientIpResolver.getClientIp(request);
         String userId = request.getHeader("X-User-Id");
 
         RateLimitProperties.Dimension dimension = properties.getDimension();
@@ -194,72 +195,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
 
-    /**
-     * 获取客户端真实 IP。
-     *
-     * <p>判断逻辑：
-     * <ol>
-     *   <li>获取直连 IP（request.getRemoteAddr()，不可伪造）</li>
-     *   <li>如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 X-Forwarded-For / X-Real-IP</li>
-     *   <li>否则直接使用直连 IP</li>
-     * </ol>
-     * 这样可以防止外部客户端伪造 X-Forwarded-For 绕过 IP 限流。
-     */
-    private String getClientIp(HttpServletRequest request) {
-        String directIp = request.getRemoteAddr();
-        // 如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 X-Forwarded-For
-        if (directIp != null && isTrustedProxy(directIp)) {
-            String ip = request.getHeader("X-Forwarded-For");
-            if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-                int index = ip.indexOf(',');
-                if (index != -1) {
-                    return ip.substring(0, index).trim();
-                }
-                return ip.trim();
-            }
-            ip = request.getHeader("X-Real-IP");
-            if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-                return ip.trim();
-            }
-        }
-        return directIp != null && !directIp.isEmpty() ? directIp : "0.0.0.0";
-    }
-
-    /**
-     * 判断 IP 是否为可信代理。
-     *
-     * <p>可信代理包括：
-     * <ul>
-     *   <li>本地回环：127.0.0.0/8, ::1</li>
-     *   <li>内网私有：10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
-     *   <li>Docker 默认网段：172.17.0.0/16</li>
-     * </ul>
-     */
-    private static boolean isTrustedProxy(String ip) {
-        if (ip == null || ip.isEmpty()) {
-            return false;
-        }
-        // 本地回环
-        if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
-            return true;
-        }
-        // 内网私有地址（简单判断，CIDR 精确匹配可后续增强）
-        if (ip.startsWith("10.") || ip.startsWith("192.168.")) {
-            return true;
-        }
-        if (ip.startsWith("172.")) {
-            // 172.16.0.0 - 172.31.255.255
-            try {
-                int secondOctet = Integer.parseInt(ip.split("\\.")[1]);
-                if (secondOctet >= 16 && secondOctet <= 31) {
-                    return true;
-                }
-            } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
-                // 解析失败，不视为可信代理
-            }
-        }
-        return false;
-    }
 
     /**
      * 判断请求路径是否需要排除限流。
@@ -279,7 +214,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         SecurityEvent event = new SecurityEvent(
                 SecurityEventType.RATE_LIMIT_TRIGGERED,
                 request.getRequestURI(),
-                getClientIp(request),
+                ClientIpResolver.getClientIp(request),
                 request.getHeader("User-Agent"),
                 "Rate limit exceeded for key: " + resolveRateLimitKey(request),
                 SecurityEvent.Severity.MEDIUM

@@ -31,6 +31,7 @@ import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
 import com.njydsz.pmis.common.safe.config.ApiSignatureProperties;
 import com.njydsz.pmis.common.safe.crypto.NonceCache;
+import com.njydsz.pmis.common.safe.util.ClientIpResolver;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
@@ -197,7 +198,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
             SecurityEvent event = new SecurityEvent(
                     SecurityEventType.ILLEGAL_ACCESS,
                     request.getRequestURI(),
-                    getClientIp(request),
+                    ClientIpResolver.getClientIp(request),
                     request.getHeader("User-Agent"),
                     payload,
                     SecurityEvent.Severity.HIGH
@@ -214,17 +215,6 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
         return UrlPathUtils.matchAny(excludes, request.getServletPath());
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeader("X-Real-IP");
-        if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-        return request.getRemoteAddr();
-    }
 
     /**
      * 计算 SHA-256 哈希（十六进制输出）

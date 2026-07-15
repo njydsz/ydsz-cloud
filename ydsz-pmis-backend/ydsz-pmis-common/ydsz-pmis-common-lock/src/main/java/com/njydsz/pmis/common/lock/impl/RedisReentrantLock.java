@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.core.AbstractRedisDistributedLock;
 
 import lombok.extern.slf4j.Slf4j;
@@ -145,6 +146,11 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
         this.releaseLockScript = new DefaultRedisScript<>(RELEASE_LOCK_LUA_SCRIPT, Long.class);
         this.getHoldCountScript = new DefaultRedisScript<>(GET_HOLD_COUNT_LUA_SCRIPT, Long.class);
         this.renewLockScript = new DefaultRedisScript<>(RENEW_LOCK_LUA_SCRIPT, Long.class);
+    }
+
+    @Override
+    protected LockType getLockType() {
+        return LockType.REENTRANT;
     }
 
     @Override

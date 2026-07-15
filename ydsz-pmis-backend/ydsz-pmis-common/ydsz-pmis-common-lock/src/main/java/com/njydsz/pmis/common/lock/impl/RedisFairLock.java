@@ -204,6 +204,11 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         this.cleanupQueueScript = new DefaultRedisScript<>(CLEANUP_QUEUE_LUA_SCRIPT, Long.class);
     }
 
+    @Override
+    protected LockType getLockType() {
+        return LockType.FAIR;
+    }
+
     /**
      * 获取公平锁等待队列的 Redis Key
      *

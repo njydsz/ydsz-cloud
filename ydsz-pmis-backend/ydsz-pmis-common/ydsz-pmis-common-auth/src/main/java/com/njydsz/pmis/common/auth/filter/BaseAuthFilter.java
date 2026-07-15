@@ -14,6 +14,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.auth.context.PermissionContextHolder;
+import com.njydsz.pmis.common.auth.security.CsrfTokenValidator;
+import com.njydsz.pmis.common.auth.security.RateLimiter;
 import com.njydsz.pmis.common.core.constant.FilterIgnoreConstant;
 import com.njydsz.pmis.common.util.auth.AuthInfo;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
@@ -34,10 +36,19 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
 
     protected final String applicationName;
     protected final AuthFilterConfiguration authFilterConfiguration;
+    protected final RateLimiter rateLimiter;
+    protected final CsrfTokenValidator csrfTokenValidator;
 
     public BaseAuthFilter(String applicationName, AuthFilterConfiguration authFilterConfiguration) {
+        this(applicationName, authFilterConfiguration, null, null);
+    }
+
+    public BaseAuthFilter(String applicationName, AuthFilterConfiguration authFilterConfiguration,
+                          RateLimiter rateLimiter, CsrfTokenValidator csrfTokenValidator) {
         this.applicationName = applicationName;
         this.authFilterConfiguration = authFilterConfiguration;
+        this.rateLimiter = rateLimiter;
+        this.csrfTokenValidator = csrfTokenValidator;
     }
 
     @Override
@@ -49,6 +60,21 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
             log.debug("{}[跳过认证] 请求路径: {}", getLogPrefix(), servletPath);
             filterChain.doFilter(request, response);
             return;
+        }
+        // CSRF 校验（如果启用）
+        if (csrfTokenValidator != null && !csrfTokenValidator.validate(request)) {
+            log.warn("{}[CSRF 校验失败] 请求路径: {}", getLogPrefix(), servletPath);
+            response.sendError jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN, "CSRF Token validation failed");
+            return;
+        }
+        // 限流检查（如果启用）
+        if (rateLimiter != null) {
+            String clientIp = request.getRemoteAddr();
+            if (!rateLimiter.tryAcquire(clientIp)) {
+                log.warn("{}[限流] IP: {}, 请求路径: {}", getLogPrefix(), clientIp, servletPath);
+                response.sendError jakarta.servlet.http.HttpServletResponse.SC_TOO_MANY_REQUESTS, "Rate limit exceeded");
+                return;
+            }
         }
         long startTime = System.currentTimeMillis();
         AuthInfo authInfo = resolveAuthInfo(request, response);

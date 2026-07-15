@@ -1,7 +1,9 @@
 package com.njydsz.pmis.common.jdbc.config;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -50,4 +52,11 @@ public class ReadWriteSplittingProperties {
      * 负载均衡策略：round-robin | random | weighted（默认 round-robin）
      */
     private String loadBalanceStrategy = "round-robin";
+
+    /**
+     * 从库权重映射（仅在 load-balance-strategy=weighted 时生效）。
+     * <p>key=数据源名称，value=权重值（正整数）。
+     * 未配置的从库默认权重为 1。
+     */
+    private Map<String, Integer> weights = new LinkedHashMap<>();
 }

@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.njydsz.pmis.common.auth.hierarchy.PermissionHierarchy;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
@@ -79,13 +80,15 @@ public final class PermissionUtils {
         if (granted == null || granted.isEmpty() || StringUtils.isBlank(required)) {
             return false;
         }
+        // 先检查直接匹配
         String req = required.trim();
         for (String g : granted) {
             if (permissionMatch(g, req, wildcardEnabled)) {
                 return true;
             }
         }
-        return false;
+        // 检查权限继承层级：拥有父权限自动拥有子权限
+        return PermissionHierarchy.hasPermission(granted, req, wildcardEnabled);
     }
 
     /**

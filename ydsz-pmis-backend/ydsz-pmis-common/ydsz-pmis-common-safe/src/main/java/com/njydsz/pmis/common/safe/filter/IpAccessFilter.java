@@ -20,6 +20,7 @@ import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
 import com.njydsz.pmis.common.safe.ip.IpAccessService;
+import com.njydsz.pmis.common.safe.util.ClientIpResolver;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
@@ -70,7 +71,7 @@ public class IpAccessFilter extends OncePerRequestFilter {
             return;
         }
 
-        String clientIp = getClientIp(request);
+        String clientIp = ClientIpResolver.getClientIp(request);
 
         try {
             if (!ipAccessService.isAllowed(clientIp)) {
@@ -107,15 +108,4 @@ public class IpAccessFilter extends OncePerRequestFilter {
         return UrlPathUtils.matchAny(excludes, request.getServletPath());
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeader("X-Real-IP");
-        if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-        return request.getRemoteAddr();
-    }
 }
