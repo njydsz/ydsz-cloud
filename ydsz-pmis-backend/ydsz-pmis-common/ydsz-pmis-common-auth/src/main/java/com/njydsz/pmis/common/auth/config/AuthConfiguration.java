@@ -15,8 +15,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import java.util.concurrent.TimeUnit;
-
 import com.njydsz.pmis.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.pmis.common.auth.aspect.AuthPermissionAspect;
 import com.njdsz.pmis.common.auth.aspect.AuthRowPermissionAspect;
