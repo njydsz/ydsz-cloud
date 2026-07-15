@@ -9,7 +9,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
  * <p>对外暴露：按系统用户/三方 openId 查询映射、保存或更新令牌、绑定账号。
  * 三方审批回调时通过 {@link #getByOpenId} 反查系统用户，驱动工作流通过/驳回等操作。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowThirdPartyAccountService {

@@ -69,7 +69,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>被 {@code FlowTaskPassService} / {@code FlowTaskRejectService} / {@code FlowTaskOperateService} /
  * {@code FlowInstanceService} 等多个调用方复用。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

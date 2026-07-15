@@ -12,7 +12,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowTimerDO;
  * <p>中间定时器：流程到达 intermediateTimer 节点后等待 N 时间再继续
  * <p>边界定时器：挂在 userTask 上，到时间未完成则触发超时分支
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowTimerService {

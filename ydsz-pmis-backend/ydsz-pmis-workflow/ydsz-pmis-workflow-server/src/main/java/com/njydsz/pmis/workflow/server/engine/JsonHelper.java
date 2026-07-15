@@ -7,7 +7,6 @@ import com.njydsz.pmis.common.json.Json;
 /**
  * 工作流引擎 JSON 工具（基于 Json 引擎，统一使用 Json）
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public final class JsonHelper {

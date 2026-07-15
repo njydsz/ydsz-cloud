@@ -9,7 +9,6 @@ import java.util.Map;
  * <p>对标钉钉"合并审批"能力。将多个相似的流程实例合并为一笔审批，
  * 审批人一次性审批多个申请，提高审批效率。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public interface FlowInstanceMergeService {

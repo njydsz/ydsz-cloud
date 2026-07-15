@@ -5,7 +5,6 @@ package com.njydsz.pmis.workflow.server.form;
  *
  * <p>对标钉钉/飞书审批表单设计器的字段类型体系。
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 public enum FlowFormFieldType {

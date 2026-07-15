@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
  * // 结果：ABC***
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see ColumnDesensitizationRule

@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
  * <p>P2-37: 携带 operatorId/operatedAt/traceId/tenantId 等上下文信息，
  * 供监听器获取完整的事件元数据，对标用友 BPM / 钉钉审批的事件通知能力。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data

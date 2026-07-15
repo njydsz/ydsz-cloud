@@ -25,7 +25,6 @@ import com.njydsz.pmis.literule.api.Rule;
  * <p>规则实例解析：Graph → Chain 时，需要外部提供 nodeId 对应的 Rule 实例
  * （因为 Graph 只携带 ruleCode，不携带表达式），由 {@link RuleResolver} 接口回调获取。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public final class ChainGraphConverter {

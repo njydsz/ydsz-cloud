@@ -24,7 +24,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
  *   <li>子流程驳回/终止：父流程同步驳回/终止</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowSubProcessService {

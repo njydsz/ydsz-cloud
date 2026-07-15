@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>本服务将两者整合：先应用字段权限过滤，再执行 Schema 校验</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 @Slf4j

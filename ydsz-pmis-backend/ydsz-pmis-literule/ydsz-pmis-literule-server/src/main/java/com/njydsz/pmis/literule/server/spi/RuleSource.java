@@ -27,7 +27,6 @@ import com.njydsz.pmis.literule.api.RuleDefinition;
  *
  * <p>参考 LiteFlow 的多数据源设计，支持 7 种数据源无缝切换。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 public interface RuleSource {

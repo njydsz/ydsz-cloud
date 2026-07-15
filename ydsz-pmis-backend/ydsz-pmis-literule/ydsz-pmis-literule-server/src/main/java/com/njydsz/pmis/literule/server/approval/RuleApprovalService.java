@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  * 单级审批流（maxLevel=1）使用 {@link RuleStatus#REVIEW} 状态，
  * 与既有单级审批完全兼容。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

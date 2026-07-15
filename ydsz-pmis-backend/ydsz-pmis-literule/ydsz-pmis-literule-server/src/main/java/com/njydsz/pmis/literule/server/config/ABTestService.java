@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>模板调整后，验证标题/描述输出是否符合预期</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j

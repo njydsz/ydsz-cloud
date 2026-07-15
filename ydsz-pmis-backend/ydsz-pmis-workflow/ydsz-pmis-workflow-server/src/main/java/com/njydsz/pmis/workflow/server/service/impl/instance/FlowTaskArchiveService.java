@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>被 {@code FlowTaskPassService} / {@code FlowTaskRejectService} / 会签策略等复用。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

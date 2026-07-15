@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>所有方法均 try-catch，保证日志异常不拖垮回调主流程</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

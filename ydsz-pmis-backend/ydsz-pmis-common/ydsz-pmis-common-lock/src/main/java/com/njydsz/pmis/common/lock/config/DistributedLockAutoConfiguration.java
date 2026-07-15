@@ -46,7 +46,6 @@ import com.njydsz.pmis.common.redis.service.RedisService;
  *   <li>ydsz.lock.max-renew-times - 最大续期次数</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @AutoConfiguration

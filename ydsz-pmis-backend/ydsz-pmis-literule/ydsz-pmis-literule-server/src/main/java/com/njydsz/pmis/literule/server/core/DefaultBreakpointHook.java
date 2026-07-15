@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>线程安全：断点集合与快照列表基于并发容器；阻塞 latch 按规则编码隔离，
  * 同一规则同一时刻仅允许一个评估线程进入 SUSPEND。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public class DefaultBreakpointHook implements BreakpointHook {

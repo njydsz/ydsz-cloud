@@ -18,7 +18,6 @@ import lombok.Getter;
  *   <li>TASK_CREATED / TASK_COMPLETED / TASK_URGED / TASK_TRANSFERRED / TASK_DELEGATED / TASK_COUNTERSIGNED / TASK_JUMPED / TASK_TIMEOUT</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Getter

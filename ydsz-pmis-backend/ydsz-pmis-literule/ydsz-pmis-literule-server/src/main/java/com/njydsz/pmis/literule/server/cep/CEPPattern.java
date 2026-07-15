@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  * - threshold: 5
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Data

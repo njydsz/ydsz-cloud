@@ -22,7 +22,6 @@ import java.util.Map;
  *   <li><b>追踪树构建</b>：求值过程中同步构建 {@link ExprTraceBuilder} 追踪树</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public class TreeInterpreter implements ExprNodeVisitor<Object> {

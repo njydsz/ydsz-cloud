@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
@@ -24,7 +24,6 @@ import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
  *
  * <p><b>注意：</b>此实现适用于单机部署。分布式环境下建议使用 Redis 实现。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see CsrfTokenRepository
@@ -40,7 +39,7 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
 
     public InMemoryCsrfTokenRepository(long expirationSeconds) {
         this.expirationSeconds = expirationSeconds;
-        this.tokenCache = YdszCache.<String, CsrfToken>newBuilder()
+        this.tokenCache = LocalCache.<String, CsrfToken>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(expirationSeconds * 2L, TimeUnit.SECONDS)
                 .build();

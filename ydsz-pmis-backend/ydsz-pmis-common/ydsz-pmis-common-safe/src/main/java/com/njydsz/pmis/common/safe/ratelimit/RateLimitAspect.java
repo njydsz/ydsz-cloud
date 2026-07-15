@@ -28,7 +28,7 @@ import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.safe.ratelimit.RateLimitProperties.Dimension;
-import com.njydsz.pmis.common.util.http.ServletUtils;
+import com.njydsz.pmis.common.safe.util.ClientIpResolver;
 
 /**
  * 方法级限流 AOP 切面
@@ -53,7 +53,6 @@ import com.njydsz.pmis.common.util.http.ServletUtils;
  *   <li>限流通过 → 执行原方法；限流拒绝 → 返回 429</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @see RateLimit
  * @see RateLimitFilter
@@ -230,7 +229,7 @@ public class RateLimitAspect {
     private String getCurrentIp() {
         HttpServletRequest request = getCurrentRequest();
         if (request != null) {
-            return ServletUtils.getClientIp(request);
+            return ClientIpResolver.getClientIp(request);
         }
         return "unknown";
     }

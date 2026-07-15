@@ -64,7 +64,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>不依赖任何第三方 BPMN 库，零外部依赖。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

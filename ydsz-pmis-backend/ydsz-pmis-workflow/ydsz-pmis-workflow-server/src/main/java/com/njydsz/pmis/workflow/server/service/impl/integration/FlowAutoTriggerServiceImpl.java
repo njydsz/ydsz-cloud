@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
  * 使用 literule 的 ExpressionEvaluator 评估 conditionExpression，
  * 满足条件则自动启动 targetFlowCode 对应的目标流程。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j

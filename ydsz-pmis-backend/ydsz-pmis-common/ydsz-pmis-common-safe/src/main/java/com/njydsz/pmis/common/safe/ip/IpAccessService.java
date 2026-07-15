@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.redis.service.RedisService;
@@ -29,7 +29,6 @@ import com.njydsz.pmis.common.safe.config.IpAccessProperties;
  *   <li>自动封禁/解封 API</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @see IpAccessFilter
  */
@@ -55,7 +54,7 @@ public class IpAccessService {
         this.properties = properties;
         this.redisService = redisService;
 
-        this.blacklistCache = YdszCache.<String, Boolean>newBuilder()
+        this.blacklistCache = LocalCache.<String, Boolean>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(properties.getLocalCacheTtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(properties.getLocalCacheSize())

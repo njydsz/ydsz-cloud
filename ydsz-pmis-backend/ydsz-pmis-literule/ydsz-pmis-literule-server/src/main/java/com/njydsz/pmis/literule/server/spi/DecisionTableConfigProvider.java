@@ -10,7 +10,6 @@ import com.njydsz.pmis.literule.api.DecisionTableDefinition;
  * <p>由消费方（如 execution 模块）提供实现，从数据库加载决策表定义。
  * literule 模块本身不依赖持久层。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public interface DecisionTableConfigProvider {

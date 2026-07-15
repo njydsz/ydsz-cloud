@@ -74,7 +74,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>自动注册核心组件：表达式求值器、规则引擎、规则管理服务。
  * 当 classpath 中存在 RuleConfigProvider 实现时，自动启用动态规则加载和热刷新。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

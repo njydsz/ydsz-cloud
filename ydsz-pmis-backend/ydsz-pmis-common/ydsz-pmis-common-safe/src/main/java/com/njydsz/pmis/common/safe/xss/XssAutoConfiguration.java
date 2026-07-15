@@ -17,7 +17,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  * <p>此方式与 XssFilter、XssJsonMessageConverter 互补，
  * 在 Json 反序列化层面提供 XSS 防护。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

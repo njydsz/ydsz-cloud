@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>采用内存 Map 存储消息资源，避免引入额外的消息文件管理复杂度。
  * 支持 zh_CN / en_US 两种语言。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j

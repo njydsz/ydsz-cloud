@@ -19,7 +19,6 @@ import lombok.NoArgsConstructor;
  *
  * <p>典型使用场景：风控规则中的"短时间内多次失败登录"、运维告警中的"5 分钟内错误率超阈值"等。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data

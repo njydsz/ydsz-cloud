@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>故障切换：主数据源不可用时自动降级到备选数据源</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j

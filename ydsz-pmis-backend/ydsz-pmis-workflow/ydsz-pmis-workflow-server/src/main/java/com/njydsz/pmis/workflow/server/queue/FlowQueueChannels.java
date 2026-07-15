@@ -13,7 +13,6 @@ package com.njydsz.pmis.workflow.server.queue;
  *   <li>{@link #FLOW_TIMEOUT} - 流程超时事件（供 cronjob 模块消费触发超时处理任务）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public final class FlowQueueChannels {

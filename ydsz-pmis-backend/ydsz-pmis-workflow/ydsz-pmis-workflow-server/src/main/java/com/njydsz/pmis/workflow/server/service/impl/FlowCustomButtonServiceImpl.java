@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 节点自定义按钮服务实现（P2-4）。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 @Slf4j

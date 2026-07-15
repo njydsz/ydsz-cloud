@@ -30,7 +30,6 @@ import com.njydsz.pmis.common.json.Json;
  *   <li>配合 {@link SensitiveDataProcessor} 使用可实现更全面的脱敏</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see SensitiveData

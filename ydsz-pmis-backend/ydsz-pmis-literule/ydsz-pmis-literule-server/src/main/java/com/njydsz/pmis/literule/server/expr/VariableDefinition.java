@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
  * <p>描述规则表达式中可引用的变量，包括名称、类型、描述、示例值等。
  * 由 {@link VariableRegistry} 提供，供 {@link ExpressionValidationService} 做 UNDEFINED_VARIABLE 校验。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Data

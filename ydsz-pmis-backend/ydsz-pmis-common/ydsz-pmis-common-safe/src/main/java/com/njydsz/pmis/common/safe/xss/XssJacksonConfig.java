@@ -14,7 +14,6 @@ import com.njydsz.pmis.common.json.Json;
  * XssJacksonConfig.registerXssProtection();
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -31,7 +31,6 @@ import com.njydsz.pmis.common.redis.service.RedisService;
  *   <li>SEMAPHORE - 信号量（需要 RedisService）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class DefaultLockStrategy implements LockStrategy {

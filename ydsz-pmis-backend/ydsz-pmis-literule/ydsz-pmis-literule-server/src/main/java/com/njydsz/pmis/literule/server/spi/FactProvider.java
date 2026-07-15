@@ -63,7 +63,6 @@ import com.njydsz.pmis.literule.api.RuleContext;
  * }
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 public interface FactProvider {

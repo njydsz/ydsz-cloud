@@ -9,7 +9,6 @@ import com.njydsz.pmis.literule.api.DecisionTreeDefinition;
  *
  * <p>由消费方提供实现，从数据库加载决策树定义。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public interface DecisionTreeConfigProvider {

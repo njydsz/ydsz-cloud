@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Bean 名称 = {@code flowTimeoutJobHandler}，
  * 可在 pmis_job 表配置：handler=flowTimeoutJobHandler, cron="0 0/5 * * * ?"（每 5 分钟扫描一次）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

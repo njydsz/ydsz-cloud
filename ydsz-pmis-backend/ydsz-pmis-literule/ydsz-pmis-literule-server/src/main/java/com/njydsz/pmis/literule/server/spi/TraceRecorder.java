@@ -18,7 +18,6 @@ import com.njydsz.pmis.literule.api.RuleExecutionTrace;
  *   <li>支持历史 Trace 回放对比</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public interface TraceRecorder {

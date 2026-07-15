@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>子流程事件通知：触发 onInstanceStart 和发布 FlowWorkflowEvent</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

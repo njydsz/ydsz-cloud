@@ -77,7 +77,6 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * request.setHeader("X-Signature", signature);
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @see ApiSignatureProperties
  * @see NonceCache

@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>适用场景：</b>需要严格按顺序执行的分布式任务，避免饥饿问题。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * @see DistributedLocker
  * @see RedisReentrantLock

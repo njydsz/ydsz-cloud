@@ -15,7 +15,6 @@ import java.lang.annotation.*;
  * public Result<Order> createOrder(@RequestBody OrderDTO dto) { ... }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Target(ElementType.METHOD)

@@ -44,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
  * // result.getTrace() → [Round1: rule1, Round2: rule2]
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @Slf4j

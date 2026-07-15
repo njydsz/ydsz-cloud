@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>依赖：需在 classpath 中引入 {@code com.alibaba.nacos:nacos-client}。
  * 当 Nacos 客户端不在 classpath 中时，{@link #isAvailable()} 返回 false，不参与数据源选择。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j

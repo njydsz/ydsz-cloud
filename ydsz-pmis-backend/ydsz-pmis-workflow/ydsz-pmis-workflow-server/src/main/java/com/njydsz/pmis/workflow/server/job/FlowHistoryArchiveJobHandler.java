@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Bean 名称 = {@code flowHistoryArchiveJobHandler}，
  * 可在 pmis_job 表配置：handler=flowHistoryArchiveJobHandler, cron="0 0 3 * * ?"
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

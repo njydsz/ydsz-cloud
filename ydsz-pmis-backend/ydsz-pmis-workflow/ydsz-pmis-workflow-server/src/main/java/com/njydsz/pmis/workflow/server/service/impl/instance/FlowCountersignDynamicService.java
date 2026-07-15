@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对标 Camunda multiInstance completionCondition。
  * 支持在审批运行时动态修改会签通过阈值（VOTE/WEIGHTED_VOTE 模式）。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j

@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>典型场景：费率表、税率表、运费表、风险等级矩阵。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j

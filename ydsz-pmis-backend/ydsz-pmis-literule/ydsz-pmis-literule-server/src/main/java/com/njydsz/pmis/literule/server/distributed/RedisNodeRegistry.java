@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
  * <p>心跳超时清理采用惰性删除策略：{@link #getAliveNodes()} 时过滤超时节点，
  * 不依赖后台定时任务，降低系统复杂度。
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 public class RedisNodeRegistry implements NodeRegistry {

@@ -17,7 +17,6 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
  *   <li>HTML 实体编码特殊字符：{@code < > " ' &}</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

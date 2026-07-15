@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  * 查询该实例关联的三方审批记录，若账号配置了 cancelWebhookUrl 则 POST 调用取消三方审批单；
  * 未配置时标记 NOT_CONFIGURED；调用失败标记 FAIL。所有异常降级记录，不影响本地主流程。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

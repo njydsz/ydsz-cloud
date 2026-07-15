@@ -23,7 +23,6 @@ import java.util.List;
  * └── Final = false (short-circuit at 2nd condition)
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public class ExprTraceBuilder {

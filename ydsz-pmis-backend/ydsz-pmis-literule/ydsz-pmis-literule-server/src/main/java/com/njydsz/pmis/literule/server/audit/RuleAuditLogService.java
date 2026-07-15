@@ -50,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
  * List<AuditLogEntry> userLogs = auditService.queryByOperator("zhangsan", 100);
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @Slf4j

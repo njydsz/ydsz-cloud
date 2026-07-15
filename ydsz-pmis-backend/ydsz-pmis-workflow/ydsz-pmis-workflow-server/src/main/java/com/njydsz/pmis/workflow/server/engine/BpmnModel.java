@@ -15,7 +15,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
  * 用于驱动流程图回放时节点高亮定位。坐标系来自 BPMN 2.0 标准 BPMNDI 段
  * （{@code <BPMNDiagram><BPMNPlane><BPMNShape>}/{@code <BPMNEdge>}）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class BpmnModel {

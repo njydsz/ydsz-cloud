@@ -11,7 +11,6 @@ import com.njydsz.pmis.literule.api.RuleEnvironment;
  * <p>由消费方（如 execution 模块）提供实现，从数据库/配置中心加载规则定义。
  * literule 模块本身不依赖任何持久层实现，通过此接口反转依赖。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface RuleConfigProvider {

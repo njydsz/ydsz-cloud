@@ -33,7 +33,6 @@ package com.njydsz.pmis.common.safe.desensitize;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see ColumnDesensitizationExecutor

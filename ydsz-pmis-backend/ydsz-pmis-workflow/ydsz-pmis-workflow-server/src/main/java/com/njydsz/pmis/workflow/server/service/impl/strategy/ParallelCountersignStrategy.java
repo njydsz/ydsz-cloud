@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
  * <p>对标钉钉/飞书"会签"。N 个办理人共享 1 条 task + N 条 FlowUserDO，
  * approveFinished 计数聚合在单 task 上。乐观锁防并发。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Component

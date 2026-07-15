@@ -9,7 +9,6 @@ import com.njydsz.pmis.literule.api.RuleContext;
  *
  * <p>抽象表达式引擎，默认提供 {@link com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator}。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface ExpressionEvaluator {

@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>规则触发后自动启动关联的工作流流程实例，实现规则与工作流深度联动。
  * 依赖 {@code ydsz-pmis-workflow-api} 模块提供的 {@link WorkflowServiceClient}。
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 @Slf4j

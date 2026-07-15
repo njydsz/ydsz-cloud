@@ -27,7 +27,6 @@ import java.util.Set;
  * }
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public class LiteExprSandbox {

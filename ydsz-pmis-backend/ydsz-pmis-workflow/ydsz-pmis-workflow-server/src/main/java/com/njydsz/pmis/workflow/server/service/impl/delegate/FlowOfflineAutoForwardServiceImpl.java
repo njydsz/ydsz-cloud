@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 离线代理自动转发服务实现（P2-5）。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 @Slf4j

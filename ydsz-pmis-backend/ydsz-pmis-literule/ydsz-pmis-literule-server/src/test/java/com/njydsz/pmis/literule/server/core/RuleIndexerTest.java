@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
  * {@link RuleIndexer} 单元测试：覆盖索引启用/重建、增量添加/移除、
  * 按租户+环境+场景+互斥组过滤、倒排索引字段过滤等核心逻辑。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @DisplayName("规则索引器 RuleIndexer 测试")

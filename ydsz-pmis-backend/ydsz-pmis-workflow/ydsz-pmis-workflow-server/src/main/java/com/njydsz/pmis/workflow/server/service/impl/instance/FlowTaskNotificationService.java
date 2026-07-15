@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>事件分发委托给 {@link FlowTaskSupport}（其内部吞异常、遍历监听器）。
  * 本类只做事件语义封装，避免在主流程中嵌入事件发布样板代码。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

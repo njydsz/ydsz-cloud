@@ -46,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>overdueRate — 超期率（taskStatus=TIMEOUT 的占比）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

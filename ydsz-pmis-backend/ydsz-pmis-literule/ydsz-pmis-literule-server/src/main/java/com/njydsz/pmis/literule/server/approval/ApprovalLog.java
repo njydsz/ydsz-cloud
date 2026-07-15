@@ -24,7 +24,6 @@ import lombok.NoArgsConstructor;
  *   <li>{@link #ACTION_CANCEL} - 撤回审核</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Data

@@ -31,7 +31,6 @@ import com.njydsz.pmis.common.safe.alert.SecurityEvent;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public class SecurityAuditLogger {

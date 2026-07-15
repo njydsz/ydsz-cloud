@@ -9,7 +9,6 @@ import com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalViewDTO;
  * <p>业务页（项目立项/合同/工时/采购等）通过本服务拉取嵌入式审批面板数据，
  * 一次性获得流程实例/流程图/当前待办/历史轨迹，并支持快捷操作。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowEmbeddedApprovalService {

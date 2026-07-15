@@ -41,7 +41,6 @@ import lombok.Data;
  *         - alt
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

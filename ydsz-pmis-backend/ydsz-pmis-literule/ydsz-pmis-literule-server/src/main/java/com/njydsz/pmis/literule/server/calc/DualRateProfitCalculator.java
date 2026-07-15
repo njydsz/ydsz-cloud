@@ -13,7 +13,6 @@ import java.util.List;
  *
  * <p>支持混合职级加权平均计算。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class DualRateProfitCalculator {

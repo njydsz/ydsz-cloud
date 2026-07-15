@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>WEBHOOK — 通过 {@link MessageServiceClient} 委托消息中心发送到 extra.webhookUrl 指定的企业微信/钉钉机器人</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

@@ -16,7 +16,6 @@ import com.njydsz.pmis.common.json.Json;
  * String json = YdszSensitiveSerializer.serialize(user);
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see SensitiveDataProcessor

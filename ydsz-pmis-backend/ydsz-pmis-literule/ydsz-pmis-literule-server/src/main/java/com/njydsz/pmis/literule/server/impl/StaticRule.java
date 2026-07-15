@@ -11,7 +11,6 @@ import com.njydsz.pmis.literule.api.RuleResult;
  *
  * <p>用于编程式注册规则，保持与原 AlertRule 编码习惯兼容。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class StaticRule implements Rule {

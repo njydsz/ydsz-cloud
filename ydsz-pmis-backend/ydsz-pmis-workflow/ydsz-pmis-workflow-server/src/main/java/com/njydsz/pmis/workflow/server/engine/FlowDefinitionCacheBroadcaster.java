@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>参考实现：auth 模块 PermissionChangePublisher / PermissionChangeCacheInvalidator
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

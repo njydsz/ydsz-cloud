@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  * StressTestResult result = service.run("BUDGET_WARN", factsList, 10, 1000, 100);
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j

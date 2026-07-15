@@ -21,11 +21,15 @@ import re
 ROOT = pathlib.Path(r"d:\Code\ydsz\ydsz-pmis")
 CACHE_MODULE = ROOT / "ydsz-pmis-backend" / "ydsz-pmis-common" / "ydsz-pmis-common-cache"
 
-# 受影响的目录（cache 模块自身 + 外部引用方）
+# 受影响的目录（cache 模块自身 + 全部外部引用方）
 AFFECTED_DIRS = [
     CACHE_MODULE,
     ROOT / "ydsz-pmis-backend" / "ydsz-pmis-gateway",
     ROOT / "ydsz-pmis-backend" / "ydsz-pmis-common" / "ydsz-pmis-common-auth",
+    ROOT / "ydsz-pmis-backend" / "ydsz-pmis-common" / "ydsz-pmis-common-safe",
+    ROOT / "ydsz-pmis-backend" / "ydsz-pmis-common" / "ydsz-pmis-common-lock",
+    ROOT / "ydsz-pmis-backend" / "ydsz-pmis-literule" / "ydsz-pmis-literule-server",
+    ROOT / "ydsz-pmis-backend" / "ydsz-pmis-workflow" / "ydsz-pmis-workflow-server",
 ]
 
 # 替换规则（按长度降序，避免部分替换）

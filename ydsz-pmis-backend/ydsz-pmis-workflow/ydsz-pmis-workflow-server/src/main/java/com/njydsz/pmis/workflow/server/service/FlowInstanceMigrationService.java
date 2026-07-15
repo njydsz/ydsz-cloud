@@ -12,7 +12,6 @@ import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationResultDTO;
  * <p>当流程定义更新（新版本部署）后，运行中的实例可能需要迁移到新版本。
  * 本服务负责实例的迁移、预览（试运行）、查询及节点自动映射。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowInstanceMigrationService {

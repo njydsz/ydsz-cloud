@@ -31,7 +31,6 @@ import java.util.Map;
  * }
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 public interface FlowConditionExprService {

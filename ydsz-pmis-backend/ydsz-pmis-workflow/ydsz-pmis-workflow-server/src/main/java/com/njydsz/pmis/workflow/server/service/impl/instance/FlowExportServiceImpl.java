@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>生成带水印的 HTML 审批单，支持浏览器直接打印（window.print()）。
  * 水印为全页面覆盖的重复文字（操作人 + 时间），防止截图泄露。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 @Slf4j

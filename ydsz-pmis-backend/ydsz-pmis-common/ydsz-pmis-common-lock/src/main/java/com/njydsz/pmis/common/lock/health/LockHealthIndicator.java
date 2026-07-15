@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>检测锁指标汇总数据（可选）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

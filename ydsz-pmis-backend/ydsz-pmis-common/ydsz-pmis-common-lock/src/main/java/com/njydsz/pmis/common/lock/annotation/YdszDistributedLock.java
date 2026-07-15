@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
  *   <li>timeUnit：时间单位，默认秒</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Target(ElementType.METHOD)

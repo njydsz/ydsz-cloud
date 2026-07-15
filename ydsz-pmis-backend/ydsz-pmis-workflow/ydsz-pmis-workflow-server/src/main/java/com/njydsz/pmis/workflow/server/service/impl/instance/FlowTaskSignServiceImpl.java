@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>跨子 Service 共享的任务校验/审计/事件能力委托给 {@link FlowTaskSupport}。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

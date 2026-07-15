@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
  * boolean mine = sharder.isMine("rule-code-001", selfNodeId);
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 public class ConsistentHashSharder {

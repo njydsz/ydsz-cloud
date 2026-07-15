@@ -10,7 +10,6 @@ import java.util.List;
  * <p>由消费方（如 execution 模块）实现，提供预算管控所需的数据快照。
  * literule 模块通过此接口反转依赖，无需直接依赖 Feign/Mapper。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface BudgetSnapshotProvider {
@@ -64,7 +63,6 @@ public interface BudgetSnapshotProvider {
     /**
      * 预算快照 DTO
      *
-     * @author ydsz-pmis-team
      */
     record BudgetSnapshot(
             String projectId,

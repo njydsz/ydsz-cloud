@@ -32,7 +32,6 @@ import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
  *   {"sourceNodeId":"hostA:1234","event":{"ruleCode":"R001","changeType":"UPDATE","operator":"admin"}}
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {

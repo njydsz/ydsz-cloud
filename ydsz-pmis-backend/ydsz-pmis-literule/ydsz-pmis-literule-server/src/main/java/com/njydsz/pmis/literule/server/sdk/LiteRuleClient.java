@@ -49,7 +49,6 @@ import com.njydsz.pmis.literule.server.impl.ExpressionRule;
  *     .register();
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public class LiteRuleClient {

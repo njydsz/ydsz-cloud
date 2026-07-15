@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>所有写操作都在 REQUIRES_NEW 子事务中，单条失败不影响扫描主循环</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

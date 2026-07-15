@@ -56,7 +56,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>新增会签类型时：实现 {@link CountersignStrategy} + 在 {@code FlowPerformType} 枚举中加值，无需修改本类。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

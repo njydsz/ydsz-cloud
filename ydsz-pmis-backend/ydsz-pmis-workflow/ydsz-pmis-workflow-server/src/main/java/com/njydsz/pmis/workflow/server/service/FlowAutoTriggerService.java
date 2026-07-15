@@ -11,7 +11,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowAutoTriggerDO;
  * 通过注册触发规则（sourceFlowCode -> targetFlowCode + 条件表达式），
  * 实现流程间的自动化串联。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public interface FlowAutoTriggerService {

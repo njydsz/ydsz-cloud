@@ -31,7 +31,6 @@ import lombok.Data;
  * <p>动态覆盖：JobHandler 的 {@code paramsJson} 仍可覆盖 retentionDays/batchSize/maxProcessMs，
  * 便于临时触发一次特殊参数的归档（如手动归档 90 天前的数据）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data

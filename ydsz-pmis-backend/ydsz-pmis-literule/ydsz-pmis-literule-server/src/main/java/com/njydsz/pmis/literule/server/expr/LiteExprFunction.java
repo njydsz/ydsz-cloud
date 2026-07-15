@@ -15,7 +15,6 @@ package com.njydsz.pmis.literule.server.expr.liteexpr;
  * });
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @FunctionalInterface

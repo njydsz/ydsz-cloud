@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code TRANSFER} — 调岗：仅转交当前部门相关流程的待办（简化实现中与 RESIGN 一致）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 @Slf4j

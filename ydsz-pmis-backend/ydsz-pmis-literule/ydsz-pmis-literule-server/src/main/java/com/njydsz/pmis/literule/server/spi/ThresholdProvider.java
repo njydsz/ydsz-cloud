@@ -9,7 +9,6 @@ import java.math.BigDecimal;
  * 修复原 AlertRuleEngine 与 pmis_config 表脱节的问题：
  * 引擎不再使用硬编码常量，而是通过此接口获取可配置阈值。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface ThresholdProvider {

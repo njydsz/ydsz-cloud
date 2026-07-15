@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>自 v3.5.1 起实现 {@link DistributedLocker} 接口，
  * 可纳入 {@link com.njydsz.pmis.common.lock.strategy.LockStrategy} 统一管理。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  *
  * @since 3.0.0

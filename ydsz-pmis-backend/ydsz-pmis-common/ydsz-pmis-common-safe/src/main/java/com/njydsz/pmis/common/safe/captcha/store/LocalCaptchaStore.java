@@ -16,7 +16,6 @@ import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
  * 基于 ConcurrentHashMap 实现,适用于单机环境
  * 支持自动过期清理
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

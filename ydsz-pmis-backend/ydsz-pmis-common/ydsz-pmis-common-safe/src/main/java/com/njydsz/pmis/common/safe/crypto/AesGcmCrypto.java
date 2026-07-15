@@ -49,7 +49,6 @@ import javax.crypto.spec.SecretKeySpec;
  *   <li>密钥应安全存储，建议使用密钥管理服务（KMS）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

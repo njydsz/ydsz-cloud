@@ -19,7 +19,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
  *   <li>{@link #resolveEffectiveDefinition} — 启动流程时根据 canary 配置解析实际生效的版本</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowCanaryService {

@@ -7,7 +7,6 @@ import java.util.Map;
  *
  * <p>对标钉钉"审批周报"能力。定时聚合审批数据，生成周报/月报并推送给管理者。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public interface FlowReportService {

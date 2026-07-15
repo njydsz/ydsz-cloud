@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
  * engine.feed(event);
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j

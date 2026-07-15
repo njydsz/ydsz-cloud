@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>催办对每个待办任务写入审计日志、触发 onTaskUrged 事件、累计 Prometheus 指标。
  * 限流通过 {@link FlowUrgeLimiter} 实现，限流命中时抛 RATE_LIMIT 异常。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

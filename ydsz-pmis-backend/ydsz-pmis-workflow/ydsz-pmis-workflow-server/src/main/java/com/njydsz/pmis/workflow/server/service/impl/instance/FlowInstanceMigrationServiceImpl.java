@@ -46,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
  * 以支持"逐实例防御式迁移"——单个实例失败不影响其他实例的已成功写入，
  * 失败明细记录在结果报告中，便于人工重试。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

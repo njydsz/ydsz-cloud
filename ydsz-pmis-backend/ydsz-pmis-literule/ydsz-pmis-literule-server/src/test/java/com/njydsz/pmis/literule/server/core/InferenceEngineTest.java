@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
  * {@link InferenceEngine} 单元测试：覆盖前向链推理、推理链执行、事实变更检测、
  * 最大轮次限制、规则异常隔离等核心逻辑。
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @DisplayName("前向链推理引擎 InferenceEngine 测试")

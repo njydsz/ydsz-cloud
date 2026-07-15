@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>注意：BPMN 中的循环（rework loop）是合法的，本校验器不拒绝环，
  * 仅在日志中记录检测到的环路。
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j

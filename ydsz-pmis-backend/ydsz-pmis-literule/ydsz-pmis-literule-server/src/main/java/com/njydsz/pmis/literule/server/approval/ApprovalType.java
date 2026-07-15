@@ -10,7 +10,6 @@ package com.njydsz.pmis.literule.server.approval;
  *   <li>{@link #SEQUENCE} - 顺序审批，按 approvers 列表顺序依次审批</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 public enum ApprovalType {

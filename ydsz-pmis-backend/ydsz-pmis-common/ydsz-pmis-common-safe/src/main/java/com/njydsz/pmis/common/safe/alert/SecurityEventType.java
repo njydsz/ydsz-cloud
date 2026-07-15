@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.safe.alert;
 /**
  * 安全事件类型枚举
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

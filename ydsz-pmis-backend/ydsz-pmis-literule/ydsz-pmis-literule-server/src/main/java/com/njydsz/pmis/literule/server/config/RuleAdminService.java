@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>若配置了 {@link RuleConfigBroadcaster}，变更事件将通过广播器同步到所有节点，
  * 实现分布式热加载一致性。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

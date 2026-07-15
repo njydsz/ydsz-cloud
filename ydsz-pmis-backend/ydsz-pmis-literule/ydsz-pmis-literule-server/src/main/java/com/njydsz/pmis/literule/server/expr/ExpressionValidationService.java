@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Bean 装配见 {@link com.njydsz.pmis.literule.server.config.LiteRuleAutoConfiguration#expressionValidationService}。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Slf4j

@@ -11,7 +11,6 @@ import com.njydsz.pmis.literule.api.RuleResult;
  * <p>规则触发后执行的后续动作（消息通知、工作流触发、定时任务触发等）。
  * 实现类通过 {@link RuleActionDispatcher} 注册，由 {@code DefaultRuleEngine} 在评估完成后调用。
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 @FunctionalInterface

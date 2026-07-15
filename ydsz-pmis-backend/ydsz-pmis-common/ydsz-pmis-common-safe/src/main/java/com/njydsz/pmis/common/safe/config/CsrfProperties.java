@@ -32,7 +32,6 @@ import lombok.Data;
  *         - /actuator/**
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -70,7 +70,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>P0 修复：补全 onInstanceStart / onError 事件触发、挂起冻结任务、撤回功能。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

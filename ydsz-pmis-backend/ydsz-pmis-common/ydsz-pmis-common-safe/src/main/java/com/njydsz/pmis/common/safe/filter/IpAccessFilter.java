@@ -34,7 +34,6 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  *
  * <p><b>降级策略：</b>Redis 异常时不阻断服务（fail-open），仅记录日志。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  * @see IpAccessService
  */

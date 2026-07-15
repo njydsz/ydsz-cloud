@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>优雅关闭：{@link #shutdown} 等待剩余事件写入</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Slf4j

@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code flow:assignee:last_active:{userId}} — 最近活跃时间</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 @Slf4j

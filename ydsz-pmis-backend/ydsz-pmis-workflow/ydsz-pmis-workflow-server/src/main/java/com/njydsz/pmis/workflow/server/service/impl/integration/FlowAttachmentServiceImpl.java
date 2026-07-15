@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>P1-6 (GAP-51)
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

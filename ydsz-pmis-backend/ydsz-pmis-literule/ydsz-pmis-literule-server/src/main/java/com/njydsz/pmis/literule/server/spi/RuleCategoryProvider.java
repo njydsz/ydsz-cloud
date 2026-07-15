@@ -16,7 +16,6 @@ import lombok.Data;
  * 按路径过滤规则、按 Owner 筛选等能力。将原有 {@code RuleCategoryTreeService} 的能力抽象为 SPI，
  * 避免 literule 模块直接依赖 project 模块。
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 public interface RuleCategoryProvider {

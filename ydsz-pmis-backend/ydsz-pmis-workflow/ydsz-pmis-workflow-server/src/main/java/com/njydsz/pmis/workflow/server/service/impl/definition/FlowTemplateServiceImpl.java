@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  * 导入时通过 {@link FlowDefinitionService#deploy} 将模板的 BPMN XML 部署为草稿流程定义。
  * 导出时将已发布流程定义转换为 BPMN XML 并存入模板表。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

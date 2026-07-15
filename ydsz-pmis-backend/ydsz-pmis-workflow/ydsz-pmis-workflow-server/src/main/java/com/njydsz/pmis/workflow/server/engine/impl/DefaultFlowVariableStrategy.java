@@ -44,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>当使用 Aviator 引擎时，${} 包裹会被自动剥离，内部表达式直接交给 Aviator 求值。
  * 不带 ${} 的表达式视为纯 Aviator 表达式直接求值。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

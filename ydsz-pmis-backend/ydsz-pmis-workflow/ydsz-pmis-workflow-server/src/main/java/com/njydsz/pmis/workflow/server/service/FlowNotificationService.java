@@ -15,7 +15,6 @@ import java.util.Map;
  *
  * <p>所有方法均为"尽力而为"语义：内部 try-catch 吞异常，不拖垮主流程事务。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public interface FlowNotificationService {

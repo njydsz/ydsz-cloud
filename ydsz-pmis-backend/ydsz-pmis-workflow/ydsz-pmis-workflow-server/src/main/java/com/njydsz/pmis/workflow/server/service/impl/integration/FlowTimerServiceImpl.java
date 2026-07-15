@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>中间定时器触发：调用 advancer.advance 推进流程到下一节点。
  * <p>边界定时器触发：取消 userTask（视为超时未完成），推进到边界定时器下游节点。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

@@ -8,7 +8,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.lock.core.DistributedLocker;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * <p><b>内存安全：</b>
- * 使用 {@link YdszCache} 替代 {@link ThreadLocal}，通过 TTL（30 分钟）和最大容量（10,000）
+ * 使用 {@link LocalCache} 替代 {@link ThreadLocal}，通过 TTL（30 分钟）和最大容量（10,000）
  * 自动清理，彻底避免线程池复用场景下的 ThreadLocal 内存泄漏。
  *
  * <p><b>等待策略：</b>
@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>自 v3.5.1 起实现 {@link DistributedLocker} 接口，
  * 可纳入 {@link com.njydsz.pmis.common.lock.strategy.LockStrategy} 统一管理。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  *
  * @since 3.0.0
@@ -82,7 +81,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * <p>使用 ydsz-pmis-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理，
      * 彻底避免线程池复用场景下的内存泄漏。
      */
-    private final Cache<String, String> readLockValueCache = YdszCache.<String, String>newBuilder()
+    private final Cache<String, String> readLockValueCache = LocalCache.<String, String>newBuilder()
             .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
@@ -92,7 +91,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * 当前线程的读锁重入计数
      * <p>使用 ydsz-pmis-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理。
      */
-    private final Cache<String, Integer> readLockCountCache = YdszCache.<String, Integer>newBuilder()
+    private final Cache<String, Integer> readLockCountCache = LocalCache.<String, Integer>newBuilder()
             .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
@@ -102,7 +101,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * 当前线程持有的写锁 lockValue，用于 DistributedLocker 接口方法
      * <p>使用 ydsz-pmis-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理。
      */
-    private final Cache<String, String> writeLockValueCache = YdszCache.<String, String>newBuilder()
+    private final Cache<String, String> writeLockValueCache = LocalCache.<String, String>newBuilder()
             .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)

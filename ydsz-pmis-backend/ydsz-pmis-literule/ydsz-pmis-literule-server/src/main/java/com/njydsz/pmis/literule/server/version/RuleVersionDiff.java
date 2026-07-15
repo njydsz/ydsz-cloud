@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
  * 与纯文本 Diff 不同，本结果基于 {@link com.njydsz.pmis.literule.api.RuleDefinition}
  * 的字段语义进行结构化对比，前端可据此高亮具体变更字段。
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @Data

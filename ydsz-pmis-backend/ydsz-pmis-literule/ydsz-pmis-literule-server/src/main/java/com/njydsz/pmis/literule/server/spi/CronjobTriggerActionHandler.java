@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>规则触发后自动触发关联的 cronjob 定时任务，实现规则与定时任务联动。
  * 依赖 {@code ydsz-pmis-cronjob-api} 模块提供的 {@link CronjobServiceClient}。
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 @Slf4j

@@ -7,7 +7,6 @@ import java.util.Map;
  *
  * <p>支持 ${var} 占位符 + 简单 SpEL 表达式（如 ${amount > 100000}）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowVariableStrategy {

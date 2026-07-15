@@ -30,7 +30,6 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>XssFilter：用于全局请求过滤，基于 Servlet Filter</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see Xss

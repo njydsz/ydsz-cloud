@@ -40,7 +40,6 @@ import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
  *   <li>仅 {@code pmis.literule.distributed.enabled=true}：降级为内存实现（单节点/开发环境）</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Configuration

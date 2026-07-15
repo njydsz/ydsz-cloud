@@ -17,7 +17,6 @@ package com.njydsz.pmis.literule.server.orchestrator;
  *   <li>{@link #RETRY} - 重试执行：执行节点失败时自动重试，达到上限后执行回滚（2.0.0）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public enum RuleChainType {

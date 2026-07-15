@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>逾期扣分：每次 -5，最低 0</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

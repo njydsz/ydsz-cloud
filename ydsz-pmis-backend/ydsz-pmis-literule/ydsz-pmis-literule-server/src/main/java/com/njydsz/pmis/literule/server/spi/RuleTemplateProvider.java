@@ -14,7 +14,6 @@ import com.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
  *
  * <p>literule 模块的 {@code RuleAdminController} 通过此接口反转依赖调用模板市场能力。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public interface RuleTemplateProvider {

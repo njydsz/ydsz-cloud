@@ -15,7 +15,6 @@ import java.util.List;
  *
  * <p>权限数据来源：{@code pmis_flow_admin_role} 表（用户-角色映射）。
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 public interface FlowAdminPermissionService {

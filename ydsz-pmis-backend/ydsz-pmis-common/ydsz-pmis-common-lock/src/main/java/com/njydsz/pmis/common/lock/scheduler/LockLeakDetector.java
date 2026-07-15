@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>看门狗持续续期但业务未完成</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

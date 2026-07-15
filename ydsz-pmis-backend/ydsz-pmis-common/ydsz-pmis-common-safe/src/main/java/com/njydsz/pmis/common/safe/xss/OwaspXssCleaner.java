@@ -15,7 +15,6 @@ import org.owasp.html.Sanitizers;
  *   <li>Better performance and security</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

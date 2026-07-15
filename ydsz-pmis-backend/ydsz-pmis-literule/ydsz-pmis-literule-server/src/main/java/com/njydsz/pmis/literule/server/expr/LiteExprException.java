@@ -10,7 +10,6 @@ import com.njydsz.pmis.common.exception.custom.BusinessException;
  *
  * <p>继承 {@link BusinessException}，纳入 common-exception 统一异常体系。
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public class LiteExprException extends BusinessException {

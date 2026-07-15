@@ -39,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link #arriveToken} 在 Redis 不可用时返回 false，调用方可重试或走兜底逻辑</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

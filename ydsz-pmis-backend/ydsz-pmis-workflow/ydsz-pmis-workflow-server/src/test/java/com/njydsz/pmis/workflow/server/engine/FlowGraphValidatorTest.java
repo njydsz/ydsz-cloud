@@ -22,7 +22,6 @@ import com.njydsz.pmis.workflow.domain.enums.FlowNodeType;
  * {@link IllegalArgumentException}（非 SysException），故以下异常断言均针对
  * {@code IllegalArgumentException} 进行。
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @DisplayName("FlowGraphValidator 流程图校验器测试")

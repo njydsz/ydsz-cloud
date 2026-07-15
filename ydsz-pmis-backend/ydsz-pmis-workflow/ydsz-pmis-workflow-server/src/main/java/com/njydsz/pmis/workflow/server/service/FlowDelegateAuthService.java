@@ -12,7 +12,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
  * <p>对标钉钉/飞书的"代理人"功能：用户预先设置规则，
  * 在生效区间内到达的匹配任务自动转给被代理人。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public interface FlowDelegateAuthService {

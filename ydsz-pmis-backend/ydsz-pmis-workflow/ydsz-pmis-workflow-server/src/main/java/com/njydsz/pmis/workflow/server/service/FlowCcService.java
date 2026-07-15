@@ -22,7 +22,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
  *   <li>分页查询返回 {@link PageResult}，统一分页响应结构</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public interface FlowCcService {

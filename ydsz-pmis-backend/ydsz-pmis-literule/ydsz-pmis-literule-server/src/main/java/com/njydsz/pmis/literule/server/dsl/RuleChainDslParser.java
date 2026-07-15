@@ -50,7 +50,6 @@ import com.njydsz.pmis.literule.server.orchestrator.RuleNode;
  *
  * <p>解析器采用递归下降算法，支持无限嵌套。规则引用通过 {@link RuleResolver} 回调解析。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 public class RuleChainDslParser {

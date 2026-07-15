@@ -54,7 +54,6 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * <p><b>性能影响：</b>每次请求都会执行参数遍历和字符串替换，对高 QPS 接口需评估
  * 性能开销。JSON Body 在内存中缓存（10MB 上限），不应作为大文件上传接口的兜底。</p>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * @since 1.0.0
  * @see XssHttpServletRequestWrapper
@@ -204,7 +203,7 @@ public class XssFilter extends OncePerRequestFilter {
         SecurityEvent event = new SecurityEvent(
                 SecurityEventType.XSS_ATTACK,
                 request.getRequestURI(),
-                getClientIp(request),
+                ClientIpResolver.getClientIp(request),
                 request.getHeader("User-Agent"),
                 payload,
                 SecurityEvent.Severity.HIGH

@@ -24,7 +24,6 @@ import java.util.UUID;
  * <p>生成背景图和带缺口的滑块图，前端用户拖动滑块到缺口位置完成验证。
  * 支持随机缺口位置、干扰线、噪点等安全增强。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public class SliderCaptchaGenerator implements CaptchaGenerator {

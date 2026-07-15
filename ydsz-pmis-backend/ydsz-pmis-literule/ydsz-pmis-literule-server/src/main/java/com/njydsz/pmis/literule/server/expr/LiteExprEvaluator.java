@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  *     evaluator: liteexpr
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @Slf4j

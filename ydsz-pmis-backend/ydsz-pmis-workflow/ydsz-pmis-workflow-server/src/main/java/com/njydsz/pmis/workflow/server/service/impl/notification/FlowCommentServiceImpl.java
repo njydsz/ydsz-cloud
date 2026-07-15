@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>审批评论多级回复实现。独立于审计日志（{@code FlowTaskSupport.audit}），
  * 评论是讨论（可回复、可删除），审计日志是操作轨迹（不可变）。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

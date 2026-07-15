@@ -9,7 +9,6 @@ import java.lang.annotation.*;
  * 用于排除分页参数、时间戳等不影响业务唯一性的字段。
  * <p>也可标注在方法上，表示该方法豁免幂等检查（如定时触发接口）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})

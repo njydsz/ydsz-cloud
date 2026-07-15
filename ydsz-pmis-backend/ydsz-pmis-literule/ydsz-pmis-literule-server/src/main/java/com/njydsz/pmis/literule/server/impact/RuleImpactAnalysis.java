@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
  *
  * <p>当一条规则被修改/删除/启停时，分析其对其他规则、下游消费者的影响。
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @Data

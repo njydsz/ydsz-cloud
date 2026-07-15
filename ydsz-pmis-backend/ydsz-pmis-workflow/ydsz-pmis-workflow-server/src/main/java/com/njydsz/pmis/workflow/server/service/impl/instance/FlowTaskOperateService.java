@@ -46,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
  * {@link FlowTaskSupport} 完成审计日志，依赖 {@link FlowTaskCreateService} 完成
  * "在目标节点创建新任务"。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

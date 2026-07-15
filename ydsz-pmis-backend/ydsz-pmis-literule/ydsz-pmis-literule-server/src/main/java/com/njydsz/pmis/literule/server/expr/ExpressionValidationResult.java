@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
  * <p>当 {@link #valid} 为 false 时，{@link #errorType} 与 {@link #errorMessage} 必填。
  * 当 {@link #valid} 为 true 时，{@link #errorType} 为 {@link ErrorType#OK}。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Data

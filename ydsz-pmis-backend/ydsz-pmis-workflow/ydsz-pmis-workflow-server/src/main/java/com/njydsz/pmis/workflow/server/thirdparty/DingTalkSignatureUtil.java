@@ -12,7 +12,6 @@ import com.njydsz.pmis.common.util.security.DigestUtils;
  * <p><b>P1-1 架构优化</b>：签名计算和常量时间比较委托到 {@link CryptoSignUtil}，
  * 消除重复的 HmacSHA256 实现。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public final class DingTalkSignatureUtil {

@@ -50,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
  *   RuleChain.breakChain()                           // 终止执行
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

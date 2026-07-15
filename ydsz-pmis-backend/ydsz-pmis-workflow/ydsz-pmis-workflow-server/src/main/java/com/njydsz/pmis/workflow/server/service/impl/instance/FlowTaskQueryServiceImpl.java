@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>视图转换：{@link #toView(FlowRunTaskDO)}</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

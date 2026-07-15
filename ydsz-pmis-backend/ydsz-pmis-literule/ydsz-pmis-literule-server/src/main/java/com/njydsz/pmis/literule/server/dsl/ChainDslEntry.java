@@ -60,7 +60,6 @@ import lombok.NoArgsConstructor;
  *     max_iterations: 5
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Data

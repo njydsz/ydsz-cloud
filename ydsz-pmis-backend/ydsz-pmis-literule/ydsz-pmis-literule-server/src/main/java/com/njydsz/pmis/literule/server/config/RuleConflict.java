@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
  *   <li>{@link Level#ERROR}：确定性冲突，默认阻塞保存（可通过配置关闭）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Data

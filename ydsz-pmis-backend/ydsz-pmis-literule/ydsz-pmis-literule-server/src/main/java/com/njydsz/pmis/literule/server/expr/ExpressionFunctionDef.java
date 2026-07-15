@@ -20,7 +20,6 @@ import lombok.NoArgsConstructor;
  *   <li>supportedEngines — 适用的表达式引擎（2.1.0 起仅 liteexpr/all）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Data

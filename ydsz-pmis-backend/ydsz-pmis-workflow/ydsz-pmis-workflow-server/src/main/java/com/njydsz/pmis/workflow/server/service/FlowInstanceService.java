@@ -13,7 +13,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 /**
  * 流程实例 Service
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowInstanceService {

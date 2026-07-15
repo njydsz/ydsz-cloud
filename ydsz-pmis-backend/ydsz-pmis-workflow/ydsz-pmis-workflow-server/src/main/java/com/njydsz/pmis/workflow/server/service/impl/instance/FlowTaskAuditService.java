@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>comment = 办理意见</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P0-1: 站内信打通（对标钉钉/飞书审批的实时通知能力）。
  * <p>P2-重构: 统一委托 FlowNotificationService，消除双服务直接调用 Feign 的重复逻辑。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

@@ -15,7 +15,6 @@ import java.util.Map;
  *   <li>{@link #getArchiveConfig()} — 查询当前归档配置（供运维查看）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowHistoryArchiveService {

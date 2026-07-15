@@ -52,7 +52,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>WatchService 监听为可选能力（{@link #supportsWatch()} 返回 true），
  * 文件变更时回调已注册的 {@link Consumer} 监听器。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

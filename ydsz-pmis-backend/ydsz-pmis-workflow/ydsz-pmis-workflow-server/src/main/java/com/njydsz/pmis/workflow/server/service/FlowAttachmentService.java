@@ -12,7 +12,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowAttachmentDO;
  *
  * <p>P1-6 (GAP-51): 审批时由前端提交的附件统一落库，支持按任务/实例维度查询与删除。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowAttachmentService {

@@ -20,7 +20,6 @@ import lombok.Data;
  *   <li>新增 {@code usageCount} 反映模板被引用次数，用于市场排序</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Data

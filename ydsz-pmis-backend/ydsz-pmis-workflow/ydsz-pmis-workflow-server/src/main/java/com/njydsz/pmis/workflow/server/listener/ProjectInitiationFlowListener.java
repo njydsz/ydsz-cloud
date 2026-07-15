@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>通知触达（对标用友 BPM / 钉钉审批的实时通知能力）</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

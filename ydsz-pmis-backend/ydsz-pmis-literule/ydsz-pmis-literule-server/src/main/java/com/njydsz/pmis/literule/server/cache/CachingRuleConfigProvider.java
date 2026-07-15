@@ -14,7 +14,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.literule.api.RuleDefinition;
@@ -54,7 +54,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>并发安全：ydsz-pmis-common-cache 的 {@code cache.get(key, mapper)} 保证同一 key 仅一个线程执行加载，
  * 其余线程阻塞等待结果，天然防止缓存击穿。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j
@@ -123,12 +122,12 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
         // L2 启用条件：RedissonClient 非空 且 配置启用 L2
         this.redissonClient = (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
         this.cacheConfig = cacheConfig;
-        this.listCache = YdszCache.<String, List<RuleDefinition>>newBuilder()
+        this.listCache = LocalCache.<String, List<RuleDefinition>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
                 .build();
-        this.singleCache = YdszCache.<String, RuleDefinition>newBuilder()
+        this.singleCache = LocalCache.<String, RuleDefinition>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())

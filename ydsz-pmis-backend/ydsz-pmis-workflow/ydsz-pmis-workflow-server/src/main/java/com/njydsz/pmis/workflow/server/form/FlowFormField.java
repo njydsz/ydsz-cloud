@@ -23,7 +23,6 @@ import lombok.Data;
  *   <li>选项数据源：静态选项 / 动态 API 选项</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 @Data

@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>无需修改本类（自动注册）</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

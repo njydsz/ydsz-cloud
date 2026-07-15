@@ -9,7 +9,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
  * <p>回调入口先以 PENDING 状态写入原始数据，处理完成后更新为 SUCCESS/FAIL，
  * 由独立重试任务保证最终一致（重试任务暂未实现）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowThirdPartyLogService {

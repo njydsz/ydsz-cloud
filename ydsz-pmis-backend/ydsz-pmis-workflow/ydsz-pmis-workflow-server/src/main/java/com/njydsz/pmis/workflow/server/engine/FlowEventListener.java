@@ -11,7 +11,6 @@ import java.util.Map;
  * <p>P2-36: 超时事件 onTaskTimeout。
  * <p>P2-37: 事件元数据携带 FlowEventContext（新增重载方法，保留旧签名兼容）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowEventListener {

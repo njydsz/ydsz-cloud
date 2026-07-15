@@ -41,7 +41,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  *   <li>lock.watchdog.renew.count - 续期次数（Counter，标签: lock_type）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class LockMetrics {

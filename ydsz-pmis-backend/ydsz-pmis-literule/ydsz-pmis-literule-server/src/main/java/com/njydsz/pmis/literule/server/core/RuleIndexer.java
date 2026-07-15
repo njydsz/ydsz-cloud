@@ -45,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>性能预期：规则数 1000+ 时，单次评估候选规则数降至 10-100 条，性能提升 10-20x。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j

@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>线程安全：所有读写操作基于 {@link ConcurrentHashMap}，{@link #listAll()} 返回快照副本。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public class InMemoryVariableRegistry implements VariableRegistry {

@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>聚合所有 {@link RuleActionHandler}，在规则触发后统一分发。
  * 由 {@code LiteRuleAutoConfiguration} 自动装配并注入到 {@code DefaultRuleEngine}。
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 @Slf4j

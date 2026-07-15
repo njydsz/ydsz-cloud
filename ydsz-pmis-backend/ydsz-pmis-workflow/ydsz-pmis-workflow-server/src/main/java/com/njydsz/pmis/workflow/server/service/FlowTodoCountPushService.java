@@ -7,7 +7,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
  *
  * <p>P1-7: WebSocket 待办数推送
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public interface FlowTodoCountPushService {

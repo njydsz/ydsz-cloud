@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>项目立项（PROJECT）— 发起人 → 部门负责人 → 项目总监 → 总经理审批</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 @Slf4j

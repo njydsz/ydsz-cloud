@@ -8,7 +8,6 @@ import java.util.Map;
  * <p>对标钉钉/飞书"审批单导出/打印"能力。
  * 提供带水印的审批单 PDF/HTML 导出，包含审批流程轨迹、表单数据、审批意见等。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 public interface FlowExportService {

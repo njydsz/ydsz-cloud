@@ -12,7 +12,6 @@ package com.njydsz.pmis.workflow.server.service;
  *   <li>流程管理员兜底</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 public interface FlowAssigneeLeaveHandler {

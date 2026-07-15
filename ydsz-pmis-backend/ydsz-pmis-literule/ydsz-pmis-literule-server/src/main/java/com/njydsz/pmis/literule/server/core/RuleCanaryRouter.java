@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>分桶统计通过 {@link #getCanaryBucketStats} 暴露给运营监控</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Slf4j

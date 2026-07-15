@@ -43,7 +43,6 @@ import lombok.Data;
  * // 配置 global-rules 后，匹配字段名的字段会自动脱敏
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

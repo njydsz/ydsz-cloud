@@ -48,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>当 SPI Bean 不存在时，对应规则类型不会被加载（向后兼容）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>对标钉钉/飞书审批的表单字段权限控制。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 @Slf4j

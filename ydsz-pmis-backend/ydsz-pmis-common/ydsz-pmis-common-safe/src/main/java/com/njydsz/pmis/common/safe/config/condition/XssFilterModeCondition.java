@@ -8,7 +8,6 @@ import org.springframework.context.annotation.ConfigurationCondition;
  * XSS Filter 模式条件
  * <p>当 ydsz.safe.xss.enabled=true（或未配置）且 ydsz.safe.xss.mode=filter 时生效
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

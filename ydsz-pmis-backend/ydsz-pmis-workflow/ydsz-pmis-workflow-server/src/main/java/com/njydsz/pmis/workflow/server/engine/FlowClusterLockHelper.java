@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>降级策略：RedissonClient Bean 不存在（单节点/测试环境）时，{@link #tryRun(String, long, Supplier)}
  * 直接执行任务不做加锁，保证功能可用。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Slf4j

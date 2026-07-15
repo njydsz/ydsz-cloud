@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
  * List&lt;RuleChain&gt; chains = RuleDslConverter.toChains(dsl, ruleMap, evaluator);
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j

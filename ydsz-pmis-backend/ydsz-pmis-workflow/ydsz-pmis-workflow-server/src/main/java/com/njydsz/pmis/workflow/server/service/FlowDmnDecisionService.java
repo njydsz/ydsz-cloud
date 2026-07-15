@@ -12,7 +12,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowDmnRuleDO;
  * <p>提供决策表的 CRUD、发布、评估能力。
  * 对标钉钉/飞书的"规则引擎"路由配置能力。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 public interface FlowDmnDecisionService {

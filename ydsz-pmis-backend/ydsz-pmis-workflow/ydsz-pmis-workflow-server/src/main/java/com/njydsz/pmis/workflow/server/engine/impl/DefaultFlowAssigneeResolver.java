@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>当业务模块未提供 FlowAssigneeResolver Bean 时使用本兜底实现。
  * 不展开 ROLE/DEPT/LEADER/POSITION，assigneeId 原样保留。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

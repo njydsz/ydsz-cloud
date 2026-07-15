@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
  * {@link DefaultRuleEngine} 单元测试：覆盖规则注册/注销、按优先级执行、互斥组短路、
  * 租户/环境隔离、异常隔离、严重度排序、dry-run、topResult、统计计数与 MDC traceId 传播。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @DisplayName("默认规则引擎 DefaultRuleEngine 测试")

@@ -36,7 +36,6 @@ import com.njydsz.pmis.workflow.domain.enums.ThirdPartyPlatform;
  * <p>无法映射的事件返回 {@code null}（如钉钉 bpmsInstanceChange 实例级变更、
  * 飞书抄送事件等），由调用方决定是否忽略。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public final class ThirdPartyApprovalActionResolver {

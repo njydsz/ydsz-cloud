@@ -59,7 +59,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>支持 BPMN 2.0 XML 与轻量 JSON 两种部署模式。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

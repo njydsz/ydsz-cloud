@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link #publishWorkflowEvent} — 发布 Spring 异步事件</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

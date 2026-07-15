@@ -14,7 +14,6 @@ import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
  *
  * <p>实现类通过 Spring 注入 Redis 连接等资源，确保所有锁实例共享同一连接池。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * @see DefaultLockStrategy
  */

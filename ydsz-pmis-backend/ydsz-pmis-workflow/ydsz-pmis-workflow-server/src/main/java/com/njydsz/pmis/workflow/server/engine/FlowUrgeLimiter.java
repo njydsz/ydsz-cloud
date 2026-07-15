@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  *       + {@code RATE_LIMIT} 错误码抛回前端</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

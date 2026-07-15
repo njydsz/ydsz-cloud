@@ -21,7 +21,6 @@ import lombok.Data;
  *   <li>项目：立项申请/变更申请/验收申请/结项申请</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.9.0
  */
 @Data

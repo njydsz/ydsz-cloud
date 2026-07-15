@@ -10,7 +10,6 @@ import java.util.List;
  * <p>由消费方实现，提供 ReconcileHandler 对账检查所需的数据。
  * literule 模块通过此接口反转 Mapper 依赖。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface ReconcileDataProvider {
@@ -38,7 +37,6 @@ public interface ReconcileDataProvider {
     /**
      * 工时记录 DTO
      *
-     * @author ydsz-pmis-team
      */
     record TimeEntryRecord(
             String id,
@@ -54,7 +52,6 @@ public interface ReconcileDataProvider {
     /**
      * 成本分摊记录 DTO
      *
-     * @author ydsz-pmis-team
      */
     record CostAllocationRecord(
             String id,

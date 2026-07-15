@@ -12,7 +12,6 @@ package com.njydsz.pmis.workflow.server.service;
  *   <li>OfflineAutoForwardService — 处理代理人设置时**已存在的待办**，批量转发</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 public interface FlowOfflineAutoForwardService {

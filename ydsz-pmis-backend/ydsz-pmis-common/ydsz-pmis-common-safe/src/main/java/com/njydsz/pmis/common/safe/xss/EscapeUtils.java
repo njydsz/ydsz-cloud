@@ -22,7 +22,6 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * 6. 危险协议过滤 - 禁止 javascript:、data:、vbscript: 等危险 URL 协议
  * </p>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

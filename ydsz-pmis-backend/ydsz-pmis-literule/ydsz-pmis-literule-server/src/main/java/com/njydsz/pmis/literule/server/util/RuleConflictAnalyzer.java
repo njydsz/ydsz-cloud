@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
  *   <li>{@link #determineSeverity(double)} — 根据重叠比例判定严重等级</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.6.0 (P1-4)
  */
 public final class RuleConflictAnalyzer {

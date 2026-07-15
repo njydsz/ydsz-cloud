@@ -51,7 +51,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>RestTemplate 不通过构造器注入，直接 new 出默认实例（与 FlowNotificationServiceImpl 一致），
  * 避免 Spring 容器中必须存在 RestTemplate Bean。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Slf4j

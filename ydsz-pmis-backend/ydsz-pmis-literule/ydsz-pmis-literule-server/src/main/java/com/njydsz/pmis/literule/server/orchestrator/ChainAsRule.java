@@ -17,7 +17,6 @@ import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
  * 返回全部已触发结果中的第一条（作为 RuleResult）。
  * 若有多个触发结果，其余通过 {@link RuleResult#getCollectedResults()} 收集。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 public class ChainAsRule implements Rule {

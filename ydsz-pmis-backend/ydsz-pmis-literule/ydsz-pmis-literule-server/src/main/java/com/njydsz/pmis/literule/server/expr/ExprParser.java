@@ -24,7 +24,6 @@ import java.util.Map;
  *
  * <p>解析错误抛出 {@link LiteExprException}，携带行列位置。
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public class ExprParser {

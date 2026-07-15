@@ -9,7 +9,6 @@ package com.njydsz.pmis.literule.server.approval;
  *
  * <p>所有方法允许返回 null 或空操作（ noop ），由调用方处理。
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 public interface ApprovalRecordRepository {

@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
  * // 后续规则评估时，RuleContext.getExpressionCache() 中已有缓存结果
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 @Slf4j

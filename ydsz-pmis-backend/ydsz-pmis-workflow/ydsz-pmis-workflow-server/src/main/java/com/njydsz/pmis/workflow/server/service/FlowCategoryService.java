@@ -10,7 +10,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowCategoryDO;
  *
  * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 public interface FlowCategoryService {

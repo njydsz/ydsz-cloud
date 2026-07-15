@@ -22,7 +22,6 @@ import java.util.List;
  *
  * <p>每个 Token 携带精确的行列位置，用于前端错误高亮。
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public class ExprLexer {

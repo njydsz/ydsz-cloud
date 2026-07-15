@@ -22,7 +22,6 @@ import com.njydsz.pmis.common.json.Json;
  *   <li>导出时间戳</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class LockMetricsExporter {

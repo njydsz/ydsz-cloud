@@ -53,7 +53,6 @@ import lombok.extern.slf4j.Slf4j;
  *     .run();
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 @Slf4j

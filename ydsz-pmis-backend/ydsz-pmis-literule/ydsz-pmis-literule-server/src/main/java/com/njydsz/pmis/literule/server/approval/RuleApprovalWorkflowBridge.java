@@ -31,7 +31,6 @@ package com.njydsz.pmis.literule.server.approval;
  *
  * <p>未提供实现时（bridge=null），literule 审批服务独立运行，不影响功能。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0 (P1-5)
  */
 public interface RuleApprovalWorkflowBridge {

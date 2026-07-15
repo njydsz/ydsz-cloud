@@ -25,7 +25,6 @@ import org.springframework.util.StringUtils;
  *   <li>Docker 默认网段：172.17.0.0/16</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public final class ClientIpResolver {

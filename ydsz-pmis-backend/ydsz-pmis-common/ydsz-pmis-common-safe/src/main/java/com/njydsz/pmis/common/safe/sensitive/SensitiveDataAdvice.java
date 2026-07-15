@@ -71,7 +71,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
  *           type: ID_CARD
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see SensitiveData

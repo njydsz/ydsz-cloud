@@ -12,7 +12,6 @@ import java.util.Map;
  * <p>路由评估：使用 Aviator 表达式引擎解析复杂条件表达式，替代简单的 SpEL 占位符替换。
  * 异常检测：覆盖超时、卡单、循环审批三种典型异常场景。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public interface FlowRoutingService {

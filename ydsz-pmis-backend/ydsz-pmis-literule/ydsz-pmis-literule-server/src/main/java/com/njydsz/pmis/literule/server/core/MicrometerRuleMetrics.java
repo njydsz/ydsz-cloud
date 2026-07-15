@@ -28,7 +28,6 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p>不依赖任何 Spring 注解，可被 Spring Boot 以外的框架使用。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public class MicrometerRuleMetrics extends RuleMetrics {

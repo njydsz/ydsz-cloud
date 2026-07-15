@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.json.Json;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  *   其余按 nodeCode / nextNodeCode / 起始节点 等维度的查询均从缓存列表中派生，
  *   将原本每次推进 5+ 次查库降为首次 2 次、后续 0 次。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j
@@ -74,12 +73,12 @@ public class FlowDefinitionCacheService {
         this.flowNodeMapper = flowNodeMapper;
         this.flowSkipMapper = flowSkipMapper;
         this.broadcaster = broadcaster;
-        this.nodeCache = YdszCache.<String, List<FlowNodeDO>>newBuilder()
+        this.nodeCache = LocalCache.<String, List<FlowNodeDO>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
                 .build();
-        this.skipCache = YdszCache.<String, List<FlowSkipDO>>newBuilder()
+        this.skipCache = LocalCache.<String, List<FlowSkipDO>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)

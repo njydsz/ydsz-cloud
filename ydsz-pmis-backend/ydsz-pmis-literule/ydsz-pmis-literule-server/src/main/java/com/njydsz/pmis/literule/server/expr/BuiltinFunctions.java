@@ -22,7 +22,6 @@ import java.util.UUID;
  * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册。
  * 业务侧可通过 {@code registry.register(name, fn)} 追加自定义函数。
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public final class BuiltinFunctions {

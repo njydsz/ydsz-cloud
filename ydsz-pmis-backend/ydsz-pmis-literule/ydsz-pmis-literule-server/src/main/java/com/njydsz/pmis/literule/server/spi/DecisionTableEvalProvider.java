@@ -10,7 +10,6 @@ import java.util.Map;
  * 返回命中行的动作值列表。将原有 {@code DecisionTableEvalService} 的能力抽象为 SPI，
  * 避免 literule 模块直接依赖 project 模块。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public interface DecisionTableEvalProvider {

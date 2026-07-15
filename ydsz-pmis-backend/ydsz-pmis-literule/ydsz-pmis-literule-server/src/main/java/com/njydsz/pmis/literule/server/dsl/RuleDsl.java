@@ -53,7 +53,6 @@ import lombok.NoArgsConstructor;
  *     step: HIGH_AMOUNT_RULE
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Data

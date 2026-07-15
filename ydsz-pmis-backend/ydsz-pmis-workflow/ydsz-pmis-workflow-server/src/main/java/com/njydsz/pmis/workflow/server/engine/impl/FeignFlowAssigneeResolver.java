@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>容错策略：Feign 调用失败时返回空列表，由 {@code node.ext.emptyStrategy} 兜底。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

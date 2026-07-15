@@ -19,7 +19,6 @@ import lombok.Data;
  *       window-seconds: 60
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Data

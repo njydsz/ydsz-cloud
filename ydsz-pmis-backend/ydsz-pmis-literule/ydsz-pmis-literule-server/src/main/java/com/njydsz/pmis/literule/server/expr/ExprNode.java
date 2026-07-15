@@ -26,7 +26,6 @@ import java.util.Map;
  *   <li>{@link TemplateStringNode} — 模板字符串 `Hello ${name}`</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 

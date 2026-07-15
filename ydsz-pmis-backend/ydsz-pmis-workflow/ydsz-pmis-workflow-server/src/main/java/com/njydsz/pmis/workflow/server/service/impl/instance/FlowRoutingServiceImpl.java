@@ -45,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>循环审批：审计日志中同一节点被反复驳回（REJECT）超过 3 次</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

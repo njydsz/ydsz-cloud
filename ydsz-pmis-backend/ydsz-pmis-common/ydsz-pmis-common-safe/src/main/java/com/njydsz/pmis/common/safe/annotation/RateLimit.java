@@ -35,7 +35,6 @@ import com.njydsz.pmis.common.safe.ratelimit.RateLimitProperties.Dimension;
  * public Result export(@RequestBody ExportDTO dto) { ... }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Target(ElementType.METHOD)

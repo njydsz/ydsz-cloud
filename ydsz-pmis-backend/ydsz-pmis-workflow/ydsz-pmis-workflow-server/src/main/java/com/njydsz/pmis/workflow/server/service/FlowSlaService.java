@@ -17,7 +17,6 @@ import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
  *   <li>所有异常都被 try-catch 吞掉，cronjob 主循环不会因单条任务失败而中断</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public interface FlowSlaService {

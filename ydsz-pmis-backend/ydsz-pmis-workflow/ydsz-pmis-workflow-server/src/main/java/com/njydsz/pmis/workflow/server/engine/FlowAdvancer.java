@@ -15,7 +15,6 @@ import com.njydsz.pmis.workflow.server.service.FlowRoutingService;
  *
  * <p>负责：找下一节点 → 生成任务 → 更新实例状态。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowAdvancer {

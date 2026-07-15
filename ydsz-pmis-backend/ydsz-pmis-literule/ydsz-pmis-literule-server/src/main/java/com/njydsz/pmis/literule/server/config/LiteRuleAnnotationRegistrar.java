@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
  * public class MyDef extends RuleDefinition { ... }   // 通过 @RuleDefinitionMeta 标注或被 @Component 声明
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.2
  */
 @Slf4j

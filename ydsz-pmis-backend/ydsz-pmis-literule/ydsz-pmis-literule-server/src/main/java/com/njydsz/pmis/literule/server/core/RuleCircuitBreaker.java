@@ -1,4 +1,4 @@
-ppackage com.njydsz.pmis.literule.server.core;
+package com.njydsz.pmis.literule.server.core;
 
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  * 仅计算窗口内的错误率，避免历史成功稀释近期突发错误导致熔断器永不触发。
  * 对标 Resilience4j {@code BitSet} 滑动窗口实现。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Slf4j

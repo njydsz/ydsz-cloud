@@ -10,7 +10,6 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * <p>当验证码生成、存储、验证等操作失败时抛出此异常。
  * 异常中可携带验证码 ID，用于问题排查和日志追踪。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

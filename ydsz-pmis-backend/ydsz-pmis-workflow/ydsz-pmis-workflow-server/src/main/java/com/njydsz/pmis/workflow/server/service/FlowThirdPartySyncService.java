@@ -6,7 +6,6 @@ package com.njydsz.pmis.workflow.server.service;
  * <p>P2-6 (GAP-40): 本地→三方主动同步。
  * 当本地流程被终止/撤回时，主动调用三方平台"取消审批单"接口，保证三方侧审批单状态一致。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowThirdPartySyncService {

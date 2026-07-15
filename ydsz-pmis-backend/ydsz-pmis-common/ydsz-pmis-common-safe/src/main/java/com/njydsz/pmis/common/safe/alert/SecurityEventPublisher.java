@@ -16,7 +16,6 @@ import org.springframework.context.ApplicationEventPublisherAware;
  * <p>通过 Spring {@link ApplicationEventPublisher} 发布事件，
  * 同时通过 {@link ServiceLoader} 调用所有 SPI 实现的监听器。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

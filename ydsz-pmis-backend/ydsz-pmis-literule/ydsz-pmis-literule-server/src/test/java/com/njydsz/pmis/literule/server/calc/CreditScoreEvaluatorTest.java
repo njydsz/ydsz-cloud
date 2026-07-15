@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * {@link CreditScoreEvaluator} 单元测试：覆盖信用评分计算的正常值、零值、null 值与逾期扣分边界。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @DisplayName("客户信用评分引擎 CreditScoreEvaluator 测试")

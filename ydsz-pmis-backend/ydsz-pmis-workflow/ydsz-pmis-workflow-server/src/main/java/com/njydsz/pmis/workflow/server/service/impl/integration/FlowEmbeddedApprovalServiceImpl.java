@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>业务页内嵌场景：单次接口拉齐"实例+图+待办+历史"，并通过快捷操作
  * 免去业务方感知 taskId。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

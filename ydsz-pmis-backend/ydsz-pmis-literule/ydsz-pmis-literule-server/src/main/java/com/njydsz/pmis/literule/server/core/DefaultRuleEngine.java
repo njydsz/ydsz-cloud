@@ -48,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>单规则超时与熔断（1.4.0）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

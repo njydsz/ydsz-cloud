@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>批量删除 his_instance</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>当 MeterRegistry 不可用时（如单元测试），退化为内存计数器</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Slf4j

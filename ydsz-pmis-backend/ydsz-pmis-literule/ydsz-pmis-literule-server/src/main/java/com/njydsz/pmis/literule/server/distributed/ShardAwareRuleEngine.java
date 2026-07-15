@@ -37,7 +37,6 @@ import com.njydsz.pmis.literule.api.RuleResult;
  * List&lt;RuleResult&gt; results = engine.evaluate(context);
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 public class ShardAwareRuleEngine implements RuleEngine {

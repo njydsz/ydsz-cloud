@@ -17,7 +17,6 @@ import java.util.Map;
  *   <li>超期率 — 超过 SLA 配置时限的占比</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public interface FlowEfficiencyService {

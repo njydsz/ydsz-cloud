@@ -47,7 +47,6 @@ import lombok.extern.slf4j.Slf4j;
  *     .build();
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j

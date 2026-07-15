@@ -38,7 +38,6 @@ import lombok.Data;
  *   <li>Content-Security-Policy：内容安全策略</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

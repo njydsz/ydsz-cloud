@@ -6,7 +6,6 @@ import java.time.Instant;
 /**
  * 安全事件
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

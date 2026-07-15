@@ -10,7 +10,6 @@ import com.njydsz.pmis.literule.api.RuleDefinition;
  * <p>由消费方提供实现，负责规则版本历史的管理。
  * 采用"主表+历史表"设计，支持变更追踪、一键回滚。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface RuleVersionRepository {

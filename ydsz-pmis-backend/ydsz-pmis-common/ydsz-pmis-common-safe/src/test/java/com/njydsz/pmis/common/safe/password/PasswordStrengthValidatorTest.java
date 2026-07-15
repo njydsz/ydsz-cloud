@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * {@link PasswordStrengthValidator} 单元测试
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 class PasswordStrengthValidatorTest {

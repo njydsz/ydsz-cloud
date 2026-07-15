@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>代理现有 {@link RuleConfigProvider} 实现，作为默认数据源。
  * 不支持 Watch 推送（需配合 {@link RuleConfigBroadcaster} 实现分布式热刷新）。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j

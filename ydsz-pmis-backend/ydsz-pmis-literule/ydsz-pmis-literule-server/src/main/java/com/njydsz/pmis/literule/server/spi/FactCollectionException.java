@@ -10,7 +10,6 @@ import com.njydsz.pmis.common.exception.custom.InfrastructureException;
  *
  * <p>继承 {@link InfrastructureException}，纳入 common-exception 统一异常体系。
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 public class FactCollectionException extends InfrastructureException {

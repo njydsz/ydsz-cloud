@@ -13,7 +13,6 @@ package com.njydsz.pmis.literule.server.expr.liteexpr;
  * @param column     列号（1-based）
  * @param offset     在源代码中的字符偏移量（0-based）
  *
- * @author ydsz-pmis-team
  * @since 2.0.0
  */
 public record Token(

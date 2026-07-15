@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.listener.RemovalCause;
@@ -36,7 +36,6 @@ import com.njydsz.pmis.common.cache.listener.RemovalCause;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */
@@ -89,7 +88,7 @@ public class NonceCache {
      */
     public NonceCache(long expireSeconds, long maxSize) {
         this.expireSeconds = expireSeconds;
-        this.cache = YdszCache.<String, Long>newBuilder()
+        this.cache = LocalCache.<String, Long>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
                 .maximumSize(maxSize)

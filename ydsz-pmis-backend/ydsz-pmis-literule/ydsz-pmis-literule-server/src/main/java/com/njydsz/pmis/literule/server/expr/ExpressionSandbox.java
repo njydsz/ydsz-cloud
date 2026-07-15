@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>允许的标识符：表达式上下文变量（驼峰/下划线命名）、白名单函数。
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j

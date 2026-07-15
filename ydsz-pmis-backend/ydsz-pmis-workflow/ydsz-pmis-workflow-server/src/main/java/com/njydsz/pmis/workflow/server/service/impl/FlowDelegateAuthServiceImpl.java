@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>P1-4: 长期授权委派实现。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

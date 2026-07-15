@@ -10,7 +10,6 @@ import com.njydsz.pmis.literule.api.ScorecardDefinition;
  * <p>由消费方提供实现，从数据库加载评分卡定义。
  * literule 模块本身不依赖持久层。
  *
- * @author ydsz-pmis-team
  * @since 1.4.0
  */
 public interface ScorecardConfigProvider {

@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>推送频率控制：单次任务事件最多推送 1 次（避免重复）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Slf4j

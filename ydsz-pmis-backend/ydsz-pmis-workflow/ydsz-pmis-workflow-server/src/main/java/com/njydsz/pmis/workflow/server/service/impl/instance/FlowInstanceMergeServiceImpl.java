@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>使用 Redis 存储合并组关系，合并组内实例保持独立但共享审批操作。
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j

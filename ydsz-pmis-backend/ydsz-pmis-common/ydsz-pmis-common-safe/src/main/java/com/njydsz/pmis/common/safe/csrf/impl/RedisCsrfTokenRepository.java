@@ -24,7 +24,6 @@ import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
  *   <li>会话映射：csrf:session:{sessionId} -> tokenValue</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see CsrfTokenRepository

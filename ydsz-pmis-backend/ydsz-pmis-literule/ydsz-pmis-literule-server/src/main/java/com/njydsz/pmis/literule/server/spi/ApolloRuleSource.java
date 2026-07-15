@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>依赖：需在 classpath 中引入 {@code com.ctrip.framework.apollo:apollo-client}。
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Slf4j

@@ -28,7 +28,6 @@ import lombok.NoArgsConstructor;
  * └── Final = false (short-circuit at 2nd condition)
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.6.0
  */
 @Data

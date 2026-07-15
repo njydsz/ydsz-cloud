@@ -20,7 +20,6 @@ import lombok.NoArgsConstructor;
  *   <li>{@code strict-3level}：一级审核 → 二级审核 → 终审（COUNTERSIGN）→ 发布</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.7.0
  */
 @Data

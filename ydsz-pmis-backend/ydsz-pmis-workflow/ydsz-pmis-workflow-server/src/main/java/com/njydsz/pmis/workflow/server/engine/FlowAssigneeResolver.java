@@ -11,7 +11,6 @@ import java.util.Map;
  *
  * <p>未提供实现时，引擎将 assigneeId 原样保留，待办查询按字符串匹配。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface FlowAssigneeResolver {

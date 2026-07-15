@@ -21,7 +21,6 @@ import com.njydsz.pmis.literule.api.Rule;
  * <p>使用静态工厂方法 {@link #of(Rule)} 与 {@link #of(RuleChain)} 构建节点，
  * 保证节点形态与字段填充的一致性。
  *
- * @author ydsz-pmis-team
  * @since 1.2.0
  */
 public class RuleNode {

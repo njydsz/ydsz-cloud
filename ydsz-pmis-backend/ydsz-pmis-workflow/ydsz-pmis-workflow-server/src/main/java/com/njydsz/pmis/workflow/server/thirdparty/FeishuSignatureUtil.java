@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
  * <p>P0-2: 三方审批 SDK — 飞书回调签名验证。
  * <p>算法：SHA256(timestamp + nonce + encrypt + appSecret)，结果以十六进制小写编码后与回调签名比对。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public final class FeishuSignatureUtil {

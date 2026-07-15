@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>将前端结构化条件 JSON ↔ 表达式字符串双向转换。
  *
- * @author ydsz-pmis-team
  * @since 1.8.0
  */
 @Slf4j

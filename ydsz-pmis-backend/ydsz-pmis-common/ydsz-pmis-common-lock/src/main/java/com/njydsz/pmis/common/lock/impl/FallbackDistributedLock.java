@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.lock.core.DistributedLocker;
@@ -39,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>适用于对一致性要求不高、但可用性优先的场景</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
@@ -67,7 +66,7 @@ public class FallbackDistributedLock implements DistributedLocker {
     /**
      * 本地锁映射表（使用 ydsz-pmis-common-cache，自动过期清理，防止内存泄漏）
      */
-    private final Cache<String, ReentrantLock> localLocks = YdszCache.<String, ReentrantLock>newBuilder()
+    private final Cache<String, ReentrantLock> localLocks = LocalCache.<String, ReentrantLock>newBuilder()
             .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10000)
