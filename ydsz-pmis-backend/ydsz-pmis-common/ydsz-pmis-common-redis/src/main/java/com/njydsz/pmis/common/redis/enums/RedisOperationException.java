@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.redis.enums;
 /**
  * Redis 操作异常
  *
- * <p>当 {@link RedisFailurePolicy#FAIL_THROW} 策略生效时，Redis 操作失败会抛出此异常。
+ * <p>当 {@link FailOpenPolicy#FAIL_THROW} 策略生效时，Redis 操作失败会抛出此异常。
  * 封装了操作的 key、操作名称和原始异常，便于上层统一处理。
  *
  * @author ydsz-pmis-team

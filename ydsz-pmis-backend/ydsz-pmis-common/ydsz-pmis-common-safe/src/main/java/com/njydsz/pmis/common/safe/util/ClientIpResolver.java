@@ -10,16 +10,20 @@ import org.springframework.util.StringUtils;
  * <p>统一从 HTTP 请求中解析客户端真实 IP，支持多级反向代理场景。
  * 所有安全 Filter 统一使用此类获取客户端 IP，避免逻辑不一致导致的安全漏洞。
  *
- * <p><b>解析顺序：</b>
+ * <p><b>安全策略（可信代理校验）：</b>
  * <ol>
- *   <li>X-Forwarded-For（取第一个非 unknown 的值）</li>
- *   <li>X-Real-IP</li>
- *   <li>Proxy-Client-IP</li>
- *   <li>WL-Proxy-Client-IP</li>
- *   <li>HTTP_CLIENT_IP</li>
- *   <li>HTTP_X_FORWARDED_FOR</li>
- *   <li>request.getRemoteAddr()</li>
+ *   <li>获取直连 IP（{@code request.getRemoteAddr()}，不可伪造）</li>
+ *   <li>如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 {@code X-Forwarded-For} / {@code X-Real-IP}</li>
+ *   <li>否则直接使用直连 IP</li>
  * </ol>
+ * 这样可以防止外部客户端伪造 {@code X-Forwarded-For} 绕过 IP 限流或 IP 黑白名单。
+ *
+ * <p><b>可信代理范围：</b>
+ * <ul>
+ *   <li>本地回环：127.0.0.0/8, ::1</li>
+ *   <li>内网私有：10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
+ *   <li>Docker 默认网段：172.17.0.0/16</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
@@ -27,20 +31,21 @@ import org.springframework.util.StringUtils;
 public final class ClientIpResolver {
 
     private static final String UNKNOWN = "unknown";
-    private static final String[] IP_HEADERS = {
-            "X-Forwarded-For",
-            "X-Real-IP",
-            "Proxy-Client-IP",
-            "WL-Proxy-Client-IP",
-            "HTTP_CLIENT_IP",
-            "HTTP_X_FORWARDED_FOR"
-    };
+    private static final String DEFAULT_IP = "0.0.0.0";
 
     private ClientIpResolver() {
     }
 
     /**
-     * 从 HTTP 请求中解析客户端真实 IP
+     * 从 HTTP 请求中解析客户端真实 IP（含可信代理校验）
+     *
+     * <p>判断逻辑：
+     * <ol>
+     *   <li>获取直连 IP（request.getRemoteAddr()，不可伪造）</li>
+     *   <li>如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 X-Forwarded-For / X-Real-IP</li>
+     *   <li>否则直接使用直连 IP</li>
+     * </ol>
+     * 这样可以防止外部客户端伪造 X-Forwarded-For 绕过 IP 限流。
      *
      * @param request HTTP 请求
      * @return 客户端 IP 地址
@@ -50,18 +55,60 @@ public final class ClientIpResolver {
             return UNKNOWN;
         }
 
-        for (String header : IP_HEADERS) {
-            String ip = request.getHeader(header);
+        String directIp = request.getRemoteAddr();
+
+        // 如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 X-Forwarded-For
+        if (directIp != null && isTrustedProxy(directIp)) {
+            String ip = request.getHeader("X-Forwarded-For");
             if (StringUtils.hasText(ip) && !UNKNOWN.equalsIgnoreCase(ip)) {
-                int commaIndex = ip.indexOf(',');
-                if (commaIndex > 0) {
-                    ip = ip.substring(0, commaIndex).trim();
+                int index = ip.indexOf(',');
+                if (index != -1) {
+                    return ip.substring(0, index).trim();
                 }
-                return ip;
+                return ip.trim();
+            }
+            ip = request.getHeader("X-Real-IP");
+            if (StringUtils.hasText(ip) && !UNKNOWN.equalsIgnoreCase(ip)) {
+                return ip.trim();
             }
         }
 
-        return request.getRemoteAddr();
+        return directIp != null && !directIp.isEmpty() ? directIp : DEFAULT_IP;
+    }
+
+    /**
+     * 判断 IP 是否为可信代理
+     *
+     * <p>可信代理包括：
+     * <ul>
+     *   <li>本地回环：127.0.0.0/8, ::1</li>
+     *   <li>内网私有：10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
+     *   <li>Docker 默认网段：172.17.0.0/16</li>
+     * </ul>
+     *
+     * @param ip IP 地址
+     * @return true 为可信代理
+     */
+    public static boolean isTrustedProxy(String ip) {
+        if (ip == null || ip.isEmpty()) {
+            return false;
+        }
+        if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+            return true;
+        }
+        if (ip.startsWith("10.") || ip.startsWith("192.168.")) {
+            return true;
+        }
+        if (ip.startsWith("172.")) {
+            try {
+                int secondOctet = Integer.parseInt(ip.split("\\.")[1]);
+                if (secondOctet >= 16 && secondOctet <= 31) {
+                    return true;
+                }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
+            }
+        }
+        return false;
     }
 
     /**
@@ -71,29 +118,6 @@ public final class ClientIpResolver {
      * @return true 为内网地址
      */
     public static boolean isInternalIp(String ip) {
-        if (!StringUtils.hasText(ip)) {
-            return false;
-        }
-        return ip.startsWith("10.")
-                || ip.startsWith("172.16.")
-                || ip.startsWith("172.17.")
-                || ip.startsWith("172.18.")
-                || ip.startsWith("172.19.")
-                || ip.startsWith("172.20.")
-                || ip.startsWith("172.21.")
-                || ip.startsWith("172.22.")
-                || ip.startsWith("172.23.")
-                || ip.startsWith("172.24.")
-                || ip.startsWith("172.25.")
-                || ip.startsWith("172.26.")
-                || ip.startsWith("172.27.")
-                || ip.startsWith("172.28.")
-                || ip.startsWith("172.29.")
-                || ip.startsWith("172.30.")
-                || ip.startsWith("172.31.")
-                || ip.startsWith("192.168.")
-                || ip.startsWith("127.")
-                || "0:0:0:0:0:0:0:1".equals(ip)
-                || "::1".equals(ip);
+        return isTrustedProxy(ip);
     }
 }

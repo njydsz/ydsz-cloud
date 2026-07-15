@@ -17,12 +17,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.pmis.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.pmis.common.auth.aspect.AuthPermissionAspect;
-import com.njydsz.pmis.common.auth.aspect.AuthRowPermissionAspect;
-import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
+import com.njdsz.pmis.common.auth.aspect.AuthRowPermissionAspect;
+import com.njdsz.pmis.common.auth.cache.LocalPermissionCache;
 import com.njydsz.pmis.common.auth.desensitize.ColumnDesensitizationService;
 import com.njydsz.pmis.common.auth.event.PermissionCacheInvalidationListener;
 import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.pmis.common.auth.listener.PermissionKeyspaceNotificationListener;
+import com.njydsz.pmis.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
@@ -156,10 +157,15 @@ public class AuthConfiguration {
             AuthProperties properties,
             RbacUserInfoService userInfoService,
             RolePermissionLoader rolePermissionLoader,
-            CacheKeyStrategy cacheKeyStrategy
+            CacheKeyStrategy cacheKeyStrategy,
+            ObjectProvider<AuthMetricsCollector> metricsCollectorProvider
     ) {
         RbacPermissionEvaluator evaluator = new RbacPermissionEvaluator(properties, userInfoService, rolePermissionLoader);
         evaluator.setCacheKeyStrategy(cacheKeyStrategy);
+        AuthMetricsCollector metricsCollector = metricsCollectorProvider.getIfAvailable();
+        if (metricsCollector != null) {
+            evaluator.setMetricsCollector(metricsCollector);
+        }
         return evaluator;
     }
 

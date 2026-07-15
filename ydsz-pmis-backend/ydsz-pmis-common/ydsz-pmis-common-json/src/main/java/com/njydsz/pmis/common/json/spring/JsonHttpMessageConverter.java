@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.json.spring;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.http.HttpInputMessage;
@@ -10,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
-import org.springframework.http.converter.json.MappingJacksonValue;
 
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.provider.SerializationProvider;
@@ -37,8 +37,42 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
     /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */
     private static final long MAX_REQUEST_BODY_SIZE = 10L * 1024 * 1024;
 
+    /**
+     * Spring 的 {@code MappingJacksonValue} 在 Spring 7.0 已被标记为待删除（{@code @Deprecated(since="7.0", forRemoval=true)}），
+     * 其 class 文件字节码内部仍引用 {@code com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY} 等 Jackson 枚举常量。
+     * 本模块刻意不引入 Jackson 依赖，因此不能直接 import 引用该类（否则编译器会同时报告 5 个
+     * "未知的枚举常量 JsonInclude.Include.NON_EMPTY" 警告）。
+     * <p>此处用反射按需探测：找到则按既有语义解包；找不到（Spring 7.x 移除该类后）则降级为原样输出，
+     * 届时 controller 侧应改用 {@code @JsonView} 注解由框架消息转换器处理视图过滤。
+     */
+    private static final Class<?> MAPPING_JACKSON_VALUE_CLASS = loadClassOrNull(
+            "org.springframework.http.converter.json.MappingJacksonValue");
+    private static final Method GET_SERIALIZATION_VIEW_METHOD = lookupMethodOrNull(
+            MAPPING_JACKSON_VALUE_CLASS, "getSerializationView");
+    private static final Method GET_VALUE_METHOD = lookupMethodOrNull(
+            MAPPING_JACKSON_VALUE_CLASS, "getValue");
+
     /** 可配置的最大请求体大小（默认与 MAX_REQUEST_BODY_SIZE 相同） */
     private long maxRequestBodySize = MAX_REQUEST_BODY_SIZE;
+
+    private static Class<?> loadClassOrNull(String className) {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+    private static Method lookupMethodOrNull(Class<?> owner, String methodName) {
+        if (owner == null) {
+            return null;
+        }
+        try {
+            return owner.getMethod(methodName);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
 
     /**
      * 构造函数，注册支持的媒体类型。
@@ -91,7 +125,7 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
     protected void writeInternal(Object o, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
         try {
-            // 检查是否带有 @JsonView 视图过滤
+            // 检查是否带有 @JsonView 视图过滤（通过反射探测 Spring 的 MappingJacksonValue 包装类）
             Class<?> viewClass = extractViewClass(o);
             Object value = extractValue(o);
 
@@ -116,7 +150,7 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
     /**
      * 从对象中提取 @JsonView 视图类。
      *
-     * <p>支持 Spring 的 {@code MappingJacksonValue} 包装类，
+     * <p>支持 Spring 的 {@code MappingJacksonValue} 包装类（反射探测，避免直接引用已废弃类），
      * 当控制器方法使用 {@code @JsonView} 注解时，Spring 会将返回值
      * 包装在 {@code MappingJacksonValue} 中，其中包含视图类信息。</p>
      *
@@ -125,22 +159,36 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
      * @since 1.4.0
      */
     private Class<?> extractViewClass(Object obj) {
-        if (obj instanceof MappingJacksonValue jacksonValue) {
-            return jacksonValue.getSerializationView();
+        if (MAPPING_JACKSON_VALUE_CLASS == null || GET_SERIALIZATION_VIEW_METHOD == null) {
+            return null;
+        }
+        if (MAPPING_JACKSON_VALUE_CLASS.isInstance(obj)) {
+            try {
+                return (Class<?>) GET_SERIALIZATION_VIEW_METHOD.invoke(obj);
+            } catch (ReflectiveOperationException e) {
+                return null;
+            }
         }
         return null;
     }
 
     /**
-     * 从对象中提取实际值（解包 MappingJacksonValue）。
+     * 从对象中提取实际值（反射解包 MappingJacksonValue）。
      *
      * @param obj 待序列化对象
      * @return 实际值
      * @since 1.4.0
      */
     private Object extractValue(Object obj) {
-        if (obj instanceof MappingJacksonValue jacksonValue) {
-            return jacksonValue.getValue();
+        if (MAPPING_JACKSON_VALUE_CLASS == null || GET_VALUE_METHOD == null) {
+            return obj;
+        }
+        if (MAPPING_JACKSON_VALUE_CLASS.isInstance(obj)) {
+            try {
+                return GET_VALUE_METHOD.invoke(obj);
+            } catch (ReflectiveOperationException e) {
+                return obj;
+            }
         }
         return obj;
     }

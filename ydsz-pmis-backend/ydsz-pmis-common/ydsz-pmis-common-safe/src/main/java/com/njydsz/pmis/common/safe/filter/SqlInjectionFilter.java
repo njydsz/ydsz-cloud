@@ -27,6 +27,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
+import com.njydsz.pmis.common.safe.util.ClientIpResolver;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
@@ -211,7 +212,7 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
 
         // 检测请求参数、请求头和请求体
         if (detectSqlInjection(request, bodyContent)) {
-            String clientIp = getClientIp(request);
+            String clientIp = ClientIpResolver.getClientIp(request);
             String queryString = request.getQueryString();
 
             log.warn("【SQL注入防护】检测到可疑请求 | ip={} | uri={} | query={}",
@@ -303,23 +304,6 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
         return result;
     }
 
-    /**
-     * 获取客户端真实 IP
-     *
-     * @param request HTTP 请求
-     * @return 客户端 IP
-     */
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeader("X-Real-IP");
-        if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-        return request.getRemoteAddr();
-    }
 
     /**
      * 缓存请求体的 HTTP 请求包装器，解决 InputStream 只能读取一次的问题。

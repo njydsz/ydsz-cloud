@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 
+import com.njydsz.pmis.common.auth.i18n.PermissionMessageResolver;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
@@ -120,13 +121,18 @@ public class PermissionDeniedException extends BusinessException {
     }
 
     private static String buildMessage(Builder builder) {
+        // 使用 i18n 解析基础消息
+        String lang = builder.language != null ? builder.language : "zh-CN";
+        String baseKey = builder.permissionType != null
+                ? "permission.denied." + builder.permissionType.name().toLowerCase()
+                : "permission.denied";
+        String baseMsg = PermissionMessageResolver.resolve(baseKey, lang);
+
         StringBuilder sb = new StringBuilder();
-        sb.append("权限不足：");
+        sb.append(baseMsg);
 
         if (builder.permissionType != null) {
-            sb.append(builder.permissionType.getDescription()).append("校验失败");
-        } else {
-            sb.append("权限校验失败");
+            sb.append(" [").append(builder.permissionType.getDescription()).append("]");
         }
 
         if (builder.userId != null) {
@@ -168,6 +174,12 @@ public class PermissionDeniedException extends BusinessException {
         private String resource;
         private String checkMode;
         private Set<String> grantedPermissions;
+        private String language = "zh-CN";
+
+        public Builder language(String language) {
+            this.language = language;
+            return this;
+        }
 
         public Builder userId(String userId) {
             this.userId = userId;

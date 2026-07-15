@@ -16,6 +16,7 @@ import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.auth.exception.PermissionDeniedException;
 import com.njydsz.pmis.common.auth.exception.PermissionDeniedException.PermissionType;
+import com.njydsz.pmis.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.pmis.common.auth.strategy.DefaultCacheKeyStrategy;
@@ -65,6 +66,11 @@ public class RbacPermissionEvaluator {
     private final AuthProperties properties;
     private final RbacUserInfoService userInfoService;
     private final RolePermissionLoader rolePermissionLoader;
+
+    /**
+     * 可选的指标采集器，由 AuthConfiguration 注入。为 null 时不采集指标（向后兼容）。
+     */
+    private AuthMetricsCollector metricsCollector;
 
     /**
      * 缓存 Key 生成策略，默认为 DefaultCacheKeyStrategy
@@ -233,6 +239,33 @@ public class RbacPermissionEvaluator {
      *
      * @param cacheKeyStrategy 缓存 Key 生成策略
      */
+    /**
+     * 设置指标采集器（由 AuthConfiguration 注入）。
+     *
+     * @param metricsCollector 指标采集器，为 null 时不采集
+     */
+    public void setMetricsCollector(AuthMetricsCollector metricsCollector) {
+        this.metricsCollector = metricsCollector;
+    }
+
+    /**
+     * 记录权限校验通过。
+     */
+    private void recordAllow(String permissionType) {
+        if (metricsCollector != null) {
+            metricsCollector.recordPermissionAllow(permissionType);
+        }
+    }
+
+    /**
+     * 记录权限校验拒绝。
+     */
+    private void recordDeny(String permissionType, String requiredPermissions, String resource) {
+        if (metricsCollector != null) {
+            metricsCollector.recordPermissionDeny(resolveUserId(), permissionType, requiredPermissions, resource);
+        }
+    }
+
     public void setCacheKeyStrategy(CacheKeyStrategy cacheKeyStrategy) {
         Objects.requireNonNull(cacheKeyStrategy, "cacheKeyStrategy cannot be null");
         this.cacheKeyStrategy = cacheKeyStrategy;
@@ -460,6 +493,7 @@ public class RbacPermissionEvaluator {
             ok = userRoles.containsAll(requiredRoles);
         }
         if (!ok) {
+            recordDeny(type.name(), requiredRoles.toString(), resolveCurrentResource());
             throw PermissionDeniedException.denied()
                     .userId(resolveUserId())
                     .userRoles(userRoles)
@@ -469,6 +503,7 @@ public class RbacPermissionEvaluator {
                     .checkMode(orMode ? "OR" : "AND")
                     .build();
         }
+        recordAllow(type.name());
     }
 
     private void validatePermissions(Set<String> grantedPerms, Set<String> requiredPerms,
@@ -493,6 +528,7 @@ public class RbacPermissionEvaluator {
         }
 
         if (!ok) {
+            recordDeny(type.name(), missingPermissions.toString(), resolveCurrentResource());
             throw PermissionDeniedException.denied()
                     .userId(resolveUserId())
                     .userRoles(parseUserRoles(loadCurrentUserInfo()))
@@ -503,6 +539,7 @@ public class RbacPermissionEvaluator {
                     .checkMode(orMode ? "OR" : "AND")
                     .build();
         }
+        recordAllow(type.name());
     }
 
     private boolean hasPermission(Set<String> granted, String required) {

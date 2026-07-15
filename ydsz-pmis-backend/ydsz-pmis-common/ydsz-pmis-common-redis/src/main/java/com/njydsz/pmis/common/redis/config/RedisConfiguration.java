@@ -118,24 +118,24 @@ public class RedisConfiguration {
     }
 
     /**
-     * 创建 Jackson 序列化器（默认）
+     * 创建 YdszJson 序列化器（默认）
      *
-     * <p>当 {@code ydsz.redis.serializer=jackson} 或未配置时启用。
-     * 使用 Json 作为 Redis 值的序列化引擎，
+     * <p>当 {@code ydsz.redis.serializer=ydsz-json} 或未配置时启用。
+     * 使用 YdszJson 作为 Redis 值的序列化引擎，
      * 支持 Java 8 时间类型。
      *
      * <p><b>配置示例：</b>
      * <pre>{@code
      * ydsz:
      *   redis:
-     *     serializer: jackson
+     *     serializer: ydsz-json
      * }</pre>
      *
      * @return YdszJsonRedisSerializer 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "ydsz.redis.serializer", havingValue = "jackson", matchIfMissing = true)
+    @ConditionalOnProperty(name = "ydsz.redis.serializer", havingValue = "ydsz-json", matchIfMissing = true)
     public YdszJsonRedisSerializer ydszJsonRedisSerializer() {
         return new YdszJsonRedisSerializer(Object.class);
     }

@@ -43,7 +43,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class LockMetrics {
 
@@ -101,19 +100,6 @@ public class LockMetrics {
      * 记录获取锁成功
      *
      * @param waitTimeMillis 等待时间（毫秒）
-     */
-    public void recordAcquireSuccess(long waitTimeMillis) {
-        acquireSuccessCount.increment();
-        totalWaitTimeMillis.addAndGet(waitTimeMillis);
-        if (micrometerCollector != null) {
-            micrometerCollector.recordAcquireSuccess(waitTimeMillis);
-        }
-    }
-
-    /**
-     * 记录获取锁成功（带锁类型标签）
-     *
-     * @param waitTimeMillis 等待时间（毫秒）
      * @param lockType       锁类型
      */
     public void recordAcquireSuccess(long waitTimeMillis, String lockType) {
@@ -126,16 +112,6 @@ public class LockMetrics {
 
     /**
      * 记录获取锁失败
-     */
-    public void recordAcquireFail() {
-        acquireFailCount.increment();
-        if (micrometerCollector != null) {
-            micrometerCollector.recordAcquireFail();
-        }
-    }
-
-    /**
-     * 记录获取锁失败（带锁类型标签）
      *
      * @param lockType 锁类型
      */
@@ -148,19 +124,6 @@ public class LockMetrics {
 
     /**
      * 记录释放锁
-     *
-     * @param holdTimeMillis 持有时间（毫秒）
-     */
-    public void recordRelease(long holdTimeMillis) {
-        releaseCount.increment();
-        totalHoldTimeMillis.addAndGet(holdTimeMillis);
-        if (micrometerCollector != null) {
-            micrometerCollector.recordRelease(holdTimeMillis);
-        }
-    }
-
-    /**
-     * 记录释放锁（带锁类型标签）
      *
      * @param holdTimeMillis 持有时间（毫秒）
      * @param lockType       锁类型
@@ -176,16 +139,6 @@ public class LockMetrics {
     // --- 新增指标采集方法 ---
 
     /**
-     * 记录锁竞争次数
-     */
-    public void recordCompetition() {
-        competitionCount.increment();
-        if (micrometerCollector != null) {
-            micrometerCollector.recordCompetition();
-        }
-    }
-
-    /**
      * 记录锁竞争次数（带锁类型和锁键标签）
      *
      * @param lockType 锁类型
@@ -195,17 +148,6 @@ public class LockMetrics {
         competitionCount.increment();
         if (micrometerCollector != null) {
             micrometerCollector.recordCompetition(lockType, lockKey);
-        }
-    }
-
-    /**
-     * 记录锁等待时间
-     *
-     * @param waitTimeMillis 等待时间（毫秒）
-     */
-    public void recordWaitDuration(long waitTimeMillis) {
-        if (micrometerCollector != null) {
-            micrometerCollector.recordWaitDuration(waitTimeMillis);
         }
     }
 
@@ -242,16 +184,6 @@ public class LockMetrics {
     }
 
     /**
-     * 记录锁超时次数
-     */
-    public void recordLockTimeout() {
-        lockTimeoutCount.increment();
-        if (micrometerCollector != null) {
-            micrometerCollector.recordLockTimeout();
-        }
-    }
-
-    /**
      * 记录锁超时次数（带锁类型标签）
      *
      * @param lockType 锁类型
@@ -260,16 +192,6 @@ public class LockMetrics {
         lockTimeoutCount.increment();
         if (micrometerCollector != null) {
             micrometerCollector.recordLockTimeout(lockType);
-        }
-    }
-
-    /**
-     * 记录看门狗续期次数
-     */
-    public void recordWatchdogRenew() {
-        watchdogRenewCount.increment();
-        if (micrometerCollector != null) {
-            micrometerCollector.recordWatchdogRenew();
         }
     }
 

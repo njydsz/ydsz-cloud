@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -25,7 +26,6 @@ import com.njydsz.pmis.common.lock.health.LockHealthIndicator;
 import com.njydsz.pmis.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.pmis.common.lock.idempotent.RedisIdempotentStrategy;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
-import com.njydsz.pmis.common.lock.metrics.LockMetricsExporter;
 import com.njydsz.pmis.common.lock.scheduler.LockLeakDetector;
 import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
 import com.njydsz.pmis.common.lock.strategy.DefaultLockStrategy;
@@ -48,7 +48,6 @@ import com.njydsz.pmis.common.redis.service.RedisService;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @AutoConfiguration
 @ConditionalOnClass({StringRedisTemplate.class})
@@ -69,19 +68,7 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
-     * 创建锁指标导出器 Bean
-     *
-     * @param lockMetrics 锁指标收集器
-     * @return LockMetricsExporter 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public LockMetricsExporter lockMetricsExporter(LockMetrics lockMetrics) {
-        return new LockMetricsExporter(lockMetrics);
-    }
-
-    /**
-     * 创建看门狗 Bean（原始版本）
+     * 创建看门狗 Bean
      *
      * @param stringRedisTemplate Redis 模板
      * @param lockProperties 锁配置属性

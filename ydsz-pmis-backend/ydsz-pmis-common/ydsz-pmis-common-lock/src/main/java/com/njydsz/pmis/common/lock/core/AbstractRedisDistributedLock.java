@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
 public abstract class AbstractRedisDistributedLock implements DistributedLocker {
@@ -465,13 +464,13 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             }
             // 记录锁竞争
             if (lockMetrics != null) {
-                lockMetrics.recordCompetition();
+                lockMetrics.recordCompetition(getLockType().name(), lockKey);
             }
             long elapsed = System.nanoTime() - startTime;
             if (elapsed >= waitNanos) {
                 // 记录锁超时
                 if (lockMetrics != null) {
-                    lockMetrics.recordLockTimeout();
+                    lockMetrics.recordLockTimeout(getLockType().name());
                 }
                 return null;
             }
@@ -488,11 +487,18 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         // 锁获取成功，记录等待时间和活跃锁
         long waitTimeMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
         if (lockMetrics != null) {
-            lockMetrics.recordWaitDuration(waitTimeMillis);
+            lockMetrics.recordWaitDuration(waitTimeMillis, getLockType().name());
             lockMetrics.incrementActiveLocks();
         }
         return lockValue;
     }
+
+    /**
+     * 返回当前锁实现对应的锁类型，用于指标采集打标
+     *
+     * @return 锁类型
+     */
+    protected abstract LockType getLockType();
 
     /**
      * 获取锁的底层实现

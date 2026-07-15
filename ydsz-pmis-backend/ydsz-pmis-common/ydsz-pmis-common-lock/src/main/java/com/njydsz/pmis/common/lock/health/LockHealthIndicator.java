@@ -1,13 +1,8 @@
 package com.njydsz.pmis.common.lock.health;
 
-import jakarta.annotation.Resource;
-
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
@@ -26,12 +21,11 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>验证 RedisConnectionFactory 连接状态</li>
  *   <li>执行 PING 命令验证连接可达性</li>
  *   <li>返回连接耗时作为性能指标</li>
- *   <li>检测看门狗活跃续期任务数（可选）</li>
- *   <li>检测锁降级状态和连续失败次数（可选）</li>
+ *   <li>检测看门狗最大续期次数配置（可选）</li>
+ *   <li>检测锁指标汇总数据（可选）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

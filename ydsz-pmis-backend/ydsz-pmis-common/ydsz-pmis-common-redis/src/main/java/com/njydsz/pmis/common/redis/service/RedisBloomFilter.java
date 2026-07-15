@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.redis.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class RedisBloomFilter {
+public class RedisBloomFilter implements BloomFilterService {
 
     private static final double DEFAULT_FALSE_POSITIVE_RATE = 0.01;
     private static final long DEFAULT_EXPECTED_INSERTIONS = 1000000;
@@ -167,16 +168,19 @@ public class RedisBloomFilter {
      *
      * @param filterKey 布隆过滤器的 Redis 键
      * @param value     要添加的元素值
+     * @return true 表示元素之前不存在（布隆过滤器为概率型数据结构，返回值仅供参考）
      */
-    public void add(String filterKey, String value) {
+    @Override
+    public boolean add(String filterKey, String value) {
         if (filterKey == null || value == null) {
-            return;
+            return false;
         }
         try {
             List<Long> hashes = murmurHash3(value, numHashes, numBits);
             List<String> keys = Collections.singletonList(filterKey);
             String[] args = hashes.stream().map(String::valueOf).toArray(String[]::new);
             redisTemplate.execute(addScript, keys, (Object[]) args);
+            return true;
         } catch (Exception e) {
             log.error("【Redis】布隆过滤器添加元素失败 | key={} | value={} | error={}", filterKey, value, e.getMessage());
             throw new RuntimeException("布隆过滤器添加元素失败: " + e.getMessage(), e);
@@ -188,9 +192,9 @@ public class RedisBloomFilter {
      *
      * @param filterKey 布隆过滤器的 Redis 键
      * @param values    要添加的元素集合
-     * @throws RuntimeException 当 Pipeline 操作失败时抛出异常
      */
-    public void addAll(String filterKey, List<String> values) {
+    @Override
+    public void addAll(String filterKey, Collection<String> values) {
         if (filterKey == null || values == null || values.isEmpty()) {
             return;
         }
@@ -233,6 +237,7 @@ public class RedisBloomFilter {
      * @param value     要检查的元素值
      * @return true-可能存在，false-一定不存在
      */
+    @Override
     public boolean mightContain(String filterKey, String value) {
         if (filterKey == null || value == null) {
             return false;
@@ -253,6 +258,33 @@ public class RedisBloomFilter {
                 throw new RuntimeException("布隆过滤器检查元素失败: " + e.getMessage(), e);
             }
             return false;
+        }
+    }
+
+    /**
+     * 获取布隆过滤器中的近似元素数量
+     *
+     * <p>通过 Redis BITCOUNT 命令统计位数组中设置为 1 的位数，
+     * 除以哈希函数数量得到近似元素数量。
+     *
+     * @param filterKey 布隆过滤器的 Redis 键
+     * @return 近似元素数量（下限），失败时返回 -1
+     */
+    @Override
+    public long count(String filterKey) {
+        if (filterKey == null) {
+            return -1;
+        }
+        try {
+            Long bitCount = redisTemplate.execute((RedisCallback<Long>) connection ->
+                    connection.stringCommands().bitCount(filterKey.getBytes(StandardCharsets.UTF_8)));
+            if (bitCount == null || numHashes == 0) {
+                return 0;
+            }
+            return bitCount / numHashes;
+        } catch (Exception e) {
+            log.error("【Redis】布隆过滤器计数失败 | key={} | error={}", filterKey, e.getMessage());
+            return -1;
         }
     }
 

@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
+import com.njydsz.pmis.common.auth.security.TokenBlacklistBloomFilter;
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -38,10 +39,12 @@ public class TokenBlacklistService {
 
     private final RedisStringOps redisStringOps;
     private final AuthProperties authProperties;
+    private final TokenBlacklistBloomFilter bloomFilter;
 
     public TokenBlacklistService(RedisStringOps redisStringOps, AuthProperties authProperties) {
         this.redisStringOps = redisStringOps;
         this.authProperties = authProperties;
+        this.bloomFilter = new TokenBlacklistBloomFilter(1_000_000);
     }
 
     /**
@@ -80,6 +83,8 @@ public class TokenBlacklistService {
         String key = buildBlacklistKey(token);
         long expire = authProperties.getBlacklist().getExpireSeconds();
         redisStringOps.set(key, "1", Duration.ofSeconds(expire));
+        // 同步加入 Bloom Filter，后续查询可前置过滤
+        bloomFilter.addToBlacklist(token);
         log.info("Token added to blacklist, expires in {}s", expire);
     }
 
@@ -94,6 +99,10 @@ public class TokenBlacklistService {
             return false;
         }
         if (token == null || token.isBlank()) {
+            return false;
+        }
+        // Bloom Filter 前置过滤：返回 false 时一定不在黑名单中，无需查 Redis
+        if (!bloomFilter.mightBeBlacklisted(token)) {
             return false;
         }
         String key = buildBlacklistKey(token);

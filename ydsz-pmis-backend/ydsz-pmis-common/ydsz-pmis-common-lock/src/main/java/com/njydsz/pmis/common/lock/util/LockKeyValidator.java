@@ -20,11 +20,6 @@ public final class LockKeyValidator {
      */
     private static final int MAX_KEY_LENGTH = 512;
 
-    /**
-     * 最小锁键长度
-     */
-    private static final int MIN_KEY_LENGTH = 1;
-
     private LockKeyValidator() {
     }
 
@@ -49,25 +44,6 @@ public final class LockKeyValidator {
                         "【分布式锁】锁键包含非法控制字符 | charCode=" + (int) c + " | index=" + i);
             }
         }
-    }
-
-    /**
-     * 校验锁键合法性（不抛异常，返回 boolean）
-     *
-     * @param lockKey 锁的键
-     * @return true-合法，false-非法
-     */
-    public static boolean isValid(String lockKey) {
-        if (lockKey == null || lockKey.length() < MIN_KEY_LENGTH || lockKey.length() > MAX_KEY_LENGTH) {
-            return false;
-        }
-        for (int i = 0; i < lockKey.length(); i++) {
-            char c = lockKey.charAt(i);
-            if (c == '\n' || c == '\r' || c == '\t' || c == '\0') {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

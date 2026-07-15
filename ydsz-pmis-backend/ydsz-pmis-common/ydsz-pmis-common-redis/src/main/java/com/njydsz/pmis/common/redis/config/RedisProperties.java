@@ -189,11 +189,6 @@ public class RedisProperties {
     private Metrics metrics = new Metrics();
 
     /**
-     * 熔断器配置
-     */
-    private CircuitBreaker circuitBreaker = new CircuitBreaker();
-
-    /**
      * Lettuce 客户端配置类
      */
     @Data
@@ -371,35 +366,5 @@ public class RedisProperties {
          */
         @Min(0)
         private long slowOperationThresholdMs = 100;
-    }
-
-    /**
-     * 熔断器配置类
-     */
-    @Data
-    public static class CircuitBreaker {
-
-        /**
-         * 是否启用熔断器（默认 false）
-         */
-        private boolean enabled = false;
-
-        /**
-         * 连续失败阈值，达到后触发熔断
-         */
-        @Min(1)
-        private int failureThreshold = 5;
-
-        /**
-         * 熔断恢复超时时间（毫秒），超过此时间后进入半开状态
-         */
-        @Min(1000)
-        private long recoveryTimeoutMs = 30000;
-
-        /**
-         * 半开状态最大探测请求数
-         */
-        @Min(1)
-        private int halfOpenMaxRequests = 3;
     }
 }

@@ -33,7 +33,6 @@ import com.njydsz.pmis.common.redis.service.RedisService;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class DefaultLockStrategy implements LockStrategy {
 
@@ -74,63 +73,6 @@ public class DefaultLockStrategy implements LockStrategy {
      * 默认锁等待时间（毫秒）
      */
     private static final long DEFAULT_WAIT_MILLIS = 5_000;
-
-    /**
-     * 构造器（仅包含 StringRedisTemplate）
-     *
-     * @param stringRedisTemplate Redis 模板
-     */
-    public DefaultLockStrategy(StringRedisTemplate stringRedisTemplate) {
-        this(stringRedisTemplate, null, null, null, null);
-    }
-
-    /**
-     * 构造器（包含 StringRedisTemplate 和 LockWatchDog）
-     *
-     * @param stringRedisTemplate Redis 模板
-     * @param lockWatchDog 看门狗
-     */
-    public DefaultLockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog) {
-        this(stringRedisTemplate, lockWatchDog, null, null, null);
-    }
-
-    /**
-     * 构造器（包含 StringRedisTemplate、LockWatchDog 和 RedisService）
-     *
-     * @param stringRedisTemplate Redis 模板
-     * @param lockWatchDog 看门狗
-     * @param redisService Redis 服务
-     */
-    public DefaultLockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog, RedisService redisService) {
-        this(stringRedisTemplate, lockWatchDog, redisService, null, null);
-    }
-
-    /**
-     * 构造器（包含 StringRedisTemplate、LockWatchDog、RedisService 和调度器）
-     *
-     * @param stringRedisTemplate Redis 模板
-     * @param lockWatchDog 看门狗
-     * @param redisService Redis 服务
-     * @param scheduler 调度线程池（用于信号量超时调度）
-     */
-    public DefaultLockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog, RedisService redisService,
-                               TaskScheduler scheduler) {
-        this(stringRedisTemplate, lockWatchDog, redisService, null, scheduler);
-    }
-
-    /**
-     * 完整构造器（支持 LockMetrics 指标注入）
-     *
-     * @param stringRedisTemplate Redis 模板
-     * @param lockWatchDog 看门狗
-     * @param redisService Redis 服务
-     * @param lockMetrics 锁指标收集器
-     * @param scheduler 调度线程池（用于信号量超时调度）
-     */
-    public DefaultLockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog,
-                               RedisService redisService, LockMetrics lockMetrics, TaskScheduler scheduler) {
-        this(stringRedisTemplate, lockWatchDog, redisService, lockMetrics, scheduler, null);
-    }
 
     /**
      * 完整构造器（包含命名空间前缀）

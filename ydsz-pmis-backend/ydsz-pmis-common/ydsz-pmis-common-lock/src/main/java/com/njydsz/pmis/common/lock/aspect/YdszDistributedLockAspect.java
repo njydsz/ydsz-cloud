@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
 @Aspect
@@ -94,16 +93,6 @@ public class YdszDistributedLockAspect {
     public YdszDistributedLockAspect(LockStrategy lockStrategy, boolean fallbackEnabled) {
         this.lockStrategy = lockStrategy;
         this.fallbackEnabled = fallbackEnabled;
-    }
-
-    /**
-     * 构造器注入（降级策略由配置决定，此构造器硬编码为不启用降级，
-     * 推荐使用双参数构造器并传入 lockProperties.isFallbackEnabled()）
-     *
-     * @param lockStrategy 锁策略工厂
-     */
-    public YdszDistributedLockAspect(LockStrategy lockStrategy) {
-        this(lockStrategy, false);
     }
 
     /**
