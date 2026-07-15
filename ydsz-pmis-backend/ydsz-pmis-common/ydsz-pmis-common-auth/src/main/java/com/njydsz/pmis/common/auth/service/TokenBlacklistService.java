@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.security.TokenBlacklistBloomFilter;
+import com.njydsz.pmis.common.auth.util.AuthDigestUtils;
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -50,21 +51,15 @@ public class TokenBlacklistService {
      * 将 Token 的 SHA-256 摘要作为 Redis key，避免完整 JWT 作为 key 浪费内存。
      */
     private String buildBlacklistKey(String token) {
-        return BLACKLIST_KEY_PREFIX + sha256(token);
+        return BLACKLIST_KEY_PREFIX + AuthDigestUtils.sha256Hex(token);
     }
 
     /**
-     * 计算 SHA-256 摘要并转为十六进制字符串。
+     * @deprecated 使用 {@link AuthDigestUtils#sha256Hex(String)}
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     private static String sha256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hashBytes);
-        } catch (NoSuchAlgorithmException e) {
-            // SHA-256 是 JDK 内置算法，理论上不会缺失
-            throw new IllegalStateException("SHA-256 algorithm not available", e);
-        }
+        return AuthDigestUtils.sha256Hex(input);
     }
 
     /**
@@ -121,7 +116,7 @@ public class TokenBlacklistService {
         if (refreshToken == null || refreshToken.isBlank()) {
             return false;
         }
-        String lockKey = REFRESH_LOCK_KEY_PREFIX + sha256(refreshToken);
+        String lockKey = REFRESH_LOCK_KEY_PREFIX + AuthDigestUtils.sha256Hex(refreshToken);
         try {
             Boolean acquired = redisStringOps.setIfAbsent(lockKey, "1", REFRESH_LOCK_TTL_SECONDS);
             if (Boolean.TRUE.equals(acquired)) {
@@ -145,7 +140,7 @@ public class TokenBlacklistService {
         if (refreshToken == null || refreshToken.isBlank()) {
             return;
         }
-        String lockKey = REFRESH_LOCK_KEY_PREFIX + sha256(refreshToken);
+        String lockKey = REFRESH_LOCK_KEY_PREFIX + AuthDigestUtils.sha256Hex(refreshToken);
         try {
             redisStringOps.del(lockKey);
         } catch (Exception e) {

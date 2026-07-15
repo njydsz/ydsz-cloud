@@ -633,7 +633,7 @@ public class AuthColPermissionAspect {
         }
     }
 
-    private static final java.lang.reflect.Method MAP_PUT_METHOD;
+    private static final Method MAP_PUT_METHOD;
 
     static {
         try {
@@ -656,7 +656,15 @@ public class AuthColPermissionAspect {
     private static Object shallowCopyByReflection(Object source) throws Exception {
         Class<?> clazz = source.getClass();
         Object copy = clazz.getDeclaredConstructor().newInstance();
-        for (Field field : listAllFieldsPublic(clazz)) {
+        for (Field field : fieldListCache.computeIfAbsent(clazz, k -> {
+            List<Field> fields = new ArrayList<>();
+            Class<?> current = k;
+            while (current != null && current != Object.class) {
+                fields.addAll(Arrays.asList(current.getDeclaredFields()));
+                current = current.getSuperclass();
+            }
+            return Collections.unmodifiableList(fields);
+        })) {
             if (Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers())) {
                 continue;
             }
@@ -665,20 +673,5 @@ public class AuthColPermissionAspect {
             field.set(copy, value);
         }
         return copy;
-    }
-
-    /**
-     * 公开版本的字段列表方法，供 shallowCopyByReflection 使用。
-     */
-    private static List<Field> listAllFieldsPublic(Class<?> clazz) {
-        return fieldListCache.computeIfAbsent(clazz, k -> {
-            List<Field> fields = new ArrayList<>();
-            Class<?> current = k;
-            while (current != null && current != Object.class) {
-                fields.addAll(Arrays.asList(current.getDeclaredFields()));
-                current = current.getSuperclass();
-            }
-            return Collections.unmodifiableList(fields);
-        });
     }
 }

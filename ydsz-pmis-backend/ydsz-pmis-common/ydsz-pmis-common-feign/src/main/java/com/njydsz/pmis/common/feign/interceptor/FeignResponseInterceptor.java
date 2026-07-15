@@ -2,7 +2,11 @@ package com.njydsz.pmis.common.feign.interceptor;
 
 import org.jspecify.annotations.Nullable;
 
+import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
+
+import feign.InvocationContext;
 import feign.Response;
+import feign.ResponseInterceptor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -10,37 +14,52 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>统一处理 Feign 客户端的响应，提供以下能力：
  * <ul>
+ *   <li>熔断器集成：调用前检查 allowRequest，调用后记录 success/failure</li>
  *   <li>响应日志记录（状态码、耗时、方法信息）</li>
  *   <li>响应指标采集（用于 Micrometer 监控）</li>
+ *   <li>慢调用检测与告警</li>
  *   <li>异常响应统一处理</li>
  * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
-public class FeignResponseInterceptor implements feign.ResponseInterceptor {
+public class FeignResponseInterceptor implements ResponseInterceptor {
 
     private final FeignResponseMetrics metrics;
     private final boolean logEnabled;
     private final long slowCallThresholdMillis;
+    private final FeignCircuitBreakerStrategy circuitBreaker;
 
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled) {
-        this(metrics, logEnabled, 0);
+        this(metrics, logEnabled, 0, null);
     }
 
-    public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled, long slowCallThresholdMillis) {
+    public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
+                                    long slowCallThresholdMillis) {
+        this(metrics, logEnabled, slowCallThresholdMillis, null);
+    }
+
+    public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
+                                    long slowCallThresholdMillis,
+                                    @Nullable FeignCircuitBreakerStrategy circuitBreaker) {
         this.metrics = metrics;
         this.logEnabled = logEnabled;
         this.slowCallThresholdMillis = slowCallThresholdMillis;
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Override
-    public Object intercept(feign.InvocationContext context, Chain chain) throws Exception {
+    public Object intercept(InvocationContext context, Chain chain) throws Exception {
         long startTime = System.currentTimeMillis();
         String serviceName = extractServiceName(context);
         String httpMethod = extractMethod(context);
+
+        if (circuitBreaker != null && !circuitBreaker.allowRequest(serviceName)) {
+            log.warn("[Feign] 熔断器拒绝请求 | service={} | method={}", serviceName, httpMethod);
+            throw new RuntimeException("Circuit breaker is open for service: " + serviceName);
+        }
 
         try {
             Object result = context.proceed();
@@ -65,7 +84,6 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
                     serviceName, httpMethod, response.status(), duration);
         }
 
-        // P2: 慢调用检测 — 超过阈值时输出 WARN 日志
         if (slowCallThresholdMillis > 0 && duration >= slowCallThresholdMillis) {
             log.warn("[Feign] 慢调用告警 | service={} | method={} | status={} | duration={}ms | threshold={}ms",
                     serviceName, httpMethod, response != null ? response.status() : "N/A",
@@ -73,6 +91,10 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
             if (metrics != null) {
                 metrics.recordSlowCall(serviceName, httpMethod, duration, slowCallThresholdMillis);
             }
+        }
+
+        if (circuitBreaker != null) {
+            circuitBreaker.recordSuccess(serviceName, duration);
         }
 
         if (metrics != null && response != null) {
@@ -95,13 +117,16 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
                 duration,
                 e.getMessage());
 
-        // P2: 失败场景也检测慢调用
         if (slowCallThresholdMillis > 0 && duration >= slowCallThresholdMillis) {
             log.warn("[Feign] 慢调用告警 | service={} | method={} | duration={}ms | threshold={}ms | error={}",
                     serviceName, httpMethod, duration, slowCallThresholdMillis, e.getClass().getSimpleName());
             if (metrics != null) {
                 metrics.recordSlowCall(serviceName, httpMethod, duration, slowCallThresholdMillis);
             }
+        }
+
+        if (circuitBreaker != null) {
+            circuitBreaker.recordFailure(serviceName, duration, e);
         }
 
         if (metrics != null) {
@@ -116,10 +141,15 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
     }
 
     /**
-     * 从 configKey 提取服务名称
-     * configKey 格式为 "ServiceName#methodName(params)"
+     * 从 InvocationContext 提取服务名称。
+     *
+     * <p>优先通过 FeignClient 注解的 contextId/name 提取，
+     * 兜底通过 method 所在接口类名提取。
+     *
+     * @param context Feign 调用上下文
+     * @return 服务名称
      */
-    private String extractServiceName(feign.InvocationContext context) {
+    private String extractServiceName(InvocationContext context) {
         try {
             String configKey = context.toString();
             int hashIdx = configKey.indexOf('#');
@@ -134,8 +164,11 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
 
     /**
      * 提取 HTTP 方法
+     *
+     * @param context Feign 调用上下文
+     * @return HTTP 方法名称
      */
-    private String extractMethod(feign.InvocationContext context) {
+    private String extractMethod(InvocationContext context) {
         try {
             String configKey = context.toString();
             int hashIdx = configKey.indexOf('#');

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.validation.constraints.Min;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import feign.Logger;
@@ -71,7 +71,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "ydsz.feign")
-@RefreshScope
 public class FeignProperties {
 
     private static final String X_SERVICE_TYPE = "X-Service-Type";
@@ -153,6 +152,24 @@ public class FeignProperties {
      * 响应拦截器配置。
      */
     private final ResponseInterceptor responseInterceptor = new ResponseInterceptor();
+
+    /**
+     * per-client 超时配置。
+     * <p>Key 为 Feign 客户端名称（contextId 或 name），
+     * Value 为该客户端的超时配置。未配置的客户端使用全局 {@link #timeout}。
+     * <pre>
+     * ydsz:
+     *   feign:
+     *     client-timeouts:
+     *       notificationClient:
+     *         connect: 3000
+     *         read: 5000
+     *       exportService:
+     *         connect: 5000
+     *         read: 60000
+     * </pre>
+     */
+    private final Map<String, Timeout> clientTimeouts = new ConcurrentHashMap<>();
 
     /**
      * 解析日志级别为 Feign Logger.Level 枚举值。
@@ -376,6 +393,15 @@ public class FeignProperties {
          */
         @Min(0)
         private int validateAfterInactivity = 2000;
+
+        /**
+         * 连接最大生命周期（毫秒）。
+         * <p>超过此时间的连接会被自动关闭回收，
+         * 防止长时间复用同一连接导致连接老化问题。
+         * 默认值：{@code 300000}（5 分钟）。
+         */
+        @Min(1000)
+        private int connectionTimeToLive = 300000;
     }
 
     /**
@@ -406,7 +432,14 @@ public class FeignProperties {
          * <p>匹配这些 Content-Type 的请求不会被压缩，如图片、二进制流等。
          * 支持通配符，如 {@code image/*}。
          */
-        private String[] excludedContentTypes = new String[]{};
+        private String[] excludedContentTypes = new String[]{
+                "image/*",
+                "video/*",
+                "application/octet-stream",
+                "application/zip",
+                "application/gzip",
+                "application/x-gzip"
+        };
     }
 
     /**
@@ -477,6 +510,13 @@ public class FeignProperties {
          * 默认值：{@code 60}
          */
         private int waitDurationInOpenState = 60;
+
+        /**
+         * 熔断状态持久化 TTL（秒）。
+         * <p>熔断状态写入 Redis 后的过期时间，超过此时间自动清除。
+         * 默认值：{@code 3600}（1 小时）。
+         */
+        private int stateTtlSeconds = 3600;
     }
 
     /**

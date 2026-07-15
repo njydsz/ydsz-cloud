@@ -21,12 +21,18 @@ import org.springframework.context.annotation.Bean;
 import com.njydsz.pmis.common.feign.aspect.FeignRequestInterceptor;
 import com.njydsz.pmis.common.feign.aspect.YdszFeignErrorDecoder;
 import com.njydsz.pmis.common.feign.aspect.YdszFeignLogger;
+import com.njydsz.pmis.common.feign.circuitbreaker.CircuitBreakerStatePersistence;
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerMetricsExporter;
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
+import com.njydsz.pmis.common.feign.codec.JsonDecoder;
+import com.njydsz.pmis.common.feign.codec.JsonEncoder;
+import com.njydsz.pmis.common.feign.codec.ResponseUnwrapDecoder;
 import com.njydsz.pmis.common.feign.compress.GzipRequestCompressInterceptor;
+import com.njydsz.pmis.common.feign.health.FeignHealthIndicator;
 import com.njydsz.pmis.common.feign.interceptor.FeignResponseInterceptor;
 import com.njydsz.pmis.common.feign.monitor.FeignResponseMetricsAdapter;
 import com.njydsz.pmis.common.feign.trace.TraceRequestInterceptor;
+import com.njydsz.pmis.common.redis.service.RedisService;
 
 import feign.Feign;
 import feign.Logger;
@@ -39,6 +45,8 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
  * YdszFeign 自动配置类。
@@ -172,7 +180,35 @@ public class FeignConfiguration {
         long period = retryConfig.getBackoff().getDelay();
         long maxPeriod = retryConfig.getBackoff().getMaxDelay();
         int maxAttempts = retryConfig.getMaxAttempts();
-        return new Retryer.Default(period, maxPeriod, maxAttempts);
+        return new MethodAwareRetryer(period, maxPeriod, maxAttempts, retryConfig.getRetryOnMethods());
+    }
+
+    /**
+     * 创建 Feign JSON 编码器。
+     *
+     * <p>使用统一 JSON 引擎进行请求体序列化，
+     * 替代 Spring Cloud OpenFeign 默认的 SpringEncoder。
+     *
+     * @return JsonEncoder 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(Encoder.class)
+    public Encoder feignEncoder() {
+        return new JsonEncoder();
+    }
+
+    /**
+     * 创建 Feign 响应解码器。
+     *
+     * <p>使用 {@link ResponseUnwrapDecoder} 包装 {@link JsonDecoder}，
+     * 自动解包 {@code BaseResponse<T>} 响应，直接返回内部 data 字段。
+     *
+     * @return ResponseUnwrapDecoder 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(Decoder.class)
+    public Decoder feignDecoder() {
+        return new ResponseUnwrapDecoder(new JsonDecoder());
     }
 
     /**
@@ -250,18 +286,20 @@ public class FeignConfiguration {
     @ConditionalOnMissingBean(FeignResponseInterceptor.class)
     @ConditionalOnProperty(prefix = "ydsz.feign.response-interceptor", name = "enabled", havingValue = "true", matchIfMissing = true)
     public ResponseInterceptor feignResponseInterceptor(FeignProperties feignProperties,
-                                                          ObjectProvider<MeterRegistry> meterRegistryProvider) {
+                                                          ObjectProvider<MeterRegistry> meterRegistryProvider,
+                                                          ObjectProvider<FeignCircuitBreakerStrategy> circuitBreakerProvider) {
         boolean logEnabled = feignProperties.getResponseInterceptor().isLogEnabled();
         long slowCallThresholdMillis = feignProperties.getResponseInterceptor().getSlowCallThresholdMillis();
 
-        // P2: 当 Micrometer 在 classpath 中时，注入指标适配器
         FeignResponseInterceptor.FeignResponseMetrics metrics = null;
         MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
         if (feignProperties.getResponseInterceptor().isMetricsEnabled() && meterRegistry != null) {
             metrics = new FeignResponseMetricsAdapter(meterRegistry);
         }
 
-        return new FeignResponseInterceptor(metrics, logEnabled, slowCallThresholdMillis);
+        FeignCircuitBreakerStrategy circuitBreaker = circuitBreakerProvider.getIfAvailable();
+
+        return new FeignResponseInterceptor(metrics, logEnabled, slowCallThresholdMillis, circuitBreaker);
     }
 
     /**
@@ -281,6 +319,7 @@ public class FeignConfiguration {
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(clientConfig.getMaxConnections());
         cm.setDefaultMaxPerRoute(clientConfig.getMaxPerRoute());
+        cm.setValidateAfterInactivity(TimeValue.ofMilliseconds(clientConfig.getValidateAfterInactivity()));
         return cm;
     }
 
@@ -392,5 +431,41 @@ public class FeignConfiguration {
             ApplicationContext applicationContext,
             DynamicFeignClientFactory clientFactory) {
         return new FeignConfigRefresher(applicationContext, clientFactory);
+    }
+
+    /**
+     * 注册 Feign 健康检查指示器。
+     *
+     * <p>暴露 /actuator/health/feign 端点，报告 Feign 客户端配置概要和熔断器状态。
+     *
+     * @param feignProperties              Feign 配置属性
+     * @param circuitBreakerStrategyProvider 熔断器策略提供者（可选）
+     * @return FeignHealthIndicator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(HealthIndicator.class)
+    @ConditionalOnProperty(prefix = "ydsz.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FeignHealthIndicator feignHealthIndicator(
+            FeignProperties feignProperties,
+            ObjectProvider<FeignCircuitBreakerStrategy> circuitBreakerStrategyProvider) {
+        return new FeignHealthIndicator(feignProperties, circuitBreakerStrategyProvider);
+    }
+
+    /**
+     * 注册熔断器状态持久化组件。
+     *
+     * <p>当 Redis 在 classpath 中时，将熔断状态持久化到 Redis，
+     * 应用重启后可恢复熔断状态。
+     *
+     * @param redisServiceProvider Redis 服务提供者（可选）
+     * @return CircuitBreakerStatePersistence 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(RedisService.class)
+    public CircuitBreakerStatePersistence circuitBreakerStatePersistence(
+            ObjectProvider<RedisService> redisServiceProvider) {
+        return new CircuitBreakerStatePersistence(redisServiceProvider);
     }
 }

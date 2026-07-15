@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.pmis.common.auth.aspect.AuthColPermissionAspect;
@@ -65,6 +66,7 @@ import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
  * 
  */
 @AutoConfiguration
+@EnableScheduling
 @ConditionalOnProperty(prefix = "ydsz.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties({AuthProperties.class, KeyspaceNotificationProperties.class, TokenProperties.class})
 public class AuthConfiguration {

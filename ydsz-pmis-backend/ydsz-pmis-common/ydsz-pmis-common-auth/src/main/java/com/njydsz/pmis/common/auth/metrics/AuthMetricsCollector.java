@@ -47,6 +47,11 @@ public class AuthMetricsCollector {
     private Counter cacheMissCounter;
     private Timer permissionCheckTimer;
 
+    /**
+     * Redis 可用状态，通过 Gauge 暴露到监控系统。
+     */
+    private final java.util.concurrent.atomic.AtomicInteger redisAvailable = new java.util.concurrent.atomic.AtomicInteger(1);
+
     public AuthMetricsCollector(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         initMetrics();
@@ -73,8 +78,8 @@ public class AuthMetricsCollector {
                 .description("权限校验耗时")
                 .register(meterRegistry);
 
-        // Redis 可用状态 Gauge（Micrometer 1.x API：gauge(String, T, ToDoubleFunction<T>)）
-        meterRegistry.gauge("auth.redis.available", new AtomicInteger(1), AtomicInteger::get);
+        // Redis 可用状态 Gauge（绑定实例字段，可通过 updateRedisAvailable 动态更新）
+        meterRegistry.gauge("auth.redis.available", redisAvailable, AtomicInteger::get);
     }
 
     /**
@@ -132,9 +137,7 @@ public class AuthMetricsCollector {
      * @param available Redis 是否可用
      */
     public void updateRedisAvailable(boolean available) {
-        // 通过 Gauge 反映状态变更
-        // 由于 Gauge 在 initMetrics 中绑定了一个固定对象，这里不直接修改
-        // 生产环境可通过独立的 AtomicInteger 来实现动态更新
+        redisAvailable.set(available ? 1 : 0);
     }
 
     /**
