@@ -15,6 +15,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.util.concurrent.TimeUnit;
+
 import com.njydsz.pmis.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.pmis.common.auth.aspect.AuthPermissionAspect;
 import com.njdsz.pmis.common.auth.aspect.AuthRowPermissionAspect;
@@ -25,6 +27,8 @@ import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.pmis.common.auth.listener.PermissionKeyspaceNotificationListener;
 import com.njydsz.pmis.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
+import com.njydsz.pmis.common.auth.security.CsrfTokenValidator;
+import com.njydsz.pmis.common.auth.security.RateLimiter;
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
@@ -57,7 +61,6 @@ import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
  *   <li>Redis 不可用时自动降级到本地缓存</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */
@@ -313,6 +316,30 @@ public class AuthConfiguration {
     @ConditionalOnBean(RedisStringOps.class)
     public TokenBlacklistService tokenBlacklistService(RedisStringOps redisStringOps, AuthProperties authProperties) {
         return new TokenBlacklistService(redisStringOps, authProperties);
+    }
+
+    /**
+     * 创建限流器 Bean（可选，默认 60 秒内 100 次请求）。
+     *
+     * @return RateLimiter 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "ydsz.auth", name = "rate-limit-enabled", havingValue = "true", matchIfMissing = false)
+    public RateLimiter authRateLimiter() {
+        return new RateLimiter(100, 60, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 创建 CSRF 验证器 Bean（可选，默认启用）。
+     *
+     * @return CsrfTokenValidator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "ydsz.auth", name = "csrf-enabled", havingValue = "true", matchIfMissing = false)
+    public CsrfTokenValidator csrfTokenValidator() {
+        return new CsrfTokenValidator(true);
     }
 
     /**

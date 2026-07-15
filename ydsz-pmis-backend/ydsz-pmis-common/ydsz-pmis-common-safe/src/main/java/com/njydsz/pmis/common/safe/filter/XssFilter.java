@@ -23,7 +23,7 @@ import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
-import com.njydsz.pmis.common.util.http.ServletUtils;
+import com.njydsz.pmis.common.safe.util.ClientIpResolver;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
@@ -249,17 +249,6 @@ public class XssFilter extends OncePerRequestFilter {
         boolean hasText() {
             return StringUtils.hasText(text);
         }
-    }
-
-    /**
-     * 获取客户端真实 IP
-     * <p>委托给 {@code ServletUtils.getClientIp}，已处理反向代理头。
-     *
-     * @param request HTTP 请求
-     * @return 客户端 IP
-     */
-    private String getClientIp(HttpServletRequest request) {
-        return ServletUtils.getClientIp(request);
     }
 
     /**

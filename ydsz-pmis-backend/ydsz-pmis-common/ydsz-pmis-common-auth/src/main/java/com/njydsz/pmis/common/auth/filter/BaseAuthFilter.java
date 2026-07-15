@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>提取 Web 端和 App 端认证过滤器的公共逻辑。</p>
  *
- * @author ydsz-pmis-team
  * 
  */
 @Slf4j
@@ -64,7 +63,7 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         // CSRF 校验（如果启用）
         if (csrfTokenValidator != null && !csrfTokenValidator.validate(request)) {
             log.warn("{}[CSRF 校验失败] 请求路径: {}", getLogPrefix(), servletPath);
-            response.sendError jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN, "CSRF Token validation failed");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF Token validation failed");
             return;
         }
         // 限流检查（如果启用）
@@ -72,7 +71,7 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
             String clientIp = request.getRemoteAddr();
             if (!rateLimiter.tryAcquire(clientIp)) {
                 log.warn("{}[限流] IP: {}, 请求路径: {}", getLogPrefix(), clientIp, servletPath);
-                response.sendError jakarta.servlet.http.HttpServletResponse.SC_TOO_MANY_REQUESTS, "Rate limit exceeded");
+                response.sendError(429, "Rate limit exceeded");
                 return;
             }
         }
