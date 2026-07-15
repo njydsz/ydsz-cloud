@@ -36,7 +36,6 @@ import lombok.Data;
  *         policy: same-origin  # same-origin | same-site | cross-origin
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Data

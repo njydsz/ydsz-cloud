@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.cache.support.AsyncFunction;
 
 /**
  * @deprecated 使用 {@link WindowTinyLFUCache} 替代。WindowTinyLFUCache 提供了分段锁架构和无锁读取，
- *     性能和并发性更优。通过 {@code YdszCache.newBuilder().type(CacheType.TINYLFU).build()} 默认使用 WindowTinyLFUCache。
+ *     性能和并发性更优。通过 {@code LocalCache.newBuilder().type(CacheType.TINYLFU).build()} 默认使用 WindowTinyLFUCache。
  */
 @Deprecated
 public class WTinyLFUCache<K, V> extends AbstractCache<K, V> {

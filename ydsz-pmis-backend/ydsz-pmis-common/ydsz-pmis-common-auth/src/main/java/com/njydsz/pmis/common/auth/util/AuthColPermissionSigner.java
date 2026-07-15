@@ -35,7 +35,6 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>密钥为空时跳过签名校验（仅建议开发/测试环境使用）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -18,7 +18,6 @@ import com.njydsz.pmis.common.auth.model.RolePermissions;
  *   <li>权限类型分离：菜单权限、按钮权限、API 权限分别管理</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

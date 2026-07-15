@@ -39,7 +39,6 @@ import java.util.concurrent.atomic.LongAdder;
  * System.out.println("Hit rate: " + stats.getHitRate());
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

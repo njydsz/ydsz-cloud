@@ -29,7 +29,6 @@ import com.njydsz.pmis.common.json.Json;
  * <p>注意：本类需要 Spring Data Redis 在 classpath 中。 如果 Redis 不可用，应降级为
  * NoopCacheInvalidationBroadcaster。
  *
- * @author ydsz-pmis-team
  * 
  */
 public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroadcaster {

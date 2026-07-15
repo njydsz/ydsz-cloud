@@ -28,7 +28,6 @@ import lombok.NoArgsConstructor;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

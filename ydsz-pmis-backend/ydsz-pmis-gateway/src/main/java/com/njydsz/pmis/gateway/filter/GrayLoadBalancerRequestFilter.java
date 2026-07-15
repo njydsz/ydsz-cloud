@@ -34,7 +34,6 @@ import reactor.core.publisher.Mono;
  * <p>{@link Ordered#HIGHEST_PRECEDENCE} + 20,晚于 {@link AuthGlobalFilter}(+10),
  * 确保 AuthFilter 完成鉴权后再注入灰度标识,避免白名单请求干扰。
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j

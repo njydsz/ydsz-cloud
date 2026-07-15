@@ -33,7 +33,6 @@ import com.njydsz.pmis.common.auth.service.impl.RedisRbacUserInfoService;
  * }
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see RedisRbacUserInfoService

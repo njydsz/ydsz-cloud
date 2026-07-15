@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
  * <p><b>限制：</b>此实现为单机内存级别，不支持分布式限流。
  * 生产环境如需分布式限流，请集成 Redis + Lua 脚本方案。
  *
- * @author ydsz-pmis-team
  * @since 1.1.0
 
  */

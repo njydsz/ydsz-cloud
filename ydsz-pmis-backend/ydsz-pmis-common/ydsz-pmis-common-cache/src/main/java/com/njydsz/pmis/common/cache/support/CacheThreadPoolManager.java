@@ -28,7 +28,6 @@ import org.springframework.beans.factory.DisposableBean;
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
  *
- * @author ydsz-pmis-team
  * 
  */
 public class CacheThreadPoolManager implements DisposableBean {

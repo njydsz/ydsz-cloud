@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.cache.builder.CacheBuilder;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 
 /**
- * YdszCache JMH 性能基准测试套件
+ * LocalCache JMH 性能基准测试套件
  *
  * <p>覆盖场景：
  *
@@ -38,7 +38,6 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
  * java -jar target/benchmarks.jar CacheBenchmark -wi 3 -i 5 -f 1
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @BenchmarkMode(Mode.Throughput)

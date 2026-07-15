@@ -29,7 +29,6 @@ import com.njydsz.pmis.common.json.Json;
  *   <li>用户角色被分配后自动清理缓存</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

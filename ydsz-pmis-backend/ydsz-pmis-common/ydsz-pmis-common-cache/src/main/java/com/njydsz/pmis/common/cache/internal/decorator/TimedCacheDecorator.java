@@ -34,7 +34,6 @@ import io.micrometer.core.instrument.Timer;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * 
  */
 public class TimedCacheDecorator<K, V> implements Cache<K, V> {

@@ -25,7 +25,6 @@ import io.jsonwebtoken.security.Keys;
  * 旧版 API 中的 roles/permissions/deptId 等扩展参数将存入 JWT claims，
  * 但不再由下游服务从 Token 中直接读取（改为通过网关 Header 透传）。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Service

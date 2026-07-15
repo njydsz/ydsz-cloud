@@ -14,7 +14,6 @@ import java.lang.annotation.*;
  * public List<Employee> listEmployees(PageQuery query) { ... }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Target(ElementType.METHOD)

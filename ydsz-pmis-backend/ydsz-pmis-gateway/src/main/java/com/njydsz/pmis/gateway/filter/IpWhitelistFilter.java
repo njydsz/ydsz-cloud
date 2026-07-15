@@ -44,7 +44,6 @@ import reactor.core.publisher.Mono;
  * <p>执行顺序先于 {@link AuthGlobalFilter}，在认证前即拒绝非法 IP，
  * 避免无效请求消耗 JWT 解析与 Redis 查询资源。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Component

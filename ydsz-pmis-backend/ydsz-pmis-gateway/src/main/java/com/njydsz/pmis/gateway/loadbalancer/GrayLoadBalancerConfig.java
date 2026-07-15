@@ -25,7 +25,6 @@ import org.springframework.core.env.Environment;
  * 获取当前 serviceId,从而为每个服务构建独立的 {@link GrayLoadBalancer} 实例
  * (含独立的轮询计数器)。
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Configuration

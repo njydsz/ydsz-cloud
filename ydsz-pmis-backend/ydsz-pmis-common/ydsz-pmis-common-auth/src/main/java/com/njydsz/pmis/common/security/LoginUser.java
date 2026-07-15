@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
  *
  * <p>从 JWT Token 解析后存放于 ThreadLocal，供业务层使用。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data

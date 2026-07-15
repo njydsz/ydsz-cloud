@@ -15,7 +15,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * YdszCache Spring Boot 配置属性
+ * LocalCache Spring Boot 配置属性
  *
  * <p>配置前缀：{@code ydsz.cache}
  *
@@ -45,12 +45,11 @@ import jakarta.validation.constraints.NotNull;
  *         expire-after-write: 0
  * </pre>
  *
- * @author ydsz-pmis-team
  * 
  */
 @ConfigurationProperties(prefix = "ydsz.cache")
 @Validated
-public class YdszCacheProperties {
+public class LocalCacheProperties {
 
   @NotNull
   private CacheType type = CacheType.TINYLFU;

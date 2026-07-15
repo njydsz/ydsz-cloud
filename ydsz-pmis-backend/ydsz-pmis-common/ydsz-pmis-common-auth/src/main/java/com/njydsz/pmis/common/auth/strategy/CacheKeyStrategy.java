@@ -21,7 +21,6 @@ import java.util.Set;
  *
  * <p><b>默认实现：</b>{@link DefaultCacheKeyStrategy} 使用 {@code tenantId:roleCodes} 格式。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -19,7 +19,6 @@ import lombok.Data;
  *   <li>列权限：role-col-key</li>
  * </ul>
   *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

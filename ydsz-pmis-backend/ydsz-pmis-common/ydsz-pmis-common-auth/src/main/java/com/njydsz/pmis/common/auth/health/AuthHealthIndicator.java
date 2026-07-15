@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>返回连接耗时作为性能指标</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

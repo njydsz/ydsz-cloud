@@ -18,7 +18,6 @@ import java.util.Set;
  *   <li>URL 解码规范化：先解码再检测，防范编码绕过</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 public final class PathGuard {

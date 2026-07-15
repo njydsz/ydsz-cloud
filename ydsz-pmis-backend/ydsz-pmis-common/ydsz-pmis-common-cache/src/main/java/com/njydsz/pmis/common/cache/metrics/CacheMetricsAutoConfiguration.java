@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 
-import com.njydsz.pmis.common.cache.spring.YdszCacheManager;
-import com.njydsz.pmis.common.cache.spring.SpringYdszCache;
+import com.njydsz.pmis.common.cache.spring.LocalCacheManager;
+import com.njydsz.pmis.common.cache.spring.SpringLocalCache;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
@@ -20,7 +20,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 /**
  * 缓存可观测性自动配置
  *
- * <p>当 classpath 中存在 Micrometer 和 YdszCacheManager 时， 自动为每个缓存注册 {@link CacheMeterBinder} 指标（含
+ * <p>当 classpath 中存在 Micrometer 和 LocalCacheManager 时， 自动为每个缓存注册 {@link CacheMeterBinder} 指标（含
  * P50/P90/P99 分位数 Timer）。
  *
  * <p>动态绑定：实现 {@link SmartInitializingSingleton}，在所有单例 Bean 初始化完成后绑定已有缓存的指标，
@@ -40,17 +40,16 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  *   <li>cache.put.duration - PUT 操作耗时分布（Timer，含 P50/P90/P99）
  * </ul>
  *
- * @author ydsz-pmis-team
  * 
  */
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
-@ConditionalOnBean({MeterRegistry.class, YdszCacheManager.class})
+@ConditionalOnBean({MeterRegistry.class, LocalCacheManager.class})
 public class CacheMetricsAutoConfiguration {
 
   @Bean
   public CacheMetricsRegistrar cacheMetricsRegistrar(
-      YdszCacheManager cacheManager, MeterRegistry meterRegistry) {
+      LocalCacheManager cacheManager, MeterRegistry meterRegistry) {
     return new CacheMetricsRegistrar(cacheManager, meterRegistry);
   }
 
@@ -61,11 +60,11 @@ public class CacheMetricsAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(CacheMetricsRegistrar.class);
 
-    private final YdszCacheManager cacheManager;
+    private final LocalCacheManager cacheManager;
     private final MeterRegistry meterRegistry;
     private final Set<String> registeredCacheNames = ConcurrentHashMap.newKeySet();
 
-    CacheMetricsRegistrar(YdszCacheManager cacheManager, MeterRegistry meterRegistry) {
+    CacheMetricsRegistrar(LocalCacheManager cacheManager, MeterRegistry meterRegistry) {
       this.cacheManager = cacheManager;
       this.meterRegistry = meterRegistry;
     }
@@ -88,7 +87,7 @@ public class CacheMetricsAutoConfiguration {
       if (registeredCacheNames.contains(cacheName)) {
         return;
       }
-      SpringYdszCache springCache = cacheManager.getCache(cacheName);
+      SpringLocalCache springCache = cacheManager.getCache(cacheName);
       if (springCache == null) {
         return;
       }

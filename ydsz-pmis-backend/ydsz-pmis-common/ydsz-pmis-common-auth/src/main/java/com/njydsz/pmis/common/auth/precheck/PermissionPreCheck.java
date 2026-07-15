@@ -34,7 +34,6 @@ import java.lang.annotation.*;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see PermissionPreChecker

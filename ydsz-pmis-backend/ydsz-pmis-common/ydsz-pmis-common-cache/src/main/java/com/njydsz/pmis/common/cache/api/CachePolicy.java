@@ -11,7 +11,7 @@ import java.util.OptionalLong;
  * <p>使用示例：
  *
  * <pre>{@code
- * Cache<String, User> cache = YdszCache.newBuilder()
+ * Cache<String, User> cache = LocalCache.newBuilder()
  *     .maximumSize(1000)
  *     .build();
  *
@@ -22,7 +22,6 @@ import java.util.OptionalLong;
  * });
  * }</pre>
  *
- * @author ydsz-pmis-team
  * 
  */
 public interface CachePolicy {

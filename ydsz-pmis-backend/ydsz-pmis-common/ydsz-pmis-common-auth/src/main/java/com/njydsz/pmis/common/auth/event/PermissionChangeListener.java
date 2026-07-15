@@ -20,7 +20,6 @@ package com.njydsz.pmis.common.auth.event;
  *   <li>实现 {@code onPermissionChanged} 方法处理权限变更事件</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see PermissionChangedEvent

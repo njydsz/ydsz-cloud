@@ -47,7 +47,6 @@ import java.util.function.Function;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

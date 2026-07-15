@@ -13,7 +13,7 @@ package com.njydsz.pmis.common.cache.support;
  *     return value.isHot() ? TimeUnit.MINUTES.toNanos(5) : TimeUnit.HOURS.toNanos(1);
  * };
  *
- * Cache<String, Data> cache = YdszCache.newBuilder()
+ * Cache<String, Data> cache = LocalCache.newBuilder()
  *     .expireAfter(expiry)
  *     .maximumSize(10000)
  *     .build();
@@ -21,7 +21,6 @@ package com.njydsz.pmis.common.cache.support;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * 
  */
 @FunctionalInterface

@@ -21,7 +21,7 @@ import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.pmis.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.pmis.common.auth.util.PermissionUtils;
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
@@ -55,7 +55,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>checkMode：校验模式（AND/OR）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see PermissionDeniedException
@@ -98,7 +97,7 @@ public class RbacPermissionEvaluator {
         this.properties = properties;
         this.userInfoService = userInfoService;
         this.rolePermissionLoader = rolePermissionLoader;
-        this.rolePermissionsCache = YdszCache.<String, RolePermissions>newBuilder()
+        this.rolePermissionsCache = LocalCache.<String, RolePermissions>newBuilder()
                 .type(CacheType.TTL)
                 .maximumSize(1000)
                 .expireAfterWrite(resolvePermissionCacheTtlSeconds(), TimeUnit.SECONDS)

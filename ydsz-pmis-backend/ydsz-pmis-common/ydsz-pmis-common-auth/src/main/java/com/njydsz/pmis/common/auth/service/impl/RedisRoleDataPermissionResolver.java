@@ -11,7 +11,7 @@ import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.DataScopeInfo;
 import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.listener.RemovalCause;
@@ -53,12 +53,11 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see DataPermissionResolver
  * @see DataScopeInfo
- * @see YdszCache
+ * @see LocalCache
  */
 public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
 
@@ -79,9 +78,9 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
     private Cache<String, DataScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleDataCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return YdszCache.<String, DataScopeInfo>newBuilder().build();
+            return LocalCache.<String, DataScopeInfo>newBuilder().build();
         }
-        return YdszCache.<String, DataScopeInfo>newBuilder()
+        return LocalCache.<String, DataScopeInfo>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, DataScopeInfo value, RemovalCause cause) -> {

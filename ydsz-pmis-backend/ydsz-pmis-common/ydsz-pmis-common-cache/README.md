@@ -221,8 +221,8 @@ mvn test
 | `LRUCacheTest` | — | LRU 淘汰策略 |
 | `WindowTinyLFUCacheTest` | — | TinyLFU 算法 |
 | `CacheExportImportTest` | 5 | 安全导出导入 |
-| `SpringYdszCacheTest` | 14 | Spring Cache 适配 |
-| `YdszCacheManagerTest` | 11 | CacheManager 管理 |
+| `SpringLocalCacheTest` | 14 | Spring Cache 适配 |
+| `LocalCacheManagerTest` | 11 | CacheManager 管理 |
 | `MultiLevelCacheTest` | 14 | 多级缓存读写/批量/统计 |
 | `Resilience4jCacheDecoratorTest` | 11 | 熔断降级装饰器 |
 | `CacheProtectionGuardTest` | 7 | 防穿透/击穿/雪崩 |

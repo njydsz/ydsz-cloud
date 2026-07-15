@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.cache.support;
 /**
  * TTL 缓存模式枚举
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -41,7 +41,6 @@ import com.njydsz.pmis.common.cache.stats.CacheStats;
  * scheduler.shutdown();
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

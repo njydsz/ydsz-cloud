@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>各过滤器通过依赖注入获取本组件，调用对应方法记录指标。
  * Prometheus 通过 {@code /actuator/prometheus} 端点采集。
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Slf4j

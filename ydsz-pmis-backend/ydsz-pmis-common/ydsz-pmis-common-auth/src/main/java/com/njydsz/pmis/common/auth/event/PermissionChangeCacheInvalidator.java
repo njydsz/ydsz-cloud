@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>ROLE_DELETED：清除以上所有相关缓存</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see PermissionChangedEvent

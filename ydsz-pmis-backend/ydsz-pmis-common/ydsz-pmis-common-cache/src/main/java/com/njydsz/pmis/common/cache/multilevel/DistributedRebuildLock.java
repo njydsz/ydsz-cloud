@@ -28,7 +28,6 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
  *   <li>本地 fallback：Redis 不可用时降级为本地锁
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public class DistributedRebuildLock {

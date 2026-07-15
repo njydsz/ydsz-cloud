@@ -43,7 +43,6 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public final class MultiLevelCacheBuilder<K, V> {

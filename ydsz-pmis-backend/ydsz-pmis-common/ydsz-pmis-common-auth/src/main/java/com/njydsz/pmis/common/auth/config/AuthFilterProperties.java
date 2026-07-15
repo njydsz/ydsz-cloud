@@ -10,7 +10,6 @@ import lombok.Data;
 /**
  * 认证过滤器配置属性
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -24,7 +24,6 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * 
  */
 @Target(ElementType.METHOD)

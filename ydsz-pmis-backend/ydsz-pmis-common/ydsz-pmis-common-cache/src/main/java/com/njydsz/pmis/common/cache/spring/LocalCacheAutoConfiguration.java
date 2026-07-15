@@ -17,9 +17,9 @@ import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.pmis.common.cache.support.CacheWarmer;
 
 /**
- * YdszCache Spring Boot 自动配置
+ * LocalCache Spring Boot 自动配置
  *
- * <p>提供 YdszCache 的 Spring Boot 自动配置， 支持通过 application.yml 配置缓存参数（全局默认 + per-cache 覆盖）。
+ * <p>提供 LocalCache 的 Spring Boot 自动配置， 支持通过 application.yml 配置缓存参数（全局默认 + per-cache 覆盖）。
  *
  * <p>配置示例：
  *
@@ -40,18 +40,17 @@ import com.njydsz.pmis.common.cache.support.CacheWarmer;
  *         maximum-size: 20000
  * </pre>
  *
- * @author ydsz-pmis-team
  * 
  */
 @AutoConfiguration
-@ConditionalOnClass(YdszCacheManager.class)
-@EnableConfigurationProperties(YdszCacheProperties.class)
-public class YdszCacheAutoConfiguration {
+@ConditionalOnClass(LocalCacheManager.class)
+@EnableConfigurationProperties(LocalCacheProperties.class)
+public class LocalCacheAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public YdszCacheManager springYdszCacheManager(YdszCacheProperties props) {
-    YdszCacheManager cacheManager = new YdszCacheManager();
+  public LocalCacheManager springLocalCacheManager(LocalCacheProperties props) {
+    LocalCacheManager cacheManager = new LocalCacheManager();
     cacheManager.setCacheType(props.getType());
     cacheManager.setCacheNames(props.getCacheNames());
     cacheManager.setMaximumSize(props.getMaximumSize());
@@ -73,7 +72,7 @@ public class YdszCacheAutoConfiguration {
   @ConditionalOnMissingBean
   @ConditionalOnProperty(name = "ydsz.cache.health-check.enabled", havingValue = "true", matchIfMissing = true)
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-  public SpringCacheHealthIndicator springCacheHealthIndicator(YdszCacheManager cacheManager) {
+  public SpringCacheHealthIndicator springCacheHealthIndicator(LocalCacheManager cacheManager) {
     return new SpringCacheHealthIndicator(cacheManager);
   }
 

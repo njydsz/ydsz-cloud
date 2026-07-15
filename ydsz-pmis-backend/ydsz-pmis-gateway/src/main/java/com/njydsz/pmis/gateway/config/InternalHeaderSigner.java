@@ -18,7 +18,6 @@ import javax.crypto.spec.SecretKeySpec;
  *   <li>{@code validateTimestamp()}: 时间戳防重放（拒绝超过 N 秒的签名）</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 public final class InternalHeaderSigner {

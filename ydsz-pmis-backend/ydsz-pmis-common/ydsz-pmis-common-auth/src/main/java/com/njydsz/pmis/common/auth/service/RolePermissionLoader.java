@@ -36,7 +36,6 @@ import com.njydsz.pmis.common.auth.service.impl.RedisRolePermissionLoader;
  * }
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see RolePermissions

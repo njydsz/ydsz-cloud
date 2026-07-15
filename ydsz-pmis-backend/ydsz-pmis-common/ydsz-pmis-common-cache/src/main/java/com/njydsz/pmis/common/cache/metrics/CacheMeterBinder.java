@@ -19,7 +19,7 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
 /**
- * YdszCache 到 Micrometer 的指标桥接器
+ * LocalCache 到 Micrometer 的指标桥接器
  *
  * <p>将缓存统计信息注册为 Micrometer 指标，支持与 Prometheus、Grafana 等可观测性平台集成。
  *
@@ -44,7 +44,6 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  *   <li>{@code cache_type} - 缓存类型
  * </ul>
  *
- * @author ydsz-pmis-team
  * 
  */
 public class CacheMeterBinder implements MeterBinder {

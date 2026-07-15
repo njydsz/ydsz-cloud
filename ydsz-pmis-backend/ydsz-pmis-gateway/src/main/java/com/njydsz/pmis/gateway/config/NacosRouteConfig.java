@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
  *       data-id: gateway-routes.json  # Nacos 中路由配置的 DataId
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Slf4j

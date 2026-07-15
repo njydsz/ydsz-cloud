@@ -15,7 +15,6 @@ import java.util.Map;
  *   <li>扩展数据通过 typed extras 访问，避免类型转换错误</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -5,7 +5,6 @@ package com.njydsz.pmis.common.auth.model;
  *
  * <p>当方法或类标注 @AuthRowPermission 时，如果参数实现该接口，则切面会在方法调用前注入 DataScopeInfo。
   *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

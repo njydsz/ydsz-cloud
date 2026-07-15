@@ -40,7 +40,6 @@ import com.njydsz.pmis.common.auth.model.DataScopeInfo;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see DataScopeInfo

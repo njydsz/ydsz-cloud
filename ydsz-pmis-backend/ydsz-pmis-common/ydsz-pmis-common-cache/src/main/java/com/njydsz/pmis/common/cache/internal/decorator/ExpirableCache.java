@@ -61,7 +61,6 @@ import com.njydsz.pmis.common.cache.support.Expiry;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * 
  */
 public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {

@@ -36,7 +36,6 @@ import reactor.core.publisher.Mono;
  * <p>{@code HIGHEST_PRECEDENCE + 2}，在 {@link AccessLogGlobalFilter}(+1) 之后、
  * {@link IpBlacklistFilter}(+3) 之前，确保所有下游请求都携带 trace context。
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Component

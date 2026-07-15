@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * 
  */
 @Target(ElementType.METHOD)

@@ -31,7 +31,6 @@ import com.njydsz.pmis.common.cache.support.CacheWriter;
  *   <li>参数校验
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @DisplayName("CacheBuilder 单元测试")

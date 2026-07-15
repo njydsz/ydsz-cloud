@@ -9,7 +9,6 @@ package com.njydsz.pmis.common.auth.model;
  *   <li>writable：是否可写</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see ColumnPermissionInfo

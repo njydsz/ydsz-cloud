@@ -11,7 +11,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
  *
  * <p>提供从 {@link ServerHttpRequest} 提取客户端真实 IP 以及 IP 白名单校验功能。
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 public final class GatewayIpUtils {

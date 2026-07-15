@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
  *
  * <p>覆盖权限匹配、通配符匹配、超管判断、CSV 解析等核心逻辑。
  *
- * @author ydsz-pmis-team
  * @since 1.1.0
 
  */

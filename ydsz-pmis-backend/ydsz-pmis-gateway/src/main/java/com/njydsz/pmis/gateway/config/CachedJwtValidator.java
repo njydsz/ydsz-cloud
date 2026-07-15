@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.token.TokenService;
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 
@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>假设单实例 QPS=2000，90% 请求在 5 秒窗口内复用缓存，
  * JWT 解析次数从 2000/s 降至 ~200/s，CPU 开销减少 90%。
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Slf4j
@@ -72,7 +71,7 @@ public class CachedJwtValidator {
     public CachedJwtValidator(TokenService tokenService, GatewayMetrics gatewayMetrics) {
         this.tokenService = tokenService;
         this.gatewayMetrics = gatewayMetrics;
-        this.claimsCache = YdszCache.<String, Optional<UserInfo>>newBuilder()
+        this.claimsCache = LocalCache.<String, Optional<UserInfo>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(CACHE_TTL_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAX_SIZE)

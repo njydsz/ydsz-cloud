@@ -22,7 +22,6 @@ import com.njydsz.pmis.common.util.auth.AuthInfo;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

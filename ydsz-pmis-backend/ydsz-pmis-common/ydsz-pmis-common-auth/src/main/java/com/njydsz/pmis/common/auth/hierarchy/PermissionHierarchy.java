@@ -13,7 +13,6 @@ import com.njydsz.pmis.common.auth.util.PermissionUtils;
  * <p>支持权限树继承：拥有父权限自动拥有子权限。
  * 例如：拥有 {@code sys:user} 自动拥有 {@code sys:user:list}、{@code sys:user:add} 等。
  *
- * @author ydsz-pmis-team
  * @since 1.1.0
 
  */

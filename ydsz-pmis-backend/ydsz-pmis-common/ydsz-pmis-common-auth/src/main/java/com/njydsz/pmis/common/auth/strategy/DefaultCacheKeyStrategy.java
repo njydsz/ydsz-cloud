@@ -16,7 +16,6 @@ import java.util.TreeSet;
  *
  * <p>Key 格式：{@code auth:rp:<sha256(tenantId|sortedRole1,role2,...)>}
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
 
  */

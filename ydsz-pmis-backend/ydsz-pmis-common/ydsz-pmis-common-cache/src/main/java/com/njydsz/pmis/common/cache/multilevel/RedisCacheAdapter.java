@@ -34,7 +34,7 @@ import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
 
 /**
- * Redis L2 缓存适配器 — 将 RedisTemplate 适配为 YdszCache Cache 接口
+ * Redis L2 缓存适配器 — 将 RedisTemplate 适配为 LocalCache Cache 接口
  *
  * <p>作为多级缓存的 L2 后端，提供分布式缓存能力。 使用 Spring Data Redis 的 RedisTemplate 进行序列化/反序列化。
  *
@@ -49,7 +49,6 @@ import com.njydsz.pmis.common.cache.support.AsyncFunction;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * 
  */
 public class RedisCacheAdapter<K, V> implements Cache<K, V> {

@@ -52,7 +52,6 @@ import reactor.core.publisher.Mono;
  *   <li>服务端错误 (5xx) — ERROR</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Slf4j

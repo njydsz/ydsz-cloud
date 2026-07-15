@@ -54,7 +54,6 @@ import java.lang.annotation.*;
  *   <li>示例：{@code sys:user:*} 可匹配 {@code sys:user:add}、{@code sys:user:edit} 等</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * @since 1.0.0
  * @see AuthApiPermission
@@ -115,7 +114,6 @@ public @interface AuthMenuPermission {
     /**
      * 权限类型枚举。
      *
-     * @author ydsz-pmis-team
      * @since 1.0.0
      * 
      */
@@ -136,7 +134,6 @@ public @interface AuthMenuPermission {
     /**
      * 多权限码校验模式枚举。
      *
-     * @author ydsz-pmis-team
      * @since 1.0.0
      * 
      */

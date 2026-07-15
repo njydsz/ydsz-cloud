@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
  *   <li>前端统一在 baseURL 中添加 {@code /api/v1} 前缀</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Configuration

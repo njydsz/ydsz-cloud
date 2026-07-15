@@ -9,7 +9,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  *
  * <p>统一入口：路由分发、鉴权、限流、跨域、链路追踪
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @SpringBootApplication

@@ -52,7 +52,6 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Aspect
@@ -71,7 +70,7 @@ public class CacheAnnotationAspect {
   /**
    * 创建缓存注解切面
    *
-   * @param cacheManager Spring CacheManager（通常为 YdszCacheManager）
+   * @param cacheManager Spring CacheManager（通常为 LocalCacheManager）
    */
   public CacheAnnotationAspect(CacheManager cacheManager) {
     this.cacheManager = cacheManager;

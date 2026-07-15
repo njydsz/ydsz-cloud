@@ -26,7 +26,7 @@ import com.njydsz.pmis.common.cache.support.TTLMode;
  * @deprecated 使用 {@link com.njydsz.pmis.common.cache.internal.decorator.ExpirableCache} 装饰器替代。
  *     通过 {@code builder.expireAfterWrite(duration, unit)} 配置过期策略，叠加在任意淘汰策略缓存上。
  *     <pre>{@code
- *     Cache<String, V> cache = YdszCache.newBuilder()
+ *     Cache<String, V> cache = LocalCache.newBuilder()
  *         .maximumSize(1000)
  *         .expireAfterWrite(5, TimeUnit.MINUTES)
  *         .build();
@@ -69,7 +69,6 @@ import com.njydsz.pmis.common.cache.support.TTLMode;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

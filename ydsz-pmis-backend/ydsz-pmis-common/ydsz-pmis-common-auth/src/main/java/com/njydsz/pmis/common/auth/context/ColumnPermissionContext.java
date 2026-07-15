@@ -16,7 +16,6 @@ import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
  *   <li>在 finally 块中清理，防止内存泄漏</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see ColumnPermissionInfo

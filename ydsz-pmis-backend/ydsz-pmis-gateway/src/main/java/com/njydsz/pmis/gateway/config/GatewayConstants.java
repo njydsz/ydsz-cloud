@@ -6,7 +6,6 @@ package com.njydsz.pmis.gateway.config;
  * <p>网关与下游服务之间约定的内部请求头常量。
  * 网关负责注入这些头，下游服务通过 {@code BaseAuthFilter} 解析。
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 public final class GatewayConstants {

@@ -8,7 +8,6 @@ import com.alibaba.ttl.TransmittableThreadLocal;
  * <p><b>已废弃：</b>请使用 {@link AuthContext} 替代，后者已包含 tenantId 字段。
  * 本类保留仅为向后兼容，将在 2.0.0 版本移除。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  *
  */

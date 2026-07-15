@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.listener.RemovalCause;
@@ -50,11 +50,10 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>支持定时刷新缓存，保证数据最终一致性</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see RolePermissionLoader
- * @see YdszCache
+ * @see LocalCache
  */
 public class RedisRolePermissionLoader implements RolePermissionLoader {
 
@@ -114,9 +113,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     private Cache<String, RolePermissions> buildCache() {
         Integer ttlSeconds = properties.getRolePermissionCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return YdszCache.<String, RolePermissions>newBuilder().build();
+            return LocalCache.<String, RolePermissions>newBuilder().build();
         }
-        return YdszCache.<String, RolePermissions>newBuilder()
+        return LocalCache.<String, RolePermissions>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, RolePermissions value, RemovalCause cause) -> {

@@ -44,7 +44,6 @@ import reactor.core.publisher.Mono;
  *   <li>不暴露内部堆栈信息，仅返回用户友好的错误码与消息</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Slf4j

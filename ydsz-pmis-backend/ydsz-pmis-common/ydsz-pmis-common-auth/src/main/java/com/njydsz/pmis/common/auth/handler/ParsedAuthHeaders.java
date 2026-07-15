@@ -19,7 +19,6 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * 供 {@code WebAuthHandler} / {@code AppAuthHandler} 直接使用，
  * 避免在两个 handler 中重复编写相同的 13 行 header.getHeader() 代码。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

@@ -27,7 +27,6 @@ import lombok.Data;
  *       - /auth/login
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data

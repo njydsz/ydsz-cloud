@@ -45,25 +45,25 @@ import com.njydsz.pmis.common.cache.support.Weigher;
  *
  * <pre>{@code
  * // 简单缓存（默认 TINYLFU）
- * Cache<String, User> cache = YdszCache.newBuilder()
+ * Cache<String, User> cache = LocalCache.newBuilder()
  *     .maximumSize(1000)
  *     .build();
  *
  * // LRU 缓存
- * Cache<String, User> lruCache = YdszCache.newBuilder()
+ * Cache<String, User> lruCache = LocalCache.newBuilder()
  *     .type(CacheType.LRU)
  *     .maximumSize(1000)
  *     .build();
  *
  * // 带写穿透的高性能缓存
- * Cache<String, User> writeThroughCache = YdszCache.newBuilder()
+ * Cache<String, User> writeThroughCache = LocalCache.newBuilder()
  *     .type(CacheType.STRIPED)
  *     .maximumSize(10000)
  *     .writer(userCacheWriter)
  *     .build();
  *
  * // 自动加载缓存
- * LoadingCache<String, User> loadingCache = YdszCache.newBuilder()
+ * LoadingCache<String, User> loadingCache = LocalCache.newBuilder()
  *     .type(CacheType.ENHANCED_LOADING)
  *     .maximumSize(10000)
  *     .refreshAfterWrite(5, TimeUnit.MINUTES)
@@ -73,7 +73,6 @@ import com.njydsz.pmis.common.cache.support.Weigher;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */
@@ -184,7 +183,7 @@ public final class CacheBuilder<K, V> {
   /** 软引用值标志（与 type 正交，不覆盖 type） */
   private boolean softValuesFlag = false;
 
-  /** 私有构造函数，通过 YdszCache.newBuilder() 创建 */
+  /** 私有构造函数，通过 LocalCache.newBuilder() 创建 */
   private CacheBuilder() {}
 
   /**
@@ -657,7 +656,7 @@ public final class CacheBuilder<K, V> {
    * 构建 WTinyLFU 缓存实例
    *
    * @deprecated 使用 {@link #build()} 配合默认的 TINYLFU 类型替代。此方法不应用装饰器、不校验参数，
-   *     建议使用 {@code YdszCache.newBuilder().type(CacheType.TINYLFU).maximumSize(n).build()}。
+   *     建议使用 {@code LocalCache.newBuilder().type(CacheType.TINYLFU).maximumSize(n).build()}。
    * @return WTinyLFU 缓存实例
    */
   @Deprecated

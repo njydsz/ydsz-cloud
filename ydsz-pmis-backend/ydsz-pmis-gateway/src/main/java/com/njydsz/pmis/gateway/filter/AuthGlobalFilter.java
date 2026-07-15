@@ -46,7 +46,6 @@ import reactor.core.publisher.Mono;
  *   <li>注入 {@code X-Internal-Sig} + {@code X-Internal-Ts} 签名头，下游可校验</li>
  * </ol>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j

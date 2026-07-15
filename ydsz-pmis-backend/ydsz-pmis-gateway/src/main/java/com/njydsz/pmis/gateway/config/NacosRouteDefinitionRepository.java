@@ -50,7 +50,6 @@ import reactor.core.publisher.Mono;
  * <p>配置变更自动监听：Nacos 配置更新后自动触发 {@code RefreshRoutesEvent}，
  * 无需手动重启网关即可实时生效。
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Slf4j

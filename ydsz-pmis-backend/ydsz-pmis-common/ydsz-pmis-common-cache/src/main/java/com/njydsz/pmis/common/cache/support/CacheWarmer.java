@@ -35,7 +35,6 @@ import com.njydsz.pmis.common.cache.api.Cache;
  * <p>实现 {@link SmartInitializingSingleton} 确保在所有 Bean 初始化完成后执行预热。
  * 实现 {@link DisposableBean} 确保应用关闭时清理资源。
  *
- * @author ydsz-pmis-team
  * 
  */
 public class CacheWarmer implements SmartInitializingSingleton, DisposableBean {

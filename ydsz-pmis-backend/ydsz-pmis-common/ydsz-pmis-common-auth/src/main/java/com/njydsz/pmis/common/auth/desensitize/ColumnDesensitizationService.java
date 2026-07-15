@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.json.Json;
@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
  * }
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see ColumnDesensitizationRule
@@ -63,7 +62,7 @@ public class ColumnDesensitizationService {
         this.redisService = redisService;
         this.properties = properties;
         this.userInfoService = userInfoService;
-        this.cache = YdszCache.<String, ColumnDesensitizationContext>newBuilder()
+        this.cache = LocalCache.<String, ColumnDesensitizationContext>newBuilder()
                 .type(CacheType.TTL)
                 .maximumSize(properties.getDesensitizeCacheMaxSize())
                 .expireAfterWrite(properties.getDesensitizeCacheTtlSeconds(), TimeUnit.SECONDS)

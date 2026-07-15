@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.listener.RemovalCause;
@@ -38,11 +38,10 @@ import java.util.stream.Collectors;
  *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see ColumnPermissionResolver
- * @see YdszCache
+ * @see LocalCache
  */
 public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolver {
 
@@ -63,9 +62,9 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     private Cache<String, ColumnScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleColumnCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return YdszCache.<String, ColumnScopeInfo>newBuilder().build();
+            return LocalCache.<String, ColumnScopeInfo>newBuilder().build();
         }
-        return YdszCache.<String, ColumnScopeInfo>newBuilder()
+        return LocalCache.<String, ColumnScopeInfo>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, ColumnScopeInfo value, RemovalCause cause) -> {

@@ -23,7 +23,6 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *
  * <p>提供 Token 格式校验能力，支持 JWT 和 Bearer Token 格式验证。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */

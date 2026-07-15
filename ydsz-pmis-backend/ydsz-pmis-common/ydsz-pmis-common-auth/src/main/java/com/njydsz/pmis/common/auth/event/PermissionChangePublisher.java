@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
  * permissionChangePublisher.publishRoleDeleted("admin");
  * }</pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  * @see PermissionChangedEvent

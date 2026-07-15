@@ -46,7 +46,6 @@ import reactor.core.publisher.Mono;
  *   <li>exchange attribute {@code X-Gray-Tag}(Filter 写入的备份)</li>
  * </ul>
  *
- * @author ydsz-pmis-team
  * @since 1.5.0
  */
 public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {

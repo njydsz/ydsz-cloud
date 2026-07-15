@@ -53,7 +53,6 @@ import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
  * }
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * @since 1.0.0
  * @see ColumnScopeInfo
@@ -111,7 +110,6 @@ public @interface AuthColPermission {
     /**
      * 列权限过滤模式枚举。
      *
-     * @author ydsz-pmis-team
      * @since 1.0.0
      * 
      */

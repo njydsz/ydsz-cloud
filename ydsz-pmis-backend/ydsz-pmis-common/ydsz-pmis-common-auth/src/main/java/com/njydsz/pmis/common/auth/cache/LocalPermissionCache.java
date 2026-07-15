@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.listener.RemovalCause;
@@ -16,7 +16,6 @@ import com.njydsz.pmis.common.cache.listener.RemovalCause;
  * <p>当 Redis 不可用时，提供本地缓存作为降级方案。
  * 使用 ydsz-pmis-common-cache 实现，支持 5 分钟过期。
  *
- * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */
@@ -46,7 +45,7 @@ public class LocalPermissionCache<V> {
      * @param expireMinutes  过期时间（分钟）
      */
     public LocalPermissionCache(String cacheName, long expireMinutes) {
-        this.cache = YdszCache.<String, V>newBuilder()
+        this.cache = LocalCache.<String, V>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(expireMinutes, TimeUnit.MINUTES)
                 .removalListener((String key, V value, RemovalCause cause) -> {

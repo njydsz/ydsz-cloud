@@ -15,7 +15,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.LocalCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -55,7 +55,6 @@ import reactor.core.publisher.Mono;
  * <p>{@code HIGHEST_PRECEDENCE + 3}，在 {@link IpWhitelistFilter}(+5) 之前执行，
  * 黑名单优先于白名单检查（恶意 IP 即使在白名单中也应被拒绝）。
  *
- * @author ydsz-pmis-team
  * @since 2.2.0
  */
 @Slf4j
@@ -73,7 +72,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
     private static final long LOCAL_CACHE_MAX_SIZE = 50_000;
 
     /** L1 本地缓存：IP → 是否在黑名单中 */
-    private final Cache<String, Boolean> localCache = YdszCache.<String, Boolean>newBuilder()
+    private final Cache<String, Boolean> localCache = LocalCache.<String, Boolean>newBuilder()
             .type(CacheType.TTL)
             .expireAfterWrite(LOCAL_CACHE_TTL_SECONDS, TimeUnit.SECONDS)
             .maximumSize(LOCAL_CACHE_MAX_SIZE)

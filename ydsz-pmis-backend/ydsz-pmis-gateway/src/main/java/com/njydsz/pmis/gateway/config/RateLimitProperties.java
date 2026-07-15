@@ -53,7 +53,6 @@ import lombok.Data;
  *         retry-after: 5
  * </pre>
  *
- * @author ydsz-pmis-team
  * @since 2.1.0
  */
 @Data
