@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.lock.idempotent;
 
 import java.util.Collections;
+import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -13,12 +14,12 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>使用 Lua 脚本保证 acquire/release 的原子性：
  * <ul>
- *   <li>acquire：SET key value NX EX ttl，成功返回 true（拿到幂等锁）</li>
- *   <li>release：仅当 value 匹配时 DEL，避免误删他人持有的锁</li>
+ *   <li>acquire：生成 UUID token，SET key token NX EX ttl，成功返回 token</li>
+ *   <li>release：Lua 脚本校验 token 匹配后 DEL，避免误删他人持有的锁</li>
  *   <li>exists：检查 key 是否存在</li>
  * </ul>
  *
- * <p>Redis 不可用时 acquire 降级放行（返回 true），避免拖垮主流程。
+ * <p>Redis 不可用时 acquire 降级放行（返回非 null token），避免拖垮主流程。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -30,7 +31,12 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
     private static final String ACQUIRE_LUA =
             "if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then return 1 else return 0 end";
 
+    /** 释放幂等锁的 Lua 脚本：仅当 value 匹配时才 DEL */
+    private static final String RELEASE_LUA =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+
     private static final RedisScript<Long> ACQUIRE_SCRIPT = new DefaultRedisScript<>(ACQUIRE_LUA, Long.class);
+    private static final RedisScript<Long> RELEASE_SCRIPT = new DefaultRedisScript<>(RELEASE_LUA, Long.class);
 
     private final StringRedisTemplate redisTemplate;
 
@@ -44,32 +50,45 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
     }
 
     @Override
-    public boolean acquire(String key, long expireMillis) {
+    public String acquire(String key, long expireMillis) {
         if (expireMillis <= 0) {
             log.warn("[RedisIdempotentStrategy] expireMillis={} 非法，降级放行 key={}", expireMillis, key);
-            return true;
+            return UUID.randomUUID().toString().replace("-", "");
         }
         long expireSeconds = Math.max(1, expireMillis / 1000);
+        String token = UUID.randomUUID().toString().replace("-", "");
         try {
             Long ok = redisTemplate.execute(
                     ACQUIRE_SCRIPT,
                     Collections.singletonList(key),
-                    "1",
+                    token,
                     String.valueOf(expireSeconds)
             );
-            return ok != null && ok == 1L;
+            if (ok != null && ok == 1L) {
+                return token;
+            }
+            return null;
         } catch (Exception e) {
             log.warn("[RedisIdempotentStrategy] Redis 不可用，降级放行 key={} cause={}", key, e.getMessage());
-            return true;
+            return token;
         }
     }
 
     @Override
-    public void release(String key) {
+    public boolean release(String key, String token) {
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
         try {
-            redisTemplate.delete(key);
+            Long result = redisTemplate.execute(
+                    RELEASE_SCRIPT,
+                    Collections.singletonList(key),
+                    token
+            );
+            return Long.valueOf(1L).equals(result);
         } catch (Exception e) {
             log.warn("[RedisIdempotentStrategy] 释放幂等锁失败 key={} cause={}", key, e.getMessage());
+            return false;
         }
     }
 

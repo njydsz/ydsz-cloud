@@ -21,10 +21,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.pmis.common.lock.aspect.IdempotentAspect;
 import com.njydsz.pmis.common.lock.aspect.YdszDistributedLockAspect;
+import com.njydsz.pmis.common.lock.health.LockHealthIndicator;
 import com.njydsz.pmis.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.pmis.common.lock.idempotent.RedisIdempotentStrategy;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.metrics.LockMetricsExporter;
+import com.njydsz.pmis.common.lock.scheduler.LockLeakDetector;
 import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
 import com.njydsz.pmis.common.lock.strategy.DefaultLockStrategy;
 import com.njydsz.pmis.common.lock.strategy.LockStrategy;
@@ -165,10 +167,31 @@ public class DistributedLockAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public IdempotentAspect idempotentAspect(StringRedisTemplate stringRedisTemplate,
+    public IdempotentAspect idempotentAspect(IdempotentStrategy idempotentStrategy,
                                              LockMetrics lockMetrics,
                                              LockProperties lockProperties) {
-        return new IdempotentAspect(stringRedisTemplate, lockProperties.getNamespace(), lockMetrics);
+        return new IdempotentAspect(idempotentStrategy,
+                lockProperties.getIdempotent().getKeyPrefix(),
+                lockProperties.getNamespace(),
+                lockMetrics);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    @ConditionalOnBean(StringRedisTemplate.class)
+    public LockHealthIndicator lockHealthIndicator(RedisConnectionFactory redisConnectionFactory,
+                                                    ObjectProvider<LockWatchDog> lockWatchDogProvider,
+                                                    ObjectProvider<LockMetrics> lockMetricsProvider) {
+        return new LockHealthIndicator(redisConnectionFactory, lockWatchDogProvider, lockMetricsProvider);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(LockWatchDog.class)
+    public LockLeakDetector lockLeakDetector(ObjectProvider<LockWatchDog> watchDogProvider,
+                                               ObjectProvider<LockMetrics> lockMetricsProvider) {
+        return new LockLeakDetector(watchDogProvider, lockMetricsProvider);
     }
 
     /**

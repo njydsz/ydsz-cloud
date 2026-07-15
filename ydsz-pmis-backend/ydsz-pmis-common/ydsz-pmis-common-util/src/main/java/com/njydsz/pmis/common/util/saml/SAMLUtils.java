@@ -29,7 +29,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import com.njydsz.pmis.common.util.security.Base64Utils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +73,7 @@ public class SAMLUtils {
 
         try {
             String urlDecoded = urlDecode(samlStr);
-            byte[] decodedBytes = Base64Utils.decodeToBytes(urlDecoded);
+            byte[] decodedBytes = Base64.getDecoder().decode(urlDecoded);
             return inflateBytes(decodedBytes);
         } catch (Exception e) {
             log.error("SAMLUtils -> 解析并解压 SAML 失败：{}", e.getMessage(), e);
@@ -95,7 +94,7 @@ public class SAMLUtils {
 
         try {
             byte[] compressedBytes = deflateContent(xmlContent);
-            String base64Encoded = Base64Utils.encode(compressedBytes);
+            String base64Encoded = Base64.getEncoder().encodeToString(compressedBytes);
             return urlEncode(base64Encoded);
         } catch (Exception e) {
             log.error("SAMLUtils -> 压缩并编码 SAML 失败：{}", e.getMessage(), e);
@@ -116,7 +115,7 @@ public class SAMLUtils {
 
         try {
             String urlDecoded = urlDecode(samlStr);
-            byte[] decodedBytes = Base64Utils.decodeToBytes(urlDecoded);
+            byte[] decodedBytes = Base64.getDecoder().decode(urlDecoded);
             return new String(decodedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("SAMLUtils -> Base64 解码失败：{}", e.getMessage(), e);
@@ -137,7 +136,7 @@ public class SAMLUtils {
 
         try {
             byte[] xmlBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
-            String base64Encoded = Base64Utils.encode(xmlBytes);
+            String base64Encoded = Base64.getEncoder().encodeToString(xmlBytes);
             return urlEncode(base64Encoded);
         } catch (Exception e) {
             log.error("SAMLUtils -> Base64 编码失败：{}", e.getMessage(), e);

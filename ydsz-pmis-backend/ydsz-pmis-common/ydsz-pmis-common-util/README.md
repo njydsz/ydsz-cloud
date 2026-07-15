@@ -32,7 +32,6 @@ PMIS 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTT
 | `CryptoUtil` / `CryptoSignUtil` | 通用加解密 + 签名工具 |
 | `DigestUtils` | SHA-256 / MD5 / HMAC 摘要工具 |
 | `PwdUtils` | BCrypt / PBKDF2 密码哈希 |
-| `Base64Utils` | Base64 编解码（URL Safe / Standard） |
 | `PasswordEncoder` / `Pbkdf2PasswordEncoder` | 密码编码器接口与实现 |
 | `PasswordStrengthEvaluator` | 密码强度评估器 |
 

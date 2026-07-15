@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.auth.metrics;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p>同时负责权限拒绝事件的安全审计日志记录。
  *
- * @author ydsz-pmis-team
  * @since 1.1.0
 
  */
@@ -73,10 +73,8 @@ public class AuthMetricsCollector {
                 .description("权限校验耗时")
                 .register(meterRegistry);
 
-        // Redis 可用状态 Gauge
-        meterRegistry.gauge("auth.redis.available", java.util.concurrent.atomic.AtomicInteger.class,
-                new java.util.concurrent.atomic.AtomicInteger(1),
-                ref -> ref.get());
+        // Redis 可用状态 Gauge（Micrometer 1.x API：gauge(String, T, ToDoubleFunction<T>)）
+        meterRegistry.gauge("auth.redis.available", new AtomicInteger(1), AtomicInteger::get);
     }
 
     /**

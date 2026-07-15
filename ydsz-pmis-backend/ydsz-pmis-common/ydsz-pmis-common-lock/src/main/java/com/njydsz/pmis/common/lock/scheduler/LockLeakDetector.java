@@ -36,20 +36,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Configuration
-@ConditionalOnBean(LockWatchDog.class)
-@ConditionalOnProperty(prefix = "ydsz.lock", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class LockLeakDetector {
 
     private final ObjectProvider<LockWatchDog> watchDogProvider;
     private final ObjectProvider<LockMetrics> lockMetricsProvider;
 
-    /**
-     * 构造锁泄漏检测器
-     *
-     * @param watchDogProvider 看门狗提供者
-     * @param lockMetricsProvider 锁指标提供者
-     */
     public LockLeakDetector(ObjectProvider<LockWatchDog> watchDogProvider,
                              ObjectProvider<LockMetrics> lockMetricsProvider) {
         this.watchDogProvider = watchDogProvider;

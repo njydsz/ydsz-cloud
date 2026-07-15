@@ -92,7 +92,6 @@ final class PatternCache {
  * <p><b>迁移说明：</b>
  * <ul>
  *   <li>md5/sha1/sha256 已迁移至 {@code com.njydsz.pmis.common.util.digest.DigestUtils}</li>
- *   <li>base64Encode/base64Decode 已迁移至 {@code com.njydsz.pmis.common.util.codec.Base64Utils}</li>
  *   <li>urlEncode/urlDecode 已迁移至 {@code com.njydsz.pmis.common.util.net.ServletUtils}</li>
  *   <li>escapeHtml/unescapeHtml 已迁移至 {@code com.njydsz.pmis.common.safe.xss.EscapeUtils}</li>
  *   <li>getLocalhostIp 已迁移至 {@code com.njydsz.pmis.common.util.net.NetUtils}</li>

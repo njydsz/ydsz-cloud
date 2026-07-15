@@ -4,9 +4,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -15,9 +13,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -26,6 +21,7 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.lock.exception.IdempotentException;
+import com.njydsz.pmis.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 
 import lombok.extern.slf4j.Slf4j;
@@ -33,15 +29,15 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 接口幂等性 AOP 切面
  *
- * <p>拦截标注 {@link Idempotent} 的 Controller 方法，基于 Redis {@code SET NX EX} Lua 脚本
+ * <p>拦截标注 {@link Idempotent} 的 Controller 方法，委托 {@link IdempotentStrategy}
  * 实现"在 TTL 窗口内同一幂等键只处理一次"的语义，防止用户重复提交或网络重试造成脏数据。
  *
  * <h3>执行流程</h3>
  * <ol>
  *   <li>解析 {@link Idempotent#key()}，支持 SpEL（{@code #{...}} 包裹）；
  *       为空时按"类名#方法名#参数摘要"自动生成</li>
- *   <li>执行 Redis Lua 脚本：成功返回 1（拿到幂等锁），失败返回 0（重复提交）</li>
- *   <li>返回 0 时抛出 {@link IdempotentException}（HTTP 409 Conflict）</li>
+ *   <li>委托 {@link IdempotentStrategy#acquire} 获取幂等锁，成功返回 token</li>
+ *   <li>获取失败时抛出 {@link IdempotentException}（HTTP 409 Conflict）</li>
  *   <li>目标方法执行完成后，按"业务异常自动释放锁"规则处理：
  *       <ul>
  *         <li>正常返回 / 无异常：保留幂等锁至 TTL 自然过期</li>
@@ -51,45 +47,21 @@ import lombok.extern.slf4j.Slf4j;
  *             防止重试风暴击穿下游</li>
  *       </ul>
  *   </li>
- *   <li>Redis 不可用时降级放行，仅记录 WARN 日志，避免拖垮主流程</li>
  * </ol>
  *
  * <h3>Redis 键命名空间</h3>
  * <ul>
- *   <li>固定前缀：{@code pmis:idem:}</li>
+ *   <li>前缀：从 {@code ydsz.lock.idempotent.key-prefix} 读取（默认 {@code pmis:idem:}）</li>
  *   <li>可选命名空间：{@code ${ydsz.lock.namespace}:}（多服务共享 Redis 时隔离）</li>
- *   <li>完整 key：{@code pmis:idem:[namespace:]${userKey}}</li>
- * </ul>
- *
- * <h3>与 FlowUrgeLimiter / RedisStringOps 的关系</h3>
- * <p>三者均使用 {@code SET NX EX} Lua 脚本，但语义不同：
- * <ul>
- *   <li>{@code FlowUrgeLimiter}：业务限流（催办冷却），业务侧自行判断 boolean</li>
- *   <li>{@code RedisStringOps.setIfAbsent}：通用工具方法，自动添加抖动防雪崩</li>
- *   <li>本切面：接口幂等，业务异常自动释放锁，Redis 故障降级放行</li>
+ *   <li>完整 key：{@code ${keyPrefix}${namespace}:${userKey}}</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j
 @Aspect
 public class IdempotentAspect {
-
-    /** Redis key 固定前缀，所有幂等键统一以此开头便于排查 */
-    private static final String KEY_PREFIX = "pmis:idem:";
-
-    /** Redis SET NX EX 原子 Lua 脚本（与 FlowUrgeLimiter 同款，保证并发安全） */
-    private static final String ACQUIRE_LUA =
-            "if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then return 1 else return 0 end";
-
-    /** 释放幂等锁的 Lua 脚本：仅当 value 匹配时才 DEL，避免误删他人持有的锁 */
-    private static final String RELEASE_LUA =
-            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-
-    private static final RedisScript<Long> ACQUIRE_SCRIPT = new DefaultRedisScript<>(ACQUIRE_LUA, Long.class);
-    private static final RedisScript<Long> RELEASE_SCRIPT = new DefaultRedisScript<>(RELEASE_LUA, Long.class);
 
     /** SpEL 表达式解析器 */
     private final ExpressionParser expressionParser = new SpelExpressionParser();
@@ -100,8 +72,11 @@ public class IdempotentAspect {
     /** SpEL 表达式缓存，避免每次反射解析 */
     private final Map<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
-    /** Redis 客户端（StringRedisTemplate，避免 Jackson 序列化导致 value 带 class 信息） */
-    private final StringRedisTemplate redisTemplate;
+    /** 幂等策略（委托实现，消除平行 Lua 脚本） */
+    private final IdempotentStrategy idempotentStrategy;
+
+    /** 幂等键 Redis 前缀（从配置读取，不再硬编码） */
+    private final String keyPrefix;
 
     /** 可选命名空间（多服务共享 Redis 时隔离键），来自 ydsz.lock.namespace */
     private final String namespace;
@@ -112,12 +87,15 @@ public class IdempotentAspect {
     /**
      * 构造 IdempotentAspect
      *
-     * @param redisTemplate Redis 客户端
-     * @param namespace     命名空间（可为 null）
-     * @param lockMetrics   锁指标收集器（可为 null）
+     * @param idempotentStrategy 幂等策略
+     * @param keyPrefix          幂等键 Redis 前缀（从 ydsz.lock.idempotent.key-prefix 读取）
+     * @param namespace          命名空间（可为 null）
+     * @param lockMetrics        锁指标收集器（可为 null）
      */
-    public IdempotentAspect(StringRedisTemplate redisTemplate, String namespace, LockMetrics lockMetrics) {
-        this.redisTemplate = redisTemplate;
+    public IdempotentAspect(IdempotentStrategy idempotentStrategy, String keyPrefix,
+                             String namespace, LockMetrics lockMetrics) {
+        this.idempotentStrategy = idempotentStrategy;
+        this.keyPrefix = keyPrefix != null && !keyPrefix.isEmpty() ? keyPrefix : "pmis:idem:";
         this.namespace = namespace;
         this.lockMetrics = lockMetrics;
     }
@@ -135,10 +113,9 @@ public class IdempotentAspect {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String userKey = resolveUserKey(idempotent.key(), method, joinPoint.getArgs());
         String redisKey = buildRedisKey(userKey);
-        String token = generateToken();
 
-        boolean acquired = tryAcquire(redisKey, token, idempotent.ttlSeconds());
-        if (!acquired) {
+        String token = idempotentStrategy.acquire(redisKey, idempotent.ttlSeconds() * 1000L);
+        if (token == null) {
             recordIdempotentHit(idempotent, redisKey);
             throw new IdempotentException(idempotent.message(), redisKey);
         }
@@ -149,7 +126,7 @@ public class IdempotentAspect {
             return result;
         } catch (BusinessException bizEx) {
             // 业务异常：自动释放幂等锁，允许客户端修正后重试（项目硬约束 P2-9）
-            releaseLock(redisKey, token);
+            idempotentStrategy.release(redisKey, token);
             log.debug("[IdempotentAspect] 业务异常释放幂等锁 key={} cause={}", redisKey, bizEx.getMessage());
             throw bizEx;
         } catch (Throwable ex) {
@@ -162,53 +139,6 @@ public class IdempotentAspect {
     }
 
     // ============================== 私有 ==============================
-
-    /**
-     * 尝试获取幂等锁
-     *
-     * @param redisKey    Redis key
-     * @param token       锁 token（value）
-     * @param ttlSeconds  TTL 秒数
-     * @return true=获取成功；false=已被占用（重复提交）
-     */
-    private boolean tryAcquire(String redisKey, String token, int ttlSeconds) {
-        if (ttlSeconds <= 0) {
-            // TTL 非法时降级放行，避免误杀正常请求
-            log.warn("[IdempotentAspect] ttlSeconds={} 非法，降级放行 key={}", ttlSeconds, redisKey);
-            return true;
-        }
-        try {
-            Long ok = redisTemplate.execute(
-                    ACQUIRE_SCRIPT,
-                    Collections.singletonList(redisKey),
-                    token,
-                    String.valueOf(ttlSeconds)
-            );
-            return ok != null && ok == 1L;
-        } catch (Exception e) {
-            // Redis 不可用：降级放行，避免拖垮主流程（与 FlowUrgeLimiter 一致）
-            log.warn("[IdempotentAspect] Redis 不可用，降级放行 key={} cause={}", redisKey, e.getMessage());
-            return true;
-        }
-    }
-
-    /**
-     * 释放幂等锁（仅当 token 匹配时才删除）
-     *
-     * @param redisKey Redis key
-     * @param token    锁 token（value）
-     */
-    private void releaseLock(String redisKey, String token) {
-        try {
-            redisTemplate.execute(
-                    RELEASE_SCRIPT,
-                    Collections.singletonList(redisKey),
-                    token
-            );
-        } catch (Exception e) {
-            log.warn("[IdempotentAspect] 释放幂等锁失败 key={} cause={}", redisKey, e.getMessage());
-        }
-    }
 
     /**
      * 解析用户幂等键
@@ -305,18 +235,9 @@ public class IdempotentAspect {
      */
     private String buildRedisKey(String userKey) {
         if (namespace == null || namespace.isEmpty()) {
-            return KEY_PREFIX + userKey;
+            return keyPrefix + userKey;
         }
-        return KEY_PREFIX + namespace + ":" + userKey;
-    }
-
-    /**
-     * 生成锁 token（value），用于释放锁时校验
-     *
-     * @return token 字符串
-     */
-    private String generateToken() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return keyPrefix + namespace + ":" + userKey;
     }
 
     /**
@@ -330,25 +251,5 @@ public class IdempotentAspect {
         if (lockMetrics != null) {
             lockMetrics.recordIdempotentHit();
         }
-    }
-
-    // ============================== 测试可见方法 ==============================
-
-    /**
-     * 暴露 KEY_PREFIX 供单元测试断言使用
-     *
-     * @return 固定前缀
-     */
-    static String keyPrefix() {
-        return KEY_PREFIX;
-    }
-
-    /**
-     * 暴露命名空间供单元测试断言使用
-     *
-     * @return 命名空间（可能为 null）
-     */
-    String namespace() {
-        return namespace;
     }
 }

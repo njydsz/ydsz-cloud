@@ -35,19 +35,19 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Configuration
-@ConditionalOnClass(RedisConnectionFactory.class)
-@ConditionalOnProperty(prefix = "ydsz.lock", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class LockHealthIndicator implements HealthIndicator {
 
-    @Resource
-    private RedisConnectionFactory redisConnectionFactory;
+    private final RedisConnectionFactory redisConnectionFactory;
+    private final ObjectProvider<LockWatchDog> lockWatchDogProvider;
+    private final ObjectProvider<LockMetrics> lockMetricsProvider;
 
-    @Resource
-    private ObjectProvider<LockWatchDog> lockWatchDogProvider;
-
-    @Resource
-    private ObjectProvider<LockMetrics> lockMetricsProvider;
+    public LockHealthIndicator(RedisConnectionFactory redisConnectionFactory,
+                               ObjectProvider<LockWatchDog> lockWatchDogProvider,
+                               ObjectProvider<LockMetrics> lockMetricsProvider) {
+        this.redisConnectionFactory = redisConnectionFactory;
+        this.lockWatchDogProvider = lockWatchDogProvider;
+        this.lockMetricsProvider = lockMetricsProvider;
+    }
 
     @Override
     public Health health() {
