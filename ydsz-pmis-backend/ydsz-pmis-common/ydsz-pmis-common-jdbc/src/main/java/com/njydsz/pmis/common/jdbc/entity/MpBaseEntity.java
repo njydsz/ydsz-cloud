@@ -3,7 +3,10 @@ package com.njydsz.pmis.common.jdbc.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.njydsz.pmis.common.json.annotation.JsonFormat;
 import com.njydsz.pmis.common.json.annotation.JsonField;
 import com.njydsz.pmis.common.domain.entity.BaseEntity;
@@ -18,8 +21,8 @@ import lombok.experimental.SuperBuilder;
  * <ul>
  *   <li>{@link TableId} — 主键 ID，使用雪花算法自动生成</li>
  *   <li>{@link TableField} + {@link FieldFill} — 审计字段自动填充（创建人/时间、更新人/时间）</li>
- *   <li>{@link Version} — 乐观锁版本号</li>
- *   <li>{@link TableLogic} — 逻辑删除标识</li>
+ *   <li>{@link TableField} — 乐观锁版本号字段映射（由自定义 OptimisticLockInterceptor 处理，不使用 @Version）</li>
+ *   <li>{@link TableField} — 逻辑删除标识字段映射（由自定义 LogicalDeleteInterceptor 处理，不使用 @TableLogic）</li>
  *   <li>{@link TableField} — 状态标识字段映射</li>
  * </ul>
  * 
@@ -39,7 +42,6 @@ import lombok.experimental.SuperBuilder;
  * @param <T> 主键ID类型
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Data
@@ -90,18 +92,22 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
     /**
      * 乐观锁版本号
      * <p>每次更新时自动递增（+1），防止并发更新冲突。
+     * <p>由自定义 {@code OptimisticLockInterceptor} 处理，不使用 {@code @Version} 注解，
+     * 避免与自定义拦截器产生双重处理冲突。当未启用自定义拦截器时，
+     * 可在业务实体上单独添加 {@code @Version} 注解使用 MP 内置能力。
      */
     @TableField("revision")
-    @Version
     @Builder.Default
     private Integer revision = 0;
 
     /**
      * 逻辑删除标识
      * <p>0=未删除，1=已删除。删除操作转为 UPDATE，查询自动追加 WHERE deleted = 0。
+     * <p>由自定义 {@code LogicalDeleteInterceptor} 处理，不使用 {@code @TableLogic} 注解，
+     * 避免与自定义拦截器产生双重处理冲突。当未启用自定义拦截器时，
+     * 可在业务实体上单独添加 {@code @TableLogic} 注解使用 MP 内置能力。
      */
     @TableField("deleted")
-    @TableLogic
     @JsonField(ignore = true)
     private Integer deleted;
 

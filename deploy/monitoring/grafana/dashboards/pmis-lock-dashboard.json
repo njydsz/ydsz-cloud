@@ -1,0 +1,217 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "title": "PMIS 分布式锁监控",
+  "uid": "pmis-lock",
+  "version": 1,
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "tags": ["pmis", "lock", "redis"],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "title": "锁获取成功率",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(lock_acquire_total[5m])) / (sum(rate(lock_acquire_total[5m])) + sum(rate(lock_acquire_failed_total[5m])) + 1e-9)",
+          "legendFormat": "成功率",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 0.95 },
+              { "color": "green", "value": 0.99 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "锁获取成功/失败次数",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(lock_acquire_total[5m])) by (lock_type)",
+          "legendFormat": "成功 - {{lock_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(lock_acquire_failed_total[5m])) by (lock_type)",
+          "legendFormat": "失败 - {{lock_type}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      }
+    },
+    {
+      "title": "锁等待时间分布 (P50/P90/P99/P999)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(lock_wait_duration_bucket[5m])) by (le, lock_type))",
+          "legendFormat": "P50 - {{lock_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.90, sum(rate(lock_wait_duration_bucket[5m])) by (le, lock_type))",
+          "legendFormat": "P90 - {{lock_type}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(lock_wait_duration_bucket[5m])) by (le, lock_type))",
+          "legendFormat": "P99 - {{lock_type}}",
+          "refId": "C"
+        },
+        {
+          "expr": "histogram_quantile(0.999, sum(rate(lock_wait_duration_bucket[5m])) by (le, lock_type))",
+          "legendFormat": "P999 - {{lock_type}}",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "title": "锁持有时间分布 (P50/P90/P99)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(lock_hold_duration_bucket[5m])) by (le, lock_type))",
+          "legendFormat": "P50 - {{lock_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.90, sum(rate(lock_hold_duration_bucket[5m])) by (le, lock_type))",
+          "legendFormat": "P90 - {{lock_type}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(lock_hold_duration_bucket[5m])) by (le, lock_type))",
+          "legendFormat": "P99 - {{lock_type}}",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "title": "锁竞争次数",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(lock_competition_count[5m])) by (lock_type)",
+          "legendFormat": "竞争 - {{lock_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      }
+    },
+    {
+      "title": "当前活跃锁数量",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "lock_active_locks",
+          "legendFormat": "活跃锁",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "锁超时次数",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(lock_timeout_count[5m])) by (lock_type)",
+          "legendFormat": "超时 - {{lock_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      }
+    },
+    {
+      "title": "看门狗续期次数",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 18, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(lock_watchdog_renew_count[5m])) by (lock_type)",
+          "legendFormat": "续期 - {{lock_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      }
+    },
+    {
+      "title": "锁释放次数",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "sum(rate(lock_release_total[5m])) by (lock_type)",
+          "legendFormat": "释放 - {{lock_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      }
+    }
+  ]
+}

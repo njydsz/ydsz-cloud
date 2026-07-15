@@ -116,5 +116,17 @@
             <artifactId>spring-boot-health</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- micrometer-core (optional for metrics) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- JUnit 5 (test) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

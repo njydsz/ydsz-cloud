@@ -181,7 +181,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
                 localCache.put(role, loaded);
             }
 
-            publishRoleChangedEvent(role);
+            // 不在加载时发布变更事件，仅在权限数据实际变更时由业务代码调用 notifier
             return loaded;
         } catch (Exception e) {
             // Redis 异常时标记不可用，并降级到本地缓存
@@ -303,10 +303,6 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
                 result.put(role, loaded);
             }
 
-            // 批量发布角色变更事件
-            for (String role : uncachedRoles) {
-                publishRoleChangedEvent(role);
-            }
         } catch (Exception e) {
             log.error("【权限模块】批量加载角色权限异常，降级到逐个加载: error={}", e.getMessage(), e);
             redisAvailable = false;

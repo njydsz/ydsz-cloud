@@ -327,9 +327,8 @@ public class IdempotentAspect {
      */
     private void recordIdempotentHit(Idempotent idempotent, String redisKey) {
         log.info("[IdempotentAspect] 幂等命中拒绝 key={} ttl={}s", redisKey, idempotent.ttlSeconds());
-        // 可扩展：通过 lockMetrics 记录命中次数、TTL、key 等指标
         if (lockMetrics != null) {
-            // 预留指标埋点（具体指标定义由 LockMetrics 扩展）
+            lockMetrics.recordIdempotentHit();
         }
     }
 

@@ -57,7 +57,6 @@ import com.baomidou.dynamic.datasource.annotation.DS;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see DS
  */
 @AutoConfiguration

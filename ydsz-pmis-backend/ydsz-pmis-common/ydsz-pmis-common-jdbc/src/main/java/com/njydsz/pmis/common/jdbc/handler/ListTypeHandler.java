@@ -50,7 +50,6 @@ import com.njydsz.pmis.common.json.Json;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see JsonTypeHandler 通用 JSON 类型处理器
  */
 public class ListTypeHandler extends BaseTypeHandler<List<Object>> {

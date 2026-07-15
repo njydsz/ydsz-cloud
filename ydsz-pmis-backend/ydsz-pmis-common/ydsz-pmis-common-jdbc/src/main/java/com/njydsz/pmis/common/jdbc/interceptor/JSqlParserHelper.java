@@ -27,7 +27,6 @@ import net.sf.jsqlparser.statement.update.UpdateSet;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public final class JSqlParserHelper {
 

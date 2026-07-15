@@ -38,7 +38,6 @@ import net.sf.jsqlparser.expression.StringValue;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see UpdatedByHandler 更新人处理器
  * @see FieldFillConfiguration 字段填充配置
  * @see AuthInfoUtils 认证信息工具类

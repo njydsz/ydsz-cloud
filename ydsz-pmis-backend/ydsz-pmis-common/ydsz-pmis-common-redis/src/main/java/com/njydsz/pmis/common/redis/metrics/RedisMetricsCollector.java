@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.redis.metrics;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import io.micrometer.core.instrument.Counter;
@@ -41,7 +42,6 @@ import io.micrometer.core.instrument.Timer;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class RedisMetricsCollector {
 
@@ -55,6 +55,10 @@ public class RedisMetricsCollector {
     private final MeterRegistry registry;
     /** 慢操作阈值（毫秒），0 表示禁用 */
     private final long slowOperationThresholdMillis;
+
+    /** 单例缓存：每个 MeterRegistry 对应一个 RedisMetricsCollector 实例 */
+    private static final ConcurrentHashMap<MeterRegistry, RedisMetricsCollector> INSTANCES =
+            new ConcurrentHashMap<>();
 
     private RedisMetricsCollector(MeterRegistry registry) {
         this(registry, 0);
@@ -78,7 +82,7 @@ public class RedisMetricsCollector {
      * @return RedisMetricsCollector 实例
      */
     public static RedisMetricsCollector getOrCreate(MeterRegistry registry) {
-        return new RedisMetricsCollector(registry);
+        return INSTANCES.computeIfAbsent(registry, RedisMetricsCollector::new);
     }
 
     /**
@@ -89,7 +93,8 @@ public class RedisMetricsCollector {
      * @return RedisMetricsCollector 实例
      */
     public static RedisMetricsCollector getOrCreate(MeterRegistry registry, long slowOperationThresholdMillis) {
-        return new RedisMetricsCollector(registry, slowOperationThresholdMillis);
+        return INSTANCES.computeIfAbsent(registry,
+                r -> new RedisMetricsCollector(r, slowOperationThresholdMillis));
     }
 
     /**

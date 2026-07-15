@@ -48,7 +48,6 @@ import net.sf.jsqlparser.statement.update.Update;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see FieldFillInterceptor
  */
 public class CombinedFieldFillInterceptor extends JsqlParserSupport implements InnerInterceptor {

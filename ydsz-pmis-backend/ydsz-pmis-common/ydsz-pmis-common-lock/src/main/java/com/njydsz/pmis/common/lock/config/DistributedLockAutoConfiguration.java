@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
@@ -20,6 +21,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.pmis.common.lock.aspect.IdempotentAspect;
 import com.njydsz.pmis.common.lock.aspect.YdszDistributedLockAspect;
+import com.njydsz.pmis.common.lock.idempotent.IdempotentStrategy;
+import com.njydsz.pmis.common.lock.idempotent.RedisIdempotentStrategy;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.metrics.LockMetricsExporter;
 import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
@@ -85,7 +88,7 @@ public class DistributedLockAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public LockWatchDog lockWatchDog(TaskScheduler lockWatchDogScheduler, StringRedisTemplate stringRedisTemplate, LockProperties lockProperties, LockMetrics lockMetrics) {
+    public LockWatchDog lockWatchDog(@Qualifier("lockWatchDogScheduler") TaskScheduler lockWatchDogScheduler, StringRedisTemplate stringRedisTemplate, LockProperties lockProperties, LockMetrics lockMetrics) {
         LockWatchDog lockWatchDog = new LockWatchDog(lockWatchDogScheduler, stringRedisTemplate, lockProperties.getMaxRenewTimes());
         lockWatchDog.setLockMetrics(lockMetrics);
         return lockWatchDog;
@@ -130,6 +133,20 @@ public class DistributedLockAutoConfiguration {
         YdszDistributedLockAspect aspect = new YdszDistributedLockAspect(lockStrategy, lockProperties.isFallbackEnabled());
         aspect.setLockMetrics(lockMetrics);
         return aspect;
+    }
+
+    /**
+     * 创建幂等策略 Bean
+     *
+     * <p>基于 Redis SET NX EX 实现，Redis 不可用时降级放行。
+     *
+     * @param stringRedisTemplate Redis 客户端
+     * @return IdempotentStrategy 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public IdempotentStrategy idempotentStrategy(StringRedisTemplate stringRedisTemplate) {
+        return new RedisIdempotentStrategy(stringRedisTemplate);
     }
 
     /**

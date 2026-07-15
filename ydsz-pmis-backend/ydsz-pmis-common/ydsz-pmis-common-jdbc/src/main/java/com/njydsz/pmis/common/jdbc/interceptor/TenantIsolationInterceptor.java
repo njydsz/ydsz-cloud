@@ -5,13 +5,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
-import org.apache.ibatis.session.ResultHandler;
-import org.apache.ibatis.session.RowBounds;
 
 import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
@@ -64,7 +61,6 @@ import net.sf.jsqlparser.statement.update.Update;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see TenantIsolationProperties
  */
 @Slf4j
@@ -90,15 +86,6 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                 PluginUtils.MPBoundSql mpBs = mpSh.mPBoundSql();
                 mpBs.sql(parserMulti(mpBs.sql(), null));
             }
-        }
-    }
-
-    @Override
-    public void beforeQuery(Executor executor, MappedStatement ms, Object parameter,
-                           RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
-        if (!InterceptorIgnoreHelper.willIgnoreTenantLine(ms.getId())) {
-            PluginUtils.MPBoundSql mpBs = PluginUtils.mpBoundSql(boundSql);
-            mpBs.sql(parserSingle(mpBs.sql(), null));
         }
     }
 

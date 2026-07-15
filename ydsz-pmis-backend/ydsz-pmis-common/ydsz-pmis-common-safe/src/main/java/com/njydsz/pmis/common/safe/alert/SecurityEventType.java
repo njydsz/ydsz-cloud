@@ -37,5 +37,20 @@ public enum SecurityEventType {
     /**
      * 限流触发
      */
-    RATE_LIMIT_TRIGGERED
+    RATE_LIMIT_TRIGGERED,
+
+    /**
+     * IP 自动封禁（安全事件聚合触发）
+     */
+    IP_AUTO_BLOCKED,
+
+    /**
+     * API 签名验证失败
+     */
+    SIGNATURE_INVALID,
+
+    /**
+     * 密码强度不足
+     */
+    WEAK_PASSWORD
 }

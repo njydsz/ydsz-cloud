@@ -21,6 +21,7 @@ import org.springframework.core.Ordered;
 
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.njydsz.pmis.common.jdbc.monitor.SqlFingerprint;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -51,7 +52,6 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  * @see SlowSqlInnerInterceptor
  * @see SqlAuditInterceptor
@@ -251,15 +251,17 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
             return;
         }
         try {
-            String sqlTag = sql != null ? sql : "unknown";
+            // 使用 SQL 指纹替代原始 SQL 作为 tag，避免高基数标签导致 Prometheus 内存爆炸
+            String fingerprint = SqlFingerprint.fingerprint(sql);
             Timer.builder("jdbc.slow.sql")
                     .description("Slow SQL execution duration")
-                    .tag("sql", sqlTag)
+                    .tag("sql_fingerprint", fingerprint)
                     .register(meterRegistry)
                     .record(Duration.ofMillis(elapsed));
 
             Counter.builder("jdbc.slow.sql.count")
                     .description("Slow SQL execution count")
+                    .tag("sql_fingerprint", fingerprint)
                     .register(meterRegistry)
                     .increment();
         } catch (Exception e) {

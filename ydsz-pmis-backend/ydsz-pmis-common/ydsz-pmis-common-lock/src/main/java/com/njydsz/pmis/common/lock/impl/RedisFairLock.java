@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.core.AbstractRedisDistributedLock;
 import com.njydsz.pmis.common.lock.core.DistributedLocker;
 
@@ -24,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>队列管理：通过 Redis List 维护等待队列，新请求追加到队尾</li>
  *   <li>原子调度：Lua 脚本检查队首客户端，仅队首客户端可获取锁</li>
  *   <li>可重入支持：同一客户端可多次获取锁，内部维护重入计数</li>
+ *   <li>LPOS 快速路径：Redis 6.2+ 使用 LPOS O(1) 检查客户端是否已在队列中，
+ *       低版本自动回退到 LINDEX O(N) 遍历</li>
+ *   <li>原子 EXPIRE：队列 TTL 续期合并到 Lua 脚本中，避免非原子操作窗口</li>
  * </ul>
  *
  * <p><b>适用场景：</b>需要严格按顺序执行的分布式任务，避免饥饿问题。
@@ -40,21 +44,28 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     /**
      * 获取公平锁 Lua 脚本
      * <p>支持可重入：当前客户端已持有时递增计数；否则检查等待队列队首，仅队首客户端可获取锁
-     * <p>兼容 Redis 6.0 以下版本：使用 LINDEX 遍历替代 LPOS 检查队列中是否存在客户端
+     * <p>LPOS 快速路径：Redis 6.2+ 使用 LPOS O(1) 检查客户端是否已在队列中，
+     * 低版本通过 pcall 捕获错误后回退到 LINDEX O(N) 遍历
+     * <p>原子 EXPIRE：队列 TTL 续期合并到 RPUSH 操作中，避免非原子操作窗口
      */
     private static final String ACQUIRE_LOCK_LUA_SCRIPT =
             "local lockKey = KEYS[1] " +
             "local queueKey = KEYS[2] " +
             "local clientId = ARGV[1] " +
             "local leaseTimeMs = ARGV[2] " +
+            "local queueTtlSeconds = ARGV[3] " +
             "local function isInQueue(queueKey, clientId) " +
-            "    local len = redis.call('LLEN', queueKey) " +
-            "    for i = 0, len - 1, 1 do " +
-            "        if redis.call('LINDEX', queueKey, i) == clientId then " +
-            "            return true " +
+            "    local lposResult = redis.pcall('LPOS', queueKey, clientId) " +
+            "    if type(lposResult) == 'table' and lposResult['err'] then " +
+            "        local len = redis.call('LLEN', queueKey) " +
+            "        for i = 0, len - 1, 1 do " +
+            "            if redis.call('LINDEX', queueKey, i) == clientId then " +
+            "                return true " +
+            "            end " +
             "        end " +
+            "        return false " +
             "    end " +
-            "    return false " +
+            "    return lposResult ~= false and lposResult ~= nil " +
             "end " +
             "if redis.call('HEXISTS', lockKey, 'owner') == 1 then " +
             "    if redis.call('HGET', lockKey, 'owner') == clientId then " +
@@ -64,6 +75,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             "    else " +
             "        if not isInQueue(queueKey, clientId) then " +
             "            redis.call('RPUSH', queueKey, clientId) " +
+            "            redis.call('EXPIRE', queueKey, queueTtlSeconds) " +
             "        end " +
             "        return 0 " +
             "    end " +
@@ -86,6 +98,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             "end " +
             "if not isInQueue(queueKey, clientId) then " +
             "    redis.call('RPUSH', queueKey, clientId) " +
+            "    redis.call('EXPIRE', queueKey, queueTtlSeconds) " +
             "end " +
             "return 0";
 
@@ -206,6 +219,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
      * 尝试获取公平锁（不等待）
      *
      * <p>按等待队列顺序获取锁，当前客户端在队首或锁空闲时可获取。
+     * 队列 TTL 续期已合并到 Lua 脚本中，保证原子性。
      *
      * @param lockKey   锁的键
      * @param leaseTime 租约时间
@@ -220,18 +234,18 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         String queueKey = getQueueKey(namespacedKey);
         boolean acquired = false;
         try {
-            stringRedisTemplate.expire(queueKey, Duration.ofSeconds(QUEUE_EXPIRE_SECONDS));
             Long result = stringRedisTemplate.execute(
                     acquireLockScript,
                     Arrays.asList(namespacedKey, queueKey),
                     clientId,
-                    String.valueOf(leaseTimeMs)
+                    String.valueOf(leaseTimeMs),
+                    String.valueOf(QUEUE_EXPIRE_SECONDS)
             );
             acquired = Long.valueOf(1L).equals(result);
             if (acquired) {
                 log.debug("【分布式锁】获取公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
                 recordLeaseTime(namespacedKey, leaseTimeMs);
-                startWatchDog(namespacedKey, clientId, leaseTimeMs);
+                startWatchDog(namespacedKey, clientId, leaseTimeMs, LockType.FAIR);
                 return clientId;
             }
             return null;
@@ -239,7 +253,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             log.error("【分布式锁】获取公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return null;
         } finally {
-            // 锁获取失败时清理 ThreadLocal 和等待队列，防止泄漏（调用方不会调用 unlock）
             if (!acquired) {
                 clearClientId(namespacedKey);
                 clearLeaseTime(namespacedKey);

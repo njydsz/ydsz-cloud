@@ -31,7 +31,6 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see Ordered
  * @see InnerInterceptor
  */

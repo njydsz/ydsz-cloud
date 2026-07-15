@@ -1,5 +1,9 @@
 package com.njydsz.pmis.common.jdbc.config;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
@@ -38,7 +42,6 @@ import lombok.Data;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see LogicalDeleteInterceptor
  */
 @Data
@@ -71,4 +74,28 @@ public class LogicalDeleteConfiguration {
      * <p>默认值：0
      */
     private Long normalValue = 0L;
+
+    /**
+     * 忽略逻辑删除拦截的表列表（忽略大小写）。
+     * <p>例如系统配置表、字典表等不含有 deleted 列的表。
+     */
+    private Set<String> ignoreTables = new HashSet<>();
+
+    /**
+     * 获取规范化后的忽略表集合（小写化）。
+     *
+     * @return 小写化的忽略表集合
+     */
+    public Set<String> getNormalizedIgnoreTables() {
+        if (ignoreTables == null || ignoreTables.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<String> normalized = new HashSet<>(ignoreTables.size());
+        for (String table : ignoreTables) {
+            if (table != null) {
+                normalized.add(table.trim().toLowerCase());
+            }
+        }
+        return normalized;
+    }
 }

@@ -21,23 +21,41 @@ import org.owasp.html.Sanitizers;
  */
 public class OwaspXssCleaner {
 
-    private static final PolicyFactory POLICY = Sanitizers.FORMATTING
-            .and(Sanitizers.LINKS)
-            .and(Sanitizers.IMAGES)
-            .and(Sanitizers.STYLES)
-            .and(Sanitizers.TABLES);
+    private static final PolicyFactory DEFAULT_POLICY = XssPolicyFactory.getPolicy(XssPolicyFactory.Policy.STANDARD);
 
     /**
-     * Clean HTML content to prevent XSS attacks
+     * Clean HTML content with default policy
      *
      * @param dirtyHtml untrusted HTML content
      * @return sanitized HTML content
      */
     public static String clean(String dirtyHtml) {
+        return clean(dirtyHtml, DEFAULT_POLICY);
+    }
+
+    /**
+     * Clean HTML content with specified policy
+     *
+     * @param dirtyHtml untrusted HTML content
+     * @param policy    XSS 清洗策略
+     * @return sanitized HTML content
+     */
+    public static String clean(String dirtyHtml, XssPolicyFactory.Policy policy) {
+        return clean(dirtyHtml, XssPolicyFactory.getPolicy(policy));
+    }
+
+    /**
+     * Clean HTML content with specified PolicyFactory
+     *
+     * @param dirtyHtml untrusted HTML content
+     * @param policy    OWASP PolicyFactory
+     * @return sanitized HTML content
+     */
+    public static String clean(String dirtyHtml, PolicyFactory policy) {
         if (dirtyHtml == null || dirtyHtml.isEmpty()) {
             return dirtyHtml;
         }
-        return POLICY.sanitize(dirtyHtml);
+        return policy.sanitize(dirtyHtml);
     }
 
     /**
@@ -51,7 +69,7 @@ public class OwaspXssCleaner {
             return jsonString;
         }
         // For JSON, we sanitize the entire string
-        return POLICY.sanitize(jsonString);
+        return DEFAULT_POLICY.sanitize(jsonString);
     }
 
     /**

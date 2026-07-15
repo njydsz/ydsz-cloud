@@ -48,6 +48,17 @@ public class CsrfProperties {
     private boolean enabled = true;
 
     /**
+     * CSRF 防护模式
+     *
+     * <ul>
+     *   <li>SYNCHRONIZER：Synchronizer Token Pattern（服务端存储 Token，验证后刷新）</li>
+     *   <li>DOUBLE_SUBMIT：Double Submit Cookie（无状态，Cookie + Header 双重提交比对）</li>
+     * </ul>
+     * 默认为 SYNCHRONIZER。微服务/SPA 架构推荐使用 DOUBLE_SUBMIT（无需 Redis）。
+     */
+    private CsrfMode mode = CsrfMode.SYNCHRONIZER;
+
+    /**
      * 过滤器注册顺序
      *
      * <p>数值越小，优先级越高。
@@ -131,4 +142,18 @@ public class CsrfProperties {
      * </ul>
      */
     private String sameSite = "Lax";
+
+    /**
+     * CSRF 防护模式枚举
+     */
+    public enum CsrfMode {
+        /**
+         * Synchronizer Token Pattern（服务端存储 Token，验证后刷新）
+         */
+        SYNCHRONIZER,
+        /**
+         * Double Submit Cookie（无状态，Cookie + Header 双重提交比对）
+         */
+        DOUBLE_SUBMIT
+    }
 }

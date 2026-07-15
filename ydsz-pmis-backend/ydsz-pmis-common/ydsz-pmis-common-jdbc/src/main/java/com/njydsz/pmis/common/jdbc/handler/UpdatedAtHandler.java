@@ -37,10 +37,8 @@ import net.sf.jsqlparser.expression.TimestampValue;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see CreatedAtHandler 创建时间处理器
  * @see FieldFillConfiguration 字段填充配置
- * @since 1.0.0
  */
 public class UpdatedAtHandler extends AbstractFieldFillHandler {
 

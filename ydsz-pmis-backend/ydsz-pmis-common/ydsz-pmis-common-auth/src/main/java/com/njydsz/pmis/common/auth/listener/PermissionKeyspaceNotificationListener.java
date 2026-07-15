@@ -41,15 +41,24 @@ public class PermissionKeyspaceNotificationListener {
 
     /**
      * 匹配 role 相关 key 的正则，提取 roleCode。
-     * Key 格式示例：ydsz-auth:role-menu:admin, ydsz-auth:role-api:admin
+     * 支持自定义 key 前缀模式，默认匹配 ydsz-auth:role-* 格式。
      */
-    private static final Pattern ROLE_KEY_PATTERN = Pattern.compile(
-            "ydsz-auth:role-(?:menu|api|row|col):([^:]+)");
+    private final Pattern roleKeyPattern;
 
     private final RbacPermissionEvaluator permissionEvaluator;
 
     public PermissionKeyspaceNotificationListener(RbacPermissionEvaluator permissionEvaluator) {
+        this(permissionEvaluator, "ydsz-auth:role");
+    }
+
+    public PermissionKeyspaceNotificationListener(RbacPermissionEvaluator permissionEvaluator, String keyPrefix) {
         this.permissionEvaluator = permissionEvaluator;
+        String prefix = (keyPrefix != null && !keyPrefix.isEmpty()) ? keyPrefix : "ydsz-auth:role";
+        // 动态构建正则：匹配 prefix-(?:menu|api|row|col):roleCode
+        // 转义 prefix 中的特殊字符
+        String escapedPrefix = Pattern.quote(prefix);
+        this.roleKeyPattern = Pattern.compile(
+                escapedPrefix + "-(?:menu|api|row|col):([^:]+)");
     }
 
     /**
@@ -86,7 +95,7 @@ public class PermissionKeyspaceNotificationListener {
                 }
 
                 // 匹配 role 相关 key
-                Matcher matcher = ROLE_KEY_PATTERN.matcher(key);
+                Matcher matcher = roleKeyPattern.matcher(key);
                 if (matcher.find()) {
                     String roleCode = matcher.group(1);
                     if (StringUtils.isNotBlank(roleCode)) {

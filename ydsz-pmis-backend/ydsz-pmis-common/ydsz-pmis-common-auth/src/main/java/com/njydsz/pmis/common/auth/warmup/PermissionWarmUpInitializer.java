@@ -3,11 +3,11 @@ package com.njydsz.pmis.common.auth.warmup;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +48,7 @@ public class PermissionWarmUpInitializer {
 
     private final AuthProperties properties;
     private final RolePermissionLoader rolePermissionLoader;
-    private final TaskExecutor taskExecutor;
+    private final ThreadPoolTaskExecutor taskExecutor;
 
     public PermissionWarmUpInitializer(AuthProperties properties,
                                        RolePermissionLoader rolePermissionLoader) {
@@ -57,8 +57,20 @@ public class PermissionWarmUpInitializer {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("auth-warmup-");
         executor.setDaemon(true);
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(5);
         executor.initialize();
         this.taskExecutor = executor;
+    }
+
+    /**
+     * 应用关闭时优雅关闭线程池。
+     */
+    @PreDestroy
+    public void shutdown() {
+        log.info("权限预热线程池正在关闭...");
+        taskExecutor.shutdown();
+        log.info("权限预热线程池已关闭");
     }
 
     /**

@@ -138,7 +138,7 @@ public class PermissionChangePublisher {
                 event.getRoleCode(),
                 event.getChangeType().name(),
                 affectedTypes,
-                event.getTimestamp(),
+                event.getEventTimestamp(),
                 event.getSourceNode());
     }
 }

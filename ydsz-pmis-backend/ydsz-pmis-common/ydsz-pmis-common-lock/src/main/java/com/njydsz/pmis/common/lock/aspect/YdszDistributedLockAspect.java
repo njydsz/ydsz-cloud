@@ -9,6 +9,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.MDC;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -22,6 +23,7 @@ import com.njydsz.pmis.common.lock.exception.DistributedLockException;
 import com.njydsz.pmis.common.lock.impl.FallbackDistributedLock;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.strategy.LockStrategy;
+import com.njydsz.pmis.common.lock.util.LockKeyValidator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +63,12 @@ public class YdszDistributedLockAspect {
      * SpEL 表达式缓存（避免重复解析相同表达式）
      */
     private final Map<String, Expression> expressionCache = new ConcurrentHashMap<>();
+
+    /**
+     * 降级锁实例缓存（按锁类型缓存，避免每次拦截创建新实例）
+     * <p>FallbackDistributedLock 内部维护降级状态，需复用同一实例以保证状态连续性
+     */
+    private final Map<LockType, FallbackDistributedLock> fallbackLockCache = new ConcurrentHashMap<>();
 
     /**
      * 锁策略工厂
@@ -119,6 +127,7 @@ public class YdszDistributedLockAspect {
     public Object around(ProceedingJoinPoint joinPoint, YdszDistributedLock lockAnn) throws Throwable {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String lockKey = resolveLockKey(lockAnn.key(), method, joinPoint.getArgs());
+        LockKeyValidator.validate(lockKey);
         LockType lockType = lockAnn.lockType();
         long waitTime = lockAnn.waitTime();
         long leaseTime = lockAnn.leaseTime();
@@ -128,9 +137,10 @@ public class YdszDistributedLockAspect {
 
         DistributedLocker lock = lockStrategy.getLock(lockType);
 
-        // 如果启用降级策略，包装为 FallbackDistributedLock
+        // 如果启用降级策略，包装为 FallbackDistributedLock（缓存实例，避免频繁创建）
         if (fallbackEnabled && !(lock instanceof FallbackDistributedLock)) {
-            lock = new FallbackDistributedLock(lock, true);
+            lock = fallbackLockCache.computeIfAbsent(lockType,
+                    lt -> new FallbackDistributedLock(lockStrategy.getLock(lt), true));
         }
 
         long acquireStartTime = System.currentTimeMillis();
@@ -144,7 +154,7 @@ public class YdszDistributedLockAspect {
             if (lockAnn.throwException()) {
                 throw new DistributedLockException(lockAnn.message());
             } else {
-                log.warn("【分布式锁】获取锁失败，跳过方法执行 | lockKey={}", lockKey);
+                log.warn("【分布式锁】获取锁失败，跳过方法执行 | lockKey={} | traceId={}", lockKey, MDC.get("tid"));
                 return null;
             }
         }
@@ -157,6 +167,10 @@ public class YdszDistributedLockAspect {
 
         long holdStartTime = System.currentTimeMillis();
         try {
+            // 如果禁用看门狗续期，获取锁后立即停止续期任务
+            if (!lockAnn.autoRenew()) {
+                lockStrategy.stopWatchDog(lockKey);
+            }
             return joinPoint.proceed();
         } finally {
             long holdTimeMillis = System.currentTimeMillis() - holdStartTime;
@@ -165,9 +179,9 @@ public class YdszDistributedLockAspect {
                 if (lockMetrics != null) {
                     lockMetrics.recordRelease(holdTimeMillis, lockType.name().toLowerCase());
                 }
-                log.debug("【分布式锁】释放锁成功 | lockKey={}", lockKey);
+                log.debug("【分布式锁】释放锁成功 | lockKey={} | traceId={}", lockKey, MDC.get("tid"));
             } else {
-                log.error("【分布式锁】释放锁失败 | lockKey={}", lockKey);
+                log.error("【分布式锁】释放锁失败 | lockKey={} | traceId={}", lockKey, MDC.get("tid"));
             }
         }
     }

@@ -96,6 +96,18 @@
             <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
             <artifactId>owasp-java-html-sanitizer</artifactId>
         </dependency>
+        <!-- Micrometer (optional, for SafeMetrics) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- JUnit 5 (test scope) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- mybatis-plus-core（AuditFieldFiller 使用） -->
         <dependency>
             <groupId>com.baomidou</groupId>

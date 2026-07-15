@@ -2,8 +2,9 @@ package com.njydsz.pmis.common.jdbc.interceptor;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.ibatis.mapping.MappedStatement;
@@ -21,13 +22,20 @@ import net.sf.jsqlparser.schema.Table;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 final class DataPermissionHelper {
 
     private static final Logger log = LoggerFactory.getLogger(DataPermissionHelper.class);
 
-    private static final ConcurrentHashMap<String, Boolean> IGNORE_CACHE = new ConcurrentHashMap<>();
+    /** 有界 LRU 缓存，最大容量 10000，防止内存泄漏 */
+    private static final int MAX_CACHE_SIZE = 10000;
+    private static final Map<String, Boolean> IGNORE_CACHE = Collections.synchronizedMap(
+            new LinkedHashMap<String, Boolean>(256, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
+                    return size() > MAX_CACHE_SIZE;
+                }
+            });
 
     /**
      * 私有构造方法，工具类禁止实例化。

@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import com.njydsz.pmis.common.auth.util.PermissionUtils;
 import com.njydsz.pmis.common.util.auth.AuthInfo;
 import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -100,6 +101,9 @@ public abstract class AbstractAuthHandler implements AuthHandler {
     /**
      * 按逗号分割字符串并过滤空值
      *
+     * <p>委托给 {@link com.njydsz.pmis.common.auth.util.PermissionUtils#splitCsv} 统一处理 CSV 解析，
+     * 消除重复逻辑。
+     *
      * @param value 待分割的字符串
      * @return 分割后的字符串流，空值时返回空流
      */
@@ -107,13 +111,7 @@ public abstract class AbstractAuthHandler implements AuthHandler {
         if (StringUtils.isBlank(value)) {
             return Stream.empty();
         }
-        String[] parts = value.split(",");
-        if (parts == null) {
-            return Stream.empty();
-        }
-        return Arrays.stream(parts)
-                .map(String::trim)
-                .filter(StringUtils::isNotBlank);
+        return PermissionUtils.splitCsv(value).stream();
     }
 
     /**

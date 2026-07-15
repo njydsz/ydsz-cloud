@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.auth.service;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -13,7 +14,6 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.auth.context.PermissionContextHolder;
 import com.njydsz.pmis.common.auth.exception.PermissionDeniedException;
 import com.njydsz.pmis.common.auth.exception.PermissionDeniedException.PermissionType;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
@@ -82,6 +82,12 @@ public class RbacPermissionEvaluator {
      */
     private final Cache<String, RolePermissions> rolePermissionsCache;
 
+    /**
+     * roleCode → cacheKey 的反向索引，用于按角色清理缓存。
+     * 由于 cacheKey 使用 SHA-256 Hash，无法从 Key 反解角色，需维护此映射。
+     */
+    private final Map<String, Set<String>> roleToCacheKeyIndex = new ConcurrentHashMap<>();
+
     public RbacPermissionEvaluator(AuthProperties properties, RbacUserInfoService userInfoService, RolePermissionLoader rolePermissionLoader) {
         this.properties = properties;
         this.userInfoService = userInfoService;
@@ -114,12 +120,19 @@ public class RbacPermissionEvaluator {
     /**
      * 加载当前登录用户信息。
      *
-     * <p>从当前请求上下文获取 token，然后加载用户信息。
+     * <p>优先从请求级 ThreadLocal 缓存获取，缓存未命中时才从 Redis 加载，
+     * 避免同一请求内多次调用导致反复 Redis 查询（原实现每次调用均走 Redis）。
      *
      * @return 用户信息 Map
      */
     public Map<String, Object> loadCurrentUserInfo() {
-        return loadUserInfo(userInfoService.loadCurrentToken());
+        Map<String, Object> cached = AuthContext.getCachedUserInfoMap();
+        if (cached != null && !cached.isEmpty()) {
+            return cached;
+        }
+        Map<String, Object> userInfo = loadUserInfo(userInfoService.loadCurrentToken());
+        AuthContext.setCachedUserInfoMap(userInfo);
+        return userInfo;
     }
 
     /**
@@ -268,6 +281,7 @@ public class RbacPermissionEvaluator {
     public void clearAllCaches() {
         PermissionUtils.clearPatternCache();
         rolePermissionsCache.invalidateAll();
+        roleToCacheKeyIndex.clear();
     }
 
     /**
@@ -356,6 +370,11 @@ public class RbacPermissionEvaluator {
         // 仅在 Redis 可用时放入缓存，避免 Redis 故障期间的空权限被缓存毒化
         if (redisAvailable) {
             rolePermissionsCache.put(cacheKey, result);
+            // 维护 roleCode → cacheKey 反向索引，用于按角色清理缓存
+            for (String roleCode : roleCodes) {
+                roleToCacheKeyIndex.computeIfAbsent(roleCode, k -> ConcurrentHashMap.newKeySet())
+                        .add(cacheKey);
+            }
         }
 
         return result;
@@ -368,12 +387,13 @@ public class RbacPermissionEvaluator {
             return cached;
         }
         try {
+            // loadCurrentUserInfo() 已有请求级缓存，不会重复查 Redis
             Map<String, Object> userInfo = loadCurrentUserInfo();
             if (userInfo != null) {
                 Object tenantId = userInfo.get("tenantId");
                 if (tenantId != null) {
                     String tid = String.valueOf(tenantId);
-                    PermissionContextHolder.setTenantId(tid);
+                    AuthContext.setTenantId(tid);
                     return tid;
                 }
             }
@@ -394,25 +414,24 @@ public class RbacPermissionEvaluator {
     /**
      * 按角色清理缓存。
      *
-     * <p>缓存 Key 格式为 {@code tenantId:role1,role2}，需先按 {@code :} 分割出角色部分，
-     * 再按 {@code ,} 分割后与传入角色集合匹配。
+     * <p>由于缓存 Key 使用 SHA-256 Hash，无法从 Key 反解角色，
+     * 通过维护的 roleCode → cacheKey 反向索引进行精确清理。
      */
     public void clearCachesByRoleCodes(String csvRoleCodes) {
         PermissionUtils.clearPatternCache();
         if (csvRoleCodes != null && !csvRoleCodes.isEmpty()) {
             Set<String> roleCodes = PermissionUtils.splitCsv(csvRoleCodes);
-            rolePermissionsCache.asMap().keySet().removeIf(key -> {
-                // key 格式: "tenantId:role1,role2" 或 "__default__:role1,role2"
-                int colonIdx = key.indexOf(':');
-                String rolesPart = (colonIdx >= 0 && colonIdx < key.length() - 1)
-                        ? key.substring(colonIdx + 1)
-                        : key;
-                return Arrays.stream(rolesPart.split(","))
-                        .map(String::trim)
-                        .anyMatch(roleCodes::contains);
-            });
+            for (String roleCode : roleCodes) {
+                Set<String> cacheKeys = roleToCacheKeyIndex.remove(roleCode);
+                if (cacheKeys != null) {
+                    for (String cacheKey : cacheKeys) {
+                        rolePermissionsCache.invalidate(cacheKey);
+                    }
+                }
+            }
         } else {
             rolePermissionsCache.invalidateAll();
+            roleToCacheKeyIndex.clear();
         }
     }
 

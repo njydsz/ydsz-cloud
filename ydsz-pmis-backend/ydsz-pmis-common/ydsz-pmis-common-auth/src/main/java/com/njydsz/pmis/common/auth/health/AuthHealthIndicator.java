@@ -40,34 +40,39 @@ public class AuthHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
+        RedisConnection connection = null;
         try {
             long startTime = System.currentTimeMillis();
-            RedisConnection connection = redisConnectionFactory.getConnection();
-            try {
-                String pong = connection.ping();
-                long responseTime = System.currentTimeMillis() - startTime;
+            connection = redisConnectionFactory.getConnection();
+            String pong = connection.ping();
+            long responseTime = System.currentTimeMillis() - startTime;
 
-                if ("PONG".equalsIgnoreCase(pong)) {
-                    return Health.up()
-                            .withDetail("module", "auth")
-                            .withDetail("redis", "connected")
-                            .withDetail("responseTimeMs", responseTime)
-                            .build();
-                }
-
-                return Health.down()
+            if ("PONG".equalsIgnoreCase(pong)) {
+                return Health.up()
                         .withDetail("module", "auth")
-                        .withDetail("redis", "unexpected response: " + pong)
+                        .withDetail("redis", "connected")
+                        .withDetail("responseTimeMs", responseTime)
                         .build();
-            } finally {
-                connection.close();
             }
+
+            return Health.down()
+                    .withDetail("module", "auth")
+                    .withDetail("redis", "unexpected response: " + pong)
+                    .build();
         } catch (Exception e) {
             log.error("【权限模块】健康检查失败 | error={}", e.getMessage());
             return Health.down()
                     .withDetail("module", "auth")
                     .withDetail("error", e.getMessage())
                     .build();
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (Exception e) {
+                    log.debug("关闭 Redis 连接异常: {}", e.getMessage());
+                }
+            }
         }
     }
 }

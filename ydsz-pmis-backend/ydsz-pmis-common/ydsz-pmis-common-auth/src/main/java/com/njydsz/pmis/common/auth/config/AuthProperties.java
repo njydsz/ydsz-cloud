@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 /**
@@ -89,21 +90,25 @@ public class AuthProperties {
     /**
      * 角色菜单/按钮/接口权限本地缓存过期时间（秒），默认 30。
      */
+    @Min(0)
     private Integer rolePermissionCacheSeconds = 30;
 
     /**
      * 权限缓存 TTL（秒），默认 30 分钟。
      */
+    @Min(1)
     private Integer permissionCacheTtlSeconds = 1800;
 
     /**
      * 角色行级数据权限本地缓存过期时间（秒），默认 30。
      */
+    @Min(0)
     private Integer roleDataCacheSeconds = 30;
 
     /**
      * 角色列级权限本地缓存过期时间（秒），默认 30。
      */
+    @Min(0)
     private Integer roleColumnCacheSeconds = 30;
 
     /**
@@ -111,11 +116,13 @@ public class AuthProperties {
      *
      * <p>按角色编码缓存脱敏规则上下文，超出后按 LRU 淘汰。
      */
+    @Min(1)
     private Integer desensitizeCacheMaxSize = 1000;
 
     /**
      * 列脱敏缓存过期时间（秒），默认 1800（30 分钟）。
      */
+    @Min(1)
     private Integer desensitizeCacheTtlSeconds = 1800;
 
     /**
@@ -123,6 +130,7 @@ public class AuthProperties {
      *
      * <p>当 Redis 不可用时，本地缓存作为降级兜底，此值控制其过期时间。
      */
+    @Min(1)
     private Integer localPermissionCacheMinutes = 5;
 
     /**
@@ -168,7 +176,8 @@ public class AuthProperties {
         /**
          * 黑名单过期时间（秒），应与 Token 有效期一致
          */
-        private long expireSeconds = 7200;
+    @Min(1)
+    private long expireSeconds = 7200;
     }
 
     /**

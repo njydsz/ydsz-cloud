@@ -11,7 +11,6 @@ package com.njydsz.pmis.common.redis.config;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public enum RedisClientType {
 

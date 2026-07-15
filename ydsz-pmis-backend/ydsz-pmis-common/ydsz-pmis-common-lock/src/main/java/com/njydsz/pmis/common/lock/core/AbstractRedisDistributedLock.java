@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import com.njydsz.pmis.common.cache.YdszCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
 
@@ -290,11 +291,25 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * @param leaseTimeMs 租约时间（毫秒）
      */
     protected void startWatchDog(String lockKey, String clientId, long leaseTimeMs) {
+        startWatchDog(lockKey, clientId, leaseTimeMs, LockType.REENTRANT);
+    }
+
+    /**
+     * 启动 WatchDog 自动续期（带锁类型）
+     *
+     * <p>锁类型决定续期时使用的 Lua 脚本，避免看门狗盲试多个脚本造成额外 Redis 调用。
+     *
+     * @param lockKey     锁的键
+     * @param clientId    客户端标识
+     * @param leaseTimeMs 租约时间（毫秒）
+     * @param lockType    锁类型
+     */
+    protected void startWatchDog(String lockKey, String clientId, long leaseTimeMs, LockType lockType) {
         if (leaseTimeMs <= 0) {
             return;
         }
         if (lockWatchDog != null) {
-            lockWatchDog.startWatch(lockKey, clientId, leaseTimeMs);
+            lockWatchDog.startWatch(lockKey, clientId, leaseTimeMs, lockType);
         }
     }
 

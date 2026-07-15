@@ -51,7 +51,6 @@ import lombok.Data;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Data
 @Validated
@@ -183,6 +182,16 @@ public class RedisProperties {
      * 布隆过滤器配置
      */
     private BloomFilter bloomFilter = new BloomFilter();
+
+    /**
+     * 可观测性配置
+     */
+    private Metrics metrics = new Metrics();
+
+    /**
+     * 熔断器配置
+     */
+    private CircuitBreaker circuitBreaker = new CircuitBreaker();
 
     /**
      * Lettuce 客户端配置类
@@ -348,5 +357,49 @@ public class RedisProperties {
          */
         private FailOpenPolicy failMode =
                 FailOpenPolicy.FAIL_OPEN;
+    }
+
+    /**
+     * 可观测性配置类
+     */
+    @Data
+    public static class Metrics {
+
+        /**
+         * 慢操作阈值（毫秒），0 表示禁用慢操作检测
+         * <p>超过此阈值的 Redis 操作将递增 {@code redis.operation.slow} 计数器
+         */
+        @Min(0)
+        private long slowOperationThresholdMs = 100;
+    }
+
+    /**
+     * 熔断器配置类
+     */
+    @Data
+    public static class CircuitBreaker {
+
+        /**
+         * 是否启用熔断器（默认 false）
+         */
+        private boolean enabled = false;
+
+        /**
+         * 连续失败阈值，达到后触发熔断
+         */
+        @Min(1)
+        private int failureThreshold = 5;
+
+        /**
+         * 熔断恢复超时时间（毫秒），超过此时间后进入半开状态
+         */
+        @Min(1000)
+        private long recoveryTimeoutMs = 30000;
+
+        /**
+         * 半开状态最大探测请求数
+         */
+        @Min(1)
+        private int halfOpenMaxRequests = 3;
     }
 }

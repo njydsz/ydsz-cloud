@@ -4,6 +4,8 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.pmis.common.redis.config.RedisProperties;
+
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
@@ -13,7 +15,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  * 指标采集是可选的，仅在实际使用时产生开销。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration
@@ -27,7 +28,11 @@ public class RedisMetricsConfiguration {
      * @return RedisMetricsCollector 实例
      */
     @Bean
-    public RedisMetricsCollector redisMetricsCollector(MeterRegistry registry) {
-        return RedisMetricsCollector.getOrCreate(registry);
+    public RedisMetricsCollector redisMetricsCollector(MeterRegistry registry,
+                                                        RedisProperties redisProperties) {
+        long threshold = redisProperties.getMetrics() != null
+                ? redisProperties.getMetrics().getSlowOperationThresholdMs()
+                : 0;
+        return RedisMetricsCollector.getOrCreate(registry, threshold);
     }
 }

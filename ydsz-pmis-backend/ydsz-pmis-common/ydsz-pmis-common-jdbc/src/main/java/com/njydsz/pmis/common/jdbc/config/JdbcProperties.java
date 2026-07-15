@@ -29,7 +29,6 @@ import lombok.Data;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Data
 @Validated
@@ -44,7 +43,7 @@ public class JdbcProperties {
     /**
      * Mapper 扫描包路径数组（默认 com.njydsz.pmis.**.mapper）
      */
-    private List<String> mapperScanPpackages = Arrays.asList("com.njydsz.pmis.**.mapper");
+    private List<String> mapperScanPackages = Arrays.asList("com.njydsz.pmis.**.mapper");
 
     /**
      * 慢 SQL 监控配置

@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.njydsz.pmis.common.domain.entity.BaseEntity;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -76,7 +77,6 @@ import net.sf.jsqlparser.statement.update.UpdateSet;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  * @see LogicalDeleteInterceptor 逻辑删除拦截器
  * @see InnerInterceptor MyBatis-Plus 内部拦截器接口
@@ -181,35 +181,11 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
             if (parameterType == null) {
                 return false;
             }
-            Class<?> current = parameterType;
-            while (current != null) {
-                if ("com.njydsz.pmis.common.domain.entity.BaseEntity".equals(current.getName())) {
-                    return true;
-                }
-                current = current.getSuperclass();
-            }
-            for (Class<?> iface : parameterType.getInterfaces()) {
-                if (isBaseEntityInterface(iface)) {
-                    return true;
-                }
-            }
-            return false;
+            return BaseEntity.class.isAssignableFrom(parameterType);
         } catch (Exception e) {
             log.warn("OptimisticLockInterceptor: 获取参数类型失败，跳过乐观锁处理, error={}", e.getMessage());
             return false;
         }
-    }
-
-    private boolean isBaseEntityInterface(Class<?> iface) {
-        if ("com.njydsz.pmis.common.domain.entity.BaseEntity".equals(iface.getName())) {
-            return true;
-        }
-        for (Class<?> parent : iface.getInterfaces()) {
-            if (isBaseEntityInterface(parent)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

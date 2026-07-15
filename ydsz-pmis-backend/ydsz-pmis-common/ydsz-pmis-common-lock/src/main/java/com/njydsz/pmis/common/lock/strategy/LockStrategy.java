@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.lock.RedisReadWriteLock;
 import com.njydsz.pmis.common.lock.RedisSemaphore;
 import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.core.DistributedLocker;
+import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
 
 /**
  * 锁策略工厂接口
@@ -44,4 +45,21 @@ public interface LockStrategy {
      * @return 信号量实例
      */
     RedisSemaphore getSemaphore(String key, int permits);
+
+    /**
+     * 获取看门狗实例（可选）
+     *
+     * @return 看门狗实例，未配置时返回 null
+     */
+    LockWatchDog getWatchDog();
+
+    /**
+     * 停止指定锁键的看门狗续期
+     *
+     * <p>当 {@code @YdszDistributedLock(autoRenew = false)} 时调用，
+     * 停止看门狗对指定锁的续期任务。
+     *
+     * @param lockKey 锁的键（用户传入的原始键）
+     */
+    void stopWatchDog(String lockKey);
 }

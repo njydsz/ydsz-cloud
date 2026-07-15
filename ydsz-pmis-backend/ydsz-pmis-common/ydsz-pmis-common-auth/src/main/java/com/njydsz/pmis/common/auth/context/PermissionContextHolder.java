@@ -5,18 +5,14 @@ import com.alibaba.ttl.TransmittableThreadLocal;
 /**
  * 权限上下文持有者，用于在同一次请求内缓存权限相关信息。
  *
- * <p>通过 {@link TransmittableThreadLocal} 避免同一次请求内多次 Redis 查询，
- * 主要用于缓存 tenantId 等从用户信息中解析的数据。
- *
- * <p><b>线程安全：</b>
- * 使用 {@link TransmittableThreadLocal}（TTL）确保线程隔离并安全支持线程池场景下的上下文透传，
- * 请求结束后必须调用 {@link #clear()} 清理。
- * 相比原生 {@link ThreadLocal}，TTL 解决了线程池复用时上下文泄露的问题。
+ * <p><b>已废弃：</b>请使用 {@link AuthContext} 替代，后者已包含 tenantId 字段。
+ * 本类保留仅为向后兼容，将在 2.0.0 版本移除。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ *
  */
+@Deprecated(since = "1.1.0", forRemoval = true)
 public final class PermissionContextHolder {
 
     private static final ThreadLocal<String> TENANT_ID = new TransmittableThreadLocal<>();

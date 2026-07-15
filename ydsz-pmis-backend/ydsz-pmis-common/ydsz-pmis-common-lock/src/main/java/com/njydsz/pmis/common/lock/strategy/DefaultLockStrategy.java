@@ -175,7 +175,7 @@ public class DefaultLockStrategy implements LockStrategy {
         if (redisService == null) {
             throw new IllegalStateException("RedisService is required for ReadWriteLock, please configure it in the constructor");
         }
-        return new RedisReadWriteLock(redisService, key, DEFAULT_EXPIRE_MILLIS, DEFAULT_WAIT_MILLIS);
+        return new RedisReadWriteLock(redisService, key, DEFAULT_EXPIRE_MILLIS, DEFAULT_WAIT_MILLIS, namespace);
     }
 
     /**
@@ -191,7 +191,7 @@ public class DefaultLockStrategy implements LockStrategy {
         if (redisService == null) {
             throw new IllegalStateException("RedisService is required for Semaphore, please configure it in the constructor");
         }
-        return new RedisSemaphore(redisService, key, permits, DEFAULT_EXPIRE_MILLIS, scheduler);
+        return new RedisSemaphore(redisService, key, permits, DEFAULT_EXPIRE_MILLIS, scheduler, namespace);
     }
 
     /**
@@ -207,7 +207,7 @@ public class DefaultLockStrategy implements LockStrategy {
         if (redisService == null) {
             throw new IllegalStateException("RedisService is required for ReadWriteLock, please configure it in the constructor");
         }
-        return new RedisReadWriteLock(redisService, key, expireMillis, waitMillis);
+        return new RedisReadWriteLock(redisService, key, expireMillis, waitMillis, namespace);
     }
 
     /**
@@ -215,8 +215,26 @@ public class DefaultLockStrategy implements LockStrategy {
      *
      * @return LockWatchDog 实例
      */
+    @Override
     public LockWatchDog getWatchDog() {
         return lockWatchDog;
+    }
+
+    /**
+     * 停止指定锁键的看门狗续期
+     *
+     * <p>将用户传入的锁键转换为带命名空间前缀的实际 Redis 键后停止看门狗。
+     *
+     * @param lockKey 锁的键（用户传入的原始键）
+     */
+    @Override
+    public void stopWatchDog(String lockKey) {
+        if (lockWatchDog == null) {
+            return;
+        }
+        String namespacedKey = (namespace != null && !namespace.isEmpty())
+                ? namespace + ":lock:" + lockKey : lockKey;
+        lockWatchDog.stopWatch(namespacedKey);
     }
 
     /**

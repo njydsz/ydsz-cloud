@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.auth.context;
 
+import java.util.Map;
+
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.pmis.common.core.context.RequestContext;
@@ -187,6 +189,29 @@ public final class AuthContext {
     // ==================== 列权限管理（原有功能） ====================
 
     /**
+     * 获取请求级缓存的用户信息 Map。
+     *
+     * <p>由 RbacPermissionEvaluator.loadCurrentUserInfo() 首次加载后写入，
+     * 后续同一请求内直接从 ThreadLocal 读取，避免反复 Redis 调用。
+     *
+     * @return 缓存的用户信息 Map，未设置时返回 null
+     */
+    public static Map<String, Object> getCachedUserInfoMap() {
+        ContextData data = CONTEXT.get();
+        return data != null ? data.cachedUserInfoMap : null;
+    }
+
+    /**
+     * 设置请求级缓存的用户信息 Map。
+     *
+     * @param userInfoMap 用户信息 Map
+     */
+    public static void setCachedUserInfoMap(Map<String, Object> userInfoMap) {
+        ContextData data = getOrCreate();
+        data.cachedUserInfoMap = userInfoMap;
+    }
+
+    /**
      * 获取当前线程的上下文数据
      *
      * @return 上下文数据，未设置时返回 null
@@ -283,6 +308,12 @@ public final class AuthContext {
         private String tenantId;
         private ColumnPermissionInfo columnPermission;
 
+        /**
+         * 请求级缓存的用户信息 Map，避免同一请求内多次 Redis 调用。
+         * 由 RbacPermissionEvaluator.loadCurrentUserInfo() 首次加载后写入，后续直接读取。
+         */
+        private Map<String, Object> cachedUserInfoMap;
+
         public LoginUser getLoginUser() {
             return loginUser;
         }
@@ -305,6 +336,14 @@ public final class AuthContext {
 
         public void setColumnPermission(ColumnPermissionInfo columnPermission) {
             this.columnPermission = columnPermission;
+        }
+
+        public Map<String, Object> getCachedUserInfoMap() {
+            return cachedUserInfoMap;
+        }
+
+        public void setCachedUserInfoMap(Map<String, Object> cachedUserInfoMap) {
+            this.cachedUserInfoMap = cachedUserInfoMap;
         }
     }
 }

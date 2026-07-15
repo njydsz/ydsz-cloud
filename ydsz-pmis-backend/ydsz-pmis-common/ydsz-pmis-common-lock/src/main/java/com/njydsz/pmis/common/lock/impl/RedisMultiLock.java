@@ -5,13 +5,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.njydsz.pmis.common.lock.core.DistributedLocker;
-import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,21 +44,22 @@ import lombok.extern.slf4j.Slf4j;
 public class RedisMultiLock implements DistributedLocker {
 
 	/**
-	 * 共享的 WatchDog 续期调度线程池（避免每个 MultiLock 创建独立线程导致线程爆炸）
+	 * WatchDog 续期调度线程池（由 Spring 管理，支持优雅停机和配置化）
 	 */
-	private static final ScheduledExecutorService RENEWAL_EXECUTOR =
-			ExecutorUtils.newScheduledThreadPool(2, "ydsz-lock-multi-watchdog-");
+	private final ScheduledExecutorService renewalExecutor;
 
 	/**
-	 * 关闭多锁续期线程池
+	 * 构造多Key联锁（需注入续期线程池）
 	 *
-	 * <p>由业务应用在停机时调用，替代 JVM ShutdownHook，实现优雅释放。
+	 * @param locks 底层分布式锁列表，至少需要 2 个锁
+	 * @param renewalExecutor 续期调度线程池（由 Spring 管理）
 	 */
-	public static void shutdown() {
-		if (RENEWAL_EXECUTOR != null && !RENEWAL_EXECUTOR.isShutdown()) {
-			log.info("[RedisMultiLock] 关闭多锁续期线程池");
-			RENEWAL_EXECUTOR.shutdown();
+	public RedisMultiLock(List<DistributedLocker> locks, ScheduledExecutorService renewalExecutor) {
+		if (locks == null || locks.size() < 2) {
+			throw new IllegalArgumentException("RedisMultiLock 至少需要 2 个底层锁");
 		}
+		this.locks = Collections.unmodifiableList(new ArrayList<>(locks));
+		this.renewalExecutor = renewalExecutor;
 	}
 
 	/**
@@ -87,10 +88,11 @@ public class RedisMultiLock implements DistributedLocker {
 	 * @param locks 底层分布式锁列表，至少需要 2 个锁
 	 */
 	public RedisMultiLock(List<DistributedLocker> locks) {
-		if (locks == null || locks.size() < 2) {
-			throw new IllegalArgumentException("RedisMultiLock 至少需要 2 个底层锁");
-		}
-		this.locks = Collections.unmodifiableList(new ArrayList<>(locks));
+		this(locks, Executors.newScheduledThreadPool(2, r -> {
+			Thread t = new Thread(r, "ydsz-lock-multi-watchdog-" + System.nanoTime());
+			t.setDaemon(true);
+			return t;
+		}));
 	}
 
 	/**
@@ -329,7 +331,7 @@ public class RedisMultiLock implements DistributedLocker {
 
 		renewing.set(true);
 
-		ScheduledFuture<?> future = RENEWAL_EXECUTOR.scheduleAtFixedRate(() -> {
+		ScheduledFuture<?> future = renewalExecutor.scheduleAtFixedRate(() -> {
 			if (!renewing.get()) {
 				return;
 			}

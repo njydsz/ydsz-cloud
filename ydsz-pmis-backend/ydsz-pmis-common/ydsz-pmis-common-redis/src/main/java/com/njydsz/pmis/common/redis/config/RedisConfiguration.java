@@ -15,13 +15,15 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.njydsz.pmis.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.pmis.common.redis.health.RedisHealthIndicator;
 import com.njydsz.pmis.common.redis.interceptor.RedisRetryInterceptor;
-import com.njydsz.pmis.common.redis.serializer.JacksonRedisSerializer;
+import com.njydsz.pmis.common.redis.serializer.YdszJsonRedisSerializer;
+import com.njydsz.pmis.common.redis.service.RedisCacheGuard;
 import com.njydsz.pmis.common.redis.service.RedisService;
 
 import lombok.RequiredArgsConstructor;
@@ -66,7 +68,6 @@ import lombok.RequiredArgsConstructor;
  * 所有 Bean 均添加了 {@code @ConditionalOnMissingBean}，允许用户自定义覆盖。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration
@@ -130,13 +131,13 @@ public class RedisConfiguration {
      *     serializer: jackson
      * }</pre>
      *
-     * @return JacksonRedisSerializer 实例
+     * @return YdszJsonRedisSerializer 实例
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(name = "ydsz.redis.serializer", havingValue = "jackson", matchIfMissing = true)
-    public JacksonRedisSerializer jacksonRedisSerializer() {
-        return new JacksonRedisSerializer(Object.class);
+    public YdszJsonRedisSerializer ydszJsonRedisSerializer() {
+        return new YdszJsonRedisSerializer(Object.class);
     }
 
     /**
@@ -242,6 +243,41 @@ public class RedisConfiguration {
     @ConditionalOnMissingBean
     public YdszCacheableAspect YdszCacheableAspect(RedisService redisService) {
         return new YdszCacheableAspect(redisService);
+    }
+
+    /**
+     * 注册 Redis 缓存防护组件
+     *
+     * <p>提供防穿透、防击穿、防雪崩三重缓存保护。
+     * 空值缓存 TTL 从 {@link RedisProperties#getNullValueTtlSeconds()} 获取。
+     *
+     * @param redisService    Redis 服务
+     * @param redisProperties Redis 配置属性
+     * @return RedisCacheGuard 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RedisCacheGuard redisCacheGuard(RedisService redisService,
+                                            RedisProperties redisProperties) {
+        return new RedisCacheGuard(redisService, redisProperties.getNullValueTtlSeconds());
+    }
+
+    /**
+     * 注册 Redis Pub/Sub 消息监听容器
+     *
+     * <p>用于支持 {@code RedisPubSubOps} 的订阅功能。
+     * 默认使用 SimpleAsyncTaskExecutor，生产环境可通过自定义 Bean 覆盖。
+     *
+     * @param connectionFactory Redis 连接工厂
+     * @return RedisMessageListenerContainer 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            RedisConnectionFactory connectionFactory) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        return container;
     }
 
 }

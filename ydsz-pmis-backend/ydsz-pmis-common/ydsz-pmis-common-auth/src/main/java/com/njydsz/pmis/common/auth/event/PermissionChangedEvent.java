@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.auth.event;
 import java.io.Serializable;
 import java.util.Set;
 
+import org.springframework.context.ApplicationEvent;
+
 /**
  * 权限变更事件。
  *
@@ -22,7 +24,7 @@ import java.util.Set;
  * @since 1.0.0
  * 
  */
-public class PermissionChangedEvent implements Serializable {
+public class PermissionChangedEvent extends ApplicationEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -65,6 +67,7 @@ public class PermissionChangedEvent implements Serializable {
 
     public PermissionChangedEvent(String roleCode, PermissionChangeType changeType,
                                   Set<String> affectedPermissionTypes, String sourceNode) {
+        super(sourceNode != null ? sourceNode : PermissionChangedEvent.class.getName());
         this.roleCode = roleCode;
         this.changeType = changeType;
         this.affectedPermissionTypes = affectedPermissionTypes;
@@ -122,8 +125,11 @@ public class PermissionChangedEvent implements Serializable {
 
     /**
      * 获取事件时间戳
+     *
+     * <p>注意：不能使用 {@code getTimestamp()} 方法名，因为 {@link ApplicationEvent}
+     * 已有同名的 final 方法。
      */
-    public long getTimestamp() {
+    public long getEventTimestamp() {
         return timestamp;
     }
 }

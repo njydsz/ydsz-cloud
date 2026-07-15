@@ -10,7 +10,6 @@ package com.njydsz.pmis.common.jdbc.config;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 
 import java.util.HashSet;

@@ -4,10 +4,15 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.njydsz.pmis.common.json.Json;
+
 /**
  * 分布式锁指标导出器
  *
  * <p>将锁指标导出为 JSON 格式，供外部系统（如监控面板、日志聚合系统）使用。
+ *
+ * <p>使用项目统一的 {@link Json} 引擎序列化，替代手写 JSON 序列化逻辑，
+ * 确保与全项目 JSON 处理保持一致。
  *
  * <p>导出的 JSON 包含：
  * <ul>
@@ -67,67 +72,6 @@ public class LockMetricsExporter {
         statistics.put("averageHoldTimeMillis", String.format("%.2f", lockMetrics.getAverageHoldTimeMillis()));
         root.put("statistics", statistics);
 
-        return toJson(root);
-    }
-
-    /**
-     * 简单的 Map 转 JSON（不依赖第三方 JSON 库）
-     */
-    private String toJson(Map<String, Object> map) {
-        StringBuilder sb = new StringBuilder();
-        sb.append('{');
-        boolean first = true;
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (!first) {
-                sb.append(',');
-            }
-            first = false;
-            sb.append('"').append(escapeJson(entry.getKey())).append('"');
-            sb.append(':');
-            sb.append(valueToJson(entry.getValue()));
-        }
-        sb.append('}');
-        return sb.toString();
-    }
-
-    /**
-     * 将值转换为 JSON 字符串表示
-     *
-     * @param value 要转换的值
-     * @return JSON 格式的字符串
-     */
-    private String valueToJson(Object value) {
-        if (value == null) {
-            return "null";
-        }
-        if (value instanceof String) {
-            return '"' + escapeJson((String) value) + '"';
-        }
-        if (value instanceof Number || value instanceof Boolean) {
-            return value.toString();
-        }
-        if (value instanceof Map<?, ?> rawMap) {
-            Map<String, Object> map = new LinkedHashMap<>();
-            rawMap.forEach((k, v) -> map.put(String.valueOf(k), v));
-            return toJson(map);
-        }
-        return '"' + escapeJson(value.toString()) + '"';
-    }
-
-    /**
-     * 转义 JSON 字符串中的特殊字符
-     *
-     * @param s 原始字符串
-     * @return 转义后的字符串
-     */
-    private String escapeJson(String s) {
-        if (s == null) {
-            return "";
-        }
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+        return Json.toJson(root);
     }
 }

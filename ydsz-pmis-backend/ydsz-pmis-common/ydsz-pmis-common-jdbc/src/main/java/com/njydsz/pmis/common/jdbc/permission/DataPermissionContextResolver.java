@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
 import com.njydsz.pmis.common.util.http.ServletUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -35,11 +36,16 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>X-Editable-Columns (15) - 列可编辑规则（INSERT/UPDATE 过滤）</li>
  * </ul>
  *
- * <h2>读取优先级（兜底链）</h2>
+ * <h2>读取优先级（安全增强）</h2>
  * <ol>
- *   <li>真实 HttpServletRequest Header（常规 Web 请求 / Feign 透传）</li>
+ *   <li>认证上下文 {@link AuthInfoUtils}（JWT 解析，可信）— 用于 tenantId / userId</li>
+ *   <li>真实 HttpServletRequest Header（常规 Web 请求 / Feign 透传）— 用于 ID 集合、列权限</li>
  *   <li>{@link RequestHolder} extra headers（{@code @AuthRowPermission}/{@code @AuthColPermission} 写入的虚拟请求头）</li>
  * </ol>
+ *
+ * <p><b>安全说明：</b> tenantId 和 userId 优先从 JWT 认证上下文获取（不可伪造），
+ * HTTP Header 中的值仅在认证上下文不可用时作为兼容回退。生产环境应确保 API 网关
+ * 清洗外部请求中的 X-Tenant-Id / X-Unique-Id 等敏感 Header，仅允许网关写入。
  *
  * <h2>ID 扩展</h2>
  * <p>支持可选的 {@link DataScopeIdExpander}，在已知 ID 集合基础上自动扩展下级子节点：
@@ -55,7 +61,6 @@ import com.njydsz.pmis.common.util.string.StringUtils;
   *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public class DataPermissionContextResolver {
 
@@ -89,8 +94,11 @@ public class DataPermissionContextResolver {
         }
         DataPermissionContext context = new DataPermissionContext();
         context.setDataScope(resolveDataScope(resolveHeader(request, HeaderConstants.X_DATA_SCOPE)));
-        context.setTenantId(trimToNull(resolveHeader(request, HeaderConstants.X_TENANT_ID)));
-        context.setUserId(trimToNull(resolveHeader(request, HeaderConstants.X_UNIQUE_ID)));
+        // 安全增强：tenantId 和 userId 优先从认证上下文（JWT）获取，不可伪造
+        String authTenantId = AuthInfoUtils.getTenantId();
+        String authUserId = AuthInfoUtils.getUniqueId();
+        context.setTenantId(trimToNull(authTenantId != null ? authTenantId : resolveHeader(request, HeaderConstants.X_TENANT_ID)));
+        context.setUserId(trimToNull(authUserId != null ? authUserId : resolveHeader(request, HeaderConstants.X_UNIQUE_ID)));
         context.setCompanyIds(splitCsv(resolveHeader(request, HeaderConstants.X_COMPANY_IDS)));
         context.setDeptIds(splitCsv(resolveHeader(request, HeaderConstants.X_DEPT_IDS)));
         context.setProjectIds(splitCsv(resolveHeader(request, HeaderConstants.X_PROJECT_IDS)));

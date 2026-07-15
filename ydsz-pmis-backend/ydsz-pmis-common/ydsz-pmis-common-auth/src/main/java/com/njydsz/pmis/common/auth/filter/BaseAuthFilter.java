@@ -12,6 +12,8 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.auth.context.PermissionContextHolder;
 import com.njydsz.pmis.common.core.constant.FilterIgnoreConstant;
 import com.njydsz.pmis.common.util.auth.AuthInfo;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
@@ -56,7 +58,10 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
+            // 清理所有 ThreadLocal 变量，防止在异步线程池场景下的上下文泄漏
             RequestHolder.remove();
+            AuthContext.clear();
+            PermissionContextHolder.clear();
             doPostAuth(request, response, System.currentTimeMillis() - startTime);
         }
     }

@@ -5,7 +5,9 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +64,6 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j
@@ -277,15 +278,15 @@ public class RedisDelayedQueue {
         }
         try {
             String queueKey = formatQueueKey(queueName);
-            Set<Object> values = redisTemplate.opsForZSet().range(queueKey, 0, -1);
-            if (values != null) {
-                for (Object value : values) {
-                    if (value instanceof DelayedTask) {
-                        DelayedTask task = (DelayedTask) value;
-                        if (taskId.equals(task.getTaskId())) {
-                            Long removed = redisTemplate.opsForZSet().remove(queueKey, value);
-                            return removed != null && removed > 0;
-                        }
+            ScanOptions options = ScanOptions.scanOptions().count(100).build();
+            try (Cursor<ZSetOperations.TypedTuple<Object>> cursor =
+                    redisTemplate.opsForZSet().scan(queueKey, options)) {
+                while (cursor.hasNext()) {
+                    ZSetOperations.TypedTuple<Object> tuple = cursor.next();
+                    Object value = tuple.getValue();
+                    if (value instanceof DelayedTask task && taskId.equals(task.getTaskId())) {
+                        Long removed = redisTemplate.opsForZSet().remove(queueKey, value);
+                        return removed != null && removed > 0;
                     }
                 }
             }

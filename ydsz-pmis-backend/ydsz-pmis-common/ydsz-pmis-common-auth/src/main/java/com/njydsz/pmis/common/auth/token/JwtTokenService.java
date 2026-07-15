@@ -119,18 +119,35 @@ public class JwtTokenService implements TokenService {
             log.warn("Refresh token is blacklisted");
             return null;
         }
-        UserInfo userInfo = parseRefreshToken(refreshToken);
-        if (userInfo == null) {
-            log.warn("Refresh token validation failed");
+        // 获取分布式锁，防止并发刷新导致重放攻击
+        if (tokenBlacklistService != null && !tokenBlacklistService.tryAcquireRefreshLock(refreshToken)) {
+            log.warn("Refresh token 正在被其他请求刷新，拒绝并发刷新");
             return null;
         }
-        String newAccessToken = issueAccessToken(userInfo);
-        // 颁发新 token 后将旧 refresh_token 加入黑名单，防止 refresh_token 重放攻击
-        if (tokenBlacklistService != null && newAccessToken != null) {
-            tokenBlacklistService.addToBlacklist(refreshToken);
-            log.debug("旧 refresh_token 已加入黑名单，防止重放");
+        try {
+            // 再次检查黑名单，防止在获取锁的间隙被其他请求加入黑名单
+            if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(refreshToken)) {
+                log.warn("Refresh token was blacklisted during lock acquisition");
+                return null;
+            }
+            UserInfo userInfo = parseRefreshToken(refreshToken);
+            if (userInfo == null) {
+                log.warn("Refresh token validation failed");
+                return null;
+            }
+            String newAccessToken = issueAccessToken(userInfo);
+            // 颁发新 token 后将旧 refresh_token 加入黑名单，防止 refresh_token 重放攻击
+            if (tokenBlacklistService != null && newAccessToken != null) {
+                tokenBlacklistService.addToBlacklist(refreshToken);
+                log.debug("旧 refresh_token 已加入黑名单，防止重放");
+            }
+            return newAccessToken;
+        } finally {
+            // 释放分布式锁
+            if (tokenBlacklistService != null) {
+                tokenBlacklistService.releaseRefreshLock(refreshToken);
+            }
         }
-        return newAccessToken;
     }
 
     /**
@@ -207,6 +224,15 @@ public class JwtTokenService implements TokenService {
      * <p>校验签名 + issuer + subject，防止跨服务令牌混淆攻击
      */
     private Claims parseClaims(String token) {
+        // 快速格式校验：JWT 格式必须包含恰好两个 '.' 分隔符（header.payload.signature）
+        // 避免非 JWT 格式的垃圾输入进入昂贵的签名验证流程
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token is null or blank");
+        }
+        long dotCount = token.chars().filter(c -> c == '.').count();
+        if (dotCount != 2) {
+            throw new IllegalArgumentException("Invalid JWT format: expected 2 dots, found " + dotCount);
+        }
         JwtParserBuilder parserBuilder = Jwts.parser()
                 .verifyWith(secretKey);
         // 校验 issuer 防止跨服务令牌混淆

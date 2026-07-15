@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.jdbc.interceptor;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -30,6 +31,7 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.ParenthesedSelect;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
@@ -70,12 +72,13 @@ import net.sf.jsqlparser.statement.update.Update;
  * <pre>
  * # application.yml
  * ydsz:
- *   sql-intercept:
+ *   jdbc:
  *     logical-delete:
  *       enable: true                       # 是否启用
  *       deleted-column: deleted           # 删除标记字段名
  *       deleted-value: 1                   # 已删除标记值
  *       normal-value: 0                   # 正常记录标记值
+ *       ignore-tables: [sys_config]       # 忽略的表
  * </pre>
  *
  * <p>注意事项：
@@ -87,7 +90,6 @@ import net.sf.jsqlparser.statement.update.Update;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  * @see OptimisticLockInterceptor 乐观锁拦截器
  * @see InnerInterceptor MyBatis-Plus 内部拦截器接口
@@ -126,6 +128,11 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
     private boolean enabled = true;
 
     /**
+     * 忽略逻辑删除拦截的表集合（小写化）
+     */
+    private Set<String> ignoreTables = java.util.Collections.emptySet();
+
+    /**
      * 设置删除标记字段名
      *
      * @param deletedColumn 删除标记字段名
@@ -150,6 +157,38 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
      */
     public void setNormalValue(Long normalValue) {
         this.normalValue = normalValue;
+    }
+
+    /**
+     * 设置忽略逻辑删除拦截的表集合
+     *
+     * @param ignoreTables 忽略表集合（将被小写化存储）
+     */
+    public void setIgnoreTables(Set<String> ignoreTables) {
+        if (ignoreTables == null || ignoreTables.isEmpty()) {
+            this.ignoreTables = java.util.Collections.emptySet();
+        } else {
+            java.util.Set<String> normalized = new java.util.HashSet<>(ignoreTables.size());
+            for (String table : ignoreTables) {
+                if (table != null) {
+                    normalized.add(table.trim().toLowerCase());
+                }
+            }
+            this.ignoreTables = normalized;
+        }
+    }
+
+    /**
+     * 判断是否应该忽略该表
+     *
+     * @param tableName 表名
+     * @return 在忽略列表中返回 true，否则返回 false
+     */
+    private boolean shouldIgnoreTable(String tableName) {
+        if (tableName == null) {
+            return true;
+        }
+        return ignoreTables.contains(tableName.toLowerCase());
     }
 
     /**
@@ -305,21 +344,35 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
             return;
         }
 
-        Expression where = plainSelect.getWhere();
-        Expression deletedCondition = new EqualsTo(
-                new Column(deletedColumn), new LongValue(normalValue));
+        // 处理主表（FROM）
+        if (plainSelect.getFromItem() instanceof Table) {
+            Table fromTable = (Table) plainSelect.getFromItem();
+            if (!shouldIgnoreTable(fromTable.getName())) {
+                Expression where = plainSelect.getWhere();
+                Expression deletedCondition = new EqualsTo(
+                        new Column(deletedColumn), new LongValue(normalValue));
 
-        if (where == null) {
-            plainSelect.setWhere(deletedCondition);
-        } else {
-            plainSelect.setWhere(new AndExpression(where, deletedCondition));
+                if (where == null) {
+                    plainSelect.setWhere(deletedCondition);
+                } else {
+                    plainSelect.setWhere(new AndExpression(where, deletedCondition));
+                }
+            }
+        } else if (plainSelect.getFromItem() instanceof ParenthesedSelect) {
+            // 递归处理子查询 FROM
+            ParenthesedSelect parenthesedSelect = (ParenthesedSelect) plainSelect.getFromItem();
+            processSelectBody(parenthesedSelect.getSelect());
         }
 
+        // 处理 JOIN 表
         List<Join> joins = plainSelect.getJoins();
         if (CollectionUtils.isNotEmpty(joins)) {
             for (Join join : joins) {
                 if (join.getRightItem() instanceof Table) {
                     Table joinTable = (Table) join.getRightItem();
+                    if (shouldIgnoreTable(joinTable.getName())) {
+                        continue;
+                    }
                     Column joinDeletedColumn = buildAliasColumn(joinTable);
                     Expression joinDeletedCondition = new EqualsTo(
                             joinDeletedColumn, new LongValue(normalValue));
@@ -330,6 +383,10 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
                         JSqlParserHelper.setJoinOnExpression(join,
                                 new AndExpression(onExpression, joinDeletedCondition));
                     }
+                } else if (join.getRightItem() instanceof ParenthesedSelect) {
+                    // 递归处理 JOIN 子查询
+                    ParenthesedSelect parenthesedSelect = (ParenthesedSelect) join.getRightItem();
+                    processSelectBody(parenthesedSelect.getSelect());
                 }
             }
         }
@@ -448,7 +505,9 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
             return;
         }
 
-        if (select instanceof SetOperationList) {
+        if (select instanceof PlainSelect) {
+            processPlainSelect((PlainSelect) select);
+        } else if (select instanceof SetOperationList) {
             SetOperationList operationList = (SetOperationList) select;
             List<Select> selects = operationList.getSelects();
             if (CollectionUtils.isNotEmpty(selects)) {
@@ -507,6 +566,12 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
         if (table == null) {
             throw new IllegalStateException(
                     "Cannot convert DELETE to UPDATE: missing table reference, possibly multi-table delete");
+        }
+
+        // 检查是否在忽略列表中
+        if (shouldIgnoreTable(table.getName())) {
+            // 忽略的表不转换，返回原始 DELETE SQL
+            return delete.toString();
         }
 
         if (CollectionUtils.isNotEmpty(delete.getTables())) {

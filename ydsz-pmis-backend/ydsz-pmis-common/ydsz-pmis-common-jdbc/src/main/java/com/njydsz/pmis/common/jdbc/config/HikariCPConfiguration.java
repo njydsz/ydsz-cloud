@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -45,7 +46,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see HikariDataSource
  * @see <a href="https://github.com/brettwooldridge/HikariCP">HikariCP Official</a>
  */
@@ -56,6 +56,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class HikariCPConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(HikariCPConfiguration.class);
+
+    private final DataSourceProperties dataSourceProperties;
+
+    public HikariCPConfiguration(ObjectProvider<DataSourceProperties> dataSourcePropertiesProvider) {
+        this.dataSourceProperties = dataSourcePropertiesProvider.getIfAvailable();
+    }
 
     /**
      * 创建 HikariCP 配置
@@ -69,6 +75,22 @@ public class HikariCPConfiguration {
     @ConditionalOnMissingBean(HikariConfig.class)
     public HikariConfig hikariConfig(HikariCPProperties properties) {
         HikariConfig config = new HikariConfig();
+
+        // 从 Spring Boot DataSourceProperties 注入连接信息（spring.datasource.*）
+        if (dataSourceProperties != null) {
+            if (dataSourceProperties.getUrl() != null) {
+                config.setJdbcUrl(dataSourceProperties.getUrl());
+            }
+            if (dataSourceProperties.getUsername() != null) {
+                config.setUsername(dataSourceProperties.getUsername());
+            }
+            if (dataSourceProperties.getPassword() != null) {
+                config.setPassword(dataSourceProperties.getPassword());
+            }
+            if (dataSourceProperties.getDriverClassName() != null) {
+                config.setDriverClassName(dataSourceProperties.getDriverClassName());
+            }
+        }
 
         config.setMinimumIdle(properties.getMinimumIdle());
         config.setMaximumPoolSize(properties.getMaximumPoolSize());

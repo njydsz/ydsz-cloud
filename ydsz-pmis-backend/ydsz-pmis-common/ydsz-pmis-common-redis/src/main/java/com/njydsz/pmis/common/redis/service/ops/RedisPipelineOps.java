@@ -11,7 +11,6 @@ package com.njydsz.pmis.common.redis.service.ops;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public interface RedisPipelineOps {
 

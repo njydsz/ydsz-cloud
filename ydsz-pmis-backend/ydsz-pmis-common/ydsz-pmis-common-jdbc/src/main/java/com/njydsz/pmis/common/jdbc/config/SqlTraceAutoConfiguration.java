@@ -39,10 +39,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see SqlTraceInnerInterceptor
  * @see MybatisPlusConfiguration
- * @since 1.0.0
  */
 @Slf4j
 @AutoConfiguration

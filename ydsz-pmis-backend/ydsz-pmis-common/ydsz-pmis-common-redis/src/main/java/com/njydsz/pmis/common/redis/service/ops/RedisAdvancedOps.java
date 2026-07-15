@@ -3,7 +3,9 @@ package com.njydsz.pmis.common.redis.service.ops;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -13,8 +15,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.pmis.common.redis.cluster.ClusterSlotUtil;
 import com.njydsz.pmis.common.redis.config.RedisProperties;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
  * SCAN 是替代 KEYS 命令的安全遍历方式，不会阻塞 Redis 服务器。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j
@@ -206,6 +209,96 @@ public class RedisAdvancedOps {
         } catch (Exception e) {
             log.error("【Redis】Lua 脚本执行失败 | script={} | error={}", script, e);
             return null;
+        }
+    }
+
+    // ============================ Cluster 模式 Pipeline =============================
+
+    /**
+     * Cluster 模式下批量 GET（按槽位分批）
+     *
+     * <p>自动将 Key 按 Redis Cluster 槽位分组，对每组发起 multiGet 请求，
+     * 避免 Cluster 模式下跨槽 MOVED/ASK 异常。
+     *
+     * @param keys Key 列表
+     * @return Key-Value 映射（Key 为原始 Key，不含前缀）
+     */
+    public Map<String, Object> multiGetClusterAware(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            Map<Integer, List<String>> grouped = ClusterSlotUtil.groupBySlot(keys, k -> k);
+            Map<String, Object> result = new LinkedHashMap<>(keys.size());
+            for (List<String> slotKeys : grouped.values()) {
+                List<String> formattedKeys = formatKeys(slotKeys);
+                List<Object> values = redisTemplate.opsForValue().multiGet(formattedKeys);
+                if (values != null) {
+                    for (int i = 0; i < slotKeys.size(); i++) {
+                        result.put(slotKeys.get(i), values.get(i));
+                    }
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("【Redis】Cluster multiGet 失败 | keys={} | error={}", keys, e);
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Cluster 模式下批量 SET（按槽位分批 Pipeline）
+     *
+     * @param keyValueMap Key-Value 映射
+     */
+    public void multiSetClusterAware(Map<String, Object> keyValueMap) {
+        if (keyValueMap == null || keyValueMap.isEmpty()) {
+            return;
+        }
+        try {
+            List<String> keys = new ArrayList<>(keyValueMap.keySet());
+            Map<Integer, List<String>> grouped = ClusterSlotUtil.groupBySlot(keys, k -> k);
+            for (List<String> slotKeys : grouped.values()) {
+                redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+                    for (String key : slotKeys) {
+                        String formattedKey = formatKey(key);
+                        Object value = keyValueMap.get(key);
+                        byte[] rawKey = redisTemplate.getStringSerializer().serialize(formattedKey);
+                        byte[] rawValue = ((RedisSerializer<Object>) redisTemplate.getValueSerializer()).serialize(value);
+                        if (rawKey != null && rawValue != null) {
+                            connection.stringCommands().set(rawKey, rawValue);
+                        }
+                    }
+                    return null;
+                });
+            }
+        } catch (Exception e) {
+            log.error("【Redis】Cluster multiSet 失败 | error={}", e);
+        }
+    }
+
+    /**
+     * Cluster 模式下批量 DELETE（按槽位分批）
+     *
+     * @param keys Key 列表
+     * @return 删除的 Key 数量
+     */
+    public long deleteClusterAware(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return 0;
+        }
+        try {
+            Map<Integer, List<String>> grouped = ClusterSlotUtil.groupBySlot(keys, k -> k);
+            long totalDeleted = 0;
+            for (List<String> slotKeys : grouped.values()) {
+                List<String> formattedKeys = formatKeys(slotKeys);
+                Long deleted = redisTemplate.delete(formattedKeys);
+                totalDeleted += deleted != null ? deleted : 0;
+            }
+            return totalDeleted;
+        } catch (Exception e) {
+            log.error("【Redis】Cluster delete 失败 | keys={} | error={}", keys, e);
+            return 0;
         }
     }
 }

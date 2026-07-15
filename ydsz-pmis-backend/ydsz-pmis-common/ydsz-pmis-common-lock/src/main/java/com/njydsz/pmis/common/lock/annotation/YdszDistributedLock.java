@@ -112,4 +112,14 @@ public @interface YdszDistributedLock {
      * @return 重试间隔（毫秒）
      */
     long retryInterval() default 100;
+
+    /**
+     * 是否启用看门狗自动续期
+     * <p>true（默认）：启用 WatchDog 自动续期，防止业务执行时间超过锁过期时间
+     * <p>false：不启动续期，锁在 leaseTime 到期后自动释放
+     * <p>使用场景：快速完成的操作（如简单 CRUD）可设为 false，避免续期开销
+     *
+     * @return 是否启用看门狗自动续期
+     */
+    boolean autoRenew() default true;
 }

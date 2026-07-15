@@ -15,6 +15,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,12 @@ public final class SensitiveDataProcessor {
      * 默认最大递归深度
      */
     private static final int MAX_DEPTH = 10;
+
+    /**
+     * 类是否有敏感字段缓存（P2-18 性能优化：快速跳过无注解类）
+     * Key: Class对象，Value: 是否包含 @SensitiveData 注解
+     */
+    private static final Map<Class<?>, Boolean> SENSITIVE_CLASS_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 简单类型缓存，避免重复判断
@@ -107,6 +114,11 @@ public final class SensitiveDataProcessor {
 
         Class<?> clazz = obj.getClass();
         if (isSimpleType(clazz)) {
+            return obj;
+        }
+
+        // P2-18 性能优化：快速跳过不含 @SensitiveData 注解的类，避免不必要的反射
+        if (!hasSensitiveFields(clazz)) {
             return obj;
         }
 
@@ -397,5 +409,34 @@ public final class SensitiveDataProcessor {
                 || Number.class.isAssignableFrom(clazz)
                 || Temporal.class.isAssignableFrom(clazz)
                 || Date.class.isAssignableFrom(clazz);
+    }
+
+    /**
+     * 检查类是否包含 @SensitiveData 注解字段（带缓存）
+     *
+     * <p>P2-18 性能优化：首次检查后缓存结果，后续直接从缓存读取，
+     * 避免对不含敏感注解的类进行不必要的反射处理。
+     *
+     * @param clazz 待检查的类
+     * @return true 表示该类（或其父类）包含 @SensitiveData 注解字段
+     */
+    private static boolean hasSensitiveFields(Class<?> clazz) {
+        return SENSITIVE_CLASS_CACHE.computeIfAbsent(clazz, SensitiveDataProcessor::doHasSensitiveFields);
+    }
+
+    /**
+     * 实际执行敏感字段检查（递归检查类及其父类）
+     */
+    private static boolean doHasSensitiveFields(Class<?> clazz) {
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            for (Field field : current.getDeclaredFields()) {
+                if (field.isAnnotationPresent(SensitiveData.class)) {
+                    return true;
+                }
+            }
+            current = current.getSuperclass();
+        }
+        return false;
     }
 }

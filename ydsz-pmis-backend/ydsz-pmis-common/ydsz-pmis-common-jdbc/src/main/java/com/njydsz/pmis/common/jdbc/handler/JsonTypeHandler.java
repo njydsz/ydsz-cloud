@@ -38,12 +38,12 @@ import com.njydsz.pmis.common.json.Json;
  * </pre>
  *
  * <h2>数据库字段要求</h2>
- * <p>对应的数据库字段类型应为 VARCHAR、TEXT 或其他文本类型。</p>
+ * <p>对应的数据库字段类型应为 VARCHAR、TEXT、JSON 或 JSONB（PostgreSQL 原生支持）。</p>
+ * <p>对于 PostgreSQL JSONB 列，使用 {@code Types.OTHER} 设置参数，确保驱动正确处理二进制 JSON。</p>
  *
  * @param <T> Java 对象类型
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  * @see <a href="https://mybatis.org/mybatis-3/zh/configuration.html#typeHandlers">MyBatis TypeHandler</a>
  */
@@ -74,7 +74,10 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
      */
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, JdbcType jdbcType) throws SQLException {
-        ps.setString(i, toJsonString(parameter));
+        String json = toJsonString(parameter);
+        // 使用 Types.OTHER 设置参数，兼容 PostgreSQL JSON/JSONB 列和其他数据库的 VARCHAR/TEXT 列
+        // PostgreSQL 驱动会根据列类型自动处理 JSONB 二进制格式
+        ps.setObject(i, json, java.sql.Types.OTHER);
     }
 
     /**

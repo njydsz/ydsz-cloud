@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -16,10 +19,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.advice.XssRequestBodyAdvice;
 import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
+import com.njydsz.pmis.common.safe.alert.SecurityEventAggregator;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.config.condition.XssConverterModeCondition;
 import com.njydsz.pmis.common.safe.config.condition.XssFilterModeCondition;
@@ -30,12 +37,18 @@ import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.pmis.common.safe.csrf.impl.DefaultCsrfTokenGenerator;
 import com.njydsz.pmis.common.safe.csrf.impl.InMemoryCsrfTokenRepository;
 import com.njydsz.pmis.common.safe.csrf.impl.RedisCsrfTokenRepository;
+import com.njydsz.pmis.common.safe.crypto.NonceCache;
+import com.njydsz.pmis.common.safe.filter.ApiSignatureFilter;
 import com.njydsz.pmis.common.safe.filter.CsrfFilter;
+import com.njydsz.pmis.common.safe.filter.IpAccessFilter;
 import com.njydsz.pmis.common.safe.filter.SecurityHeaderFilter;
 import com.njydsz.pmis.common.safe.filter.SqlInjectionFilter;
 import com.njydsz.pmis.common.safe.filter.XssFilter;
+import com.njydsz.pmis.common.safe.ip.IpAccessService;
+import com.njydsz.pmis.common.safe.ratelimit.RateLimitAspect;
 import com.njydsz.pmis.common.safe.ratelimit.RateLimitFilter;
 import com.njydsz.pmis.common.safe.ratelimit.RateLimitProperties;
+import com.njydsz.pmis.common.safe.ratelimit.MultiDimensionRateLimiter;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
 
@@ -65,17 +78,64 @@ import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
  */
 @AutoConfiguration
 @ConditionalOnClass(FilterRegistrationBean.class)
+@EnableScheduling
 @EnableConfigurationProperties({
         SafeXssProperties.class,
         SecurityHeaderProperties.class,
         CsrfProperties.class,
         SensitiveDataConfiguration.class,
         SafeAlertProperties.class,
-        RateLimitProperties.class
+        RateLimitProperties.class,
+        ApiSignatureProperties.class,
+        IpAccessProperties.class,
+        AutoBlockProperties.class,
+        SqlInjectionProperties.class
 })
 public class SafeConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SafeConfiguration.class);
+
+    @Value("${ydsz.safe.security-headers.enabled:true}")
+    private boolean securityHeadersEnabled;
+
+    @Value("${ydsz.safe.csrf.enabled:true}")
+    private boolean csrfEnabled;
+
+    @Value("${ydsz.safe.ratelimit.enabled:false}")
+    private boolean rateLimitEnabled;
+
+    @Value("${ydsz.safe.ip-access.enabled:false}")
+    private boolean ipAccessEnabled;
+
+    @Value("${ydsz.safe.api-signature.enabled:false}")
+    private boolean apiSignatureEnabled;
+
+    @Value("${ydsz.safe.auto-block.enabled:true}")
+    private boolean autoBlockEnabled;
+
+    /**
+     * P2-17: 安全模块启动摘要日志
+     *
+     * <p>启动时输出已启用/禁用的安全能力摘要，方便运维确认安全配置状态。
+     */
+    @PostConstruct
+    public void logStartupSummary() {
+        log.info("==================== [Safe Module] Security Capabilities Summary ====================");
+        log.info("  XSS Filter:        ENABLED (OWASP Sanitizer + configurable policies)");
+        log.info("  SQL Injection:     ENABLED (regex-based detection)");
+        log.info("  CSRF:              {}", csrfEnabled ? "ENABLED" : "DISABLED");
+        log.info("  Security Headers:  {}", securityHeadersEnabled ? "ENABLED" : "DISABLED");
+        log.info("  Rate Limit:        {} (Filter + @RateLimit AOP)", rateLimitEnabled ? "ENABLED" : "DISABLED");
+        log.info("  IP Access Control:  {}", ipAccessEnabled ? "ENABLED" : "DISABLED");
+        log.info("  API Signature:     {}", apiSignatureEnabled ? "ENABLED" : "DISABLED");
+        log.info("  Auto Block:        {}", autoBlockEnabled ? "ENABLED" : "DISABLED");
+        log.info("  Sensitive Data:    ENABLED (18 types + Record support + role-based control)");
+        log.info("  Captcha:           ENABLED (image + arithmetic + slider)");
+        log.info("  Crypto:            ENABLED (AES-256-GCM + Nonce cache)");
+        log.info("  Metrics:           ENABLED (Micrometer optional)");
+        log.info("  Audit Logger:      ENABLED (structured JSON + traceId)");
+        log.info("====================================================================================");
+    }
 
     /**
      * 注册安全响应头过滤器
@@ -112,6 +172,33 @@ public class SafeConfiguration {
     @ConditionalOnMissingBean(SecurityEventPublisher.class)
     public SecurityEventPublisher securityEventPublisher() {
         return new SecurityEventPublisher();
+    }
+
+    /**
+     * 注册安全事件自动响应聚合器
+     *
+     * <p>监听安全事件，基于滑动窗口统计同一 IP 的安全事件频率。
+     * 当同一 IP 在窗口内触发超过阈值数量的安全事件时，自动触发 IP 封禁。
+     * IpAccessService 为可选依赖，未启用 IP 访问控制时仅记录日志。
+     *
+     * @param properties       自动封禁配置属性
+     * @param ipAccessService IP 访问控制服务（可选）
+     * @return 安全事件聚合器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SecurityEventAggregator.class)
+    @ConditionalOnProperty(prefix = "ydsz.safe.auto-block", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public SecurityEventAggregator securityEventAggregator(
+            AutoBlockProperties properties,
+            ObjectProvider<IpAccessService> ipAccessService) {
+        log.info("注册安全事件自动响应聚合器: threshold={}, window={}s",
+                properties.getThreshold(), properties.getWindowSeconds());
+        return new SecurityEventAggregator(
+                ipAccessService.getIfAvailable(),
+                properties.isEnabled(),
+                properties.getThreshold(),
+                properties.getWindowSeconds()
+        );
     }
 
     /**
@@ -294,6 +381,133 @@ public class SafeConfiguration {
         registrationBean.setName("rateLimitFilter");
         registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+        return registrationBean;
+    }
+
+    /**
+     * 注册方法级限流 AOP 切面
+     *
+     * <p>拦截标注了 {@code @RateLimit} 注解的 Controller 方法，基于 Redis 滑动窗口
+     * 实现方法级限流。支持 SPEL 表达式解析 key，实现按用户 ID、按 IP 等维度的精细限流。
+     *
+     * <p>仅在 RedisService 可用时注册，与 {@link RateLimitFilter} 互不冲突——
+     * Filter 负责全局限流，Aspect 负责方法级限流。
+     *
+     * @param properties   限流配置属性
+     * @param redisService Redis 服务
+     * @return 方法级限流切面实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(RateLimitAspect.class)
+    @ConditionalOnBean(RedisService.class)
+    public RateLimitAspect rateLimitAspect(RateLimitProperties properties, RedisService redisService) {
+        log.info("注册方法级限流 AOP 切面");
+        return new RateLimitAspect(redisService, properties);
+    }
+
+    /**
+     * P3-21: 注册多维度限流器
+     *
+     * <p>支持按 IP+USER+API 等多维度组合进行限流，使用 Redis Lua 脚本保证原子性。
+     * 仅在 RedisService 和 StringRedisTemplate 可用时注册。
+     *
+     * @param stringRedisTemplate Spring Data Redis StringRedisTemplate
+     * @return 多维度限流器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(MultiDimensionRateLimiter.class)
+    @ConditionalOnBean(RedisService.class)
+    @ConditionalOnProperty(prefix = "ydsz.safe.ratelimit", name = "enabled", havingValue = "true")
+    public MultiDimensionRateLimiter multiDimensionRateLimiter(
+            StringRedisTemplate stringRedisTemplate) {
+        log.info("注册多维度限流器");
+        return new MultiDimensionRateLimiter(stringRedisTemplate);
+    }
+
+    /**
+     * 注册 IP 访问控制服务
+     *
+     * <p>提供 IP 黑白名单管理能力，支持 CIDR 网段匹配、Redis 持久化存储和本地缓存。
+     * 仅在 {@code ydsz.safe.ip-access.enabled=true} 且 Redis 可用时注册。
+     *
+     * @param properties   IP 访问控制配置
+     * @param redisService Redis 服务
+     * @return IP 访问控制服务实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(IpAccessService.class)
+    @ConditionalOnBean(RedisService.class)
+    @ConditionalOnProperty(prefix = "ydsz.safe.ip-access", name = "enabled", havingValue = "true")
+    public IpAccessService ipAccessService(IpAccessProperties properties, RedisService redisService) {
+        log.info("注册 IP 访问控制服务: mode={}", properties.getMode());
+        return new IpAccessService(properties, redisService);
+    }
+
+    /**
+     * 注册 IP 访问控制过滤器
+     *
+     * <p>在请求进入安全过滤器链之前执行 IP 黑白名单检查，命中黑名单的 IP 返回 403。
+     * 过滤器优先级最高（HIGHEST_PRECEDENCE），确保恶意 IP 在进入其他过滤器之前被拦截。
+     *
+     * @param ipAccessService IP 访问控制服务
+     * @param eventPublisher   安全事件发布器
+     * @param properties       IP 访问控制配置
+     * @return IP 访问控制过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "ipAccessFilterRegistration")
+    @ConditionalOnBean(IpAccessService.class)
+    public FilterRegistrationBean<IpAccessFilter> ipAccessFilterRegistration(
+            IpAccessService ipAccessService,
+            SecurityEventPublisher eventPublisher,
+            IpAccessProperties properties) {
+        FilterRegistrationBean<IpAccessFilter> registrationBean = new FilterRegistrationBean<>(
+                new IpAccessFilter(ipAccessService, eventPublisher, properties.getExcludes()));
+        registrationBean.setName("ipAccessFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registrationBean;
+    }
+
+    /**
+     * 注册防重放 Nonce 缓存
+     *
+     * <p>用于 API 签名验证的 nonce 防重放存储，基于 ydsz-pmis-common-cache 实现 TTL 自动过期。
+     * 定时清理任务每 60 秒执行一次（需宿主应用开启 {@code @EnableScheduling}）。
+     *
+     * @return Nonce 缓存实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(NonceCache.class)
+    public NonceCache nonceCache() {
+        log.info("注册防重放 Nonce 缓存");
+        return new NonceCache();
+    }
+
+    /**
+     * 注册 API 签名验证过滤器
+     *
+     * <p>基于 {@code timestamp + nonce + signature} 三要素实现 API 请求防篡改和防重放。
+     * 使用 HMAC-SHA256 算法计算签名，确保请求在传输过程中未被篡改。
+     * 仅在 {@code ydsz.safe.api-signature.enabled=true} 时注册。
+     *
+     * @param properties     签名配置属性
+     * @param nonceCache     防重放 Nonce 缓存
+     * @param eventPublisher 安全事件发布器
+     * @return API 签名验证过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "apiSignatureFilterRegistration")
+    @ConditionalOnProperty(prefix = "ydsz.safe.api-signature", name = "enabled", havingValue = "true")
+    public FilterRegistrationBean<ApiSignatureFilter> apiSignatureFilterRegistration(
+            ApiSignatureProperties properties,
+            NonceCache nonceCache,
+            SecurityEventPublisher eventPublisher) {
+        FilterRegistrationBean<ApiSignatureFilter> registrationBean = new FilterRegistrationBean<>(
+                new ApiSignatureFilter(properties, nonceCache, eventPublisher));
+        registrationBean.setName("apiSignatureFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
         return registrationBean;
     }
 

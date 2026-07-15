@@ -42,8 +42,6 @@ package com.njydsz.pmis.common.redis.enums;
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.5.0
  */
 public interface RedisFailurePolicy {

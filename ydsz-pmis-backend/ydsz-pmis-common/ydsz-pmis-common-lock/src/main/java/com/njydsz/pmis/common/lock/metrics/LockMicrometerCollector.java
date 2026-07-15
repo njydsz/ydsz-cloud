@@ -70,6 +70,10 @@ public class LockMicrometerCollector {
      */
     private static final String METRIC_WATCHDOG_RENEW_COUNT = "lock.watchdog.renew.count";
     /**
+     * 幂等命中次数指标名称
+     */
+    private static final String METRIC_IDEMPOTENT_HIT_COUNT = "lock.idempotent.hit.count";
+    /**
      * 锁类型标签键
      */
     private static final String TAG_LOCK_TYPE = "lock_type";
@@ -93,6 +97,19 @@ public class LockMicrometerCollector {
         Gauge.builder(METRIC_ACTIVE_LOCKS, activeLocksCounter, AtomicInteger::get)
                 .description("Current number of active locks")
                 .register(registry);
+        // 预注册 Timer，确保 P50/P90/P99/P999 分位数被采集
+        Timer.builder(METRIC_HOLD_DURATION)
+                .tag(TAG_LOCK_TYPE, "init")
+                .description("Lock hold duration")
+                .publishPercentileHistogram()
+                .publishPercentiles(0.5, 0.9, 0.99, 0.999)
+                .register(registry);
+        Timer.builder(METRIC_WAIT_DURATION)
+                .tag(TAG_LOCK_TYPE, "init")
+                .description("Lock wait time distribution")
+                .publishPercentileHistogram()
+                .publishPercentiles(0.5, 0.9, 0.99, 0.999)
+                .register(registry);
     }
 
     // --- 原有指标 ---
@@ -108,6 +125,12 @@ public class LockMicrometerCollector {
                 .description("Total number of successful lock acquisitions")
                 .register(registry)
                 .increment();
+        Timer.builder(METRIC_WAIT_DURATION)
+                .tag(TAG_LOCK_TYPE, "unknown")
+                .description("Lock wait time distribution")
+                .publishPercentiles(0.5, 0.9, 0.99, 0.999)
+                .register(registry)
+                .record(Duration.ofMillis(waitTimeMillis));
     }
 
     /**
@@ -122,6 +145,12 @@ public class LockMicrometerCollector {
                 .description("Total number of successful lock acquisitions")
                 .register(registry)
                 .increment();
+        Timer.builder(METRIC_WAIT_DURATION)
+                .tag(TAG_LOCK_TYPE, lockType)
+                .description("Lock wait time distribution")
+                .publishPercentiles(0.5, 0.9, 0.99, 0.999)
+                .register(registry)
+                .record(Duration.ofMillis(waitTimeMillis));
     }
 
     /**
@@ -218,7 +247,7 @@ public class LockMicrometerCollector {
         Timer.builder(METRIC_WAIT_DURATION)
                 .tag(TAG_LOCK_TYPE, "unknown")
                 .description("Lock wait time distribution")
-                .publishPercentileHistogram()
+                .publishPercentiles(0.5, 0.9, 0.99, 0.999)
                 .register(registry)
                 .record(Duration.ofMillis(waitTimeMillis));
     }
@@ -230,7 +259,7 @@ public class LockMicrometerCollector {
         Timer.builder(METRIC_WAIT_DURATION)
                 .tag(TAG_LOCK_TYPE, lockType)
                 .description("Lock wait time distribution")
-                .publishPercentileHistogram()
+                .publishPercentiles(0.5, 0.9, 0.99, 0.999)
                 .register(registry)
                 .record(Duration.ofMillis(waitTimeMillis));
     }
@@ -296,6 +325,16 @@ public class LockMicrometerCollector {
         Counter.builder(METRIC_WATCHDOG_RENEW_COUNT)
                 .tag(TAG_LOCK_TYPE, lockType)
                 .description("Total number of watchdog renewals")
+                .register(registry)
+                .increment();
+    }
+
+    /**
+     * 记录幂等命中次数
+     */
+    void recordIdempotentHit() {
+        Counter.builder(METRIC_IDEMPOTENT_HIT_COUNT)
+                .description("Total number of idempotent hits (rejected duplicate requests)")
                 .register(registry)
                 .increment();
     }

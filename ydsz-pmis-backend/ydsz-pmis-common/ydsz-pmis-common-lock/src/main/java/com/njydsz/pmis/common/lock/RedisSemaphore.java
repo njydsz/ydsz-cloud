@@ -26,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>初始化：Lua 原子 NX set 初始 permits，防止重复初始化</li>
  * </ul>
  *
+ * <p><b>等待策略：</b>
+ * 使用指数退避策略（10ms → 200ms）替代固定 50ms 轮询，减少无效 Redis 调用。
+ *
  * <p><b>超时自动释放：</b>
  * <ul>
  *   <li>acquireWithTimeout：获取信号量后启动定时任务，超时后自动 release</li>
@@ -37,11 +40,21 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ *
  * @since 3.0.0
  */
 @Slf4j
 public class RedisSemaphore implements DistributedLocker {
+
+    /**
+     * 最小退避等待时间（毫秒）
+     */
+    private static final long MIN_BACKOFF_MILLIS = 10;
+
+    /**
+     * 最大退避等待时间（毫秒）
+     */
+    private static final long MAX_BACKOFF_MILLIS = 200;
 
     /**
      * Redis 服务，用于执行 Lua 脚本
@@ -108,7 +121,7 @@ public class RedisSemaphore implements DistributedLocker {
                     "else return -1 end";
 
     /**
-     * 构造 RedisSemaphore（需要注入调度线程池，便于 Spring 管理和配置化）
+     * 构造 RedisSemaphore（无命名空间，需要注入调度线程池，便于 Spring 管理和配置化）
      *
      * @param redisService    Redis 服务
      * @param key             信号量键
@@ -118,12 +131,50 @@ public class RedisSemaphore implements DistributedLocker {
      */
     public RedisSemaphore(RedisService redisService, String key, int permits, long expireMillis,
                           TaskScheduler timeoutScheduler) {
+        this(redisService, key, permits, expireMillis, timeoutScheduler, null);
+    }
+
+    /**
+     * 构造 RedisSemaphore（带命名空间）
+     *
+     * @param redisService    Redis 服务
+     * @param key             信号量键
+     * @param permits         许可数量
+     * @param expireMillis    过期时间（毫秒）
+     * @param timeoutScheduler 超时调度线程池
+     * @param namespace       锁键命名空间前缀，用于多应用共享 Redis 时的隔离
+     */
+    public RedisSemaphore(RedisService redisService, String key, int permits, long expireMillis,
+                          TaskScheduler timeoutScheduler, String namespace) {
         this.redisService = redisService;
-        this.key = "semaphore:" + key;
+        String prefix = (namespace != null && !namespace.isEmpty()) ? namespace + ":lock:" : "";
+        this.key = prefix + "semaphore:" + key;
         this.permits = permits;
         this.expireMillis = expireMillis;
         this.timeoutScheduler = timeoutScheduler;
-        // 懒初始化：不在构造函数中初始化 permits，延迟到首次使用时初始化
+    }
+
+    /**
+     * 指数退避等待
+     *
+     * @param deadline       截止时间戳
+     * @param currentBackoff 当前退避时间
+     * @return 下一次退避时间
+     */
+    private static long backoffSleep(long deadline, long currentBackoff) {
+        long remaining = deadline - System.currentTimeMillis();
+        if (remaining <= 0) {
+            return currentBackoff;
+        }
+        long sleepMillis = Math.min(remaining, currentBackoff);
+        if (sleepMillis > 0) {
+            try {
+                Thread.sleep(sleepMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        return Math.min(currentBackoff * 2, MAX_BACKOFF_MILLIS);
     }
 
     /**
@@ -131,7 +182,6 @@ public class RedisSemaphore implements DistributedLocker {
      * <p>使用懒初始化模式，避免在 Spring 启动时执行 Redis 操作导致连接问题
      */
     private void initPermits() {
-        // 使用 CAS 保证只初始化一次
         if (!initialized.compareAndSet(false, true)) {
             return;
         }
@@ -145,7 +195,6 @@ public class RedisSemaphore implements DistributedLocker {
             );
         } catch (Exception e) {
             log.warn("信号量初始化失败: {}", key, e);
-            // 初始化失败时重置标志，允许下次重试
             initialized.set(false);
         }
     }
@@ -170,15 +219,17 @@ public class RedisSemaphore implements DistributedLocker {
 
     /**
      * 尝试获取信号量（带等待时间）
+     * <p>使用指数退避策略（10ms → 200ms）替代固定 50ms 轮询间隔。
      *
      * @param timeout 最大等待时间
      * @param unit    时间单位
      * @return true-获取成功，false-获取失败或超时
      */
     public boolean tryAcquire(long timeout, TimeUnit unit) {
-        ensureInitialized(); // 确保已初始化
+        ensureInitialized();
         long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
-        boolean reinitialized = false; // 标记是否已重新初始化过，避免重复重置
+        boolean reinitialized = false;
+        long currentBackoff = MIN_BACKOFF_MILLIS;
         while (true) {
             try {
                 Long result = redisService.executeScript(
@@ -190,40 +241,29 @@ public class RedisSemaphore implements DistributedLocker {
                 if (result != null && result >= 0) {
                     return true;
                 }
-                // 返回 -1 表示 key 不存在（已过期）或许可耗尽；
-                // key 过期后 initialized 仍为 true 会导致后续不再重新初始化，信号量永久不可用。
-                // 此处重置 initialized 并重新初始化后重试一次。
                 if (result != null && result == -1L && !reinitialized) {
                     reinitialized = true;
                     if (initialized.compareAndSet(true, false)) {
                         initPermits();
-                        continue; // 重新初始化后立即重试 acquire
+                        continue;
                     }
                 }
             } catch (Exception e) {
                 log.warn("信号量获取异常: {}", key, e);
             }
-            if (System.currentTimeMillis() > deadline) {
+            if (System.currentTimeMillis() >= deadline) {
                 return false;
             }
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return false;
-            }
+            currentBackoff = backoffSleep(deadline, currentBackoff);
         }
     }
 
     /**
      * 获取信号量（带超时自动释放）
      *
-     * <p>获取信号量成功后，启动一个定时任务，在指定超时时间后自动 release。
-     * 如果业务代码在超时前正常调用 {@link #release(String)}，定时任务将被取消。
-     *
      * @param timeout 超时时间
      * @param unit    时间单位
-     * @return 获取成功返回 acquireId（用于 release 时取消定时任务），获取失败返回 null
+     * @return 获取成功返回 acquireId，获取失败返回 null
      */
     public String acquireWithTimeout(long timeout, TimeUnit unit) {
         if (tryAcquire(0, TimeUnit.MILLISECONDS)) {
@@ -242,8 +282,6 @@ public class RedisSemaphore implements DistributedLocker {
 
     /**
      * 获取信号量（带等待时间和超时自动释放）
-     *
-     * <p>在指定等待时间内尝试获取信号量，成功后启动超时自动释放定时任务。
      *
      * @param waitTimeout 等待获取信号量的超时时间
      * @param waitUnit    等待时间单位
@@ -270,8 +308,7 @@ public class RedisSemaphore implements DistributedLocker {
     /**
      * 释放信号量（无 acquireId，不取消定时任务）
      *
-     * <p>适用于未使用 acquireWithTimeout 获取信号量的场景。
-     * 如果使用了 acquireWithTimeout，请使用 {@link #release(String)} 方法。
+     * @param acquireId 获取信号量时返回的 acquireId
      */
     public void release() {
         releaseInternal();
@@ -279,9 +316,6 @@ public class RedisSemaphore implements DistributedLocker {
 
     /**
      * 释放信号量（带 acquireId，取消超时自动释放定时任务）
-     *
-     * <p>如果业务代码在超时前正常完成，调用此方法释放信号量，
-     * 同时取消对应的超时自动释放定时任务，避免误释放。
      *
      * @param acquireId 获取信号量时返回的 acquireId
      */
@@ -317,16 +351,6 @@ public class RedisSemaphore implements DistributedLocker {
 
     // ======================== DistributedLocker 接口实现 ========================
 
-    /**
-     * 尝试获取一个信号量许可（非阻塞）
-     * <p>实现 {@link DistributedLocker#tryLock(String, long, TimeUnit)}，
-     * 内部使用 {@code tryAcquire()} 方法。
-     *
-     * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
-     * @param leaseTime 许可持有时间（毫秒精度）
-     * @param timeUnit  时间单位
-     * @return 获取成功返回 acquireId，获取失败返回 null
-     */
     @Override
     public String tryLock(String lockKey, long leaseTime, TimeUnit timeUnit) {
         if (tryAcquire()) {
@@ -345,17 +369,6 @@ public class RedisSemaphore implements DistributedLocker {
         return null;
     }
 
-    /**
-     * 尝试获取一个信号量许可（带等待时间）
-     * <p>实现 {@link DistributedLocker#tryLock(String, long, long, TimeUnit)}，
-     * 内部使用 {@code tryAcquire(timeout, unit)} 方法。
-     *
-     * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
-     * @param waitTime  最大等待时间
-     * @param leaseTime 许可持有时间（自动释放超时）
-     * @param timeUnit  时间单位
-     * @return 获取成功返回 acquireId，等待超时返回 null
-     */
     @Override
     public String tryLock(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) throws InterruptedException {
         if (tryAcquire(waitTime, timeUnit)) {
@@ -374,29 +387,12 @@ public class RedisSemaphore implements DistributedLocker {
         return null;
     }
 
-    /**
-     * 释放信号量许可
-     * <p>实现 {@link DistributedLocker#unlock(String, String)}，
-     * 同时取消超时自动释放定时任务。
-     *
-     * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
-     * @param lockValue 获取锁时返回的 acquireId
-     * @return true-释放成功，false-释放失败
-     */
     @Override
     public boolean unlock(String lockKey, String lockValue) {
         release(lockValue);
         return true;
     }
 
-    /**
-     * 检查信号量是否还有可用许可
-     * <p>实现 {@link DistributedLocker#isLocked(String)}，
-     * 当所有许可都被占用时返回 true。
-     *
-     * @param lockKey 锁的键（当前实现忽略，使用构造时传入的 key）
-     * @return true-所有许可都被占用，false-还有可用许可
-     */
     @Override
     public boolean isLocked(String lockKey) {
         try {
@@ -412,13 +408,6 @@ public class RedisSemaphore implements DistributedLocker {
         }
     }
 
-    /**
-     * 获取信号量 key 的剩余过期时间
-     * <p>实现 {@link DistributedLocker#getRemainTime(String)}。
-     *
-     * @param lockKey 锁的键（当前实现忽略，使用构造时传入的 key）
-     * @return 剩余时间（毫秒），-1 表示 key 不存在，-2 表示获取失败
-     */
     @Override
     public long getRemainTime(String lockKey) {
         try {

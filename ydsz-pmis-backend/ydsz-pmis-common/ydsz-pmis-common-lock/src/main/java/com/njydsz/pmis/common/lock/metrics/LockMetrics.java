@@ -84,6 +84,10 @@ public class LockMetrics {
      * 看门狗续期次数
      */
     private final LongAdder watchdogRenewCount = new LongAdder();
+    /**
+     * 幂等命中次数
+     */
+    private final LongAdder idempotentHitCount = new LongAdder();
 
     /**
      * Micrometer 指标收集器（可选，当 classpath 存在 MeterRegistry 时设置）
@@ -282,6 +286,16 @@ public class LockMetrics {
     }
 
     /**
+     * 记录幂等命中次数
+     */
+    public void recordIdempotentHit() {
+        idempotentHitCount.increment();
+        if (micrometerCollector != null) {
+            micrometerCollector.recordIdempotentHit();
+        }
+    }
+
+    /**
      * 绑定 Micrometer MeterRegistry，启用 Prometheus 指标采集
      *
      * <p>此方法仅在 MeterRegistry 存在于 classpath 时可调用，
@@ -377,11 +391,20 @@ public class LockMetrics {
         return watchdogRenewCount.sum();
     }
 
+    /**
+     * 获取幂等命中总次数
+     *
+     * @return 幂等命中次数
+     */
+    public long getIdempotentHitCount() {
+        return idempotentHitCount.sum();
+    }
+
     @Override
     public String toString() {
-        return String.format("LockMetrics{success=%d, fail=%d, release=%d, competition=%d, active=%d, timeout=%d, renew=%d, avgWait=%.1fms, avgHold=%.1fms}",
+        return String.format("LockMetrics{success=%d, fail=%d, release=%d, competition=%d, active=%d, timeout=%d, renew=%d, idempotentHit=%d, avgWait=%.1fms, avgHold=%.1fms}",
                 getAcquireSuccessCount(), getAcquireFailCount(), getReleaseCount(),
                 getCompetitionCount(), getActiveLocks(), getLockTimeoutCount(), getWatchdogRenewCount(),
-                getAverageWaitTimeMillis(), getAverageHoldTimeMillis());
+                getAverageWaitTimeMillis(), getAverageHoldTimeMillis(), getIdempotentHitCount());
     }
 }

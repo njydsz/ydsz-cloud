@@ -24,6 +24,9 @@ import lombok.Data;
  *       max-size: 32
  *       queue-capacity: 256
  *     scheduler-pool-size: 2
+ *     idempotent:
+ *       default-ttl-seconds: 5
+ *       key-prefix: pmis:idem:
  * }</pre>
  *
  * <p><b>兼容性说明：</b>
@@ -93,6 +96,11 @@ public class LockProperties {
      */
     private MultiLock multiLock = new MultiLock();
 
+    /**
+     * 幂等配置
+     */
+    private Idempotent idempotent = new Idempotent();
+
     @Data
     public static class ThreadPool {
         /** 核心线程数 */
@@ -120,5 +128,24 @@ public class LockProperties {
          */
         @Min(1)
         private int renewIntervalSeconds = 10;
+    }
+
+    /**
+     * 幂等配置
+     */
+    @Data
+    public static class Idempotent {
+        /**
+         * 幂等锁默认过期时间（秒），默认 5 秒
+         * <p>覆盖大部分重复点击场景
+         */
+        @Min(1)
+        private int defaultTtlSeconds = 5;
+
+        /**
+         * 幂等键 Redis 前缀
+         * <p>所有幂等键统一以此前缀开头，便于排查和清理
+         */
+        private String keyPrefix = "pmis:idem:";
     }
 }

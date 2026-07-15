@@ -18,9 +18,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.pmis.common.safe.config.CsrfProperties;
+import com.njydsz.pmis.common.safe.config.CsrfProperties.CsrfMode;
 import com.njydsz.pmis.common.safe.csrf.CsrfToken;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 /**
  * CSRF 防护过滤器
@@ -59,6 +62,9 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
 public class CsrfFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(CsrfFilter.class);
+
+    /** 安全随机数生成器（Double Submit 模式使用） */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /** CSRF Cookie 名称 */
     private static final String CSRF_TOKEN_COOKIE = "CSRF-TOKEN";
@@ -154,14 +160,18 @@ public class CsrfFilter extends OncePerRequestFilter {
 
     private void handleGetRequest(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        String sessionId = getSessionId(request);
-
-        CsrfToken token = tokenRepository.createToken(sessionId);
-
-        Cookie cookie = buildCsrfCookie(token.getToken(), request);
-        response.addCookie(cookie);
-
-        response.setHeader(properties.getTokenHeader(), token.getToken());
+        if (properties.getMode() == CsrfMode.DOUBLE_SUBMIT) {
+            String token = generateRandomToken();
+            Cookie cookie = buildCsrfCookie(token, request);
+            response.addCookie(cookie);
+            response.setHeader(properties.getTokenHeader(), token);
+        } else {
+            String sessionId = getSessionId(request);
+            CsrfToken token = tokenRepository.createToken(sessionId);
+            Cookie cookie = buildCsrfCookie(token.getToken(), request);
+            response.addCookie(cookie);
+            response.setHeader(properties.getTokenHeader(), token.getToken());
+        }
 
         chain.doFilter(request, response);
     }
@@ -278,6 +288,45 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     private boolean validateCsrfToken(HttpServletRequest request) {
+        if (properties.getMode() == CsrfMode.DOUBLE_SUBMIT) {
+            return validateDoubleSubmitToken(request);
+        }
+        return validateSynchronizerToken(request);
+    }
+
+    /**
+     * Double Submit Cookie 模式验证：比对 Cookie 中的 Token 与 Header/Parameter 中的 Token
+     */
+    private boolean validateDoubleSubmitToken(HttpServletRequest request) {
+        String cookieToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (CSRF_TOKEN_COOKIE.equals(cookie.getName())) {
+                    cookieToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        String headerToken = request.getHeader(properties.getTokenHeader());
+        String paramToken = request.getParameter(properties.getTokenParameter());
+        String submittedToken = headerToken != null ? headerToken : paramToken;
+
+        if (cookieToken == null || cookieToken.isEmpty() || submittedToken == null || submittedToken.isEmpty()) {
+            logger.debug("CSRF Double Submit: token missing | cookie={}, header={}",
+                    cookieToken != null ? "present" : "absent",
+                    headerToken != null ? "present" : "absent");
+            return false;
+        }
+
+        return constantTimeEquals(cookieToken, submittedToken);
+    }
+
+    /**
+     * Synchronizer Token Pattern 验证：服务端存储校验
+     */
+    private boolean validateSynchronizerToken(HttpServletRequest request) {
         String sessionId = getSessionId(request);
         if (sessionId == null) {
             return false;
@@ -295,11 +344,33 @@ public class CsrfFilter extends OncePerRequestFilter {
 
         boolean valid = tokenRepository.validateToken(token, sessionId);
         if (valid) {
-            // 验证通过后生成新 token，通过 request 属性传递给 doFilterInternal 写入 response
             CsrfToken newToken = tokenRepository.createToken(sessionId);
             request.setAttribute("NEW_CSRF_TOKEN", newToken.getToken());
         }
         return valid;
+    }
+
+    /**
+     * 生成随机 CSRF Token（Double Submit 模式使用）
+     */
+    private String generateRandomToken() {
+        byte[] randomBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+    /**
+     * 常量时间比较，防止时序攻击
+     */
+    private static boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null || a.length() != b.length()) {
+            return false;
+        }
+        int result = 0;
+        for (int i = 0; i < a.length(); i++) {
+            result |= a.charAt(i) ^ b.charAt(i);
+        }
+        return result == 0;
     }
 
     private String getSessionId(HttpServletRequest request) {

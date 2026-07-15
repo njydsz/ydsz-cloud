@@ -107,4 +107,14 @@ public @interface SensitiveData {
      * @return 自定义脱敏格式字符串
      */
     String customFormat() default "";
+
+    /**
+     * 角色白名单（不脱敏的角色列表）
+     *
+     * <p>当前用户拥有此处列出的任一角色时，该字段不脱敏，返回原始值。
+     * 默认为空数组，表示所有角色都脱敏。
+     *
+     * @return 角色白名单数组
+     */
+    String[] roles() default {};
 }

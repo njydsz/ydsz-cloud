@@ -196,7 +196,7 @@ public class ColumnDesensitizationService {
             String tableName = entry.getKey();
             JsonNode columnValue = entry.getValue();
             if (columnValue == null || columnValue.isNull()) {
-                return;
+                continue;
             }
 
             if (columnValue.isArray()) {

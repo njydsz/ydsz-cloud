@@ -33,6 +33,8 @@ public class TokenBlacklistService {
 
     private static final Logger log = LoggerFactory.getLogger(TokenBlacklistService.class);
     private static final String BLACKLIST_KEY_PREFIX = "auth:token:blacklist:";
+    private static final String REFRESH_LOCK_KEY_PREFIX = "auth:token:refresh-lock:";
+    private static final long REFRESH_LOCK_TTL_SECONDS = 10;
 
     private final RedisStringOps redisStringOps;
     private final AuthProperties authProperties;
@@ -96,5 +98,50 @@ public class TokenBlacklistService {
         }
         String key = buildBlacklistKey(token);
         return redisStringOps.hasKey(key);
+    }
+
+    /**
+     * 尝试获取 Token 刷新分布式锁。
+     *
+     * <p>使用 Redis SET NX EX 实现分布式锁，确保同一 refresh_token 在并发场景下
+     * 只能有一个请求成功刷新，防止重放攻击窗口。
+     *
+     * @param refreshToken 刷新令牌
+     * @return 获锁成功返回 true，获取失败（已有其他请求正在刷新）返回 false
+     */
+    public boolean tryAcquireRefreshLock(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return false;
+        }
+        String lockKey = REFRESH_LOCK_KEY_PREFIX + sha256(refreshToken);
+        try {
+            Boolean acquired = redisStringOps.setIfAbsent(lockKey, "1", REFRESH_LOCK_TTL_SECONDS);
+            if (Boolean.TRUE.equals(acquired)) {
+                log.debug("获取刷新锁成功: key={}", lockKey);
+                return true;
+            }
+            log.warn("获取刷新锁失败，已有其他请求正在刷新同一 token");
+            return false;
+        } catch (Exception e) {
+            log.error("获取刷新锁异常，降级为允许刷新: {}", e.getMessage());
+            return true;
+        }
+    }
+
+    /**
+     * 释放 Token 刷新分布式锁。
+     *
+     * @param refreshToken 刷新令牌
+     */
+    public void releaseRefreshLock(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return;
+        }
+        String lockKey = REFRESH_LOCK_KEY_PREFIX + sha256(refreshToken);
+        try {
+            redisStringOps.del(lockKey);
+        } catch (Exception e) {
+            log.debug("释放刷新锁异常（锁会自动过期）: {}", e.getMessage());
+        }
     }
 }

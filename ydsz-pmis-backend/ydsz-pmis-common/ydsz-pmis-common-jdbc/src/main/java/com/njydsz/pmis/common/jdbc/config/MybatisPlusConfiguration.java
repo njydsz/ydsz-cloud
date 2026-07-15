@@ -36,6 +36,8 @@ import com.njydsz.pmis.common.jdbc.interceptor.CombinedFieldFillInterceptor;
 import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
 import com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor;
 import com.njydsz.pmis.common.jdbc.interceptor.RowPermissionInnerInterceptor;
+import com.njydsz.pmis.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
+import com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor;
 import com.njydsz.pmis.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.pmis.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.pmis.common.jdbc.permission.DataScopeIdExpander;
@@ -59,7 +61,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>OptimisticLocker - 乐观锁（自定义 或 内置，二选一）</li>
  *   <li>LogicalDeleteInterceptor - 逻辑删除（SELECT/DELETE）</li>
  *   <li>FieldFillInterceptor - 字段填充</li>
- *   <li>DataPermissionInnerInterceptor - 数据权限</li>
+ *   <li>TenantIsolationInterceptor - 租户隔离（自动注入 tenant_id 条件）</li>
+ *   <li>DataPermissionInnerInterceptor - 数据权限（行级+列级）</li>
  *   <li>PaginationInnerInterceptor - 分页</li>
  * </ol>
  *
@@ -73,11 +76,10 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see MybatisPlusInterceptor
  * @see OptimisticLockInterceptor
  * @see LogicalDeleteInterceptor
- * @since 1.0.0
+ * @see TenantIsolationInterceptor
  */
 @Slf4j
 @AutoConfiguration
@@ -87,7 +89,10 @@ import lombok.extern.slf4j.Slf4j;
     OptimisticLockConfiguration.class,
     LogicalDeleteConfiguration.class,
     TenantIsolationProperties.class,
-    PaginationProperties.class
+    PaginationProperties.class,
+    SqlFirewallProperties.class,
+    ReadWriteSplittingProperties.class,
+    CircuitBreakerProperties.class
 })
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
 public class MybatisPlusConfiguration {
@@ -99,6 +104,9 @@ public class MybatisPlusConfiguration {
     private final LogicalDeleteConfiguration logicalDeleteConfiguration;
     private final TenantIsolationProperties tenantIsolationProperties;
     private final PaginationProperties paginationProperties;
+    private final SqlFirewallProperties sqlFirewallProperties;
+    private final ReadWriteSplittingProperties readWriteSplittingProperties;
+    private final CircuitBreakerProperties circuitBreakerProperties;
 
     public MybatisPlusConfiguration(FieldFillConfiguration fieldFillConfiguration,
                                      DataPermissionConfiguration dataPermissionConfiguration,
@@ -106,7 +114,10 @@ public class MybatisPlusConfiguration {
                                      OptimisticLockConfiguration optimisticLockConfiguration,
                                      LogicalDeleteConfiguration logicalDeleteConfiguration,
                                      TenantIsolationProperties tenantIsolationProperties,
-                                     PaginationProperties paginationProperties) {
+                                     PaginationProperties paginationProperties,
+                                     SqlFirewallProperties sqlFirewallProperties,
+                                     ReadWriteSplittingProperties readWriteSplittingProperties,
+                                     CircuitBreakerProperties circuitBreakerProperties) {
         this.fieldFillConfiguration = fieldFillConfiguration;
         this.dataPermissionConfiguration = dataPermissionConfiguration;
         this.dataScopeIdExpanderProvider = dataScopeIdExpanderProvider;
@@ -114,6 +125,9 @@ public class MybatisPlusConfiguration {
         this.logicalDeleteConfiguration = logicalDeleteConfiguration;
         this.tenantIsolationProperties = tenantIsolationProperties;
         this.paginationProperties = paginationProperties;
+        this.sqlFirewallProperties = sqlFirewallProperties;
+        this.readWriteSplittingProperties = readWriteSplittingProperties;
+        this.circuitBreakerProperties = circuitBreakerProperties;
     }
 
     /**
@@ -124,6 +138,7 @@ public class MybatisPlusConfiguration {
      *   <li>乐观锁拦截器（自定义实现，替代@Version）</li>
      *   <li>逻辑删除拦截器（自定义实现，替代@TableLogic）</li>
      *   <li>字段填充拦截器（针对非实体类的更新操作）</li>
+     *   <li>租户隔离拦截器（自动注入 tenant_id 条件）</li>
      *   <li>数据权限拦截器（行级+列级）</li>
      *   <li>分页拦截器（动态适配数据库类型）</li>
      * </ol>
@@ -131,9 +146,11 @@ public class MybatisPlusConfiguration {
      * @return MybatisPlusInterceptor 实例
      * @see OptimisticLockInterceptor
      * @see LogicalDeleteInterceptor
+     * @see TenantIsolationInterceptor
      * @see PaginationInnerInterceptor
      */
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(MybatisPlusInterceptor.class)
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
@@ -160,18 +177,28 @@ public class MybatisPlusConfiguration {
             logicalDeleteInterceptor.setDeletedColumn(logicalDeleteConfiguration.getDeletedColumn());
             logicalDeleteInterceptor.setDeletedValue(logicalDeleteConfiguration.getDeletedValue());
             logicalDeleteInterceptor.setNormalValue(logicalDeleteConfiguration.getNormalValue());
+            logicalDeleteInterceptor.setIgnoreTables(logicalDeleteConfiguration.getNormalizedIgnoreTables());
             interceptor.addInnerInterceptor(logicalDeleteInterceptor);
-            log.debug("MyBatis Plus: LogicalDelete interceptor enabled (deletedColumn={})",
-                    logicalDeleteConfiguration.getDeletedColumn());
+            log.debug("MyBatis Plus: LogicalDelete interceptor enabled (deletedColumn={}, ignoreTables={})",
+                    logicalDeleteConfiguration.getDeletedColumn(),
+                    logicalDeleteConfiguration.getNormalizedIgnoreTables());
         }
 
         // 3. 字段填充拦截器（合并多 Handler，单次 SQL 解析完成所有字段填充）
         configureFieldFillInterceptors(interceptor);
 
-        // 4. 数据权限拦截器（行级+列级）
+        // 4. 租户隔离拦截器（在数据权限之前，确保 tenant_id 条件优先注入）
+        if (tenantIsolationProperties != null && tenantIsolationProperties.isEnabled()) {
+            interceptor.addInnerInterceptor(new TenantIsolationInterceptor(tenantIsolationProperties));
+            log.debug("MyBatis Plus: TenantIsolation interceptor enabled (tenantColumn={}, ignoreTables={})",
+                    tenantIsolationProperties.getTenantColumn(),
+                    tenantIsolationProperties.getNormalizedIgnoreTables());
+        }
+
+        // 5. 数据权限拦截器（行级+列级）
         configureDataPermissionInterceptor(interceptor);
 
-        // 5. 分页拦截器（支持显式指定 DbType + maxLimit 安全加固）
+        // 6. 分页拦截器（支持显式指定 DbType + maxLimit 安全加固）
         PaginationInnerInterceptor paginationInterceptor = new PaginationInnerInterceptor();
         String dbType = paginationProperties.getDbType();
         if (dbType != null && !dbType.isEmpty()) {
@@ -182,6 +209,21 @@ public class MybatisPlusConfiguration {
         }
         paginationInterceptor.setOverflow(paginationProperties.isOverflow());
         interceptor.addInnerInterceptor(paginationInterceptor);
+
+        // 7. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）
+        if (sqlFirewallProperties != null && sqlFirewallProperties.isEnabled()) {
+            SqlFirewallInnerInterceptor firewall = new SqlFirewallInnerInterceptor();
+            firewall.setEnabled(true);
+            firewall.setBlockDropTable(sqlFirewallProperties.isBlockDropTable());
+            firewall.setBlockTruncate(sqlFirewallProperties.isBlockTruncate());
+            firewall.setBlockDeleteWithoutWhere(sqlFirewallProperties.isBlockDeleteWithoutWhere());
+            firewall.setBlockUpdateWithoutWhere(sqlFirewallProperties.isBlockUpdateWithoutWhere());
+            firewall.setBlockMultiStatement(sqlFirewallProperties.isBlockMultiStatement());
+            firewall.setBlockPermissionOps(sqlFirewallProperties.isBlockPermissionOps());
+            firewall.setAllowTables(sqlFirewallProperties.getAllowTables());
+            interceptor.addInnerInterceptor(firewall);
+            log.debug("MyBatis Plus: SqlFirewall interceptor enabled");
+        }
 
         return interceptor;
     }
@@ -248,7 +290,7 @@ public class MybatisPlusConfiguration {
      * <p>数据权限配置示例：
      * <pre>
      * ydsz:
-     *   sql-intercept:
+     *   jdbc:
      *     data-permission:
      *       enabled: true
      * </pre>

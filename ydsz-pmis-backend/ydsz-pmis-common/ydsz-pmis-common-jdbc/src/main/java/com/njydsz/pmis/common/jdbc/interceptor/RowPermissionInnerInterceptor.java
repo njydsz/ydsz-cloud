@@ -66,7 +66,6 @@ import net.sf.jsqlparser.statement.update.Update;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
 public class RowPermissionInnerInterceptor extends JsqlParserSupport implements InnerInterceptor {

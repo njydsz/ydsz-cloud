@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
 @Component
@@ -114,7 +113,7 @@ public class RedisSnowflakeIdGenerator {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisProperties redisProperties;
     private final long datacenterId;
-    private final long workerId;
+    private volatile long workerId;
     private final AtomicLong sequence = new AtomicLong(0L);
     private final AtomicLong lastTimestamp = new AtomicLong(-1L);
 
@@ -242,10 +241,12 @@ public class RedisSnowflakeIdGenerator {
             log.warn("【Snowflake】workerId 已过期或被释放，尝试重新分配 | workerId={}", workerId);
             // workerId 已失效，尝试重新分配
             try {
+                long oldWorkerId = this.workerId;
                 long newWorkerId = allocateWorkerIdFromRedis();
                 setWorkerIdHeartbeat(newWorkerId);
+                this.workerId = newWorkerId;
                 log.info("【Snowflake】重新分配 workerId 成功 | oldWorkerId={} | newWorkerId={}",
-                        workerId, newWorkerId);
+                        oldWorkerId, newWorkerId);
             } catch (Exception e) {
                 log.error("【Snowflake】重新分配 workerId 失败 | error={}", e.getMessage());
             }

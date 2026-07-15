@@ -40,7 +40,6 @@ import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Component
 public class RedisConnectionFactoryConfigurer {

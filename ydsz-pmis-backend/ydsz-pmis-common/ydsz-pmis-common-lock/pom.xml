@@ -69,6 +69,11 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-cache</artifactId>
         </dependency>
+        <!--ydsz-pmis-common-json（统一 JSON 引擎，替代手写 JSON 序列化）-->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
         <!-- Redisson 分布式锁（可选，提供降级策略）-->
         <dependency>
             <groupId>org.redisson</groupId>

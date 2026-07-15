@@ -82,6 +82,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final List<String> excludes;
     private final SecurityEventPublisher eventPublisher;
     private final SafeAlertProperties alertProperties;
+    private final LocalRateLimiter localRateLimiter;
 
     /** JSON 序列化器，用于生成限流响应体 */
     // Json as JSON engine
@@ -97,6 +98,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 : new ArrayList<>(properties.getExcludes());
         this.eventPublisher = eventPublisher;
         this.alertProperties = alertProperties;
+        this.localRateLimiter = new LocalRateLimiter(properties.getLimitPerSecond(), 1);
     }
 
     @Override
@@ -135,9 +137,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 return;
             }
         } catch (Exception e) {
-            // Redis 异常时 fail-open：限流是保护性措施而非安全性措施，放行请求不中断服务
-            log.warn("【安全模块】Redis 限流不可用，放行请求 | key={}, uri={}, error={}",
+            // Redis 异常时降级到本地限流（fail-safe），避免 Redis 不可用时完全放行
+            log.warn("【安全模块】Redis 限流不可用，降级到本地限流 | key={}, uri={}, error={}",
                     rateLimitKey, request.getRequestURI(), e.getMessage());
+            if (!localRateLimiter.tryAcquire()) {
+                log.warn("【安全模块】本地限流触发 | key={}, uri={}", rateLimitKey, request.getRequestURI());
+                publishRateLimitEvent(request);
+                writeRateLimitResponse(response);
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);

@@ -80,22 +80,9 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(SqlInjectionFilter.class);
 
     /**
-     * SQL 注入检测正则表达式
-     *
-     * <p>匹配 SQL 注入攻击特征模式（而非裸关键词），降低误报率：
-     * <ul>
-     *   <li>UNION SELECT 联合查询注入</li>
-     *   <li>布尔型注入：OR/AND 数字=数字（如 OR 1=1）</li>
-     *   <li>引号 + 逻辑运算符（如 ' OR '）</li>
-     *   <li>堆叠查询：引号/分号后跟 DDL/DML</li>
-     *   <li>SQL 注释符 -- / /*</li>
-     *   <li>存储过程执行 EXEC / XP_</li>
-     *   <li>时间盲注 SLEEP / BENCHMARK / WAITFOR DELAY</li>
-     *   <li>危险文件操作 INTO OUTFILE / LOAD_FILE</li>
-     *   <li>INFORMATION_SCHEMA 探测</li>
-     * </ul>
+     * 默认 SQL 注入检测正则表达式
      */
-    private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
+    private static final String DEFAULT_PATTERN_STR =
             "(?i)" +
                     // UNION SELECT 联合查询注入
                     "(?:\\bUNION\\s+(?:ALL\\s+)?SELECT\\b)" +
@@ -120,11 +107,38 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
                     "|(?:\\bINTO\\s+(?:OUTFILE|DUMPFILE)\\b)" +
                     "|(?:\\bLOAD_FILE\\s*\\()" +
                     // 信息 schema 探测
-                    "|(?:\\bINFORMATION_SCHEMA\\b)"
-    );
+                    "|(?:\\bINFORMATION_SCHEMA\\b)";
+
+    /**
+     * 当前使用的 SQL 注入检测 Pattern（支持运行时热更新）
+     */
+    private volatile Pattern sqlInjectionPattern = Pattern.compile(DEFAULT_PATTERN_STR);
 
     /** 请求体最大检测长度，避免大请求体导致性能问题 */
     private static final int MAX_BODY_DETECT_LENGTH = 65536;
+
+    /**
+     * P1-11: 运行时热更新 SQL 注入检测规则
+     *
+     * <p>通过传入新的正则表达式替换当前检测规则，无需重启服务。
+     * 使用 volatile 保证可见性，线程安全。
+     *
+     * @param newPattern 新的 SQL 注入检测正则表达式
+     */
+    public void updatePattern(String newPattern) {
+        if (newPattern != null && !newPattern.trim().isEmpty()) {
+            this.sqlInjectionPattern = Pattern.compile(newPattern);
+            log.info("SQL 注入检测规则已热更新");
+        }
+    }
+
+    /**
+     * 重置为默认检测规则
+     */
+    public void resetPattern() {
+        this.sqlInjectionPattern = Pattern.compile(DEFAULT_PATTERN_STR);
+        log.info("SQL 注入检测规则已重置为默认");
+    }
 
     /**
      * 是否启用阻断模式
@@ -250,7 +264,7 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
                 continue;
             }
             for (String value : entry.getValue()) {
-                if (StringUtils.hasText(value) && SQL_INJECTION_PATTERN.matcher(value).find()) {
+                if (StringUtils.hasText(value) && sqlInjectionPattern.matcher(value).find()) {
                     return true;
                 }
             }
@@ -260,13 +274,13 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
         String[] headersToCheck = {"User-Agent", "Referer", "X-Forwarded-For"};
         for (String headerName : headersToCheck) {
             String headerValue = request.getHeader(headerName);
-            if (StringUtils.hasText(headerValue) && SQL_INJECTION_PATTERN.matcher(headerValue).find()) {
+            if (StringUtils.hasText(headerValue) && sqlInjectionPattern.matcher(headerValue).find()) {
                 return true;
             }
         }
 
         // 检测请求体
-        if (StringUtils.hasText(bodyContent) && SQL_INJECTION_PATTERN.matcher(bodyContent).find()) {
+        if (StringUtils.hasText(bodyContent) && sqlInjectionPattern.matcher(bodyContent).find()) {
             return true;
         }
 

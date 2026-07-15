@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.jdbc.health;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -9,6 +11,8 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 import com.zaxxer.hikari.HikariDataSource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 数据源健康检查指示器
@@ -24,8 +28,8 @@ import com.zaxxer.hikari.HikariDataSource;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
+@Slf4j
 @Component
 @ConditionalOnClass({HealthIndicator.class, HikariDataSource.class})
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
@@ -50,17 +54,51 @@ public class DataSourceHealthIndicator implements HealthIndicator {
             int max = pool.getMaximumPoolSize();
             int min = pool.getMinimumIdle();
 
+            // 计算连接池利用率
+            double utilization = max > 0 ? (double) active / max : 0.0;
+
             Health.Builder builder = Health.up()
                     .withDetail("active", active)
                     .withDetail("idle", idle)
                     .withDetail("waiting", threadsAwaitingConnection)
                     .withDetail("max", max)
-                    .withDetail("min", min);
+                    .withDetail("min", min)
+                    .withDetail("utilization", String.format("%.2f%%", utilization * 100));
+
+            // 执行实际连通性检查（SELECT 1）
+            try (Connection conn = pool.getConnection()) {
+                boolean isValid = conn.isValid(3);
+                builder.withDetail("connectivity", isValid ? "OK" : "FAILED");
+                if (!isValid) {
+                    return Health.down()
+                            .withDetail("error", "Connection.isValid() returned false")
+                            .withDetail("active", active)
+                            .withDetail("idle", idle)
+                            .withDetail("max", max)
+                            .build();
+                }
+            } catch (SQLException e) {
+                log.warn("数据库连通性检查失败", e);
+                return Health.down(e)
+                        .withDetail("active", active)
+                        .withDetail("idle", idle)
+                        .withDetail("max", max)
+                        .build();
+            }
 
             // 如果等待线程数过多，标记为降级
             if (threadsAwaitingConnection > max / 2) {
-                builder.withDetail("status", "DEGRADED")
+                builder.down()
+                        .withDetail("status", "DEGRADED")
                         .withDetail("reason", "High connection wait queue");
+                return builder.build();
+            }
+
+            // 如果利用率超过 90%，标记为降级
+            if (utilization > 0.9) {
+                builder.down()
+                        .withDetail("status", "DEGRADED")
+                        .withDetail("reason", "Connection pool near exhaustion");
                 return builder.build();
             }
 

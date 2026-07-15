@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.lock.scheduler;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +17,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TaskScheduler;
 
+import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 
 import lombok.extern.slf4j.Slf4j;
@@ -158,9 +160,10 @@ public class LockWatchDog {
     /**
      * 续期任务上下文
      */
-    private static class WatchTask {
+    static class WatchTask {
         final String clientId;
         final long leaseTime;
+        final LockType lockType;
         final AtomicBoolean running;
         final ScheduledFuture<?> future;
         /**
@@ -170,9 +173,10 @@ public class LockWatchDog {
          */
         volatile int renewCount;
 
-        WatchTask(String clientId, long leaseTime, AtomicBoolean running, ScheduledFuture<?> future) {
+        WatchTask(String clientId, long leaseTime, LockType lockType, AtomicBoolean running, ScheduledFuture<?> future) {
             this.clientId = clientId;
             this.leaseTime = leaseTime;
+            this.lockType = lockType;
             this.running = running;
             this.future = future;
             this.renewCount = 0;
@@ -184,6 +188,19 @@ public class LockWatchDog {
 
         public long getLeaseTime() {
             return leaseTime;
+        }
+
+        public LockType getLockType() {
+            return lockType;
+        }
+
+        /**
+         * 获取已续期次数
+         *
+         * @return 已续期次数
+         */
+        public int getRenewCount() {
+            return renewCount;
         }
     }
 
@@ -229,9 +246,32 @@ public class LockWatchDog {
      * @param clientId  客户端标识
      * @param leaseTime 锁的过期时间（毫秒）
      */
+    /**
+     * 启动续期任务
+     *
+     * @param lockKey   锁的键
+     * @param clientId  客户端标识
+     * @param leaseTime 锁的过期时间（毫秒）
+     */
     public void startWatch(String lockKey, String clientId, long leaseTime) {
-        // 使用 ReentrantLock 保证检查与注册的原子性，避免并发场景下重复启动续期任务
-        // ReentrantLock 替代 synchronized，防止 JDK 21 虚拟线程被固定（VT pinning）
+        startWatch(lockKey, clientId, leaseTime, LockType.REENTRANT);
+    }
+
+    /**
+     * 启动续期任务（带锁类型）
+     *
+     * <p>锁类型决定续期时使用的 Lua 脚本：
+     * <ul>
+     *   <li>REENTRANT：使用 HEXISTS 检查 clientId 作为 Hash field</li>
+     *   <li>FAIR：使用 HGET 'owner' 检查 clientId 作为 owner 值</li>
+     * </ul>
+     *
+     * @param lockKey   锁的键
+     * @param clientId  客户端标识
+     * @param leaseTime 锁的过期时间（毫秒）
+     * @param lockType  锁类型，决定续期时使用哪个 Lua 脚本
+     */
+    public void startWatch(String lockKey, String clientId, long leaseTime, LockType lockType) {
         startWatchLock.lock();
         try {
             if (activeTasks.containsKey(lockKey)) {
@@ -247,13 +287,13 @@ public class LockWatchDog {
             AtomicBoolean running = new AtomicBoolean(true);
 
             ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(
-                    () -> renewLockWithRetry(lockKey, clientId, leaseTime),
+                    () -> renewLockWithRetry(lockKey, clientId, leaseTime, lockType),
                     Duration.ofMillis(renewInterval)
             );
 
-            activeTasks.put(lockKey, new WatchTask(clientId, leaseTime, running, future));
-            log.info("【看门狗】启动续期任务 | lockKey={} | leaseTime={}ms | interval={}ms",
-                    lockKey, leaseTime, renewInterval);
+            activeTasks.put(lockKey, new WatchTask(clientId, leaseTime, lockType, running, future));
+            log.info("【看门狗】启动续期任务 | lockKey={} | leaseTime={}ms | interval={}ms | lockType={}",
+                    lockKey, leaseTime, renewInterval, lockType);
         } finally {
             startWatchLock.unlock();
         }
@@ -294,6 +334,15 @@ public class LockWatchDog {
      * @param lockKey 锁的键
      * @return true-续期任务运行中
      */
+    /**
+     * 获取活跃续期任务快照（用于锁泄漏检测）
+     *
+     * @return 活跃续期任务的不可变快照
+     */
+    public Map<String, WatchTask> getActiveTasksSnapshot() {
+        return Collections.unmodifiableMap(new HashMap<>(activeTasks));
+    }
+
     public boolean isWatching(String lockKey) {
         WatchTask task = activeTasks.get(lockKey);
         return task != null && task.running.get() && !task.future.isDone() && !task.future.isCancelled();
@@ -344,8 +393,15 @@ public class LockWatchDog {
      * @param clientId  客户端标识
      * @param leaseTime 锁的过期时间（毫秒）
      */
-    private void renewLockWithRetry(String lockKey, String clientId, long leaseTime) {
-        // 检查续期次数是否超过最大限制
+    /**
+     * 带重试机制的续期（根据锁类型选择对应脚本）
+     *
+     * @param lockKey   锁的键
+     * @param clientId  客户端标识
+     * @param leaseTime 锁的过期时间（毫秒）
+     * @param lockType  锁类型，决定使用哪个续期脚本
+     */
+    private void renewLockWithRetry(String lockKey, String clientId, long leaseTime, LockType lockType) {
         WatchTask currentTask = activeTasks.get(lockKey);
         if (currentTask != null && currentTask.renewCount >= maxRenewTimes) {
             log.warn("【看门狗】续期次数超过最大限制（{}次），停止续期，锁将自动过期 | lockKey={}", maxRenewTimes, lockKey);
@@ -353,52 +409,35 @@ public class LockWatchDog {
             return;
         }
 
+        DefaultRedisScript<Long> script = (lockType == LockType.FAIR) ? renewOwnerScript : renewScript;
+
         for (int retry = 0; retry < MAX_RETRY_COUNT; retry++) {
             try {
-                // 先尝试标准续期脚本（适用于 RedisReentrantLock：clientId 是 Hash field）
                 Long result = stringRedisTemplate.execute(
-                        renewScript,
+                        script,
                         Collections.singletonList(lockKey),
                         clientId,
                         String.valueOf(leaseTime)
                 );
                 if (Long.valueOf(1L).equals(result)) {
-                    log.debug("【看门狗】锁续期成功 | lockKey={}", lockKey);
+                    log.debug("【看门狗】锁续期成功 | lockKey={} | lockType={}", lockKey, lockType);
                     WatchTask task = activeTasks.get(lockKey);
                     if (task != null) {
                         task.renewCount++;
                     }
                     if (lockMetrics != null) {
-                        lockMetrics.recordWatchdogRenew();
+                        lockMetrics.recordWatchdogRenew(lockType.name().toLowerCase());
                     }
                     return;
                 }
-                // 标准脚本返回 0 时，尝试公平锁续期脚本（适用于 RedisFairLock：owner field 的值等于 clientId）
-                Long ownerResult = stringRedisTemplate.execute(
-                        renewOwnerScript,
-                        Collections.singletonList(lockKey),
-                        clientId,
-                        String.valueOf(leaseTime)
-                );
-                if (Long.valueOf(1L).equals(ownerResult)) {
-                    log.debug("【看门狗】公平锁续期成功 | lockKey={}", lockKey);
-                    WatchTask task = activeTasks.get(lockKey);
-                    if (task != null) {
-                        task.renewCount++;
-                    }
-                    if (lockMetrics != null) {
-                        lockMetrics.recordWatchdogRenew();
-                    }
-                    return;
-                }
-                log.warn("【看门狗】锁续期失败，可能锁已释放 | lockKey={}", lockKey);
+                log.warn("【看门狗】锁续期失败，可能锁已释放 | lockKey={} | lockType={}", lockKey, lockType);
                 stopWatch(lockKey);
                 return;
             } catch (Exception e) {
-                log.warn("【看门狗】锁续期异常 | lockKey={} | retry={}/{} | error={}",
-                        lockKey, retry + 1, MAX_RETRY_COUNT, e.getMessage());
+                log.warn("【看门狗】锁续期异常 | lockKey={} | lockType={} | retry={}/{} | error={}",
+                        lockKey, lockType, retry + 1, MAX_RETRY_COUNT, e.getMessage());
                 if (retry == MAX_RETRY_COUNT - 1) {
-                    log.error("【看门狗】锁续期最终失败，停止续期 | lockKey={}", lockKey);
+                    log.error("【看门狗】锁续期最终失败，停止续期 | lockKey={} | lockType={}", lockKey, lockType);
                     stopWatch(lockKey);
                 }
             }

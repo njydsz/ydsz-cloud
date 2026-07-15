@@ -147,16 +147,35 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             return DataScopeInfo.empty();
         }
         List<DataScopeInfo> all = new ArrayList<>();
+        // 分离缓存命中和未命中的角色
+        List<String> uncachedRoles = new ArrayList<>(roleCodes.size());
         for (String role : roleCodes) {
             DataScopeInfo cached = cache.getIfPresent(role);
             if (cached != null) {
                 all.add(cached);
-                continue;
+            } else {
+                uncachedRoles.add(role);
             }
-            DataScopeInfo loaded = loadOne(role);
-            if (loaded != null) {
-                cache.put(role, loaded);
-                all.add(loaded);
+        }
+        // 使用 MGET 批量加载未命中的角色数据
+        if (!uncachedRoles.isEmpty()) {
+            try {
+                Map<String, DataScopeInfo> loaded = loadByRolesMget(new java.util.LinkedHashSet<>(uncachedRoles));
+                for (Map.Entry<String, DataScopeInfo> entry : loaded.entrySet()) {
+                    if (entry.getValue() != null) {
+                        cache.put(entry.getKey(), entry.getValue());
+                        all.add(entry.getValue());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("批量加载数据权限失败，降级到逐个加载: {}", e.getMessage());
+                for (String role : uncachedRoles) {
+                    DataScopeInfo loaded = loadOne(role);
+                    if (loaded != null) {
+                        cache.put(role, loaded);
+                        all.add(loaded);
+                    }
+                }
             }
         }
         if (all.isEmpty()) {
