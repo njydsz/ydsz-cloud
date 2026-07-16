@@ -51,7 +51,7 @@ public class SagaOrchestrator {
      * @throws Exception 事务异常
      */
     @SuppressWarnings("unchecked")
-    public <T> T execute(String transactionName, List<SagaStep<?>> steps) throws Exception {
+    public <T> T execute(String transactionName, List<? extends SagaStep<?>> steps) throws Exception {
         String xid = java.util.UUID.randomUUID().toString();
         log.info("SAGA transaction started: name={}, xid={}, steps={}", transactionName, xid, steps.size());
 

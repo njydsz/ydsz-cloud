@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.njydsz.pmis.common.seata.api.TccAction;
-import com.njydsz.pmis.common.seata.api.TccBranchStatus;
 import com.njydsz.pmis.common.seata.api.TccContext;
 import com.njydsz.pmis.common.seata.api.TccTransactionLogStore;
 import com.njydsz.pmis.common.seata.config.SeataProperties;
@@ -100,8 +99,6 @@ class TccTransactionManagerTest {
     void testEmptyRollbackProtection() {
         // 当 Try 未完成时，Cancel 不应执行
         TccAction<String> action = new TccAction<>() {
-            boolean cancelExecuted = false;
-
             @Override
             public String tryAction(TccContext ctx) throws Exception {
                 throw new RuntimeException("try failed");
@@ -113,7 +110,6 @@ class TccTransactionManagerTest {
 
             @Override
             public void cancelAction(TccContext ctx) {
-                cancelExecuted = true;
             }
         };
 
@@ -123,8 +119,6 @@ class TccTransactionManagerTest {
     @Test
     void testIdempotentConfirm() throws Exception {
         TccAction<String> action = new TccAction<>() {
-            int confirmCount = 0;
-
             @Override
             public String tryAction(TccContext ctx) {
                 return "result";
@@ -132,7 +126,6 @@ class TccTransactionManagerTest {
 
             @Override
             public void confirmAction(TccContext ctx) {
-                confirmCount++;
             }
 
             @Override
