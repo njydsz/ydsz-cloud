@@ -1,0 +1,2 @@
+com.njydsz.pmis.common.cache.spring.LocalCacheAutoConfiguration
+com.njydsz.pmis.common.cache.metrics.CacheMetricsAutoConfiguration

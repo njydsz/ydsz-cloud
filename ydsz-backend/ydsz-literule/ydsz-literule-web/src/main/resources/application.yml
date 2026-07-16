@@ -1,0 +1,98 @@
+# PMIS 规则引擎服务本地配置
+# Nacos 配置中心覆盖以下配置（ydsz-literule.yaml）
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 规则引擎核心配置（生产环境由 Nacos ydsz-literule.yaml 覆盖）
+ydsz:
+  literule:
+    # ---------- 核心开关 ----------
+    auto-register-builtin-rules: true
+    hot-reload-enabled: true
+    stats-enabled: true
+    dry-run-enabled: true
+    sandbox-enabled: true
+    trace-enabled: true
+    trace-queue-capacity: 5000
+    trace-batch-size: 100
+    trace-flush-interval-ms: 2000
+    rule-timeout-ms: 0
+    canary-enabled: true
+    conflict-detection-enabled: true
+    conflict-detection-block-on-error: true
+    environment: default
+    # ---------- 熔断器 ----------
+    circuit-breaker-error-rate: 0.5
+    circuit-breaker-min-evaluations: 100
+    circuit-breaker-open-state-ms: 30000
+    # ---------- 多级缓存 ----------
+    cache:
+      enabled: true
+      l1-ttl-seconds: 60
+      l1-max-size: 1000
+      l2-enabled: true
+      l2-ttl-seconds: 300
+    # ---------- 数据源 ----------
+    rule-source:
+      type: db
+      watch-enabled: true
+    # ---------- 分布式执行（默认关闭，单实例够用） ----------
+    distributed:
+      enabled: false
+      virtual-nodes: 150
+      refresh-interval-ms: 10000
+      heartbeat-timeout-ms: 30000
+      heartbeat-interval-ms: 5000
+    # ---------- 规则+模型融合（默认关闭） ----------
+    model:
+      enabled: false
+      timeout-ms: 100
+      fallback-on-error: true
+      mock-enabled: false
+    # ---------- 动态事实采集（默认关闭） ----------
+    fact:
+      enabled: false
+      timeout-ms: 200
+      fallback-on-error: true
+    # ---------- 高性能优化（默认关闭，按需开启） ----------
+    performance:
+      cache-enabled: false
+      cache-ttl-seconds: 300
+      cache-max-size: 10000
+      parallel-enabled: false
+      parallel-pool-size: 0
+    # ---------- 生命周期管理 ----------
+    lifecycle:
+      enabled: true
+      dormant-min-evaluations: 1000
+      high-error-rate-threshold: 0.30
+      stale-disabled-days: 90
+      low-impact-trigger-rate: 0.001
+      min-sample-size: 500
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

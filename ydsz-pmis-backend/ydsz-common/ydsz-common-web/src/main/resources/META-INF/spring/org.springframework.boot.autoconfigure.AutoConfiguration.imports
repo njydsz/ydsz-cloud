@@ -1,0 +1,7 @@
+com.njydsz.pmis.common.web.config.WebMvcConfiguration
+com.njydsz.pmis.common.web.config.UserAgentConfiguration
+com.njydsz.pmis.common.web.config.WebSecurityConfiguration
+com.njydsz.pmis.common.web.config.WebOpenApiConfiguration
+com.njydsz.pmis.common.web.config.WebTimezoneConfiguration
+com.njydsz.pmis.common.web.config.WebI18nConfiguration
+com.njydsz.pmis.common.web.config.WebSessionAutoConfiguration

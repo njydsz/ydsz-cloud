@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.literule.infra.mapper.RuleTemplateMapper">
+
+    <sql id="Base_Column_List">
+        id, template_code, template_name, category, description,
+        condition_expression, severity_expression, default_severity,
+        title_template, description_template, priority, scope, industry, tags,
+        created_by, created_at
+    </sql>
+
+    <select id="selectByCategory" resultType="com.njydsz.literule.domain.entity.RuleTemplateDO">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_rule_template WHERE category = #{category} ORDER BY priority ASC
+    </select>
+
+    <select id="selectByIndustry" resultType="com.njydsz.literule.domain.entity.RuleTemplateDO">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_rule_template WHERE industry = #{industry} ORDER BY priority ASC
+    </select>
+
+    <select id="selectByCode" resultType="com.njydsz.literule.domain.entity.RuleTemplateDO">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_rule_template WHERE template_code = #{templateCode}
+    </select>
+
+</mapper>

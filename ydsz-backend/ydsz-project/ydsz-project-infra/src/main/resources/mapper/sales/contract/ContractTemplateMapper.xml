@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.project.mapper.contract.ContractTemplateMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.project.entity.ContractTemplateDO">
+        <id column="id" property="id"/>
+        <result column="template_code" property="templateCode"/>
+        <result column="template_name" property="templateName"/>
+        <result column="contract_type" property="contractType"/>
+        <result column="version" property="version"/>
+        <result column="payment_terms" property="paymentTerms"/>
+        <result column="default_payment_days" property="defaultPaymentDays"/>
+        <result column="default_penalty_rate" property="defaultPenaltyRate"/>
+        <result column="sla_description" property="slaDescription"/>
+        <result column="deliverables" property="deliverables"/>
+        <result column="content" property="content"/>
+        <result column="customer_level" property="customerLevel"/>
+        <result column="project_level" property="projectLevel"/>
+        <result column="status" property="status"/>
+        <result column="author_id" property="authorId"/>
+        <result column="author_name" property="authorName"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT id, template_code, template_name, contract_type, version, payment_terms, default_payment_days, default_penalty_rate, sla_description, deliverables, content, customer_level, project_level, status, author_id, author_name, remark, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM ydsz_project_contract_template
+        WHERE template_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <select id="selectByType" resultMap="BaseResultMap">
+        SELECT id, template_code, template_name, contract_type, version, payment_terms, default_payment_days, default_penalty_rate, sla_description, deliverables, content, customer_level, project_level, status, author_id, author_name, remark, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM ydsz_project_contract_template
+        <where>
+            deleted = 0
+            <if test="contractType != null and contractType != ''">
+                AND contract_type = #{contractType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE ydsz_project_contract_template
+        SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="countByTypeAndStatus" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM ydsz_project_contract_template
+        WHERE contract_type = #{contractType}
+          <if test="status != null and status != ''">
+              AND status = #{status}
+          </if>
+          AND deleted = 0
+    </select>
+
+</mapper>

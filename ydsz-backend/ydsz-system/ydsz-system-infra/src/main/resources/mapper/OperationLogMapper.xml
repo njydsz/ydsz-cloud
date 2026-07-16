@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.system.infra.mapper.OperationLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.system.domain.entity.OperationLogDO">
+        <id column="id" property="id"/>
+        <result column="module" property="module"/>
+        <result column="action" property="action"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="request_url" property="requestUrl"/>
+        <result column="http_method" property="httpMethod"/>
+        <result column="method_signature" property="methodSignature"/>
+        <result column="client_ip" property="clientIp"/>
+        <result column="user_agent" property="userAgent"/>
+        <result column="params_json" property="paramsJson"/>
+        <result column="response_json" property="responseJson"/>
+        <!-- P1-5 修复：映射变更前/后数据列 -->
+        <result column="before_data" property="beforeData"/>
+        <result column="after_data" property="afterData"/>
+        <result column="status" property="status"/>
+        <result column="error_message" property="errorMessage"/>
+        <result column="cost_ms" property="costMs"/>
+        <result column="trace_id" property="traceId"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insertLog" parameterType="com.njydsz.system.domain.entity.OperationLogDO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ydsz_operation_log (
+            module, action, biz_type, biz_id, user_id, username,
+            request_url, http_method, method_signature, client_ip, user_agent,
+            params_json, response_json, before_data, after_data,
+            status, error_message, cost_ms, trace_id, tenant_id, created_at
+        ) VALUES (
+            #{module}, #{action}, #{bizType}, #{bizId}, #{userId}, #{username},
+            #{requestUrl}, #{httpMethod}, #{methodSignature}, #{clientIp}, #{userAgent},
+            #{paramsJson}, #{responseJson},
+            #{beforeData}::jsonb, #{afterData}::jsonb,
+            #{status}, #{errorMessage}, #{costMs}, #{traceId}, #{tenantId}, NOW()
+        )
+    </insert>
+
+    <select id="selectByUser" resultMap="BaseResultMap">
+        SELECT id, module, action, biz_type, biz_id, user_id, username,
+               request_url, http_method, method_signature, client_ip, user_agent,
+               params_json, response_json, before_data, after_data,
+               status, error_message, cost_ms,
+               trace_id, tenant_id, created_at
+        FROM ydsz_operation_log
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectByBiz" resultMap="BaseResultMap">
+        SELECT id, module, action, biz_type, biz_id, user_id, username,
+               request_url, http_method, method_signature, client_ip, user_agent,
+               params_json, response_json, before_data, after_data,
+               status, error_message, cost_ms,
+               trace_id, tenant_id, created_at
+        FROM ydsz_operation_log
+        WHERE biz_type = #{bizType} AND biz_id = #{bizId}
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deleteBefore">
+        DELETE FROM ydsz_operation_log
+        WHERE created_at &lt; (CURRENT_TIMESTAMP - (#{days} || ' day')::interval)
+    </delete>
+
+</mapper>

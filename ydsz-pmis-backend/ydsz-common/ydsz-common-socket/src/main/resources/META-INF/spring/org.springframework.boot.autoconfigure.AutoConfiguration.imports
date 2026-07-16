@@ -1,0 +1,2 @@
+com.njydsz.pmis.common.socket.config.WebSocketAutoConfiguration
+com.njydsz.pmis.common.socket.config.WebSocketClusterAutoConfiguration

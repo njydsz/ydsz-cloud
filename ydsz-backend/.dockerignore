@@ -1,0 +1,49 @@
+# YDSZ PMIS 后端 .dockerignore
+# 减少构建上下文体积，加速 docker build
+
+# Maven 构建产物
+**/target/
+**/*.jar
+**/*.war
+**/*.class
+
+# IDE
+**/.idea/
+**/.vscode/
+**/*.iml
+**/.settings/
+**/.classpath
+**/.project
+
+# 日志
+**/logs/
+**/*.log
+
+# 临时文件
+**/*.tmp
+**/*.bak
+**/.cache/
+**/.tmp/
+
+# 测试产物
+**/test-output/
+**/test-results/
+**/coverage/
+**/.scannerwork/
+
+# Git
+.git/
+.gitignore
+
+# 文档（构建不需要）
+**/*.md
+docs/
+
+# 系统文件
+**/.DS_Store
+**/Thumbs.db
+
+# 敏感信息
+**/.env
+**/.env.local
+**/application-local.yml

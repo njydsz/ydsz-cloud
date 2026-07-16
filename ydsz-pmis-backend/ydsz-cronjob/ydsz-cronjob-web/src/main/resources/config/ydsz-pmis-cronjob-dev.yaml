@@ -1,0 +1,72 @@
+# =====================================================================
+#  YDSZ PMIS · CronJob · DEV 环境配置（Nacos DataId）
+#  DataId:    ydsz-cronjob-dev.yaml
+#  Group:     dev
+#  端口:      9005
+# =====================================================================
+
+# MinIO
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  default-bucket: ${MINIO_BUCKET:pmis}
+  url-expire-seconds: 3600
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.cronjob.entity
+
+# 调度服务配置
+ydsz:
+  cronjob:
+    node-discovery:
+      type: nacos
+    failover:
+      enabled: true
+      scan-interval-seconds: 30
+      scan-node-limit: 10
+      failover-task-limit: 50
+    job-lock-ttl: 5m
+    job-lock-ttl-min: 30s
+    job-lock-ttl-max: 24h
+    scheduler-pool-size: 8
+    scheduler-await-termination-seconds: 30
+    leader:
+      enabled: true
+      role: pmis-job-scheduler
+      lease-seconds: 30
+      renew-interval-seconds: 10
+    scanner:
+      interval-ms: 5000
+      batch-size: 100
+      misfire-grace-minutes: 30
+    executor:
+      register-on-startup: true
+      heartbeat-interval-seconds: 10
+      offline-threshold-seconds: 30
+      drain-on-shutdown: true
+      drain-timeout-seconds: 60
+      max-concurrent: 16
+      isolation-strategy: none
+      tenant-pool-size: 10
+      tenant-pool-queue-capacity: 200
+    timeout-monitor:
+      interval-ms: 10000
+    quota:
+      enabled: false
+      default-max-jobs: null
+      default-max-concurrent: null
+      default-max-daily-executions: null
+    alert:
+      feishu:
+        enabled: false
+        webhook-url: ""
+      sms:
+        enabled: false
+        webhook-url: ""
+        phone-numbers: ""
+    log-retention:
+      retention-days: 30
+      batch-size: 1000
+      cron: "0 0 3 * * ?"

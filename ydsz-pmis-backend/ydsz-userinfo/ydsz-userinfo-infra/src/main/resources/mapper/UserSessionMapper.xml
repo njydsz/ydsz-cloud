@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.userinfo.infra.mapper.UserSessionMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.userinfo.domain.entity.UserSessionDO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="session_id" property="sessionId"/>
+        <result column="token_jti" property="tokenJti"/>
+        <result column="login_at" property="loginAt"/>
+        <result column="last_active_at" property="lastActiveAt"/>
+        <result column="expire_at" property="expireAt"/>
+        <result column="client_ip" property="clientIp"/>
+        <result column="user_agent" property="userAgent"/>
+        <result column="device_type" property="deviceType"/>
+        <result column="status" property="status"/>
+        <result column="logout_at" property="logoutAt"/>
+        <result column="logout_reason" property="logoutReason"/>
+        <result column="trace_id" property="traceId"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectBySessionId" resultMap="BaseResultMap">
+        SELECT id, user_id, session_id, token_jti, login_at, last_active_at, expire_at,
+               client_ip, user_agent, device_type, status, logout_at, logout_reason,
+               trace_id, tenant_id, created_at, updated_at, deleted
+        FROM ydsz_user_session
+        WHERE session_id = #{sessionId} AND deleted = 0
+    </select>
+
+    <select id="selectActiveByUserId" resultMap="BaseResultMap">
+        SELECT id, user_id, session_id, token_jti, login_at, last_active_at, expire_at,
+               client_ip, user_agent, device_type, status, logout_at, logout_reason,
+               trace_id, tenant_id, created_at, updated_at, deleted
+        FROM ydsz_user_session
+        WHERE user_id = #{userId} AND status = 'ACTIVE' AND deleted = 0
+        ORDER BY login_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE ydsz_user_session
+        SET status = #{status},
+            logout_at = #{logoutAt},
+            logout_reason = #{logoutReason},
+            updated_at = NOW()
+        WHERE session_id = #{sessionId} AND deleted = 0
+    </update>
+
+    <update id="kickOtherByUserId">
+        UPDATE ydsz_user_session
+        SET status = 'KICKED',
+            logout_at = NOW(),
+            logout_reason = '强制下线（新会话登录）',
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+          AND session_id != #{keepSessionId}
+          AND status = 'ACTIVE'
+          AND deleted = 0
+    </update>
+
+</mapper>

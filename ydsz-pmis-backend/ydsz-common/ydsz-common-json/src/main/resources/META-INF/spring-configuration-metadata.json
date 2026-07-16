@@ -1,0 +1,103 @@
+{
+  "groups": [
+    {
+      "name": "pmis.json",
+      "type": "com.njydsz.common.json.spring.JsonProperties",
+      "description": "PMIS 高性能 JSON 引擎配置项（主前缀）"
+    }
+  ],
+  "properties": [
+    {
+      "name": "pmis.json.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Json 引擎（默认 true，关闭后所有序列化/反序列化操作将回退到系统默认实现）",
+      "defaultValue": true
+    },
+    {
+      "name": "pmis.json.date-format",
+      "type": "java.lang.String",
+      "description": "全局日期格式（Jackson 风格，遵循 java.time.format.DateTimeFormatter 语法）",
+      "defaultValue": "yyyy-MM-dd HH:mm:ss"
+    },
+    {
+      "name": "pmis.json.naming-strategy",
+      "type": "com.njydsz.common.json.naming.PropertyNamingStrategy",
+      "description": "字段命名策略（LOWER_CAMEL_CASE / UPPER_CAMEL_CASE / SNAKE_CASE / KEBAB_CASE / LOWER_UNDERSCORE）",
+      "defaultValue": "LOWER_CAMEL_CASE"
+    },
+    {
+      "name": "pmis.json.write-nulls",
+      "type": "java.lang.Boolean",
+      "description": "序列化时是否输出 null 值字段（默认 false 省略 null）",
+      "defaultValue": false
+    },
+    {
+      "name": "pmis.json.pretty-print",
+      "type": "java.lang.Boolean",
+      "description": "序列化时是否格式化输出（带缩进，默认 false 紧凑输出）",
+      "defaultValue": false
+    },
+    {
+      "name": "pmis.json.circular-reference-strategy",
+      "type": "java.lang.String",
+      "description": "循环引用处理策略（REF 写入引用标记 / IGNORE 跳过 / ERROR 抛异常）",
+      "defaultValue": "REF"
+    },
+    {
+      "name": "pmis.json.serialize-enum-using-ordinal",
+      "type": "java.lang.Boolean",
+      "description": "枚举是否使用 ordinal() 序列化（默认 false 使用 name()）",
+      "defaultValue": false
+    },
+    {
+      "name": "pmis.json.max-json-size",
+      "type": "java.lang.Long",
+      "description": "最大 JSON 大小（字节，默认 10MB；超出抛 JsonDeserializationException）",
+      "defaultValue": 10485760
+    },
+    {
+      "name": "pmis.json.max-depth",
+      "type": "java.lang.Integer",
+      "description": "最大序列化/反序列化嵌套深度（防止栈溢出，默认 256）",
+      "defaultValue": 256
+    },
+    {
+      "name": "pmis.json.fast-path-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用快速路径优化（直接写入 JSONWriter，跳过 StringBuilder 中转；默认 true）",
+      "defaultValue": true
+    },
+    {
+      "name": "pmis.json.safe-mode",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全模式（AutoType 白名单检查防反序列化漏洞，默认 true）",
+      "defaultValue": true
+    },
+    {
+      "name": "pmis.json.monitoring-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用性能监控（serializeCount / serializeTotalNanos 计数；默认 false 消除热路径开销）",
+      "defaultValue": false
+    }
+  ],
+  "hints": [
+    {
+      "name": "pmis.json.naming-strategy",
+      "values": [
+        { "value": "LOWER_CAMEL_CASE", "description": "首字母小写驼峰：userName" },
+        { "value": "UPPER_CAMEL_CASE", "description": "首字母大写驼峰：UserName" },
+        { "value": "SNAKE_CASE", "description": "下划线：user_name" },
+        { "value": "KEBAB_CASE", "description": "短横线：user-name" },
+        { "value": "LOWER_UNDERSCORE", "description": "全小写下划线：user_name" }
+      ]
+    },
+    {
+      "name": "pmis.json.circular-reference-strategy",
+      "values": [
+        { "value": "REF", "description": "写入对象引用标记（$ref）" },
+        { "value": "IGNORE", "description": "跳过循环引用字段" },
+        { "value": "ERROR", "description": "检测到循环引用立即抛异常" }
+      ]
+    }
+  ]
+}

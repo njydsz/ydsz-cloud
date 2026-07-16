@@ -1,0 +1,64 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.exception.metrics-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用异常指标统计。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.global-handler-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用全局异常处理器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.trace-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 TraceId 注入过滤器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.response-format",
+      "type": "com.njydsz.common.exception.config.ExceptionProperties$ResponseFormat",
+      "description": "响应格式：base-response（默认）或 problem-detail（RFC 7807）。",
+      "defaultValue": "base-response"
+    },
+    {
+      "name": "ydsz.exception.include-stack-trace",
+      "type": "java.lang.Boolean",
+      "description": "是否在响应中包含异常堆栈信息（仅开发/测试环境建议开启）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.exception.alert-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用异常告警。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.doc-endpoint-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用错误码文档 Actuator 端点。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.alert-dedup-window-seconds",
+      "type": "java.lang.Integer",
+      "description": "告警去重时间窗口（秒），同一 errorCode 在此窗口内只告警一次。",
+      "defaultValue": 60
+    },
+    {
+      "name": "ydsz.exception.alert-silence-period-seconds",
+      "type": "java.lang.Integer",
+      "description": "告警全局静默期（秒，0=不静默）。",
+      "defaultValue": 0
+    },
+    {
+      "name": "ydsz.i18n.validate-on-startup",
+      "type": "java.lang.Boolean",
+      "description": "启动时是否校验所有 ExceptionCode 的 i18n key 可解析。",
+      "defaultValue": true
+    }
+  ]
+}

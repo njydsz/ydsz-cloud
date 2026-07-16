@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: ydsz-agent
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+      config:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        file-extension: yaml
+        shared-configs:
+          - data-id: ydsz-common.yaml
+            refresh: true
+
+server:
+  port: 9007
+
+ydsz:
+  agent:
+    enabled: true
+    llm:
+      default-provider: ${LLM_PROVIDER:openai}
+      default-model: ${LLM_MODEL:gpt-4o-mini}
+      api-key: ${LLM_API_KEY:}
+      base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
+      temperature: ${LLM_TEMPERATURE:0.7}
+      max-tokens: ${LLM_MAX_TOKENS:2048}
+      timeout-seconds: ${LLM_TIMEOUT:60}
+    memory:
+      ttl-hours: 24
+      max-messages: 20
+    rag:
+      enabled: ${RAG_ENABLED:false}
+      vector-store: ${RAG_VECTOR_STORE:memory}
+      embedding-model: ${EMBEDDING_MODEL:text-embedding-3-small}
+      embedding-api-key: ${EMBEDDING_API_KEY:}
+      embedding-base-url: ${EMBEDDING_BASE_URL:}
+      dimension: ${EMBEDDING_DIMENSION:1536}
+      chunk-size: 500
+      chunk-overlap: 50
+      top-k: 5
+      min-score: 0.7

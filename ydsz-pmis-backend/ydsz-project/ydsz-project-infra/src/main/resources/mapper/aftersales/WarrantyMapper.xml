@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.project.infra.mapper.WarrantyMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.project.domain.entity.WarrantyDO">
+        <id column="id" property="id"/>
+        <result column="warranty_code" property="warrantyCode"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="contract_id" property="contractId"/>
+        <result column="project_type" property="projectType"/>
+        <result column="project_level" property="projectLevel"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="duration_months" property="durationMonths"/>
+        <result column="notice_days" property="noticeDays"/>
+        <result column="notice_sent" property="noticeSent"/>
+        <result column="notice_sent_at" property="noticeSentAt"/>
+        <result column="status" property="status"/>
+        <result column="terminated_at" property="terminatedAt"/>
+        <result column="terminated_reason" property="terminatedReason"/>
+        <result column="contact_name" property="contactName"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM ydsz_warranty
+        WHERE warranty_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <select id="selectByInitiation" resultMap="BaseResultMap">
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM ydsz_warranty
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY start_date DESC, id DESC
+    </select>
+
+    <select id="selectExpiringBefore" resultMap="BaseResultMap">
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM ydsz_warranty
+        WHERE end_date &lt;= #{until}
+          AND status IN ('ACTIVE', 'EXPIRING_SOON')
+          AND deleted = 0
+        ORDER BY end_date
+    </select>
+
+    <select id="selectOverdue" resultMap="BaseResultMap">
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM ydsz_warranty
+        WHERE end_date &lt; #{today}
+          AND status NOT IN ('EXPIRED', 'TERMINATED')
+          AND deleted = 0
+        ORDER BY end_date
+    </select>
+
+    <update id="markStatus">
+        UPDATE ydsz_warranty
+        <set>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="terminatedReason != null and terminatedReason != ''">
+                terminated_at = CURRENT_TIMESTAMP,
+                terminated_reason = #{terminatedReason},
+            </if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+</mapper>

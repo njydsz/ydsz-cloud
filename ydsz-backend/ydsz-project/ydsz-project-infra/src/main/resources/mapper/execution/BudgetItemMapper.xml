@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.project.infra.mapper.BudgetItemMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.project.domain.entity.BudgetItemDO">
+        <id column="id" property="id"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="category" property="category"/>
+        <result column="sub_category" property="subCategory"/>
+        <result column="description" property="description"/>
+        <result column="quantity" property="quantity"/>
+        <result column="unit" property="unit"/>
+        <result column="unit_price" property="unitPrice"/>
+        <result column="amount" property="amount"/>
+        <result column="remark" property="remark"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByInitiationId" resultMap="BaseResultMap">
+        SELECT id, initiation_id, category, sub_category, description, quantity, unit, unit_price, amount, remark, sort_order, created_at, updated_at, deleted
+        FROM ydsz_project_budget_item
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY sort_order, id
+    </select>
+
+    <select id="sumByCategory" resultType="java.util.Map">
+        SELECT category, COALESCE(SUM(amount), 0) AS amount
+        FROM ydsz_project_budget_item
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        GROUP BY category
+    </select>
+
+    <update id="deleteByInitiationId">
+        UPDATE ydsz_project_budget_item
+        SET deleted = 1, updated_at = CURRENT_TIMESTAMP
+        WHERE initiation_id = #{initiationId}
+    </update>
+
+</mapper>

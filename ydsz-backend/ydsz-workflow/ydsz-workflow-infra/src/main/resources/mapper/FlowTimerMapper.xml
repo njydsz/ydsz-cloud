@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.workflow.infra.mapper.FlowTimerMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.workflow.domain.entity.FlowTimerDO">
+        <id column="id" property="id"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="instance_id" property="instanceId"/>
+        <result column="definition_id" property="definitionId"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="node_code" property="nodeCode"/>
+        <result column="node_name" property="nodeName"/>
+        <result column="timer_type" property="timerType"/>
+        <result column="boundary_task_id" property="boundaryTaskId"/>
+        <result column="fire_at" property="fireAt"/>
+        <result column="cycle" property="cycle"/>
+        <result column="timer_status" property="timerStatus"/>
+        <result column="fired_at" property="firedAt"/>
+        <result column="cancel_reason" property="cancelReason"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, tenant_id, instance_id, definition_id, flow_code, node_code, node_name,
+        timer_type, boundary_task_id, fire_at, cycle, timer_status, fired_at, cancel_reason,
+        status, created_by, created_at, updated_by, updated_at, deleted, provider_trace_id
+    </sql>
+
+    <!-- P1-2: 扫描到点的 PENDING 定时器 -->
+    <select id="selectDueTimers" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_flow_timer
+        WHERE timer_status = 'PENDING'
+          AND deleted = 0
+          AND fire_at &lt;= #{now}
+        ORDER BY fire_at ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- P1-2: 取消某 userTask 关联的所有 BOUNDARY 定时器 -->
+    <update id="cancelByTask">
+        UPDATE ydsz_flow_timer
+        SET timer_status = 'CANCELLED',
+            cancel_reason = #{reason},
+            updated_at = NOW()
+        WHERE boundary_task_id = #{boundaryTaskId}
+          AND timer_status = 'PENDING'
+          AND deleted = 0
+    </update>
+
+    <!-- P1-2: 标记定时器已触发 -->
+    <update id="markFired">
+        UPDATE ydsz_flow_timer
+        SET timer_status = 'FIRED',
+            fired_at = #{firedAt},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND timer_status = 'PENDING'
+    </update>
+
+    <!-- P1-2: 关闭某实例所有 PENDING 定时器 -->
+    <update id="cancelByInstance">
+        UPDATE ydsz_flow_timer
+        SET timer_status = 'CANCELLED',
+            cancel_reason = #{reason},
+            updated_at = NOW()
+        WHERE instance_id = #{instanceId}
+          AND timer_status = 'PENDING'
+          AND deleted = 0
+    </update>
+
+    <select id="countPendingByInstance" resultType="long">
+        SELECT COUNT(*)
+        FROM ydsz_flow_timer
+        WHERE instance_id = #{instanceId}
+          AND timer_status = 'PENDING'
+          AND deleted = 0
+    </select>
+</mapper>
