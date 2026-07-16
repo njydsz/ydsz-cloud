@@ -48,7 +48,8 @@ public class HtmlDocumentParser implements DocumentParser {
         try {
             String html = new String(inputStream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
             // 使用 OWASP HTML Sanitizer 清洗恶意脚本（<script>, on* 事件等）
-            String sanitized = sanitizeHtml(html);
+            // 使用 Jsoup Safelist 清洗 HTML，移除恶意脚本和事件处理器
+            String sanitized = org.jsoup.Jsoup.clean(html, org.jsoup.safety.Safelist.relaxed());
             doc = Jsoup.parse(sanitized, "");
         } catch (IOException e) {
             log.error("[HtmlDocumentParser] 解析失败: {}", fileName, e);
@@ -162,29 +163,6 @@ public class HtmlDocumentParser implements DocumentParser {
     }
 
 
-    /**
-     * 使用 OWASP HTML Sanitizer 清洗 HTML，移除恶意脚本和事件处理器
-     */
-    private String sanitizeHtml(String html) {
-        try {
-            var policy = org.owasp.html.HtmlSanitizer.policyBuilder()
-                    .allowElements(org.owasp.html.HtmlSanitizer.policyBuilder().build(), "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "table", "tr", "td", "th", "thead", "tbody", "img", "a", "div", "span", "br", "hr", "strong", "em", "b", "i")
-                    .allowAttributes("src", "alt", "href", "title").onElements("img", "a")
-                    .build();
-            var sb = new StringBuilder();
-            org.owasp.html.HtmlSanitizer.sanitize(html, policy, (elementName, attrs) -> {
-                sb.append("<").append(elementName);
-                for (var e : attrs.entrySet()) {
-                    sb.append(" ").append(e.getKey()).append("="").append(e.getValue()).append(""");
-                }
-                sb.append(">");
-            }, (text) -> sb.append(org.owasp.html.HtmlSanitizer.escapeHtml(text)));
-            return sb.toString();
-        } catch (Exception e) {
-            log.warn("[HtmlDocumentParser] HTML 清洗失败, 使用原始 HTML", e);
-            return html;
-        }
-    }
     @Override
     public DocumentFormat getSupportedFormat() {
         return DocumentFormat.HTML;

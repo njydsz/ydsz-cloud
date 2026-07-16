@@ -25,7 +25,6 @@ package com.njydsz.pmis.common.file.storage;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public final class StorageType {
 

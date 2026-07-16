@@ -12,3 +12,8 @@ def rep(p,old,new):
         return False
     wf(p,c.replace(old,new,1))
     return True
+
+import re
+config=BASE/"core"/"config"/"ExcelConfig.java"
+c2=rf(str(config))
+fields=["useScientificNotation","keepRichTextFormat","writeHiddenSheet","maxSheetCacheSize","mandatoryUseInputStream","maxReadCacheSize"]

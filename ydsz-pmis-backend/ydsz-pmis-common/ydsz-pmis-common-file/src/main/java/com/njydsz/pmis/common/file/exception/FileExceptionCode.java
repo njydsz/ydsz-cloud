@@ -22,7 +22,6 @@ import com.njydsz.pmis.common.exception.enums.ExceptionCode;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public enum FileExceptionCode implements ExceptionCode {
 
@@ -78,6 +77,8 @@ public enum FileExceptionCode implements ExceptionCode {
     MULTIPART_UPLOAD_COMPLETE_FAILED("F07003", "multipart.upload.complete.failed"),
     /** 上传并发冲突（同一文件被并发上传） */
     UPLOAD_CONCURRENT_CONFLICT("F07004", "upload.concurrent.conflict"),
+    /** 文件病毒检测命中 */
+    FILE_VIRUS_DETECTED("F01014", "file.virus.detected"),
     /** 未知错误（兜底） */
     UNKNOWN("F99999", "unknown.error");
 

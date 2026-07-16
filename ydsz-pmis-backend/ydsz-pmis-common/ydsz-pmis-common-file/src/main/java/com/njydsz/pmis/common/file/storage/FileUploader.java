@@ -36,7 +36,6 @@ import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public interface FileUploader {
 

@@ -4,8 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.health.health.Health;
-import org.springframework.boot.health.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.docs.config.DocsProperties;
@@ -26,11 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnClass(name = "org.springframework.boot.health.health.HealthIndicator")
+@ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
 public class DocsHealthIndicator implements HealthIndicator {
 
     private final DocumentParserRegistry parserRegistry;
-    private final DocumentSecurityScannerComposite securityScanner;
     private final PiiDetectorComposite piiDetector;
     private final DocsProperties properties;
     private final AsyncDocumentParser asyncDocumentParser;

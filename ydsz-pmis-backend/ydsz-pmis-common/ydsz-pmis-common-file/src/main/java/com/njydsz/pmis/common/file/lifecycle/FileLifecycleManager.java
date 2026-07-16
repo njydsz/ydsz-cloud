@@ -300,12 +300,4 @@ public class FileLifecycleManager {
 		}
 	}
 
-	/**
-	 * 文件生命周期规则配置
-	 *
-	 * <p>配置前缀: {@code ydsz.file.lifecycle}
-	 */
-	@Data
-	@Component
-	@ConfigurationProperties(prefix = "ydsz.file.lifecycle")
 }

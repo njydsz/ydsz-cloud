@@ -470,36 +470,19 @@ public class ExcelFacade {
         setWebResponse(fileName, isXlsx, null);
     }
 
-    private static final ThreadLocal<String> DOWNLOAD_CONTENT_TYPE = new ThreadLocal<>();
-    private static final ThreadLocal<String> DOWNLOAD_FILE_NAME = new ThreadLocal<>();
-
-    public static String getDownloadContentType() {
-        return DOWNLOAD_CONTENT_TYPE.get();
-    }
-
-    public static String getDownloadFileName() {
-        return DOWNLOAD_FILE_NAME.get();
-    }
-
-    public static void clearDownloadContext() {
-        DOWNLOAD_CONTENT_TYPE.remove();
-        DOWNLOAD_FILE_NAME.remove();
-    }
 
     /**
-     * 生成 Web 下载响应的工具方法 (带内容类型)
+     * Generate web download response.
      *
-     * @param fileName 下载文件名
-     * @param isXlsx 是否为 xlsx 格式
-     * @param contentType 自定义内容类型 (null 时使用默认值)
+     * <p>Uses DownloadContext to manage download context, unified ThreadLocal management.</p>
+     *
+     * @param fileName download file name
+     * @param isXlsx whether xlsx format
+     * @param contentType custom content type (deprecated, handled by ExcelWebSupport)
      */
     public static void setWebResponse(String fileName, boolean isXlsx, String contentType) {
-        if (contentType == null) {
-            contentType = isXlsx
-                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                : "application/vnd.ms-excel";
-        }
-        DOWNLOAD_CONTENT_TYPE.set(contentType);
-        DOWNLOAD_FILE_NAME.set(fileName);
+        com.njydsz.pmis.common.excel.spring.DownloadContext.setFileName(
+            fileName + (isXlsx ? ".xlsx" : ".xls"));
     }
+
 }

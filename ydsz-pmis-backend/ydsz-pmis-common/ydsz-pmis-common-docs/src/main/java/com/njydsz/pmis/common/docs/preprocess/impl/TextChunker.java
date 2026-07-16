@@ -28,17 +28,17 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @since 1.3.0
  */
 @Slf4j
 @Component
 public class TextChunker implements DocumentPreprocessor {
 
-    /** 默认最大块大小（字符数） */
-    private static final int properties.getMaxChunkSize() = 2000;
+    private final DocsProperties properties;
 
-    /** 默认块重叠大小（字符数） */
-    private static final int properties.getChunkOverlap() = 200;
+    public TextChunker(DocsProperties properties) {
+        this.properties = properties;
+    }
 
     @Override
     public DocumentContent process(DocumentContent content) {

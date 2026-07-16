@@ -1,4 +1,51 @@
-# ydsz-pmis-common-excel
+import re
+from pathlib import Path
+
+BASE = Path(r"d:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-common\ydsz-pmis-common-excel\src\main\java\com\njydsz\pmis\common\excel")
+
+def rf(p):
+    with open(p, "r", encoding="utf-8") as f:
+        return f.read()
+
+def wf(p, c):
+    with open(p, "w", encoding="utf-8") as f:
+        f.write(c)
+
+# P2-8: Remove unused fields from ExcelConfig
+config_path = str(BASE / "core" / "config" / "ExcelConfig.java")
+c = rf(config_path)
+
+# Remove field declarations
+fields_to_remove = [
+    "useScientificNotation",
+    "keepRichTextFormat",
+    "writeHiddenSheet",
+    "maxSheetCacheSize",
+    "mandatoryUseInputStream",
+    "maxReadCacheSize",
+]
+
+for field in fields_to_remove:
+    # Remove field declaration with Javadoc
+    pattern = re.compile(r'    /\*\*.*?\*/\n    private \w+ \w+' + field + r'.*?;\n\n?', re.DOTALL)
+    c = pattern.sub("", c)
+    # Remove getter
+    pattern_get = re.compile(r'    public \w+ [gG]et\w*' + field + r'\(\).*?\n    \}\n\n?', re.DOTALL)
+    c = pattern_get.sub("", c)
+    # Remove setter
+    pattern_set = re.compile(r'    public void [sS]et\w*' + field + r'\(.*?\n    \}\n\n?', re.DOTALL)
+    c = pattern_set.sub("", c)
+    # Remove is-getter for boolean
+    pattern_is = re.compile(r'    public boolean is\w*' + field + r'\(\).*?\n    \}\n\n?', re.DOTALL)
+    c = pattern_is.sub("", c)
+    print(f"  removed {field}")
+
+wf(config_path, c)
+print("P2-8 DONE")
+
+# P1-7+P1-8: README update
+readme_path = Path(r"d:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-common\ydsz-pmis-common-excel\README.md")
+readme_content = """# ydsz-pmis-common-excel
 
 PMIS high-performance Excel read/write framework - SAX streaming read (memory-friendly), SXSSF large file write, concurrent write, template fill, ASM field acceleration, formula injection protection, type converter chain, Spring Web integration.
 
@@ -164,3 +211,29 @@ ydsz:
     <artifactId>ydsz-pmis-common-excel</artifactId>
 </dependency>
 ```
+"""
+readme_path.write_text(readme_content, encoding="utf-8")
+print("README DONE")
+
+# P2-4: Fix ExcelFacade ThreadLocal (if not already done)
+facade_path = str(BASE / "core" / "ExcelFacade.java")
+c = rf(facade_path)
+if "DOWNLOAD_CONTENT_TYPE" in c:
+    # Still has ThreadLocal - remove it
+    import re
+    # Remove ThreadLocal declarations and accessor methods
+    pattern = re.compile(
+        r'    private static final ThreadLocal<String> DOWNLOAD_\w+.*?(?=\n    [/\*]|\n    public|\n    \})',
+        re.DOTALL
+    )
+    c = pattern.sub("", c)
+    # Remove getDownloadContentType, getDownloadFileName, clearDownloadContext
+    for method in ["getDownloadContentType", "getDownloadFileName", "clearDownloadContext"]:
+        pat = re.compile(r'    public static \w+ ' + method + r'\(\).*?\n    \}\n\n?', re.DOTALL)
+        c = pat.sub("", c)
+    wf(facade_path, c)
+    print("P2-4 ThreadLocal cleaned")
+else:
+    print("P2-4 already done")
+
+print("ALL DONE")

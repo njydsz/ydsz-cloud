@@ -43,7 +43,6 @@ import lombok.Data;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Data
 public class FileStorage implements Serializable {
@@ -115,6 +114,7 @@ public class FileStorage implements Serializable {
      * @return 填充了基本信息的 FileStorage 实体
      * @throws BusinessException 文件为空、文件名无效或扩展名不允许时抛出
      */
+    @Deprecated
     public static FileStorage build(MultipartFile file) {
         if (file.isEmpty()) {
             throw new BusinessException(FileExceptionCode.FILE_EMPTY);

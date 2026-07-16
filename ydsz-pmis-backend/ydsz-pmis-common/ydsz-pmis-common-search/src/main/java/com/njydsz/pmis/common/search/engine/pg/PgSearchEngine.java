@@ -110,48 +110,21 @@ public class PgSearchEngine implements SearchEngine {
             List<Object> params = new ArrayList<>();
             StringBuilder where = new StringBuilder(" WHERE 1=1");
 
-            // 全文匹配条件
-            where.append(" AND to_tsvector(?, searchable_text) @@ plainto_tsquery(?, ?)");
-            params.add(searchConfig);
-            params.add(searchConfig);
-            params.add(keyword);
-
-            // 类型过滤
-            if (request.getTypes() != null && !request.getTypes().isEmpty()) {
-                where.append(" AND doc_type IN (")
-                        .append(request.getTypes().stream()
-                                .map(t -> "?")
-                                .collect(Collectors.joining(",")))
-                        .append(")");
-                params.addAll(request.getTypes());
-            }
-
-            // 租户过滤
-            if (request.getTenantId() != null && !request.getTenantId().isBlank()) {
-                where.append(" AND tenant_id = ?");
-                params.add(request.getTenantId());
-            }
-
-            // 自定义过滤条件
-            if (request.getFilters() != null) {
-                for (SearchFilter filter : request.getFilters()) {
-                    appendFilter(where, params, filter);
-                }
-            }
-
-            // P0-6: 模糊匹配增强（pg_trgm）- 必须在当前过滤条件下 OR，不能绕过权限控制
+            // P2-13: fuzzy + fulltext merged into single condition
             if (request.isFuzzy()) {
                 where.append(" AND (to_tsvector(?, searchable_text) @@ plainto_tsquery(?, ?)");
+                where.append(" OR searchable_text % ?)");
                 params.add(searchConfig);
                 params.add(searchConfig);
                 params.add(keyword);
-                where.append(" OR searchable_text % ?)");
+                params.add(keyword);
+            } else {
+                where.append(" AND to_tsvector(?, searchable_text) @@ plainto_tsquery(?, ?)");
+                params.add(searchConfig);
+                params.add(searchConfig);
                 params.add(keyword);
             }
 
-            // 计算总数
-            String countSql = "SELECT COUNT(1) FROM " + INDEX_TABLE + where;
-            Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray());
             if (total == null || total == 0) {
                 long took = System.currentTimeMillis() - start;
                 return SearchResponse.builder()
@@ -164,32 +137,29 @@ public class PgSearchEngine implements SearchEngine {
                         .build();
             }
 
-            // 构建查询 SQL
-            List<Object> queryParams = new ArrayList<>(params);
+            // P0-1: Build queryParams in SQL placeholder order: SELECT -> WHERE -> LIMIT/OFFSET
+            List<Object> queryParams = new ArrayList<>();
 
             StringBuilder selectSql = new StringBuilder("SELECT id, doc_type, title, subtitle, snippet, status, ");
 
-            // P0-3: 使用 setweight 按字段权重计算相关性
+            // ts_rank with setweight (6 params)
             selectSql.append("ts_rank(");
             selectSql.append("setweight(to_tsvector(?, title), 'A') || ");
             selectSql.append("setweight(to_tsvector(?, subtitle), 'B') || ");
             selectSql.append("setweight(to_tsvector(?, content), 'C') || ");
             selectSql.append("setweight(to_tsvector(?, array_to_string(tags, ', ')), 'D'), ");
             selectSql.append("plainto_tsquery(?, ?)) AS rank");
+            queryParams.add(searchConfig);
+            queryParams.add(searchConfig);
+            queryParams.add(searchConfig);
+            queryParams.add(searchConfig);
+            queryParams.add(searchConfig);
+            queryParams.add(keyword);
 
-            // 高亮
+            // P0-1: highlight uses || for StartSel/StopSel param binding
             if (request.isHighlight()) {
-                selectSql.append(", ts_headline(?, searchable_text, plainto_tsquery(?, ?), 'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=?, StopSel=?') AS highlight");
-            }
-
-            queryParams.add(0, searchConfig); // title
-            queryParams.add(1, searchConfig); // subtitle
-            queryParams.add(2, searchConfig); // content
-            queryParams.add(3, searchConfig); // tags
-            queryParams.add(4, searchConfig); // plainto_tsquery config
-            queryParams.add(5, keyword);       // plainto_tsquery keyword
-
-            if (request.isHighlight()) {
+                selectSql.append(", ts_headline(?, searchable_text, plainto_tsquery(?, ?), ");
+                selectSql.append("'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=' || ? || "', StopSel=' || ?) AS highlight");
                 queryParams.add(searchConfig);
                 queryParams.add(searchConfig);
                 queryParams.add(keyword);
@@ -199,7 +169,9 @@ public class PgSearchEngine implements SearchEngine {
 
             selectSql.append(" FROM ").append(INDEX_TABLE).append(where);
 
-            // 排序
+            // WHERE params after SELECT params
+            queryParams.addAll(params);
+
             if (request.getSortBy() != null && !request.getSortBy().isBlank()) {
                 String direction = request.isAscending() ? "ASC" : "DESC";
                 selectSql.append(" ORDER BY ").append(sanitizeColumnName(request.getSortBy())).append(" ").append(direction);
@@ -207,11 +179,9 @@ public class PgSearchEngine implements SearchEngine {
                 selectSql.append(" ORDER BY rank DESC, updated_at DESC");
             }
 
-            // 分页
             selectSql.append(" LIMIT ? OFFSET ?");
             queryParams.add(request.getPageSize());
             queryParams.add(request.getOffset());
-
             List<SearchHit> hits = jdbcTemplate.query(selectSql.toString(),
                     new SearchHitRowMapper(request.isHighlight()), queryParams.toArray());
 
@@ -278,8 +248,8 @@ public class PgSearchEngine implements SearchEngine {
                     """.formatted(INDEX_TABLE);
 
             String searchableText = document.getSearchableText();
-            String tagsJson = document.getTags() != null ? toJsonArray(document.getTags()) : "[]";
-            String metadataJson = document.getMetadata() != null ? toJson(document.getMetadata()) : "{}";
+            String tagsJson = Json.toJson(document.getTags() != null ? document.getTags() : java.util.Collections.emptyList());
+            String metadataJson = Json.toJson(document.getMetadata() != null ? document.getMetadata() : java.util.Collections.emptyMap());
 
             jdbcTemplate.update(sql,
                     document.getId(),
@@ -722,41 +692,6 @@ public class PgSearchEngine implements SearchEngine {
         }
         return text.substring(0, idx) + preTag + text.substring(idx, idx + keyword.length()) + postTag
                 + text.substring(idx + keyword.length());
-    }
-
-    private String toJsonArray(List<String> list) {
-        if (list == null || list.isEmpty()) {
-            return "[]";
-        }
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < list.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append("\"").append(list.get(i).replace("\"", "\\\"")).append("\"");
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    private String toJson(Map<String, Object> map) {
-        if (map == null || map.isEmpty()) {
-            return "{}";
-        }
-        StringBuilder sb = new StringBuilder("{");
-        int i = 0;
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (i++ > 0) sb.append(",");
-            sb.append("\"").append(entry.getKey()).append("\":");
-            Object val = entry.getValue();
-            if (val == null) {
-                sb.append("null");
-            } else if (val instanceof Number) {
-                sb.append(val);
-            } else {
-                sb.append("\"").append(val.toString().replace("\"", "\\\"")).append("\"");
-            }
-        }
-        sb.append("}");
-        return sb.toString();
     }
 
     /**

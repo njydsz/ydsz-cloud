@@ -536,8 +536,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         try {
             doRemoveObject(resolvedBucket, resolvedObjectName);
+            if (fileMetrics != null) fileMetrics.recordDelete();
         } catch (Exception e) {
-            log.error("[Storage] file delete failed, bucket={}, object={}, message={}",
+            log.error("file delete failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
             throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
         }

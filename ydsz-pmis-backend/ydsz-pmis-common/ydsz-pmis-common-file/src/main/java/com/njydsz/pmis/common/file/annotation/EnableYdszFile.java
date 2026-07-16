@@ -36,7 +36,6 @@ import com.njydsz.pmis.common.file.config.FileConfiguration;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see FileConfiguration
  */
 @Target(ElementType.TYPE)
