@@ -53,7 +53,7 @@ BEGIN;
 --   - pmis_project_closure         -> pmis_execution_closure          (已存在)
 --   - pmis_evm_record              -> pmis_evm_measure                (已存在)
 --   - pmis_contract_template       -> pmis_project_contract_template  (已存在)
---   - pmis_daily_reconcile         -> pmis_reconcile_daily            (已存在)
+--   - pmis_daily_reconcile         -> pmis_project_reconcile_daily            (已存在)
 --   - pmis_project_delivery        -> pmis_execution_delivery_standard/item (已存在)
 --   - pmis_agent_blackboard        -> 运行时对象(Blackboard 模式,非持久化实体)
 --   - pmis_agent_orchestration     -> 服务层编排概念(无实体类,非 DB 表)
@@ -3951,9 +3951,9 @@ CREATE INDEX IF NOT EXISTS idx_pcp_trace
     ON pmis_cost_purchase (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 5. 费用报销表 pmis_cost_expense
+-- 5. 费用报销表 pmis_project_expense
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_cost_expense(
+CREATE TABLE IF NOT EXISTS pmis_project_expense(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     expense_code        VARCHAR(64)    NOT NULL,
     initiation_id       VARCHAR(20),
@@ -3984,50 +3984,50 @@ CREATE TABLE IF NOT EXISTS pmis_cost_expense(
     CONSTRAINT ck_pce_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_pce_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_cost_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
-COMMENT ON COLUMN pmis_cost_expense.id IS '主键 ID';
-COMMENT ON COLUMN pmis_cost_expense.expense_code IS '报销单编码(全局唯一)';
-COMMENT ON COLUMN pmis_cost_expense.initiation_id IS '关联立项 ID(项目级费用必填,公司公共费用可空)';
-COMMENT ON COLUMN pmis_cost_expense.employee_id IS '报销人 ID';
-COMMENT ON COLUMN pmis_cost_expense.employee_name IS '报销人姓名';
-COMMENT ON COLUMN pmis_cost_expense.expense_type IS '费用类型: TRAVEL 差旅 / CATERING 餐饮 / MEETING 会议 / SUPPLIES 办公 / COMMUNICATION 通讯 / OTHER 其他';
-COMMENT ON COLUMN pmis_cost_expense.amount IS '报销金额(元)';
-COMMENT ON COLUMN pmis_cost_expense.expense_date IS '费用发生日期';
-COMMENT ON COLUMN pmis_cost_expense.description IS '费用说明';
-COMMENT ON COLUMN pmis_cost_expense.receipt_url IS '发票/凭证 URL';
-COMMENT ON COLUMN pmis_cost_expense.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已打款';
-COMMENT ON COLUMN pmis_cost_expense.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_cost_expense.approver_name IS '审批人姓名';
-COMMENT ON COLUMN pmis_cost_expense.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_cost_expense.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_cost_expense.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_cost_expense.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_cost_expense.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_cost_expense.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_cost_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_cost_expense.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_cost_expense.version IS '乐观锁版本号';
+COMMENT ON TABLE pmis_project_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
+COMMENT ON COLUMN pmis_project_expense.id IS '主键 ID';
+COMMENT ON COLUMN pmis_project_expense.expense_code IS '报销单编码(全局唯一)';
+COMMENT ON COLUMN pmis_project_expense.initiation_id IS '关联立项 ID(项目级费用必填,公司公共费用可空)';
+COMMENT ON COLUMN pmis_project_expense.employee_id IS '报销人 ID';
+COMMENT ON COLUMN pmis_project_expense.employee_name IS '报销人姓名';
+COMMENT ON COLUMN pmis_project_expense.expense_type IS '费用类型: TRAVEL 差旅 / CATERING 餐饮 / MEETING 会议 / SUPPLIES 办公 / COMMUNICATION 通讯 / OTHER 其他';
+COMMENT ON COLUMN pmis_project_expense.amount IS '报销金额(元)';
+COMMENT ON COLUMN pmis_project_expense.expense_date IS '费用发生日期';
+COMMENT ON COLUMN pmis_project_expense.description IS '费用说明';
+COMMENT ON COLUMN pmis_project_expense.receipt_url IS '发票/凭证 URL';
+COMMENT ON COLUMN pmis_project_expense.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已打款';
+COMMENT ON COLUMN pmis_project_expense.approver_id IS '审批人 ID';
+COMMENT ON COLUMN pmis_project_expense.approver_name IS '审批人姓名';
+COMMENT ON COLUMN pmis_project_expense.approved_at IS '审批时间';
+COMMENT ON COLUMN pmis_project_expense.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_expense.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_project_expense.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_project_expense.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_project_expense.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_project_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_project_expense.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_expense.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_pce_initiation
-    ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
+    ON pmis_project_expense (initiation_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pce_employee
-    ON pmis_cost_expense (employee_id) WHERE deleted = 0;
+    ON pmis_project_expense (employee_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pce_status
-    ON pmis_cost_expense (status) WHERE deleted = 0;
+    ON pmis_project_expense (status) WHERE deleted = 0;
 -- [INLINE-OPT] 员工 + 状态(员工报销台账)
 CREATE INDEX IF NOT EXISTS idx_pce_employee_status
-    ON pmis_cost_expense (employee_id, status) WHERE deleted = 0;
+    ON pmis_project_expense (employee_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 费用日期(报销中心时间筛选)
 CREATE INDEX IF NOT EXISTS idx_pce_tenant_date
-    ON pmis_cost_expense (tenant_id, expense_date DESC) WHERE deleted = 0;
+    ON pmis_project_expense (tenant_id, expense_date DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pce_trace
-    ON pmis_cost_expense (provider_trace_id) WHERE provider_trace_id <> '';
+    ON pmis_project_expense (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 6. 收入确认表 pmis_profit_revenue
+-- 6. 收入确认表 pmis_project_revenue
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
+CREATE TABLE IF NOT EXISTS pmis_project_revenue(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_id         VARCHAR(20)         NOT NULL,
     initiation_id       VARCHAR(20)         NOT NULL,
@@ -4060,52 +4060,52 @@ CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
     CONSTRAINT ck_ppr_version_nonneg    CHECK (version >= 0),
     CONSTRAINT ck_ppr_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_profit_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
-COMMENT ON COLUMN pmis_profit_revenue.id IS '主键 ID';
-COMMENT ON COLUMN pmis_profit_revenue.contract_id IS '合同 ID(关联 pmis_project_contract.id)';
-COMMENT ON COLUMN pmis_profit_revenue.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_profit_revenue.revenue_code IS '收入确认单编码(全局唯一)';
-COMMENT ON COLUMN pmis_profit_revenue.recognition_method IS '确认方法: MILESTONE 里程碑法 / PERCENTAGE 比例法 / PERCENT_COMPLETE 完工法 / POINTS 工分法 / MANUAL 手动';
-COMMENT ON COLUMN pmis_profit_revenue.period IS '所属期间(YYYY-MM)';
-COMMENT ON COLUMN pmis_profit_revenue.amount IS '确认金额(元)';
-COMMENT ON COLUMN pmis_profit_revenue.recognition_date IS '确认日期';
-COMMENT ON COLUMN pmis_profit_revenue.milestone IS '里程碑描述';
-COMMENT ON COLUMN pmis_profit_revenue.percent_complete IS '完工百分比(0-100,完工法)';
-COMMENT ON COLUMN pmis_profit_revenue.invoice_id IS '关联开票申请 ID';
-COMMENT ON COLUMN pmis_profit_revenue.status IS '状态: DRAFT 草稿 / CONFIRMED 已确认 / REVERSED 已冲销';
-COMMENT ON COLUMN pmis_profit_revenue.confirmed_by IS '确认人 ID';
-COMMENT ON COLUMN pmis_profit_revenue.confirmed_at IS '确认时间';
-COMMENT ON COLUMN pmis_profit_revenue.description IS '收入确认说明';
-COMMENT ON COLUMN pmis_profit_revenue.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_profit_revenue.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_profit_revenue.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_profit_revenue.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_profit_revenue.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_profit_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_profit_revenue.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_profit_revenue.version IS '乐观锁版本号';
+COMMENT ON TABLE pmis_project_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
+COMMENT ON COLUMN pmis_project_revenue.id IS '主键 ID';
+COMMENT ON COLUMN pmis_project_revenue.contract_id IS '合同 ID(关联 pmis_project_contract.id)';
+COMMENT ON COLUMN pmis_project_revenue.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_project_revenue.revenue_code IS '收入确认单编码(全局唯一)';
+COMMENT ON COLUMN pmis_project_revenue.recognition_method IS '确认方法: MILESTONE 里程碑法 / PERCENTAGE 比例法 / PERCENT_COMPLETE 完工法 / POINTS 工分法 / MANUAL 手动';
+COMMENT ON COLUMN pmis_project_revenue.period IS '所属期间(YYYY-MM)';
+COMMENT ON COLUMN pmis_project_revenue.amount IS '确认金额(元)';
+COMMENT ON COLUMN pmis_project_revenue.recognition_date IS '确认日期';
+COMMENT ON COLUMN pmis_project_revenue.milestone IS '里程碑描述';
+COMMENT ON COLUMN pmis_project_revenue.percent_complete IS '完工百分比(0-100,完工法)';
+COMMENT ON COLUMN pmis_project_revenue.invoice_id IS '关联开票申请 ID';
+COMMENT ON COLUMN pmis_project_revenue.status IS '状态: DRAFT 草稿 / CONFIRMED 已确认 / REVERSED 已冲销';
+COMMENT ON COLUMN pmis_project_revenue.confirmed_by IS '确认人 ID';
+COMMENT ON COLUMN pmis_project_revenue.confirmed_at IS '确认时间';
+COMMENT ON COLUMN pmis_project_revenue.description IS '收入确认说明';
+COMMENT ON COLUMN pmis_project_revenue.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_revenue.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_project_revenue.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_project_revenue.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_project_revenue.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_project_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_project_revenue.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_revenue.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ppr_contract
-    ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
+    ON pmis_project_revenue (contract_id) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:立项 + 期间(项目月度收入走势)
 CREATE INDEX IF NOT EXISTS idx_ppr_initiation
-    ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
+    ON pmis_project_revenue (initiation_id, period) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppr_status
-    ON pmis_profit_revenue (status) WHERE deleted = 0;
+    ON pmis_project_revenue (status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 期间(全公司收入月报)
 CREATE INDEX IF NOT EXISTS idx_ppr_tenant_period
-    ON pmis_profit_revenue (tenant_id, period) WHERE deleted = 0;
+    ON pmis_project_revenue (tenant_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 关联开票申请 ID
 CREATE INDEX IF NOT EXISTS idx_ppr_invoice
-    ON pmis_profit_revenue (invoice_id) WHERE deleted = 0 AND invoice_id IS NOT NULL;
+    ON pmis_project_revenue (invoice_id) WHERE deleted = 0 AND invoice_id IS NOT NULL;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_ppr_trace
-    ON pmis_profit_revenue (provider_trace_id) WHERE provider_trace_id <> '';
+    ON pmis_project_revenue (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 7. 项目利润快照表 pmis_profit_snapshot
+-- 7. 项目利润快照表 pmis_project_profit_snapshot
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
+CREATE TABLE IF NOT EXISTS pmis_project_profit_snapshot(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id       VARCHAR(20)         NOT NULL,
     period              VARCHAR(7)     NOT NULL,
@@ -4141,40 +4141,40 @@ CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
     CONSTRAINT ck_pps_version_nonneg  CHECK (version >= 0),
     CONSTRAINT ck_pps_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照(按月): 立项 × 期间 唯一约束,周期性滚动生成';
-COMMENT ON COLUMN pmis_profit_snapshot.id IS '主键 ID';
-COMMENT ON COLUMN pmis_profit_snapshot.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_profit_snapshot.period IS '快照周期(YYYY-MM)';
-COMMENT ON COLUMN pmis_profit_snapshot.contract_amount IS '合同总额(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.recognized_revenue IS '已确认收入(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.billed_amount IS '已开票金额(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.received_amount IS '已回款金额(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.labor_cost IS '人力成本(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.purchase_cost IS '采购成本(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.expense_cost IS '费用(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.outsource_cost IS '外包(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.allocation_cost IS '分摊费用(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.total_cost IS '总成本(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.gross_profit IS '毛利(元)';
-COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
-COMMENT ON COLUMN pmis_profit_snapshot.progress_pct IS '完工进度(0-100)';
-COMMENT ON COLUMN pmis_profit_snapshot.billable_hours IS '可计费工时(小时)';
-COMMENT ON COLUMN pmis_profit_snapshot.non_billable_hours IS '不可计费工时(小时)';
-COMMENT ON COLUMN pmis_profit_snapshot.snapshot_at IS '快照生成时间';
-COMMENT ON COLUMN pmis_profit_snapshot.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_profit_snapshot.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_profit_snapshot.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_profit_snapshot.version IS '乐观锁版本号';
+COMMENT ON TABLE pmis_project_profit_snapshot IS '项目利润快照(按月): 立项 × 期间 唯一约束,周期性滚动生成';
+COMMENT ON COLUMN pmis_project_profit_snapshot.id IS '主键 ID';
+COMMENT ON COLUMN pmis_project_profit_snapshot.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.period IS '快照周期(YYYY-MM)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.contract_amount IS '合同总额(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.recognized_revenue IS '已确认收入(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.billed_amount IS '已开票金额(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.received_amount IS '已回款金额(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.labor_cost IS '人力成本(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.purchase_cost IS '采购成本(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.expense_cost IS '费用(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.outsource_cost IS '外包(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.allocation_cost IS '分摊费用(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.total_cost IS '总成本(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.gross_profit IS '毛利(元)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
+COMMENT ON COLUMN pmis_project_profit_snapshot.progress_pct IS '完工进度(0-100)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.billable_hours IS '可计费工时(小时)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.non_billable_hours IS '不可计费工时(小时)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.snapshot_at IS '快照生成时间';
+COMMENT ON COLUMN pmis_project_profit_snapshot.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_profit_snapshot.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_project_profit_snapshot.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_profit_snapshot.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:立项 + 期间(项目利润走势)
 CREATE INDEX IF NOT EXISTS idx_pps_initiation
-    ON pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
+    ON pmis_project_profit_snapshot (initiation_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 期间(全公司月度利润驾驶舱)
 CREATE INDEX IF NOT EXISTS idx_pps_tenant_period
-    ON pmis_profit_snapshot (tenant_id, period) WHERE deleted = 0;
+    ON pmis_project_profit_snapshot (tenant_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pps_trace
-    ON pmis_profit_snapshot (provider_trace_id) WHERE provider_trace_id <> '';
+    ON pmis_project_profit_snapshot (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 8. 项目风险登记表 pmis_execution_risk
@@ -4730,14 +4730,14 @@ VALUES
 -- =====================================================
 -- PMIS 批次9 DDL：开票/回款/客户信用
 -- 版本: V1.0.0_012
--- 描述: 发票主表(pmis_finance_invoice)、回款主表(pmis_finance_payment)、
---       客户信用表(pmis_finance_customer_credit)
+-- 描述: 发票主表(pmis_project_invoice)、回款主表(pmis_project_payment)、
+--       客户信用表(pmis_project_customer_credit)
 -- =====================================================
 
 -- =====================================================
--- 1. 发票主表 pmis_finance_invoice
+-- 1. 发票主表 pmis_project_invoice
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
+CREATE TABLE IF NOT EXISTS pmis_project_invoice(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     invoice_no          VARCHAR(64),                              -- 财务发票号
     invoice_code        VARCHAR(64)  NOT NULL,                    -- 业务编号（系统生成）
@@ -4785,65 +4785,65 @@ CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     CONSTRAINT ck_pfi_amount_nonneg     CHECK (amount >= 0 AND tax_amount >= 0 AND net_amount >= 0),
     CONSTRAINT ck_pfi_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_finance_invoice IS '发票主表: 支持正常开票与红冲（RED_REVERSED）,执行 InvoiceStatus 状态机校验,invoice_code 唯一,invoice_no 在 ISSUED 时分配';
-COMMENT ON COLUMN pmis_finance_invoice.invoice_no IS '财务发票号: 税务局分配的纸质/电子发票号,ISSUED 状态时分配';
-COMMENT ON COLUMN pmis_finance_invoice.invoice_code IS '业务编号: 系统生成的唯一编码,如 INV-2026-001';
-COMMENT ON COLUMN pmis_finance_invoice.invoice_type IS '发票类型: NORMAL 正常开票 / RED_REVERSE 红冲发票';
-COMMENT ON COLUMN pmis_finance_invoice.contract_id IS '所属合同 ID';
-COMMENT ON COLUMN pmis_finance_invoice.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_finance_invoice.customer_id IS '客户 ID';
-COMMENT ON COLUMN pmis_finance_invoice.customer_name IS '客户名称（冗余）';
-COMMENT ON COLUMN pmis_finance_invoice.invoice_basis IS '开票依据: MILESTONE 里程碑 / OUTSOURCING 外包人天 / MONTHLY 月度结算 / FINAL 终验 / OTHER 其他';
-COMMENT ON COLUMN pmis_finance_invoice.amount IS '含税金额(元)';
-COMMENT ON COLUMN pmis_finance_invoice.tax_amount IS '税额(元)';
-COMMENT ON COLUMN pmis_finance_invoice.net_amount IS '不含税金额(元)';
-COMMENT ON COLUMN pmis_finance_invoice.tax_rate IS '税率: 0.06=6%,0.13=13%';
-COMMENT ON COLUMN pmis_finance_invoice.currency IS '币种: CNY/USD/EUR,默认 CNY';
-COMMENT ON COLUMN pmis_finance_invoice.invoice_date IS '开票日期';
-COMMENT ON COLUMN pmis_finance_invoice.tax_period IS '税务所属期: 格式 YYYY-MM,用于税务申报';
-COMMENT ON COLUMN pmis_finance_invoice.title IS '发票抬头';
-COMMENT ON COLUMN pmis_finance_invoice.tax_no IS '纳税人识别号: 客户税号';
-COMMENT ON COLUMN pmis_finance_invoice.bank_info IS '开户行+账号: 客户收票方银行信息';
-COMMENT ON COLUMN pmis_finance_invoice.address IS '客户地址';
-COMMENT ON COLUMN pmis_finance_invoice.phone IS '客户电话';
-COMMENT ON COLUMN pmis_finance_invoice.remark IS '备注';
-COMMENT ON COLUMN pmis_finance_invoice.status IS '发票状态: DRAFT 草稿 / SUBMITTED 已提交 / ISSUED 已开票 / RED_REVERSED 已红冲 / CANCELLED 已取消,严格状态机';
-COMMENT ON COLUMN pmis_finance_invoice.reversed_by_id IS '红冲来源发票 ID: 红冲发票指向被红冲的原始发票';
-COMMENT ON COLUMN pmis_finance_invoice.attachment_id IS '发票扫描件: 引用 pmis_file_metadata.id';
-COMMENT ON COLUMN pmis_finance_invoice.approval_comment IS '审批意见';
-COMMENT ON COLUMN pmis_finance_invoice.applied_by IS '申请人 ID';
-COMMENT ON COLUMN pmis_finance_invoice.approved_by IS '审批人 ID';
-COMMENT ON COLUMN pmis_finance_invoice.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_finance_invoice.issued_by IS '开票人 ID';
-COMMENT ON COLUMN pmis_finance_invoice.issued_at IS '开票时间';
-COMMENT ON COLUMN pmis_finance_invoice.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_finance_invoice.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_finance_invoice.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  pmis_project_invoice IS '发票主表: 支持正常开票与红冲（RED_REVERSED）,执行 InvoiceStatus 状态机校验,invoice_code 唯一,invoice_no 在 ISSUED 时分配';
+COMMENT ON COLUMN pmis_project_invoice.invoice_no IS '财务发票号: 税务局分配的纸质/电子发票号,ISSUED 状态时分配';
+COMMENT ON COLUMN pmis_project_invoice.invoice_code IS '业务编号: 系统生成的唯一编码,如 INV-2026-001';
+COMMENT ON COLUMN pmis_project_invoice.invoice_type IS '发票类型: NORMAL 正常开票 / RED_REVERSE 红冲发票';
+COMMENT ON COLUMN pmis_project_invoice.contract_id IS '所属合同 ID';
+COMMENT ON COLUMN pmis_project_invoice.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN pmis_project_invoice.customer_id IS '客户 ID';
+COMMENT ON COLUMN pmis_project_invoice.customer_name IS '客户名称（冗余）';
+COMMENT ON COLUMN pmis_project_invoice.invoice_basis IS '开票依据: MILESTONE 里程碑 / OUTSOURCING 外包人天 / MONTHLY 月度结算 / FINAL 终验 / OTHER 其他';
+COMMENT ON COLUMN pmis_project_invoice.amount IS '含税金额(元)';
+COMMENT ON COLUMN pmis_project_invoice.tax_amount IS '税额(元)';
+COMMENT ON COLUMN pmis_project_invoice.net_amount IS '不含税金额(元)';
+COMMENT ON COLUMN pmis_project_invoice.tax_rate IS '税率: 0.06=6%,0.13=13%';
+COMMENT ON COLUMN pmis_project_invoice.currency IS '币种: CNY/USD/EUR,默认 CNY';
+COMMENT ON COLUMN pmis_project_invoice.invoice_date IS '开票日期';
+COMMENT ON COLUMN pmis_project_invoice.tax_period IS '税务所属期: 格式 YYYY-MM,用于税务申报';
+COMMENT ON COLUMN pmis_project_invoice.title IS '发票抬头';
+COMMENT ON COLUMN pmis_project_invoice.tax_no IS '纳税人识别号: 客户税号';
+COMMENT ON COLUMN pmis_project_invoice.bank_info IS '开户行+账号: 客户收票方银行信息';
+COMMENT ON COLUMN pmis_project_invoice.address IS '客户地址';
+COMMENT ON COLUMN pmis_project_invoice.phone IS '客户电话';
+COMMENT ON COLUMN pmis_project_invoice.remark IS '备注';
+COMMENT ON COLUMN pmis_project_invoice.status IS '发票状态: DRAFT 草稿 / SUBMITTED 已提交 / ISSUED 已开票 / RED_REVERSED 已红冲 / CANCELLED 已取消,严格状态机';
+COMMENT ON COLUMN pmis_project_invoice.reversed_by_id IS '红冲来源发票 ID: 红冲发票指向被红冲的原始发票';
+COMMENT ON COLUMN pmis_project_invoice.attachment_id IS '发票扫描件: 引用 pmis_file_metadata.id';
+COMMENT ON COLUMN pmis_project_invoice.approval_comment IS '审批意见';
+COMMENT ON COLUMN pmis_project_invoice.applied_by IS '申请人 ID';
+COMMENT ON COLUMN pmis_project_invoice.approved_by IS '审批人 ID';
+COMMENT ON COLUMN pmis_project_invoice.approved_at IS '审批时间';
+COMMENT ON COLUMN pmis_project_invoice.issued_by IS '开票人 ID';
+COMMENT ON COLUMN pmis_project_invoice.issued_at IS '开票时间';
+COMMENT ON COLUMN pmis_project_invoice.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_project_invoice.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_invoice.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pfi_*)
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_contract
-    ON pmis_finance_invoice(tenant_id, contract_id)
+    ON pmis_project_invoice(tenant_id, contract_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_initiation
-    ON pmis_finance_invoice(tenant_id, initiation_id)
+    ON pmis_project_invoice(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_customer
-    ON pmis_finance_invoice(tenant_id, customer_id)
+    ON pmis_project_invoice(tenant_id, customer_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_status_type
-    ON pmis_finance_invoice(tenant_id, status, invoice_type)
+    ON pmis_project_invoice(tenant_id, status, invoice_type)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_invoice_date
-    ON pmis_finance_invoice(tenant_id, invoice_date)
+    ON pmis_project_invoice(tenant_id, invoice_date)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_tax_period
-    ON pmis_finance_invoice(tenant_id, tax_period)
+    ON pmis_project_invoice(tenant_id, tax_period)
     WHERE deleted = 0;
 
 -- =====================================================
--- 2. 回款主表 pmis_finance_payment
+-- 2. 回款主表 pmis_project_payment
 -- =====================================================
 -- P1-6: 已废弃,无需 DROP
-CREATE TABLE IF NOT EXISTS pmis_finance_payment(
+CREATE TABLE IF NOT EXISTS pmis_project_payment(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
     payment_code        VARCHAR(64)  NOT NULL,                    -- 业务编号
@@ -4880,52 +4880,52 @@ CREATE TABLE IF NOT EXISTS pmis_finance_payment(
     CONSTRAINT ck_pfp_alloc_le_amount   CHECK (allocated_amount <= amount),
     CONSTRAINT ck_pfp_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_finance_payment IS '回款主表: 客户回款记录,支持核销发票（allocated_amount/unallocated_amount）,unallocatedAmount=0 时自动转 ALLOCATED';
-COMMENT ON COLUMN pmis_finance_payment.payment_no IS '回款流水号: 银行流水号或系统生成';
-COMMENT ON COLUMN pmis_finance_payment.payment_code IS '业务编号: 系统生成的唯一编码,如 PAY-2026-001';
-COMMENT ON COLUMN pmis_finance_payment.contract_id IS '所属合同 ID';
-COMMENT ON COLUMN pmis_finance_payment.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_finance_payment.customer_id IS '客户 ID';
-COMMENT ON COLUMN pmis_finance_payment.customer_name IS '客户名称（冗余）';
-COMMENT ON COLUMN pmis_finance_payment.amount IS '回款总金额(元)';
-COMMENT ON COLUMN pmis_finance_payment.currency IS '币种: 默认 CNY';
-COMMENT ON COLUMN pmis_finance_payment.payment_method IS '支付方式: BANK_TRANSFER 银行转账 / CHECK 支票 / CASH 现金 / OTHER 其他';
-COMMENT ON COLUMN pmis_finance_payment.payment_date IS '到账日期';
-COMMENT ON COLUMN pmis_finance_payment.bank_account IS '客户付款账号';
-COMMENT ON COLUMN pmis_finance_payment.our_bank_account IS '我方收款账号';
-COMMENT ON COLUMN pmis_finance_payment.bank_reference IS '银行流水号: 银行端的流水标识';
-COMMENT ON COLUMN pmis_finance_payment.invoice_allocation IS '已分配发票 ID 列表: 逗号分隔';
-COMMENT ON COLUMN pmis_finance_payment.allocated_amount IS '已核销金额(元): 关联到发票';
-COMMENT ON COLUMN pmis_finance_payment.unallocated_amount IS '未核销金额(元): amount - allocatedAmount';
-COMMENT ON COLUMN pmis_finance_payment.status IS '回款状态: PENDING 待确认 / RECEIVED 已到账 / PARTIAL 部分核销 / ALLOCATED 已核销完 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_finance_payment.remark IS '备注';
-COMMENT ON COLUMN pmis_finance_payment.confirmed_by IS '确认人 ID: 财务确认到账';
-COMMENT ON COLUMN pmis_finance_payment.confirmed_at IS '确认时间';
-COMMENT ON COLUMN pmis_finance_payment.recorded_by IS '录入人 ID';
-COMMENT ON COLUMN pmis_finance_payment.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_finance_payment.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_finance_payment.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  pmis_project_payment IS '回款主表: 客户回款记录,支持核销发票（allocated_amount/unallocated_amount）,unallocatedAmount=0 时自动转 ALLOCATED';
+COMMENT ON COLUMN pmis_project_payment.payment_no IS '回款流水号: 银行流水号或系统生成';
+COMMENT ON COLUMN pmis_project_payment.payment_code IS '业务编号: 系统生成的唯一编码,如 PAY-2026-001';
+COMMENT ON COLUMN pmis_project_payment.contract_id IS '所属合同 ID';
+COMMENT ON COLUMN pmis_project_payment.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN pmis_project_payment.customer_id IS '客户 ID';
+COMMENT ON COLUMN pmis_project_payment.customer_name IS '客户名称（冗余）';
+COMMENT ON COLUMN pmis_project_payment.amount IS '回款总金额(元)';
+COMMENT ON COLUMN pmis_project_payment.currency IS '币种: 默认 CNY';
+COMMENT ON COLUMN pmis_project_payment.payment_method IS '支付方式: BANK_TRANSFER 银行转账 / CHECK 支票 / CASH 现金 / OTHER 其他';
+COMMENT ON COLUMN pmis_project_payment.payment_date IS '到账日期';
+COMMENT ON COLUMN pmis_project_payment.bank_account IS '客户付款账号';
+COMMENT ON COLUMN pmis_project_payment.our_bank_account IS '我方收款账号';
+COMMENT ON COLUMN pmis_project_payment.bank_reference IS '银行流水号: 银行端的流水标识';
+COMMENT ON COLUMN pmis_project_payment.invoice_allocation IS '已分配发票 ID 列表: 逗号分隔';
+COMMENT ON COLUMN pmis_project_payment.allocated_amount IS '已核销金额(元): 关联到发票';
+COMMENT ON COLUMN pmis_project_payment.unallocated_amount IS '未核销金额(元): amount - allocatedAmount';
+COMMENT ON COLUMN pmis_project_payment.status IS '回款状态: PENDING 待确认 / RECEIVED 已到账 / PARTIAL 部分核销 / ALLOCATED 已核销完 / CANCELLED 已取消';
+COMMENT ON COLUMN pmis_project_payment.remark IS '备注';
+COMMENT ON COLUMN pmis_project_payment.confirmed_by IS '确认人 ID: 财务确认到账';
+COMMENT ON COLUMN pmis_project_payment.confirmed_at IS '确认时间';
+COMMENT ON COLUMN pmis_project_payment.recorded_by IS '录入人 ID';
+COMMENT ON COLUMN pmis_project_payment.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_project_payment.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_payment.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pfp_*)
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_contract
-    ON pmis_finance_payment(tenant_id, contract_id)
+    ON pmis_project_payment(tenant_id, contract_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_initiation
-    ON pmis_finance_payment(tenant_id, initiation_id)
+    ON pmis_project_payment(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_status
-    ON pmis_finance_payment(tenant_id, customer_id, status)
+    ON pmis_project_payment(tenant_id, customer_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_payment_date
-    ON pmis_finance_payment(tenant_id, payment_date)
+    ON pmis_project_payment(tenant_id, payment_date)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_unalloc
-    ON pmis_finance_payment(tenant_id, customer_id, unallocated_amount)
+    ON pmis_project_payment(tenant_id, customer_id, unallocated_amount)
     WHERE deleted = 0 AND status IN ('PENDING','RECEIVED','PARTIAL');
 
 -- =====================================================
--- 3. 客户信用表 pmis_finance_customer_credit
+-- 3. 客户信用表 pmis_project_customer_credit
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
+CREATE TABLE IF NOT EXISTS pmis_project_customer_credit(
     id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     customer_id           VARCHAR(20)       NOT NULL,
     customer_name         VARCHAR(256),
@@ -4955,29 +4955,29 @@ CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
     CONSTRAINT ck_pfcc_count_nonneg      CHECK (contract_count >= 0 AND overdue_count >= 0),
     CONSTRAINT ck_pfcc_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_finance_customer_credit IS '客户信用表: 客户信用评分与等级（A/B/C/D）,CustomerCreditScoreEvaluator 评分（0-100）';
-COMMENT ON COLUMN pmis_finance_customer_credit.customer_id IS '客户 ID: 全局唯一';
-COMMENT ON COLUMN pmis_finance_customer_credit.customer_name IS '客户名称（冗余）';
-COMMENT ON COLUMN pmis_finance_customer_credit.credit_level IS '信用等级: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59),fromScore() 使用 >= 比较';
-COMMENT ON COLUMN pmis_finance_customer_credit.credit_score IS '信用分: 0-100,新客户默认 30 分（A 级基线）';
-COMMENT ON COLUMN pmis_finance_customer_credit.total_contract_amount IS '累计合同金额(元)';
-COMMENT ON COLUMN pmis_finance_customer_credit.total_invoiced_amount IS '累计开票金额(元)';
-COMMENT ON COLUMN pmis_finance_customer_credit.total_received_amount IS '累计回款金额(元)';
-COMMENT ON COLUMN pmis_finance_customer_credit.on_time_rate IS '及时回款率: 0.85=85%';
-COMMENT ON COLUMN pmis_finance_customer_credit.contract_count IS '合同总数';
-COMMENT ON COLUMN pmis_finance_customer_credit.overdue_count IS '逾期次数';
-COMMENT ON COLUMN pmis_finance_customer_credit.last_evaluation_at IS '最近一次评估时间';
-COMMENT ON COLUMN pmis_finance_customer_credit.evaluator IS '评估人/评估器名称';
-COMMENT ON COLUMN pmis_finance_customer_credit.remark IS '备注';
-COMMENT ON COLUMN pmis_finance_customer_credit.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_finance_customer_credit.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_finance_customer_credit.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  pmis_project_customer_credit IS '客户信用表: 客户信用评分与等级（A/B/C/D）,CustomerCreditScoreEvaluator 评分（0-100）';
+COMMENT ON COLUMN pmis_project_customer_credit.customer_id IS '客户 ID: 全局唯一';
+COMMENT ON COLUMN pmis_project_customer_credit.customer_name IS '客户名称（冗余）';
+COMMENT ON COLUMN pmis_project_customer_credit.credit_level IS '信用等级: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59),fromScore() 使用 >= 比较';
+COMMENT ON COLUMN pmis_project_customer_credit.credit_score IS '信用分: 0-100,新客户默认 30 分（A 级基线）';
+COMMENT ON COLUMN pmis_project_customer_credit.total_contract_amount IS '累计合同金额(元)';
+COMMENT ON COLUMN pmis_project_customer_credit.total_invoiced_amount IS '累计开票金额(元)';
+COMMENT ON COLUMN pmis_project_customer_credit.total_received_amount IS '累计回款金额(元)';
+COMMENT ON COLUMN pmis_project_customer_credit.on_time_rate IS '及时回款率: 0.85=85%';
+COMMENT ON COLUMN pmis_project_customer_credit.contract_count IS '合同总数';
+COMMENT ON COLUMN pmis_project_customer_credit.overdue_count IS '逾期次数';
+COMMENT ON COLUMN pmis_project_customer_credit.last_evaluation_at IS '最近一次评估时间';
+COMMENT ON COLUMN pmis_project_customer_credit.evaluator IS '评估人/评估器名称';
+COMMENT ON COLUMN pmis_project_customer_credit.remark IS '备注';
+COMMENT ON COLUMN pmis_project_customer_credit.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_project_customer_credit.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_customer_credit.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pfcc_level / idx_pfcc_tenant)
 CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_level_score
-    ON pmis_finance_customer_credit(tenant_id, credit_level, credit_score DESC)
+    ON pmis_project_customer_credit(tenant_id, credit_level, credit_score DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
-    ON pmis_finance_customer_credit(tenant_id, updated_at DESC)
+    ON pmis_project_customer_credit(tenant_id, updated_at DESC)
     WHERE deleted = 0;
 
 -- =====================================================
@@ -4993,7 +4993,7 @@ CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
 -- PMIS 批次10 DDL：EVM 挣值 / 对外报价费率 / 对内成本费率 / 利润测算
 -- 版本: V1.0.0_013
 -- 描述: 挣值测量(pmis_evm_measure)、对外报价费率(pmis_rate_card)、
---       对内成本费率(pmis_rate_internal)、利润测算版本(pmis_profit_simulation)
+--       对内成本费率(pmis_rate_internal)、利润测算版本(pmis_project_profit_simulation)
 -- =====================================================
 
 -- =====================================================
@@ -5183,9 +5183,9 @@ CREATE INDEX IF NOT EXISTS idx_pri_tenant_status_effective
     WHERE deleted = 0;
 
 -- =====================================================
--- 4. 利润测算版本表 pmis_profit_simulation
+-- 4. 利润测算版本表 pmis_project_profit_simulation
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_profit_simulation(
+CREATE TABLE IF NOT EXISTS pmis_project_profit_simulation(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     simulation_code     VARCHAR(64)  NOT NULL,
     simulation_name     VARCHAR(256) NOT NULL,
@@ -5229,40 +5229,40 @@ CREATE TABLE IF NOT EXISTS pmis_profit_simulation(
     CONSTRAINT ck_pps_margin_range      CHECK (gross_margin >= -1 AND gross_margin <= 1 AND target_margin >= -1 AND target_margin <= 1),
     CONSTRAINT ck_pps_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_profit_simulation IS '利润测算版本表 What-if: 同一立项支持多个测算版本,create() 自动 version=max+1,APPROVED/ARCHIVED 状态禁止删除';
-COMMENT ON COLUMN pmis_profit_simulation.simulation_code IS '测算单号: 业务唯一,如 SIM-2026-001';
-COMMENT ON COLUMN pmis_profit_simulation.simulation_name IS '测算名称';
-COMMENT ON COLUMN pmis_profit_simulation.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_profit_simulation.version IS '版本号: 同立项内递增,create() 时自动 max+1';
-COMMENT ON COLUMN pmis_profit_simulation.scenario_type IS '场景类型: BASE 基准 / OPTIMISTIC 乐观 / PESSIMISTIC 悲观 / CUSTOM 自定义';
-COMMENT ON COLUMN pmis_profit_simulation.contract_amount IS '合同金额(元)';
-COMMENT ON COLUMN pmis_profit_simulation.external_revenue IS '外部收入(元): 对外报价合计';
-COMMENT ON COLUMN pmis_profit_simulation.internal_cost IS '内部成本(元): 人力 + 采购 + 费用 + 外包';
-COMMENT ON COLUMN pmis_profit_simulation.expected_hours IS '预计工时(小时)';
-COMMENT ON COLUMN pmis_profit_simulation.blended_rate IS '综合人天费率(元)';
-COMMENT ON COLUMN pmis_profit_simulation.gross_profit IS '毛利润(元) = external_revenue - internal_cost';
-COMMENT ON COLUMN pmis_profit_simulation.gross_margin IS '毛利率: 0.25=25%';
-COMMENT ON COLUMN pmis_profit_simulation.target_margin IS '目标毛利率: 业务方预设的达标线';
-COMMENT ON COLUMN pmis_profit_simulation.labor_cost IS '人工成本(元)';
-COMMENT ON COLUMN pmis_profit_simulation.purchase_cost IS '采购成本(元)';
-COMMENT ON COLUMN pmis_profit_simulation.expense_cost IS '费用(元)';
-COMMENT ON COLUMN pmis_profit_simulation.outsource_cost IS '外包成本(元)';
-COMMENT ON COLUMN pmis_profit_simulation.assumptions IS '假设条件 JSON: 输入参数快照';
-COMMENT ON COLUMN pmis_profit_simulation.status IS '测算状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档,REJECTED 可回退到 DRAFT';
-COMMENT ON COLUMN pmis_profit_simulation.approver_name IS '审批人姓名（冗余）';
-COMMENT ON COLUMN pmis_profit_simulation.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_profit_simulation.remark IS '备注';
-COMMENT ON COLUMN pmis_profit_simulation.applicant_id IS '申请人 ID';
-COMMENT ON COLUMN pmis_profit_simulation.applicant_name IS '申请人姓名（冗余）';
-COMMENT ON COLUMN pmis_profit_simulation.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_profit_simulation.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_profit_simulation.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  pmis_project_profit_simulation IS '利润测算版本表 What-if: 同一立项支持多个测算版本,create() 自动 version=max+1,APPROVED/ARCHIVED 状态禁止删除';
+COMMENT ON COLUMN pmis_project_profit_simulation.simulation_code IS '测算单号: 业务唯一,如 SIM-2026-001';
+COMMENT ON COLUMN pmis_project_profit_simulation.simulation_name IS '测算名称';
+COMMENT ON COLUMN pmis_project_profit_simulation.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN pmis_project_profit_simulation.version IS '版本号: 同立项内递增,create() 时自动 max+1';
+COMMENT ON COLUMN pmis_project_profit_simulation.scenario_type IS '场景类型: BASE 基准 / OPTIMISTIC 乐观 / PESSIMISTIC 悲观 / CUSTOM 自定义';
+COMMENT ON COLUMN pmis_project_profit_simulation.contract_amount IS '合同金额(元)';
+COMMENT ON COLUMN pmis_project_profit_simulation.external_revenue IS '外部收入(元): 对外报价合计';
+COMMENT ON COLUMN pmis_project_profit_simulation.internal_cost IS '内部成本(元): 人力 + 采购 + 费用 + 外包';
+COMMENT ON COLUMN pmis_project_profit_simulation.expected_hours IS '预计工时(小时)';
+COMMENT ON COLUMN pmis_project_profit_simulation.blended_rate IS '综合人天费率(元)';
+COMMENT ON COLUMN pmis_project_profit_simulation.gross_profit IS '毛利润(元) = external_revenue - internal_cost';
+COMMENT ON COLUMN pmis_project_profit_simulation.gross_margin IS '毛利率: 0.25=25%';
+COMMENT ON COLUMN pmis_project_profit_simulation.target_margin IS '目标毛利率: 业务方预设的达标线';
+COMMENT ON COLUMN pmis_project_profit_simulation.labor_cost IS '人工成本(元)';
+COMMENT ON COLUMN pmis_project_profit_simulation.purchase_cost IS '采购成本(元)';
+COMMENT ON COLUMN pmis_project_profit_simulation.expense_cost IS '费用(元)';
+COMMENT ON COLUMN pmis_project_profit_simulation.outsource_cost IS '外包成本(元)';
+COMMENT ON COLUMN pmis_project_profit_simulation.assumptions IS '假设条件 JSON: 输入参数快照';
+COMMENT ON COLUMN pmis_project_profit_simulation.status IS '测算状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档,REJECTED 可回退到 DRAFT';
+COMMENT ON COLUMN pmis_project_profit_simulation.approver_name IS '审批人姓名（冗余）';
+COMMENT ON COLUMN pmis_project_profit_simulation.approved_at IS '审批时间';
+COMMENT ON COLUMN pmis_project_profit_simulation.remark IS '备注';
+COMMENT ON COLUMN pmis_project_profit_simulation.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN pmis_project_profit_simulation.applicant_name IS '申请人姓名（冗余）';
+COMMENT ON COLUMN pmis_project_profit_simulation.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_project_profit_simulation.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_profit_simulation.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_psm_initiation / idx_psm_version / idx_psm_status)
 CREATE INDEX IF NOT EXISTS idx_psm_tenant_initiation_version
-    ON pmis_profit_simulation(tenant_id, initiation_id, version DESC)
+    ON pmis_project_profit_simulation(tenant_id, initiation_id, version DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_psm_tenant_status_scenario
-    ON pmis_profit_simulation(tenant_id, status, scenario_type)
+    ON pmis_project_profit_simulation(tenant_id, status, scenario_type)
     WHERE deleted = 0;
 
 -- =====================================================
@@ -5716,13 +5716,13 @@ CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost
     WITH (security_invoker = true) AS
 SELECT i.tenant_id,
        i.id              AS initiation_id,
-       COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r
+       COALESCE((SELECT SUM(amount) FROM pmis_project_revenue r
                   WHERE r.initiation_id = i.id AND r.deleted = 0
                     AND r.tenant_id = i.tenant_id), 0)         AS total_revenue,
-       COALESCE((SELECT SUM(amount) FROM pmis_finance_invoice p
+       COALESCE((SELECT SUM(amount) FROM pmis_project_invoice p
                   WHERE p.initiation_id = i.id AND p.deleted = 0
                     AND p.tenant_id = i.tenant_id), 0)         AS invoiced_amount,
-       COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r2
+       COALESCE((SELECT SUM(amount) FROM pmis_project_revenue r2
                   WHERE r2.initiation_id = i.id AND r2.deleted = 0
                     AND r2.status = 'CONFIRMED'
                     AND r2.tenant_id = i.tenant_id), 0)        AS confirmed_revenue,
@@ -5732,7 +5732,7 @@ SELECT i.tenant_id,
        COALESCE((SELECT SUM(amount) FROM pmis_cost_purchase
                   WHERE initiation_id = i.id AND deleted = 0
                     AND tenant_id = i.tenant_id), 0)          AS purchase_cost,
-       COALESCE((SELECT SUM(amount) FROM pmis_cost_expense
+       COALESCE((SELECT SUM(amount) FROM pmis_project_expense
                   WHERE initiation_id = i.id AND deleted = 0
                     AND tenant_id = i.tenant_id), 0)          AS expense_cost
 FROM pmis_project_initiation i
@@ -5770,10 +5770,10 @@ SELECT
     (SELECT COUNT(*) FROM pmis_project_initiation
         WHERE deleted = 0 AND stage IN ('APPROVED','IN_PROGRESS')
           AND tenant_id = t.tenant_id)                                            AS active_projects,
-    (SELECT COALESCE(SUM(amount), 0) FROM pmis_finance_invoice
+    (SELECT COALESCE(SUM(amount), 0) FROM pmis_project_invoice
         WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED')
           AND tenant_id = t.tenant_id)                                            AS total_invoiced,
-    (SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
+    (SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_project_payment
         WHERE deleted = 0 AND status = 'ALLOCATED'
           AND tenant_id = t.tenant_id)                                           AS confirmed_revenue
 FROM (SELECT DISTINCT tenant_id FROM pmis_project_initiation WHERE deleted = 0) t;
@@ -6267,7 +6267,7 @@ CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_level
 -- 说明：批次 15 智能化升级-系统内部数据管理（PRD 4.2）
 -- 1) 工时表新增 billable 字段（可计费标识）
 -- 2) 预警分级推送表 pmis_alert_dispatch
--- 3) 每日对账表 pmis_reconcile_daily
+-- 3) 每日对账表 pmis_project_reconcile_daily
 -- ============================================================
 
 -- ----------------------------
@@ -6349,7 +6349,7 @@ CREATE INDEX IF NOT EXISTS idx_pad_tenant_target
 -- ----------------------------
 -- 3) 每日对账表
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
+CREATE TABLE IF NOT EXISTS pmis_project_reconcile_daily (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     reconcile_date      DATE         NOT NULL,
     reconcile_type      VARCHAR(32)  NOT NULL,
@@ -6373,33 +6373,33 @@ CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
     CONSTRAINT ck_prd_diff_pct_range    CHECK (diff_pct >= -1 AND diff_pct <= 1),
     CONSTRAINT ck_prd_deleted           CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_reconcile_daily IS '每日自动对账表: 成本/收入/回款/开票 跨模块校验,ReconcileServiceImpl 执行';
-COMMENT ON COLUMN pmis_reconcile_daily.reconcile_date IS '对账日期: 每日 02:00 触发';
-COMMENT ON COLUMN pmis_reconcile_daily.reconcile_type IS '对账类型: COST 成本 / REVENUE 收入 / PAYMENT 回款 / INVOICE 开票 / TIMESHEET 工时 / PROFIT 利润 / BENCH 闲置 / BUDGET 预算';
-COMMENT ON COLUMN pmis_reconcile_daily.initiation_id IS '所属立项 ID: 可空,NULL 表示全局维度';
-COMMENT ON COLUMN pmis_reconcile_daily.expected_amount IS '应计金额(元)';
-COMMENT ON COLUMN pmis_reconcile_daily.actual_amount IS '实计金额(元)';
-COMMENT ON COLUMN pmis_reconcile_daily.diff_amount IS '差异金额(元) = actual - expected';
-COMMENT ON COLUMN pmis_reconcile_daily.diff_pct IS '差异比例: -1 ~ 1,例如 0.05=5%';
-COMMENT ON COLUMN pmis_reconcile_daily.status IS '对账状态: OK 一致 / WARN 警告（|diff_pct| < 5%）/ FAIL 失败（|diff_pct| >= 5%）';
-COMMENT ON COLUMN pmis_reconcile_daily.detail IS '对账明细 JSON: 列出差异项';
-COMMENT ON COLUMN pmis_reconcile_daily.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_reconcile_daily.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_reconcile_daily.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  pmis_project_reconcile_daily IS '每日自动对账表: 成本/收入/回款/开票 跨模块校验,ReconcileServiceImpl 执行';
+COMMENT ON COLUMN pmis_project_reconcile_daily.reconcile_date IS '对账日期: 每日 02:00 触发';
+COMMENT ON COLUMN pmis_project_reconcile_daily.reconcile_type IS '对账类型: COST 成本 / REVENUE 收入 / PAYMENT 回款 / INVOICE 开票 / TIMESHEET 工时 / PROFIT 利润 / BENCH 闲置 / BUDGET 预算';
+COMMENT ON COLUMN pmis_project_reconcile_daily.initiation_id IS '所属立项 ID: 可空,NULL 表示全局维度';
+COMMENT ON COLUMN pmis_project_reconcile_daily.expected_amount IS '应计金额(元)';
+COMMENT ON COLUMN pmis_project_reconcile_daily.actual_amount IS '实计金额(元)';
+COMMENT ON COLUMN pmis_project_reconcile_daily.diff_amount IS '差异金额(元) = actual - expected';
+COMMENT ON COLUMN pmis_project_reconcile_daily.diff_pct IS '差异比例: -1 ~ 1,例如 0.05=5%';
+COMMENT ON COLUMN pmis_project_reconcile_daily.status IS '对账状态: OK 一致 / WARN 警告（|diff_pct| < 5%）/ FAIL 失败（|diff_pct| >= 5%）';
+COMMENT ON COLUMN pmis_project_reconcile_daily.detail IS '对账明细 JSON: 列出差异项';
+COMMENT ON COLUMN pmis_project_reconcile_daily.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_project_reconcile_daily.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_project_reconcile_daily.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的单列索引)
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_date_type
-    ON pmis_reconcile_daily(tenant_id, reconcile_date DESC, reconcile_type)
+    ON pmis_project_reconcile_daily(tenant_id, reconcile_date DESC, reconcile_type)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_init_date
-    ON pmis_reconcile_daily(tenant_id, initiation_id, reconcile_date DESC)
+    ON pmis_project_reconcile_daily(tenant_id, initiation_id, reconcile_date DESC)
     WHERE deleted = 0 AND initiation_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_status_date
-    ON pmis_reconcile_daily(tenant_id, status, reconcile_date DESC)
+    ON pmis_project_reconcile_daily(tenant_id, status, reconcile_date DESC)
     WHERE deleted = 0 AND status IN ('WARN','FAIL');
 
 -- 唯一约束：每天每个维度只能有一条
 CREATE UNIQUE INDEX IF NOT EXISTS uk_prd_tenant_date_type_init
-    ON pmis_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, '0'), deleted);
+    ON pmis_project_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, '0'), deleted);
 
 -- --------------------------------------------------------------------
 
@@ -6577,7 +6577,7 @@ VALUES (
     'dailyReconcileJobHandler',
     '0 0 2 * * ?',
     'NORMAL',
-    '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 pmis_reconcile_daily',
+    '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 pmis_project_reconcile_daily',
     1
 ) ON CONFLICT DO NOTHING;
 -- ---------- P7-3 售后巡检 ----------
@@ -6971,7 +6971,7 @@ COMMENT ON COLUMN pmis_flow_instance.reject_reason IS '退回原因（最近一�
 COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
 COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 
--- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
+-- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_project_invoice) 的
 --      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
 --      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
 -- 复合/部分索引(替代零散的单列索引)
@@ -7365,13 +7365,13 @@ ALTER TABLE pmis_project_change
 -- 早期版本误加 pmis_finance. schema 前缀，但所有表均建在 public schema
 -- （与上方 project/execution 域的写法保持一致），执行时会报
 -- "模式 pmis_finance 不存在" 错误，故去除 schema 前缀。
-ALTER TABLE pmis_finance_invoice
+ALTER TABLE pmis_project_invoice
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_finance_payment
+ALTER TABLE pmis_project_payment
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_finance_customer_credit
+ALTER TABLE pmis_project_customer_credit
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 执行域 ==========
@@ -7392,9 +7392,9 @@ COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号（P1-12
 COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_project_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_project_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_project_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_project_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
@@ -9670,11 +9670,11 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
 --  6) 财务对账（voucher / payment / invoice）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_status_issued
-    ON pmis_finance_invoice (status, invoice_date DESC);
+    ON pmis_project_invoice (status, invoice_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_customer_status
-    ON pmis_finance_invoice (customer_id, status, invoice_date DESC);
+    ON pmis_project_invoice (customer_id, status, invoice_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
-    ON pmis_finance_payment (contract_id, status)
+    ON pmis_project_payment (contract_id, status)
     WHERE status IN ('RECEIVED', 'PARTIAL');
 -- 注：pmis_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用
 -- CREATE INDEX IF NOT EXISTS idx_pmis_voucher_period_status
@@ -9705,8 +9705,8 @@ ANALYZE pmis_project_change;
 -- P1-6 清理: 移除 [SKIPPED-FWD-REF] ANALYZE(表暂未落地,见文件头 §Missing-Tables)
 ANALYZE pmis_billable_utilization_snapshot;
 ANALYZE pmis_alert_dispatch;
-ANALYZE pmis_finance_invoice;
-ANALYZE pmis_finance_payment;
+ANALYZE pmis_project_invoice;
+ANALYZE pmis_project_payment;
 ANALYZE pmis_operation_log;
 
 -- =====================================================================
@@ -10751,7 +10751,7 @@ COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已
 -- 背景:历史演进过程中出现了若干类型不一致:
 --   1. pmis_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(20) — 同含义字段类型不一致
 --   2. pmis_flow_his_task 完全缺失 assignor_id 列(主表有,历史表没有)
---   3. pmis_finance_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
+--   3. pmis_project_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
 --   4. pmis_dict_version 缺 updated_at/updated_by/tenant_id,且 created_at/effective_date 用了 TIMESTAMP 而非 TIMESTAMPTZ
 --
 -- 已审查但**保留原样**的差异(具备合理业务理由):
@@ -10802,10 +10802,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_pfrt_foreach_iter
     WHERE iter_var IS NOT NULL AND deleted = 0;
 
 -- ----------------------------------------------------------------------------
--- 2) pmis_finance_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
+-- 2) pmis_project_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_finance_invoice ALTER COLUMN tax_period TYPE VARCHAR(7);
-COMMENT ON COLUMN pmis_finance_invoice.tax_period IS '税务所属期: 格式 YYYY-MM(7 字符,VARCHAR(7) 精确匹配 CHECK 约束)';
+ALTER TABLE pmis_project_invoice ALTER COLUMN tax_period TYPE VARCHAR(7);
+COMMENT ON COLUMN pmis_project_invoice.tax_period IS '税务所属期: 格式 YYYY-MM(7 字符,VARCHAR(7) 精确匹配 CHECK 约束)';
 
 -- ----------------------------------------------------------------------------
 -- 3) pmis_dict_version 字段补齐
@@ -10833,31 +10833,31 @@ CREATE INDEX IF NOT EXISTS idx_pdv_tenant_type_created
 ANALYZE pmis_dict_version;
 ANALYZE pmis_flow_run_task;
 ANALYZE pmis_flow_his_task;
-ANALYZE pmis_finance_invoice;
+ANALYZE pmis_project_invoice;
 
 -- ----------------------------------------------------------------------------
 -- 4) 人员ID字段 BIGINT -> VARCHAR(20) 统一(对齐其它 _by 雪花 ID 约定)
---    - pmis_profit_revenue.confirmed_by                          BIGINT -> VARCHAR(20)
---    - pmis_finance_invoice.applied_by / approved_by / issued_by BIGINT -> VARCHAR(20)
---    - pmis_finance_payment.confirmed_by / recorded_by            BIGINT -> VARCHAR(20)
+--    - pmis_project_revenue.confirmed_by                          BIGINT -> VARCHAR(20)
+--    - pmis_project_invoice.applied_by / approved_by / issued_by BIGINT -> VARCHAR(20)
+--    - pmis_project_payment.confirmed_by / recorded_by            BIGINT -> VARCHAR(20)
 --    USING ::VARCHAR(20) 处理历史 BIGINT 数据(雪花 ID 字符串可直接转型)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_profit_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
-ALTER TABLE pmis_finance_invoice ALTER COLUMN applied_by   TYPE VARCHAR(20) USING applied_by::VARCHAR(20);
-ALTER TABLE pmis_finance_invoice ALTER COLUMN approved_by  TYPE VARCHAR(20) USING approved_by::VARCHAR(20);
-ALTER TABLE pmis_finance_invoice ALTER COLUMN issued_by    TYPE VARCHAR(20) USING issued_by::VARCHAR(20);
-ALTER TABLE pmis_finance_payment ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
-ALTER TABLE pmis_finance_payment ALTER COLUMN recorded_by  TYPE VARCHAR(20) USING recorded_by::VARCHAR(20);
+ALTER TABLE pmis_project_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE pmis_project_invoice ALTER COLUMN applied_by   TYPE VARCHAR(20) USING applied_by::VARCHAR(20);
+ALTER TABLE pmis_project_invoice ALTER COLUMN approved_by  TYPE VARCHAR(20) USING approved_by::VARCHAR(20);
+ALTER TABLE pmis_project_invoice ALTER COLUMN issued_by    TYPE VARCHAR(20) USING issued_by::VARCHAR(20);
+ALTER TABLE pmis_project_payment ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE pmis_project_payment ALTER COLUMN recorded_by  TYPE VARCHAR(20) USING recorded_by::VARCHAR(20);
 
-COMMENT ON COLUMN pmis_profit_revenue.confirmed_by   IS '确认人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_finance_invoice.applied_by    IS '申请人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_finance_invoice.approved_by   IS '审批人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_finance_invoice.issued_by     IS '开票人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_finance_payment.confirmed_by  IS '确认人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_finance_payment.recorded_by   IS '录入人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_revenue.confirmed_by   IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_invoice.applied_by    IS '申请人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_invoice.approved_by   IS '审批人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_invoice.issued_by     IS '开票人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_payment.confirmed_by  IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_payment.recorded_by   IS '录入人ID(雪花ID VARCHAR(20))';
 
-ANALYZE pmis_profit_revenue;
-ANALYZE pmis_finance_payment;
+ANALYZE pmis_project_revenue;
+ANALYZE pmis_project_payment;
 
 -- ====================================================================
 -- ============================ [061] merge export tables ============================
@@ -11170,8 +11170,8 @@ SELECT pmis_attach_updated_at_trigger('pmis_dict_version');         -- 字典版
 SELECT pmis_attach_updated_at_trigger('pmis_project_initiation');   -- 立项
 SELECT pmis_attach_updated_at_trigger('pmis_project_change');       -- 变更
 SELECT pmis_attach_updated_at_trigger('pmis_finance_contract');     -- 合同
-SELECT pmis_attach_updated_at_trigger('pmis_finance_invoice');      -- 发票
-SELECT pmis_attach_updated_at_trigger('pmis_finance_payment');      -- 回款
+SELECT pmis_attach_updated_at_trigger('pmis_project_invoice');      -- 发票
+SELECT pmis_attach_updated_at_trigger('pmis_project_payment');      -- 回款
 SELECT pmis_attach_updated_at_trigger('pmis_flow_instance');        -- 流程实例
 SELECT pmis_attach_updated_at_trigger('pmis_flow_definition');      -- 流程定义
 
@@ -11253,13 +11253,13 @@ CREATE INDEX IF NOT EXISTS idx_pmis_leave_trace
 
 -- 2) 财务/合同(4 张)
 CREATE INDEX IF NOT EXISTS idx_pmis_finance_invoice_trace
-    ON pmis_finance_invoice (provider_trace_id)
+    ON pmis_project_invoice (provider_trace_id)
     WHERE provider_trace_id <> '';
 CREATE INDEX IF NOT EXISTS idx_pmis_finance_payment_trace
-    ON pmis_finance_payment (provider_trace_id)
+    ON pmis_project_payment (provider_trace_id)
     WHERE provider_trace_id <> '';
 CREATE INDEX IF NOT EXISTS idx_pmis_finance_customer_credit_trace
-    ON pmis_finance_customer_credit (provider_trace_id)
+    ON pmis_project_customer_credit (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 -- 3) 资源/计费(6 张)
@@ -11273,7 +11273,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_rate_internal_trace
     ON pmis_rate_internal (provider_trace_id)
     WHERE provider_trace_id <> '';
 CREATE INDEX IF NOT EXISTS idx_pmis_profit_simulation_trace
-    ON pmis_profit_simulation (provider_trace_id)
+    ON pmis_project_profit_simulation (provider_trace_id)
     WHERE provider_trace_id <> '';
 CREATE INDEX IF NOT EXISTS idx_pmis_resource_pool_trace
     ON pmis_resource_pool (provider_trace_id)
@@ -11302,7 +11302,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_trace
     ON pmis_alert_dispatch (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_trace
-    ON pmis_reconcile_daily (provider_trace_id)
+    ON pmis_project_reconcile_daily (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- 5) 工作流核心(11 张)

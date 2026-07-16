@@ -19,15 +19,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.config.ThresholdProvider;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
-import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.domain.entity.EvmMeasureDO;
+import com.njydsz.pmis.project.domain.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.project.domain.entity.RateCardDO;
 import com.njydsz.pmis.project.domain.entity.RateInternalDO;
 import com.njydsz.pmis.project.domain.entity.RiskDO;
 import com.njydsz.pmis.project.infra.mapper.EvmMeasureMapper;
+import com.njydsz.pmis.project.infra.mapper.ProfitSnapshotMapper;
 import com.njydsz.pmis.project.infra.mapper.RateCardMapper;
 import com.njydsz.pmis.project.infra.mapper.RateInternalMapper;
 import com.njydsz.pmis.project.infra.mapper.RiskMapper;
@@ -73,8 +75,8 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private final ThresholdProvider thresholdProvider;
     /** Bench 资源 Feign 客户端 */
     private final BenchResourceClient benchResourceClient;
-    /** 财务数据 Feign 客户端（跨域查询利润快照） */
-    private final FinanceDataClient financeDataClient;
+    /** 利润快照 Mapper（同进程查询利润快照） */
+    private final ProfitSnapshotMapper profitSnapshotMapper;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
@@ -732,12 +734,21 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         Map<String, Object> out = new LinkedHashMap<>();
         // 1) 加载 EVM 健康聚合
         List<Map<String, Object>> evmRows = safeAll(evmMapper, m -> m.aggregateHealthByInitiation());
-        // 2) 加载 ProfitSnapshot 全量（跨域 Feign 调用财务服务）
+        // 2) 加载 ProfitSnapshot 全量（同进程查询利润快照）
         List<Map<String, Object>> snapRows = new ArrayList<>();
         try {
-            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotSummaryAll();
-            if (resp != null && resp.getData() != null) {
-                snapRows = resp.getData();
+            LambdaQueryWrapper<ProfitSnapshotDO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.orderByDesc(ProfitSnapshotDO::getSnapshotAt).last("LIMIT 200");
+            List<ProfitSnapshotDO> snaps = profitSnapshotMapper.selectList(wrapper);
+            if (snaps != null) {
+                for (ProfitSnapshotDO s : snaps) {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("initiationId", s.getInitiationId());
+                    m.put("period", s.getPeriod());
+                    m.put("totalCost", s.getTotalCost());
+                    m.put("grossMargin", s.getGrossMargin());
+                    snapRows.add(m);
+                }
             }
         } catch (Exception e) {
             log.warn("[AdvancedReport] projectHealthDashboard 快照查询失败: {}", e.getMessage());

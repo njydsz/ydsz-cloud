@@ -6,9 +6,7 @@
 -- V1.0.0 模块 SQL（按后端服务拆分）
 \i V1.0.0_system.sql
 \i V1.0.0_userinfo.sql
-\i V1.0.0_sales.sql       -- 商务销售服务 (port 9010, 6 张表)
-\i V1.0.0_finance.sql     -- 财务会计服务 (port 9011, 8 张表)
-\i V1.0.0_project.sql     -- 项目执行服务 (port 9003, 20 张表)
+\i V1.0.0_project.sql     -- 项目执行服务 (port 9003, 34 张表, 含原 sales 6 张 + 原 finance 8 张)
 \i V1.0.0_cronjob.sql
 \i V1.0.0_message.sql
 \i V1.0.0_workflow.sql

@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.netty.server;
 
-import java.net.BindException;
 import com.njydsz.pmis.common.netty.config.NettyProperties;
+import com.njydsz.pmis.common.netty.event.ChannelEventDispatcher;
+import com.njydsz.pmis.common.netty.event.MessageDispatcher;
 import com.njydsz.pmis.common.netty.handler.ChannelGroupManager;
 import com.njydsz.pmis.common.netty.handler.ConnectionEventHandler;
 import com.njydsz.pmis.common.netty.handler.IdleStateHandlerFactory;
@@ -24,6 +25,9 @@ import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
+
+import java.net.BindException;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -76,6 +80,12 @@ public abstract class AbstractNettyServer {
 
     /** 可选依赖 — EventLoop 池（由 NettyAutoConfiguration 通过 setter 注入） */
     private NettyEventLoopPool eventLoopPool;
+
+    /** 可选依赖 — Channel 事件分发器（由 NettyAutoConfiguration 通过 setter 注入） */
+    private ChannelEventDispatcher channelEventDispatcher;
+
+    /** 可选依赖 — 消息分发器（由 NettyAutoConfiguration 通过 setter 注入） */
+    private MessageDispatcher messageDispatcher;
 
     /**
      * 构造 Netty TCP Server。

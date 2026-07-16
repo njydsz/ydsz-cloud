@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>设计说明：</b>
  * <ul>
- *   <li>作为 Feign 调用（InitiationFeignClient）的补充路径，提供消息队列可靠投递能力</li>
+ *   <li>提供消息队列可靠投递能力，作为 workflow → project 状态联动的异步路径</li>
  *   <li>在 {@link PostConstruct} 阶段启动异步订阅，应用启动即开始监听</li>
  *   <li>消息体为 JSON 格式：{"eventType":"INSTANCE_COMPLETED", "instanceId":"...", "data":{...}}</li>
  *   <li>消息头携带 eventType，用于快速过滤</li>
@@ -41,12 +41,12 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>INSTANCE_REJECTED → markRejected（已驳回）</li>
  * </ul>
  *
- * <p><b>与现有 Feign 调用的关系：</b>
- * <p>workflow 模块的 ProjectInitiationFlowListener 通过 Feign 调用 InitiationFeignClient
- * 进行立项状态联动。本订阅者作为消息队列补充路径：
+ * <p><b>与 workflow 模块的关系：</b>
+ * <p>workflow 模块的 ProjectInitiationFlowListener 原通过 Feign 调用进行立项状态联动，
+ * 现 Feign 契约已下线，本订阅者作为消息队列异步路径承担状态联动职责：
  * <ul>
- *   <li>当 Feign 调用成功时，队列消息仅做幂等校验（状态已更新则跳过）</li>
- *   <li>当 Feign 调用失败时，队列消息提供补偿机制（确保最终一致性）</li>
+ *   <li>队列消息提供幂等校验（状态已更新则跳过）</li>
+ *   <li>消费失败时根据队列模式重试或进入死信队列，确保最终一致性</li>
  * </ul>
  *
  * @author ydsz-pmis-team

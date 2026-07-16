@@ -61,10 +61,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-finance-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-userinfo-api</artifactId>
         </dependency>
         <dependency>

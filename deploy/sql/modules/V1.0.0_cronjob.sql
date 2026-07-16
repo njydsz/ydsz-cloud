@@ -1573,7 +1573,7 @@ VALUES (
     'dailyReconcileJobHandler',
     '0 0 2 * * ?',
     'NORMAL',
-    '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 pmis_reconcile_daily',
+    '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 pmis_project_reconcile_daily',
     1
 ) ON CONFLICT DO NOTHING;
 

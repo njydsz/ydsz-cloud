@@ -393,7 +393,7 @@ COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时�
 
 COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 
--- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
+-- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_project_invoice) 的
 --      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
 --      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
 -- 复合/部分索引(替代零散的单列索引)

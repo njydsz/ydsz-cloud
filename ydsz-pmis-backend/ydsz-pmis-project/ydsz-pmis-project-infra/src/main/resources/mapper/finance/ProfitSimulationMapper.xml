@@ -36,18 +36,18 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT id, simulation_code, simulation_name, initiation_id, version, scenario_type, contract_amount, external_revenue, internal_cost, expected_hours, blended_rate, gross_profit, gross_margin, target_margin, labor_cost, purchase_cost, expense_cost, outsource_cost, assumptions, status, approver_name, approved_at, remark, applicant_id, applicant_name, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_profit_simulation
+        SELECT id, simulation_code, simulation_name, initiation_id, version, scenario_type, contract_amount, external_revenue, internal_cost, expected_hours, blended_rate, gross_profit, gross_margin, target_margin, labor_cost, purchase_cost, expense_cost, outsource_cost, assumptions, status, approver_name, approved_at, remark, applicant_id, applicant_name, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_project_profit_simulation
         WHERE simulation_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT id, simulation_code, simulation_name, initiation_id, version, scenario_type, contract_amount, external_revenue, internal_cost, expected_hours, blended_rate, gross_profit, gross_margin, target_margin, labor_cost, purchase_cost, expense_cost, outsource_cost, assumptions, status, approver_name, approved_at, remark, applicant_id, applicant_name, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_profit_simulation
+        SELECT id, simulation_code, simulation_name, initiation_id, version, scenario_type, contract_amount, external_revenue, internal_cost, expected_hours, blended_rate, gross_profit, gross_margin, target_margin, labor_cost, purchase_cost, expense_cost, outsource_cost, assumptions, status, approver_name, approved_at, remark, applicant_id, applicant_name, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_project_profit_simulation
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY version DESC
     </select>
 
     <select id="maxVersion" resultType="java.lang.Integer">
-        SELECT COALESCE(MAX(version), 0) FROM pmis_profit_simulation
+        SELECT COALESCE(MAX(version), 0) FROM pmis_project_profit_simulation
         WHERE initiation_id = #{initiationId} AND deleted = 0
     </select>
 </mapper>

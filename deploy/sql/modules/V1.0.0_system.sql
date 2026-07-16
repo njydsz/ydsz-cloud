@@ -1422,10 +1422,10 @@ SELECT pmis_attach_updated_at_trigger('pmis_project_change');
 SELECT pmis_attach_updated_at_trigger('pmis_finance_contract');
 
 -- 合同
-SELECT pmis_attach_updated_at_trigger('pmis_finance_invoice');
+SELECT pmis_attach_updated_at_trigger('pmis_project_invoice');
 
 -- 发票
-SELECT pmis_attach_updated_at_trigger('pmis_finance_payment');
+SELECT pmis_attach_updated_at_trigger('pmis_project_payment');
 
 -- 回款
 SELECT pmis_attach_updated_at_trigger('pmis_flow_instance');

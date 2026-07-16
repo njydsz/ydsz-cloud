@@ -96,10 +96,15 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
         tcpLock.lock();
         try {
             Socket socket = ensureTcpConnection();
-            OutputStream os = socket.getOutputStream();
-            os.write(bytes);
-            os.write('\n');
-            os.flush();
+            try {
+                OutputStream os = socket.getOutputStream();
+                os.write(bytes);
+                os.write('\n');
+                os.flush();
+            } catch (IOException e) {
+                closeTcpSocketQuietly();
+                throw e;
+            }
         } finally {
             tcpLock.unlock();
         }

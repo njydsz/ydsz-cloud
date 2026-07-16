@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.sentry.tracing;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 
 import com.njydsz.pmis.common.sentry.spi.TraceContext;
@@ -28,7 +29,7 @@ public class OpenTelemetryTraceContext implements TraceContext {
     public String getTraceId() {
         try {
             Span currentSpan = Span.fromContext(Context.current());
-            io.opentelemetry.api.trace.SpanContext spanContext = currentSpan.getSpanContext();
+            SpanContext spanContext = currentSpan.getSpanContext();
             if (spanContext.isValid()) {
                 return spanContext.getTraceId();
             }
@@ -42,7 +43,7 @@ public class OpenTelemetryTraceContext implements TraceContext {
     public String getSpanId() {
         try {
             Span currentSpan = Span.fromContext(Context.current());
-            io.opentelemetry.api.trace.SpanContext spanContext = currentSpan.getSpanContext();
+            SpanContext spanContext = currentSpan.getSpanContext();
             if (spanContext.isValid()) {
                 return spanContext.getSpanId();
             }

@@ -22,7 +22,7 @@
 
     <select id="selectUnique" resultMap="BaseResultMap">
         SELECT id, reconcile_date, reconcile_type, initiation_id, expected_amount, actual_amount, diff_amount, diff_pct, status, detail, tenant_id, provider_trace_id, created_at, updated_at, deleted
-        FROM pmis_reconcile_daily
+        FROM pmis_project_reconcile_daily
         WHERE deleted = 0
           AND reconcile_date = #{date}
           AND reconcile_type = #{type}
@@ -35,7 +35,7 @@
 
     <select id="selectByDateRange" resultMap="BaseResultMap">
         SELECT id, reconcile_date, reconcile_type, initiation_id, expected_amount, actual_amount, diff_amount, diff_pct, status, detail, tenant_id, provider_trace_id, created_at, updated_at, deleted
-        FROM pmis_reconcile_daily
+        FROM pmis_project_reconcile_daily
         WHERE deleted = 0
           AND reconcile_date BETWEEN #{from} AND #{to}
           <if test="status != null and status != ''">AND status = #{status}</if>
@@ -44,7 +44,7 @@
 
     <select id="aggregateByStatus" resultType="java.util.Map">
         SELECT reconcile_date, status, COUNT(*) AS cnt
-        FROM pmis_reconcile_daily
+        FROM pmis_project_reconcile_daily
         WHERE deleted = 0
           AND reconcile_date BETWEEN #{from} AND #{to}
         GROUP BY reconcile_date, status

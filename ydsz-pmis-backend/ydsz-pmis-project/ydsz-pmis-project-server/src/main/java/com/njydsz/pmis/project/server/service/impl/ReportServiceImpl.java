@@ -3,6 +3,7 @@ package com.njydsz.pmis.project.server.service.impl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,13 +14,16 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
-import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.domain.entity.CostAllocationDO;
+import com.njydsz.pmis.project.domain.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.project.domain.entity.PurchaseDO;
+import com.njydsz.pmis.project.domain.entity.RevenueDO;
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.ExpenseMapper;
+import com.njydsz.pmis.project.infra.mapper.ProfitSnapshotMapper;
 import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
+import com.njydsz.pmis.project.infra.mapper.RevenueMapper;
 import com.njydsz.pmis.project.server.service.ReportService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>聚合 PM 域成本数据（Labor/Purchase）+ 财务域数据（Revenue/Expense/ProfitSnapshot），
  * 提供项目利润报表、成本明细报表、回款台账与全生命周期台账。
  *
- * <p>跨域财务数据通过 {@link FinanceDataClient} Feign 调用获取，失败时降级返回零值。
+ * <p>财务域数据已合并至 project 模块，通过同进程 Mapper 直接查询，失败时降级返回零值。
  *
  * @author ydsz-pmis-team
  * @since 2.0.0
@@ -47,8 +51,12 @@ public class ReportServiceImpl implements ReportService {
     private final CostAllocationMapper costAllocationMapper;
     /** 采购成本 Mapper */
     private final PurchaseMapper purchaseMapper;
-    /** 财务数据 Feign 客户端（跨域查询收入/费用/利润快照） */
-    private final FinanceDataClient financeDataClient;
+    /** 收入 Mapper（同进程查询收入数据） */
+    private final RevenueMapper revenueMapper;
+    /** 费用 Mapper（同进程查询费用数据） */
+    private final ExpenseMapper expenseMapper;
+    /** 利润快照 Mapper（同进程查询利润快照） */
+    private final ProfitSnapshotMapper profitSnapshotMapper;
 
     @Override
     public Map<String, Object> projectProfitReport(String initiationId, String period) {
@@ -57,9 +65,9 @@ public class ReportServiceImpl implements ReportService {
             report.put("error", "initiationId 不能为空");
             return report;
         }
-        // 1) 优先用 ProfitSnapshot（跨域 Feign 调用财务服务）
+        // 1) 优先用 ProfitSnapshot（同进程查询利润快照）
         Map<String, Object> snap = latestSnapshot(initiationId, period);
-        // 2) 累计收入（跨域 Feign）
+        // 2) 累计收入（同进程查询）
         BigDecimal totalRevenue = sumRevenue(initiationId, period);
         // 3) 累计成本
         BigDecimal laborCost = sumCost(initiationId, period, "LABOR");
@@ -154,26 +162,26 @@ public class ReportServiceImpl implements ReportService {
             report.put("error", "initiationId 不能为空");
             return report;
         }
-        // 跨域 Feign 调用财务服务获取收入明细
+        // 同进程查询收入明细
         BigDecimal totalRevenue = BigDecimal.ZERO;
         try {
-            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.revenueByInitiation(initiationId);
-            if (resp != null && resp.getData() != null) {
-                for (Map<String, Object> r : resp.getData()) {
-                    if ("CONFIRMED".equals(String.valueOf(r.get("status")))) {
-                        totalRevenue = totalRevenue.add(toDecimal(r.get("amount")));
+            List<RevenueDO> revs = revenueMapper.selectByInitiation(initiationId);
+            if (revs != null) {
+                for (RevenueDO r : revs) {
+                    if ("CONFIRMED".equals(r.getStatus())) {
+                        totalRevenue = totalRevenue.add(r.getAmount() == null ? BigDecimal.ZERO : r.getAmount());
                     }
                 }
             }
         } catch (Exception e) {
             log.error("[Report] paymentLedgerReport 收入查询失败: {}", e.getMessage());
         }
-        // 跨域 Feign 调用获取期间汇总
+        // 同进程查询期间汇总
         List<Map<String, Object>> byMonth = new ArrayList<>();
         try {
-            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.revenueSumByPeriod(initiationId);
-            if (resp != null && resp.getData() != null) {
-                byMonth = resp.getData();
+            List<Map<String, Object>> resp = revenueMapper.sumByPeriod(initiationId);
+            if (resp != null) {
+                byMonth = resp;
             }
         } catch (Exception e) {
             log.error("[Report] paymentLedgerReport 期间汇总查询失败: {}", e.getMessage());
@@ -196,10 +204,22 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<Map<String, Object>> profitSummaryAll() {
         try {
-            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotSummaryAll();
-            if (resp != null && resp.getData() != null) {
-                return resp.getData();
+            LambdaQueryWrapper<ProfitSnapshotDO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.orderByDesc(ProfitSnapshotDO::getSnapshotAt).last("LIMIT 200");
+            List<ProfitSnapshotDO> snaps = profitSnapshotMapper.selectList(wrapper);
+            if (snaps == null) {
+                return new ArrayList<>();
             }
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (ProfitSnapshotDO s : snaps) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("initiationId", s.getInitiationId());
+                m.put("period", s.getPeriod());
+                m.put("totalCost", s.getTotalCost());
+                m.put("grossMargin", s.getGrossMargin());
+                result.add(m);
+            }
+            return result;
         } catch (Exception e) { log.error("[Report] profitSummaryAll 查询失败: {}", e.getMessage(), e); }
         return new ArrayList<>();
     }
@@ -207,24 +227,61 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<Map<String, Object>> profitRank(int top, String sortBy, String period) {
         try {
-            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotRank(top, sortBy, period);
-            if (resp != null && resp.getData() != null) {
-                List<Map<String, Object>> rows = new ArrayList<>(resp.getData());
-                // 健康度简易派生：毛利率 >= 0.30 = 绿；0.10-0.30 = 黄；< 0.10 = 红
-                for (Map<String, Object> row : rows) {
-                    BigDecimal margin = toDecimal(row.get("grossMargin"));
-                    String health;
-                    if (margin.compareTo(new BigDecimal("0.30")) >= 0) {
-                        health = "GREEN";
-                    } else if (margin.compareTo(new BigDecimal("0.10")) >= 0) {
-                        health = "YELLOW";
-                    } else {
-                        health = "RED";
-                    }
-                    row.put("healthLevel", health);
-                }
-                return rows;
+            LambdaQueryWrapper<ProfitSnapshotDO> wrapper = new LambdaQueryWrapper<>();
+            if (period != null && !period.isEmpty()) {
+                wrapper.eq(ProfitSnapshotDO::getPeriod, period);
             }
+            List<ProfitSnapshotDO> all = profitSnapshotMapper.selectList(wrapper);
+            if (all == null) {
+                return new ArrayList<>();
+            }
+            // 按立项去重，保留最新快照
+            Map<String, ProfitSnapshotDO> latest = new HashMap<>();
+            for (ProfitSnapshotDO s : all) {
+                if (s == null || s.getInitiationId() == null) continue;
+                ProfitSnapshotDO prev = latest.get(s.getInitiationId());
+                if (prev == null || (s.getSnapshotAt() != null && (prev.getSnapshotAt() == null || s.getSnapshotAt().isAfter(prev.getSnapshotAt())))) {
+                    latest.put(s.getInitiationId(), s);
+                }
+            }
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (ProfitSnapshotDO s : latest.values()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("initiationId", s.getInitiationId());
+                row.put("period", s.getPeriod());
+                row.put("contractAmount", s.getContractAmount());
+                row.put("recognizedRevenue", s.getRecognizedRevenue());
+                row.put("totalCost", s.getTotalCost());
+                row.put("grossProfit", s.getGrossProfit());
+                row.put("grossMargin", s.getGrossMargin());
+                row.put("progressPct", s.getProgressPct());
+                row.put("snapshotAt", s.getSnapshotAt());
+                rows.add(row);
+            }
+            // 排序
+            String dim = sortBy != null ? sortBy : "grossMargin";
+            Comparator<Map<String, Object>> cmp = switch (dim) {
+                case "grossProfit" -> Comparator.comparing(m -> toDecimal(m.get("grossProfit")));
+                case "contractAmount" -> Comparator.comparing(m -> toDecimal(m.get("contractAmount")));
+                default -> Comparator.comparing(m -> toDecimal(m.get("grossMargin")));
+            };
+            rows.sort(cmp.reversed());
+            int limit = top <= 0 ? 10 : top;
+            if (rows.size() > limit) rows = rows.subList(0, limit);
+            // 健康度简易派生：毛利率 >= 0.30 = 绿；0.10-0.30 = 黄；< 0.10 = 红
+            for (Map<String, Object> row : rows) {
+                BigDecimal margin = toDecimal(row.get("grossMargin"));
+                String health;
+                if (margin.compareTo(new BigDecimal("0.30")) >= 0) {
+                    health = "GREEN";
+                } else if (margin.compareTo(new BigDecimal("0.10")) >= 0) {
+                    health = "YELLOW";
+                } else {
+                    health = "RED";
+                }
+                row.put("healthLevel", health);
+            }
+            return rows;
         } catch (Exception e) {
             log.error("[Report] profitRank 查询失败: {}", e.getMessage());
         }
@@ -235,10 +292,14 @@ public class ReportServiceImpl implements ReportService {
 
     private Map<String, Object> latestSnapshot(String initiationId, String period) {
         try {
-            BaseResponse<Map<String, Object>> resp = financeDataClient.latestProfitSnapshot(initiationId, period);
-            if (resp != null && resp.getData() != null && !resp.getData().isEmpty()) {
-                return resp.getData();
+            ProfitSnapshotDO snapshot = profitSnapshotMapper.selectLatest(initiationId, period);
+            if (snapshot == null) {
+                return null;
             }
+            Map<String, Object> data = new HashMap<>();
+            data.put("snapshotId", snapshot.getId());
+            data.put("grossProfit", snapshot.getGrossProfit());
+            return data;
         } catch (Exception e) {
             log.error("[Report] 利润快照查询失败: {}", e.getMessage());
         }
@@ -247,8 +308,8 @@ public class ReportServiceImpl implements ReportService {
 
     private BigDecimal sumRevenue(String initiationId, String period) {
         try {
-            BaseResponse<BigDecimal> resp = financeDataClient.sumRevenue(initiationId, period);
-            return resp != null && resp.getData() != null ? resp.getData() : BigDecimal.ZERO;
+            BigDecimal val = revenueMapper.sumByInitiation(initiationId, period);
+            return val != null ? val : BigDecimal.ZERO;
         } catch (Exception e) {
             log.error("[Report] 收入汇总查询失败: {}", e.getMessage());
             return BigDecimal.ZERO;
@@ -257,8 +318,8 @@ public class ReportServiceImpl implements ReportService {
 
     private BigDecimal sumExpense(String initiationId, String period) {
         try {
-            BaseResponse<BigDecimal> resp = financeDataClient.sumExpense(initiationId, period);
-            return resp != null && resp.getData() != null ? resp.getData() : BigDecimal.ZERO;
+            BigDecimal val = expenseMapper.sumByInitiation(initiationId, period);
+            return val != null ? val : BigDecimal.ZERO;
         } catch (Exception e) {
             log.error("[Report] 费用汇总查询失败: {}", e.getMessage());
             return BigDecimal.ZERO;

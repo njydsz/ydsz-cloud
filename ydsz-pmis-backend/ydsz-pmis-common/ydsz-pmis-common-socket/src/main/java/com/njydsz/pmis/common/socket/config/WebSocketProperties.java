@@ -11,7 +11,7 @@ import lombok.Data;
  * WebSocket 可配置化属性。
  *
  * <p>支持通过 YAML 配置文件灵活控制 WebSocket 端点、心跳、消息大小限制、
- * 空闲超时、跨域策略、集群广播开关、熔断降级、消息可靠性、多端策略等，避免硬编码。
+ * 空闲超时、跨域策略、集群广播开关、熔断降级、消息可靠性、等，避免硬编码。
  *
  * <p>配置示例：
  * <pre>{@code
@@ -52,9 +52,6 @@ import lombok.Data;
  *     ack:
  *       enabled: false
  *       timeout: 30s
- *     multi-device:
- *       policy: ALLOW_ALL
- *       max-sessions-per-user: 5
  *     connection-limit:
  *       max-global-connections: 10000
  *       max-per-user-connections: 5
@@ -114,9 +111,6 @@ public class WebSocketProperties {
 
     /** ACK 确认配置 */
     private Ack ack = new Ack();
-
-    /** 多端登录策略配置 */
-    private MultiDevice multiDevice = new MultiDevice();
 
     /** 连接数限制配置 */
     private ConnectionLimit connectionLimit = new ConnectionLimit();
@@ -195,14 +189,6 @@ public class WebSocketProperties {
         private boolean enabled = false;
         /** ACK 超时时间 */
         private Duration timeout = Duration.ofSeconds(30);
-    }
-
-    @Data
-    public static class MultiDevice {
-        /** 多端登录策略：ALLOW_ALL / MUTEX / NEW_REPLACE_OLD */
-        private String policy = "ALLOW_ALL";
-        /** 每用户最大并发 Session 数 */
-        private int maxSessionsPerUser = 5;
     }
 
     @Data

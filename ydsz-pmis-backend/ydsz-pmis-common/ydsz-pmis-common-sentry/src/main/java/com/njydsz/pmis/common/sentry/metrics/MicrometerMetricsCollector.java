@@ -3,11 +3,13 @@ package com.njydsz.pmis.common.sentry.metrics;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.Reference;
 
 import com.njydsz.pmis.common.sentry.spi.MetricsCollector;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
@@ -31,6 +33,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
     private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, DistributionSummary> histogramCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicReference<Double>> gaugeRefCache = new ConcurrentHashMap<>();
 
     /** Timer SLO 配置（启用百分位和直方图，支持 Prometheus Exemplar） */
     private static final Duration[] TIMER_SLOS = {
@@ -73,7 +76,16 @@ public class MicrometerMetricsCollector implements MetricsCollector {
             return;
         }
         try {
-            meterRegistry.gauge(name, toTags(tags), value);
+            String cacheKey = buildCacheKey(name, tags);
+            AtomicReference<Double> ref = gaugeRefCache.computeIfAbsent(cacheKey, k -> {
+                AtomicReference<Double> newRef = new AtomicReference<>(value);
+                Gauge.builder(name, newRef, AtomicReference::get)
+                        .description(description)
+                        .tags(toTags(tags))
+                        .register(meterRegistry);
+                return newRef;
+            });
+            ref.set(value);
         } catch (Exception e) {
             log.debug("[Sentry] Micrometer Gauge 记录失败, 降级到内存: name={}, err={}", name, e.getMessage());
             fallback.setGauge(name, description, tags, value);

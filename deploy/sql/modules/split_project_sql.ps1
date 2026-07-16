@@ -23,14 +23,14 @@ $salesTables = @(
 )
 
 $financeTables = @(
-    'pmis_finance_invoice',
-    'pmis_finance_payment',
-    'pmis_finance_customer_credit',
-    'pmis_cost_expense',
-    'pmis_profit_revenue',
-    'pmis_profit_snapshot',
-    'pmis_profit_simulation',
-    'pmis_reconcile_daily'
+    'pmis_project_invoice',
+    'pmis_project_payment',
+    'pmis_project_customer_credit',
+    'pmis_project_expense',
+    'pmis_project_revenue',
+    'pmis_project_profit_snapshot',
+    'pmis_project_profit_simulation',
+    'pmis_project_reconcile_daily'
 )
 
 $literuleTables = @(

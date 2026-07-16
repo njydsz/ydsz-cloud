@@ -22,7 +22,6 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.core.constant.CacheConstants;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
-import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
@@ -38,6 +37,9 @@ import com.njydsz.pmis.project.domain.enums.AlertSeverity;
 import com.njydsz.pmis.project.infra.mapper.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
 import com.njydsz.pmis.project.infra.mapper.EvmMeasureMapper;
+import com.njydsz.pmis.project.infra.mapper.ExpenseMapper;
+import com.njydsz.pmis.project.infra.mapper.InvoiceMapper;
+import com.njydsz.pmis.project.infra.mapper.PaymentMapper;
 import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
 import com.njydsz.pmis.project.infra.mapper.RiskMapper;
 import com.njydsz.pmis.project.server.engine.alert.AlertRuleEngine;
@@ -67,8 +69,12 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class CockpitReportServiceImpl implements CockpitReportService {
 
-    /** 财务数据 Feign 客户端（跨域查询发票/回款/费用等财务数据） */
-    private final FinanceDataClient financeDataClient;
+    /** 发票 Mapper（同进程查询发票数据） */
+    private final InvoiceMapper invoiceMapper;
+    /** 回款 Mapper（同进程查询回款数据） */
+    private final PaymentMapper paymentMapper;
+    /** 费用 Mapper（同进程查询费用数据） */
+    private final ExpenseMapper expenseMapper;
     /** 成本分摊 Mapper */
     private final CostAllocationMapper costAllocationMapper;
     /** 采购成本 Mapper */
@@ -115,11 +121,11 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         // 1) 在执行项目数：有 ISUED invoice 但未结项的项目（简化：取有任一收入记录的项目数）
         kpi.setActiveProjects(countActiveProjects());
 
-        // 2) 合同总额（跨域 Feign 调用财务服务）
+        // 2) 合同总额（同进程查询发票数据）
         BigDecimal totalContractAmount = sumInvoiceAmount();
         kpi.setTotalContractAmount(totalContractAmount);
 
-        // 3) 已确认收入（跨域 Feign 调用财务服务）
+        // 3) 已确认收入（同进程查询回款数据）
         BigDecimal confirmedRevenue = sumAllocatedPayment();
         kpi.setConfirmedRevenue(confirmedRevenue);
 
@@ -238,8 +244,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     public List<Map<String, Object>> drillByDept(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
-            out = financeDataClient.sumInvoiceByDepartment().getData();
-            if (out == null) out = new ArrayList<>();
+            List<Map<String, Object>> data = invoiceMapper.sumByDepartment();
+            out = data != null ? data : new ArrayList<>();
         } catch (Exception e) {
             log.error("[Cockpit] 事业部下钻失败: {}", e.getMessage());
         }
@@ -252,8 +258,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     public List<Map<String, Object>> drillByProjectType(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
-            out = financeDataClient.sumInvoiceByProjectType().getData();
-            if (out == null) out = new ArrayList<>();
+            List<Map<String, Object>> data = invoiceMapper.sumByProjectType();
+            out = data != null ? data : new ArrayList<>();
         } catch (Exception e) {
             log.error("[Cockpit] 项目类型下钻失败: {}", e.getMessage());
         }
@@ -266,8 +272,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     public List<Map<String, Object>> drillByCustomer(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
-            out = financeDataClient.sumInvoiceByCustomer().getData();
-            if (out == null) out = new ArrayList<>();
+            List<Map<String, Object>> data = invoiceMapper.sumByCustomer();
+            out = data != null ? data : new ArrayList<>();
         } catch (Exception e) {
             log.error("[Cockpit] 客户下钻失败: {}", e.getMessage());
         }
@@ -280,8 +286,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         Map<String, Object> out = new HashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
         try {
-            var resp = financeDataClient.sumInvoiceByYear();
-            rows = resp != null && resp.getData() != null ? resp.getData() : new ArrayList<>();
+            List<Map<String, Object>> resp = invoiceMapper.sumByYear();
+            rows = resp != null ? resp : new ArrayList<>();
         } catch (Exception e) {
             log.error("[Cockpit] 合同年度趋势查询失败: {}", e.getMessage());
         }
@@ -375,8 +381,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     private int countActiveProjects() {
         try {
-            return financeDataClient.countDistinctInitiation().getData() != null
-                    ? financeDataClient.countDistinctInitiation().getData() : 0;
+            Integer cnt = invoiceMapper.countDistinctInitiation();
+            return cnt != null ? cnt : 0;
         } catch (Exception e) {
             log.error("[Cockpit] activeProjects 计算失败: {}", e.getMessage());
             return 0;
@@ -385,7 +391,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     private BigDecimal sumInvoiceAmount() {
         try {
-            return nz(financeDataClient.sumInvoiceAmount().getData());
+            return nz(invoiceMapper.sumInvoicedAmount());
         } catch (Exception e) {
             log.error("[Cockpit] 合同总额计算失败: {}", e.getMessage());
             return ZERO;
@@ -394,7 +400,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     private BigDecimal sumAllocatedPayment() {
         try {
-            return nz(financeDataClient.sumAllocatedPayment().getData());
+            return nz(paymentMapper.sumAllocatedAmount());
         } catch (Exception e) {
             log.error("[Cockpit] 已确认收入计算失败: {}", e.getMessage());
             return ZERO;
@@ -428,13 +434,13 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     /**
-     * 跨域安全求和：通过 Feign 调用财务服务查询费用总额，失败返回零值。
+     * 同进程安全求和：查询费用总额，失败返回零值。
      */
     private BigDecimal safeSumFinanceAmount() {
         try {
-            return nz(financeDataClient.sumExpenseAmount().getData());
+            return nz(expenseMapper.sumAllAmount());
         } catch (Exception e) {
-            log.error("[Cockpit] 费用总额查询失败（Feign 降级）: {}", e.getMessage());
+            log.error("[Cockpit] 费用总额查询失败: {}", e.getMessage());
             return ZERO;
         }
     }
@@ -688,14 +694,14 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         List<Map<String, Object>> paymentRowsDesc = new ArrayList<>();
         List<Map<String, Object>> costRowsDesc = new ArrayList<>();
         try {
-            var resp = financeDataClient.sumInvoiceByRecentMonth(limit);
-            contractRowsDesc = resp != null && resp.getData() != null ? resp.getData() : new ArrayList<>();
+            List<Map<String, Object>> resp = invoiceMapper.sumByRecentMonth(limit);
+            contractRowsDesc = resp != null ? resp : new ArrayList<>();
         } catch (Exception e) {
             log.warn("[Cockpit] KPI 趋势-合同查询失败: {}", e.getMessage());
         }
         try {
-            var pmtResp = financeDataClient.aggregatePaymentByRecentMonth(limit);
-            paymentRowsDesc = pmtResp != null && pmtResp.getData() != null ? pmtResp.getData() : new ArrayList<>();
+            List<Map<String, Object>> pmtResp = paymentMapper.aggregateByRecentMonth(limit);
+            paymentRowsDesc = pmtResp != null ? pmtResp : new ArrayList<>();
         } catch (Exception e) {
             log.warn("[Cockpit] KPI 趋势-回款查询失败: {}", e.getMessage());
         }

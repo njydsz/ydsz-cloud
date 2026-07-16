@@ -3,8 +3,6 @@ package com.njydsz.pmis.common.sentry.spi;
 import java.time.Duration;
 import java.util.Map;
 
-import com.njydsz.pmis.common.sentry.domain.MetricType;
-
 /**
  * 指标采集器 SPI
  *
@@ -73,10 +71,4 @@ public interface MetricsCollector {
      */
     String getName();
 
-    /**
-     * 获取采集器类型
-     */
-    default MetricType getCollectorType() {
-        return null;
-    }
 }

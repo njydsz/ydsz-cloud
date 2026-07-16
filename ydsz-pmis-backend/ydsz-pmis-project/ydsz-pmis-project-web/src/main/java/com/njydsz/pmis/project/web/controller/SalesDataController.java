@@ -21,8 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 商务数据查询 Controller（内部接口）
  *
- * <p>供 PM/Finance 模块通过 {@link com.njydsz.pmis.project.api.client.SalesDataClient} 跨域调用，
- * 暴露合同/商机等聚合数据查询能力。
+ * <p>sales/finance 模块已合并到 project 模块，原 Feign 跨域调用已下线，
+ * 现直接暴露合同/商机等聚合数据查询能力供同进程调用。
  *
  * @author ydsz-pmis-team
  * @since 2.0.0

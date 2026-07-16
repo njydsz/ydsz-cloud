@@ -33,12 +33,12 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_project_payment
         WHERE payment_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <update id="updateStatus">
-        UPDATE pmis_finance_payment
+        UPDATE pmis_project_payment
         SET status = #{status},
             confirmed_by = COALESCE(#{confirmedBy}, confirmed_by),
             updated_at = CURRENT_TIMESTAMP
@@ -46,7 +46,7 @@
     </update>
 
     <update id="updateAllocation">
-        UPDATE pmis_finance_payment
+        UPDATE pmis_project_payment
         SET invoice_allocation = #{allocation},
             allocated_amount = #{allocatedAmount},
             unallocated_amount = #{unallocatedAmount},
@@ -55,19 +55,19 @@
     </update>
 
     <select id="selectByContract" resultMap="BaseResultMap">
-        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_project_payment
         WHERE contract_id = #{contractId} AND deleted = 0
         ORDER BY payment_date DESC
     </select>
 
     <select id="selectByCustomer" resultMap="BaseResultMap">
-        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_project_payment
         WHERE customer_id = #{customerId} AND deleted = 0
         ORDER BY payment_date DESC
     </select>
 
     <select id="selectUnallocated" resultMap="BaseResultMap">
-        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_project_payment
         WHERE customer_id = #{customerId}
           AND status = 'CONFIRMED'
           AND unallocated_amount > 0
@@ -76,7 +76,7 @@
     </select>
 
     <select id="sumReceivedByContract" resultType="java.math.BigDecimal">
-        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
+        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_project_payment
         WHERE contract_id = #{contractId}
           AND status IN ('CONFIRMED', 'ALLOCATED')
           AND deleted = 0
@@ -86,7 +86,7 @@
         SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month,
                COALESCE(SUM(amount), 0) AS amount,
                COUNT(1) AS cnt
-        FROM pmis_finance_payment
+        FROM pmis_project_payment
         WHERE initiation_id = #{initiationId}
           AND status IN ('CONFIRMED', 'ALLOCATED') AND deleted = 0
         GROUP BY TO_CHAR(payment_date, 'YYYY-MM')
@@ -97,19 +97,19 @@
         SELECT customer_id, customer_name,
                COALESCE(SUM(amount), 0) AS amount,
                COUNT(1) AS cnt
-        FROM pmis_finance_payment
+        FROM pmis_project_payment
         WHERE status IN ('CONFIRMED', 'ALLOCATED') AND deleted = 0
         GROUP BY customer_id, customer_name
         ORDER BY amount DESC
     </select>
 
     <select id="sumAllocatedAmount" resultType="java.math.BigDecimal">
-        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
+        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_project_payment
         WHERE status = 'ALLOCATED' AND deleted = 0
     </select>
 
     <select id="sumAmountAllocated" resultType="java.math.BigDecimal">
-        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
+        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_project_payment
         WHERE status = 'ALLOCATED' AND deleted = 0
     </select>
 
@@ -120,7 +120,7 @@
         SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month,
                COALESCE(SUM(amount), 0)         AS amount,
                COUNT(1)                         AS cnt
-        FROM pmis_finance_payment
+        FROM pmis_project_payment
         WHERE status IN ('CONFIRMED', 'ALLOCATED') AND deleted = 0
           AND payment_date IS NOT NULL
         GROUP BY TO_CHAR(payment_date, 'YYYY-MM')

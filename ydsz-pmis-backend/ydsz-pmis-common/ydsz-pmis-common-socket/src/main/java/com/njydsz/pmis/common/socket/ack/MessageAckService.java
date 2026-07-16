@@ -113,7 +113,6 @@ public class MessageAckService {
     /**
      * 清理本地降级存储中的过期 ACK 记录。
      */
-    public void cleanupLocalAcks() {
         if (!localPendingAcks.isEmpty()) {
             log.debug("[WS-ACK] 本地 ACK 记录数: {}", localPendingAcks.size());
         }

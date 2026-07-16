@@ -7,9 +7,9 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider;
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.ExpenseMapper;
 import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
 import com.njydsz.pmis.project.server.service.InitiationService;
 
@@ -39,7 +39,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
 
     private final InitiationService initiationService;
     private final PurchaseMapper purchaseMapper;
-    private final FinanceDataClient financeDataClient;
+    private final ExpenseMapper expenseMapper;
     private final CostAllocationMapper costAllocationMapper;
 
     /**
@@ -85,7 +85,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
             return BigDecimal.ZERO;
         }
         BigDecimal purchaseUsed = nz(purchaseMapper.sumByInitiation(initiationId));
-        BigDecimal expenseUsed = nz(financeDataClient.sumExpense(initiationId, null).getData());
+        BigDecimal expenseUsed = nz(expenseMapper.sumByInitiation(initiationId, null));
         BigDecimal allocatedUsed = nz(costAllocationMapper.sumByInitiation(initiationId));
         BigDecimal incurred = purchaseUsed.add(expenseUsed).add(allocatedUsed);
         log.debug("[BudgetSnapshotProvider] 项目 {} 已发生成本: 采购 {} + 费用 {} + 已归集 {} = {}",

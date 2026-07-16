@@ -877,7 +877,7 @@ COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已
 -- 背景:历史演进过程中出现了若干类型不一致:
 --   1. pmis_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(20) — 同含义字段类型不一致
 --   2. pmis_flow_his_task 完全缺失 assignor_id 列(主表有,历史表没有)
---   3. pmis_finance_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
+--   3. pmis_project_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
 --   4. pmis_dict_version 缺 updated_at/updated_by/tenant_id,且 created_at/effective_date 用了 TIMESTAMP 而非 TIMESTAMPTZ
 --
 -- 已审查但**保留原样**的差异(具备合理业务理由):
@@ -1353,13 +1353,13 @@ CREATE INDEX IF NOT EXISTS idx_pmis_utilization_user_period
 --  6) 财务对账（voucher / payment / invoice）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_status_issued
-    ON pmis_finance_invoice (status, invoice_date DESC);
+    ON pmis_project_invoice (status, invoice_date DESC);
 
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_customer_status
-    ON pmis_finance_invoice (customer_id, status, invoice_date DESC);
+    ON pmis_project_invoice (customer_id, status, invoice_date DESC);
 
 CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
-    ON pmis_finance_payment (contract_id, status)
+    ON pmis_project_payment (contract_id, status)
     WHERE status IN ('RECEIVED', 'PARTIAL');
 
 -- =====================================================================
@@ -1381,9 +1381,9 @@ ANALYZE pmis_project_change;
 -- P1-6 清理: 移除 [SKIPPED-FWD-REF] ANALYZE(表暂未落地,见文件头 §Missing-Tables)
 ANALYZE pmis_billable_utilization_snapshot;
 
-ANALYZE pmis_finance_invoice;
+ANALYZE pmis_project_invoice;
 
-ANALYZE pmis_finance_payment;
+ANALYZE pmis_project_payment;
 
 -- 3. 规则执行轨迹表
 ALTER TABLE pmis_rule_execution_trace
@@ -1580,48 +1580,48 @@ COMMENT ON COLUMN pmis_rule_decision_tree.created_by IS '创建人(同 rule_def)
 COMMENT ON COLUMN pmis_rule_script.created_by        IS '创建人(同 rule_def)';
 
 -- ----------------------------------------------------------------------------
--- 2) pmis_finance_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
+-- 2) pmis_project_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_finance_invoice ALTER COLUMN tax_period TYPE VARCHAR(7);
+ALTER TABLE pmis_project_invoice ALTER COLUMN tax_period TYPE VARCHAR(7);
 
-COMMENT ON COLUMN pmis_finance_invoice.tax_period IS '税务所属期: 格式 YYYY-MM(7 字符,VARCHAR(7) 精确匹配 CHECK 约束)';
+COMMENT ON COLUMN pmis_project_invoice.tax_period IS '税务所属期: 格式 YYYY-MM(7 字符,VARCHAR(7) 精确匹配 CHECK 约束)';
 
-ANALYZE pmis_finance_invoice;
+ANALYZE pmis_project_invoice;
 
 -- ----------------------------------------------------------------------------
 -- 4) 人员ID字段 BIGINT -> VARCHAR(20) 统一(对齐其它 _by 雪花 ID 约定)
---    - pmis_profit_revenue.confirmed_by                          BIGINT -> VARCHAR(20)
---    - pmis_finance_invoice.applied_by / approved_by / issued_by BIGINT -> VARCHAR(20)
---    - pmis_finance_payment.confirmed_by / recorded_by            BIGINT -> VARCHAR(20)
+--    - pmis_project_revenue.confirmed_by                          BIGINT -> VARCHAR(20)
+--    - pmis_project_invoice.applied_by / approved_by / issued_by BIGINT -> VARCHAR(20)
+--    - pmis_project_payment.confirmed_by / recorded_by            BIGINT -> VARCHAR(20)
 --    USING ::VARCHAR(20) 处理历史 BIGINT 数据(雪花 ID 字符串可直接转型)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_profit_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE pmis_project_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
 
-ALTER TABLE pmis_finance_invoice ALTER COLUMN applied_by   TYPE VARCHAR(20) USING applied_by::VARCHAR(20);
+ALTER TABLE pmis_project_invoice ALTER COLUMN applied_by   TYPE VARCHAR(20) USING applied_by::VARCHAR(20);
 
-ALTER TABLE pmis_finance_invoice ALTER COLUMN approved_by  TYPE VARCHAR(20) USING approved_by::VARCHAR(20);
+ALTER TABLE pmis_project_invoice ALTER COLUMN approved_by  TYPE VARCHAR(20) USING approved_by::VARCHAR(20);
 
-ALTER TABLE pmis_finance_invoice ALTER COLUMN issued_by    TYPE VARCHAR(20) USING issued_by::VARCHAR(20);
+ALTER TABLE pmis_project_invoice ALTER COLUMN issued_by    TYPE VARCHAR(20) USING issued_by::VARCHAR(20);
 
-ALTER TABLE pmis_finance_payment ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE pmis_project_payment ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
 
-ALTER TABLE pmis_finance_payment ALTER COLUMN recorded_by  TYPE VARCHAR(20) USING recorded_by::VARCHAR(20);
+ALTER TABLE pmis_project_payment ALTER COLUMN recorded_by  TYPE VARCHAR(20) USING recorded_by::VARCHAR(20);
 
-COMMENT ON COLUMN pmis_profit_revenue.confirmed_by   IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_revenue.confirmed_by   IS '确认人ID(雪花ID VARCHAR(20))';
 
-COMMENT ON COLUMN pmis_finance_invoice.applied_by    IS '申请人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_invoice.applied_by    IS '申请人ID(雪花ID VARCHAR(20))';
 
-COMMENT ON COLUMN pmis_finance_invoice.approved_by   IS '审批人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_invoice.approved_by   IS '审批人ID(雪花ID VARCHAR(20))';
 
-COMMENT ON COLUMN pmis_finance_invoice.issued_by     IS '开票人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_invoice.issued_by     IS '开票人ID(雪花ID VARCHAR(20))';
 
-COMMENT ON COLUMN pmis_finance_payment.confirmed_by  IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_payment.confirmed_by  IS '确认人ID(雪花ID VARCHAR(20))';
 
-COMMENT ON COLUMN pmis_finance_payment.recorded_by   IS '录入人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_project_payment.recorded_by   IS '录入人ID(雪花ID VARCHAR(20))';
 
-ANALYZE pmis_profit_revenue;
+ANALYZE pmis_project_revenue;
 
-ANALYZE pmis_finance_payment;
+ANALYZE pmis_project_payment;
 
 -- ====================================================================
 -- ============================ [064] P1-7 provider_trace_id 索引补齐 ============================
@@ -1662,15 +1662,15 @@ CREATE INDEX IF NOT EXISTS idx_pmis_execution_closure_trace
 
 -- 2) 财务/合同(4 张)
 CREATE INDEX IF NOT EXISTS idx_pmis_finance_invoice_trace
-    ON pmis_finance_invoice (provider_trace_id)
+    ON pmis_project_invoice (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_finance_payment_trace
-    ON pmis_finance_payment (provider_trace_id)
+    ON pmis_project_payment (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_finance_customer_credit_trace
-    ON pmis_finance_customer_credit (provider_trace_id)
+    ON pmis_project_customer_credit (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 -- 3) 资源/计费(6 张)
@@ -1687,7 +1687,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_rate_internal_trace
     WHERE provider_trace_id <> '';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_profit_simulation_trace
-    ON pmis_profit_simulation (provider_trace_id)
+    ON pmis_project_profit_simulation (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 -- 4) 运维/告警/工单(5 张)
@@ -1704,7 +1704,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_trace
     WHERE provider_trace_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_trace
-    ON pmis_reconcile_daily (provider_trace_id)
+    ON pmis_project_reconcile_daily (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pmis_rule_execution_trace_trace
