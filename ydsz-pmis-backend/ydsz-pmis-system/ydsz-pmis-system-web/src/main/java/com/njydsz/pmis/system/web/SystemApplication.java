@@ -23,7 +23,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 })
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePpackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.system.infra.mapper")
 public class SystemApplication {
 

@@ -17,7 +17,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.pmis.common.audit.aspect.AuditAspect;
@@ -65,7 +64,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(AuditProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableAsync
 public class AuditAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AuditAutoConfiguration.class);

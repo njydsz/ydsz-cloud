@@ -17,7 +17,10 @@ import java.lang.annotation.*;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
+ * @deprecated 该注解当前未实现对应的 AOP 切面，
+ *             请使用 {@link Audit} 注解替代。后续版本将补全 {@code saveDiff()} 差异审计能力。
  */
+@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

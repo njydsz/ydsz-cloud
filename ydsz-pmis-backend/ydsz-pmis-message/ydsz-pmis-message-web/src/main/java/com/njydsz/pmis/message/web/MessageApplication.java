@@ -36,7 +36,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
-@EnableFeignClients(basePpackages = {"com.njydsz.pmis.message.api", "com.njydsz.pmis.common.feign"})
+@EnableFeignClients(basePackages = {"com.njydsz.pmis.message.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.message.infra.mapper")
 @EnableAsync
 @EnableScheduling

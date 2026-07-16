@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.json.writer;
 
-import java.lang.invoke.MethodHandle;
-
 import com.njydsz.pmis.common.json.cache.FieldMeta;
 import com.njydsz.pmis.common.json.number.NumberUtils;
+import com.njydsz.pmis.common.json.provider.SerializationProvider;
+
+import java.lang.invoke.MethodHandle;
 
 /**
  * Bean 专用序列化器
@@ -65,7 +66,10 @@ public final class BeanSerializer {
         /** 字段访问器 */
         public final MethodHandle getter;
         
-        /** JSON 键名（含引号） */
+        /** JSON 键名（不含引号） */
+        public final String jsonName;
+        
+        /** JSON 键名（含引号和冒号） */
         public final String jsonKey;
         
         /** JSON 键名长度 */
@@ -82,6 +86,7 @@ public final class BeanSerializer {
          */
         public FieldWriter(FieldMeta meta) {
             this.getter = meta.getter;
+            this.jsonName = meta.jsonName;
             this.jsonKey = meta.jsonKey;
             this.jsonKeyLen = meta.jsonKey.length();
             this.type = meta.type;
@@ -105,6 +110,11 @@ public final class BeanSerializer {
         
         for (int i = 0; i < fieldCount; i++) {
             FieldWriter field = fields[i];
+            
+            // 列权限字段排除检查
+            if (SerializationProvider.isFieldExcluded(field.jsonKey)) {
+                continue;
+            }
             
             switch (field.typeCode) {
                 case 1: // String

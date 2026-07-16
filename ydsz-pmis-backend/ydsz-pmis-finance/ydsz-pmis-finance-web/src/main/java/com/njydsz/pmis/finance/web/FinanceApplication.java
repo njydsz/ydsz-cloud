@@ -29,7 +29,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 @SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.finance", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePpackages = {"com.njydsz.pmis.finance.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePackages = {"com.njydsz.pmis.finance.api", "com.njydsz.pmis.common.feign"})
 @MapperScan({"com.njydsz.pmis.finance.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
 @EnableScheduling
 public class FinanceApplication {

@@ -6,8 +6,9 @@ import java.lang.annotation.*;
  * 数据导出审计注解。
  *
  * <p>标注在 Controller 方法上，专门记录数据导出操作的行为日志。
- * 与 {@link OperationLog} 类似，但语义上聚焦于数据导出场景，
- * 便于合规审计与数据泄露追踪。
+ *
+ * <p><b>注意：</b>该注解当前未实现对应的 AOP 切面，
+ * 请使用 {@link Audit} 注解并设置 {@code type = AuditType.DATA, action = AuditAction.EXPORT} 替代。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -18,7 +19,10 @@ import java.lang.annotation.*;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
+ * @deprecated 该注解当前未实现对应的 AOP 切面，
+ *             请使用 {@link Audit} 注解替代，设置 {@code type = AuditType.DATA}。
  */
+@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

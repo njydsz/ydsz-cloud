@@ -30,6 +30,6 @@ import org.springframework.context.annotation.Configuration;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Configuration
-@ComponentScan(basePpackages = "com.njydsz.pmis.common.docs")
+@ComponentScan(basePackages = "com.njydsz.pmis.common.docs")
 public @interface EnableYdszDocs {
 }

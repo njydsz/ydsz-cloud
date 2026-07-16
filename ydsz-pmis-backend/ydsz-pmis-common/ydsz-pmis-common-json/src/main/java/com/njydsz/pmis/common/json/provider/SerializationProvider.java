@@ -104,6 +104,10 @@ public final class SerializationProvider {
     private static final ThreadLocal<Boolean> SERIALIZE_ENUM_USING_ORDINAL =
         ThreadLocal.withInitial(() -> false);
 
+    /** 需要排除的字段名集合（ThreadLocal，用于列权限等场景的字段级过滤）*/
+    static final ThreadLocal<Set<String>> EXCLUDED_FIELDS =
+        ThreadLocal.withInitial(() -> null);
+
     /** Bean 序列化信息缓存*/
     private static final ConcurrentMap<Class<?>, BeanSerializerInfo> BEAN_SERIALIZER_INFO_CACHE = new ConcurrentHashMap<>(1024);
 
@@ -167,7 +171,40 @@ public final class SerializationProvider {
         PRETTY_PRINT.remove();
         CIRCULAR_REFERENCE_STRATEGY.remove();
         SERIALIZE_ENUM_USING_ORDINAL.remove();
+        EXCLUDED_FIELDS.remove();
         FieldMetadataLoader.NAMING_STRATEGY.remove();
+    }
+
+    /**
+     * 设置需要排除的字段名集合。
+     *
+     * <p>在序列化时，集合中的字段名（JSON 名称）对应的字段将被跳过，不输出到 JSON 中。
+     * 适用于列权限字段过滤等场景。
+     *
+     * @param fieldNames 需要排除的字段名集合，null 表示清除排除
+     */
+    public static void setExcludedFields(Set<String> fieldNames) {
+        EXCLUDED_FIELDS.set(fieldNames);
+    }
+
+    /**
+     * 获取需要排除的字段名集合。
+     *
+     * @return 排除集合，null 表示不排除任何字段
+     */
+    public static Set<String> getExcludedFields() {
+        return EXCLUDED_FIELDS.get();
+    }
+
+    /**
+     * 判断指定字段名是否被排除。
+     *
+     * @param jsonName 字段的 JSON 名称
+     * @return true 表示该字段应被排除
+     */
+    public static boolean isFieldExcluded(String jsonName) {
+        Set<String> excluded = EXCLUDED_FIELDS.get();
+        return excluded != null && excluded.contains(jsonName);
     }
 
     /**

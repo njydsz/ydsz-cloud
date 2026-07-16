@@ -28,7 +28,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 @SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.workflow", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePpackages = {"com.njydsz.pmis.workflow.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePackages = {"com.njydsz.pmis.workflow.api", "com.njydsz.pmis.common.feign"})
 @MapperScan({"com.njydsz.pmis.workflow.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
 @EnableScheduling
 public class WorkflowApplication {

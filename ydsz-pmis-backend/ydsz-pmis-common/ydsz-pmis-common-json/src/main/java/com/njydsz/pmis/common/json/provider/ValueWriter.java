@@ -496,6 +496,11 @@ public final class ValueWriter {
                 continue;
             }
 
+            // 列权限字段排除检查
+            if (SerializationProvider.isFieldExcluded(field.jsonName)) {
+                continue;
+            }
+
             Class<?> currentView = SerializationProvider.CURRENT_VIEW_CLASS.get();
             if (currentView != null) {
                 JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);

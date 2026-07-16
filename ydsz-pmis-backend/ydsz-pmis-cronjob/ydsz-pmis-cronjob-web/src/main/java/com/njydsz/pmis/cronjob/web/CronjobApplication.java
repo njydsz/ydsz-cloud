@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 @SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.cronjob", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePpackages = {"com.njydsz.pmis.cronjob.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePackages = {"com.njydsz.pmis.cronjob.api", "com.njydsz.pmis.common.feign"})
 @EnableScheduling
 @MapperScan("com.njydsz.pmis.cronjob.infra.mapper")
 public class CronjobApplication {

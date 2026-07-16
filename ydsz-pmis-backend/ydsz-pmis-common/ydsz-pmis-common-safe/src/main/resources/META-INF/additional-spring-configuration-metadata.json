@@ -1,0 +1,157 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.safe.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全模块。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.xss.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 XSS 防护过滤器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.xss.mode",
+      "type": "java.lang.String",
+      "description": "XSS 防护模式：filter（过滤器模式）或 converter（转换器模式）。",
+      "defaultValue": "filter"
+    },
+    {
+      "name": "ydsz.safe.xss.ignore-urls",
+      "type": "java.util.List<java.lang.String>",
+      "description": "XSS 过滤排除的 URL 列表（Ant 风格匹配）。"
+    },
+    {
+      "name": "ydsz.safe.sql-injection.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 SQL 注入防护。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.sql-injection.block-on-detect",
+      "type": "java.lang.Boolean",
+      "description": "检测到 SQL 注入时是否阻断请求（false=仅记录日志）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.sql-injection.custom-pattern",
+      "type": "java.lang.String",
+      "description": "自定义 SQL 注入检测正则表达式（为空时使用内置规则，支持运行时热更新）。",
+      "defaultValue": ""
+    },
+    {
+      "name": "ydsz.safe.csrf.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 CSRF 防护。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.csrf.mode",
+      "type": "com.njydsz.pmis.common.safe.config.CsrfProperties$CsrfMode",
+      "description": "CSRF 防护模式：SYNCHRONIZER（同步令牌）或 DOUBLE_SUBMIT（双重提交 Cookie）。",
+      "defaultValue": "SYNCHRONIZER"
+    },
+    {
+      "name": "ydsz.safe.ratelimit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用限流（Redis 滑动窗口 + 本地降级）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.safe.ratelimit.limit-per-second",
+      "type": "java.lang.Integer",
+      "description": "每秒请求限制数。",
+      "defaultValue": 100
+    },
+    {
+      "name": "ydsz.safe.ratelimit.burst-capacity",
+      "type": "java.lang.Integer",
+      "description": "突发容量上限。",
+      "defaultValue": 200
+    },
+    {
+      "name": "ydsz.safe.ip-access.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 IP 黑白名单访问控制。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.safe.ip-access.mode",
+      "type": "java.lang.String",
+      "description": "IP 访问控制模式：BLACKLIST 或 WHITELIST。",
+      "defaultValue": "BLACKLIST"
+    },
+    {
+      "name": "ydsz.safe.api-signature.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 API 签名验证（timestamp + nonce + HMAC-SHA256）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.safe.api-signature.app-id",
+      "type": "java.lang.String",
+      "description": "API 签名验证的应用 ID。"
+    },
+    {
+      "name": "ydsz.safe.api-signature.app-secret",
+      "type": "java.lang.String",
+      "description": "API 签名验证的应用密钥（Base64 编码）。"
+    },
+    {
+      "name": "ydsz.safe.api-signature.timestamp-tolerance-seconds",
+      "type": "java.lang.Integer",
+      "description": "时间戳容差（秒），超过此值的请求被拒绝。",
+      "defaultValue": 300
+    },
+    {
+      "name": "ydsz.safe.auto-block.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全事件自动响应（滑动窗口聚合 + 自动 IP 封禁）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.auto-block.threshold",
+      "type": "java.lang.Integer",
+      "description": "自动封禁阈值：同一 IP 在窗口内触发安全事件超过此值则自动封禁。",
+      "defaultValue": 10
+    },
+    {
+      "name": "ydsz.safe.auto-block.window-seconds",
+      "type": "java.lang.Integer",
+      "description": "自动封禁滑动窗口大小（秒）。",
+      "defaultValue": 60
+    },
+    {
+      "name": "ydsz.safe.sensitive.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用敏感数据脱敏。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.sensitive.max-depth",
+      "type": "java.lang.Integer",
+      "description": "脱敏处理最大递归深度。",
+      "defaultValue": 10
+    },
+    {
+      "name": "ydsz.safe.security-headers.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全响应头过滤器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.captcha.type",
+      "type": "java.lang.String",
+      "description": "验证码类型：image、arithmetic 或 slider。",
+      "defaultValue": "image"
+    },
+    {
+      "name": "ydsz.safe.captcha.store-type",
+      "type": "java.lang.String",
+      "description": "验证码存储类型：redis 或 local。",
+      "defaultValue": "redis"
+    }
+  ]
+}
