@@ -98,45 +98,28 @@ public class SafeConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SafeConfiguration.class);
 
-    @Value("${ydsz.safe.security-headers.enabled:true}")
-    private boolean securityHeadersEnabled;
-
-    @Value("${ydsz.safe.csrf.enabled:true}")
-    private boolean csrfEnabled;
-
-    @Value("${ydsz.safe.ratelimit.enabled:false}")
-    private boolean rateLimitEnabled;
-
-    @Value("${ydsz.safe.ip-access.enabled:false}")
-    private boolean ipAccessEnabled;
-
-    @Value("${ydsz.safe.api-signature.enabled:false}")
-    private boolean apiSignatureEnabled;
-
-    @Value("${ydsz.safe.auto-block.enabled:true}")
-    private boolean autoBlockEnabled;
-
     /**
-     * P2-17: 安全模块启动摘要日志
+     * 安全模块启动摘要日志
      *
-     * <p>启动时输出已启用/禁用的安全能力摘要，方便运维确认安全配置状态。
+     * <p>启动时输出安全能力清单。各能力是否实际注册由对应的
+     * {@code @ConditionalOnProperty} 决定，此处仅列出模块支持的全部能力。
      */
     @PostConstruct
     public void logStartupSummary() {
         log.info("==================== [Safe Module] Security Capabilities Summary ====================");
-        log.info("  XSS Filter:        ENABLED (OWASP Sanitizer + configurable policies)");
-        log.info("  SQL Injection:     ENABLED (regex-based detection)");
-        log.info("  CSRF:              {}", csrfEnabled ? "ENABLED" : "DISABLED");
-        log.info("  Security Headers:  {}", securityHeadersEnabled ? "ENABLED" : "DISABLED");
-        log.info("  Rate Limit:        {} (Filter + @RateLimit AOP)", rateLimitEnabled ? "ENABLED" : "DISABLED");
-        log.info("  IP Access Control:  {}", ipAccessEnabled ? "ENABLED" : "DISABLED");
-        log.info("  API Signature:     {}", apiSignatureEnabled ? "ENABLED" : "DISABLED");
-        log.info("  Auto Block:        {}", autoBlockEnabled ? "ENABLED" : "DISABLED");
-        log.info("  Sensitive Data:    ENABLED (18 types + Record support + role-based control)");
-        log.info("  Captcha:           ENABLED (image + arithmetic + slider)");
-        log.info("  Crypto:            ENABLED (AES-256-GCM + Nonce cache)");
-        log.info("  Metrics:           ENABLED (Micrometer optional)");
-        log.info("  Audit Logger:      ENABLED (structured JSON + traceId)");
+        log.info("  XSS Filter:         OWASP Sanitizer + configurable policies (STRICT/STANDARD/RELAXED)");
+        log.info("  SQL Injection:      Regex-based detection + runtime hot-reload");
+        log.info("  CSRF:               Synchronizer Token / Double Submit Cookie (dual mode)");
+        log.info("  Security Headers:   CSP / HSTS / X-Frame-Options / X-Content-Type-Options");
+        log.info("  Rate Limit:         Redis sliding window + @RateLimit AOP + local fallback");
+        log.info("  IP Access Control:  CIDR blacklist/whitelist + auto-block");
+        log.info("  API Signature:       timestamp + nonce + HMAC-SHA256");
+        log.info("  Auto Block:         Sliding window event aggregation + auto IP ban");
+        log.info("  Sensitive Data:     18 types + Record support + role-based control");
+        log.info("  Captcha:            Image + Arithmetic + Slider");
+        log.info("  Crypto:             AES-256-GCM + Nonce cache");
+        log.info("  Metrics:            Micrometer Counter/Timer (optional)");
+        log.info("  Audit Logger:       Structured JSON + traceId");
         log.info("====================================================================================");
     }
 
