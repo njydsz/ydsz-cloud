@@ -7,7 +7,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.security.DataExportAuditEvent;
+import com.njydsz.pmis.common.audit.event.DataExportAuditEvent;
 import com.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
 import com.njydsz.pmis.system.infra.mapper.audit.DataExportAuditMapper;
 

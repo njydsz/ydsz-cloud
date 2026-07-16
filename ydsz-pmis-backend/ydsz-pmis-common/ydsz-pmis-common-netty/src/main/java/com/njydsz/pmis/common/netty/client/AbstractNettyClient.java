@@ -55,6 +55,9 @@ public abstract class AbstractNettyClient {
     /** 可选依赖 — EventLoop 池（由 NettyAutoConfiguration 通过 setter 注入） */
     private NettyEventLoopPool eventLoopPool;
 
+    private ChannelEventDispatcher channelEventDispatcher;
+    private MessageDispatcher messageDispatcher;
+
     /**
      * 构造 Netty TCP Client。
      *
@@ -146,7 +149,6 @@ public abstract class AbstractNettyClient {
                                 pipeline.addLast("trafficMonitor", trafficHandler);
                             }
 
-                            // 子类自定义 Pipeline
                             if (connectionHandler != null) {
                                 pipeline.addLast("connectionEvent", connectionHandler);
                             }
@@ -155,14 +157,14 @@ public abstract class AbstractNettyClient {
                                 pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
                             }
 
-                            // åç±»èªå®ä¹ Pipeline
+                            // Pipeline
                             initChannelPipeline(ch);
 
                             if (messageDispatcher != null) {
                                 pipeline.addLast("messageDispatcher", messageDispatcher);
                             }
 
-                            // æ­çº¿éè¿
+                            if (properties.getReconnect().isEnabled()) {
                                 pipeline.addLast("reconnect", createReconnectHandler());
                             }
                         }

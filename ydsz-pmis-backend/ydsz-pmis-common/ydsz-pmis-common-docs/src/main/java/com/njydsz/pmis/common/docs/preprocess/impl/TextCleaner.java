@@ -21,8 +21,6 @@ import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 1.3.0
  */
 @Component
@@ -32,7 +30,7 @@ public class TextCleaner implements DocumentPreprocessor {
     private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]");
 
     /** BOM 标记 */
-    private static final Pattern BOM = Pattern.compile("|\uFFFE");
+    private static final Pattern BOM = Pattern.compile("\uFEFF");
 
     /** 零宽字符 */
     private static final Pattern ZERO_WIDTH = Pattern.compile("[\u200B-\u200D]");

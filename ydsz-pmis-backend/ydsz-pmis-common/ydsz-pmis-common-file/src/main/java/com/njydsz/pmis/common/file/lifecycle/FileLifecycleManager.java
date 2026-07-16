@@ -5,14 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.file.domain.ListObjectsResult;
 import com.njydsz.pmis.common.file.domain.ObjectMetadata;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
-import com.njydsz.pmis.common.file.storage.IStorageFactory;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -49,14 +47,12 @@ import lombok.extern.slf4j.Slf4j;
  * 
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "ydsz.file.lifecycle", name = "enabled", havingValue = "true")
 public class FileLifecycleManager {
 
 	private final FileLifecycleProperties lifecycleProperties;
-	private final IStorageFactory storageFactory;
-	private final IFileStorage fileStorage;
+	private final IFileStorageProvider storageProvider;
 
 	/**
 	 * 定时执行文件清理任务
@@ -253,12 +249,7 @@ public class FileLifecycleManager {
 	 * @return 文件存储实例
 	 */
 	private IFileStorage resolveStorage() {
-		if (fileStorage != null) {
-			return fileStorage;
-		}
-		if (storageFactory != null) {
-			return storageFactory.getStorage();
-		}
+		return storageProvider.getStorage();
 		return null;
 	}
 
@@ -317,53 +308,4 @@ public class FileLifecycleManager {
 	@Data
 	@Component
 	@ConfigurationProperties(prefix = "ydsz.file.lifecycle")
-	public static class FileLifecycleProperties {
-
-		/**
-		 * 是否启用文件生命周期管理
-		 */
-		private boolean enabled = false;
-
-		/**
-		 * 定时任务 cron 表达式
-		 */
-		private String cron = "0 0 2 * * ?";
-
-		/**
-		 * 存储桶名称
-		 */
-		private String bucket;
-
-		/**
-		 * 生命周期规则列表
-		 */
-		private List<LifecycleRule> rules = new ArrayList<>();
-
-		/**
-		 * 是否仅模拟执行（不实际删除）
-		 */
-		private boolean dryRun = false;
-
-		/**
-		 * 生命周期规则
-		 */
-		@Data
-		public static class LifecycleRule {
-
-			/**
-			 * 文件路径前缀匹配（如 "temp/", "logs/"）
-			 */
-			private String prefix;
-
-			/**
-			 * 最大保留天数，超过此天数的文件将被清理
-			 */
-			private int maxAgeDays;
-
-			/**
-			 * 清理动作，当前仅支持 delete
-			 */
-			private String action = "delete";
-		}
-	}
 }

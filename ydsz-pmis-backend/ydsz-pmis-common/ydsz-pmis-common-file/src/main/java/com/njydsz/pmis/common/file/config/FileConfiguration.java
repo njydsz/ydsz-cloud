@@ -2,8 +2,6 @@ package com.njydsz.pmis.common.file.config;
 
 import java.util.Collections;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -13,10 +11,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.pmis.common.file.health.FileHealthIndicator;
-import com.njydsz.pmis.common.file.service.DedupCleanupScheduler;
+import com.njydsz.pmis.common.file.lifecycle.FileLifecycleManager;
+import com.njydsz.pmis.common.file.metrics.FileMetrics;
 import com.njydsz.pmis.common.file.service.FileDedupService;
 import com.njydsz.pmis.common.file.storage.CheckpointService;
 import com.njydsz.pmis.common.file.storage.CheckpointStore;
@@ -24,187 +24,146 @@ import com.njydsz.pmis.common.file.storage.DefaultCheckpointService;
 import com.njydsz.pmis.common.file.storage.DelegatingCheckpointStore;
 import com.njydsz.pmis.common.file.storage.DelegatingMultipartContextStore;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
-import com.njydsz.pmis.common.file.storage.IStorageFactory;
 import com.njydsz.pmis.common.file.storage.InMemoryMultipartContextStore;
 import com.njydsz.pmis.common.file.storage.LocalCheckpointStore;
 import com.njydsz.pmis.common.file.storage.MultipartContextStore;
 import com.njydsz.pmis.common.file.storage.RedisCheckpointStore;
 import com.njydsz.pmis.common.file.storage.RedisMultipartContextStore;
+import com.njydsz.pmis.common.file.storage.StorageRetryHelper;
 import com.njydsz.pmis.common.file.storage.UploadConcurrencyGuard;
+import com.njydsz.pmis.common.file.storage.DefaultStorageFactory;
 import com.njydsz.pmis.common.file.util.FileTypeValidator;
+import com.njydsz.pmis.common.file.virus.NoOpVirusScanner;
+import com.njydsz.pmis.common.file.virus.VirusScanner;
+import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * 文件存储自动配置类
- *
- * <p>基于 Spring Boot AutoConfiguration 机制，自动装配文件存储相关的 Bean，
- * 包括存储工厂、分片上传上下文存储、检查点存储、健康检查等组件。
- *
- * <p><b>主要特性：</b>
- * <ul>
- *   <li>智能降级：Redis 可用时优先使用 Redis 存储，否则降级到内存或本地文件</li>
- *   <li>并发控制：可选的上传并发保护器，防止同一文件被重复上传</li>
- *   <li>健康检查：集成 Spring Boot Actuator，自动暴露文件存储健康状态</li>
- *   <li>定时清理：每小时自动清理过期的分片上传上下文</li>
- * </ul>
+ * File storage auto-configuration.
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
+@Slf4j
 @AutoConfiguration
-@EnableConfigurationProperties({FileProperties.class, FileUploadProperties.class})
+@EnableScheduling
+@EnableConfigurationProperties({FileProperties.class, FileUploadProperties.class, FileLifecycleProperties.class})
 @ConditionalOnProperty(prefix = "ydsz.file", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class FileConfiguration {
 
-    /** 分片上传上下文过期时间（分钟） */
     private static final int MULTIPART_CONTEXT_TIMEOUT_MINUTES = 60;
+    private final MultipartContextStore multipartContextStore;
 
-    /** 分片上传上下文存储（由 Spring 自动注入） */
-    private MultipartContextStore multipartContextStore;
+    public FileConfiguration(MultipartContextStore multipartContextStore) {
+        this.multipartContextStore = multipartContextStore;
+    }
 
-    private static final Logger configLog = LoggerFactory.getLogger(FileConfiguration.class);
-
-    /**
-     * 分片上传上下文存储 Bean
-     * <p>当 Redis 可用时优先使用 Redis 存储，否则降级到内存 Map。
-     */
     @Bean
     @ConditionalOnMissingBean(MultipartContextStore.class)
-    public MultipartContextStore multipartContextStore(
-            ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider) {
-        StringRedisTemplate template = stringRedisTemplateProvider.getIfAvailable();
+    public MultipartContextStore multipartContextStore(ObjectProvider<StringRedisTemplate> redisProvider) {
+        StringRedisTemplate template = redisProvider.getIfAvailable();
         if (template != null) {
-            return new DelegatingMultipartContextStore(
-                    new RedisMultipartContextStore(template), null);
+            return new DelegatingMultipartContextStore(new RedisMultipartContextStore(template), null);
         }
-        configLog.warn("[FileConfig] Redis not available, falling back to InMemoryMultipartContextStore. " +
-                "Multi-instance deployments may fail to share multipart upload contexts.");
+        log.warn("Redis not available, falling back to InMemoryMultipartContextStore.");
         return new InMemoryMultipartContextStore();
     }
 
-    /**
-     * 检查点存储 Bean
-     * <p>当 Redis 可用时优先使用 Redis 存储，否则降级到本地文件。
-     */
     @Bean
     @ConditionalOnMissingBean(CheckpointStore.class)
-    public CheckpointStore checkpointStore(
-            FileProperties fileProperties,
-            ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider) {
-        StringRedisTemplate template = stringRedisTemplateProvider.getIfAvailable();
-        CheckpointStore fallback = new LocalCheckpointStore(fileProperties.getCheckpointDir());
+    public CheckpointStore checkpointStore(FileProperties props, ObjectProvider<StringRedisTemplate> redisProvider) {
+        StringRedisTemplate template = redisProvider.getIfAvailable();
+        CheckpointStore fallback = new LocalCheckpointStore(props.getCheckpointDir());
         if (template != null) {
-            return new DelegatingCheckpointStore(
-                    new RedisCheckpointStore(template), fallback);
+            return new DelegatingCheckpointStore(new RedisCheckpointStore(template), fallback);
         }
-        configLog.warn("[FileConfig] Redis not available, falling back to LocalCheckpointStore. " +
-                "Multi-instance deployments may fail to share checkpoint data for resumable uploads.");
+        log.warn("Redis not available, falling back to LocalCheckpointStore.");
         return fallback;
     }
 
-    /**
-     * 检查点服务 Bean
-     * <p>基于 CheckpointStore 构建服务层封装。
-     */
     @Bean
     @ConditionalOnMissingBean(CheckpointService.class)
-    public CheckpointService checkpointService(
-            CheckpointStore store,
-            MultipartContextStore multipartStore) {
-        final long checkpointTtl = 24 * 3600L;
-        return new DefaultCheckpointService(store,
-                (bucketName, objectName, uploadId) -> {
-                    // 在 Bean 初始化阶段无法获取 IFileStorageProvider，返回空列表
-                    // 实际运行时由 AbstractFileStorage 重新创建时使用真实 listParts
-                    return Collections.emptyList();
-                },
-                checkpointTtl);
+    public CheckpointService checkpointService(CheckpointStore store, MultipartContextStore multipartStore) {
+        return new DefaultCheckpointService(store, (b, o, u) -> Collections.emptyList(), 24 * 3600L);
     }
 
-    /**
-     * 创建文件存储提供者工厂
-     * <p>根据配置初始化 Magic Number 校验开关，创建存储工厂并注入分布式存储实现和并发保护器。
-     *
-     * @param fileProperties              文件存储基础配置
-     * @param fileUploadProperties        文件上传配置
-     * @param multipartContextStore       分片上传上下文存储
-     * @param checkpointStore             检查点存储
-     * @param checkpointService           检查点服务
-     * @param stringRedisTemplateProvider Redis 模板提供者（可选）
-     * @return 文件存储提供者实例
-     */
+    @Bean
+    @ConditionalOnMissingBean(FileMetrics.class)
+    @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+    public FileMetrics fileMetrics(ObjectProvider<MeterRegistry> registryProvider) {
+        return new FileMetrics(registryProvider.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(VirusScanner.class)
+    public VirusScanner virusScanner() {
+        log.info("No VirusScanner bean found, registering NoOpVirusScanner.");
+        return new NoOpVirusScanner();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(StorageRetryHelper.class)
+    public StorageRetryHelper storageRetryHelper(FileProperties props) {
+        int retryCount = props.getRetryCount() != null ? props.getRetryCount() : 3;
+        return new StorageRetryHelper(retryCount, 500L);
+    }
+
+    @Bean
+    @ConditionalOnBean({RedisStringOps.class})
+    @ConditionalOnMissingBean(FileDedupService.class)
+    public FileDedupService fileDedupService(RedisStringOps redisStringOps, IFileStorageProvider provider) {
+        return new FileDedupService(redisStringOps, provider.getStorage());
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "ydsz.file.lifecycle", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean(FileLifecycleManager.class)
+    public FileLifecycleManager fileLifecycleManager(FileLifecycleProperties props, IFileStorageProvider provider) {
+        return new FileLifecycleManager(props, provider);
+    }
+
     @Bean
     @ConditionalOnMissingBean(IFileStorageProvider.class)
-    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties,
-                                                     FileUploadProperties fileUploadProperties,
-                                                     MultipartContextStore multipartContextStore,
-                                                     CheckpointStore checkpointStore,
-                                                     CheckpointService checkpointService,
-                                                     ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider) {
-        // 从配置文件初始化 Magic Number 校验开关
+    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties, FileUploadProperties fileUploadProperties, MultipartContextStore multipartContextStore, CheckpointStore checkpointStore, CheckpointService checkpointService, ObjectProvider<StringRedisTemplate> redisProvider, ObjectProvider<FileDedupService> dedupProvider, ObjectProvider<VirusScanner> virusScannerProvider, ObjectProvider<FileMetrics> metricsProvider, ObjectProvider<StorageRetryHelper> retryHelperProvider) {
         FileTypeValidator.init(fileProperties.isCheckMagicNumber());
-
-        IStorageFactory factory = new IStorageFactory(fileProperties, fileUploadProperties);
-        // 通知所有已注册的存储实例使用分布式存储
+        DefaultStorageFactory factory = new DefaultStorageFactory(fileProperties, fileUploadProperties);
         factory.setMultipartContextStore(multipartContextStore);
         factory.setCheckpointStore(checkpointStore);
-        // 注入服务层
         factory.setCheckpointService(checkpointService);
-
-        // 注入并发上传保护器（仅当 Redis 可用且配置启用时）
-        UploadConcurrencyGuard guard = buildConcurrencyGuardIfEnabled(fileProperties, stringRedisTemplateProvider.getIfAvailable());
-        if (guard != null) {
-            factory.setConcurrencyGuard(guard);
-        }
-
+        UploadConcurrencyGuard guard = buildConcurrencyGuardIfEnabled(fileProperties, redisProvider.getIfAvailable());
+        if (guard != null) factory.setConcurrencyGuard(guard);
+        FileDedupService dedup = dedupProvider.getIfAvailable();
+        if (dedup != null) factory.setFileDedupService(dedup);
+        VirusScanner scanner = virusScannerProvider.getIfAvailable();
+        if (scanner != null) factory.setVirusScanner(scanner);
+        FileMetrics metrics = metricsProvider.getIfAvailable();
+        if (metrics != null) factory.setFileMetrics(metrics);
+        StorageRetryHelper retryHelper = retryHelperProvider.getIfAvailable();
+        if (retryHelper != null) factory.setRetryHelper(retryHelper);
         return factory;
     }
 
-    /**
-     * 构建并发上传保护器（Redis 不可用或配置未启用时返回 null）
-     */
-    private UploadConcurrencyGuard buildConcurrencyGuardIfEnabled(FileProperties fileProperties, StringRedisTemplate redisTemplate) {
-        if (redisTemplate == null) {
-            return null;
-        }
-        var config = fileProperties.getConcurrencyControl();
-        if (config == null || !config.isEnabled()) {
-            return null;
-        }
-        return new UploadConcurrencyGuard(redisTemplate, config);
+    private UploadConcurrencyGuard buildConcurrencyGuardIfEnabled(FileProperties props, StringRedisTemplate redis) {
+        if (redis == null) return null;
+        var config = props.getConcurrencyControl();
+        if (config == null || !config.isEnabled()) return null;
+        return new UploadConcurrencyGuard(redis, config);
     }
 
-    /**
-     * 创建文件存储健康检查指示器
-     *
-     * @param fileStorageProvider 文件存储提供者
-     * @param fileProperties      文件存储配置
-     * @return 文件健康检查指示器实例
-     */
     @Bean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     @ConditionalOnMissingBean(FileHealthIndicator.class)
-    public FileHealthIndicator storageHealthIndicator(IFileStorageProvider fileStorageProvider,
-                                                      FileProperties fileProperties) {
-        return new FileHealthIndicator(fileStorageProvider, fileProperties);
+    public FileHealthIndicator storageHealthIndicator(IFileStorageProvider provider, FileProperties props) {
+        return new FileHealthIndicator(provider, props);
     }
 
-    /**
-     * 去重清理调度器 Bean
-     * <p>仅当 FileDedupService 存在时注册，定时清理过期的去重映射记录。
-     */
-    @Bean
-    @ConditionalOnBean(FileDedupService.class)
-    public DedupCleanupScheduler dedupCleanupScheduler(FileDedupService fileDedupService) {
-        return new DedupCleanupScheduler(fileDedupService);
-    }
-
-    /**
-     * 定时清理过期的分片上传上下文（每小时执行一次）
-     */
     @Scheduled(fixedRate = 3_600_000)
     public void cleanExpiredMultipartContexts() {
-        if (multipartContextStore == null) return;
-        multipartContextStore.cleanExpired(MULTIPART_CONTEXT_TIMEOUT_MINUTES);
+        if (multipartContextStore != null) {
+            multipartContextStore.cleanExpired(MULTIPART_CONTEXT_TIMEOUT_MINUTES);
+            log.debug("Cleaned expired multipart contexts.");
+        }
     }
 }

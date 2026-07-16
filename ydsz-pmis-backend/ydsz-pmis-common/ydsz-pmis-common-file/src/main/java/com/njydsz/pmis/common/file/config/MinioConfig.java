@@ -6,12 +6,15 @@ import org.springframework.context.annotation.Configuration;
 import lombok.Data;
 
 /**
+ * @deprecated Use {@link FileProperties} + {@link com.njydsz.pmis.common.file.storage.IFileStorageProvider} instead.
+ *
  * MinIO 配置属性。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data
+@Deprecated
 @Configuration
 @ConfigurationProperties(prefix = "pmis.file.minio")
 public class MinioConfig {

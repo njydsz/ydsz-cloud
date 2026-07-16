@@ -27,6 +27,8 @@ import com.njydsz.pmis.common.search.config.SearchProperties;
 import com.njydsz.pmis.common.search.core.IndexDocument;
 import com.njydsz.pmis.common.search.core.SearchEngine;
 
+import com.njydsz.pmis.common.json.Json;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**

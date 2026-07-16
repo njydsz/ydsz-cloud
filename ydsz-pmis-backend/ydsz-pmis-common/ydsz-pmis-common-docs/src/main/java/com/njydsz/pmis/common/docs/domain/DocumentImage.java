@@ -9,8 +9,6 @@ import lombok.Data;
  * 从文档中提取的嵌入图片信息。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 1.3.0
  */
 @Data
@@ -28,6 +26,9 @@ public class DocumentImage {
 
     /** 图片字节大小 */
     private long size;
+
+    /** 图片 URL 或 src 路径 */
+    private String url;
 
     /** 图片 alt 文本或描述 */
     private String altText;

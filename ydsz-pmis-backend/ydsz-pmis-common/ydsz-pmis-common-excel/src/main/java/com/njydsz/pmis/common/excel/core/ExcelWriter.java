@@ -22,6 +22,8 @@ import com.njydsz.pmis.common.excel.annotation.ExcelSheet;
 import com.njydsz.pmis.common.excel.annotation.ExcelStyle;
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
 import com.njydsz.pmis.common.excel.core.context.WriteContext;
+import com.njydsz.pmis.common.excel.core.metrics.ExcelMetrics;
+import com.njydsz.pmis.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.pmis.common.excel.core.metadata.MetadataCache;
 import com.njydsz.pmis.common.excel.core.metadata.MetadataCache.CachedProperty;
 import com.njydsz.pmis.common.excel.core.metadata.MetadataCache.CachedWriteMetadata;
@@ -477,6 +479,9 @@ public class ExcelWriter {
      * @throws RuntimeException 写入过程中发生错误时抛出
      */
     public void doWrite(Object data, int sheetNo) {
+        long startTime = System.nanoTime();
+        int rowCount = (data instanceof List) ? ((List<?>) data).size() : 1;
+        boolean useFastPath = false;
         try {
             if (metadata.getDataSize() == null && data instanceof List) {
                 metadata.setDataSize(((List<?>) data).size());

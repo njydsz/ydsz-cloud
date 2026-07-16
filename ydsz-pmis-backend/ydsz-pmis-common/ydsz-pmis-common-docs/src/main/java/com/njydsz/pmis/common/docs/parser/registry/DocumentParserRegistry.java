@@ -23,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>线程安全性：</b>使用 {@link ConcurrentHashMap} 存储注册表，线程安全。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 1.3.0
  */
 @Slf4j
@@ -40,7 +38,8 @@ public class DocumentParserRegistry {
      * @param parsers Spring 容器中所有 DocumentParser 实现
      */
     public DocumentParserRegistry(List<DocumentParser> parsers) {
-        if (parsers != null) {
+        parsers = parsers != null ? parsers : java.util.List.of();
+        if (!parsers.isEmpty()) {
             for (DocumentParser parser : parsers) {
                 register(parser);
             }

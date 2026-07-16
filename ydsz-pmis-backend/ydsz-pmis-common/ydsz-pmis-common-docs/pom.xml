@@ -31,10 +31,30 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- micrometer -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jakarta Validation -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- ydsz-pmis-common-core -->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-core</artifactId>
+        </dependency>
+
+        <!-- ydsz-pmis-common-json -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
         </dependency>
 
         <!-- 全局工具 -->

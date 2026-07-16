@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.docs.parser.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,8 +34,6 @@ import lombok.extern.slf4j.Slf4j;
  * 基于 Apache POI 解析 Excel 文档，提取所有 Sheet 的表格数据。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 1.3.0
  */
 @Slf4j
@@ -131,7 +129,7 @@ public class ExcelDocumentParser implements DocumentParser {
             case STRING -> cell.getStringCellValue().trim();
             case NUMERIC -> {
                 if (DateUtil.isCellDateFormatted(cell)) {
-                    yield new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cell.getDateCellValue());
+                    yield DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(cell.getLocalDateTimeCellValue());
                 }
                 double num = cell.getNumericCellValue();
                 if (num == Math.floor(num)) {

@@ -7,8 +7,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.security.LoginAuditEvent;
-import com.njydsz.pmis.common.security.LoginStatus;
+import com.njydsz.pmis.system.server.security.LoginAuditEvent;
+import com.njydsz.pmis.system.server.security.LoginStatus;
 import com.njydsz.pmis.system.domain.entity.audit.LoginAuditDO;
 import com.njydsz.pmis.system.infra.mapper.audit.LoginAuditMapper;
 

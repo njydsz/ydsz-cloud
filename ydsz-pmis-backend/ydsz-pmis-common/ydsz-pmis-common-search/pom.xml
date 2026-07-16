@@ -20,6 +20,11 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-core</artifactId>
         </dependency>
+        <!--common-json（统一 JSON 引擎 — P0-4: 替代手工 JSON 序列化）-->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
         <!--common-domain（PageQuery/PageResult/Specification）-->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>

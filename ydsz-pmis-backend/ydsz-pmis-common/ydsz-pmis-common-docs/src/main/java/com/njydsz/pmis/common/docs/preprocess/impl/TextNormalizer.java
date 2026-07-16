@@ -23,8 +23,6 @@ import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 1.3.0
  */
 @Component
@@ -58,15 +56,13 @@ public class TextNormalizer implements DocumentPreprocessor {
         text = text.strip();
 
         // 同步更新分节内容
-        List.of(content).forEach(c -> {
-            if (c.getSections() != null) {
-                c.getSections().forEach(s -> {
-                    if (s.getContent() != null) {
-                        s.setContent(s.getContent().strip());
-                    }
-                });
-            }
-        });
+        if (content.getSections() != null) {
+            content.getSections().forEach(s -> {
+                if (s.getContent() != null) {
+                    s.setContent(s.getContent().strip());
+                }
+            });
+        }
 
         content.setText(text);
         content.setTotalChars(text.length());

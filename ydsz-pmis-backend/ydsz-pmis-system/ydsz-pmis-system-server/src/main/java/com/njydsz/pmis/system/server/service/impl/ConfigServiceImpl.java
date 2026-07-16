@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.json.type.JsonType;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
@@ -140,7 +141,7 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_GROUP_PREFIX + group;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return JSON.parseObject(cached, new JsonType<Map<String, String>>() {});
+            return Json.toObject(cached, new JsonType<Map<String, String>>() {});
         }
         List<ConfigDO> list = configMapper.selectByGroup(group);
         Map<String, String> map = new HashMap<>();
@@ -251,7 +252,7 @@ public class ConfigServiceImpl implements ConfigService {
             }
             case "JSON" -> {
                 try {
-                    JSON.parse(v);
+                    Json.toObject(v, Object.class);
                 } catch (Exception e) {
                     throw new SysException(BaseResultCode.BAD_REQUEST,
                             "JSON 类型配置值格式不合法: " + v);
@@ -376,7 +377,7 @@ public class ConfigServiceImpl implements ConfigService {
         switch (vt) {
             case "NUMBER" -> parsed = Long.parseLong(value);
             case "BOOLEAN" -> parsed = Boolean.parseBoolean(value);
-            case "JSON" -> parsed = JSON.parseObject(value, type);
+            case "JSON" -> parsed = Json.toObject(value, type);
             default -> parsed = value;
         }
         if (type == String.class) {

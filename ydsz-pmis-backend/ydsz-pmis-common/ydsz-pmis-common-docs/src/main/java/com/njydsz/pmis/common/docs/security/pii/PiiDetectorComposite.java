@@ -16,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
  * 聚合所有 {@link PiiDetector} 实现，对文档进行全量 PII 扫描。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 1.3.0
  */
 @Slf4j
@@ -27,7 +25,7 @@ public class PiiDetectorComposite {
     private final List<PiiDetector> detectors;
 
     public PiiDetectorComposite(List<PiiDetector> detectors) {
-        this.detectors = detectors;
+        this.detectors = detectors != null ? detectors : java.util.List.of();
         log.info("[PiiDetectorComposite] 已注册 {} 个 PII 检测器: {}", detectors.size(),
                 detectors.stream().map(d -> d.getSupportedType().name()).toList());
     }
@@ -64,6 +62,6 @@ public class PiiDetectorComposite {
      * @return 检测器列表
      */
     public List<PiiDetector> getDetectors() {
-        return detectors;
+        return java.util.Collections.unmodifiableList(detectors);
     }
 }

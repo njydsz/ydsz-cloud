@@ -7,8 +7,6 @@ import java.time.Duration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
@@ -25,8 +23,6 @@ import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
  * @since 1.0.0
  * 
  */
-@Service
-@ConditionalOnBean({RedisStringOps.class, IFileStorage.class})
 public class FileDedupService {
 
     private static final Logger log = LoggerFactory.getLogger(FileDedupService.class);
