@@ -26,7 +26,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 2.0.0
  */
-@SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.finance", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
+@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.finance", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableYdszAuth
 @EnableYdszFeign(basePackages = {"com.njydsz.pmis.finance.api", "com.njydsz.pmis.common.feign"})

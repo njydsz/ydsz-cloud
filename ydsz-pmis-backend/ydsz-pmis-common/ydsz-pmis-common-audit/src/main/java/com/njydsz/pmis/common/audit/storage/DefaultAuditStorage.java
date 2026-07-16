@@ -71,7 +71,7 @@ public class DefaultAuditStorage implements AuditStorage {
                 log.error("【审计存储】队列已满且无法插入新日志，该日志被丢弃: {}", auditLog);
             }
         }
-        log.info("【审计日志】{}", auditLog);
+        log.debug("【审计日志】{}", auditLog);
     }
 
     @Override

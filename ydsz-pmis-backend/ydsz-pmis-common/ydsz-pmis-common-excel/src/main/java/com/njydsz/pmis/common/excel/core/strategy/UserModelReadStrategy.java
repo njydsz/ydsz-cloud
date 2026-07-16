@@ -7,21 +7,21 @@ package com.njydsz.pmis.common.excel.core.strategy;
  * @email pmis-dev@njydsz.com
  * @version 1.0.0
  */
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.*;
-
-import org.apache.poi.ss.usermodel.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.excel.annotation.ExcelIgnore;
 import com.njydsz.pmis.common.excel.annotation.ExcelProperty;
 import com.njydsz.pmis.common.excel.core.context.AnalysisContext;
 import com.njydsz.pmis.common.excel.core.listener.ReadListener;
 import com.njydsz.pmis.common.excel.core.metadata.ReadMetadata;
+import org.apache.poi.ss.usermodel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
  * 用户模式读取策略 - POI对象模型
@@ -212,7 +212,7 @@ public class UserModelReadStrategy implements ReadStrategy {
 
             return instance;
         } catch (Exception e) {
-            log.warn("解析行数据异。, e);
+            log.warn("解析行数据异。{}", e);
             return null;
         }
     }

@@ -19,7 +19,7 @@ import com.njydsz.pmis.common.auth.annotation.EnableYdszAuth;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePpackages = {
+@SpringBootApplication(scanBasePackages = {
         "com.njydsz.pmis.userinfo",
         "com.njydsz.pmis.common"
 })

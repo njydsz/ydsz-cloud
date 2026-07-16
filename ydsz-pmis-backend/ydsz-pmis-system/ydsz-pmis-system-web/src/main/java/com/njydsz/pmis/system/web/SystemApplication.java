@@ -17,7 +17,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePpackages = {
+@SpringBootApplication(scanBasePackages = {
         "com.njydsz.pmis.system",
         "com.njydsz.pmis.common"
 })

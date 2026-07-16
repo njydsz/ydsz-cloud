@@ -31,7 +31,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePpackages = {
+@SpringBootApplication(scanBasePackages = {
         "com.njydsz.pmis.message",
         "com.njydsz.pmis.common"
 })

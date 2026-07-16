@@ -25,7 +25,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.workflow", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
+@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.workflow", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableYdszAuth
 @EnableYdszFeign(basePackages = {"com.njydsz.pmis.workflow.api", "com.njydsz.pmis.common.feign"})

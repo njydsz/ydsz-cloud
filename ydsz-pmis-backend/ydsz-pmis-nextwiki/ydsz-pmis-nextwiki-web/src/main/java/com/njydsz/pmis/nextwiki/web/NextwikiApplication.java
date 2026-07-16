@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
-@SpringBootApplication(scanBasePpackages = {"com.njydsz.pmis.nextwiki", "com.njydsz.pmis.common"})
+@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.nextwiki", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
 @EnableYdszFeign(basePackages = {"com.njydsz.pmis.nextwiki.api", "com.njydsz.pmis.common.feign"})
