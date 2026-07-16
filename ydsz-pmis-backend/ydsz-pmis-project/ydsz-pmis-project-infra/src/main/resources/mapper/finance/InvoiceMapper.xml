@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.finance.infra.mapper.InvoiceMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.finance.domain.entity.InvoiceDO">
+        <id column="id" property="id"/>
+        <result column="invoice_no" property="invoiceNo"/>
+        <result column="invoice_code" property="invoiceCode"/>
+        <result column="invoice_type" property="invoiceType"/>
+        <result column="contract_id" property="contractId"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="invoice_basis" property="invoiceBasis"/>
+        <result column="amount" property="amount"/>
+        <result column="tax_amount" property="taxAmount"/>
+        <result column="net_amount" property="netAmount"/>
+        <result column="tax_rate" property="taxRate"/>
+        <result column="currency" property="currency"/>
+        <result column="invoice_date" property="invoiceDate"/>
+        <result column="tax_period" property="taxPeriod"/>
+        <result column="title" property="title"/>
+        <result column="tax_no" property="taxNo"/>
+        <result column="bank_info" property="bankInfo"/>
+        <result column="address" property="address"/>
+        <result column="phone" property="phone"/>
+        <result column="remark" property="remark"/>
+        <result column="status" property="status"/>
+        <result column="reversed_by_id" property="reversedById"/>
+        <result column="attachment_id" property="attachmentId"/>
+        <result column="approval_comment" property="approvalComment"/>
+        <result column="applied_by" property="appliedBy"/>
+        <result column="approved_by" property="approvedBy"/>
+        <result column="approved_at" property="approvedAt"/>
+        <result column="issued_by" property="issuedBy"/>
+        <result column="issued_at" property="issuedAt"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_project_invoice
+        WHERE invoice_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <select id="selectByInvoiceNo" resultMap="BaseResultMap">
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_project_invoice
+        WHERE invoice_no = #{invoiceNo} AND deleted = 0 LIMIT 1
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pmis_project_invoice
+        SET status = #{status},
+            approved_by = COALESCE(#{approvedBy}, approved_by),
+            issued_by = COALESCE(#{issuedBy}, issued_by),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectByContract" resultMap="BaseResultMap">
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_project_invoice
+        WHERE contract_id = #{contractId} AND deleted = 0
+        ORDER BY invoice_date DESC
+    </select>
+
+    <select id="selectByInitiation" resultMap="BaseResultMap">
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_project_invoice
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY invoice_date DESC
+    </select>
+
+    <select id="selectByCustomer" resultMap="BaseResultMap">
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_project_invoice
+        WHERE customer_id = #{customerId} AND deleted = 0
+        ORDER BY invoice_date DESC
+    </select>
+
+    <select id="sumInvoicedByContract" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_project_invoice
+        WHERE contract_id = #{contractId}
+          AND status IN ('APPROVED', 'ISSUED')
+          AND invoice_type = 'NORMAL'
+          AND deleted = 0
+    </select>
+
+    <select id="aggregateByStatus" resultType="java.util.Map">
+        SELECT status, COUNT(1) AS cnt, COALESCE(SUM(amount), 0) AS amount
+        FROM pmis_project_invoice
+        WHERE contract_id = #{contractId} AND deleted = 0
+        GROUP BY status
+    </select>
+
+    <select id="sumByMonth" resultType="java.util.Map">
+        SELECT tax_period, COALESCE(SUM(amount), 0) AS amount, COUNT(1) AS cnt
+        FROM pmis_project_invoice
+        WHERE initiation_id = #{initiationId}
+          AND status = 'ISSUED' AND invoice_type = 'NORMAL' AND deleted = 0
+        GROUP BY tax_period
+        ORDER BY tax_period
+    </select>
+
+    <select id="sumInvoicedAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_project_invoice
+        WHERE status = 'ISSUED' AND invoice_type = 'NORMAL' AND deleted = 0
+    </select>
+
+    <select id="sumAmountIssued" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_project_invoice
+        WHERE status = 'ISSUED' AND invoice_type = 'NORMAL' AND deleted = 0
+    </select>
+
+    <select id="sumConfirmedAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_project_payment
+        WHERE status = 'ALLOCATED' AND deleted = 0
+    </select>
+
+    <select id="sumByCustomer" resultType="java.util.Map">
+        SELECT customer_id,
+               COUNT(1)                                   AS cnt,
+               COALESCE(SUM(amount), 0)                   AS total_amount
+        FROM pmis_project_invoice
+        WHERE deleted = 0
+        GROUP BY customer_id
+        ORDER BY total_amount DESC
+    </select>
+
+    <select id="sumByDepartment" resultType="java.util.Map">
+        SELECT COALESCE(department_id, 0)                 AS department_id,
+               COUNT(1)                                   AS cnt,
+               COALESCE(SUM(amount), 0)                   AS total_amount
+        FROM pmis_project_invoice
+        WHERE deleted = 0
+        GROUP BY department_id
+        ORDER BY total_amount DESC
+    </select>
+
+    <!--
+      项目类型维度下钻：JOIN 立项表（pmis_project_initiation）获取 project_type，
+      按项目类型聚合开票金额。返回 project_type / cnt / total_amount。
+    -->
+    <select id="sumByProjectType" resultType="java.util.Map">
+        SELECT COALESCE(i.project_type, 'UNKNOWN')        AS project_type,
+               COUNT(1)                                   AS cnt,
+               COALESCE(SUM(inv.amount), 0)               AS total_amount
+        FROM pmis_project_invoice inv
+        LEFT JOIN pmis_project_initiation i ON inv.initiation_id = i.id AND i.deleted = 0
+        WHERE inv.deleted = 0
+        GROUP BY COALESCE(i.project_type, 'UNKNOWN')
+        ORDER BY total_amount DESC
+    </select>
+
+    <select id="countDistinctInitiation" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT initiation_id) FROM pmis_project_invoice
+        WHERE deleted = 0 AND initiation_id IS NOT NULL
+    </select>
+
+    <select id="sumByYear" resultType="java.util.Map">
+        SELECT TO_CHAR(invoice_date, 'YYYY')            AS year,
+               COALESCE(SUM(amount), 0)                 AS total_amount,
+               COUNT(1)                                AS invoice_count,
+               COUNT(DISTINCT initiation_id)            AS project_count
+        FROM pmis_project_invoice
+        WHERE deleted = 0
+          AND status = 'ISSUED'
+          AND invoice_type = 'NORMAL'
+          AND invoice_date IS NOT NULL
+        GROUP BY TO_CHAR(invoice_date, 'YYYY')
+        ORDER BY year
+    </select>
+
+    <!--
+      批次18 增量：按月汇总开票金额（最近 N 个月）
+      通过子查询挑选最近的 limit 个月，按月升序输出
+    -->
+    <select id="sumByRecentMonth" resultType="java.util.Map">
+        SELECT TO_CHAR(invoice_date, 'YYYY-MM')     AS month,
+               COALESCE(SUM(amount), 0)             AS total_amount,
+               COUNT(1)                            AS invoice_count,
+               COUNT(DISTINCT initiation_id)        AS project_count
+        FROM pmis_project_invoice
+        WHERE deleted = 0
+          AND status = 'ISSUED'
+          AND invoice_type = 'NORMAL'
+          AND invoice_date IS NOT NULL
+        GROUP BY TO_CHAR(invoice_date, 'YYYY-MM')
+        ORDER BY month DESC
+        LIMIT #{limit}
+    </select>
+</mapper>
