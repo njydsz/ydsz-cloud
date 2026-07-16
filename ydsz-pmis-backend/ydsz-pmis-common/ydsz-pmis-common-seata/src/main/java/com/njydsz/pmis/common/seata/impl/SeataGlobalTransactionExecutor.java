@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Seata 全局事务执行器实现（反射调用 Seata API）
  *
- * <p>通过反射调用 Seata 2.x 的 {@code RootContext} 和 {@code GlobalTransactionContext}
- * API，避免编译期对 Seata 类的硬依赖（Seata 是 optional 依赖）。
+ * <p>通过反射调用 Seata 2.x 的 {@code GlobalTransactionContext} API，
+ * 避免编译期对 Seata 类的硬依赖（Seata 是 optional 依赖）。
  *
  * <p>仅当类路径存在 {@code org.apache.seata.tm.api.GlobalTransactionContext} 时
  * 由 {@link com.njydsz.pmis.common.seata.config.SeataAutoConfiguration.SeataAtConfiguration}
@@ -23,12 +23,9 @@ public class SeataGlobalTransactionExecutor implements GlobalTransactionExecutor
 
     private static final Logger log = LoggerFactory.getLogger(SeataGlobalTransactionExecutor.class);
 
-    private static final String SEATA_ROOT_CONTEXT = "org.apache.seata.core.context.RootContext";
     private static final String SEATA_GLOBAL_TX_CONTEXT = "org.apache.seata.tm.api.GlobalTransactionContext";
     private static final String SEATA_GLOBAL_TRANSACTION = "org.apache.seata.tm.api.GlobalTransaction";
 
-    private final Class<?> rootContextClass;
-    private final Class<?> globalTxContextClass;
     private final Method beginMethod;
     private final Method commitMethod;
     private final Method rollbackMethod;
@@ -36,8 +33,7 @@ public class SeataGlobalTransactionExecutor implements GlobalTransactionExecutor
     private final Method getCurrentMethod;
 
     public SeataGlobalTransactionExecutor() throws ClassNotFoundException, NoSuchMethodException {
-        this.rootContextClass = Class.forName(SEATA_ROOT_CONTEXT);
-        this.globalTxContextClass = Class.forName(SEATA_GLOBAL_TX_CONTEXT);
+        Class<?> globalTxContextClass = Class.forName(SEATA_GLOBAL_TX_CONTEXT);
         Class<?> globalTxClass = Class.forName(SEATA_GLOBAL_TRANSACTION);
 
         this.getCurrentMethod = globalTxContextClass.getMethod("getCurrent");

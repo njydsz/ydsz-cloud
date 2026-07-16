@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
 import com.njydsz.pmis.common.seata.api.TransactionType;
 
 /**

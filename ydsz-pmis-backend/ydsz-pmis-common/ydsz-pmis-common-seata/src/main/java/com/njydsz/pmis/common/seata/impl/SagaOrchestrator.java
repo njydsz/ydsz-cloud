@@ -50,7 +50,7 @@ public class SagaOrchestrator {
      * @return 最后一步的返回值
      * @throws Exception 事务异常
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings("unchecked")
     public <T> T execute(String transactionName, List<SagaStep<?>> steps) throws Exception {
         String xid = java.util.UUID.randomUUID().toString();
         log.info("SAGA transaction started: name={}, xid={}, steps={}", transactionName, xid, steps.size());
@@ -75,7 +75,6 @@ public class SagaOrchestrator {
             log.error("SAGA transaction failed at step {}/{}, executing compensation: name={}, xid={}",
                     completedSteps.size() + 1, steps.size(), transactionName, xid, e);
 
-            // 逆序补偿已完成步骤
             List<SagaStep<?>> reverseSteps = new ArrayList<>(completedSteps);
             Collections.reverse(reverseSteps);
 
@@ -90,9 +89,6 @@ public class SagaOrchestrator {
         }
     }
 
-    /**
-     * 带重试的补偿步骤
-     */
     private void compensateStepWithRetry(SagaStep<?> step, String xid) {
         int maxRetries = properties != null ? properties.getSagaMaxRetries() : 0;
         long intervalMs = properties != null ? properties.getSagaRetryIntervalMs() : 2000;

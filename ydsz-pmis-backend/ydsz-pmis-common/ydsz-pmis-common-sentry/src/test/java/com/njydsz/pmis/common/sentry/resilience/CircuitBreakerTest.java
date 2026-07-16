@@ -44,14 +44,12 @@ class CircuitBreakerTest {
     @DisplayName("失败率超过阈值时触发熔断")
     void shouldOpenOnHighFailureRate() {
         CircuitBreaker cb = new CircuitBreaker("test", 0.3, 5, 1000);
-        // 4 failures out of 5 = 80% > 30%
         for (int i = 0; i < 4; i++) {
             cb.execute(() -> {
                 throw new RuntimeException("fail");
             }, () -> "fallback");
         }
         cb.execute(() -> "success", () -> "fallback");
-        // After 5 calls, failure rate = 80% > 30%, should be OPEN
         assertThat(cb.getState()).isEqualTo(CircuitBreaker.State.OPEN);
     }
 
@@ -66,7 +64,6 @@ class CircuitBreakerTest {
             throw new RuntimeException("fail");
         }, () -> "fallback");
         assertThat(cb.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
         String result = cb.execute(() -> "should-not-reach", () -> "fallback");
         assertThat(result).isEqualTo("fallback");
     }
@@ -82,9 +79,7 @@ class CircuitBreakerTest {
             throw new RuntimeException("fail");
         }, () -> "fallback");
         assertThat(cb.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
         Thread.sleep(150);
-        // Next call should transition to HALF_OPEN
         String result = cb.execute(() -> "recovered", () -> "fallback");
         assertThat(result).isEqualTo("recovered");
         assertThat(cb.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -101,7 +96,6 @@ class CircuitBreakerTest {
             throw new RuntimeException("fail");
         }, () -> "fallback");
         assertThat(cb.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
         Thread.sleep(150);
         String result = cb.execute(() -> {
             throw new RuntimeException("still failing");
@@ -121,15 +115,12 @@ class CircuitBreakerTest {
             throw new RuntimeException("fail");
         }, () -> "fallback");
         assertThat(cb.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
         Thread.sleep(100);
-
         int threadCount = 10;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch startLatch = new CountDownLatch(1);
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger fallbackCount = new AtomicInteger(0);
-
         for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 try {
@@ -148,12 +139,9 @@ class CircuitBreakerTest {
                 }
             });
         }
-
         startLatch.countDown();
         executor.shutdown();
         executor.awaitTermination(5, TimeUnit.SECONDS);
-
-        // Only one thread should have executed the operation, others should fallback
         assertThat(successCount.get()).isLessThanOrEqualTo(1);
         assertThat(fallbackCount.get()).isGreaterThanOrEqualTo(threadCount - 1);
     }
