@@ -1,21 +1,21 @@
 package com.njydsz.pmis.gateway.config;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
+import com.alibaba.cloud.nacos.NacosConfigManager;
+import com.alibaba.nacos.api.config.listener.Listener;
+import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.json.type.JsonType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
 import org.springframework.context.ApplicationEventPublisher;
-
-import com.alibaba.cloud.nacos.NacosConfigManager;
-import com.alibaba.nacos.api.config.listener.Listener;
-
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Nacos 动态路由仓库（P1-6 + P2-12 增强）
@@ -121,7 +121,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                 return Flux.empty();
             }
 
-            List<RouteDefinition> routes = JSON.parseObject(config,
+            List<RouteDefinition> routes = Json.fromJson(config,
                     new JsonType<List<RouteDefinition>>() {});
             if (routes == null) {
                 routes = Collections.emptyList();

@@ -30,15 +30,24 @@ class OutboxRepositoryTest {
 
     private JdbcTemplate jdbcTemplate;
     private OutboxRepository repository;
+    private javax.sql.DataSource dataSource;
 
     @BeforeEach
     void setUp() {
-        DataSource dataSource = new EmbeddedDatabaseBuilder()
+        dataSource = new EmbeddedDatabaseBuilder()
+                .generateUniqueName(true)
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("classpath:schema-test.sql")
                 .build();
         jdbcTemplate = new JdbcTemplate(dataSource);
         repository = new OutboxRepository(jdbcTemplate, "pmis_outbox", DatabaseDialect.UNKNOWN);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        if (dataSource instanceof org.springframework.jdbc.datasource.embedded.EmbeddedDatabase db) {
+            db.shutdown();
+        }
     }
 
     @Test

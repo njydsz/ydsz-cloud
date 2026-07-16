@@ -68,7 +68,6 @@ import com.njydsz.pmis.common.core.enums.DataScopeType;
  * 详见 {@link com.njydsz.pmis.common.jdbc.permission.DataPermissionContext}
  *
  * @since 1.0.0
- * @since 1.0.0
  * @see DataScopeInfo
  * @see DataScopeAware
  * @see DataScopeType
