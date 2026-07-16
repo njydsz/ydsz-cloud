@@ -7,7 +7,6 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
-import com.njydsz.pmis.common.socket.session.OnlineUserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketHealthIndicator implements HealthIndicator {
 
     private final WebSocketProperties properties;
-    private final OnlineUserService onlineUserService;
     private final AtomicLong activeConnections;
     private final StringRedisTemplate redisTemplate;
 
@@ -57,8 +55,10 @@ public class WebSocketHealthIndicator implements HealthIndicator {
             builder.withDetail("rateLimit.enabled", properties.getRateLimit().isEnabled());
             builder.withDetail("heartbeat.serverIntervalMs", properties.getHeartbeat().getServerInterval());
             builder.withDetail("heartbeat.clientIntervalMs", properties.getHeartbeat().getClientInterval());
+            builder.withDetail("heartbeat.staleSessionTimeoutMs", properties.getHeartbeat().getStaleSessionTimeout());
             builder.withDetail("messageSizeLimitBytes", properties.getMessageSizeLimit());
             builder.withDetail("sessionTtlSeconds", properties.getSessionTtlSeconds());
+            builder.withDetail("circuitBreaker.enabled", true);
 
             if (redisTemplate != null) {
                 builder.withDetail("onlineUserService", "redis-backed");

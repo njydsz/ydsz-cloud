@@ -88,4 +88,21 @@ public class DualLogPublisher implements LogPublisher {
     public List<LogPublisher> getPublishers() {
         return publishers;
     }
+
+    /**
+     * 获取各子发布器的健康状态摘要
+     */
+    public String getHealthSummary() {
+        if (publishers == null || publishers.isEmpty()) {
+            return "none";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (LogPublisher p : publishers) {
+            if (!sb.isEmpty()) {
+                sb.append(", ");
+            }
+            sb.append(p.getName()).append("=").append(p.isAvailable() ? "UP" : "DOWN");
+        }
+        return sb.toString();
+    }
 }

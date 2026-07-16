@@ -30,6 +30,18 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-exception</artifactId>
         </dependency>
+        <!--common-json（统一 JSON 引擎）-->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
+        <!--common-notify（告警通知渠道，可选）-->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-notify</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
 
         <!-- Spring Context -->
         <dependency>
@@ -116,6 +128,13 @@
         <dependency>
             <groupId>org.apache.skywalking</groupId>
             <artifactId>apm-toolkit-trace</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenTelemetry API（可选，未来追踪标准） -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

@@ -38,21 +38,21 @@ public class DefaultSlaCollector implements SlaCollector {
 
     @Override
     public void record(String name, String stepName, long tookMillis, boolean success) {
-        if (metricsCollector == null) {
+        if (metricsCollector == null || name == null) {
             return;
         }
         SlaDefinition def = definitions.get(name);
         if (def != null) {
             // 找到步骤定义
             SlaDefinition.SlaStep step = def.getSteps().stream()
-                    .filter(s -> s.getName().equals(stepName))
+                    .filter(s -> s.getName() != null && s.getName().equals(stepName))
                     .findFirst()
                     .orElse(null);
 
-            Map<String, String> tags = Map.of(
-                    "sla", name,
-                    "step", stepName,
-                    "success", String.valueOf(success));
+            Map<String, String> tags = new java.util.HashMap<>(3);
+            tags.put("sla", name);
+            tags.put("step", stepName != null ? stepName : "unknown");
+            tags.put("success", String.valueOf(success));
 
             metricsCollector.recordTimer("ydsz.sla.step.duration",
                     "SLA 步骤耗时", tags, Duration.ofMillis(tookMillis));
@@ -73,7 +73,7 @@ public class DefaultSlaCollector implements SlaCollector {
 
     @Override
     public void recordTotal(String name, long tookMillis, boolean success) {
-        if (metricsCollector == null) {
+        if (metricsCollector == null || name == null) {
             return;
         }
         SlaDefinition def = definitions.get(name);
@@ -81,9 +81,9 @@ public class DefaultSlaCollector implements SlaCollector {
             return;
         }
 
-        Map<String, String> tags = Map.of(
-                "sla", name,
-                "success", String.valueOf(success));
+        Map<String, String> tags = new java.util.HashMap<>(2);
+        tags.put("sla", name);
+        tags.put("success", String.valueOf(success));
 
         metricsCollector.recordTimer("ydsz.sla.total.duration",
                 "SLA 总耗时", tags, Duration.ofMillis(tookMillis));

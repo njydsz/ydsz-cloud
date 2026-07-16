@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.sentry.metrics;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -23,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class InMemoryMetricsCollector implements MetricsCollector {
 
     private final ConcurrentHashMap<String, DoubleAdder> counters = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, DoubleAdder> gauges = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicReference<Double>> gauges = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, LongAdder> timerCounts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, LongAdder> timerTotals = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, LongAdder> histogramCounts = new ConcurrentHashMap<>();
@@ -38,9 +39,8 @@ public class InMemoryMetricsCollector implements MetricsCollector {
     @Override
     public void setGauge(String name, String description, Map<String, String> tags, double value) {
         String key = buildKey(name, tags);
-        DoubleAdder adder = gauges.computeIfAbsent(key, k -> new DoubleAdder());
-        adder.reset();
-        adder.add(value);
+        AtomicReference<Double> ref = gauges.computeIfAbsent(key, k -> new AtomicReference<>());
+        ref.set(value);
     }
 
     @Override
@@ -79,8 +79,8 @@ public class InMemoryMetricsCollector implements MetricsCollector {
      * 获取 Gauge 值
      */
     public double getGaugeValue(String name, Map<String, String> tags) {
-        DoubleAdder adder = gauges.get(buildKey(name, tags));
-        return adder != null ? adder.sum() : 0;
+        AtomicReference<Double> ref = gauges.get(buildKey(name, tags));
+        return ref != null && ref.get() != null ? ref.get() : 0;
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.netty.transport;
 
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.epoll.Epoll;

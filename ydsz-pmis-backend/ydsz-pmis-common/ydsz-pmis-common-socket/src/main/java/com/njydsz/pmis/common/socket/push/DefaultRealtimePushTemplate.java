@@ -23,7 +23,6 @@ import com.njydsz.pmis.common.socket.serialize.MessageSerializer;
 import com.njydsz.pmis.common.socket.session.OnlineUserService;
 import com.njydsz.pmis.common.socket.trace.WebSocketTraceContext;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**

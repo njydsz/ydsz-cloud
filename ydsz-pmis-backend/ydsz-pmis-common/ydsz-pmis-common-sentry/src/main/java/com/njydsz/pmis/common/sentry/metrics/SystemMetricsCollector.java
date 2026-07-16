@@ -160,7 +160,8 @@ public class SystemMetricsCollector {
 
         long prevTime = lastGcTime.getAndSet(totalGcTime);
         long gcDelta = totalGcTime - prevTime;
-        if (gcDelta > 0) {
+        // 防止 JVM 重置 GC 计数器导致负数
+        if (gcDelta > 0 && totalGcTime >= prevTime) {
             metricsCollector.incrementCounter("ydsz.system.process.gc.time_delta",
                     "GC 增量耗时（毫秒）", null, gcDelta);
         }

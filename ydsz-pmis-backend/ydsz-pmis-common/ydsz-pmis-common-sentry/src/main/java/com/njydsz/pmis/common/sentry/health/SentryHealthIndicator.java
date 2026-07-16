@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.sentry.health;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.pmis.common.sentry.logging.AsyncLogPublisher;
+import com.njydsz.pmis.common.sentry.logging.DualLogPublisher;
 import com.njydsz.pmis.common.sentry.spi.LogPublisher;
 import com.njydsz.pmis.common.sentry.spi.MetricsCollector;
 import com.njydsz.pmis.common.sentry.spi.TraceContext;
@@ -37,6 +39,23 @@ public class SentryHealthIndicator implements HealthIndicator {
             builder.withDetail("logging.publisher", logPublisher.getName())
                     .withDetail("logging.scheme", logPublisher.getScheme())
                     .withDetail("logging.available", logPublisher.isAvailable());
+
+            // 暴露 DualLogPublisher 子发布器健康状态
+            if (logPublisher instanceof DualLogPublisher dual) {
+                builder.withDetail("logging.subPublishers", dual.getHealthSummary());
+            }
+
+            // 暴露 AsyncLogPublisher 队列统计
+            if (logPublisher instanceof AsyncLogPublisher async) {
+                builder.withDetail("logging.queueSize", async.getQueueSize())
+                        .withDetail("logging.droppedCount", async.getDroppedCount())
+                        .withDetail("logging.totalPublished", async.getTotalPublished());
+                LogPublisher delegate = async.getDelegate();
+                if (delegate instanceof DualLogPublisher dualDelegate) {
+                    builder.withDetail("logging.subPublishers", dualDelegate.getHealthSummary());
+                }
+            }
+
             if (!logPublisher.isAvailable()) {
                 builder.down();
             }

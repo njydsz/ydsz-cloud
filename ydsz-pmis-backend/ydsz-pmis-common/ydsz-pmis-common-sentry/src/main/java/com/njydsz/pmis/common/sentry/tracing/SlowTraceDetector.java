@@ -27,8 +27,10 @@ public class SlowTraceDetector {
 
     /** 慢追踪计数器 */
     private final AtomicLong slowTraceCount = new AtomicLong(0);
-    /** 追踪记录缓存（key=traceId, value=startMillis） */
+    /** 追踪记录缓存（key=traceId|operation, value=startMillis） */
     private final ConcurrentHashMap<String, Long> activeTraces = new ConcurrentHashMap<>();
+    /** 最大活跃追踪数，防止内存泄漏 */
+    private static final int MAX_ACTIVE_TRACES = 10000;
 
     public SlowTraceDetector(MetricsCollector metricsCollector, TraceContext traceContext,
                              long slowThresholdMillis) {
@@ -46,7 +48,14 @@ public class SlowTraceDetector {
     public void startTrace(String operation) {
         String traceId = traceContext != null ? traceContext.getTraceId() : null;
         if (traceId != null) {
-            activeTraces.put(traceId + "|" + operation, System.currentTimeMillis());
+            String key = traceId + "|" + operation;
+            // 防止无限增长：超过上限时移除最早的条目
+            if (activeTraces.size() >= MAX_ACTIVE_TRACES) {
+                String oldestKey = activeTraces.keys().nextElement();
+                activeTraces.remove(oldestKey);
+                log.debug("[Sentry] 活跃追踪数超过上限 {}, 移除最早条目: {}", MAX_ACTIVE_TRACES, oldestKey);
+            }
+            activeTraces.put(key, System.currentTimeMillis());
         }
     }
 

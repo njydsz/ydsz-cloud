@@ -44,8 +44,6 @@ import com.njydsz.pmis.common.socket.serialize.JsonMessageSerializer;
 import com.njydsz.pmis.common.socket.serialize.MessageSerializer;
 import com.njydsz.pmis.common.socket.session.OnlineUserService;
 import com.njydsz.pmis.common.socket.session.WebSocketSessionEventListener;
-import com.njydsz.pmis.common.socket.trace.WebSocketTraceContext;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
@@ -335,11 +333,10 @@ public class WebSocketAutoConfiguration {
     @ConditionalOnMissingBean(name = "webSocketHealthIndicator")
     public HealthIndicator webSocketHealthIndicator(
             WebSocketProperties properties,
-            OnlineUserService onlineUserService,
             WebSocketSessionEventListener eventListener,
             @Autowired(required = false) StringRedisTemplate redisTemplate) {
         log.info("[WebSocket] 注册 WebSocketHealthIndicator");
-        return new WebSocketHealthIndicator(properties, onlineUserService,
+        return new WebSocketHealthIndicator(properties,
                 eventListener.getActiveConnectionsCounter(), redisTemplate);
     }
 

@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.njydsz.pmis.common.sentry.domain.AlertEvent;
 import com.njydsz.pmis.common.sentry.spi.AlertPublisher;
 
@@ -85,8 +87,9 @@ public class AlertConverger implements AlertPublisher {
     }
 
     /**
-     * 清理过期静默记录
+     * 清理过期静默记录（定时调度，每 60 秒执行一次）
      */
+    @Scheduled(fixedDelay = 60000)
     public void cleanupExpiredSilence() {
         Instant now = Instant.now();
         silenceMap.entrySet().removeIf(entry ->
