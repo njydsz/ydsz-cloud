@@ -44,15 +44,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>所有节点完成后，更新 DAG 实例终态（SUCCESS/FAILED/PARTIAL_SUCCESS）</li>
  * </ol>
  *
- * <h3>与 {@link DagExecutor} 的关系</h3>
- * <p>两者均监听 {@link TaskCompletedEvent}：
- * <ul>
- *   <li>{@code DagInstanceExecutor}：通过查询节点实例表判断是否为 DAG 节点，
- *       匹配则处理，不匹配则跳过（不影响 DagExecutor）</li>
- *   <li>{@code DagExecutor}：基于 {@code pmis_job_relation} 表触发后继，
- *       与 DAG 实例执行正交（建议 DAG 模式下不混用 JobRelation）</li>
- * </ul>
- *
  * <h3>跨节点上下文传递（P2-5）</h3>
  * <p>节点执行结果写入 DAG 实例级上下文（{@code contextJson}），
  * 后继节点可通过 {@link JobDagInstanceMapper#updateContext} 读取。
@@ -104,7 +95,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * <p>通过查询节点实例表判断是否为 DAG 节点：
      * <ul>
      *   <li>匹配 PENDING/RUNNING 状态的节点实例 → 是 DAG 节点，处理</li>
-     *   <li>无匹配 → 非 DAG 节点，跳过（不影响 DagExecutor）</li>
+     *   <li>无匹配 → 非 DAG 节点，跳过</li>
      * </ul>
      */
     @Async
@@ -619,7 +610,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             triggerSuccessors(dagInstanceId, instance.getDagId(), nodeInstance.getJobKey(), definition);
         } else {
             // 节点失败：根据 DAG 级失败策略处理（P2-6 增强）
-            FailStrategy dagStrategy = FailStrategy.parse(dag.getFailStrategy());
+            DagFailureStrategy dagStrategy = DagFailureStrategy.parse(dag.getFailStrategy());
             handleNodeFailure(dagInstanceId, instance.getDagId(), nodeInstance, definition, dagStrategy);
         }
 
@@ -719,7 +710,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             triggerSuccessors(dagInstanceId, instance.getDagId(), originalJobKey, definition);
         } else {
             // 按 DAG 级失败策略处理（对原始 body 节点）
-            FailStrategy dagStrategy = FailStrategy.parse(dag.getFailStrategy());
+            DagFailureStrategy dagStrategy = DagFailureStrategy.parse(dag.getFailStrategy());
             handleNodeFailure(dagInstanceId, instance.getDagId(), originalBody, definition, dagStrategy);
         }
     }
@@ -747,41 +738,41 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      *
      * <p>支持四种 DAG 级失败策略：
      * <ul>
-     *   <li>{@link FailStrategy#RETRY}：若 retryCount &lt; maxRetries，重置为 PENDING 并重新派发；
-     *       否则按 {@link FailStrategy#FAIL_FAST} 处理</li>
-     *   <li>{@link FailStrategy#FAIL_FAST}：标记所有未完成节点为 SKIPPED</li>
-     *   <li>{@link FailStrategy#SKIP_SUBSEQUENT}：仅跳过失败节点的直接后继，其他分支继续</li>
-     *   <li>{@link FailStrategy#CONTINUE_ON_FAIL}：仍触发后继（通知/清理类）</li>
+     *   <li>{@link DagFailureStrategy#RETRY}：若 retryCount &lt; maxRetries，重置为 PENDING 并重新派发；
+     *       否则按 {@link DagFailureStrategy#ABORT} 处理</li>
+     *   <li>{@link DagFailureStrategy#ABORT}：标记所有未完成节点为 SKIPPED</li>
+     *   <li>{@link DagFailureStrategy#SKIP_SUBSEQUENT}：仅跳过失败节点的直接后继，其他分支继续</li>
+     *   <li>{@link DagFailureStrategy#CONTINUE}：仍触发后继（通知/清理类）</li>
      * </ul>
      */
     private void handleNodeFailure(String dagInstanceId, String dagId,
                                     JobDagNodeInstanceDO nodeInstance, DagDefinition definition,
-                                    FailStrategy dagStrategy) {
+                                    DagFailureStrategy dagStrategy) {
         String jobKey = nodeInstance.getJobKey();
         // P2-6: RETRY 策略优先处理
-        if (dagStrategy == FailStrategy.RETRY) {
+        if (dagStrategy == DagFailureStrategy.RETRY) {
             if (tryRetryNode(nodeInstance, definition)) {
                 log.info("[DagInstance] RETRY 重试节点: instanceId={} jobKey={} retry={}/{}",
                         dagInstanceId, jobKey, nodeInstance.getRetryCount() + 1, nodeInstance.getMaxRetries());
                 return; // 重试中，不触发后继也不 finalize
             }
-            // 重试次数用尽，降级为 FAIL_FAST
-            log.info("[DagInstance] RETRY 重试次数用尽, 按 FAIL_FAST 处理: instanceId={} jobKey={}",
+            // 重试次数用尽，降级为 ABORT
+            log.info("[DagInstance] RETRY 重试次数用尽, 按 ABORT 处理: instanceId={} jobKey={}",
                     dagInstanceId, jobKey);
             skipPendingNodes(dagInstanceId);
             return;
         }
 
-        if (dagStrategy == FailStrategy.FAIL_FAST) {
+        if (dagStrategy == DagFailureStrategy.ABORT) {
             skipPendingNodes(dagInstanceId);
-            log.info("[DagInstance] FAIL_FAST, 跳过未完成节点: instanceId={}", dagInstanceId);
-        } else if (dagStrategy == FailStrategy.SKIP_SUBSEQUENT) {
+            log.info("[DagInstance] ABORT, 跳过未完成节点: instanceId={}", dagInstanceId);
+        } else if (dagStrategy == DagFailureStrategy.SKIP_SUBSEQUENT) {
             // P2-6: 仅跳过失败节点的直接后继（递归跳过后继的后继）
             skipSubsequentNodes(dagInstanceId, jobKey, definition);
             log.info("[DagInstance] SKIP_SUBSEQUENT, 跳过失败节点后继: instanceId={} jobKey={}",
                     dagInstanceId, jobKey);
         } else {
-            // CONTINUE_ON_FAIL: 仍然触发后继（仅 CONTINUE_ON_FAIL 边级策略的边触发）
+            // CONTINUE: 仍然触发后继（仅 CONTINUE 边级策略的边触发）
             triggerSuccessors(dagInstanceId, dagId, jobKey, definition, false);
         }
     }
@@ -907,7 +898,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             }
             // P2-6: 边级失败策略判断
             if (!predecessorSuccess) {
-                FailStrategy edgeStrategy = edge.resolveFailStrategy();
+                DagFailureStrategy edgeStrategy = edge.resolveFailStrategy();
                 if (!edgeStrategy.shouldTriggerOnFailure()) {
                     log.debug("[DagInstance] 边级策略不触发后继: instanceId={} edge={}→{} strategy={}",
                             dagInstanceId, edge.from(), edge.to(), edgeStrategy);

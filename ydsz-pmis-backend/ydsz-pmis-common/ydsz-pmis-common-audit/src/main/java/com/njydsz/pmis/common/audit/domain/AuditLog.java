@@ -24,7 +24,6 @@ import lombok.Data;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Data
 public class AuditLog implements Serializable {
@@ -142,6 +141,16 @@ public class AuditLog implements Serializable {
     private String extraInfo;
 
     /**
+     * 租户 ID（多租户场景下用于数据隔离）
+     */
+    private String tenantId;
+
+    /**
+     * 链路追踪 ID（独立列，支持索引查询）
+     */
+    private String traceId;
+
+    /**
      * 创建时间（审计日志落库时刻）
      */
     private LocalDateTime createdAt;
@@ -158,6 +167,8 @@ public class AuditLog implements Serializable {
                 ", operatorName='" + operatorName + '\'' +
                 ", operationTime=" + operationTime +
                 ", costTime=" + costTime + "ms" +
+                ", tenantId='" + tenantId + '\'' +
+                ", traceId='" + traceId + '\'' +
                 '}';
     }
 }

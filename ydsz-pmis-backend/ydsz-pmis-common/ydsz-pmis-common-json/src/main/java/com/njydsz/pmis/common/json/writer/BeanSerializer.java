@@ -66,9 +66,6 @@ public final class BeanSerializer {
         /** 字段访问器 */
         public final MethodHandle getter;
         
-        /** JSON 键名（不含引号） */
-        public final String jsonName;
-        
         /** JSON 键名（含引号和冒号） */
         public final String jsonKey;
         
@@ -86,7 +83,6 @@ public final class BeanSerializer {
          */
         public FieldWriter(FieldMeta meta) {
             this.getter = meta.getter;
-            this.jsonName = meta.jsonName;
             this.jsonKey = meta.jsonKey;
             this.jsonKeyLen = meta.jsonKey.length();
             this.type = meta.type;

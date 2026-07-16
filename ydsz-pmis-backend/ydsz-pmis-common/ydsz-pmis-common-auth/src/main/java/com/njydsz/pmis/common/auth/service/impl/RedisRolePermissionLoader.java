@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
+import com.njydsz.pmis.common.auth.hierarchy.PermissionHierarchy;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
 import com.njydsz.pmis.common.cache.LocalCache;
@@ -174,6 +175,11 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
                     Collections.unmodifiableSet(apiPerms)
             );
             cache.put(role, loaded);
+
+            // 自动注册权限层级继承关系
+            registerPermissionHierarchy(menuPerms);
+            registerPermissionHierarchy(buttonPerms);
+            registerPermissionHierarchy(apiPerms);
 
             // 同时写入 LocalPermissionCache，为后续 Redis 降级时提供兜底数据
             if (localCache != null) {
@@ -371,6 +377,32 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         } catch (Exception e) {
             log.error("加载角色菜单权限失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
             throw BusinessException.builder().code(String.valueOf(HttpStatus.FORBIDDEN.value())).message("权限加载失败").build();
+        }
+    }
+
+    /**
+     * 自动注册权限层级继承关系。
+     *
+     * <p>权限码格式为 {@code 领域:资源:操作}，通过冒号分割解析层级关系。
+     * 例如：{@code sys:user} 是 {@code sys:user:list} 的父权限。
+     * 更短前缀的权限码自动成为更长权限码的父级。
+     *
+     * @param permissions 权限码集合
+     */
+    private void registerPermissionHierarchy(Set<String> permissions) {
+        if (permissions == null || permissions.isEmpty()) {
+            return;
+        }
+        for (String perm : permissions) {
+            if (perm == null || perm.isBlank()) {
+                continue;
+            }
+            String trimmed = perm.trim();
+            int lastColon = trimmed.lastIndexOf(':');
+            if (lastColon > 0) {
+                String parent = trimmed.substring(0, lastColon);
+                PermissionHierarchy.register(parent, trimmed);
+            }
         }
     }
 

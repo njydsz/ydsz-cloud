@@ -97,5 +97,12 @@
             <artifactId>spring-boot-health</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- Micrometer for metrics exposure (optional) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

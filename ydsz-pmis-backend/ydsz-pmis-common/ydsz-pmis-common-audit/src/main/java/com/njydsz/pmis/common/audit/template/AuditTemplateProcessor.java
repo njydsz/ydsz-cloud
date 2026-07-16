@@ -2,8 +2,9 @@ package com.njydsz.pmis.common.audit.template;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,6 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class AuditTemplateProcessor {
 
@@ -49,8 +49,16 @@ public class AuditTemplateProcessor {
 
     /**
      * 表达式缓存，避免重复解析（key = 模板字符串，value = 编译后的 Expression）
+     * <p>使用 LinkedHashMap 实现 LRU 淘汰策略，超过容量时自动淘汰最旧条目。
      */
-    private final Map<String, Expression> expressionCache = new ConcurrentHashMap<>(128);
+    private final Map<String, Expression> expressionCache =
+            Collections.synchronizedMap(
+                    new LinkedHashMap<String, Expression>(128, 0.75f, true) {
+                        @Override
+                        protected boolean removeEldestEntry(Map.Entry<String, Expression> eldest) {
+                            return size() > MAX_EXPRESSION_CACHE_SIZE;
+                        }
+                    });
 
     /**
      * 处理 SpEL 模板表达式
@@ -130,16 +138,12 @@ public class AuditTemplateProcessor {
 
     /**
      * 获取或解析表达式
-     * <p>优先从缓存中获取，缓存未命中时解析并缓存。缓存满时直接清空（不实现严格 LRU，
-     * 简单实现对审计场景已足够）。
+     * <p>优先从缓存中获取，缓存未命中时解析并缓存。缓存满时通过 LinkedHashMap 的 LRU 策略自动淘汰最旧条目。
      *
      * @param template 模板字符串
      * @return SpEL 表达式
      */
     private Expression getOrParseExpression(String template) {
-        if (expressionCache.size() >= MAX_EXPRESSION_CACHE_SIZE) {
-            expressionCache.clear();
-        }
         return expressionCache.computeIfAbsent(template, parser::parseExpression);
     }
 

@@ -55,7 +55,7 @@ import java.lang.annotation.*;
  * </ul>
  *
  * @since 1.0.0
- * @since 1.0.0
+ * 
  * @see AuthApiPermission
  * @see AuthRowPermission
  * @see AuthColPermission
@@ -109,7 +109,7 @@ public @interface AuthMenuPermission {
      *
      * @return 校验模式
      */
-    Mode mode() default Mode.AND;
+    PermissionMode mode() default PermissionMode.AND;
 
     /**
      * 权限类型枚举。
@@ -129,23 +129,5 @@ public @interface AuthMenuPermission {
          * <p>通常对应菜单下的操作按钮，用于控制用户可执行的操作。
          */
         BUTTON
-    }
-
-    /**
-     * 多权限码校验模式枚举。
-     *
-     * @since 1.0.0
-     * 
-     */
-    enum Mode {
-        /**
-         * AND 模式：用户必须同时拥有所有指定的权限码才能通过校验。
-         */
-        AND,
-
-        /**
-         * OR 模式：用户只需拥有任意一个指定的权限码即可通过校验。
-         */
-        OR
     }
 }

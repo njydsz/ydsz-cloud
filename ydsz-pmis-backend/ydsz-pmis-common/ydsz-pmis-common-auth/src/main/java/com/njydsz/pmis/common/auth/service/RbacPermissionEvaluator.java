@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.auth.annotation.PermissionMode;
 import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -163,7 +163,7 @@ public class RbacPermissionEvaluator {
         if (isSuperAdmin(userRoles)) return;
 
         PermissionType permType = mapToPermissionType(type);
-        boolean orMode = mode == AuthMenuPermission.Mode.OR;
+        boolean orMode = mode == PermissionMode.OR;
 
         if (!requiredRoles.isEmpty()) {
             validateRoles(userRoles, requiredRoles, orMode, permType);
@@ -182,7 +182,7 @@ public class RbacPermissionEvaluator {
      * @param roleCodes 需要校验的角色编码数组
      * @param mode 校验模式（AND/OR）
      */
-    public void validateApi(String[] apiCodes, String[] roleCodes, AuthApiPermission.Mode mode) {
+    public void validateApi(String[] apiCodes, String[] roleCodes, PermissionMode mode) {
         validateApi0(loadCurrentUserInfo(), apiCodes, roleCodes, mode);
     }
 
@@ -210,7 +210,7 @@ public class RbacPermissionEvaluator {
         validateApi0(userInfo, required.apiCodes(), required.roleCodes(), required.mode());
     }
 
-    private void validateApi0(Map<String, Object> userInfo, String[] apiCodes, String[] roleCodes, AuthApiPermission.Mode mode) {
+    private void validateApi0(Map<String, Object> userInfo, String[] apiCodes, String[] roleCodes, PermissionMode mode) {
         if (!properties.isEnabled()) return;
         Set<String> requiredRoles = arrayToSet(roleCodes);
         Set<String> requiredApis = arrayToSet(apiCodes);
@@ -219,7 +219,7 @@ public class RbacPermissionEvaluator {
         Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>();
         if (isSuperAdmin(userRoles)) return;
 
-        boolean orMode = mode == AuthApiPermission.Mode.OR;
+        boolean orMode = mode == PermissionMode.OR;
 
         if (!requiredRoles.isEmpty()) {
             validateRoles(userRoles, requiredRoles, orMode, PermissionType.API);

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.config;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +84,7 @@ public class ConfigAutoConfiguration {
                 environment,
                 publisher,
                 configProperties.getChangeMonitor(),
-                new java.util.concurrent.CopyOnWriteArrayList<>(listeners)
+                new CopyOnWriteArrayList<>(listeners)
         );
     }
 

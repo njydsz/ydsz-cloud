@@ -47,10 +47,10 @@ public record DagEdge(String from, String to, String failStrategy, String condit
     }
 
     /**
-     * 解析失败策略，null 时返回默认值 FAIL_FAST。
+     * 解析失败策略，null 时返回默认值 ABORT。
      */
-    public FailStrategy resolveFailStrategy() {
-        return FailStrategy.parse(failStrategy);
+    public DagFailureStrategy resolveFailStrategy() {
+        return DagFailureStrategy.parse(failStrategy);
     }
 
 }

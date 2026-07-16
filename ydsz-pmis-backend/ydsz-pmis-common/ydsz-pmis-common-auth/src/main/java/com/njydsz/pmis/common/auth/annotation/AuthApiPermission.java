@@ -39,7 +39,7 @@ import java.lang.annotation.*;
  * </ul>
  *
  * @since 1.0.0
- * @since 1.0.0
+ * 
  * @see AuthMenuPermission
  * @see AuthRowPermission
  * @see AuthColPermission
@@ -81,23 +81,20 @@ public @interface AuthApiPermission {
      *
      * @return 校验模式
      */
-    Mode mode() default Mode.AND;
+    PermissionMode mode() default PermissionMode.AND;
 
     /**
-     * 多权限码校验模式枚举。
+     * API 路径模式，用于 URL 路径级别的权限控制。
      *
-     * @since 1.0.0
-     * 
+     * <p>与 {@link #apiCodes()} 互补：{@code apiCodes} 基于权限码校验，
+     * {@code pathPatterns} 基于 URL 路径模式匹配（支持 Ant 风格通配符）。
+     * 例如：{@code "/api/user/**"} 匹配所有 /api/user/ 下的接口。
+     *
+     * <p>当 {@code pathPatterns} 和 {@code apiCodes} 同时配置时，
+     * 遵循 {@link #mode()} 指定的 AND/OR 逻辑。
+     *
+     * @return API 路径模式数组
      */
-    enum Mode {
-        /**
-         * AND 模式：用户必须同时拥有所有指定的权限码才能通过校验。
-         */
-        AND,
+    String[] pathPatterns() default {};
 
-        /**
-         * OR 模式：用户只需拥有任意一个指定的权限码即可通过校验。
-         */
-        OR
-    }
 }

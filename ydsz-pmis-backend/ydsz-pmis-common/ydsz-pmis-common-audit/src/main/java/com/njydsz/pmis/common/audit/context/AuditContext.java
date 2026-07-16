@@ -21,14 +21,14 @@ import com.njydsz.pmis.common.core.context.RequestContext;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class AuditContext {
 
     /**
-     * 当前线程的审计上下文（InheritableThreadLocal 支持子线程继承）
+     * 当前线程的审计上下文（使用 ThreadLocal，避免线程池场景下的上下文泄漏）
+     * <p>异步线程上下文传递请使用 {@link #wrap(Runnable)} 方法显式包装。
      */
-    private static final InheritableThreadLocal<AuditContextData> CONTEXT_THREAD_LOCAL = new InheritableThreadLocal<>();
+    private static final ThreadLocal<AuditContextData> CONTEXT_THREAD_LOCAL = new ThreadLocal<>();
 
     /**
      * 将 Runnable 包装为携带当前审计上下文的任务
@@ -266,13 +266,21 @@ public class AuditContext {
         /**
          * 获取扩展信息
          *
-         * @param key 键
-         * @param <T> 值类型
+         * @param key  键
+         * @param type 值类型
+         * @param <T>  值类型
          * @return 值
          */
-        
-        public <T> T getExtra(String key) {
-            return (T) this.extra.get(key);
+        public <T> T getExtra(String key, Class<T> type) {
+            Object value = this.extra.get(key);
+            if (value == null) {
+                return null;
+            }
+            if (type.isInstance(value)) {
+                return type.cast(value);
+            }
+            throw new ClassCastException("Cannot cast extra value for key '" + key
+                    + "' from " + value.getClass().getName() + " to " + type.getName());
         }
     }
 }

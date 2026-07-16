@@ -59,22 +59,23 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        Health.Builder builder = new Health.Builder();
-
         // 检查密钥来源
         String keySource = resolveKeySource();
         int encryptedCount = countEncryptedProperties();
         Set<String> encryptedKeys = findEncryptedPropertyKeys();
 
+        Health.Builder builder;
         if (encryptedCount == 0) {
-            builder.up().withDetail("encryptorPasswordSource", keySource);
-            builder.withDetail("encryptedPropertyCount", 0);
+            builder = Health.up()
+                    .withDetail("encryptorPasswordSource", keySource)
+                    .withDetail("encryptedPropertyCount", 0);
         } else if ("NOT_CONFIGURED".equals(keySource)) {
-            builder.down();
-            builder.withDetail("error", "Encrypted properties found but Jasypt master password is not configured");
+            builder = Health.down()
+                    .withDetail("error", "Encrypted properties found but Jasypt master password is not configured");
         } else {
-            builder.up().withDetail("encryptorPasswordSource", keySource);
-            builder.withDetail("encryptedPropertyCount", encryptedCount);
+            builder = Health.up()
+                    .withDetail("encryptorPasswordSource", keySource)
+                    .withDetail("encryptedPropertyCount", encryptedCount);
             // 仅显示前 MAX_DETAIL_ITEMS 个属性名
             Set<String> displayKeys = new HashSet<>();
             int i = 0;

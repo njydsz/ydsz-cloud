@@ -160,11 +160,11 @@ public class OpenApiAutoConfiguration {
 
         // 优先使用 ppackages 列表
         if (group.getPpackages() != null && !group.getPpackages().isEmpty()) {
-            builder.ppackagesToScan(group.getPpackages().toArray(new String[0]));
+            builder.packagesToScan(group.getPpackages().toArray(new String[0]));
         }
         // 兼容旧版 basePpackage
         else if (group.getBasePpackage() != null && !group.getBasePpackage().isEmpty()) {
-            builder.ppackagesToScan(group.getBasePpackage());
+            builder.packagesToScan(group.getBasePpackage());
         }
         // 使用 paths 列表
         else if (group.getPaths() != null && !group.getPaths().isEmpty()) {

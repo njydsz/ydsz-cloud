@@ -63,18 +63,6 @@ public class AesGcmCrypto {
     }
 
     /**
-     * 创建 AES-GCM 加密器（带 NoncePersistor，向后兼容）
-     *
-     * @param key       主密钥（16/24/32 字节）
-     * @param persistor Nonce 持久化器（已忽略）
-     * @deprecated 使用 {@link #AesGcmCrypto(byte[])} 替代
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public AesGcmCrypto(byte[] key, NoncePersistor persistor) {
-        this(key);
-    }
-
-    /**
      * 加密并返回 Base64 字符串
      *
      * <p>每次加密生成全新的随机 IV，确保 GCM 安全性。
@@ -161,32 +149,5 @@ public class AesGcmCrypto {
         byte[] iv = new byte[IV_LENGTH];
         random.nextBytes(iv);
         return iv;
-    }
-
-    /**
-     * Nonce 持久化器（已废弃）
-     *
-     * <p>GCM 模式下 IV 不可复用，每次加密都应生成随机 IV。
-     * 此接口保留仅为向后兼容，不再有任何实际作用。</p>
-     *
-     * @deprecated GCM 安全要求 IV 不可复用，使用随机 IV 替代持久化方案
-     */
-    @Deprecated(since = "1.3.0", forRemoval = true)
-    public interface NoncePersistor {
-        /**
-         * 加载已存在的 Nonce
-         *
-         * @param keyId 业务 keyId
-         * @return 已存在的 Nonce；不存在时返回 null
-         */
-        byte[] load(String keyId);
-
-        /**
-         * 持久化 Nonce
-         *
-         * @param keyId 业务 keyId
-         * @param iv    12 字节 Nonce
-         */
-        void save(String keyId, byte[] iv);
     }
 }

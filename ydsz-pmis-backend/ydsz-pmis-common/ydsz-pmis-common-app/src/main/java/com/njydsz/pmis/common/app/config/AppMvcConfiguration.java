@@ -90,18 +90,6 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     }
 
     /**
-     * 自定义 ObjectMapper 配置
-     *
-     * <p>App 端关闭 BigDecimal 的科学计数法表示，确保长 ID 等大数字以普通十进制字符串输出。
-     *
-     * @param mapper Spring MVC 默认 ObjectMapper 实例
-     */
-    protected void configureObjectMapper(ObjectMapper mapper) {
-        // App端大数格式化：避免科学计数法
-        mapper.configure(StreamWriteFeature.WRITE_BIGDECIMAL_AS_PLAIN.mappedFeature(), true);
-    }
-
-    /**
      * 注册拦截器
      *
      * <p>注册顺序：

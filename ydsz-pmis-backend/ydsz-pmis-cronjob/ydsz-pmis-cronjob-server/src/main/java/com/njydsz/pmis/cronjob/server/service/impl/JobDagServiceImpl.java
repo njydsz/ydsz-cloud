@@ -27,10 +27,10 @@ import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagVersionMapper;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.pmis.cronjob.server.core.dag.DagEdge;
+import com.njydsz.pmis.cronjob.server.core.dag.DagFailureStrategy;
 import com.njydsz.pmis.cronjob.server.core.dag.DagInstanceExecutor;
 import com.njydsz.pmis.cronjob.server.core.dag.DagNode;
 import com.njydsz.pmis.cronjob.server.core.dag.DagParser;
-import com.njydsz.pmis.cronjob.server.core.dag.FailStrategy;
 import com.njydsz.pmis.cronjob.server.service.dag.JobDagService;
 
 import lombok.RequiredArgsConstructor;
@@ -99,7 +99,7 @@ public class JobDagServiceImpl implements JobDagService {
         dag.setMaxConcurrentInstances(dto.getMaxConcurrentInstances() != null
                 ? dto.getMaxConcurrentInstances() : 1);
         dag.setFailStrategy(StringUtils.hasText(dto.getFailStrategy())
-                ? dto.getFailStrategy() : FailStrategy.FAIL_FAST.name());
+                ? dto.getFailStrategy() : DagFailureStrategy.ABORT.name());
         dag.setDescription(dto.getDescription());
         // 默认值
         dag.setVersion(1);
