@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * Logstash 解析后写入 Elasticsearch，由 Kibana 展示。
  *
  * <p>TCP 模式下复用长连接，避免频繁 TCP 握手开销。
- * UDP 模式下每次创建 DatagramSocket（无连接）。
+ * UDP 模式下复用 DatagramSocket（无连接，构造时创建）。
  * 熔断保护由 {@link CircuitBreaker} 统一管理。
  *
  * @author ydsz-pmis-team

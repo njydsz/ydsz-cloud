@@ -31,18 +31,6 @@ public class JsonMessageSerializer implements MessageSerializer {
         }
     }
 
-    @Override
-    public <T> T deserialize(String json, Class<T> clazz) {
-        if (json == null || json.isEmpty()) {
-            return null;
-        }
-        try {
-            return Json.toObject(json, clazz);
-        } catch (Exception e) {
-            log.warn("[WS-Serialize] 反序列化失败: {}", e.getMessage());
-            return null;
-        }
-    }
 
     @Override
     public String getName() {

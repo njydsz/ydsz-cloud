@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.seata.api.SagaStep;
 import com.njydsz.pmis.common.seata.config.SeataProperties;
+import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.pmis.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.pmis.common.seata.metrics.SeataMetrics;
 
 /**
  * SAGA 事务编排器
@@ -29,13 +32,16 @@ import com.njydsz.pmis.common.seata.config.SeataProperties;
  * @author ydsz-pmis-team
  * @since 3.5.0
  */
-public class SagaOrchestrator {
+public class SagaOrchestrator extends AbstractTransactionManager {
 
     private static final Logger log = LoggerFactory.getLogger(SagaOrchestrator.class);
 
     private final SeataProperties properties;
 
-    public SagaOrchestrator(SeataProperties properties) {
+    public SagaOrchestrator(SeataProperties properties,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider) {
+        super(metricsProvider, auditProvider);
         this.properties = properties;
     }
 
@@ -52,7 +58,7 @@ public class SagaOrchestrator {
      */
     @SuppressWarnings("unchecked")
     public <T> T execute(String transactionName, List<? extends SagaStep<?>> steps) throws Exception {
-        String xid = java.util.UUID.randomUUID().toString();
+        String xid = beginXid(transactionName);
         log.info("SAGA transaction started: name={}, xid={}, steps={}", transactionName, xid, steps.size());
 
         List<SagaStep<?>> completedSteps = new ArrayList<>();
@@ -111,5 +117,21 @@ public class SagaOrchestrator {
             }
         }
         log.error("SAGA compensation exhausted retries: step={}, xid={}", step.getName(), xid);
+    }
+
+    @Override
+    public com.njydsz.pmis.common.seata.api.TransactionType getCurrentType() {
+        return com.njydsz.pmis.common.seata.api.TransactionType.SAGA;
+    }
+
+    @Override
+    public <T> T execute(String transactionName, com.njydsz.pmis.common.seata.api.TransactionType type, java.util.concurrent.Callable<T> action) throws Exception {
+        return action.call();
+    }
+
+    @Override
+    public <T> T executeWithCompensation(String transactionName, java.util.concurrent.Callable<T> action, Runnable compensation) throws Exception {
+        try { return action.call(); }
+        catch (Exception e) { if (compensation != null) { compensation.run(); } throw e; }
     }
 }

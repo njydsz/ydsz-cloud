@@ -50,6 +50,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * @since 3.5.0
  */
 @AutoConfiguration
+@EnableScheduling
 @EnableConfigurationProperties(SeataProperties.class)
 @ConditionalOnProperty(prefix = "pmis.seata", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SeataAutoConfiguration {
@@ -77,12 +78,10 @@ public class SeataAutoConfiguration {
     @ConditionalOnProperty(prefix = "pmis.seata", name = "tcc-enabled", havingValue = "true", matchIfMissing = true)
     public TccTransactionManager tccTransactionManager(
             ObjectProvider<TccTransactionLogStore> logStoreProvider,
-            SeataProperties properties) {
-        TccTransactionLogStore logStore = logStoreProvider.getIfAvailable();
-        if (logStore != null) {
-            return new TccTransactionManager(logStore, properties);
-        }
-        return new TccTransactionManager(null, properties, metricsProvider, auditProvider);
+            SeataProperties properties,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider) {
+        return new TccTransactionManager(logStoreProvider.getIfAvailable(), properties, metricsProvider, auditProvider);
     }
 
     /**
@@ -124,9 +123,9 @@ public class SeataAutoConfiguration {
         }
 
         if (properties.getDefaultType() == TransactionType.SEATA_AT) {
-            // P0-F2: delegate to SeataTransactionManager
+            // delegate to SeataTransactionManager
             SeataTransactionManager seataTm = seataTmProvider.getIfAvailable();
-            if (seataTm != null) { return seataTm; } 待实现，降级为 Local
+            if (seataTm != null) { return seataTm; }
         }
 
         PlatformTransactionManager txManager = txManagerProvider.getIfAvailable();
@@ -223,7 +222,7 @@ public class SeataAutoConfiguration {
      * Seata AT 模式配置
      *
      * <p>当 Seata 在类路径且 {@code seata-at-enabled=true} 时注册
-     * {@link GlobalTransactionExecutor} 和 {@link SeataTransactionManager}。
+     * {@link SeataGlobalTransactionExecutor} 和 {@link SeataTransactionManager}。
      */
     @org.springframework.context.annotation.Configuration
     @ConditionalOnClass(name = "org.apache.seata.tm.api.GlobalTransactionContext")
@@ -232,7 +231,7 @@ public class SeataAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean(SeataGlobalTransactionExecutor.class)
-        public SeataGlobalTransactionExecutor seataGlobalTransactionExecutor() throws Exception {
+        public SeataGlobalTransactionExecutor seataSeataGlobalTransactionExecutor() throws Exception {
             return new SeataGlobalTransactionExecutor();
         }
 

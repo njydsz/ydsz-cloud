@@ -16,6 +16,7 @@ import com.njydsz.pmis.common.socket.audit.WebSocketAuditService;
 import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.socket.heartbeat.WebSocketHeartbeatHandler;
 import com.njydsz.pmis.common.socket.lifecycle.WebSocketConnectionListener;
+import com.njydsz.pmis.common.socket.monitor.SlowConnectionDetector;
 import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class WebSocketSessionEventListener {
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketHeartbeatHandler heartbeatHandler;
     private final WebSocketAuditService auditService;
+    private final SlowConnectionDetector slowConnectionDetector;
     private final List<WebSocketConnectionListener> connectionListeners;
 
     /** 本节点活跃连接计数器（供 HealthIndicator 读取） */
@@ -56,12 +58,14 @@ public class WebSocketSessionEventListener {
             SimpMessagingTemplate messagingTemplate,
             WebSocketHeartbeatHandler heartbeatHandler,
             WebSocketAuditService auditService,
+            SlowConnectionDetector slowConnectionDetector,
             List<WebSocketConnectionListener> connectionListeners) {
         this.onlineUserService = onlineUserService;
         this.offlineMessageStore = offlineMessageStore;
         this.messagingTemplate = messagingTemplate;
         this.heartbeatHandler = heartbeatHandler;
         this.auditService = auditService;
+        this.slowConnectionDetector = slowConnectionDetector;
         this.connectionListeners = connectionListeners != null ? connectionListeners : List.of();
     }
 
@@ -88,7 +92,7 @@ public class WebSocketSessionEventListener {
         activeConnections.incrementAndGet();
         connectTimes.put(sessionId, System.currentTimeMillis());
         if (heartbeatHandler != null) {
-            heartbeatHandler.registerSession(sessionId);
+            heartbeatHandler.registerSession(sessionId, userId);
         }
         log.info("[WS-Session] 用户连接: userId={}, sessionId={}, localActive={}",
                 userId, sessionId, activeConnections.get());
@@ -125,6 +129,9 @@ public class WebSocketSessionEventListener {
         }
         log.info("[WS-Session] 用户断开: userId={}, sessionId={}, localActive={}",
                 userId, sessionId, activeConnections.get());
+        if (slowConnectionDetector != null) {
+            slowConnectionDetector.cleanup(sessionId);
+        }
         notifyDisconnected(userId, sessionId);
     }
 

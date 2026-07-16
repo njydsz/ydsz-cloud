@@ -5,35 +5,33 @@ import java.util.List;
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
 
 /**
- * 日志发布器 SPI
+ * "日志发布器 SPI"
  *
- * <p>统一日志发布抽象，底层可切换 ELK（Logstash） / Loki / 双发。
+ * <p>"统一日志发布抽象，底层可切换 ELK（Logstash） / Loki / 双发。"
  *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
 public interface LogPublisher {
 
-    /**
-     * 发布日志事件
-     *
-     * @param event 日志事件
-     * @return 是否发布成功
-     */
     boolean publish(LogEvent event);
 
-    /**
-     * 判断发布器是否可用
-     */
+    default boolean publishBatch(List<LogEvent> events) {
+        if (events == null || events.isEmpty()) {
+            return false;
+        }
+        boolean anySuccess = false;
+        for (LogEvent event : events) {
+            if (publish(event)) {
+                anySuccess = true;
+            }
+        }
+        return anySuccess;
+    }
+
     boolean isAvailable();
 
-    /**
-     * 获取发布器名称
-     */
     String getName();
 
-    /**
-     * 获取发布器方案标识（elk / loki / dual）
-     */
     String getScheme();
 }

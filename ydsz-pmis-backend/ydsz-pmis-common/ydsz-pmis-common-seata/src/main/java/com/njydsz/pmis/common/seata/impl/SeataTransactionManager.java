@@ -1,6 +1,9 @@
 package com.njydsz.pmis.common.seata.impl;
 
 import java.util.concurrent.Callable;
+import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.pmis.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.pmis.common.seata.metrics.SeataMetrics;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +44,13 @@ public class SeataTransactionManager extends AbstractTransactionManager {
     private final SeataGlobalTransactionExecutor globalExecutor;
 
     public SeataTransactionManager(SeataGlobalTransactionExecutor globalExecutor) {
+        this.globalExecutor = globalExecutor;
+    }
+
+    public SeataTransactionManager(SeataGlobalTransactionExecutor globalExecutor,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider) {
+        super(metricsProvider, auditProvider);
         this.globalExecutor = globalExecutor;
     }
 

@@ -26,7 +26,7 @@ class SagaOrchestratorTest {
         SeataProperties props = new SeataProperties();
         props.setSagaMaxRetries(2);
         props.setSagaRetryIntervalMs(10);
-        orchestrator = new SagaOrchestrator(props);
+        orchestrator = new SagaOrchestrator(props, null, null);
     }
 
     @Test

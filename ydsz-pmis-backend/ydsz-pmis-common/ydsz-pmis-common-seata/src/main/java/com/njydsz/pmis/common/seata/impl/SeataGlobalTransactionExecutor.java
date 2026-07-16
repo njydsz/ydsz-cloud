@@ -45,7 +45,6 @@ public class SeataGlobalTransactionExecutor  {
         log.info("Seata GlobalTransactionExecutor initialized (Seata 2.x detected)");
     }
 
-    @Override
     public <T> T executeInGlobalTransaction(Callable<T> action) throws Exception {
         Object globalTx = getCurrentMethod.invoke(null);
         if (globalTx == null) {
@@ -68,7 +67,6 @@ public class SeataGlobalTransactionExecutor  {
         }
     }
 
-    @Override
     public String getCurrentGlobalXid() {
         try {
             Object globalTx = getCurrentMethod.invoke(null);

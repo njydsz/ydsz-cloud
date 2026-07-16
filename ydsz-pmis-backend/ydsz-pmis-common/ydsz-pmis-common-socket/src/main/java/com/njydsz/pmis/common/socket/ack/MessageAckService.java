@@ -21,7 +21,12 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>定时扫描超时未 ACK 的消息，触发重试</li>
  * </ul>
  *
- * <p>当 Redis 不可用时降级为本地 {@link ConcurrentHashMap} 存储。
+ * <p>当 Redis 不可用时降级为本地 {@link ConcurrentHashMap    public void cleanupExpiredLocalAcks() {
+        if (!localPendingAcks.isEmpty()) {
+            localPendingAcks.clear();
+}
+}
+} 存储。
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
@@ -109,4 +114,8 @@ public class MessageAckService {
             return !localPendingAcks.contains(messageId);
         }
     }
+
+    public void cleanupExpiredLocalAcks() {
+        localPendingAcks.clear();
+}
 }

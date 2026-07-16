@@ -82,6 +82,7 @@ public class WebSocketRateLimiter {
      * @return true 表示允许，false 表示被限流
      */
     private boolean checkRate(String key, int limit) {
+        if (redisTemplate == null) return true;
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1) {
             redisTemplate.expire(key, WINDOW);

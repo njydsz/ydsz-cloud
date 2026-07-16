@@ -45,7 +45,7 @@ public class WebSocketHealthIndicator implements HealthIndicator {
             boolean clusterEnabled = properties.getCluster().isEnabled();
             builder.withDetail("cluster.enabled", clusterEnabled);
             if (clusterEnabled && redisTemplate != null) {
-                String pong = redisTemplate.getConnectionFactory().getConnection().ping();
+                String pong = redisTemplate.execute(conn -> conn.ping(), true);
                 builder.withDetail("cluster.redisReachable", "PONG".equalsIgnoreCase(pong));
             } else {
                 builder.withDetail("cluster.redisReachable", false);

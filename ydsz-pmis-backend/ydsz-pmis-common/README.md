@@ -117,15 +117,15 @@ deploy\windows\scripts\import-nacos-config.bat pmis dev
 | 1 | ydsz-pmis-gateway | 9000 | `com.njydsz.pmis.gateway`（裸 @SpringBootApplication） | common-core / common-exception / common-auth |
 | 2 | ydsz-pmis-userinfo | 9001 | userinfo + common | 全量（通过 common-web） |
 | 3 | ydsz-pmis-system | 9002 | system + common | 全量（通过 common-web） |
-| 4 | ydsz-pmis-project | 9003 | project + common + literule | 全量（通过 common-web） |
+| 4 | ydsz-pmis-project | 9003 | project + common + literule（含 sales/finance 合并域） | 全量（通过 common-web） |
 | 5 | ydsz-pmis-message | 9004 | message + common | 全量（通过 common-web） |
 | 6 | ydsz-pmis-cronjob | 9005 | cronjob + common | 全量（通过 common-web） |
 | 7 | ydsz-pmis-workflow | 9006 | workflow + common | 全量（通过 common-web） |
 | 8 | ydsz-pmis-agent | 9007 | agent + common + project | 全量（通过 common-web） |
-| 9 | ydsz-pmis-sales | 9010 | sales + common + literule | 全量（通过 common-web） |
-| 10 | ydsz-pmis-finance | 9011 | finance + common + literule | 全量（通过 common-web） |
 
-> **literule** 不是独立部署单元，是 jar 库，被 sales/project/finance 作为业务规则引擎嵌入。
+> **literule** 不是独立部署单元，是 jar 库，被 project 作为业务规则引擎嵌入。
+>
+> **2026-07-16 合并**：原 `ydsz-pmis-sales`（端口 9010）和 `ydsz-pmis-finance`（端口 9011）已合并到 `ydsz-pmis-project`。
 
 ## 目录结构
 

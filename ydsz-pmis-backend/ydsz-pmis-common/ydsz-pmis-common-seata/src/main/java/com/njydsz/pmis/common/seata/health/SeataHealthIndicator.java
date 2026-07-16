@@ -6,7 +6,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.pmis.common.seata.api.TccTransactionLogStore;
 import com.njydsz.pmis.common.seata.config.SeataProperties;
-import com.njydsz.pmis.common.seata.impl.GlobalTransactionExecutor;
+import com.njydsz.pmis.common.seata.impl.SeataGlobalTransactionExecutor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  * <p>暴露 {@code /actuator/health/seata} 端点，检测：
  * <ul>
  *   <li>当前事务模式（LOCAL/TCC/SEATA_AT/SAGA）</li>
- *   <li>Seata TC 连通性（当 GlobalTransactionExecutor 可用时）</li>
+ *   <li>Seata TC 连通性（当 SeataGlobalTransactionExecutor 可用时）</li>
  *   <li>TCC 挂起事务数（TRIED 状态超时未完成）</li>
  *   <li>恢复扫描配置</li>
  * </ul>
@@ -32,11 +32,11 @@ public class SeataHealthIndicator implements HealthIndicator {
     private static final Logger log = LoggerFactory.getLogger(SeataHealthIndicator.class);
 
     private final SeataProperties properties;
-    private final ObjectProvider<GlobalTransactionExecutor> globalExecutorProvider;
+    private final ObjectProvider<SeataGlobalTransactionExecutor> globalExecutorProvider;
     private final ObjectProvider<TccTransactionLogStore> logStoreProvider;
 
     public SeataHealthIndicator(SeataProperties properties,
-                                ObjectProvider<GlobalTransactionExecutor> globalExecutorProvider,
+                                ObjectProvider<SeataGlobalTransactionExecutor> globalExecutorProvider,
                                 ObjectProvider<TccTransactionLogStore> logStoreProvider) {
         this.properties = properties;
         this.globalExecutorProvider = globalExecutorProvider;
@@ -58,7 +58,7 @@ public class SeataHealthIndicator implements HealthIndicator {
     }
 
     private void checkSeataTcConnectivity(Health.Builder builder) {
-        GlobalTransactionExecutor executor = globalExecutorProvider.getIfAvailable();
+        SeataGlobalTransactionExecutor executor = globalExecutorProvider.getIfAvailable();
         if (executor == null) {
             builder.withDetail("seataTc", "not configured (Local mode)");
             return;

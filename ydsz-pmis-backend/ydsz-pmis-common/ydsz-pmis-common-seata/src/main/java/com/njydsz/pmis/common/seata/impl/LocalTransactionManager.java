@@ -5,6 +5,9 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.pmis.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.pmis.common.seata.metrics.SeataMetrics;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.njydsz.pmis.common.seata.api.TransactionType;
@@ -35,6 +38,13 @@ public class LocalTransactionManager extends AbstractTransactionManager {
      *                           在单数据源场景下为 {@code DataSourceTransactionManager}）
      */
     public LocalTransactionManager(PlatformTransactionManager transactionManager) {
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+
+    public LocalTransactionManager(PlatformTransactionManager transactionManager,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider) {
+        super(metricsProvider, auditProvider);
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 

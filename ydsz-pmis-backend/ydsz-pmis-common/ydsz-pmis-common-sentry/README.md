@@ -19,7 +19,7 @@
 
 ```
 ydsz-pmis-common-sentry/
-├── domain/           # 领域模型（MetricType/LogEvent/AlertEvent/SlaDefinition 等）
+├── domain/           # 领域模型（LogEvent/AlertEvent/SlaDefinition 等）
 ├── spi/              # SPI 接口（MetricsCollector/LogPublisher/TraceContext/AlertPublisher/SlaCollector）
 ├── metrics/          # 指标采集（Micrometer + InMemory 降级 + SystemMetrics）
 ├── logging/          # 日志发布（AsyncLogPublisher + ELK + Loki + DualLogPublisher + LogbackLayout）

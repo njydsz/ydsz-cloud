@@ -132,6 +132,29 @@ public class SentryAutoConfiguration {
                 cb.getHalfOpenAfterSeconds() * 1000L);
     }
 
+    @Bean
+    @ConditionalOnClass(MeterRegistry.class)
+    public void circuitBreakerMetricsBinder(ObjectProvider<CircuitBreaker> circuitBreakers,
+                                             ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        MeterRegistry registry = meterRegistryProvider.getIfAvailable();
+        if (registry != null) {
+            circuitBreakers.stream().forEach(cb -> {
+                String name = cb.getName();
+                Gauge.builder("ydsz.sentry.circuitbreaker.state", cb,
+                        st -> st.getState().ordinal())
+                        .description("熔断器状态 (0=CLOSED,1=OPEN,2=HALF_OPEN)")
+                        .tag("name", name)
+                        .register(registry);
+                Gauge.builder("ydsz.sentry.circuitbreaker.failures", cb,
+                        CircuitBreaker::getFailureCount)
+                        .description("熔断器失败计数")
+                        .tag("name", name)
+                        .register(registry);
+            });
+        }
+    }
+
+
     // ==================== 日志发布 ====================
 
     @Bean

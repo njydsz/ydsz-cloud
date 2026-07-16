@@ -14,6 +14,9 @@ import com.njydsz.pmis.common.seata.api.TccTransactionLog;
 import com.njydsz.pmis.common.seata.api.TccTransactionLogStore;
 import com.njydsz.pmis.common.seata.api.TransactionType;
 import com.njydsz.pmis.common.seata.config.SeataProperties;
+import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.pmis.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.pmis.common.seata.metrics.SeataMetrics;
 
 /**
  * TCC 事务管理器
@@ -43,6 +46,7 @@ public class TccTransactionManager extends AbstractTransactionManager
 
     private final TccTransactionLogStore logStore;
     private final SeataProperties properties;
+    private final java.util.Map<String, TccAction<?>> registeredActions = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
      * 无日志存储模式（向后兼容）
@@ -58,13 +62,19 @@ public class TccTransactionManager extends AbstractTransactionManager
      * @param logStore   事务日志存储
      * @param properties 配置
      */
-    public TccTransactionManager(TccTransactionLogStore logStore, SeataProperties properties) {
+    public TccTransactionManager(TccTransactionLogStore logStore, SeataProperties properties,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider) {
+        super(metricsProvider, auditProvider);
         this.logStore = logStore;
         this.properties = properties;
     }
 
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
+        if (type == TransactionType.TCC && action instanceof TccAction) {
+            return executeTcc(transactionName, (TccAction<T>) action);
+        }
         String xid = beginXid(transactionName);
         log.debug("TCC transaction started: name={}, xid={}, type={}", transactionName, xid, type);
         try {
@@ -114,6 +124,7 @@ public class TccTransactionManager extends AbstractTransactionManager
         String xid = beginXid(transactionName);
         String branchId = generateBranchId();
         TccContext context = new TccContext(xid, branchId);
+        registeredActions.put(xid, tccAction);
 
         TccTransactionLog txLog = new TccTransactionLog(xid, branchId, transactionName);
         if (logStore != null) {
@@ -178,7 +189,7 @@ public class TccTransactionManager extends AbstractTransactionManager
             Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
             if (existing.isPresent()) {
                 TccBranchStatus currentStatus = existing.get().getStatus();
-                if (currentStatus.isFinal()) {
+                if (currentStatus.isFinal()) {  // idempotent check
                     log.info("TCC Cancel skipped (idempotent): already final: xid={}, branch={}, status={}",
                             xid, branchId, currentStatus);
                     return;
@@ -295,8 +306,19 @@ public class TccTransactionManager extends AbstractTransactionManager
     @Override
     public void recoverCancel(TccTransactionLog txLog) throws Exception {
         log.info("TCC recovery Cancel: xid={}, branch={}", txLog.getXid(), txLog.getBranchId());
+        TccAction<?> action = registeredActions.get(txLog.getXid());
+        if (action != null) {
+            try {
+                action.cancelAction(new TccContext(txLog.getXid(), txLog.getBranchId()));
+                log.info("TCC recovery Cancel completed: xid={}", txLog.getXid());
+            } catch (Exception e) {
+                log.error("TCC recovery Cancel failed: xid={}", txLog.getXid(), e);
+            }
+        } else {
+            log.warn("TCC recovery Cancel skipped: no TccAction registered for xid={}", txLog.getXid());
+        }
         if (logStore != null) {
-            logStore.updateStatus(txLog.getXid(), txLog.getBranchId(), TccBranchStatus.CANCELLING);
+            logStore.updateStatus(txLog.getXid(), txLog.getBranchId(), TccBranchStatus.CANCELLED);
         }
     }
 

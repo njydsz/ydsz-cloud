@@ -30,7 +30,7 @@ class TccTransactionManagerTest {
         properties = new SeataProperties();
         properties.setTccRetryCount(2);
         properties.setTccRetryIntervalMs(10);
-        manager = new TccTransactionManager(logStore, properties);
+        manager = new TccTransactionManager(logStore, properties, null, null);
     }
 
     @Test

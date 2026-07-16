@@ -37,6 +37,7 @@ public class OnlineUserService {
      * @param sessionId WebSocket session ID
      */
     public void markOnline(String userId, String sessionId) {
+        if (redisTemplate == null) return;
         if (userId == null || sessionId == null) {
             return;
         }
@@ -53,6 +54,7 @@ public class OnlineUserService {
      * @param sessionId WebSocket session ID
      */
     public void markOffline(String userId, String sessionId) {
+        if (redisTemplate == null) return;
         if (userId == null || sessionId == null) {
             return;
         }
@@ -71,6 +73,7 @@ public class OnlineUserService {
      * @return true 表示在线
      */
     public boolean isOnline(String userId) {
+        if (redisTemplate == null) return false;
         if (userId == null) {
             return false;
         }
@@ -86,6 +89,7 @@ public class OnlineUserService {
      * @return session 数量
      */
     public long getSessionCount(String userId) {
+        if (redisTemplate == null) return 0L;
         if (userId == null) {
             return 0L;
         }
@@ -101,6 +105,7 @@ public class OnlineUserService {
      * @param sessionId WebSocket session ID
      */
     public void renewSession(String userId, String sessionId) {
+        if (redisTemplate == null) return;
         if (userId == null || sessionId == null) {
             return;
         }

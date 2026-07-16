@@ -286,11 +286,12 @@ public class WebSocketAutoConfiguration {
             SimpMessagingTemplate messagingTemplate,
             @Autowired(required = false) WebSocketHeartbeatHandler heartbeatHandler,
             @Autowired(required = false) WebSocketAuditService auditService,
-            @Autowired(required = false) List<WebSocketConnectionListener> connectionListeners) {
+            @Autowired(required = false) List<WebSocketConnectionListener> connectionListeners,
+            @Autowired(required = false) SlowConnectionDetector slowConnectionDetector) {
         log.info("[WebSocket] 注册 WebSocketSessionEventListener");
         return new WebSocketSessionEventListener(
                 onlineUserService, offlineMessageStore, messagingTemplate,
-                heartbeatHandler, auditService, connectionListeners);
+                heartbeatHandler, auditService, slowConnectionDetector, connectionListeners);
     }
 
     // ==================== 指标收集器 ====================
@@ -367,6 +368,30 @@ public class WebSocketAutoConfiguration {
                 messageFilters);
     }
 
+    @Bean
+    public RetryFlushTask retryFlushTask(
+            RealtimePushTemplate pushTemplate,
+            @Autowired(required = false) MessageAckService ackService) {
+        return new RetryFlushTask(pushTemplate, ackService);
+}
+
+    public static class RetryFlushTask {
+        private final RealtimePushTemplate pushTemplate;
+        private final MessageAckService ackService;
+
+        public RetryFlushTask(RealtimePushTemplate pushTemplate, MessageAckService ackService) {
+            this.pushTemplate = pushTemplate;
+            this.ackService = ackService;
+}
+
+        @org.springframework.scheduling.annotation.Scheduled(fixedDelay = 10000)
+        public void flush() {
+            pushTemplate.flushRetryMessages();
+            if (ackService != null) {
+                ackService.cleanupExpiredLocalAcks();
+}
+}
+}
     /**
      * No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。
      */

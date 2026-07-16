@@ -27,7 +27,6 @@ public interface MessageSerializer {
      * @param <T>   目标类型
      * @return 反序列化后的对象
      */
-    <T> T deserialize(String json, Class<T> clazz);
 
     /**
      * 获取序列化器名称。
