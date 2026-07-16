@@ -9,6 +9,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import com.njydsz.common.json.Json;
+import com.njydsz.common.json.object.JsonArray;
+import com.njydsz.common.json.object.JsonObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,25 +235,25 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private ChatResponse parseResponse(String json) {
-        Map<String, Object> obj = Json.parseMap(json);
+        JsonObject obj = Json.parseObjectToJsonObject(json);
         String id = obj.getString("id");
         String model = obj.getString("model");
-        List<Object> choices = obj.getJSONArray("choices");
+        JsonArray choices = obj.getJSONArray("choices");
         if (choices == null || choices.isEmpty()) {
             throw new LlmException("LLM 响应无 choices", LlmException.ErrorType.INVALID_RESPONSE);
         }
-        Map<String, Object> choice = choices.getJSONObject(0);
-        Map<String, Object> message = choice.getJSONObject("message");
+        JsonObject choice = choices.getJSONObject(0);
+        JsonObject message = choice.getJSONObject("message");
         String finishReason = choice.getString("finish_reason");
         String content = message != null ? message.getString("content") : null;
 
         List<ToolCall> toolCalls = new ArrayList<>();
         if (message != null && message.containsKey("tool_calls")) {
-            List<Object> calls = message.getJSONArray("tool_calls");
+            JsonArray calls = message.getJSONArray("tool_calls");
             for (int i = 0; i < calls.size(); i++) {
-                Map<String, Object> call = calls.getJSONObject(i);
+                JsonObject call = calls.getJSONObject(i);
                 String callId = call.getString("id");
-                Map<String, Object> function = call.getJSONObject("function");
+                JsonObject function = call.getJSONObject("function");
                 String name = function.getString("name");
                 String argsStr = function.getString("arguments");
                 Map<String, Object> args = Json.toObject(argsStr, Map.class);
@@ -261,10 +263,10 @@ public class OpenAiCompatibleClient implements LlmClient {
 
         TokenUsage usage = TokenUsage.zero();
         if (obj.containsKey("usage")) {
-            Map<String, Object> usageObj = obj.getJSONObject("usage");
+            JsonObject usageObj = obj.getJSONObject("usage");
             usage = new TokenUsage(
-                    usageObj.getIntValue("prompt_tokens", 0),
-                    usageObj.getIntValue("completion_tokens", 0));
+                    usageObj.getIntValue("prompt_tokens"),
+                    usageObj.getIntValue("completion_tokens"));
         }
 
         ChatMessage chatMessage = toolCalls.isEmpty()
@@ -276,24 +278,24 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     private ChatChunk parseChunk(String data) {
         try {
-            Map<String, Object> obj = Json.parseMap(data);
+            JsonObject obj = Json.parseObjectToJsonObject(data);
             String id = obj.getString("id");
             String model = obj.getString("model");
-            List<Object> choices = obj.getJSONArray("choices");
+            JsonArray choices = obj.getJSONArray("choices");
             if (choices == null || choices.isEmpty()) {
                 return null;
             }
-            Map<String, Object> choice = choices.getJSONObject(0);
-            Map<String, Object> delta = choice.getJSONObject("delta");
+            JsonObject choice = choices.getJSONObject(0);
+            JsonObject delta = choice.getJSONObject("delta");
             String finishReason = choice.getString("finish_reason");
             String content = delta != null ? delta.getString("content") : null;
 
             TokenUsage usage = null;
             if (obj.containsKey("usage") && obj.get("usage") != null) {
-                Map<String, Object> usageObj = obj.getJSONObject("usage");
+                JsonObject usageObj = obj.getJSONObject("usage");
                 usage = new TokenUsage(
-                        usageObj.getIntValue("prompt_tokens", 0),
-                        usageObj.getIntValue("completion_tokens", 0));
+                        usageObj.getIntValue("prompt_tokens"),
+                        usageObj.getIntValue("completion_tokens"));
             }
 
             if (finishReason != null) {

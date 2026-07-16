@@ -21,6 +21,7 @@ import org.apache.pdfbox.util.Matrix;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
@@ -39,6 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @ConditionalOnClass(name = "org.apache.pdfbox.Loader")
 public class TextWatermarkProvider implements WatermarkProvider {
+
+    private final DocsProperties properties;
+
+    public TextWatermarkProvider(DocsProperties properties) {
+        this.properties = properties;
+    }
 
     /** 水印字体大小 */
     private static final float FONT_SIZE = 60f;
@@ -124,7 +131,19 @@ public class TextWatermarkProvider implements WatermarkProvider {
      * 尝试加载嵌入中文字体，失败时回退到 Helvetica（仅支持 ASCII）
      */
     private PDFont loadFont(PDDocument document) {
-        // 尝试从系统字体目录加载中文字体
+        // 优先使用配置的自定义字体
+        String configuredPath = properties.getWatermarkFontPath();
+        if (configuredPath != null && !configuredPath.isBlank()) {
+            try {
+                var file = new File(configuredPath);
+                if (file.exists()) {
+                    return PDType0Font.load(document, file);
+                }
+            } catch (Exception e) {
+                log.warn("[TextWatermarkProvider] 配置字体加载失败: {}", configuredPath);
+            }
+        }
+        // 回退到系统字体目录加载中文字体
         String[] fontPaths = {
             System.getProperty("java.home") + "/lib/fonts/fontconfig",
             "C:/Windows/Fonts/simhei.ttf",

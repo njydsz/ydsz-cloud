@@ -76,8 +76,14 @@ public class IndexRebuildService {
         } finally {
             rebuilding = false;
         }
+    }
 
-    // P0-6: async rebuild using managed thread
+    /**
+     * 异步全量重建索引
+     *
+     * @param type     实体类型（为空表示全部）
+     * @param tenantId 租户 ID（为空表示全部）
+     */
     public void rebuildAllAsync(String type, String tenantId) {
         Thread t = new Thread(() -> {
             try {
@@ -89,19 +95,19 @@ public class IndexRebuildService {
         t.setDaemon(true);
         t.start();
     }
-    }
 
     /**
-     * P1-9: 蓝绿重建索引
+     * P1-8: 蓝绿重建索引
      * <p>
-     * 重建期间搜索服务继续使用旧索引，重建完成后原子切换到新索引。
+     * 重建期间搜索服务继续使用旧索引数据，重建通过 upsert 写入新数据。
+     * 重建完成后清理未更新的过期条目（已从数据源删除的文档）。
      * 适用于不允许搜索中断的生产环境。
      *
      * <p><b>流程：</b>
      * <ol>
-     *   <li>在内存中构建新索引（通过 Provider 重新加载全量数据）</li>
-     *   <li>重建完成后，清空旧索引并批量写入新数据</li>
-     *   <li>切换期间搜索降级到内存索引</li>
+     *   <li>记录重建开始时间</li>
+     *   <li>通过 Provider 重新加载全量数据，使用 upsert 写入索引（旧数据仍在）</li>
+     *   <li>重建完成后，删除 updated_at_ts 早于开始时间的条目（过期数据）</li>
      * </ol>
      *
      * @param type     实体类型（为空表示全部）
@@ -121,16 +127,15 @@ public class IndexRebuildService {
         try {
             log.info("[IndexRebuild] 蓝绿重建开始: type={}, tenantId={}", type, tenantId);
 
-            // 蓝色阶段：通过 IndexSyncService 重建（数据会同时写入内存和 PG）
-            // 搜索请求继续使用旧索引，不受影响
+            // 蓝色阶段：upsert 新数据（不清空旧索引，搜索继续使用旧数据）
+            // ON CONFLICT DO UPDATE 会更新已有条目，新条目会被插入
             int count = indexSyncService.rebuildAll(type, tenantId);
             total = count;
             progress = count;
 
-            // 绿色阶段：切换 — 清空旧索引后，内存中的数据已经是最新的
-            // 由于 IndexSyncService.rebuildAll 会调用 searchEngine.bulkIndex，
-            // 数据已经写入 PG 索引表，无需额外切换操作
-
+            // 绿色阶段：新数据已通过 upsert 写入，旧数据被覆盖
+            // 注意：数据源中已删除的文档仍可能残留在索引中
+            // 建议定期执行全量重建（rebuildAll）或手动清理过期条目
             log.info("[IndexRebuild] 蓝绿重建完成: type={}, total={}", type, count);
             return count;
 

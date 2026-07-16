@@ -138,10 +138,14 @@ public class TextChunker implements DocumentPreprocessor {
                     current = new StringBuilder(overlapText);
                 }
                 if (sentence.length() > maxChunkSize) {
-                    // 超长单句直接按最大块大小截断
-                    for (int i = 0; i < sentence.length(); i += maxChunkSize - overlap) {
+                    // 超长单句直接按最大块大小截断，步长和截取长度一致保证 overlap
+                    int step = Math.max(1, maxChunkSize - overlap);
+                    for (int i = 0; i < sentence.length(); i += step) {
                         int end = Math.min(i + maxChunkSize, sentence.length());
                         chunks.add(sentence.substring(i, end));
+                        if (end >= sentence.length()) {
+                            break;
+                        }
                     }
                     current = new StringBuilder();
                     continue;

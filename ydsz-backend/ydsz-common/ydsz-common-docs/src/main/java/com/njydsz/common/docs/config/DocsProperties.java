@@ -58,4 +58,7 @@ public class DocsProperties {
     private int securityMaxScanPages = 50;
 
     private boolean blockOnHighRisk = false;
+
+    /** 水印自定义字体路径（配置后优先使用） */
+    private String watermarkFontPath;
 }

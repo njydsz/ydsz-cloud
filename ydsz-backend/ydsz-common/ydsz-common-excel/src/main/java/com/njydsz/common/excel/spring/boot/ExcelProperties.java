@@ -1,6 +1,9 @@
 package com.njydsz.common.excel.spring.boot;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Excel 模块配置属性
@@ -28,13 +31,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Validated
 @ConfigurationProperties(prefix = "ydsz.excel")
 public class ExcelProperties {
 
     /** 读取缓冲区大小（字节） */
+    @Min(1024)
     private Integer readBufferSize;
 
     /** 写入缓冲区大小（字节） */
+    @Min(1024)
     private Integer writeBufferSize;
 
     /** 默认日期格式 */
@@ -53,15 +59,23 @@ public class ExcelProperties {
     private Boolean useFastWriter;
 
     /** 流式解析文件大小阈值（MB） */
+    @Min(1)
+    @Max(500)
     private Integer streamingParseThresholdMB;
 
     /** 最大读取文件大小（MB） */
+    @Min(1)
+    @Max(1024)
     private Integer maxReadFileSizeMB;
 
     /** 最大写入文件大小（MB） */
+    @Min(1)
+    @Max(512)
     private Integer maxWriteFileSizeMB;
 
     /** ZIP 压缩级别（-1~9） */
+    @Min(-1)
+    @Max(9)
     private Integer compressionLevel;
 
     /** 是否启用公式注入防护 */

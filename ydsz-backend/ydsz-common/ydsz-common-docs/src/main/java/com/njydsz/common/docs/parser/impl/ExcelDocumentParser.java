@@ -2,13 +2,10 @@ package com.njydsz.common.docs.parser.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -25,6 +22,7 @@ import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
+import com.njydsz.common.docs.convert.DocumentConverter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,7 +65,7 @@ public class ExcelDocumentParser implements DocumentParser {
 
                     for (int c = 0; c < lastCol; c++) {
                         Cell cell = row.getCell(c);
-                        cells.add(getCellValueAsString(cell));
+                        cells.add(DocumentConverter.getCellValueAsString(cell));
                     }
                     // 过滤空行
                     if (cells.stream().anyMatch(v -> v != null && !v.isBlank())) {
@@ -117,35 +115,8 @@ public class ExcelDocumentParser implements DocumentParser {
         return DocumentFormat.XLSX;
     }
 
-    /**
-     * 将单元格值转换为字符串
-     */
-    private String getCellValueAsString(Cell cell) {
-        if (cell == null) {
-            return "";
-        }
-        CellType cellType = cell.getCellType();
-        return switch (cellType) {
-            case STRING -> cell.getStringCellValue().trim();
-            case NUMERIC -> {
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    yield DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(cell.getLocalDateTimeCellValue());
-                }
-                double num = cell.getNumericCellValue();
-                if (num == Math.floor(num)) {
-                    yield String.valueOf((long) num);
-                }
-                yield String.valueOf(num);
-            }
-            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            case FORMULA -> {
-                try {
-                    yield cell.getStringCellValue();
-                } catch (Exception e) {
-                    yield String.valueOf(cell.getNumericCellValue());
-                }
-            }
-            default -> "";
-        };
+    @Override
+    public boolean supports(DocumentFormat format) {
+        return format == DocumentFormat.XLSX || format == DocumentFormat.XLS;
     }
 }

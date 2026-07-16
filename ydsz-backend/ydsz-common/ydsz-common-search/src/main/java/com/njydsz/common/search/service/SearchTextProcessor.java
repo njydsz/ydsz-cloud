@@ -56,8 +56,13 @@ public class SearchTextProcessor {
             loadSynonyms(properties.getSynonym().getFile());
         }
 
-        log.info("[SearchTextProcessor] 初始化完成: synonyms={}, stopWords={}",
-                synonymMap.size(), stopWords.size());
+        // P1-5: 加载拼音词典
+        if (properties.getPinyin().isEnabled() && properties.getPinyin().getFile() != null) {
+            loadPinyinDictionary(properties.getPinyin().getFile());
+        }
+
+        log.info("[SearchTextProcessor] 初始化完成: synonyms={}, stopWords={}, pinyin={}",
+                synonymMap.size(), stopWords.size(), pinyinMap.size());
     }
 
     /**
@@ -135,6 +140,40 @@ public class SearchTextProcessor {
         }
     }
 
+    /**
+     * P1-5: 加载拼音词典
+     * <p>
+     * 词典格式（每行一个映射）：汉字=拼音
+     * <pre>
+     * 项=xiang
+     * 目=mu
+     * 工=gong
+     * </pre>
+     */
+    private void loadPinyinDictionary(String filePath) {
+        try (InputStream is = resolveResource(filePath);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#")) continue;
+                int idx = line.indexOf('=');
+                if (idx > 0 && idx < line.length() - 1) {
+                    String hanzi = line.substring(0, idx).trim();
+                    String pinyin = line.substring(idx + 1).trim();
+                    if (!hanzi.isEmpty() && !pinyin.isEmpty()) {
+                        pinyinMap.put(hanzi, pinyin);
+                    }
+                }
+            }
+            log.info("[SearchTextProcessor] 拼音词典加载完成: {} 字", pinyinMap.size());
+        } catch (IOException e) {
+            log.warn("[SearchTextProcessor] 拼音词典加载失败: {}", e.getMessage());
+        } catch (NullPointerException e) {
+            log.warn("[SearchTextProcessor] 拼音词典文件不存在: {}", filePath);
+        }
+    }
+
     private InputStream resolveResource(String filePath) throws IOException {
         if (filePath.startsWith("classpath:")) {
             String path = filePath.substring("classpath:".length());
@@ -171,19 +210,22 @@ public class SearchTextProcessor {
     }
 
     /**
-     * 简单拼音转换
+     * P1-5: 拼音转换 — 基于词典文件加载汉字到拼音的映射
      * <p>
-     * 当前为简化实现，仅处理常见汉字到拼音的映射。
-     * 生产环境建议集成 pinyin4j 或 TinyPinyin 库。
+     * 词典格式（每行一个映射）：汉字=拼音
+     * 如果词典未加载，返回原始文本（拼音功能降级）。
      */
+    private final Map<String, String> pinyinMap = new HashMap<>();
+
     private String toPinyin(String text) {
-        if (text == null) return null;
+        if (text == null || pinyinMap.isEmpty()) {
+            return text;
+        }
         StringBuilder sb = new StringBuilder();
         for (char c : text.toCharArray()) {
-            if (c >= '一' && c <= '鿿') {
-                // 简化处理：仅返回原始文本
-                // TODO: 集成 pinyin4j 进行完整拼音转换
-                sb.append(c);
+            if (c >= '\u4e00' && c <= '\u9fff') {
+                String pinyin = pinyinMap.get(String.valueOf(c));
+                sb.append(pinyin != null ? pinyin : c);
             } else {
                 sb.append(c);
             }

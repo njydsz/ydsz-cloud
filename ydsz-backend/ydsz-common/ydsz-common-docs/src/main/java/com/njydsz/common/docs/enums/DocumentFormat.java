@@ -28,6 +28,12 @@ public enum DocumentFormat {
     PPTX("pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
     /** PowerPoint 文档（.ppt，旧格式） */
     PPT("ppt", "application/vnd.ms-powerpoint"),
+    /** Word 文档（.docm，含宏） */
+    DOCM("docm", "application/vnd.ms-word.document.macroEnabled.12"),
+    /** Excel 文档（.xlsm，含宏） */
+    XLSM("xlsm", "application/vnd.ms-excel.sheet.macroEnabled.12"),
+    /** PowerPoint 文档（.pptm，含宏） */
+    PPTM("pptm", "application/vnd.ms-powerpoint.presentation.macroEnabled.12"),
     /** HTML 文档 */
     HTML("html", "text/html"),
     /** Markdown 文档 */
@@ -47,6 +53,9 @@ public enum DocumentFormat {
     private final String extension;
     /** MIME 类型 */
     private final String mimeType;
+
+    /** Tika 实例复用（加载开销较大） */
+    private static final Tika TIKA = new Tika();
 
     DocumentFormat(String extension, String mimeType) {
         this.extension = extension;
@@ -71,8 +80,7 @@ public enum DocumentFormat {
      */
     public static DocumentFormat fromContent(InputStream inputStream) {
         try {
-            var tika = new Tika();
-            String mimeType = tika.detect(inputStream);
+            String mimeType = TIKA.detect(inputStream);
             for (DocumentFormat format : values()) {
                 if (format.mimeType.equals(mimeType)) {
                     return format;

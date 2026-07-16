@@ -15,6 +15,8 @@ import com.njydsz.common.docs.enums.SecurityLevel;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
+
 /**
  * Office 宏检测器
  * <p>
@@ -40,8 +42,22 @@ public class MacroDetector implements DocumentSecurityScanner {
     /** VBA 宏在 ZIP 容器中的路径 */
     private static final String VBA_PROJECT_ENTRY = "vbaProject.bin";
 
+    /** 需要 ZIP 扫描的 Office 格式 */
+    private static final Set<DocumentFormat> OFFICE_FORMATS = Set.of(
+            DocumentFormat.DOCX, DocumentFormat.XLSX, DocumentFormat.PPTX,
+            DocumentFormat.DOCM, DocumentFormat.XLSM, DocumentFormat.PPTM,
+            DocumentFormat.XLS);
+
     @Override
     public SecurityScanResult scan(InputStream inputStream, String fileName, DocumentFormat format) {
+        // 非 Office 格式跳过 ZIP 扫描
+        if (format != null && !OFFICE_FORMATS.contains(format)) {
+            return SecurityScanResult.builder()
+                    .securityLevel(SecurityLevel.SAFE)
+                    .findings(List.of())
+                    .success(true)
+                    .build();
+        }
         List<SecurityScanResult.SecurityFinding> findings = new ArrayList<>();
 
         // 后缀检测

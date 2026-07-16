@@ -2,11 +2,13 @@ package com.njydsz.common.search.engine.pg;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +19,7 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
+import com.njydsz.common.json.Json;
 import com.njydsz.common.search.api.SearchAggregation;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchHit;
@@ -51,7 +54,7 @@ public class PgSearchEngine implements SearchEngine {
     /** P1-11: 内存索引最大容量 */
     private static final int MAX_MEMORY_INDEX_SIZE = 10000;
     /** P2-14: Allowed sort columns whitelist */
-    private static final java.util.Set<String> ALLOWED_COLUMNS = java.util.Set.of(
+    private static final Set<String> ALLOWED_COLUMNS = Set.of(
             "id", "doc_type", "title", "subtitle", "content", "snippet",
             "tags", "status", "path", "tenant_id", "created_by", "created_at",
             "updated_by", "updated_at", "searchable_text", "metadata",
@@ -107,23 +110,48 @@ public class PgSearchEngine implements SearchEngine {
                 return SearchResponse.empty(request.getPage(), request.getPageSize());
             }
 
-            List<Object> params = new ArrayList<>();
+            List<Object> whereParams = new ArrayList<>();
             StringBuilder where = new StringBuilder(" WHERE 1=1");
 
-            // P2-13: fuzzy + fulltext merged into single condition
+            // 全文检索 + 模糊匹配
             if (request.isFuzzy()) {
                 where.append(" AND (to_tsvector(?, searchable_text) @@ plainto_tsquery(?, ?)");
                 where.append(" OR searchable_text % ?)");
-                params.add(searchConfig);
-                params.add(searchConfig);
-                params.add(keyword);
-                params.add(keyword);
+                whereParams.add(searchConfig);
+                whereParams.add(searchConfig);
+                whereParams.add(keyword);
+                whereParams.add(keyword);
             } else {
                 where.append(" AND to_tsvector(?, searchable_text) @@ plainto_tsquery(?, ?)");
-                params.add(searchConfig);
-                params.add(searchConfig);
-                params.add(keyword);
+                whereParams.add(searchConfig);
+                whereParams.add(searchConfig);
+                whereParams.add(keyword);
             }
+
+            // P0-7: 应用过滤条件（含权限过滤）
+            if (request.getFilters() != null) {
+                for (SearchFilter filter : request.getFilters()) {
+                    appendFilter(where, whereParams, filter);
+                }
+            }
+
+            // 租户隔离
+            if (request.getTenantId() != null && !request.getTenantId().isBlank()) {
+                where.append(" AND tenant_id = ?");
+                whereParams.add(request.getTenantId());
+            }
+
+            // 类型过滤
+            if (request.getTypes() != null && !request.getTypes().isEmpty()) {
+                where.append(" AND doc_type IN (")
+                        .append(request.getTypes().stream().map(t -> "?").collect(Collectors.joining(",")))
+                        .append(")");
+                whereParams.addAll(request.getTypes());
+            }
+
+            // P0-1: 执行 COUNT 查询获取总匹配数
+            String countSql = "SELECT COUNT(1) FROM " + INDEX_TABLE + where;
+            Long total = jdbcTemplate.queryForObject(countSql, Long.class, whereParams.toArray());
 
             if (total == null || total == 0) {
                 long took = System.currentTimeMillis() - start;
@@ -137,7 +165,7 @@ public class PgSearchEngine implements SearchEngine {
                         .build();
             }
 
-            // P0-1: Build queryParams in SQL placeholder order: SELECT -> WHERE -> LIMIT/OFFSET
+            // SELECT 查询参数：先 SELECT 部分，再 WHERE 部分
             List<Object> queryParams = new ArrayList<>();
 
             StringBuilder selectSql = new StringBuilder("SELECT id, doc_type, title, subtitle, snippet, status, ");
@@ -156,10 +184,10 @@ public class PgSearchEngine implements SearchEngine {
             queryParams.add(searchConfig);
             queryParams.add(keyword);
 
-            // P0-1: highlight uses || for StartSel/StopSel param binding
+            // highlight
             if (request.isHighlight()) {
                 selectSql.append(", ts_headline(?, searchable_text, plainto_tsquery(?, ?), ");
-                selectSql.append("'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=' || ? || "', StopSel=' || ?) AS highlight");
+                selectSql.append("'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=' || ? || ', StopSel=' || ?) AS highlight");
                 queryParams.add(searchConfig);
                 queryParams.add(searchConfig);
                 queryParams.add(keyword);
@@ -170,11 +198,15 @@ public class PgSearchEngine implements SearchEngine {
             selectSql.append(" FROM ").append(INDEX_TABLE).append(where);
 
             // WHERE params after SELECT params
-            queryParams.addAll(params);
+            queryParams.addAll(whereParams);
 
             if (request.getSortBy() != null && !request.getSortBy().isBlank()) {
                 String direction = request.isAscending() ? "ASC" : "DESC";
                 selectSql.append(" ORDER BY ").append(sanitizeColumnName(request.getSortBy())).append(" ").append(direction);
+            } else if (properties.getRank().getTimeDecayDays() > 0) {
+                // P1-11: 时间衰减排序 — rank * EXP(-age_days / half_life * ln2)
+                selectSql.append(" ORDER BY (rank * EXP(-EXTRACT(EPOCH FROM (NOW() - updated_at_ts)) / 86400.0 / ? * LN(2))) DESC, updated_at DESC");
+                queryParams.add(properties.getRank().getTimeDecayDays());
             } else {
                 selectSql.append(" ORDER BY rank DESC, updated_at DESC");
             }
@@ -190,7 +222,7 @@ public class PgSearchEngine implements SearchEngine {
             // 聚合
             List<SearchAggregation> aggregations = Collections.emptyList();
             if (request.getAggregations() != null && !request.getAggregations().isEmpty()) {
-                aggregations = executeAggregations(where, params, request.getAggregations());
+                aggregations = executeAggregations(where, whereParams, request.getAggregations());
             }
 
             return SearchResponse.builder()
@@ -248,8 +280,8 @@ public class PgSearchEngine implements SearchEngine {
                     """.formatted(INDEX_TABLE);
 
             String searchableText = document.getSearchableText();
-            String tagsJson = Json.toJson(document.getTags() != null ? document.getTags() : java.util.Collections.emptyList());
-            String metadataJson = Json.toJson(document.getMetadata() != null ? document.getMetadata() : java.util.Collections.emptyMap());
+            String tagsJson = Json.toJson(document.getTags() != null ? document.getTags() : Collections.emptyList());
+            String metadataJson = Json.toJson(document.getMetadata() != null ? document.getMetadata() : Collections.emptyMap());
 
             jdbcTemplate.update(sql,
                     document.getId(),
@@ -299,8 +331,8 @@ public class PgSearchEngine implements SearchEngine {
             List<IndexDocument> batch = documents.subList(i, end);
             try {
                 jdbcTemplate.batchUpdate(sql, batch, batch.size(), (ps, doc) -> {
-                    String tagsJson = Json.toJson(doc.getTags() != null ? doc.getTags() : java.util.Collections.emptyList());
-                    String metadataJson = Json.toJson(doc.getMetadata() != null ? doc.getMetadata() : java.util.Collections.emptyMap());
+                    String tagsJson = Json.toJson(doc.getTags() != null ? doc.getTags() : Collections.emptyList());
+                    String metadataJson = Json.toJson(doc.getMetadata() != null ? doc.getMetadata() : Collections.emptyMap());
                     ps.setString(1, doc.getId());
                     ps.setString(2, doc.getType());
                     ps.setString(3, doc.getTitle());
@@ -312,9 +344,9 @@ public class PgSearchEngine implements SearchEngine {
                     ps.setString(9, doc.getPath());
                     ps.setString(10, doc.getTenantId());
                     ps.setString(11, doc.getCreatedBy());
-                    ps.setTimestamp(12, doc.getCreatedAt() != null ? java.sql.Timestamp.from(doc.getCreatedAt()) : null);
+                    ps.setTimestamp(12, doc.getCreatedAt() != null ? Timestamp.from(doc.getCreatedAt()) : null);
                     ps.setString(13, doc.getUpdatedBy());
-                    ps.setTimestamp(14, doc.getUpdatedAt() != null ? java.sql.Timestamp.from(doc.getUpdatedAt()) : null);
+                    ps.setTimestamp(14, doc.getUpdatedAt() != null ? Timestamp.from(doc.getUpdatedAt()) : null);
                     ps.setString(15, searchConfig);
                     ps.setString(16, doc.getSearchableText());
                     ps.setString(17, metadataJson);
@@ -326,6 +358,7 @@ public class PgSearchEngine implements SearchEngine {
                 }
             }
         }
+    }
 
     @Override
     public void deleteIndex(String type, String documentId) {
@@ -370,9 +403,9 @@ public class PgSearchEngine implements SearchEngine {
 
         try {
             String sql = "SELECT DISTINCT title FROM " + INDEX_TABLE +
-                    " WHERE title ILIKE ? ESCAPE \"\"" ORDER BY title LIMIT ?";
+                    " WHERE title ILIKE ? ESCAPE '\\' ORDER BY title LIMIT ?";
             List<String> suggestions = jdbcTemplate.queryForList(sql, String.class,
-                    prefix.replace("\\", "\\\\").replace("%", "\%").replace("_", "\_") + "%", limit);
+                    prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%", limit);
             return SearchSuggestion.builder()
                     .type(SearchSuggestion.SuggestionType.AUTOCOMPLETE)
                     .suggestions(suggestions)
@@ -804,8 +837,7 @@ public class PgSearchEngine implements SearchEngine {
             try {
                 String tagsJson = rs.getString("tags");
                 if (tagsJson != null && !tagsJson.isBlank() && !tagsJson.equals("[]")) {
-                    // P0-7: use Json engine to parse tags array
-                    java.util.List<String> tags = Json.parseArray(tagsJson, String.class);
+                    List<String> tags = Json.parseArray(tagsJson, String.class);
                     if (tags != null && !tags.isEmpty()) {
                         hit.setTags(tags);
                     }

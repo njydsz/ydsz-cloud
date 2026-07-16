@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +17,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.json.Json;
 import com.njydsz.common.file.config.FileUploadProperties;
 import com.njydsz.common.file.constant.FileConstant;
 import com.njydsz.common.file.domain.ChunkedUploadResult;
@@ -475,11 +477,12 @@ public class MinioStorage extends AbstractFileStorage {
 
             long expirationTime = System.currentTimeMillis() / 1000 + expirySeconds;
 
-            String safePrefix = escapeJsonString(resolvedPrefix);
-            String safeBucket = escapeJsonString(resolvedBucket);
-            String policyJson = String.format(
-                    "{\"expiration\":%d,\"conditions\":[[\"starts-with\",\"$key\",\"%s\"],[\"eq\",\"$bucket\",\"%s\"]]}",
-                    expirationTime, safePrefix, safeBucket);
+            Map<String, Object> policyMap = Map.of(
+                    "expiration", expirationTime,
+                    "conditions", List.of(
+                            List.of("starts-with", "$key", resolvedPrefix),
+                            List.of("eq", "$bucket", resolvedBucket)));
+            String policyJson = Json.toJson(policyMap);
 
             String policyBase64 = Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
 

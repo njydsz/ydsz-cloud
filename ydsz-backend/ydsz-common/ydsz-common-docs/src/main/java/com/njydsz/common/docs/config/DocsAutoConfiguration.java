@@ -1,9 +1,17 @@
 package com.njydsz.common.docs.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Bean;
+
+import com.njydsz.common.docs.health.DocsHealthIndicator;
+import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
+import com.njydsz.common.docs.security.pii.PiiDetectorComposite;
+import com.njydsz.common.docs.service.AsyncDocumentParser;
+import com.njydsz.common.docs.service.DocumentService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @EnableConfigurationProperties(DocsProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.docs", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ComponentScan(basePackages = "com.njydsz.common.docs")
 public class DocsAutoConfiguration {
 
     public DocsAutoConfiguration(DocsProperties properties) {
@@ -33,5 +40,16 @@ public class DocsAutoConfiguration {
                 properties.isPreprocessEnabled(),
                 properties.isWatermarkEnabled(),
                 properties.isRedactEnabled());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    public DocsHealthIndicator docsHealthIndicator(
+            DocumentParserRegistry parserRegistry,
+            PiiDetectorComposite piiDetector,
+            DocsProperties properties,
+            AsyncDocumentParser asyncDocumentParser) {
+        return new DocsHealthIndicator(parserRegistry, piiDetector, properties, asyncDocumentParser);
     }
 }

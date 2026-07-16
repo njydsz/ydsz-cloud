@@ -122,9 +122,10 @@ public class SearchAutoConfiguration {
                                                       SearchProviderRegistry providerRegistry,
                                                       SearchProperties properties,
                                                       SearchMetrics searchMetrics,
-                                                      SearchAnalyticsService searchAnalyticsService) {
+                                                      SearchAnalyticsService searchAnalyticsService,
+                                                      SearchTextProcessor searchTextProcessor) {
         unifiedSearchServiceInstance = new UnifiedSearchService(searchEngine, providerRegistry, properties,
-                searchMetrics, searchAnalyticsService);
+                searchMetrics, searchAnalyticsService, searchTextProcessor);
         return unifiedSearchServiceInstance;
     }
 

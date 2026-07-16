@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.api.SearchFilter;
@@ -45,9 +46,14 @@ public class UnifiedSearchService {
     private final SearchAnalyticsService analyticsService;
     private final SearchTextProcessor textProcessor;
     private final ExecutorService searchExecutor;
-    private final AtomicBoolean circuitOpen = new AtomicBoolean(false);
+    // P1-3: 使用 AtomicReference<CircuitState> 替代 AtomicBoolean，CAS 确保线程安全
+    private enum CircuitState { CLOSED, OPEN, HALF_OPEN }
+    private final AtomicReference<CircuitState> circuitState = new AtomicReference<>(CircuitState.CLOSED);
     private volatile long circuitOpenTime = 0;
     private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
+    private final AtomicInteger halfOpenProbeCount = new AtomicInteger(0);
+    // P1-10: 并发搜索限流 — Semaphore 限制最大并发搜索数
+    private final Semaphore searchConcurrencyLimit;
     public UnifiedSearchService(SearchEngine searchEngine,
                                  SearchProviderRegistry providerRegistry,
                                  SearchProperties properties,
@@ -63,6 +69,8 @@ public class UnifiedSearchService {
         this.cacheService = new SearchCacheService(properties);
         this.searchExecutor = Executors.newFixedThreadPool(
                 Math.max(2, properties.getIndex().getThreadPoolSize()));
+        // P1-10: 限制最大并发搜索数，防止过载
+        this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
     }
 
     /**
@@ -77,7 +85,19 @@ public class UnifiedSearchService {
     public SearchResponse search(SearchRequest request) {
         long start = System.currentTimeMillis();
 
-        applyDefaults(request);
+        // P1-10: 并发搜索限流
+        try {
+            if (!searchConcurrencyLimit.tryAcquire(properties.getSearchTimeout(), TimeUnit.SECONDS)) {
+                log.warn("[UnifiedSearch] 搜索并发数超限，拒绝请求: keyword={}", request.getKeyword());
+                return SearchResponse.empty(request.getPage(), request.getPageSize());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return SearchResponse.empty(request.getPage(), request.getPageSize());
+        }
+
+        try {
+            applyDefaults(request);
         validateRequest(request);
 
         if (request.getKeyword() == null || request.getKeyword().isBlank()) {
@@ -124,6 +144,9 @@ public class UnifiedSearchService {
             metrics.recordSearch(took, response.getTotal());
             analyticsService.recordSearch(request.getKeyword(), response.getTotal());
 
+            // P1-3: 搜索成功时关闭半开熔断器
+            closeCircuitIfHalfOpen();
+
             // 缓存结果
             cacheService.put(request, response);
 
@@ -140,6 +163,10 @@ public class UnifiedSearchService {
         }
 
         return response;
+        } finally {
+            // P1-10: 释放并发搜索许可
+            searchConcurrencyLimit.release();
+        }
     }
 
     /**
@@ -265,13 +292,15 @@ public class UnifiedSearchService {
     }
 
     private SearchResponse searchMultiType(SearchRequest request, List<SearchProvider<?>> providers, long start) {
-        int perTypeLimit = Math.max(request.getPageSize(), 10);
+        // P1-2: 每个类型获取 offset + pageSize 条结果，确保翻页正确
+        int perTypeLimit = request.getOffset() + request.getPageSize();
 
         List<CompletableFuture<SearchResponse>> futures = providers.stream()
                 .map(provider -> CompletableFuture.supplyAsync(() -> {
                     try {
                         SearchRequest typeRequest = copyRequest(request);
                         typeRequest.setTypes(List.of(provider.getType()));
+                        typeRequest.setPage(1);
                         typeRequest.setPageSize(perTypeLimit);
                         return searchEngine.search(typeRequest);
                     } catch (Exception e) {
@@ -316,26 +345,52 @@ public class UnifiedSearchService {
                 .build();
     }
 
+    /**
+     * P1-3: 熔断器状态检查 — CAS 确保半开状态仅限定数量的探测请求通过
+     */
     private boolean isCircuitOpen() {
-        if (!circuitOpen.get()) {
+        CircuitState state = circuitState.get();
+        if (state == CircuitState.CLOSED) {
             return false;
         }
-        // 检查是否过了熔断等待时间
-        long waitMs = properties.getCircuitBreaker().getWaitDuration() * 1000L;
-        if (System.currentTimeMillis() - circuitOpenTime > waitMs) {
-            // 半开状态：尝试恢复
-            log.info("[UnifiedSearch] 熔断器半开，尝试恢复");
-            circuitOpen.set(false);
-            return false;
+        if (state == CircuitState.OPEN) {
+            // 检查是否过了熔断等待时间
+            long waitMs = properties.getCircuitBreaker().getWaitDuration() * 1000L;
+            if (System.currentTimeMillis() - circuitOpenTime > waitMs) {
+                // CAS: OPEN → HALF_OPEN，确保仅一个线程成功转换
+                if (circuitState.compareAndSet(CircuitState.OPEN, CircuitState.HALF_OPEN)) {
+                    halfOpenProbeCount.set(0);
+                    log.info("[UnifiedSearch] 熔断器半开，尝试恢复");
+                    return false;
+                }
+                // CAS 失败说明其他线程已转换，检查是否仍在 OPEN 状态
+                return circuitState.get() == CircuitState.OPEN;
+            }
+            return true;
         }
-        return true;
+        // HALF_OPEN 状态：限制探测请求数
+        if (halfOpenProbeCount.incrementAndGet() > properties.getCircuitBreaker().getHalfOpenRequests()) {
+            return true;
+        }
+        return false;
     }
 
     private void openCircuit() {
-        circuitOpen.set(true);
+        circuitState.set(CircuitState.OPEN);
         circuitOpenTime = System.currentTimeMillis();
         log.warn("[UnifiedSearch] 熔断器开启: failures={}, wait={}s",
                 consecutiveFailures.get(), properties.getCircuitBreaker().getWaitDuration());
+    }
+
+    /**
+     * P1-3: 搜索成功时关闭熔断器
+     */
+    private void closeCircuitIfHalfOpen() {
+        if (circuitState.get() == CircuitState.HALF_OPEN) {
+            circuitState.set(CircuitState.CLOSED);
+            halfOpenProbeCount.set(0);
+            log.info("[UnifiedSearch] 熔断器恢复，已关闭");
+        }
     }
 
     private SearchRequest copyRequest(SearchRequest original) {

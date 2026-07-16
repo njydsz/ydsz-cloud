@@ -31,6 +31,13 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>文档分类：基于关键词匹配的简单分类</li>
  * </ul>
  *
+ * <p><b>已知限制：</b>
+ * <ul>
+ *   <li>中文分词使用简单 bigram（两两组合），准确率有限，仅适用于快速预览场景</li>
+ *   <li>摘要算法基于句子位置，无 TF-IDF 或 TextRank 评分，不保证摘要质量</li>
+ *   <li>如需高质量摘要/关键词，推荐接入 LLM 服务（如 ydsz-agent 模块）</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -147,13 +154,19 @@ public class DocumentSummarizer {
             }
         }
 
-        // 中文分词：简单双字组合
+        // 中文分词：简单双字组合，过滤以停用词开头或结尾的无意义 bigram
         for (int i = 0; i < text.length() - 1; i++) {
             char c1 = text.charAt(i);
             char c2 = text.charAt(i + 1);
             if (isChinese(c1) && isChinese(c2)) {
                 String bigram = "" + c1 + c2;
-                wordFreq.merge(bigram, 1, Integer::sum);
+                // 过滤以单字停用词开头或结尾的 bigram（如 "的项"、"项目"→保留、"目了"）
+                String lowerBigram = bigram.toLowerCase();
+                String firstChar = String.valueOf(c1).toLowerCase();
+                String secondChar = String.valueOf(c2).toLowerCase();
+                if (!STOP_WORDS.contains(firstChar) && !STOP_WORDS.contains(secondChar)) {
+                    wordFreq.merge(bigram, 1, Integer::sum);
+                }
             }
         }
     }

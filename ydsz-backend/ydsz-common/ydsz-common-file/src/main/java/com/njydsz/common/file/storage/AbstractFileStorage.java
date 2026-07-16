@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -140,11 +143,6 @@ public abstract class AbstractFileStorage implements IFileStorage {
     protected volatile CheckpointService checkpointService;
 
     /**
-     * 分片上传模板（组合方式，避免继承导致类膨胀）
-     */
-    protected AbstractChunkedUploadTemplate chunkedUploadTemplate;
-
-    /**
      * 并发上传保护器（可选）
      */
     protected UploadConcurrencyGuard concurrencyGuard;
@@ -188,8 +186,6 @@ public abstract class AbstractFileStorage implements IFileStorage {
                 },
                 CHECKPOINT_TTL_SECONDS);
         listerHolder[0] = this::listParts;
-        // 初始化分片上传模板（基于当前实例的 checkpoint 保存/加载能力）
-        this.chunkedUploadTemplate = createChunkedUploadTemplate();
     }
 
     /**
@@ -221,68 +217,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     public void setCheckpointService(CheckpointService service) {
         if (service != null) {
             this.checkpointService = service;
-            // 重建模板以使用新的服务
-            this.chunkedUploadTemplate = createChunkedUploadTemplate();
         }
-    }
-
-    /**
-     * 设置分片上传模板
-     * <p>子类可注入自定义的模板实现
-     */
-    public void setChunkedUploadTemplate(AbstractChunkedUploadTemplate template) {
-        this.chunkedUploadTemplate = template;
-    }
-
-    /**
-     * 创建默认的分片上传模板实现
-     * <p>基于 checkpointStore 保存/加载检查点数据
-     */
-    protected final AbstractChunkedUploadTemplate createChunkedUploadTemplate() {
-        final AbstractFileStorage self = this;
-        return new AbstractChunkedUploadTemplate(CHECKPOINT_TTL_SECONDS * 1000L) {
-            @Override
-            protected void saveCheckpoint(String bucketName, String objectName, String uploadId,
-                                          long partSize, long totalSize, int totalParts,
-                                          int completedParts, long expiresAt) {
-                // 委托给 AbstractFileStorage 的检查点保存逻辑
-                UploadCheckpoint checkpoint = new UploadCheckpoint();
-                checkpoint.setUploadId(uploadId);
-                checkpoint.setBucketName(bucketName);
-                checkpoint.setObjectName(objectName);
-                checkpoint.setPartSize(partSize);
-                checkpoint.setTotalSize(totalSize);
-                checkpoint.setUploadedPartsCount(completedParts);
-                self.saveCheckpoint(checkpoint);
-            }
-
-            @Override
-            protected AbstractChunkedUploadTemplate.ChunkedUploadCheckpoint doLoadCheckpoint(
-                    String bucketName, String objectName, String uploadId) {
-                UploadCheckpoint loaded = self.loadCheckpoint(bucketName, objectName);
-                if (loaded == null) {
-                    return null;
-                }
-                long partSize = loaded.getPartSize() != null ? loaded.getPartSize() : 0;
-                long totalSize = loaded.getTotalSize() != null ? loaded.getTotalSize() : 0;
-                int totalParts = partSize > 0 && totalSize > 0 ? (int) Math.ceil((double) totalSize / partSize) : 0;
-                return new AbstractChunkedUploadTemplate.ChunkedUploadCheckpoint(
-                        uploadId,
-                        partSize,
-                        totalSize,
-                        totalParts,
-                        loaded.getUploadedPartsCount() != null ? loaded.getUploadedPartsCount() : 0,
-                        System.currentTimeMillis() + CHECKPOINT_TTL_SECONDS * 1000L);
-            }
-
-            @Override
-            protected void deleteCheckpoint(String bucketName, String objectName, String uploadId) {
-                UploadCheckpoint checkpoint = new UploadCheckpoint();
-                checkpoint.setBucketName(bucketName);
-                checkpoint.setObjectName(objectName);
-                self.deleteCheckpoint(checkpoint);
-            }
-        };
     }
 
     /**
@@ -450,8 +385,8 @@ public abstract class AbstractFileStorage implements IFileStorage {
         // P0-1: File dedup check
         String dedupHash = null;
         if (fileDedupService != null) {
-            try {
-                dedupHash = fileDedupService.calculateHash(file.getInputStream());
+            try (InputStream dedupStream = file.getInputStream()) {
+                dedupHash = fileDedupService.calculateHash(dedupStream);
                 String existingUrl = fileDedupService.checkExisting(file.getSize(), dedupHash);
                 if (existingUrl != null) {
                     if (fileMetrics != null) fileMetrics.recordDedupHit();
@@ -461,18 +396,18 @@ public abstract class AbstractFileStorage implements IFileStorage {
                     return dedupResult;
                 }
                 if (fileMetrics != null) fileMetrics.recordDedupMiss();
-            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Dedup check failed"); }
+            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Dedup check failed", e); }
         }
 
         // P0-2: Virus scan
         if (virusScanner != null) {
-            try {
-                VirusScanner.ScanResult scanResult = virusScanner.scan(file.getInputStream(), file.getOriginalFilename());
+            try (InputStream virusStream = file.getInputStream()) {
+                VirusScanner.ScanResult scanResult = virusScanner.scan(virusStream, file.getOriginalFilename());
                 if (scanResult == VirusScanner.ScanResult.INFECTED) {
                     if (fileMetrics != null) fileMetrics.recordVirusDetected();
                     throw new BusinessException(FileExceptionCode.FILE_VIRUS_DETECTED);
                 }
-            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Virus scan failed"); }
+            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Virus scan failed", e); }
         }
 
         // 获取并发上传锁
@@ -488,8 +423,14 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         long startTime = System.nanoTime();
         try (InputStream inputStream = file.getInputStream()) {
-            doPutObject(resolvedBucket, resolvedObjectName, inputStream,
-                    file.getSize(), file.getContentType());
+            if (retryHelper != null) {
+                retryHelper.executeRunnableWithRetry(() ->
+                        doPutObject(resolvedBucket, resolvedObjectName, inputStream,
+                                file.getSize(), file.getContentType()), "upload");
+            } else {
+                doPutObject(resolvedBucket, resolvedObjectName, inputStream,
+                        file.getSize(), file.getContentType());
+            }
 
             fileStorage.setUuidName(resolvedObjectName);
             fileStorage.setUrl(buildObjectUrl(resolvedBucket, resolvedObjectName));
@@ -500,7 +441,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             // P0-1: Register hash for dedup
             if (fileDedupService != null) {
                 if (dedupHash != null) {
-                    try { fileDedupService.registerHash(file.getSize(), dedupHash, fileStorage.getUrl()); } catch (Exception e) { log.warn("Dedup register failed"); }
+                    try { fileDedupService.registerHash(file.getSize(), dedupHash, fileStorage.getUrl()); } catch (Exception e) { log.warn("Dedup register failed", e); }
                 }
             }
             // P0-3: Record upload metrics
@@ -547,7 +488,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         if (objectNames == null || objectNames.isEmpty()) {
             return BatchDeleteResult.allSuccess(Collections.emptyList());
         }
-        List<String> successList = new ArrayList<>();
+        ConcurrentLinkedQueue<String> successList = new ConcurrentLinkedQueue<>();
         Map<String, String> failedMap = new ConcurrentHashMap<>();
         // P0-8: Parallel batch delete
         objectNames.parallelStream().forEach(objectName -> {
@@ -587,10 +528,14 @@ public abstract class AbstractFileStorage implements IFileStorage {
         if (lastSlash >= 0) {
             fileName = fileName.substring(lastSlash + 1);
         }
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=\"" + encodedFileName + "\"; filename*=UTF-8''" + encodedFileName);
         response.setHeader("Accept-Ranges", "bytes");
         long dlStart = System.nanoTime();
-        try (InputStream is = doGetObject(resolvedBucket, resolvedObjectName, offset, length);
+        try (InputStream is = (retryHelper != null
+                ? retryHelper.executeWithRetry(() -> doGetObject(resolvedBucket, resolvedObjectName, offset, length), "download")
+                : doGetObject(resolvedBucket, resolvedObjectName, offset, length));
              OutputStream os = response.getOutputStream()) {
             byte[] buffer = new byte[8192];
             int read;
@@ -600,11 +545,21 @@ public abstract class AbstractFileStorage implements IFileStorage {
             os.flush();
             if (fileMetrics != null) fileMetrics.recordDownload(System.nanoTime() - dlStart);
         } catch (BusinessException e) {
-            throw e;
+            if (response.isCommitted()) {
+                log.error("[Storage] file download failed after response committed, bucket={}, object={}, message={}",
+                        resolvedBucket, resolvedObjectName, e.getMessage(), e);
+            } else {
+                throw e;
+            }
         } catch (Exception e) {
-            log.error("[Storage] file download failed, bucket={}, object={}, message={}",
-                    resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            if (response.isCommitted()) {
+                log.error("[Storage] file download failed after response committed, bucket={}, object={}, message={}",
+                        resolvedBucket, resolvedObjectName, e.getMessage(), e);
+            } else {
+                log.error("[Storage] file download failed, bucket={}, object={}, message={}",
+                        resolvedBucket, resolvedObjectName, e.getMessage(), e);
+                throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            }
         }
     }
 

@@ -48,10 +48,10 @@ public class HtmlDocumentParser implements DocumentParser {
 
         Document doc;
         try {
-            String html = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            // 使用 OWASP HTML Sanitizer 清洗恶意脚本（<script>, on* 事件等）
+            // 使用 Jsoup 从 InputStream 流式解析，避免大文件 OOM
+            doc = Jsoup.parse(inputStream, StandardCharsets.UTF_8.name(), "");
             // 使用 Jsoup Safelist 清洗 HTML，移除恶意脚本和事件处理器
-            String sanitized = Jsoup.clean(html, Safelist.relaxed());
+            String sanitized = Jsoup.clean(doc.html(), Safelist.relaxed());
             doc = Jsoup.parse(sanitized, "");
         } catch (IOException e) {
             log.error("[HtmlDocumentParser] 解析失败: {}", fileName, e);

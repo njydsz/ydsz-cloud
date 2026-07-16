@@ -6,7 +6,6 @@ import java.util.Map;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
@@ -23,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
 public class DocsHealthIndicator implements HealthIndicator {

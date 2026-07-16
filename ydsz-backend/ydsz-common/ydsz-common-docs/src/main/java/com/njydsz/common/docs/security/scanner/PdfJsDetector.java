@@ -18,6 +18,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.SecurityLevel;
@@ -37,9 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.apache.pdfbox.Loader")
 public class PdfJsDetector implements DocumentSecurityScanner {
 
-    private final com.njydsz.common.docs.config.DocsProperties properties;
+    private final DocsProperties properties;
 
-    public PdfJsDetector(com.njydsz.common.docs.config.DocsProperties properties) {
+    public PdfJsDetector(DocsProperties properties) {
         this.properties = properties;
     }
 
@@ -90,7 +91,9 @@ public class PdfJsDetector implements DocumentSecurityScanner {
 
                 // 3. 检测每页中的可疑链接和 JavaScript
                 int maxScan = properties.getSecurityMaxScanPages();
-                int pageCount = maxScan > 0 ? Math.min(document.getNumberOfPages(), maxScan) : document.getNumberOfPages();
+                int pageCount = maxScan > 0
+                        ? Math.min(document.getNumberOfPages(), maxScan)
+                        : document.getNumberOfPages();
                 for (int i = 0; i < pageCount; i++) {
                     var page = document.getPage(i);
                     if (page == null) {
@@ -106,11 +109,12 @@ public class PdfJsDetector implements DocumentSecurityScanner {
                             if (action instanceof PDActionURI uriAction) {
                                 String uri = uriAction.getURI();
                                 if (uri != null && isSuspiciousUri(uri)) {
+                                    SecurityLevel level = getUriRiskLevel(uri);
                                     findings.add(SecurityScanResult.SecurityFinding.builder()
                                             .type("external_link")
                                             .description("检测到可疑外部链接: " + uri)
                                             .location("第 " + (i + 1) + " 页")
-                                            .level(SecurityLevel.LOW)
+                                            .level(level)
                                             .build());
                                 }
                             } else if (action instanceof PDActionJavaScript) {
@@ -156,18 +160,37 @@ public class PdfJsDetector implements DocumentSecurityScanner {
     }
 
     /**
-     * 判断 URI 是否可疑（非 HTTPS 或可疑域名）
+     * 判断 URI 是否可疑
      */
     private boolean isSuspiciousUri(String uri) {
         if (uri == null || uri.isBlank()) {
             return false;
         }
-        // 非 http/https 协议
-        if (!uri.startsWith("http://") && !uri.startsWith("https://")) {
+        String lower = uri.toLowerCase();
+        // javascript:/vbscript:/data: 协议高风险
+        if (lower.startsWith("javascript:") || lower.startsWith("vbscript:")
+                || lower.startsWith("data:")) {
             return true;
         }
-        // HTTP 协议（非加密）
-        return uri.startsWith("http://");
+        // file:// 协议中风险
+        if (lower.startsWith("file://")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 根据 URI 协议获取风险等级
+     */
+    private SecurityLevel getUriRiskLevel(String uri) {
+        String lower = uri.toLowerCase();
+        if (lower.startsWith("javascript:") || lower.startsWith("vbscript:")) {
+            return SecurityLevel.HIGH;
+        }
+        if (lower.startsWith("data:") || lower.startsWith("file://")) {
+            return SecurityLevel.MEDIUM;
+        }
+        return SecurityLevel.LOW;
     }
 
     @Override

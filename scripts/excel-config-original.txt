@@ -1,5 +1,6 @@
-package com.njydsz.common.excel.core.config;
+﻿package com.njydsz.common.excel.core.config;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
 
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
@@ -14,9 +15,9 @@ import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
  * <ul>
  *   <li>缓冲配置 - readBufferSize、writeBufferSize</li>
  *   <li>格式配置 - defaultDateFormat、defaultNumberFormat</li>
- *   <li>性能配置 - maxReadCacheSize、streamingParseThresholdMB</li>
+ *   <li>性能配置 - maxReadCacheSize、writeCacheSize</li>
  *   <li>行为配置 - automaticTrim、use1904Windowing</li>
- *   <li>安全配置 - formulaInjectionProtection</li>
+ *   <li>安全配置 - password、mandatoryUseInputStream</li>
  * </ul>
  *
  * @see ExcelFacade#setConfiguration
@@ -26,11 +27,16 @@ public class ExcelConfig {
     /** 单例实例(双重检查锁定) */
     private static volatile ExcelConfig instance;
 
+    /** 引用计数器(用于资源管理) */
+    private static final AtomicInteger REFERENCE_COUNT = new AtomicInteger(0);
+
     /** 读取缓冲区大小(字节) */
     private int readBufferSize = 8192;
 
     /** 写入缓冲区大小(字节) */
     private int writeBufferSize = 8192;
+
+    /** 是否使用科学计数法 */
 
     /** 自动去除字符串首尾空格 */
     private boolean automaticTrim = true;
@@ -73,7 +79,6 @@ public class ExcelConfig {
 
     /** 是否使用快速写入器（默认开启，直接生成XML，性能远超POI方式） */
     private boolean useFastWriter = true;
-
 
     /** 启用流式解析的文件大小阈值(MB)，默认10MB */
     private int streamingParseThresholdMB = 10;
@@ -128,6 +133,34 @@ public class ExcelConfig {
         }
     }
 
+    /**
+     * 获取实例并增加引用计数
+     *
+     * @return 配置实例
+     */
+    public static ExcelConfig getInstanceAndIncrement() {
+        REFERENCE_COUNT.incrementAndGet();
+        return getInstance();
+    }
+
+    /**
+     * 释放引用
+     *
+     * <p>减少引用计数,当计数为0时可进行资源清理</p>
+     */
+    public static void release() {
+        REFERENCE_COUNT.decrementAndGet();
+    }
+
+    /**
+     * 获取当前引用计数
+     *
+     * @return 引用计数
+     */
+    public static int getReferenceCount() {
+        return REFERENCE_COUNT.get();
+    }
+
     public int getReadBufferSize() {
         return readBufferSize;
     }
@@ -148,6 +181,10 @@ public class ExcelConfig {
             throw new IllegalArgumentException("writeBufferSize must be positive, got: " + writeBufferSize);
         }
         this.writeBufferSize = writeBufferSize;
+    }
+
+    }
+
     }
 
     public boolean isAutomaticTrim() {

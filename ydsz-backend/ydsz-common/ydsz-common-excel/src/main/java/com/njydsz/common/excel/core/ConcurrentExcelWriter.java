@@ -203,11 +203,7 @@ public class ConcurrentExcelWriter {
      * 将合并后的分片写入最终 xlsx 文件
      */
     private void writeMergedFile(List<ChunkResult> results) {
-        // 使用 SuperFastExcelWriter 的静态模板
-        Path tempDir = null;
         try {
-            tempDir = Files.createTempDirectory("ydsz_concurrent_");
-
             // 构建 SharedStrings
             // 这里简化处理，使用 inlineStr 方式避免 SST 构建
 
@@ -264,17 +260,6 @@ public class ConcurrentExcelWriter {
             }
         } catch (Exception e) {
             throw new RuntimeException("并发写入文件失败: " + filePath, e);
-        } finally {
-            if (tempDir != null) {
-                try {
-                    Files.walk(tempDir)
-                         .sorted(Comparator.reverseOrder())
-                         .map(p -> p.toFile())
-                         .forEach(f -> f.delete());
-                } catch (Exception e) {
-                    log.warn("清理临时文件异常", e);
-                }
-            }
         }
     }
 

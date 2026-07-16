@@ -6,23 +6,27 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.docs.domain.DocumentContent;
+import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
-import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.impl.PdfDocumentParser;
 
@@ -31,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 文档格式转换器
  * <p>
- * 将 Office 文档（Word/Excel/PPT）转换为纯文本格式。
+ * 将 Office 文档（Word/Excel/PPT）和 PDF 转换为纯文本格式。
  * <p>
- * P2 功能：当前仅支持 Office→TXT 转换，
+ * P2 功能：当前仅支持 Office→TXT 和 PDF→TXT 转换，
  * Office→PDF 转换需要 LibreOffice/OpenOffice 服务，留作后续扩展。
  *
  * @author ydsz-team
@@ -44,13 +48,19 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.apache.poi.xwpf.usermodel.XWPFDocument")
 public class DocumentConverter {
 
+    private final PdfDocumentParser pdfParser;
+
+    public DocumentConverter(PdfDocumentParser pdfParser) {
+        this.pdfParser = pdfParser;
+    }
+
     /**
      * 转换文档格式
      *
-     * @param inputStream 原始文档输入流
-     * @param fileName     原始文件名
-     * @param sourceFormat 源格式
-     * @param targetFormat 目标格式
+     * @param inputStream   原始文档输入流
+     * @param fileName      原始文件名
+     * @param sourceFormat  源格式
+     * @param targetFormat  目标格式
      * @return 转换后的文档字节流
      */
     public byte[] convert(InputStream inputStream, String fileName,
@@ -71,7 +81,7 @@ public class DocumentConverter {
 
             switch (sourceFormat) {
                 case DOCX -> convertWordToText(inputStream, writer);
-                case XLSX -> convertExcelToText(inputStream, writer);
+                case XLSX, XLS -> convertExcelToText(inputStream, writer);
                 case PDF -> convertPdfToText(inputStream, writer);
                 case PPTX -> convertPptToText(inputStream, writer);
                 default -> throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED,
@@ -106,7 +116,7 @@ public class DocumentConverter {
      * Excel → 纯文本
      */
     private void convertExcelToText(InputStream input, Writer writer) throws IOException {
-        try (var workbook = WorkbookFactory.create(input)) {
+        try (Workbook workbook = WorkbookFactory.create(input)) {
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
                 Sheet sheet = workbook.getSheetAt(i);
                 writer.write("=== ");
@@ -120,7 +130,7 @@ public class DocumentConverter {
                         }
                         Cell cell = row.getCell(c);
                         if (cell != null) {
-                            sb.append(getCellValue(cell));
+                            sb.append(getCellValueAsString(cell));
                         }
                     }
                     if (!sb.isEmpty()) {
@@ -156,26 +166,29 @@ public class DocumentConverter {
         }
     }
 
-
     /**
-     * PDF -> 纯文本
+     * PDF → 纯文本（委托 PdfDocumentParser）
      */
     private void convertPdfToText(InputStream input, Writer writer) throws IOException {
-        var parser = new PdfDocumentParser();
-        var content = parser.parse(input, "convert.pdf", ParseOptions.builder().build());
+        DocumentContent content = pdfParser.parse(input, "convert.pdf", ParseOptions.builder().build());
         writer.write(content.getText());
     }
+
     /**
-     * 获取单元格值
+     * 将单元格值转换为字符串（公共方法，供 DocumentConverter 和 ExcelDocumentParser 共享）
      */
-    private String getCellValue(Cell cell) {
+    public static String getCellValueAsString(Cell cell) {
         if (cell == null) {
             return "";
         }
-        CellType type = cell.getCellType();
-        return switch (type) {
-            case STRING -> cell.getStringCellValue();
+        CellType cellType = cell.getCellType();
+        return switch (cellType) {
+            case STRING -> cell.getStringCellValue().trim();
             case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    yield DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                            .format(cell.getLocalDateTimeCellValue());
+                }
                 double num = cell.getNumericCellValue();
                 if (num == Math.floor(num)) {
                     yield String.valueOf((long) num);

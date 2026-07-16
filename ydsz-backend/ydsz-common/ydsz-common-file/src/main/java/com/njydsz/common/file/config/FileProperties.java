@@ -116,24 +116,11 @@ public class FileProperties {
     /** 断点续传检查点目录（默认使用系统临时目录） */
     private String checkpointDir;
 
-    /** 上传频率限制配置 */
-    private RateLimit rateLimit = new RateLimit();
-
     /** 是否启用 Magic Number 文件头校验（默认启用；关闭后仅基于后缀名校验） */
     private boolean checkMagicNumber = true;
 
     /** 上传并发控制配置 */
     private ConcurrencyControl concurrencyControl = new ConcurrencyControl();
-
-    /**
-     * 上传频率限制配置
-     */
-    @Data
-    public static class RateLimit {
-
-        /** 每分钟最大上传次数（默认 60） */
-        private int maxUploadsPerMinute = 60;
-    }
 
     /**
      * 上传并发控制策略

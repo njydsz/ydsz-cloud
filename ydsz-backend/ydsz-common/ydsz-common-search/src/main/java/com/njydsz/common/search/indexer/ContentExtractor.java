@@ -1,0 +1,33 @@
+package com.njydsz.common.search.indexer;
+
+import java.io.InputStream;
+
+/**
+ * 内容提取器 SPI
+ * <p>
+ * 将文件内容解析为纯文本，供搜索引擎索引。
+ * 各文档解析模块（如 common-docs）实现此接口并通过 Spring Bean 注入。
+ *
+ * @author ydsz-team
+ * @since 1.4.0
+ */
+public interface ContentExtractor {
+
+    /**
+     * 解析文件内容为纯文本
+     *
+     * @param inputStream 文件输入流
+     * @param fileName    文件名（用于判断文件类型）
+     * @return 纯文本内容，解析失败返回 null
+     */
+    String extract(InputStream inputStream, String fileName);
+
+    /**
+     * 检查内容提取器是否可用
+     *
+     * @return 可用返回 true
+     */
+    default boolean isAvailable() {
+        return true;
+    }
+}

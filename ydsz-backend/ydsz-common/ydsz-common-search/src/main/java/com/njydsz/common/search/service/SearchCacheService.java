@@ -2,10 +2,13 @@ package com.njydsz.common.search.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HexFormat;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
@@ -16,8 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 搜索结果缓存服务
  * <p>
- * 基于 LRU + TTL 的轻量级内存缓存，用于缓存搜索结果。
- * 支持空结果缓存（防穿透），热点结果短 TTL 缓存（防雪崩）。
+ * 基于 ConcurrentHashMap + TTL 的线程安全缓存，用于缓存搜索结果。
+ * 支持空结果缓存（防穿透），短 TTL 缓存（防雪崩）。
  *
  * @author ydsz-team
  * @since 1.4.0
@@ -26,53 +29,48 @@ import lombok.extern.slf4j.Slf4j;
 public class SearchCacheService {
 
     private final SearchProperties properties;
-    private final LinkedHashMap<String, CacheEntry> cache;
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ConcurrentHashMap<String, CacheEntry> cache;
+    private final int maxSize;
+
+    /** P1-4: 空结果哨兵值 — 区分缓存命中空结果和缓存未命中 */
+    private static final SearchResponse EMPTY_SENTINEL =
+            SearchResponse.builder().total(-1L).build();
+
+    /** P1-4: 空结果缓存使用更短的 TTL（防穿透） */
+    private static final long EMPTY_TTL_RATIO = 3; // 空结果 TTL = 正常 TTL / 3
 
     public SearchCacheService(SearchProperties properties) {
         this.properties = properties;
-        long maxSize = properties.getCache().getMaxSize();
-        int capacity = (int) Math.min(maxSize, Integer.MAX_VALUE);
-        this.cache = new LinkedHashMap<>(capacity, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, CacheEntry> eldest) {
-                return size() > capacity;
-            }
-        };
+        long configMaxSize = properties.getCache().getMaxSize();
+        this.maxSize = (int) Math.min(configMaxSize, Integer.MAX_VALUE);
+        this.cache = new ConcurrentHashMap<>(Math.min(maxSize, 256));
     }
 
     /**
      * 获取缓存的搜索结果
      *
      * @param request 搜索请求
-     * @return 缓存结果，不存在返回 null
+     * @return 缓存结果，不存在返回 null；空结果返回 SearchResponse.empty()
      */
     public SearchResponse get(SearchRequest request) {
         if (!properties.getCache().isEnabled()) {
             return null;
         }
         String key = buildCacheKey(request);
-        lock.readLock().lock();
-        try {
-            CacheEntry entry = cache.get(key);
-            if (entry == null) {
-                return null;
-            }
-            if (System.currentTimeMillis() > entry.expireAt) {
-                lock.readLock().unlock();
-                lock.writeLock().lock();
-                try {
-                    cache.remove(key);
-                } finally {
-                    lock.readLock().lock();
-                    lock.writeLock().unlock();
-                }
-                return null;
-            }
-            return entry.response;
-        } finally {
-            lock.readLock().unlock();
+        CacheEntry entry = cache.get(key);
+        if (entry == null) {
+            return null;
         }
+        if (System.currentTimeMillis() > entry.expireAt) {
+            // P1-1: 使用 ConcurrentHashMap 原子删除，无锁升级死锁风险
+            cache.remove(key, entry);
+            return null;
+        }
+        // P1-4: 空结果哨兵返回空响应
+        if (entry.response == EMPTY_SENTINEL) {
+            return SearchResponse.empty(request.getPage(), request.getPageSize());
+        }
+        return entry.response;
     }
 
     /**
@@ -87,12 +85,18 @@ public class SearchCacheService {
         }
         String key = buildCacheKey(request);
         long ttlMs = properties.getCache().getTtl() * 1000;
-        long expireAt = System.currentTimeMillis() + ttlMs;
-        lock.writeLock().lock();
-        try {
-            cache.put(key, new CacheEntry(response, expireAt));
-        } finally {
-            lock.writeLock().unlock();
+
+        // P1-4: 空结果使用更短 TTL 防穿透
+        if (response.getTotal() == 0) {
+            ttlMs = ttlMs / EMPTY_TTL_RATIO;
+            cache.put(key, new CacheEntry(EMPTY_SENTINEL, System.currentTimeMillis() + ttlMs));
+        } else {
+            cache.put(key, new CacheEntry(response, System.currentTimeMillis() + ttlMs));
+        }
+
+        // P1-1: 惰性淘汰 — 超过最大容量时清理过期条目
+        if (cache.size() > maxSize) {
+            evictExpired();
         }
     }
 
@@ -100,31 +104,50 @@ public class SearchCacheService {
      * 清空缓存
      */
     public void clear() {
-        lock.writeLock().lock();
-        try {
-            cache.clear();
-            log.info("[SearchCache] 缓存已清空");
-        } finally {
-            lock.writeLock().unlock();
-        }
+        cache.clear();
+        log.info("[SearchCache] 缓存已清空");
     }
 
     /**
      * 获取缓存大小
      */
     public int size() {
-        lock.readLock().lock();
-        try {
-            return cache.size();
-        } finally {
-            lock.readLock().unlock();
+        return cache.size();
+    }
+
+    /**
+     * P1-1: 惰性淘汰过期条目
+     */
+    private void evictExpired() {
+        long now = System.currentTimeMillis();
+        AtomicInteger removed = new AtomicInteger(0);
+        cache.forEach((k, v) -> {
+            if (now > v.expireAt) {
+                if (cache.remove(k, v)) {
+                    removed.incrementAndGet();
+                }
+            }
+        });
+        // 如果清理过期后仍然超限，随机淘汰
+        if (cache.size() > maxSize) {
+            int toRemove = cache.size() - maxSize;
+            List<Map.Entry<String, CacheEntry>> entries = new ArrayList<>(cache.entrySet());
+            entries.sort(Comparator.comparingLong(e -> e.getValue().expireAt));
+            for (int i = 0; i < toRemove && i < entries.size(); i++) {
+                cache.remove(entries.get(i).getKey(), entries.get(i).getValue());
+            }
+        }
+        if (removed.get() > 0) {
+            log.debug("[SearchCache] 惰性淘汰过期条目: {}", removed.get());
         }
     }
 
+    /**
+     * P2-9: 构建缓存键 — 过滤条件排序后再拼接，确保顺序无关
+     */
     private String buildCacheKey(SearchRequest request) {
         StringBuilder sb = new StringBuilder();
         sb.append(request.getKeyword()).append('|');
-        sb.append(request.getTypes()).append('|');
         sb.append(request.getPage()).append('|');
         sb.append(request.getPageSize()).append('|');
         sb.append(request.isHighlight()).append('|');
@@ -132,6 +155,11 @@ public class SearchCacheService {
         sb.append(request.isTitleOnly()).append('|');
         sb.append(request.getTenantId()).append('|');
         sb.append(request.getUserId()).append('|');
+        if (request.getTypes() != null) {
+            List<String> sortedTypes = new ArrayList<>(request.getTypes());
+            sortedTypes.sort(Comparator.naturalOrder());
+            sb.append(sortedTypes).append('|');
+        }
         if (request.getFilters() != null) {
             sb.append(request.getFilters()).append('|');
         }

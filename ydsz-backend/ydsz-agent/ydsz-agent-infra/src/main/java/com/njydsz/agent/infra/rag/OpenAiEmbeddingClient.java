@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.Json;
+import com.njydsz.common.json.object.JsonArray;
+import com.njydsz.common.json.object.JsonObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,15 +83,15 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
     }
 
     private List<List<Float>> parseEmbeddings(String json) {
-        Map<String, Object> obj = Json.parseMap(json);
-        List<Object> data = obj.getJSONArray("data");
+        JsonObject obj = Json.parseObjectToJsonObject(json);
+        JsonArray data = obj.getJSONArray("data");
         if (data == null || data.isEmpty()) {
             throw new LlmException("Embedding 响应无 data", LlmException.ErrorType.INVALID_RESPONSE);
         }
         List<List<Float>> result = new ArrayList<>(data.size());
         for (int i = 0; i < data.size(); i++) {
-            Map<String, Object> item = data.getJSONObject(i);
-            List<Object> embedding = item.getJSONArray("embedding");
+            JsonObject item = data.getJSONObject(i);
+            JsonArray embedding = item.getJSONArray("embedding");
             List<Float> vector = new ArrayList<>(embedding.size());
             for (int j = 0; j < embedding.size(); j++) {
                 vector.add(embedding.getFloatValue(j));

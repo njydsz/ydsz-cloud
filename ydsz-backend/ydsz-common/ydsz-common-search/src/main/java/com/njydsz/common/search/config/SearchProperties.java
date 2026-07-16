@@ -114,6 +114,9 @@ public class SearchProperties {
     /** 拼音配置 */
     private PinyinConfig pinyin = new PinyinConfig();
 
+    /** P1-9+P1-11: 排序权重与时间衰减配置 */
+    private RankConfig rank = new RankConfig();
+
     @Data
     public static class CacheConfig {
         /** 是否启用搜索结果缓存 */
@@ -181,5 +184,24 @@ public class SearchProperties {
     public static class PinyinConfig {
         /** 是否启用拼音搜索 */
         private boolean enabled = false;
+        /** P1-5: 拼音词典文件路径 */
+        private String file = "classpath:pinyin.txt";
+    }
+
+    /**
+     * P1-9+P1-11: 排序权重与时间衰减配置
+     */
+    @Data
+    public static class RankConfig {
+        /** P1-9: 标题字段权重（PG setweight A 对应 1.0） */
+        private double titleWeight = 1.0;
+        /** P1-9: 副标题字段权重（PG setweight B 对应 0.7） */
+        private double subtitleWeight = 0.7;
+        /** P1-9: 内容字段权重（PG setweight C 对应 0.4） */
+        private double contentWeight = 0.4;
+        /** P1-9: 标签字段权重（PG setweight D 对应 0.2） */
+        private double tagsWeight = 0.2;
+        /** P1-11: 时间衰减半衰期（天），0 表示不衰减 */
+        private double timeDecayDays = 0;
     }
 }

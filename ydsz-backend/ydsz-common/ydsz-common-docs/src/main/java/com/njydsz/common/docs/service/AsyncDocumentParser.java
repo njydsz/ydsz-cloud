@@ -31,9 +31,11 @@ public class AsyncDocumentParser {
     private final DocumentService documentService;
     private final ExecutorService executor;
     private final long timeoutMs;
+    private final DocsProperties properties;
 
     public AsyncDocumentParser(DocumentService documentService, DocsProperties properties) {
         this.documentService = documentService;
+        this.properties = properties;
         this.timeoutMs = properties.getParseTimeoutSeconds() * 1000L;
         this.executor = new ThreadPoolExecutor(properties.getAsyncPoolSize(), properties.getAsyncPoolSize(), 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(properties.getAsyncQueueCapacity()), r -> { Thread t = new Thread(r, "pmis-docs-async-parser"); t.setDaemon(true); return t; }, new ThreadPoolExecutor.CallerRunsPolicy());
         log.info("[AsyncDocumentParser] poolSize={} queueCapacity={} timeoutMs={}", properties.getAsyncPoolSize(), properties.getAsyncQueueCapacity(), timeoutMs);
@@ -77,7 +79,11 @@ public class AsyncDocumentParser {
     }
 
     public List<CompletableFuture<DocumentParseResult>> parseBatch(List<BatchFile> files, ParseOptions options) {
-        return files.stream().map(f -> parseAsync(f.inputStream(), f.fileName(), options)).toList();
+        // 限制每批最大提交数量，避免队列积压
+        int batchSize = Math.min(files.size(), properties.getAsyncQueueCapacity());
+        return files.subList(0, batchSize).stream()
+                .map(f -> parseAsync(f.inputStream(), f.fileName(), options))
+                .toList();
     }
 
     public void parseAsync(InputStream inputStream, String fileName, ParseOptions options, Consumer<DocumentParseResult> callback) {

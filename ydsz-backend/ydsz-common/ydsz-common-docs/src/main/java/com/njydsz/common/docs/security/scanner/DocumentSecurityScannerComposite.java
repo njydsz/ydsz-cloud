@@ -30,9 +30,9 @@ public class DocumentSecurityScannerComposite implements DocumentSecurityScanner
     private final List<DocumentSecurityScanner> scanners;
 
     public DocumentSecurityScannerComposite(List<DocumentSecurityScanner> scanners) {
-        // 过滤自身，避免递归
+        // 过滤 Composite 自身，避免递归——通过 getName() 判断而非 this 引用
         this.scanners = scanners.stream()
-                .filter(s -> s != this)
+                .filter(s -> !"composite".equals(s.getName()))
                 .toList();
         log.info("[DocumentSecurityScannerComposite] 已注册 {} 个安全扫描器", this.scanners.size());
     }

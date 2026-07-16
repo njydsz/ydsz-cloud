@@ -96,13 +96,4 @@ public class FileDedupService {
         redisStringOps.set(key, filePath, Duration.ofDays(30));
     }
 
-    /**
-     * 清理过期的去重映射记录
-     *
-     * <p>由于去重映射在 Redis 中已设置 TTL，此方法主要用于
-     * 记录清理日志和执行额外的清理逻辑。
-     */
-    public void cleanupExpiredEntries() {
-        log.debug("去重映射记录基于 Redis TTL 自动过期，无需手动清理");
-    }
 }

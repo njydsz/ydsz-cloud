@@ -58,9 +58,19 @@ public class DocumentParserRegistry {
         if (parser == null) {
             return;
         }
-        DocumentFormat format = parser.getSupportedFormat();
+        // 注册主格式
+        registerFormat(parser.getSupportedFormat(), parser);
+        // 注册 supports() 支持但 getSupportedFormat() 未覆盖的额外格式
+        for (DocumentFormat format : DocumentFormat.values()) {
+            if (format != parser.getSupportedFormat() && parser.supports(format)) {
+                registerFormat(format, parser);
+            }
+        }
+    }
+
+    private void registerFormat(DocumentFormat format, DocumentParser parser) {
         DocumentParser existing = parserMap.put(format, parser);
-        if (existing != null) {
+        if (existing != null && existing != parser) {
             log.warn("[DocumentParserRegistry] 解析器覆盖注册: format={}, old={}, new={}",
                     format, existing.getClass().getSimpleName(), parser.getClass().getSimpleName());
         }
