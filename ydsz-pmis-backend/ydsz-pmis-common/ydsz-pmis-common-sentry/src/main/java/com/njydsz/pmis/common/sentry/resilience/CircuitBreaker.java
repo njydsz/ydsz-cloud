@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.sentry.resilience;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 熔断降级保护器
  *
- * <p>当 Resilience4j 不可用时使用此简化版熔断器。
- * 基于滑动窗口失败率统计，达到阈值后触发熔断。
+ * <p>基于滑动窗口失败率统计，达到阈值后触发熔断。
+ * 使用 AtomicReference + CAS 确保 HALF_OPEN 状态下仅单个探测请求通过。
  *
  * <p>状态流转：
  * <ul>
@@ -34,10 +35,11 @@ public class CircuitBreaker {
     private final int slidingWindowSize;
     private final long halfOpenAfterMillis;
 
-    private volatile State state = State.CLOSED;
+    private final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
     private final AtomicInteger failureCount = new AtomicInteger(0);
     private final AtomicInteger totalCount = new AtomicInteger(0);
     private volatile long lastFailureTime = 0;
+    private final AtomicInteger halfOpenProbeInProgress = new AtomicInteger(0);
 
     public CircuitBreaker(String name, double failureRateThreshold,
                           int slidingWindowSize, long halfOpenAfterMillis) {
@@ -91,29 +93,39 @@ public class CircuitBreaker {
     }
 
     private boolean canExecute() {
-        if (state == State.CLOSED) {
+        State currentState = state.get();
+        if (currentState == State.CLOSED) {
             return true;
         }
-        if (state == State.OPEN) {
+        if (currentState == State.OPEN) {
             long elapsed = System.currentTimeMillis() - lastFailureTime;
             if (elapsed >= halfOpenAfterMillis) {
-                state = State.HALF_OPEN;
-                log.info("[Sentry] CircuitBreaker '{}' 进入半开状态", name);
-                return true;
+                // CAS 确保 only one thread transitions to HALF_OPEN
+                if (state.compareAndSet(State.OPEN, State.HALF_OPEN)) {
+                    log.info("[Sentry] CircuitBreaker '{}' 进入半开状态", name);
+                    return true;
+                }
+                // CAS 失败说明其他线程已先转换，当前线程走降级
+                return false;
             }
             return false;
         }
-        // HALF_OPEN: 允许一次探测
-        return true;
+        // HALF_OPEN: 仅允许一个探测请求
+        if (currentState == State.HALF_OPEN) {
+            return halfOpenProbeInProgress.compareAndSet(0, 1);
+        }
+        return false;
     }
 
     private void onSuccess() {
-        if (state == State.HALF_OPEN) {
-            state = State.CLOSED;
+        State currentState = state.get();
+        if (currentState == State.HALF_OPEN) {
+            halfOpenProbeInProgress.set(0);
+            state.set(State.CLOSED);
             failureCount.set(0);
             totalCount.set(0);
             log.info("[Sentry] CircuitBreaker '{}' 半开探测成功, 恢复 CLOSED", name);
-        } else {
+        } else if (currentState == State.CLOSED) {
             totalCount.incrementAndGet();
             checkThreshold();
         }
@@ -121,10 +133,12 @@ public class CircuitBreaker {
 
     private void onFailure() {
         lastFailureTime = System.currentTimeMillis();
-        if (state == State.HALF_OPEN) {
-            state = State.OPEN;
+        State currentState = state.get();
+        if (currentState == State.HALF_OPEN) {
+            halfOpenProbeInProgress.set(0);
+            state.set(State.OPEN);
             log.warn("[Sentry] CircuitBreaker '{}' 半开探测失败, 恢复 OPEN", name);
-        } else {
+        } else if (currentState == State.CLOSED) {
             failureCount.incrementAndGet();
             totalCount.incrementAndGet();
             checkThreshold();
@@ -137,9 +151,10 @@ public class CircuitBreaker {
             int failures = failureCount.get();
             double rate = (double) failures / total;
             if (rate >= failureRateThreshold) {
-                state = State.OPEN;
-                log.warn("[Sentry] CircuitBreaker '{}' 失败率 {}/{}={:.2%} 超过阈值 {}, 触发熔断",
-                        name, failures, total, rate, failureRateThreshold);
+                if (state.compareAndSet(State.CLOSED, State.OPEN)) {
+                    log.warn("[Sentry] CircuitBreaker '{}' 失败率 {}/{}={} 超过阈值 {}, 触发熔断",
+                            name, failures, total, String.format("%.2f%%", rate * 100), failureRateThreshold);
+                }
             }
             // 重置滑动窗口
             failureCount.set(0);
@@ -148,7 +163,7 @@ public class CircuitBreaker {
     }
 
     public State getState() {
-        return state;
+        return state.get();
     }
 
     public String getName() {

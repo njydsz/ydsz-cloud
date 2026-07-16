@@ -13,6 +13,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.njydsz.pmis.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.pmis.common.socket.cluster.WebSocketClusterSubscriber;
+import com.njydsz.pmis.common.socket.compress.MessageCompressor;
+import com.njydsz.pmis.common.socket.resilience.WebSocketCircuitBreaker;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,8 +25,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>自动注册：
  * <ul>
- *   <li>{@link WebSocketClusterPublisher} — Redis Pub/Sub 发布者</li>
- *   <li>{@link WebSocketClusterSubscriber} — Redis Pub/Sub 订阅者</li>
+ *   <li>{@link WebSocketClusterPublisher} — Redis Pub/Sub 发布者（含熔断保护 P0-2）</li>
+ *   <li>{@link WebSocketClusterSubscriber} — Redis Pub/Sub 订阅者（含消息解压 P2-3）</li>
  *   <li>{@link RedisMessageListenerContainer} — Redis 监听容器</li>
  * </ul>
  *
@@ -37,42 +39,24 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "pmis.websocket.cluster", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSocketClusterAutoConfiguration {
 
-    /**
-     * 集群广播发布者。
-     *
-     * @param redisTemplate Redis 模板
-     * @param properties    WebSocket 配置
-     * @return 集群发布者
-     */
     @Bean
     @ConditionalOnBean(StringRedisTemplate.class)
     public WebSocketClusterPublisher webSocketClusterPublisher(
             StringRedisTemplate redisTemplate,
-            WebSocketProperties properties) {
+            WebSocketProperties properties,
+            WebSocketCircuitBreaker circuitBreaker) {
         log.info("[WS-Cluster] 注册 WebSocketClusterPublisher, channel={}", properties.getCluster().getChannel());
-        return new WebSocketClusterPublisher(redisTemplate, properties);
+        return new WebSocketClusterPublisher(redisTemplate, properties, circuitBreaker);
     }
 
-    /**
-     * 集群广播订阅者。
-     *
-     * @param messagingTemplate STOMP 消息模板
-     * @return 集群订阅者
-     */
     @Bean
-    public WebSocketClusterSubscriber webSocketClusterSubscriber(SimpMessagingTemplate messagingTemplate) {
+    public WebSocketClusterSubscriber webSocketClusterSubscriber(
+            SimpMessagingTemplate messagingTemplate,
+            MessageCompressor messageCompressor) {
         log.info("[WS-Cluster] 注册 WebSocketClusterSubscriber");
-        return new WebSocketClusterSubscriber(messagingTemplate);
+        return new WebSocketClusterSubscriber(messagingTemplate, messageCompressor);
     }
 
-    /**
-     * Redis 监听容器（绑定订阅者到 Channel）。
-     *
-     * @param connectionFactory Redis 连接工厂
-     * @param subscriber        集群订阅者
-     * @param properties        WebSocket 配置
-     * @return Redis 监听容器
-     */
     @Bean
     @ConditionalOnBean(RedisConnectionFactory.class)
     public RedisMessageListenerContainer wsClusterListenerContainer(

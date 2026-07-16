@@ -4,9 +4,14 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
+import com.njydsz.pmis.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.pmis.common.sentry.spi.LogPublisher;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,22 +26,20 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.5.0
  */
 @Slf4j
-public class LokiLogPublisher implements LogPublisher {
+public class LokiLogPublisher implements LogPublisher, AutoCloseable {
 
     private final String pushUrl;
     private final HttpClient httpClient;
     private final int maxRetryAttempts;
-    private final int circuitBreakerThreshold;
-
-    private volatile int consecutiveFailures = 0;
+    private final CircuitBreaker circuitBreaker;
 
     public LokiLogPublisher(String lokiUrl, int connectTimeoutSeconds,
-                            int maxRetryAttempts, int circuitBreakerThreshold) {
+                            int maxRetryAttempts, CircuitBreaker circuitBreaker) {
         this.pushUrl = lokiUrl.endsWith("/")
                 ? lokiUrl + "loki/api/v1/push"
                 : lokiUrl + "/loki/api/v1/push";
         this.maxRetryAttempts = maxRetryAttempts;
-        this.circuitBreakerThreshold = circuitBreakerThreshold;
+        this.circuitBreaker = circuitBreaker;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
                 .build();
@@ -49,45 +52,41 @@ public class LokiLogPublisher implements LogPublisher {
             return false;
         }
         String payload = buildLokiPayload(event);
-        byte[] bytes = payload.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
 
-        for (int attempt = 1; attempt <= maxRetryAttempts; attempt++) {
-            try {
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(pushUrl))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
-                        .timeout(Duration.ofSeconds(10))
-                        .build();
-
-                HttpResponse<Void> response = httpClient.send(request,
-                        HttpResponse.BodyHandlers.discarding());
-
-                if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                    consecutiveFailures = 0;
-                    return true;
-                }
-                log.debug("[Sentry] Loki 推送返回 {} (attempt {}/{})",
-                        response.statusCode(), attempt, maxRetryAttempts);
-            } catch (Exception e) {
-                log.debug("[Sentry] Loki 日志发布失败 (attempt {}/{}): {}",
-                        attempt, maxRetryAttempts, e.getMessage());
-            }
-            if (attempt < maxRetryAttempts) {
+        return circuitBreaker.execute(() -> {
+            for (int attempt = 1; attempt <= maxRetryAttempts; attempt++) {
                 try {
-                    Thread.sleep(200L * attempt);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    break;
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(pushUrl))
+                            .header("Content-Type", "application/json")
+                            .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
+                            .timeout(Duration.ofSeconds(10))
+                            .build();
+
+                    HttpResponse<Void> response = httpClient.send(request,
+                            HttpResponse.BodyHandlers.discarding());
+
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        return true;
+                    }
+                    log.debug("[Sentry] Loki 推送返回 {} (attempt {}/{})",
+                            response.statusCode(), attempt, maxRetryAttempts);
+                } catch (Exception e) {
+                    log.debug("[Sentry] Loki 日志发布失败 (attempt {}/{}): {}",
+                            attempt, maxRetryAttempts, e.getMessage());
+                }
+                if (attempt < maxRetryAttempts) {
+                    try {
+                        Thread.sleep(200L * attempt);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
                 }
             }
-        }
-
-        consecutiveFailures++;
-        if (consecutiveFailures >= circuitBreakerThreshold) {
-            log.warn("[Sentry] Loki 日志发布连续失败 {} 次, 触发熔断", consecutiveFailures);
-        }
-        return false;
+            return false;
+        }, () -> false);
     }
 
     /**
@@ -107,49 +106,29 @@ public class LokiLogPublisher implements LogPublisher {
         String timestampNs = String.valueOf(event.getTimestamp().toEpochMilli() * 1_000_000);
         String logLine = LogEventSerializer.toJson(event);
 
-        StringBuilder sb = new StringBuilder(256 + logLine.length());
-        sb.append("{\"streams\":[{\"stream\":{");
-        sb.append("\"app\":\"").append(escapeJson(event.getAppName())).append("\"");
-        sb.append(",\"level\":\"").append(event.getLevel() != null ? event.getLevel().name() : "INFO").append("\"");
+        Map<String, String> streamLabels = new LinkedHashMap<>();
+        streamLabels.put("app", event.getAppName() != null ? event.getAppName() : "pmis");
+        streamLabels.put("level", event.getLevel() != null ? event.getLevel().name() : "INFO");
         if (event.getProfile() != null) {
-            sb.append(",\"env\":\"").append(escapeJson(event.getProfile())).append("\"");
+            streamLabels.put("env", event.getProfile());
         }
         if (event.getTraceId() != null) {
-            sb.append(",\"traceId\":\"").append(escapeJson(event.getTraceId())).append("\"");
+            streamLabels.put("traceId", event.getTraceId());
         }
-        sb.append("},\"values\":[[\"").append(timestampNs).append("\",")
-                .append("\"").append(escapeJson(logLine)).append("\"]]}]}");
-        return sb.toString();
-    }
 
-    private String escapeJson(String str) {
-        if (str == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder(str.length() + 16);
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            switch (c) {
-                case '"' -> sb.append("\\\"");
-                case '\\' -> sb.append("\\\\");
-                case '\n' -> sb.append("\\n");
-                case '\r' -> sb.append("\\r");
-                case '\t' -> sb.append("\\t");
-                default -> {
-                    if (c < 0x20) {
-                        sb.append(String.format("\\u%04x", (int) c));
-                    } else {
-                        sb.append(c);
-                    }
-                }
-            }
-        }
-        return sb.toString();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("streams", new Object[]{
+                Map.of(
+                        "stream", streamLabels,
+                        "values", new Object[][]{{timestampNs, logLine}}
+                )
+        });
+        return Json.toJson(payload);
     }
 
     @Override
     public boolean isAvailable() {
-        return consecutiveFailures < circuitBreakerThreshold;
+        return circuitBreaker == null || circuitBreaker.getState() != CircuitBreaker.State.OPEN;
     }
 
     @Override
@@ -163,16 +142,21 @@ public class LokiLogPublisher implements LogPublisher {
     }
 
     /**
-     * 重置熔断状态
+     * 获取熔断器状态
      */
-    public void resetCircuitBreaker() {
-        consecutiveFailures = 0;
+    public CircuitBreaker.State getCircuitBreakerState() {
+        return circuitBreaker != null ? circuitBreaker.getState() : CircuitBreaker.State.CLOSED;
     }
 
-    /**
-     * 获取连续失败次数
-     */
-    public int getConsecutiveFailures() {
-        return consecutiveFailures;
+    @Override
+    public void close() {
+        if (httpClient != null) {
+            try {
+                httpClient.close();
+                log.info("[Sentry] LokiLogPublisher HttpClient 已关闭");
+            } catch (Exception e) {
+                log.debug("[Sentry] HttpClient 关闭异常: {}", e.getMessage());
+            }
+        }
     }
 }

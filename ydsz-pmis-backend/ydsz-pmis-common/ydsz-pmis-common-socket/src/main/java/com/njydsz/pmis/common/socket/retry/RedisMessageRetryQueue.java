@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;

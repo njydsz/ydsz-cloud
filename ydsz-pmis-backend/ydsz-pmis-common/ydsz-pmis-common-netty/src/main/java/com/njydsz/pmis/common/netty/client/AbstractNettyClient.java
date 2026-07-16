@@ -1,6 +1,5 @@
 package com.njydsz.pmis.common.netty.client;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.njydsz.pmis.common.netty.config.NettyProperties;
@@ -10,6 +9,7 @@ import com.njydsz.pmis.common.netty.handler.TrafficMonitoringHandler;
 import com.njydsz.pmis.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.pmis.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.pmis.common.netty.ssl.SslContextFactory;
+import com.njydsz.pmis.common.netty.transport.NativeTransportDetector;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -19,7 +19,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
@@ -107,7 +106,8 @@ public abstract class AbstractNettyClient {
 
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(workerGroup)
-                    .channel(NioSocketChannel.class)
+                    .channel(NativeTransportDetector.getSocketChannelClass(
+                            pool.getTransportType()))
                     .option(ChannelOption.SO_KEEPALIVE, properties.isSoKeepAlive())
                     .option(ChannelOption.TCP_NODELAY, properties.isTcpNoDelay())
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutMillis())
@@ -293,7 +293,8 @@ public abstract class AbstractNettyClient {
         if (eventLoopPool == null) {
             eventLoopPool = new NettyEventLoopPool(
                     properties.getShutdownQuietPeriodSeconds(),
-                    properties.getShutdownTimeoutSeconds());
+                    properties.getShutdownTimeoutSeconds(),
+                    properties.getNativeTransport());
         }
         return eventLoopPool;
     }

@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.socket.session;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.context.event.EventListener;
@@ -11,10 +12,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import com.njydsz.pmis.common.socket.audit.WebSocketAuditService;
 import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
+import com.njydsz.pmis.common.socket.heartbeat.WebSocketHeartbeatHandler;
+import com.njydsz.pmis.common.socket.lifecycle.WebSocketConnectionListener;
 import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,23 +26,44 @@ import lombok.extern.slf4j.Slf4j;
  * <p>监听 STOMP {@link SessionConnectedEvent} / {@link SessionDisconnectEvent}，
  * 维护用户在线状态并在上线时补偿离线消息：
  * <ul>
- *   <li>连接成功：标记用户上线，拉取并推送离线消息</li>
- *   <li>断开连接：标记用户下线（仅当最后一个 session 断开时真正离线）</li>
+ *   <li>连接成功：标记用户上线，拉取并推送离线消息，通知连接监听器</li>
+ *   <li>断开连接：标记用户下线，审计断开事件，通知连接监听器</li>
  * </ul>
+ *
+ * <p>集成心跳注册/注销（P0-3）和连接生命周期钩子（P3-5）。
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j
-@RequiredArgsConstructor
 public class WebSocketSessionEventListener {
 
     private final OnlineUserService onlineUserService;
     private final OfflineMessageStore offlineMessageStore;
     private final SimpMessagingTemplate messagingTemplate;
+    private final WebSocketHeartbeatHandler heartbeatHandler;
+    private final WebSocketAuditService auditService;
+    private final List<WebSocketConnectionListener> connectionListeners;
 
     /** 本节点活跃连接计数器（供 HealthIndicator 读取） */
     private final AtomicLong activeConnections = new AtomicLong(0);
+    /** Session ID → 连接时间戳（用于计算连接时长） */
+    private final Map<String, Long> connectTimes = new ConcurrentHashMap<>();
+
+    public WebSocketSessionEventListener(
+            OnlineUserService onlineUserService,
+            OfflineMessageStore offlineMessageStore,
+            SimpMessagingTemplate messagingTemplate,
+            WebSocketHeartbeatHandler heartbeatHandler,
+            WebSocketAuditService auditService,
+            List<WebSocketConnectionListener> connectionListeners) {
+        this.onlineUserService = onlineUserService;
+        this.offlineMessageStore = offlineMessageStore;
+        this.messagingTemplate = messagingTemplate;
+        this.heartbeatHandler = heartbeatHandler;
+        this.auditService = auditService;
+        this.connectionListeners = connectionListeners != null ? connectionListeners : List.of();
+    }
 
     /**
      * 连接成功事件：标记上线 + 补偿离线消息。
@@ -62,8 +86,13 @@ public class WebSocketSessionEventListener {
         }
         onlineUserService.markOnline(userId, sessionId);
         activeConnections.incrementAndGet();
+        connectTimes.put(sessionId, System.currentTimeMillis());
+        if (heartbeatHandler != null) {
+            heartbeatHandler.registerSession(sessionId);
+        }
         log.info("[WS-Session] 用户连接: userId={}, sessionId={}, localActive={}",
                 userId, sessionId, activeConnections.get());
+        notifyConnected(userId, sessionId);
         drainAndPushOfflineMessages(userId);
     }
 
@@ -86,8 +115,17 @@ public class WebSocketSessionEventListener {
         }
         onlineUserService.markOffline(userId, sessionId);
         activeConnections.decrementAndGet();
+        Long connectTime = connectTimes.remove(sessionId);
+        if (heartbeatHandler != null) {
+            heartbeatHandler.unregisterSession(sessionId);
+        }
+        if (auditService != null) {
+            long duration = connectTime != null ? System.currentTimeMillis() - connectTime : 0;
+            auditService.auditDisconnect(userId, sessionId, duration);
+        }
         log.info("[WS-Session] 用户断开: userId={}, sessionId={}, localActive={}",
                 userId, sessionId, activeConnections.get());
+        notifyDisconnected(userId, sessionId);
     }
 
     /**
@@ -106,6 +144,34 @@ public class WebSocketSessionEventListener {
      */
     public AtomicLong getActiveConnectionsCounter() {
         return activeConnections;
+    }
+
+    /**
+     * 通知所有注册的连接监听器：连接建立。
+     */
+    private void notifyConnected(String userId, String sessionId) {
+        for (WebSocketConnectionListener listener : connectionListeners) {
+            try {
+                listener.onConnected(userId, sessionId);
+            } catch (Exception e) {
+                log.warn("[WS-Session] 连接监听器异常: listener={}, err={}",
+                        listener.getClass().getSimpleName(), e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 通知所有注册的连接监听器：连接断开。
+     */
+    private void notifyDisconnected(String userId, String sessionId) {
+        for (WebSocketConnectionListener listener : connectionListeners) {
+            try {
+                listener.onDisconnected(userId, sessionId);
+            } catch (Exception e) {
+                log.warn("[WS-Session] 断开监听器异常: listener={}, err={}",
+                        listener.getClass().getSimpleName(), e.getMessage());
+            }
+        }
     }
 
     /**

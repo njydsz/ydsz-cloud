@@ -6,6 +6,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
+import com.njydsz.pmis.common.sentry.spi.SlaCollector;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SlaMetricAspect {
 
-    private final DefaultSlaCollector slaCollector;
+    private final SlaCollector slaCollector;
 
     /**
      * 拦截 @SlaMetric 注解

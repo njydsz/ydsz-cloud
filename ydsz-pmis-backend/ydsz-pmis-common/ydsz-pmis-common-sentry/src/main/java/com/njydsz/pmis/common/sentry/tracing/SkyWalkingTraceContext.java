@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.sentry.tracing;
 
+import org.apache.skywalking.apm.toolkit.trace.ActiveSpan;
+
 import com.njydsz.pmis.common.sentry.spi.TraceContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public String getTraceId() {
         try {
+            // FQN-OK: name conflict with com.njydsz.pmis.common.sentry.spi.TraceContext
             return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId();
         } catch (Exception e) {
             return null;
@@ -31,6 +34,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public String getSpanId() {
         try {
+            // FQN-OK: name conflict with com.njydsz.pmis.common.sentry.spi.TraceContext
             return String.valueOf(org.apache.skywalking.apm.toolkit.trace.TraceContext.spanId());
         } catch (Exception e) {
             return null;
@@ -40,6 +44,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public String getSegmentId() {
         try {
+            // FQN-OK: name conflict with com.njydsz.pmis.common.sentry.spi.TraceContext
             return org.apache.skywalking.apm.toolkit.trace.TraceContext.segmentId();
         } catch (Exception e) {
             return null;
@@ -49,6 +54,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public boolean isTracing() {
         try {
+            // FQN-OK: name conflict with com.njydsz.pmis.common.sentry.spi.TraceContext
             return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId() != null;
         } catch (Exception e) {
             return false;
@@ -58,7 +64,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public void tag(String key, String value) {
         try {
-            org.apache.skywalking.apm.toolkit.trace.ActiveSpan.tag(key, value);
+            ActiveSpan.tag(key, value);
         } catch (Exception e) {
             log.debug("[Sentry] SkyWalking tag 注入失败: key={}, err={}", key, e.getMessage());
         }

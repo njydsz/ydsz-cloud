@@ -2,6 +2,8 @@ package com.njydsz.pmis.common.sentry.tracing;
 
 import java.util.UUID;
 
+import org.slf4j.MDC;
+
 import com.njydsz.pmis.common.sentry.spi.TraceContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +82,7 @@ public class DefaultTraceContext implements TraceContext {
      */
     private String getMdcValue(String key) {
         try {
-            return org.slf4j.MDC.get(key);
+            return MDC.get(key);
         } catch (Exception e) {
             return null;
         }
@@ -91,7 +93,7 @@ public class DefaultTraceContext implements TraceContext {
      */
     private void setMdcValue(String key, String value) {
         try {
-            org.slf4j.MDC.put(key, value);
+            MDC.put(key, value);
         } catch (Exception e) {
             log.debug("[Sentry] MDC put 失败: key={}, err={}", key, e.getMessage());
         }

@@ -53,6 +53,7 @@ public class AlertEvent {
      * 生成去重 Key（用于告警收敛）
      */
     public String dedupKey() {
-        return name + "|" + (labels != null ? labels.getOrDefault("job", "") : "");
+        return name + "|" + (severity != null ? severity.name() : "")
+                + "|" + (labels != null ? labels.getOrDefault("job", "") : "");
     }
 }

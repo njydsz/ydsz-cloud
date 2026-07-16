@@ -7,7 +7,6 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
-import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.socket.session.OnlineUserService;
 
 import lombok.RequiredArgsConstructor;

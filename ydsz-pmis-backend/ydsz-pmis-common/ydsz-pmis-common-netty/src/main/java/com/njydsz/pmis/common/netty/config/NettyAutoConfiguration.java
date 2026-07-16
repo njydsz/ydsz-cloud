@@ -11,9 +11,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.pmis.common.netty.client.AbstractNettyClient;
+import com.njydsz.pmis.common.netty.event.ChannelEventDispatcher;
+import com.njydsz.pmis.common.netty.event.ChannelEventListener;
+import com.njydsz.pmis.common.netty.event.MessageDispatcher;
 import com.njydsz.pmis.common.netty.health.NettyHealthIndicator;
 import com.njydsz.pmis.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.pmis.common.netty.pool.NettyEventLoopPool;
@@ -127,6 +131,36 @@ public class NettyAutoConfiguration {
                 servers != null ? servers : Collections.emptyList();
         log.info("[Netty] 注册 NettyHealthIndicator, servers={}", serverList.size());
         return new NettyHealthIndicator(serverList, eventLoopPool, metrics);
+    }
+
+    /**
+     * Channel 事件分发器（当容器中存在 ChannelEventListener Bean 时自动注册）。
+     *
+     * @param listeners Channel 事件监听器列表
+     * @return Channel 事件分发器
+     */
+    @Bean
+    @ConditionalOnMissingBean(ChannelEventDispatcher.class)
+    public ChannelEventDispatcher channelEventDispatcher(
+            @Autowired(required = false) List<ChannelEventListener> listeners) {
+        List<ChannelEventListener> list =
+                listeners != null ? listeners : Collections.emptyList();
+        log.info("[Netty] 注册 ChannelEventDispatcher, listeners={}", list.size());
+        return new ChannelEventDispatcher(list);
+    }
+
+    /**
+     * 消息分发器（基于 @MessageHandler 注解自动路由消息）。
+     *
+     * @param applicationContext Spring 应用上下文
+     * @return 消息分发器
+     */
+    @Bean
+    @ConditionalOnMissingBean(MessageDispatcher.class)
+    public MessageDispatcher messageDispatcher(
+            @Autowired(required = false) ApplicationContext applicationContext) {
+        log.info("[Netty] 注册 MessageDispatcher");
+        return new MessageDispatcher(applicationContext);
     }
 
     /**

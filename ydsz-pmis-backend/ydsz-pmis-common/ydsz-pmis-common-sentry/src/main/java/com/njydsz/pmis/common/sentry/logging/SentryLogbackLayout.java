@@ -6,6 +6,7 @@ import java.time.Instant;
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
 import com.njydsz.pmis.common.sentry.domain.LogLevel;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
@@ -35,6 +36,16 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
     private String appName = "pmis";
     private String hostname;
     private String profile = "dev";
+    private volatile String cachedHostname;
+
+    @Override
+    public void start() {
+        if (appName == null || appName.isBlank()) {
+            appName = "pmis";
+        }
+        cachedHostname = detectHostname();
+        super.start();
+    }
 
     @Override
     public String doLayout(ILoggingEvent event) {
@@ -50,7 +61,7 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
                 .thread(event.getThreadName())
                 .message(event.getFormattedMessage())
                 .appName(appName)
-                .hostname(hostname != null ? hostname : detectHostname())
+                .hostname(hostname != null ? hostname : cachedHostname)
                 .profile(profile);
 
         // MDC 字段提取
@@ -69,20 +80,20 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
         return builder.build();
     }
 
-    private LogLevel convertLevel(ch.qos.logback.classic.Level level) {
+    private LogLevel convertLevel(Level level) {
         if (level == null) {
             return LogLevel.INFO;
         }
         switch (level.levelInt) {
-            case ch.qos.logback.classic.Level.TRACE_INT:
+            case Level.TRACE_INT:
                 return LogLevel.TRACE;
-            case ch.qos.logback.classic.Level.DEBUG_INT:
+            case Level.DEBUG_INT:
                 return LogLevel.DEBUG;
-            case ch.qos.logback.classic.Level.INFO_INT:
+            case Level.INFO_INT:
                 return LogLevel.INFO;
-            case ch.qos.logback.classic.Level.WARN_INT:
+            case Level.WARN_INT:
                 return LogLevel.WARN;
-            case ch.qos.logback.classic.Level.ERROR_INT:
+            case Level.ERROR_INT:
                 return LogLevel.ERROR;
             default:
                 return LogLevel.INFO;

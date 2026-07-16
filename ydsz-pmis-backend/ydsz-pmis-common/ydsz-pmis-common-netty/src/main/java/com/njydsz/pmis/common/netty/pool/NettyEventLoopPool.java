@@ -7,7 +7,6 @@ import com.njydsz.pmis.common.netty.transport.NativeTransportDetector;
 import com.njydsz.pmis.common.netty.transport.NativeTransportDetector.TransportType;
 
 import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
