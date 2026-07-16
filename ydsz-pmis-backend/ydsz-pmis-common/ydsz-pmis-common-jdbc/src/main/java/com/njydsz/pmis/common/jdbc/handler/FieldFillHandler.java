@@ -1,7 +1,5 @@
 package com.njydsz.pmis.common.jdbc.handler;
 
-import java.util.Map;
-
 import net.sf.jsqlparser.expression.Expression;
 
 /**
@@ -84,34 +82,5 @@ public interface FieldFillHandler {
      */
     default boolean updateIgnore(String tableName) {
         return false;
-    }
-
-    /**
-     * 获取字段默认值映射
-     *
-     * <p>当字段值为 null 时，使用此映射提供的默认值进行填充。
-     * 返回的 Map key 为字段名，value 为默认值表达式。</p>
-     *
-     * @return 默认值映射，返回 null 或空 Map 表示不使用默认值
-     */
-    default Map<String, Expression> getDefaultValues() {
-        return null;
-    }
-
-    /**
-     * 获取指定字段的默认值
-     *
-     * <p>当字段值为 null 时调用此方法获取默认值。
-     * 优先使用 {@link #getDefaultValues()} 中配置的映射。</p>
-     *
-     * @param fieldName 字段名
-     * @return 默认值表达式，返回 null 表示不应用默认值
-     */
-    default Expression getDefaultValue(String fieldName) {
-        Map<String, Expression> defaults = getDefaultValues();
-        if (defaults != null && !defaults.isEmpty()) {
-            return defaults.get(fieldName);
-        }
-        return null;
     }
 }

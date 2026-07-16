@@ -21,6 +21,8 @@ import com.njydsz.pmis.common.jdbc.config.ReadWriteSplittingProperties;
 import com.njydsz.pmis.common.jdbc.config.RoundRobinLoadBalanceStrategy;
 import com.njydsz.pmis.common.jdbc.config.WeightedLoadBalanceStrategy;
 
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -98,11 +100,17 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
 
     /**
      * 根据 SQL 类型解析目标数据源
+     * <p>事务激活时强制路由到主库，保证读写一致性。
      *
      * @param commandType SQL 命令类型
      * @return 数据源名称
      */
     private String resolveTargetDataSource(SqlCommandType commandType) {
+        // 事务感知：@Transactional 中 SELECT 必须读主库，避免读写不一致
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            log.debug("ReadWriteSplitting: Transaction active, routing to master for {}", commandType);
+            return properties.getMasterDs();
+        }
         if (commandType == SqlCommandType.SELECT) {
             List<String> slaves = properties.getSlaveDsList();
             if (slaves == null || slaves.isEmpty()) {

@@ -7,13 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.pmis.common.jdbc.health.DataSourceHealthIndicator;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -142,6 +145,22 @@ public class HikariCPConfiguration {
 
         log.info("HikariCP 数据源已初始化，池名: {}", dataSource.getPoolName());
         return dataSource;
+    }
+
+    /**
+     * 注册数据源健康检查指示器
+     *
+     * <p>当 HikariDataSource 和 HealthIndicator 可用时，自动注册 {@link DataSourceHealthIndicator}。
+     * 业务应用可通过覆盖该 Bean 自定义健康检查行为。
+     *
+     * @param dataSource HikariCP 数据源
+     * @return DataSourceHealthIndicator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(DataSourceHealthIndicator.class)
+    @ConditionalOnClass({HealthIndicator.class, HikariDataSource.class})
+    public DataSourceHealthIndicator dataSourceHealthIndicator(DataSource dataSource) {
+        return new DataSourceHealthIndicator(dataSource);
     }
 
     /**

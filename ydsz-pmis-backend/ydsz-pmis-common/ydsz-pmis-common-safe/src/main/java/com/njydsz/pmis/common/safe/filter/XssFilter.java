@@ -55,7 +55,6 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * 性能开销。JSON Body 在内存中缓存（10MB 上限），不应作为大文件上传接口的兜底。</p>
  *
  * @since 1.0.0
- * @since 1.0.0
  * @see XssHttpServletRequestWrapper
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 2)

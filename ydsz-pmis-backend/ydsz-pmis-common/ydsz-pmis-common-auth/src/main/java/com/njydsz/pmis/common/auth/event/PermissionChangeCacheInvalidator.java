@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(PermissionChangeCacheInvalidator.class)
 public class PermissionChangeCacheInvalidator {
 
     private static final String PERMISSION_CHANGE_CHANNEL = "ydsz-auth:permission:changed";

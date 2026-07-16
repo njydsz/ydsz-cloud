@@ -15,6 +15,11 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.pmis.common.exception.custom.SysException;
 
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.update.Update;
 
 /**
  * SQL 防火墙拦截器
@@ -124,17 +129,17 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
 
         SqlCommandType commandType = ms.getSqlCommandType();
 
-        // DELETE 无 WHERE 检测
+        // DELETE 无 WHERE 检测（使用 JSqlParser AST 精确判断，避免字符串匹配误判）
         if (blockDeleteWithoutWhere && commandType == SqlCommandType.DELETE) {
-            if (!trimmedSql.toLowerCase().contains("where")) {
+            if (!hasWhereClause(trimmedSql, SqlCommandType.DELETE)) {
                 reject("SQL 防火墙拦截：检测到无 WHERE 条件的 DELETE 操作，已拒绝", sql);
                 return;
             }
         }
 
-        // UPDATE 无 WHERE 检测
+        // UPDATE 无 WHERE 检测（使用 JSqlParser AST 精确判断，避免字符串匹配误判）
         if (blockUpdateWithoutWhere && commandType == SqlCommandType.UPDATE) {
-            if (!trimmedSql.toLowerCase().contains("where")) {
+            if (!hasWhereClause(trimmedSql, SqlCommandType.UPDATE)) {
                 reject("SQL 防火墙拦截：检测到无 WHERE 条件的 UPDATE 操作，已拒绝", sql);
                 return;
             }
@@ -142,12 +147,38 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     }
 
     /**
+     * 使用 JSqlParser AST 检测 DELETE/UPDATE 语句是否包含 WHERE 子句
+     *
+     * @param sql SQL 语句
+     * @param commandType SQL 命令类型（DELETE 或 UPDATE）
+     * @return true 表示有 WHERE 子句，false 表示无 WHERE 子句或解析失败
+     */
+    private boolean hasWhereClause(String sql, SqlCommandType commandType) {
+        try {
+            Statement statement = CCJSqlParserUtil.parse(sql);
+            if (commandType == SqlCommandType.DELETE && statement instanceof Delete delete) {
+                return delete.getWhere() != null;
+            }
+            if (commandType == SqlCommandType.UPDATE && statement instanceof Update update) {
+                return update.getWhere() != null;
+            }
+        } catch (JSQLParserException e) {
+            // 解析失败时保守拒绝，避免危险 SQL 通过
+            log.warn("SQL 防火墙：JSqlParser 解析失败，保守拒绝执行。sql={}", truncate(sql, 200));
+            return false;
+        }
+        return false;
+    }
+
+    /**
      * 检测 SQL 是否包含多语句（分号分隔）
      */
     private boolean containsMultiStatement(String sql) {
-        // 简单检测：去除字符串字面量后检查分号
+        // 去除字符串字面量后检查分号
         String cleaned = sql.replaceAll("'(?:[^']|'')*'", "''");
-        return SEMICOLON_PATTERN.matcher(cleaned).find() && !cleaned.trim().endsWith(";");
+        // 去除末尾空格后检测尾部是否为分号
+        String trimmed = cleaned.trim();
+        return SEMICOLON_PATTERN.matcher(cleaned).find() && !trimmed.endsWith(";");
     }
 
     /**

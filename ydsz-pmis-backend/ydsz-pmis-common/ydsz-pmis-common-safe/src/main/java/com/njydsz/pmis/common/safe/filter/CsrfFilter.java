@@ -54,7 +54,6 @@ import java.util.Base64;
  * 启用 Redis 存储而非内存存储，否则多实例下 Token 不一致。</p>
  *
  * @since 1.0.0
- * @since 1.0.0
  * @see CsrfProperties
  * @see CsrfTokenRepository
  */

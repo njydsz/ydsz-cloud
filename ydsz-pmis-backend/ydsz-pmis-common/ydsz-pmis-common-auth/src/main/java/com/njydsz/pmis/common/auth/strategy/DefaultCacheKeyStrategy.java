@@ -7,6 +7,8 @@ import java.util.HexFormat;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.njydsz.pmis.common.auth.util.AuthDigestUtils;
+
 /**
  * 默认缓存 Key 生成策略。
  *
@@ -34,22 +36,16 @@ public class DefaultCacheKeyStrategy implements CacheKeyStrategy {
         // 使用 TreeSet 保证角色顺序一致性
         String rolesPart = String.join(",", new TreeSet<>(roleCodes));
         String raw = prefix + "|" + rolesPart;
-        return KEY_PREFIX + sha256(raw);
+        return KEY_PREFIX + AuthDigestUtils.sha256Hex(raw);
     }
 
     /**
      * 计算 SHA-256 摘要并转为十六进制字符串。
      *
-     * @param input 输入字符串
-     * @return 十六进制编码的摘要
+     * @deprecated 使用 {@link AuthDigestUtils#sha256Hex(String)}
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     private static String sha256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hashBytes);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 algorithm not available", e);
-        }
+        return AuthDigestUtils.sha256Hex(input);
     }
 }

@@ -27,8 +27,13 @@ import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.advice.XssRequestBodyAdvice;
 import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
 import com.njydsz.pmis.common.safe.alert.SecurityEventAggregator;
-import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.pmis.common.safe.alert.SecurityEventListener;
+import com.njdsz.pmis.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.pmis.common.safe.audit.SecurityAuditLogger;
+import com.njydsz.pmis.common.safe.metrics.SafeMetrics;
 import com.njydsz.pmis.common.safe.config.condition.XssConverterModeCondition;
+
+import io.micrometer.core.instrument.MeterRegistry;
 import com.njydsz.pmis.common.safe.config.condition.XssFilterModeCondition;
 import com.njydsz.pmis.common.safe.converter.XssJsonMessageConverter;
 import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
@@ -73,7 +78,6 @@ import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
  * <p><b>注意：</b>防重复提交/幂等性功能由本模块的 Redis 限流能力提供。</p>
  *
  * @since 1.0.0
- * @since 1.0.0
  */
 @AutoConfiguration
 @ConditionalOnClass(FilterRegistrationBean.class)
@@ -82,7 +86,7 @@ import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
         SafeXssProperties.class,
         SecurityHeaderProperties.class,
         CsrfProperties.class,
-        SensitiveDataConfiguration.class,
+        SensitiveDataProperties.class,
         SafeAlertProperties.class,
         RateLimitProperties.class,
         ApiSignatureProperties.class,
@@ -171,6 +175,56 @@ public class SafeConfiguration {
     @ConditionalOnMissingBean(SecurityEventPublisher.class)
     public SecurityEventPublisher securityEventPublisher() {
         return new SecurityEventPublisher();
+    }
+
+    /**
+     * 注册安全指标采集器
+     *
+     * <p>采集安全相关 Micrometer 指标（XSS/SQL注入/CSRF/限流/IP封禁 Counter + Filter Timer）。
+     * Micrometer 为可选依赖，不可用时降级为内存计数。
+     *
+     * @param meterRegistry Micrometer MeterRegistry（可选）
+     * @return 安全指标采集器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SafeMetrics.class)
+    public SafeMetrics safeMetrics(ObjectProvider<MeterRegistry> meterRegistry) {
+        log.info("注册安全指标采集器");
+        return new SafeMetrics(meterRegistry.getIfAvailable());
+    }
+
+    /**
+     * 注册安全审计日志记录器
+     *
+     * <p>将安全事件以结构化 JSON 格式输出到独立的审计日志，
+     * 支持 traceId 关联，可与 Loki/Sentry 集成。
+     *
+     * @return 安全审计日志记录器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SecurityAuditLogger.class)
+    public SecurityAuditLogger securityAuditLogger() {
+        log.info("注册安全审计日志记录器");
+        return new SecurityAuditLogger();
+    }
+
+    /**
+     * 注册安全事件监听器
+     *
+     * <p>串联安全事件处理链：监听 {@link SecurityEvent} 事件，
+     * 分发给 {@link SafeMetrics}（指标采集）和 {@link SecurityAuditLogger}（审计日志）。
+     *
+     * @param safeMetrics   安全指标采集器（可选）
+     * @param auditLogger   安全审计日志记录器（可选）
+     * @return 安全事件监听器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SecurityEventListener.class)
+    public SecurityEventListener securityEventListener(
+            ObjectProvider<SafeMetrics> safeMetrics,
+            ObjectProvider<SecurityAuditLogger> auditLogger) {
+        log.info("注册安全事件监听器（串联指标采集 + 审计日志）");
+        return new SecurityEventListener(safeMetrics.getIfAvailable(), auditLogger.getIfAvailable());
     }
 
     /**

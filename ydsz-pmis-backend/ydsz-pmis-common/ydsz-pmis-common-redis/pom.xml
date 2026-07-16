@@ -47,6 +47,18 @@
             <artifactId>micrometer-core</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!--
+            Jackson annotations（provided，编译期可见，运行期不强制）
+            spring-boot 4.x 的 spring-boot-health / spring-boot-actuator / spring-web 7.0.x
+            的 class 文件字节码中带有 @JsonInclude 等 Jackson 注解。声明为 provided 即可在
+            编译期消除 "未知的枚举常量 com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY"
+            警告，又不强制本模块使用者必须引入 Jackson 核心。
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>

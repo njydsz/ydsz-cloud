@@ -499,7 +499,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
      * @return 需要应用租户隔离时返回 true，否则返回 false
      */
     private boolean shouldApplyTenantIsolation(Table table) {
-        if (!DataPermissionContext.isTenantIsolationEnabled()) {
+        if (tenantIsolationProperties == null || !tenantIsolationProperties.isEnabled()) {
             return false;
         }
         if (table == null) {

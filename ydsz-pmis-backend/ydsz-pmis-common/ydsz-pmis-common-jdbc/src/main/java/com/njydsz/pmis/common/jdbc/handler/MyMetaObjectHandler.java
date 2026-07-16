@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.jdbc.handler;
 import java.time.LocalDateTime;
 
 import org.apache.ibatis.reflection.MetaObject;
-import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
@@ -53,7 +52,6 @@ import lombok.extern.slf4j.Slf4j;
  * @see MetaObjectHandler
  */
 @Slf4j
-@Component
 public class MyMetaObjectHandler implements MetaObjectHandler {
 
     /**

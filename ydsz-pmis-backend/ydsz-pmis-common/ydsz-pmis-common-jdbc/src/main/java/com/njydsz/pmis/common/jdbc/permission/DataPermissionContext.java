@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import com.njydsz.pmis.common.core.enums.DataScopeType;
 
@@ -51,20 +50,9 @@ public class DataPermissionContext {
     private Map<String, Set<String>> editableColumnsByTable = Collections.emptyMap();
 
     /**
-     * 租户隔离开关 Supplier（由配置类初始化）。
+     * 租户隔离是否启用（由配置类构造时注入）。
      */
-    private static volatile Supplier<Boolean> tenantIsolationEnabledSupplier = () -> true;
-
-    /**
-     * 初始化租户隔离开关的 Supplier。
-     *
-     * <p>由 Spring Boot 配置类在启动时调用，传入实际的配置读取逻辑。
-     *
-     * @param supplier 租户隔离开关的 Supplier
-     */
-    public static void initTenantIsolationEnabledSupplier(Supplier<Boolean> supplier) {
-        tenantIsolationEnabledSupplier = supplier;
-    }
+    private boolean tenantIsolationEnabled = true;
 
     /**
      * 返回一个空的 DataPermissionContext 实例。
@@ -91,11 +79,18 @@ public class DataPermissionContext {
     /**
      * 判断租户隔离是否启用。
      *
-     * <p>通过外部配置的 Supplier 读取开关状态，默认返回 true（启用租户隔离）。
-     *
      * @return true 表示启用租户隔离，false 表示关闭
      */
-    public static boolean isTenantIsolationEnabled() {
-        return tenantIsolationEnabledSupplier != null && tenantIsolationEnabledSupplier.get();
+    public boolean isTenantIsolationEnabled() {
+        return tenantIsolationEnabled;
+    }
+
+    /**
+     * 设置租户隔离是否启用。
+     *
+     * @param tenantIsolationEnabled 租户隔离是否启用
+     */
+    public void setTenantIsolationEnabled(boolean tenantIsolationEnabled) {
+        this.tenantIsolationEnabled = tenantIsolationEnabled;
     }
 }

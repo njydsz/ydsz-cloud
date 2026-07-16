@@ -30,6 +30,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import com.njydsz.pmis.common.jdbc.handler.CreatedAtHandler;
 import com.njydsz.pmis.common.jdbc.handler.CreatedByHandler;
 import com.njydsz.pmis.common.jdbc.handler.FieldFillHandler;
+import com.njydsz.pmis.common.jdbc.handler.MyMetaObjectHandler;
 import com.njydsz.pmis.common.jdbc.handler.UpdatedAtHandler;
 import com.njydsz.pmis.common.jdbc.handler.UpdatedByHandler;
 import com.njydsz.pmis.common.jdbc.interceptor.ColPermissionInnerInterceptor;
@@ -39,7 +40,6 @@ import com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor;
 import com.njydsz.pmis.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.pmis.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
 import com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor;
-import com.njydsz.pmis.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.pmis.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.pmis.common.jdbc.permission.DataScopeIdExpander;
 
@@ -242,6 +242,17 @@ public class MybatisPlusConfiguration {
     }
 
     /**
+     * 注册 MyBatis-Plus MetaObjectHandler，自动填充审计字段
+     *
+     * @return MyMetaObjectHandler 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(MyMetaObjectHandler.class)
+    public MyMetaObjectHandler myMetaObjectHandler() {
+        return new MyMetaObjectHandler();
+    }
+
+    /**
      * 配置字段填充拦截器
      *
      * <p>根据配置决定是否启用以下字段填充拦截器：
@@ -318,9 +329,6 @@ public class MybatisPlusConfiguration {
         if (Boolean.TRUE.equals(dataPermissionConfiguration.getEnabled())) {
             DataScopeIdExpander expander = dataScopeIdExpanderProvider == null ? null : dataScopeIdExpanderProvider.getIfAvailable();
             DataPermissionContextResolver resolver = new DataPermissionContextResolver(expander);
-            // 初始化租户隔离开关 Supplier
-            DataPermissionContext.initTenantIsolationEnabledSupplier(() ->
-                    tenantIsolationProperties != null && tenantIsolationProperties.isEnabled());
 
             // 注册行级权限拦截器和列级权限拦截器
             interceptor.addInnerInterceptor(new RowPermissionInnerInterceptor(dataPermissionConfiguration, resolver, tenantIsolationProperties));
@@ -344,15 +352,17 @@ public class MybatisPlusConfiguration {
             return;
         }
 
-        // 扫描所有标注了 @TableName 的实体类
+        // 仅扫描实体包路径下的 .class 文件，避免全量 classpath 扫描导致启动缓慢
         List<String> entitiesWithVersion = new ArrayList<>();
         
         try {
             ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
             MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(resourcePatternResolver);
             
-            // 扫描 classpath 下所有 .class 文件
-            Resource[] resources = resourcePatternResolver.getResources("classpath*:/**/*.class");
+            // 仅扫描配置的 Mapper 包路径的上一级目录（通常是 entity 包）
+            // 默认为 com.njydsz.pmis.* 下的 class 文件
+            String scanPattern = "classpath*:com/njydsz/pmis/**/*.class";
+            Resource[] resources = resourcePatternResolver.getResources(scanPattern);
             
             for (Resource resource : resources) {
                 if (resource.isReadable()) {

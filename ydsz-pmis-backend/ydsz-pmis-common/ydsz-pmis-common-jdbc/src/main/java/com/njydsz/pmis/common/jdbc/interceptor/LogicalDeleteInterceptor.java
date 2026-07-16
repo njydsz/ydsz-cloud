@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -427,33 +428,11 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
     }
 
     /**
-     * 处理 DELETE 语句 - 对 JsqlParser AST 进行安全校验并追加 deleted=0 兜底条件
+     * 处理 DELETE 语句（空实现）
      *
-     * <p>该方法负责以下处理：
-     * <ul>
-     *   <li>校验 DELETE 语句的合法性（拒绝多表删除等不支持场景）</li>
-     *   <li>在现有 WHERE 条件（如有）末尾追加 deleted = 0 条件作为安全兜底</li>
-     * </ul>
-     *
-     * <p><b>注意：实际的 DELETE→UPDATE 转换由 {@link #processDeleteIntercept} 方法完成</b>，
-     * 该方法从原始 SQL 字符串层面解析 DELETE 语句，调用 {@link #convertDeleteToLogicalUpdateSql}
-     * 生成 UPDATE 语句，并将转换后的 SQL 设置回 BoundSql。本方法（processDelete）仅在
-     * JsqlParser AST 层面追加安全条件，不负责 SQL 字符串的替换。
-     *
-     * <p>SQL 转换示例：
-     * <pre>
-     * // 原始 DELETE 语句
-     * DELETE FROM rs_company WHERE id = 1
-     *
-     * // 最终生成的 UPDATE 语句（由 processDeleteIntercept 完成）
-     * UPDATE rs_company SET deleted = 1 WHERE id = 1 AND deleted = 0
-     * </pre>
-     *
-     * <p>不支持的场景（将抛出异常以防止物理删除）：
-     * <ul>
-     *   <li>多表删除（DELETE t1, t2 FROM ...）</li>
-     *   <li>缺少表引用的 DELETE 语句</li>
-     * </ul>
+     * <p>DELETE 语句的转换由 {@link #processDeleteIntercept} 直接完成，
+     * 该方法调用 {@link #convertDeleteToLogicalUpdateSql} 生成 UPDATE SQL。
+     * 此方法仅为满足 JsqlParserSupport 抽象方法要求，不做任何处理。
      *
      * @param delete DELETE 语句对象
      * @param index  语句索引
@@ -462,34 +441,7 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
      */
     @Override
     protected void processDelete(Delete delete, int index, String sql, Object obj) {
-        if (delete == null) {
-            return;
-        }
-
-        Table table = delete.getTable();
-        if (table == null) {
-            throw new IllegalStateException(
-                    "Cannot convert DELETE to UPDATE: missing table reference, possibly multi-table delete");
-        }
-
-        if (CollectionUtils.isNotEmpty(delete.getTables())) {
-            throw new IllegalStateException(
-                    "Cannot convert multi-table DELETE to UPDATE: " + delete);
-        }
-
-        // 追加 deleted = 0 条件作为安全兜底，防止物理删除未标记为已删除的记录
-        // 实际的 DELETE→UPDATE SQL 字符串转换由 processDeleteIntercept 方法完成
-        Expression existingWhere = delete.getWhere();
-        Expression deletedCondition = new EqualsTo(new Column(deletedColumn), new LongValue(normalValue));
-
-        if (existingWhere == null) {
-            delete.setWhere(deletedCondition);
-        } else {
-            delete.setWhere(new AndExpression(existingWhere, deletedCondition));
-        }
-
-        log.debug("LogicalDeleteInterceptor: Appended {}={} safety condition to DELETE WHERE clause",
-                deletedColumn, normalValue);
+        // DELETE→UPDATE 转换由 processDeleteIntercept 完成，此处无需处理
     }
 
     /**
@@ -600,52 +552,13 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
     /**
      * 设置拦截器配置属性
      *
-     * <p>该方法由 Spring 在初始化拦截器时自动调用，
-     * 将配置文件中的属性值绑定到拦截器的成员变量上。
-     *
-     * <p>支持的配置项：
-     * <ul>
-     *   <li>deletedColumn：删除标记字段名，默认 "deleted"</li>
-     *   <li>deletedValue：已删除标记值，默认 1</li>
-     *   <li>normalValue：正常记录标记值，默认 0</li>
-     *   <li>enabled：是否启用，默认 true</li>
-     * </ul>
+     * <p>在 Spring Boot 环境下，配置通过 @ConfigurationProperties + setter 注入，
+     * 此方法仅为兼容 MyBatis 原生 XML 配置方式保留。
      *
      * @param properties 配置属性
      */
     @Override
     public void setProperties(Properties properties) {
-        if (properties == null) {
-            return;
-        }
-
-        String column = properties.getProperty("deletedColumn");
-        if (StringUtils.isNotBlank(column)) {
-            this.deletedColumn = column;
-        }
-
-        String deletedVal = properties.getProperty("deletedValue");
-        if (StringUtils.isNotBlank(deletedVal)) {
-            try {
-                this.deletedValue = Long.parseLong(deletedVal);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid deletedValue: {}, using default: 1", deletedVal);
-            }
-        }
-
-        String normalVal = properties.getProperty("normalValue");
-        if (StringUtils.isNotBlank(normalVal)) {
-            try {
-                this.normalValue = Long.parseLong(normalVal);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid normalValue: {}, using default: 0", normalVal);
-            }
-        }
-
-        String enabledStr = properties.getProperty("enabled", "true");
-        this.enabled = Boolean.parseBoolean(enabledStr);
-
-        log.info("LogicalDeleteInterceptor initialized: deletedColumn={}, deletedValue={}, normalValue={}, enabled={}",
-                deletedColumn, deletedValue, normalValue, enabled);
+        // Spring Boot 环境下配置通过 @ConfigurationProperties 注入，此方法不会被调用
     }
 }

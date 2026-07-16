@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.safe.sensitive;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.serializer.JsonSerializer;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
-import com.njydsz.pmis.common.json.Json;
 
 /**
  * 敏感数据脱敏序列化器（基于 Json 引擎）
