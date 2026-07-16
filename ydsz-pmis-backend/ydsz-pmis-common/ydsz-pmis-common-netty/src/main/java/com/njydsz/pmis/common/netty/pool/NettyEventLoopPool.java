@@ -3,9 +3,10 @@ package com.njydsz.pmis.common.netty.pool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.njydsz.pmis.common.netty.transport.NativeTransportDetector;
+import com.njydsz.pmis.common.netty.transport.NativeTransportDetector.TransportType;
+
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.MultiThreadIoEventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,12 +41,14 @@ public class NettyEventLoopPool {
     private final long shutdownQuietPeriodSeconds;
     /** 优雅关闭超时（秒） */
     private final long shutdownTimeoutSeconds;
+    /** 原生传输类型 */
+    private final TransportType transportType;
 
     /**
-     * 构造默认 EventLoop 池（静默期 2s，超时 15s）。
+     * 构造默认 EventLoop 池（静默期 2s，超时 15s，NIO 传输）。
      */
     public NettyEventLoopPool() {
-        this(2L, 15L);
+        this(2L, 15L, TransportType.NIO);
     }
 
     /**
@@ -55,8 +58,34 @@ public class NettyEventLoopPool {
      * @param shutdownTimeoutSeconds     优雅关闭超时（秒）
      */
     public NettyEventLoopPool(long shutdownQuietPeriodSeconds, long shutdownTimeoutSeconds) {
+        this(shutdownQuietPeriodSeconds, shutdownTimeoutSeconds, TransportType.NIO);
+    }
+
+    /**
+     * 构造 EventLoop 池（指定传输类型）。
+     *
+     * @param shutdownQuietPeriodSeconds 优雅关闭静默期（秒）
+     * @param shutdownTimeoutSeconds     优雅关闭超时（秒）
+     * @param nativeTransportMode        原生传输模式（auto / enabled / disabled）
+     */
+    public NettyEventLoopPool(long shutdownQuietPeriodSeconds, long shutdownTimeoutSeconds,
+                              String nativeTransportMode) {
+        this(shutdownQuietPeriodSeconds, shutdownTimeoutSeconds,
+                NativeTransportDetector.detect(nativeTransportMode));
+    }
+
+    /**
+     * 构造 EventLoop 池（指定传输类型）。
+     *
+     * @param shutdownQuietPeriodSeconds 优雅关闭静默期（秒）
+     * @param shutdownTimeoutSeconds     优雅关闭超时（秒）
+     * @param transportType              传输类型
+     */
+    public NettyEventLoopPool(long shutdownQuietPeriodSeconds, long shutdownTimeoutSeconds,
+                              TransportType transportType) {
         this.shutdownQuietPeriodSeconds = shutdownQuietPeriodSeconds;
         this.shutdownTimeoutSeconds = shutdownTimeoutSeconds;
+        this.transportType = transportType;
     }
 
     /**
@@ -68,8 +97,8 @@ public class NettyEventLoopPool {
     public synchronized EventLoopGroup acquireBossGroup(int threads) {
         if (bossGroup == null) {
             int n = threads <= 0 ? 1 : threads;
-            bossGroup = new NioEventLoopGroup(n, new DefaultThreadFactory("pmis-netty-boss"));
-            log.info("[Netty-Pool] 创建 boss EventLoopGroup, threads={}", n);
+            bossGroup = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-boss");
+            log.info("[Netty-Pool] 创建 boss EventLoopGroup, threads={}, transport={}", n, transportType);
         }
         bossRefCount.incrementAndGet();
         return bossGroup;
@@ -84,8 +113,8 @@ public class NettyEventLoopPool {
     public synchronized EventLoopGroup acquireWorkerGroup(int threads) {
         if (workerGroup == null) {
             int n = threads <= 0 ? Runtime.getRuntime().availableProcessors() * 2 : threads;
-            workerGroup = new NioEventLoopGroup(n, new DefaultThreadFactory("pmis-netty-worker"));
-            log.info("[Netty-Pool] 创建 worker EventLoopGroup, threads={}", n);
+            workerGroup = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-worker");
+            log.info("[Netty-Pool] 创建 worker EventLoopGroup, threads={}, transport={}", n, transportType);
         }
         workerRefCount.incrementAndGet();
         return workerGroup;
@@ -99,8 +128,8 @@ public class NettyEventLoopPool {
      */
     public EventLoopGroup createIsolatedBossGroup(int threads) {
         int n = threads <= 0 ? 1 : threads;
-        EventLoopGroup group = new NioEventLoopGroup(n, new DefaultThreadFactory("pmis-netty-boss-iso"));
-        log.info("[Netty-Pool] 创建隔离 boss EventLoopGroup, threads={}", n);
+        EventLoopGroup group = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-boss-iso");
+        log.info("[Netty-Pool] 创建隔离 boss EventLoopGroup, threads={}, transport={}", n, transportType);
         return group;
     }
 
@@ -112,8 +141,8 @@ public class NettyEventLoopPool {
      */
     public EventLoopGroup createIsolatedWorkerGroup(int threads) {
         int n = threads <= 0 ? Runtime.getRuntime().availableProcessors() * 2 : threads;
-        EventLoopGroup group = new NioEventLoopGroup(n, new DefaultThreadFactory("pmis-netty-worker-iso"));
-        log.info("[Netty-Pool] 创建隔离 worker EventLoopGroup, threads={}", n);
+        EventLoopGroup group = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-worker-iso");
+        log.info("[Netty-Pool] 创建隔离 worker EventLoopGroup, threads={}, transport={}", n, transportType);
         return group;
     }
 
@@ -202,5 +231,14 @@ public class NettyEventLoopPool {
      */
     public boolean isWorkerGroupActive() {
         return workerGroup != null && !workerGroup.isShutdown();
+    }
+
+    /**
+     * 获取当前传输类型。
+     *
+     * @return 传输类型
+     */
+    public TransportType getTransportType() {
+        return transportType;
     }
 }

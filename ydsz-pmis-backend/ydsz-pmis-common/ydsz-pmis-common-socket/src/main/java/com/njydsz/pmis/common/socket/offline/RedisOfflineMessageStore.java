@@ -65,6 +65,7 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
         }
 
         log.debug("[WS-Offline] 缓存离线消息: userId={}, type={}", userId, type);
+    }
 
     @Override
     public List<String> drainOffline(String userId) {

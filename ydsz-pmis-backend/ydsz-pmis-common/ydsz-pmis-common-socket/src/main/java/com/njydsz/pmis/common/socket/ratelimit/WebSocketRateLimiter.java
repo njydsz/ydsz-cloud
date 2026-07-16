@@ -5,6 +5,7 @@ import java.time.Duration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
+import com.njydsz.pmis.common.socket.resilience.WebSocketCircuitBreaker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class WebSocketRateLimiter {
 
     private final StringRedisTemplate redisTemplate;
     private final WebSocketProperties properties;
+    private final WebSocketCircuitBreaker circuitBreaker;
 
     /**
      * 检查用户是否被限流。
@@ -48,8 +50,11 @@ public class WebSocketRateLimiter {
         if (!properties.getRateLimit().isEnabled() || userId == null) {
             return true;
         }
-        return checkRate(RATE_LIMIT_USER_PREFIX + userId,
-                properties.getRateLimit().getMaxPerUserPerMinute());
+        return circuitBreaker.execute(
+                () -> checkRate(RATE_LIMIT_USER_PREFIX + userId,
+                        properties.getRateLimit().getMaxPerUserPerMinute()),
+                () -> true
+        );
     }
 
     /**
@@ -62,8 +67,11 @@ public class WebSocketRateLimiter {
         if (!properties.getRateLimit().isEnabled() || ip == null) {
             return true;
         }
-        return checkRate(RATE_LIMIT_IP_PREFIX + ip,
-                properties.getRateLimit().getMaxPerIpPerMinute());
+        return circuitBreaker.execute(
+                () -> checkRate(RATE_LIMIT_IP_PREFIX + ip,
+                        properties.getRateLimit().getMaxPerIpPerMinute()),
+                () -> true
+        );
     }
 
     /**
@@ -74,15 +82,10 @@ public class WebSocketRateLimiter {
      * @return true 表示允许，false 表示被限流
      */
     private boolean checkRate(String key, int limit) {
-        try {
-            Long count = redisTemplate.opsForValue().increment(key);
-            if (count != null && count == 1) {
-                redisTemplate.expire(key, WINDOW);
-            }
-            return count == null || count <= limit;
-        } catch (Exception e) {
-            log.warn("[WS-RateLimit] Redis 限流检查失败,降级放行: err={}", e.getMessage());
-            return true;
+        Long count = redisTemplate.opsForValue().increment(key);
+        if (count != null && count == 1) {
+            redisTemplate.expire(key, WINDOW);
         }
+        return count == null || count <= limit;
     }
 }

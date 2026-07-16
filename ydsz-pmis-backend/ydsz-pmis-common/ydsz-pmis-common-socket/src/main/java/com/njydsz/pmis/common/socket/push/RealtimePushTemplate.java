@@ -12,6 +12,16 @@ package com.njydsz.pmis.common.socket.push;
 public interface RealtimePushTemplate {
 
     /**
+     * 向指定用户推送通知（集群广播，带优先级）。
+     *
+     * @param userId   用户 ID
+     * @param type     消息类型标签
+     * @param payload  消息内容
+     * @param priority 消息优先级（P1-4）
+     */
+    void pushToUser(String userId, String type, Object payload, String priority);
+
+    /**
      * 向指定用户推送通知（集群广播）。
      *
      * @param userId  用户 ID
@@ -58,4 +68,23 @@ public interface RealtimePushTemplate {
      * @param payload 消息内容
      */
     void pushToTopic(String topic, Object payload);
+
+    /**
+     * 向指定用户推送通知，带消息 TTL（P3-4）。
+     *
+     * <p>消息超过 TTL 后自动过期，不再补偿推送。
+     *
+     * @param userId   用户 ID
+     * @param type     消息类型标签
+     * @param payload  消息内容
+     * @param ttlSeconds 消息 TTL（秒），0 表示不过期
+     */
+    void pushToUserWithTtl(String userId, String type, Object payload, long ttlSeconds);
+
+    /**
+     * 刷新重试队列中到期的消息（P0-4）。
+     *
+     * <p>定时调用此方法，拉取到期重试消息并重新推送。
+     */
+    void flushRetryMessages();
 }

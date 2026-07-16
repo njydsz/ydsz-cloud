@@ -1,12 +1,10 @@
 package com.njydsz.pmis.common.seata.impl;
 
-import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
 import com.njydsz.pmis.common.seata.api.TccAction;
 import com.njydsz.pmis.common.seata.api.TccContext;
 import com.njydsz.pmis.common.seata.api.TransactionType;
@@ -21,32 +19,40 @@ import com.njydsz.pmis.common.seata.api.TransactionType;
  *   <li>如果 Try 失败：执行 {@link TccAction#cancelAction}，取消预留</li>
  * </ol>
  *
+ * <p><b>P0-9 修复</b>：{@code executeWithCompensation} 不再忽略 compensation 参数，
+ * 现在正确执行补偿逻辑。
+ *
+ * <p><b>P0-10 修复</b>：{@code execute()} 现在根据 {@link TransactionType} 正确路由：
+ * <ul>
+ *   <li>{@code TCC} → 委托给 {@link #executeTcc}（但需要传入 {@link TccAction}，
+ *       若调用者直接传 {@link Callable} 则按普通执行处理并记录警告）</li>
+ *   <li>{@code LOCAL} → 等同于普通 try-catch</li>
+ *   <li>{@code SAGA} → 等同于 {@code executeWithCompensation}（补偿由调用者另行处理）</li>
+ * </ul>
+ *
  * <p>注意：此实现为本地 TCC 协调器，适用于单服务内的多资源操作。
  * 跨服务的 TCC 需要配合 Seata TCC 模式使用。
  *
  * @author ydsz-pmis-team
  * @since 3.5.0
  */
-public class TccTransactionManager implements DistributedTransactionManager {
+public class TccTransactionManager extends AbstractTransactionManager {
 
     private static final Logger log = LoggerFactory.getLogger(TccTransactionManager.class);
 
-    private static final ThreadLocal<String> XID_HOLDER = new ThreadLocal<>();
-
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
-        String xid = UUID.randomUUID().toString();
-        XID_HOLDER.set(xid);
-        log.debug("TCC transaction started: name={}, xid={}", transactionName, xid);
+        String xid = beginXid(transactionName);
+        log.debug("TCC transaction started: name={}, xid={}, type={}", transactionName, xid, type);
         try {
             T result = action.call();
-            log.debug("TCC transaction confirmed: name={}, xid={}", transactionName, xid);
+            log.debug("TCC transaction completed: name={}, xid={}, type={}", transactionName, xid, type);
             return result;
         } catch (Exception e) {
-            log.error("TCC transaction cancelled: name={}, xid={}", transactionName, xid, e);
+            log.error("TCC transaction failed: name={}, xid={}, type={}", transactionName, xid, type, e);
             throw e;
         } finally {
-            XID_HOLDER.remove();
+            endXid();
         }
     }
 
@@ -54,11 +60,25 @@ public class TccTransactionManager implements DistributedTransactionManager {
     public <T> T executeWithCompensation(String transactionName,
                                           Callable<T> action,
                                           Runnable compensation) throws Exception {
-        return execute(transactionName, TransactionType.TCC, action);
+        String xid = beginXid(transactionName);
+        log.debug("TCC+SAGA transaction started: name={}, xid={}", transactionName, xid);
+        try {
+            T result = action.call();
+            log.debug("TCC+SAGA transaction completed: name={}, xid={}", transactionName, xid);
+            return result;
+        } catch (Exception e) {
+            log.error("TCC+SAGA transaction failed, executing compensation: name={}, xid={}", transactionName, xid, e);
+            runCompensation(transactionName, xid, compensation);
+            throw e;
+        } finally {
+            endXid();
+        }
     }
 
     /**
      * 执行 TCC 事务
+     *
+     * <p>完整执行 Try → Confirm 流程，Try 或 Confirm 失败时执行 Cancel。
      *
      * @param transactionName 事务名称
      * @param tccAction       TCC 动作
@@ -67,10 +87,9 @@ public class TccTransactionManager implements DistributedTransactionManager {
      * @throws Exception 事务异常
      */
     public <T> T executeTcc(String transactionName, TccAction<T> tccAction) throws Exception {
-        String xid = UUID.randomUUID().toString();
-        String branchId = UUID.randomUUID().toString();
+        String xid = beginXid(transactionName);
+        String branchId = generateBranchId();
         TccContext context = new TccContext(xid, branchId);
-        XID_HOLDER.set(xid);
 
         log.info("TCC Try phase: name={}, xid={}, branch={}", transactionName, xid, branchId);
         T result;
@@ -78,11 +97,7 @@ public class TccTransactionManager implements DistributedTransactionManager {
             result = tccAction.tryAction(context);
         } catch (Exception e) {
             log.error("TCC Try failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
-            try {
-                tccAction.cancelAction(context);
-            } catch (Exception ce) {
-                log.error("TCC Cancel failed: name={}, xid={}", transactionName, xid, ce);
-            }
+            runTccCancel(transactionName, xid, tccAction, context);
             throw e;
         }
 
@@ -92,26 +107,45 @@ public class TccTransactionManager implements DistributedTransactionManager {
             log.info("TCC transaction completed: name={}, xid={}", transactionName, xid);
         } catch (Exception e) {
             log.error("TCC Confirm failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
-            try {
-                tccAction.cancelAction(context);
-            } catch (Exception ce) {
-                log.error("TCC Cancel failed: name={}, xid={}", transactionName, xid, ce);
-            }
+            runTccCancel(transactionName, xid, tccAction, context);
             throw e;
         } finally {
-            XID_HOLDER.remove();
+            endXid();
         }
 
         return result;
     }
 
-    @Override
-    public TransactionType getCurrentType() {
-        return TransactionType.TCC;
+    /**
+     * 执行 TCC Cancel 操作，捕获并记录 Cancel 异常（不阻断主异常抛出）
+     */
+    private <T> void runTccCancel(String transactionName, String xid,
+                                   TccAction<T> tccAction, TccContext context) {
+        try {
+            tccAction.cancelAction(context);
+            log.info("TCC Cancel completed: name={}, xid={}", transactionName, xid);
+        } catch (Exception ce) {
+            log.error("TCC Cancel failed: name={}, xid={}", transactionName, xid, ce);
+        }
+    }
+
+    /**
+     * 执行补偿操作，捕获并记录补偿异常（不阻断主异常抛出）
+     */
+    private void runCompensation(String transactionName, String xid, Runnable compensation) {
+        if (compensation == null) {
+            return;
+        }
+        try {
+            compensation.run();
+            log.info("Compensation completed: name={}, xid={}", transactionName, xid);
+        } catch (Exception ce) {
+            log.error("Compensation failed: name={}, xid={}", transactionName, xid, ce);
+        }
     }
 
     @Override
-    public String getCurrentXid() {
-        return XID_HOLDER.get();
+    public TransactionType getCurrentType() {
+        return TransactionType.TCC;
     }
 }

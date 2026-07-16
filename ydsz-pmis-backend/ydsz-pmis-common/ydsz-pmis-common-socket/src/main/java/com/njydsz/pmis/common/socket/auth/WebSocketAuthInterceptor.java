@@ -12,7 +12,9 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.token.TokenService;
+import com.njydsz.pmis.common.socket.audit.WebSocketAuditService;
 import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
+import com.njydsz.pmis.common.socket.ratelimit.ConnectionLimiter;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
     private final TokenService tokenService;
+    private final ConnectionLimiter connectionLimiter;
+    private final WebSocketAuditService auditService;
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -54,9 +58,23 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
+        // 连接数限制检查（P2-1）
+        if (connectionLimiter != null && !connectionLimiter.allowConnection(userInfo.getUserId())) {
+            log.warn("[WS-Auth] 握手拒绝: 连接数超限, userId={}", userInfo.getUserId());
+            response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+            return false;
+        }
+
         attributes.put(WebSocketConstants.WS_ATTR_USER_ID, userInfo.getUserId());
         attributes.put(WebSocketConstants.WS_ATTR_USERNAME, userInfo.getUsername());
         log.info("[WS-Auth] 握手成功: userId={}, username={}", userInfo.getUserId(), userInfo.getUsername());
+
+        // 审计连接建立（P2-5）
+        if (auditService != null) {
+            String remoteIp = request.getRemoteAddress() != null
+                    ? request.getRemoteAddress().getAddress().getHostAddress() : "unknown";
+            auditService.auditConnect(userInfo.getUserId(), null, remoteIp);
+        }
         return true;
     }
 

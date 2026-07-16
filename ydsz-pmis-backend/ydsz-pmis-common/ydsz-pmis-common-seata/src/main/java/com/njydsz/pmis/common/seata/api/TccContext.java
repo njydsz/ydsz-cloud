@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.seata.api;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -7,6 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * TCC 事务上下文
  *
  * <p>在 Try/Confirm/Cancel 三个阶段之间传递业务数据。
+ *
+ * <p><b>P2-4 修复</b>：{@link #getAll()} 不再使用 {@code Map.copyOf(data)} 遍历 live view，
+ * 改为先复制为 {@link HashMap} 再包装为不可变 Map，确保快照一致性。
+ *
+ * <p><b>P2-5 修复</b>：{@link #getLong(String)} 解析失败时不再抛出未声明的
+ * {@link NumberFormatException}，改为返回 null 并记录警告。
  *
  * @author ydsz-pmis-team
  * @since 3.5.0
@@ -44,15 +52,37 @@ public class TccContext {
         return val != null ? val.toString() : null;
     }
 
+    /**
+     * 获取 Long 类型值
+     *
+     * <p>解析失败时返回 null，不抛出异常。
+     *
+     * @param key 键
+     * @return Long 值，不存在或解析失败时返回 null
+     */
     public Long getLong(String key) {
         Object val = data.get(key);
+        if (val == null) {
+            return null;
+        }
         if (val instanceof Number num) {
             return num.longValue();
         }
-        return val != null ? Long.parseLong(val.toString()) : null;
+        try {
+            return Long.parseLong(val.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
+    /**
+     * 获取所有数据的不可变快照
+     *
+     * <p>先复制为 {@link HashMap} 再包装为不可变 Map，避免遍历 live view 的并发问题。
+     *
+     * @return 不可修改的数据快照
+     */
     public Map<String, Object> getAll() {
-        return Map.copyOf(data);
+        return Collections.unmodifiableMap(new HashMap<>(data));
     }
 }

@@ -11,6 +11,7 @@ import com.njydsz.pmis.common.netty.handler.TrafficMonitoringHandler;
 import com.njydsz.pmis.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.pmis.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.pmis.common.netty.ssl.SslContextFactory;
+import com.njydsz.pmis.common.netty.transport.NativeTransportDetector;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -135,7 +136,8 @@ public abstract class AbstractNettyServer {
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel.class)
+                .channel(NativeTransportDetector.getServerSocketChannelClass(
+                        pool.getTransportType()))
                 .option(ChannelOption.SO_BACKLOG, properties.getSoBacklog())
                 .childOption(ChannelOption.SO_KEEPALIVE, properties.isSoKeepAlive())
                 .childOption(ChannelOption.TCP_NODELAY, properties.isTcpNoDelay())
@@ -324,7 +326,8 @@ public abstract class AbstractNettyServer {
         if (eventLoopPool == null) {
             eventLoopPool = new NettyEventLoopPool(
                     properties.getShutdownQuietPeriodSeconds(),
-                    properties.getShutdownTimeoutSeconds());
+                    properties.getShutdownTimeoutSeconds(),
+                    properties.getNativeTransport());
         }
         return eventLoopPool;
     }

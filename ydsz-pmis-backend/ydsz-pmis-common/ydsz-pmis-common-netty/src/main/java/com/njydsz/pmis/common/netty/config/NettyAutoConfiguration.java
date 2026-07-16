@@ -62,9 +62,11 @@ public class NettyAutoConfiguration {
     public NettyEventLoopPool nettyEventLoopPool(NettyProperties properties) {
         NettyEventLoopPool pool = new NettyEventLoopPool(
                 properties.getShutdownQuietPeriodSeconds(),
-                properties.getShutdownTimeoutSeconds());
-        log.info("[Netty] 注册 NettyEventLoopPool, shared={}, quietPeriod={}s, timeout={}s",
+                properties.getShutdownTimeoutSeconds(),
+                properties.getNativeTransport());
+        log.info("[Netty] 注册 NettyEventLoopPool, shared={}, transport={}, quietPeriod={}s, timeout={}s",
                 properties.isSharedEventLoop(),
+                pool.getTransportType(),
                 properties.getShutdownQuietPeriodSeconds(),
                 properties.getShutdownTimeoutSeconds());
         return pool;
