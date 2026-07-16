@@ -5,7 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.CellType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.excel.api.validator.DataValidator;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.core.reader.SimpleCell;
@@ -14,6 +17,9 @@ import com.njydsz.common.excel.core.reader.SimpleCell;
  * Sheet数据读取器 - 纯手工XML解析
  */
 public class SheetXmlReader {
+
+    private static final Logger log = LoggerFactory.getLogger(SheetXmlReader.class);
+
     private final SharedStringsReader ssReader;
     private final SuperFastExcelReader reader;
     private Object rowData;
@@ -62,12 +68,35 @@ public class SheetXmlReader {
 
             if (rowData != null && reader.context != null && reader.listeners != null) {
                 reader.context.incrementRow();
+
+                // P0-3: DataValidator integration in SuperFast read path
+                try {
+                    DataValidator.validate(rowData, currentRow);
+                } catch (Exception ve) {
+                    log.warn("Data validation failed at row {}: {}", currentRow, ve.getMessage());
+                    for (ReadListener<?> listener : reader.listeners) {
+                        try {
+                            ReadListener<Object> typedListener = (ReadListener<Object>) listener;
+                            typedListener.onError(reader.context, ve);
+                        } catch (Exception ex) {
+                            log.warn("Listener onError callback failed at row {}", currentRow, ex);
+                        }
+                    }
+                    rowData = null;
+                    if (reader.maxRows > 0 && reader.context.getCurrentRow() - reader.headRowNumber >= reader.maxRows) {
+                        break;
+                    }
+                    pos = rowEnd + 6;
+                    continue;
+                }
+
                 List<ReadListener<?>> safeListeners = reader.listeners;
                 for (ReadListener<?> listener : safeListeners) {
                     try {
                         ReadListener<Object> typedListener = (ReadListener<Object>) listener;
                         typedListener.onData(reader.context, rowData);
                     } catch (Exception e) {
+                        log.warn("Listener onData callback failed at row {}", currentRow, e);
                     }
                 }
             }
@@ -287,6 +316,8 @@ public class SheetXmlReader {
                 try {
                     colMeta.setter.set(rowData, convertedValue);
                 } catch (Exception e) {
+                    log.warn("Failed to set field value at row={}, col={}, value={}",
+                            currentRow, col, convertedValue, e);
                 }
                 break;
             }

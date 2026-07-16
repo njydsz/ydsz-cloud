@@ -13,6 +13,7 @@ import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.model.SheetData;
+import com.njydsz.common.excel.spring.DownloadContext;
 
 /**
  * ExcelFacade - 高性能 Excel 处理工具
@@ -481,7 +482,7 @@ public class ExcelFacade {
      * @param contentType custom content type (deprecated, handled by ExcelWebSupport)
      */
     public static void setWebResponse(String fileName, boolean isXlsx, String contentType) {
-        com.njydsz.common.excel.spring.DownloadContext.setFileName(
+        DownloadContext.setFileName(
             fileName + (isXlsx ? ".xlsx" : ".xls"));
     }
 

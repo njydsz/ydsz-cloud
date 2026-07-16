@@ -183,10 +183,6 @@ public class ExcelConfig {
         this.writeBufferSize = writeBufferSize;
     }
 
-    }
-
-    }
-
     public boolean isAutomaticTrim() {
         return automaticTrim;
     }

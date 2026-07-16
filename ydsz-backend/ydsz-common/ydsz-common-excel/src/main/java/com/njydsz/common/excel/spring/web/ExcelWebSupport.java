@@ -103,7 +103,6 @@ public class ExcelWebSupport {
         } finally {
             // 确保 ThreadLocal 被清理，防止线程池内存泄漏
             DownloadContext.clear();
-            ExcelFacade.clearDownloadContext();
         }
     }
 }
