@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserSessionMapper;
@@ -50,7 +50,7 @@ public class SessionServiceImpl implements SessionService {
         s.setUserAgent(userAgent);
         s.setDeviceType(deviceType);
         s.setStatus("ACTIVE");
-        s.setTenantId(TenantContext.getTenantId());
+        s.setTenantId(AuthContext.getTenantIdOrDefault());
         s.setCreatedAt(LocalDateTime.now());
         s.setUpdatedAt(LocalDateTime.now());
         s.setDeleted(0);

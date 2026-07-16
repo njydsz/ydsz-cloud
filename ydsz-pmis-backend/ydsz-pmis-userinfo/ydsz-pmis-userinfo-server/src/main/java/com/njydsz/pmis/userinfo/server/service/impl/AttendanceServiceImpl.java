@@ -17,7 +17,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.rate.AttendanceCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.LeaveCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OvertimeCreateDTO;
@@ -74,7 +74,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         BeanUtils.copyProperties(dto, entity);
         if (entity.getWorkHours() == null) entity.setWorkHours(BigDecimal.ZERO);
         if (entity.getOvertimeHours() == null) entity.setOvertimeHours(BigDecimal.ZERO);
-        if (entity.getTenantId() == null) entity.setTenantId(TenantContext.getTenantId());
+        if (entity.getTenantId() == null) entity.setTenantId(AuthContext.getTenantIdOrDefault());
         if (!StringUtils.hasText(entity.getProviderTraceId())) entity.setProviderTraceId("");
 
         attendanceMapper.insert(entity);
@@ -120,7 +120,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         BeanUtils.copyProperties(dto, entity);
         if (entity.getOvertimeCode() == null) entity.setOvertimeCode("OT-" + IdUtil.fastSimpleUUID());
         entity.setApprovalStatus("DRAFT");
-        if (entity.getTenantId() == null) entity.setTenantId(TenantContext.getTenantId());
+        if (entity.getTenantId() == null) entity.setTenantId(AuthContext.getTenantIdOrDefault());
         if (!StringUtils.hasText(entity.getProviderTraceId())) entity.setProviderTraceId("");
 
         overtimeMapper.insert(entity);
@@ -184,7 +184,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         BeanUtils.copyProperties(dto, entity);
         if (entity.getLeaveCode() == null) entity.setLeaveCode("LV-" + IdUtil.fastSimpleUUID());
         entity.setApprovalStatus(LeaveStatus.DRAFT.getCode());
-        if (entity.getTenantId() == null) entity.setTenantId(TenantContext.getTenantId());
+        if (entity.getTenantId() == null) entity.setTenantId(AuthContext.getTenantIdOrDefault());
         if (!StringUtils.hasText(entity.getProviderTraceId())) entity.setProviderTraceId("");
 
         leaveMapper.insert(entity);

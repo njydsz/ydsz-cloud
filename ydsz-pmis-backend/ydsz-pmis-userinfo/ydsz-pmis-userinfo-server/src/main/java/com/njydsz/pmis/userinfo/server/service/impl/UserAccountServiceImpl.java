@@ -19,21 +19,14 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.core.constant.CacheConstants;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.pmis.common.redis.service.BloomFilterService;
-import com.njydsz.pmis.common.security.AccountLockInfo;
-import com.njydsz.pmis.common.security.DataScopeHelper;
-import com.njydsz.pmis.common.security.LoginAuditEvent;
-import com.njydsz.pmis.common.security.LoginStatus;
-import com.njydsz.pmis.common.security.PasswordPolicy;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.security.TotpUtil;
-import com.njydsz.pmis.common.util.security.PwdUtils;
 import com.njydsz.pmis.common.util.id.TracerUtils;
+import com.njydsz.pmis.common.util.security.PwdUtils;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginRequest;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResult;
 import com.njydsz.pmis.userinfo.domain.dto.user.UserQueryDTO;
@@ -46,6 +39,13 @@ import com.njydsz.pmis.userinfo.domain.vo.UserVO;
 import com.njydsz.pmis.userinfo.infra.mapper.user.User2FAMapper;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserAccountMapper;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserRoleMapper;
+import com.njydsz.pmis.userinfo.server.constant.CacheConstants;
+import com.njydsz.pmis.userinfo.server.security.AccountLockInfo;
+import com.njydsz.pmis.userinfo.server.security.DataScopeHelper;
+import com.njydsz.pmis.userinfo.server.security.LoginAuditEvent;
+import com.njydsz.pmis.userinfo.server.security.LoginStatus;
+import com.njydsz.pmis.userinfo.server.security.PasswordPolicy;
+import com.njydsz.pmis.userinfo.server.security.TotpUtil;
 import com.njydsz.pmis.userinfo.server.service.auth.SessionService;
 import com.njydsz.pmis.userinfo.server.service.impl.auth.JwtSimpleBuilder;
 import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
@@ -208,7 +208,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new SysException(BaseResultCode.DUPLICATE_KEY, "error.user.msg_a633b7b9");
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(rawPassword, user.getUsername());
-        if (!r.pass()) {
+        if (!r.isPass()) {
             throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         // BCrypt 哈希存储在 password 字段，salt 字段留空（BCrypt 自带盐）
@@ -277,7 +277,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(newPassword, u.getUsername());
-        if (!r.pass()) {
+        if (!r.isPass()) {
             throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         // BCrypt 哈希存储在 password 字段，salt 字段留空（BCrypt 自带盐）
@@ -436,7 +436,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new SysException(BaseResultCode.PASSWORD_INCORRECT, "error.user.msg_25562cd3");
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(newPassword, u.getUsername());
-        if (!r.pass()) {
+        if (!r.isPass()) {
             throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         if (PasswordPolicy.isExpired(u.getLastPwdChangeAt(), PWD_EXPIRE_DAYS) && u.getLastPwdChangeAt() != null) {
@@ -630,7 +630,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                     .mfaUsed(mfaUsed)
                     .mfaSuccess(mfaSuccess)
                     .traceId(TracerUtils.getTraceId())
-                    .tenantId(TenantContext.getTenantId())
+                    .tenantId(AuthContext.getTenantIdOrDefault())
                     .loginAt(System.currentTimeMillis())
                     .build();
             publisher.publishEvent(e);

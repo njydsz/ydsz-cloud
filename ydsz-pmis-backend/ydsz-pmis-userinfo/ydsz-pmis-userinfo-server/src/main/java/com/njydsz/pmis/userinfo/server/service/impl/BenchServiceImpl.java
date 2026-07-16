@@ -15,7 +15,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.resource.BenchRecordCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.BenchRecordDO;
 import com.njydsz.pmis.userinfo.domain.enums.resource.BenchStatus;
@@ -76,7 +76,7 @@ public class BenchServiceImpl implements BenchService {
         b.setStatus(BenchStatus.ACTIVE.getCode());
         if (b.getBenchDate() == null) b.setBenchDate(LocalDate.now());
         if (b.getDailyCost() == null) b.setDailyCost(BigDecimal.ZERO);
-        if (b.getTenantId() == null) b.setTenantId(TenantContext.getTenantId());
+        if (b.getTenantId() == null) b.setTenantId(AuthContext.getTenantIdOrDefault());
         if (b.getProviderTraceId() == null) b.setProviderTraceId("");
         // 计算初始成本
         b.setIdleDays(BenchCostCalculator.idleDays(b.getBenchDate(), b.getExitDate()));

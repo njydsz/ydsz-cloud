@@ -15,8 +15,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.security.DataScopeHelper;
-import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.userinfo.server.security.DataScopeHelper;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
@@ -96,7 +96,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             entity.setWorkStatus(DEFAULT_WORK_STATUS);
         }
         if (entity.getTenantId() == null) {
-            entity.setTenantId(TenantContext.getTenantId());
+            entity.setTenantId(AuthContext.getTenantIdOrDefault());
         }
         employeeMapper.insert(entity);
         log.info("[Employee] 新增员工: id={}, empCode={}, type={}", entity.getId(), entity.getEmpCode(), employeeType);

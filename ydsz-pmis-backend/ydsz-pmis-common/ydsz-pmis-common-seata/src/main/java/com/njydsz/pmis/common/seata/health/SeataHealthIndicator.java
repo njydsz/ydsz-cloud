@@ -4,9 +4,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.pmis.common.seata.api.TransactionType;
 import com.njydsz.pmis.common.seata.api.TccTransactionLogStore;
-import com.njydsz.pmis.common.seata.api.TccBranchStatus;
 import com.njydsz.pmis.common.seata.config.SeataProperties;
 import com.njydsz.pmis.common.seata.impl.GlobalTransactionExecutor;
 

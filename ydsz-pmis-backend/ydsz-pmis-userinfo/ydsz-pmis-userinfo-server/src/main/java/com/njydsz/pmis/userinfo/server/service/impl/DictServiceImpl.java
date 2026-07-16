@@ -7,11 +7,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.pmis.common.core.constant.CacheConstants;
 import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DictTypeDO;
 import com.njydsz.pmis.userinfo.infra.mapper.org.DictItemMapper;
 import com.njydsz.pmis.userinfo.infra.mapper.org.DictTypeMapper;
+import com.njydsz.pmis.userinfo.server.constant.CacheConstants;
 import com.njydsz.pmis.userinfo.server.service.org.DictService;
 
 import lombok.RequiredArgsConstructor;

@@ -15,7 +15,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourceAssignmentCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourceAssignmentDO;
 import com.njydsz.pmis.userinfo.domain.enums.resource.AssignmentStatus;
@@ -77,7 +77,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
         if (a.getAllocation() == null) a.setAllocation(new BigDecimal("1.0"));
         if (a.getDailyHours() == null) a.setDailyHours(new BigDecimal("8.0"));
         if (a.getBillable() == null) a.setBillable(1);
-        if (a.getTenantId() == null) a.setTenantId(TenantContext.getTenantId());
+        if (a.getTenantId() == null) a.setTenantId(AuthContext.getTenantIdOrDefault());
         if (a.getProviderTraceId() == null) a.setProviderTraceId("");
         if ("START".equals(action) && a.getActualStartDate() == null) {
             a.setActualStartDate(LocalDate.now());

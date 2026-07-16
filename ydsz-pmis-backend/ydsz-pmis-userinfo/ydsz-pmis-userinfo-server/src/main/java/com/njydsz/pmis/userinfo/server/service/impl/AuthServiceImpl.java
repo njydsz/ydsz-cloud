@@ -12,11 +12,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.security.AccountLockedEvent;
-import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.util.security.PwdUtils;
 import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
@@ -26,6 +24,8 @@ import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
+import com.njydsz.pmis.userinfo.server.auth.JwtTokenProvider;
+import com.njydsz.pmis.userinfo.server.security.AccountLockedEvent;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
 import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
 import com.njydsz.pmis.userinfo.server.service.permission.PermissionService;
@@ -451,7 +451,7 @@ public class AuthServiceImpl implements AuthService {
                         .failCount(count.intValue())
                         .lockMinutes((int) LOGIN_LOCK_MINUTES)
                         .traceId(TracerUtils.getTraceId())
-                        .tenantId(TenantContext.getTenantId())
+                        .tenantId(AuthContext.getTenantIdOrDefault())
                         .lockedAt(System.currentTimeMillis())
                         .build();
                 publisher.publishEvent(event);

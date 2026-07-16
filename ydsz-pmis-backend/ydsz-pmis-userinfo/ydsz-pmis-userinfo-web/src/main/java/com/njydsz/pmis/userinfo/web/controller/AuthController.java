@@ -5,13 +5,13 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
+import com.njydsz.pmis.userinfo.server.auth.JwtTokenProvider;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;

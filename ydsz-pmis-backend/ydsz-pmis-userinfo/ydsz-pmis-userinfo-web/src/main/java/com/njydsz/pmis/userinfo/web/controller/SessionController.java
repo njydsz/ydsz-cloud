@@ -99,19 +99,19 @@ public class SessionController {
      */
     @Operation(summary = "管理员分页查询所有会话（按用户/状态/IP 过滤）")
     @GetMapping("/admin/page")
-    public BaseResponse<PageResponse<UserSessionDO>> adminPage(
+    public BaseResponse<PageResponse<List<UserSessionDO>>> adminPage(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String clientIp) {
-        Page<UserSessionDO> p = new Page<>(page, size);
         LambdaQueryWrapper<UserSessionDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(UserSessionDO::getUserId, userId);
         if (StringUtils.hasText(status)) w.eq(UserSessionDO::getStatus, status);
         if (StringUtils.hasText(clientIp)) w.like(UserSessionDO::getClientIp, clientIp);
         w.orderByDesc(UserSessionDO::getLoginAt);
-        return BaseResponse.ok(PageResponse.ofPage(sessionMapper.selectPage(p, w)));
+        Page<UserSessionDO> p = sessionMapper.selectPage(new Page<>(page, size), w);
+        return BaseResponse.ok(PageResponse.success(p.getTotal(), p.getCurrent(), p.getSize(), p.getRecords()));
     }
 
     /**

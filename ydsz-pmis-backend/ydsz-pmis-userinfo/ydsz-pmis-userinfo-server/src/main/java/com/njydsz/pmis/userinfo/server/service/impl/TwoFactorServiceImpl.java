@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.security.TotpUtil;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.userinfo.server.security.TotpUtil;
 import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
 import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
@@ -60,7 +60,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
         entity.setBindingAt(LocalDateTime.now());
         entity.setBackupCodes(joinCodes(codes));
         entity.setEnabled(false);
-        entity.setTenantId(TenantContext.getTenantId());
+        entity.setTenantId(AuthContext.getTenantIdOrDefault());
         if (existing == null) {
             user2FAMapper.insert(entity);
         } else {

@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
 import com.njydsz.pmis.userinfo.domain.enums.resource.PoolType;
@@ -49,7 +49,7 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
         if (!StringUtils.hasText(p.getStatus())) p.setStatus("ACTIVE");
         if (p.getHeadcount() == null) p.setHeadcount(0);
         if (p.getBillableTarget() == null) p.setBillableTarget(0);
-        if (p.getTenantId() == null) p.setTenantId(TenantContext.getTenantId());
+        if (p.getTenantId() == null) p.setTenantId(AuthContext.getTenantIdOrDefault());
         if (p.getProviderTraceId() == null) p.setProviderTraceId("");
         poolMapper.insert(p);
         log.info("[ResourcePool] 创建资源池: code={} type={}", p.getPoolCode(), p.getPoolType());

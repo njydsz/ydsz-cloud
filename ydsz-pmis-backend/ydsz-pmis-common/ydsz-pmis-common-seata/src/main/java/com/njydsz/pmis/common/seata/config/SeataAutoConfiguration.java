@@ -25,6 +25,11 @@ import com.njydsz.pmis.common.seata.impl.TccTransactionManager;
 import com.njydsz.pmis.common.seata.impl.TccTransactionRecoveryScanner;
 import com.njydsz.pmis.common.seata.interceptor.FeignXidRequestInterceptor;
 import com.njydsz.pmis.common.seata.interceptor.XidServletFilter;
+import com.njydsz.pmis.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.pmis.common.seata.health.SeataHealthIndicator;
+import com.njydsz.pmis.common.seata.metrics.SeataMetrics;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 分布式事务自动配置
@@ -158,6 +163,42 @@ public class SeataAutoConfiguration {
     @ConditionalOnMissingBean(XidServletFilter.class)
     public XidServletFilter xidServletFilter(XidPropagator xidPropagator) {
         return new XidServletFilter(xidPropagator);
+    }
+
+    /**
+     * 事务审计日志（P1-3）
+     */
+    @Bean
+    @ConditionalOnMissingBean(TransactionAuditLogger.class)
+    public TransactionAuditLogger transactionAuditLogger() {
+        return new TransactionAuditLogger();
+    }
+
+    /**
+     * 事务指标采集（P1-2）
+     *
+     * <p>当 Micrometer 在类路径时注册
+     */
+    @Bean
+    @ConditionalOnMissingBean(SeataMetrics.class)
+    @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+    public SeataMetrics seataMetrics(ObjectProvider<MeterRegistry> registryProvider) {
+        return new SeataMetrics(registryProvider);
+    }
+
+    /**
+     * 分布式事务健康检查（P1-1）
+     *
+     * <p>当 Spring Boot Health 在类路径时注册
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    @ConditionalOnMissingBean(SeataHealthIndicator.class)
+    public SeataHealthIndicator seataHealthIndicator(
+            SeataProperties properties,
+            ObjectProvider<GlobalTransactionExecutor> globalExecutorProvider,
+            ObjectProvider<TccTransactionLogStore> logStoreProvider) {
+        return new SeataHealthIndicator(properties, globalExecutorProvider, logStoreProvider);
     }
 
     /**
