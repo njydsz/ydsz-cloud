@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.sentry.metrics;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.Reference;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.pmis.common.sentry.spi.MetricsCollector;
 

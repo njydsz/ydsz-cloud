@@ -24,7 +24,7 @@ export const pageRateCards = (
   params?: { levelCode?: string; status?: string },
 ) =>
   request<PageResult<RateCardVO>>({
-    url: '/resource/rate-card/page',
+    url: '/api/project/resource/rate-card/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -35,7 +35,7 @@ export const pageRateCards = (
  * @returns 费率详情
  */
 export const getRateCard = (id: number) =>
-  request<RateCardVO>({ url: `/resource/rate-card/${id}`, method: 'GET' })
+  request<RateCardVO>({ url: `/api/project/resource/rate-card/${id}`, method: 'GET' })
 
 /**
  * 新建对外报价费率
@@ -43,7 +43,7 @@ export const getRateCard = (id: number) =>
  * @returns 新建费率记录ID
  */
 export const createRateCard = (data: RateCardCreateDTO) =>
-  request<number>({ url: '/resource/rate-card', method: 'POST', data })
+  request<number>({ url: '/api/project/resource/rate-card', method: 'POST', data })
 
 /**
  * 更新对外报价费率
@@ -52,7 +52,7 @@ export const createRateCard = (data: RateCardCreateDTO) =>
  * @returns 无返回值
  */
 export const updateRateCard = (id: number, data: RateCardCreateDTO) =>
-  request<void>({ url: `/resource/rate-card/${id}`, method: 'PUT', data })
+  request<void>({ url: `/api/project/resource/rate-card/${id}`, method: 'PUT', data })
 
 /**
  * 删除对外报价费率
@@ -60,7 +60,7 @@ export const updateRateCard = (id: number, data: RateCardCreateDTO) =>
  * @returns 无返回值
  */
 export const deleteRateCard = (id: number) =>
-  request<void>({ url: `/resource/rate-card/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/resource/rate-card/${id}`, method: 'DELETE' })
 
 /**
  * 按职级查询对外报价费率列表
@@ -69,7 +69,7 @@ export const deleteRateCard = (id: number) =>
  */
 export const listRateCardByLevel = (levelCode: string) =>
   request<RateCardVO[]>({
-    url: '/resource/rate-card/by-level',
+    url: '/api/project/resource/rate-card/by-level',
     method: 'GET',
     params: { levelCode },
   })
@@ -86,7 +86,7 @@ export const matchRateCard = (params: {
   date?: string
 }) =>
   request<RateCardVO>({
-    url: '/resource/rate-card/match',
+    url: '/api/project/resource/rate-card/match',
     method: 'GET',
     params,
   })

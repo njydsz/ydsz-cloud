@@ -20,7 +20,7 @@ export const pageRisks = (
   params?: { keyword?: string; status?: string; level?: string; initiationId?: number },
 ) =>
   request<PageResult<RiskVO>>({
-    url: '/execution/risk/page',
+    url: '/api/project/execution/risk/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -31,7 +31,7 @@ export const pageRisks = (
  * @returns 风险详情
  */
 export const getRisk = (id: number) =>
-  request<RiskVO>({ url: `/execution/risk/${id}`, method: 'GET' })
+  request<RiskVO>({ url: `/api/project/execution/risk/${id}`, method: 'GET' })
 
 /**
  * 新建风险记录
@@ -39,7 +39,7 @@ export const getRisk = (id: number) =>
  * @returns 新建风险的 ID
  */
 export const createRisk = (data: RiskCreateDTO) =>
-  request<number>({ url: '/execution/risk', method: 'POST', data })
+  request<number>({ url: '/api/project/execution/risk', method: 'POST', data })
 
 /**
  * 变更风险状态（打开/缓解中/关闭/接受）
@@ -47,7 +47,7 @@ export const createRisk = (data: RiskCreateDTO) =>
  * @returns 无返回值
  */
 export const changeRiskStatus = (data: RiskStatusDTO) =>
-  request<void>({ url: '/execution/risk/status', method: 'PUT', data })
+  request<void>({ url: '/api/project/execution/risk/status', method: 'PUT', data })
 
 /**
  * 根据 ID 删除风险记录
@@ -55,4 +55,4 @@ export const changeRiskStatus = (data: RiskStatusDTO) =>
  * @returns 无返回值
  */
 export const deleteRisk = (id: number) =>
-  request<void>({ url: `/execution/risk/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/execution/risk/${id}`, method: 'DELETE' })

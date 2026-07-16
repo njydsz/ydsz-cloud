@@ -77,7 +77,7 @@ export interface SubscriptionHistory {
  */
 export const createSubscription = (params: CreateSubscriptionParams) =>
   request<string>({
-    url: '/report/subscription',
+    url: '/api/project/report/subscription',
     method: 'POST',
     data: params,
   })
@@ -88,7 +88,7 @@ export const createSubscription = (params: CreateSubscriptionParams) =>
  */
 export const getSubscriptionList = () =>
   request<ReportSubscription[]>({
-    url: '/report/subscription/list',
+    url: '/api/project/report/subscription/list',
     method: 'GET',
   })
 
@@ -99,7 +99,7 @@ export const getSubscriptionList = () =>
  */
 export const toggleSubscriptionStatus = (id: string, status: SubscriptionStatus) =>
   request<void>({
-    url: `/report/subscription/${id}/status`,
+    url: `/api/project/report/subscription/${id}/status`,
     method: 'PUT',
     params: { status },
   })
@@ -110,7 +110,7 @@ export const toggleSubscriptionStatus = (id: string, status: SubscriptionStatus)
  */
 export const deleteSubscription = (id: string) =>
   request<void>({
-    url: `/report/subscription/${id}`,
+    url: `/api/project/report/subscription/${id}`,
     method: 'DELETE',
   })
 
@@ -123,7 +123,7 @@ export const deleteSubscription = (id: string) =>
  */
 export const getSubscriptionHistory = (id: string, page = 1, size = 20) =>
   request<SubscriptionHistory[]>({
-    url: `/report/subscription/${id}/history`,
+    url: `/api/project/report/subscription/${id}/history`,
     method: 'GET',
     params: { page, size },
   })

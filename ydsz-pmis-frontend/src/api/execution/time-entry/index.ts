@@ -27,7 +27,7 @@ export const pageTimeEntries = (
   },
 ) =>
   request<PageResult<TimeEntryVO>>({
-    url: '/execution/time-entry/page',
+    url: '/api/project/execution/time-entry/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -38,7 +38,7 @@ export const pageTimeEntries = (
  * @returns 工时填报详情
  */
 export const getTimeEntry = (id: number) =>
-  request<TimeEntryVO>({ url: `/execution/time-entry/${id}`, method: 'GET' })
+  request<TimeEntryVO>({ url: `/api/project/execution/time-entry/${id}`, method: 'GET' })
 
 /**
  * 新建工时填报记录
@@ -46,7 +46,7 @@ export const getTimeEntry = (id: number) =>
  * @returns 新建工时记录的 ID
  */
 export const createTimeEntry = (data: TimeEntryCreateDTO) =>
-  request<number>({ url: '/execution/time-entry', method: 'POST', data })
+  request<number>({ url: '/api/project/execution/time-entry', method: 'POST', data })
 
 /**
  * 更新工时填报记录
@@ -54,7 +54,7 @@ export const createTimeEntry = (data: TimeEntryCreateDTO) =>
  * @returns 无返回值
  */
 export const updateTimeEntry = (data: Partial<TimeEntryVO> & { id: number }) =>
-  request<void>({ url: '/execution/time-entry', method: 'PUT', data })
+  request<void>({ url: '/api/project/execution/time-entry', method: 'PUT', data })
 
 /**
  * 审批通过工时填报记录
@@ -63,7 +63,7 @@ export const updateTimeEntry = (data: Partial<TimeEntryVO> & { id: number }) =>
  */
 export const approveTimeEntry = (data: TimeEntryApprovalDTO) =>
   request<void>({
-    url: '/execution/time-entry/approve',
+    url: '/api/project/execution/time-entry/approve',
     method: 'PUT',
     data,
   })
@@ -75,7 +75,7 @@ export const approveTimeEntry = (data: TimeEntryApprovalDTO) =>
  */
 export const rejectTimeEntry = (data: TimeEntryApprovalDTO) =>
   request<void>({
-    url: '/execution/time-entry/reject',
+    url: '/api/project/execution/time-entry/reject',
     method: 'PUT',
     data,
   })
@@ -86,4 +86,4 @@ export const rejectTimeEntry = (data: TimeEntryApprovalDTO) =>
  * @returns 无返回值
  */
 export const deleteTimeEntry = (id: number) =>
-  request<void>({ url: `/execution/time-entry/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/execution/time-entry/${id}`, method: 'DELETE' })

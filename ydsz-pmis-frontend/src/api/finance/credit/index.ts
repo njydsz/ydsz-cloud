@@ -20,7 +20,7 @@ export const pageCustomerCredits = (
   params?: { keyword?: string; level?: string; customerId?: number },
 ) =>
   request<PageResult<CustomerCreditVO>>({
-    url: '/finance/credit/page',
+    url: '/api/project/finance/credit/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -32,7 +32,7 @@ export const pageCustomerCredits = (
  */
 export const getCustomerCredit = (id: number) =>
   request<CustomerCreditVO>({
-    url: `/finance/credit/${id}`,
+    url: `/api/project/finance/credit/${id}`,
     method: 'GET',
   })
 
@@ -43,7 +43,7 @@ export const getCustomerCredit = (id: number) =>
  */
 export const assessCustomerCredit = (data: CreditAssessmentDTO) =>
   request<CustomerCreditVO>({
-    url: '/finance/credit/assess',
+    url: '/api/project/finance/credit/assess',
     method: 'POST',
     data,
   })
@@ -55,6 +55,6 @@ export const assessCustomerCredit = (data: CreditAssessmentDTO) =>
  */
 export const getCreditByCustomer = (customerId: number) =>
   request<CustomerCreditVO>({
-    url: `/finance/credit/customer/${customerId}`,
+    url: `/api/project/finance/credit/customer/${customerId}`,
     method: 'GET',
   })

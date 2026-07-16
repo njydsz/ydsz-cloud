@@ -33,7 +33,7 @@ export type {
  */
 export const getCockpitOverview = (period?: string, drillDown?: Record<string, unknown>) =>
   request<CockpitKpiVO>({
-    url: '/report/cockpit/overview',
+    url: '/api/project/report/cockpit/overview',
     method: 'GET',
     params: { period, ...(drillDown || {}) },
     silent: true,
@@ -46,7 +46,7 @@ export const getCockpitOverview = (period?: string, drillDown?: Record<string, u
  */
 export const getEvmHealthDistribution = (period?: string) =>
   request<Record<string, number>>({
-    url: '/report/cockpit/evm-health',
+    url: '/api/project/report/cockpit/evm-health',
     method: 'GET',
     params: { period },
   })
@@ -57,7 +57,7 @@ export const getEvmHealthDistribution = (period?: string) =>
  */
 export const getBenchCostSummary = () =>
   request<Record<string, unknown>>({
-    url: '/report/cockpit/bench-cost',
+    url: '/api/project/report/cockpit/bench-cost',
     method: 'GET',
   })
 
@@ -67,7 +67,7 @@ export const getBenchCostSummary = () =>
  */
 export const getUtilizationSummary = () =>
   request<Record<string, unknown>>({
-    url: '/report/cockpit/utilization',
+    url: '/api/project/report/cockpit/utilization',
     method: 'GET',
   })
 
@@ -78,7 +78,7 @@ export const getUtilizationSummary = () =>
  */
 export const drillByDept = (period?: string) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/cockpit/drill/dept',
+    url: '/api/project/report/cockpit/drill/dept',
     method: 'GET',
     params: { period },
   })
@@ -90,7 +90,7 @@ export const drillByDept = (period?: string) =>
  */
 export const drillByProjectType = (period?: string) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/cockpit/drill/project-type',
+    url: '/api/project/report/cockpit/drill/project-type',
     method: 'GET',
     params: { period },
   })
@@ -102,7 +102,7 @@ export const drillByProjectType = (period?: string) =>
  */
 export const drillByCustomer = (period?: string) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/cockpit/drill/customer',
+    url: '/api/project/report/cockpit/drill/customer',
     method: 'GET',
     params: { period },
   })
@@ -113,7 +113,7 @@ export const drillByCustomer = (period?: string) =>
  */
 export const getContractYearlyTrend = () =>
   request<Record<string, unknown>>({
-    url: '/report/cockpit/contract-yearly-trend',
+    url: '/api/project/report/cockpit/contract-yearly-trend',
     method: 'GET',
   })
 
@@ -126,7 +126,7 @@ export const getContractYearlyTrend = () =>
  */
 export const getAlertSummary = (period?: string) =>
   request<CockpitAlertSummaryVO>({
-    url: '/report/cockpit/alerts',
+    url: '/api/project/report/cockpit/alerts',
     method: 'GET',
     params: { period },
   })
@@ -138,7 +138,7 @@ export const getAlertSummary = (period?: string) =>
  */
 export const getProjectGroupOverview = (period?: string) =>
   request<Array<ProjectGroupKpiDTO>>({
-    url: '/report/cockpit/project-group',
+    url: '/api/project/report/cockpit/project-group',
     method: 'GET',
     params: { period },
   })
@@ -150,7 +150,7 @@ export const getProjectGroupOverview = (period?: string) =>
  */
 export const getExecutiveOverview = (period?: string) =>
   request<ExecutiveOverviewVO>({
-    url: '/report/cockpit/executive',
+    url: '/api/project/report/cockpit/executive',
     method: 'GET',
     params: { period },
   })
@@ -162,7 +162,7 @@ export const getExecutiveOverview = (period?: string) =>
  */
 export const getKpiTrend = (months = 12) =>
   request<KpiTrendVO>({
-    url: '/report/cockpit/kpi-trend',
+    url: '/api/project/report/cockpit/kpi-trend',
     method: 'GET',
     params: { months },
     silent: true,

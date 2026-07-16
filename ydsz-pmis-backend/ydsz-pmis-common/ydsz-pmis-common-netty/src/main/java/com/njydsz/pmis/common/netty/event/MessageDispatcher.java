@@ -80,7 +80,7 @@ public class MessageDispatcher extends ChannelInboundHandlerAdapter {
                             log.warn("[Netty-Dispatcher] 消息类型 {} 已有处理器，将被覆盖", type);
                         }
                         method.setAccessible(true);
-                        handlerMap.put(type, new HandlerMethod(bean, method, annotation.requireAuth()));
+                        handlerMap.put(type, new HandlerMethod(bean, method));
                         log.debug("[Netty-Dispatcher] 注册消息处理器: type={}, bean={}, method={}",
                                 type, entry.getKey(), method.getName());
                     }
@@ -141,6 +141,6 @@ public class MessageDispatcher extends ChannelInboundHandlerAdapter {
     }
 
     /** 处理器方法元数据 */
-    private record HandlerMethod(Object bean, Method method, boolean requireAuth) {
+    private record HandlerMethod(Object bean, Method method) {
     }
 }

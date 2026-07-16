@@ -20,7 +20,7 @@ export const pagePayments = (
   params?: { keyword?: string; status?: string; customerId?: number; initiationId?: number },
 ) =>
   request<PageResult<PaymentVO>>({
-    url: '/finance/payment/page',
+    url: '/api/project/finance/payment/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -31,7 +31,7 @@ export const pagePayments = (
  * @returns 回款详情对象
  */
 export const getPayment = (id: number) =>
-  request<PaymentVO>({ url: `/finance/payment/${id}`, method: 'GET' })
+  request<PaymentVO>({ url: `/api/project/finance/payment/${id}`, method: 'GET' })
 
 /**
  * 创建回款
@@ -39,7 +39,7 @@ export const getPayment = (id: number) =>
  * @returns 新建回款 ID
  */
 export const createPayment = (data: PaymentCreateDTO) =>
-  request<number>({ url: '/finance/payment', method: 'POST', data })
+  request<number>({ url: '/api/project/finance/payment', method: 'POST', data })
 
 /**
  * 确认回款（PENDING → CONFIRMED）
@@ -49,7 +49,7 @@ export const createPayment = (data: PaymentCreateDTO) =>
  */
 export const confirmPayment = (id: number, operatorId: number) =>
   request<void>({
-    url: `/finance/payment/${id}/confirm`,
+    url: `/api/project/finance/payment/${id}/confirm`,
     method: 'PUT',
     params: { operatorId },
   })
@@ -63,7 +63,7 @@ export const confirmPayment = (id: number, operatorId: number) =>
  */
 export const cancelPayment = (id: number, operatorId: number, reason?: string) =>
   request<void>({
-    url: `/finance/payment/${id}/cancel`,
+    url: `/api/project/finance/payment/${id}/cancel`,
     method: 'PUT',
     params: { operatorId, reason },
   })
@@ -74,7 +74,7 @@ export const cancelPayment = (id: number, operatorId: number, reason?: string) =
  * @returns 无返回值
  */
 export const allocatePayment = (data: PaymentAllocationDTO) =>
-  request<void>({ url: '/finance/payment/allocate', method: 'POST', data })
+  request<void>({ url: '/api/project/finance/payment/allocate', method: 'POST', data })
 
 /**
  * 删除回款
@@ -82,4 +82,4 @@ export const allocatePayment = (data: PaymentAllocationDTO) =>
  * @returns 无返回值
  */
 export const deletePayment = (id: number) =>
-  request<void>({ url: `/finance/payment/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/finance/payment/${id}`, method: 'DELETE' })

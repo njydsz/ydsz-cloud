@@ -69,7 +69,7 @@ export interface UniversalSearchDoc {
  */
 export const searchProjects = (keyword: string, page = 1, size = 10) =>
   request<PageData<ProjectSearchDoc>>({
-    url: '/search/projects',
+    url: '/api/project/search/projects',
     method: 'GET',
     params: { keyword, page, size },
     silent: true,
@@ -88,7 +88,7 @@ export const searchProjects = (keyword: string, page = 1, size = 10) =>
  */
 export const searchAll = (keyword: string, size = 5) =>
   request<UniversalSearchDoc[]>({
-    url: '/search/all',
+    url: '/api/project/search/all',
     method: 'GET',
     params: { keyword, size },
     silent: true,

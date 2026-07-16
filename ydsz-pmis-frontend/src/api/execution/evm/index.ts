@@ -28,7 +28,7 @@ export const pageEvm = (
   params?: { initiationId?: number; alertLevel?: string },
 ) =>
   request<PageResult<EvmMeasureVO>>({
-    url: '/execution/evm/page',
+    url: '/api/project/execution/evm/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -39,7 +39,7 @@ export const pageEvm = (
  * @returns EVM 测量记录详情
  */
 export const getEvm = (id: number) =>
-  request<EvmMeasureVO>({ url: `/execution/evm/${id}`, method: 'GET' })
+  request<EvmMeasureVO>({ url: `/api/project/execution/evm/${id}`, method: 'GET' })
 
 /**
  * 录入 / 更新（按 initiation+wbs+period 幂等）
@@ -47,7 +47,7 @@ export const getEvm = (id: number) =>
  * @returns 新建或更新后的记录ID
  */
 export const saveEvm = (data: EvmMeasureCreateDTO) =>
-  request<number>({ url: '/execution/evm', method: 'POST', data })
+  request<number>({ url: '/api/project/execution/evm', method: 'POST', data })
 
 /**
  * 删除 EVM 测量记录
@@ -55,7 +55,7 @@ export const saveEvm = (data: EvmMeasureCreateDTO) =>
  * @returns 无返回值
  */
 export const deleteEvm = (id: number) =>
-  request<void>({ url: `/execution/evm/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/execution/evm/${id}`, method: 'DELETE' })
 
 /**
  * 按项目查询 EVM 测量记录列表
@@ -64,7 +64,7 @@ export const deleteEvm = (id: number) =>
  */
 export const listEvmByInitiation = (initiationId: number) =>
   request<EvmMeasureVO[]>({
-    url: '/execution/evm/by-initiation',
+    url: '/api/project/execution/evm/by-initiation',
     method: 'GET',
     params: { initiationId },
   })
@@ -76,7 +76,7 @@ export const listEvmByInitiation = (initiationId: number) =>
  */
 export const getEvmDashboard = (initiationId: number) =>
   request<EvmDashboardVO>({
-    url: '/execution/evm/dashboard',
+    url: '/api/project/execution/evm/dashboard',
     method: 'GET',
     params: { initiationId },
   })

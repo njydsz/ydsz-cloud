@@ -26,7 +26,7 @@ export const pageInvoices = (
   },
 ) =>
   request<PageResult<InvoiceVO>>({
-    url: '/finance/invoice/page',
+    url: '/api/project/finance/invoice/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -37,7 +37,7 @@ export const pageInvoices = (
  * @returns 发票详情对象
  */
 export const getInvoice = (id: number) =>
-  request<InvoiceVO>({ url: `/finance/invoice/${id}`, method: 'GET' })
+  request<InvoiceVO>({ url: `/api/project/finance/invoice/${id}`, method: 'GET' })
 
 /**
  * 创建发票
@@ -45,7 +45,7 @@ export const getInvoice = (id: number) =>
  * @returns 新建发票 ID
  */
 export const createInvoice = (data: InvoiceCreateDTO) =>
-  request<number>({ url: '/finance/invoice', method: 'POST', data })
+  request<number>({ url: '/api/project/finance/invoice', method: 'POST', data })
 
 /**
  * 审批发票
@@ -53,7 +53,7 @@ export const createInvoice = (data: InvoiceCreateDTO) =>
  * @returns 无返回值
  */
 export const approveInvoice = (data: InvoiceApprovalDTO) =>
-  request<void>({ url: `/finance/invoice/${data.id}/approve`, method: 'PUT', data })
+  request<void>({ url: `/api/project/finance/invoice/${data.id}/approve`, method: 'PUT', data })
 
 /**
  * 开具发票
@@ -61,7 +61,7 @@ export const approveInvoice = (data: InvoiceApprovalDTO) =>
  * @returns 无返回值
  */
 export const issueInvoice = (data: InvoiceApprovalDTO) =>
-  request<void>({ url: `/finance/invoice/${data.id}/issue`, method: 'PUT', data })
+  request<void>({ url: `/api/project/finance/invoice/${data.id}/issue`, method: 'PUT', data })
 
 /**
  * 红冲发票
@@ -69,7 +69,7 @@ export const issueInvoice = (data: InvoiceApprovalDTO) =>
  * @returns 无返回值
  */
 export const reverseInvoice = (data: InvoiceApprovalDTO) =>
-  request<void>({ url: `/finance/invoice/${data.id}/reverse`, method: 'PUT', data })
+  request<void>({ url: `/api/project/finance/invoice/${data.id}/reverse`, method: 'PUT', data })
 
 /**
  * 删除发票
@@ -77,4 +77,4 @@ export const reverseInvoice = (data: InvoiceApprovalDTO) =>
  * @returns 无返回值
  */
 export const deleteInvoice = (id: number) =>
-  request<void>({ url: `/finance/invoice/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/finance/invoice/${id}`, method: 'DELETE' })

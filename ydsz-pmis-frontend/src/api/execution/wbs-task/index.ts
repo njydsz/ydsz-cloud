@@ -20,7 +20,7 @@ export const pageWbsTasks = (
   params?: { keyword?: string; status?: string; initiationId?: number; ownerId?: number },
 ) =>
   request<PageResult<WbsTaskVO>>({
-    url: '/execution/wbs-task/page',
+    url: '/api/project/execution/wbs-task/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -31,7 +31,7 @@ export const pageWbsTasks = (
  * @returns WBS 任务详情
  */
 export const getWbsTask = (id: number) =>
-  request<WbsTaskVO>({ url: `/execution/wbs-task/${id}`, method: 'GET' })
+  request<WbsTaskVO>({ url: `/api/project/execution/wbs-task/${id}`, method: 'GET' })
 
 /**
  * 新建 WBS 任务
@@ -39,7 +39,7 @@ export const getWbsTask = (id: number) =>
  * @returns 新建任务的 ID
  */
 export const createWbsTask = (data: WbsTaskCreateDTO) =>
-  request<number>({ url: '/execution/wbs-task', method: 'POST', data })
+  request<number>({ url: '/api/project/execution/wbs-task', method: 'POST', data })
 
 /**
  * 更新 WBS 任务信息
@@ -47,7 +47,7 @@ export const createWbsTask = (data: WbsTaskCreateDTO) =>
  * @returns 无返回值
  */
 export const updateWbsTask = (data: Partial<WbsTaskVO> & { id: number }) =>
-  request<void>({ url: '/execution/wbs-task', method: 'PUT', data })
+  request<void>({ url: '/api/project/execution/wbs-task', method: 'PUT', data })
 
 /**
  * 变更 WBS 任务状态（含进度更新）
@@ -55,7 +55,7 @@ export const updateWbsTask = (data: Partial<WbsTaskVO> & { id: number }) =>
  * @returns 无返回值
  */
 export const changeWbsTaskStatus = (data: WbsTaskStatusDTO) =>
-  request<void>({ url: '/execution/wbs-task/status', method: 'PUT', data })
+  request<void>({ url: '/api/project/execution/wbs-task/status', method: 'PUT', data })
 
 /**
  * 根据 ID 删除 WBS 任务
@@ -63,7 +63,7 @@ export const changeWbsTaskStatus = (data: WbsTaskStatusDTO) =>
  * @returns 无返回值
  */
 export const deleteWbsTask = (id: number) =>
-  request<void>({ url: `/execution/wbs-task/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/execution/wbs-task/${id}`, method: 'DELETE' })
 
 /**
  * 获取甘特图数据（P0-1：项目甘特图可视化）
@@ -71,7 +71,7 @@ export const deleteWbsTask = (id: number) =>
  * @returns 树形结构的甘特图数据
  */
 export const getGanttData = (initiationId: number | string) =>
-  request<GanttNode[]>({ url: `/execution/wbs-task/gantt/${initiationId}`, method: 'GET' })
+  request<GanttNode[]>({ url: `/api/project/execution/wbs-task/gantt/${initiationId}`, method: 'GET' })
 
 /**
  * 甘特图节点数据结构

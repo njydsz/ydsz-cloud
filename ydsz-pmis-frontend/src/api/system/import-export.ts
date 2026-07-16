@@ -42,7 +42,7 @@ export interface ImportResult {
  * @returns 模板文件二进制 Blob
  */
 export function downloadTemplate(bizType: BizType): Promise<Blob> {
-  return request.get(`/execution/import/template/${bizType}`, {
+  return request.get(`/api/project/execution/import/template/${bizType}`, {
     responseType: 'blob'
   }) as unknown as Promise<Blob>
 }
@@ -56,7 +56,7 @@ export function downloadTemplate(bizType: BizType): Promise<Blob> {
 export function importData(bizType: BizType, file: File): Promise<ApiResponse<ImportResult>> {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post(`/execution/import/${bizType}`, formData, {
+  return request.post(`/api/project/execution/import/${bizType}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }) as unknown as Promise<ApiResponse<ImportResult>>
 }

@@ -13,7 +13,7 @@ export const dashboardHandlers: MockHandler[] = [
   // ===== 概览 KPI：活跃项目、收入、毛利、EVM 分布、利用率、闲置成本、健康度分布等 =====
   {
     method: 'GET',
-    path: '/report/cockpit/overview',
+    path: '/api/project/report/cockpit/overview',
     handler: () => ({
       activeProjectCount: 25,
       totalRevenue: 12_000_000,
@@ -33,13 +33,13 @@ export const dashboardHandlers: MockHandler[] = [
   // ===== EVM 健康度分布（红 / 黄 / 绿项目数） =====
   {
     method: 'GET',
-    path: '/report/cockpit/evm-health',
+    path: '/api/project/report/cockpit/evm-health',
     handler: () => ({ RED: 2, YELLOW: 5, NORMAL: 18 }),
   },
   // ===== 预警 TOP N：项目维度告警等级与告警次数 =====
   {
     method: 'GET',
-    path: '/execution/alert/cockpit/topn',
+    path: '/api/project/execution/alert/cockpit/topn',
     handler: () => [
       { projectCode: 'P001', projectName: '项目甲', alertLevel: 'RED', alertCount: 8 },
       { projectCode: 'P002', projectName: '项目乙', alertLevel: 'YELLOW', alertCount: 5 },
@@ -49,7 +49,7 @@ export const dashboardHandlers: MockHandler[] = [
   // ===== 告警汇总：红黄告警数、总告警数、事件列表与头条事件 =====
   {
     method: 'GET',
-    path: '/report/cockpit/alert-summary',
+    path: '/api/project/report/cockpit/alert-summary',
     handler: () => ({
       redCount: 2,
       yellowCount: 5,
@@ -61,7 +61,7 @@ export const dashboardHandlers: MockHandler[] = [
   // ===== KPI 趋势：合同额 / 确认收入 / 成本 / 毛利 / 毛利率多月序列 =====
   {
     method: 'GET',
-    path: '/report/cockpit/kpi-trend',
+    path: '/api/project/report/cockpit/kpi-trend',
     handler: () => ({
       periods: ['2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07'],
       contractAmountSeries: [800, 950, 1100, 1050, 1150, 1200],

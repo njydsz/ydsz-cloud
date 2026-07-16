@@ -12,7 +12,7 @@
  *     failureThreshold: 5,
  *     cooldownMs: 30000,
  *   })
- *   const data = await execute(() => api.get('/finance/invoice/page'))
+ *   const data = await execute(() => api.get('/api/project/finance/invoice/page'))
  *
  * @module composables/useCircuitBreaker
  */

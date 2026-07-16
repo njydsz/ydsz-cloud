@@ -18,7 +18,7 @@ let nextSeq = 1000
 export const projectHandlers: MockHandler[] = [
   {
     method: 'GET',
-    path: '/opportunity/page',
+    path: '/api/project/opportunity/page',
     handler: ({ query }) => ({
       list: list(Number(query.size || 10), (i) => ({
         id: i,
@@ -38,7 +38,7 @@ export const projectHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    path: '/initiation/page',
+    path: '/api/project/initiation/page',
     handler: ({ query }) => {
       const stored = Object.values(initiationStore)
       const fixtureList = list(Number(query.size || 10), (i) => ({
@@ -64,7 +64,7 @@ export const projectHandlers: MockHandler[] = [
   },
   {
     method: 'POST',
-    path: '/initiation',
+    path: '/api/project/initiation',
     handler: ({ body }) => {
       const b = (body || {}) as Record<string, unknown>
       const id = ++nextSeq
@@ -85,7 +85,7 @@ export const projectHandlers: MockHandler[] = [
   },
   {
     method: 'POST',
-    path: '/initiation/{id}/submit',
+    path: '/api/project/initiation/{id}/submit',
     handler: ({ body }) => {
       const id = (body as { id?: number })?.id || 0
       // 更新 store
@@ -96,7 +96,7 @@ export const projectHandlers: MockHandler[] = [
   },
   {
     method: 'POST',
-    path: '/initiation/{id}/approve',
+    path: '/api/project/initiation/{id}/approve',
     handler: ({ body }) => {
       const id = (body as { id?: number })?.id || 0
       const obj = Object.values(initiationStore).find((s) => s.id === id)
@@ -106,7 +106,7 @@ export const projectHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    path: '/contract/page',
+    path: '/api/project/contract/page',
     handler: ({ query }) => {
       const stored = Object.values(contractStore)
       const fixtureList = list(Number(query.size || 10), (i) => ({
@@ -130,7 +130,7 @@ export const projectHandlers: MockHandler[] = [
   },
   {
     method: 'POST',
-    path: '/contract',
+    path: '/api/project/contract',
     handler: ({ body }) => {
       const b = (body || {}) as Record<string, unknown>
       const id = ++nextSeq
@@ -150,7 +150,7 @@ export const projectHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    path: '/initiation/change/page',
+    path: '/api/project/initiation/change/page',
     handler: ({ query }) => ({
       list: list(Number(query.size || 10), (i) => ({
         id: i,

@@ -23,7 +23,7 @@ export const pageRevenues = (
   params?: { keyword?: string; initiationId?: number; method?: string },
 ) =>
   request<PageResult<RevenueVO>>({
-    url: '/finance/revenue/page',
+    url: '/api/project/finance/revenue/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -34,7 +34,7 @@ export const pageRevenues = (
  * @returns 收入确认详情
  */
 export const getRevenue = (id: number) =>
-  request<RevenueVO>({ url: `/finance/revenue/${id}`, method: 'GET' })
+  request<RevenueVO>({ url: `/api/project/finance/revenue/${id}`, method: 'GET' })
 
 /**
  * 新建收入确认记录
@@ -42,7 +42,7 @@ export const getRevenue = (id: number) =>
  * @returns 新建收入确认记录的 ID
  */
 export const createRevenue = (data: RevenueCreateDTO) =>
-  request<number>({ url: '/finance/revenue', method: 'POST', data })
+  request<number>({ url: '/api/project/finance/revenue', method: 'POST', data })
 
 /**
  * 根据 ID 删除收入确认记录
@@ -50,7 +50,7 @@ export const createRevenue = (data: RevenueCreateDTO) =>
  * @returns 无返回值
  */
 export const deleteRevenue = (id: number) =>
-  request<void>({ url: `/finance/revenue/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/finance/revenue/${id}`, method: 'DELETE' })
 
 // ============= 利润快照 =============
 
@@ -67,7 +67,7 @@ export const pageProfitSnapshots = (
   params?: { initiationId?: number; period?: string },
 ) =>
   request<PageResult<ProfitSnapshotVO>>({
-    url: '/finance/profit/snapshot/page',
+    url: '/api/project/finance/profit/snapshot/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -79,7 +79,7 @@ export const pageProfitSnapshots = (
  */
 export const getProfitSnapshot = (id: number) =>
   request<ProfitSnapshotVO>({
-    url: `/finance/profit/snapshot/${id}`,
+    url: `/api/project/finance/profit/snapshot/${id}`,
     method: 'GET',
   })
 
@@ -91,7 +91,7 @@ export const getProfitSnapshot = (id: number) =>
  */
 export const generateProfitSnapshot = (initiationId: number, period: string) =>
   request<number>({
-    url: '/finance/profit/snapshot/generate',
+    url: '/api/project/finance/profit/snapshot/generate',
     method: 'POST',
     params: { initiationId, period },
   })

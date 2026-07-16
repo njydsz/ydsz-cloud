@@ -1,7 +1,7 @@
 /**
  * @file 合同管理 API 接口封装
  * @description 提供合同的分页查询、详情查询、创建、更新、状态变更、删除等能力，
- *              对应后端 ContractController（/project/contract）。
+ *              对应后端 ContractController（/api/api/project/contract）。
  * @module api/contract
  */
 import { request } from '@/utils/request'
@@ -24,7 +24,7 @@ export const pageContracts = (
   },
 ) =>
   request<PageResult<ContractVO>>({
-    url: '/project/contract/page',
+    url: '/api/project/contract/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -35,7 +35,7 @@ export const pageContracts = (
  * @returns 合同详情对象
  */
 export const getContract = (id: number) =>
-  request<ContractVO>({ url: `/project/contract/${id}`, method: 'GET' })
+  request<ContractVO>({ url: `/api/project/contract/${id}`, method: 'GET' })
 
 /**
  * 创建合同
@@ -43,7 +43,7 @@ export const getContract = (id: number) =>
  * @returns 新建合同 ID
  */
 export const createContract = (data: ContractCreateDTO) =>
-  request<number>({ url: '/project/contract', method: 'POST', data })
+  request<number>({ url: '/api/project/contract', method: 'POST', data })
 
 /**
  * 更新合同信息
@@ -51,7 +51,7 @@ export const createContract = (data: ContractCreateDTO) =>
  * @returns 无返回值
  */
 export const updateContract = (data: Partial<ContractVO> & { id: number }) =>
-  request<void>({ url: '/project/contract', method: 'PUT', data })
+  request<void>({ url: '/api/project/contract', method: 'PUT', data })
 
 /**
  * 变更合同状态
@@ -59,7 +59,7 @@ export const updateContract = (data: Partial<ContractVO> & { id: number }) =>
  * @returns 无返回值
  */
 export const changeContractStatus = (data: ContractStatusDTO) =>
-  request<void>({ url: '/project/contract/status', method: 'PUT', data })
+  request<void>({ url: '/api/project/contract/status', method: 'PUT', data })
 
 /**
  * 删除合同
@@ -67,4 +67,4 @@ export const changeContractStatus = (data: ContractStatusDTO) =>
  * @returns 无返回值
  */
 export const deleteContract = (id: number) =>
-  request<void>({ url: `/project/contract/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/contract/${id}`, method: 'DELETE' })

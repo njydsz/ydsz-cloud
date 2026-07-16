@@ -33,7 +33,7 @@ export const pageProjectChanges = (
   },
 ) =>
   request<PageResult<ProjectChangeVO>>({
-    url: '/initiation/change/page',
+    url: '/api/project/initiation/change/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -44,7 +44,7 @@ export const pageProjectChanges = (
  * @returns 变更详情对象
  */
 export const getProjectChange = (id: number) =>
-  request<ProjectChangeVO>({ url: `/initiation/change/${id}`, method: 'GET' })
+  request<ProjectChangeVO>({ url: `/api/project/initiation/change/${id}`, method: 'GET' })
 
 /**
  * 创建变更（后端自动调用 ChangeImpactEvaluator 评估影响等级 + 重大变更标识）
@@ -52,7 +52,7 @@ export const getProjectChange = (id: number) =>
  * @returns 新建变更记录 ID
  */
 export const createProjectChange = (data: ProjectChangeCreateDTO) =>
-  request<number>({ url: '/initiation/change', method: 'POST', data })
+  request<number>({ url: '/api/project/initiation/change', method: 'POST', data })
 
 /**
  * 状态迁移（后端校验 canTransitTo 合法性）
@@ -60,7 +60,7 @@ export const createProjectChange = (data: ProjectChangeCreateDTO) =>
  * @returns 无返回值
  */
 export const changeProjectChangeStatus = (data: ProjectChangeStatusDTO) =>
-  request<void>({ url: '/initiation/change/status', method: 'PUT', data })
+  request<void>({ url: '/api/project/initiation/change/status', method: 'PUT', data })
 
 /**
  * 删除变更（仅 DRAFT/REJECTED/CANCELLED 可删）
@@ -68,7 +68,7 @@ export const changeProjectChangeStatus = (data: ProjectChangeStatusDTO) =>
  * @returns 无返回值
  */
 export const deleteProjectChange = (id: number) =>
-  request<void>({ url: `/initiation/change/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/initiation/change/${id}`, method: 'DELETE' })
 
 /**
  * 按立项查询变更列表
@@ -77,7 +77,7 @@ export const deleteProjectChange = (id: number) =>
  */
 export const listProjectChangesByInitiation = (initiationId: number) =>
   request<ProjectChangeVO[]>({
-    url: `/initiation/change/list-by-initiation/${initiationId}`,
+    url: `/api/project/initiation/change/list-by-initiation/${initiationId}`,
     method: 'GET',
   })
 
@@ -88,7 +88,7 @@ export const listProjectChangesByInitiation = (initiationId: number) =>
  */
 export const aggregateProjectChangeByType = (tenantId?: number) =>
   request<ProjectChangeAggregateRow[]>({
-    url: '/initiation/change/aggregate/type',
+    url: '/api/project/initiation/change/aggregate/type',
     method: 'GET',
     params: { tenantId },
   })
@@ -100,7 +100,7 @@ export const aggregateProjectChangeByType = (tenantId?: number) =>
  */
 export const aggregateProjectChangeByStatus = (tenantId?: number) =>
   request<ProjectChangeStatusAggregateRow[]>({
-    url: '/initiation/change/aggregate/status',
+    url: '/api/project/initiation/change/aggregate/status',
     method: 'GET',
     params: { tenantId },
   })
@@ -112,7 +112,7 @@ export const aggregateProjectChangeByStatus = (tenantId?: number) =>
  */
 export const countMajorProjectChange = (initiationId: number) =>
   request<number>({
-    url: `/initiation/change/major-count/${initiationId}`,
+    url: `/api/project/initiation/change/major-count/${initiationId}`,
     method: 'GET',
   })
 
@@ -123,6 +123,6 @@ export const countMajorProjectChange = (initiationId: number) =>
  */
 export const getAllowedTransitions = (id: number) =>
   request<string[]>({
-    url: `/initiation/change/${id}/allowed-transitions`,
+    url: `/api/project/initiation/change/${id}/allowed-transitions`,
     method: 'GET',
   })

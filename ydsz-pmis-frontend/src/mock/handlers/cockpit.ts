@@ -13,7 +13,7 @@ export const cockpitHandlers: MockHandler[] = [
   // ===== 项目群概览：各大区项目数、收入、健康度 =====
   {
     method: 'GET',
-    path: '/report/cockpit/project-group',
+    path: '/api/project/report/cockpit/project-group',
     handler: () => ({
       groups: [
         { groupId: 1, groupName: '华东大区', projectCount: 12, revenue: 5000000, health: 'NORMAL' },
@@ -25,7 +25,7 @@ export const cockpitHandlers: MockHandler[] = [
   // ===== 高管 KPI 概览：合同总额、收入、利润、毛利率、利用率及 TOP 项目 =====
   {
     method: 'GET',
-    path: '/report/cockpit/executive',
+    path: '/api/project/report/cockpit/executive',
     handler: () => ({
       kpis: {
         totalContract: 50000000,
@@ -44,7 +44,7 @@ export const cockpitHandlers: MockHandler[] = [
   // ===== 合同年度签订 / 回款趋势（多月序列） =====
   {
     method: 'GET',
-    path: '/report/cockpit/contract-yearly-trend',
+    path: '/api/project/report/cockpit/contract-yearly-trend',
     handler: () => ({
       months: ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07'],
       signedAmount: [1200, 1500, 1800, 1700, 2000, 2200, 2400],
@@ -54,7 +54,7 @@ export const cockpitHandlers: MockHandler[] = [
   // ===== 部门维度下钻：活跃项目数、收入、毛利 =====
   {
     method: 'GET',
-    path: '/report/cockpit/drill/dept',
+    path: '/api/project/report/cockpit/drill/dept',
     handler: () => [
       { dimension: '部门A', activeProjectCount: 5, totalRevenue: 2000000, grossProfit: 600000 },
       { dimension: '部门B', activeProjectCount: 8, totalRevenue: 3000000, grossProfit: 900000 },

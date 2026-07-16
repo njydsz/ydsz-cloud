@@ -24,7 +24,7 @@ export const pageProfitSimulations = (
   params?: { initiationId?: number; scenarioType?: string; status?: string },
 ) =>
   request<PageResult<ProfitSimulationVO>>({
-    url: '/finance/profit-simulation/page',
+    url: '/api/project/finance/profit-simulation/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -36,7 +36,7 @@ export const pageProfitSimulations = (
  */
 export const getProfitSimulation = (id: number) =>
   request<ProfitSimulationVO>({
-    url: `/finance/profit-simulation/${id}`,
+    url: `/api/project/finance/profit-simulation/${id}`,
     method: 'GET',
   })
 
@@ -46,7 +46,7 @@ export const getProfitSimulation = (id: number) =>
  * @returns 新建测算方案ID
  */
 export const createProfitSimulation = (data: ProfitSimulationCreateDTO) =>
-  request<number>({ url: '/finance/profit-simulation', method: 'POST', data })
+  request<number>({ url: '/api/project/finance/profit-simulation', method: 'POST', data })
 
 /**
  * 变更利润测算方案状态（提交/审批通过/驳回）
@@ -54,7 +54,7 @@ export const createProfitSimulation = (data: ProfitSimulationCreateDTO) =>
  * @returns 无返回值
  */
 export const changeSimulationStatus = (data: SimulationStatusDTO) =>
-  request<void>({ url: '/finance/profit-simulation/status', method: 'PUT', data })
+  request<void>({ url: '/api/project/finance/profit-simulation/status', method: 'PUT', data })
 
 /**
  * 删除利润测算方案
@@ -62,7 +62,7 @@ export const changeSimulationStatus = (data: SimulationStatusDTO) =>
  * @returns 无返回值
  */
 export const deleteProfitSimulation = (id: number) =>
-  request<void>({ url: `/finance/profit-simulation/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/finance/profit-simulation/${id}`, method: 'DELETE' })
 
 /**
  * 对比同立项下多个利润测算方案
@@ -71,7 +71,7 @@ export const deleteProfitSimulation = (id: number) =>
  */
 export const compareSimulations = (initiationId: number) =>
   request<Array<Record<string, unknown>>>({
-    url: '/finance/profit-simulation/compare',
+    url: '/api/project/finance/profit-simulation/compare',
     method: 'GET',
     params: { initiationId },
   })

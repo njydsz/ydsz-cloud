@@ -21,7 +21,7 @@ export const pageDeliveryItems = (
   params?: { keyword?: string; status?: string; initiationId?: number; stage?: string },
 ) =>
   request<PageResult<DeliveryItemVO>>({
-    url: '/execution/delivery/page',
+    url: '/api/project/execution/delivery/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -33,7 +33,7 @@ export const pageDeliveryItems = (
  */
 export const getDeliveryItem = (id: number) =>
   request<DeliveryItemVO>({
-    url: `/execution/delivery/${id}`,
+    url: `/api/project/execution/delivery/${id}`,
     method: 'GET',
   })
 
@@ -44,7 +44,7 @@ export const getDeliveryItem = (id: number) =>
  */
 export const createDeliveryItem = (data: DeliveryItemCreateDTO) =>
   request<number>({
-    url: '/execution/delivery',
+    url: '/api/project/execution/delivery',
     method: 'POST',
     data,
   })
@@ -56,7 +56,7 @@ export const createDeliveryItem = (data: DeliveryItemCreateDTO) =>
  */
 export const changeDeliveryItemStatus = (data: DeliveryItemStatusDTO) =>
   request<void>({
-    url: '/execution/delivery/status',
+    url: '/api/project/execution/delivery/status',
     method: 'PUT',
     data,
   })

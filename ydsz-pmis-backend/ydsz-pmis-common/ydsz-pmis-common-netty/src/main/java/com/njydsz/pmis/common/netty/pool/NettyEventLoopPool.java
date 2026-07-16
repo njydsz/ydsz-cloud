@@ -44,23 +44,6 @@ public class NettyEventLoopPool {
     private final TransportType transportType;
 
     /**
-     * 构造默认 EventLoop 池（静默期 2s，超时 15s，NIO 传输）。
-     */
-    public NettyEventLoopPool() {
-        this(2L, 15L, TransportType.NIO);
-    }
-
-    /**
-     * 构造 EventLoop 池。
-     *
-     * @param shutdownQuietPeriodSeconds 优雅关闭静默期（秒）
-     * @param shutdownTimeoutSeconds     优雅关闭超时（秒）
-     */
-    public NettyEventLoopPool(long shutdownQuietPeriodSeconds, long shutdownTimeoutSeconds) {
-        this(shutdownQuietPeriodSeconds, shutdownTimeoutSeconds, TransportType.NIO);
-    }
-
-    /**
      * 构造 EventLoop 池（指定传输类型）。
      *
      * @param shutdownQuietPeriodSeconds 优雅关闭静默期（秒）

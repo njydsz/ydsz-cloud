@@ -26,7 +26,7 @@ export const pageExpenses = (
   },
 ) =>
   request<PageResult<ExpenseVO>>({
-    url: '/finance/expense/page',
+    url: '/api/project/finance/expense/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -37,7 +37,7 @@ export const pageExpenses = (
  * @returns 费用报销详情
  */
 export const getExpense = (id: number) =>
-  request<ExpenseVO>({ url: `/finance/expense/${id}`, method: 'GET' })
+  request<ExpenseVO>({ url: `/api/project/finance/expense/${id}`, method: 'GET' })
 
 /**
  * 新建费用报销记录
@@ -45,7 +45,7 @@ export const getExpense = (id: number) =>
  * @returns 新建费用报销的 ID
  */
 export const createExpense = (data: ExpenseCreateDTO) =>
-  request<number>({ url: '/finance/expense', method: 'POST', data })
+  request<number>({ url: '/api/project/finance/expense', method: 'POST', data })
 
 /**
  * 变更费用报销状态（审批/驳回/付款等）
@@ -53,7 +53,7 @@ export const createExpense = (data: ExpenseCreateDTO) =>
  * @returns 无返回值
  */
 export const changeExpenseStatus = (data: ApprovalDTO) =>
-  request<void>({ url: '/finance/expense/status', method: 'PUT', data })
+  request<void>({ url: '/api/project/finance/expense/status', method: 'PUT', data })
 
 /**
  * 根据 ID 删除费用报销记录
@@ -61,4 +61,4 @@ export const changeExpenseStatus = (data: ApprovalDTO) =>
  * @returns 无返回值
  */
 export const deleteExpense = (id: number) =>
-  request<void>({ url: `/finance/expense/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/finance/expense/${id}`, method: 'DELETE' })

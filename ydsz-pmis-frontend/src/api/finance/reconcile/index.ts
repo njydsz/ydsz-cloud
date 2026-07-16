@@ -15,7 +15,7 @@ import type { DailyReconcileVO, DailyReconcileAggregateVO } from './types'
  */
 export const runDailyReconcile = (date?: string) =>
   request<number>({
-    url: '/finance/daily-reconcile/run',
+    url: '/api/project/finance/daily-reconcile/run',
     method: 'POST',
     params: { date },
   })
@@ -31,7 +31,7 @@ export const queryReconcileByDateRange = (params: {
   status?: string
 }) =>
   request<DailyReconcileVO[]>({
-    url: '/finance/daily-reconcile/query',
+    url: '/api/project/finance/daily-reconcile/query',
     method: 'GET',
     params,
   })
@@ -43,7 +43,7 @@ export const queryReconcileByDateRange = (params: {
  */
 export const aggregateReconcileStatus = (params: { from?: string; to?: string }) =>
   request<DailyReconcileAggregateVO[]>({
-    url: '/finance/daily-reconcile/aggregate',
+    url: '/api/project/finance/daily-reconcile/aggregate',
     method: 'GET',
     params,
   })
@@ -55,7 +55,7 @@ export const aggregateReconcileStatus = (params: { from?: string; to?: string })
  */
 export const retryReconcile = (date: string) =>
   request<number>({
-    url: '/finance/daily-reconcile/run',
+    url: '/api/project/finance/daily-reconcile/run',
     method: 'POST',
     params: { date },
   })

@@ -13,7 +13,7 @@ export const financeHandlers: MockHandler[] = [
   // ===== 发票分页查询（含发票号、金额、状态、开票日期、客户） =====
   {
     method: 'GET',
-    path: '/finance/invoice/page',
+    path: '/api/project/finance/invoice/page',
     handler: ({ query }) => ({
       list: Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,
@@ -33,7 +33,7 @@ export const financeHandlers: MockHandler[] = [
   // ===== 回款分页查询（含回款编码、金额、状态、到账日期、客户） =====
   {
     method: 'GET',
-    path: '/finance/payment/page',
+    path: '/api/project/finance/payment/page',
     handler: ({ query }) => ({
       list: Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,
@@ -52,7 +52,7 @@ export const financeHandlers: MockHandler[] = [
   // ===== 客户信用分页查询（含评分、等级、逾期金额、最近更新时间） =====
   {
     method: 'GET',
-    path: '/finance/customer-credit/page',
+    path: '/api/project/finance/customer-credit/page',
     handler: ({ query }) => ({
       list: Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,

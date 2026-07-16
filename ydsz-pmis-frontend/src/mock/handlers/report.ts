@@ -21,7 +21,7 @@ import type { MockHandler } from './types'
 export const reportHandlers: MockHandler[] = [
   {
     method: 'GET',
-    path: '/report/profit',
+    path: '/api/project/report/profit',
     handler: () => ({
       revenue: 8500000,
       laborCost: 3500000,
@@ -34,7 +34,7 @@ export const reportHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    path: '/report/cost',
+    path: '/api/project/report/cost',
     handler: () => ({
       laborRatio: 0.6,
       purchaseRatio: 0.3,
@@ -43,7 +43,7 @@ export const reportHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    path: '/report/payment-ledger',
+    path: '/api/project/report/payment-ledger',
     handler: () => ({
       total: 5000000,
       received: 3500000,
@@ -52,7 +52,7 @@ export const reportHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    path: '/report/lifecycle',
+    path: '/api/project/report/lifecycle',
     handler: () => ({
       stages: [
         { stage: '立项', date: '2026-01-15', amount: null },
@@ -65,7 +65,7 @@ export const reportHandlers: MockHandler[] = [
   },
   {
     method: 'GET',
-    path: '/report/profit-summary',
+    path: '/api/project/report/profit-summary',
     handler: () =>
       Array.from({ length: 8 }, (_, i) => ({
         initiationId: i + 1,

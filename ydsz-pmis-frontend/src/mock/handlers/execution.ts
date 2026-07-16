@@ -13,7 +13,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== WBS 任务分页查询（含编码、名称、父级、进度、负责人、状态） =====
   {
     method: 'GET',
-    path: '/execution/wbs/page',
+    path: '/api/project/execution/wbs/page',
     handler: ({ query }) => ({
       list: Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,
@@ -33,7 +33,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== EVM 指标分页查询（含周期、CPI、SPI、健康度） =====
   {
     method: 'GET',
-    path: '/execution/evm/page',
+    path: '/api/project/execution/evm/page',
     handler: ({ query }) => ({
       list: Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,
@@ -51,7 +51,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== 利用率排名报表（员工维度） =====
   {
     method: 'GET',
-    path: '/report/advanced/utilization-rank',
+    path: '/api/project/report/advanced/utilization-rank',
     handler: () =>
       Array.from({ length: 20 }, (_, i) => ({
         employeeId: i + 1,
@@ -63,7 +63,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== 闲置成本月度报表 =====
   {
     method: 'GET',
-    path: '/report/advanced/bench-cost',
+    path: '/api/project/report/advanced/bench-cost',
     handler: () =>
       Array.from({ length: 12 }, (_, i) => ({
         period: `2026-${String(i + 1).padStart(2, '0')}`,
@@ -74,7 +74,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== 风险仪表盘报表（项目维度的风险/告警计数） =====
   {
     method: 'GET',
-    path: '/report/advanced/risk-dashboard',
+    path: '/api/project/report/advanced/risk-dashboard',
     handler: () =>
       Array.from({ length: 5 }, (_, i) => ({
         projectId: i + 1,
@@ -92,7 +92,7 @@ export const executionHandlers: MockHandler[] = [
   // 风险分页查询（含标题、等级、类别、状态、影响金额）
   {
     method: 'GET',
-    path: '/execution/risk/page',
+    path: '/api/project/execution/risk/page',
     handler: ({ query }) => {
       const fixture = Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,
@@ -115,7 +115,7 @@ export const executionHandlers: MockHandler[] = [
   // 新建风险（随机生成 ID，回填默认值）
   {
     method: 'POST',
-    path: '/execution/risk',
+    path: '/api/project/execution/risk',
     handler: ({ body }) => {
       const b = (body || {}) as Record<string, unknown>
       const id = 2000 + Math.floor(Math.random() * 1000)
@@ -134,7 +134,7 @@ export const executionHandlers: MockHandler[] = [
   // 风险评估（返回等级、评分、命中规则）
   {
     method: 'POST',
-    path: '/execution/risk/{id}/evaluate',
+    path: '/api/project/execution/risk/{id}/evaluate',
     handler: () => ({
       success: true,
       level: 'HIGH',
@@ -146,7 +146,7 @@ export const executionHandlers: MockHandler[] = [
   // 预警分页查询（含编码、标题、等级、状态）
   {
     method: 'GET',
-    path: '/execution/alert/page',
+    path: '/api/project/execution/alert/page',
     handler: ({ query }) => {
       const list = Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,
@@ -168,14 +168,14 @@ export const executionHandlers: MockHandler[] = [
   // 预警确认（ack）
   {
     method: 'POST',
-    path: '/execution/alert/{id}/ack',
+    path: '/api/project/execution/alert/{id}/ack',
     handler: () => ({ success: true, status: 'ACKED' }),
   },
   // ====== E2E P1-6 结项流程 mock (批次 25) ======
   // 结项分页查询（含编码、立项、类型、状态、原因）
   {
     method: 'GET',
-    path: '/execution/project-closure/page',
+    path: '/api/project/execution/project-closure/page',
     handler: ({ query }) => ({
       list: Array.from({ length: Number(query.size || 10) }, (_, i) => ({
         id: i + 1,
@@ -196,7 +196,7 @@ export const executionHandlers: MockHandler[] = [
   // 新建结项（生成编码，回填默认状态）
   {
     method: 'POST',
-    path: '/execution/project-closure',
+    path: '/api/project/execution/project-closure',
     handler: ({ body }) => {
       const b = (body || {}) as Record<string, unknown>
       return {
@@ -214,13 +214,13 @@ export const executionHandlers: MockHandler[] = [
   // 更新结项状态（提交 / 受理 / 驳回等）
   {
     method: 'PUT',
-    path: '/execution/project-closure/status',
+    path: '/api/project/execution/project-closure/status',
     handler: () => ({ success: true }),
   },
   // 结项详情查询
   {
     method: 'GET',
-    path: '/execution/project-closure/{id}',
+    path: '/api/project/execution/project-closure/{id}',
     handler: () => ({
       id: 1,
       closureCode: 'CL-0001',

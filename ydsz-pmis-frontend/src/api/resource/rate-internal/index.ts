@@ -24,7 +24,7 @@ export const pageRateInternal = (
   params?: { levelCode?: string; departmentId?: number; status?: string },
 ) =>
   request<PageResult<RateInternalVO>>({
-    url: '/resource/rate-internal/page',
+    url: '/api/project/resource/rate-internal/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -35,7 +35,7 @@ export const pageRateInternal = (
  * @returns 费率详情
  */
 export const getRateInternal = (id: number) =>
-  request<RateInternalVO>({ url: `/resource/rate-internal/${id}`, method: 'GET' })
+  request<RateInternalVO>({ url: `/api/project/resource/rate-internal/${id}`, method: 'GET' })
 
 /**
  * 新建对内职级成本费率
@@ -43,7 +43,7 @@ export const getRateInternal = (id: number) =>
  * @returns 新建费率记录ID
  */
 export const createRateInternal = (data: RateInternalCreateDTO) =>
-  request<number>({ url: '/resource/rate-internal', method: 'POST', data })
+  request<number>({ url: '/api/project/resource/rate-internal', method: 'POST', data })
 
 /**
  * 更新对内职级成本费率
@@ -52,7 +52,7 @@ export const createRateInternal = (data: RateInternalCreateDTO) =>
  * @returns 无返回值
  */
 export const updateRateInternal = (id: number, data: RateInternalCreateDTO) =>
-  request<void>({ url: `/resource/rate-internal/${id}`, method: 'PUT', data })
+  request<void>({ url: `/api/project/resource/rate-internal/${id}`, method: 'PUT', data })
 
 /**
  * 删除对内职级成本费率
@@ -60,4 +60,4 @@ export const updateRateInternal = (id: number, data: RateInternalCreateDTO) =>
  * @returns 无返回值
  */
 export const deleteRateInternal = (id: number) =>
-  request<void>({ url: `/resource/rate-internal/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/resource/rate-internal/${id}`, method: 'DELETE' })

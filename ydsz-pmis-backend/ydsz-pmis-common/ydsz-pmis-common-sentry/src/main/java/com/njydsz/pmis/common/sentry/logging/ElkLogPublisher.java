@@ -42,6 +42,8 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
     /** TCP 长连接（仅在 TCP 模式下使用） */
     private volatile Socket tcpSocket;
     private final ReentrantLock tcpLock = new ReentrantLock();
+    /** UDP socket 复用（仅 UDP 模式） */
+    private DatagramSocket udpSocket;
 
     public ElkLogPublisher(String host, int port, String protocol,
                            int connectTimeoutMillis, int readTimeoutMillis,
@@ -54,6 +56,9 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
         this.maxRetryAttempts = maxRetryAttempts;
         this.circuitBreaker = circuitBreaker;
         log.info("[Sentry] ElkLogPublisher 初始化: {}://{}:{}", this.protocol, host, port);
+        if ("udp".equals(this.protocol)) {
+            try { udpSocket = new DatagramSocket(); } catch (Exception e) { log.warn("[Sentry] UDP socket 创建失败: {}", e.getMessage()); }
+        }
     }
 
     @Override
@@ -147,11 +152,12 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
      * UDP 发送
      */
     private void sendUdp(byte[] bytes) throws IOException {
-        try (DatagramSocket socket = new DatagramSocket()) {
-            DatagramPacket packet = new DatagramPacket(
-                    bytes, bytes.length, new InetSocketAddress(host, port));
-            socket.send(packet);
+        if (udpSocket == null) {
+            udpSocket = new DatagramSocket();
         }
+        DatagramPacket packet = new DatagramPacket(
+                bytes, bytes.length, new InetSocketAddress(host, port));
+        udpSocket.send(packet);
     }
 
     @Override
@@ -179,6 +185,11 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
     @Override
     public void close() {
         closeTcpSocketQuietly();
+        if (udpSocket != null) {
+            try { udpSocket.close(); } catch (Exception ignored) { }
+            udpSocket = null;
+        }
+        log.info("[Sentry] ElkLogPublisher 已关闭");
         log.info("[Sentry] ElkLogPublisher 已关闭");
     }
 }

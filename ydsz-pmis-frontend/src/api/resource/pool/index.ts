@@ -16,7 +16,7 @@ import type { ResourcePoolVO, ResourcePoolCreateDTO } from './types'
  */
 export const pageResourcePools = (page: number, size: number, poolType?: string, status?: string) =>
   request<PageResult<ResourcePoolVO>>({
-    url: '/resource-pools/page',
+    url: '/api/project/resource-pools/page',
     method: 'GET',
     params: { page, size, poolType, status },
   })
@@ -27,7 +27,7 @@ export const pageResourcePools = (page: number, size: number, poolType?: string,
  * @returns 资源池列表
  */
 export const listPoolsByType = (poolType: string) =>
-  request<ResourcePoolVO[]>({ url: '/resource-pools/by-type', method: 'GET', params: { poolType } })
+  request<ResourcePoolVO[]>({ url: '/api/project/resource-pools/by-type', method: 'GET', params: { poolType } })
 
 /**
  * 按部门查询资源池列表
@@ -35,7 +35,7 @@ export const listPoolsByType = (poolType: string) =>
  * @returns 资源池列表
  */
 export const listPoolsByDept = (departmentId: number) =>
-  request<ResourcePoolVO[]>({ url: `/resource-pools/by-dept/${departmentId}`, method: 'GET' })
+  request<ResourcePoolVO[]>({ url: `/api/project/resource-pools/by-dept/${departmentId}`, method: 'GET' })
 
 /**
  * 查询资源池详情
@@ -43,7 +43,7 @@ export const listPoolsByDept = (departmentId: number) =>
  * @returns 资源池详情
  */
 export const getResourcePool = (id: number) =>
-  request<ResourcePoolVO>({ url: `/resource-pools/${id}`, method: 'GET' })
+  request<ResourcePoolVO>({ url: `/api/project/resource-pools/${id}`, method: 'GET' })
 
 /**
  * 创建资源池
@@ -51,7 +51,7 @@ export const getResourcePool = (id: number) =>
  * @returns 新建资源池 ID
  */
 export const createResourcePool = (data: ResourcePoolCreateDTO) =>
-  request<number>({ url: '/resource-pools', method: 'POST', data })
+  request<number>({ url: '/api/project/resource-pools', method: 'POST', data })
 
 /**
  * 更新资源池
@@ -60,7 +60,7 @@ export const createResourcePool = (data: ResourcePoolCreateDTO) =>
  * @returns 无返回值
  */
 export const updateResourcePool = (id: number, data: ResourcePoolCreateDTO) =>
-  request<void>({ url: `/resource-pools/${id}`, method: 'PUT', data })
+  request<void>({ url: `/api/project/resource-pools/${id}`, method: 'PUT', data })
 
 /**
  * 删除资源池
@@ -68,4 +68,4 @@ export const updateResourcePool = (id: number, data: ResourcePoolCreateDTO) =>
  * @returns 无返回值
  */
 export const deleteResourcePool = (id: number) =>
-  request<void>({ url: `/resource-pools/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/resource-pools/${id}`, method: 'DELETE' })

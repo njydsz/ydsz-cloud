@@ -12,7 +12,7 @@ import type { ResourceAssignmentVO, ResourceAssignmentCreateDTO } from './types'
  * @returns 新建分配记录 ID
  */
 export const actResourceAssignment = (data: ResourceAssignmentCreateDTO) =>
-  request<number>({ url: '/resource-assignments/act', method: 'POST', data })
+  request<number>({ url: '/api/project/resource-assignments/act', method: 'POST', data })
 
 /**
  * 查询分配详情
@@ -20,7 +20,7 @@ export const actResourceAssignment = (data: ResourceAssignmentCreateDTO) =>
  * @returns 分配记录详情
  */
 export const getResourceAssignment = (id: number) =>
-  request<ResourceAssignmentVO>({ url: `/resource-assignments/${id}`, method: 'GET' })
+  request<ResourceAssignmentVO>({ url: `/api/project/resource-assignments/${id}`, method: 'GET' })
 
 /**
  * 按员工查询分配记录列表
@@ -28,7 +28,7 @@ export const getResourceAssignment = (id: number) =>
  * @returns 分配记录列表
  */
 export const listAssignmentsByEmployee = (employeeId: number) =>
-  request<ResourceAssignmentVO[]>({ url: `/resource-assignments/by-employee/${employeeId}`, method: 'GET' })
+  request<ResourceAssignmentVO[]>({ url: `/api/project/resource-assignments/by-employee/${employeeId}`, method: 'GET' })
 
 /**
  * 按立项查询分配记录列表
@@ -36,7 +36,7 @@ export const listAssignmentsByEmployee = (employeeId: number) =>
  * @returns 分配记录列表
  */
 export const listAssignmentsByInitiation = (initiationId: number) =>
-  request<ResourceAssignmentVO[]>({ url: `/resource-assignments/by-initiation/${initiationId}`, method: 'GET' })
+  request<ResourceAssignmentVO[]>({ url: `/api/project/resource-assignments/by-initiation/${initiationId}`, method: 'GET' })
 
 /**
  * 查询员工当前活跃项目数
@@ -44,7 +44,7 @@ export const listAssignmentsByInitiation = (initiationId: number) =>
  * @returns 活跃项目数量
  */
 export const activeCount = (employeeId: number) =>
-  request<number>({ url: `/resource-assignments/active-count/${employeeId}`, method: 'GET' })
+  request<number>({ url: `/api/project/resource-assignments/active-count/${employeeId}`, method: 'GET' })
 
 /**
  * 查询员工利用率
@@ -52,7 +52,7 @@ export const activeCount = (employeeId: number) =>
  * @returns 利用率统计信息（键值对结构）
  */
 export const utilization = (employeeId: number) =>
-  request<Record<string, unknown>>({ url: `/resource-assignments/utilization/${employeeId}`, method: 'GET' })
+  request<Record<string, unknown>>({ url: `/api/project/resource-assignments/utilization/${employeeId}`, method: 'GET' })
 
 /**
  * 分页查询分配记录
@@ -63,7 +63,7 @@ export const utilization = (employeeId: number) =>
  */
 export const pageAssignments = (page: number, size: number, params?: { employeeId?: number; initiationId?: number; status?: string }) =>
   request<PageResult<ResourceAssignmentVO>>({
-    url: '/resource-assignments/page',
+    url: '/api/project/resource-assignments/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })

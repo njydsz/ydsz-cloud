@@ -31,7 +31,7 @@ import { request } from '@/utils/request'
  */
 export const getProjectProfitReport = (initiationId: number, period?: string) =>
   request<Record<string, unknown>>({
-    url: '/report/profit',
+    url: '/api/project/report/profit',
     method: 'GET',
     params: { initiationId, period },
   })
@@ -44,7 +44,7 @@ export const getProjectProfitReport = (initiationId: number, period?: string) =>
  */
 export const getCostDetailReport = (initiationId: number, period?: string) =>
   request<Record<string, unknown>>({
-    url: '/report/cost',
+    url: '/api/project/report/cost',
     method: 'GET',
     params: { initiationId, period },
   })
@@ -56,7 +56,7 @@ export const getCostDetailReport = (initiationId: number, period?: string) =>
  */
 export const getPaymentLedger = (initiationId: number) =>
   request<Record<string, unknown>>({
-    url: '/report/payment-ledger',
+    url: '/api/project/report/payment-ledger',
     method: 'GET',
     params: { initiationId },
   })
@@ -68,7 +68,7 @@ export const getPaymentLedger = (initiationId: number) =>
  */
 export const getLifecycleReport = (initiationId: number) =>
   request<Record<string, unknown>>({
-    url: '/report/lifecycle',
+    url: '/api/project/report/lifecycle',
     method: 'GET',
     params: { initiationId },
   })
@@ -79,7 +79,7 @@ export const getLifecycleReport = (initiationId: number) =>
  */
 export const getProfitSummary = () =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/profit-summary',
+    url: '/api/project/report/profit-summary',
     method: 'GET',
   })
 
@@ -92,7 +92,7 @@ export const getProfitSummary = () =>
  */
 export const getProfitRank = (top = 10, sortBy?: string, period?: string) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/profit-rank',
+    url: '/api/project/report/profit-rank',
     method: 'GET',
     params: { top, sortBy, period },
   })
@@ -107,7 +107,7 @@ export const getProfitRank = (top = 10, sortBy?: string, period?: string) =>
  */
 export const getEvmReport = (initiationId: number) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/advanced/evm',
+    url: '/api/project/report/advanced/evm',
     method: 'GET',
     params: { initiationId },
   })
@@ -120,7 +120,7 @@ export const getEvmReport = (initiationId: number) =>
  */
 export const getUtilizationRank = (top = 20) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/advanced/utilization-rank',
+    url: '/api/project/report/advanced/utilization-rank',
     method: 'GET',
     params: { top },
   })
@@ -139,7 +139,7 @@ export const getUtilizationReport = (top = 20) => getUtilizationRank(top)
  */
 export const getBenchCostReport = () =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/advanced/bench-cost',
+    url: '/api/project/report/advanced/bench-cost',
     method: 'GET',
   })
 
@@ -151,7 +151,7 @@ export const getBenchCostReport = () =>
  */
 export const getDualRateComparison = (period?: string) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/advanced/dual-rate',
+    url: '/api/project/report/advanced/dual-rate',
     method: 'GET',
     params: { period },
   })
@@ -164,7 +164,7 @@ export const getDualRateComparison = (period?: string) =>
  */
 export const getResourceGantt = (initiationId: number) =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/advanced/gantt',
+    url: '/api/project/report/advanced/gantt',
     method: 'GET',
     params: { initiationId },
   })
@@ -176,6 +176,6 @@ export const getResourceGantt = (initiationId: number) =>
  */
 export const getRiskDashboard = () =>
   request<Array<Record<string, unknown>>>({
-    url: '/report/advanced/risk-dashboard',
+    url: '/api/project/report/advanced/risk-dashboard',
     method: 'GET',
   })

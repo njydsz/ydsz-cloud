@@ -59,7 +59,7 @@ export interface SubmitExportResult {
  */
 export const submitExport = (exportType: string, params?: Record<string, unknown>) =>
   request<SubmitExportResult>({
-    url: '/report/asyncExport/submit',
+    url: '/api/project/report/asyncExport/submit',
     method: 'POST',
     params: { exportType },
     data: params || {},
@@ -78,7 +78,7 @@ export const getExportRecords = (page = 1, size = 20) =>
     totalPages: number
     number: number
   }>({
-    url: '/report/asyncExport/records',
+    url: '/api/project/report/asyncExport/records',
     method: 'GET',
     params: { page, size },
   })
@@ -90,7 +90,7 @@ export const getExportRecords = (page = 1, size = 20) =>
  */
 export const getDownloadUrl = (recordId: string) =>
   request<{ url: string; success: boolean }>({
-    url: `/report/asyncExport/${recordId}/download`,
+    url: `/api/project/report/asyncExport/${recordId}/download`,
     method: 'GET',
   })
 
@@ -101,6 +101,6 @@ export const getDownloadUrl = (recordId: string) =>
  */
 export const deleteExportRecord = (recordId: string) =>
   request<{ success: boolean }>({
-    url: `/report/asyncExport/${recordId}`,
+    url: `/api/project/report/asyncExport/${recordId}`,
     method: 'DELETE',
   })

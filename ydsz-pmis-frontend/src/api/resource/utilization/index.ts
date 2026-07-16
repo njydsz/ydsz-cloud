@@ -18,7 +18,7 @@ export * from './types'
  */
 export const aggregateUtilization = (from?: string, to?: string) =>
   request<Array<Record<string, unknown>>>({
-    url: '/resource/utilization/aggregate',
+    url: '/api/project/resource/utilization/aggregate',
     method: 'GET',
     params: { from, to },
   })
@@ -32,7 +32,7 @@ export const aggregateUtilization = (from?: string, to?: string) =>
  */
 export const getPersonalUtilization = (employeeId: number, from?: string, to?: string) =>
   request<Record<string, unknown>>({
-    url: '/resource/utilization/personal',
+    url: '/api/project/resource/utilization/personal',
     method: 'GET',
     params: { employeeId, from, to },
   })
@@ -46,7 +46,7 @@ export const getPersonalUtilization = (employeeId: number, from?: string, to?: s
  */
 export const getUtilizationRank = (from?: string, to?: string, top = 20) =>
   request<Array<Record<string, unknown>>>({
-    url: '/resource/utilization/rank',
+    url: '/api/project/resource/utilization/rank',
     method: 'GET',
     params: { from, to, top },
   })
@@ -59,7 +59,7 @@ export const getUtilizationRank = (from?: string, to?: string, top = 20) =>
  */
 export const getOverallUtilization = (from?: string, to?: string) =>
   request<Record<string, unknown>>({
-    url: '/resource/utilization/overall',
+    url: '/api/project/resource/utilization/overall',
     method: 'GET',
     params: { from, to },
   })
@@ -72,7 +72,7 @@ export const getOverallUtilization = (from?: string, to?: string) =>
  */
 export const getUtilizationAlerts = (from?: string, to?: string) =>
   request<Array<Record<string, unknown>>>({
-    url: '/resource/utilization/alerts',
+    url: '/api/project/resource/utilization/alerts',
     method: 'GET',
     params: { from, to },
   })
@@ -85,7 +85,7 @@ export const getUtilizationAlerts = (from?: string, to?: string) =>
  */
 export const evaluateUtilization = (totalHours: number, billableHours: number) =>
   request<Record<string, unknown>>({
-    url: '/resource/utilization/evaluate',
+    url: '/api/project/resource/utilization/evaluate',
     method: 'GET',
     params: { totalHours, billableHours },
   })
@@ -98,7 +98,7 @@ export const evaluateUtilization = (totalHours: number, billableHours: number) =
  */
 export const recomputeUtilization = (period?: string, recomputeAll = false) =>
   request<Record<string, unknown>>({
-    url: '/resource/utilization/recompute',
+    url: '/api/project/resource/utilization/recompute',
     method: 'POST',
     params: { period, recomputeAll },
   })
@@ -110,7 +110,7 @@ export const recomputeUtilization = (period?: string, recomputeAll = false) =>
  */
 export const getSnapshotAverage = (period?: string) =>
   request<Record<string, unknown>>({
-    url: '/resource/utilization/snapshot-average',
+    url: '/api/project/resource/utilization/snapshot-average',
     method: 'GET',
     params: { period },
   })

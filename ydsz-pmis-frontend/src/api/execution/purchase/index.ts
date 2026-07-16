@@ -20,7 +20,7 @@ export const pagePurchases = (
   params?: { keyword?: string; status?: string; initiationId?: number },
 ) =>
   request<PageResult<PurchaseVO>>({
-    url: '/execution/purchase/page',
+    url: '/api/project/execution/purchase/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -31,7 +31,7 @@ export const pagePurchases = (
  * @returns 采购申请详情
  */
 export const getPurchase = (id: number) =>
-  request<PurchaseVO>({ url: `/execution/purchase/${id}`, method: 'GET' })
+  request<PurchaseVO>({ url: `/api/project/execution/purchase/${id}`, method: 'GET' })
 
 /**
  * 新建采购申请
@@ -39,7 +39,7 @@ export const getPurchase = (id: number) =>
  * @returns 新建采购申请的 ID
  */
 export const createPurchase = (data: PurchaseCreateDTO) =>
-  request<number>({ url: '/execution/purchase', method: 'POST', data })
+  request<number>({ url: '/api/project/execution/purchase', method: 'POST', data })
 
 /**
  * 变更采购申请状态（审批/驳回/收货/付款等）
@@ -47,7 +47,7 @@ export const createPurchase = (data: PurchaseCreateDTO) =>
  * @returns 无返回值
  */
 export const changePurchaseStatus = (data: ApprovalDTO) =>
-  request<void>({ url: '/execution/purchase/status', method: 'PUT', data })
+  request<void>({ url: '/api/project/execution/purchase/status', method: 'PUT', data })
 
 /**
  * 根据 ID 删除采购申请
@@ -55,4 +55,4 @@ export const changePurchaseStatus = (data: ApprovalDTO) =>
  * @returns 无返回值
  */
 export const deletePurchase = (id: number) =>
-  request<void>({ url: `/execution/purchase/${id}`, method: 'DELETE' })
+  request<void>({ url: `/api/project/execution/purchase/${id}`, method: 'DELETE' })
