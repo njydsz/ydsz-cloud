@@ -27,8 +27,5 @@ public enum OutboxStatus {
     SENT,
 
     /** 死信（超过最大重试次数，需人工介入） */
-    DEAD_LETTER,
-
-    /** 投递失败（临时不可用，等待 reclaim） */
-    FAILED
+    DEAD_LETTER
 }

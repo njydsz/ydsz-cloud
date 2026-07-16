@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.pmis.common.json.annotation.JsonField;
-import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveData;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
 import lombok.Data;
@@ -36,10 +36,10 @@ public class UserVO implements Serializable {
     /** 真实姓名 */
     private String realName;
     /** 邮箱（脱敏：a***@example.com） */
-    @Sensitive(type = SensitiveType.EMAIL)
+    @SensitiveData(SensitiveType.EMAIL)
     private String email;
     /** 手机号（脱敏：138****8000） */
-    @Sensitive(type = SensitiveType.PHONE)
+    @SensitiveData(SensitiveType.PHONE)
     private String phone;
     /** 头像地址 */
     private String avatar;
@@ -62,7 +62,7 @@ public class UserVO implements Serializable {
     /** 最近登录时间 */
     private LocalDateTime lastLoginTime;
     /** 最近登录 IP（脱敏：保留前 3 段） */
-    @Sensitive(type = SensitiveType.ADDRESS)
+    @SensitiveData(SensitiveType.ADDRESS)
     private String lastLoginIp;
     /** 数据权限范围: ALL/DEPT/DEPT_AND_CHILD/SELF/CUSTOM/PROJECT */
     private String dataScope;

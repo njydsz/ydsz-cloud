@@ -10,7 +10,6 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public interface NotifyService {
 
@@ -24,6 +23,14 @@ public interface NotifyService {
 	 * @return 发送结果
 	 */
 	NotifySendResult send(NotifyChannel channel, String receiver, String title, String content);
+
+	/**
+	 * 发送完整通知请求（支持模板、优先级、用户偏好、去重等高级特性）
+	 *
+	 * @param request 通知请求
+	 * @return 发送结果
+	 */
+	NotifySendResult send(NotifyRequest request);
 
 	/**
 	 * 发送通知消息到指定渠道（带模板参数）

@@ -61,6 +61,11 @@ public class QueueMessage implements Serializable {
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     /**
+     * 反序列化 payload 最大长度限制（16MB），防止恶意超大消息导致 OOM
+     */
+    private static final int MAX_PAYLOAD_LENGTH = 16 * 1024 * 1024;
+
+    /**
      * 消息体内容
      */
     private String body;
@@ -230,6 +235,10 @@ public class QueueMessage implements Serializable {
     public static QueueMessage fromPayload(String payload) {
         if (StringUtils.isBlank(payload)) {
             return null;
+        }
+        if (payload.length() > MAX_PAYLOAD_LENGTH) {
+            throw new IllegalArgumentException(
+                    "消息 payload 超过最大长度限制: " + payload.length() + " > " + MAX_PAYLOAD_LENGTH);
         }
         try {
             QueueMessage message = Json.toObject(payload, QueueMessage.class);

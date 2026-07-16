@@ -16,15 +16,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.pmis.common.notify.aggregate.NotificationAggregator;
+import com.njydsz.pmis.common.notify.aggregate.TimeWindowAggregator;
 import com.njydsz.pmis.common.notify.audit.NotifyAuditService;
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
@@ -38,16 +42,17 @@ import com.njydsz.pmis.common.notify.core.PersistentNotifyRetryQueue;
 import com.njydsz.pmis.common.notify.core.TransactionalNotifyPublisher;
 import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
 import com.njydsz.pmis.common.notify.fallback.NotifyFallbackManager;
+import com.njydsz.pmis.common.notify.i18n.NotifyI18nResolver;
 import com.njydsz.pmis.common.notify.i18n.NotifyI18nService;
 import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
 import com.njydsz.pmis.common.notify.preference.NotifyPreferenceManager;
-import com.njydsz.pmis.common.notify.queue.EmailQueueService;
 import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
 import com.njydsz.pmis.common.notify.security.DkimSigner;
 import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
 import com.njydsz.pmis.common.notify.security.NotifyPasswordResolver;
 import com.njydsz.pmis.common.notify.template.HtmlTemplateRegistry;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
+import com.njydsz.pmis.common.notify.template.TemplateVariableValidator;
 import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
@@ -57,38 +62,31 @@ import io.micrometer.core.instrument.MeterRegistry;
  * 统一消息通知自动配置类
  *
  * <p>各渠道 Sender（Email/SMS/WeCom/DingTalk/Feishu）通过实现 {@link NotifyChannelStrategy} 接口自动注册。
- * 邮件渠道的 {@link JavaMailSender} Bean 由本配置类根据 {@code ydsz.notify.email} 配置自动创建，
- * 支持密码加密解密（P0-1）、SMTP 健康探活（P0-2）、内容 XSS 防护（P0-3）、指标埋点（P1-4）、
- * 追踪像素（P1-5）、渠道降级（P1-6）、HTML 模板注册（P2-7）、邮件队列（P2-8）、
- * DKIM 签名（P2-9）、多提供商抽象（P2-10）、通知偏好（P3-12）、去重（P3-13）、国际化（P3-14）。
+ * 邮件渠道的 {@link JavaMailSender} Bean 由本配置类根据 {@code ydsz.notify.email} 配置自动创建。
+ *
+ * <p>核心能力：密码加密、SMTP 健康探活、XSS 防护、指标埋点、邮件追踪、渠道降级、
+ * HTML 模板注册、DKIM 签名、多提供商抽象、通知偏好、去重、国际化、消息聚合、审计日志、
+ * 熔断器、死信队列、事务安全发布。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration
 @EnableConfigurationProperties(NotifyProperties.class)
+@EnableScheduling
 @ConditionalOnClass(name = "org.apache.hc.client5.http.classic.HttpClient")
 @ConditionalOnProperty(prefix = "ydsz.notify", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class NotifyConfiguration {
 
 	private final Logger log = LoggerFactory.getLogger(NotifyConfiguration.class);
 
-	/** 通知服务实例，供定时任务消费重试队列时使用 */
-	private NotifyService notifyServiceInstance;
+	/** 通知服务实例，供定时任务消费重试队列和聚合消息时使用 */
+	private NotifyServiceImpl notifyServiceInstance;
 	/** 通知重试队列实例，供定时任务消费重试队列时使用 */
 	private NotifyRetryQueue retryQueueInstance;
 
-	// ==================== P0-1 密码加密 ====================
+	// ==================== 密码加密 ====================
 
-	/**
-	 * 创建通知模块密码解析器（P0-1）
-	 *
-	 * <p>当 EmailConfig.security.passwordEncrypted=true 时，通过 Jasypt 解密 SMTP 密码。
-	 *
-	 * @param properties 通知配置属性
-	 * @return NotifyPasswordResolver 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyPasswordResolver.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
@@ -99,19 +97,6 @@ public class NotifyConfiguration {
 
 	// ==================== JavaMailSender ====================
 
-	/**
-	 * 创建邮件发送器 {@link JavaMailSender}。
-	 *
-	 * <p>根据 {@code ydsz.notify.email} 配置构建 SMTP 连接参数，支持 SSL/TLS 加密、STARTTLS 升级、
-	 * 自定义 JavaMail 属性等。当邮件渠道未启用或 SMTP 主机未配置时，不创建该 Bean。
-	 * 若容器中已存在 {@link JavaMailSender} Bean，则不重复创建。
-	 *
-	 * <p>P0-1：当 security.passwordEncrypted=true 时，通过 {@link NotifyPasswordResolver} 自动解密密码。
-	 *
-	 * @param properties       通知配置属性
-	 * @param passwordResolver 密码解析器（可选，用于加密密码解密）
-	 * @return JavaMailSender 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(JavaMailSender.class)
 	@ConditionalOnClass(JavaMailSender.class)
@@ -124,7 +109,6 @@ public class NotifyConfiguration {
 		sender.setPort(email.getSmtpPort());
 		sender.setUsername(email.getFromMail());
 
-		// P0-1：密码解密
 		String password = email.getPassword();
 		NotifyPasswordResolver resolver = passwordResolver.getIfAvailable();
 		if (resolver != null && NotifyPasswordResolver.isEncrypted(password)) {
@@ -168,14 +152,8 @@ public class NotifyConfiguration {
 		return sender;
 	}
 
-	// ==================== P0-2 SMTP 健康探活 ====================
+	// ==================== SMTP 健康探活 ====================
 
-	/**
-	 * 创建 SMTP 健康检查器（P0-2）
-	 *
-	 * @param properties 通知配置属性
-	 * @return EmailSmtpHealthChecker 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(EmailSmtpHealthChecker.class)
 	@ConditionalOnClass(JavaMailSender.class)
@@ -185,17 +163,8 @@ public class NotifyConfiguration {
 		return new EmailSmtpHealthChecker(properties);
 	}
 
-	// ==================== P0-3 XSS 防护 ====================
-	// EmailContentSanitizer 为静态工具类，无需注册 Bean
+	// ==================== 指标埋点 ====================
 
-	// ==================== P1-4 指标埋点 ====================
-
-	/**
-	 * 创建通知指标收集器（P1-4）
-	 *
-	 * @param meterRegistryProvider Micrometer MeterRegistry 提供者（可选）
-	 * @return NotifyMetrics 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyMetrics.class)
 	public NotifyMetrics notifyMetrics(ObjectProvider<MeterRegistry> meterRegistryProvider) {
@@ -205,15 +174,8 @@ public class NotifyConfiguration {
 		return new NotifyMetrics(registry);
 	}
 
-	// ==================== P1-5 邮件追踪 ====================
+	// ==================== 邮件追踪 ====================
 
-	/**
-	 * 创建邮件追踪服务（P1-5）
-	 *
-	 * @param properties          通知配置属性
-	 * @param redisTemplateProvider Redis 模板提供者（可选）
-	 * @return EmailTrackingService 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(EmailTrackingService.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
@@ -225,15 +187,8 @@ public class NotifyConfiguration {
 		return new EmailTrackingService(properties, redisTemplate);
 	}
 
-	// ==================== P1-6 渠道降级 ====================
+	// ==================== 渠道降级 ====================
 
-	/**
-	 * 创建渠道降级管理器（P1-6）
-	 *
-	 * @param properties 通知配置属性
-	 * @param strategies 所有渠道策略列表
-	 * @return NotifyFallbackManager 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyFallbackManager.class)
 	public NotifyFallbackManager notifyFallbackManager(NotifyProperties properties,
@@ -243,13 +198,8 @@ public class NotifyConfiguration {
 		return new NotifyFallbackManager(properties, strategies != null ? strategies : List.of());
 	}
 
-	// ==================== P2-7 HTML 模板注册 ====================
+	// ==================== HTML 模板注册 ====================
 
-	/**
-	 * 创建 HTML 邮件模板注册中心（P2-7）
-	 *
-	 * @return HtmlTemplateRegistry 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(HtmlTemplateRegistry.class)
 	public HtmlTemplateRegistry htmlTemplateRegistry() {
@@ -257,34 +207,8 @@ public class NotifyConfiguration {
 		return new HtmlTemplateRegistry();
 	}
 
-	// ==================== P2-8 邮件队列 ====================
+	// ==================== DKIM 签名 ====================
 
-	/**
-	 * 创建邮件队列服务（P2-8）
-	 *
-	 * @param redisTemplateProvider Redis 模板提供者（可选）
-	 * @param executor             虚拟线程池
-	 * @return EmailQueueService 实例
-	 */
-	@Bean
-	@ConditionalOnMissingBean(EmailQueueService.class)
-	@ConditionalOnClass(name = "com.njydsz.pmis.common.json.Json")
-	public EmailQueueService emailQueueService(ObjectProvider<StringRedisTemplate> redisTemplateProvider,
-											   @Qualifier("notifyVirtualThreadExecutor") ExecutorService executor) {
-		StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
-		log.info("[NotifyConfiguration] EmailQueueService bean registered, redis={}",
-				redisTemplate != null);
-		return new EmailQueueService(redisTemplate, executor);
-	}
-
-	// ==================== P2-9 DKIM 签名 ====================
-
-	/**
-	 * 创建 DKIM 签名器（P2-9）
-	 *
-	 * @param properties 通知配置属性
-	 * @return DkimSigner 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(DkimSigner.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
@@ -293,14 +217,8 @@ public class NotifyConfiguration {
 		return new DkimSigner(properties);
 	}
 
-	// ==================== P3-12 通知偏好 ====================
+	// ==================== 通知偏好 ====================
 
-	/**
-	 * 创建通知偏好管理器（P3-12）
-	 *
-	 * @param redisTemplateProvider Redis 模板提供者（可选）
-	 * @return NotifyPreferenceManager 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyPreferenceManager.class)
 	public NotifyPreferenceManager notifyPreferenceManager(ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
@@ -310,15 +228,8 @@ public class NotifyConfiguration {
 		return new NotifyPreferenceManager(redisTemplate);
 	}
 
-	// ==================== P3-13 邮件去重 ====================
+	// ==================== 去重 ====================
 
-	/**
-	 * 创建邮件去重服务（P3-13）
-	 *
-	 * @param properties          通知配置属性
-	 * @param redisTemplateProvider Redis 模板提供者（可选）
-	 * @return NotifyDedupService 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyDedupService.class)
 	public NotifyDedupService notifyDedupService(NotifyProperties properties,
@@ -329,13 +240,8 @@ public class NotifyConfiguration {
 		return new NotifyDedupService(properties, redisTemplate);
 	}
 
-	// ==================== P3-14 国际化 ====================
+	// ==================== 国际化 ====================
 
-	/**
-	 * 创建通知国际化服务（P3-14）
-	 *
-	 * @return NotifyI18nService 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyI18nService.class)
 	public NotifyI18nService notifyI18nService() {
@@ -343,13 +249,16 @@ public class NotifyConfiguration {
 		return new NotifyI18nService();
 	}
 
-	// ==================== P0-3 熔断器 ====================
+	@Bean
+	@ConditionalOnMissingBean(NotifyI18nResolver.class)
+	public NotifyI18nResolver notifyI18nResolver(NotifyPreferenceManager preferenceManager,
+												  NotifyI18nService i18nService) {
+		log.info("[NotifyConfiguration] NotifyI18nResolver bean registered");
+		return new NotifyI18nResolver(preferenceManager, i18nService);
+	}
 
-	/**
-	 * 创建渠道熔断器注册中心（P0-3）
-	 *
-	 * @return NotifyCircuitBreakerRegistry 实例
-	 */
+	// ==================== 熔断器 ====================
+
 	@Bean
 	@ConditionalOnMissingBean(NotifyCircuitBreakerRegistry.class)
 	public NotifyCircuitBreakerRegistry notifyCircuitBreakerRegistry() {
@@ -357,13 +266,8 @@ public class NotifyConfiguration {
 		return new NotifyCircuitBreakerRegistry();
 	}
 
-	// ==================== P0-2 死信队列 ====================
+	// ==================== 死信队列 ====================
 
-	/**
-	 * 创建死信队列处理器（P0-2）
-	 *
-	 * @return DeadLetterHandler 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(DeadLetterHandler.class)
 	public DeadLetterHandler notifyDeadLetterHandler() {
@@ -371,13 +275,8 @@ public class NotifyConfiguration {
 		return new InMemoryDeadLetterHandler();
 	}
 
-	// ==================== P1-4 审计日志 ====================
+	// ==================== 审计日志 ====================
 
-	/**
-	 * 创建通知审计服务（P1-4）
-	 *
-	 * @return NotifyAuditService 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyAuditService.class)
 	public NotifyAuditService notifyAuditService() {
@@ -385,59 +284,26 @@ public class NotifyConfiguration {
 		return new NotifyAuditService();
 	}
 
-	// ==================== P2-3 消息聚合器 ====================
+	// ==================== 消息聚合器 ====================
 
-	/**
-	 * 创建时间窗口消息聚合器（P2-3）
-	 *
-	 * @return TimeWindowAggregator 实例
-	 */
 	@Bean
-	@ConditionalOnMissingBean
-	public com.njydsz.pmis.common.notify.aggregate.TimeWindowAggregator notifyAggregator() {
+	@ConditionalOnMissingBean(NotificationAggregator.class)
+	public TimeWindowAggregator notifyAggregator() {
 		log.info("[NotifyConfiguration] TimeWindowAggregator bean registered");
-		return new com.njydsz.pmis.common.notify.aggregate.TimeWindowAggregator(30, 100);
+		return new TimeWindowAggregator(30, 100);
 	}
 
-	// ==================== P3-2 模板变量校验器 ====================
+	// ==================== 模板变量校验器 ====================
 
-	/**
-	 * 创建模板变量校验器（P3-2）
-	 *
-	 * @return TemplateVariableValidator 实例
-	 */
 	@Bean
-	@ConditionalOnMissingBean
-	public com.njydsz.pmis.common.notify.template.TemplateVariableValidator templateVariableValidator() {
+	@ConditionalOnMissingBean(TemplateVariableValidator.class)
+	public TemplateVariableValidator templateVariableValidator() {
 		log.info("[NotifyConfiguration] TemplateVariableValidator bean registered");
-		return new com.njydsz.pmis.common.notify.template.TemplateVariableValidator();
-	}
-
-	// ==================== P3-3 国际化语言解析器 ====================
-
-	/**
-	 * 创建通知国际化语言解析器（P3-3）
-	 *
-	 * @param preferenceManager 用户偏好管理器
-	 * @param i18nService       国际化服务
-	 * @return NotifyI18nResolver 实例
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	public com.njydsz.pmis.common.notify.i18n.NotifyI18nResolver notifyI18nResolver(
-			com.njydsz.pmis.common.notify.preference.NotifyPreferenceManager preferenceManager,
-			com.njydsz.pmis.common.notify.i18n.NotifyI18nService i18nService) {
-		log.info("[NotifyConfiguration] NotifyI18nResolver bean registered");
-		return new com.njydsz.pmis.common.notify.i18n.NotifyI18nResolver(preferenceManager, i18nService);
+		return new TemplateVariableValidator();
 	}
 
 	// ==================== RestTemplate =====================
 
-	/**
-	 * 创建用于通知渠道 HTTP 调用的 {@link RestTemplate}。
-	 *
-	 * @return 配置了超时参数的 RestTemplate 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public RestTemplate notifyRestTemplate() {
@@ -449,12 +315,6 @@ public class NotifyConfiguration {
 
 	// ==================== 限流器 ====================
 
-	/**
-	 * 创建渠道限流管理器，用于控制各通知渠道的发送频率。
-	 *
-	 * @param properties 通知配置属性
-	 * @return NotifyRateLimiterManager 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyRateLimiterManager.class)
 	public NotifyRateLimiterManager notifyRateLimiterManager(NotifyProperties properties) {
@@ -469,11 +329,7 @@ public class NotifyConfiguration {
 	/**
 	 * 创建统一消息通知服务，自动收集所有 {@link NotifyChannelStrategy} 实现并组装。
 	 *
-	 * @param beanFactory              用于扫描所有 NotifyChannelStrategy 实现的 Bean 工厂
-	 * @param templateEngineProvider   可选的模板引擎
-	 * @param rateLimiterManagerProvider 可选的限流管理器
-	 * @param executorProvider         可选的并行执行器
-	 * @return 组装完成的 NotifyService 实例
+	 * <p>集成限流、熔断、降级、去重、指标、审计、偏好、聚合等全部横切关注点。
 	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyService.class)
@@ -481,7 +337,13 @@ public class NotifyConfiguration {
 			ObjectProvider<TemplateEngine> templateEngineProvider,
 			ObjectProvider<NotifyRateLimiterManager> rateLimiterManagerProvider,
 			@Qualifier("notifyVirtualThreadExecutor") ObjectProvider<ExecutorService> executorProvider,
-			ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerRegistryProvider) {
+			ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerRegistryProvider,
+			ObjectProvider<NotifyFallbackManager> fallbackManagerProvider,
+			ObjectProvider<NotifyAuditService> auditServiceProvider,
+			ObjectProvider<NotifyMetrics> metricsProvider,
+			ObjectProvider<NotifyPreferenceManager> preferenceManagerProvider,
+			ObjectProvider<NotifyDedupService> dedupServiceProvider,
+			ObjectProvider<NotificationAggregator> aggregatorProvider) {
 		List<NotifyChannelStrategy> strategies = beanFactory.getBeansOfType(NotifyChannelStrategy.class)
 				.values()
 				.stream()
@@ -495,28 +357,24 @@ public class NotifyConfiguration {
 			log.info("[NotifyConfiguration] TemplateEngine 已注入到 {} 个渠道策略", strategies.size());
 		}
 
-		NotifyRateLimiterManager rateLimiterManager = rateLimiterManagerProvider.getIfAvailable();
-		ExecutorService parallelExecutor = executorProvider.getIfAvailable();
-
-		// P0-3：注入熔断器注册中心
-		NotifyCircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerRegistryProvider.getIfAvailable();
-
-		log.info("[NotifyConfiguration] NotifyService bean registered, strategies={}, rateLimitEnabled={}, parallelEnabled={}, circuitBreaker={}",
-				strategies.size(), rateLimiterManager != null, parallelExecutor != null, circuitBreakerRegistry != null);
-		NotifyService service = new NotifyServiceImpl(strategies, rateLimiterManager, parallelExecutor, circuitBreakerRegistry);
+		NotifyServiceImpl service = new NotifyServiceImpl(
+				strategies,
+				rateLimiterManagerProvider.getIfAvailable(),
+				executorProvider.getIfAvailable(),
+				circuitBreakerRegistryProvider.getIfAvailable(),
+				fallbackManagerProvider.getIfAvailable(),
+				auditServiceProvider.getIfAvailable(),
+				metricsProvider.getIfAvailable(),
+				preferenceManagerProvider.getIfAvailable(),
+				dedupServiceProvider.getIfAvailable(),
+				aggregatorProvider.getIfAvailable()
+		);
 		notifyServiceInstance = service;
 		return service;
 	}
 
 	// ==================== 重试队列 ====================
 
-	/**
-	 * 创建通知重试队列，用于管理发送失败通知的重试调度。
-	 *
-	 * @param properties             通知配置属性
-	 * @param redisTemplateProvider  Redis 模板提供者（可选）
-	 * @return NotifyRetryQueue 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(NotifyRetryQueue.class)
 	public NotifyRetryQueue notifyRetryQueue(NotifyProperties properties,
@@ -538,7 +396,7 @@ public class NotifyConfiguration {
 					retryConfig.getMaxRetries(), retryConfig.getCapacity(), retryConfig.getBatchSize(),
 					null, dlqHandler);
 			log.info("[NotifyConfiguration] In-memory NotifyRetryQueue bean registered, persistent=false, maxRetries={}, batchSize={}, dlq={}",
-					retryConfig.getBatchSize(), dlqHandler != null);
+					retryConfig.getMaxRetries(), retryConfig.getBatchSize(), dlqHandler != null);
 		}
 		retryQueueInstance = queue;
 		return queue;
@@ -546,14 +404,6 @@ public class NotifyConfiguration {
 
 	// ==================== 异步通知服务 ====================
 
-	/**
-	 * 创建异步通知服务，封装 {@link NotifyService} 并集成重试队列支持。
-	 *
-	 * @param notifyService 统一通知服务
-	 * @param retryQueue    通知重试队列
-	 * @param executor      共享虚拟线程池
-	 * @return AsyncNotifyService 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(AsyncNotifyService.class)
 	public AsyncNotifyService asyncNotifyService(NotifyService notifyService, NotifyRetryQueue retryQueue,
@@ -562,33 +412,19 @@ public class NotifyConfiguration {
 		return new AsyncNotifyService(notifyService, retryQueue, executor);
 	}
 
-	// ==================== P0-1 事务安全通知发布器 ====================
+	// ==================== 事务安全通知发布器 ====================
 
-	/**
-	 * 创建事务安全通知发布器（P0-1）
-	 *
-	 * <p>确保通知发送在业务事务提交后才执行，避免数据不一致。
-	 *
-	 * @param asyncNotifyService  异步通知服务
-	 * @param eventPublisher      Spring 事件发布器
-	 * @return TransactionalNotifyPublisher 实例
-	 */
 	@Bean
 	@ConditionalOnMissingBean(TransactionalNotifyPublisher.class)
 	public TransactionalNotifyPublisher transactionalNotifyPublisher(
 			AsyncNotifyService asyncNotifyService,
-			org.springframework.context.ApplicationEventPublisher eventPublisher) {
+			ApplicationEventPublisher eventPublisher) {
 		log.info("[NotifyConfiguration] TransactionalNotifyPublisher bean registered");
 		return new TransactionalNotifyPublisher(eventPublisher, asyncNotifyService);
 	}
 
 	// ==================== 虚拟线程池 =====================
 
-	/**
-	 * 创建共享的虚拟线程池，供通知模块各组件使用
-	 *
-	 * @return 共享的虚拟线程池 ExecutorService
-	 */
 	@Bean(destroyMethod = "shutdown")
 	@ConditionalOnMissingBean(name = "notifyVirtualThreadExecutor")
 	public ExecutorService notifyVirtualThreadExecutor() {
@@ -610,6 +446,16 @@ public class NotifyConfiguration {
 				log.info("[NotifyRetryQueue] 批量重试完成, queueSize={}, 本次处理={}",
 						retryQueueInstance.getQueueSize(), processed);
 			}
+		}
+	}
+
+	/**
+	 * 定时刷新聚合消息缓冲区，每 30 秒执行一次。
+	 */
+	@Scheduled(fixedDelay = 30000)
+	public void flushAggregatedMessages() {
+		if (notifyServiceInstance != null) {
+			notifyServiceInstance.flushAggregatedMessages();
 		}
 	}
 }

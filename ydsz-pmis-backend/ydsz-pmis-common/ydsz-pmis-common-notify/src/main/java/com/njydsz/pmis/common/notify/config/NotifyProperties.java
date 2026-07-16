@@ -276,6 +276,9 @@ public class NotifyProperties {
 		/** 短信服务提供商 */
 		private String provider = "aliyun";
 
+		/** API 端点地址 */
+		private String endpoint;
+
 		/** AccessKey ID */
 		private String accessKeyId;
 
@@ -285,8 +288,17 @@ public class NotifyProperties {
 		/** 短信签名 */
 		private String signName;
 
+		/** 默认短信模板编码 */
+		private String templateCode;
+
 		/** 短信模板映射，key=模板编码，value=模板ID */
 		private Map<String, String> templates = new HashMap<>();
+
+		/** 发送超时时间（毫秒） */
+		private int timeoutMs = 10000;
+
+		/** 失败重试次数 */
+		private int retryCount = 2;
 	}
 
 	/**

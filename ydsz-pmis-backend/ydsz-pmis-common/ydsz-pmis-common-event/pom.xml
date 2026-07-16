@@ -43,6 +43,11 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-json</artifactId>
         </dependency>
+        <!-- domain (DomainEvent / EventStore SPI 集成) -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-domain</artifactId>
+        </dependency>
         <!-- configuration processor -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -65,6 +70,16 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--
+            RocketMQ Spring Boot Starter（optional，编译期可见，运行期不强制）
+            提供 RocketMQTemplate 供 RocketMqEventPublishGateway 使用。
+            仅当使用方引入 rocketmq-spring-boot-starter 时才自动装配 RocketMQ 网关。
+        -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
             <optional>true</optional>
         </dependency>
         <!--

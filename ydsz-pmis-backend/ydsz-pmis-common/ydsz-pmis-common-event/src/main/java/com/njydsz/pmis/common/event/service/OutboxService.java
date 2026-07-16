@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.UUID;
@@ -16,11 +17,13 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.njydsz.pmis.common.core.context.RequestContext;
+import com.njydsz.pmis.common.domain.event.DomainEvent;
 import com.njydsz.pmis.common.event.config.EventProperties;
 import com.njydsz.pmis.common.event.gateway.EventPublishGateway;
 import com.njydsz.pmis.common.event.model.OutboxMessage;
 import com.njydsz.pmis.common.event.model.OutboxStatus;
 import com.njydsz.pmis.common.event.repository.OutboxRepository;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * Outbox 写入服务
@@ -32,11 +35,10 @@ import com.njydsz.pmis.common.event.repository.OutboxRepository;
  * <ul>
  *   <li>自动注入 traceId（从 RequestContext / MDC 获取）</li>
  *   <li>自动注入 tenantId（从 RequestContext 获取）</li>
- *   <li>自动生成 deduplicationId（基于内容哈希）</li>
+ *   <li>幂等去重（可选，基于 deduplicationId，需开启 auto-dedup 或显式传入）</li>
  *   <li>payload 大小校验（防数据库行过大 / MQ 投递失败）</li>
  *   <li>支持事件 Schema 版本号和内容类型</li>
- *   <li>支持消息优先级</li>
- *   <li>幂等去重（可选，基于 deduplicationId）</li>
+ *   <li>支持消息优先级（0-9，正确处理 priority=0）</li>
  *   <li>同步投递模式（事务提交后立即投递）</li>
  * </ul>
  *
@@ -73,14 +75,6 @@ public class OutboxService {
     private final EventPublishGateway syncPublishGateway;
 
     /**
-     * @param outboxRepository Outbox 仓储
-     * @param properties       事件配置属性
-     */
-    public OutboxService(OutboxRepository outboxRepository, EventProperties properties) {
-        this(outboxRepository, properties, null);
-    }
-
-    /**
      * @param outboxRepository   Outbox 仓储
      * @param properties         事件配置属性
      * @param syncPublishGateway 同步投递网关（可选）
@@ -91,6 +85,47 @@ public class OutboxService {
         this.outboxRepository = outboxRepository;
         this.properties = properties;
         this.syncPublishGateway = syncPublishGateway;
+    }
+
+    /**
+     * 追加领域事件到 Outbox（在当前数据库事务中执行）
+     *
+     * <p>将 {@link DomainEvent} 转换为 Outbox 消息并写入。自动处理：
+     * <ul>
+     *   <li>eventType / aggregateId / aggregateType 从 DomainEvent 提取</li>
+     *   <li>payload 为 DomainEvent 序列化后的 JSON</li>
+     *   <li>metadata 转换为 headers</li>
+     *   <li>eventId 作为 deduplicationId（天然唯一）</li>
+     * </ul>
+     *
+     * @param event 领域事件
+     */
+    @Transactional
+    public void appendToOutbox(DomainEvent event) {
+        Map<String, String> headers = new HashMap<>();
+        if (event.getMetadata() != null) {
+            event.getMetadata().forEach((k, v) -> {
+                if (v != null) {
+                    headers.put(k, v.toString());
+                }
+            });
+        }
+        if (event.getVersion() > 0) {
+            headers.put("_eventVersion", String.valueOf(event.getVersion()));
+        }
+        if (event.getUserId() != null) {
+            headers.put("_userId", event.getUserId());
+        }
+
+        appendToOutbox(OutboxMessage.builder()
+                .aggregateType(event.getAggregateType())
+                .aggregateId(event.getAggregateId())
+                .eventType(event.getEventType())
+                .payload(Json.toJson(event))
+                .headers(headers)
+                .deduplicationId(event.getEventId())
+                .tenantId(event.getTenantId())
+                .traceId(event.getTraceId()));
     }
 
     /**
@@ -139,7 +174,7 @@ public class OutboxService {
      * @param priority         优先级（0-9，9 最高）
      * @param schemaVersion    Schema 版本号
      * @param contentType      内容类型
-     * @param deduplicationId  幂等去重 ID（null 表示自动生成）
+     * @param deduplicationId  幂等去重 ID（null 表示不自动生成，除非 auto-dedup=true）
      */
     @Transactional
     public void appendToOutbox(String aggregateType, String aggregateId,
@@ -167,9 +202,9 @@ public class OutboxService {
      *   <li>id - UUID</li>
      *   <li>tenantId - 从 RequestContext 获取</li>
      *   <li>traceId - 从 RequestContext / MDC 获取</li>
-     *   <li>deduplicationId - 若未指定，基于内容自动生成</li>
+     *   <li>deduplicationId - 若显式指定则使用；若 auto-dedup=true 则基于内容自动生成</li>
      *   <li>schemaVersion - 若未指定，使用默认值</li>
-     *   <li>priority - 若未指定，使用默认值</li>
+     *   <li>priority - 若未指定（null），使用默认值；显式设置 0 时保留 0</li>
      *   <li>status - PENDING</li>
      *   <li>时间戳 - 当前时间</li>
      * </ul>
@@ -178,20 +213,23 @@ public class OutboxService {
      */
     @Transactional
     public void appendToOutbox(OutboxMessage.OutboxMessageBuilder partialBuilder) {
+        // 构建一次快照，避免重复 build() 调用
+        OutboxMessage partial = partialBuilder.build();
+
         // payload 大小校验
-        validatePayloadSize(partialBuilder);
+        validatePayloadSize(partial.getPayload());
 
         Instant now = Instant.now();
         String tenantId = resolveTenantId();
         String traceId = resolveTraceId();
-        String deduplicationId = resolveDeduplicationId(partialBuilder);
+        String deduplicationId = resolveDeduplicationId(partial);
 
-        // 幂等去重检查
+        // 幂等去重检查（仅当有 deduplicationId 时）
         if (deduplicationId != null && outboxRepository.existsByDeduplicationId(deduplicationId)) {
             log.info("Outbox message skipped (duplicate): aggregateType={}, aggregateId={}, eventType={}, deduplicationId={}",
-                    partialBuilder.build().getAggregateType(),
-                    partialBuilder.build().getAggregateId(),
-                    partialBuilder.build().getEventType(),
+                    partial.getAggregateType(),
+                    partial.getAggregateId(),
+                    partial.getEventType(),
                     deduplicationId);
             return;
         }
@@ -201,11 +239,11 @@ public class OutboxService {
                 .tenantId(tenantId)
                 .traceId(traceId)
                 .deduplicationId(deduplicationId)
-                .schemaVersion(partialBuilder.build().getSchemaVersion() != null
-                        ? partialBuilder.build().getSchemaVersion()
+                .schemaVersion(partial.getSchemaVersion() != null
+                        ? partial.getSchemaVersion()
                         : properties.getDefaultSchemaVersion())
-                .priority(partialBuilder.build().getPriority() != 0
-                        ? partialBuilder.build().getPriority()
+                .priority(partial.getPriority() != null
+                        ? partial.getPriority()
                         : properties.getDefaultPriority())
                 .status(OutboxStatus.PENDING)
                 .retryCount(0)
@@ -230,11 +268,10 @@ public class OutboxService {
     /**
      * 校验 payload 大小
      *
-     * @param builder 消息 Builder
+     * @param payload 消息负载
      * @throws IllegalArgumentException payload 超过最大限制
      */
-    private void validatePayloadSize(OutboxMessage.OutboxMessageBuilder builder) {
-        String payload = builder.build().getPayload();
+    private void validatePayloadSize(String payload) {
         if (payload == null) {
             return;
         }
@@ -291,15 +328,24 @@ public class OutboxService {
     }
 
     /**
-     * 生成幂等去重 ID（基于内容 SHA-256 哈希）
+     * 解析幂等去重 ID
      *
-     * @param builder 消息 Builder
-     * @return 去重 ID，若 Builder 已指定则直接返回
+     * <p>优先级：
+     * <ol>
+     *   <li>调用方显式指定的 deduplicationId</li>
+     *   <li>若 auto-dedup=true，基于内容 SHA-256 自动生成</li>
+     *   <li>否则返回 null（不进行去重）</li>
+     * </ol>
+     *
+     * @param partial 消息快照
+     * @return 去重 ID，若不启用则返回 null
      */
-    private String resolveDeduplicationId(OutboxMessage.OutboxMessageBuilder builder) {
-        OutboxMessage partial = builder.build();
+    private String resolveDeduplicationId(OutboxMessage partial) {
         if (partial.getDeduplicationId() != null && !partial.getDeduplicationId().isBlank()) {
             return partial.getDeduplicationId();
+        }
+        if (!properties.isAutoDedup()) {
+            return null;
         }
         // 基于 aggregateType + aggregateId + eventType + payload 生成
         String content = partial.getAggregateType() + ":"

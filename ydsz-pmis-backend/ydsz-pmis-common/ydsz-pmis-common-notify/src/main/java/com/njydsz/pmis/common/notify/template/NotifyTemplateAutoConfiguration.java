@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @AutoConfiguration
 @RequiredArgsConstructor
@@ -43,9 +42,16 @@ public class NotifyTemplateAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(TemplateEngine.class)
-    public TemplateEngine templateEngine(NotifyTemplateProperties properties) {
+    public TemplateEngine templateEngine(NotifyTemplateProperties properties,
+                                         ObjectProvider<TemplateVariableValidator> validatorProvider) {
+        SpelTemplateEngine engine = new SpelTemplateEngine();
+        TemplateVariableValidator validator = validatorProvider.getIfAvailable();
+        if (validator != null) {
+            engine.setVariableValidator(validator);
+            log.info("[NotifyTemplateAutoConfiguration] TemplateVariableValidator 已注入到 SpEL 模板引擎");
+        }
         log.info("[NotifyTemplateAutoConfiguration] 初始化 SpEL 模板引擎");
-        return new SpelTemplateEngine();
+        return engine;
     }
 
     /**

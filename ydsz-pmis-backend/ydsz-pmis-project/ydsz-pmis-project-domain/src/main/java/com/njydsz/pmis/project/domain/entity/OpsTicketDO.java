@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveData;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
 import lombok.Data;
@@ -55,7 +55,7 @@ public class OpsTicketDO implements Serializable {
     /** 报告人姓名 */
     private String reporterName;
     /** 报告人电话（脱敏：138****8000） */
-    @Sensitive(type = SensitiveType.PHONE)
+    @SensitiveData(SensitiveType.PHONE)
     private String reporterPhone;
     /** 处理人ID */
     private String assigneeId;

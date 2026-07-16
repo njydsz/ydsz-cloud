@@ -32,6 +32,9 @@ import lombok.Setter;
  *       dead-letter-alert-threshold: 10
  *       enable-tenant-isolation: true
  *       enable-sync-publish: false
+ *       auto-dedup: false
+ *       worker-threads: 1
+ *       fail-on-noop: true
  * }</pre>
  *
  * @author ydsz-pmis-team
@@ -95,4 +98,13 @@ public class EventProperties {
 
     /** 是否启用同步投递模式（事务提交后立即投递） */
     private boolean enableSyncPublish = false;
+
+    /** 是否自动生成幂等去重 ID（基于内容 SHA-256 哈希，默认关闭） */
+    private boolean autoDedup = false;
+
+    /** 投递工作线程数（1=单线程，>1=多线程并行投递） */
+    private int workerThreads = 1;
+
+    /** 检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true） */
+    private boolean failOnNoop = true;
 }

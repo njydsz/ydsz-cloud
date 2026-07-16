@@ -28,7 +28,6 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class SpelTemplateEngine implements TemplateEngine {
 
@@ -43,6 +42,18 @@ public class SpelTemplateEngine implements TemplateEngine {
     /** 模板缓存 */
     private final Map<String, NotifyTemplate> templates = new ConcurrentHashMap<>();
 
+    /** 模板变量校验器（可选依赖，P0-9） */
+    private TemplateVariableValidator variableValidator;
+
+    /**
+     * 设置模板变量校验器
+     *
+     * @param validator 变量校验器
+     */
+    public void setVariableValidator(TemplateVariableValidator validator) {
+        this.variableValidator = validator;
+    }
+
     /**
      * 渲染模板，根据 templateId 查找模板并使用变量渲染
      *
@@ -56,6 +67,10 @@ public class SpelTemplateEngine implements TemplateEngine {
         NotifyTemplate template = templates.get(templateId);
         if (template == null) {
             throw new IllegalArgumentException("模板不存在: " + templateId);
+        }
+        // P0-9: 模板变量校验
+        if (variableValidator != null) {
+            variableValidator.validate(template, variables);
         }
         return renderTemplate(template.getContent(), variables);
     }

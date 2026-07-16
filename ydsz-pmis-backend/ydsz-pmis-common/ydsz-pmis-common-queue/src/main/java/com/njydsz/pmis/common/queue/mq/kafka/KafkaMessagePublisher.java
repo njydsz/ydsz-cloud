@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.queue.mq.kafka;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -113,6 +115,80 @@ public class KafkaMessagePublisher implements IMessagePublisher {
     public void publishDelayed(QueueMessage message, long delayMillis) {
         log.warn("[Kafka] 延迟消息暂不支持，topic={}", topic);
         publish(message);
+    }
+
+    @Override
+    public void publishSequential(QueueMessage message) {
+        if (message == null || !message.isSequential()) {
+            throw new IllegalArgumentException("顺序消息必须设置 messageGroupKey");
+        }
+        if (closed) {
+            return;
+        }
+        try {
+            String payload = QueueMessage.toPayload(message);
+            String key = message.getMessageGroupKey();
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, payload);
+            producer.send(record, new Callback() {
+                @Override
+                public void onCompletion(RecordMetadata metadata, Exception exception) {
+                    if (exception != null) {
+                        log.error("[Kafka] 顺序消息发送失败回调，topic={}, groupKey={}, partition={}, error={}",
+                                topic, key,
+                                metadata != null ? metadata.partition() : -1,
+                                exception.getMessage());
+                    } else if (log.isDebugEnabled()) {
+                        log.debug("[Kafka] 顺序消息发送成功，topic={}, groupKey={}, partition={}, offset={}",
+                                topic, key, metadata.partition(), metadata.offset());
+                    }
+                }
+            });
+        } catch (Exception e) {
+            log.error("[Kafka] 顺序消息发布失败，topic={}, groupKey={}", topic, message.getMessageGroupKey(), e);
+            throw new InfrastructureException("Kafka 顺序消息发布失败：" + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void publishBatch(List<QueueMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        if (closed) {
+            return;
+        }
+        try {
+            List<ProducerRecord<String, String>> records = new ArrayList<>(messages.size());
+            for (QueueMessage message : messages) {
+                if (message == null) {
+                    continue;
+                }
+                String payload = QueueMessage.toPayload(message);
+                String key = message.getTraceId();
+                ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, payload);
+                records.add(record);
+            }
+            for (ProducerRecord<String, String> record : records) {
+                producer.send(record, new Callback() {
+                    @Override
+                    public void onCompletion(RecordMetadata metadata, Exception exception) {
+                        if (exception != null) {
+                            log.error("[Kafka] 批量消息发送失败回调，topic={}, partition={}, error={}",
+                                    topic,
+                                    metadata != null ? metadata.partition() : -1,
+                                    exception.getMessage());
+                        } else if (log.isDebugEnabled()) {
+                            log.debug("[Kafka] 批量消息发送成功，topic={}, partition={}, offset={}",
+                                    topic, metadata.partition(), metadata.offset());
+                        }
+                    }
+                });
+            }
+            producer.flush();
+        } catch (Exception e) {
+            log.error("[Kafka] 批量消息发布失败，topic={}", topic, e);
+            throw new InfrastructureException("Kafka 批量消息发布失败：" + e.getMessage(), e);
+        }
     }
 
     @Override

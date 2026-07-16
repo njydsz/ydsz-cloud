@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.notify.core;
 
+import java.util.function.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -91,6 +93,30 @@ public final class NotifyTraceContext {
         try {
             setTraceId(traceId);
             runnable.run();
+        } finally {
+            if (previousTraceId != null) {
+                MDC.put(TRACE_ID_KEY, previousTraceId);
+            } else {
+                clearTraceId();
+            }
+        }
+    }
+
+    /**
+     * 在指定 traceId 上下文中执行有返回值的操作
+     *
+     * <p>执行完毕后自动恢复原 traceId，避免线程池线程复用导致的 traceId 泄漏。
+     *
+     * @param traceId  链路追踪ID
+     * @param supplier 要执行的操作（有返回值）
+     * @param <T>      返回值类型
+     * @return 操作返回值
+     */
+    public static <T> T runWithTraceResult(String traceId, Supplier<T> supplier) {
+        String previousTraceId = MDC.get(TRACE_ID_KEY);
+        try {
+            setTraceId(traceId);
+            return supplier.get();
         } finally {
             if (previousTraceId != null) {
                 MDC.put(TRACE_ID_KEY, previousTraceId);

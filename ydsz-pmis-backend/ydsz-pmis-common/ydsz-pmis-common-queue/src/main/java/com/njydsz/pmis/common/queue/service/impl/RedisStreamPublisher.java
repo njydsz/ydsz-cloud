@@ -1,11 +1,16 @@
 package com.njydsz.pmis.common.queue.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
@@ -75,6 +80,41 @@ public class RedisStreamPublisher implements IMessagePublisher {
                 .ofObject(fields)
                 .withStreamKey(channel);
         redisTemplate.opsForStream().add(record);
+    }
+
+    @Override
+    public void publishBatch(List<QueueMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        List<MapRecord<String, String, String>> records = new ArrayList<>(messages.size());
+        for (QueueMessage message : messages) {
+            if (message == null) {
+                continue;
+            }
+            Map<String, String> fields = new HashMap<>(8);
+            fields.put(FIELD_PAYLOAD, QueueMessage.toPayload(message));
+            fields.put(FIELD_TRACE_ID, message.getTraceId());
+            fields.put(FIELD_RETRY_COUNT,
+                    String.valueOf(message.getRetryCount() != null ? message.getRetryCount() : 0));
+            if (message.isSequential()) {
+                fields.put(FIELD_GROUP_KEY, message.getMessageGroupKey());
+                if (message.getSequenceNumber() != null) {
+                    fields.put(FIELD_SEQUENCE, String.valueOf(message.getSequenceNumber()));
+                }
+            }
+            MapRecord<String, String, String> record = StreamRecords.mapBacked(fields).withStreamKey(channel);
+            records.add(record);
+        }
+        redisTemplate.executePipelined(new SessionCallback<>() {
+            @Override
+            public <K, V> Object execute(RedisOperations<K, V> operations) {
+                for (MapRecord<String, String, String> record : records) {
+                    operations.opsForStream().add((MapRecord) record);
+                }
+                return null;
+            }
+        });
     }
 
     @Override

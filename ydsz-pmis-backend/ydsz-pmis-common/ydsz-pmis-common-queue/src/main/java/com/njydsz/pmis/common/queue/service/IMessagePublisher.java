@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.queue.service;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 
 /**
@@ -98,6 +100,24 @@ public interface IMessagePublisher {
             return;
         }
         for (String message : messages) {
+            publish(message);
+        }
+    }
+
+    /**
+     * 批量发布 QueueMessage 消息
+     *
+     * <p>将多条 QueueMessage 批量发布到队列通道。
+     * 支持批量发送的队列实现（如 Redis Stream pipeline、Kafka batch、RocketMQ batch）
+     * 可以覆盖此方法以利用原生批量 API 提升吞吐量。
+     *
+     * @param messages 待发布的消息列表
+     */
+    default void publishBatch(List<QueueMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        for (QueueMessage message : messages) {
             publish(message);
         }
     }

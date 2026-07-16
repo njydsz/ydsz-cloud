@@ -23,12 +23,14 @@ import com.njydsz.pmis.common.notify.enums.NotifyType;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class NotifyPreference {
 
 	/** 用户ID */
 	private String userId;
+
+	/** 用户语言偏好（如 zh_CN、en_US），用于国际化消息解析 */
+	private String language;
 
 	/** 启用的渠道集合 */
 	private Set<NotifyChannel> enabledChannels = EnumSet.allOf(NotifyChannel.class);
@@ -152,4 +154,6 @@ public class NotifyPreference {
 	public void setAggregateEnabled(boolean aggregateEnabled) { this.aggregateEnabled = aggregateEnabled; }
 	public int getAggregateWindowMinutes() { return aggregateWindowMinutes; }
 	public void setAggregateWindowMinutes(int aggregateWindowMinutes) { this.aggregateWindowMinutes = aggregateWindowMinutes; }
+	public String getLanguage() { return language; }
+	public void setLanguage(String language) { this.language = language; }
 }

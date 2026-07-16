@@ -1,8 +1,10 @@
 package com.njydsz.pmis.common.notify.aggregate;
 
 import java.util.List;
+import java.util.Map;
 
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.common.notify.enums.NotifyPriority;
 
 /**
  * 通知聚合策略接口（P2-3）
@@ -31,6 +33,31 @@ public interface NotificationAggregator {
      * @return 聚合后的摘要内容和标题
      */
     AggregatedMessage aggregate(List<PendingMessage> messages);
+
+    /**
+     * 将消息加入聚合缓冲区
+     *
+     * @param receiver     接收者
+     * @param channel      通知渠道
+     * @param templateCode 模板编码
+     * @param title        标题
+     * @param content      内容
+     * @param priority     优先级
+     * @return true 表示消息已加入缓冲区（等待聚合），false 表示应立即发送
+     */
+    default boolean offer(String receiver, NotifyChannel channel, String templateCode,
+                          String title, String content, NotifyPriority priority) {
+        return false;
+    }
+
+    /**
+     * 刷新所有待聚合消息
+     *
+     * @return key 到聚合消息的映射
+     */
+    default Map<String, AggregatedMessage> flushAll() {
+        return Map.of();
+    }
 
     /**
      * 获取聚合时间窗口（秒）

@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveData;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
 import lombok.Data;
@@ -57,10 +57,10 @@ public class PaymentDO implements Serializable {
     /** 到账日期 */
     private LocalDate paymentDate;
     /** 客户付款账户（脱敏：保留前 4 后 4） */
-    @Sensitive(type = SensitiveType.BANK_CARD)
+    @SensitiveData(SensitiveType.BANK_CARD)
     private String bankAccount;
     /** 我方收款账户（脱敏：保留前 4 后 4） */
-    @Sensitive(type = SensitiveType.BANK_CARD)
+    @SensitiveData(SensitiveType.BANK_CARD)
     private String ourBankAccount;
     /** 银行流水号 */
     private String bankReference;

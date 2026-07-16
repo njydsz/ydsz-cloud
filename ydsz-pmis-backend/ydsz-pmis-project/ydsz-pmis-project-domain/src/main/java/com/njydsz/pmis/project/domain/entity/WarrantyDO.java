@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveData;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
 import lombok.Data;
@@ -65,7 +65,7 @@ public class WarrantyDO implements Serializable {
     /** 联系人姓名 */
     private String contactName;
     /** 联系人电话（脱敏：138****8000） */
-    @Sensitive(type = SensitiveType.PHONE)
+    @SensitiveData(SensitiveType.PHONE)
     private String contactPhone;
     /** 备注 */
     private String remark;

@@ -84,12 +84,4 @@ public enum DatabaseDialect {
         };
     }
 
-    /**
-     * 是否支持 JSONB 类型（PostgreSQL）
-     *
-     * @return true 表示支持 JSONB
-     */
-    public boolean supportsJsonb() {
-        return this == POSTGRESQL;
-    }
 }

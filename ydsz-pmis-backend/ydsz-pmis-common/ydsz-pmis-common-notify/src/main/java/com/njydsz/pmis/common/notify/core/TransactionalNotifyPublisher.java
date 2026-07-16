@@ -127,9 +127,13 @@ public class TransactionalNotifyPublisher {
                 request.getChannel().getName(), request.getReceiver());
 
         try {
-            asyncNotifyService.sendAsync(request.getChannel(), request.getReceiver(),
-                    request.getTitle() != null ? request.getTitle() : "",
-                    request.getContent() != null ? request.getContent() : "");
+            if (request.isTemplateRequest()) {
+                asyncNotifyService.sendAsync(request);
+            } else {
+                asyncNotifyService.sendAsync(request.getChannel(), request.getReceiver(),
+                        request.getTitle() != null ? request.getTitle() : "",
+                        request.getContent() != null ? request.getContent() : "");
+            }
         } catch (Exception e) {
             log.error("[TransactionalNotifyPublisher] 事务后通知发送异常: channel={}, receiver={}, error={}",
                     request.getChannel().getName(), request.getReceiver(), e.getMessage(), e);

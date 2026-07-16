@@ -1,13 +1,17 @@
 package com.njydsz.pmis.common.queue.mq.rocket;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.MessageQueueSelector;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageQueue;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
@@ -221,6 +225,90 @@ public class RocketMQPublisher implements IMessagePublisher {
                 maxRetryTimes, topic, message.getTraceId(), lastException);
         String errorMsg = lastException != null ? lastException.getMessage() : "未知错误";
         throw BusinessException.builder().key("RocketMQ 延迟消息发布失败，已重试 " + maxRetryTimes + " 次：" + errorMsg).cause(lastException).build();
+    }
+
+    @Override
+    public void publishBatch(List<QueueMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        checkNotClosed();
+        List<Message> rocketMessages = new ArrayList<>(messages.size());
+        for (QueueMessage message : messages) {
+            if (message == null) {
+                continue;
+            }
+            String payload = QueueMessage.toPayload(message);
+            Message msg = new Message(topic, tag, message.getTraceId(), payload.getBytes());
+            rocketMessages.add(msg);
+        }
+        if (rocketMessages.isEmpty()) {
+            return;
+        }
+        Exception lastException = null;
+        for (int attempt = 0; attempt <= maxRetryTimes; attempt++) {
+            try {
+                SendResult result = producer.send(rocketMessages);
+                validateSendStatus(result, "batch", topic);
+                if (log.isDebugEnabled()) {
+                    log.debug("[RocketMQ] 批量消息已发送，topic={}, count={}, msgId={}, attempt={}",
+                            topic, rocketMessages.size(), result.getMsgId(), attempt + 1);
+                }
+                return;
+            } catch (Exception e) {
+                lastException = e;
+                if (attempt < maxRetryTimes) {
+                    log.warn("[RocketMQ] 批量消息发送失败，准备重试，topic={}, count={}, attempt={}/{}, error={}",
+                            topic, rocketMessages.size(), attempt + 1, maxRetryTimes + 1, e.getMessage());
+                    sleepBeforeRetry(attempt);
+                }
+            }
+        }
+        log.error("[RocketMQ] 批量消息发布失败，已重试 {} 次，topic={}, count={}",
+                maxRetryTimes, topic, rocketMessages.size(), lastException);
+        String errorMsg = lastException != null ? lastException.getMessage() : "未知错误";
+        throw BusinessException.builder().key("RocketMQ 批量消息发布失败，已重试 " + maxRetryTimes + " 次：" + errorMsg).cause(lastException).build();
+    }
+
+    @Override
+    public void publishSequential(QueueMessage message) {
+        if (message == null || !message.isSequential()) {
+            throw BusinessException.builder().key("顺序消息必须设置 messageGroupKey").build();
+        }
+        checkNotClosed();
+        Exception lastException = null;
+        for (int attempt = 0; attempt <= maxRetryTimes; attempt++) {
+            try {
+                String payload = QueueMessage.toPayload(message);
+                Message msg = new Message(topic, tag, message.getTraceId(), payload.getBytes());
+                String groupKey = message.getMessageGroupKey();
+                SendResult result = producer.send(msg, new MessageQueueSelector() {
+                    @Override
+                    public MessageQueue select(List<MessageQueue> mqs, Message m, Object arg) {
+                        String key = (String) arg;
+                        int index = Math.abs(key.hashCode()) % mqs.size();
+                        return mqs.get(index);
+                    }
+                }, groupKey);
+                validateSendStatus(result, message.getTraceId(), topic);
+                if (log.isDebugEnabled()) {
+                    log.debug("[RocketMQ] 顺序消息已发送，topic={}, traceId={}, groupKey={}, msgId={}, status={}, attempt={}",
+                            topic, message.getTraceId(), groupKey, result.getMsgId(), result.getSendStatus(), attempt + 1);
+                }
+                return;
+            } catch (Exception e) {
+                lastException = e;
+                if (attempt < maxRetryTimes) {
+                    log.warn("[RocketMQ] 顺序消息发送失败，准备重试，topic={}, traceId={}, attempt={}/{}, error={}",
+                            topic, message.getTraceId(), attempt + 1, maxRetryTimes + 1, e.getMessage());
+                    sleepBeforeRetry(attempt);
+                }
+            }
+        }
+        log.error("[RocketMQ] 顺序消息发布失败，已重试 {} 次，topic={}, traceId={}, groupKey={}",
+                maxRetryTimes, topic, message.getTraceId(), message.getMessageGroupKey(), lastException);
+        String errorMsg = lastException != null ? lastException.getMessage() : "未知错误";
+        throw BusinessException.builder().key("RocketMQ 顺序消息发布失败，已重试 " + maxRetryTimes + " 次：" + errorMsg).cause(lastException).build();
     }
 
     @Override

@@ -113,9 +113,7 @@ public class NotifyI18nResolver {
      * @return 语言代码，未设置返回 null
      */
     private String getUserLanguageFromPreference(NotifyPreference pref) {
-        // NotifyPreference 目前没有 language 字段，此处预留扩展
-        // 当 NotifyPreference 添加 language 字段后，直接返回 pref.getLanguage()
-        return null;
+        return pref.getLanguage();
     }
 
     /**

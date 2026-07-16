@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveData;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
 import lombok.Data;
@@ -72,7 +72,7 @@ public class ContractDO implements Serializable {
     /** 责任人 ID */
     private String ownerId;
     /** 责任人名称（脱敏：保留首末字） */
-    @Sensitive(type = SensitiveType.NAME)
+    @SensitiveData(SensitiveType.NAME)
     private String ownerName;
     /** 合同附件 ID */
     private String contractFileId;

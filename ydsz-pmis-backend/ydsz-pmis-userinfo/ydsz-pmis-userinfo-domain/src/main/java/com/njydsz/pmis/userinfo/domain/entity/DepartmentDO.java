@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
-import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveData;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
 import lombok.Data;
@@ -49,11 +49,11 @@ public class DepartmentDO extends BaseDO {
     private String leaderId;
 
     /** 联系电话（脱敏：138****8000） */
-    @Sensitive(type = SensitiveType.PHONE)
+    @SensitiveData(SensitiveType.PHONE)
     private String phone;
 
     /** 邮箱（脱敏：a***@example.com） */
-    @Sensitive(type = SensitiveType.EMAIL)
+    @SensitiveData(SensitiveType.EMAIL)
     private String email;
 
     /** 部门描述 */

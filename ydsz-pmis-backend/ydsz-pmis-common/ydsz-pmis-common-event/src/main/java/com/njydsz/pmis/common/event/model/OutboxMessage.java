@@ -28,7 +28,7 @@ import lombok.ToString;
  *   <li>{@code deduplicationId} - 幂等去重 ID（下游消费端去重）</li>
  *   <li>{@code schemaVersion} - 事件 Schema 版本号（如 "v1.0.0"）</li>
  *   <li>{@code contentType} - 内容类型（如 "application/vnd.ydsz.order.v1+json"）</li>
- *   <li>{@code priority} - 优先级（0-9，9 最高，默认 5）</li>
+ *   <li>{@code priority} - 优先级（0-9，9 最高，null 表示未设置由 OutboxService 填充默认值）</li>
  *   <li>{@code traceId} - 链路追踪 ID</li>
  * </ul>
  *
@@ -97,47 +97,15 @@ public class OutboxMessage {
     /** 内容类型（如 "application/vnd.ydsz.order.v1+json"） */
     private final String contentType;
 
-    /** 优先级（0-9，9 最高，默认 5） */
-    @Builder.Default
-    private final int priority = DEFAULT_PRIORITY;
+    /**
+     * 优先级（0-9，9 最高）
+     *
+     * <p>使用 {@code Integer} 包装类型，{@code null} 表示未设置，
+     * 由 {@code OutboxService} 填充配置的默认优先级。
+     * 这样可以正确区分"用户显式设置 0"和"未设置"两种情况。
+     */
+    private final Integer priority;
 
     /** 链路追踪 ID */
     private final String traceId;
-
-    /**
-     * 标记为已投递成功
-     */
-    public void markAsSent() {
-        this.status = OutboxStatus.SENT;
-        this.sentAt = Instant.now();
-        this.updatedAt = Instant.now();
-        this.errorMessage = null;
-    }
-
-    /**
-     * 标记为投递失败，增加重试计数
-     *
-     * @param errorMessage 错误信息
-     * @param backoffSeconds 退避秒数
-     */
-    public void markAsFailed(String errorMessage, long backoffSeconds) {
-        this.retryCount++;
-        this.errorMessage = errorMessage;
-        this.updatedAt = Instant.now();
-        this.nextRetryAt = Instant.now().plusSeconds(backoffSeconds);
-
-        if (this.retryCount >= this.maxRetries) {
-            this.status = OutboxStatus.DEAD_LETTER;
-        } else {
-            this.status = OutboxStatus.PENDING;
-        }
-    }
-
-    /**
-     * 标记为处理中（被某个实例 claim）
-     */
-    public void markAsProcessing() {
-        this.status = OutboxStatus.PROCESSING;
-        this.updatedAt = Instant.now();
-    }
 }
