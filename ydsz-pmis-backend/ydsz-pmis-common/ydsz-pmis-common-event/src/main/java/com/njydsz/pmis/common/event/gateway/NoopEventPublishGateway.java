@@ -25,8 +25,8 @@ public class NoopEventPublishGateway implements EventPublishGateway {
 
     @Override
     public boolean publish(OutboxMessage message) {
-        log.warn("NoopEventPublishGateway: message id={}, type={}/{}, aggregate={}/{} not actually published",
-                message.getId(), message.getAggregateType(), message.getEventType(),
+        log.warn("NoopEventPublishGateway: message id={}, type={}, aggregate={}/{} not actually published",
+                message.getId(), message.getEventType(),
                 message.getAggregateType(), message.getAggregateId());
         return true;
     }

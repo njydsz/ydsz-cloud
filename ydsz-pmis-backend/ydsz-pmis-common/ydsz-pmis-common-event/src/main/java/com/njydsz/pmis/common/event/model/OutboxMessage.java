@@ -108,4 +108,41 @@ public class OutboxMessage {
 
     /** 链路追踪 ID */
     private final String traceId;
+
+    /**
+     * 标记为处理中（已被某个实例 claim，正在投递）
+     */
+    public void markAsProcessing() {
+        this.status = OutboxStatus.PROCESSING;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * 标记为已投递成功
+     */
+    public void markAsSent() {
+        this.status = OutboxStatus.SENT;
+        this.sentAt = Instant.now();
+        this.updatedAt = Instant.now();
+        this.errorMessage = null;
+    }
+
+    /**
+     * 标记为投递失败，增加重试计数并按指数退避策略设置下次重试时间
+     *
+     * <p>当 {@code retryCount} 达到 {@code maxRetries} 时，状态流转为 {@link OutboxStatus#DEAD_LETTER}；
+     * 否则状态回退为 {@link OutboxStatus#PENDING} 等待下次调度。
+     *
+     * @param errorMessage    失败错误信息
+     * @param backoffSeconds  退避秒数（下次重试时间 = 当前时间 + backoffSeconds）
+     */
+    public void markAsFailed(String errorMessage, int backoffSeconds) {
+        this.retryCount++;
+        this.errorMessage = errorMessage;
+        this.nextRetryAt = Instant.now().plusSeconds(backoffSeconds);
+        this.updatedAt = Instant.now();
+        this.status = this.retryCount >= this.maxRetries
+                ? OutboxStatus.DEAD_LETTER
+                : OutboxStatus.PENDING;
+    }
 }

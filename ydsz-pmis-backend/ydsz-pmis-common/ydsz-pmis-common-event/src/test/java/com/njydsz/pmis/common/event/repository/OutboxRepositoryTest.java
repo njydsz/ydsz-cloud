@@ -169,9 +169,9 @@ class OutboxRepositoryTest {
     @DisplayName("表名校验：非法表名抛出异常")
     void invalidTableName_throwsException() {
         assertThrows(IllegalArgumentException.class, () ->
-                new OutboxRepository(jdbcTemplate, "invalid; DROP TABLE--"));
+                new OutboxRepository(jdbcTemplate, "invalid; DROP TABLE--", null));
         assertThrows(IllegalArgumentException.class, () ->
-                new OutboxRepository(jdbcTemplate, "123abc"));
+                new OutboxRepository(jdbcTemplate, "123abc", null));
     }
 
     private OutboxMessage buildMessage(String id, OutboxStatus status, int retryCount) {
