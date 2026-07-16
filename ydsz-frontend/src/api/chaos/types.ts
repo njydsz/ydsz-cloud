@@ -1,7 +1,7 @@
 /**
  * @file 混沌工程 API 类型 (批次 24 P2-2)
  * @description 定义混沌实验类型、实验结果、注入事件等类型，
- *              与后端 com.njydsz.pmis.config.controller.ChaosController 返回结构对齐。
+ *              与后端 com.njydsz.config.controller.ChaosController 返回结构对齐。
  * @module api/chaos/types
  */
 

@@ -3,7 +3,7 @@
  * @description P2-7: 提供 5 个开箱即用的表单模板，用户可一键导入设计器。
  *   模板基于 form-create/element-ui rule 结构，分类对齐流程模板库（HR/FINANCE/ADMIN/PROJECT/GENERAL）。
  * @module views/workflow/form-design/templates
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 

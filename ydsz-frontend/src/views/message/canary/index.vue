@@ -6,7 +6,7 @@
   - Tab 2 A/B 报表：输入 canaryKey + 日期范围，拉取报表，对照组与实验组并排对比展示
   - 命中检查工具：输入 canaryKey + bucketValue 检查是否命中灰度
   @module views/message/canary
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

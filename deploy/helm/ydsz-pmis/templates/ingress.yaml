@@ -6,10 +6,10 @@ Ingress：仅 gateway / frontend 启用
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ydsz-pmis-gateway
+  name: ydsz-gateway
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" "gateway-ingress" "Release" .Release "Chart" .Chart) | nindent 4 }}
+    {{- include "ydsz.labels" (dict "name" "gateway-ingress" "Release" .Release "Chart" .Chart) | nindent 4 }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
@@ -31,7 +31,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: ydsz-pmis-gateway
+                name: ydsz-gateway
                 port:
                   number: {{ .Values.services.gateway.port }}
 {{- end }}
@@ -42,10 +42,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ydsz-pmis-frontend
+  name: ydsz-frontend
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" "frontend-ingress" "Release" .Release "Chart" .Chart) | nindent 4 }}
+    {{- include "ydsz.labels" (dict "name" "frontend-ingress" "Release" .Release "Chart" .Chart) | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.frontend.ingress.className }}
   {{- if .Values.frontend.ingress.tls.enabled }}
@@ -62,7 +62,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: ydsz-pmis-frontend
+                name: ydsz-frontend
                 port:
                   number: {{ .Values.frontend.port }}
 {{- end }}

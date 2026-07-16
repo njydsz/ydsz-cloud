@@ -12,7 +12,7 @@
 global:
   imageTag: v1.0.0
   nacos:
-    serverAddr: nacos-server.pmis.svc.cluster.local:8848
+    serverAddr: nacos-server.ydsz.svc.cluster.local:8848
     namespace: pmis
 
 backend:
@@ -68,7 +68,7 @@ services:
     ingress:
       enabled: true
       className: nginx
-      host: pmis.example.com
+      host: ydsz.example.com
       tls:
         enabled: true
         secretName: pmis-tls
@@ -155,7 +155,7 @@ frontend:
   ingress:
     enabled: true
     className: nginx
-    host: app.pmis.example.com
+    host: app.ydsz.example.com
     tls:
       enabled: true
       secretName: pmis-frontend-tls

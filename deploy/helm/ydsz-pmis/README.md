@@ -8,7 +8,7 @@
 ## 1. 目录结构
 
 ```
-helm/ydsz-pmis/
+helm/ydsz/
 ├── Chart.yaml              # Chart 元数据（v1.0.0）
 ├── values.yaml             # 全局默认值
 ├── values-dev.yaml         # DEV 环境覆盖（1 副本 + DEBUG）
@@ -48,8 +48,8 @@ helm/ydsz-pmis/
 kubectl create namespace pmis-dev --dry-run=client -o yaml | kubectl apply -f -
 
 # 部署
-helm install pmis deploy/helm/ydsz-pmis -n pmis-dev \
-  -f deploy/helm/ydsz-pmis/values-dev.yaml
+helm install pmis deploy/helm/ydsz -n pmis-dev \
+  -f deploy/helm/ydsz/values-dev.yaml
 
 # 验证
 kubectl -n pmis-dev get pods
@@ -61,12 +61,12 @@ helm -n pmis-dev status pmis
 
 ```bash
 # 部署（生产配置含 HPA + PDB + Ingress + TLS）
-helm install pmis deploy/helm/ydsz-pmis -n pmis \
-  -f deploy/helm/ydsz-pmis/values-prod.yaml
+helm install pmis deploy/helm/ydsz -n pmis \
+  -f deploy/helm/ydsz/values-prod.yaml
 
 # 升级
-helm upgrade pmis deploy/helm/ydsz-pmis -n pmis \
-  -f deploy/helm/ydsz-pmis/values-prod.yaml \
+helm upgrade pmis deploy/helm/ydsz -n pmis \
+  -f deploy/helm/ydsz/values-prod.yaml \
   --set global.imageTag=v1.3.1
 
 # 回滚
@@ -100,8 +100,8 @@ helm uninstall pmis -n pmis
 ### 4.1 覆盖镜像仓库
 
 ```bash
-helm install pmis deploy/helm/ydsz-pmis -n pmis \
-  -f deploy/helm/ydsz-pmis/values-prod.yaml \
+helm install pmis deploy/helm/ydsz -n pmis \
+  -f deploy/helm/ydsz/values-prod.yaml \
   --set global.imageRegistry=registry.cn-hangzhou.aliyuncs.com/your-org \
   --set global.imageTag=v1.0.0
 ```
@@ -109,24 +109,24 @@ helm install pmis deploy/helm/ydsz-pmis -n pmis \
 ### 4.2 覆盖单个服务副本数
 
 ```bash
-helm upgrade pmis deploy/helm/ydsz-pmis -n pmis \
-  -f deploy/helm/ydsz-pmis/values-prod.yaml \
+helm upgrade pmis deploy/helm/ydsz -n pmis \
+  -f deploy/helm/ydsz/values-prod.yaml \
   --set services.project.replicas=6
 ```
 
 ### 4.3 禁用某个服务
 
 ```bash
-helm install pmis deploy/helm/ydsz-pmis -n pmis \
-  -f deploy/helm/ydsz-pmis/values-dev.yaml \
+helm install pmis deploy/helm/ydsz -n pmis \
+  -f deploy/helm/ydsz/values-dev.yaml \
   --set services.agent.enabled=false
 ```
 
 ### 4.4 启用前端
 
 ```bash
-helm upgrade pmis deploy/helm/ydsz-pmis -n pmis \
-  -f deploy/helm/ydsz-pmis/values-prod.yaml \
+helm upgrade pmis deploy/helm/ydsz -n pmis \
+  -f deploy/helm/ydsz/values-prod.yaml \
   --set frontend.enabled=true
 ```
 
@@ -152,11 +152,11 @@ helm upgrade pmis deploy/helm/ydsz-pmis -n pmis \
 
 ```bash
 # 渲染但不部署
-helm template pmis deploy/helm/ydsz-pmis -n pmis \
-  -f deploy/helm/ydsz-pmis/values-prod.yaml > /tmp/pmis-rendered.yaml
+helm template pmis deploy/helm/ydsz -n pmis \
+  -f deploy/helm/ydsz/values-prod.yaml > /tmp/pmis-rendered.yaml
 
 # Lint 检查
-helm lint deploy/helm/ydsz-pmis -f deploy/helm/ydsz-pmis/values-prod.yaml
+helm lint deploy/helm/ydsz -f deploy/helm/ydsz/values-prod.yaml
 ```
 
 ---

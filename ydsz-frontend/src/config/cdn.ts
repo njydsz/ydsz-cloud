@@ -5,7 +5,7 @@
  * - 前端运行时可通过 CDN_ENABLED 判断是否启用 CDN
  * - 仅外置「全量导入」且「体积大、API 稳定」的库
  * @module config/cdn
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 

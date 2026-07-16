@@ -1,41 +1,41 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-gateway
+  name: ydsz-gateway
 spec:
   replicas: 2
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-system
+  name: ydsz-system
 spec:
   replicas: 2
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-userinfo
+  name: ydsz-userinfo
 spec:
   replicas: 2
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-project
+  name: ydsz-project
 spec:
   replicas: 3
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-cronjob
+  name: ydsz-cronjob
 spec:
   replicas: 1
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-workflow
+  name: ydsz-workflow
 spec:
   replicas: 2

@@ -7,7 +7,7 @@
 --   3. 投递成功后标记为 DONE，失败重试至达到最大重试次数
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS pmis_local_message (
+CREATE TABLE IF NOT EXISTS ydsz_local_message (
     id              BIGSERIAL       PRIMARY KEY,
     message_id      VARCHAR(64)     NOT NULL UNIQUE,  -- 消息唯一标识（UUID，用于幂等去重）
     message_type    VARCHAR(64)     NOT NULL,          -- 消息类型（NOTIFICATION / SYNC_PROJECT 等）
@@ -27,25 +27,25 @@ CREATE TABLE IF NOT EXISTS pmis_local_message (
 
 -- 索引：按状态和下次重试时间查询（调度器扫描使用）
 CREATE INDEX IF NOT EXISTS idx_local_message_status_retry
-    ON pmis_local_message (status, next_retry_at)
+    ON ydsz_local_message (status, next_retry_at)
     WHERE status = 'PENDING' OR status = 'FAILED';
 
 -- 索引：按消息类型查询
 CREATE INDEX IF NOT EXISTS idx_local_message_type
-    ON pmis_local_message (message_type);
+    ON ydsz_local_message (message_type);
 
 -- 索引：按创建时间查询（清理历史数据使用）
 CREATE INDEX IF NOT EXISTS idx_local_message_created
-    ON pmis_local_message (created_at);
+    ON ydsz_local_message (created_at);
 
-COMMENT ON TABLE  pmis_local_message IS '本地消息表（分布式事务 - 本地消息表模式）';
-COMMENT ON COLUMN pmis_local_message.message_id     IS '消息唯一标识（UUID，用于消费端幂等去重）';
-COMMENT ON COLUMN pmis_local_message.message_type   IS '消息类型（NOTIFICATION / SYNC_PROJECT / SYNC_USER 等）';
-COMMENT ON COLUMN pmis_local_message.target_service IS '目标服务名（如 ydsz-pmis-message）';
-COMMENT ON COLUMN pmis_local_message.target_endpoint IS '目标接口路径（如 /message/send）';
-COMMENT ON COLUMN pmis_local_message.payload        IS '消息体 JSON';
-COMMENT ON COLUMN pmis_local_message.status         IS '状态: PENDING / DONE / FAILED / DEAD';
-COMMENT ON COLUMN pmis_local_message.retry_count    IS '已重试次数';
-COMMENT ON COLUMN pmis_local_message.max_retries    IS '最大重试次数（默认 5）';
-COMMENT ON COLUMN pmis_local_message.next_retry_at  IS '下次重试时间（指数退避）';
-COMMENT ON COLUMN pmis_local_message.last_error     IS '最后错误信息';
+COMMENT ON TABLE  ydsz_local_message IS '本地消息表（分布式事务 - 本地消息表模式）';
+COMMENT ON COLUMN ydsz_local_message.message_id     IS '消息唯一标识（UUID，用于消费端幂等去重）';
+COMMENT ON COLUMN ydsz_local_message.message_type   IS '消息类型（NOTIFICATION / SYNC_PROJECT / SYNC_USER 等）';
+COMMENT ON COLUMN ydsz_local_message.target_service IS '目标服务名（如 ydsz-message）';
+COMMENT ON COLUMN ydsz_local_message.target_endpoint IS '目标接口路径（如 /message/send）';
+COMMENT ON COLUMN ydsz_local_message.payload        IS '消息体 JSON';
+COMMENT ON COLUMN ydsz_local_message.status         IS '状态: PENDING / DONE / FAILED / DEAD';
+COMMENT ON COLUMN ydsz_local_message.retry_count    IS '已重试次数';
+COMMENT ON COLUMN ydsz_local_message.max_retries    IS '最大重试次数（默认 5）';
+COMMENT ON COLUMN ydsz_local_message.next_retry_at  IS '下次重试时间（指数退避）';
+COMMENT ON COLUMN ydsz_local_message.last_error     IS '最后错误信息';

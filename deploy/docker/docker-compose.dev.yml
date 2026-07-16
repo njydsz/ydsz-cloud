@@ -543,7 +543,7 @@ services:
   #  采集: /var/log/pmis/*.log (PMIS 后端 logback LOGSTASH_JSON appender 输出)
   #  推送: http://loki:3100/loki/push
   #  解析: json pipeline 提取 service / level / traceId 标签
-  #  说明: 挂载宿主机日志目录(Windows: D:\Code\ydsz\ydsz-pmis\logs,Mac/Linux: ./logs)
+  #  说明: 挂载宿主机日志目录(Windows: D:\Code\ydsz\ydsz\logs,Mac/Linux: ./logs)
   #        通过 PMIS_LOG_DIR 环境变量配置实际路径
   # ---------------------------------------------------------------------------
   promtail:
@@ -558,7 +558,7 @@ services:
     volumes:
       - ../monitoring/loki/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
       # 挂载宿主机日志目录(需配置 PMIS_LOG_DIR 指向实际日志路径)
-      - ${PMIS_LOG_DIR:-./pmis-logs}:/var/log/pmis:ro
+      - ${PMIS_LOG_DIR:-./pmis-logs}:/var/log/ydsz:ro
       # 采集 docker 容器日志(可选)
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - promtail_data:/tmp

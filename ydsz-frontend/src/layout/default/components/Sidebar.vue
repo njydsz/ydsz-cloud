@@ -5,7 +5,7 @@
   - 支持折叠/展开与子菜单嵌套
   - 路由变化时自动高亮当前菜单（支持 meta.activeMenu 自定义高亮）
   @module layout/default/components/Sidebar
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

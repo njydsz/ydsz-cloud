@@ -22,7 +22,7 @@
  *  - 运行时通过 locales/index.ts 的 setLocale(locale) 切换；切勿在业务代码中直接修改 vue-i18n 内部状态。
  *
  * @module locales/zh-CN
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 export default {

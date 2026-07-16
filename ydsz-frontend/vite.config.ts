@@ -2,7 +2,7 @@
  * @file vite.config.ts
  * @description Vite 构建配置入口, 负责开发服务器、构建产物、插件体系、Mock 拦截等能力。
  *              通过环境变量 (.env / .env.[mode]) 控制是否启用 Mock、Bundle 分析等开关。
- * @module ydsz-pmis-frontend/vite.config.ts
+ * @module ydsz-frontend/vite.config.ts
  */
 import { defineConfig } from 'vitest/config'
 import { loadEnv } from 'vite'

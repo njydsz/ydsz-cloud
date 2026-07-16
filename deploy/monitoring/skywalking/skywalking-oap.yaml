@@ -26,7 +26,7 @@ kind: Namespace
 metadata:
   name: observability
   labels:
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 
 # =============================================================================
 # 2. SkyWalking OAP application.yml ConfigMap
@@ -41,7 +41,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: skywalking-oap
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 data:
   application.yml: |
     cluster:
@@ -156,7 +156,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: skywalking-oap
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   replicas: 1
   selector:
@@ -243,7 +243,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: skywalking-oap
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   type: ClusterIP
   selector:
@@ -270,7 +270,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: skywalking-ui
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   replicas: 1
   selector:
@@ -325,7 +325,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: skywalking-ui
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   type: NodePort
   selector:

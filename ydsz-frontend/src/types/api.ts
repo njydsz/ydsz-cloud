@@ -7,7 +7,7 @@
  * - BusinessEntity 业务实体基类
  * - 配合 .eslintrc.cjs 中 no-explicit-any: error 强制收口
  * @module types/api
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 
@@ -30,7 +30,7 @@ export interface PageData<T> {
   pages?: number
 }
 
-/** 统一 R 包装响应（与后端 com.njydsz.pmis.common.api.R<T> 一致） */
+/** 统一 R 包装响应（与后端 com.njydsz.common.api.R<T> 一致） */
 export interface ApiResponse<T> {
   code: number
   message: string

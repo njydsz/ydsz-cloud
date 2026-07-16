@@ -26,7 +26,7 @@
  * }
  * ```
  *
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 

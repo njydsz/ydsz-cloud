@@ -2,17 +2,17 @@
 -- PMIS message module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
--- 本脚本 DDL 对应后端 message 服务 (ydsz-pmis-message) 的 Mapper / DO,
+-- 本脚本 DDL 对应后端 message 服务 (ydsz-message) 的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
 -- ====================================================================
--- 5. 通知中心（ydsz-pmis-message 引擎 - 大厂级独立自研）
---    表前缀 pmis_msg_* 统一管理：站内通知 / 用户偏好 / 订阅
+-- 5. 通知中心（ydsz-message 引擎 - 大厂级独立自研）
+--    表前缀 ydsz_msg_* 统一管理：站内通知 / 用户偏好 / 订阅
 --    消息模板 / 发送日志 / 路由 / 回执 / 聚合 / 灰度 见第 7.x 节
 -- ====================================================================
 
--- 站内通知表 pmis_msg_notification（由原 pmis_msg_notification 重构升级）
-CREATE TABLE IF NOT EXISTS pmis_msg_notification(
+-- 站内通知表 ydsz_msg_notification（由原 ydsz_msg_notification 重构升级）
+CREATE TABLE IF NOT EXISTS ydsz_msg_notification(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     title           VARCHAR(255)   NOT NULL,
     content         TEXT,
@@ -50,84 +50,84 @@ CREATE TABLE IF NOT EXISTS pmis_msg_notification(
     CONSTRAINT ck_pmn_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_notification IS '站内通知表: 系统消息/待办/预警/公告统一入口,支持优先级/聚合/撤回/业务跳转';
+COMMENT ON TABLE ydsz_msg_notification IS '站内通知表: 系统消息/待办/预警/公告统一入口,支持优先级/聚合/撤回/业务跳转';
 
-COMMENT ON COLUMN pmis_msg_notification.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_msg_notification.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_msg_notification.title IS '通知标题';
+COMMENT ON COLUMN ydsz_msg_notification.title IS '通知标题';
 
-COMMENT ON COLUMN pmis_msg_notification.content IS '通知内容(支持富文本/Markdown)';
+COMMENT ON COLUMN ydsz_msg_notification.content IS '通知内容(支持富文本/Markdown)';
 
-COMMENT ON COLUMN pmis_msg_notification.level IS '通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急';
+COMMENT ON COLUMN ydsz_msg_notification.level IS '通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急';
 
-COMMENT ON COLUMN pmis_msg_notification.category IS '通知分类: SYSTEM 系统消息 / WORKFLOW 流程审批 / ALERT 预警通知 / TODO 待办 / ANNOUNCE 公告';
+COMMENT ON COLUMN ydsz_msg_notification.category IS '通知分类: SYSTEM 系统消息 / WORKFLOW 流程审批 / ALERT 预警通知 / TODO 待办 / ANNOUNCE 公告';
 
-COMMENT ON COLUMN pmis_msg_notification.priority IS '发送优先级: LOW 低 / NORMAL 普通 / HIGH 高 / URGENT 紧急(影响排队与聚合)';
+COMMENT ON COLUMN ydsz_msg_notification.priority IS '发送优先级: LOW 低 / NORMAL 普通 / HIGH 高 / URGENT 紧急(影响排队与聚合)';
 
-COMMENT ON COLUMN pmis_msg_notification.sender_id IS '发送人 ID(系统通知为 SYSTEM)';
+COMMENT ON COLUMN ydsz_msg_notification.sender_id IS '发送人 ID(系统通知为 SYSTEM)';
 
-COMMENT ON COLUMN pmis_msg_notification.receiver_id IS '接收人 ID(关联 pmis_employee.id)';
+COMMENT ON COLUMN ydsz_msg_notification.receiver_id IS '接收人 ID(关联 ydsz_employee.id)';
 
-COMMENT ON COLUMN pmis_msg_notification.biz_type IS '关联业务类型(如 contract/invoice/risk)';
+COMMENT ON COLUMN ydsz_msg_notification.biz_type IS '关联业务类型(如 contract/invoice/risk)';
 
-COMMENT ON COLUMN pmis_msg_notification.biz_id IS '关联业务单据 ID';
+COMMENT ON COLUMN ydsz_msg_notification.biz_id IS '关联业务单据 ID';
 
-COMMENT ON COLUMN pmis_msg_notification.message_group IS '聚合组(同组通知可合并为摘要,如 RISK:contract-123)';
+COMMENT ON COLUMN ydsz_msg_notification.message_group IS '聚合组(同组通知可合并为摘要,如 RISK:contract-123)';
 
-COMMENT ON COLUMN pmis_msg_notification.batch_id IS '聚合批次 ID(关联 pmis_msg_aggregate.id)';
+COMMENT ON COLUMN ydsz_msg_notification.batch_id IS '聚合批次 ID(关联 ydsz_msg_aggregate.id)';
 
-COMMENT ON COLUMN pmis_msg_notification.action_url IS '点击跳转 URL(前端路由或外链)';
+COMMENT ON COLUMN ydsz_msg_notification.action_url IS '点击跳转 URL(前端路由或外链)';
 
-COMMENT ON COLUMN pmis_msg_notification.action_text IS '跳转按钮文案(如"去处理")';
+COMMENT ON COLUMN ydsz_msg_notification.action_text IS '跳转按钮文案(如"去处理")';
 
-COMMENT ON COLUMN pmis_msg_notification.icon IS '通知图标标识(Element Plus icon name)';
+COMMENT ON COLUMN ydsz_msg_notification.icon IS '通知图标标识(Element Plus icon name)';
 
-COMMENT ON COLUMN pmis_msg_notification.extra IS '扩展字段 JSON(业务自定义透传)';
+COMMENT ON COLUMN ydsz_msg_notification.extra IS '扩展字段 JSON(业务自定义透传)';
 
-COMMENT ON COLUMN pmis_msg_notification.source_module IS '来源模块(system/project/workflow/agent)';
+COMMENT ON COLUMN ydsz_msg_notification.source_module IS '来源模块(system/project/workflow/agent)';
 
-COMMENT ON COLUMN pmis_msg_notification.read_status IS '已读状态: 0 未读 / 1 已读';
+COMMENT ON COLUMN ydsz_msg_notification.read_status IS '已读状态: 0 未读 / 1 已读';
 
-COMMENT ON COLUMN pmis_msg_notification.read_time IS '首次阅读时间';
+COMMENT ON COLUMN ydsz_msg_notification.read_time IS '首次阅读时间';
 
-COMMENT ON COLUMN pmis_msg_notification.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
+COMMENT ON COLUMN ydsz_msg_notification.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
 
-COMMENT ON COLUMN pmis_msg_notification.recall_at IS '撤回时间';
+COMMENT ON COLUMN ydsz_msg_notification.recall_at IS '撤回时间';
 
-COMMENT ON COLUMN pmis_msg_notification.expired_at IS '过期时间(过期后不再展示)';
+COMMENT ON COLUMN ydsz_msg_notification.expired_at IS '过期时间(过期后不再展示)';
 
-COMMENT ON COLUMN pmis_msg_notification.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_msg_notification.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_msg_notification.created_at IS '发送时间';
+COMMENT ON COLUMN ydsz_msg_notification.created_at IS '发送时间';
 
-COMMENT ON COLUMN pmis_msg_notification.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_msg_notification.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_msg_notification.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_msg_notification.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_msg_notification.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_msg_notification.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_msg_notification.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_msg_notification.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmn_receiver ON pmis_msg_notification (receiver_id, read_status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmn_receiver ON ydsz_msg_notification (receiver_id, read_status) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmn_biz ON pmis_msg_notification (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmn_biz ON ydsz_msg_notification (biz_type, biz_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmn_tenant ON pmis_msg_notification(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmn_tenant ON ydsz_msg_notification(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_pmn_tenant_created
-    ON pmis_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pmn_sender
-    ON pmis_msg_notification(sender_id) WHERE deleted = 0;
+    ON ydsz_msg_notification(sender_id) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pmn_group
-    ON pmis_msg_notification(receiver_id, message_group) WHERE deleted = 0 AND message_group IS NOT NULL;
+    ON ydsz_msg_notification(receiver_id, message_group) WHERE deleted = 0 AND message_group IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pmn_batch
-    ON pmis_msg_notification(batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
+    ON ydsz_msg_notification(batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
 
--- 用户消息偏好表 pmis_msg_preference（免打扰 / 频率上限 / 聚合开关 / 语言）
-CREATE TABLE IF NOT EXISTS pmis_msg_preference(
+-- 用户消息偏好表 ydsz_msg_preference（免打扰 / 频率上限 / 聚合开关 / 语言）
+CREATE TABLE IF NOT EXISTS ydsz_msg_preference(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id           VARCHAR(20)   NOT NULL,
     channel           VARCHAR(32)   NOT NULL,
@@ -158,40 +158,40 @@ CREATE TABLE IF NOT EXISTS pmis_msg_preference(
     CONSTRAINT ck_pmp_hourly_nonneg CHECK (hourly_limit IS NULL OR hourly_limit >= 0)
 );
 
-COMMENT ON TABLE pmis_msg_preference IS '用户消息偏好表: 免打扰时段 / 频率上限 / 聚合开关 / 偏好语言';
+COMMENT ON TABLE ydsz_msg_preference IS '用户消息偏好表: 免打扰时段 / 频率上限 / 聚合开关 / 偏好语言';
 
-COMMENT ON COLUMN pmis_msg_preference.user_id IS '用户 ID(关联 pmis_employee.id)';
+COMMENT ON COLUMN ydsz_msg_preference.user_id IS '用户 ID(关联 ydsz_employee.id)';
 
-COMMENT ON COLUMN pmis_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
+COMMENT ON COLUMN ydsz_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
 
-COMMENT ON COLUMN pmis_msg_preference.biz_type IS '业务类型(__DEFAULT__ 表示该通道全局默认偏好)';
+COMMENT ON COLUMN ydsz_msg_preference.biz_type IS '业务类型(__DEFAULT__ 表示该通道全局默认偏好)';
 
-COMMENT ON COLUMN pmis_msg_preference.enabled IS '是否启用该通道: 0 关闭 / 1 开启(关闭后不发送)';
+COMMENT ON COLUMN ydsz_msg_preference.enabled IS '是否启用该通道: 0 关闭 / 1 开启(关闭后不发送)';
 
-COMMENT ON COLUMN pmis_msg_preference.dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
+COMMENT ON COLUMN ydsz_msg_preference.dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
 
-COMMENT ON COLUMN pmis_msg_preference.dnd_start IS '免打扰开始时间 HH:mm(如 22:00)';
+COMMENT ON COLUMN ydsz_msg_preference.dnd_start IS '免打扰开始时间 HH:mm(如 22:00)';
 
-COMMENT ON COLUMN pmis_msg_preference.dnd_end IS '免打扰结束时间 HH:mm(如 08:00)';
+COMMENT ON COLUMN ydsz_msg_preference.dnd_end IS '免打扰结束时间 HH:mm(如 08:00)';
 
-COMMENT ON COLUMN pmis_msg_preference.daily_limit IS '每日发送上限(超过则暂存或丢弃)';
+COMMENT ON COLUMN ydsz_msg_preference.daily_limit IS '每日发送上限(超过则暂存或丢弃)';
 
-COMMENT ON COLUMN pmis_msg_preference.hourly_limit IS '每小时发送上限';
+COMMENT ON COLUMN ydsz_msg_preference.hourly_limit IS '每小时发送上限';
 
-COMMENT ON COLUMN pmis_msg_preference.digest_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
+COMMENT ON COLUMN ydsz_msg_preference.digest_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
 
-COMMENT ON COLUMN pmis_msg_preference.digest_frequency IS '聚合频率: HOURLY / DAILY / WEEKLY';
+COMMENT ON COLUMN ydsz_msg_preference.digest_frequency IS '聚合频率: HOURLY / DAILY / WEEKLY';
 
-COMMENT ON COLUMN pmis_msg_preference.locale IS '偏好语言(如 zh-CN / en-US,影响模板 i18n 选择)';
+COMMENT ON COLUMN ydsz_msg_preference.locale IS '偏好语言(如 zh-CN / en-US,影响模板 i18n 选择)';
 
-COMMENT ON COLUMN pmis_msg_preference.extra IS '扩展字段 JSON';
+COMMENT ON COLUMN ydsz_msg_preference.extra IS '扩展字段 JSON';
 
-CREATE INDEX IF NOT EXISTS idx_pmp_user ON pmis_msg_preference(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmp_user ON ydsz_msg_preference(user_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmp_tenant ON pmis_msg_preference(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmp_tenant ON ydsz_msg_preference(tenant_id);
 
--- 订阅关系表 pmis_msg_subscription（用户订阅/退订主题）
-CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
+-- 订阅关系表 ydsz_msg_subscription（用户订阅/退订主题）
+CREATE TABLE IF NOT EXISTS ydsz_msg_subscription(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)   NOT NULL,
     topic_code      VARCHAR(128)  NOT NULL,
@@ -212,27 +212,27 @@ CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
     CONSTRAINT ck_pms_deleted_enum    CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_subscription IS '订阅关系表: 用户对主题(topic_code)在指定通道的订阅/退订状态';
+COMMENT ON TABLE ydsz_msg_subscription IS '订阅关系表: 用户对主题(topic_code)在指定通道的订阅/退订状态';
 
-COMMENT ON COLUMN pmis_msg_subscription.user_id IS '用户 ID';
+COMMENT ON COLUMN ydsz_msg_subscription.user_id IS '用户 ID';
 
-COMMENT ON COLUMN pmis_msg_subscription.topic_code IS '主题编码(如 RISK_ALERT / CONTRACT_APPROVAL / APPROVAL_TODO)';
+COMMENT ON COLUMN ydsz_msg_subscription.topic_code IS '主题编码(如 RISK_ALERT / CONTRACT_APPROVAL / APPROVAL_TODO)';
 
-COMMENT ON COLUMN pmis_msg_subscription.channel IS '通道';
+COMMENT ON COLUMN ydsz_msg_subscription.channel IS '通道';
 
-COMMENT ON COLUMN pmis_msg_subscription.status IS '订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订';
+COMMENT ON COLUMN ydsz_msg_subscription.status IS '订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订';
 
-COMMENT ON COLUMN pmis_msg_subscription.role_scope IS '角色范围(如 PM|MEMBER,限定角色内可见性)';
+COMMENT ON COLUMN ydsz_msg_subscription.role_scope IS '角色范围(如 PM|MEMBER,限定角色内可见性)';
 
-COMMENT ON COLUMN pmis_msg_subscription.extra IS '扩展字段 JSON';
+COMMENT ON COLUMN ydsz_msg_subscription.extra IS '扩展字段 JSON';
 
-COMMENT ON COLUMN pmis_msg_subscription.unsubscribed_at IS '退订时间(P1-5:仅 status=UNSUBSCRIBED 时有意义)';
+COMMENT ON COLUMN ydsz_msg_subscription.unsubscribed_at IS '退订时间(P1-5:仅 status=UNSUBSCRIBED 时有意义)';
 
-CREATE INDEX IF NOT EXISTS idx_pms_user ON pmis_msg_subscription(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pms_user ON ydsz_msg_subscription(user_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pms_topic ON pmis_msg_subscription(topic_code, channel) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pms_topic ON ydsz_msg_subscription(topic_code, channel) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON pmis_msg_subscription(status, unsubscribed_at) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON ydsz_msg_subscription(status, unsubscribed_at) WHERE deleted = 0;
 
 -- ============================================================================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
@@ -249,12 +249,12 @@ CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON pmis_msg_subscription(status,
 -- 描述: 短信/邮件/推送/站内信/Webhook 发送日志 + 模板
 -- =====================================================
 
--- 消息发送日志表 pmis_msg_log（由原 pmis_msg_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
+-- 消息发送日志表 ydsz_msg_log（由原 ydsz_msg_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
 -- P2-3: 改为 PostgreSQL 月度 RANGE 分区表，按 created_at 分区，便于按时间范围查询与冷数据归档。
 -- 分区表主键必须包含分区键 created_at，故采用 (id, created_at) 复合主键。
 -- 业务代码通过 MyBatis-Plus BaseMapper 以 id 单字段查询时，PostgreSQL 会扫描所有分区上的本地索引，
 -- 配合 partition pruning（带 created_at 范围条件时）能保证查询性能。
-CREATE TABLE IF NOT EXISTS pmis_msg_log(
+CREATE TABLE IF NOT EXISTS ydsz_msg_log(
     id                VARCHAR(20)    NOT NULL,
     channel           VARCHAR(32)    NOT NULL,
     biz_type          VARCHAR(64),
@@ -318,131 +318,131 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
 ) PARTITION BY RANGE (created_at);
 
 -- 月度分区: 预创建 2026 全年 12 个分区 + DEFAULT 兜底分区。
--- 归档策略: 由 MsgLogArchiveService 在每月 1 号 DETACH 90 天前分区并重命名为 pmis_msg_log_archive_yyyymm。
+-- 归档策略: 由 MsgLogArchiveService 在每月 1 号 DETACH 90 天前分区并重命名为 ydsz_msg_log_archive_yyyymm。
 -- 后续新增分区也由该服务动态 CREATE,避免人为遗漏。
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m01 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m01 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m02 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m02 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m03 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m03 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m04 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m04 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m05 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-05-01') TO ('2026-06-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m05 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-05-01') TO ('2026-06-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m06 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m06 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m07 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m07 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m08 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m08 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m09 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m09 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m10 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m10 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m11 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m11 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
 
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m12 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-12-01') TO ('2027-01-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m12 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-12-01') TO ('2027-01-01');
 
 -- DEFAULT 分区: 兜底不在预创建范围内的数据,避免插入失败;运维应监控该分区并补建新分区。
-CREATE TABLE IF NOT EXISTS pmis_msg_log_default PARTITION OF pmis_msg_log DEFAULT;
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_default PARTITION OF ydsz_msg_log DEFAULT;
 
-COMMENT ON TABLE pmis_msg_log IS '消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度';
+COMMENT ON TABLE ydsz_msg_log IS '消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度';
 
-COMMENT ON COLUMN pmis_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
+COMMENT ON COLUMN ydsz_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
 
-COMMENT ON COLUMN pmis_msg_log.status IS '发送状态: PENDING 待发送 / SENDING 发送中 / SUCCESS 成功 / FAILED 失败 / RETRY 重试中 / DEAD 死信 / RECALLED 已撤回';
+COMMENT ON COLUMN ydsz_msg_log.status IS '发送状态: PENDING 待发送 / SENDING 发送中 / SUCCESS 成功 / FAILED 失败 / RETRY 重试中 / DEAD 死信 / RECALLED 已撤回';
 
-COMMENT ON COLUMN pmis_msg_log.priority IS '发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并发)';
+COMMENT ON COLUMN ydsz_msg_log.priority IS '发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并发)';
 
-COMMENT ON COLUMN pmis_msg_log.sender_id IS '触发发送的用户 ID(系统发送为 SYSTEM)';
+COMMENT ON COLUMN ydsz_msg_log.sender_id IS '触发发送的用户 ID(系统发送为 SYSTEM)';
 
-COMMENT ON COLUMN pmis_msg_log.message_group IS '聚合组(同组消息可合并为摘要发送)';
+COMMENT ON COLUMN ydsz_msg_log.message_group IS '聚合组(同组消息可合并为摘要发送)';
 
-COMMENT ON COLUMN pmis_msg_log.batch_id IS '聚合批次 ID(关联 pmis_msg_aggregate.id)';
+COMMENT ON COLUMN ydsz_msg_log.batch_id IS '聚合批次 ID(关联 ydsz_msg_aggregate.id)';
 
-COMMENT ON COLUMN pmis_msg_log.route_rule_id IS '命中的路由规则 ID(关联 pmis_msg_route_rule.id)';
+COMMENT ON COLUMN ydsz_msg_log.route_rule_id IS '命中的路由规则 ID(关联 ydsz_msg_route_rule.id)';
 
-COMMENT ON COLUMN pmis_msg_log.canary IS '是否灰度命中: 0 正式 / 1 灰度';
+COMMENT ON COLUMN ydsz_msg_log.canary IS '是否灰度命中: 0 正式 / 1 灰度';
 
-COMMENT ON COLUMN pmis_msg_log.canary_key IS 'P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)';
+COMMENT ON COLUMN ydsz_msg_log.canary_key IS 'P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)';
 
-COMMENT ON COLUMN pmis_msg_log.dedup_key IS '幂等去重键(用于消费端幂等,Redis SET NX EX)';
+COMMENT ON COLUMN ydsz_msg_log.dedup_key IS '幂等去重键(用于消费端幂等,Redis SET NX EX)';
 
-COMMENT ON COLUMN pmis_msg_log.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
+COMMENT ON COLUMN ydsz_msg_log.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
 
-COMMENT ON COLUMN pmis_msg_log.receipt_at IS '回执到达时间';
+COMMENT ON COLUMN ydsz_msg_log.receipt_at IS '回执到达时间';
 
-COMMENT ON COLUMN pmis_msg_log.receipt_status IS '回执状态: NONE 无 / DELIVERED 已送达 / READ 已读 / CLICKED 已点击 / FAILED 失败 / TIMEOUT 超时(ReceiptPuller 标记)';
+COMMENT ON COLUMN ydsz_msg_log.receipt_status IS '回执状态: NONE 无 / DELIVERED 已送达 / READ 已读 / CLICKED 已点击 / FAILED 失败 / TIMEOUT 超时(ReceiptPuller 标记)';
 
-COMMENT ON COLUMN pmis_msg_log.retry_count IS '已重试次数';
+COMMENT ON COLUMN ydsz_msg_log.retry_count IS '已重试次数';
 
-COMMENT ON COLUMN pmis_msg_log.next_retry_at IS '下次重试时间(退避调度)';
+COMMENT ON COLUMN ydsz_msg_log.next_retry_at IS '下次重试时间(退避调度)';
 
-COMMENT ON COLUMN pmis_msg_log.provider_trace_id IS '三方服务商回执 ID';
+COMMENT ON COLUMN ydsz_msg_log.provider_trace_id IS '三方服务商回执 ID';
 
-COMMENT ON COLUMN pmis_msg_log.cost_ms IS '发送耗时(毫秒)';
+COMMENT ON COLUMN ydsz_msg_log.cost_ms IS '发送耗时(毫秒)';
 
-COMMENT ON COLUMN pmis_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/INAPP 免费)';
+COMMENT ON COLUMN ydsz_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/INAPP 免费)';
 
-COMMENT ON COLUMN pmis_msg_log.trace_id IS '系统链路追踪 ID';
+COMMENT ON COLUMN ydsz_msg_log.trace_id IS '系统链路追踪 ID';
 
-COMMENT ON COLUMN pmis_msg_log.msg_id IS 'RocketMQ 消息 ID';
+COMMENT ON COLUMN ydsz_msg_log.msg_id IS 'RocketMQ 消息 ID';
 
-COMMENT ON COLUMN pmis_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';
+COMMENT ON COLUMN ydsz_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';
 
-COMMENT ON COLUMN pmis_msg_log.reconsume_times IS 'RocketMQ 重试次数';
+COMMENT ON COLUMN ydsz_msg_log.reconsume_times IS 'RocketMQ 重试次数';
 
-COMMENT ON COLUMN pmis_msg_log.parent_msg_id IS 'P2-6: 级联发送父消息 ID(顶层消息为 NULL)';
+COMMENT ON COLUMN ydsz_msg_log.parent_msg_id IS 'P2-6: 级联发送父消息 ID(顶层消息为 NULL)';
 
-COMMENT ON COLUMN pmis_msg_log.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_msg_log.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pml_channel
-    ON pmis_msg_log (channel) WHERE deleted = 0;
+    ON ydsz_msg_log (channel) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pml_status
-    ON pmis_msg_log (status) WHERE deleted = 0;
+    ON ydsz_msg_log (status) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pml_biz
-    ON pmis_msg_log (biz_type, biz_id) WHERE deleted = 0;
+    ON ydsz_msg_log (biz_type, biz_id) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pml_receiver
-    ON pmis_msg_log (receiver) WHERE deleted = 0;
+    ON ydsz_msg_log (receiver) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pml_tenant_created
-    ON pmis_msg_log (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_msg_log (tenant_id, created_at DESC) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pml_msg_id
-    ON pmis_msg_log (msg_id) WHERE deleted = 0 AND msg_id IS NOT NULL;
+    ON ydsz_msg_log (msg_id) WHERE deleted = 0 AND msg_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pml_provider_trace
-    ON pmis_msg_log (provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
+    ON ydsz_msg_log (provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pml_priority
-    ON pmis_msg_log (status, priority, next_retry_at) WHERE deleted = 0;
+    ON ydsz_msg_log (status, priority, next_retry_at) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pml_dedup
-    ON pmis_msg_log (dedup_key) WHERE deleted = 0 AND dedup_key IS NOT NULL;
+    ON ydsz_msg_log (dedup_key) WHERE deleted = 0 AND dedup_key IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pml_batch
-    ON pmis_msg_log (batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
+    ON ydsz_msg_log (batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pml_recall
-    ON pmis_msg_log (recall_status) WHERE deleted = 0 AND recall_status = 'RECALLED';
+    ON ydsz_msg_log (recall_status) WHERE deleted = 0 AND recall_status = 'RECALLED';
 
 CREATE INDEX IF NOT EXISTS idx_pml_retry_due
-    ON pmis_msg_log (status, next_retry_at) WHERE deleted = 0 AND status = 'RETRY' AND next_retry_at IS NOT NULL;
+    ON ydsz_msg_log (status, next_retry_at) WHERE deleted = 0 AND status = 'RETRY' AND next_retry_at IS NOT NULL;
 
 -- P2-6: 级联发送父子关系查询索引(按 parent_msg_id 查询某条消息触发的全部级联消息)
 CREATE INDEX IF NOT EXISTS idx_pml_parent
-    ON pmis_msg_log (parent_msg_id) WHERE deleted = 0 AND parent_msg_id IS NOT NULL;
+    ON ydsz_msg_log (parent_msg_id) WHERE deleted = 0 AND parent_msg_id IS NOT NULL;
 
 -- P1-6: 灰度 A/B 报表查询索引(按 canary_key 分组统计实验组数据)
 CREATE INDEX IF NOT EXISTS idx_pml_canary_key
-    ON pmis_msg_log (canary_key) WHERE deleted = 0 AND canary_key IS NOT NULL;
+    ON ydsz_msg_log (canary_key) WHERE deleted = 0 AND canary_key IS NOT NULL;
 
--- 消息模板表 pmis_msg_template（由原 pmis_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
-CREATE TABLE IF NOT EXISTS pmis_msg_template(
+-- 消息模板表 ydsz_msg_template（由原 ydsz_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
+CREATE TABLE IF NOT EXISTS ydsz_msg_template(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     template_code   VARCHAR(128)   NOT NULL,
     channel         VARCHAR(32)    NOT NULL,
@@ -475,43 +475,43 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template(
     CONSTRAINT ck_pmt_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_template IS '消息模板表: 支持 ${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景';
+COMMENT ON TABLE ydsz_msg_template IS '消息模板表: 支持 ${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景';
 
-COMMENT ON COLUMN pmis_msg_template.template_code IS '模板编码(同 code 不同 channel/locale 形成多版本)';
+COMMENT ON COLUMN ydsz_msg_template.template_code IS '模板编码(同 code 不同 channel/locale 形成多版本)';
 
-COMMENT ON COLUMN pmis_msg_template.locale IS '语言区域(如 zh-CN / en-US),影响 i18n 模板选择';
+COMMENT ON COLUMN ydsz_msg_template.locale IS '语言区域(如 zh-CN / en-US),影响 i18n 模板选择';
 
-COMMENT ON COLUMN pmis_msg_template.version IS '语义版本(如 1.0.0),支持模板版本回滚';
+COMMENT ON COLUMN ydsz_msg_template.version IS '语义版本(如 1.0.0),支持模板版本回滚';
 
-COMMENT ON COLUMN pmis_msg_template.category IS '模板分类(如 ALERT/APPROVAL/NOTICE/VERIFY)';
+COMMENT ON COLUMN ydsz_msg_template.category IS '模板分类(如 ALERT/APPROVAL/NOTICE/VERIFY)';
 
-COMMENT ON COLUMN pmis_msg_template.scene_code IS '场景编码(如 BUDGET_YELLOW / CONTRACT_SIGN),用于业务侧精确匹配';
+COMMENT ON COLUMN ydsz_msg_template.scene_code IS '场景编码(如 BUDGET_YELLOW / CONTRACT_SIGN),用于业务侧精确匹配';
 
-COMMENT ON COLUMN pmis_msg_template.audit_status IS '审核状态: DRAFT 草稿 / AUDITING 审核中 / APPROVED 已通过 / REJECTED 已驳回';
+COMMENT ON COLUMN ydsz_msg_template.audit_status IS '审核状态: DRAFT 草稿 / AUDITING 审核中 / APPROVED 已通过 / REJECTED 已驳回';
 
-COMMENT ON COLUMN pmis_msg_template.audit_by IS '审核人 ID';
+COMMENT ON COLUMN ydsz_msg_template.audit_by IS '审核人 ID';
 
-COMMENT ON COLUMN pmis_msg_template.audit_at IS '审核时间';
+COMMENT ON COLUMN ydsz_msg_template.audit_at IS '审核时间';
 
-COMMENT ON COLUMN pmis_msg_template.audit_remark IS '审核备注';
+COMMENT ON COLUMN ydsz_msg_template.audit_remark IS '审核备注';
 
 CREATE INDEX IF NOT EXISTS idx_pmt_channel
-    ON pmis_msg_template (channel) WHERE deleted = 0;
+    ON ydsz_msg_template (channel) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pmt_status
-    ON pmis_msg_template (status) WHERE deleted = 0;
+    ON ydsz_msg_template (status) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pmt_tenant_status
-    ON pmis_msg_template (tenant_id, status) WHERE deleted = 0;
+    ON ydsz_msg_template (tenant_id, status) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pmt_scene
-    ON pmis_msg_template (scene_code, channel) WHERE deleted = 0 AND scene_code IS NOT NULL;
+    ON ydsz_msg_template (scene_code, channel) WHERE deleted = 0 AND scene_code IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pmt_audit
-    ON pmis_msg_template (audit_status) WHERE deleted = 0 AND audit_status IN ('DRAFT', 'AUDITING');
+    ON ydsz_msg_template (audit_status) WHERE deleted = 0 AND audit_status IN ('DRAFT', 'AUDITING');
 
--- 消息路由规则表 pmis_msg_route_rule（条件路由 / 通道降级）
-CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
+-- 消息路由规则表 ydsz_msg_route_rule（条件路由 / 通道降级）
+CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rule_code         VARCHAR(128)  NOT NULL,
     rule_name         VARCHAR(255)  NOT NULL,
@@ -540,22 +540,22 @@ CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
     CONSTRAINT ck_pmrr_priority_nonneg CHECK (priority >= 0)
 );
 
-COMMENT ON TABLE pmis_msg_route_rule IS '消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级';
+COMMENT ON TABLE ydsz_msg_route_rule IS '消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级';
 
-COMMENT ON COLUMN pmis_msg_route_rule.condition_expr IS '路由条件(SpEL 表达式,如 #request.bizType==''ALERT'' and #request.priority==''URGENT'')';
+COMMENT ON COLUMN ydsz_msg_route_rule.condition_expr IS '路由条件(SpEL 表达式,如 #request.bizType==''ALERT'' and #request.priority==''URGENT'')';
 
-COMMENT ON COLUMN pmis_msg_route_rule.target_channel IS '命中后目标通道';
+COMMENT ON COLUMN ydsz_msg_route_rule.target_channel IS '命中后目标通道';
 
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道(单通道,兼容旧版)';
+COMMENT ON COLUMN ydsz_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道(单通道,兼容旧版)';
 
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,INAPP),按顺序逐个尝试,优先于 fallback_channel';
+COMMENT ON COLUMN ydsz_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,INAPP),按顺序逐个尝试,优先于 fallback_channel';
 
-CREATE INDEX IF NOT EXISTS idx_pmrt_biz ON pmis_msg_route_rule(biz_type) WHERE deleted = 0 AND status = 'ENABLED';
+CREATE INDEX IF NOT EXISTS idx_pmrt_biz ON ydsz_msg_route_rule(biz_type) WHERE deleted = 0 AND status = 'ENABLED';
 
-CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON pmis_msg_route_rule(status, sort_order) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON ydsz_msg_route_rule(status, sort_order) WHERE deleted = 0;
 
--- 消息回执表 pmis_msg_receipt（服务商回执 / 已读 / 点击回调）
-CREATE TABLE IF NOT EXISTS pmis_msg_receipt(
+-- 消息回执表 ydsz_msg_receipt（服务商回执 / 已读 / 点击回调）
+CREATE TABLE IF NOT EXISTS ydsz_msg_receipt(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     log_id            VARCHAR(20)   NOT NULL,
     provider_trace_id VARCHAR(128),
@@ -574,18 +574,18 @@ CREATE TABLE IF NOT EXISTS pmis_msg_receipt(
     CONSTRAINT ck_pmrt_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_receipt IS '消息回执表: 服务商送达/已读/点击/失败回调记录';
+COMMENT ON TABLE ydsz_msg_receipt IS '消息回执表: 服务商送达/已读/点击/失败回调记录';
 
-COMMENT ON COLUMN pmis_msg_receipt.log_id IS '关联 pmis_msg_log.id';
+COMMENT ON COLUMN ydsz_msg_receipt.log_id IS '关联 ydsz_msg_log.id';
 
-COMMENT ON COLUMN pmis_msg_receipt.receipt_type IS '回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败';
+COMMENT ON COLUMN ydsz_msg_receipt.receipt_type IS '回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败';
 
-CREATE INDEX IF NOT EXISTS idx_pmrc_log ON pmis_msg_receipt(log_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmrc_log ON ydsz_msg_receipt(log_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmrc_trace ON pmis_msg_receipt(provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pmrc_trace ON ydsz_msg_receipt(provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 
--- 聚合批次表 pmis_msg_aggregate（同组消息合并为摘要发送）
-CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
+-- 聚合批次表 ydsz_msg_aggregate（同组消息合并为摘要发送）
+CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     aggregate_group   VARCHAR(64)   NOT NULL,
     receiver          VARCHAR(256)  NOT NULL,
@@ -609,20 +609,20 @@ CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
     CONSTRAINT ck_pmag_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_aggregate IS '聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送';
+COMMENT ON TABLE ydsz_msg_aggregate IS '聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送';
 
-COMMENT ON COLUMN pmis_msg_aggregate.batch_status IS '批次状态: PENDING 攒批中 / READY 就绪待发 / SENDING 发送中(CAS 占有) / SENT 已发送 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_msg_aggregate.batch_status IS '批次状态: PENDING 攒批中 / READY 就绪待发 / SENDING 发送中(CAS 占有) / SENT 已发送 / CANCELLED 已取消';
 
-COMMENT ON COLUMN pmis_msg_aggregate.scheduled_send_at IS '计划发送时间(到达后触发摘要发送)';
+COMMENT ON COLUMN ydsz_msg_aggregate.scheduled_send_at IS '计划发送时间(到达后触发摘要发送)';
 
-COMMENT ON COLUMN pmis_msg_aggregate.digest_content IS '聚合后摘要内容(渲染后)';
+COMMENT ON COLUMN ydsz_msg_aggregate.digest_content IS '聚合后摘要内容(渲染后)';
 
-CREATE INDEX IF NOT EXISTS idx_pmag_group ON pmis_msg_aggregate(aggregate_group, receiver) WHERE deleted = 0 AND batch_status IN ('PENDING', 'READY');
+CREATE INDEX IF NOT EXISTS idx_pmag_group ON ydsz_msg_aggregate(aggregate_group, receiver) WHERE deleted = 0 AND batch_status IN ('PENDING', 'READY');
 
-CREATE INDEX IF NOT EXISTS idx_pmag_due ON pmis_msg_aggregate(scheduled_send_at) WHERE deleted = 0 AND batch_status = 'READY' AND scheduled_send_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pmag_due ON ydsz_msg_aggregate(scheduled_send_at) WHERE deleted = 0 AND batch_status = 'READY' AND scheduled_send_at IS NOT NULL;
 
--- 灰度桶表 pmis_msg_canary（按 template_code/biz_type 灰度发布）
-CREATE TABLE IF NOT EXISTS pmis_msg_canary(
+-- 灰度桶表 ydsz_msg_canary（按 template_code/biz_type 灰度发布）
+CREATE TABLE IF NOT EXISTS ydsz_msg_canary(
     id                       VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     canary_key               VARCHAR(128)  NOT NULL,
     bucket_total             INTEGER       NOT NULL DEFAULT 100,
@@ -646,19 +646,19 @@ CREATE TABLE IF NOT EXISTS pmis_msg_canary(
     CONSTRAINT ck_pmc_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布,命中后可切换实验模板/通道';
+COMMENT ON TABLE ydsz_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布,命中后可切换实验模板/通道';
 
-COMMENT ON COLUMN pmis_msg_canary.canary_key IS '灰度键(如 template_code 或 biz_type)';
+COMMENT ON COLUMN ydsz_msg_canary.canary_key IS '灰度键(如 template_code 或 biz_type)';
 
-COMMENT ON COLUMN pmis_msg_canary.bucket_selected IS '命中的桶列表 JSON(如 [0,1,2,...,4] 表示 0-4 号桶命中)';
+COMMENT ON COLUMN ydsz_msg_canary.bucket_selected IS '命中的桶列表 JSON(如 [0,1,2,...,4] 表示 0-4 号桶命中)';
 
-COMMENT ON COLUMN pmis_msg_canary.percentage IS '灰度比例(0-100)';
+COMMENT ON COLUMN ydsz_msg_canary.percentage IS '灰度比例(0-100)';
 
-COMMENT ON COLUMN pmis_msg_canary.experiment_template_code IS '灰度命中后切换的实验模板编码(可空,空则不切换)';
+COMMENT ON COLUMN ydsz_msg_canary.experiment_template_code IS '灰度命中后切换的实验模板编码(可空,空则不切换)';
 
-COMMENT ON COLUMN pmis_msg_canary.experiment_channel IS '灰度命中后切换的实验通道(可空,空则不切换)';
+COMMENT ON COLUMN ydsz_msg_canary.experiment_channel IS '灰度命中后切换的实验通道(可空,空则不切换)';
 
-CREATE INDEX IF NOT EXISTS idx_pmc_key ON pmis_msg_canary(canary_key) WHERE deleted = 0 AND status = 'ENABLED';
+CREATE INDEX IF NOT EXISTS idx_pmc_key ON ydsz_msg_canary(canary_key) WHERE deleted = 0 AND status = 'ENABLED';
 
 -- --------------------------------------------------------------------
 
@@ -673,79 +673,79 @@ CREATE INDEX IF NOT EXISTS idx_pmc_key ON pmis_msg_canary(canary_key) WHERE dele
 -- ============================================================
 
 -- 预算黄色预警
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'INAPP',
        '【预算黄色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%',
        'INAPP', 'PMIS', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
 
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'EMAIL',
        '【预算黄色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及黄色阈值(80%)。</p>',
        'EMAIL', 'PMIS', 'ENABLED', '预算黄色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
 
 -- 预算红色预警
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'INAPP',
        '【预算红色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%，已触及红色阈值(95%)，请立即关注',
        'INAPP', 'PMIS', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
 
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'EMAIL',
        '【预算红色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及红色阈值(95%)，请立即关注。</p>',
        'EMAIL', 'PMIS', 'ENABLED', '预算红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
 
 -- EVM 红色预警
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'INAPP',
        '【EVM 红色预警】${title}',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
 
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'EMAIL',
        '【EVM 红色预警】${title}',
        '<p>${content}</p>',
        'EMAIL', 'PMIS', 'ENABLED', 'EVM 红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
 
 -- SLA 红色预警（工单超时）
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_SLA_RED', 'INAPP',
        '【SLA 红色预警】工单 ${alertCode} 超时',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', '运维工单 SLA 超时红色预警', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
 
 -- 通用黄色预警兜底
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_OTHER_YELLOW', 'INAPP',
        '【黄色预警】${title}',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
 
--- 注：pmis_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用
--- CREATE INDEX IF NOT EXISTS idx_pmis_voucher_period_status
---     ON pmis_voucher (period, status, created_at DESC);
+-- 注：ydsz_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用
+-- CREATE INDEX IF NOT EXISTS idx_ydsz_voucher_period_status
+--     ON ydsz_voucher (period, status, created_at DESC);
 
 -- =====================================================================
 --  7) 索引评估与优化
 -- =====================================================================
--- P1-4: pmis_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
+-- P1-4: ydsz_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
 --
--- P3-4: pmis_msg_log 的 BRIN 索引评估结论 - 删除
---   原因: ① pmis_msg_log 已改为月度分区表(非注释所述"仍非分区表"),每个分区
+-- P3-4: ydsz_msg_log 的 BRIN 索引评估结论 - 删除
+--   原因: ① ydsz_msg_log 已改为月度分区表(非注释所述"仍非分区表"),每个分区
 --            数据量可控(单月),BRIN 的 block-range 过滤优势不明显;
---         ② 已有 B-tree 部分索引 idx_pmis_message_log_tenant_created
+--         ② 已有 B-tree 部分索引 idx_ydsz_message_log_tenant_created
 --            (tenant_id, created_at DESC) WHERE deleted = 0 覆盖时间范围查询,
 --            BRIN 索引冗余;
 --         ③ BRIN 虽写入开销低,但在已有 B-tree 覆盖的场景下不提供额外查询加速。
@@ -754,27 +754,27 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_O
 --
 -- P3-5: scheduled_at 部分索引 - 优化 ScheduledMessageScanner 定时扫描
 --   查询模式: WHERE status = 'SCHEDULED' AND scheduled_at <= now LIMIT 200
---   原有问题: 无专门索引,扫描器每 30s 查询时可能走 idx_pmis_message_log_status
+--   原有问题: 无专门索引,扫描器每 30s 查询时可能走 idx_ydsz_message_log_status
 --             (status WHERE deleted=0) 后再过滤 scheduled_at,效率不高。
 --   解决方案: 创建 (scheduled_at) WHERE status = 'SCHEDULED' AND deleted = 0
 --             部分索引,仅索引待调度的消息(活跃数据量小,索引体积小)。
-CREATE INDEX IF NOT EXISTS idx_pmis_message_log_scheduled
-    ON pmis_msg_log (scheduled_at)
+CREATE INDEX IF NOT EXISTS idx_ydsz_message_log_scheduled
+    ON ydsz_msg_log (scheduled_at)
     WHERE status = 'SCHEDULED' AND deleted = 0 AND scheduled_at IS NOT NULL;
 
 -- 15. 通知
-ALTER TABLE pmis_msg_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+ALTER TABLE ydsz_msg_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 
-CREATE INDEX IF NOT EXISTS idx_notification_tenant ON pmis_msg_notification(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_notification_tenant ON ydsz_msg_notification(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_notification_tenant_created
-    ON pmis_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 通知-发送人：按 sender_id 查询"我发出的通知"
-CREATE INDEX IF NOT EXISTS idx_pmis_notif_sender
-    ON pmis_msg_notification(sender_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_notif_sender
+    ON ydsz_msg_notification(sender_id) WHERE deleted = 0;
 
-ANALYZE pmis_msg_notification;
+ANALYZE ydsz_msg_notification;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT
@@ -783,7 +783,7 @@ ANALYZE pmis_msg_notification;
 -- ====================================================================
 -- P0-2: 消息批次表（异步批量发送）
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_batch(
+CREATE TABLE IF NOT EXISTS ydsz_msg_batch(
     id                VARCHAR(20)    NOT NULL,
     batch_id          VARCHAR(64)    NOT NULL,
     batch_name        VARCHAR(128),
@@ -811,16 +811,16 @@ CREATE TABLE IF NOT EXISTS pmis_msg_batch(
     CONSTRAINT ck_pmb_status CHECK (status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_pmb_batch_id ON pmis_msg_batch(batch_id);
+CREATE INDEX IF NOT EXISTS idx_pmb_batch_id ON ydsz_msg_batch(batch_id);
 
-CREATE INDEX IF NOT EXISTS idx_pmb_status ON pmis_msg_batch(status);
+CREATE INDEX IF NOT EXISTS idx_pmb_status ON ydsz_msg_batch(status);
 
-CREATE INDEX IF NOT EXISTS idx_pmb_created_at ON pmis_msg_batch(created_at);
+CREATE INDEX IF NOT EXISTS idx_pmb_created_at ON ydsz_msg_batch(created_at);
 
 -- ====================================================================
 -- P1-6: 消息模板版本历史表
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_template_version(
+CREATE TABLE IF NOT EXISTS ydsz_msg_template_version(
     id                VARCHAR(20)    NOT NULL,
     template_code     VARCHAR(128)   NOT NULL,
     version           INTEGER        NOT NULL,
@@ -840,12 +840,12 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template_version(
     CONSTRAINT ck_pmtv_audit_status CHECK (audit_status IN ('APPROVED', 'REJECTED'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_pmtv_template_code ON pmis_msg_template_version(template_code);
+CREATE INDEX IF NOT EXISTS idx_pmtv_template_code ON ydsz_msg_template_version(template_code);
 
 -- ====================================================================
 -- P0-1: 用户通道绑定表（userId → 各通道联系方式映射）
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_user_channel(
+CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id           VARCHAR(20)   NOT NULL,
     channel_type      VARCHAR(32)   NOT NULL,
@@ -866,30 +866,30 @@ CREATE TABLE IF NOT EXISTS pmis_msg_user_channel(
     CONSTRAINT ck_pmuc_deleted    CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_user_channel IS '用户通道绑定表: userId → 各通道联系方式(phone/email/dingtalkUserId等)映射,发送时自动解析';
+COMMENT ON TABLE ydsz_msg_user_channel IS '用户通道绑定表: userId → 各通道联系方式(phone/email/dingtalkUserId等)映射,发送时自动解析';
 
-COMMENT ON COLUMN pmis_msg_user_channel.user_id IS '用户 ID(关联 pmis_employee.id)';
+COMMENT ON COLUMN ydsz_msg_user_channel.user_id IS '用户 ID(关联 ydsz_employee.id)';
 
-COMMENT ON COLUMN pmis_msg_user_channel.channel_type IS '通道类型: SMS(phone)/EMAIL(email)/DINGTALK(userId)/WECOM(userId)/FEISHU(userId)/PUSH(cid)';
+COMMENT ON COLUMN ydsz_msg_user_channel.channel_type IS '通道类型: SMS(phone)/EMAIL(email)/DINGTALK(userId)/WECOM(userId)/FEISHU(userId)/PUSH(cid)';
 
-COMMENT ON COLUMN pmis_msg_user_channel.channel_user_id IS '通道用户标识(手机号/邮箱/钉钉userId/企微userId/飞书userId/个推cid)';
+COMMENT ON COLUMN ydsz_msg_user_channel.channel_user_id IS '通道用户标识(手机号/邮箱/钉钉userId/企微userId/飞书userId/个推cid)';
 
-COMMENT ON COLUMN pmis_msg_user_channel.verified IS '是否已验证: 0 未验证 / 1 已验证(未验证的绑定发送时降级日志)';
+COMMENT ON COLUMN ydsz_msg_user_channel.verified IS '是否已验证: 0 未验证 / 1 已验证(未验证的绑定发送时降级日志)';
 
-COMMENT ON COLUMN pmis_msg_user_channel.is_primary IS '是否主绑定: 0 否 / 1 是(同通道多绑定时优先使用主绑定)';
+COMMENT ON COLUMN ydsz_msg_user_channel.is_primary IS '是否主绑定: 0 否 / 1 是(同通道多绑定时优先使用主绑定)';
 
-COMMENT ON COLUMN pmis_msg_user_channel.extra IS '扩展字段 JSON(如 deviceToken / openId 等)';
+COMMENT ON COLUMN ydsz_msg_user_channel.extra IS '扩展字段 JSON(如 deviceToken / openId 等)';
 
-CREATE INDEX IF NOT EXISTS idx_pmuc_user ON pmis_msg_user_channel(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmuc_user ON ydsz_msg_user_channel(user_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmuc_user_chan_type ON pmis_msg_user_channel(user_id, channel_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmuc_user_chan_type ON ydsz_msg_user_channel(user_id, channel_type) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmuc_tenant ON pmis_msg_user_channel(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmuc_tenant ON ydsz_msg_user_channel(tenant_id);
 
 -- ====================================================================
 -- P0-4: 消息变量数据源绑定表
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_variable_source(
+CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     template_code     VARCHAR(128)   NOT NULL,
     variable_name     VARCHAR(64)    NOT NULL,
@@ -908,24 +908,24 @@ CREATE TABLE IF NOT EXISTS pmis_msg_variable_source(
     CONSTRAINT ck_pmvs_deleted  CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_variable_source IS 'P0-4: 消息变量数据源绑定表,模板变量自动从数据源拉取,免去调用方手动传参';
+COMMENT ON TABLE ydsz_msg_variable_source IS 'P0-4: 消息变量数据源绑定表,模板变量自动从数据源拉取,免去调用方手动传参';
 
-COMMENT ON COLUMN pmis_msg_variable_source.template_code IS '模板编码';
+COMMENT ON COLUMN ydsz_msg_variable_source.template_code IS '模板编码';
 
-COMMENT ON COLUMN pmis_msg_variable_source.variable_name IS '变量名(与模板 ${var} 对应)';
+COMMENT ON COLUMN ydsz_msg_variable_source.variable_name IS '变量名(与模板 ${var} 对应)';
 
-COMMENT ON COLUMN pmis_msg_variable_source.source_type IS '数据源类型: BEAN(Spring Bean方法) / SQL(SQL查询) / HTTP(远程接口) / STATIC(静态值)';
+COMMENT ON COLUMN ydsz_msg_variable_source.source_type IS '数据源类型: BEAN(Spring Bean方法) / SQL(SQL查询) / HTTP(远程接口) / STATIC(静态值)';
 
-COMMENT ON COLUMN pmis_msg_variable_source.source_expr IS '数据源表达式: BEAN=beanName.method(#bizId) / SQL=SELECT xxx FROM ... / HTTP=https://... / STATIC=直接值';
+COMMENT ON COLUMN ydsz_msg_variable_source.source_expr IS '数据源表达式: BEAN=beanName.method(#bizId) / SQL=SELECT xxx FROM ... / HTTP=https://... / STATIC=直接值';
 
-COMMENT ON COLUMN pmis_msg_variable_source.cache_ttl IS '缓存有效期(秒),0=不缓存';
+COMMENT ON COLUMN ydsz_msg_variable_source.cache_ttl IS '缓存有效期(秒),0=不缓存';
 
-CREATE INDEX IF NOT EXISTS idx_pmvs_tpl ON pmis_msg_variable_source(template_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmvs_tpl ON ydsz_msg_variable_source(template_code) WHERE deleted = 0;
 
 -- ====================================================================
 -- P1-4: 消息用户反馈表
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_feedback(
+CREATE TABLE IF NOT EXISTS ydsz_msg_feedback(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     msg_id            VARCHAR(64)   NOT NULL,
     notification_id   VARCHAR(20),
@@ -945,28 +945,28 @@ CREATE TABLE IF NOT EXISTS pmis_msg_feedback(
     CONSTRAINT ck_pmf_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_feedback IS 'P1-4: 消息用户反馈表,记录用户对消息质量的评分和反馈,用于推送质量评估和智能防骚扰';
+COMMENT ON TABLE ydsz_msg_feedback IS 'P1-4: 消息用户反馈表,记录用户对消息质量的评分和反馈,用于推送质量评估和智能防骚扰';
 
-COMMENT ON COLUMN pmis_msg_feedback.msg_id IS '消息 ID(关联 pmis_msg_log.msg_id)';
+COMMENT ON COLUMN ydsz_msg_feedback.msg_id IS '消息 ID(关联 ydsz_msg_log.msg_id)';
 
-COMMENT ON COLUMN pmis_msg_feedback.notification_id IS '站内通知 ID(关联 pmis_msg_notification.id,可为 null)';
+COMMENT ON COLUMN ydsz_msg_feedback.notification_id IS '站内通知 ID(关联 ydsz_msg_notification.id,可为 null)';
 
-COMMENT ON COLUMN pmis_msg_feedback.rating IS '评分: 1-5 分(1=非常不满意, 5=非常满意)';
+COMMENT ON COLUMN ydsz_msg_feedback.rating IS '评分: 1-5 分(1=非常不满意, 5=非常满意)';
 
-COMMENT ON COLUMN pmis_msg_feedback.feedback_type IS '反馈类型: TOO_FREQUENT 太频繁 / IRRELEVANT 不相关 / TOO_LONG 内容太长 / SPAM 垃圾信息 / GOOD 有用 / OTHER 其他';
+COMMENT ON COLUMN ydsz_msg_feedback.feedback_type IS '反馈类型: TOO_FREQUENT 太频繁 / IRRELEVANT 不相关 / TOO_LONG 内容太长 / SPAM 垃圾信息 / GOOD 有用 / OTHER 其他';
 
-COMMENT ON COLUMN pmis_msg_feedback.content IS '反馈内容(用户自由文本输入)';
+COMMENT ON COLUMN ydsz_msg_feedback.content IS '反馈内容(用户自由文本输入)';
 
-CREATE INDEX IF NOT EXISTS idx_pmf_user ON pmis_msg_feedback(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmf_user ON ydsz_msg_feedback(user_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmf_msg ON pmis_msg_feedback(msg_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmf_msg ON ydsz_msg_feedback(msg_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmf_tenant_created ON pmis_msg_feedback(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmf_tenant_created ON ydsz_msg_feedback(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- ====================================================================
 -- P0-3: 离线消息持久化表
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_offline(
+CREATE TABLE IF NOT EXISTS ydsz_msg_offline(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id           VARCHAR(20)   NOT NULL,
     msg_type          VARCHAR(32),
@@ -985,32 +985,32 @@ CREATE TABLE IF NOT EXISTS pmis_msg_offline(
     CONSTRAINT ck_pmo_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_offline IS 'P0-3: 离线消息持久化表,Redis 离线缓存溢出时持久化到 DB,支持 30 天回溯';
+COMMENT ON TABLE ydsz_msg_offline IS 'P0-3: 离线消息持久化表,Redis 离线缓存溢出时持久化到 DB,支持 30 天回溯';
 
-COMMENT ON COLUMN pmis_msg_offline.user_id IS '接收人用户 ID';
+COMMENT ON COLUMN ydsz_msg_offline.user_id IS '接收人用户 ID';
 
-COMMENT ON COLUMN pmis_msg_offline.msg_type IS '消息类型标签(如 NOTIFICATION / ALERT)';
+COMMENT ON COLUMN ydsz_msg_offline.msg_type IS '消息类型标签(如 NOTIFICATION / ALERT)';
 
-COMMENT ON COLUMN pmis_msg_offline.payload IS '消息内容 JSON';
+COMMENT ON COLUMN ydsz_msg_offline.payload IS '消息内容 JSON';
 
-COMMENT ON COLUMN pmis_msg_offline.msg_timestamp IS '消息时间戳(毫秒)';
+COMMENT ON COLUMN ydsz_msg_offline.msg_timestamp IS '消息时间戳(毫秒)';
 
-COMMENT ON COLUMN pmis_msg_offline.status IS '推送状态: PENDING 待推送 / PUSHED 已推送 / EXPIRED 已过期';
+COMMENT ON COLUMN ydsz_msg_offline.status IS '推送状态: PENDING 待推送 / PUSHED 已推送 / EXPIRED 已过期';
 
-COMMENT ON COLUMN pmis_msg_offline.pushed_at IS '推送时间';
+COMMENT ON COLUMN ydsz_msg_offline.pushed_at IS '推送时间';
 
-COMMENT ON COLUMN pmis_msg_offline.expired_at IS '过期时间(默认 createdAt + 30 天)';
+COMMENT ON COLUMN ydsz_msg_offline.expired_at IS '过期时间(默认 createdAt + 30 天)';
 
-CREATE INDEX IF NOT EXISTS idx_pmo_user_status ON pmis_msg_offline(user_id, status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmo_user_status ON ydsz_msg_offline(user_id, status) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmo_expired ON pmis_msg_offline(expired_at) WHERE deleted = 0 AND expired_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pmo_expired ON ydsz_msg_offline(expired_at) WHERE deleted = 0 AND expired_at IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_pmo_tenant ON pmis_msg_offline(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmo_tenant ON ydsz_msg_offline(tenant_id);
 
 -- ====================================================================
 -- P0-2: 消息轨迹记录表
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_trace(
+CREATE TABLE IF NOT EXISTS ydsz_msg_trace(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     msg_id            VARCHAR(64)   NOT NULL,
     trace_id          VARCHAR(64),
@@ -1035,25 +1035,25 @@ CREATE TABLE IF NOT EXISTS pmis_msg_trace(
     CONSTRAINT ck_pmt_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_trace IS 'P0-2: 消息轨迹记录表,记录消息从接入到投递全链路的每个关键节点,通过 msgId 关联形成完整链路';
+COMMENT ON TABLE ydsz_msg_trace IS 'P0-2: 消息轨迹记录表,记录消息从接入到投递全链路的每个关键节点,通过 msgId 关联形成完整链路';
 
-COMMENT ON COLUMN pmis_msg_trace.msg_id IS '消息 ID(关联 pmis_msg_log.msg_id)';
+COMMENT ON COLUMN ydsz_msg_trace.msg_id IS '消息 ID(关联 ydsz_msg_log.msg_id)';
 
-COMMENT ON COLUMN pmis_msg_trace.trace_id IS '链路追踪 ID(关联 pmis_msg_log.trace_id,用于跨服务链路串联)';
+COMMENT ON COLUMN ydsz_msg_trace.trace_id IS '链路追踪 ID(关联 ydsz_msg_log.trace_id,用于跨服务链路串联)';
 
-COMMENT ON COLUMN pmis_msg_trace.node IS '轨迹节点类型: RECEIVED/CHANNEL_CHECK/ROUTE_MATCHED/CANARY_HIT/SUBSCRIPTION_CHECK/PREFERENCE_CHECK/DEDUP_CHECK/RATE_LIMIT_CHECK/TEMPLATE_LOADED/TEMPLATE_RENDERED/SENSITIVE_FILTERED/PERSISTED/SCHEDULED/AGGREGATED/DISPATCH_START/DISPATCH_SUCCESS/FALLBACK/RETRY/SEND_FAILED/RECEIPT_RECEIVED/RECALLED/CASCADE_SENT';
+COMMENT ON COLUMN ydsz_msg_trace.node IS '轨迹节点类型: RECEIVED/CHANNEL_CHECK/ROUTE_MATCHED/CANARY_HIT/SUBSCRIPTION_CHECK/PREFERENCE_CHECK/DEDUP_CHECK/RATE_LIMIT_CHECK/TEMPLATE_LOADED/TEMPLATE_RENDERED/SENSITIVE_FILTERED/PERSISTED/SCHEDULED/AGGREGATED/DISPATCH_START/DISPATCH_SUCCESS/FALLBACK/RETRY/SEND_FAILED/RECEIPT_RECEIVED/RECALLED/CASCADE_SENT';
 
-COMMENT ON COLUMN pmis_msg_trace.status IS '节点状态: SUCCESS / FAILED / SKIPPED / PENDING';
+COMMENT ON COLUMN ydsz_msg_trace.status IS '节点状态: SUCCESS / FAILED / SKIPPED / PENDING';
 
-COMMENT ON COLUMN pmis_msg_trace.cost_ms IS '节点耗时(毫秒)';
+COMMENT ON COLUMN ydsz_msg_trace.cost_ms IS '节点耗时(毫秒)';
 
-COMMENT ON COLUMN pmis_msg_trace.extra IS '扩展信息 JSON(节点附加数据,如路由规则 ID、降级链、灰度配置等)';
+COMMENT ON COLUMN ydsz_msg_trace.extra IS '扩展信息 JSON(节点附加数据,如路由规则 ID、降级链、灰度配置等)';
 
-COMMENT ON COLUMN pmis_msg_trace.event_at IS '节点发生时间';
+COMMENT ON COLUMN ydsz_msg_trace.event_at IS '节点发生时间';
 
-CREATE INDEX IF NOT EXISTS idx_pmt_msg ON pmis_msg_trace(msg_id, event_at) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmt_msg ON ydsz_msg_trace(msg_id, event_at) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmt_trace ON pmis_msg_trace(trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pmt_trace ON ydsz_msg_trace(trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_pmt_tenant_event ON pmis_msg_trace(tenant_id, event_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmt_tenant_event ON ydsz_msg_trace(tenant_id, event_at DESC) WHERE deleted = 0;
 

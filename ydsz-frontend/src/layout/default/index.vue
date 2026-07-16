@@ -6,7 +6,7 @@
   - 响应式：小屏自动收起侧边栏
   - MainContent 内部由 ErrorBoundary 包裹，捕获渲染异常
   @module layout/default
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

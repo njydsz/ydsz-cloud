@@ -13,9 +13,9 @@
 # service-name 参数说明：
 #   Prometheus 指标中的 `application` 标签由 Micrometer 通过
 #   management.metrics.tags.application 注入，值为 Spring 应用名
-#   （spring.application.name，如 ydsz-pmis-userinfo）。
+#   （spring.application.name，如 ydsz-userinfo）。
 #   因此 analysis.args.service-name 必须传 Spring 应用名，
-#   而非 K8s Canary Service 名（如 ydsz-pmis-userinfo-canary）。
+#   而非 K8s Canary Service 名（如 ydsz-userinfo-canary）。
 #
 # 使用方式：
 #   kubectl apply -f deploy/k8s/rollouts/
@@ -29,17 +29,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-userinfo
+  name: ydsz-userinfo
   namespace: pmis
   labels:
-    app: ydsz-pmis-userinfo
+    app: ydsz-userinfo
     tier: service
 spec:
   replicas: 3
   strategy:
     canary:
-      canaryService: ydsz-pmis-userinfo-canary
-      stableService: ydsz-pmis-userinfo-stable
+      canaryService: ydsz-userinfo-canary
+      stableService: ydsz-userinfo-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-userinfo-ingress
@@ -60,21 +60,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-userinfo
+            value: ydsz-userinfo
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-userinfo
+      app: ydsz-userinfo
   template:
     metadata:
       labels:
-        app: ydsz-pmis-userinfo
+        app: ydsz-userinfo
         tier: service
     spec:
       containers:
         - name: userinfo
-          image: ydsz-pmis/userinfo:IMAGE_TAG
+          image: ydsz/userinfo:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -121,17 +121,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-system
+  name: ydsz-system
   namespace: pmis
   labels:
-    app: ydsz-pmis-system
+    app: ydsz-system
     tier: service
 spec:
   replicas: 3
   strategy:
     canary:
-      canaryService: ydsz-pmis-system-canary
-      stableService: ydsz-pmis-system-stable
+      canaryService: ydsz-system-canary
+      stableService: ydsz-system-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-system-ingress
@@ -152,21 +152,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-system
+            value: ydsz-system
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-system
+      app: ydsz-system
   template:
     metadata:
       labels:
-        app: ydsz-pmis-system
+        app: ydsz-system
         tier: service
     spec:
       containers:
         - name: system
-          image: ydsz-pmis/system:IMAGE_TAG
+          image: ydsz/system:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -213,17 +213,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-project
+  name: ydsz-project
   namespace: pmis
   labels:
-    app: ydsz-pmis-project
+    app: ydsz-project
     tier: service
 spec:
   replicas: 3
   strategy:
     canary:
-      canaryService: ydsz-pmis-project-canary
-      stableService: ydsz-pmis-project-stable
+      canaryService: ydsz-project-canary
+      stableService: ydsz-project-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-project-ingress
@@ -244,21 +244,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-project
+            value: ydsz-project
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-project
+      app: ydsz-project
   template:
     metadata:
       labels:
-        app: ydsz-pmis-project
+        app: ydsz-project
         tier: service
     spec:
       containers:
         - name: project
-          image: ydsz-pmis/project:IMAGE_TAG
+          image: ydsz/project:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -305,17 +305,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-message
+  name: ydsz-message
   namespace: pmis
   labels:
-    app: ydsz-pmis-message
+    app: ydsz-message
     tier: service
 spec:
   replicas: 2
   strategy:
     canary:
-      canaryService: ydsz-pmis-message-canary
-      stableService: ydsz-pmis-message-stable
+      canaryService: ydsz-message-canary
+      stableService: ydsz-message-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-message-ingress
@@ -336,21 +336,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-message
+            value: ydsz-message
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-message
+      app: ydsz-message
   template:
     metadata:
       labels:
-        app: ydsz-pmis-message
+        app: ydsz-message
         tier: service
     spec:
       containers:
         - name: message
-          image: ydsz-pmis/message:IMAGE_TAG
+          image: ydsz/message:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -397,17 +397,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-cronjob
+  name: ydsz-cronjob
   namespace: pmis
   labels:
-    app: ydsz-pmis-cronjob
+    app: ydsz-cronjob
     tier: service
 spec:
   replicas: 2
   strategy:
     canary:
-      canaryService: ydsz-pmis-cronjob-canary
-      stableService: ydsz-pmis-cronjob-stable
+      canaryService: ydsz-cronjob-canary
+      stableService: ydsz-cronjob-stable
       steps:
         - setWeight: 50
         - pause: { duration: 5m }
@@ -418,21 +418,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-cronjob
+            value: ydsz-cronjob
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-cronjob
+      app: ydsz-cronjob
   template:
     metadata:
       labels:
-        app: ydsz-pmis-cronjob
+        app: ydsz-cronjob
         tier: service
     spec:
       containers:
         - name: cronjob
-          image: ydsz-pmis/cronjob:IMAGE_TAG
+          image: ydsz/cronjob:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -479,17 +479,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-workflow
+  name: ydsz-workflow
   namespace: pmis
   labels:
-    app: ydsz-pmis-workflow
+    app: ydsz-workflow
     tier: service
 spec:
   replicas: 3
   strategy:
     canary:
-      canaryService: ydsz-pmis-workflow-canary
-      stableService: ydsz-pmis-workflow-stable
+      canaryService: ydsz-workflow-canary
+      stableService: ydsz-workflow-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-workflow-ingress
@@ -510,21 +510,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-workflow
+            value: ydsz-workflow
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-workflow
+      app: ydsz-workflow
   template:
     metadata:
       labels:
-        app: ydsz-pmis-workflow
+        app: ydsz-workflow
         tier: service
     spec:
       containers:
         - name: workflow
-          image: ydsz-pmis/workflow:IMAGE_TAG
+          image: ydsz/workflow:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -572,17 +572,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-agent
+  name: ydsz-agent
   namespace: pmis
   labels:
-    app: ydsz-pmis-agent
+    app: ydsz-agent
     tier: service
 spec:
   replicas: 2
   strategy:
     canary:
-      canaryService: ydsz-pmis-agent-canary
-      stableService: ydsz-pmis-agent-stable
+      canaryService: ydsz-agent-canary
+      stableService: ydsz-agent-stable
       steps:
         - setWeight: 50
         - pause: { duration: 3m }
@@ -593,21 +593,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-agent
+            value: ydsz-agent
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-agent
+      app: ydsz-agent
   template:
     metadata:
       labels:
-        app: ydsz-pmis-agent
+        app: ydsz-agent
         tier: service
     spec:
       containers:
         - name: agent
-          image: ydsz-pmis/agent:IMAGE_TAG
+          image: ydsz/agent:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -654,17 +654,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-sales
+  name: ydsz-sales
   namespace: pmis
   labels:
-    app: ydsz-pmis-sales
+    app: ydsz-sales
     tier: service
 spec:
   replicas: 2
   strategy:
     canary:
-      canaryService: ydsz-pmis-sales-canary
-      stableService: ydsz-pmis-sales-stable
+      canaryService: ydsz-sales-canary
+      stableService: ydsz-sales-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-sales-ingress
@@ -685,21 +685,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-sales
+            value: ydsz-sales
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-sales
+      app: ydsz-sales
   template:
     metadata:
       labels:
-        app: ydsz-pmis-sales
+        app: ydsz-sales
         tier: service
     spec:
       containers:
         - name: sales
-          image: ydsz-pmis/sales:IMAGE_TAG
+          image: ydsz/sales:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -746,17 +746,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-finance
+  name: ydsz-finance
   namespace: pmis
   labels:
-    app: ydsz-pmis-finance
+    app: ydsz-finance
     tier: service
 spec:
   replicas: 2
   strategy:
     canary:
-      canaryService: ydsz-pmis-finance-canary
-      stableService: ydsz-pmis-finance-stable
+      canaryService: ydsz-finance-canary
+      stableService: ydsz-finance-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-finance-ingress
@@ -777,21 +777,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-finance
+            value: ydsz-finance
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-finance
+      app: ydsz-finance
   template:
     metadata:
       labels:
-        app: ydsz-pmis-finance
+        app: ydsz-finance
         tier: service
     spec:
       containers:
         - name: finance
-          image: ydsz-pmis/finance:IMAGE_TAG
+          image: ydsz/finance:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -838,17 +838,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-nextwiki
+  name: ydsz-nextwiki
   namespace: pmis
   labels:
-    app: ydsz-pmis-nextwiki
+    app: ydsz-nextwiki
     tier: service
 spec:
   replicas: 2
   strategy:
     canary:
-      canaryService: ydsz-pmis-nextwiki-canary
-      stableService: ydsz-pmis-nextwiki-stable
+      canaryService: ydsz-nextwiki-canary
+      stableService: ydsz-nextwiki-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-nextwiki-ingress
@@ -869,21 +869,21 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-nextwiki
+            value: ydsz-nextwiki
       maxUnavailable: 1
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-nextwiki
+      app: ydsz-nextwiki
   template:
     metadata:
       labels:
-        app: ydsz-pmis-nextwiki
+        app: ydsz-nextwiki
         tier: service
     spec:
       containers:
         - name: nextwiki
-          image: ydsz-pmis/nextwiki:IMAGE_TAG
+          image: ydsz/nextwiki:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

@@ -34,7 +34,7 @@ END $$;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- 4. 创建统一搜索索引表
-CREATE TABLE IF NOT EXISTS pmis_search_index (
+CREATE TABLE IF NOT EXISTS ydsz_search_index (
     id              VARCHAR(128) NOT NULL,
     doc_type        VARCHAR(64)  NOT NULL,
     title           TEXT,
@@ -58,35 +58,35 @@ CREATE TABLE IF NOT EXISTS pmis_search_index (
 
 -- 5. 创建索引
 -- GIN 全文检索索引（核心索引，加速 tsvector 匹配）
-CREATE INDEX IF NOT EXISTS idx_pmis_search_index_fts
-    ON pmis_search_index USING GIN (to_tsvector('search_zh', searchable_text));
+CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_fts
+    ON ydsz_search_index USING GIN (to_tsvector('search_zh', searchable_text));
 
 -- 回退全文索引（当 search_zh 不可用时使用 simple）
-CREATE INDEX IF NOT EXISTS idx_pmis_search_index_fts_simple
-    ON pmis_search_index USING GIN (to_tsvector('simple', searchable_text));
+CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_fts_simple
+    ON ydsz_search_index USING GIN (to_tsvector('simple', searchable_text));
 
 -- 类型索引
-CREATE INDEX IF NOT EXISTS idx_pmis_search_index_type
-    ON pmis_search_index (doc_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_type
+    ON ydsz_search_index (doc_type);
 
 -- 租户索引
-CREATE INDEX IF NOT EXISTS idx_pmis_search_index_tenant
-    ON pmis_search_index (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_tenant
+    ON ydsz_search_index (tenant_id);
 
 -- 更新时间索引（排序优化）
-CREATE INDEX IF NOT EXISTS idx_pmis_search_index_updated
-    ON pmis_search_index (updated_at_ts DESC);
+CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_updated
+    ON ydsz_search_index (updated_at_ts DESC);
 
 -- pg_trgm 模糊匹配索引
-CREATE INDEX IF NOT EXISTS idx_pmis_search_index_trgm
-    ON pmis_search_index USING GIN (searchable_text gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_trgm
+    ON ydsz_search_index USING GIN (searchable_text gin_trgm_ops);
 
 -- 标签 GIN 索引
-CREATE INDEX IF NOT EXISTS idx_pmis_search_index_tags
-    ON pmis_search_index USING GIN (tags jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS idx_ydsz_search_index_tags
+    ON ydsz_search_index USING GIN (tags jsonb_path_ops);
 
 -- 6. 创建更新触发器（自动维护 updated_at_ts）
-CREATE OR REPLACE FUNCTION update_pmis_search_index_timestamp()
+CREATE OR REPLACE FUNCTION update_ydsz_search_index_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at_ts = NOW();
@@ -94,16 +94,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_pmis_search_index_update ON pmis_search_index;
+DROP TRIGGER IF EXISTS trg_ydsz_search_index_update ON ydsz_search_index;
 
-CREATE TRIGGER trg_pmis_search_index_update
-    BEFORE UPDATE ON pmis_search_index
+CREATE TRIGGER trg_ydsz_search_index_update
+    BEFORE UPDATE ON ydsz_search_index
     FOR EACH ROW
-    EXECUTE FUNCTION update_pmis_search_index_timestamp();
+    EXECUTE FUNCTION update_ydsz_search_index_timestamp();
 
 -- 7. 验证
 SELECT 'PMIS Search Index 初始化完成' AS message;
 SELECT
     (SELECT COUNT(1) FROM pg_ts_config WHERE cfgname = 'search_zh') AS has_zhparser,
     (SELECT COUNT(1) FROM pg_extension WHERE extname = 'pg_trgm') AS has_pg_trgm,
-    (SELECT COUNT(1) FROM pg_tables WHERE tablename = 'pmis_search_index') AS has_index_table;
+    (SELECT COUNT(1) FROM pg_tables WHERE tablename = 'ydsz_search_index') AS has_index_table;

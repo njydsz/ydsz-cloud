@@ -5,7 +5,7 @@
   - 渲染与表格结构一致的骨架占位，避免空白闪烁
   - 场景: 列表首屏、骨架屏
   @module components/common/SkeletonTable
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

@@ -3,11 +3,11 @@
 # Based on physical Mapper location after DDD refactor
 # ============================================================
 
-$sourceFile = "d:\Code\ydsz\ydsz-pmis\deploy\sql\modules\V1.0.0_project.sql"
+$sourceFile = "d:\Code\ydsz\ydsz\deploy\sql\modules\V1.0.0_project.sql"
 
 # First, restore from V1.0.0.sql if the file was already overwritten
 # We need the original content - let's read V1.0.0.sql and extract project tables
-$masterFile = "d:\Code\ydsz\ydsz-pmis\deploy\sql\V1.0.0.sql"
+$masterFile = "d:\Code\ydsz\ydsz\deploy\sql\V1.0.0.sql"
 $lines = Get-Content $sourceFile
 $totalLines = $lines.Count
 Write-Host "Source file: $totalLines lines"
@@ -121,18 +121,18 @@ foreach ($ct in $createTableLines) {
 $salesHeader = @"
 -- ============================================================
 -- PMIS sales module SQL
--- 商务销售服务 (ydsz-pmis-sales, port 9010)
+-- 商务销售服务 (ydsz-sales, port 9010)
 -- ============================================================
 -- 本脚本 DDL 对应后端 sales 服务的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign Client (SalesDataClient / FinanceDataClient)。
 --
--- 表归属依据: ydsz-pmis-sales/src/main/java/.../infra/mapper/
+-- 表归属依据: ydsz-sales/src/main/java/.../infra/mapper/
 -- 表数量: $($salesTables.Count) 张
 -- --------------------------------------------------------------------
 
 "@
-$salesFile = "d:\Code\ydsz\ydsz-pmis\deploy\sql\modules\V1.0.0_sales.sql"
+$salesFile = "d:\Code\ydsz\ydsz\deploy\sql\modules\V1.0.0_sales.sql"
 $salesHeader | Out-File -FilePath $salesFile -Encoding UTF8
 $salesContent -join "`n" | Out-File -FilePath $salesFile -Encoding UTF8 -Append
 Write-Host "`nWrote $salesFile ($($salesContent.Count) lines)"
@@ -141,18 +141,18 @@ Write-Host "`nWrote $salesFile ($($salesContent.Count) lines)"
 $financeHeader = @"
 -- ============================================================
 -- PMIS finance module SQL
--- 财务会计服务 (ydsz-pmis-finance, port 9011)
+-- 财务会计服务 (ydsz-finance, port 9011)
 -- ============================================================
 -- 本脚本 DDL 对应后端 finance 服务的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign Client (FinanceDataClient / SalesDataClient)。
 --
--- 表归属依据: ydsz-pmis-finance/src/main/java/.../infra/mapper/
+-- 表归属依据: ydsz-finance/src/main/java/.../infra/mapper/
 -- 表数量: $($financeTables.Count) 张
 -- --------------------------------------------------------------------
 
 "@
-$financeFile = "d:\Code\ydsz\ydsz-pmis\deploy\sql\modules\V1.0.0_finance.sql"
+$financeFile = "d:\Code\ydsz\ydsz\deploy\sql\modules\V1.0.0_finance.sql"
 $financeHeader | Out-File -FilePath $financeFile -Encoding UTF8
 $financeContent -join "`n" | Out-File -FilePath $financeFile -Encoding UTF8 -Append
 Write-Host "Wrote $financeFile ($($financeContent.Count) lines)"
@@ -161,13 +161,13 @@ Write-Host "Wrote $financeFile ($($financeContent.Count) lines)"
 $projectHeader = @"
 -- ============================================================
 -- PMIS project module SQL
--- 项目执行服务 (ydsz-pmis-project, port 9003)
+-- 项目执行服务 (ydsz-project, port 9003)
 -- ============================================================
 -- 本脚本 DDL 对应后端 project 服务的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign Client (FinanceDataClient / SalesDataClient)。
 --
--- 表归属依据: ydsz-pmis-project/src/main/java/.../infra/mapper/
+-- 表归属依据: ydsz-project/src/main/java/.../infra/mapper/
 -- 表数量: $($projectTables.Count) 张 (原 42 张表拆分后剩余)
 -- --------------------------------------------------------------------
 -- [P4 架构优化提示] 跨模块冗余字段：pmis_cost_allocation.employee_name、
@@ -177,19 +177,19 @@ $projectHeader = @"
 -- --------------------------------------------------------------------
 
 "@
-$projectFile = "d:\Code\ydsz\ydsz-pmis\deploy\sql\modules\V1.0.0_project.sql"
+$projectFile = "d:\Code\ydsz\ydsz\deploy\sql\modules\V1.0.0_project.sql"
 $projectHeader | Out-File -FilePath $projectFile -Encoding UTF8
 $projectContent -join "`n" | Out-File -FilePath $projectFile -Encoding UTF8 -Append
 Write-Host "Wrote $projectFile ($($projectContent.Count) lines)"
 
 # --- Append literule tables to V1.0.0_literule.sql ---
-$literuleFile = "d:\Code\ydsz\ydsz-pmis\deploy\sql\modules\V1.0.0_literule.sql"
+$literuleFile = "d:\Code\ydsz\ydsz\deploy\sql\modules\V1.0.0_literule.sql"
 $literuleAppend = @"
 
 -- ============================================================
 -- 以下表从 V1.0.0_project.sql 迁移 (2026-07-12 DDD 拆分)
 -- 原 Mapper 在 project 模块, 现已迁移至 literule 模块
--- 表归属依据: ydsz-pmis-literule/src/main/java/.../mapper/
+-- 表归属依据: ydsz-literule/src/main/java/.../mapper/
 -- ============================================================
 
 "@

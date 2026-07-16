@@ -1,6 +1,6 @@
 <!--
   @file 资源池管理
-  @description 资源池管理页面：提供资源池分页查询（按类型/状态筛选）及新增/编辑/删除。资源池类型分为总部池/事业部池/备用池，后端 PoolType.inferByLevel() 按职级推断归属：L1-L3→储备 / L4-L12→事业部 / L13+→总部。对应路由 /resource/pool，后端服务 ydsz-pmis-userinfo（端口 9002）。
+  @description 资源池管理页面：提供资源池分页查询（按类型/状态筛选）及新增/编辑/删除。资源池类型分为总部池/事业部池/备用池，后端 PoolType.inferByLevel() 按职级推断归属：L1-L3→储备 / L4-L12→事业部 / L13+→总部。对应路由 /resource/pool，后端服务 ydsz-userinfo（端口 9002）。
   @module views/resource/pool
 -->
 <script setup lang="ts">

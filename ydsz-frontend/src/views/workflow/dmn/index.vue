@@ -7,7 +7,7 @@
       3. 操作：编辑、发布、执行测试。
     与流程引擎配合实现规则路由（自研工作流 v2 引擎 pmis_flow_*），PC 端专用。
   @module views/workflow/dmn
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

@@ -29,7 +29,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-night
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   entry: chaos-night-entry
   templates:
@@ -67,7 +67,7 @@ spec:
                 host=$(echo $svc | cut -d: -f1)
                 port=$(echo $svc | cut -d: -f2)
                 echo "  - Checking ${host}:${port}/actuator/health"
-                curl -sf --max-time 5 "http://${host}.${host}.pmis.svc.cluster.local:${port}/actuator/health" > /dev/null \
+                curl -sf --max-time 5 "http://${host}.${host}.ydsz.svc.cluster.local:${port}/actuator/health" > /dev/null \
                   || { echo "  FAIL: ${host} unhealthy, aborting chaos night"; exit 1; }
                 echo "  OK: ${host} healthy"
               done
@@ -86,7 +86,7 @@ spec:
           namespaces:
             - pmis
           labelSelectors:
-            app: ydsz-pmis-userinfo
+            app: ydsz-userinfo
         delay:
           latency: "200ms"
           correlation: "100"
@@ -106,7 +106,7 @@ spec:
           namespaces:
             - pmis
           labelSelectors:
-            app: ydsz-pmis-gateway
+            app: ydsz-gateway
         duration: "30s"
 
     # -----------------------------------------------------
@@ -123,13 +123,13 @@ spec:
           namespaces:
             - pmis
           labelSelectors:
-            app: ydsz-pmis-workflow
+            app: ydsz-workflow
         target:
           selector:
             namespaces:
               - pmis
             labelSelectors:
-              app: ydsz-pmis-project
+              app: ydsz-project
           mode: all
         duration: "2m"
 
@@ -145,7 +145,7 @@ spec:
           namespaces:
             - pmis
           labelSelectors:
-            app: ydsz-pmis-project
+            app: ydsz-project
         stressors:
           cpu:
             workers: 2
@@ -165,7 +165,7 @@ spec:
           namespaces:
             - pmis
           labelSelectors:
-            app: ydsz-pmis-message
+            app: ydsz-message
         duration: "90s"
 
     # -----------------------------------------------------
@@ -188,7 +188,7 @@ spec:
               for svc in gateway:9000 userinfo:9001 system:9002 project:9003 message:9004; do
                 host=$(echo $svc | cut -d: -f1)
                 port=$(echo $svc | cut -d: -f2)
-                if curl -sf --max-time 5 "http://${host}.${host}.pmis.svc.cluster.local:${port}/actuator/health" > /dev/null; then
+                if curl -sf --max-time 5 "http://${host}.${host}.ydsz.svc.cluster.local:${port}/actuator/health" > /dev/null; then
                   echo "  OK: ${host} healthy"
                 else
                   echo "  FAIL: ${host} still unhealthy after 60s recovery"

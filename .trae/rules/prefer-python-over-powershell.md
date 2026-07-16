@@ -9,7 +9,7 @@ scene: code
 
 ## 规则定义
 
-在 ydsz-pmis 项目中执行脚本命令时（包括但不限于批量文件处理、文本替换、代码生成、数据转换、文件读写等），**必须优先使用 Python**，禁止使用 PowerShell。
+在 ydsz 项目中执行脚本命令时（包括但不限于批量文件处理、文本替换、代码生成、数据转换、文件读写等），**必须优先使用 Python**，禁止使用 PowerShell。
 
 ## 原因
 
@@ -39,7 +39,7 @@ pathlib.Path("src/main/java/.../Example.java").write_text(new_content, encoding=
 # 使用 Python 批量处理多个文件
 import pathlib
 
-for f in pathlib.Path("ydsz-pmis-backend").rglob("*.java"):
+for f in pathlib.Path("ydsz-backend").rglob("*.java"):
     content = f.read_text(encoding="utf-8")
     if "oldText" in content:
         f.write_text(content.replace("oldText", "newText"), encoding="utf-8")

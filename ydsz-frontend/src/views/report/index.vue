@@ -4,7 +4,7 @@
                顶部 Tab 切换 11 类报表视图，下方提供查询条件（项目 ID / 期间）与图表渲染容器。
                所有图表实例通过 useECharts composable 统一管理生命周期（init/setOption/resize/dispose）。
   @module views/report
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

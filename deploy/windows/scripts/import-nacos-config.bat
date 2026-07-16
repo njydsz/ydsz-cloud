@@ -6,7 +6,7 @@ chcp 65001 >nul
 set SCRIPT_DIR=%~dp0
 set ROOT_DIR=%SCRIPT_DIR%..\..\..
 for %%I in ("%ROOT_DIR%") do set ROOT_DIR=%%~fI
-set CONFIG_FILE=%ROOT_DIR%\deploy\common\nacos\ydsz-pmis-common.yaml
+set CONFIG_FILE=%ROOT_DIR%\deploy\common\nacos\ydsz-common.yaml
 set NACOS_ADDR=%NACOS_SERVER_ADDR%
 if "%NACOS_ADDR%"=="" set NACOS_ADDR=127.0.0.1:8848
 set NAMESPACE=%~1
@@ -23,10 +23,10 @@ if errorlevel 1 (
 )
 echo [OK] Nacos 已就绪
 
-echo [INFO] 导入配置: ydsz-pmis-common.yaml ^(namespace=%NAMESPACE%, group=%GROUP%^)
+echo [INFO] 导入配置: ydsz-common.yaml ^(namespace=%NAMESPACE%, group=%GROUP%^)
 powershell -NoProfile -Command ^
   "$content = Get-Content '%CONFIG_FILE%' -Raw -Encoding UTF8;" ^
-  "$body = @{ dataId='ydsz-pmis-common.yaml'; group='%GROUP%'; namespaceId='%NAMESPACE%'; content=$content; type='yaml' };" ^
+  "$body = @{ dataId='ydsz-common.yaml'; group='%GROUP%'; namespaceId='%NAMESPACE%'; content=$content; type='yaml' };" ^
   "try {" ^
   "  $r = Invoke-RestMethod -Uri 'http://%NACOS_ADDR%/v1/cs/configs' -Method Post -Body $body -ContentType 'application/x-www-form-urlencoded';" ^
   "  Write-Host '[OK] 导入成功'" ^

@@ -9,15 +9,15 @@ PDB：当 podDisruptionBudget.enabled=true 时为所有后端服务生成
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-{{ $svc.name }}-pdb
+  name: ydsz-{{ $svc.name }}-pdb
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" (printf "%s-pdb" $svc.name) "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
+    {{- include "ydsz.labels" (dict "name" (printf "%s-pdb" $svc.name) "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
 spec:
   minAvailable: {{ $root.Values.podDisruptionBudget.minAvailable | default 1 }}
   selector:
     matchLabels:
-      app: ydsz-pmis-{{ $svc.name }}
+      app: ydsz-{{ $svc.name }}
 {{- end }}
 {{- end }}
 {{- end -}}

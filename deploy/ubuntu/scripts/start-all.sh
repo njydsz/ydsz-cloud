@@ -28,8 +28,8 @@ err()  { echo -e "${RED}[$(date '+%H:%M:%S')] ✗${NC} $*"; }
 # 路径：脚本所在 deploy/scripts，回退两级到仓库根
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-BACKEND_DIR="$ROOT_DIR/ydsz-pmis-backend"
-FRONTEND_DIR="$ROOT_DIR/ydsz-pmis-frontend"
+BACKEND_DIR="$ROOT_DIR/ydsz-backend"
+FRONTEND_DIR="$ROOT_DIR/ydsz-frontend"
 LOG_DIR="$ROOT_DIR/.run-logs"
 mkdir -p "$LOG_DIR"
 
@@ -106,7 +106,7 @@ fi
 if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
   log "步骤 4/6 - 编译后端公共模块（首次约 3-5 分钟）"
   cd "$BACKEND_DIR"
-  mvn -q -pl ydsz-pmis-common,ydsz-pmis-literule -am install -DskipTests
+  mvn -q -pl ydsz-common,ydsz-literule -am install -DskipTests
   ok "公共模块编译完成"
 fi
 
@@ -121,17 +121,17 @@ if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
   #            → cronjob(9005) / workflow(9006) / agent(9007) / nextwiki(8800)
   #            → sales(9010) / finance(9011)
   declare -A SERVICES=(
-    ["ydsz-pmis-gateway"]="9000"
-    ["ydsz-pmis-userinfo"]="9001"
-    ["ydsz-pmis-system"]="9002"
-    ["ydsz-pmis-project"]="9003"
-    ["ydsz-pmis-message"]="9004"
-    ["ydsz-pmis-cronjob"]="9005"
-    ["ydsz-pmis-workflow"]="9006"
-    ["ydsz-pmis-agent"]="9007"
-    ["ydsz-pmis-nextwiki"]="8800"
-    ["ydsz-pmis-sales"]="9010"
-    ["ydsz-pmis-finance"]="9011"
+    ["ydsz-gateway"]="9000"
+    ["ydsz-userinfo"]="9001"
+    ["ydsz-system"]="9002"
+    ["ydsz-project"]="9003"
+    ["ydsz-message"]="9004"
+    ["ydsz-cronjob"]="9005"
+    ["ydsz-workflow"]="9006"
+    ["ydsz-agent"]="9007"
+    ["ydsz-nextwiki"]="8800"
+    ["ydsz-sales"]="9010"
+    ["ydsz-finance"]="9011"
   )
 
   for module in "${!SERVICES[@]}"; do

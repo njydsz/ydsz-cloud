@@ -1,3 +1,0 @@
-com.njydsz.pmis.common.feign.config.FeignConfiguration
-com.njydsz.pmis.common.feign.monitor.FeignMetricsConfiguration
-com.njydsz.pmis.common.feign.circuitbreaker.Resilience4jFeignConfiguration

@@ -8,9 +8,9 @@
 #
 # 使用方式：
 #   kubectl apply -f deploy/k8s/rollouts/rollout-gateway.yaml
-#   kubectl argo rollouts get rollout ydsz-pmis-gateway -n pmis --watch
-#   kubectl argo rollouts promote ydsz-pmis-gateway -n pmis
-#   kubectl argo rollouts abort ydsz-pmis-gateway -n pmis
+#   kubectl argo rollouts get rollout ydsz-gateway -n pmis --watch
+#   kubectl argo rollouts promote ydsz-gateway -n pmis
+#   kubectl argo rollouts abort ydsz-gateway -n pmis
 #
 # 前提条件：
 #   - 集群已安装 Argo Rollouts controller
@@ -20,18 +20,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: ydsz-pmis-gateway
+  name: ydsz-gateway
   namespace: pmis
   labels:
-    app: ydsz-pmis-gateway
+    app: ydsz-gateway
     tier: gateway
 spec:
   replicas: 4
   strategy:
     canary:
       # 金丝雀流量路由（通过 Nginx Ingress Canary 注解实现）
-      canaryService: ydsz-pmis-gateway-canary
-      stableService: ydsz-pmis-gateway-stable
+      canaryService: ydsz-gateway-canary
+      stableService: ydsz-gateway-stable
       trafficRouting:
         nginx:
           stableIngress: pmis-gateway-ingress
@@ -57,23 +57,23 @@ spec:
           - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-gateway
+            value: ydsz-gateway
       # 最大不可用副本数
       maxUnavailable: 1
       # 最大 surge 副本数
       maxSurge: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-gateway
+      app: ydsz-gateway
   template:
     metadata:
       labels:
-        app: ydsz-pmis-gateway
+        app: ydsz-gateway
         tier: gateway
     spec:
       containers:
         - name: gateway
-          image: ydsz-pmis/gateway:IMAGE_TAG
+          image: ydsz/gateway:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -120,14 +120,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-gateway-canary
+  name: ydsz-gateway-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-gateway
+    app: ydsz-gateway
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-gateway
+    app: ydsz-gateway
   ports:
     - name: http
       port: 9000
@@ -140,14 +140,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-gateway-stable
+  name: ydsz-gateway-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-gateway
+    app: ydsz-gateway
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-gateway
+    app: ydsz-gateway
   ports:
     - name: http
       port: 9000

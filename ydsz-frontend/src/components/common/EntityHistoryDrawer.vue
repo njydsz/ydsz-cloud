@@ -6,7 +6,7 @@
   - 数据来源: @/api/audit（getOperationLogByBiz / getOperationLogDiff）
   - 场景: 审计、问题排查、变更追溯
   @module components/common/EntityHistoryDrawer
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

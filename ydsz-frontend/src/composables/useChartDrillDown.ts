@@ -18,7 +18,7 @@
  * ```
  *
  * @module composables/useChartDrillDown
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.5.0
  */
 import { ref, computed, type Ref } from 'vue'

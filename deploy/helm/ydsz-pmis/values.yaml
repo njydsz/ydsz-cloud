@@ -2,8 +2,8 @@
 #  YDSZ PMIS · Helm Chart 全局默认值
 # -----------------------------------------------------------------------------
 #  用法:
-#    helm install pmis deploy/helm/ydsz-pmis -n pmis
-#    helm install pmis deploy/helm/ydsz-pmis -n pmis -f deploy/helm/ydsz-pmis/values-prod.yaml
+#    helm install pmis deploy/helm/ydsz -n pmis
+#    helm install pmis deploy/helm/ydsz -n pmis -f deploy/helm/ydsz/values-prod.yaml
 #
 #  与 Kustomize 的关系:
 #    Helm Chart 与 deploy/k8s/ 目录的 Kustomize 互为替代方案
@@ -15,7 +15,7 @@
 #  全局
 # -----------------------------------------------------------------------------
 global:
-  imageRegistry: ""                    # 留空则用镜像名前缀 ydsz-pmis/
+  imageRegistry: ""                    # 留空则用镜像名前缀 ydsz/
   imagePullSecrets: []                 # 私有仓库认证: [{ name: regcred }]
   imageTag: v1.0.0                     # 全局镜像 tag（被 services.*.tag 覆盖）
   storageClass: ""                     # 留空则用集群默认 StorageClass
@@ -23,7 +23,7 @@ global:
 
   # Nacos 注册中心（所有微服务共用）
   nacos:
-    serverAddr: nacos-server.pmis.svc.cluster.local:8848
+    serverAddr: nacos-server.ydsz.svc.cluster.local:8848
     namespace: pmis
     username: nacos
     password: ""                       # 留空则不设置 Nacos 密码
@@ -33,7 +33,7 @@ global:
 # -----------------------------------------------------------------------------
 backend:
   image:
-    repository: ydsz-pmis              # 镜像仓库前缀，最终镜像为 {repository}/{name}:{tag}
+    repository: ydsz              # 镜像仓库前缀，最终镜像为 {repository}/{name}:{tag}
     pullPolicy: IfNotPresent
 
   # JVM 容器化参数
@@ -125,7 +125,7 @@ services:
     ingress:
       enabled: false
       className: nginx
-      host: pmis.example.com
+      host: ydsz.example.com
       tls:
         enabled: false
         secretName: pmis-tls
@@ -215,7 +215,7 @@ services:
 frontend:
   enabled: false                       # 默认不启用，需要时设为 true
   image:
-    repository: ydsz-pmis/frontend
+    repository: ydsz/frontend
     tag: ""
     pullPolicy: IfNotPresent
   replicas: 2
@@ -226,7 +226,7 @@ frontend:
   ingress:
     enabled: false
     className: nginx
-    host: pmis.example.com
+    host: ydsz.example.com
     tls:
       enabled: false
       secretName: pmis-frontend-tls
@@ -236,7 +236,7 @@ frontend:
 # -----------------------------------------------------------------------------
 serviceAccount:
   create: true
-  name: ""                             # 留空则自动生成 ydsz-pmis-sa
+  name: ""                             # 留空则自动生成 ydsz-sa
   annotations: {}
 
 # -----------------------------------------------------------------------------

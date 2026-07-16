@@ -2,13 +2,13 @@
 # =============================================================================
 # check-brand-consistency.sh
 # -----------------------------------------------------------------------------
-# ydsz-pmis common 子模块品牌一致性门禁
+# ydsz common 子模块品牌一致性门禁
 #
 # 检测目标：阻止「Ydsz 品牌标识」在公开 API / 资源 / 文档中再次回潮。
 #
 # 覆盖模块（已去品牌化）：
-#   - ydsz-pmis-common-json   （2026-07-15 完成）
-#   - ydsz-pmis-common-cache  （2026-07-15 完成）
+#   - ydsz-common-json   （2026-07-15 完成）
+#   - ydsz-common-cache  （2026-07-15 完成）
 #
 # 检测范围（命中即 fail PR）：
 #   1. Java 源文件 public class/interface/enum/@interface/record 声明含 Ydsz 前缀
@@ -16,7 +16,7 @@
 #   3. META-INF/spring/.../AutoConfiguration.imports 引用已废弃的 Ydsz*AutoConfiguration
 #   4. META-INF/native-image/.../native-image.json 反射类名包含 Ydsz 前缀
 #   5. README.md / pom.xml description 出现 Ydsz 品牌类名
-#   6. Javadoc @author ydsz-pmis-team 残留
+#   6. Javadoc @author ydsz-team 残留
 #
 # 适用场景：
 #   - 本地开发：mvn verify 前手动跑
@@ -30,13 +30,13 @@ set -euo pipefail
 
 # ---------- 路径与配置 ----------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKEND_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)/ydsz-pmis-backend"
-COMMON_DIR="${BACKEND_DIR}/ydsz-pmis-common"
+BACKEND_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)/ydsz-backend"
+COMMON_DIR="${BACKEND_DIR}/ydsz-common"
 
 # 已去品牌化的模块列表（每行一个模块目录名）
 MODULES=(
-  "ydsz-pmis-common-json"
-  "ydsz-pmis-common-cache"
+  "ydsz-common-json"
+  "ydsz-common-cache"
 )
 
 # ---------- 颜色输出 ----------
@@ -76,7 +76,7 @@ check() {
 
 # ---------- 颜色输出 ----------
 echo "=========================================="
-echo " ydsz-pmis common 子模块品牌一致性门禁"
+echo " ydsz common 子模块品牌一致性门禁"
 echo " 覆盖模块：${MODULES[*]}"
 echo "=========================================="
 
@@ -117,8 +117,8 @@ for module_name in "${MODULES[@]}"; do
         "*.md" \
         "${MODULE_DIR}"
 
-  check "6. Javadoc @author ydsz-pmis-team 残留" \
-        '@author\s+ydsz-pmis-team' \
+  check "6. Javadoc @author ydsz-team 残留" \
+        '@author\s+ydsz-team' \
         "*.java" \
         "${MODULE_DIR}"
 done
@@ -134,7 +134,7 @@ if [[ ${violations} -gt 0 ]]; then
   echo "  2. AutoConfiguration.imports: 引用最新类名"
   echo "  3. native-image.json: 反射类名同步更新"
   echo "  4. README / pom: 文档描述更新为去 Ydsz 化后类名"
-  echo "  5. Javadoc @author: 删除 ydsz-pmis-team 标签"
+  echo "  5. Javadoc @author: 删除 ydsz-team 标签"
   echo ""
   echo "或运行对应模块的修复脚本：python scripts/debrand-<module>-module.py"
   exit 1

@@ -5,7 +5,7 @@
   - 通过 slot 接收 RouterView 内容
   - 内部配合 ErrorBoundary 捕获渲染异常
   @module layout/default/components/MainContent
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <template>

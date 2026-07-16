@@ -1,7 +1,7 @@
 -- ============================================================
 -- NextWiki 网盘知识库服务 - 数据库表结构（V1.0.0）
--- 模块: ydsz-pmis-nextwiki
--- 物理 Mapper 路径：ydsz-pmis-nextwiki/ydsz-pmis-nextwiki-infra/.../mapper/
+-- 模块: ydsz-nextwiki
+-- 物理 Mapper 路径：ydsz-nextwiki/ydsz-nextwiki-infra/.../mapper/
 -- 说明: 网盘文件管理、版本控制、分享ACL、标签、回收站、配额
 -- 任何 schema 调整请直接编辑本文件，禁止新增增量脚本
 -- ============================================================

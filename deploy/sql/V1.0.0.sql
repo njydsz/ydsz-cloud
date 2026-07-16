@@ -47,16 +47,16 @@ SET search_path = public, pg_catalog;
 BEGIN;
 -- ====================================================================
 -- [GENERATOR NOTE] 历史前向引用表已全部落地(表名经重命名规范后已存在)：
---   - pmis_after_sales_ops_ticket  -> pmis_ops_ticket                 (已存在)
---   - pmis_after_sales_satisfaction -> pmis_satisfaction              (已存在)
---   - pmis_after_sales_warranty    -> pmis_warranty                   (已存在)
---   - pmis_project_closure         -> pmis_execution_closure          (已存在)
---   - pmis_evm_record              -> pmis_evm_measure                (已存在)
---   - pmis_contract_template       -> pmis_project_contract_template  (已存在)
---   - pmis_daily_reconcile         -> pmis_project_reconcile_daily            (已存在)
---   - pmis_project_delivery        -> pmis_execution_delivery_standard/item (已存在)
---   - pmis_agent_blackboard        -> 运行时对象(Blackboard 模式,非持久化实体)
---   - pmis_agent_orchestration     -> 服务层编排概念(无实体类,非 DB 表)
+--   - ydsz_after_sales_ops_ticket  -> ydsz_ops_ticket                 (已存在)
+--   - ydsz_after_sales_satisfaction -> ydsz_satisfaction              (已存在)
+--   - ydsz_after_sales_warranty    -> ydsz_warranty                   (已存在)
+--   - ydsz_project_closure         -> ydsz_execution_closure          (已存在)
+--   - ydsz_evm_record              -> ydsz_evm_measure                (已存在)
+--   - ydsz_contract_template       -> ydsz_project_contract_template  (已存在)
+--   - ydsz_daily_reconcile         -> ydsz_project_reconcile_daily            (已存在)
+--   - ydsz_project_delivery        -> ydsz_execution_delivery_standard/item (已存在)
+--   - ydsz_agent_blackboard        -> 运行时对象(Blackboard 模式,非持久化实体)
+--   - ydsz_agent_orchestration     -> 服务层编排概念(无实体类,非 DB 表)
 --   NOTE 中所列"前向引用缺失表"经核对后确认全部落地或为运行时对象,
 --   无需补建任何 CREATE TABLE。
 -- ====================================================================
@@ -80,7 +80,7 @@ BEGIN;
 -- ====================================================================
 
 -- 字典类型表
-CREATE TABLE IF NOT EXISTS pmis_dict_type(
+CREATE TABLE IF NOT EXISTS ydsz_dict_type(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     type_code       VARCHAR(64)    NOT NULL,
     type_name       VARCHAR(128)   NOT NULL,
@@ -93,29 +93,29 @@ CREATE TABLE IF NOT EXISTS pmis_dict_type(
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
-    CONSTRAINT uk_pmis_dict_type_code UNIQUE (type_code, deleted),
+    CONSTRAINT uk_ydsz_dict_type_code UNIQUE (type_code, deleted),
     CONSTRAINT ck_pdt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pdt_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_dict_type IS '字典类型表: 业务字典分类定义(如项目类型、招采方式、计费方式)';
-COMMENT ON COLUMN pmis_dict_type.id IS '主键 ID';
-COMMENT ON COLUMN pmis_dict_type.type_code IS '字典类型编码(全局唯一,如 project_type/expense_category)';
-COMMENT ON COLUMN pmis_dict_type.type_name IS '字典类型名称(中文展示名)';
-COMMENT ON COLUMN pmis_dict_type.description IS '字典类型业务说明';
-COMMENT ON COLUMN pmis_dict_type.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_dict_type.created_by IS '创建人 ID(SYSTEM=系统初始化)';
-COMMENT ON COLUMN pmis_dict_type.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_dict_type.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_dict_type.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_dict_type.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_dict_type.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_dict_type IS '字典类型表: 业务字典分类定义(如项目类型、招采方式、计费方式)';
+COMMENT ON COLUMN ydsz_dict_type.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_dict_type.type_code IS '字典类型编码(全局唯一,如 project_type/expense_category)';
+COMMENT ON COLUMN ydsz_dict_type.type_name IS '字典类型名称(中文展示名)';
+COMMENT ON COLUMN ydsz_dict_type.description IS '字典类型业务说明';
+COMMENT ON COLUMN ydsz_dict_type.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_dict_type.created_by IS '创建人 ID(SYSTEM=系统初始化)';
+COMMENT ON COLUMN ydsz_dict_type.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_dict_type.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_dict_type.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_dict_type.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_dict_type.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_type_tenant_created
-    ON pmis_dict_type (tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_type_status ON ydsz_dict_type (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_type_tenant_created
+    ON ydsz_dict_type (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 字典项表
-CREATE TABLE IF NOT EXISTS pmis_dict_item(
+CREATE TABLE IF NOT EXISTS ydsz_dict_item(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     type_code       VARCHAR(64)    NOT NULL,
     item_code       VARCHAR(64)    NOT NULL,
@@ -132,32 +132,32 @@ CREATE TABLE IF NOT EXISTS pmis_dict_item(
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
-    CONSTRAINT uk_pmis_dict_item UNIQUE (type_code, item_code, deleted),
+    CONSTRAINT uk_ydsz_dict_item UNIQUE (type_code, item_code, deleted),
     CONSTRAINT ck_pdi_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pdi_deleted_enum  CHECK (deleted IN (0, 1)),
     CONSTRAINT ck_pdi_sort_nonneg   CHECK (sort_order >= 0)
 );
-COMMENT ON TABLE pmis_dict_item IS '字典项表: 字典类型下的具体枚举值(如项目类型下的 SYSTEM_DEV/T_M 等)';
-COMMENT ON COLUMN pmis_dict_item.id IS '主键 ID';
-COMMENT ON COLUMN pmis_dict_item.type_code IS '所属字典类型编码(关联 pmis_dict_type.type_code)';
-COMMENT ON COLUMN pmis_dict_item.item_code IS '字典项编码(type_code 下唯一,如 SYSTEM_DEV/T_M)';
-COMMENT ON COLUMN pmis_dict_item.item_value IS '字典项展示值(中文)';
-COMMENT ON COLUMN pmis_dict_item.sort_order IS '字典项排序号(升序)';
-COMMENT ON COLUMN pmis_dict_item.parent_id IS '父级字典项 ID(0=根,支持树形字典)';
-COMMENT ON COLUMN pmis_dict_item.description IS '字典项业务说明';
-COMMENT ON COLUMN pmis_dict_item.ext_json IS '扩展属性 JSONB(如颜色/图标/跳转链接)';
-COMMENT ON COLUMN pmis_dict_item.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_dict_item.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_dict_item.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_dict_item.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_dict_item.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_dict_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_dict_item IS '字典项表: 字典类型下的具体枚举值(如项目类型下的 SYSTEM_DEV/T_M 等)';
+COMMENT ON COLUMN ydsz_dict_item.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_dict_item.type_code IS '所属字典类型编码(关联 ydsz_dict_type.type_code)';
+COMMENT ON COLUMN ydsz_dict_item.item_code IS '字典项编码(type_code 下唯一,如 SYSTEM_DEV/T_M)';
+COMMENT ON COLUMN ydsz_dict_item.item_value IS '字典项展示值(中文)';
+COMMENT ON COLUMN ydsz_dict_item.sort_order IS '字典项排序号(升序)';
+COMMENT ON COLUMN ydsz_dict_item.parent_id IS '父级字典项 ID(0=根,支持树形字典)';
+COMMENT ON COLUMN ydsz_dict_item.description IS '字典项业务说明';
+COMMENT ON COLUMN ydsz_dict_item.ext_json IS '扩展属性 JSONB(如颜色/图标/跳转链接)';
+COMMENT ON COLUMN ydsz_dict_item.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_dict_item.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_dict_item.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_dict_item.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_dict_item.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_dict_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_item_type ON pmis_dict_item (type_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_item_status ON pmis_dict_item (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_type ON ydsz_dict_item (type_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_item_status ON ydsz_dict_item (status) WHERE deleted = 0;
 
 -- 字典版本表
-CREATE TABLE IF NOT EXISTS pmis_dict_version(
+CREATE TABLE IF NOT EXISTS ydsz_dict_version(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     type_code       VARCHAR(64)    NOT NULL,
     version         VARCHAR(32)    NOT NULL,
@@ -167,22 +167,22 @@ CREATE TABLE IF NOT EXISTS pmis_dict_version(
     created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis_dict_version IS '字典版本表: 字典变更历史快照,支持回滚与变更审计';
-COMMENT ON COLUMN pmis_dict_version.id IS '主键 ID';
-COMMENT ON COLUMN pmis_dict_version.type_code IS '字典类型编码';
-COMMENT ON COLUMN pmis_dict_version.version IS '版本号(语义化版本,如 1.0.0)';
-COMMENT ON COLUMN pmis_dict_version.change_log IS '变更说明';
-COMMENT ON COLUMN pmis_dict_version.effective_date IS '生效时间';
-COMMENT ON COLUMN pmis_dict_version.created_by IS '发布人 ID';
-COMMENT ON COLUMN pmis_dict_version.created_at IS '发布时间';
-COMMENT ON COLUMN pmis_dict_version.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_dict_version IS '字典版本表: 字典变更历史快照,支持回滚与变更审计';
+COMMENT ON COLUMN ydsz_dict_version.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_dict_version.type_code IS '字典类型编码';
+COMMENT ON COLUMN ydsz_dict_version.version IS '版本号(语义化版本,如 1.0.0)';
+COMMENT ON COLUMN ydsz_dict_version.change_log IS '变更说明';
+COMMENT ON COLUMN ydsz_dict_version.effective_date IS '生效时间';
+COMMENT ON COLUMN ydsz_dict_version.created_by IS '发布人 ID';
+COMMENT ON COLUMN ydsz_dict_version.created_at IS '发布时间';
+COMMENT ON COLUMN ydsz_dict_version.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- ====================================================================
 -- 2. RBAC 权限模块
 -- ====================================================================
 
 -- 角色表
-CREATE TABLE IF NOT EXISTS pmis_role(
+CREATE TABLE IF NOT EXISTS ydsz_role(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     role_code       VARCHAR(64)    NOT NULL,
     role_name       VARCHAR(64)    NOT NULL,
@@ -196,32 +196,32 @@ CREATE TABLE IF NOT EXISTS pmis_role(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_role_code UNIQUE (role_code, deleted),
+    CONSTRAINT uk_ydsz_role_code UNIQUE (role_code, deleted),
     CONSTRAINT ck_pr_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pr_data_scope     CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_CHILD', 'SELF', 'CUSTOM')),
     CONSTRAINT ck_pr_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_role IS '角色表: RBAC 角色定义,关联权限与数据范围';
-COMMENT ON COLUMN pmis_role.id IS '主键 ID';
-COMMENT ON COLUMN pmis_role.role_code IS '角色编码(全局唯一,如 SUPER_ADMIN/PM)';
-COMMENT ON COLUMN pmis_role.role_name IS '角色名称(中文展示名)';
-COMMENT ON COLUMN pmis_role.description IS '角色业务说明(职责、适用场景)';
-COMMENT ON COLUMN pmis_role.sort_order IS '角色排序号(升序)';
-COMMENT ON COLUMN pmis_role.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_CHILD 本部门及下级 / SELF 本人 / CUSTOM 自定义';
-COMMENT ON COLUMN pmis_role.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_role.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_role.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_role.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_role.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_role.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_role IS '角色表: RBAC 角色定义,关联权限与数据范围';
+COMMENT ON COLUMN ydsz_role.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_role.role_code IS '角色编码(全局唯一,如 SUPER_ADMIN/PM)';
+COMMENT ON COLUMN ydsz_role.role_name IS '角色名称(中文展示名)';
+COMMENT ON COLUMN ydsz_role.description IS '角色业务说明(职责、适用场景)';
+COMMENT ON COLUMN ydsz_role.sort_order IS '角色排序号(升序)';
+COMMENT ON COLUMN ydsz_role.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_CHILD 本部门及下级 / SELF 本人 / CUSTOM 自定义';
+COMMENT ON COLUMN ydsz_role.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_role.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_role.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_role.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_role.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_role.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_role_status ON pmis_role (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_role_status ON ydsz_role (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_role_tenant_created
-    ON pmis_role (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_role (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 权限/菜单表
-CREATE TABLE IF NOT EXISTS pmis_permission(
+CREATE TABLE IF NOT EXISTS ydsz_permission(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     parent_id       VARCHAR(20)         NOT NULL DEFAULT 0,
     perm_code       VARCHAR(128)   NOT NULL,
@@ -239,37 +239,37 @@ CREATE TABLE IF NOT EXISTS pmis_permission(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_permission_code UNIQUE (perm_code, deleted),
+    CONSTRAINT uk_ydsz_permission_code UNIQUE (perm_code, deleted),
     CONSTRAINT ck_pp_perm_type    CHECK (perm_type IN ('MENU', 'BUTTON', 'API')),
     CONSTRAINT ck_pp_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pp_visible_enum CHECK (visible IN (0, 1)),
     CONSTRAINT ck_pp_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_permission IS '权限/菜单表: 树形结构,涵盖菜单/按钮/API 三类权限';
-COMMENT ON COLUMN pmis_permission.id IS '主键 ID';
-COMMENT ON COLUMN pmis_permission.parent_id IS '父级权限 ID(0=根,支持多级树)';
-COMMENT ON COLUMN pmis_permission.perm_code IS '权限编码(全局唯一,格式: module:entity:action,如 project:contract:create)';
-COMMENT ON COLUMN pmis_permission.perm_name IS '权限名称(中文展示名)';
-COMMENT ON COLUMN pmis_permission.perm_type IS '权限类型: MENU 菜单 / BUTTON 按钮 / API 接口';
-COMMENT ON COLUMN pmis_permission.path IS '前端路由路径(菜单/按钮可空)';
-COMMENT ON COLUMN pmis_permission.component IS '前端组件路径(对应 views 目录)';
-COMMENT ON COLUMN pmis_permission.icon IS '菜单图标(Element Plus 图标名)';
-COMMENT ON COLUMN pmis_permission.sort_order IS '排序号(同级升序)';
-COMMENT ON COLUMN pmis_permission.visible IS '是否显示: 1 显示 / 0 隐藏(按钮权限一般隐藏)';
-COMMENT ON COLUMN pmis_permission.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_permission.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_permission.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_permission.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_permission.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_permission.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_permission.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_permission IS '权限/菜单表: 树形结构,涵盖菜单/按钮/API 三类权限';
+COMMENT ON COLUMN ydsz_permission.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_permission.parent_id IS '父级权限 ID(0=根,支持多级树)';
+COMMENT ON COLUMN ydsz_permission.perm_code IS '权限编码(全局唯一,格式: module:entity:action,如 project:contract:create)';
+COMMENT ON COLUMN ydsz_permission.perm_name IS '权限名称(中文展示名)';
+COMMENT ON COLUMN ydsz_permission.perm_type IS '权限类型: MENU 菜单 / BUTTON 按钮 / API 接口';
+COMMENT ON COLUMN ydsz_permission.path IS '前端路由路径(菜单/按钮可空)';
+COMMENT ON COLUMN ydsz_permission.component IS '前端组件路径(对应 views 目录)';
+COMMENT ON COLUMN ydsz_permission.icon IS '菜单图标(Element Plus 图标名)';
+COMMENT ON COLUMN ydsz_permission.sort_order IS '排序号(同级升序)';
+COMMENT ON COLUMN ydsz_permission.visible IS '是否显示: 1 显示 / 0 隐藏(按钮权限一般隐藏)';
+COMMENT ON COLUMN ydsz_permission.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_permission.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_permission.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_permission.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_permission.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_permission.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_permission.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_permission_parent ON pmis_permission (parent_id);
-CREATE INDEX IF NOT EXISTS idx_pmis_permission_type ON pmis_permission (perm_type) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_permission_tenant ON pmis_permission(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_permission_parent ON ydsz_permission (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_permission_type ON ydsz_permission (perm_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_permission_tenant ON ydsz_permission(tenant_id);
 
 -- 用户-角色关联表
-CREATE TABLE IF NOT EXISTS pmis_user_role(
+CREATE TABLE IF NOT EXISTS ydsz_user_role(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)         NOT NULL,
     role_id         VARCHAR(20)         NOT NULL,
@@ -277,52 +277,52 @@ CREATE TABLE IF NOT EXISTS pmis_user_role(
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_user_role UNIQUE (user_id, role_id, deleted),
+    CONSTRAINT uk_ydsz_user_role UNIQUE (user_id, role_id, deleted),
     CONSTRAINT ck_pur_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_user_role IS '用户-角色关联表: 多对多,用户可同时拥有多个角色';
-COMMENT ON COLUMN pmis_user_role.id IS '主键 ID';
-COMMENT ON COLUMN pmis_user_role.user_id IS '用户 ID(关联 pmis_user_account.id)';
-COMMENT ON COLUMN pmis_user_role.role_id IS '角色 ID(关联 pmis_role.id)';
-COMMENT ON COLUMN pmis_user_role.created_by IS '授权人 ID';
-COMMENT ON COLUMN pmis_user_role.created_at IS '授权时间';
-COMMENT ON COLUMN pmis_user_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_user_role.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_user_role IS '用户-角色关联表: 多对多,用户可同时拥有多个角色';
+COMMENT ON COLUMN ydsz_user_role.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_user_role.user_id IS '用户 ID(关联 ydsz_user_account.id)';
+COMMENT ON COLUMN ydsz_user_role.role_id IS '角色 ID(关联 ydsz_role.id)';
+COMMENT ON COLUMN ydsz_user_role.created_by IS '授权人 ID';
+COMMENT ON COLUMN ydsz_user_role.created_at IS '授权时间';
+COMMENT ON COLUMN ydsz_user_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_user_role.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_user_role_user ON pmis_user_role (user_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_user_role_role ON pmis_user_role (role_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON pmis_user_role(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_user_role_user ON ydsz_user_role (user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_user_role_role ON ydsz_user_role (role_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON ydsz_user_role(tenant_id);
 
 -- 角色-权限关联表
-CREATE TABLE IF NOT EXISTS pmis_role_permission(
+CREATE TABLE IF NOT EXISTS ydsz_role_permission(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     role_id         VARCHAR(20)         NOT NULL,
     permission_id   VARCHAR(20)         NOT NULL,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_role_permission UNIQUE (role_id, permission_id, deleted),
+    CONSTRAINT uk_ydsz_role_permission UNIQUE (role_id, permission_id, deleted),
     CONSTRAINT ck_prp_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_role_permission IS '角色-权限关联表: 多对多,角色绑定具体可访问的权限点';
-COMMENT ON COLUMN pmis_role_permission.id IS '主键 ID';
-COMMENT ON COLUMN pmis_role_permission.role_id IS '角色 ID(关联 pmis_role.id)';
-COMMENT ON COLUMN pmis_role_permission.permission_id IS '权限 ID(关联 pmis_permission.id)';
-COMMENT ON COLUMN pmis_role_permission.created_at IS '授权时间';
-COMMENT ON COLUMN pmis_role_permission.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_role_permission.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_role_permission IS '角色-权限关联表: 多对多,角色绑定具体可访问的权限点';
+COMMENT ON COLUMN ydsz_role_permission.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_role_permission.role_id IS '角色 ID(关联 ydsz_role.id)';
+COMMENT ON COLUMN ydsz_role_permission.permission_id IS '权限 ID(关联 ydsz_permission.id)';
+COMMENT ON COLUMN ydsz_role_permission.created_at IS '授权时间';
+COMMENT ON COLUMN ydsz_role_permission.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_role_permission.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_role_permission_deleted ON pmis_role_permission(deleted);
-CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON pmis_role_permission(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_role_permission_deleted ON ydsz_role_permission(deleted);
+CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON ydsz_role_permission(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_role_permission_perm
-    ON pmis_role_permission(permission_id) WHERE deleted = 0;
+    ON ydsz_role_permission(permission_id) WHERE deleted = 0;
 
 -- ====================================================================
 -- 3. 组织/人员模块
 -- ====================================================================
 
 -- 部门表
-CREATE TABLE IF NOT EXISTS pmis_department(
+CREATE TABLE IF NOT EXISTS ydsz_department(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     dept_code       VARCHAR(64)    NOT NULL,
     dept_name       VARCHAR(128)   NOT NULL,
@@ -340,39 +340,39 @@ CREATE TABLE IF NOT EXISTS pmis_department(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_department_code UNIQUE (dept_code, deleted),
+    CONSTRAINT uk_ydsz_department_code UNIQUE (dept_code, deleted),
     CONSTRAINT ck_pd_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pd_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_department IS '部门表: 树形组织架构,支持多级嵌套与路径检索';
-COMMENT ON COLUMN pmis_department.id IS '主键 ID';
-COMMENT ON COLUMN pmis_department.dept_code IS '部门编码(全局唯一,如 TECH/HR)';
-COMMENT ON COLUMN pmis_department.dept_name IS '部门名称';
-COMMENT ON COLUMN pmis_department.parent_id IS '父级部门 ID(0=根)';
-COMMENT ON COLUMN pmis_department.dept_path IS '部门路径(以斜杠分隔的祖先链路,如 /1/3/5,用于子树查询)';
-COMMENT ON COLUMN pmis_department.sort_order IS '部门排序号(同级升序)';
-COMMENT ON COLUMN pmis_department.leader_id IS '部门负责人 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_department.phone IS '部门电话';
-COMMENT ON COLUMN pmis_department.email IS '部门邮箱';
-COMMENT ON COLUMN pmis_department.description IS '部门职责说明';
-COMMENT ON COLUMN pmis_department.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_department.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_department.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_department.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_department.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_department.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_department.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_department IS '部门表: 树形组织架构,支持多级嵌套与路径检索';
+COMMENT ON COLUMN ydsz_department.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_department.dept_code IS '部门编码(全局唯一,如 TECH/HR)';
+COMMENT ON COLUMN ydsz_department.dept_name IS '部门名称';
+COMMENT ON COLUMN ydsz_department.parent_id IS '父级部门 ID(0=根)';
+COMMENT ON COLUMN ydsz_department.dept_path IS '部门路径(以斜杠分隔的祖先链路,如 /1/3/5,用于子树查询)';
+COMMENT ON COLUMN ydsz_department.sort_order IS '部门排序号(同级升序)';
+COMMENT ON COLUMN ydsz_department.leader_id IS '部门负责人 ID(关联 ydsz_employee.id)';
+COMMENT ON COLUMN ydsz_department.phone IS '部门电话';
+COMMENT ON COLUMN ydsz_department.email IS '部门邮箱';
+COMMENT ON COLUMN ydsz_department.description IS '部门职责说明';
+COMMENT ON COLUMN ydsz_department.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_department.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_department.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_department.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_department.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_department.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_department.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_department_parent ON pmis_department (parent_id);
-CREATE INDEX IF NOT EXISTS idx_pmis_department_status ON pmis_department (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_department_tenant ON pmis_department(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_department_parent ON ydsz_department (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_department_status ON ydsz_department (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_department_tenant ON ydsz_department(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_department_tenant_created
-    ON pmis_department(tenant_id, created_at DESC) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_dept_leader
-    ON pmis_department(leader_id) WHERE deleted = 0;
+    ON ydsz_department(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_dept_leader
+    ON ydsz_department(leader_id) WHERE deleted = 0;
 
 -- 岗位表
-CREATE TABLE IF NOT EXISTS pmis_position(
+CREATE TABLE IF NOT EXISTS ydsz_position(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     position_code   VARCHAR(64)    NOT NULL,
     position_name   VARCHAR(128)   NOT NULL,
@@ -386,32 +386,32 @@ CREATE TABLE IF NOT EXISTS pmis_position(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_position_code UNIQUE (position_code, deleted),
+    CONSTRAINT uk_ydsz_position_code UNIQUE (position_code, deleted),
     CONSTRAINT ck_pp_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pp_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_position IS '岗位表: 部门下的具体岗位定义(如开发工程师/PM/HRBP)';
-COMMENT ON COLUMN pmis_position.id IS '主键 ID';
-COMMENT ON COLUMN pmis_position.position_code IS '岗位编码(全局唯一)';
-COMMENT ON COLUMN pmis_position.position_name IS '岗位名称';
-COMMENT ON COLUMN pmis_position.department_id IS '所属部门 ID(关联 pmis_department.id)';
-COMMENT ON COLUMN pmis_position.level_code IS '岗位职级(关联 pmis_rank.level_code)';
-COMMENT ON COLUMN pmis_position.description IS '岗位职责说明';
-COMMENT ON COLUMN pmis_position.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_position.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_position.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_position.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_position.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_position.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_position.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_position IS '岗位表: 部门下的具体岗位定义(如开发工程师/PM/HRBP)';
+COMMENT ON COLUMN ydsz_position.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_position.position_code IS '岗位编码(全局唯一)';
+COMMENT ON COLUMN ydsz_position.position_name IS '岗位名称';
+COMMENT ON COLUMN ydsz_position.department_id IS '所属部门 ID(关联 ydsz_department.id)';
+COMMENT ON COLUMN ydsz_position.level_code IS '岗位职级(关联 ydsz_rank.level_code)';
+COMMENT ON COLUMN ydsz_position.description IS '岗位职责说明';
+COMMENT ON COLUMN ydsz_position.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_position.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_position.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_position.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_position.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_position.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_position.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_position_dept ON pmis_position (department_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_position_tenant ON pmis_position(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_position_dept ON ydsz_position (department_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_position_tenant ON ydsz_position(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_position_tenant_created
-    ON pmis_position(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_position(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 职级表 (L1-L18)
-CREATE TABLE IF NOT EXISTS pmis_rank(
+CREATE TABLE IF NOT EXISTS ydsz_rank(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     level_code      VARCHAR(8)     NOT NULL,
     level_name      VARCHAR(64)    NOT NULL,
@@ -425,32 +425,32 @@ CREATE TABLE IF NOT EXISTS pmis_rank(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_rank_code UNIQUE (level_code, deleted),
+    CONSTRAINT uk_ydsz_rank_code UNIQUE (level_code, deleted),
     CONSTRAINT ck_pr_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
     CONSTRAINT ck_pr_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pr_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_rank IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
-COMMENT ON COLUMN pmis_rank.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rank.level_code IS '职级编码(L1-L18)';
-COMMENT ON COLUMN pmis_rank.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
-COMMENT ON COLUMN pmis_rank.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
-COMMENT ON COLUMN pmis_rank.sort_order IS '职级排序号(升序,L1=1)';
-COMMENT ON COLUMN pmis_rank.description IS '职级能力要求说明';
-COMMENT ON COLUMN pmis_rank.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_rank.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_rank.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rank.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_rank.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_rank.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_rank.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_rank IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
+COMMENT ON COLUMN ydsz_rank.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rank.level_code IS '职级编码(L1-L18)';
+COMMENT ON COLUMN ydsz_rank.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
+COMMENT ON COLUMN ydsz_rank.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
+COMMENT ON COLUMN ydsz_rank.sort_order IS '职级排序号(升序,L1=1)';
+COMMENT ON COLUMN ydsz_rank.description IS '职级能力要求说明';
+COMMENT ON COLUMN ydsz_rank.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_rank.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_rank.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rank.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_rank.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_rank.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_rank.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_rank_tenant ON pmis_rank(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rank_tenant ON ydsz_rank(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_rank_tenant_sort
-    ON pmis_rank(tenant_id, sort_order) WHERE deleted = 0;
+    ON ydsz_rank(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 职级费率表 (对外人天 / 对内人天)
-CREATE TABLE IF NOT EXISTS pmis_rank_rate(
+CREATE TABLE IF NOT EXISTS ydsz_rank_rate(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     level_code          VARCHAR(8)     NOT NULL,
     external_daily      NUMERIC(10,2)  NOT NULL,
@@ -475,45 +475,45 @@ CREATE TABLE IF NOT EXISTS pmis_rank_rate(
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_rank_rate UNIQUE (level_code, version, deleted),
+    CONSTRAINT uk_ydsz_rank_rate UNIQUE (level_code, version, deleted),
     CONSTRAINT ck_prr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
     CONSTRAINT ck_prr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
     CONSTRAINT ck_prr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
     CONSTRAINT ck_prr_deleted_enum    CHECK (deleted IN (0, 1)),
     CONSTRAINT ck_prr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_rank_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
-COMMENT ON COLUMN pmis_rank_rate.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rank_rate.level_code IS '职级编码(L1-L18,关联 pmis_rank.level_code)';
-COMMENT ON COLUMN pmis_rank_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
-COMMENT ON COLUMN pmis_rank_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
-COMMENT ON COLUMN pmis_rank_rate.base_salary IS '月度基础工资(元)';
-COMMENT ON COLUMN pmis_rank_rate.social_company IS '公司社保部分(元/月)';
-COMMENT ON COLUMN pmis_rank_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
-COMMENT ON COLUMN pmis_rank_rate.fund_company IS '公司公积金部分(元/月)';
-COMMENT ON COLUMN pmis_rank_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
-COMMENT ON COLUMN pmis_rank_rate.take_home IS '税后到手工资(元/月)';
-COMMENT ON COLUMN pmis_rank_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_rank_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_rank_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
-COMMENT ON COLUMN pmis_rank_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
-COMMENT ON COLUMN pmis_rank_rate.effective_date IS '生效日期';
-COMMENT ON COLUMN pmis_rank_rate.expire_date IS '失效日期(NULL 表示长期有效)';
-COMMENT ON COLUMN pmis_rank_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
-COMMENT ON COLUMN pmis_rank_rate.description IS '费率版本说明';
-COMMENT ON COLUMN pmis_rank_rate.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_rank_rate.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rank_rate.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_rank_rate.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_rank_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_rank_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_rank_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
+COMMENT ON COLUMN ydsz_rank_rate.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rank_rate.level_code IS '职级编码(L1-L18,关联 ydsz_rank.level_code)';
+COMMENT ON COLUMN ydsz_rank_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN ydsz_rank_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN ydsz_rank_rate.base_salary IS '月度基础工资(元)';
+COMMENT ON COLUMN ydsz_rank_rate.social_company IS '公司社保部分(元/月)';
+COMMENT ON COLUMN ydsz_rank_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
+COMMENT ON COLUMN ydsz_rank_rate.fund_company IS '公司公积金部分(元/月)';
+COMMENT ON COLUMN ydsz_rank_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
+COMMENT ON COLUMN ydsz_rank_rate.take_home IS '税后到手工资(元/月)';
+COMMENT ON COLUMN ydsz_rank_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN ydsz_rank_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN ydsz_rank_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
+COMMENT ON COLUMN ydsz_rank_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
+COMMENT ON COLUMN ydsz_rank_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN ydsz_rank_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN ydsz_rank_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN ydsz_rank_rate.description IS '费率版本说明';
+COMMENT ON COLUMN ydsz_rank_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_rank_rate.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rank_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_rank_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_rank_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_rank_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_rank_rate_code ON pmis_rank_rate (level_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_rank_rate_effective ON pmis_rank_rate (effective_date, expire_date);
-CREATE INDEX IF NOT EXISTS idx_rank_rate_tenant ON pmis_rank_rate(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rank_rate_code ON ydsz_rank_rate (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_rank_rate_effective ON ydsz_rank_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_rank_rate_tenant ON ydsz_rank_rate(tenant_id);
 
 -- 员工表
-CREATE TABLE IF NOT EXISTS pmis_employee(
+CREATE TABLE IF NOT EXISTS ydsz_employee(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)         NOT NULL,
     emp_code        VARCHAR(64)    NOT NULL,
@@ -547,7 +547,7 @@ outsource_rate_id VARCHAR(20),
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_emp_code UNIQUE (emp_code, deleted),
+    CONSTRAINT uk_ydsz_emp_code UNIQUE (emp_code, deleted),
     CONSTRAINT ck_pe_gender_enum      CHECK (gender IN ('M', 'F', 'U')),
     CONSTRAINT ck_pe_employee_type   CHECK (employee_type IN ('FULL_TIME', 'PART_TIME', 'OUTSOURCE')),
     CONSTRAINT ck_pe_work_status     CHECK (work_status IN ('ACTIVE', 'LEAVE', 'SUSPEND', 'PROBATION')),
@@ -555,54 +555,54 @@ outsource_rate_id VARCHAR(20),
     CONSTRAINT ck_pe_dates_valid      CHECK (leave_date IS NULL OR leave_date >= hire_date),
     CONSTRAINT ck_pe_deleted_enum     CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_employee IS '员工表: 员工主数据,关联用户账号/部门/岗位/职级,敏感字段加密存储';
-COMMENT ON COLUMN pmis_employee.id IS '主键 ID';
-COMMENT ON COLUMN pmis_employee.user_id IS '关联用户账号 ID(关联 pmis_user_account.id)';
-COMMENT ON COLUMN pmis_employee.emp_code IS '工号(全局唯一,如 E20260001)';
-COMMENT ON COLUMN pmis_employee.emp_name IS '员工姓名';
-COMMENT ON COLUMN pmis_employee.id_card IS '身份证号(脱敏显示,完整数据见 id_card_enc)';
-COMMENT ON COLUMN pmis_employee.id_card_enc IS '身份证号 SM4 加密密文';
-COMMENT ON COLUMN pmis_employee.gender IS '性别: M 男 / F 女 / U 未知';
-COMMENT ON COLUMN pmis_employee.birth_date IS '出生日期';
-COMMENT ON COLUMN pmis_employee.phone IS '手机号(脱敏显示,完整数据见 phone_enc)';
-COMMENT ON COLUMN pmis_employee.phone_enc IS '手机号 SM4 加密密文';
-COMMENT ON COLUMN pmis_employee.email IS '企业邮箱';
-COMMENT ON COLUMN pmis_employee.department_id IS '所属部门 ID(关联 pmis_department.id)';
-COMMENT ON COLUMN pmis_employee.position_id IS '岗位 ID(关联 pmis_position.id)';
-COMMENT ON COLUMN pmis_employee.level_code IS '职级编码(全职 L1-L18 / 兼职 P1-P18,关联 pmis_rank 或 pmis_part_time_rate)';
-COMMENT ON COLUMN pmis_employee.employee_type IS '雇佣类型: FULL_TIME 全职 / PART_TIME 兼职 / OUTSOURCE 外包';
-COMMENT ON COLUMN pmis_employee.part_time_rate_id IS '兼职费率 ID(仅 PART_TIME 类型填写,关联 pmis_part_time_rate.id)';
-COMMENT ON COLUMN pmis_employee.outsource_rate_id IS '外包费率 ID(仅 OUTSOURCE 类型填写,关联 pmis_outsource_rate.id)';
-COMMENT ON COLUMN pmis_employee.hire_date IS '入职日期';
-COMMENT ON COLUMN pmis_employee.leave_date IS '离职日期(在职为 NULL)';
-COMMENT ON COLUMN pmis_employee.work_status IS '在职状态: ACTIVE 在职 / LEAVE 离职 / SUSPEND 停薪留职 / PROBATION 试用期';
-COMMENT ON COLUMN pmis_employee.bench_status IS 'Bench 状态: YES 闲置中 / NO 在项目中 / TRAINING 培训期';
-COMMENT ON COLUMN pmis_employee.bench_start IS '进入 Bench 的起始日期';
-COMMENT ON COLUMN pmis_employee.avatar IS '头像 URL';
-COMMENT ON COLUMN pmis_employee.address IS '家庭住址';
-COMMENT ON COLUMN pmis_employee.emergency_contact IS '紧急联系人姓名';
-COMMENT ON COLUMN pmis_employee.emergency_phone IS '紧急联系人电话';
-COMMENT ON COLUMN pmis_employee.description IS '备注';
-COMMENT ON COLUMN pmis_employee.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_employee.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_employee.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_employee.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_employee.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_employee.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_employee IS '员工表: 员工主数据,关联用户账号/部门/岗位/职级,敏感字段加密存储';
+COMMENT ON COLUMN ydsz_employee.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_employee.user_id IS '关联用户账号 ID(关联 ydsz_user_account.id)';
+COMMENT ON COLUMN ydsz_employee.emp_code IS '工号(全局唯一,如 E20260001)';
+COMMENT ON COLUMN ydsz_employee.emp_name IS '员工姓名';
+COMMENT ON COLUMN ydsz_employee.id_card IS '身份证号(脱敏显示,完整数据见 id_card_enc)';
+COMMENT ON COLUMN ydsz_employee.id_card_enc IS '身份证号 SM4 加密密文';
+COMMENT ON COLUMN ydsz_employee.gender IS '性别: M 男 / F 女 / U 未知';
+COMMENT ON COLUMN ydsz_employee.birth_date IS '出生日期';
+COMMENT ON COLUMN ydsz_employee.phone IS '手机号(脱敏显示,完整数据见 phone_enc)';
+COMMENT ON COLUMN ydsz_employee.phone_enc IS '手机号 SM4 加密密文';
+COMMENT ON COLUMN ydsz_employee.email IS '企业邮箱';
+COMMENT ON COLUMN ydsz_employee.department_id IS '所属部门 ID(关联 ydsz_department.id)';
+COMMENT ON COLUMN ydsz_employee.position_id IS '岗位 ID(关联 ydsz_position.id)';
+COMMENT ON COLUMN ydsz_employee.level_code IS '职级编码(全职 L1-L18 / 兼职 P1-P18,关联 ydsz_rank 或 ydsz_part_time_rate)';
+COMMENT ON COLUMN ydsz_employee.employee_type IS '雇佣类型: FULL_TIME 全职 / PART_TIME 兼职 / OUTSOURCE 外包';
+COMMENT ON COLUMN ydsz_employee.part_time_rate_id IS '兼职费率 ID(仅 PART_TIME 类型填写,关联 ydsz_part_time_rate.id)';
+COMMENT ON COLUMN ydsz_employee.outsource_rate_id IS '外包费率 ID(仅 OUTSOURCE 类型填写,关联 ydsz_outsource_rate.id)';
+COMMENT ON COLUMN ydsz_employee.hire_date IS '入职日期';
+COMMENT ON COLUMN ydsz_employee.leave_date IS '离职日期(在职为 NULL)';
+COMMENT ON COLUMN ydsz_employee.work_status IS '在职状态: ACTIVE 在职 / LEAVE 离职 / SUSPEND 停薪留职 / PROBATION 试用期';
+COMMENT ON COLUMN ydsz_employee.bench_status IS 'Bench 状态: YES 闲置中 / NO 在项目中 / TRAINING 培训期';
+COMMENT ON COLUMN ydsz_employee.bench_start IS '进入 Bench 的起始日期';
+COMMENT ON COLUMN ydsz_employee.avatar IS '头像 URL';
+COMMENT ON COLUMN ydsz_employee.address IS '家庭住址';
+COMMENT ON COLUMN ydsz_employee.emergency_contact IS '紧急联系人姓名';
+COMMENT ON COLUMN ydsz_employee.emergency_phone IS '紧急联系人电话';
+COMMENT ON COLUMN ydsz_employee.description IS '备注';
+COMMENT ON COLUMN ydsz_employee.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_employee.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_employee.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_employee.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_employee.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_employee.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_user ON pmis_employee (user_id);
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_dept ON pmis_employee (department_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_level ON pmis_employee (level_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_type ON pmis_employee (employee_type) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_bench ON pmis_employee (bench_status, bench_start) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_employee_tenant ON pmis_employee(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_user ON ydsz_employee (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_dept ON ydsz_employee (department_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_level ON ydsz_employee (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_type ON ydsz_employee (employee_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_bench ON ydsz_employee (bench_status, bench_start) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_employee_tenant ON ydsz_employee(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_employee_tenant_created
-    ON pmis_employee(tenant_id, created_at DESC) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
-    ON pmis_employee(position_id) WHERE deleted = 0;
+    ON ydsz_employee(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_position
+    ON ydsz_employee(position_id) WHERE deleted = 0;
 
 -- 兼职职级费率表 (P1-P18, 时薪核算月薪+商业保险+差旅)
-CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
+CREATE TABLE IF NOT EXISTS ydsz_part_time_rate(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(8)     NOT NULL,
     rate_name           VARCHAR(64)    NOT NULL,
@@ -629,7 +629,7 @@ CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_part_time_rate UNIQUE (rate_code, version, deleted),
+    CONSTRAINT uk_ydsz_part_time_rate UNIQUE (rate_code, version, deleted),
     CONSTRAINT ck_ptr_segment         CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
     CONSTRAINT ck_ptr_status_enum     CHECK (status IN ('ACTIVE', 'INACTIVE')),
     CONSTRAINT ck_ptr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
@@ -637,41 +637,41 @@ CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
     CONSTRAINT ck_ptr_salary_valid    CHECK (monthly_salary = ROUND(hourly_rate * monthly_hours, 2)),
     CONSTRAINT ck_ptr_cost_valid      CHECK (total_cost = monthly_salary + commercial_insurance + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_part_time_rate IS '兼职职级费率表(P1-P18): 时薪核算月薪+商业保险+差旅成本拆解,支持版本化生效';
-COMMENT ON COLUMN pmis_part_time_rate.id IS '主键 ID';
-COMMENT ON COLUMN pmis_part_time_rate.rate_code IS '兼职级别编码(P1-P18)';
-COMMENT ON COLUMN pmis_part_time_rate.rate_name IS '级别名称(如兼职初级工程师)';
-COMMENT ON COLUMN pmis_part_time_rate.level_segment IS '级别段: PRIMARY 初级(P1-P3) / MIDDLE 中级(P4-P6) / SENIOR 高级(P7-P9) / EXPERT 专家(P10-P12) / STRATEGIC 战略(P13-P18)';
-COMMENT ON COLUMN pmis_part_time_rate.hourly_rate IS '时薪(元/小时,兼职核心计价单元)';
-COMMENT ON COLUMN pmis_part_time_rate.monthly_hours IS '月工时数(默认176小时=22天×8小时)';
-COMMENT ON COLUMN pmis_part_time_rate.monthly_salary IS '月度薪资(元/月,= hourly_rate × monthly_hours)';
-COMMENT ON COLUMN pmis_part_time_rate.commercial_insurance IS '商业保险-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_part_time_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_part_time_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_part_time_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+commercial_insurance+travel_reimbursement+travel_allowance)';
-COMMENT ON COLUMN pmis_part_time_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
-COMMENT ON COLUMN pmis_part_time_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
-COMMENT ON COLUMN pmis_part_time_rate.billable_target IS '可计费利用率目标(0.0-1.0)';
-COMMENT ON COLUMN pmis_part_time_rate.sort_order IS '排序序号';
-COMMENT ON COLUMN pmis_part_time_rate.effective_date IS '生效日期';
-COMMENT ON COLUMN pmis_part_time_rate.expire_date IS '失效日期(NULL 表示长期有效)';
-COMMENT ON COLUMN pmis_part_time_rate.version IS '版本号(同级别可有多版本,通过 effective_date 区分)';
-COMMENT ON COLUMN pmis_part_time_rate.description IS '费率版本说明';
-COMMENT ON COLUMN pmis_part_time_rate.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
-COMMENT ON COLUMN pmis_part_time_rate.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_part_time_rate.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_part_time_rate.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_part_time_rate.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_part_time_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_part_time_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_part_time_rate IS '兼职职级费率表(P1-P18): 时薪核算月薪+商业保险+差旅成本拆解,支持版本化生效';
+COMMENT ON COLUMN ydsz_part_time_rate.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_part_time_rate.rate_code IS '兼职级别编码(P1-P18)';
+COMMENT ON COLUMN ydsz_part_time_rate.rate_name IS '级别名称(如兼职初级工程师)';
+COMMENT ON COLUMN ydsz_part_time_rate.level_segment IS '级别段: PRIMARY 初级(P1-P3) / MIDDLE 中级(P4-P6) / SENIOR 高级(P7-P9) / EXPERT 专家(P10-P12) / STRATEGIC 战略(P13-P18)';
+COMMENT ON COLUMN ydsz_part_time_rate.hourly_rate IS '时薪(元/小时,兼职核心计价单元)';
+COMMENT ON COLUMN ydsz_part_time_rate.monthly_hours IS '月工时数(默认176小时=22天×8小时)';
+COMMENT ON COLUMN ydsz_part_time_rate.monthly_salary IS '月度薪资(元/月,= hourly_rate × monthly_hours)';
+COMMENT ON COLUMN ydsz_part_time_rate.commercial_insurance IS '商业保险-公司承担部分(元/月)';
+COMMENT ON COLUMN ydsz_part_time_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN ydsz_part_time_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN ydsz_part_time_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+commercial_insurance+travel_reimbursement+travel_allowance)';
+COMMENT ON COLUMN ydsz_part_time_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN ydsz_part_time_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN ydsz_part_time_rate.billable_target IS '可计费利用率目标(0.0-1.0)';
+COMMENT ON COLUMN ydsz_part_time_rate.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_part_time_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN ydsz_part_time_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN ydsz_part_time_rate.version IS '版本号(同级别可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN ydsz_part_time_rate.description IS '费率版本说明';
+COMMENT ON COLUMN ydsz_part_time_rate.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN ydsz_part_time_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_part_time_rate.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_part_time_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_part_time_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_part_time_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_part_time_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_ptr_code ON pmis_part_time_rate (rate_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_ptr_effective ON pmis_part_time_rate (effective_date, expire_date);
-CREATE INDEX IF NOT EXISTS idx_ptr_tenant ON pmis_part_time_rate(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ptr_tenant_sort ON pmis_part_time_rate(tenant_id, sort_order) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ptr_code ON ydsz_part_time_rate (rate_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ptr_effective ON ydsz_part_time_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_ptr_tenant ON ydsz_part_time_rate(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ptr_tenant_sort ON ydsz_part_time_rate(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 外包职级费率表 (V1-V18, 人天核算月薪+差旅报销+差旅补贴)
-CREATE TABLE IF NOT EXISTS pmis_outsource_rate(
+CREATE TABLE IF NOT EXISTS ydsz_outsource_rate(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(8)     NOT NULL,
     rate_name           VARCHAR(64)    NOT NULL,
@@ -697,7 +697,7 @@ CREATE TABLE IF NOT EXISTS pmis_outsource_rate(
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_outsource_rate UNIQUE (rate_code, version, deleted),
+    CONSTRAINT uk_ydsz_outsource_rate UNIQUE (rate_code, version, deleted),
     CONSTRAINT ck_por_segment         CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
     CONSTRAINT ck_por_status_enum     CHECK (status IN ('ACTIVE', 'INACTIVE')),
     CONSTRAINT ck_por_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
@@ -705,40 +705,40 @@ CREATE TABLE IF NOT EXISTS pmis_outsource_rate(
     CONSTRAINT ck_por_salary_valid    CHECK (monthly_salary = ROUND(daily_rate * monthly_days, 2)),
     CONSTRAINT ck_por_cost_valid      CHECK (total_cost = monthly_salary + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_outsource_rate IS '外包职级费率表(V1-V18): 人天核算月薪+差旅报销+差旅补贴成本拆解,支持版本化生效';
-COMMENT ON COLUMN pmis_outsource_rate.id IS '主键 ID';
-COMMENT ON COLUMN pmis_outsource_rate.rate_code IS '外包级别编码(V1-V18)';
-COMMENT ON COLUMN pmis_outsource_rate.rate_name IS '级别名称(如外包初级工程师)';
-COMMENT ON COLUMN pmis_outsource_rate.level_segment IS '级别段: PRIMARY 初级(V1-V3) / MIDDLE 中级(V4-V6) / SENIOR 高级(V7-V9) / EXPERT 专家(V10-V12) / STRATEGIC 战略(V13-V18)';
-COMMENT ON COLUMN pmis_outsource_rate.daily_rate IS '人天单价(元/天,外包核心计价单元)';
-COMMENT ON COLUMN pmis_outsource_rate.monthly_days IS '月工作天数(默认22天)';
-COMMENT ON COLUMN pmis_outsource_rate.monthly_salary IS '月度薪资(元/月,= daily_rate × monthly_days)';
-COMMENT ON COLUMN pmis_outsource_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_outsource_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_outsource_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+travel_reimbursement+travel_allowance)';
-COMMENT ON COLUMN pmis_outsource_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
-COMMENT ON COLUMN pmis_outsource_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
-COMMENT ON COLUMN pmis_outsource_rate.billable_target IS '可计费利用率目标(0.0-1.0)';
-COMMENT ON COLUMN pmis_outsource_rate.sort_order IS '排序序号';
-COMMENT ON COLUMN pmis_outsource_rate.effective_date IS '生效日期';
-COMMENT ON COLUMN pmis_outsource_rate.expire_date IS '失效日期(NULL 表示长期有效)';
-COMMENT ON COLUMN pmis_outsource_rate.version IS '版本号(同级别可有多版本,通过 effective_date 区分)';
-COMMENT ON COLUMN pmis_outsource_rate.description IS '费率版本说明';
-COMMENT ON COLUMN pmis_outsource_rate.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
-COMMENT ON COLUMN pmis_outsource_rate.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_outsource_rate.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_outsource_rate.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_outsource_rate.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_outsource_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_outsource_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_outsource_rate IS '外包职级费率表(V1-V18): 人天核算月薪+差旅报销+差旅补贴成本拆解,支持版本化生效';
+COMMENT ON COLUMN ydsz_outsource_rate.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_outsource_rate.rate_code IS '外包级别编码(V1-V18)';
+COMMENT ON COLUMN ydsz_outsource_rate.rate_name IS '级别名称(如外包初级工程师)';
+COMMENT ON COLUMN ydsz_outsource_rate.level_segment IS '级别段: PRIMARY 初级(V1-V3) / MIDDLE 中级(V4-V6) / SENIOR 高级(V7-V9) / EXPERT 专家(V10-V12) / STRATEGIC 战略(V13-V18)';
+COMMENT ON COLUMN ydsz_outsource_rate.daily_rate IS '人天单价(元/天,外包核心计价单元)';
+COMMENT ON COLUMN ydsz_outsource_rate.monthly_days IS '月工作天数(默认22天)';
+COMMENT ON COLUMN ydsz_outsource_rate.monthly_salary IS '月度薪资(元/月,= daily_rate × monthly_days)';
+COMMENT ON COLUMN ydsz_outsource_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN ydsz_outsource_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN ydsz_outsource_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+travel_reimbursement+travel_allowance)';
+COMMENT ON COLUMN ydsz_outsource_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN ydsz_outsource_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN ydsz_outsource_rate.billable_target IS '可计费利用率目标(0.0-1.0)';
+COMMENT ON COLUMN ydsz_outsource_rate.sort_order IS '排序序号';
+COMMENT ON COLUMN ydsz_outsource_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN ydsz_outsource_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN ydsz_outsource_rate.version IS '版本号(同级别可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN ydsz_outsource_rate.description IS '费率版本说明';
+COMMENT ON COLUMN ydsz_outsource_rate.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN ydsz_outsource_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_outsource_rate.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_outsource_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_outsource_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_outsource_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_outsource_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_por_code ON pmis_outsource_rate (rate_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_por_effective ON pmis_outsource_rate (effective_date, expire_date);
-CREATE INDEX IF NOT EXISTS idx_por_tenant ON pmis_outsource_rate(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_por_tenant_sort ON pmis_outsource_rate(tenant_id, sort_order) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_por_code ON ydsz_outsource_rate (rate_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_por_effective ON ydsz_outsource_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_por_tenant ON ydsz_outsource_rate(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_por_tenant_sort ON ydsz_outsource_rate(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 员工标签表
-CREATE TABLE IF NOT EXISTS pmis_employee_tag(
+CREATE TABLE IF NOT EXISTS ydsz_employee_tag(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     employee_id     VARCHAR(20)         NOT NULL,
     tag_type        VARCHAR(32)    NOT NULL,
@@ -750,27 +750,27 @@ CREATE TABLE IF NOT EXISTS pmis_employee_tag(
     CONSTRAINT ck_pet_tag_type CHECK (tag_type IN ('TECH_STACK', 'INDUSTRY', 'DOMAIN', 'CERTIFICATE', 'SKILL')),
     CONSTRAINT ck_pet_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_employee_tag IS '员工标签表: 技能/行业/资质/认证,支持资源池精准匹配';
-COMMENT ON COLUMN pmis_employee_tag.id IS '主键 ID';
-COMMENT ON COLUMN pmis_employee_tag.employee_id IS '员工 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_employee_tag.tag_type IS '标签类型: TECH_STACK 技术栈 / INDUSTRY 行业经验 / DOMAIN 业务领域 / CERTIFICATE 资质证书 / SKILL 软技能';
-COMMENT ON COLUMN pmis_employee_tag.tag_code IS '标签编码(同类型下唯一,如 Java/Python/FinTech)';
-COMMENT ON COLUMN pmis_employee_tag.tag_value IS '标签值(中文展示名)';
-COMMENT ON COLUMN pmis_employee_tag.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_employee_tag.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_employee_tag.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_employee_tag IS '员工标签表: 技能/行业/资质/认证,支持资源池精准匹配';
+COMMENT ON COLUMN ydsz_employee_tag.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_employee_tag.employee_id IS '员工 ID(关联 ydsz_employee.id)';
+COMMENT ON COLUMN ydsz_employee_tag.tag_type IS '标签类型: TECH_STACK 技术栈 / INDUSTRY 行业经验 / DOMAIN 业务领域 / CERTIFICATE 资质证书 / SKILL 软技能';
+COMMENT ON COLUMN ydsz_employee_tag.tag_code IS '标签编码(同类型下唯一,如 Java/Python/FinTech)';
+COMMENT ON COLUMN ydsz_employee_tag.tag_value IS '标签值(中文展示名)';
+COMMENT ON COLUMN ydsz_employee_tag.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_employee_tag.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_employee_tag.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_emp ON pmis_employee_tag (employee_id);
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_code ON pmis_employee_tag (tag_code);
-CREATE INDEX IF NOT EXISTS idx_emp_tag_tenant ON pmis_employee_tag(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_deleted ON pmis_employee_tag(deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_tag_emp ON ydsz_employee_tag (employee_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_tag_code ON ydsz_employee_tag (tag_code);
+CREATE INDEX IF NOT EXISTS idx_emp_tag_tenant ON ydsz_employee_tag(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_tag_deleted ON ydsz_employee_tag(deleted);
 
 -- ====================================================================
 -- 4. 用户账号
 -- ====================================================================
 
 -- 用户账号表
-CREATE TABLE IF NOT EXISTS pmis_user_account(
+CREATE TABLE IF NOT EXISTS ydsz_user_account(
     id                 VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     username           VARCHAR(64)    NOT NULL,
     password           VARCHAR(128)   NOT NULL,
@@ -798,61 +798,61 @@ CREATE TABLE IF NOT EXISTS pmis_user_account(
     updated_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT       NOT NULL DEFAULT 0,
     tenant_id          VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_user_username UNIQUE (username, deleted),
+    CONSTRAINT uk_ydsz_user_username UNIQUE (username, deleted),
     CONSTRAINT ck_pua_status_enum   CHECK (status IN ('ENABLED', 'DISABLED', 'LOCKED')),
     CONSTRAINT ck_pua_data_scope    CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_CHILD', 'SELF', 'CUSTOM')),
     CONSTRAINT ck_pua_mfa_type      CHECK (mfa_type IN ('NONE', 'TOTP', 'SMS')),
     CONSTRAINT ck_pua_fail_nonneg   CHECK (login_fail_count >= 0 AND pwd_change_count >= 0),
     CONSTRAINT ck_pua_deleted_enum  CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_user_account IS '用户账号表: 登录凭证,存储密码哈希+盐值,支持登录失败锁定与 MFA';
-COMMENT ON COLUMN pmis_user_account.id IS '主键 ID';
-COMMENT ON COLUMN pmis_user_account.username IS '登录用户名(全局唯一)';
-COMMENT ON COLUMN pmis_user_account.password IS '密码哈希(BCrypt)';
-COMMENT ON COLUMN pmis_user_account.salt IS '密码盐值';
-COMMENT ON COLUMN pmis_user_account.employee_id IS '关联员工 ID(关联 pmis_employee.id,1 个账号对应 1 个员工)';
-COMMENT ON COLUMN pmis_user_account.status IS '账号状态: ENABLED 启用 / DISABLED 停用 / LOCKED 锁定';
-COMMENT ON COLUMN pmis_user_account.last_login_time IS '最近登录时间';
-COMMENT ON COLUMN pmis_user_account.last_login_ip IS '最近登录 IP';
-COMMENT ON COLUMN pmis_user_account.login_fail_count IS '连续登录失败次数(达到阈值触发锁定)';
-COMMENT ON COLUMN pmis_user_account.locked_until IS '锁定截止时间(到期自动解锁)';
-COMMENT ON COLUMN pmis_user_account.dept_id IS '所属部门 ID(关联 pmis_department.id,支持 dept: 审批人展开)';
-COMMENT ON COLUMN pmis_user_account.leader_id IS '直属上级用户 ID(关联 pmis_user_account.id,支持 leader: 审批人展开)';
-COMMENT ON COLUMN pmis_user_account.position_code IS '岗位编码(如 PM/DEV/QA/SA,支持 position: 审批人展开)';
-COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_CHILD 本部门及下级 / SELF 本人 / CUSTOM 自定义';
-COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
-COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
-COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
-COMMENT ON COLUMN pmis_user_account.last_pwd_change_at IS '最近密码修改时间';
-COMMENT ON COLUMN pmis_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
-COMMENT ON COLUMN pmis_user_account.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_user_account.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_user_account.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_user_account.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_user_account.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_user_account.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_user_account IS '用户账号表: 登录凭证,存储密码哈希+盐值,支持登录失败锁定与 MFA';
+COMMENT ON COLUMN ydsz_user_account.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_user_account.username IS '登录用户名(全局唯一)';
+COMMENT ON COLUMN ydsz_user_account.password IS '密码哈希(BCrypt)';
+COMMENT ON COLUMN ydsz_user_account.salt IS '密码盐值';
+COMMENT ON COLUMN ydsz_user_account.employee_id IS '关联员工 ID(关联 ydsz_employee.id,1 个账号对应 1 个员工)';
+COMMENT ON COLUMN ydsz_user_account.status IS '账号状态: ENABLED 启用 / DISABLED 停用 / LOCKED 锁定';
+COMMENT ON COLUMN ydsz_user_account.last_login_time IS '最近登录时间';
+COMMENT ON COLUMN ydsz_user_account.last_login_ip IS '最近登录 IP';
+COMMENT ON COLUMN ydsz_user_account.login_fail_count IS '连续登录失败次数(达到阈值触发锁定)';
+COMMENT ON COLUMN ydsz_user_account.locked_until IS '锁定截止时间(到期自动解锁)';
+COMMENT ON COLUMN ydsz_user_account.dept_id IS '所属部门 ID(关联 ydsz_department.id,支持 dept: 审批人展开)';
+COMMENT ON COLUMN ydsz_user_account.leader_id IS '直属上级用户 ID(关联 ydsz_user_account.id,支持 leader: 审批人展开)';
+COMMENT ON COLUMN ydsz_user_account.position_code IS '岗位编码(如 PM/DEV/QA/SA,支持 position: 审批人展开)';
+COMMENT ON COLUMN ydsz_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_CHILD 本部门及下级 / SELF 本人 / CUSTOM 自定义';
+COMMENT ON COLUMN ydsz_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
+COMMENT ON COLUMN ydsz_user_account.mfa_enabled IS '是否启用双因素认证';
+COMMENT ON COLUMN ydsz_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
+COMMENT ON COLUMN ydsz_user_account.last_pwd_change_at IS '最近密码修改时间';
+COMMENT ON COLUMN ydsz_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
+COMMENT ON COLUMN ydsz_user_account.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_user_account.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_user_account.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_user_account.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_user_account.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_user_account.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_user_status ON pmis_user_account (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_user_account_tenant ON pmis_user_account(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_user_status ON ydsz_user_account (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_user_account_tenant ON ydsz_user_account(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_user_account_tenant_created
-    ON pmis_user_account(tenant_id, created_at DESC) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_user_employee
-    ON pmis_user_account(employee_id) WHERE deleted = 0;
+    ON ydsz_user_account(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_user_employee
+    ON ydsz_user_account(employee_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pua_dept_id
-    ON pmis_user_account(dept_id) WHERE deleted = 0 AND dept_id IS NOT NULL;
+    ON ydsz_user_account(dept_id) WHERE deleted = 0 AND dept_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pua_position_code
-    ON pmis_user_account(position_code) WHERE deleted = 0 AND position_code IS NOT NULL;
+    ON ydsz_user_account(position_code) WHERE deleted = 0 AND position_code IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pua_leader_id
-    ON pmis_user_account(leader_id) WHERE deleted = 0 AND leader_id IS NOT NULL;
+    ON ydsz_user_account(leader_id) WHERE deleted = 0 AND leader_id IS NOT NULL;
 
 -- ====================================================================
--- 5. 通知中心（ydsz-pmis-message 引擎 - 大厂级独立自研）
---    表前缀 pmis_msg_* 统一管理：站内通知 / 用户偏好 / 订阅
+-- 5. 通知中心（ydsz-message 引擎 - 大厂级独立自研）
+--    表前缀 ydsz_msg_* 统一管理：站内通知 / 用户偏好 / 订阅
 --    消息模板 / 发送日志 / 路由 / 回执 / 聚合 / 灰度 见第 7.x 节
 -- ====================================================================
 
--- 站内通知表 pmis_msg_notification（由原 pmis_msg_notification 重构升级）
-CREATE TABLE IF NOT EXISTS pmis_msg_notification(
+-- 站内通知表 ydsz_msg_notification（由原 ydsz_msg_notification 重构升级）
+CREATE TABLE IF NOT EXISTS ydsz_msg_notification(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     title           VARCHAR(255)   NOT NULL,
     content         TEXT,
@@ -888,50 +888,50 @@ CREATE TABLE IF NOT EXISTS pmis_msg_notification(
     CONSTRAINT ck_pmn_recall_enum    CHECK (recall_status IN ('NONE', 'RECALLED')),
     CONSTRAINT ck_pmn_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_msg_notification IS '站内通知表: 系统消息/待办/预警/公告统一入口,支持优先级/聚合/撤回/业务跳转';
-COMMENT ON COLUMN pmis_msg_notification.id IS '主键 ID';
-COMMENT ON COLUMN pmis_msg_notification.title IS '通知标题';
-COMMENT ON COLUMN pmis_msg_notification.content IS '通知内容(支持富文本/Markdown)';
-COMMENT ON COLUMN pmis_msg_notification.level IS '通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急';
-COMMENT ON COLUMN pmis_msg_notification.category IS '通知分类: SYSTEM 系统消息 / WORKFLOW 流程审批 / ALERT 预警通知 / TODO 待办 / ANNOUNCE 公告';
-COMMENT ON COLUMN pmis_msg_notification.priority IS '发送优先级: LOW 低 / NORMAL 普通 / HIGH 高 / URGENT 紧急(影响排队与聚合)';
-COMMENT ON COLUMN pmis_msg_notification.sender_id IS '发送人 ID(系统通知为 SYSTEM)';
-COMMENT ON COLUMN pmis_msg_notification.receiver_id IS '接收人 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_msg_notification.biz_type IS '关联业务类型(如 contract/invoice/risk)';
-COMMENT ON COLUMN pmis_msg_notification.biz_id IS '关联业务单据 ID';
-COMMENT ON COLUMN pmis_msg_notification.message_group IS '聚合组(同组通知可合并为摘要,如 RISK:contract-123)';
-COMMENT ON COLUMN pmis_msg_notification.batch_id IS '聚合批次 ID(关联 pmis_msg_aggregate.id)';
-COMMENT ON COLUMN pmis_msg_notification.action_url IS '点击跳转 URL(前端路由或外链)';
-COMMENT ON COLUMN pmis_msg_notification.action_text IS '跳转按钮文案(如"去处理")';
-COMMENT ON COLUMN pmis_msg_notification.icon IS '通知图标标识(Element Plus icon name)';
-COMMENT ON COLUMN pmis_msg_notification.extra IS '扩展字段 JSON(业务自定义透传)';
-COMMENT ON COLUMN pmis_msg_notification.source_module IS '来源模块(system/project/workflow/agent)';
-COMMENT ON COLUMN pmis_msg_notification.read_status IS '已读状态: 0 未读 / 1 已读';
-COMMENT ON COLUMN pmis_msg_notification.read_time IS '首次阅读时间';
-COMMENT ON COLUMN pmis_msg_notification.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
-COMMENT ON COLUMN pmis_msg_notification.recall_at IS '撤回时间';
-COMMENT ON COLUMN pmis_msg_notification.expired_at IS '过期时间(过期后不再展示)';
-COMMENT ON COLUMN pmis_msg_notification.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_msg_notification.created_at IS '发送时间';
-COMMENT ON COLUMN pmis_msg_notification.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_msg_notification.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_msg_notification.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_msg_notification.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_msg_notification IS '站内通知表: 系统消息/待办/预警/公告统一入口,支持优先级/聚合/撤回/业务跳转';
+COMMENT ON COLUMN ydsz_msg_notification.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_msg_notification.title IS '通知标题';
+COMMENT ON COLUMN ydsz_msg_notification.content IS '通知内容(支持富文本/Markdown)';
+COMMENT ON COLUMN ydsz_msg_notification.level IS '通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急';
+COMMENT ON COLUMN ydsz_msg_notification.category IS '通知分类: SYSTEM 系统消息 / WORKFLOW 流程审批 / ALERT 预警通知 / TODO 待办 / ANNOUNCE 公告';
+COMMENT ON COLUMN ydsz_msg_notification.priority IS '发送优先级: LOW 低 / NORMAL 普通 / HIGH 高 / URGENT 紧急(影响排队与聚合)';
+COMMENT ON COLUMN ydsz_msg_notification.sender_id IS '发送人 ID(系统通知为 SYSTEM)';
+COMMENT ON COLUMN ydsz_msg_notification.receiver_id IS '接收人 ID(关联 ydsz_employee.id)';
+COMMENT ON COLUMN ydsz_msg_notification.biz_type IS '关联业务类型(如 contract/invoice/risk)';
+COMMENT ON COLUMN ydsz_msg_notification.biz_id IS '关联业务单据 ID';
+COMMENT ON COLUMN ydsz_msg_notification.message_group IS '聚合组(同组通知可合并为摘要,如 RISK:contract-123)';
+COMMENT ON COLUMN ydsz_msg_notification.batch_id IS '聚合批次 ID(关联 ydsz_msg_aggregate.id)';
+COMMENT ON COLUMN ydsz_msg_notification.action_url IS '点击跳转 URL(前端路由或外链)';
+COMMENT ON COLUMN ydsz_msg_notification.action_text IS '跳转按钮文案(如"去处理")';
+COMMENT ON COLUMN ydsz_msg_notification.icon IS '通知图标标识(Element Plus icon name)';
+COMMENT ON COLUMN ydsz_msg_notification.extra IS '扩展字段 JSON(业务自定义透传)';
+COMMENT ON COLUMN ydsz_msg_notification.source_module IS '来源模块(system/project/workflow/agent)';
+COMMENT ON COLUMN ydsz_msg_notification.read_status IS '已读状态: 0 未读 / 1 已读';
+COMMENT ON COLUMN ydsz_msg_notification.read_time IS '首次阅读时间';
+COMMENT ON COLUMN ydsz_msg_notification.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
+COMMENT ON COLUMN ydsz_msg_notification.recall_at IS '撤回时间';
+COMMENT ON COLUMN ydsz_msg_notification.expired_at IS '过期时间(过期后不再展示)';
+COMMENT ON COLUMN ydsz_msg_notification.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_msg_notification.created_at IS '发送时间';
+COMMENT ON COLUMN ydsz_msg_notification.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_msg_notification.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_msg_notification.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_msg_notification.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmn_receiver ON pmis_msg_notification (receiver_id, read_status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmn_biz ON pmis_msg_notification (biz_type, biz_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmn_tenant ON pmis_msg_notification(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmn_receiver ON ydsz_msg_notification (receiver_id, read_status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmn_biz ON ydsz_msg_notification (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmn_tenant ON ydsz_msg_notification(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_pmn_tenant_created
-    ON pmis_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmn_sender
-    ON pmis_msg_notification(sender_id) WHERE deleted = 0;
+    ON ydsz_msg_notification(sender_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmn_group
-    ON pmis_msg_notification(receiver_id, message_group) WHERE deleted = 0 AND message_group IS NOT NULL;
+    ON ydsz_msg_notification(receiver_id, message_group) WHERE deleted = 0 AND message_group IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pmn_batch
-    ON pmis_msg_notification(batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
+    ON ydsz_msg_notification(batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
 
--- 用户消息偏好表 pmis_msg_preference（免打扰 / 频率上限 / 聚合开关 / 语言）
-CREATE TABLE IF NOT EXISTS pmis_msg_preference(
+-- 用户消息偏好表 ydsz_msg_preference（免打扰 / 频率上限 / 聚合开关 / 语言）
+CREATE TABLE IF NOT EXISTS ydsz_msg_preference(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id           VARCHAR(20)   NOT NULL,
     channel           VARCHAR(32)   NOT NULL,
@@ -961,26 +961,26 @@ CREATE TABLE IF NOT EXISTS pmis_msg_preference(
     CONSTRAINT ck_pmp_daily_nonneg  CHECK (daily_limit IS NULL OR daily_limit >= 0),
     CONSTRAINT ck_pmp_hourly_nonneg CHECK (hourly_limit IS NULL OR hourly_limit >= 0)
 );
-COMMENT ON TABLE pmis_msg_preference IS '用户消息偏好表: 免打扰时段 / 频率上限 / 聚合开关 / 偏好语言';
-COMMENT ON COLUMN pmis_msg_preference.user_id IS '用户 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
-COMMENT ON COLUMN pmis_msg_preference.biz_type IS '业务类型(__DEFAULT__ 表示该通道全局默认偏好)';
-COMMENT ON COLUMN pmis_msg_preference.enabled IS '是否启用该通道: 0 关闭 / 1 开启(关闭后不发送)';
-COMMENT ON COLUMN pmis_msg_preference.dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
-COMMENT ON COLUMN pmis_msg_preference.dnd_start IS '免打扰开始时间 HH:mm(如 22:00)';
-COMMENT ON COLUMN pmis_msg_preference.dnd_end IS '免打扰结束时间 HH:mm(如 08:00)';
-COMMENT ON COLUMN pmis_msg_preference.daily_limit IS '每日发送上限(超过则暂存或丢弃)';
-COMMENT ON COLUMN pmis_msg_preference.hourly_limit IS '每小时发送上限';
-COMMENT ON COLUMN pmis_msg_preference.digest_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
-COMMENT ON COLUMN pmis_msg_preference.digest_frequency IS '聚合频率: HOURLY / DAILY / WEEKLY';
-COMMENT ON COLUMN pmis_msg_preference.locale IS '偏好语言(如 zh-CN / en-US,影响模板 i18n 选择)';
-COMMENT ON COLUMN pmis_msg_preference.extra IS '扩展字段 JSON';
+COMMENT ON TABLE ydsz_msg_preference IS '用户消息偏好表: 免打扰时段 / 频率上限 / 聚合开关 / 偏好语言';
+COMMENT ON COLUMN ydsz_msg_preference.user_id IS '用户 ID(关联 ydsz_employee.id)';
+COMMENT ON COLUMN ydsz_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
+COMMENT ON COLUMN ydsz_msg_preference.biz_type IS '业务类型(__DEFAULT__ 表示该通道全局默认偏好)';
+COMMENT ON COLUMN ydsz_msg_preference.enabled IS '是否启用该通道: 0 关闭 / 1 开启(关闭后不发送)';
+COMMENT ON COLUMN ydsz_msg_preference.dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
+COMMENT ON COLUMN ydsz_msg_preference.dnd_start IS '免打扰开始时间 HH:mm(如 22:00)';
+COMMENT ON COLUMN ydsz_msg_preference.dnd_end IS '免打扰结束时间 HH:mm(如 08:00)';
+COMMENT ON COLUMN ydsz_msg_preference.daily_limit IS '每日发送上限(超过则暂存或丢弃)';
+COMMENT ON COLUMN ydsz_msg_preference.hourly_limit IS '每小时发送上限';
+COMMENT ON COLUMN ydsz_msg_preference.digest_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
+COMMENT ON COLUMN ydsz_msg_preference.digest_frequency IS '聚合频率: HOURLY / DAILY / WEEKLY';
+COMMENT ON COLUMN ydsz_msg_preference.locale IS '偏好语言(如 zh-CN / en-US,影响模板 i18n 选择)';
+COMMENT ON COLUMN ydsz_msg_preference.extra IS '扩展字段 JSON';
 
-CREATE INDEX IF NOT EXISTS idx_pmp_user ON pmis_msg_preference(user_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmp_tenant ON pmis_msg_preference(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmp_user ON ydsz_msg_preference(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmp_tenant ON ydsz_msg_preference(tenant_id);
 
--- 订阅关系表 pmis_msg_subscription（用户订阅/退订主题）
-CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
+-- 订阅关系表 ydsz_msg_subscription（用户订阅/退订主题）
+CREATE TABLE IF NOT EXISTS ydsz_msg_subscription(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)   NOT NULL,
     topic_code      VARCHAR(128)  NOT NULL,
@@ -1000,24 +1000,24 @@ CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
     CONSTRAINT ck_pms_status_enum     CHECK (status IN ('SUBSCRIBED', 'UNSUBSCRIBED')),
     CONSTRAINT ck_pms_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_msg_subscription IS '订阅关系表: 用户对主题(topic_code)在指定通道的订阅/退订状态';
-COMMENT ON COLUMN pmis_msg_subscription.user_id IS '用户 ID';
-COMMENT ON COLUMN pmis_msg_subscription.topic_code IS '主题编码(如 RISK_ALERT / CONTRACT_APPROVAL / APPROVAL_TODO)';
-COMMENT ON COLUMN pmis_msg_subscription.channel IS '通道';
-COMMENT ON COLUMN pmis_msg_subscription.status IS '订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订';
-COMMENT ON COLUMN pmis_msg_subscription.role_scope IS '角色范围(如 PM|MEMBER,限定角色内可见性)';
-COMMENT ON COLUMN pmis_msg_subscription.extra IS '扩展字段 JSON';
-COMMENT ON COLUMN pmis_msg_subscription.unsubscribed_at IS '退订时间(P1-5:仅 status=UNSUBSCRIBED 时有意义)';
+COMMENT ON TABLE ydsz_msg_subscription IS '订阅关系表: 用户对主题(topic_code)在指定通道的订阅/退订状态';
+COMMENT ON COLUMN ydsz_msg_subscription.user_id IS '用户 ID';
+COMMENT ON COLUMN ydsz_msg_subscription.topic_code IS '主题编码(如 RISK_ALERT / CONTRACT_APPROVAL / APPROVAL_TODO)';
+COMMENT ON COLUMN ydsz_msg_subscription.channel IS '通道';
+COMMENT ON COLUMN ydsz_msg_subscription.status IS '订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订';
+COMMENT ON COLUMN ydsz_msg_subscription.role_scope IS '角色范围(如 PM|MEMBER,限定角色内可见性)';
+COMMENT ON COLUMN ydsz_msg_subscription.extra IS '扩展字段 JSON';
+COMMENT ON COLUMN ydsz_msg_subscription.unsubscribed_at IS '退订时间(P1-5:仅 status=UNSUBSCRIBED 时有意义)';
 
-CREATE INDEX IF NOT EXISTS idx_pms_user ON pmis_msg_subscription(user_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pms_topic ON pmis_msg_subscription(topic_code, channel) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON pmis_msg_subscription(status, unsubscribed_at) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pms_user ON ydsz_msg_subscription(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pms_topic ON ydsz_msg_subscription(topic_code, channel) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON ydsz_msg_subscription(status, unsubscribed_at) WHERE deleted = 0;
 
 -- ====================================================================
 -- 6. 系统配置
 -- ====================================================================
 
-CREATE TABLE IF NOT EXISTS pmis_config(
+CREATE TABLE IF NOT EXISTS ydsz_config(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     config_group    VARCHAR(64)    NOT NULL,
     config_key      VARCHAR(128)   NOT NULL,
@@ -1034,43 +1034,43 @@ CREATE TABLE IF NOT EXISTS pmis_config(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_config_key UNIQUE (config_group, config_key, deleted),
+    CONSTRAINT uk_ydsz_config_key UNIQUE (config_group, config_key, deleted),
     CONSTRAINT ck_pc_value_type    CHECK (value_type IN ('STRING', 'NUMBER', 'BOOLEAN', 'JSON')),
     CONSTRAINT ck_pc_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pc_public_enum   CHECK (is_public IN (0, 1)),
     CONSTRAINT ck_pc_deleted_enum  CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_config IS '系统配置表: 业务可热更新的参数(预警阈值/费率/工作流引擎等),按 group 分组';
-COMMENT ON COLUMN pmis_config.id IS '主键 ID';
-COMMENT ON COLUMN pmis_config.config_group IS '配置分组(如 alert/rate/workflow/system)';
-COMMENT ON COLUMN pmis_config.config_key IS '配置键(同组下唯一,如 alert.cpi.yellow)';
-COMMENT ON COLUMN pmis_config.config_value IS '配置值';
-COMMENT ON COLUMN pmis_config.value_type IS '值类型: STRING 字符串 / NUMBER 数值 / BOOLEAN 布尔 / JSON JSON 对象';
-COMMENT ON COLUMN pmis_config.default_value IS '默认值(配置缺失时回退使用)';
-COMMENT ON COLUMN pmis_config.description IS '配置项说明';
-COMMENT ON COLUMN pmis_config.is_public IS '是否对前端公开: 1 公开 / 0 仅后端(避免敏感配置泄漏)';
-COMMENT ON COLUMN pmis_config.sort_order IS '排序号';
-COMMENT ON COLUMN pmis_config.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_config.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_config.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_config.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_config.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_config.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_config.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_config IS '系统配置表: 业务可热更新的参数(预警阈值/费率/工作流引擎等),按 group 分组';
+COMMENT ON COLUMN ydsz_config.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_config.config_group IS '配置分组(如 alert/rate/workflow/system)';
+COMMENT ON COLUMN ydsz_config.config_key IS '配置键(同组下唯一,如 alert.cpi.yellow)';
+COMMENT ON COLUMN ydsz_config.config_value IS '配置值';
+COMMENT ON COLUMN ydsz_config.value_type IS '值类型: STRING 字符串 / NUMBER 数值 / BOOLEAN 布尔 / JSON JSON 对象';
+COMMENT ON COLUMN ydsz_config.default_value IS '默认值(配置缺失时回退使用)';
+COMMENT ON COLUMN ydsz_config.description IS '配置项说明';
+COMMENT ON COLUMN ydsz_config.is_public IS '是否对前端公开: 1 公开 / 0 仅后端(避免敏感配置泄漏)';
+COMMENT ON COLUMN ydsz_config.sort_order IS '排序号';
+COMMENT ON COLUMN ydsz_config.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_config.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_config.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_config.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_config.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_config.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_config.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_config_group ON pmis_config (config_group) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_config_tenant ON pmis_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_config_group ON ydsz_config (config_group) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_config_tenant ON ydsz_config(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_config_tenant_created
-    ON pmis_config(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_config(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- ====================================================================
 -- 7. 操作日志
 -- ====================================================================
 
--- V1.0.0_001 P1-4 重构: pmis_operation_log 改为按月 RANGE 分区表
+-- V1.0.0_001 P1-4 重构: ydsz_operation_log 改为按月 RANGE 分区表
 --   (主键必须包含分区键;BRIN 索引对父表定义,自动传播到所有分区)
-DROP TABLE IF EXISTS pmis_operation_log CASCADE;
-CREATE TABLE IF NOT EXISTS pmis_operation_log(
+DROP TABLE IF EXISTS ydsz_operation_log CASCADE;
+CREATE TABLE IF NOT EXISTS ydsz_operation_log(
     id                VARCHAR(20)      NOT NULL,
     user_id           VARCHAR(20),
     username          VARCHAR(64),
@@ -1100,47 +1100,47 @@ CREATE TABLE IF NOT EXISTS pmis_operation_log(
     -- 分区表主键必须包含分区键
     PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
-COMMENT ON TABLE pmis_operation_log IS '操作日志表: 用户关键操作全量留存(模块/动作/入参/出参/耗时/IP),用于审计与问题排查';
-COMMENT ON COLUMN pmis_operation_log.id IS '主键 ID';
-COMMENT ON COLUMN pmis_operation_log.user_id IS '操作用户 ID';
-COMMENT ON COLUMN pmis_operation_log.username IS '操作用户名';
-COMMENT ON COLUMN pmis_operation_log.module IS '操作模块(如 project/contract/finance)';
-COMMENT ON COLUMN pmis_operation_log.action IS '操作动作(如 create/update/delete/approve)';
-COMMENT ON COLUMN pmis_operation_log.biz_type IS '业务类型';
-COMMENT ON COLUMN pmis_operation_log.biz_id IS '业务单据 ID';
-COMMENT ON COLUMN pmis_operation_log.request_url IS '请求 URL';
-COMMENT ON COLUMN pmis_operation_log.http_method IS 'V1.0.0_008: HTTP 方法(GET/POST/PUT/DELETE)';
-COMMENT ON COLUMN pmis_operation_log.method_signature IS 'V1.0.0_008: Java 方法签名(如 ProjectController#create)';
-COMMENT ON COLUMN pmis_operation_log.client_ip IS 'V1.0.0_008: 客户端 IP';
-COMMENT ON COLUMN pmis_operation_log.user_agent IS '浏览器/客户端 User-Agent';
-COMMENT ON COLUMN pmis_operation_log.params_json IS 'V1.0.0_008: 请求参数 JSON(敏感字段脱敏)';
-COMMENT ON COLUMN pmis_operation_log.response_json IS 'V1.0.0_008: 响应数据 JSON(失败时为空)';
-COMMENT ON COLUMN pmis_operation_log.before_data IS 'V1.0.0_040: 变更前数据快照(JSONB,update/delete 时填充)';
-COMMENT ON COLUMN pmis_operation_log.after_data IS 'V1.0.0_040: 变更后数据快照(JSONB,create/update 时填充)';
-COMMENT ON COLUMN pmis_operation_log.cost_ms IS '接口耗时(毫秒)';
-COMMENT ON COLUMN pmis_operation_log.status IS '操作状态: SUCCESS 成功 / FAILED 失败';
-COMMENT ON COLUMN pmis_operation_log.error_message IS '错误信息(失败时填充堆栈摘要)';
-COMMENT ON COLUMN pmis_operation_log.trace_id IS 'V1.0.0_008: 系统链路追踪 ID(SkyWalking/TLog)';
-COMMENT ON COLUMN pmis_operation_log.created_at IS '操作时间';
-COMMENT ON COLUMN pmis_operation_log.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_operation_log IS '操作日志表: 用户关键操作全量留存(模块/动作/入参/出参/耗时/IP),用于审计与问题排查';
+COMMENT ON COLUMN ydsz_operation_log.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_operation_log.user_id IS '操作用户 ID';
+COMMENT ON COLUMN ydsz_operation_log.username IS '操作用户名';
+COMMENT ON COLUMN ydsz_operation_log.module IS '操作模块(如 project/contract/finance)';
+COMMENT ON COLUMN ydsz_operation_log.action IS '操作动作(如 create/update/delete/approve)';
+COMMENT ON COLUMN ydsz_operation_log.biz_type IS '业务类型';
+COMMENT ON COLUMN ydsz_operation_log.biz_id IS '业务单据 ID';
+COMMENT ON COLUMN ydsz_operation_log.request_url IS '请求 URL';
+COMMENT ON COLUMN ydsz_operation_log.http_method IS 'V1.0.0_008: HTTP 方法(GET/POST/PUT/DELETE)';
+COMMENT ON COLUMN ydsz_operation_log.method_signature IS 'V1.0.0_008: Java 方法签名(如 ProjectController#create)';
+COMMENT ON COLUMN ydsz_operation_log.client_ip IS 'V1.0.0_008: 客户端 IP';
+COMMENT ON COLUMN ydsz_operation_log.user_agent IS '浏览器/客户端 User-Agent';
+COMMENT ON COLUMN ydsz_operation_log.params_json IS 'V1.0.0_008: 请求参数 JSON(敏感字段脱敏)';
+COMMENT ON COLUMN ydsz_operation_log.response_json IS 'V1.0.0_008: 响应数据 JSON(失败时为空)';
+COMMENT ON COLUMN ydsz_operation_log.before_data IS 'V1.0.0_040: 变更前数据快照(JSONB,update/delete 时填充)';
+COMMENT ON COLUMN ydsz_operation_log.after_data IS 'V1.0.0_040: 变更后数据快照(JSONB,create/update 时填充)';
+COMMENT ON COLUMN ydsz_operation_log.cost_ms IS '接口耗时(毫秒)';
+COMMENT ON COLUMN ydsz_operation_log.status IS '操作状态: SUCCESS 成功 / FAILED 失败';
+COMMENT ON COLUMN ydsz_operation_log.error_message IS '错误信息(失败时填充堆栈摘要)';
+COMMENT ON COLUMN ydsz_operation_log.trace_id IS 'V1.0.0_008: 系统链路追踪 ID(SkyWalking/TLog)';
+COMMENT ON COLUMN ydsz_operation_log.created_at IS '操作时间';
+COMMENT ON COLUMN ydsz_operation_log.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 -- P1-4: 父表索引,自动传播到所有月度分区
-CREATE INDEX IF NOT EXISTS idx_pmis_oplog_user ON pmis_operation_log (user_id);
-CREATE INDEX IF NOT EXISTS idx_pmis_oplog_module ON pmis_operation_log (module, action);
-CREATE INDEX IF NOT EXISTS idx_pmis_oplog_created ON pmis_operation_log (created_at);
-CREATE INDEX IF NOT EXISTS idx_pol_tenant ON pmis_operation_log(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_oplog_user ON ydsz_operation_log (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_oplog_module ON ydsz_operation_log (module, action);
+CREATE INDEX IF NOT EXISTS idx_ydsz_oplog_created ON ydsz_operation_log (created_at);
+CREATE INDEX IF NOT EXISTS idx_pol_tenant ON ydsz_operation_log(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_pol_tenant_created
-    ON pmis_operation_log(tenant_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_oplog_biz
-    ON pmis_operation_log(biz_type, biz_id)
+    ON ydsz_operation_log(tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ydsz_oplog_biz
+    ON ydsz_operation_log(biz_type, biz_id)
     WHERE biz_type IS NOT NULL AND biz_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pol_user_created
-    ON pmis_operation_log(user_id, created_at DESC);
+    ON ydsz_operation_log(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pol_trace
-    ON pmis_operation_log(trace_id) WHERE trace_id IS NOT NULL;
+    ON ydsz_operation_log(trace_id) WHERE trace_id IS NOT NULL;
 -- P1-4: BRIN 索引(父表,自动传播) — 时间范围扫描友好
-CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
-    ON pmis_operation_log USING BRIN (created_at)
+CREATE INDEX IF NOT EXISTS idx_ydsz_operation_log_brin
+    ON ydsz_operation_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 
 -- ====================================================================
@@ -1151,12 +1151,12 @@ CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
 -- 默认 admin 账号 (密码: admin123, 哈希算法: BCrypt, 成本因子: 10)
 -- BCrypt 自带盐,无需单独存储 salt 字段(此处置空字符串)。
 -- 密码使用 BCrypt 哈希,首次登录建议强制修改。
-INSERT INTO pmis_user_account (username, password, salt, status, created_by)
+INSERT INTO ydsz_user_account (username, password, salt, status, created_by)
 VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMy.Mrq8BpVLqMDvQXEvCJ5DEmCJWP1tCaa', '', 'ENABLED', 0)
 ON CONFLICT (username, deleted) DO NOTHING;
 
 -- 初始化职级 (L1-L18)
-INSERT INTO pmis_rank (level_code, level_name, level_segment, sort_order, description, created_by)
+INSERT INTO ydsz_rank (level_code, level_name, level_segment, sort_order, description, created_by)
 VALUES
     ('L1',  '助理工程师',   'PRIMARY',   1,  '0-1 年（应届大专/中专）', 0),
     ('L2',  '初级开发工程师','PRIMARY',  2,  '0-1 年（应届本科）', 0),
@@ -1179,7 +1179,7 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 初始化职级费率 (V3.2 双列直出)
-INSERT INTO pmis_rank_rate
+INSERT INTO ydsz_rank_rate
 (level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, travel_reimbursement, travel_allowance, total_cost, billable_target, effective_date, version, created_by)
 VALUES
     ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  500,  300,  5980,  0.78, '2026-01-01', 1, 0),
@@ -1203,7 +1203,7 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 初始化兼职职级费率 (P1-P18, 时薪核算月薪+商业保险+差旅)
-INSERT INTO pmis_part_time_rate
+INSERT INTO ydsz_part_time_rate
 (rate_code, rate_name, level_segment, hourly_rate, monthly_hours, monthly_salary, commercial_insurance, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
 VALUES
     ('P1',  '兼职助理工程师',     'PRIMARY',   17.05, 176,  3000.80,  50,  300,  200,  3550.80,  300,  150,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
@@ -1227,7 +1227,7 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 初始化外包职级费率 (V1-V18, 人天核算月薪+差旅报销+差旅补贴)
-INSERT INTO pmis_outsource_rate
+INSERT INTO ydsz_outsource_rate
 (rate_code, rate_name, level_segment, daily_rate, monthly_days, monthly_salary, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
 VALUES
     ('V1',  '外包助理工程师',     'PRIMARY',   113.64, 22,  2500.08,  300,  200,  3000.08,  250,  120,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
@@ -1251,17 +1251,17 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 初始化根部门
-INSERT INTO pmis_department (dept_code, dept_name, parent_id, dept_path, sort_order, status, created_by)
+INSERT INTO ydsz_department (dept_code, dept_name, parent_id, dept_path, sort_order, status, created_by)
 VALUES ('ROOT', '南京云顶数字科技有限公司', 0, '/1', 0, 'ENABLED', 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化超级管理员角色
-INSERT INTO pmis_role (role_code, role_name, data_scope, sort_order, status, created_by)
+INSERT INTO ydsz_role (role_code, role_name, data_scope, sort_order, status, created_by)
 VALUES ('SUPER_ADMIN', '超级管理员', 'ALL', 0, 'ENABLED', 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化字典类型（PRD 2.3 节要求）
-INSERT INTO pmis_dict_type (type_code, type_name, description, created_by) VALUES
+INSERT INTO ydsz_dict_type (type_code, type_name, description, created_by) VALUES
     ('procurement_method', '招采方式', '招采方式枚举', 0),
     ('project_type', '项目类型', '8 类项目类型', 0),
     ('product_type', '产品类型', '产品线', 0),
@@ -1275,7 +1275,7 @@ INSERT INTO pmis_dict_type (type_code, type_name, description, created_by) VALUE
 ON CONFLICT DO NOTHING;
 
 -- 初始化项目类型字典项
-INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
+INSERT INTO ydsz_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
     ('project_type', 'SYSTEM_DEV',     '系统开发',   1, 0),
     ('project_type', 'SYSTEM_INTEG',   '系统集成',   2, 0),
     ('project_type', 'SYSTEM_MAINT',   '系统维护',   3, 0),
@@ -1287,7 +1287,7 @@ INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, create
 ON CONFLICT DO NOTHING;
 
 -- 初始化项目阶段字典项
-INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
+INSERT INTO ydsz_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
     ('project_phase', 'REQUIREMENT', '需求调研', 1, 0),
     ('project_phase', 'DEVELOPMENT', '功能开发', 2, 0),
     ('project_phase', 'TESTING',     '测试阶段', 3, 0),
@@ -1297,14 +1297,14 @@ INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, create
 ON CONFLICT DO NOTHING;
 
 -- 初始化系统配置
-INSERT INTO pmis_config (config_group, config_key, config_value, value_type, description, created_by) VALUES
+INSERT INTO ydsz_config (config_group, config_key, config_value, value_type, description, created_by) VALUES
     ('system', 'system.name', 'PMIS 项目运营管理系统', 'STRING', '系统名称', 0),
     ('system', 'system.version', '1.0.0', 'STRING', '系统版本', 0),
     ('rate', 'rate.social.company.rate', '0.245', 'NUMBER', '公司社保比例', 0),
     ('rate', 'rate.fund.company.rate', '0.05', 'NUMBER', '公司公积金比例', 0),
     ('rate', 'rate.workdays.per.month', '21.75', 'NUMBER', '月计薪天数', 0),
     ('rate', 'rate.hours.per.day', '8', 'NUMBER', '日标准工时', 0),
-    ('workflow', 'workflow.engine', 'pmis', 'STRING', '工作流引擎（自研 pmis_flow_*）', 0),
+    ('workflow', 'workflow.engine', 'pmis', 'STRING', '工作流引擎（自研 ydsz_flow_*）', 0),
     ('alert', 'alert.cpi.yellow', '0.95', 'NUMBER', 'CPI 黄色预警阈值', 0),
     ('alert', 'alert.cpi.red', '0.85', 'NUMBER', 'CPI 红色预警阈值', 0),
     ('alert', 'alert.spi.yellow', '0.90', 'NUMBER', 'SPI 黄色预警阈值', 0),
@@ -1321,19 +1321,19 @@ ON CONFLICT DO NOTHING;
 -- PMIS 工作流基础模块清理 DDL（Flowable 表已下线）
 -- 版本: V1.0.0_004
 -- 描述: 完全移除 Flowable 引擎相关的业务关联表 / 表单定义表 / 节点配置表
---       业务流程关联信息已统一收敛到自研 pmis_flow_instance / pmis_flow_run_task
---       流程表单/节点配置已收敛到自研 pmis_flow_definition / pmis_flow_node / pmis_flow_skip
--- 历史: V1.0.0_004 旧版本曾创建 pmis_workflow_business / pmis_workflow_form / pmis_workflow_node_config
+--       业务流程关联信息已统一收敛到自研 ydsz_flow_instance / ydsz_flow_run_task
+--       流程表单/节点配置已收敛到自研 ydsz_flow_definition / ydsz_flow_node / ydsz_flow_skip
+-- 历史: V1.0.0_004 旧版本曾创建 ydsz_workflow_business / ydsz_workflow_form / ydsz_workflow_node_config
 --       现已废弃，本次迁移仅 DROP（不重建），以保证幂等
 -- =====================================================
 
--- 清理：业务流程实例关联表（功能已被 pmis_flow_instance 替代）
+-- 清理：业务流程实例关联表（功能已被 ydsz_flow_instance 替代）
 -- P1-6: DROP 改 CREATE IF NOT EXISTS 即可,无需 DROP(已废弃表)
 
--- 清理：流程表单定义表（功能已通过 pmis_flow_definition.form_path 替代）
+-- 清理：流程表单定义表（功能已通过 ydsz_flow_definition.form_path 替代）
 -- P1-6: 已废弃,无需 DROP
 
--- 清理：流程节点配置表（功能已通过 pmis_flow_node.permission_flag / ext 替代）
+-- 清理：流程节点配置表（功能已通过 ydsz_flow_node.permission_flag / ext 替代）
 -- P1-6: 已废弃,无需 DROP
 
 -- --------------------------------------------------------------------
@@ -1351,7 +1351,7 @@ ON CONFLICT DO NOTHING;
 -- 描述: 文件元信息表(MinIO/OSS 对象存储统一管理)
 -- =====================================================
 
-CREATE TABLE IF NOT EXISTS pmis_file (
+CREATE TABLE IF NOT EXISTS ydsz_file (
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     file_name       VARCHAR(256)   NOT NULL,
     original_name   VARCHAR(256)   NOT NULL,
@@ -1382,45 +1382,45 @@ CREATE TABLE IF NOT EXISTS pmis_file (
 -- [INLINE-OPT] 文件名 + 桶 在同一租户下应唯一(同一对象不能两次上传)
 -- 注:此处未直接加 UNIQUE 约束,因 file_path 可能随时间变化;唯一性由应用层 + file_hash 联合去重保障
 
-COMMENT ON TABLE pmis_file IS '文件元信息表: 统一管理 MinIO/OSS 等对象存储中的文件,支持业务关联与临时 URL';
-COMMENT ON COLUMN pmis_file.id IS '主键 ID';
-COMMENT ON COLUMN pmis_file.file_name IS '存储文件名(系统按 UUID 生成,避免冲突)';
-COMMENT ON COLUMN pmis_file.original_name IS '原始文件名(用户上传时的文件名)';
-COMMENT ON COLUMN pmis_file.file_path IS '对象存储 Key/路径(如 contracts/2026/06/xxx.pdf)';
-COMMENT ON COLUMN pmis_file.bucket IS '对象存储桶名';
-COMMENT ON COLUMN pmis_file.content_type IS 'MIME 类型(如 application/pdf)';
-COMMENT ON COLUMN pmis_file.file_size IS '文件大小(字节)';
-COMMENT ON COLUMN pmis_file.file_hash IS '文件 SHA-256 哈希(用于秒传/去重/完整性校验)';
-COMMENT ON COLUMN pmis_file.biz_type IS '业务类型(如 contract/invoice/delivery)';
-COMMENT ON COLUMN pmis_file.biz_id IS '业务单据 ID(关联具体业务表)';
-COMMENT ON COLUMN pmis_file.storage_type IS '存储类型: MINIO / LOCAL 本地 / OSS 阿里云 / COS 腾讯云';
-COMMENT ON COLUMN pmis_file.access_url IS '访问 URL(预签名 URL,带过期时间)';
-COMMENT ON COLUMN pmis_file.url_expire_at IS '访问 URL 过期时间';
-COMMENT ON COLUMN pmis_file.uploader_id IS '上传人 ID';
-COMMENT ON COLUMN pmis_file.uploader_name IS '上传人姓名';
-COMMENT ON COLUMN pmis_file.description IS '文件描述/备注';
-COMMENT ON COLUMN pmis_file.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_file.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_file.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_file.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_file.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_file.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_file IS '文件元信息表: 统一管理 MinIO/OSS 等对象存储中的文件,支持业务关联与临时 URL';
+COMMENT ON COLUMN ydsz_file.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_file.file_name IS '存储文件名(系统按 UUID 生成,避免冲突)';
+COMMENT ON COLUMN ydsz_file.original_name IS '原始文件名(用户上传时的文件名)';
+COMMENT ON COLUMN ydsz_file.file_path IS '对象存储 Key/路径(如 contracts/2026/06/xxx.pdf)';
+COMMENT ON COLUMN ydsz_file.bucket IS '对象存储桶名';
+COMMENT ON COLUMN ydsz_file.content_type IS 'MIME 类型(如 application/pdf)';
+COMMENT ON COLUMN ydsz_file.file_size IS '文件大小(字节)';
+COMMENT ON COLUMN ydsz_file.file_hash IS '文件 SHA-256 哈希(用于秒传/去重/完整性校验)';
+COMMENT ON COLUMN ydsz_file.biz_type IS '业务类型(如 contract/invoice/delivery)';
+COMMENT ON COLUMN ydsz_file.biz_id IS '业务单据 ID(关联具体业务表)';
+COMMENT ON COLUMN ydsz_file.storage_type IS '存储类型: MINIO / LOCAL 本地 / OSS 阿里云 / COS 腾讯云';
+COMMENT ON COLUMN ydsz_file.access_url IS '访问 URL(预签名 URL,带过期时间)';
+COMMENT ON COLUMN ydsz_file.url_expire_at IS '访问 URL 过期时间';
+COMMENT ON COLUMN ydsz_file.uploader_id IS '上传人 ID';
+COMMENT ON COLUMN ydsz_file.uploader_name IS '上传人姓名';
+COMMENT ON COLUMN ydsz_file.description IS '文件描述/备注';
+COMMENT ON COLUMN ydsz_file.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_file.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_file.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_file.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_file.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 -- [INLINE-OPT] 全部索引添加 deleted 部分条件,避免逻辑删除行干扰
-CREATE INDEX IF NOT EXISTS idx_pmis_file_biz
-    ON pmis_file (biz_type, biz_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_file_hash
-    ON pmis_file (file_hash) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_file_uploader
-    ON pmis_file (uploader_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_file_bucket
-    ON pmis_file (bucket) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_biz
+    ON ydsz_file (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_hash
+    ON ydsz_file (file_hash) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_uploader
+    ON ydsz_file (uploader_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_bucket
+    ON ydsz_file (bucket) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:按租户 + 创建时间倒序,支持文件中心列表分页
-CREATE INDEX IF NOT EXISTS idx_pmis_file_tenant_created
-    ON pmis_file (tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_tenant_created
+    ON ydsz_file (tenant_id, created_at DESC) WHERE deleted = 0;
 -- [INLINE-OPT] URL 过期清理:按 url_expire_at 升序扫描已过期 URL(系统后台任务使用)
-CREATE INDEX IF NOT EXISTS idx_pmis_file_url_expire
-    ON pmis_file (url_expire_at) WHERE deleted = 0 AND url_expire_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_url_expire
+    ON ydsz_file (url_expire_at) WHERE deleted = 0 AND url_expire_at IS NOT NULL;
 
 -- --------------------------------------------------------------------
 
@@ -1438,8 +1438,8 @@ CREATE INDEX IF NOT EXISTS idx_pmis_file_url_expire
 -- 描述: 动态定时任务定义 + 执行日志(自研调度引擎)
 -- =====================================================
 
--- 任务定义表 pmis_job
-CREATE TABLE IF NOT EXISTS pmis_job(
+-- 任务定义表 ydsz_job
+CREATE TABLE IF NOT EXISTS ydsz_job(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_name        VARCHAR(128)   NOT NULL,
     job_group       VARCHAR(64)    NOT NULL DEFAULT 'DEFAULT',
@@ -1463,7 +1463,7 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     -- [P0-4] 任务级锁 TTL（毫秒, NULL 使用全局默认值）和任务超时（毫秒, NULL 不限）
     lock_ttl_ms     BIGINT,
     timeout_ms      BIGINT,
-    -- [P6-3] 慢任务阈值（毫秒, NULL 不检测慢任务; 超过此值记入 pmis_job_slow_log）
+    -- [P6-3] 慢任务阈值（毫秒, NULL 不检测慢任务; 超过此值记入 ydsz_job_slow_log）
     slow_threshold_ms BIGINT,
     -- [P2-1] Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行并标记 MISFIRED
     misfire_policy  VARCHAR(32)    NOT NULL DEFAULT 'FIRE_NOW',
@@ -1496,7 +1496,7 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
-    CONSTRAINT uk_pmis_job_key UNIQUE (job_key, deleted),
+    CONSTRAINT uk_ydsz_job_key UNIQUE (job_key, deleted),
     -- [P1-6] status 增加 AUTO_PAUSED: 连续失败熔断后自动暂停
     CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE', 'AUTO_PAUSED')),
     CONSTRAINT ck_pj_counts_nonneg  CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
@@ -1522,68 +1522,68 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     CONSTRAINT ck_pj_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(自研调度引擎)';
-COMMENT ON COLUMN pmis_job.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job.job_name IS '任务名称(展示用)';
-COMMENT ON COLUMN pmis_job.job_group IS '任务分组(如 DEFAULT/RECONCILE/ALERT)';
-COMMENT ON COLUMN pmis_job.job_key IS '任务唯一 KEY(调度器使用)';
-COMMENT ON COLUMN pmis_job.handler IS '任务处理器 Bean 名称(Spring Bean)';
-COMMENT ON COLUMN pmis_job.cron_expression IS 'Cron 表达式(如 0 0 2 * * ? = 每日 02:00)';
-COMMENT ON COLUMN pmis_job.schedule_type IS '调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)';
-COMMENT ON COLUMN pmis_job.fixed_rate_ms IS '固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效';
-COMMENT ON COLUMN pmis_job.fixed_delay_ms IS '固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效';
-COMMENT ON COLUMN pmis_job.params_json IS '任务参数 JSON';
-COMMENT ON COLUMN pmis_job.status IS '任务状态: NORMAL 正常 / PAUSED 暂停 / ERROR 异常 / COMPLETE 一次性任务完成';
-COMMENT ON COLUMN pmis_job.remark IS '任务说明';
-COMMENT ON COLUMN pmis_job.next_fire_time IS '下次触发时间';
-COMMENT ON COLUMN pmis_job.last_fire_time IS '上次触发时间';
-COMMENT ON COLUMN pmis_job.fire_count IS '累计触发次数';
-COMMENT ON COLUMN pmis_job.success_count IS '成功执行次数';
-COMMENT ON COLUMN pmis_job.fail_count IS '失败次数(超过阈值告警)';
-COMMENT ON COLUMN pmis_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 pmis.cronjob.job-lock-ttl)';
-COMMENT ON COLUMN pmis_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
-COMMENT ON COLUMN pmis_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值记入 pmis_job_slow_log)';
-COMMENT ON COLUMN pmis_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
-COMMENT ON COLUMN pmis_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
-COMMENT ON COLUMN pmis_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码) / MAP(Map 动态子任务) / MAP_REDUCE(MapReduce 动态子任务+汇总)';
-COMMENT ON COLUMN pmis_job.max_retries IS '最大重试次数: 0=不重试(默认), >0 时失败后自动重试';
-COMMENT ON COLUMN pmis_job.retry_interval_ms IS '重试间隔(毫秒): NULL=立即重试, >0 时按 retry_backoff 策略计算间隔';
-COMMENT ON COLUMN pmis_job.retry_backoff IS '重试退避策略: FIXED 固定间隔(默认) / EXPONENTIAL 指数退避(间隔*2^retryCount)';
-COMMENT ON COLUMN pmis_job.block_strategy IS '阻塞策略: SERIAL 排队(默认) / COVER 中断+执行新 / DISCARD 丢弃新 / CONCURRENT 并行';
-COMMENT ON COLUMN pmis_job.consecutive_fail_count IS '连续失败次数: 成功时归零, 失败时+1, 达到 max_consecutive_fails 时自动暂停';
-COMMENT ON COLUMN pmis_job.max_consecutive_fails IS '最大连续失败次数: NULL=不熔断, >0 时达到阈值后 status 改为 AUTO_PAUSED';
-COMMENT ON COLUMN pmis_job.auto_resume_after_minutes IS '自动恢复时间(分钟): NULL=不自动恢复, >0 时 AUTO_PAUSED 后定时检查恢复';
-COMMENT ON COLUMN pmis_job.priority IS '优先级: 1-10, 越小越高(默认 5), 扫描器按优先级排序派发';
-COMMENT ON COLUMN pmis_job.version IS '版本号: 每次修改 +1, 用于乐观锁和版本追溯';
-COMMENT ON COLUMN pmis_job.timezone IS '任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区';
-COMMENT ON COLUMN pmis_job.cluster IS '目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群';
-COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_job.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(自研调度引擎)';
+COMMENT ON COLUMN ydsz_job.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job.job_name IS '任务名称(展示用)';
+COMMENT ON COLUMN ydsz_job.job_group IS '任务分组(如 DEFAULT/RECONCILE/ALERT)';
+COMMENT ON COLUMN ydsz_job.job_key IS '任务唯一 KEY(调度器使用)';
+COMMENT ON COLUMN ydsz_job.handler IS '任务处理器 Bean 名称(Spring Bean)';
+COMMENT ON COLUMN ydsz_job.cron_expression IS 'Cron 表达式(如 0 0 2 * * ? = 每日 02:00)';
+COMMENT ON COLUMN ydsz_job.schedule_type IS '调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)';
+COMMENT ON COLUMN ydsz_job.fixed_rate_ms IS '固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效';
+COMMENT ON COLUMN ydsz_job.fixed_delay_ms IS '固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效';
+COMMENT ON COLUMN ydsz_job.params_json IS '任务参数 JSON';
+COMMENT ON COLUMN ydsz_job.status IS '任务状态: NORMAL 正常 / PAUSED 暂停 / ERROR 异常 / COMPLETE 一次性任务完成';
+COMMENT ON COLUMN ydsz_job.remark IS '任务说明';
+COMMENT ON COLUMN ydsz_job.next_fire_time IS '下次触发时间';
+COMMENT ON COLUMN ydsz_job.last_fire_time IS '上次触发时间';
+COMMENT ON COLUMN ydsz_job.fire_count IS '累计触发次数';
+COMMENT ON COLUMN ydsz_job.success_count IS '成功执行次数';
+COMMENT ON COLUMN ydsz_job.fail_count IS '失败次数(超过阈值告警)';
+COMMENT ON COLUMN ydsz_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 pmis.cronjob.job-lock-ttl)';
+COMMENT ON COLUMN ydsz_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
+COMMENT ON COLUMN ydsz_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值记入 ydsz_job_slow_log)';
+COMMENT ON COLUMN ydsz_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
+COMMENT ON COLUMN ydsz_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
+COMMENT ON COLUMN ydsz_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码) / MAP(Map 动态子任务) / MAP_REDUCE(MapReduce 动态子任务+汇总)';
+COMMENT ON COLUMN ydsz_job.max_retries IS '最大重试次数: 0=不重试(默认), >0 时失败后自动重试';
+COMMENT ON COLUMN ydsz_job.retry_interval_ms IS '重试间隔(毫秒): NULL=立即重试, >0 时按 retry_backoff 策略计算间隔';
+COMMENT ON COLUMN ydsz_job.retry_backoff IS '重试退避策略: FIXED 固定间隔(默认) / EXPONENTIAL 指数退避(间隔*2^retryCount)';
+COMMENT ON COLUMN ydsz_job.block_strategy IS '阻塞策略: SERIAL 排队(默认) / COVER 中断+执行新 / DISCARD 丢弃新 / CONCURRENT 并行';
+COMMENT ON COLUMN ydsz_job.consecutive_fail_count IS '连续失败次数: 成功时归零, 失败时+1, 达到 max_consecutive_fails 时自动暂停';
+COMMENT ON COLUMN ydsz_job.max_consecutive_fails IS '最大连续失败次数: NULL=不熔断, >0 时达到阈值后 status 改为 AUTO_PAUSED';
+COMMENT ON COLUMN ydsz_job.auto_resume_after_minutes IS '自动恢复时间(分钟): NULL=不自动恢复, >0 时 AUTO_PAUSED 后定时检查恢复';
+COMMENT ON COLUMN ydsz_job.priority IS '优先级: 1-10, 越小越高(默认 5), 扫描器按优先级排序派发';
+COMMENT ON COLUMN ydsz_job.version IS '版本号: 每次修改 +1, 用于乐观锁和版本追溯';
+COMMENT ON COLUMN ydsz_job.timezone IS '任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区';
+COMMENT ON COLUMN ydsz_job.cluster IS '目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群';
+COMMENT ON COLUMN ydsz_job.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_job.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_job.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_job.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_job.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 -- [INLINE-OPT] status/group 走部分索引(逻辑删除过滤)
-CREATE INDEX IF NOT EXISTS idx_pmis_job_status
-    ON pmis_job (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_job_group
-    ON pmis_job (job_group) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_status
+    ON ydsz_job (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_group
+    ON ydsz_job (job_group) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:按租户 + 创建时间倒序(任务中心列表)
-CREATE INDEX IF NOT EXISTS idx_pmis_job_tenant_created
-    ON pmis_job (tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_tenant_created
+    ON ydsz_job (tenant_id, created_at DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 下次触发时间:调度器扫描待触发任务
-CREATE INDEX IF NOT EXISTS idx_pmis_job_next_fire
-    ON pmis_job (next_fire_time) WHERE deleted = 0 AND status = 'NORMAL' AND next_fire_time IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_next_fire
+    ON ydsz_job (next_fire_time) WHERE deleted = 0 AND status = 'NORMAL' AND next_fire_time IS NOT NULL;
 
 
 -- ============================================================================
--- [P1-3] 调度节点心跳表 pmis_job_node
+-- [P1-3] 调度节点心跳表 ydsz_job_node
 -- ----------------------------------------------------------------------------
 -- 每个 cronjob 实例启动时注册一条记录，定时（默认 10s）更新 last_heartbeat。
 -- Leader 节点通过 last_heartbeat 判断节点是否在线，用于任务派发选择执行节点。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_node(
+CREATE TABLE IF NOT EXISTS ydsz_job_node(
     node_id         VARCHAR(128)  PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     app_name        VARCHAR(128)  NOT NULL,
     host            VARCHAR(128)  NOT NULL,
@@ -1600,25 +1600,25 @@ CREATE TABLE IF NOT EXISTS pmis_job_node(
     CONSTRAINT ck_pjn_running_nonneg CHECK (running_count >= 0)
 );
 -- 心跳时间索引：Leader 扫描在线节点
-CREATE INDEX IF NOT EXISTS idx_pjn_last_hb ON pmis_job_node(last_heartbeat);
+CREATE INDEX IF NOT EXISTS idx_pjn_last_hb ON ydsz_job_node(last_heartbeat);
 -- 状态索引：筛选 ONLINE 节点
-CREATE INDEX IF NOT EXISTS idx_pjn_status ON pmis_job_node(status);
+CREATE INDEX IF NOT EXISTS idx_pjn_status ON ydsz_job_node(status);
 
-COMMENT ON TABLE pmis_job_node IS '调度节点心跳表（P1-3）';
-COMMENT ON COLUMN pmis_job_node.node_id IS '节点 ID（hostname:port 或 hostname:pid）';
-COMMENT ON COLUMN pmis_job_node.app_name IS '应用名称';
-COMMENT ON COLUMN pmis_job_node.host IS '主机名';
-COMMENT ON COLUMN pmis_job_node.port IS '服务端口';
-COMMENT ON COLUMN pmis_job_node.last_heartbeat IS '最后心跳时间（Leader 据此判断节点是否在线）';
-COMMENT ON COLUMN pmis_job_node.status IS '节点状态: ONLINE 在线 / OFFLINE 离线 / DRAINING 排空退出中';
-COMMENT ON COLUMN pmis_job_node.cpu_usage IS 'CPU 使用率（百分比 0-100）';
-COMMENT ON COLUMN pmis_job_node.mem_usage_pct IS '内存使用率（百分比 0-100）';
-COMMENT ON COLUMN pmis_job_node.running_count IS '当前正在执行的任务数（用于负载均衡选择）';
-COMMENT ON COLUMN pmis_job_node.tags IS '节点标签（JSON，用于任务亲和性选择）';
+COMMENT ON TABLE ydsz_job_node IS '调度节点心跳表（P1-3）';
+COMMENT ON COLUMN ydsz_job_node.node_id IS '节点 ID（hostname:port 或 hostname:pid）';
+COMMENT ON COLUMN ydsz_job_node.app_name IS '应用名称';
+COMMENT ON COLUMN ydsz_job_node.host IS '主机名';
+COMMENT ON COLUMN ydsz_job_node.port IS '服务端口';
+COMMENT ON COLUMN ydsz_job_node.last_heartbeat IS '最后心跳时间（Leader 据此判断节点是否在线）';
+COMMENT ON COLUMN ydsz_job_node.status IS '节点状态: ONLINE 在线 / OFFLINE 离线 / DRAINING 排空退出中';
+COMMENT ON COLUMN ydsz_job_node.cpu_usage IS 'CPU 使用率（百分比 0-100）';
+COMMENT ON COLUMN ydsz_job_node.mem_usage_pct IS '内存使用率（百分比 0-100）';
+COMMENT ON COLUMN ydsz_job_node.running_count IS '当前正在执行的任务数（用于负载均衡选择）';
+COMMENT ON COLUMN ydsz_job_node.tags IS '节点标签（JSON，用于任务亲和性选择）';
 
 
--- 任务执行日志表 pmis_job_log
-CREATE TABLE IF NOT EXISTS pmis_job_log(
+-- 任务执行日志表 ydsz_job_log
+CREATE TABLE IF NOT EXISTS ydsz_job_log(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -1663,52 +1663,52 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
 -- [INLINE-OPT] 任务日志不需要 tenant_id 维度(系统全局资源)
 -- 注:此处不携带 tenant_id,以避免与任务中心分页逻辑耦合
 
-COMMENT ON TABLE pmis_job_log IS '任务执行日志: 每次任务执行的耗时/入参/出参/异常,用于排障与审计';
-COMMENT ON COLUMN pmis_job_log.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_log.job_id IS '任务 ID(关联 pmis_job.id)';
-COMMENT ON COLUMN pmis_job_log.job_key IS '任务 KEY(冗余,避免连表)';
-COMMENT ON COLUMN pmis_job_log.start_time IS '任务开始时间';
-COMMENT ON COLUMN pmis_job_log.end_time IS '任务结束时间';
-COMMENT ON COLUMN pmis_job_log.duration_ms IS '任务执行耗时(毫秒)';
-COMMENT ON COLUMN pmis_job_log.status IS '执行状态: RUNNING 进行中 / SUCCESS 成功 / FAILED 失败 / TIMEOUT 超时';
-COMMENT ON COLUMN pmis_job_log.error_message IS '异常堆栈(失败时填充)';
-COMMENT ON COLUMN pmis_job_log.params_json IS '执行参数 JSON';
-COMMENT ON COLUMN pmis_job_log.result_json IS '执行结果 JSON';
-COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
-COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发 / API 接口触发 / FAILOVER 故障转移';
-COMMENT ON COLUMN pmis_job_log.lock_holder IS '持锁者标识(hostname:pid): 分布式锁的 value,超时后通过 Lua 脚本安全释放锁';
-COMMENT ON COLUMN pmis_job_log.exec_node_id IS '执行节点 ID(hostname:port): 用于故障转移时定位任务所在节点';
-COMMENT ON COLUMN pmis_job_log.exec_thread_id IS '执行线程 ID: 用于超时强制中断时定位执行线程';
-COMMENT ON COLUMN pmis_job_log.shard_index IS '分片索引: 非分片任务为 NULL; 分片任务为 0-based, 供故障转移重建分片锁 key';
-COMMENT ON COLUMN pmis_job_log.shard_total IS '分片总数: 非分片任务为 NULL; 分片任务为 shardTotal 值';
-COMMENT ON COLUMN pmis_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
-COMMENT ON COLUMN pmis_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
-COMMENT ON COLUMN pmis_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
-COMMENT ON COLUMN pmis_job_log.created_at IS '日志写入时间';
-COMMENT ON COLUMN pmis_job_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_log IS '任务执行日志: 每次任务执行的耗时/入参/出参/异常,用于排障与审计';
+COMMENT ON COLUMN ydsz_job_log.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_log.job_id IS '任务 ID(关联 ydsz_job.id)';
+COMMENT ON COLUMN ydsz_job_log.job_key IS '任务 KEY(冗余,避免连表)';
+COMMENT ON COLUMN ydsz_job_log.start_time IS '任务开始时间';
+COMMENT ON COLUMN ydsz_job_log.end_time IS '任务结束时间';
+COMMENT ON COLUMN ydsz_job_log.duration_ms IS '任务执行耗时(毫秒)';
+COMMENT ON COLUMN ydsz_job_log.status IS '执行状态: RUNNING 进行中 / SUCCESS 成功 / FAILED 失败 / TIMEOUT 超时';
+COMMENT ON COLUMN ydsz_job_log.error_message IS '异常堆栈(失败时填充)';
+COMMENT ON COLUMN ydsz_job_log.params_json IS '执行参数 JSON';
+COMMENT ON COLUMN ydsz_job_log.result_json IS '执行结果 JSON';
+COMMENT ON COLUMN ydsz_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
+COMMENT ON COLUMN ydsz_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发 / API 接口触发 / FAILOVER 故障转移';
+COMMENT ON COLUMN ydsz_job_log.lock_holder IS '持锁者标识(hostname:pid): 分布式锁的 value,超时后通过 Lua 脚本安全释放锁';
+COMMENT ON COLUMN ydsz_job_log.exec_node_id IS '执行节点 ID(hostname:port): 用于故障转移时定位任务所在节点';
+COMMENT ON COLUMN ydsz_job_log.exec_thread_id IS '执行线程 ID: 用于超时强制中断时定位执行线程';
+COMMENT ON COLUMN ydsz_job_log.shard_index IS '分片索引: 非分片任务为 NULL; 分片任务为 0-based, 供故障转移重建分片锁 key';
+COMMENT ON COLUMN ydsz_job_log.shard_total IS '分片总数: 非分片任务为 NULL; 分片任务为 shardTotal 值';
+COMMENT ON COLUMN ydsz_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
+COMMENT ON COLUMN ydsz_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
+COMMENT ON COLUMN ydsz_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
+COMMENT ON COLUMN ydsz_job_log.created_at IS '日志写入时间';
+COMMENT ON COLUMN ydsz_job_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- [INLINE-OPT] status 走部分索引(高频过滤)
 CREATE INDEX IF NOT EXISTS idx_pjl_job_id
-    ON pmis_job_log (job_id) WHERE deleted = 0;
+    ON ydsz_job_log (job_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjl_job_key
-    ON pmis_job_log (job_key) WHERE deleted = 0;
+    ON ydsz_job_log (job_key) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjl_status
-    ON pmis_job_log (status) WHERE deleted = 0;
+    ON ydsz_job_log (status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:按 job_id + 开始时间倒序(任务执行历史分页)
 CREATE INDEX IF NOT EXISTS idx_pjl_job_start
-    ON pmis_job_log (job_id, start_time DESC) WHERE deleted = 0;
+    ON ydsz_job_log (job_id, start_time DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
 CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
-    ON pmis_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+    ON ydsz_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
 
 -- ============================================================================
--- [P0-2] 任务执行日志明细表 pmis_job_log_content
+-- [P0-2] 任务执行日志明细表 ydsz_job_log_content
 -- ----------------------------------------------------------------------------
 -- 存储任务执行过程中业务侧通过 JobLogger 写入的逐行日志，
 -- 供前端 SSE 实时滚动展示（在线日志白屏化）。
--- 与 pmis_job_log（执行级汇总）互补，本表为行级明细。
+-- 与 ydsz_job_log（执行级汇总）互补，本表为行级明细。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_log_content(
+CREATE TABLE IF NOT EXISTS ydsz_job_log_content(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     log_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -1721,26 +1721,26 @@ CREATE TABLE IF NOT EXISTS pmis_job_log_content(
     CONSTRAINT ck_pjlc_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_log_content IS '任务执行日志明细: 业务侧通过 JobLogger 写入的逐行日志, 供前端 SSE 实时滚动展示';
-COMMENT ON COLUMN pmis_job_log_content.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_log_content.log_id IS '执行日志 ID(关联 pmis_job_log.id)';
-COMMENT ON COLUMN pmis_job_log_content.job_key IS '任务 KEY(冗余, 避免连表)';
-COMMENT ON COLUMN pmis_job_log_content.line_no IS '行号(从 1 递增)';
-COMMENT ON COLUMN pmis_job_log_content.log_level IS '日志级别: DEBUG / INFO / WARN / ERROR';
-COMMENT ON COLUMN pmis_job_log_content.content IS '日志内容(单行, 最长 4000 字符)';
-COMMENT ON COLUMN pmis_job_log_content.created_at IS '写入时间';
-COMMENT ON COLUMN pmis_job_log_content.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_log_content IS '任务执行日志明细: 业务侧通过 JobLogger 写入的逐行日志, 供前端 SSE 实时滚动展示';
+COMMENT ON COLUMN ydsz_job_log_content.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_log_content.log_id IS '执行日志 ID(关联 ydsz_job_log.id)';
+COMMENT ON COLUMN ydsz_job_log_content.job_key IS '任务 KEY(冗余, 避免连表)';
+COMMENT ON COLUMN ydsz_job_log_content.line_no IS '行号(从 1 递增)';
+COMMENT ON COLUMN ydsz_job_log_content.log_level IS '日志级别: DEBUG / INFO / WARN / ERROR';
+COMMENT ON COLUMN ydsz_job_log_content.content IS '日志内容(单行, 最长 4000 字符)';
+COMMENT ON COLUMN ydsz_job_log_content.created_at IS '写入时间';
+COMMENT ON COLUMN ydsz_job_log_content.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjlc_log_id
-    ON pmis_job_log_content (log_id, line_no) WHERE deleted = 0;
+    ON ydsz_job_log_content (log_id, line_no) WHERE deleted = 0;
 
 -- ============================================================================
--- [P0-4] MapReduce 子任务表 pmis_job_task
+-- [P0-4] MapReduce 子任务表 ydsz_job_task
 -- ----------------------------------------------------------------------------
 -- 存储动态产生的子任务，一个 JobInstance（logId）对应多个子任务。
 -- 由 MapTaskExecutor 管理：root task 调用 map() 产生子任务，框架执行后记录结果。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_task(
+CREATE TABLE IF NOT EXISTS ydsz_job_task(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     log_id          VARCHAR(20)         NOT NULL,
@@ -1760,33 +1760,33 @@ CREATE TABLE IF NOT EXISTS pmis_job_task(
     CONSTRAINT ck_pjt_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_task IS 'MapReduce 子任务表: 动态产生的子任务及其执行结果';
-COMMENT ON COLUMN pmis_job_task.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_task.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_task.log_id IS '执行日志 ID(关联 pmis_job_log.id)';
-COMMENT ON COLUMN pmis_job_task.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN pmis_job_task.task_name IS '子任务名称';
-COMMENT ON COLUMN pmis_job_task.task_params IS '子任务参数 JSON';
-COMMENT ON COLUMN pmis_job_task.task_type IS '子任务类型: ROOT 根任务 / SUB_TASK 子任务';
-COMMENT ON COLUMN pmis_job_task.status IS '执行状态: PENDING / RUNNING / SUCCESS / FAILED';
-COMMENT ON COLUMN pmis_job_task.result IS '执行结果 JSON';
-COMMENT ON COLUMN pmis_job_task.error_message IS '错误信息';
-COMMENT ON COLUMN pmis_job_task.exec_node_id IS '执行节点 ID';
-COMMENT ON COLUMN pmis_job_task.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_task.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_job_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_task IS 'MapReduce 子任务表: 动态产生的子任务及其执行结果';
+COMMENT ON COLUMN ydsz_job_task.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_task.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_task.log_id IS '执行日志 ID(关联 ydsz_job_log.id)';
+COMMENT ON COLUMN ydsz_job_task.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN ydsz_job_task.task_name IS '子任务名称';
+COMMENT ON COLUMN ydsz_job_task.task_params IS '子任务参数 JSON';
+COMMENT ON COLUMN ydsz_job_task.task_type IS '子任务类型: ROOT 根任务 / SUB_TASK 子任务';
+COMMENT ON COLUMN ydsz_job_task.status IS '执行状态: PENDING / RUNNING / SUCCESS / FAILED';
+COMMENT ON COLUMN ydsz_job_task.result IS '执行结果 JSON';
+COMMENT ON COLUMN ydsz_job_task.error_message IS '错误信息';
+COMMENT ON COLUMN ydsz_job_task.exec_node_id IS '执行节点 ID';
+COMMENT ON COLUMN ydsz_job_task.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_task.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_job_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjt_log_id
-    ON pmis_job_task (log_id) WHERE deleted = 0;
+    ON ydsz_job_task (log_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjt_status
-    ON pmis_job_task (status) WHERE deleted = 0;
+    ON ydsz_job_task (status) WHERE deleted = 0;
 
 -- ============================================================================
--- [P1-2] GLUE 在线编码表 pmis_job_glue
+-- [P1-2] GLUE 在线编码表 ydsz_job_glue
 -- ----------------------------------------------------------------------------
 -- 存储 GLUE 类型任务的在线代码，支持版本管理和回滚。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_glue(
+CREATE TABLE IF NOT EXISTS ydsz_job_glue(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     source_code     TEXT           NOT NULL,
@@ -1801,26 +1801,26 @@ CREATE TABLE IF NOT EXISTS pmis_job_glue(
     CONSTRAINT ck_pjg_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_glue IS 'GLUE 在线编码表: 存储在线编辑的代码及版本历史';
-COMMENT ON COLUMN pmis_job_glue.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_glue.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_glue.source_code IS '源代码';
-COMMENT ON COLUMN pmis_job_glue.language IS '语言: GROOVY(默认) / JAVA';
-COMMENT ON COLUMN pmis_job_glue.version IS '版本号(从 1 递增)';
-COMMENT ON COLUMN pmis_job_glue.remark IS '版本备注';
-COMMENT ON COLUMN pmis_job_glue.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_glue.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_glue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_glue IS 'GLUE 在线编码表: 存储在线编辑的代码及版本历史';
+COMMENT ON COLUMN ydsz_job_glue.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_glue.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_glue.source_code IS '源代码';
+COMMENT ON COLUMN ydsz_job_glue.language IS '语言: GROOVY(默认) / JAVA';
+COMMENT ON COLUMN ydsz_job_glue.version IS '版本号(从 1 递增)';
+COMMENT ON COLUMN ydsz_job_glue.remark IS '版本备注';
+COMMENT ON COLUMN ydsz_job_glue.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_job_glue.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_glue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjg_job_id
-    ON pmis_job_glue (job_id, version DESC) WHERE deleted = 0;
+    ON ydsz_job_glue (job_id, version DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P1-6] 任务配置历史版本表 pmis_job_history
+-- [P1-6] 任务配置历史版本表 ydsz_job_history
 -- ----------------------------------------------------------------------------
 -- 每次任务配置更新时自动保存历史快照，支持版本对比和一键回滚。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_history(
+CREATE TABLE IF NOT EXISTS ydsz_job_history(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     version         INTEGER        NOT NULL,
@@ -1838,34 +1838,34 @@ CREATE TABLE IF NOT EXISTS pmis_job_history(
     CONSTRAINT ck_pjh_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_history IS '任务配置历史版本表: 每次更新自动保存快照, 支持回滚';
-COMMENT ON COLUMN pmis_job_history.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_history.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_history.version IS '版本号(对应更新前的 job.version)';
-COMMENT ON COLUMN pmis_job_history.snapshot IS '完整 JobDO JSON 快照';
-COMMENT ON COLUMN pmis_job_history.job_name IS '任务名称(冗余, 便于列表展示)';
-COMMENT ON COLUMN pmis_job_history.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN pmis_job_history.handler IS '处理器(冗余)';
-COMMENT ON COLUMN pmis_job_history.cron_expression IS 'Cron 表达式(冗余)';
-COMMENT ON COLUMN pmis_job_history.params_json IS '参数 JSON(冗余)';
-COMMENT ON COLUMN pmis_job_history.remark IS '备注(冗余)';
-COMMENT ON COLUMN pmis_job_history.changed_by IS '修改人 ID';
-COMMENT ON COLUMN pmis_job_history.changed_at IS '修改时间';
-COMMENT ON COLUMN pmis_job_history.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_history IS '任务配置历史版本表: 每次更新自动保存快照, 支持回滚';
+COMMENT ON COLUMN ydsz_job_history.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_history.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_history.version IS '版本号(对应更新前的 job.version)';
+COMMENT ON COLUMN ydsz_job_history.snapshot IS '完整 JobDO JSON 快照';
+COMMENT ON COLUMN ydsz_job_history.job_name IS '任务名称(冗余, 便于列表展示)';
+COMMENT ON COLUMN ydsz_job_history.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN ydsz_job_history.handler IS '处理器(冗余)';
+COMMENT ON COLUMN ydsz_job_history.cron_expression IS 'Cron 表达式(冗余)';
+COMMENT ON COLUMN ydsz_job_history.params_json IS '参数 JSON(冗余)';
+COMMENT ON COLUMN ydsz_job_history.remark IS '备注(冗余)';
+COMMENT ON COLUMN ydsz_job_history.changed_by IS '修改人 ID';
+COMMENT ON COLUMN ydsz_job_history.changed_at IS '修改时间';
+COMMENT ON COLUMN ydsz_job_history.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjh_job_id
-    ON pmis_job_history (job_id, version DESC) WHERE deleted = 0;
+    ON ydsz_job_history (job_id, version DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P6-3] 慢任务诊断日志表 pmis_job_slow_log
+-- [P6-3] 慢任务诊断日志表 ydsz_job_slow_log
 -- ----------------------------------------------------------------------------
--- 当任务执行耗时超过 pmis_job.slow_threshold_ms 时，自动记录到本表。
--- 与 pmis_job_log 的区别：
+-- 当任务执行耗时超过 ydsz_job.slow_threshold_ms 时，自动记录到本表。
+-- 与 ydsz_job_log 的区别：
 --   - job_log 记录全部执行（RUNNING/SUCCESS/FAILED/TIMEOUT），用于审计
 --   - slow_log 仅记录慢执行，用于性能趋势分析与优化决策
 -- 由 SlowTaskDetector 定期扫描 job_log 并写入，不影响任务执行主流程。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_slow_log(
+CREATE TABLE IF NOT EXISTS ydsz_job_slow_log(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id            VARCHAR(20)         NOT NULL,
     job_key           VARCHAR(128)   NOT NULL,
@@ -1887,38 +1887,38 @@ CREATE TABLE IF NOT EXISTS pmis_job_slow_log(
     CONSTRAINT ck_pjsl_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_slow_log IS '慢任务诊断日志（P6-3）: 仅记录执行耗时超过 slow_threshold_ms 的任务，用于性能分析';
-COMMENT ON COLUMN pmis_job_slow_log.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_slow_log.job_id IS '任务 ID（关联 pmis_job.id）';
-COMMENT ON COLUMN pmis_job_slow_log.job_key IS '任务 KEY（冗余,避免连表）';
-COMMENT ON COLUMN pmis_job_slow_log.log_id IS '关联 pmis_job_log.id（原始终端执行日志）';
-COMMENT ON COLUMN pmis_job_slow_log.duration_ms IS '本次执行耗时（毫秒）';
-COMMENT ON COLUMN pmis_job_slow_log.slow_threshold_ms IS '慢任务阈值（毫秒，来自 pmis_job.slow_threshold_ms）';
-COMMENT ON COLUMN pmis_job_slow_log.params_json IS '执行参数 JSON（冗余自 job_log,便于独立分析）';
-COMMENT ON COLUMN pmis_job_slow_log.error_message IS '异常信息（如慢且有异常,冗余自 job_log）';
-COMMENT ON COLUMN pmis_job_slow_log.trace_id IS '链路追踪 ID（关联分布式链路）';
-COMMENT ON COLUMN pmis_job_slow_log.tenant_id IS '租户 ID（单租户部署默认 1）';
-COMMENT ON COLUMN pmis_job_slow_log.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_slow_log.created_at IS '记录时间';
-COMMENT ON COLUMN pmis_job_slow_log.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job_slow_log.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job_slow_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_slow_log IS '慢任务诊断日志（P6-3）: 仅记录执行耗时超过 slow_threshold_ms 的任务，用于性能分析';
+COMMENT ON COLUMN ydsz_job_slow_log.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_slow_log.job_id IS '任务 ID（关联 ydsz_job.id）';
+COMMENT ON COLUMN ydsz_job_slow_log.job_key IS '任务 KEY（冗余,避免连表）';
+COMMENT ON COLUMN ydsz_job_slow_log.log_id IS '关联 ydsz_job_log.id（原始终端执行日志）';
+COMMENT ON COLUMN ydsz_job_slow_log.duration_ms IS '本次执行耗时（毫秒）';
+COMMENT ON COLUMN ydsz_job_slow_log.slow_threshold_ms IS '慢任务阈值（毫秒，来自 ydsz_job.slow_threshold_ms）';
+COMMENT ON COLUMN ydsz_job_slow_log.params_json IS '执行参数 JSON（冗余自 job_log,便于独立分析）';
+COMMENT ON COLUMN ydsz_job_slow_log.error_message IS '异常信息（如慢且有异常,冗余自 job_log）';
+COMMENT ON COLUMN ydsz_job_slow_log.trace_id IS '链路追踪 ID（关联分布式链路）';
+COMMENT ON COLUMN ydsz_job_slow_log.tenant_id IS '租户 ID（单租户部署默认 1）';
+COMMENT ON COLUMN ydsz_job_slow_log.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_job_slow_log.created_at IS '记录时间';
+COMMENT ON COLUMN ydsz_job_slow_log.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_job_slow_log.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_job_slow_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- [INLINE-OPT] job_id 索引（按任务查慢日志）
 CREATE INDEX IF NOT EXISTS idx_pjsl_job_id
-    ON pmis_job_slow_log (job_id) WHERE deleted = 0;
+    ON ydsz_job_slow_log (job_id) WHERE deleted = 0;
 -- [INLINE-OPT] 创建时间索引（按时间范围查慢日志趋势）
 CREATE INDEX IF NOT EXISTS idx_pjsl_created
-    ON pmis_job_slow_log (created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_slow_log (created_at DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P4-1] 任务依赖关系表 pmis_job_relation
+-- [P4-1] 任务依赖关系表 ydsz_job_relation
 -- ----------------------------------------------------------------------------
 -- 存储 DAG 工作流中任务之间的依赖边（parent_job → child_job）。
 -- 当 parent_job 执行成功后，根据 fail_strategy 决定是否触发 child_job。
 -- 对标 XXL-Job 子任务依赖 / PowerJob 工作流实例。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_relation(
+CREATE TABLE IF NOT EXISTS ydsz_job_relation(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     parent_job_id   VARCHAR(20)      NOT NULL,
     child_job_id    VARCHAR(20)      NOT NULL,
@@ -1930,32 +1930,32 @@ CREATE TABLE IF NOT EXISTS pmis_job_relation(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     -- 数据完整性约束
-    CONSTRAINT uk_pmis_job_relation UNIQUE (parent_job_id, child_job_id, deleted),
+    CONSTRAINT uk_ydsz_job_relation UNIQUE (parent_job_id, child_job_id, deleted),
     CONSTRAINT ck_pjr_fail_strategy  CHECK (fail_strategy IN ('FAIL_FAST', 'CONTINUE_ON_FAIL')),
     CONSTRAINT ck_pjr_no_self_ref   CHECK (parent_job_id != child_job_id),
     CONSTRAINT ck_pjr_deleted_enum  CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_relation IS '任务依赖关系表（P4 DAG 工作流）';
-COMMENT ON COLUMN pmis_job_relation.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_relation.parent_job_id IS '前置任务 ID（执行成功后触发后继）';
-COMMENT ON COLUMN pmis_job_relation.child_job_id IS '后继任务 ID（被前置任务触发）';
-COMMENT ON COLUMN pmis_job_relation.fail_strategy IS '失败传播策略: FAIL_FAST 前置失败不触发后继(默认) / CONTINUE_ON_FAIL 前置失败仍触发后继';
-COMMENT ON COLUMN pmis_job_relation.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_relation.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_relation.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job_relation.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job_relation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_relation IS '任务依赖关系表（P4 DAG 工作流）';
+COMMENT ON COLUMN ydsz_job_relation.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_relation.parent_job_id IS '前置任务 ID（执行成功后触发后继）';
+COMMENT ON COLUMN ydsz_job_relation.child_job_id IS '后继任务 ID（被前置任务触发）';
+COMMENT ON COLUMN ydsz_job_relation.fail_strategy IS '失败传播策略: FAIL_FAST 前置失败不触发后继(默认) / CONTINUE_ON_FAIL 前置失败仍触发后继';
+COMMENT ON COLUMN ydsz_job_relation.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_job_relation.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_relation.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_job_relation.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_job_relation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- 索引: 按前置任务查询后继列表（高频，任务成功后触发）
 CREATE INDEX IF NOT EXISTS idx_pjr_parent
-    ON pmis_job_relation (parent_job_id) WHERE deleted = 0;
+    ON ydsz_job_relation (parent_job_id) WHERE deleted = 0;
 -- 索引: 按后继任务查询前置列表（DAG 解析时使用）
 CREATE INDEX IF NOT EXISTS idx_pjr_child
-    ON pmis_job_relation (child_job_id) WHERE deleted = 0;
+    ON ydsz_job_relation (child_job_id) WHERE deleted = 0;
 
 -- ============================================================================
--- [P2-1] DAG 工作流定义表 pmis_job_dag
+-- [P2-1] DAG 工作流定义表 ydsz_job_dag
 -- ----------------------------------------------------------------------------
 -- 将 DAG 提升为一等公民：一个 DAG 定义包含若干任务节点和依赖边，
 -- 支持手动触发或 Cron 定时触发整个工作流。
@@ -1966,7 +1966,7 @@ CREATE INDEX IF NOT EXISTS idx_pjr_child
 -- }
 -- 对标 PowerJob workflow / XXL-Job 子任务链。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_dag(
+CREATE TABLE IF NOT EXISTS ydsz_job_dag(
     id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     dag_key                 VARCHAR(128)  NOT NULL,
     dag_name                VARCHAR(128)  NOT NULL,
@@ -1995,7 +1995,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag(
     deleted                 SMALLINT      NOT NULL DEFAULT 0,
     tenant_id               VARCHAR(20)       NOT NULL DEFAULT '1',
     -- 数据完整性约束
-    CONSTRAINT uk_pmis_job_dag_key UNIQUE (dag_key, deleted),
+    CONSTRAINT uk_ydsz_job_dag_key UNIQUE (dag_key, deleted),
     CONSTRAINT ck_pjd_status_enum  CHECK (status IN ('DRAFT', 'ENABLED', 'DISABLED')),
     CONSTRAINT ck_pjd_trigger_enum CHECK (trigger_type IN ('MANUAL', 'CRON')),
     CONSTRAINT ck_pjd_fail_strategy_enum CHECK (fail_strategy IN ('FAIL_FAST', 'CONTINUE_ON_FAIL', 'RETRY', 'SKIP_SUBSEQUENT')),
@@ -2005,29 +2005,29 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag(
     CONSTRAINT ck_pjd_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_dag IS 'DAG 工作流定义表（P2 DAG 增强）';
-COMMENT ON COLUMN pmis_job_dag.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_dag.dag_key IS 'DAG 唯一 KEY（调度与触发使用）';
-COMMENT ON COLUMN pmis_job_dag.dag_name IS 'DAG 名称（展示用）';
-COMMENT ON COLUMN pmis_job_dag.dag_definition IS 'DAG 定义 JSON（nodes + edges + 可视化坐标）';
-COMMENT ON COLUMN pmis_job_dag.status IS 'DAG 状态: DRAFT 草稿 / ENABLED 启用 / DISABLED 禁用';
-COMMENT ON COLUMN pmis_job_dag.trigger_type IS '触发类型: MANUAL 手动 / CRON 定时';
-COMMENT ON COLUMN pmis_job_dag.cron_expression IS 'Cron 表达式（trigger_type=CRON 时必填）';
-COMMENT ON COLUMN pmis_job_dag.max_concurrent_instances IS '最大并发实例数(0=不限制, 默认1)';
-COMMENT ON COLUMN pmis_job_dag.fail_strategy IS 'DAG 级失败策略: FAIL_FAST 中止 / CONTINUE_ON_FAIL 继续';
-COMMENT ON COLUMN pmis_job_dag.description IS 'DAG 描述';
-COMMENT ON COLUMN pmis_job_dag.next_fire_time IS '下次触发时间（CRON 模式）';
-COMMENT ON COLUMN pmis_job_dag.last_fire_time IS '上次触发时间';
-COMMENT ON COLUMN pmis_job_dag.fire_count IS '总触发次数';
-COMMENT ON COLUMN pmis_job_dag.success_count IS '成功次数';
-COMMENT ON COLUMN pmis_job_dag.fail_count IS '失败次数';
-COMMENT ON COLUMN pmis_job_dag.version IS '版本号(乐观锁)';
-COMMENT ON COLUMN pmis_job_dag.tenant_id IS '租户 ID';
+COMMENT ON TABLE ydsz_job_dag IS 'DAG 工作流定义表（P2 DAG 增强）';
+COMMENT ON COLUMN ydsz_job_dag.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_dag.dag_key IS 'DAG 唯一 KEY（调度与触发使用）';
+COMMENT ON COLUMN ydsz_job_dag.dag_name IS 'DAG 名称（展示用）';
+COMMENT ON COLUMN ydsz_job_dag.dag_definition IS 'DAG 定义 JSON（nodes + edges + 可视化坐标）';
+COMMENT ON COLUMN ydsz_job_dag.status IS 'DAG 状态: DRAFT 草稿 / ENABLED 启用 / DISABLED 禁用';
+COMMENT ON COLUMN ydsz_job_dag.trigger_type IS '触发类型: MANUAL 手动 / CRON 定时';
+COMMENT ON COLUMN ydsz_job_dag.cron_expression IS 'Cron 表达式（trigger_type=CRON 时必填）';
+COMMENT ON COLUMN ydsz_job_dag.max_concurrent_instances IS '最大并发实例数(0=不限制, 默认1)';
+COMMENT ON COLUMN ydsz_job_dag.fail_strategy IS 'DAG 级失败策略: FAIL_FAST 中止 / CONTINUE_ON_FAIL 继续';
+COMMENT ON COLUMN ydsz_job_dag.description IS 'DAG 描述';
+COMMENT ON COLUMN ydsz_job_dag.next_fire_time IS '下次触发时间（CRON 模式）';
+COMMENT ON COLUMN ydsz_job_dag.last_fire_time IS '上次触发时间';
+COMMENT ON COLUMN ydsz_job_dag.fire_count IS '总触发次数';
+COMMENT ON COLUMN ydsz_job_dag.success_count IS '成功次数';
+COMMENT ON COLUMN ydsz_job_dag.fail_count IS '失败次数';
+COMMENT ON COLUMN ydsz_job_dag.version IS '版本号(乐观锁)';
+COMMENT ON COLUMN ydsz_job_dag.tenant_id IS '租户 ID';
 
 -- ----------------------------------------------------------------------------
 -- [P2-1] DAG 节点类型扩展（CONDITION / LOOP / PARALLEL_GATEWAY）
 -- ----------------------------------------------------------------------------
--- DAG 节点定义存储在 pmis_job_dag.dag_definition JSON 字段中（非独立表），
+-- DAG 节点定义存储在 ydsz_job_dag.dag_definition JSON 字段中（非独立表），
 -- 节点类型扩展字段（nodeType / conditionExpression / loopCount / parallelBranches）
 -- 直接在 JSON 中管理，无需 ALTER TABLE。
 --
@@ -2044,29 +2044,29 @@ COMMENT ON COLUMN pmis_job_dag.tenant_id IS '租户 ID';
 --   "parallelBranches": 2               -- PARALLEL_GATEWAY 并行分支数
 -- }
 --
--- 以下 ALTER 语句用于兼容性（若未来引入独立的 pmis_job_dag_node 表），
+-- 以下 ALTER 语句用于兼容性（若未来引入独立的 ydsz_job_dag_node 表），
 -- 当前为 no-op（表不存在时跳过）。
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS node_type VARCHAR(32) NOT NULL DEFAULT 'TASK';
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS condition_expression VARCHAR(512);
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTEGER;
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
+ALTER TABLE IF EXISTS ydsz_job_dag_node ADD COLUMN IF NOT EXISTS node_type VARCHAR(32) NOT NULL DEFAULT 'TASK';
+ALTER TABLE IF EXISTS ydsz_job_dag_node ADD COLUMN IF NOT EXISTS condition_expression VARCHAR(512);
+ALTER TABLE IF EXISTS ydsz_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTEGER;
+ALTER TABLE IF EXISTS ydsz_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
 
 
 
 
 CREATE INDEX IF NOT EXISTS idx_pjd_status
-    ON pmis_job_dag (status) WHERE deleted = 0;
+    ON ydsz_job_dag (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjd_tenant
-    ON pmis_job_dag (tenant_id) WHERE deleted = 0;
+    ON ydsz_job_dag (tenant_id) WHERE deleted = 0;
 
 -- ============================================================================
--- [P2-2] DAG 工作流实例表 pmis_job_dag_instance
+-- [P2-2] DAG 工作流实例表 ydsz_job_dag_instance
 -- ----------------------------------------------------------------------------
 -- 记录每次 DAG 执行的整体状态，对标 PowerJob workflow_instance。
 -- 一个 DAG 定义可对应多次实例（每次触发/每次定时调度）。
 -- context_json 存储 DAG 实例级上下文，支持跨节点传参。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_dag_instance(
+CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance(
     id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     dag_id                  VARCHAR(20)   NOT NULL,
     dag_key                 VARCHAR(128)  NOT NULL,
@@ -2102,39 +2102,39 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag_instance(
     CONSTRAINT ck_pjdi_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_dag_instance IS 'DAG 工作流实例表（P2 DAG 增强）';
-COMMENT ON COLUMN pmis_job_dag_instance.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_dag_instance.dag_id IS 'DAG 定义 ID';
-COMMENT ON COLUMN pmis_job_dag_instance.dag_key IS 'DAG KEY（冗余，便于查询）';
-COMMENT ON COLUMN pmis_job_dag_instance.status IS '实例状态: PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/PAUSED/CANCELED';
-COMMENT ON COLUMN pmis_job_dag_instance.trigger_type IS '触发类型: MANUAL/CRON/DEPENDENT';
-COMMENT ON COLUMN pmis_job_dag_instance.trigger_by IS '触发人（MANUAL 时为用户 ID）';
-COMMENT ON COLUMN pmis_job_dag_instance.trigger_trace_id IS '触发 traceId（用于链路追踪）';
-COMMENT ON COLUMN pmis_job_dag_instance.context_json IS 'DAG 实例级上下文 JSON（跨节点传参）';
-COMMENT ON COLUMN pmis_job_dag_instance.started_at IS '开始时间';
-COMMENT ON COLUMN pmis_job_dag_instance.finished_at IS '结束时间';
-COMMENT ON COLUMN pmis_job_dag_instance.duration_ms IS '执行耗时（毫秒）';
-COMMENT ON COLUMN pmis_job_dag_instance.error_message IS '错误信息（FAILED 时填充）';
-COMMENT ON COLUMN pmis_job_dag_instance.total_nodes IS '总节点数';
-COMMENT ON COLUMN pmis_job_dag_instance.success_nodes IS '成功节点数';
-COMMENT ON COLUMN pmis_job_dag_instance.failed_nodes IS '失败节点数';
-COMMENT ON COLUMN pmis_job_dag_instance.skipped_nodes IS '跳过节点数';
-COMMENT ON COLUMN pmis_job_dag_instance.tenant_id IS '租户 ID';
+COMMENT ON TABLE ydsz_job_dag_instance IS 'DAG 工作流实例表（P2 DAG 增强）';
+COMMENT ON COLUMN ydsz_job_dag_instance.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_dag_instance.dag_id IS 'DAG 定义 ID';
+COMMENT ON COLUMN ydsz_job_dag_instance.dag_key IS 'DAG KEY（冗余，便于查询）';
+COMMENT ON COLUMN ydsz_job_dag_instance.status IS '实例状态: PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/PAUSED/CANCELED';
+COMMENT ON COLUMN ydsz_job_dag_instance.trigger_type IS '触发类型: MANUAL/CRON/DEPENDENT';
+COMMENT ON COLUMN ydsz_job_dag_instance.trigger_by IS '触发人（MANUAL 时为用户 ID）';
+COMMENT ON COLUMN ydsz_job_dag_instance.trigger_trace_id IS '触发 traceId（用于链路追踪）';
+COMMENT ON COLUMN ydsz_job_dag_instance.context_json IS 'DAG 实例级上下文 JSON（跨节点传参）';
+COMMENT ON COLUMN ydsz_job_dag_instance.started_at IS '开始时间';
+COMMENT ON COLUMN ydsz_job_dag_instance.finished_at IS '结束时间';
+COMMENT ON COLUMN ydsz_job_dag_instance.duration_ms IS '执行耗时（毫秒）';
+COMMENT ON COLUMN ydsz_job_dag_instance.error_message IS '错误信息（FAILED 时填充）';
+COMMENT ON COLUMN ydsz_job_dag_instance.total_nodes IS '总节点数';
+COMMENT ON COLUMN ydsz_job_dag_instance.success_nodes IS '成功节点数';
+COMMENT ON COLUMN ydsz_job_dag_instance.failed_nodes IS '失败节点数';
+COMMENT ON COLUMN ydsz_job_dag_instance.skipped_nodes IS '跳过节点数';
+COMMENT ON COLUMN ydsz_job_dag_instance.tenant_id IS '租户 ID';
 
 CREATE INDEX IF NOT EXISTS idx_pjdi_dag_id
-    ON pmis_job_dag_instance (dag_id) WHERE deleted = 0;
+    ON ydsz_job_dag_instance (dag_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjdi_status
-    ON pmis_job_dag_instance (status) WHERE deleted = 0;
+    ON ydsz_job_dag_instance (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjdi_created_at
-    ON pmis_job_dag_instance (created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_dag_instance (created_at DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P2-3] DAG 节点实例表 pmis_job_dag_node_instance
+-- [P2-3] DAG 节点实例表 ydsz_job_dag_node_instance
 -- ----------------------------------------------------------------------------
 -- 记录 DAG 实例中每个任务节点的执行状态，对标 PowerJob node_instance。
--- 一个 DAG 实例包含若干节点实例，每个节点实例关联一个任务执行日志（pmis_job_log）。
+-- 一个 DAG 实例包含若干节点实例，每个节点实例关联一个任务执行日志（ydsz_job_log）。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_dag_node_instance(
+CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance(
     id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     dag_instance_id         VARCHAR(20)   NOT NULL,
     dag_id                  VARCHAR(20)   NOT NULL,
@@ -2142,7 +2142,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag_node_instance(
     job_key                 VARCHAR(128)  NOT NULL,
     -- 节点状态: PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败 / SKIPPED 跳过 / RETRYING 重试中
     node_status             VARCHAR(32)   NOT NULL DEFAULT 'PENDING',
-    -- 关联的任务执行日志 ID（pmis_job_log.id）
+    -- 关联的任务执行日志 ID（ydsz_job_log.id）
     log_id                  VARCHAR(20),
     -- 节点级重试次数（独立于任务级 maxRetries，由 DAG 失败策略控制）
     retry_count             INTEGER       NOT NULL DEFAULT 0,
@@ -2165,38 +2165,38 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag_node_instance(
     CONSTRAINT ck_pjdni_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_dag_node_instance IS 'DAG 节点实例表（P2 DAG 增强）';
-COMMENT ON COLUMN pmis_job_dag_node_instance.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_dag_node_instance.dag_instance_id IS 'DAG 实例 ID';
-COMMENT ON COLUMN pmis_job_dag_node_instance.dag_id IS 'DAG 定义 ID';
-COMMENT ON COLUMN pmis_job_dag_node_instance.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_dag_node_instance.job_key IS '任务 KEY（冗余）';
-COMMENT ON COLUMN pmis_job_dag_node_instance.node_status IS '节点状态: PENDING/RUNNING/SUCCESS/FAILED/SKIPPED/RETRYING';
-COMMENT ON COLUMN pmis_job_dag_node_instance.log_id IS '关联的任务执行日志 ID（pmis_job_log.id）';
-COMMENT ON COLUMN pmis_job_dag_node_instance.retry_count IS '节点级重试次数';
-COMMENT ON COLUMN pmis_job_dag_node_instance.max_retries IS '节点级最大重试次数';
-COMMENT ON COLUMN pmis_job_dag_node_instance.started_at IS '节点开始时间';
-COMMENT ON COLUMN pmis_job_dag_node_instance.finished_at IS '节点结束时间';
-COMMENT ON COLUMN pmis_job_dag_node_instance.duration_ms IS '节点执行耗时（毫秒）';
-COMMENT ON COLUMN pmis_job_dag_node_instance.result_json IS '节点执行结果 JSON';
-COMMENT ON COLUMN pmis_job_dag_node_instance.error_message IS '节点错误信息';
-COMMENT ON COLUMN pmis_job_dag_node_instance.tenant_id IS '租户 ID';
+COMMENT ON TABLE ydsz_job_dag_node_instance IS 'DAG 节点实例表（P2 DAG 增强）';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.dag_instance_id IS 'DAG 实例 ID';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.dag_id IS 'DAG 定义 ID';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.job_key IS '任务 KEY（冗余）';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.node_status IS '节点状态: PENDING/RUNNING/SUCCESS/FAILED/SKIPPED/RETRYING';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.log_id IS '关联的任务执行日志 ID（ydsz_job_log.id）';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.retry_count IS '节点级重试次数';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.max_retries IS '节点级最大重试次数';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.started_at IS '节点开始时间';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.finished_at IS '节点结束时间';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.duration_ms IS '节点执行耗时（毫秒）';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.result_json IS '节点执行结果 JSON';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.error_message IS '节点错误信息';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.tenant_id IS '租户 ID';
 
 CREATE INDEX IF NOT EXISTS idx_pjdni_dag_instance
-    ON pmis_job_dag_node_instance (dag_instance_id) WHERE deleted = 0;
+    ON ydsz_job_dag_node_instance (dag_instance_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjdni_job_id
-    ON pmis_job_dag_node_instance (job_id) WHERE deleted = 0;
+    ON ydsz_job_dag_node_instance (job_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjdni_status
-    ON pmis_job_dag_node_instance (node_status) WHERE deleted = 0;
+    ON ydsz_job_dag_node_instance (node_status) WHERE deleted = 0;
 
 -- ============================================================================
--- [P5-1] 任务告警规则表 pmis_job_alert_rule
+-- [P5-1] 任务告警规则表 ydsz_job_alert_rule
 -- ----------------------------------------------------------------------------
 -- 定义告警触发条件、级别、通知通道与去重策略。
 -- 规则可绑定到具体任务（job_id 非空），也可作为全局规则（job_id 为 NULL）应用于所有任务。
 -- 对标 XXL-Job 告警中心 / PowerJob 告警配置。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
+CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule(
     id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rule_name             VARCHAR(128)  NOT NULL,
     job_id                VARCHAR(20),
@@ -2243,46 +2243,46 @@ CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
     )
 );
 
-COMMENT ON TABLE pmis_job_alert_rule IS '任务告警规则表（P5 告警 + 监控）';
-COMMENT ON COLUMN pmis_job_alert_rule.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_alert_rule.rule_name IS '规则名称（展示用）';
-COMMENT ON COLUMN pmis_job_alert_rule.job_id IS '关联任务 ID（NULL 表示全局规则）';
-COMMENT ON COLUMN pmis_job_alert_rule.job_key IS '任务 KEY 冗余（NULL 表示全局规则）';
-COMMENT ON COLUMN pmis_job_alert_rule.alert_type IS '告警类型: FAIL 任务失败 / TIMEOUT 任务超时 / SLOW 任务慢 / FAIL_RATE 失败率 / DURATION_P95 P95耗时';
-COMMENT ON COLUMN pmis_job_alert_rule.alert_level IS '告警级别: INFO 提示 / WARN 警告 / ERROR 错误 / CRITICAL 严重';
-COMMENT ON COLUMN pmis_job_alert_rule.threshold IS '阈值（按 alert_type 解释: FAIL_RATE 百分比 0-100 / SLOW+DURATION_P95 毫秒数）';
-COMMENT ON COLUMN pmis_job_alert_rule.time_window_minutes IS '统计时间窗口（分钟），仅 FAIL_RATE / DURATION_P95 生效';
-COMMENT ON COLUMN pmis_job_alert_rule.channels IS '通知通道（JSON 数组: ["EMAIL","DINGTALK","WECOM","WEBHOOK"]）';
-COMMENT ON COLUMN pmis_job_alert_rule.receivers IS '接收人（JSON 数组: 邮箱/手机号/userId 列表）';
-COMMENT ON COLUMN pmis_job_alert_rule.cooldown_minutes IS '冷却时间（分钟），同一规则在冷却期内不重复告警';
-COMMENT ON COLUMN pmis_job_alert_rule.enabled IS '是否启用: 0 禁用 / 1 启用';
-COMMENT ON COLUMN pmis_job_alert_rule.last_alert_at IS '最后告警时间（用于冷却判断，CAS 更新）';
-COMMENT ON COLUMN pmis_job_alert_rule.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_alert_rule.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_alert_rule.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job_alert_rule.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job_alert_rule.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_job_alert_rule.tenant_id IS '租户 ID（单租户部署默认 1）';
+COMMENT ON TABLE ydsz_job_alert_rule IS '任务告警规则表（P5 告警 + 监控）';
+COMMENT ON COLUMN ydsz_job_alert_rule.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_alert_rule.rule_name IS '规则名称（展示用）';
+COMMENT ON COLUMN ydsz_job_alert_rule.job_id IS '关联任务 ID（NULL 表示全局规则）';
+COMMENT ON COLUMN ydsz_job_alert_rule.job_key IS '任务 KEY 冗余（NULL 表示全局规则）';
+COMMENT ON COLUMN ydsz_job_alert_rule.alert_type IS '告警类型: FAIL 任务失败 / TIMEOUT 任务超时 / SLOW 任务慢 / FAIL_RATE 失败率 / DURATION_P95 P95耗时';
+COMMENT ON COLUMN ydsz_job_alert_rule.alert_level IS '告警级别: INFO 提示 / WARN 警告 / ERROR 错误 / CRITICAL 严重';
+COMMENT ON COLUMN ydsz_job_alert_rule.threshold IS '阈值（按 alert_type 解释: FAIL_RATE 百分比 0-100 / SLOW+DURATION_P95 毫秒数）';
+COMMENT ON COLUMN ydsz_job_alert_rule.time_window_minutes IS '统计时间窗口（分钟），仅 FAIL_RATE / DURATION_P95 生效';
+COMMENT ON COLUMN ydsz_job_alert_rule.channels IS '通知通道（JSON 数组: ["EMAIL","DINGTALK","WECOM","WEBHOOK"]）';
+COMMENT ON COLUMN ydsz_job_alert_rule.receivers IS '接收人（JSON 数组: 邮箱/手机号/userId 列表）';
+COMMENT ON COLUMN ydsz_job_alert_rule.cooldown_minutes IS '冷却时间（分钟），同一规则在冷却期内不重复告警';
+COMMENT ON COLUMN ydsz_job_alert_rule.enabled IS '是否启用: 0 禁用 / 1 启用';
+COMMENT ON COLUMN ydsz_job_alert_rule.last_alert_at IS '最后告警时间（用于冷却判断，CAS 更新）';
+COMMENT ON COLUMN ydsz_job_alert_rule.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_job_alert_rule.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_alert_rule.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_job_alert_rule.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_job_alert_rule.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_job_alert_rule.tenant_id IS '租户 ID（单租户部署默认 1）';
 
 -- 索引: 按 job_id 查询任务专属规则（任务告警触发时使用）
 CREATE INDEX IF NOT EXISTS idx_pjar_job_id
-    ON pmis_job_alert_rule (job_id) WHERE deleted = 0 AND enabled = 1;
+    ON ydsz_job_alert_rule (job_id) WHERE deleted = 0 AND enabled = 1;
 -- 索引: 按告警类型筛选（批量加载同类规则）
 CREATE INDEX IF NOT EXISTS idx_pjar_alert_type
-    ON pmis_job_alert_rule (alert_type) WHERE deleted = 0 AND enabled = 1;
+    ON ydsz_job_alert_rule (alert_type) WHERE deleted = 0 AND enabled = 1;
 -- 索引: 按启用状态加载全部启用规则（启动时缓存）
 CREATE INDEX IF NOT EXISTS idx_pjar_enabled
-    ON pmis_job_alert_rule (enabled) WHERE deleted = 0;
+    ON ydsz_job_alert_rule (enabled) WHERE deleted = 0;
 -- 索引: 按租户 + 创建时间倒序（告警中心列表）
 CREATE INDEX IF NOT EXISTS idx_pjar_tenant_created
-    ON pmis_job_alert_rule (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_alert_rule (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P5-1] 任务告警日志表 pmis_job_alert_log
+-- [P5-1] 任务告警日志表 ydsz_job_alert_log
 -- ----------------------------------------------------------------------------
 -- 记录每次告警派发的实际情况，用于审计、去重判断和告警效果统计。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
+CREATE TABLE IF NOT EXISTS ydsz_job_alert_log(
     id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rule_id               VARCHAR(20)   NOT NULL,
     rule_name             VARCHAR(128)  NOT NULL,
@@ -2299,7 +2299,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
     status                VARCHAR(32)   NOT NULL DEFAULT 'PENDING',
     error_message         TEXT,
     trace_id              VARCHAR(20),
-    -- 触发该告警的任务日志 ID（关联 pmis_job_log.id）
+    -- 触发该告警的任务日志 ID（关联 ydsz_job_log.id）
     trigger_log_id        VARCHAR(20),
     created_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at            TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2315,49 +2315,49 @@ CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
     CONSTRAINT ck_pjal_deleted_enum      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_alert_log IS '任务告警日志表（P5 告警 + 监控）';
-COMMENT ON COLUMN pmis_job_alert_log.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_alert_log.rule_id IS '告警规则 ID（关联 pmis_job_alert_rule.id）';
-COMMENT ON COLUMN pmis_job_alert_log.rule_name IS '规则名称（冗余，避免连表）';
-COMMENT ON COLUMN pmis_job_alert_log.job_id IS '任务 ID（NULL 表示全局告警）';
-COMMENT ON COLUMN pmis_job_alert_log.job_key IS '任务 KEY（冗余）';
-COMMENT ON COLUMN pmis_job_alert_log.alert_type IS '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95';
-COMMENT ON COLUMN pmis_job_alert_log.alert_level IS '告警级别: INFO / WARN / ERROR / CRITICAL';
-COMMENT ON COLUMN pmis_job_alert_log.trigger_value IS '触发时的实际值（如失败率 85.5、耗时 5000）';
-COMMENT ON COLUMN pmis_job_alert_log.threshold IS '规则阈值（冗余）';
-COMMENT ON COLUMN pmis_job_alert_log.channels IS '实际发送通道（JSON 数组）';
-COMMENT ON COLUMN pmis_job_alert_log.status IS '告警状态: PENDING 派发中 / SUCCESS 全部成功 / PARTIAL 部分成功 / FAILED 全部失败';
-COMMENT ON COLUMN pmis_job_alert_log.error_message IS '错误信息（部分通道失败时记录）';
-COMMENT ON COLUMN pmis_job_alert_log.trace_id IS '链路追踪 ID（分布式排障）';
-COMMENT ON COLUMN pmis_job_alert_log.trigger_log_id IS '触发该告警的任务日志 ID（关联 pmis_job_log.id）';
-COMMENT ON COLUMN pmis_job_alert_log.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_alert_log.created_at IS '告警发送时间';
-COMMENT ON COLUMN pmis_job_alert_log.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job_alert_log.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job_alert_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_job_alert_log.tenant_id IS '租户 ID';
+COMMENT ON TABLE ydsz_job_alert_log IS '任务告警日志表（P5 告警 + 监控）';
+COMMENT ON COLUMN ydsz_job_alert_log.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_alert_log.rule_id IS '告警规则 ID（关联 ydsz_job_alert_rule.id）';
+COMMENT ON COLUMN ydsz_job_alert_log.rule_name IS '规则名称（冗余，避免连表）';
+COMMENT ON COLUMN ydsz_job_alert_log.job_id IS '任务 ID（NULL 表示全局告警）';
+COMMENT ON COLUMN ydsz_job_alert_log.job_key IS '任务 KEY（冗余）';
+COMMENT ON COLUMN ydsz_job_alert_log.alert_type IS '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95';
+COMMENT ON COLUMN ydsz_job_alert_log.alert_level IS '告警级别: INFO / WARN / ERROR / CRITICAL';
+COMMENT ON COLUMN ydsz_job_alert_log.trigger_value IS '触发时的实际值（如失败率 85.5、耗时 5000）';
+COMMENT ON COLUMN ydsz_job_alert_log.threshold IS '规则阈值（冗余）';
+COMMENT ON COLUMN ydsz_job_alert_log.channels IS '实际发送通道（JSON 数组）';
+COMMENT ON COLUMN ydsz_job_alert_log.status IS '告警状态: PENDING 派发中 / SUCCESS 全部成功 / PARTIAL 部分成功 / FAILED 全部失败';
+COMMENT ON COLUMN ydsz_job_alert_log.error_message IS '错误信息（部分通道失败时记录）';
+COMMENT ON COLUMN ydsz_job_alert_log.trace_id IS '链路追踪 ID（分布式排障）';
+COMMENT ON COLUMN ydsz_job_alert_log.trigger_log_id IS '触发该告警的任务日志 ID（关联 ydsz_job_log.id）';
+COMMENT ON COLUMN ydsz_job_alert_log.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_job_alert_log.created_at IS '告警发送时间';
+COMMENT ON COLUMN ydsz_job_alert_log.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_job_alert_log.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_job_alert_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_job_alert_log.tenant_id IS '租户 ID';
 
 -- 索引: 按规则 ID 查询去重判断（冷却期内是否已告警）
 CREATE INDEX IF NOT EXISTS idx_pjal_rule_id
-    ON pmis_job_alert_log (rule_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_alert_log (rule_id, created_at DESC) WHERE deleted = 0;
 -- 索引: 按任务 ID 查询告警历史（任务详情页）
 CREATE INDEX IF NOT EXISTS idx_pjal_job_id
-    ON pmis_job_alert_log (job_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_alert_log (job_id, created_at DESC) WHERE deleted = 0;
 -- 索引: 按告警级别筛选（告警中心）
 CREATE INDEX IF NOT EXISTS idx_pjal_alert_level
-    ON pmis_job_alert_log (alert_level, created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_alert_log (alert_level, created_at DESC) WHERE deleted = 0;
 -- 索引: 按租户 + 创建时间倒序（告警中心列表）
 CREATE INDEX IF NOT EXISTS idx_pjal_tenant_created
-    ON pmis_job_alert_log (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_alert_log (tenant_id, created_at DESC) WHERE deleted = 0;
 -- 索引: 链路追踪 ID（分布式排障）
 CREATE INDEX IF NOT EXISTS idx_pjal_trace_id
-    ON pmis_job_alert_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+    ON ydsz_job_alert_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
 
 -- ============================ [006e] P7-2 租户级配额 ============================
 
 -- [P7-2] 租户级配额表：控制单个租户可创建任务数、并发执行数、日执行总量
 -- 未配置记录的租户视为 unlimited（由应用层 CronjobProperties.Quota.defaultMax* 兜底）
-CREATE TABLE IF NOT EXISTS pmis_tenant_quota(
+CREATE TABLE IF NOT EXISTS ydsz_tenant_quota(
     id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)      NOT NULL UNIQUE,
     -- 任务数上限（NULL=unlimited；超过此值拒绝创建新任务）
@@ -2382,30 +2382,30 @@ CREATE TABLE IF NOT EXISTS pmis_tenant_quota(
     CONSTRAINT ck_ptq_deleted_enum      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_tenant_quota IS '租户级配额表（P7-2）：控制单个租户的任务数/并发数/日执行量上限';
-COMMENT ON COLUMN pmis_tenant_quota.id IS '主键 ID';
-COMMENT ON COLUMN pmis_tenant_quota.tenant_id IS '租户 ID（唯一，一个租户一条配额记录）';
-COMMENT ON COLUMN pmis_tenant_quota.max_jobs IS '任务数上限（NULL=unlimited）';
-COMMENT ON COLUMN pmis_tenant_quota.max_concurrent IS '并发执行上限（NULL=unlimited，P7-3 实现）';
-COMMENT ON COLUMN pmis_tenant_quota.max_daily_executions IS '日执行量上限（NULL=unlimited，P7-3 实现）';
-COMMENT ON COLUMN pmis_tenant_quota.enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
-COMMENT ON COLUMN pmis_tenant_quota.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_tenant_quota.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_tenant_quota.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_tenant_quota.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_tenant_quota.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_tenant_quota IS '租户级配额表（P7-2）：控制单个租户的任务数/并发数/日执行量上限';
+COMMENT ON COLUMN ydsz_tenant_quota.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_tenant_quota.tenant_id IS '租户 ID（唯一，一个租户一条配额记录）';
+COMMENT ON COLUMN ydsz_tenant_quota.max_jobs IS '任务数上限（NULL=unlimited）';
+COMMENT ON COLUMN ydsz_tenant_quota.max_concurrent IS '并发执行上限（NULL=unlimited，P7-3 实现）';
+COMMENT ON COLUMN ydsz_tenant_quota.max_daily_executions IS '日执行量上限（NULL=unlimited，P7-3 实现）';
+COMMENT ON COLUMN ydsz_tenant_quota.enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
+COMMENT ON COLUMN ydsz_tenant_quota.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_tenant_quota.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_tenant_quota.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_tenant_quota.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_tenant_quota.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- 默认租户（tenant_id='1'）的初始配额记录（unlimited，便于单租户部署直接使用）
-INSERT INTO pmis_tenant_quota (id, tenant_id, max_jobs, max_concurrent, max_daily_executions, enabled)
+INSERT INTO ydsz_tenant_quota (id, tenant_id, max_jobs, max_concurrent, max_daily_executions, enabled)
 VALUES ('1', '1', NULL, NULL, NULL, 1)
 ON CONFLICT (tenant_id) DO NOTHING;
 
 -- ============================================================================
--- [P2-3] 任务执行每日统计表 pmis_job_daily_stats
+-- [P2-3] 任务执行每日统计表 ydsz_job_daily_stats
 -- ----------------------------------------------------------------------------
--- 每天凌晨聚合 pmis_job_log 的执行统计，供前端趋势图展示。
+-- 每天凌晨聚合 ydsz_job_log 的执行统计，供前端趋势图展示。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_daily_stats(
+CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -2425,32 +2425,32 @@ CREATE TABLE IF NOT EXISTS pmis_job_daily_stats(
     CONSTRAINT uk_pjds_job_date UNIQUE (job_id, stats_date, deleted)
 );
 
-COMMENT ON TABLE pmis_job_daily_stats IS '任务执行每日统计: 聚合 pmis_job_log 按日统计, 供趋势图展示';
-COMMENT ON COLUMN pmis_job_daily_stats.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_daily_stats.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_daily_stats.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN pmis_job_daily_stats.stats_date IS '统计日期';
-COMMENT ON COLUMN pmis_job_daily_stats.fire_count IS '当日触发次数';
-COMMENT ON COLUMN pmis_job_daily_stats.success_count IS '当日成功次数';
-COMMENT ON COLUMN pmis_job_daily_stats.fail_count IS '当日失败次数';
-COMMENT ON COLUMN pmis_job_daily_stats.timeout_count IS '当日超时次数';
-COMMENT ON COLUMN pmis_job_daily_stats.avg_duration_ms IS '平均耗时(毫秒)';
-COMMENT ON COLUMN pmis_job_daily_stats.max_duration_ms IS '最大耗时(毫秒)';
-COMMENT ON COLUMN pmis_job_daily_stats.min_duration_ms IS '最小耗时(毫秒)';
-COMMENT ON COLUMN pmis_job_daily_stats.p95_duration_ms IS 'P95 耗时(毫秒)';
-COMMENT ON COLUMN pmis_job_daily_stats.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_daily_stats.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_daily_stats IS '任务执行每日统计: 聚合 ydsz_job_log 按日统计, 供趋势图展示';
+COMMENT ON COLUMN ydsz_job_daily_stats.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_daily_stats.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_daily_stats.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN ydsz_job_daily_stats.stats_date IS '统计日期';
+COMMENT ON COLUMN ydsz_job_daily_stats.fire_count IS '当日触发次数';
+COMMENT ON COLUMN ydsz_job_daily_stats.success_count IS '当日成功次数';
+COMMENT ON COLUMN ydsz_job_daily_stats.fail_count IS '当日失败次数';
+COMMENT ON COLUMN ydsz_job_daily_stats.timeout_count IS '当日超时次数';
+COMMENT ON COLUMN ydsz_job_daily_stats.avg_duration_ms IS '平均耗时(毫秒)';
+COMMENT ON COLUMN ydsz_job_daily_stats.max_duration_ms IS '最大耗时(毫秒)';
+COMMENT ON COLUMN ydsz_job_daily_stats.min_duration_ms IS '最小耗时(毫秒)';
+COMMENT ON COLUMN ydsz_job_daily_stats.p95_duration_ms IS 'P95 耗时(毫秒)';
+COMMENT ON COLUMN ydsz_job_daily_stats.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_daily_stats.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjds_job_date
-    ON pmis_job_daily_stats (job_id, stats_date DESC) WHERE deleted = 0;
+    ON ydsz_job_daily_stats (job_id, stats_date DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P2-7] 任务 SLA 管理表 pmis_job_sla
+-- [P2-7] 任务 SLA 管理表 ydsz_job_sla
 -- ----------------------------------------------------------------------------
 -- 定义任务的 SLA 约束（最大执行时长/最大失败率/最小成功率），
 -- 由 AlertScanner 定期检查，违约时触发告警。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_sla(
+CREATE TABLE IF NOT EXISTS ydsz_job_sla(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -2473,29 +2473,29 @@ CREATE TABLE IF NOT EXISTS pmis_job_sla(
     CONSTRAINT uk_pjs_job_id UNIQUE (job_id, deleted)
 );
 
-COMMENT ON TABLE pmis_job_sla IS '任务 SLA 管理表: 定义最大执行时长/失败率/成功率约束, 违约时告警';
-COMMENT ON COLUMN pmis_job_sla.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_sla.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_sla.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN pmis_job_sla.max_duration_ms IS '最大执行时长(毫秒), 超过则违约';
-COMMENT ON COLUMN pmis_job_sla.max_fail_rate IS '最大失败率(%), 超过则违约';
-COMMENT ON COLUMN pmis_job_sla.min_success_rate IS '最小成功率(%), 低于则违约';
-COMMENT ON COLUMN pmis_job_sla.alert_level IS '告警级别: INFO / WARNING / CRITICAL';
-COMMENT ON COLUMN pmis_job_sla.enabled IS '是否启用: 0 禁用 / 1 启用';
-COMMENT ON COLUMN pmis_job_sla.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_sla.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_sla.updated_by IS '修改人 ID';
-COMMENT ON COLUMN pmis_job_sla.updated_at IS '修改时间';
-COMMENT ON COLUMN pmis_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_sla IS '任务 SLA 管理表: 定义最大执行时长/失败率/成功率约束, 违约时告警';
+COMMENT ON COLUMN ydsz_job_sla.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_sla.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_sla.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN ydsz_job_sla.max_duration_ms IS '最大执行时长(毫秒), 超过则违约';
+COMMENT ON COLUMN ydsz_job_sla.max_fail_rate IS '最大失败率(%), 超过则违约';
+COMMENT ON COLUMN ydsz_job_sla.min_success_rate IS '最小成功率(%), 低于则违约';
+COMMENT ON COLUMN ydsz_job_sla.alert_level IS '告警级别: INFO / WARNING / CRITICAL';
+COMMENT ON COLUMN ydsz_job_sla.enabled IS '是否启用: 0 禁用 / 1 启用';
+COMMENT ON COLUMN ydsz_job_sla.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_job_sla.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_sla.updated_by IS '修改人 ID';
+COMMENT ON COLUMN ydsz_job_sla.updated_at IS '修改时间';
+COMMENT ON COLUMN ydsz_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- ============================================================================
 
 -- ============================================================================
--- [P2-7] 任务版本历史表 pmis_job_version_history
+-- [P2-7] 任务版本历史表 ydsz_job_version_history
 -- ----------------------------------------------------------------------------
 -- 每次任务定义变更时记录一条版本快照，支持版本回溯和差异对比。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_version_history(
+CREATE TABLE IF NOT EXISTS ydsz_job_version_history(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id            VARCHAR(20)         NOT NULL,
     job_key           VARCHAR(128)   NOT NULL,
@@ -2510,27 +2510,27 @@ CREATE TABLE IF NOT EXISTS pmis_job_version_history(
     CONSTRAINT ck_pjvh_version_pos CHECK (version >= 1)
 );
 
-COMMENT ON TABLE pmis_job_version_history IS '任务版本历史表: 每次任务定义变更时记录版本快照, 支持回溯和差异对比';
-COMMENT ON COLUMN pmis_job_version_history.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_version_history.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_version_history.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN pmis_job_version_history.version IS '版本号';
-COMMENT ON COLUMN pmis_job_version_history.change_type IS '变更类型: CREATE / UPDATE / DELETE';
-COMMENT ON COLUMN pmis_job_version_history.before_snapshot IS '变更前快照 JSON';
-COMMENT ON COLUMN pmis_job_version_history.after_snapshot IS '变更后快照 JSON';
-COMMENT ON COLUMN pmis_job_version_history.change_remark IS '变更说明';
-COMMENT ON COLUMN pmis_job_version_history.changed_by IS '变更人 ID';
-COMMENT ON COLUMN pmis_job_version_history.changed_at IS '变更时间';
+COMMENT ON TABLE ydsz_job_version_history IS '任务版本历史表: 每次任务定义变更时记录版本快照, 支持回溯和差异对比';
+COMMENT ON COLUMN ydsz_job_version_history.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_version_history.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_version_history.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN ydsz_job_version_history.version IS '版本号';
+COMMENT ON COLUMN ydsz_job_version_history.change_type IS '变更类型: CREATE / UPDATE / DELETE';
+COMMENT ON COLUMN ydsz_job_version_history.before_snapshot IS '变更前快照 JSON';
+COMMENT ON COLUMN ydsz_job_version_history.after_snapshot IS '变更后快照 JSON';
+COMMENT ON COLUMN ydsz_job_version_history.change_remark IS '变更说明';
+COMMENT ON COLUMN ydsz_job_version_history.changed_by IS '变更人 ID';
+COMMENT ON COLUMN ydsz_job_version_history.changed_at IS '变更时间';
 
 CREATE INDEX IF NOT EXISTS idx_pjvh_job_id
-    ON pmis_job_version_history (job_id, version DESC);
+    ON ydsz_job_version_history (job_id, version DESC);
 
 -- ============================================================================
--- [P2-8] 执行产物管理表 pmis_job_artifact
+-- [P2-8] 执行产物管理表 ydsz_job_artifact
 -- ----------------------------------------------------------------------------
 -- 记录任务执行产生的文件/数据产物，支持产物查询、下载和过期清理。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_artifact(
+CREATE TABLE IF NOT EXISTS ydsz_job_artifact(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     log_id          VARCHAR(20)         NOT NULL,
@@ -2548,34 +2548,34 @@ CREATE TABLE IF NOT EXISTS pmis_job_artifact(
     CONSTRAINT ck_pja_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_artifact IS '执行产物管理表: 记录任务执行产生的文件/数据产物, 支持查询/下载/清理';
-COMMENT ON COLUMN pmis_job_artifact.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_artifact.job_id IS '任务 ID';
-COMMENT ON COLUMN pmis_job_artifact.log_id IS '执行日志 ID';
-COMMENT ON COLUMN pmis_job_artifact.job_key IS '任务 KEY(冗余)';
-COMMENT ON COLUMN pmis_job_artifact.artifact_name IS '产物名称';
-COMMENT ON COLUMN pmis_job_artifact.artifact_type IS '产物类型: FILE / REPORT / DATA / LOG';
-COMMENT ON COLUMN pmis_job_artifact.storage_path IS '存储路径(文件系统路径或对象存储 URL)';
-COMMENT ON COLUMN pmis_job_artifact.size_bytes IS '产物大小(字节)';
-COMMENT ON COLUMN pmis_job_artifact.content_type IS '内容类型(MIME type)';
-COMMENT ON COLUMN pmis_job_artifact.metadata IS '产物元数据 JSON';
-COMMENT ON COLUMN pmis_job_artifact.expire_at IS '过期时间(NULL=不过期, 过期后由清理任务删除)';
-COMMENT ON COLUMN pmis_job_artifact.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_artifact.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_artifact IS '执行产物管理表: 记录任务执行产生的文件/数据产物, 支持查询/下载/清理';
+COMMENT ON COLUMN ydsz_job_artifact.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_artifact.job_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_job_artifact.log_id IS '执行日志 ID';
+COMMENT ON COLUMN ydsz_job_artifact.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN ydsz_job_artifact.artifact_name IS '产物名称';
+COMMENT ON COLUMN ydsz_job_artifact.artifact_type IS '产物类型: FILE / REPORT / DATA / LOG';
+COMMENT ON COLUMN ydsz_job_artifact.storage_path IS '存储路径(文件系统路径或对象存储 URL)';
+COMMENT ON COLUMN ydsz_job_artifact.size_bytes IS '产物大小(字节)';
+COMMENT ON COLUMN ydsz_job_artifact.content_type IS '内容类型(MIME type)';
+COMMENT ON COLUMN ydsz_job_artifact.metadata IS '产物元数据 JSON';
+COMMENT ON COLUMN ydsz_job_artifact.expire_at IS '过期时间(NULL=不过期, 过期后由清理任务删除)';
+COMMENT ON COLUMN ydsz_job_artifact.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_artifact.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pja_log_id
-    ON pmis_job_artifact (log_id) WHERE deleted = 0;
+    ON ydsz_job_artifact (log_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pja_job_key
-    ON pmis_job_artifact (job_key, created_at DESC) WHERE deleted = 0;
+    ON ydsz_job_artifact (job_key, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pja_expire_at
-    ON pmis_job_artifact (expire_at) WHERE deleted = 0 AND expire_at IS NOT NULL;
+    ON ydsz_job_artifact (expire_at) WHERE deleted = 0 AND expire_at IS NOT NULL;
 
 -- ============================================================================
--- [P3-13] WebHook 事件订阅表 pmis_job_webhook
+-- [P3-13] WebHook 事件订阅表 ydsz_job_webhook
 -- ----------------------------------------------------------------------------
 -- 记录用户配置的 WebHook 订阅，在任务生命周期事件发生时推送通知。
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS pmis_job_webhook(
+CREATE TABLE IF NOT EXISTS ydsz_job_webhook(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     name            VARCHAR(128)   NOT NULL,
     event_type      VARCHAR(64)    NOT NULL,
@@ -2596,25 +2596,25 @@ CREATE TABLE IF NOT EXISTS pmis_job_webhook(
     CONSTRAINT ck_pjw_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_webhook IS 'WebHook 事件订阅表: 配置任务生命周期事件的通知推送';
-COMMENT ON COLUMN pmis_job_webhook.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_webhook.name IS 'WebHook 名称';
-COMMENT ON COLUMN pmis_job_webhook.event_type IS '订阅事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT / DAG_COMPLETED';
-COMMENT ON COLUMN pmis_job_webhook.job_key IS '订阅任务 KEY(NULL=所有任务)';
-COMMENT ON COLUMN pmis_job_webhook.job_group IS '订阅任务组(NULL=所有分组)';
-COMMENT ON COLUMN pmis_job_webhook.callback_url IS 'WebHook 回调 URL';
-COMMENT ON COLUMN pmis_job_webhook.http_method IS '请求方法: POST / PUT';
-COMMENT ON COLUMN pmis_job_webhook.headers IS '请求头 JSON';
-COMMENT ON COLUMN pmis_job_webhook.secret IS '密钥(用于 HMAC-SHA256 签名验证)';
-COMMENT ON COLUMN pmis_job_webhook.status IS '状态: ACTIVE / INACTIVE';
-COMMENT ON COLUMN pmis_job_webhook.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_webhook.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_job_webhook.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON TABLE ydsz_job_webhook IS 'WebHook 事件订阅表: 配置任务生命周期事件的通知推送';
+COMMENT ON COLUMN ydsz_job_webhook.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_job_webhook.name IS 'WebHook 名称';
+COMMENT ON COLUMN ydsz_job_webhook.event_type IS '订阅事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT / DAG_COMPLETED';
+COMMENT ON COLUMN ydsz_job_webhook.job_key IS '订阅任务 KEY(NULL=所有任务)';
+COMMENT ON COLUMN ydsz_job_webhook.job_group IS '订阅任务组(NULL=所有分组)';
+COMMENT ON COLUMN ydsz_job_webhook.callback_url IS 'WebHook 回调 URL';
+COMMENT ON COLUMN ydsz_job_webhook.http_method IS '请求方法: POST / PUT';
+COMMENT ON COLUMN ydsz_job_webhook.headers IS '请求头 JSON';
+COMMENT ON COLUMN ydsz_job_webhook.secret IS '密钥(用于 HMAC-SHA256 签名验证)';
+COMMENT ON COLUMN ydsz_job_webhook.status IS '状态: ACTIVE / INACTIVE';
+COMMENT ON COLUMN ydsz_job_webhook.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_webhook.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_job_webhook.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjw_event_job
-    ON pmis_job_webhook (event_type, job_key) WHERE deleted = 0 AND status = 'ACTIVE';
+    ON ydsz_job_webhook (event_type, job_key) WHERE deleted = 0 AND status = 'ACTIVE';
 CREATE INDEX IF NOT EXISTS idx_pjw_status
-    ON pmis_job_webhook (status) WHERE deleted = 0;
+    ON ydsz_job_webhook (status) WHERE deleted = 0;
 
 -- ============================================================================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
@@ -2631,12 +2631,12 @@ CREATE INDEX IF NOT EXISTS idx_pjw_status
 -- 描述: 短信/邮件/推送/站内信/Webhook 发送日志 + 模板
 -- =====================================================
 
--- 消息发送日志表 pmis_msg_log（由原 pmis_msg_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
+-- 消息发送日志表 ydsz_msg_log（由原 ydsz_msg_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
 -- P2-3: 改为 PostgreSQL 月度 RANGE 分区表，按 created_at 分区，便于按时间范围查询与冷数据归档。
 -- 分区表主键必须包含分区键 created_at，故采用 (id, created_at) 复合主键。
 -- 业务代码通过 MyBatis-Plus BaseMapper 以 id 单字段查询时，PostgreSQL 会扫描所有分区上的本地索引，
 -- 配合 partition pruning（带 created_at 范围条件时）能保证查询性能。
-CREATE TABLE IF NOT EXISTS pmis_msg_log(
+CREATE TABLE IF NOT EXISTS ydsz_msg_log(
     id                VARCHAR(20)    NOT NULL,
     channel           VARCHAR(32)    NOT NULL,
     biz_type          VARCHAR(64),
@@ -2700,83 +2700,83 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
 ) PARTITION BY RANGE (created_at);
 
 -- 月度分区: 预创建 2026 全年 12 个分区 + DEFAULT 兜底分区。
--- 归档策略: 由 MsgLogArchiveService 在每月 1 号 DETACH 90 天前分区并重命名为 pmis_msg_log_archive_yyyymm。
+-- 归档策略: 由 MsgLogArchiveService 在每月 1 号 DETACH 90 天前分区并重命名为 ydsz_msg_log_archive_yyyymm。
 -- 后续新增分区也由该服务动态 CREATE,避免人为遗漏。
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m01 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m02 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m03 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m04 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m05 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-05-01') TO ('2026-06-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m06 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m07 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m08 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m09 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m10 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m11 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m12 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-12-01') TO ('2027-01-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m01 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m02 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m03 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m04 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m05 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-05-01') TO ('2026-06-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m06 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m07 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m08 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m09 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m10 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m11 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_y2026m12 PARTITION OF ydsz_msg_log FOR VALUES FROM ('2026-12-01') TO ('2027-01-01');
 -- DEFAULT 分区: 兜底不在预创建范围内的数据,避免插入失败;运维应监控该分区并补建新分区。
-CREATE TABLE IF NOT EXISTS pmis_msg_log_default PARTITION OF pmis_msg_log DEFAULT;
+CREATE TABLE IF NOT EXISTS ydsz_msg_log_default PARTITION OF ydsz_msg_log DEFAULT;
 
-COMMENT ON TABLE pmis_msg_log IS '消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度';
-COMMENT ON COLUMN pmis_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
-COMMENT ON COLUMN pmis_msg_log.status IS '发送状态: PENDING 待发送 / SENDING 发送中 / SUCCESS 成功 / FAILED 失败 / RETRY 重试中 / DEAD 死信 / RECALLED 已撤回';
-COMMENT ON COLUMN pmis_msg_log.priority IS '发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并发)';
-COMMENT ON COLUMN pmis_msg_log.sender_id IS '触发发送的用户 ID(系统发送为 SYSTEM)';
-COMMENT ON COLUMN pmis_msg_log.message_group IS '聚合组(同组消息可合并为摘要发送)';
-COMMENT ON COLUMN pmis_msg_log.batch_id IS '聚合批次 ID(关联 pmis_msg_aggregate.id)';
-COMMENT ON COLUMN pmis_msg_log.route_rule_id IS '命中的路由规则 ID(关联 pmis_msg_route_rule.id)';
-COMMENT ON COLUMN pmis_msg_log.canary IS '是否灰度命中: 0 正式 / 1 灰度';
-COMMENT ON COLUMN pmis_msg_log.canary_key IS 'P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)';
-COMMENT ON COLUMN pmis_msg_log.dedup_key IS '幂等去重键(用于消费端幂等,Redis SET NX EX)';
-COMMENT ON COLUMN pmis_msg_log.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
-COMMENT ON COLUMN pmis_msg_log.receipt_at IS '回执到达时间';
-COMMENT ON COLUMN pmis_msg_log.receipt_status IS '回执状态: NONE 无 / DELIVERED 已送达 / READ 已读 / CLICKED 已点击 / FAILED 失败 / TIMEOUT 超时(ReceiptPuller 标记)';
-COMMENT ON COLUMN pmis_msg_log.retry_count IS '已重试次数';
-COMMENT ON COLUMN pmis_msg_log.next_retry_at IS '下次重试时间(退避调度)';
-COMMENT ON COLUMN pmis_msg_log.provider_trace_id IS '三方服务商回执 ID';
-COMMENT ON COLUMN pmis_msg_log.cost_ms IS '发送耗时(毫秒)';
-COMMENT ON COLUMN pmis_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/INAPP 免费)';
-COMMENT ON COLUMN pmis_msg_log.trace_id IS '系统链路追踪 ID';
-COMMENT ON COLUMN pmis_msg_log.msg_id IS 'RocketMQ 消息 ID';
-COMMENT ON COLUMN pmis_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';
-COMMENT ON COLUMN pmis_msg_log.reconsume_times IS 'RocketMQ 重试次数';
-COMMENT ON COLUMN pmis_msg_log.parent_msg_id IS 'P2-6: 级联发送父消息 ID(顶层消息为 NULL)';
-COMMENT ON COLUMN pmis_msg_log.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE ydsz_msg_log IS '消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度';
+COMMENT ON COLUMN ydsz_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
+COMMENT ON COLUMN ydsz_msg_log.status IS '发送状态: PENDING 待发送 / SENDING 发送中 / SUCCESS 成功 / FAILED 失败 / RETRY 重试中 / DEAD 死信 / RECALLED 已撤回';
+COMMENT ON COLUMN ydsz_msg_log.priority IS '发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并发)';
+COMMENT ON COLUMN ydsz_msg_log.sender_id IS '触发发送的用户 ID(系统发送为 SYSTEM)';
+COMMENT ON COLUMN ydsz_msg_log.message_group IS '聚合组(同组消息可合并为摘要发送)';
+COMMENT ON COLUMN ydsz_msg_log.batch_id IS '聚合批次 ID(关联 ydsz_msg_aggregate.id)';
+COMMENT ON COLUMN ydsz_msg_log.route_rule_id IS '命中的路由规则 ID(关联 ydsz_msg_route_rule.id)';
+COMMENT ON COLUMN ydsz_msg_log.canary IS '是否灰度命中: 0 正式 / 1 灰度';
+COMMENT ON COLUMN ydsz_msg_log.canary_key IS 'P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)';
+COMMENT ON COLUMN ydsz_msg_log.dedup_key IS '幂等去重键(用于消费端幂等,Redis SET NX EX)';
+COMMENT ON COLUMN ydsz_msg_log.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
+COMMENT ON COLUMN ydsz_msg_log.receipt_at IS '回执到达时间';
+COMMENT ON COLUMN ydsz_msg_log.receipt_status IS '回执状态: NONE 无 / DELIVERED 已送达 / READ 已读 / CLICKED 已点击 / FAILED 失败 / TIMEOUT 超时(ReceiptPuller 标记)';
+COMMENT ON COLUMN ydsz_msg_log.retry_count IS '已重试次数';
+COMMENT ON COLUMN ydsz_msg_log.next_retry_at IS '下次重试时间(退避调度)';
+COMMENT ON COLUMN ydsz_msg_log.provider_trace_id IS '三方服务商回执 ID';
+COMMENT ON COLUMN ydsz_msg_log.cost_ms IS '发送耗时(毫秒)';
+COMMENT ON COLUMN ydsz_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/INAPP 免费)';
+COMMENT ON COLUMN ydsz_msg_log.trace_id IS '系统链路追踪 ID';
+COMMENT ON COLUMN ydsz_msg_log.msg_id IS 'RocketMQ 消息 ID';
+COMMENT ON COLUMN ydsz_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';
+COMMENT ON COLUMN ydsz_msg_log.reconsume_times IS 'RocketMQ 重试次数';
+COMMENT ON COLUMN ydsz_msg_log.parent_msg_id IS 'P2-6: 级联发送父消息 ID(顶层消息为 NULL)';
+COMMENT ON COLUMN ydsz_msg_log.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pml_channel
-    ON pmis_msg_log (channel) WHERE deleted = 0;
+    ON ydsz_msg_log (channel) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pml_status
-    ON pmis_msg_log (status) WHERE deleted = 0;
+    ON ydsz_msg_log (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pml_biz
-    ON pmis_msg_log (biz_type, biz_id) WHERE deleted = 0;
+    ON ydsz_msg_log (biz_type, biz_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pml_receiver
-    ON pmis_msg_log (receiver) WHERE deleted = 0;
+    ON ydsz_msg_log (receiver) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pml_tenant_created
-    ON pmis_msg_log (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_msg_log (tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pml_msg_id
-    ON pmis_msg_log (msg_id) WHERE deleted = 0 AND msg_id IS NOT NULL;
+    ON ydsz_msg_log (msg_id) WHERE deleted = 0 AND msg_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pml_provider_trace
-    ON pmis_msg_log (provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
+    ON ydsz_msg_log (provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pml_priority
-    ON pmis_msg_log (status, priority, next_retry_at) WHERE deleted = 0;
+    ON ydsz_msg_log (status, priority, next_retry_at) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pml_dedup
-    ON pmis_msg_log (dedup_key) WHERE deleted = 0 AND dedup_key IS NOT NULL;
+    ON ydsz_msg_log (dedup_key) WHERE deleted = 0 AND dedup_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pml_batch
-    ON pmis_msg_log (batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
+    ON ydsz_msg_log (batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pml_recall
-    ON pmis_msg_log (recall_status) WHERE deleted = 0 AND recall_status = 'RECALLED';
+    ON ydsz_msg_log (recall_status) WHERE deleted = 0 AND recall_status = 'RECALLED';
 CREATE INDEX IF NOT EXISTS idx_pml_retry_due
-    ON pmis_msg_log (status, next_retry_at) WHERE deleted = 0 AND status = 'RETRY' AND next_retry_at IS NOT NULL;
+    ON ydsz_msg_log (status, next_retry_at) WHERE deleted = 0 AND status = 'RETRY' AND next_retry_at IS NOT NULL;
 -- P2-6: 级联发送父子关系查询索引(按 parent_msg_id 查询某条消息触发的全部级联消息)
 CREATE INDEX IF NOT EXISTS idx_pml_parent
-    ON pmis_msg_log (parent_msg_id) WHERE deleted = 0 AND parent_msg_id IS NOT NULL;
+    ON ydsz_msg_log (parent_msg_id) WHERE deleted = 0 AND parent_msg_id IS NOT NULL;
 -- P1-6: 灰度 A/B 报表查询索引(按 canary_key 分组统计实验组数据)
 CREATE INDEX IF NOT EXISTS idx_pml_canary_key
-    ON pmis_msg_log (canary_key) WHERE deleted = 0 AND canary_key IS NOT NULL;
+    ON ydsz_msg_log (canary_key) WHERE deleted = 0 AND canary_key IS NOT NULL;
 
 
--- 消息模板表 pmis_msg_template（由原 pmis_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
-CREATE TABLE IF NOT EXISTS pmis_msg_template(
+-- 消息模板表 ydsz_msg_template（由原 ydsz_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
+CREATE TABLE IF NOT EXISTS ydsz_msg_template(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     template_code   VARCHAR(128)   NOT NULL,
     channel         VARCHAR(32)    NOT NULL,
@@ -2808,31 +2808,31 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template(
     CONSTRAINT ck_pmt_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_msg_template IS '消息模板表: 支持 ${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景';
-COMMENT ON COLUMN pmis_msg_template.template_code IS '模板编码(同 code 不同 channel/locale 形成多版本)';
-COMMENT ON COLUMN pmis_msg_template.locale IS '语言区域(如 zh-CN / en-US),影响 i18n 模板选择';
-COMMENT ON COLUMN pmis_msg_template.version IS '语义版本(如 1.0.0),支持模板版本回滚';
-COMMENT ON COLUMN pmis_msg_template.category IS '模板分类(如 ALERT/APPROVAL/NOTICE/VERIFY)';
-COMMENT ON COLUMN pmis_msg_template.scene_code IS '场景编码(如 BUDGET_YELLOW / CONTRACT_SIGN),用于业务侧精确匹配';
-COMMENT ON COLUMN pmis_msg_template.audit_status IS '审核状态: DRAFT 草稿 / AUDITING 审核中 / APPROVED 已通过 / REJECTED 已驳回';
-COMMENT ON COLUMN pmis_msg_template.audit_by IS '审核人 ID';
-COMMENT ON COLUMN pmis_msg_template.audit_at IS '审核时间';
-COMMENT ON COLUMN pmis_msg_template.audit_remark IS '审核备注';
+COMMENT ON TABLE ydsz_msg_template IS '消息模板表: 支持 ${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景';
+COMMENT ON COLUMN ydsz_msg_template.template_code IS '模板编码(同 code 不同 channel/locale 形成多版本)';
+COMMENT ON COLUMN ydsz_msg_template.locale IS '语言区域(如 zh-CN / en-US),影响 i18n 模板选择';
+COMMENT ON COLUMN ydsz_msg_template.version IS '语义版本(如 1.0.0),支持模板版本回滚';
+COMMENT ON COLUMN ydsz_msg_template.category IS '模板分类(如 ALERT/APPROVAL/NOTICE/VERIFY)';
+COMMENT ON COLUMN ydsz_msg_template.scene_code IS '场景编码(如 BUDGET_YELLOW / CONTRACT_SIGN),用于业务侧精确匹配';
+COMMENT ON COLUMN ydsz_msg_template.audit_status IS '审核状态: DRAFT 草稿 / AUDITING 审核中 / APPROVED 已通过 / REJECTED 已驳回';
+COMMENT ON COLUMN ydsz_msg_template.audit_by IS '审核人 ID';
+COMMENT ON COLUMN ydsz_msg_template.audit_at IS '审核时间';
+COMMENT ON COLUMN ydsz_msg_template.audit_remark IS '审核备注';
 
 CREATE INDEX IF NOT EXISTS idx_pmt_channel
-    ON pmis_msg_template (channel) WHERE deleted = 0;
+    ON ydsz_msg_template (channel) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmt_status
-    ON pmis_msg_template (status) WHERE deleted = 0;
+    ON ydsz_msg_template (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmt_tenant_status
-    ON pmis_msg_template (tenant_id, status) WHERE deleted = 0;
+    ON ydsz_msg_template (tenant_id, status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmt_scene
-    ON pmis_msg_template (scene_code, channel) WHERE deleted = 0 AND scene_code IS NOT NULL;
+    ON ydsz_msg_template (scene_code, channel) WHERE deleted = 0 AND scene_code IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pmt_audit
-    ON pmis_msg_template (audit_status) WHERE deleted = 0 AND audit_status IN ('DRAFT', 'AUDITING');
+    ON ydsz_msg_template (audit_status) WHERE deleted = 0 AND audit_status IN ('DRAFT', 'AUDITING');
 
 
--- 消息路由规则表 pmis_msg_route_rule（条件路由 / 通道降级）
-CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
+-- 消息路由规则表 ydsz_msg_route_rule（条件路由 / 通道降级）
+CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rule_code         VARCHAR(128)  NOT NULL,
     rule_name         VARCHAR(255)  NOT NULL,
@@ -2860,18 +2860,18 @@ CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
     CONSTRAINT ck_pmrr_deleted_enum CHECK (deleted IN (0, 1)),
     CONSTRAINT ck_pmrr_priority_nonneg CHECK (priority >= 0)
 );
-COMMENT ON TABLE pmis_msg_route_rule IS '消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级';
-COMMENT ON COLUMN pmis_msg_route_rule.condition_expr IS '路由条件(SpEL 表达式,如 #request.bizType==''ALERT'' and #request.priority==''URGENT'')';
-COMMENT ON COLUMN pmis_msg_route_rule.target_channel IS '命中后目标通道';
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道(单通道,兼容旧版)';
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,INAPP),按顺序逐个尝试,优先于 fallback_channel';
+COMMENT ON TABLE ydsz_msg_route_rule IS '消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级';
+COMMENT ON COLUMN ydsz_msg_route_rule.condition_expr IS '路由条件(SpEL 表达式,如 #request.bizType==''ALERT'' and #request.priority==''URGENT'')';
+COMMENT ON COLUMN ydsz_msg_route_rule.target_channel IS '命中后目标通道';
+COMMENT ON COLUMN ydsz_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道(单通道,兼容旧版)';
+COMMENT ON COLUMN ydsz_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,INAPP),按顺序逐个尝试,优先于 fallback_channel';
 
-CREATE INDEX IF NOT EXISTS idx_pmrt_biz ON pmis_msg_route_rule(biz_type) WHERE deleted = 0 AND status = 'ENABLED';
-CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON pmis_msg_route_rule(status, sort_order) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmrt_biz ON ydsz_msg_route_rule(biz_type) WHERE deleted = 0 AND status = 'ENABLED';
+CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON ydsz_msg_route_rule(status, sort_order) WHERE deleted = 0;
 
 
--- 消息回执表 pmis_msg_receipt（服务商回执 / 已读 / 点击回调）
-CREATE TABLE IF NOT EXISTS pmis_msg_receipt(
+-- 消息回执表 ydsz_msg_receipt（服务商回执 / 已读 / 点击回调）
+CREATE TABLE IF NOT EXISTS ydsz_msg_receipt(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     log_id            VARCHAR(20)   NOT NULL,
     provider_trace_id VARCHAR(128),
@@ -2889,16 +2889,16 @@ CREATE TABLE IF NOT EXISTS pmis_msg_receipt(
     CONSTRAINT ck_pmrt_type_enum   CHECK (receipt_type IN ('DELIVERED', 'READ', 'CLICKED', 'FAILED')),
     CONSTRAINT ck_pmrt_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_msg_receipt IS '消息回执表: 服务商送达/已读/点击/失败回调记录';
-COMMENT ON COLUMN pmis_msg_receipt.log_id IS '关联 pmis_msg_log.id';
-COMMENT ON COLUMN pmis_msg_receipt.receipt_type IS '回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败';
+COMMENT ON TABLE ydsz_msg_receipt IS '消息回执表: 服务商送达/已读/点击/失败回调记录';
+COMMENT ON COLUMN ydsz_msg_receipt.log_id IS '关联 ydsz_msg_log.id';
+COMMENT ON COLUMN ydsz_msg_receipt.receipt_type IS '回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败';
 
-CREATE INDEX IF NOT EXISTS idx_pmrc_log ON pmis_msg_receipt(log_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmrc_trace ON pmis_msg_receipt(provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pmrc_log ON ydsz_msg_receipt(log_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmrc_trace ON ydsz_msg_receipt(provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 
 
--- 聚合批次表 pmis_msg_aggregate（同组消息合并为摘要发送）
-CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
+-- 聚合批次表 ydsz_msg_aggregate（同组消息合并为摘要发送）
+CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     aggregate_group   VARCHAR(64)   NOT NULL,
     receiver          VARCHAR(256)  NOT NULL,
@@ -2921,17 +2921,17 @@ CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
     CONSTRAINT ck_pmag_count_nonneg CHECK (message_count >= 0),
     CONSTRAINT ck_pmag_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_msg_aggregate IS '聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送';
-COMMENT ON COLUMN pmis_msg_aggregate.batch_status IS '批次状态: PENDING 攒批中 / READY 就绪待发 / SENT 已发送 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_msg_aggregate.scheduled_send_at IS '计划发送时间(到达后触发摘要发送)';
-COMMENT ON COLUMN pmis_msg_aggregate.digest_content IS '聚合后摘要内容(渲染后)';
+COMMENT ON TABLE ydsz_msg_aggregate IS '聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送';
+COMMENT ON COLUMN ydsz_msg_aggregate.batch_status IS '批次状态: PENDING 攒批中 / READY 就绪待发 / SENT 已发送 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_msg_aggregate.scheduled_send_at IS '计划发送时间(到达后触发摘要发送)';
+COMMENT ON COLUMN ydsz_msg_aggregate.digest_content IS '聚合后摘要内容(渲染后)';
 
-CREATE INDEX IF NOT EXISTS idx_pmag_group ON pmis_msg_aggregate(aggregate_group, receiver) WHERE deleted = 0 AND batch_status IN ('PENDING', 'READY');
-CREATE INDEX IF NOT EXISTS idx_pmag_due ON pmis_msg_aggregate(scheduled_send_at) WHERE deleted = 0 AND batch_status = 'READY' AND scheduled_send_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pmag_group ON ydsz_msg_aggregate(aggregate_group, receiver) WHERE deleted = 0 AND batch_status IN ('PENDING', 'READY');
+CREATE INDEX IF NOT EXISTS idx_pmag_due ON ydsz_msg_aggregate(scheduled_send_at) WHERE deleted = 0 AND batch_status = 'READY' AND scheduled_send_at IS NOT NULL;
 
 
--- 灰度桶表 pmis_msg_canary（按 template_code/biz_type 灰度发布）
-CREATE TABLE IF NOT EXISTS pmis_msg_canary(
+-- 灰度桶表 ydsz_msg_canary（按 template_code/biz_type 灰度发布）
+CREATE TABLE IF NOT EXISTS ydsz_msg_canary(
     id                       VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     canary_key               VARCHAR(128)  NOT NULL,
     bucket_total             INTEGER       NOT NULL DEFAULT 100,
@@ -2954,19 +2954,19 @@ CREATE TABLE IF NOT EXISTS pmis_msg_canary(
     CONSTRAINT ck_pmc_exp_chan_enum CHECK (experiment_channel IS NULL OR experiment_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pmc_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布,命中后可切换实验模板/通道';
-COMMENT ON COLUMN pmis_msg_canary.canary_key IS '灰度键(如 template_code 或 biz_type)';
-COMMENT ON COLUMN pmis_msg_canary.bucket_selected IS '命中的桶列表 JSON(如 [0,1,2,...,4] 表示 0-4 号桶命中)';
-COMMENT ON COLUMN pmis_msg_canary.percentage IS '灰度比例(0-100)';
-COMMENT ON COLUMN pmis_msg_canary.experiment_template_code IS '灰度命中后切换的实验模板编码(可空,空则不切换)';
-COMMENT ON COLUMN pmis_msg_canary.experiment_channel IS '灰度命中后切换的实验通道(可空,空则不切换)';
+COMMENT ON TABLE ydsz_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布,命中后可切换实验模板/通道';
+COMMENT ON COLUMN ydsz_msg_canary.canary_key IS '灰度键(如 template_code 或 biz_type)';
+COMMENT ON COLUMN ydsz_msg_canary.bucket_selected IS '命中的桶列表 JSON(如 [0,1,2,...,4] 表示 0-4 号桶命中)';
+COMMENT ON COLUMN ydsz_msg_canary.percentage IS '灰度比例(0-100)';
+COMMENT ON COLUMN ydsz_msg_canary.experiment_template_code IS '灰度命中后切换的实验模板编码(可空,空则不切换)';
+COMMENT ON COLUMN ydsz_msg_canary.experiment_channel IS '灰度命中后切换的实验通道(可空,空则不切换)';
 
-CREATE INDEX IF NOT EXISTS idx_pmc_key ON pmis_msg_canary(canary_key) WHERE deleted = 0 AND status = 'ENABLED';
+CREATE INDEX IF NOT EXISTS idx_pmc_key ON ydsz_msg_canary(canary_key) WHERE deleted = 0 AND status = 'ENABLED';
 
 -- --------------------------------------------------------------------
 
 -- ====================================================================
--- V1.0.0_008 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
+-- V1.0.0_008 已优化内联至 V1.0.0_001 的 ydsz_operation_log 定义中
 -- (字段已统一为 http_method/method_signature/client_ip/params_json/response_json/trace_id,
 --  并补齐 V1.0.0_040 审计差异字段 before_data/after_data)
 -- ====================================================================
@@ -2987,9 +2987,9 @@ CREATE INDEX IF NOT EXISTS idx_pmc_key ON pmis_msg_canary(canary_key) WHERE dele
 -- =====================================================
 
 -- =====================================================
--- 1. 商机主表 pmis_project_opportunity
+-- 1. 商机主表 ydsz_project_opportunity
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
+CREATE TABLE IF NOT EXISTS ydsz_project_opportunity(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     opportunity_code  VARCHAR(64)    NOT NULL,
     opportunity_name  VARCHAR(256)   NOT NULL,
@@ -3027,58 +3027,58 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
     CONSTRAINT ck_ppo_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppo_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_opportunity IS '商机主表: 销售线索到合同前的漏斗管理,支持赢率/分级/转化立项';
-COMMENT ON COLUMN pmis_project_opportunity.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_opportunity.opportunity_code IS '商机编码(全局唯一,如 OPP20260001)';
-COMMENT ON COLUMN pmis_project_opportunity.opportunity_name IS '商机名称';
-COMMENT ON COLUMN pmis_project_opportunity.customer_id IS '客户 ID';
-COMMENT ON COLUMN pmis_project_opportunity.customer_name IS '客户名称(冗余,减少连表)';
-COMMENT ON COLUMN pmis_project_opportunity.business_dept_id IS '负责事业部 ID';
-COMMENT ON COLUMN pmis_project_opportunity.owner_id IS '商机负责人 ID(销售/BD)';
-COMMENT ON COLUMN pmis_project_opportunity.owner_name IS '商机负责人姓名';
-COMMENT ON COLUMN pmis_project_opportunity.level IS '商机分级: A 大客户 / B 中型 / C 小型';
-COMMENT ON COLUMN pmis_project_opportunity.source IS '商机来源(老客户介绍/展会/官网/招投标/其他)';
-COMMENT ON COLUMN pmis_project_opportunity.industry IS '客户所属行业';
-COMMENT ON COLUMN pmis_project_opportunity.estimated_amount IS '预计签约金额(元)';
-COMMENT ON COLUMN pmis_project_opportunity.win_rate IS '赢率(0.0000-1.0000,用于收入预测)';
-COMMENT ON COLUMN pmis_project_opportunity.expected_sign_date IS '预计签约日期';
-COMMENT ON COLUMN pmis_project_opportunity.expected_start_date IS '预计项目开始日期';
-COMMENT ON COLUMN pmis_project_opportunity.expected_end_date IS '预计项目结束日期';
-COMMENT ON COLUMN pmis_project_opportunity.status IS '商机状态: FOLLOWING 跟进中 / QUOTED 已报价 / NEGOTIATING 谈判中 / WON 中标 / LOST 输单 / INVALID 无效 / CONVERTED 已转立项';
-COMMENT ON COLUMN pmis_project_opportunity.lost_reason IS '输单原因';
-COMMENT ON COLUMN pmis_project_opportunity.competitor IS '竞争对手';
-COMMENT ON COLUMN pmis_project_opportunity.remark IS '备注';
-COMMENT ON COLUMN pmis_project_opportunity.tags IS '标签(逗号分隔,用于检索)';
-COMMENT ON COLUMN pmis_project_opportunity.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_opportunity.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_opportunity.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_opportunity.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_opportunity.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_opportunity.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_opportunity.version IS '乐观锁版本号(更新时自增,防止并发覆盖)';
+COMMENT ON TABLE ydsz_project_opportunity IS '商机主表: 销售线索到合同前的漏斗管理,支持赢率/分级/转化立项';
+COMMENT ON COLUMN ydsz_project_opportunity.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_opportunity.opportunity_code IS '商机编码(全局唯一,如 OPP20260001)';
+COMMENT ON COLUMN ydsz_project_opportunity.opportunity_name IS '商机名称';
+COMMENT ON COLUMN ydsz_project_opportunity.customer_id IS '客户 ID';
+COMMENT ON COLUMN ydsz_project_opportunity.customer_name IS '客户名称(冗余,减少连表)';
+COMMENT ON COLUMN ydsz_project_opportunity.business_dept_id IS '负责事业部 ID';
+COMMENT ON COLUMN ydsz_project_opportunity.owner_id IS '商机负责人 ID(销售/BD)';
+COMMENT ON COLUMN ydsz_project_opportunity.owner_name IS '商机负责人姓名';
+COMMENT ON COLUMN ydsz_project_opportunity.level IS '商机分级: A 大客户 / B 中型 / C 小型';
+COMMENT ON COLUMN ydsz_project_opportunity.source IS '商机来源(老客户介绍/展会/官网/招投标/其他)';
+COMMENT ON COLUMN ydsz_project_opportunity.industry IS '客户所属行业';
+COMMENT ON COLUMN ydsz_project_opportunity.estimated_amount IS '预计签约金额(元)';
+COMMENT ON COLUMN ydsz_project_opportunity.win_rate IS '赢率(0.0000-1.0000,用于收入预测)';
+COMMENT ON COLUMN ydsz_project_opportunity.expected_sign_date IS '预计签约日期';
+COMMENT ON COLUMN ydsz_project_opportunity.expected_start_date IS '预计项目开始日期';
+COMMENT ON COLUMN ydsz_project_opportunity.expected_end_date IS '预计项目结束日期';
+COMMENT ON COLUMN ydsz_project_opportunity.status IS '商机状态: FOLLOWING 跟进中 / QUOTED 已报价 / NEGOTIATING 谈判中 / WON 中标 / LOST 输单 / INVALID 无效 / CONVERTED 已转立项';
+COMMENT ON COLUMN ydsz_project_opportunity.lost_reason IS '输单原因';
+COMMENT ON COLUMN ydsz_project_opportunity.competitor IS '竞争对手';
+COMMENT ON COLUMN ydsz_project_opportunity.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_opportunity.tags IS '标签(逗号分隔,用于检索)';
+COMMENT ON COLUMN ydsz_project_opportunity.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_opportunity.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_opportunity.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_opportunity.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_opportunity.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_opportunity.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_opportunity.version IS '乐观锁版本号(更新时自增,防止并发覆盖)';
 
 CREATE INDEX IF NOT EXISTS idx_ppo_customer
-    ON pmis_project_opportunity (customer_id) WHERE deleted = 0;
+    ON ydsz_project_opportunity (customer_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppo_owner
-    ON pmis_project_opportunity (owner_id) WHERE deleted = 0;
+    ON ydsz_project_opportunity (owner_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppo_status
-    ON pmis_project_opportunity (status) WHERE deleted = 0;
+    ON ydsz_project_opportunity (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppo_level
-    ON pmis_project_opportunity (level) WHERE deleted = 0;
+    ON ydsz_project_opportunity (level) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 客户 + 状态(漏斗视图)
 CREATE INDEX IF NOT EXISTS idx_ppo_tenant_customer_status
-    ON pmis_project_opportunity (tenant_id, customer_id, status) WHERE deleted = 0;
+    ON ydsz_project_opportunity (tenant_id, customer_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(商机中心列表)
 CREATE INDEX IF NOT EXISTS idx_ppo_tenant_created
-    ON pmis_project_opportunity (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_project_opportunity (tenant_id, created_at DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 预计签约日期索引(用于赢率加权收入预测扫描)
 CREATE INDEX IF NOT EXISTS idx_ppo_expected_sign
-    ON pmis_project_opportunity (expected_sign_date) WHERE deleted = 0 AND status IN ('FOLLOWING', 'QUOTED', 'NEGOTIATING');
+    ON ydsz_project_opportunity (expected_sign_date) WHERE deleted = 0 AND status IN ('FOLLOWING', 'QUOTED', 'NEGOTIATING');
 
 -- =====================================================
--- 2. 商机跟进记录 pmis_project_opportunity_follow
+-- 2. 商机跟进记录 ydsz_project_opportunity_follow
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
+CREATE TABLE IF NOT EXISTS ydsz_project_opportunity_follow(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     opportunity_id    VARCHAR(20)         NOT NULL,
     follow_type       VARCHAR(32)    NOT NULL,
@@ -3100,38 +3100,38 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
     CONSTRAINT ck_ppof_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppof_deleted_enum  CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_opportunity_follow IS '商机跟进记录: 拜访/电话/报价/谈判的痕迹管理,支持时间线回溯';
-COMMENT ON COLUMN pmis_project_opportunity_follow.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_opportunity_follow.opportunity_id IS '商机 ID(关联 pmis_project_opportunity.id)';
-COMMENT ON COLUMN pmis_project_opportunity_follow.follow_type IS '跟进类型: VISIT 拜访 / CALL 电话 / QUOTE 报价 / NEGOTIATE 谈判 / OTHER 其他';
-COMMENT ON COLUMN pmis_project_opportunity_follow.follow_at IS '跟进时间';
-COMMENT ON COLUMN pmis_project_opportunity_follow.follower_id IS '跟进人 ID';
-COMMENT ON COLUMN pmis_project_opportunity_follow.follower_name IS '跟进人姓名';
-COMMENT ON COLUMN pmis_project_opportunity_follow.content IS '跟进内容';
-COMMENT ON COLUMN pmis_project_opportunity_follow.next_step IS '下一步计划';
-COMMENT ON COLUMN pmis_project_opportunity_follow.next_follow_date IS '下次跟进日期';
-COMMENT ON COLUMN pmis_project_opportunity_follow.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_opportunity_follow.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_opportunity_follow.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_opportunity_follow.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_opportunity_follow.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_opportunity_follow.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_opportunity_follow.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_opportunity_follow IS '商机跟进记录: 拜访/电话/报价/谈判的痕迹管理,支持时间线回溯';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.opportunity_id IS '商机 ID(关联 ydsz_project_opportunity.id)';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.follow_type IS '跟进类型: VISIT 拜访 / CALL 电话 / QUOTE 报价 / NEGOTIATE 谈判 / OTHER 其他';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.follow_at IS '跟进时间';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.follower_id IS '跟进人 ID';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.follower_name IS '跟进人姓名';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.content IS '跟进内容';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.next_step IS '下一步计划';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.next_follow_date IS '下次跟进日期';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_opportunity_follow.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:商机 + 跟进时间倒序(时间线展示)
 CREATE INDEX IF NOT EXISTS idx_ppof_opp
-    ON pmis_project_opportunity_follow (opportunity_id, follow_at DESC) WHERE deleted = 0;
+    ON ydsz_project_opportunity_follow (opportunity_id, follow_at DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 跟进人 + 时间索引(销售个人工作台)
 CREATE INDEX IF NOT EXISTS idx_ppof_follower_at
-    ON pmis_project_opportunity_follow (follower_id, follow_at DESC) WHERE deleted = 0;
+    ON ydsz_project_opportunity_follow (follower_id, follow_at DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 下次跟进日期提醒(后台扫描)
 CREATE INDEX IF NOT EXISTS idx_ppof_next_date
-    ON pmis_project_opportunity_follow (next_follow_date) WHERE deleted = 0 AND next_follow_date IS NOT NULL;
+    ON ydsz_project_opportunity_follow (next_follow_date) WHERE deleted = 0 AND next_follow_date IS NOT NULL;
 
 -- =====================================================
--- 3. 立项主表 pmis_project_initiation
+-- 3. 立项主表 ydsz_project_initiation
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_initiation(
+CREATE TABLE IF NOT EXISTS ydsz_project_initiation(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     project_code      VARCHAR(64)    NOT NULL,
     project_name      VARCHAR(256)   NOT NULL,
@@ -3174,61 +3174,61 @@ CREATE TABLE IF NOT EXISTS pmis_project_initiation(
     CONSTRAINT ck_ppi_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppi_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_initiation IS '项目立项主表: 商机到合同之间的立项流程载体,关联预算/PM/CDCP 门径评审';
-COMMENT ON COLUMN pmis_project_initiation.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_initiation.project_code IS '项目编码(全局唯一,如 PRJ20260001)';
-COMMENT ON COLUMN pmis_project_initiation.project_name IS '项目名称';
-COMMENT ON COLUMN pmis_project_initiation.opportunity_id IS '来源商机 ID(关联 pmis_project_opportunity.id)';
-COMMENT ON COLUMN pmis_project_initiation.customer_id IS '客户 ID';
-COMMENT ON COLUMN pmis_project_initiation.customer_name IS '客户名称(冗余)';
-COMMENT ON COLUMN pmis_project_initiation.business_dept_id IS '负责事业部 ID';
-COMMENT ON COLUMN pmis_project_initiation.project_type IS '项目类型: FIXED_PRICE 固定总价 / T_M 人月计费 / OUTSOURCING 人力外包 / PRODUCT 产品销售 / MAINTENANCE 运维 / CONSULTING 咨询 / TRAINING 培训 / OTHER';
-COMMENT ON COLUMN pmis_project_initiation.project_level IS '项目级别: A 重大 / B 重要 / C 一般(影响审批流)';
-COMMENT ON COLUMN pmis_project_initiation.pm_id IS '项目经理 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_project_initiation.pm_name IS '项目经理姓名';
-COMMENT ON COLUMN pmis_project_initiation.sponsor_id IS '项目发起人/赞助人 ID(业务方)';
-COMMENT ON COLUMN pmis_project_initiation.sponsor_name IS '项目发起人姓名';
-COMMENT ON COLUMN pmis_project_initiation.estimated_amount IS '预计合同金额(元)';
-COMMENT ON COLUMN pmis_project_initiation.budget_amount IS '项目预算总额(元,人力+采购+费用+外包)';
-COMMENT ON COLUMN pmis_project_initiation.planned_start_date IS '计划开始日期';
-COMMENT ON COLUMN pmis_project_initiation.planned_end_date IS '计划结束日期';
-COMMENT ON COLUMN pmis_project_initiation.duration_days IS '计划工期(天)';
-COMMENT ON COLUMN pmis_project_initiation.stage IS '立项阶段: PRE_INITIATION 预立项 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回 / EXECUTING 执行中 / CLOSED 已结项';
-COMMENT ON COLUMN pmis_project_initiation.current_gate IS '当前 CDCP 门径: CD1 启动 / CD2 设计 / CD3 建设 / CD4 UAT / CD5 上线';
-COMMENT ON COLUMN pmis_project_initiation.description IS '项目描述';
-COMMENT ON COLUMN pmis_project_initiation.business_case IS '立项依据(业务价值/ROI 分析)';
-COMMENT ON COLUMN pmis_project_initiation.risk_assessment IS '风险评估';
-COMMENT ON COLUMN pmis_project_initiation.workflow_id IS '关联自研工作流流程实例 ID';
-COMMENT ON COLUMN pmis_project_initiation.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_initiation.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_initiation.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_initiation.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_initiation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_initiation.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_initiation IS '项目立项主表: 商机到合同之间的立项流程载体,关联预算/PM/CDCP 门径评审';
+COMMENT ON COLUMN ydsz_project_initiation.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_initiation.project_code IS '项目编码(全局唯一,如 PRJ20260001)';
+COMMENT ON COLUMN ydsz_project_initiation.project_name IS '项目名称';
+COMMENT ON COLUMN ydsz_project_initiation.opportunity_id IS '来源商机 ID(关联 ydsz_project_opportunity.id)';
+COMMENT ON COLUMN ydsz_project_initiation.customer_id IS '客户 ID';
+COMMENT ON COLUMN ydsz_project_initiation.customer_name IS '客户名称(冗余)';
+COMMENT ON COLUMN ydsz_project_initiation.business_dept_id IS '负责事业部 ID';
+COMMENT ON COLUMN ydsz_project_initiation.project_type IS '项目类型: FIXED_PRICE 固定总价 / T_M 人月计费 / OUTSOURCING 人力外包 / PRODUCT 产品销售 / MAINTENANCE 运维 / CONSULTING 咨询 / TRAINING 培训 / OTHER';
+COMMENT ON COLUMN ydsz_project_initiation.project_level IS '项目级别: A 重大 / B 重要 / C 一般(影响审批流)';
+COMMENT ON COLUMN ydsz_project_initiation.pm_id IS '项目经理 ID(关联 ydsz_employee.id)';
+COMMENT ON COLUMN ydsz_project_initiation.pm_name IS '项目经理姓名';
+COMMENT ON COLUMN ydsz_project_initiation.sponsor_id IS '项目发起人/赞助人 ID(业务方)';
+COMMENT ON COLUMN ydsz_project_initiation.sponsor_name IS '项目发起人姓名';
+COMMENT ON COLUMN ydsz_project_initiation.estimated_amount IS '预计合同金额(元)';
+COMMENT ON COLUMN ydsz_project_initiation.budget_amount IS '项目预算总额(元,人力+采购+费用+外包)';
+COMMENT ON COLUMN ydsz_project_initiation.planned_start_date IS '计划开始日期';
+COMMENT ON COLUMN ydsz_project_initiation.planned_end_date IS '计划结束日期';
+COMMENT ON COLUMN ydsz_project_initiation.duration_days IS '计划工期(天)';
+COMMENT ON COLUMN ydsz_project_initiation.stage IS '立项阶段: PRE_INITIATION 预立项 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回 / EXECUTING 执行中 / CLOSED 已结项';
+COMMENT ON COLUMN ydsz_project_initiation.current_gate IS '当前 CDCP 门径: CD1 启动 / CD2 设计 / CD3 建设 / CD4 UAT / CD5 上线';
+COMMENT ON COLUMN ydsz_project_initiation.description IS '项目描述';
+COMMENT ON COLUMN ydsz_project_initiation.business_case IS '立项依据(业务价值/ROI 分析)';
+COMMENT ON COLUMN ydsz_project_initiation.risk_assessment IS '风险评估';
+COMMENT ON COLUMN ydsz_project_initiation.workflow_id IS '关联自研工作流流程实例 ID';
+COMMENT ON COLUMN ydsz_project_initiation.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_initiation.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_initiation.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_initiation.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_initiation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_initiation.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_initiation.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ppi_customer
-    ON pmis_project_initiation (customer_id) WHERE deleted = 0;
+    ON ydsz_project_initiation (customer_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppi_stage
-    ON pmis_project_initiation (stage) WHERE deleted = 0;
+    ON ydsz_project_initiation (stage) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppi_pm
-    ON pmis_project_initiation (pm_id) WHERE deleted = 0;
+    ON ydsz_project_initiation (pm_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppi_opp
-    ON pmis_project_initiation (opportunity_id) WHERE deleted = 0;
+    ON ydsz_project_initiation (opportunity_id) WHERE deleted = 0;
 -- [INLINE-OPT] PM 工作台:PM + 阶段(项目经理视图)
 CREATE INDEX IF NOT EXISTS idx_ppi_pm_stage
-    ON pmis_project_initiation (pm_id, stage) WHERE deleted = 0;
+    ON ydsz_project_initiation (pm_id, stage) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 阶段 + 创建时间倒序(立项中心列表)
 CREATE INDEX IF NOT EXISTS idx_ppi_tenant_stage_created
-    ON pmis_project_initiation (tenant_id, stage, created_at DESC) WHERE deleted = 0;
+    ON ydsz_project_initiation (tenant_id, stage, created_at DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 当前门径索引(CDCP 流程编排)
 CREATE INDEX IF NOT EXISTS idx_ppi_current_gate
-    ON pmis_project_initiation (current_gate) WHERE deleted = 0 AND current_gate IS NOT NULL;
+    ON ydsz_project_initiation (current_gate) WHERE deleted = 0 AND current_gate IS NOT NULL;
 
 -- =====================================================
--- 4. 立项预算明细 pmis_project_budget_item
+-- 4. 立项预算明细 ydsz_project_budget_item
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
+CREATE TABLE IF NOT EXISTS ydsz_project_budget_item(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id     VARCHAR(20)         NOT NULL,
     category          VARCHAR(32)    NOT NULL,
@@ -3254,37 +3254,37 @@ CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
     CONSTRAINT ck_ppbi_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppbi_deleted_enum  CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_budget_item IS '立项预算明细: 按类别拆解预算,支撑执行期预算占用控制(80% 黄/95% 红)';
-COMMENT ON COLUMN pmis_project_budget_item.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_budget_item.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_project_budget_item.category IS '预算类别: LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / OTHER 其他';
-COMMENT ON COLUMN pmis_project_budget_item.sub_category IS '子类别(可关联字典,如差旅/团建/硬件/软件)';
-COMMENT ON COLUMN pmis_project_budget_item.description IS '预算项说明';
-COMMENT ON COLUMN pmis_project_budget_item.quantity IS '数量';
-COMMENT ON COLUMN pmis_project_budget_item.unit IS '计量单位(人天/件/次/月)';
-COMMENT ON COLUMN pmis_project_budget_item.unit_price IS '单价(元)';
-COMMENT ON COLUMN pmis_project_budget_item.amount IS '金额(元,=quantity*unit_price)';
-COMMENT ON COLUMN pmis_project_budget_item.remark IS '备注';
-COMMENT ON COLUMN pmis_project_budget_item.sort_order IS '排序号';
-COMMENT ON COLUMN pmis_project_budget_item.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_budget_item.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_budget_item.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_budget_item.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_budget_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_budget_item.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_budget_item.version IS '乐观锁版本号(P1-2)';
+COMMENT ON TABLE ydsz_project_budget_item IS '立项预算明细: 按类别拆解预算,支撑执行期预算占用控制(80% 黄/95% 红)';
+COMMENT ON COLUMN ydsz_project_budget_item.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_budget_item.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_project_budget_item.category IS '预算类别: LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / OTHER 其他';
+COMMENT ON COLUMN ydsz_project_budget_item.sub_category IS '子类别(可关联字典,如差旅/团建/硬件/软件)';
+COMMENT ON COLUMN ydsz_project_budget_item.description IS '预算项说明';
+COMMENT ON COLUMN ydsz_project_budget_item.quantity IS '数量';
+COMMENT ON COLUMN ydsz_project_budget_item.unit IS '计量单位(人天/件/次/月)';
+COMMENT ON COLUMN ydsz_project_budget_item.unit_price IS '单价(元)';
+COMMENT ON COLUMN ydsz_project_budget_item.amount IS '金额(元,=quantity*unit_price)';
+COMMENT ON COLUMN ydsz_project_budget_item.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_budget_item.sort_order IS '排序号';
+COMMENT ON COLUMN ydsz_project_budget_item.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_budget_item.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_budget_item.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_budget_item.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_budget_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_budget_item.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_budget_item.version IS '乐观锁版本号(P1-2)';
 
 -- [INLINE-OPT] 复合索引:立项 + 类别 + 排序(预算分类展示)
 CREATE INDEX IF NOT EXISTS idx_ppbi_init_cat_sort
-    ON pmis_project_budget_item (initiation_id, category, sort_order) WHERE deleted = 0;
+    ON ydsz_project_budget_item (initiation_id, category, sort_order) WHERE deleted = 0;
 -- [INLINE-OPT] 立项 + 租户(预算中心筛选)
 CREATE INDEX IF NOT EXISTS idx_ppbi_tenant_init
-    ON pmis_project_budget_item (tenant_id, initiation_id) WHERE deleted = 0;
+    ON ydsz_project_budget_item (tenant_id, initiation_id) WHERE deleted = 0;
 
 -- =====================================================
--- 5. 门径评审记录 pmis_project_gate_review
+-- 5. 门径评审记录 ydsz_project_gate_review
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_gate_review(
+CREATE TABLE IF NOT EXISTS ydsz_project_gate_review(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id     VARCHAR(20)         NOT NULL,
     gate_code         VARCHAR(16)    NOT NULL,
@@ -3310,40 +3310,40 @@ CREATE TABLE IF NOT EXISTS pmis_project_gate_review(
     CONSTRAINT ck_ppgr_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppgr_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_gate_review IS '门径评审记录: CDCP 决策评审(CD1 启动/CD2 设计/CD3 建设/CD4 UAT/CD5 上线)';
-COMMENT ON COLUMN pmis_project_gate_review.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_gate_review.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_project_gate_review.gate_code IS '门径编码: CD1 / CD2 / CD3 / CD4 / CD5';
-COMMENT ON COLUMN pmis_project_gate_review.gate_name IS '门径名称';
-COMMENT ON COLUMN pmis_project_gate_review.review_result IS '评审结果: PENDING 待评审 / PASSED 通过 / REJECTED 不通过 / CONDITIONAL 有条件通过';
-COMMENT ON COLUMN pmis_project_gate_review.reviewer_id IS '评审人 ID';
-COMMENT ON COLUMN pmis_project_gate_review.reviewer_name IS '评审人姓名';
-COMMENT ON COLUMN pmis_project_gate_review.review_at IS '评审时间';
-COMMENT ON COLUMN pmis_project_gate_review.decision_basis IS '决策依据';
-COMMENT ON COLUMN pmis_project_gate_review.conditions IS '有条件通过的条件清单';
-COMMENT ON COLUMN pmis_project_gate_review.next_gate IS '下一门径';
-COMMENT ON COLUMN pmis_project_gate_review.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_gate_review.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_gate_review.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_gate_review.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_gate_review.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_gate_review.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_gate_review.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_gate_review IS '门径评审记录: CDCP 决策评审(CD1 启动/CD2 设计/CD3 建设/CD4 UAT/CD5 上线)';
+COMMENT ON COLUMN ydsz_project_gate_review.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_gate_review.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_project_gate_review.gate_code IS '门径编码: CD1 / CD2 / CD3 / CD4 / CD5';
+COMMENT ON COLUMN ydsz_project_gate_review.gate_name IS '门径名称';
+COMMENT ON COLUMN ydsz_project_gate_review.review_result IS '评审结果: PENDING 待评审 / PASSED 通过 / REJECTED 不通过 / CONDITIONAL 有条件通过';
+COMMENT ON COLUMN ydsz_project_gate_review.reviewer_id IS '评审人 ID';
+COMMENT ON COLUMN ydsz_project_gate_review.reviewer_name IS '评审人姓名';
+COMMENT ON COLUMN ydsz_project_gate_review.review_at IS '评审时间';
+COMMENT ON COLUMN ydsz_project_gate_review.decision_basis IS '决策依据';
+COMMENT ON COLUMN ydsz_project_gate_review.conditions IS '有条件通过的条件清单';
+COMMENT ON COLUMN ydsz_project_gate_review.next_gate IS '下一门径';
+COMMENT ON COLUMN ydsz_project_gate_review.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_gate_review.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_gate_review.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_gate_review.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_gate_review.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_gate_review.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_gate_review.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:立项 + 门径(门径状态查询)
 CREATE INDEX IF NOT EXISTS idx_ppgr_init_gate
-    ON pmis_project_gate_review (initiation_id, gate_code) WHERE deleted = 0;
+    ON ydsz_project_gate_review (initiation_id, gate_code) WHERE deleted = 0;
 -- [INLINE-OPT] 评审结果索引(待评审 / 已驳回 工作台)
 CREATE INDEX IF NOT EXISTS idx_ppgr_result
-    ON pmis_project_gate_review (review_result) WHERE deleted = 0;
+    ON ydsz_project_gate_review (review_result) WHERE deleted = 0;
 -- [INLINE-OPT] 评审人 + 评审时间(评审人工作台)
 CREATE INDEX IF NOT EXISTS idx_ppgr_reviewer_at
-    ON pmis_project_gate_review (reviewer_id, review_at DESC) WHERE deleted = 0;
+    ON ydsz_project_gate_review (reviewer_id, review_at DESC) WHERE deleted = 0;
 
 -- =====================================================
--- 6. 合同主表 pmis_project_contract
+-- 6. 合同主表 ydsz_project_contract
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_contract(
+CREATE TABLE IF NOT EXISTS ydsz_project_contract(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_code     VARCHAR(64)    NOT NULL,
     contract_name     VARCHAR(256)   NOT NULL,
@@ -3386,62 +3386,62 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract(
     CONSTRAINT ck_ppc_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppc_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_contract IS '合同主表: 项目签约合同,关联立项/客户/付款条款,支撑开票回款';
-COMMENT ON COLUMN pmis_project_contract.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_contract.contract_code IS '合同编码(全局唯一,如 CT20260001)';
-COMMENT ON COLUMN pmis_project_contract.contract_name IS '合同名称';
-COMMENT ON COLUMN pmis_project_contract.initiation_id IS '关联立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_project_contract.customer_id IS '客户 ID';
-COMMENT ON COLUMN pmis_project_contract.customer_name IS '客户名称(冗余)';
-COMMENT ON COLUMN pmis_project_contract.contract_type IS '合同类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
-COMMENT ON COLUMN pmis_project_contract.sign_date IS '签约日期';
-COMMENT ON COLUMN pmis_project_contract.effective_date IS '合同生效日期';
-COMMENT ON COLUMN pmis_project_contract.expire_date IS '合同到期日期';
-COMMENT ON COLUMN pmis_project_contract.total_amount IS '合同总额(元,含税)';
-COMMENT ON COLUMN pmis_project_contract.currency IS '币种(默认 CNY)';
-COMMENT ON COLUMN pmis_project_contract.payment_terms IS '付款条款(如 3-3-3-1 预付/启动/UAT/质保)';
-COMMENT ON COLUMN pmis_project_contract.billing_cycle IS '结算周期(MONTHLY 月结 / QUARTERLY 季结 / MILESTONE 里程碑 / ONEOFF 一次性)';
-COMMENT ON COLUMN pmis_project_contract.tax_rate IS '适用税率(0.0000-1.0000)';
-COMMENT ON COLUMN pmis_project_contract.status IS '合同状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / ACTIVE 执行中 / SUSPENDED 暂停 / EXPIRED 已到期 / TERMINATED 已终止';
-COMMENT ON COLUMN pmis_project_contract.risk_level IS '风险等级: LOW 低 / MEDIUM 中 / HIGH 高';
-COMMENT ON COLUMN pmis_project_contract.risk_notes IS '风险说明';
-COMMENT ON COLUMN pmis_project_contract.owner_id IS '合同负责人 ID(销售/客户经理)';
-COMMENT ON COLUMN pmis_project_contract.owner_name IS '合同负责人姓名';
-COMMENT ON COLUMN pmis_project_contract.contract_file_id IS '合同文件 ID(关联 pmis_file.id)';
-COMMENT ON COLUMN pmis_project_contract.workflow_id IS '审批流程实例 ID';
-COMMENT ON COLUMN pmis_project_contract.remark IS '备注';
-COMMENT ON COLUMN pmis_project_contract.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_contract.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_contract.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_contract.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_contract.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_contract.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_contract IS '合同主表: 项目签约合同,关联立项/客户/付款条款,支撑开票回款';
+COMMENT ON COLUMN ydsz_project_contract.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_contract.contract_code IS '合同编码(全局唯一,如 CT20260001)';
+COMMENT ON COLUMN ydsz_project_contract.contract_name IS '合同名称';
+COMMENT ON COLUMN ydsz_project_contract.initiation_id IS '关联立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_project_contract.customer_id IS '客户 ID';
+COMMENT ON COLUMN ydsz_project_contract.customer_name IS '客户名称(冗余)';
+COMMENT ON COLUMN ydsz_project_contract.contract_type IS '合同类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
+COMMENT ON COLUMN ydsz_project_contract.sign_date IS '签约日期';
+COMMENT ON COLUMN ydsz_project_contract.effective_date IS '合同生效日期';
+COMMENT ON COLUMN ydsz_project_contract.expire_date IS '合同到期日期';
+COMMENT ON COLUMN ydsz_project_contract.total_amount IS '合同总额(元,含税)';
+COMMENT ON COLUMN ydsz_project_contract.currency IS '币种(默认 CNY)';
+COMMENT ON COLUMN ydsz_project_contract.payment_terms IS '付款条款(如 3-3-3-1 预付/启动/UAT/质保)';
+COMMENT ON COLUMN ydsz_project_contract.billing_cycle IS '结算周期(MONTHLY 月结 / QUARTERLY 季结 / MILESTONE 里程碑 / ONEOFF 一次性)';
+COMMENT ON COLUMN ydsz_project_contract.tax_rate IS '适用税率(0.0000-1.0000)';
+COMMENT ON COLUMN ydsz_project_contract.status IS '合同状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / ACTIVE 执行中 / SUSPENDED 暂停 / EXPIRED 已到期 / TERMINATED 已终止';
+COMMENT ON COLUMN ydsz_project_contract.risk_level IS '风险等级: LOW 低 / MEDIUM 中 / HIGH 高';
+COMMENT ON COLUMN ydsz_project_contract.risk_notes IS '风险说明';
+COMMENT ON COLUMN ydsz_project_contract.owner_id IS '合同负责人 ID(销售/客户经理)';
+COMMENT ON COLUMN ydsz_project_contract.owner_name IS '合同负责人姓名';
+COMMENT ON COLUMN ydsz_project_contract.contract_file_id IS '合同文件 ID(关联 ydsz_file.id)';
+COMMENT ON COLUMN ydsz_project_contract.workflow_id IS '审批流程实例 ID';
+COMMENT ON COLUMN ydsz_project_contract.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_contract.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_contract.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_contract.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_contract.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_contract.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_contract.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_contract.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ppc_customer
-    ON pmis_project_contract (customer_id) WHERE deleted = 0;
+    ON ydsz_project_contract (customer_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppc_init
-    ON pmis_project_contract (initiation_id) WHERE deleted = 0;
+    ON ydsz_project_contract (initiation_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppc_status
-    ON pmis_project_contract (status) WHERE deleted = 0;
+    ON ydsz_project_contract (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppc_sign
-    ON pmis_project_contract (sign_date) WHERE deleted = 0;
+    ON ydsz_project_contract (sign_date) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppc_risk
-    ON pmis_project_contract (risk_level) WHERE deleted = 0;
+    ON ydsz_project_contract (risk_level) WHERE deleted = 0;
 -- [INLINE-OPT] 合同负责人 + 状态(销售合同台账)
 CREATE INDEX IF NOT EXISTS idx_ppc_owner_status
-    ON pmis_project_contract (owner_id, status) WHERE deleted = 0;
+    ON ydsz_project_contract (owner_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 到期日期(到期预警扫描)
 CREATE INDEX IF NOT EXISTS idx_ppc_tenant_expire
-    ON pmis_project_contract (tenant_id, expire_date) WHERE deleted = 0 AND expire_date IS NOT NULL;
+    ON ydsz_project_contract (tenant_id, expire_date) WHERE deleted = 0 AND expire_date IS NOT NULL;
 -- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(合同中心列表)
 CREATE INDEX IF NOT EXISTS idx_ppc_tenant_created
-    ON pmis_project_contract (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_project_contract (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- =====================================================
--- 7. 合同补充协议 pmis_project_contract_supplement
+-- 7. 合同补充协议 ydsz_project_contract_supplement
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
+CREATE TABLE IF NOT EXISTS ydsz_project_contract_supplement(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_id       VARCHAR(20)         NOT NULL,
     supplement_code   VARCHAR(64)    NOT NULL,
@@ -3469,38 +3469,38 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
     CONSTRAINT ck_ppcs_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppcs_deleted_enum  CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_contract_supplement IS '合同补充协议: 主合同签订后的金额/范围/工期/其他补充条款,法务备案';
-COMMENT ON COLUMN pmis_project_contract_supplement.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_contract_supplement.contract_id IS '主合同 ID(关联 pmis_project_contract.id)';
-COMMENT ON COLUMN pmis_project_contract_supplement.supplement_code IS '补充协议编码(全局唯一)';
-COMMENT ON COLUMN pmis_project_contract_supplement.supplement_name IS '补充协议名称';
-COMMENT ON COLUMN pmis_project_contract_supplement.supplement_type IS '补充类型: AMOUNT 金额 / SCOPE 范围 / TERM 工期 / OTHER 其他';
-COMMENT ON COLUMN pmis_project_contract_supplement.change_amount IS '变更金额(可正可负)';
-COMMENT ON COLUMN pmis_project_contract_supplement.new_total_amount IS '变更后合同总额';
-COMMENT ON COLUMN pmis_project_contract_supplement.effective_date IS '生效日期';
-COMMENT ON COLUMN pmis_project_contract_supplement.expire_date IS '到期日期';
-COMMENT ON COLUMN pmis_project_contract_supplement.content IS '协议正文';
-COMMENT ON COLUMN pmis_project_contract_supplement.file_id IS '协议文件 ID(关联 pmis_file.id)';
-COMMENT ON COLUMN pmis_project_contract_supplement.status IS '状态: DRAFT 草稿 / APPROVED 已签 / REJECTED 已驳回';
-COMMENT ON COLUMN pmis_project_contract_supplement.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_contract_supplement.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_contract_supplement.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_contract_supplement.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_contract_supplement.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_contract_supplement.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_contract_supplement.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_contract_supplement IS '合同补充协议: 主合同签订后的金额/范围/工期/其他补充条款,法务备案';
+COMMENT ON COLUMN ydsz_project_contract_supplement.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_contract_supplement.contract_id IS '主合同 ID(关联 ydsz_project_contract.id)';
+COMMENT ON COLUMN ydsz_project_contract_supplement.supplement_code IS '补充协议编码(全局唯一)';
+COMMENT ON COLUMN ydsz_project_contract_supplement.supplement_name IS '补充协议名称';
+COMMENT ON COLUMN ydsz_project_contract_supplement.supplement_type IS '补充类型: AMOUNT 金额 / SCOPE 范围 / TERM 工期 / OTHER 其他';
+COMMENT ON COLUMN ydsz_project_contract_supplement.change_amount IS '变更金额(可正可负)';
+COMMENT ON COLUMN ydsz_project_contract_supplement.new_total_amount IS '变更后合同总额';
+COMMENT ON COLUMN ydsz_project_contract_supplement.effective_date IS '生效日期';
+COMMENT ON COLUMN ydsz_project_contract_supplement.expire_date IS '到期日期';
+COMMENT ON COLUMN ydsz_project_contract_supplement.content IS '协议正文';
+COMMENT ON COLUMN ydsz_project_contract_supplement.file_id IS '协议文件 ID(关联 ydsz_file.id)';
+COMMENT ON COLUMN ydsz_project_contract_supplement.status IS '状态: DRAFT 草稿 / APPROVED 已签 / REJECTED 已驳回';
+COMMENT ON COLUMN ydsz_project_contract_supplement.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_contract_supplement.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_contract_supplement.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_contract_supplement.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_contract_supplement.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_contract_supplement.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_contract_supplement.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:合同 + 类型(按类型查看补充协议)
 CREATE INDEX IF NOT EXISTS idx_ppcs_contract_type
-    ON pmis_project_contract_supplement (contract_id, supplement_type) WHERE deleted = 0;
+    ON ydsz_project_contract_supplement (contract_id, supplement_type) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 状态(补充协议台账)
 CREATE INDEX IF NOT EXISTS idx_ppcs_tenant_status
-    ON pmis_project_contract_supplement (tenant_id, status) WHERE deleted = 0;
+    ON ydsz_project_contract_supplement (tenant_id, status) WHERE deleted = 0;
 
 -- =====================================================
--- 8. 合同变更记录 pmis_project_contract_change
+-- 8. 合同变更记录 ydsz_project_contract_change
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
+CREATE TABLE IF NOT EXISTS ydsz_project_contract_change(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_id       VARCHAR(20)         NOT NULL,
     change_code       VARCHAR(64)    NOT NULL,
@@ -3531,43 +3531,43 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
     CONSTRAINT ck_ppcc_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppcc_deleted_enum  CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_contract_change IS '合同变更记录: 范围/金额/工期/人员/进度的变更,需走审批流';
-COMMENT ON COLUMN pmis_project_contract_change.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_contract_change.contract_id IS '主合同 ID(关联 pmis_project_contract.id)';
-COMMENT ON COLUMN pmis_project_contract_change.change_code IS '变更单编码(全局唯一)';
-COMMENT ON COLUMN pmis_project_contract_change.change_type IS '变更类型: SCOPE 范围 / AMOUNT 金额 / TERM 工期 / PERSONNEL 人员 / PROGRESS 进度';
-COMMENT ON COLUMN pmis_project_contract_change.change_reason IS '变更原因';
-COMMENT ON COLUMN pmis_project_contract_change.before_value IS '变更前值';
-COMMENT ON COLUMN pmis_project_contract_change.after_value IS '变更后值';
-COMMENT ON COLUMN pmis_project_contract_change.amount_delta IS '金额变化(可正可负)';
-COMMENT ON COLUMN pmis_project_contract_change.impact_analysis IS '影响分析(范围/工期/成本/风险)';
-COMMENT ON COLUMN pmis_project_contract_change.status IS '状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回';
-COMMENT ON COLUMN pmis_project_contract_change.applicant_id IS '申请人 ID';
-COMMENT ON COLUMN pmis_project_contract_change.applicant_name IS '申请人姓名';
-COMMENT ON COLUMN pmis_project_contract_change.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_project_contract_change.approver_name IS '审批人姓名';
-COMMENT ON COLUMN pmis_project_contract_change.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_project_contract_change.workflow_id IS '审批流程实例 ID';
-COMMENT ON COLUMN pmis_project_contract_change.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_contract_change.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_contract_change.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_contract_change.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_contract_change.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_contract_change.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_contract_change IS '合同变更记录: 范围/金额/工期/人员/进度的变更,需走审批流';
+COMMENT ON COLUMN ydsz_project_contract_change.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_contract_change.contract_id IS '主合同 ID(关联 ydsz_project_contract.id)';
+COMMENT ON COLUMN ydsz_project_contract_change.change_code IS '变更单编码(全局唯一)';
+COMMENT ON COLUMN ydsz_project_contract_change.change_type IS '变更类型: SCOPE 范围 / AMOUNT 金额 / TERM 工期 / PERSONNEL 人员 / PROGRESS 进度';
+COMMENT ON COLUMN ydsz_project_contract_change.change_reason IS '变更原因';
+COMMENT ON COLUMN ydsz_project_contract_change.before_value IS '变更前值';
+COMMENT ON COLUMN ydsz_project_contract_change.after_value IS '变更后值';
+COMMENT ON COLUMN ydsz_project_contract_change.amount_delta IS '金额变化(可正可负)';
+COMMENT ON COLUMN ydsz_project_contract_change.impact_analysis IS '影响分析(范围/工期/成本/风险)';
+COMMENT ON COLUMN ydsz_project_contract_change.status IS '状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回';
+COMMENT ON COLUMN ydsz_project_contract_change.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN ydsz_project_contract_change.applicant_name IS '申请人姓名';
+COMMENT ON COLUMN ydsz_project_contract_change.approver_id IS '审批人 ID';
+COMMENT ON COLUMN ydsz_project_contract_change.approver_name IS '审批人姓名';
+COMMENT ON COLUMN ydsz_project_contract_change.approved_at IS '审批时间';
+COMMENT ON COLUMN ydsz_project_contract_change.workflow_id IS '审批流程实例 ID';
+COMMENT ON COLUMN ydsz_project_contract_change.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_contract_change.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_contract_change.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_contract_change.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_contract_change.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_contract_change.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_contract_change.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:合同 + 类型(合同变更历史)
 CREATE INDEX IF NOT EXISTS idx_ppcc_contract_type
-    ON pmis_project_contract_change (contract_id, change_type) WHERE deleted = 0;
+    ON ydsz_project_contract_change (contract_id, change_type) WHERE deleted = 0;
 -- [INLINE-OPT] 状态索引(待审批工作台)
 CREATE INDEX IF NOT EXISTS idx_ppcc_status
-    ON pmis_project_contract_change (status) WHERE deleted = 0;
+    ON ydsz_project_contract_change (status) WHERE deleted = 0;
 -- [INLINE-OPT] 审批人 + 状态(审批人工作台)
 CREATE INDEX IF NOT EXISTS idx_ppcc_approver_status
-    ON pmis_project_contract_change (approver_id, status) WHERE deleted = 0;
+    ON ydsz_project_contract_change (approver_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 审批时间倒序(变更审计)
 CREATE INDEX IF NOT EXISTS idx_ppcc_tenant_approved
-    ON pmis_project_contract_change (tenant_id, approved_at DESC) WHERE deleted = 0;
+    ON ydsz_project_contract_change (tenant_id, approved_at DESC) WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
 
@@ -3587,9 +3587,9 @@ CREATE INDEX IF NOT EXISTS idx_ppcc_tenant_approved
 -- =====================================================
 
 -- =====================================================
--- 1. WBS 任务表 pmis_execution_wbs_task
+-- 1. WBS 任务表 ydsz_execution_wbs_task
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_execution_wbs_task(
+CREATE TABLE IF NOT EXISTS ydsz_execution_wbs_task(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     task_code           VARCHAR(64)    NOT NULL,
     task_name           VARCHAR(256)   NOT NULL,
@@ -3639,66 +3639,66 @@ CREATE TABLE IF NOT EXISTS pmis_execution_wbs_task(
     CONSTRAINT ck_pewt_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_pewt_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_execution_wbs_task IS 'WBS 任务表: 项目工作分解结构,层级化任务编排,支撑进度/工时/责任追踪';
-COMMENT ON COLUMN pmis_execution_wbs_task.id IS '主键 ID';
-COMMENT ON COLUMN pmis_execution_wbs_task.task_code IS '任务编码(全局唯一,如 TASK20260001001)';
-COMMENT ON COLUMN pmis_execution_wbs_task.task_name IS '任务名称';
-COMMENT ON COLUMN pmis_execution_wbs_task.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_execution_wbs_task.parent_id IS '父任务 ID(0=根,支持多级 WBS)';
-COMMENT ON COLUMN pmis_execution_wbs_task.task_level IS 'WBS 层级(1=顶层)';
-COMMENT ON COLUMN pmis_execution_wbs_task.wbs_path IS 'WBS 路径(以斜杠分隔的祖先链路,如 /1/3/5)';
-COMMENT ON COLUMN pmis_execution_wbs_task.sort_order IS '同级排序号';
-COMMENT ON COLUMN pmis_execution_wbs_task.task_type IS '任务类型: TASK 普通任务 / MILESTONE 里程碑 / SUMMARY 汇总节点';
-COMMENT ON COLUMN pmis_execution_wbs_task.planned_start_date IS '计划开始日期';
-COMMENT ON COLUMN pmis_execution_wbs_task.planned_end_date IS '计划结束日期';
-COMMENT ON COLUMN pmis_execution_wbs_task.actual_start_date IS '实际开始日期';
-COMMENT ON COLUMN pmis_execution_wbs_task.actual_end_date IS '实际结束日期';
-COMMENT ON COLUMN pmis_execution_wbs_task.duration_days IS '工期(天)';
-COMMENT ON COLUMN pmis_execution_wbs_task.planned_effort IS '计划人天';
-COMMENT ON COLUMN pmis_execution_wbs_task.actual_effort IS '实际人天(从工时聚合)';
-COMMENT ON COLUMN pmis_execution_wbs_task.progress_pct IS '完成进度(0-100)';
-COMMENT ON COLUMN pmis_execution_wbs_task.owner_id IS '责任人 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_execution_wbs_task.owner_name IS '责任人姓名';
-COMMENT ON COLUMN pmis_execution_wbs_task.assignee_ids IS '执行人 ID 列表(逗号分隔)';
-COMMENT ON COLUMN pmis_execution_wbs_task.priority IS '优先级: LOW / NORMAL / HIGH / URGENT';
-COMMENT ON COLUMN pmis_execution_wbs_task.status IS '任务状态: PLANNED 计划中 / IN_PROGRESS 进行中 / BLOCKED 阻塞 / IN_REVIEW 评审中 / COMPLETED 已完成 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_execution_wbs_task.depends_on IS '依赖任务 ID 列表(逗号分隔,用于甘特图依赖连线)';
-COMMENT ON COLUMN pmis_execution_wbs_task.milestone IS '是否里程碑: 1 是 / 0 否';
-COMMENT ON COLUMN pmis_execution_wbs_task.description IS '任务描述';
-COMMENT ON COLUMN pmis_execution_wbs_task.deliverable IS '交付物说明';
-COMMENT ON COLUMN pmis_execution_wbs_task.risk_level IS '风险等级: LOW / MEDIUM / HIGH';
-COMMENT ON COLUMN pmis_execution_wbs_task.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_execution_wbs_task.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_execution_wbs_task.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_execution_wbs_task.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_execution_wbs_task.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_execution_wbs_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_execution_wbs_task.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_execution_wbs_task IS 'WBS 任务表: 项目工作分解结构,层级化任务编排,支撑进度/工时/责任追踪';
+COMMENT ON COLUMN ydsz_execution_wbs_task.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_execution_wbs_task.task_code IS '任务编码(全局唯一,如 TASK20260001001)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.task_name IS '任务名称';
+COMMENT ON COLUMN ydsz_execution_wbs_task.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.parent_id IS '父任务 ID(0=根,支持多级 WBS)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.task_level IS 'WBS 层级(1=顶层)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.wbs_path IS 'WBS 路径(以斜杠分隔的祖先链路,如 /1/3/5)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.sort_order IS '同级排序号';
+COMMENT ON COLUMN ydsz_execution_wbs_task.task_type IS '任务类型: TASK 普通任务 / MILESTONE 里程碑 / SUMMARY 汇总节点';
+COMMENT ON COLUMN ydsz_execution_wbs_task.planned_start_date IS '计划开始日期';
+COMMENT ON COLUMN ydsz_execution_wbs_task.planned_end_date IS '计划结束日期';
+COMMENT ON COLUMN ydsz_execution_wbs_task.actual_start_date IS '实际开始日期';
+COMMENT ON COLUMN ydsz_execution_wbs_task.actual_end_date IS '实际结束日期';
+COMMENT ON COLUMN ydsz_execution_wbs_task.duration_days IS '工期(天)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.planned_effort IS '计划人天';
+COMMENT ON COLUMN ydsz_execution_wbs_task.actual_effort IS '实际人天(从工时聚合)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.progress_pct IS '完成进度(0-100)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.owner_id IS '责任人 ID(关联 ydsz_employee.id)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.owner_name IS '责任人姓名';
+COMMENT ON COLUMN ydsz_execution_wbs_task.assignee_ids IS '执行人 ID 列表(逗号分隔)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.priority IS '优先级: LOW / NORMAL / HIGH / URGENT';
+COMMENT ON COLUMN ydsz_execution_wbs_task.status IS '任务状态: PLANNED 计划中 / IN_PROGRESS 进行中 / BLOCKED 阻塞 / IN_REVIEW 评审中 / COMPLETED 已完成 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_execution_wbs_task.depends_on IS '依赖任务 ID 列表(逗号分隔,用于甘特图依赖连线)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.milestone IS '是否里程碑: 1 是 / 0 否';
+COMMENT ON COLUMN ydsz_execution_wbs_task.description IS '任务描述';
+COMMENT ON COLUMN ydsz_execution_wbs_task.deliverable IS '交付物说明';
+COMMENT ON COLUMN ydsz_execution_wbs_task.risk_level IS '风险等级: LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN ydsz_execution_wbs_task.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_execution_wbs_task.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_execution_wbs_task.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_execution_wbs_task.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_execution_wbs_task.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_execution_wbs_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_execution_wbs_task.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_execution_wbs_task.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:立项 + 删除标记(WBS 树形加载)
 CREATE INDEX IF NOT EXISTS idx_pewt_initiation
-    ON pmis_execution_wbs_task (initiation_id, deleted);
+    ON ydsz_execution_wbs_task (initiation_id, deleted);
 CREATE INDEX IF NOT EXISTS idx_pewt_parent
-    ON pmis_execution_wbs_task (parent_id);
+    ON ydsz_execution_wbs_task (parent_id);
 CREATE INDEX IF NOT EXISTS idx_pewt_owner
-    ON pmis_execution_wbs_task (owner_id) WHERE deleted = 0;
+    ON ydsz_execution_wbs_task (owner_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pewt_status
-    ON pmis_execution_wbs_task (status) WHERE deleted = 0;
+    ON ydsz_execution_wbs_task (status) WHERE deleted = 0;
 -- [INLINE-OPT] 立项 + 里程碑(WBS 里程碑视图)
 CREATE INDEX IF NOT EXISTS idx_pewt_milestone
-    ON pmis_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
+    ON ydsz_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
 -- [INLINE-OPT] 责任人 + 状态(个人任务工作台)
 CREATE INDEX IF NOT EXISTS idx_pewt_owner_status
-    ON pmis_execution_wbs_task (owner_id, status) WHERE deleted = 0;
+    ON ydsz_execution_wbs_task (owner_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
 CREATE INDEX IF NOT EXISTS idx_pewt_trace
-    ON pmis_execution_wbs_task (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_execution_wbs_task (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 2. 工时录入表 pmis_execution_time_entry
+-- 2. 工时录入表 ydsz_execution_time_entry
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
+CREATE TABLE IF NOT EXISTS ydsz_execution_time_entry(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     entry_date          DATE           NOT NULL,
     employee_id         VARCHAR(20)         NOT NULL,
@@ -3740,67 +3740,67 @@ CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
     CONSTRAINT ck_pete_version_nonneg  CHECK (version >= 0),
     CONSTRAINT ck_pete_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_execution_time_entry IS '工时录入表: 日清日结,员工每日填报工时,自动计算人天/成本';
-COMMENT ON COLUMN pmis_execution_time_entry.id IS '主键 ID';
-COMMENT ON COLUMN pmis_execution_time_entry.entry_date IS '工时日期';
-COMMENT ON COLUMN pmis_execution_time_entry.employee_id IS '填报人 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_execution_time_entry.employee_name IS '填报人姓名';
-COMMENT ON COLUMN pmis_execution_time_entry.level_code IS '填报人职级(冗余,锁定当时费率)';
-COMMENT ON COLUMN pmis_execution_time_entry.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_execution_time_entry.initiation_name IS '立项名称(冗余)';
-COMMENT ON COLUMN pmis_execution_time_entry.task_id IS 'WBS 任务 ID(关联 pmis_execution_wbs_task.id,可空:项目级工时)';
-COMMENT ON COLUMN pmis_execution_time_entry.task_name IS 'WBS 任务名称(冗余)';
-COMMENT ON COLUMN pmis_execution_time_entry.hours IS '工时(小时)';
-COMMENT ON COLUMN pmis_execution_time_entry.days IS '人天(按 8h 折算)';
-COMMENT ON COLUMN pmis_execution_time_entry.overtime IS '加班工时(小时)';
-COMMENT ON COLUMN pmis_execution_time_entry.work_type IS '工时类型: REGULAR 正常 / OVERTIME 加班 / TRAINING 培训 / LEAVE 请假';
-COMMENT ON COLUMN pmis_execution_time_entry.billable IS '是否可计费: 1 可计费(向客户收费) / 0 不可计费(培训/管理工时)';
-COMMENT ON COLUMN pmis_execution_time_entry.description IS '工时说明';
-COMMENT ON COLUMN pmis_execution_time_entry.rate_id IS '命中的费率卡 ID(关联 pmis_rate_card.id,可空:未匹配到费率卡)';
-COMMENT ON COLUMN pmis_execution_time_entry.rate IS '人天费率(冗余,锁定当时报价,用于成本归集)';
-COMMENT ON COLUMN pmis_execution_time_entry.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回';
-COMMENT ON COLUMN pmis_execution_time_entry.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_execution_time_entry.approver_name IS '审批人姓名';
-COMMENT ON COLUMN pmis_execution_time_entry.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_execution_time_entry.reject_reason IS '驳回原因';
-COMMENT ON COLUMN pmis_execution_time_entry.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_execution_time_entry.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_execution_time_entry.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_execution_time_entry.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_execution_time_entry.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_execution_time_entry.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_execution_time_entry.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_execution_time_entry.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_execution_time_entry IS '工时录入表: 日清日结,员工每日填报工时,自动计算人天/成本';
+COMMENT ON COLUMN ydsz_execution_time_entry.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_execution_time_entry.entry_date IS '工时日期';
+COMMENT ON COLUMN ydsz_execution_time_entry.employee_id IS '填报人 ID(关联 ydsz_employee.id)';
+COMMENT ON COLUMN ydsz_execution_time_entry.employee_name IS '填报人姓名';
+COMMENT ON COLUMN ydsz_execution_time_entry.level_code IS '填报人职级(冗余,锁定当时费率)';
+COMMENT ON COLUMN ydsz_execution_time_entry.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_execution_time_entry.initiation_name IS '立项名称(冗余)';
+COMMENT ON COLUMN ydsz_execution_time_entry.task_id IS 'WBS 任务 ID(关联 ydsz_execution_wbs_task.id,可空:项目级工时)';
+COMMENT ON COLUMN ydsz_execution_time_entry.task_name IS 'WBS 任务名称(冗余)';
+COMMENT ON COLUMN ydsz_execution_time_entry.hours IS '工时(小时)';
+COMMENT ON COLUMN ydsz_execution_time_entry.days IS '人天(按 8h 折算)';
+COMMENT ON COLUMN ydsz_execution_time_entry.overtime IS '加班工时(小时)';
+COMMENT ON COLUMN ydsz_execution_time_entry.work_type IS '工时类型: REGULAR 正常 / OVERTIME 加班 / TRAINING 培训 / LEAVE 请假';
+COMMENT ON COLUMN ydsz_execution_time_entry.billable IS '是否可计费: 1 可计费(向客户收费) / 0 不可计费(培训/管理工时)';
+COMMENT ON COLUMN ydsz_execution_time_entry.description IS '工时说明';
+COMMENT ON COLUMN ydsz_execution_time_entry.rate_id IS '命中的费率卡 ID(关联 ydsz_rate_card.id,可空:未匹配到费率卡)';
+COMMENT ON COLUMN ydsz_execution_time_entry.rate IS '人天费率(冗余,锁定当时报价,用于成本归集)';
+COMMENT ON COLUMN ydsz_execution_time_entry.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回';
+COMMENT ON COLUMN ydsz_execution_time_entry.approver_id IS '审批人 ID';
+COMMENT ON COLUMN ydsz_execution_time_entry.approver_name IS '审批人姓名';
+COMMENT ON COLUMN ydsz_execution_time_entry.approved_at IS '审批时间';
+COMMENT ON COLUMN ydsz_execution_time_entry.reject_reason IS '驳回原因';
+COMMENT ON COLUMN ydsz_execution_time_entry.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_execution_time_entry.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_execution_time_entry.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_execution_time_entry.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_execution_time_entry.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_execution_time_entry.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_execution_time_entry.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_execution_time_entry.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:员工 + 日期(个人工时历史)
 CREATE INDEX IF NOT EXISTS idx_pete_employee
-    ON pmis_execution_time_entry (employee_id, entry_date DESC) WHERE deleted = 0;
+    ON ydsz_execution_time_entry (employee_id, entry_date DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:立项 + 日期(项目工时聚合)
 CREATE INDEX IF NOT EXISTS idx_pete_initiation
-    ON pmis_execution_time_entry (initiation_id, entry_date DESC) WHERE deleted = 0;
+    ON ydsz_execution_time_entry (initiation_id, entry_date DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pete_task
-    ON pmis_execution_time_entry (task_id) WHERE deleted = 0;
+    ON ydsz_execution_time_entry (task_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pete_status
-    ON pmis_execution_time_entry (status) WHERE deleted = 0;
+    ON ydsz_execution_time_entry (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pete_level
-    ON pmis_execution_time_entry (level_code) WHERE deleted = 0;
+    ON ydsz_execution_time_entry (level_code) WHERE deleted = 0;
 -- [INLINE-OPT] 费率卡 ID 索引(按费率卡聚合成本)
 CREATE INDEX IF NOT EXISTS idx_pete_rate_id
-    ON pmis_execution_time_entry (rate_id) WHERE deleted = 0 AND rate_id IS NOT NULL;
+    ON ydsz_execution_time_entry (rate_id) WHERE deleted = 0 AND rate_id IS NOT NULL;
 -- [INLINE-OPT] 审批人 + 状态(审批人工作台)
 CREATE INDEX IF NOT EXISTS idx_pete_approver_status
-    ON pmis_execution_time_entry (approver_id, status) WHERE deleted = 0;
+    ON ydsz_execution_time_entry (approver_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(工时中心列表)
 CREATE INDEX IF NOT EXISTS idx_pete_tenant_created
-    ON pmis_execution_time_entry (tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_execution_time_entry (tenant_id, created_at DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pete_trace
-    ON pmis_execution_time_entry (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_execution_time_entry (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 3. 成本归集表 pmis_cost_allocation
+-- 3. 成本归集表 ydsz_cost_allocation
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_cost_allocation(
+CREATE TABLE IF NOT EXISTS ydsz_cost_allocation(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id       VARCHAR(20)         NOT NULL,
     period              VARCHAR(7)     NOT NULL,
@@ -3831,52 +3831,52 @@ CREATE TABLE IF NOT EXISTS pmis_cost_allocation(
     CONSTRAINT ck_pca_version_nonneg    CHECK (version >= 0),
     CONSTRAINT ck_pca_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_cost_allocation IS '项目成本归集表: 按月 × 类别归集项目发生的所有成本,支撑利润核算与驾驶舱';
-COMMENT ON COLUMN pmis_cost_allocation.id IS '主键 ID';
-COMMENT ON COLUMN pmis_cost_allocation.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_cost_allocation.period IS '归集周期(YYYY-MM,如 2026-06)';
-COMMENT ON COLUMN pmis_cost_allocation.cost_type IS '成本类型: LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / ALLOCATION 分摊 / OTHER 其他';
-COMMENT ON COLUMN pmis_cost_allocation.source_id IS '源单据 ID(关联 time_entry/purchase/expense)';
-COMMENT ON COLUMN pmis_cost_allocation.source_type IS '源单据类型(TIME_ENTRY/PURCHASE/EXPENSE/MANUAL)';
-COMMENT ON COLUMN pmis_cost_allocation.description IS '成本说明';
-COMMENT ON COLUMN pmis_cost_allocation.amount IS '金额(元)';
-COMMENT ON COLUMN pmis_cost_allocation.billable IS '是否可计费: 1 可计费 / 0 不可计费';
-COMMENT ON COLUMN pmis_cost_allocation.allocated IS '是否已分摊到 WBS 节点: 1 已分摊 / 0 待分摊';
-COMMENT ON COLUMN pmis_cost_allocation.employee_id IS '员工 ID(人力成本时关联)';
-COMMENT ON COLUMN pmis_cost_allocation.employee_name IS '员工姓名';
-COMMENT ON COLUMN pmis_cost_allocation.level_code IS '职级(冗余,锁定费率)';
-COMMENT ON COLUMN pmis_cost_allocation.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_cost_allocation.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_cost_allocation.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_cost_allocation.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_cost_allocation.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_cost_allocation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_cost_allocation.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_cost_allocation.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_cost_allocation IS '项目成本归集表: 按月 × 类别归集项目发生的所有成本,支撑利润核算与驾驶舱';
+COMMENT ON COLUMN ydsz_cost_allocation.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_cost_allocation.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_cost_allocation.period IS '归集周期(YYYY-MM,如 2026-06)';
+COMMENT ON COLUMN ydsz_cost_allocation.cost_type IS '成本类型: LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / ALLOCATION 分摊 / OTHER 其他';
+COMMENT ON COLUMN ydsz_cost_allocation.source_id IS '源单据 ID(关联 time_entry/purchase/expense)';
+COMMENT ON COLUMN ydsz_cost_allocation.source_type IS '源单据类型(TIME_ENTRY/PURCHASE/EXPENSE/MANUAL)';
+COMMENT ON COLUMN ydsz_cost_allocation.description IS '成本说明';
+COMMENT ON COLUMN ydsz_cost_allocation.amount IS '金额(元)';
+COMMENT ON COLUMN ydsz_cost_allocation.billable IS '是否可计费: 1 可计费 / 0 不可计费';
+COMMENT ON COLUMN ydsz_cost_allocation.allocated IS '是否已分摊到 WBS 节点: 1 已分摊 / 0 待分摊';
+COMMENT ON COLUMN ydsz_cost_allocation.employee_id IS '员工 ID(人力成本时关联)';
+COMMENT ON COLUMN ydsz_cost_allocation.employee_name IS '员工姓名';
+COMMENT ON COLUMN ydsz_cost_allocation.level_code IS '职级(冗余,锁定费率)';
+COMMENT ON COLUMN ydsz_cost_allocation.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_cost_allocation.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_cost_allocation.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_cost_allocation.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_cost_allocation.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_cost_allocation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_cost_allocation.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_cost_allocation.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:立项 + 周期(月度成本透视)
 CREATE INDEX IF NOT EXISTS idx_pca_initiation
-    ON pmis_cost_allocation (initiation_id, period) WHERE deleted = 0;
+    ON ydsz_cost_allocation (initiation_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:周期 + 类型(全公司月度成本分析)
 CREATE INDEX IF NOT EXISTS idx_pca_period_type
-    ON pmis_cost_allocation (period, cost_type) WHERE deleted = 0;
+    ON ydsz_cost_allocation (period, cost_type) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pca_type
-    ON pmis_cost_allocation (cost_type) WHERE deleted = 0;
+    ON ydsz_cost_allocation (cost_type) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pca_source
-    ON pmis_cost_allocation (source_type, source_id) WHERE deleted = 0;
+    ON ydsz_cost_allocation (source_type, source_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pca_employee
-    ON pmis_cost_allocation (employee_id) WHERE deleted = 0;
+    ON ydsz_cost_allocation (employee_id) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 周期(全租户成本驾驶舱)
 CREATE INDEX IF NOT EXISTS idx_pca_tenant_period
-    ON pmis_cost_allocation (tenant_id, period) WHERE deleted = 0;
+    ON ydsz_cost_allocation (tenant_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pca_trace
-    ON pmis_cost_allocation (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_cost_allocation (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 4. 采购成本表 pmis_cost_purchase
+-- 4. 采购成本表 ydsz_cost_purchase
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_cost_purchase(
+CREATE TABLE IF NOT EXISTS ydsz_cost_purchase(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     purchase_code       VARCHAR(64)    NOT NULL,
     initiation_id       VARCHAR(20)         NOT NULL,
@@ -3908,52 +3908,52 @@ CREATE TABLE IF NOT EXISTS pmis_cost_purchase(
     CONSTRAINT ck_pcp_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_pcp_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_cost_purchase IS '采购成本申请表: 项目硬件/软件/服务采购,触发预算占用校验(80% 黄/95% 红)';
-COMMENT ON COLUMN pmis_cost_purchase.id IS '主键 ID';
-COMMENT ON COLUMN pmis_cost_purchase.purchase_code IS '采购单编码(全局唯一)';
-COMMENT ON COLUMN pmis_cost_purchase.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_cost_purchase.vendor IS '供应商';
-COMMENT ON COLUMN pmis_cost_purchase.item_name IS '采购品名';
-COMMENT ON COLUMN pmis_cost_purchase.quantity IS '采购数量';
-COMMENT ON COLUMN pmis_cost_purchase.unit_price IS '单价(元)';
-COMMENT ON COLUMN pmis_cost_purchase.amount IS '总金额(元,=quantity*unit_price)';
-COMMENT ON COLUMN pmis_cost_purchase.purchase_date IS '采购日期';
-COMMENT ON COLUMN pmis_cost_purchase.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已付款';
-COMMENT ON COLUMN pmis_cost_purchase.applicant_id IS '申请人 ID';
-COMMENT ON COLUMN pmis_cost_purchase.applicant_name IS '申请人姓名';
-COMMENT ON COLUMN pmis_cost_purchase.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_cost_purchase.approver_name IS '审批人姓名';
-COMMENT ON COLUMN pmis_cost_purchase.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_cost_purchase.description IS '采购说明';
-COMMENT ON COLUMN pmis_cost_purchase.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_cost_purchase.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_cost_purchase.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_cost_purchase.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_cost_purchase.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_cost_purchase.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_cost_purchase.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_cost_purchase IS '采购成本申请表: 项目硬件/软件/服务采购,触发预算占用校验(80% 黄/95% 红)';
+COMMENT ON COLUMN ydsz_cost_purchase.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_cost_purchase.purchase_code IS '采购单编码(全局唯一)';
+COMMENT ON COLUMN ydsz_cost_purchase.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_cost_purchase.vendor IS '供应商';
+COMMENT ON COLUMN ydsz_cost_purchase.item_name IS '采购品名';
+COMMENT ON COLUMN ydsz_cost_purchase.quantity IS '采购数量';
+COMMENT ON COLUMN ydsz_cost_purchase.unit_price IS '单价(元)';
+COMMENT ON COLUMN ydsz_cost_purchase.amount IS '总金额(元,=quantity*unit_price)';
+COMMENT ON COLUMN ydsz_cost_purchase.purchase_date IS '采购日期';
+COMMENT ON COLUMN ydsz_cost_purchase.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已付款';
+COMMENT ON COLUMN ydsz_cost_purchase.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN ydsz_cost_purchase.applicant_name IS '申请人姓名';
+COMMENT ON COLUMN ydsz_cost_purchase.approver_id IS '审批人 ID';
+COMMENT ON COLUMN ydsz_cost_purchase.approver_name IS '审批人姓名';
+COMMENT ON COLUMN ydsz_cost_purchase.approved_at IS '审批时间';
+COMMENT ON COLUMN ydsz_cost_purchase.description IS '采购说明';
+COMMENT ON COLUMN ydsz_cost_purchase.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_cost_purchase.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_cost_purchase.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_cost_purchase.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_cost_purchase.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_cost_purchase.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_cost_purchase.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_cost_purchase.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_pcp_initiation
-    ON pmis_cost_purchase (initiation_id) WHERE deleted = 0;
+    ON ydsz_cost_purchase (initiation_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pcp_status
-    ON pmis_cost_purchase (status) WHERE deleted = 0;
+    ON ydsz_cost_purchase (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pcp_applicant
-    ON pmis_cost_purchase (applicant_id) WHERE deleted = 0;
+    ON ydsz_cost_purchase (applicant_id) WHERE deleted = 0;
 -- [INLINE-OPT] 申请人 + 状态(申请人台账)
 CREATE INDEX IF NOT EXISTS idx_pcp_applicant_status
-    ON pmis_cost_purchase (applicant_id, status) WHERE deleted = 0;
+    ON ydsz_cost_purchase (applicant_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 采购日期(采购中心时间筛选)
 CREATE INDEX IF NOT EXISTS idx_pcp_tenant_date
-    ON pmis_cost_purchase (tenant_id, purchase_date DESC) WHERE deleted = 0;
+    ON ydsz_cost_purchase (tenant_id, purchase_date DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pcp_trace
-    ON pmis_cost_purchase (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_cost_purchase (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 5. 费用报销表 pmis_project_expense
+-- 5. 费用报销表 ydsz_project_expense
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_expense(
+CREATE TABLE IF NOT EXISTS ydsz_project_expense(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     expense_code        VARCHAR(64)    NOT NULL,
     initiation_id       VARCHAR(20),
@@ -3984,50 +3984,50 @@ CREATE TABLE IF NOT EXISTS pmis_project_expense(
     CONSTRAINT ck_pce_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_pce_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
-COMMENT ON COLUMN pmis_project_expense.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_expense.expense_code IS '报销单编码(全局唯一)';
-COMMENT ON COLUMN pmis_project_expense.initiation_id IS '关联立项 ID(项目级费用必填,公司公共费用可空)';
-COMMENT ON COLUMN pmis_project_expense.employee_id IS '报销人 ID';
-COMMENT ON COLUMN pmis_project_expense.employee_name IS '报销人姓名';
-COMMENT ON COLUMN pmis_project_expense.expense_type IS '费用类型: TRAVEL 差旅 / CATERING 餐饮 / MEETING 会议 / SUPPLIES 办公 / COMMUNICATION 通讯 / OTHER 其他';
-COMMENT ON COLUMN pmis_project_expense.amount IS '报销金额(元)';
-COMMENT ON COLUMN pmis_project_expense.expense_date IS '费用发生日期';
-COMMENT ON COLUMN pmis_project_expense.description IS '费用说明';
-COMMENT ON COLUMN pmis_project_expense.receipt_url IS '发票/凭证 URL';
-COMMENT ON COLUMN pmis_project_expense.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已打款';
-COMMENT ON COLUMN pmis_project_expense.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_project_expense.approver_name IS '审批人姓名';
-COMMENT ON COLUMN pmis_project_expense.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_project_expense.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_expense.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_expense.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_expense.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_expense.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_expense.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_expense.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
+COMMENT ON COLUMN ydsz_project_expense.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_expense.expense_code IS '报销单编码(全局唯一)';
+COMMENT ON COLUMN ydsz_project_expense.initiation_id IS '关联立项 ID(项目级费用必填,公司公共费用可空)';
+COMMENT ON COLUMN ydsz_project_expense.employee_id IS '报销人 ID';
+COMMENT ON COLUMN ydsz_project_expense.employee_name IS '报销人姓名';
+COMMENT ON COLUMN ydsz_project_expense.expense_type IS '费用类型: TRAVEL 差旅 / CATERING 餐饮 / MEETING 会议 / SUPPLIES 办公 / COMMUNICATION 通讯 / OTHER 其他';
+COMMENT ON COLUMN ydsz_project_expense.amount IS '报销金额(元)';
+COMMENT ON COLUMN ydsz_project_expense.expense_date IS '费用发生日期';
+COMMENT ON COLUMN ydsz_project_expense.description IS '费用说明';
+COMMENT ON COLUMN ydsz_project_expense.receipt_url IS '发票/凭证 URL';
+COMMENT ON COLUMN ydsz_project_expense.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已打款';
+COMMENT ON COLUMN ydsz_project_expense.approver_id IS '审批人 ID';
+COMMENT ON COLUMN ydsz_project_expense.approver_name IS '审批人姓名';
+COMMENT ON COLUMN ydsz_project_expense.approved_at IS '审批时间';
+COMMENT ON COLUMN ydsz_project_expense.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_expense.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_expense.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_expense.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_expense.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_expense.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_expense.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_pce_initiation
-    ON pmis_project_expense (initiation_id) WHERE deleted = 0;
+    ON ydsz_project_expense (initiation_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pce_employee
-    ON pmis_project_expense (employee_id) WHERE deleted = 0;
+    ON ydsz_project_expense (employee_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pce_status
-    ON pmis_project_expense (status) WHERE deleted = 0;
+    ON ydsz_project_expense (status) WHERE deleted = 0;
 -- [INLINE-OPT] 员工 + 状态(员工报销台账)
 CREATE INDEX IF NOT EXISTS idx_pce_employee_status
-    ON pmis_project_expense (employee_id, status) WHERE deleted = 0;
+    ON ydsz_project_expense (employee_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 费用日期(报销中心时间筛选)
 CREATE INDEX IF NOT EXISTS idx_pce_tenant_date
-    ON pmis_project_expense (tenant_id, expense_date DESC) WHERE deleted = 0;
+    ON ydsz_project_expense (tenant_id, expense_date DESC) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pce_trace
-    ON pmis_project_expense (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_project_expense (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 6. 收入确认表 pmis_project_revenue
+-- 6. 收入确认表 ydsz_project_revenue
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_revenue(
+CREATE TABLE IF NOT EXISTS ydsz_project_revenue(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_id         VARCHAR(20)         NOT NULL,
     initiation_id       VARCHAR(20)         NOT NULL,
@@ -4060,52 +4060,52 @@ CREATE TABLE IF NOT EXISTS pmis_project_revenue(
     CONSTRAINT ck_ppr_version_nonneg    CHECK (version >= 0),
     CONSTRAINT ck_ppr_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
-COMMENT ON COLUMN pmis_project_revenue.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_revenue.contract_id IS '合同 ID(关联 pmis_project_contract.id)';
-COMMENT ON COLUMN pmis_project_revenue.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_project_revenue.revenue_code IS '收入确认单编码(全局唯一)';
-COMMENT ON COLUMN pmis_project_revenue.recognition_method IS '确认方法: MILESTONE 里程碑法 / PERCENTAGE 比例法 / PERCENT_COMPLETE 完工法 / POINTS 工分法 / MANUAL 手动';
-COMMENT ON COLUMN pmis_project_revenue.period IS '所属期间(YYYY-MM)';
-COMMENT ON COLUMN pmis_project_revenue.amount IS '确认金额(元)';
-COMMENT ON COLUMN pmis_project_revenue.recognition_date IS '确认日期';
-COMMENT ON COLUMN pmis_project_revenue.milestone IS '里程碑描述';
-COMMENT ON COLUMN pmis_project_revenue.percent_complete IS '完工百分比(0-100,完工法)';
-COMMENT ON COLUMN pmis_project_revenue.invoice_id IS '关联开票申请 ID';
-COMMENT ON COLUMN pmis_project_revenue.status IS '状态: DRAFT 草稿 / CONFIRMED 已确认 / REVERSED 已冲销';
-COMMENT ON COLUMN pmis_project_revenue.confirmed_by IS '确认人 ID';
-COMMENT ON COLUMN pmis_project_revenue.confirmed_at IS '确认时间';
-COMMENT ON COLUMN pmis_project_revenue.description IS '收入确认说明';
-COMMENT ON COLUMN pmis_project_revenue.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_revenue.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_project_revenue.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_project_revenue.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_project_revenue.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_project_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_revenue.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_revenue.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
+COMMENT ON COLUMN ydsz_project_revenue.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_revenue.contract_id IS '合同 ID(关联 ydsz_project_contract.id)';
+COMMENT ON COLUMN ydsz_project_revenue.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_project_revenue.revenue_code IS '收入确认单编码(全局唯一)';
+COMMENT ON COLUMN ydsz_project_revenue.recognition_method IS '确认方法: MILESTONE 里程碑法 / PERCENTAGE 比例法 / PERCENT_COMPLETE 完工法 / POINTS 工分法 / MANUAL 手动';
+COMMENT ON COLUMN ydsz_project_revenue.period IS '所属期间(YYYY-MM)';
+COMMENT ON COLUMN ydsz_project_revenue.amount IS '确认金额(元)';
+COMMENT ON COLUMN ydsz_project_revenue.recognition_date IS '确认日期';
+COMMENT ON COLUMN ydsz_project_revenue.milestone IS '里程碑描述';
+COMMENT ON COLUMN ydsz_project_revenue.percent_complete IS '完工百分比(0-100,完工法)';
+COMMENT ON COLUMN ydsz_project_revenue.invoice_id IS '关联开票申请 ID';
+COMMENT ON COLUMN ydsz_project_revenue.status IS '状态: DRAFT 草稿 / CONFIRMED 已确认 / REVERSED 已冲销';
+COMMENT ON COLUMN ydsz_project_revenue.confirmed_by IS '确认人 ID';
+COMMENT ON COLUMN ydsz_project_revenue.confirmed_at IS '确认时间';
+COMMENT ON COLUMN ydsz_project_revenue.description IS '收入确认说明';
+COMMENT ON COLUMN ydsz_project_revenue.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_revenue.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_project_revenue.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_project_revenue.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_project_revenue.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_project_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_revenue.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_revenue.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ppr_contract
-    ON pmis_project_revenue (contract_id) WHERE deleted = 0;
+    ON ydsz_project_revenue (contract_id) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:立项 + 期间(项目月度收入走势)
 CREATE INDEX IF NOT EXISTS idx_ppr_initiation
-    ON pmis_project_revenue (initiation_id, period) WHERE deleted = 0;
+    ON ydsz_project_revenue (initiation_id, period) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppr_status
-    ON pmis_project_revenue (status) WHERE deleted = 0;
+    ON ydsz_project_revenue (status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 期间(全公司收入月报)
 CREATE INDEX IF NOT EXISTS idx_ppr_tenant_period
-    ON pmis_project_revenue (tenant_id, period) WHERE deleted = 0;
+    ON ydsz_project_revenue (tenant_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 关联开票申请 ID
 CREATE INDEX IF NOT EXISTS idx_ppr_invoice
-    ON pmis_project_revenue (invoice_id) WHERE deleted = 0 AND invoice_id IS NOT NULL;
+    ON ydsz_project_revenue (invoice_id) WHERE deleted = 0 AND invoice_id IS NOT NULL;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_ppr_trace
-    ON pmis_project_revenue (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_project_revenue (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 7. 项目利润快照表 pmis_project_profit_snapshot
+-- 7. 项目利润快照表 ydsz_project_profit_snapshot
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_profit_snapshot(
+CREATE TABLE IF NOT EXISTS ydsz_project_profit_snapshot(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id       VARCHAR(20)         NOT NULL,
     period              VARCHAR(7)     NOT NULL,
@@ -4141,45 +4141,45 @@ CREATE TABLE IF NOT EXISTS pmis_project_profit_snapshot(
     CONSTRAINT ck_pps_version_nonneg  CHECK (version >= 0),
     CONSTRAINT ck_pps_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_project_profit_snapshot IS '项目利润快照(按月): 立项 × 期间 唯一约束,周期性滚动生成';
-COMMENT ON COLUMN pmis_project_profit_snapshot.id IS '主键 ID';
-COMMENT ON COLUMN pmis_project_profit_snapshot.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.period IS '快照周期(YYYY-MM)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.contract_amount IS '合同总额(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.recognized_revenue IS '已确认收入(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.billed_amount IS '已开票金额(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.received_amount IS '已回款金额(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.labor_cost IS '人力成本(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.purchase_cost IS '采购成本(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.expense_cost IS '费用(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.outsource_cost IS '外包(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.allocation_cost IS '分摊费用(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.total_cost IS '总成本(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.gross_profit IS '毛利(元)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
-COMMENT ON COLUMN pmis_project_profit_snapshot.progress_pct IS '完工进度(0-100)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.billable_hours IS '可计费工时(小时)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.non_billable_hours IS '不可计费工时(小时)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.snapshot_at IS '快照生成时间';
-COMMENT ON COLUMN pmis_project_profit_snapshot.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_profit_snapshot.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_project_profit_snapshot.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_project_profit_snapshot.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_project_profit_snapshot IS '项目利润快照(按月): 立项 × 期间 唯一约束,周期性滚动生成';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.period IS '快照周期(YYYY-MM)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.contract_amount IS '合同总额(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.recognized_revenue IS '已确认收入(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.billed_amount IS '已开票金额(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.received_amount IS '已回款金额(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.labor_cost IS '人力成本(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.purchase_cost IS '采购成本(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.expense_cost IS '费用(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.outsource_cost IS '外包(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.allocation_cost IS '分摊费用(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.total_cost IS '总成本(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.gross_profit IS '毛利(元)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.progress_pct IS '完工进度(0-100)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.billable_hours IS '可计费工时(小时)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.non_billable_hours IS '不可计费工时(小时)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.snapshot_at IS '快照生成时间';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_project_profit_snapshot.version IS '乐观锁版本号';
 
 -- [INLINE-OPT] 复合索引:立项 + 期间(项目利润走势)
 CREATE INDEX IF NOT EXISTS idx_pps_initiation
-    ON pmis_project_profit_snapshot (initiation_id, period) WHERE deleted = 0;
+    ON ydsz_project_profit_snapshot (initiation_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 期间(全公司月度利润驾驶舱)
 CREATE INDEX IF NOT EXISTS idx_pps_tenant_period
-    ON pmis_project_profit_snapshot (tenant_id, period) WHERE deleted = 0;
+    ON ydsz_project_profit_snapshot (tenant_id, period) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pps_trace
-    ON pmis_project_profit_snapshot (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_project_profit_snapshot (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 8. 项目风险登记表 pmis_execution_risk
+-- 8. 项目风险登记表 ydsz_execution_risk
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_execution_risk(
+CREATE TABLE IF NOT EXISTS ydsz_execution_risk(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     risk_code           VARCHAR(64)    NOT NULL,
     initiation_id       VARCHAR(20)         NOT NULL,
@@ -4213,47 +4213,47 @@ CREATE TABLE IF NOT EXISTS pmis_execution_risk(
     CONSTRAINT ck_per_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_per_deleted_enum   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_execution_risk IS '项目风险登记表: 项目执行过程中的风险识别、跟踪与闭环管理';
-COMMENT ON COLUMN pmis_execution_risk.id IS '主键 ID';
-COMMENT ON COLUMN pmis_execution_risk.risk_code IS '风险编号(全局唯一)';
-COMMENT ON COLUMN pmis_execution_risk.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
-COMMENT ON COLUMN pmis_execution_risk.risk_title IS '风险标题';
-COMMENT ON COLUMN pmis_execution_risk.risk_type IS '风险类型: SCOPE 范围 / SCHEDULE 进度 / COST 成本 / QUALITY 质量 / RESOURCE 资源 / EXTERNAL 外部 / OTHER 其他';
-COMMENT ON COLUMN pmis_execution_risk.description IS '风险描述';
-COMMENT ON COLUMN pmis_execution_risk.probability IS '发生概率: LOW / MEDIUM / HIGH';
-COMMENT ON COLUMN pmis_execution_risk.impact IS '影响程度: LOW / MEDIUM / HIGH';
-COMMENT ON COLUMN pmis_execution_risk.risk_level IS '风险等级(probability × impact 派生): LOW / MEDIUM / HIGH';
-COMMENT ON COLUMN pmis_execution_risk.mitigation IS '缓解措施';
-COMMENT ON COLUMN pmis_execution_risk.contingency IS '应急方案';
-COMMENT ON COLUMN pmis_execution_risk.owner_id IS '风险责任人 ID';
-COMMENT ON COLUMN pmis_execution_risk.owner_name IS '风险责任人姓名';
-COMMENT ON COLUMN pmis_execution_risk.status IS '风险状态: OPEN 待处理 / MITIGATING 处理中 / CLOSED 已关闭 / OCCURRED 已发生';
-COMMENT ON COLUMN pmis_execution_risk.occurred_at IS '风险发生时间';
-COMMENT ON COLUMN pmis_execution_risk.closed_at IS '风险关闭时间';
-COMMENT ON COLUMN pmis_execution_risk.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_execution_risk.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_execution_risk.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_execution_risk.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_execution_risk.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_execution_risk.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_execution_risk.tenant_id IS '租户 ID(单租户部署默认 1)';
-COMMENT ON COLUMN pmis_execution_risk.version IS '乐观锁版本号';
+COMMENT ON TABLE ydsz_execution_risk IS '项目风险登记表: 项目执行过程中的风险识别、跟踪与闭环管理';
+COMMENT ON COLUMN ydsz_execution_risk.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_execution_risk.risk_code IS '风险编号(全局唯一)';
+COMMENT ON COLUMN ydsz_execution_risk.initiation_id IS '立项 ID(关联 ydsz_project_initiation.id)';
+COMMENT ON COLUMN ydsz_execution_risk.risk_title IS '风险标题';
+COMMENT ON COLUMN ydsz_execution_risk.risk_type IS '风险类型: SCOPE 范围 / SCHEDULE 进度 / COST 成本 / QUALITY 质量 / RESOURCE 资源 / EXTERNAL 外部 / OTHER 其他';
+COMMENT ON COLUMN ydsz_execution_risk.description IS '风险描述';
+COMMENT ON COLUMN ydsz_execution_risk.probability IS '发生概率: LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN ydsz_execution_risk.impact IS '影响程度: LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN ydsz_execution_risk.risk_level IS '风险等级(probability × impact 派生): LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN ydsz_execution_risk.mitigation IS '缓解措施';
+COMMENT ON COLUMN ydsz_execution_risk.contingency IS '应急方案';
+COMMENT ON COLUMN ydsz_execution_risk.owner_id IS '风险责任人 ID';
+COMMENT ON COLUMN ydsz_execution_risk.owner_name IS '风险责任人姓名';
+COMMENT ON COLUMN ydsz_execution_risk.status IS '风险状态: OPEN 待处理 / MITIGATING 处理中 / CLOSED 已关闭 / OCCURRED 已发生';
+COMMENT ON COLUMN ydsz_execution_risk.occurred_at IS '风险发生时间';
+COMMENT ON COLUMN ydsz_execution_risk.closed_at IS '风险关闭时间';
+COMMENT ON COLUMN ydsz_execution_risk.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_execution_risk.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_execution_risk.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_execution_risk.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_execution_risk.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_execution_risk.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_execution_risk.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_execution_risk.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_per_initiation
-    ON pmis_execution_risk (initiation_id) WHERE deleted = 0;
+    ON ydsz_execution_risk (initiation_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_per_status
-    ON pmis_execution_risk (status) WHERE deleted = 0;
+    ON ydsz_execution_risk (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_per_level
-    ON pmis_execution_risk (risk_level) WHERE deleted = 0;
+    ON ydsz_execution_risk (risk_level) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:立项 + 状态(项目风险面板)
 CREATE INDEX IF NOT EXISTS idx_per_init_status
-    ON pmis_execution_risk (initiation_id, status) WHERE deleted = 0;
+    ON ydsz_execution_risk (initiation_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 复合索引:租户 + 状态(全公司高风险扫描)
 CREATE INDEX IF NOT EXISTS idx_per_tenant_status
-    ON pmis_execution_risk (tenant_id, status) WHERE deleted = 0;
+    ON ydsz_execution_risk (tenant_id, status) WHERE deleted = 0;
 -- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_per_trace
-    ON pmis_execution_risk (provider_trace_id) WHERE provider_trace_id <> '';
+    ON ydsz_execution_risk (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- --------------------------------------------------------------------
 
@@ -4267,9 +4267,9 @@ CREATE INDEX IF NOT EXISTS idx_per_trace
 -- =====================================================
 
 -- =====================================================
--- 1. 合同模板表 pmis_project_contract_template
+-- 1. 合同模板表 ydsz_project_contract_template
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
+CREATE TABLE IF NOT EXISTS ydsz_project_contract_template(
     id                     VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     template_code          VARCHAR(64)  NOT NULL,
     template_name          VARCHAR(256) NOT NULL,
@@ -4304,37 +4304,37 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
     CONSTRAINT ck_ppct_penalty_range   CHECK (default_penalty_rate >= 0 AND default_penalty_rate <= 1),
     CONSTRAINT ck_ppct_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_project_contract_template IS '合同模板表: 8 类项目类型（FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER）的标准化合同模板,合同起草时按类型引用';
-COMMENT ON COLUMN pmis_project_contract_template.template_code IS '模板编码: 业务唯一,如 TPL-FIX-001';
-COMMENT ON COLUMN pmis_project_contract_template.template_name IS '模板名称';
-COMMENT ON COLUMN pmis_project_contract_template.contract_type IS '合同类型: FIXED_PRICE 固定总价 / T_M 人月计费 / OUTSOURCING 人力外包 / PRODUCT 产品销售 / MAINTENANCE 运维服务 / CONSULTING 咨询服务 / TRAINING 培训服务 / OTHER 其他';
-COMMENT ON COLUMN pmis_project_contract_template.version IS '模板版本号: 语义化版本,默认 1.0.0';
-COMMENT ON COLUMN pmis_project_contract_template.payment_terms IS '付款条款: 文本描述,例如"3-3-3-1"分阶段比例';
-COMMENT ON COLUMN pmis_project_contract_template.default_payment_days IS '默认账期(天): 0=预付,30=月结30天';
-COMMENT ON COLUMN pmis_project_contract_template.default_penalty_rate IS '默认违约金比例: 0.0010=千分之一,作为合同基准';
-COMMENT ON COLUMN pmis_project_contract_template.sla_description IS 'SLA 描述: 服务等级协议,例如 P1 4 小时响应';
-COMMENT ON COLUMN pmis_project_contract_template.deliverables IS '交付物清单: 合同约定的交付物列表';
-COMMENT ON COLUMN pmis_project_contract_template.content IS '模板正文: 含占位符 ${} 的合同正文';
-COMMENT ON COLUMN pmis_project_contract_template.customer_level IS '客户级别: A/B/C/D 信用等级,NULL=全级别适用';
-COMMENT ON COLUMN pmis_project_contract_template.project_level IS '项目级别: L1-L18 复杂度等级,NULL=全级别适用';
-COMMENT ON COLUMN pmis_project_contract_template.status IS '模板状态: DRAFT 草稿 / PUBLISHED 已发布 / DEPRECATED 已废弃,状态机线性';
-COMMENT ON COLUMN pmis_project_contract_template.author_id IS '模板作者 ID';
-COMMENT ON COLUMN pmis_project_contract_template.author_name IS '模板作者姓名（冗余）';
-COMMENT ON COLUMN pmis_project_contract_template.remark IS '备注';
-COMMENT ON COLUMN pmis_project_contract_template.tenant_id IS '租户 ID: 多租户隔离';
-COMMENT ON COLUMN pmis_project_contract_template.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_project_contract_template IS '合同模板表: 8 类项目类型（FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER）的标准化合同模板,合同起草时按类型引用';
+COMMENT ON COLUMN ydsz_project_contract_template.template_code IS '模板编码: 业务唯一,如 TPL-FIX-001';
+COMMENT ON COLUMN ydsz_project_contract_template.template_name IS '模板名称';
+COMMENT ON COLUMN ydsz_project_contract_template.contract_type IS '合同类型: FIXED_PRICE 固定总价 / T_M 人月计费 / OUTSOURCING 人力外包 / PRODUCT 产品销售 / MAINTENANCE 运维服务 / CONSULTING 咨询服务 / TRAINING 培训服务 / OTHER 其他';
+COMMENT ON COLUMN ydsz_project_contract_template.version IS '模板版本号: 语义化版本,默认 1.0.0';
+COMMENT ON COLUMN ydsz_project_contract_template.payment_terms IS '付款条款: 文本描述,例如"3-3-3-1"分阶段比例';
+COMMENT ON COLUMN ydsz_project_contract_template.default_payment_days IS '默认账期(天): 0=预付,30=月结30天';
+COMMENT ON COLUMN ydsz_project_contract_template.default_penalty_rate IS '默认违约金比例: 0.0010=千分之一,作为合同基准';
+COMMENT ON COLUMN ydsz_project_contract_template.sla_description IS 'SLA 描述: 服务等级协议,例如 P1 4 小时响应';
+COMMENT ON COLUMN ydsz_project_contract_template.deliverables IS '交付物清单: 合同约定的交付物列表';
+COMMENT ON COLUMN ydsz_project_contract_template.content IS '模板正文: 含占位符 ${} 的合同正文';
+COMMENT ON COLUMN ydsz_project_contract_template.customer_level IS '客户级别: A/B/C/D 信用等级,NULL=全级别适用';
+COMMENT ON COLUMN ydsz_project_contract_template.project_level IS '项目级别: L1-L18 复杂度等级,NULL=全级别适用';
+COMMENT ON COLUMN ydsz_project_contract_template.status IS '模板状态: DRAFT 草稿 / PUBLISHED 已发布 / DEPRECATED 已废弃,状态机线性';
+COMMENT ON COLUMN ydsz_project_contract_template.author_id IS '模板作者 ID';
+COMMENT ON COLUMN ydsz_project_contract_template.author_name IS '模板作者姓名（冗余）';
+COMMENT ON COLUMN ydsz_project_contract_template.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_contract_template.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON COLUMN ydsz_project_contract_template.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_ppct_type_status / idx_ppct_tenant)
 CREATE INDEX IF NOT EXISTS idx_ppct_tenant_type_status
-    ON pmis_project_contract_template(tenant_id, contract_type, status)
+    ON ydsz_project_contract_template(tenant_id, contract_type, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ppct_tenant_created
-    ON pmis_project_contract_template(tenant_id, created_at DESC)
+    ON ydsz_project_contract_template(tenant_id, created_at DESC)
     WHERE deleted = 0;
 
 -- =====================================================
--- 2. 项目变更主表 pmis_project_change
+-- 2. 项目变更主表 ydsz_project_change
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_change(
+CREATE TABLE IF NOT EXISTS ydsz_project_change(
     id                       VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     change_code              VARCHAR(64)  NOT NULL,
     initiation_id            VARCHAR(20)       NOT NULL,
@@ -4380,50 +4380,50 @@ CREATE TABLE IF NOT EXISTS pmis_project_change(
     CONSTRAINT ck_pch_wbs_count         CHECK (affected_wbs_count >= 0),
     CONSTRAINT ck_pch_staff_count       CHECK (affected_staff_count >= 0)
 );
-COMMENT ON TABLE  pmis_project_change IS '项目变更主表: 5 类变更（SCOPE/COST/CONTRACT/STAFF/SCHEDULE）全过程管理,严格执行 DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING 状态机';
-COMMENT ON COLUMN pmis_project_change.change_code IS '变更单号: 业务唯一,如 CHG-2026-001';
-COMMENT ON COLUMN pmis_project_change.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_project_change.change_type IS '变更类型: SCOPE 范围 / COST 成本 / CONTRACT 合同 / STAFF 人员 / SCHEDULE 进度';
-COMMENT ON COLUMN pmis_project_change.change_title IS '变更标题';
-COMMENT ON COLUMN pmis_project_change.change_reason IS '变更原因';
-COMMENT ON COLUMN pmis_project_change.change_desc IS '变更详细描述';
-COMMENT ON COLUMN pmis_project_change.budget_impact IS '预算影响金额(元): 正数=增加,负数=减少';
-COMMENT ON COLUMN pmis_project_change.contract_impact IS '合同金额影响(元): 正数=增加,负数=减少';
-COMMENT ON COLUMN pmis_project_change.schedule_impact_days IS '进度影响天数: 正数=延期,负数=提前';
-COMMENT ON COLUMN pmis_project_change.profit_impact IS '利润影响(元)';
-COMMENT ON COLUMN pmis_project_change.profit_impact_pct IS '利润影响比例: 0.05=5%';
-COMMENT ON COLUMN pmis_project_change.risk_level_after IS '变更后风险等级: LOW 低 / MEDIUM 中 / HIGH 高';
-COMMENT ON COLUMN pmis_project_change.affected_wbs_count IS '受影响 WBS 任务数';
-COMMENT ON COLUMN pmis_project_change.affected_staff_count IS '受影响人员数';
-COMMENT ON COLUMN pmis_project_change.major_flag IS '是否重大变更: 0=否,1=是（重大变更需走完整审批流）';
-COMMENT ON COLUMN pmis_project_change.approver_roles IS '审批人角色 JSON 数组: 指定审批节点的角色列表';
-COMMENT ON COLUMN pmis_project_change.applicant_id IS '申请人 ID';
-COMMENT ON COLUMN pmis_project_change.applicant_name IS '申请人姓名（冗余）';
-COMMENT ON COLUMN pmis_project_change.contract_id IS '关联合同 ID（合同变更时必填）';
-COMMENT ON COLUMN pmis_project_change.workflow_id IS '流程实例 ID: 关联工作流引擎的实例';
-COMMENT ON COLUMN pmis_project_change.status IS '变更状态: DRAFT 草稿 / SUBMITTED 已提交 / UNDER_REVIEW 审批中 / APPROVED 已批准 / REJECTED 已驳回 / EXECUTING 执行中';
-COMMENT ON COLUMN pmis_project_change.submitted_at IS '提交时间';
-COMMENT ON COLUMN pmis_project_change.approved_at IS '审批通过时间';
-COMMENT ON COLUMN pmis_project_change.executed_at IS '执行完成时间';
-COMMENT ON COLUMN pmis_project_change.remark IS '备注';
-COMMENT ON COLUMN pmis_project_change.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_project_change.provider_trace_id IS '链路追踪 ID: AI 智能体调用时的 trace 标识';
-COMMENT ON COLUMN pmis_project_change.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_project_change IS '项目变更主表: 5 类变更（SCOPE/COST/CONTRACT/STAFF/SCHEDULE）全过程管理,严格执行 DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING 状态机';
+COMMENT ON COLUMN ydsz_project_change.change_code IS '变更单号: 业务唯一,如 CHG-2026-001';
+COMMENT ON COLUMN ydsz_project_change.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_project_change.change_type IS '变更类型: SCOPE 范围 / COST 成本 / CONTRACT 合同 / STAFF 人员 / SCHEDULE 进度';
+COMMENT ON COLUMN ydsz_project_change.change_title IS '变更标题';
+COMMENT ON COLUMN ydsz_project_change.change_reason IS '变更原因';
+COMMENT ON COLUMN ydsz_project_change.change_desc IS '变更详细描述';
+COMMENT ON COLUMN ydsz_project_change.budget_impact IS '预算影响金额(元): 正数=增加,负数=减少';
+COMMENT ON COLUMN ydsz_project_change.contract_impact IS '合同金额影响(元): 正数=增加,负数=减少';
+COMMENT ON COLUMN ydsz_project_change.schedule_impact_days IS '进度影响天数: 正数=延期,负数=提前';
+COMMENT ON COLUMN ydsz_project_change.profit_impact IS '利润影响(元)';
+COMMENT ON COLUMN ydsz_project_change.profit_impact_pct IS '利润影响比例: 0.05=5%';
+COMMENT ON COLUMN ydsz_project_change.risk_level_after IS '变更后风险等级: LOW 低 / MEDIUM 中 / HIGH 高';
+COMMENT ON COLUMN ydsz_project_change.affected_wbs_count IS '受影响 WBS 任务数';
+COMMENT ON COLUMN ydsz_project_change.affected_staff_count IS '受影响人员数';
+COMMENT ON COLUMN ydsz_project_change.major_flag IS '是否重大变更: 0=否,1=是（重大变更需走完整审批流）';
+COMMENT ON COLUMN ydsz_project_change.approver_roles IS '审批人角色 JSON 数组: 指定审批节点的角色列表';
+COMMENT ON COLUMN ydsz_project_change.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN ydsz_project_change.applicant_name IS '申请人姓名（冗余）';
+COMMENT ON COLUMN ydsz_project_change.contract_id IS '关联合同 ID（合同变更时必填）';
+COMMENT ON COLUMN ydsz_project_change.workflow_id IS '流程实例 ID: 关联工作流引擎的实例';
+COMMENT ON COLUMN ydsz_project_change.status IS '变更状态: DRAFT 草稿 / SUBMITTED 已提交 / UNDER_REVIEW 审批中 / APPROVED 已批准 / REJECTED 已驳回 / EXECUTING 执行中';
+COMMENT ON COLUMN ydsz_project_change.submitted_at IS '提交时间';
+COMMENT ON COLUMN ydsz_project_change.approved_at IS '审批通过时间';
+COMMENT ON COLUMN ydsz_project_change.executed_at IS '执行完成时间';
+COMMENT ON COLUMN ydsz_project_change.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_change.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_project_change.provider_trace_id IS '链路追踪 ID: AI 智能体调用时的 trace 标识';
+COMMENT ON COLUMN ydsz_project_change.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pch_initiation / idx_pch_type_status / idx_pch_major)
 CREATE INDEX IF NOT EXISTS idx_pch_tenant_initiation
-    ON pmis_project_change(tenant_id, initiation_id)
+    ON ydsz_project_change(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pch_tenant_type_status
-    ON pmis_project_change(tenant_id, change_type, status)
+    ON ydsz_project_change(tenant_id, change_type, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pch_initiation_major
-    ON pmis_project_change(initiation_id, major_flag);
+    ON ydsz_project_change(initiation_id, major_flag);
 
 -- =====================================================
--- 3. 交付物标准表 pmis_execution_delivery_standard
+-- 3. 交付物标准表 ydsz_execution_delivery_standard
 -- =====================================================
 -- P1-6: 已废弃,无需 DROP
-CREATE TABLE IF NOT EXISTS pmis_execution_delivery_standard(
+CREATE TABLE IF NOT EXISTS ydsz_execution_delivery_standard(
     id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     project_type          VARCHAR(32)  NOT NULL,                 -- ProjectType
     project_level         VARCHAR(16),                            -- L1-L18, NULL=全部
@@ -4450,32 +4450,32 @@ CREATE TABLE IF NOT EXISTS pmis_execution_delivery_standard(
     CONSTRAINT ck_peds_trigger_tr      CHECK (trigger_tr IN (0, 1)),
     CONSTRAINT ck_peds_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_execution_delivery_standard IS '交付物标准库: 8 类项目类型 × 5 个门径阶段（CD1/CD2/CD3/CD4/CD5）的标准交付物定义,新建项目时按类型/级别自动生成交付物清单';
-COMMENT ON COLUMN pmis_execution_delivery_standard.project_type IS '项目类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
-COMMENT ON COLUMN pmis_execution_delivery_standard.project_level IS '项目级别: L1-L18,NULL 表示全级别适用';
-COMMENT ON COLUMN pmis_execution_delivery_standard.delivery_name IS '交付物名称: 例如 SRS 需求规格';
-COMMENT ON COLUMN pmis_execution_delivery_standard.delivery_category IS '交付物类别: DOC 文档 / CODE 代码 / MODEL 模型 / RUNBOOK 运维手册 / REPORT 报告 / OTHER 其他';
-COMMENT ON COLUMN pmis_execution_delivery_standard.stage IS '所属门径阶段: CD1_KICKOFF 启动 / CD2_DESIGN 设计 / CD3_BUILD 建设 / CD4_UAT UAT / CD5_GO_LIVE 上线';
-COMMENT ON COLUMN pmis_execution_delivery_standard.required IS '是否必交付: 1=必交付,0=可选';
-COMMENT ON COLUMN pmis_execution_delivery_standard.trigger_tr IS '是否触发技术评审(TR): 0=否,1=是';
-COMMENT ON COLUMN pmis_execution_delivery_standard.acceptance_criteria IS '验收标准: 文本描述,例如"客户签字"';
-COMMENT ON COLUMN pmis_execution_delivery_standard.template_ref IS '模板引用: 关联的模板路径或编码';
-COMMENT ON COLUMN pmis_execution_delivery_standard.remark IS '备注';
-COMMENT ON COLUMN pmis_execution_delivery_standard.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_execution_delivery_standard.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_execution_delivery_standard.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_execution_delivery_standard IS '交付物标准库: 8 类项目类型 × 5 个门径阶段（CD1/CD2/CD3/CD4/CD5）的标准交付物定义,新建项目时按类型/级别自动生成交付物清单';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.project_type IS '项目类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.project_level IS '项目级别: L1-L18,NULL 表示全级别适用';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.delivery_name IS '交付物名称: 例如 SRS 需求规格';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.delivery_category IS '交付物类别: DOC 文档 / CODE 代码 / MODEL 模型 / RUNBOOK 运维手册 / REPORT 报告 / OTHER 其他';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.stage IS '所属门径阶段: CD1_KICKOFF 启动 / CD2_DESIGN 设计 / CD3_BUILD 建设 / CD4_UAT UAT / CD5_GO_LIVE 上线';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.required IS '是否必交付: 1=必交付,0=可选';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.trigger_tr IS '是否触发技术评审(TR): 0=否,1=是';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.acceptance_criteria IS '验收标准: 文本描述,例如"客户签字"';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.template_ref IS '模板引用: 关联的模板路径或编码';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.remark IS '备注';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_execution_delivery_standard.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_peds_type_level / idx_peds_stage)
 CREATE INDEX IF NOT EXISTS idx_peds_tenant_type_level
-    ON pmis_execution_delivery_standard(tenant_id, project_type, project_level)
+    ON ydsz_execution_delivery_standard(tenant_id, project_type, project_level)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_peds_tenant_stage
-    ON pmis_execution_delivery_standard(tenant_id, stage)
+    ON ydsz_execution_delivery_standard(tenant_id, stage)
     WHERE deleted = 0;
 
 -- =====================================================
--- 4. 交付物实例表 pmis_execution_delivery_item
+-- 4. 交付物实例表 ydsz_execution_delivery_item
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_execution_delivery_item(
+CREATE TABLE IF NOT EXISTS ydsz_execution_delivery_item(
     id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     item_code             VARCHAR(64)  NOT NULL,
     initiation_id         VARCHAR(20)       NOT NULL,
@@ -4516,47 +4516,47 @@ CREATE TABLE IF NOT EXISTS pmis_execution_delivery_item(
     CONSTRAINT ck_pedi_tr_completed    CHECK (tr_completed IN (0, 1)),
     CONSTRAINT ck_pedi_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_execution_delivery_item IS '交付物实例表: 项目立项后,按交付物标准库自动生成具体交付物实例,跟踪提交/验收全过程';
-COMMENT ON COLUMN pmis_execution_delivery_item.item_code IS '交付物实例编码: 业务唯一,如 DI-2026-001';
-COMMENT ON COLUMN pmis_execution_delivery_item.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_execution_delivery_item.standard_id IS '关联交付物标准 ID: 追溯到标准库';
-COMMENT ON COLUMN pmis_execution_delivery_item.project_type IS '项目类型: 冗余字段,便于快速查询';
-COMMENT ON COLUMN pmis_execution_delivery_item.project_level IS '项目级别: 冗余字段';
-COMMENT ON COLUMN pmis_execution_delivery_item.delivery_name IS '交付物名称';
-COMMENT ON COLUMN pmis_execution_delivery_item.delivery_category IS '交付物类别: DOC/CODE/MODEL/RUNBOOK/REPORT/OTHER';
-COMMENT ON COLUMN pmis_execution_delivery_item.stage IS '所属门径阶段: CD1-CD5';
-COMMENT ON COLUMN pmis_execution_delivery_item.required IS '是否必交付: 0=否,1=是';
-COMMENT ON COLUMN pmis_execution_delivery_item.planned_submit_date IS '计划提交日期';
-COMMENT ON COLUMN pmis_execution_delivery_item.actual_submit_date IS '实际提交日期';
-COMMENT ON COLUMN pmis_execution_delivery_item.accepted_date IS '验收日期';
-COMMENT ON COLUMN pmis_execution_delivery_item.submitter_id IS '提交人 ID';
-COMMENT ON COLUMN pmis_execution_delivery_item.submitter_name IS '提交人姓名（冗余）';
-COMMENT ON COLUMN pmis_execution_delivery_item.reviewer_id IS '验收人 ID';
-COMMENT ON COLUMN pmis_execution_delivery_item.reviewer_name IS '验收人姓名（冗余）';
-COMMENT ON COLUMN pmis_execution_delivery_item.review_comment IS '验收意见';
-COMMENT ON COLUMN pmis_execution_delivery_item.status IS '交付物状态: PENDING 待提交 / SUBMITTED 已提交 / IN_REVIEW 验收中 / ACCEPTED 已验收 / REJECTED 已驳回 / REVISION 待修订';
-COMMENT ON COLUMN pmis_execution_delivery_item.tr_required IS '是否需要技术评审: 0=否,1=是';
-COMMENT ON COLUMN pmis_execution_delivery_item.tr_completed IS '技术评审是否完成: 0=否,1=是';
-COMMENT ON COLUMN pmis_execution_delivery_item.file_ids IS '关联文件 ID 列表 JSON 数组: 引用 pmis_file_metadata.id';
-COMMENT ON COLUMN pmis_execution_delivery_item.remark IS '备注';
-COMMENT ON COLUMN pmis_execution_delivery_item.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_execution_delivery_item.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_execution_delivery_item.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_execution_delivery_item IS '交付物实例表: 项目立项后,按交付物标准库自动生成具体交付物实例,跟踪提交/验收全过程';
+COMMENT ON COLUMN ydsz_execution_delivery_item.item_code IS '交付物实例编码: 业务唯一,如 DI-2026-001';
+COMMENT ON COLUMN ydsz_execution_delivery_item.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_execution_delivery_item.standard_id IS '关联交付物标准 ID: 追溯到标准库';
+COMMENT ON COLUMN ydsz_execution_delivery_item.project_type IS '项目类型: 冗余字段,便于快速查询';
+COMMENT ON COLUMN ydsz_execution_delivery_item.project_level IS '项目级别: 冗余字段';
+COMMENT ON COLUMN ydsz_execution_delivery_item.delivery_name IS '交付物名称';
+COMMENT ON COLUMN ydsz_execution_delivery_item.delivery_category IS '交付物类别: DOC/CODE/MODEL/RUNBOOK/REPORT/OTHER';
+COMMENT ON COLUMN ydsz_execution_delivery_item.stage IS '所属门径阶段: CD1-CD5';
+COMMENT ON COLUMN ydsz_execution_delivery_item.required IS '是否必交付: 0=否,1=是';
+COMMENT ON COLUMN ydsz_execution_delivery_item.planned_submit_date IS '计划提交日期';
+COMMENT ON COLUMN ydsz_execution_delivery_item.actual_submit_date IS '实际提交日期';
+COMMENT ON COLUMN ydsz_execution_delivery_item.accepted_date IS '验收日期';
+COMMENT ON COLUMN ydsz_execution_delivery_item.submitter_id IS '提交人 ID';
+COMMENT ON COLUMN ydsz_execution_delivery_item.submitter_name IS '提交人姓名（冗余）';
+COMMENT ON COLUMN ydsz_execution_delivery_item.reviewer_id IS '验收人 ID';
+COMMENT ON COLUMN ydsz_execution_delivery_item.reviewer_name IS '验收人姓名（冗余）';
+COMMENT ON COLUMN ydsz_execution_delivery_item.review_comment IS '验收意见';
+COMMENT ON COLUMN ydsz_execution_delivery_item.status IS '交付物状态: PENDING 待提交 / SUBMITTED 已提交 / IN_REVIEW 验收中 / ACCEPTED 已验收 / REJECTED 已驳回 / REVISION 待修订';
+COMMENT ON COLUMN ydsz_execution_delivery_item.tr_required IS '是否需要技术评审: 0=否,1=是';
+COMMENT ON COLUMN ydsz_execution_delivery_item.tr_completed IS '技术评审是否完成: 0=否,1=是';
+COMMENT ON COLUMN ydsz_execution_delivery_item.file_ids IS '关联文件 ID 列表 JSON 数组: 引用 ydsz_file_metadata.id';
+COMMENT ON COLUMN ydsz_execution_delivery_item.remark IS '备注';
+COMMENT ON COLUMN ydsz_execution_delivery_item.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_execution_delivery_item.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_execution_delivery_item.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pedi_initiation / idx_pedi_stage / idx_pedi_status)
 CREATE INDEX IF NOT EXISTS idx_pedi_tenant_initiation
-    ON pmis_execution_delivery_item(tenant_id, initiation_id)
+    ON ydsz_execution_delivery_item(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pedi_tenant_initiation_stage
-    ON pmis_execution_delivery_item(tenant_id, initiation_id, stage)
+    ON ydsz_execution_delivery_item(tenant_id, initiation_id, stage)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pedi_tenant_status
-    ON pmis_execution_delivery_item(tenant_id, status)
+    ON ydsz_execution_delivery_item(tenant_id, status)
     WHERE deleted = 0;
 
 -- =====================================================
--- 5. 项目结项主表 pmis_execution_closure
+-- 5. 项目结项主表 ydsz_execution_closure
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_execution_closure(
+CREATE TABLE IF NOT EXISTS ydsz_execution_closure(
     id                       VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     closure_code             VARCHAR(64)  NOT NULL,
     initiation_id            VARCHAR(20)       NOT NULL,
@@ -4605,51 +4605,51 @@ CREATE TABLE IF NOT EXISTS pmis_execution_closure(
     CONSTRAINT ck_pec_progress          CHECK (progress_pct >= 0 AND progress_pct <= 100),
     CONSTRAINT ck_pec_warranty_months   CHECK (warranty_months >= 0)
 );
-COMMENT ON TABLE  pmis_execution_closure IS '项目结项主表: 3 种结项类型（FORMAL/PRE_CLOSURE/FORCED）,由 ClosureAdmissionValidator 按类型校验准入条件';
-COMMENT ON COLUMN pmis_execution_closure.closure_code IS '结项单号: 业务唯一,如 PC-2026-001';
-COMMENT ON COLUMN pmis_execution_closure.initiation_id IS '所属立项 ID: 一对一关联';
-COMMENT ON COLUMN pmis_execution_closure.closure_type IS '结项类型: FORMAL 正式结项 / PRE_CLOSURE 预结项 / FORCED 强制结项';
-COMMENT ON COLUMN pmis_execution_closure.closure_reason IS '结项原因';
-COMMENT ON COLUMN pmis_execution_closure.contract_amount IS '合同总金额(元)';
-COMMENT ON COLUMN pmis_execution_closure.received_amount IS '已回款金额(元)';
-COMMENT ON COLUMN pmis_execution_closure.received_ratio IS '回款完成率: 0.85=85%';
-COMMENT ON COLUMN pmis_execution_closure.cpi IS '成本绩效指数 CPI: >1 节约,<1 超支,1.0 为基准';
-COMMENT ON COLUMN pmis_execution_closure.spi IS '进度绩效指数 SPI: >1 提前,<1 滞后,1.0 为基准';
-COMMENT ON COLUMN pmis_execution_closure.gross_margin IS '毛利率: 0.25=25%';
-COMMENT ON COLUMN pmis_execution_closure.progress_pct IS '完成进度百分比: 0-100';
-COMMENT ON COLUMN pmis_execution_closure.total_cost IS '累计成本(元)';
-COMMENT ON COLUMN pmis_execution_closure.warranty_months IS '质保期(月): 0=无质保';
-COMMENT ON COLUMN pmis_execution_closure.warranty_start_date IS '质保期开始日期';
-COMMENT ON COLUMN pmis_execution_closure.warranty_end_date IS '质保期结束日期';
-COMMENT ON COLUMN pmis_execution_closure.planned_archive_date IS '计划归档日期';
-COMMENT ON COLUMN pmis_execution_closure.actual_archive_date IS '实际归档日期';
-COMMENT ON COLUMN pmis_execution_closure.archive_file_ids IS '归档文件 ID 列表 JSON: 引用 pmis_file_metadata.id';
-COMMENT ON COLUMN pmis_execution_closure.locked IS '是否锁定: 0=否,1=是（结项后锁定,防止修改）';
-COMMENT ON COLUMN pmis_execution_closure.status IS '结项状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档';
-COMMENT ON COLUMN pmis_execution_closure.remark IS '备注';
-COMMENT ON COLUMN pmis_execution_closure.applicant_id IS '申请人 ID';
-COMMENT ON COLUMN pmis_execution_closure.applicant_name IS '申请人姓名（冗余）';
-COMMENT ON COLUMN pmis_execution_closure.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_execution_closure.approver_name IS '审批人姓名（冗余）';
-COMMENT ON COLUMN pmis_execution_closure.submitted_at IS '提交时间';
-COMMENT ON COLUMN pmis_execution_closure.approved_at IS '审批通过时间';
-COMMENT ON COLUMN pmis_execution_closure.archived_at IS '归档时间';
-COMMENT ON COLUMN pmis_execution_closure.approval_comment IS '审批意见';
-COMMENT ON COLUMN pmis_execution_closure.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_execution_closure.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_execution_closure.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_execution_closure IS '项目结项主表: 3 种结项类型（FORMAL/PRE_CLOSURE/FORCED）,由 ClosureAdmissionValidator 按类型校验准入条件';
+COMMENT ON COLUMN ydsz_execution_closure.closure_code IS '结项单号: 业务唯一,如 PC-2026-001';
+COMMENT ON COLUMN ydsz_execution_closure.initiation_id IS '所属立项 ID: 一对一关联';
+COMMENT ON COLUMN ydsz_execution_closure.closure_type IS '结项类型: FORMAL 正式结项 / PRE_CLOSURE 预结项 / FORCED 强制结项';
+COMMENT ON COLUMN ydsz_execution_closure.closure_reason IS '结项原因';
+COMMENT ON COLUMN ydsz_execution_closure.contract_amount IS '合同总金额(元)';
+COMMENT ON COLUMN ydsz_execution_closure.received_amount IS '已回款金额(元)';
+COMMENT ON COLUMN ydsz_execution_closure.received_ratio IS '回款完成率: 0.85=85%';
+COMMENT ON COLUMN ydsz_execution_closure.cpi IS '成本绩效指数 CPI: >1 节约,<1 超支,1.0 为基准';
+COMMENT ON COLUMN ydsz_execution_closure.spi IS '进度绩效指数 SPI: >1 提前,<1 滞后,1.0 为基准';
+COMMENT ON COLUMN ydsz_execution_closure.gross_margin IS '毛利率: 0.25=25%';
+COMMENT ON COLUMN ydsz_execution_closure.progress_pct IS '完成进度百分比: 0-100';
+COMMENT ON COLUMN ydsz_execution_closure.total_cost IS '累计成本(元)';
+COMMENT ON COLUMN ydsz_execution_closure.warranty_months IS '质保期(月): 0=无质保';
+COMMENT ON COLUMN ydsz_execution_closure.warranty_start_date IS '质保期开始日期';
+COMMENT ON COLUMN ydsz_execution_closure.warranty_end_date IS '质保期结束日期';
+COMMENT ON COLUMN ydsz_execution_closure.planned_archive_date IS '计划归档日期';
+COMMENT ON COLUMN ydsz_execution_closure.actual_archive_date IS '实际归档日期';
+COMMENT ON COLUMN ydsz_execution_closure.archive_file_ids IS '归档文件 ID 列表 JSON: 引用 ydsz_file_metadata.id';
+COMMENT ON COLUMN ydsz_execution_closure.locked IS '是否锁定: 0=否,1=是（结项后锁定,防止修改）';
+COMMENT ON COLUMN ydsz_execution_closure.status IS '结项状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档';
+COMMENT ON COLUMN ydsz_execution_closure.remark IS '备注';
+COMMENT ON COLUMN ydsz_execution_closure.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN ydsz_execution_closure.applicant_name IS '申请人姓名（冗余）';
+COMMENT ON COLUMN ydsz_execution_closure.approver_id IS '审批人 ID';
+COMMENT ON COLUMN ydsz_execution_closure.approver_name IS '审批人姓名（冗余）';
+COMMENT ON COLUMN ydsz_execution_closure.submitted_at IS '提交时间';
+COMMENT ON COLUMN ydsz_execution_closure.approved_at IS '审批通过时间';
+COMMENT ON COLUMN ydsz_execution_closure.archived_at IS '归档时间';
+COMMENT ON COLUMN ydsz_execution_closure.approval_comment IS '审批意见';
+COMMENT ON COLUMN ydsz_execution_closure.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_execution_closure.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_execution_closure.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pec_initiation / idx_pec_type_status)
 CREATE INDEX IF NOT EXISTS idx_pec_tenant_initiation
-    ON pmis_execution_closure(tenant_id, initiation_id)
+    ON ydsz_execution_closure(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pec_tenant_type_status
-    ON pmis_execution_closure(tenant_id, closure_type, status)
+    ON ydsz_execution_closure(tenant_id, closure_type, status)
     WHERE deleted = 0;
 
 -- =====================================================
 -- 7. 初始化 8 类项目类型的默认交付物标准（CD1-CD5）
 -- =====================================================
-INSERT INTO pmis_execution_delivery_standard
+INSERT INTO ydsz_execution_delivery_standard
     (project_type, project_level, delivery_name, delivery_category, stage, required, trigger_tr, acceptance_criteria, tenant_id)
 VALUES
     -- 固定总价 FIXED_PRICE
@@ -4712,7 +4712,7 @@ VALUES
 -- =====================================================
 -- 8. 初始化 8 类项目类型的默认合同模板
 -- =====================================================
-INSERT INTO pmis_project_contract_template
+INSERT INTO ydsz_project_contract_template
     (template_code, template_name, contract_type, version, payment_terms, default_payment_days, default_penalty_rate, sla_description, deliverables, status, tenant_id)
 VALUES
     ('TPL-FIX-001',  '固定总价标准合同',          'FIXED_PRICE',  '1.0.0', '3-3-3-1（预付款30%/启动30%/UAT30%/质保10%）', 30, 0.0010, 'P1 4小时响应/P2 1个工作日/P3 3个工作日', '系统源码/设计文档/验收报告', 'PUBLISHED', 1),
@@ -4730,14 +4730,14 @@ VALUES
 -- =====================================================
 -- PMIS 批次9 DDL：开票/回款/客户信用
 -- 版本: V1.0.0_012
--- 描述: 发票主表(pmis_project_invoice)、回款主表(pmis_project_payment)、
---       客户信用表(pmis_project_customer_credit)
+-- 描述: 发票主表(ydsz_project_invoice)、回款主表(ydsz_project_payment)、
+--       客户信用表(ydsz_project_customer_credit)
 -- =====================================================
 
 -- =====================================================
--- 1. 发票主表 pmis_project_invoice
+-- 1. 发票主表 ydsz_project_invoice
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_invoice(
+CREATE TABLE IF NOT EXISTS ydsz_project_invoice(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     invoice_no          VARCHAR(64),                              -- 财务发票号
     invoice_code        VARCHAR(64)  NOT NULL,                    -- 业务编号（系统生成）
@@ -4785,65 +4785,65 @@ CREATE TABLE IF NOT EXISTS pmis_project_invoice(
     CONSTRAINT ck_pfi_amount_nonneg     CHECK (amount >= 0 AND tax_amount >= 0 AND net_amount >= 0),
     CONSTRAINT ck_pfi_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_project_invoice IS '发票主表: 支持正常开票与红冲（RED_REVERSED）,执行 InvoiceStatus 状态机校验,invoice_code 唯一,invoice_no 在 ISSUED 时分配';
-COMMENT ON COLUMN pmis_project_invoice.invoice_no IS '财务发票号: 税务局分配的纸质/电子发票号,ISSUED 状态时分配';
-COMMENT ON COLUMN pmis_project_invoice.invoice_code IS '业务编号: 系统生成的唯一编码,如 INV-2026-001';
-COMMENT ON COLUMN pmis_project_invoice.invoice_type IS '发票类型: NORMAL 正常开票 / RED_REVERSE 红冲发票';
-COMMENT ON COLUMN pmis_project_invoice.contract_id IS '所属合同 ID';
-COMMENT ON COLUMN pmis_project_invoice.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_project_invoice.customer_id IS '客户 ID';
-COMMENT ON COLUMN pmis_project_invoice.customer_name IS '客户名称（冗余）';
-COMMENT ON COLUMN pmis_project_invoice.invoice_basis IS '开票依据: MILESTONE 里程碑 / OUTSOURCING 外包人天 / MONTHLY 月度结算 / FINAL 终验 / OTHER 其他';
-COMMENT ON COLUMN pmis_project_invoice.amount IS '含税金额(元)';
-COMMENT ON COLUMN pmis_project_invoice.tax_amount IS '税额(元)';
-COMMENT ON COLUMN pmis_project_invoice.net_amount IS '不含税金额(元)';
-COMMENT ON COLUMN pmis_project_invoice.tax_rate IS '税率: 0.06=6%,0.13=13%';
-COMMENT ON COLUMN pmis_project_invoice.currency IS '币种: CNY/USD/EUR,默认 CNY';
-COMMENT ON COLUMN pmis_project_invoice.invoice_date IS '开票日期';
-COMMENT ON COLUMN pmis_project_invoice.tax_period IS '税务所属期: 格式 YYYY-MM,用于税务申报';
-COMMENT ON COLUMN pmis_project_invoice.title IS '发票抬头';
-COMMENT ON COLUMN pmis_project_invoice.tax_no IS '纳税人识别号: 客户税号';
-COMMENT ON COLUMN pmis_project_invoice.bank_info IS '开户行+账号: 客户收票方银行信息';
-COMMENT ON COLUMN pmis_project_invoice.address IS '客户地址';
-COMMENT ON COLUMN pmis_project_invoice.phone IS '客户电话';
-COMMENT ON COLUMN pmis_project_invoice.remark IS '备注';
-COMMENT ON COLUMN pmis_project_invoice.status IS '发票状态: DRAFT 草稿 / SUBMITTED 已提交 / ISSUED 已开票 / RED_REVERSED 已红冲 / CANCELLED 已取消,严格状态机';
-COMMENT ON COLUMN pmis_project_invoice.reversed_by_id IS '红冲来源发票 ID: 红冲发票指向被红冲的原始发票';
-COMMENT ON COLUMN pmis_project_invoice.attachment_id IS '发票扫描件: 引用 pmis_file_metadata.id';
-COMMENT ON COLUMN pmis_project_invoice.approval_comment IS '审批意见';
-COMMENT ON COLUMN pmis_project_invoice.applied_by IS '申请人 ID';
-COMMENT ON COLUMN pmis_project_invoice.approved_by IS '审批人 ID';
-COMMENT ON COLUMN pmis_project_invoice.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_project_invoice.issued_by IS '开票人 ID';
-COMMENT ON COLUMN pmis_project_invoice.issued_at IS '开票时间';
-COMMENT ON COLUMN pmis_project_invoice.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_project_invoice.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_invoice.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_project_invoice IS '发票主表: 支持正常开票与红冲（RED_REVERSED）,执行 InvoiceStatus 状态机校验,invoice_code 唯一,invoice_no 在 ISSUED 时分配';
+COMMENT ON COLUMN ydsz_project_invoice.invoice_no IS '财务发票号: 税务局分配的纸质/电子发票号,ISSUED 状态时分配';
+COMMENT ON COLUMN ydsz_project_invoice.invoice_code IS '业务编号: 系统生成的唯一编码,如 INV-2026-001';
+COMMENT ON COLUMN ydsz_project_invoice.invoice_type IS '发票类型: NORMAL 正常开票 / RED_REVERSE 红冲发票';
+COMMENT ON COLUMN ydsz_project_invoice.contract_id IS '所属合同 ID';
+COMMENT ON COLUMN ydsz_project_invoice.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_project_invoice.customer_id IS '客户 ID';
+COMMENT ON COLUMN ydsz_project_invoice.customer_name IS '客户名称（冗余）';
+COMMENT ON COLUMN ydsz_project_invoice.invoice_basis IS '开票依据: MILESTONE 里程碑 / OUTSOURCING 外包人天 / MONTHLY 月度结算 / FINAL 终验 / OTHER 其他';
+COMMENT ON COLUMN ydsz_project_invoice.amount IS '含税金额(元)';
+COMMENT ON COLUMN ydsz_project_invoice.tax_amount IS '税额(元)';
+COMMENT ON COLUMN ydsz_project_invoice.net_amount IS '不含税金额(元)';
+COMMENT ON COLUMN ydsz_project_invoice.tax_rate IS '税率: 0.06=6%,0.13=13%';
+COMMENT ON COLUMN ydsz_project_invoice.currency IS '币种: CNY/USD/EUR,默认 CNY';
+COMMENT ON COLUMN ydsz_project_invoice.invoice_date IS '开票日期';
+COMMENT ON COLUMN ydsz_project_invoice.tax_period IS '税务所属期: 格式 YYYY-MM,用于税务申报';
+COMMENT ON COLUMN ydsz_project_invoice.title IS '发票抬头';
+COMMENT ON COLUMN ydsz_project_invoice.tax_no IS '纳税人识别号: 客户税号';
+COMMENT ON COLUMN ydsz_project_invoice.bank_info IS '开户行+账号: 客户收票方银行信息';
+COMMENT ON COLUMN ydsz_project_invoice.address IS '客户地址';
+COMMENT ON COLUMN ydsz_project_invoice.phone IS '客户电话';
+COMMENT ON COLUMN ydsz_project_invoice.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_invoice.status IS '发票状态: DRAFT 草稿 / SUBMITTED 已提交 / ISSUED 已开票 / RED_REVERSED 已红冲 / CANCELLED 已取消,严格状态机';
+COMMENT ON COLUMN ydsz_project_invoice.reversed_by_id IS '红冲来源发票 ID: 红冲发票指向被红冲的原始发票';
+COMMENT ON COLUMN ydsz_project_invoice.attachment_id IS '发票扫描件: 引用 ydsz_file_metadata.id';
+COMMENT ON COLUMN ydsz_project_invoice.approval_comment IS '审批意见';
+COMMENT ON COLUMN ydsz_project_invoice.applied_by IS '申请人 ID';
+COMMENT ON COLUMN ydsz_project_invoice.approved_by IS '审批人 ID';
+COMMENT ON COLUMN ydsz_project_invoice.approved_at IS '审批时间';
+COMMENT ON COLUMN ydsz_project_invoice.issued_by IS '开票人 ID';
+COMMENT ON COLUMN ydsz_project_invoice.issued_at IS '开票时间';
+COMMENT ON COLUMN ydsz_project_invoice.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_project_invoice.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_invoice.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pfi_*)
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_contract
-    ON pmis_project_invoice(tenant_id, contract_id)
+    ON ydsz_project_invoice(tenant_id, contract_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_initiation
-    ON pmis_project_invoice(tenant_id, initiation_id)
+    ON ydsz_project_invoice(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_customer
-    ON pmis_project_invoice(tenant_id, customer_id)
+    ON ydsz_project_invoice(tenant_id, customer_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_status_type
-    ON pmis_project_invoice(tenant_id, status, invoice_type)
+    ON ydsz_project_invoice(tenant_id, status, invoice_type)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_invoice_date
-    ON pmis_project_invoice(tenant_id, invoice_date)
+    ON ydsz_project_invoice(tenant_id, invoice_date)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_tax_period
-    ON pmis_project_invoice(tenant_id, tax_period)
+    ON ydsz_project_invoice(tenant_id, tax_period)
     WHERE deleted = 0;
 
 -- =====================================================
--- 2. 回款主表 pmis_project_payment
+-- 2. 回款主表 ydsz_project_payment
 -- =====================================================
 -- P1-6: 已废弃,无需 DROP
-CREATE TABLE IF NOT EXISTS pmis_project_payment(
+CREATE TABLE IF NOT EXISTS ydsz_project_payment(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
     payment_code        VARCHAR(64)  NOT NULL,                    -- 业务编号
@@ -4880,52 +4880,52 @@ CREATE TABLE IF NOT EXISTS pmis_project_payment(
     CONSTRAINT ck_pfp_alloc_le_amount   CHECK (allocated_amount <= amount),
     CONSTRAINT ck_pfp_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_project_payment IS '回款主表: 客户回款记录,支持核销发票（allocated_amount/unallocated_amount）,unallocatedAmount=0 时自动转 ALLOCATED';
-COMMENT ON COLUMN pmis_project_payment.payment_no IS '回款流水号: 银行流水号或系统生成';
-COMMENT ON COLUMN pmis_project_payment.payment_code IS '业务编号: 系统生成的唯一编码,如 PAY-2026-001';
-COMMENT ON COLUMN pmis_project_payment.contract_id IS '所属合同 ID';
-COMMENT ON COLUMN pmis_project_payment.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_project_payment.customer_id IS '客户 ID';
-COMMENT ON COLUMN pmis_project_payment.customer_name IS '客户名称（冗余）';
-COMMENT ON COLUMN pmis_project_payment.amount IS '回款总金额(元)';
-COMMENT ON COLUMN pmis_project_payment.currency IS '币种: 默认 CNY';
-COMMENT ON COLUMN pmis_project_payment.payment_method IS '支付方式: BANK_TRANSFER 银行转账 / CHECK 支票 / CASH 现金 / OTHER 其他';
-COMMENT ON COLUMN pmis_project_payment.payment_date IS '到账日期';
-COMMENT ON COLUMN pmis_project_payment.bank_account IS '客户付款账号';
-COMMENT ON COLUMN pmis_project_payment.our_bank_account IS '我方收款账号';
-COMMENT ON COLUMN pmis_project_payment.bank_reference IS '银行流水号: 银行端的流水标识';
-COMMENT ON COLUMN pmis_project_payment.invoice_allocation IS '已分配发票 ID 列表: 逗号分隔';
-COMMENT ON COLUMN pmis_project_payment.allocated_amount IS '已核销金额(元): 关联到发票';
-COMMENT ON COLUMN pmis_project_payment.unallocated_amount IS '未核销金额(元): amount - allocatedAmount';
-COMMENT ON COLUMN pmis_project_payment.status IS '回款状态: PENDING 待确认 / RECEIVED 已到账 / PARTIAL 部分核销 / ALLOCATED 已核销完 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_project_payment.remark IS '备注';
-COMMENT ON COLUMN pmis_project_payment.confirmed_by IS '确认人 ID: 财务确认到账';
-COMMENT ON COLUMN pmis_project_payment.confirmed_at IS '确认时间';
-COMMENT ON COLUMN pmis_project_payment.recorded_by IS '录入人 ID';
-COMMENT ON COLUMN pmis_project_payment.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_project_payment.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_payment.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_project_payment IS '回款主表: 客户回款记录,支持核销发票（allocated_amount/unallocated_amount）,unallocatedAmount=0 时自动转 ALLOCATED';
+COMMENT ON COLUMN ydsz_project_payment.payment_no IS '回款流水号: 银行流水号或系统生成';
+COMMENT ON COLUMN ydsz_project_payment.payment_code IS '业务编号: 系统生成的唯一编码,如 PAY-2026-001';
+COMMENT ON COLUMN ydsz_project_payment.contract_id IS '所属合同 ID';
+COMMENT ON COLUMN ydsz_project_payment.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_project_payment.customer_id IS '客户 ID';
+COMMENT ON COLUMN ydsz_project_payment.customer_name IS '客户名称（冗余）';
+COMMENT ON COLUMN ydsz_project_payment.amount IS '回款总金额(元)';
+COMMENT ON COLUMN ydsz_project_payment.currency IS '币种: 默认 CNY';
+COMMENT ON COLUMN ydsz_project_payment.payment_method IS '支付方式: BANK_TRANSFER 银行转账 / CHECK 支票 / CASH 现金 / OTHER 其他';
+COMMENT ON COLUMN ydsz_project_payment.payment_date IS '到账日期';
+COMMENT ON COLUMN ydsz_project_payment.bank_account IS '客户付款账号';
+COMMENT ON COLUMN ydsz_project_payment.our_bank_account IS '我方收款账号';
+COMMENT ON COLUMN ydsz_project_payment.bank_reference IS '银行流水号: 银行端的流水标识';
+COMMENT ON COLUMN ydsz_project_payment.invoice_allocation IS '已分配发票 ID 列表: 逗号分隔';
+COMMENT ON COLUMN ydsz_project_payment.allocated_amount IS '已核销金额(元): 关联到发票';
+COMMENT ON COLUMN ydsz_project_payment.unallocated_amount IS '未核销金额(元): amount - allocatedAmount';
+COMMENT ON COLUMN ydsz_project_payment.status IS '回款状态: PENDING 待确认 / RECEIVED 已到账 / PARTIAL 部分核销 / ALLOCATED 已核销完 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_project_payment.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_payment.confirmed_by IS '确认人 ID: 财务确认到账';
+COMMENT ON COLUMN ydsz_project_payment.confirmed_at IS '确认时间';
+COMMENT ON COLUMN ydsz_project_payment.recorded_by IS '录入人 ID';
+COMMENT ON COLUMN ydsz_project_payment.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_project_payment.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_payment.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pfp_*)
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_contract
-    ON pmis_project_payment(tenant_id, contract_id)
+    ON ydsz_project_payment(tenant_id, contract_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_initiation
-    ON pmis_project_payment(tenant_id, initiation_id)
+    ON ydsz_project_payment(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_status
-    ON pmis_project_payment(tenant_id, customer_id, status)
+    ON ydsz_project_payment(tenant_id, customer_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_payment_date
-    ON pmis_project_payment(tenant_id, payment_date)
+    ON ydsz_project_payment(tenant_id, payment_date)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_unalloc
-    ON pmis_project_payment(tenant_id, customer_id, unallocated_amount)
+    ON ydsz_project_payment(tenant_id, customer_id, unallocated_amount)
     WHERE deleted = 0 AND status IN ('PENDING','RECEIVED','PARTIAL');
 
 -- =====================================================
--- 3. 客户信用表 pmis_project_customer_credit
+-- 3. 客户信用表 ydsz_project_customer_credit
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_customer_credit(
+CREATE TABLE IF NOT EXISTS ydsz_project_customer_credit(
     id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     customer_id           VARCHAR(20)       NOT NULL,
     customer_name         VARCHAR(256),
@@ -4955,29 +4955,29 @@ CREATE TABLE IF NOT EXISTS pmis_project_customer_credit(
     CONSTRAINT ck_pfcc_count_nonneg      CHECK (contract_count >= 0 AND overdue_count >= 0),
     CONSTRAINT ck_pfcc_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_project_customer_credit IS '客户信用表: 客户信用评分与等级（A/B/C/D）,CustomerCreditScoreEvaluator 评分（0-100）';
-COMMENT ON COLUMN pmis_project_customer_credit.customer_id IS '客户 ID: 全局唯一';
-COMMENT ON COLUMN pmis_project_customer_credit.customer_name IS '客户名称（冗余）';
-COMMENT ON COLUMN pmis_project_customer_credit.credit_level IS '信用等级: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59),fromScore() 使用 >= 比较';
-COMMENT ON COLUMN pmis_project_customer_credit.credit_score IS '信用分: 0-100,新客户默认 30 分（A 级基线）';
-COMMENT ON COLUMN pmis_project_customer_credit.total_contract_amount IS '累计合同金额(元)';
-COMMENT ON COLUMN pmis_project_customer_credit.total_invoiced_amount IS '累计开票金额(元)';
-COMMENT ON COLUMN pmis_project_customer_credit.total_received_amount IS '累计回款金额(元)';
-COMMENT ON COLUMN pmis_project_customer_credit.on_time_rate IS '及时回款率: 0.85=85%';
-COMMENT ON COLUMN pmis_project_customer_credit.contract_count IS '合同总数';
-COMMENT ON COLUMN pmis_project_customer_credit.overdue_count IS '逾期次数';
-COMMENT ON COLUMN pmis_project_customer_credit.last_evaluation_at IS '最近一次评估时间';
-COMMENT ON COLUMN pmis_project_customer_credit.evaluator IS '评估人/评估器名称';
-COMMENT ON COLUMN pmis_project_customer_credit.remark IS '备注';
-COMMENT ON COLUMN pmis_project_customer_credit.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_project_customer_credit.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_customer_credit.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_project_customer_credit IS '客户信用表: 客户信用评分与等级（A/B/C/D）,CustomerCreditScoreEvaluator 评分（0-100）';
+COMMENT ON COLUMN ydsz_project_customer_credit.customer_id IS '客户 ID: 全局唯一';
+COMMENT ON COLUMN ydsz_project_customer_credit.customer_name IS '客户名称（冗余）';
+COMMENT ON COLUMN ydsz_project_customer_credit.credit_level IS '信用等级: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59),fromScore() 使用 >= 比较';
+COMMENT ON COLUMN ydsz_project_customer_credit.credit_score IS '信用分: 0-100,新客户默认 30 分（A 级基线）';
+COMMENT ON COLUMN ydsz_project_customer_credit.total_contract_amount IS '累计合同金额(元)';
+COMMENT ON COLUMN ydsz_project_customer_credit.total_invoiced_amount IS '累计开票金额(元)';
+COMMENT ON COLUMN ydsz_project_customer_credit.total_received_amount IS '累计回款金额(元)';
+COMMENT ON COLUMN ydsz_project_customer_credit.on_time_rate IS '及时回款率: 0.85=85%';
+COMMENT ON COLUMN ydsz_project_customer_credit.contract_count IS '合同总数';
+COMMENT ON COLUMN ydsz_project_customer_credit.overdue_count IS '逾期次数';
+COMMENT ON COLUMN ydsz_project_customer_credit.last_evaluation_at IS '最近一次评估时间';
+COMMENT ON COLUMN ydsz_project_customer_credit.evaluator IS '评估人/评估器名称';
+COMMENT ON COLUMN ydsz_project_customer_credit.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_customer_credit.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_project_customer_credit.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_customer_credit.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pfcc_level / idx_pfcc_tenant)
 CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_level_score
-    ON pmis_project_customer_credit(tenant_id, credit_level, credit_score DESC)
+    ON ydsz_project_customer_credit(tenant_id, credit_level, credit_score DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
-    ON pmis_project_customer_credit(tenant_id, updated_at DESC)
+    ON ydsz_project_customer_credit(tenant_id, updated_at DESC)
     WHERE deleted = 0;
 
 -- =====================================================
@@ -4992,15 +4992,15 @@ CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
 -- =====================================================
 -- PMIS 批次10 DDL：EVM 挣值 / 对外报价费率 / 对内成本费率 / 利润测算
 -- 版本: V1.0.0_013
--- 描述: 挣值测量(pmis_evm_measure)、对外报价费率(pmis_rate_card)、
---       对内成本费率(pmis_rate_internal)、利润测算版本(pmis_project_profit_simulation)
+-- 描述: 挣值测量(ydsz_evm_measure)、对外报价费率(ydsz_rate_card)、
+--       对内成本费率(ydsz_rate_internal)、利润测算版本(ydsz_project_profit_simulation)
 -- =====================================================
 
 -- =====================================================
--- 1. EVM 挣值测量表 pmis_evm_measure
+-- 1. EVM 挣值测量表 ydsz_evm_measure
 -- =====================================================
--- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_evm_measure; -- 已废弃
-CREATE TABLE IF NOT EXISTS pmis_evm_measure(
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS ydsz_evm_measure; -- 已废弃
+CREATE TABLE IF NOT EXISTS ydsz_evm_measure(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id       VARCHAR(20)       NOT NULL,
     wbs_task_id         VARCHAR(20),                                -- 可空：项目级度量
@@ -5037,45 +5037,45 @@ CREATE TABLE IF NOT EXISTS pmis_evm_measure(
     CONSTRAINT ck_pem_tcpi_range        CHECK (tcpi > 0),
     CONSTRAINT ck_pem_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_evm_measure IS 'EVM 挣值测量记录: 周期性（按 period 月度）记录 PV/EV/AC/BAC 等挣值指标,EvmCalculator 用 nz() 防空 NPE,EvmAlertLevel 评估预警';
-COMMENT ON COLUMN pmis_evm_measure.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_evm_measure.wbs_task_id IS '关联 WBS 任务 ID: 可空,NULL 表示项目级度量';
-COMMENT ON COLUMN pmis_evm_measure.period IS '测量周期: 格式 YYYY-MM,例如 2026-06';
-COMMENT ON COLUMN pmis_evm_measure.pv IS '计划值 PV(元): 截至当前周期计划完成工作的预算成本';
-COMMENT ON COLUMN pmis_evm_measure.ev IS '挣值 EV(元): 截至当前周期实际完成工作的预算成本';
-COMMENT ON COLUMN pmis_evm_measure.ac IS '实际成本 AC(元): 截至当前周期实际花费';
-COMMENT ON COLUMN pmis_evm_measure.bac IS '完工预算 BAC(元): 项目总预算';
-COMMENT ON COLUMN pmis_evm_measure.cpi IS '成本绩效指数 CPI = EV/AC: >1 节约,<1 超支';
-COMMENT ON COLUMN pmis_evm_measure.spi IS '进度绩效指数 SPI = EV/PV: >1 提前,<1 滞后';
-COMMENT ON COLUMN pmis_evm_measure.cv IS '成本偏差 CV = EV-AC(元)';
-COMMENT ON COLUMN pmis_evm_measure.sv IS '进度偏差 SV = EV-PV(元)';
-COMMENT ON COLUMN pmis_evm_measure.eac IS '完工估算 EAC = BAC/CPI(元)';
-COMMENT ON COLUMN pmis_evm_measure.vac IS '完工偏差 VAC = BAC-EAC(元)';
-COMMENT ON COLUMN pmis_evm_measure.etc IS '完工尚需 ETC = EAC-AC(元)';
-COMMENT ON COLUMN pmis_evm_measure.tcpi IS '完工绩效指数 TCPI = (BAC-EV)/(BAC-AC)';
-COMMENT ON COLUMN pmis_evm_measure.alert_level IS '预警等级: NORMAL 正常 / YELLOW 黄色 / RED 红色,基于 CPI/SPI 阈值';
-COMMENT ON COLUMN pmis_evm_measure.alert_reason IS '预警原因: 描述触发预警的具体指标';
-COMMENT ON COLUMN pmis_evm_measure.measure_date IS '测量日期: 数据采集时点';
-COMMENT ON COLUMN pmis_evm_measure.remark IS '备注';
-COMMENT ON COLUMN pmis_evm_measure.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_evm_measure.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_evm_measure.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_evm_measure IS 'EVM 挣值测量记录: 周期性（按 period 月度）记录 PV/EV/AC/BAC 等挣值指标,EvmCalculator 用 nz() 防空 NPE,EvmAlertLevel 评估预警';
+COMMENT ON COLUMN ydsz_evm_measure.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_evm_measure.wbs_task_id IS '关联 WBS 任务 ID: 可空,NULL 表示项目级度量';
+COMMENT ON COLUMN ydsz_evm_measure.period IS '测量周期: 格式 YYYY-MM,例如 2026-06';
+COMMENT ON COLUMN ydsz_evm_measure.pv IS '计划值 PV(元): 截至当前周期计划完成工作的预算成本';
+COMMENT ON COLUMN ydsz_evm_measure.ev IS '挣值 EV(元): 截至当前周期实际完成工作的预算成本';
+COMMENT ON COLUMN ydsz_evm_measure.ac IS '实际成本 AC(元): 截至当前周期实际花费';
+COMMENT ON COLUMN ydsz_evm_measure.bac IS '完工预算 BAC(元): 项目总预算';
+COMMENT ON COLUMN ydsz_evm_measure.cpi IS '成本绩效指数 CPI = EV/AC: >1 节约,<1 超支';
+COMMENT ON COLUMN ydsz_evm_measure.spi IS '进度绩效指数 SPI = EV/PV: >1 提前,<1 滞后';
+COMMENT ON COLUMN ydsz_evm_measure.cv IS '成本偏差 CV = EV-AC(元)';
+COMMENT ON COLUMN ydsz_evm_measure.sv IS '进度偏差 SV = EV-PV(元)';
+COMMENT ON COLUMN ydsz_evm_measure.eac IS '完工估算 EAC = BAC/CPI(元)';
+COMMENT ON COLUMN ydsz_evm_measure.vac IS '完工偏差 VAC = BAC-EAC(元)';
+COMMENT ON COLUMN ydsz_evm_measure.etc IS '完工尚需 ETC = EAC-AC(元)';
+COMMENT ON COLUMN ydsz_evm_measure.tcpi IS '完工绩效指数 TCPI = (BAC-EV)/(BAC-AC)';
+COMMENT ON COLUMN ydsz_evm_measure.alert_level IS '预警等级: NORMAL 正常 / YELLOW 黄色 / RED 红色,基于 CPI/SPI 阈值';
+COMMENT ON COLUMN ydsz_evm_measure.alert_reason IS '预警原因: 描述触发预警的具体指标';
+COMMENT ON COLUMN ydsz_evm_measure.measure_date IS '测量日期: 数据采集时点';
+COMMENT ON COLUMN ydsz_evm_measure.remark IS '备注';
+COMMENT ON COLUMN ydsz_evm_measure.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_evm_measure.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_evm_measure.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pem_initiation / idx_pem_wbs / idx_pem_period / idx_pem_alert)
 CREATE INDEX IF NOT EXISTS idx_pem_tenant_initiation_measure_date
-    ON pmis_evm_measure(tenant_id, initiation_id, measure_date DESC)
+    ON ydsz_evm_measure(tenant_id, initiation_id, measure_date DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pem_tenant_wbs_measure_date
-    ON pmis_evm_measure(tenant_id, wbs_task_id, measure_date DESC)
+    ON ydsz_evm_measure(tenant_id, wbs_task_id, measure_date DESC)
     WHERE deleted = 0 AND wbs_task_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pem_tenant_alert_measure_date
-    ON pmis_evm_measure(tenant_id, alert_level, measure_date DESC)
+    ON ydsz_evm_measure(tenant_id, alert_level, measure_date DESC)
     WHERE deleted = 0 AND alert_level IN ('YELLOW','RED');
 
 -- =====================================================
--- 2. 对外报价费率表 pmis_rate_card
+-- 2. 对外报价费率表 ydsz_rate_card
 -- =====================================================
--- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_rate_card; -- 已废弃
-CREATE TABLE IF NOT EXISTS pmis_rate_card(
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS ydsz_rate_card; -- 已废弃
+CREATE TABLE IF NOT EXISTS ydsz_rate_card(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,                 -- L1-L18
@@ -5104,35 +5104,35 @@ CREATE TABLE IF NOT EXISTS pmis_rate_card(
     CONSTRAINT ck_prc_expiry_after_eff  CHECK (expiry_date IS NULL OR expiry_date >= effective_date),
     CONSTRAINT ck_prc_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_rate_card IS '对外报价费率表 Rate Card: 客户报价用,支持 3 级匹配（level+project+customer > level+project > level）,matchEffective 自动选最优';
-COMMENT ON COLUMN pmis_rate_card.rate_code IS '费率编码: 业务唯一,如 RC-L5-FIX-A';
-COMMENT ON COLUMN pmis_rate_card.level_code IS '职级: L1-L18';
-COMMENT ON COLUMN pmis_rate_card.project_type IS '项目类型: FIXED_PRICE/T_M/OUTSOURCING 等,NULL=全类型';
-COMMENT ON COLUMN pmis_rate_card.customer_level IS '客户级别: A/B/C/D,NULL=全级别';
-COMMENT ON COLUMN pmis_rate_card.billing_unit IS '计费单位: DAY 日 / HOUR 小时';
-COMMENT ON COLUMN pmis_rate_card.rate_amount IS '费率(元): 单价';
-COMMENT ON COLUMN pmis_rate_card.currency IS '币种: 默认 CNY';
-COMMENT ON COLUMN pmis_rate_card.effective_date IS '生效日期';
-COMMENT ON COLUMN pmis_rate_card.expiry_date IS '失效日期: NULL=长期有效';
-COMMENT ON COLUMN pmis_rate_card.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
-COMMENT ON COLUMN pmis_rate_card.remark IS '备注';
-COMMENT ON COLUMN pmis_rate_card.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rate_card.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_rate_card.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_rate_card IS '对外报价费率表 Rate Card: 客户报价用,支持 3 级匹配（level+project+customer > level+project > level）,matchEffective 自动选最优';
+COMMENT ON COLUMN ydsz_rate_card.rate_code IS '费率编码: 业务唯一,如 RC-L5-FIX-A';
+COMMENT ON COLUMN ydsz_rate_card.level_code IS '职级: L1-L18';
+COMMENT ON COLUMN ydsz_rate_card.project_type IS '项目类型: FIXED_PRICE/T_M/OUTSOURCING 等,NULL=全类型';
+COMMENT ON COLUMN ydsz_rate_card.customer_level IS '客户级别: A/B/C/D,NULL=全级别';
+COMMENT ON COLUMN ydsz_rate_card.billing_unit IS '计费单位: DAY 日 / HOUR 小时';
+COMMENT ON COLUMN ydsz_rate_card.rate_amount IS '费率(元): 单价';
+COMMENT ON COLUMN ydsz_rate_card.currency IS '币种: 默认 CNY';
+COMMENT ON COLUMN ydsz_rate_card.effective_date IS '生效日期';
+COMMENT ON COLUMN ydsz_rate_card.expiry_date IS '失效日期: NULL=长期有效';
+COMMENT ON COLUMN ydsz_rate_card.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN ydsz_rate_card.remark IS '备注';
+COMMENT ON COLUMN ydsz_rate_card.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rate_card.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_rate_card.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_prc_level / idx_prc_status)
 -- 主要查询: tenant + level + project_type + customer_level + 在效期内 + ACTIVE
 CREATE INDEX IF NOT EXISTS idx_prc_tenant_level_match
-    ON pmis_rate_card(tenant_id, level_code, project_type, customer_level)
+    ON ydsz_rate_card(tenant_id, level_code, project_type, customer_level)
     WHERE deleted = 0 AND status = 'ACTIVE';
 CREATE INDEX IF NOT EXISTS idx_prc_tenant_status_effective
-    ON pmis_rate_card(tenant_id, status, effective_date DESC)
+    ON ydsz_rate_card(tenant_id, status, effective_date DESC)
     WHERE deleted = 0;
 
 -- =====================================================
--- 3. 对内成本费率表 pmis_rate_internal
+-- 3. 对内成本费率表 ydsz_rate_internal
 -- =====================================================
 -- P1-6: 已废弃,无需 DROP
-CREATE TABLE IF NOT EXISTS pmis_rate_internal(
+CREATE TABLE IF NOT EXISTS ydsz_rate_internal(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,
@@ -5159,33 +5159,33 @@ CREATE TABLE IF NOT EXISTS pmis_rate_internal(
     CONSTRAINT ck_pri_expiry_after_eff  CHECK (expiry_date IS NULL OR expiry_date >= effective_date),
     CONSTRAINT ck_pri_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_rate_internal IS '对内成本费率表: 内部人力成本计算用,matchEffective 优先 (level+department) 而非 (level only)';
-COMMENT ON COLUMN pmis_rate_internal.rate_code IS '费率编码: 业务唯一,如 RI-L5-DEV-001';
-COMMENT ON COLUMN pmis_rate_internal.level_code IS '职级: L1-L18';
-COMMENT ON COLUMN pmis_rate_internal.department_id IS '部门 ID: 事业部/部门,NULL=全部门';
-COMMENT ON COLUMN pmis_rate_internal.department_name IS '部门名称（冗余）';
-COMMENT ON COLUMN pmis_rate_internal.billing_unit IS '计费单位: DAY 日 / HOUR 小时';
-COMMENT ON COLUMN pmis_rate_internal.cost_amount IS '成本金额(元): 人天/人时成本';
-COMMENT ON COLUMN pmis_rate_internal.currency IS '币种: 默认 CNY';
-COMMENT ON COLUMN pmis_rate_internal.effective_date IS '生效日期';
-COMMENT ON COLUMN pmis_rate_internal.expiry_date IS '失效日期';
-COMMENT ON COLUMN pmis_rate_internal.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
-COMMENT ON COLUMN pmis_rate_internal.remark IS '备注';
-COMMENT ON COLUMN pmis_rate_internal.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rate_internal.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_rate_internal.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_rate_internal IS '对内成本费率表: 内部人力成本计算用,matchEffective 优先 (level+department) 而非 (level only)';
+COMMENT ON COLUMN ydsz_rate_internal.rate_code IS '费率编码: 业务唯一,如 RI-L5-DEV-001';
+COMMENT ON COLUMN ydsz_rate_internal.level_code IS '职级: L1-L18';
+COMMENT ON COLUMN ydsz_rate_internal.department_id IS '部门 ID: 事业部/部门,NULL=全部门';
+COMMENT ON COLUMN ydsz_rate_internal.department_name IS '部门名称（冗余）';
+COMMENT ON COLUMN ydsz_rate_internal.billing_unit IS '计费单位: DAY 日 / HOUR 小时';
+COMMENT ON COLUMN ydsz_rate_internal.cost_amount IS '成本金额(元): 人天/人时成本';
+COMMENT ON COLUMN ydsz_rate_internal.currency IS '币种: 默认 CNY';
+COMMENT ON COLUMN ydsz_rate_internal.effective_date IS '生效日期';
+COMMENT ON COLUMN ydsz_rate_internal.expiry_date IS '失效日期';
+COMMENT ON COLUMN ydsz_rate_internal.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN ydsz_rate_internal.remark IS '备注';
+COMMENT ON COLUMN ydsz_rate_internal.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rate_internal.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_rate_internal.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pri_level_dept / idx_pri_status)
 CREATE INDEX IF NOT EXISTS idx_pri_tenant_level_dept
-    ON pmis_rate_internal(tenant_id, level_code, department_id)
+    ON ydsz_rate_internal(tenant_id, level_code, department_id)
     WHERE deleted = 0 AND status = 'ACTIVE';
 CREATE INDEX IF NOT EXISTS idx_pri_tenant_status_effective
-    ON pmis_rate_internal(tenant_id, status, effective_date DESC)
+    ON ydsz_rate_internal(tenant_id, status, effective_date DESC)
     WHERE deleted = 0;
 
 -- =====================================================
--- 4. 利润测算版本表 pmis_project_profit_simulation
+-- 4. 利润测算版本表 ydsz_project_profit_simulation
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_project_profit_simulation(
+CREATE TABLE IF NOT EXISTS ydsz_project_profit_simulation(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     simulation_code     VARCHAR(64)  NOT NULL,
     simulation_name     VARCHAR(256) NOT NULL,
@@ -5229,46 +5229,46 @@ CREATE TABLE IF NOT EXISTS pmis_project_profit_simulation(
     CONSTRAINT ck_pps_margin_range      CHECK (gross_margin >= -1 AND gross_margin <= 1 AND target_margin >= -1 AND target_margin <= 1),
     CONSTRAINT ck_pps_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_project_profit_simulation IS '利润测算版本表 What-if: 同一立项支持多个测算版本,create() 自动 version=max+1,APPROVED/ARCHIVED 状态禁止删除';
-COMMENT ON COLUMN pmis_project_profit_simulation.simulation_code IS '测算单号: 业务唯一,如 SIM-2026-001';
-COMMENT ON COLUMN pmis_project_profit_simulation.simulation_name IS '测算名称';
-COMMENT ON COLUMN pmis_project_profit_simulation.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_project_profit_simulation.version IS '版本号: 同立项内递增,create() 时自动 max+1';
-COMMENT ON COLUMN pmis_project_profit_simulation.scenario_type IS '场景类型: BASE 基准 / OPTIMISTIC 乐观 / PESSIMISTIC 悲观 / CUSTOM 自定义';
-COMMENT ON COLUMN pmis_project_profit_simulation.contract_amount IS '合同金额(元)';
-COMMENT ON COLUMN pmis_project_profit_simulation.external_revenue IS '外部收入(元): 对外报价合计';
-COMMENT ON COLUMN pmis_project_profit_simulation.internal_cost IS '内部成本(元): 人力 + 采购 + 费用 + 外包';
-COMMENT ON COLUMN pmis_project_profit_simulation.expected_hours IS '预计工时(小时)';
-COMMENT ON COLUMN pmis_project_profit_simulation.blended_rate IS '综合人天费率(元)';
-COMMENT ON COLUMN pmis_project_profit_simulation.gross_profit IS '毛利润(元) = external_revenue - internal_cost';
-COMMENT ON COLUMN pmis_project_profit_simulation.gross_margin IS '毛利率: 0.25=25%';
-COMMENT ON COLUMN pmis_project_profit_simulation.target_margin IS '目标毛利率: 业务方预设的达标线';
-COMMENT ON COLUMN pmis_project_profit_simulation.labor_cost IS '人工成本(元)';
-COMMENT ON COLUMN pmis_project_profit_simulation.purchase_cost IS '采购成本(元)';
-COMMENT ON COLUMN pmis_project_profit_simulation.expense_cost IS '费用(元)';
-COMMENT ON COLUMN pmis_project_profit_simulation.outsource_cost IS '外包成本(元)';
-COMMENT ON COLUMN pmis_project_profit_simulation.assumptions IS '假设条件 JSON: 输入参数快照';
-COMMENT ON COLUMN pmis_project_profit_simulation.status IS '测算状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档,REJECTED 可回退到 DRAFT';
-COMMENT ON COLUMN pmis_project_profit_simulation.approver_name IS '审批人姓名（冗余）';
-COMMENT ON COLUMN pmis_project_profit_simulation.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_project_profit_simulation.remark IS '备注';
-COMMENT ON COLUMN pmis_project_profit_simulation.applicant_id IS '申请人 ID';
-COMMENT ON COLUMN pmis_project_profit_simulation.applicant_name IS '申请人姓名（冗余）';
-COMMENT ON COLUMN pmis_project_profit_simulation.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_project_profit_simulation.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_profit_simulation.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_project_profit_simulation IS '利润测算版本表 What-if: 同一立项支持多个测算版本,create() 自动 version=max+1,APPROVED/ARCHIVED 状态禁止删除';
+COMMENT ON COLUMN ydsz_project_profit_simulation.simulation_code IS '测算单号: 业务唯一,如 SIM-2026-001';
+COMMENT ON COLUMN ydsz_project_profit_simulation.simulation_name IS '测算名称';
+COMMENT ON COLUMN ydsz_project_profit_simulation.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_project_profit_simulation.version IS '版本号: 同立项内递增,create() 时自动 max+1';
+COMMENT ON COLUMN ydsz_project_profit_simulation.scenario_type IS '场景类型: BASE 基准 / OPTIMISTIC 乐观 / PESSIMISTIC 悲观 / CUSTOM 自定义';
+COMMENT ON COLUMN ydsz_project_profit_simulation.contract_amount IS '合同金额(元)';
+COMMENT ON COLUMN ydsz_project_profit_simulation.external_revenue IS '外部收入(元): 对外报价合计';
+COMMENT ON COLUMN ydsz_project_profit_simulation.internal_cost IS '内部成本(元): 人力 + 采购 + 费用 + 外包';
+COMMENT ON COLUMN ydsz_project_profit_simulation.expected_hours IS '预计工时(小时)';
+COMMENT ON COLUMN ydsz_project_profit_simulation.blended_rate IS '综合人天费率(元)';
+COMMENT ON COLUMN ydsz_project_profit_simulation.gross_profit IS '毛利润(元) = external_revenue - internal_cost';
+COMMENT ON COLUMN ydsz_project_profit_simulation.gross_margin IS '毛利率: 0.25=25%';
+COMMENT ON COLUMN ydsz_project_profit_simulation.target_margin IS '目标毛利率: 业务方预设的达标线';
+COMMENT ON COLUMN ydsz_project_profit_simulation.labor_cost IS '人工成本(元)';
+COMMENT ON COLUMN ydsz_project_profit_simulation.purchase_cost IS '采购成本(元)';
+COMMENT ON COLUMN ydsz_project_profit_simulation.expense_cost IS '费用(元)';
+COMMENT ON COLUMN ydsz_project_profit_simulation.outsource_cost IS '外包成本(元)';
+COMMENT ON COLUMN ydsz_project_profit_simulation.assumptions IS '假设条件 JSON: 输入参数快照';
+COMMENT ON COLUMN ydsz_project_profit_simulation.status IS '测算状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档,REJECTED 可回退到 DRAFT';
+COMMENT ON COLUMN ydsz_project_profit_simulation.approver_name IS '审批人姓名（冗余）';
+COMMENT ON COLUMN ydsz_project_profit_simulation.approved_at IS '审批时间';
+COMMENT ON COLUMN ydsz_project_profit_simulation.remark IS '备注';
+COMMENT ON COLUMN ydsz_project_profit_simulation.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN ydsz_project_profit_simulation.applicant_name IS '申请人姓名（冗余）';
+COMMENT ON COLUMN ydsz_project_profit_simulation.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_project_profit_simulation.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_profit_simulation.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_psm_initiation / idx_psm_version / idx_psm_status)
 CREATE INDEX IF NOT EXISTS idx_psm_tenant_initiation_version
-    ON pmis_project_profit_simulation(tenant_id, initiation_id, version DESC)
+    ON ydsz_project_profit_simulation(tenant_id, initiation_id, version DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_psm_tenant_status_scenario
-    ON pmis_project_profit_simulation(tenant_id, status, scenario_type)
+    ON ydsz_project_profit_simulation(tenant_id, status, scenario_type)
     WHERE deleted = 0;
 
 -- =====================================================
 -- 5. 初始化 L1-L18 职级默认对外报价费率（基线参考）
 -- =====================================================
-INSERT INTO pmis_rate_card
+INSERT INTO ydsz_rate_card
     (rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, status, tenant_id, provider_trace_id)
 VALUES
     ('RC-L1-DEFAULT',  'L1',  NULL, NULL, 'DAY',  1200.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
@@ -5292,7 +5292,7 @@ VALUES
 -- =====================================================
 -- 6. 初始化 L1-L18 职级默认对内成本费率（基线参考）
 -- =====================================================
-INSERT INTO pmis_rate_internal
+INSERT INTO ydsz_rate_internal
     (rate_code, level_code, billing_unit, cost_amount, currency, effective_date, status, tenant_id, provider_trace_id)
 VALUES
     ('RI-L1-DEFAULT',  'L1',  'DAY',  800.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
@@ -5320,12 +5320,12 @@ VALUES
 -- =====================================================
 -- PMIS 批次11 DDL：资源池 + 人员标签 + 资源分配 + Bench 闲置
 -- 版本: V1.0.0_014
--- 描述: 资源池(pmis_resource_pool)、人员标签(pmis_employee_tag)、
---       资源分配(pmis_resource_assignment)、Bench 闲置(pmis_bench_record)
+-- 描述: 资源池(ydsz_resource_pool)、人员标签(ydsz_employee_tag)、
+--       资源分配(ydsz_resource_assignment)、Bench 闲置(ydsz_bench_record)
 -- =====================================================
 
--- P1-7 fix: pmis_employee_tag 已在 [001] 章节以 tag_value 字段先建,本节扩展新字段
-ALTER TABLE pmis_employee_tag
+-- P1-7 fix: ydsz_employee_tag 已在 [001] 章节以 tag_value 字段先建,本节扩展新字段
+ALTER TABLE ydsz_employee_tag
     ADD COLUMN IF NOT EXISTS tag_name     VARCHAR(256) NOT NULL DEFAULT '',
     ADD COLUMN IF NOT EXISTS proficiency  INTEGER      NOT NULL DEFAULT 3,
     ADD COLUMN IF NOT EXISTS years_exp    INTEGER      NOT NULL DEFAULT 0,
@@ -5336,16 +5336,16 @@ ALTER TABLE pmis_employee_tag
     ADD COLUMN IF NOT EXISTS updated_at   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- 放宽 tag_type 枚举约束(原[001]是 TECH_STACK/INDUSTRY/DOMAIN/CERTIFICATE/SKILL,本节扩展为含 CERT)
-ALTER TABLE pmis_employee_tag
+ALTER TABLE ydsz_employee_tag
     DROP CONSTRAINT IF EXISTS ck_pet_tag_type;
-ALTER TABLE pmis_employee_tag
+ALTER TABLE ydsz_employee_tag
     ADD CONSTRAINT ck_pet_tag_type CHECK (tag_type IN ('SKILL', 'INDUSTRY', 'DOMAIN', 'CERT', 'TECH_STACK', 'CERTIFICATE'));
 
 -- =====================================================
--- 1. 资源池主表 pmis_resource_pool
+-- 1. 资源池主表 ydsz_resource_pool
 -- =====================================================
--- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
-CREATE TABLE IF NOT EXISTS pmis_resource_pool(
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS ydsz_resource_pool; -- 已废弃
+CREATE TABLE IF NOT EXISTS ydsz_resource_pool(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     pool_code           VARCHAR(64)  NOT NULL,
     pool_name           VARCHAR(256) NOT NULL,
@@ -5371,58 +5371,58 @@ CREATE TABLE IF NOT EXISTS pmis_resource_pool(
     CONSTRAINT ck_prp_bill_target_nonneg CHECK (billable_target >= 0),
     CONSTRAINT ck_prp_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_resource_pool IS '资源池表: 3 级资源池（HQ 总部 / DIVISION 事业部 / RESERVE 储备）,PoolType.inferByLevel 按职级自动分配';
-COMMENT ON COLUMN pmis_resource_pool.pool_code IS '资源池编码: 业务唯一,如 POOL-HQ-GLOBAL';
-COMMENT ON COLUMN pmis_resource_pool.pool_name IS '资源池名称';
-COMMENT ON COLUMN pmis_resource_pool.pool_type IS '资源池类型: HQ 总部 / DIVISION 事业部 / RESERVE 储备,按职级自动映射';
-COMMENT ON COLUMN pmis_resource_pool.department_id IS '所属部门 ID: 池归属的事业部/部门';
-COMMENT ON COLUMN pmis_resource_pool.department_name IS '所属部门名称（冗余）';
-COMMENT ON COLUMN pmis_resource_pool.level_range IS '职级范围: L1-L3 / L4-L12 / L13+';
-COMMENT ON COLUMN pmis_resource_pool.headcount IS '当前人数';
-COMMENT ON COLUMN pmis_resource_pool.billable_target IS '计费人头目标: 期望投入计费项目的人数';
-COMMENT ON COLUMN pmis_resource_pool.description IS '资源池描述';
-COMMENT ON COLUMN pmis_resource_pool.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
-COMMENT ON COLUMN pmis_resource_pool.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_resource_pool.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_resource_pool.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_resource_pool IS '资源池表: 3 级资源池（HQ 总部 / DIVISION 事业部 / RESERVE 储备）,PoolType.inferByLevel 按职级自动分配';
+COMMENT ON COLUMN ydsz_resource_pool.pool_code IS '资源池编码: 业务唯一,如 POOL-HQ-GLOBAL';
+COMMENT ON COLUMN ydsz_resource_pool.pool_name IS '资源池名称';
+COMMENT ON COLUMN ydsz_resource_pool.pool_type IS '资源池类型: HQ 总部 / DIVISION 事业部 / RESERVE 储备,按职级自动映射';
+COMMENT ON COLUMN ydsz_resource_pool.department_id IS '所属部门 ID: 池归属的事业部/部门';
+COMMENT ON COLUMN ydsz_resource_pool.department_name IS '所属部门名称（冗余）';
+COMMENT ON COLUMN ydsz_resource_pool.level_range IS '职级范围: L1-L3 / L4-L12 / L13+';
+COMMENT ON COLUMN ydsz_resource_pool.headcount IS '当前人数';
+COMMENT ON COLUMN ydsz_resource_pool.billable_target IS '计费人头目标: 期望投入计费项目的人数';
+COMMENT ON COLUMN ydsz_resource_pool.description IS '资源池描述';
+COMMENT ON COLUMN ydsz_resource_pool.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN ydsz_resource_pool.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_resource_pool.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_resource_pool.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_prp_type_status / idx_prp_dept)
 CREATE INDEX IF NOT EXISTS idx_prp_tenant_type_status
-    ON pmis_resource_pool(tenant_id, pool_type, status)
+    ON ydsz_resource_pool(tenant_id, pool_type, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prp_tenant_dept
-    ON pmis_resource_pool(tenant_id, department_id)
+    ON ydsz_resource_pool(tenant_id, department_id)
     WHERE deleted = 0 AND department_id IS NOT NULL;
 
 -- =====================================================
--- 2. 人员标签表 pmis_employee_tag (已在 [001] 章节创建, [014_1] 已 ALTER 扩展新字段)
+-- 2. 人员标签表 ydsz_employee_tag (已在 [001] 章节创建, [014_1] 已 ALTER 扩展新字段)
 -- =====================================================
 -- 注意:历史 [SKIPPED-CLEANUP-REBUILD] 标记下的旧版 DDL 已废弃,字段定义以 [001]+[014_1] 为准
 -- 本节保留 COMMENT ON COLUMN 用于覆盖 [001] 的简短注释,提供更详细的字段说明
 -- (以下 CREATE TABLE IF NOT EXISTS 因表已存在会被跳过,不会重建)
 -- =====================================================
-COMMENT ON TABLE  pmis_employee_tag IS '人员标签表: 员工的技能/行业/领域/资质标签,支撑资源推荐智能体匹配';
-COMMENT ON COLUMN pmis_employee_tag.employee_id IS '员工 ID';
-COMMENT ON COLUMN pmis_employee_tag.tag_type IS '标签类型: SKILL 技能 / INDUSTRY 行业 / DOMAIN 领域 / CERT 资质';
-COMMENT ON COLUMN pmis_employee_tag.tag_code IS '标签编码: 业务唯一,如 JAVA / BANKING';
-COMMENT ON COLUMN pmis_employee_tag.tag_name IS '标签名称';
-COMMENT ON COLUMN pmis_employee_tag.proficiency IS '熟练度: 1=入门 2=了解 3=熟练 4=精通 5=专家';
-COMMENT ON COLUMN pmis_employee_tag.years_exp IS '相关经验年限';
-COMMENT ON COLUMN pmis_employee_tag.remark IS '备注';
-COMMENT ON COLUMN pmis_employee_tag.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_employee_tag.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_employee_tag.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_employee_tag IS '人员标签表: 员工的技能/行业/领域/资质标签,支撑资源推荐智能体匹配';
+COMMENT ON COLUMN ydsz_employee_tag.employee_id IS '员工 ID';
+COMMENT ON COLUMN ydsz_employee_tag.tag_type IS '标签类型: SKILL 技能 / INDUSTRY 行业 / DOMAIN 领域 / CERT 资质';
+COMMENT ON COLUMN ydsz_employee_tag.tag_code IS '标签编码: 业务唯一,如 JAVA / BANKING';
+COMMENT ON COLUMN ydsz_employee_tag.tag_name IS '标签名称';
+COMMENT ON COLUMN ydsz_employee_tag.proficiency IS '熟练度: 1=入门 2=了解 3=熟练 4=精通 5=专家';
+COMMENT ON COLUMN ydsz_employee_tag.years_exp IS '相关经验年限';
+COMMENT ON COLUMN ydsz_employee_tag.remark IS '备注';
+COMMENT ON COLUMN ydsz_employee_tag.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_employee_tag.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_employee_tag.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pet_emp / idx_pet_type)
 CREATE INDEX IF NOT EXISTS idx_pet_tenant_emp
-    ON pmis_employee_tag(tenant_id, employee_id)
+    ON ydsz_employee_tag(tenant_id, employee_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pet_tenant_type_code
-    ON pmis_employee_tag(tenant_id, tag_type, tag_code)
+    ON ydsz_employee_tag(tenant_id, tag_type, tag_code)
     WHERE deleted = 0;
 
 -- =====================================================
--- 3. 资源分配主表 pmis_resource_assignment
+-- 3. 资源分配主表 ydsz_resource_assignment
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_resource_assignment(
+CREATE TABLE IF NOT EXISTS ydsz_resource_assignment(
     id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     assignment_code       VARCHAR(64)  NOT NULL,
     employee_id           VARCHAR(20)       NOT NULL,
@@ -5457,42 +5457,42 @@ CREATE TABLE IF NOT EXISTS pmis_resource_assignment(
     CONSTRAINT ck_pra_dates_order       CHECK (planned_end_date IS NULL OR planned_start_date IS NULL OR planned_end_date >= planned_start_date),
     CONSTRAINT ck_pra_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_resource_assignment IS '资源分配表: 资源预占/入场/调岗/离场的全过程,act() 入口按 action 参数映射 AssignmentStatus';
-COMMENT ON COLUMN pmis_resource_assignment.assignment_code IS '分配单号: 业务唯一,如 RA-2026-001';
-COMMENT ON COLUMN pmis_resource_assignment.employee_id IS '员工 ID';
-COMMENT ON COLUMN pmis_resource_assignment.employee_name IS '员工姓名（冗余）';
-COMMENT ON COLUMN pmis_resource_assignment.level_code IS '职级: L1-L18';
-COMMENT ON COLUMN pmis_resource_assignment.pool_id IS '所属资源池 ID';
-COMMENT ON COLUMN pmis_resource_assignment.pool_type IS '资源池类型: HQ/DIVISION/RESERVE（冗余,便于查询）';
-COMMENT ON COLUMN pmis_resource_assignment.initiation_id IS '所属立项 ID: 分配到的项目';
-COMMENT ON COLUMN pmis_resource_assignment.initiation_name IS '立项名称（冗余）';
-COMMENT ON COLUMN pmis_resource_assignment.opportunity_id IS '所属商机 ID: 商机阶段预占时填写';
-COMMENT ON COLUMN pmis_resource_assignment.status IS '分配状态: RESERVED 已预占 / IN_PROGRESS 进行中 / TRANSFERRED 已调岗 / RELEASED 已释放 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_resource_assignment.allocation IS '占用比例: 0-1,例如 0.5=50% 投入';
-COMMENT ON COLUMN pmis_resource_assignment.planned_start_date IS '计划开始日期';
-COMMENT ON COLUMN pmis_resource_assignment.planned_end_date IS '计划结束日期';
-COMMENT ON COLUMN pmis_resource_assignment.actual_start_date IS '实际开始日期';
-COMMENT ON COLUMN pmis_resource_assignment.actual_end_date IS '实际结束日期';
-COMMENT ON COLUMN pmis_resource_assignment.billable IS '是否计费: 0=非计费,1=计费';
-COMMENT ON COLUMN pmis_resource_assignment.daily_hours IS '日均工时(小时): 默认 8';
-COMMENT ON COLUMN pmis_resource_assignment.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_resource_assignment.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_resource_assignment.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_resource_assignment IS '资源分配表: 资源预占/入场/调岗/离场的全过程,act() 入口按 action 参数映射 AssignmentStatus';
+COMMENT ON COLUMN ydsz_resource_assignment.assignment_code IS '分配单号: 业务唯一,如 RA-2026-001';
+COMMENT ON COLUMN ydsz_resource_assignment.employee_id IS '员工 ID';
+COMMENT ON COLUMN ydsz_resource_assignment.employee_name IS '员工姓名（冗余）';
+COMMENT ON COLUMN ydsz_resource_assignment.level_code IS '职级: L1-L18';
+COMMENT ON COLUMN ydsz_resource_assignment.pool_id IS '所属资源池 ID';
+COMMENT ON COLUMN ydsz_resource_assignment.pool_type IS '资源池类型: HQ/DIVISION/RESERVE（冗余,便于查询）';
+COMMENT ON COLUMN ydsz_resource_assignment.initiation_id IS '所属立项 ID: 分配到的项目';
+COMMENT ON COLUMN ydsz_resource_assignment.initiation_name IS '立项名称（冗余）';
+COMMENT ON COLUMN ydsz_resource_assignment.opportunity_id IS '所属商机 ID: 商机阶段预占时填写';
+COMMENT ON COLUMN ydsz_resource_assignment.status IS '分配状态: RESERVED 已预占 / IN_PROGRESS 进行中 / TRANSFERRED 已调岗 / RELEASED 已释放 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_resource_assignment.allocation IS '占用比例: 0-1,例如 0.5=50% 投入';
+COMMENT ON COLUMN ydsz_resource_assignment.planned_start_date IS '计划开始日期';
+COMMENT ON COLUMN ydsz_resource_assignment.planned_end_date IS '计划结束日期';
+COMMENT ON COLUMN ydsz_resource_assignment.actual_start_date IS '实际开始日期';
+COMMENT ON COLUMN ydsz_resource_assignment.actual_end_date IS '实际结束日期';
+COMMENT ON COLUMN ydsz_resource_assignment.billable IS '是否计费: 0=非计费,1=计费';
+COMMENT ON COLUMN ydsz_resource_assignment.daily_hours IS '日均工时(小时): 默认 8';
+COMMENT ON COLUMN ydsz_resource_assignment.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_resource_assignment.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_resource_assignment.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pra_emp / idx_pra_initiation / idx_pra_status / idx_pra_pool)
 CREATE INDEX IF NOT EXISTS idx_pra_tenant_emp_status
-    ON pmis_resource_assignment(tenant_id, employee_id, status)
+    ON ydsz_resource_assignment(tenant_id, employee_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pra_tenant_initiation_status
-    ON pmis_resource_assignment(tenant_id, initiation_id, status)
+    ON ydsz_resource_assignment(tenant_id, initiation_id, status)
     WHERE deleted = 0 AND initiation_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pra_tenant_pool_status
-    ON pmis_resource_assignment(tenant_id, pool_id, status)
+    ON ydsz_resource_assignment(tenant_id, pool_id, status)
     WHERE deleted = 0;
 
 -- =====================================================
--- 4. Bench 闲置记录表 pmis_bench_record
+-- 4. Bench 闲置记录表 ydsz_bench_record
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_bench_record(
+CREATE TABLE IF NOT EXISTS ydsz_bench_record(
     id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     bench_code            VARCHAR(64)  NOT NULL,
     employee_id           VARCHAR(20)       NOT NULL,
@@ -5525,40 +5525,40 @@ CREATE TABLE IF NOT EXISTS pmis_bench_record(
     CONSTRAINT ck_pbr_exit_after_bench  CHECK (exit_date IS NULL OR exit_date >= bench_date),
     CONSTRAINT ck_pbr_deleted_enum      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_bench_record IS 'Bench 闲置记录表: 资源闲置期间自动入池/出池,BenchCostCalculator 计算 idleDays + totalIdleCost';
-COMMENT ON COLUMN pmis_bench_record.bench_code IS 'Bench 单号: 业务唯一,如 BENCH-2026-001';
-COMMENT ON COLUMN pmis_bench_record.employee_id IS '员工 ID';
-COMMENT ON COLUMN pmis_bench_record.employee_name IS '员工姓名（冗余）';
-COMMENT ON COLUMN pmis_bench_record.level_code IS '职级: L1-L18';
-COMMENT ON COLUMN pmis_bench_record.pool_id IS '所属资源池 ID';
-COMMENT ON COLUMN pmis_bench_record.bench_reason IS 'Bench 类型: ENTER 入池 / EXIT 出池';
-COMMENT ON COLUMN pmis_bench_record.reason_type IS '原因类型: PROJECT_END 项目结束 / RESERVE 储备 / TRAINING 培训 / LEAVE 请假';
-COMMENT ON COLUMN pmis_bench_record.source_assignment IS '触发本次 Bench 的分配记录 ID: 引用 pmis_resource_assignment.id(Long)';
-COMMENT ON COLUMN pmis_bench_record.bench_date IS '入池日期';
-COMMENT ON COLUMN pmis_bench_record.exit_date IS '出池日期: NULL 表示仍在 Bench';
-COMMENT ON COLUMN pmis_bench_record.idle_days IS '闲置天数: ChronoUnit.DAYS.between(benchDate, exitDate or now)';
-COMMENT ON COLUMN pmis_bench_record.status IS '状态: ACTIVE 闲置中 / CLOSED 已关闭';
-COMMENT ON COLUMN pmis_bench_record.daily_cost IS '日均闲置成本(元): 按职级内部费率计算';
-COMMENT ON COLUMN pmis_bench_record.total_idle_cost IS '累计闲置成本(元) = daily_cost * idle_days';
-COMMENT ON COLUMN pmis_bench_record.remark IS '备注';
-COMMENT ON COLUMN pmis_bench_record.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_bench_record.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_bench_record.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_bench_record IS 'Bench 闲置记录表: 资源闲置期间自动入池/出池,BenchCostCalculator 计算 idleDays + totalIdleCost';
+COMMENT ON COLUMN ydsz_bench_record.bench_code IS 'Bench 单号: 业务唯一,如 BENCH-2026-001';
+COMMENT ON COLUMN ydsz_bench_record.employee_id IS '员工 ID';
+COMMENT ON COLUMN ydsz_bench_record.employee_name IS '员工姓名（冗余）';
+COMMENT ON COLUMN ydsz_bench_record.level_code IS '职级: L1-L18';
+COMMENT ON COLUMN ydsz_bench_record.pool_id IS '所属资源池 ID';
+COMMENT ON COLUMN ydsz_bench_record.bench_reason IS 'Bench 类型: ENTER 入池 / EXIT 出池';
+COMMENT ON COLUMN ydsz_bench_record.reason_type IS '原因类型: PROJECT_END 项目结束 / RESERVE 储备 / TRAINING 培训 / LEAVE 请假';
+COMMENT ON COLUMN ydsz_bench_record.source_assignment IS '触发本次 Bench 的分配记录 ID: 引用 ydsz_resource_assignment.id(Long)';
+COMMENT ON COLUMN ydsz_bench_record.bench_date IS '入池日期';
+COMMENT ON COLUMN ydsz_bench_record.exit_date IS '出池日期: NULL 表示仍在 Bench';
+COMMENT ON COLUMN ydsz_bench_record.idle_days IS '闲置天数: ChronoUnit.DAYS.between(benchDate, exitDate or now)';
+COMMENT ON COLUMN ydsz_bench_record.status IS '状态: ACTIVE 闲置中 / CLOSED 已关闭';
+COMMENT ON COLUMN ydsz_bench_record.daily_cost IS '日均闲置成本(元): 按职级内部费率计算';
+COMMENT ON COLUMN ydsz_bench_record.total_idle_cost IS '累计闲置成本(元) = daily_cost * idle_days';
+COMMENT ON COLUMN ydsz_bench_record.remark IS '备注';
+COMMENT ON COLUMN ydsz_bench_record.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_bench_record.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_bench_record.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_pbr_emp / idx_pbr_status / idx_pbr_pool / idx_pbr_date)
 CREATE INDEX IF NOT EXISTS idx_pbr_tenant_emp_status
-    ON pmis_bench_record(tenant_id, employee_id, status)
+    ON ydsz_bench_record(tenant_id, employee_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pbr_tenant_pool_status
-    ON pmis_bench_record(tenant_id, pool_id, status)
+    ON ydsz_bench_record(tenant_id, pool_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pbr_tenant_active_dates
-    ON pmis_bench_record(tenant_id, bench_date DESC)
+    ON ydsz_bench_record(tenant_id, bench_date DESC)
     WHERE deleted = 0 AND status = 'ACTIVE';
 
 -- =====================================================
 -- 5. 初始化三级资源池（HQ/DIVISION/RESERVE）
 -- =====================================================
-INSERT INTO pmis_resource_pool
+INSERT INTO ydsz_resource_pool
     (pool_code, pool_name, pool_type, department_id, department_name, level_range, headcount, billable_target, status, tenant_id, provider_trace_id)
 VALUES
     ('POOL-HQ-GLOBAL',        '总部高级资源池',   'HQ',       1, '总部',  'L13+', 0, 0, 'ACTIVE', 1, 'init'),
@@ -5566,13 +5566,13 @@ VALUES
     ('POOL-DIV-IMPL',         '实施事业部池',    'DIVISION', 3, '实施事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
         ('POOL-RESERVE-TRAINING', '储备培训池',      'RESERVE',  1, '总部',  'L1-L3', 0, 0, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
 
--- [AUTO-MIGRATION] pmis_employee_tag: rebuild pattern detected.
+-- [AUTO-MIGRATION] ydsz_employee_tag: rebuild pattern detected.
 -- 注: 历史兼容代码 (兼容 V1.0.0_014_1 旧版 [SKIPPED-CLEANUP-REBUILD] 的字段补齐逻辑)
 --   已被前面 CREATE TABLE 取代 (IF NOT EXISTS 已包含全部字段),此处保留
 --   空 DO 块以保留脚本兼容性,无任何实际效果。
 DO $$ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables
-                WHERE table_schema = 'public' AND table_name = 'pmis_employee_tag') THEN
+                WHERE table_schema = 'public' AND table_name = 'ydsz_employee_tag') THEN
         -- 字段已由上方 CREATE TABLE IF NOT EXISTS 完整定义,这里无需重复 ALTER
         NULL;
     END IF;
@@ -5596,7 +5596,7 @@ END $$;
 --       看不到同语句中正在插入的行；因此必须分多语句执行。
 
 -- 步骤 1：插入顶层节点
-INSERT INTO pmis_permission
+INSERT INTO ydsz_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
 VALUES
     (0, 'dashboard',  '仪表盘',   'MENU', '/dashboard',  'dashboard/index', 'odometer',  1, 1, 'ENABLED', 0),
@@ -5608,91 +5608,91 @@ VALUES
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 步骤 2a：插入系统管理子菜单
-INSERT INTO pmis_permission
+INSERT INTO ydsz_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
 VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:user',     '用户管理',     'MENU', '/system/user',     'system/user/index',     'user',     1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:role',     '角色管理',     'MENU', '/system/role',     'system/role/index',     'avatar',   2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:menu',     '菜单管理',     'MENU', '/system/menu',     'system/menu/index',     'menu',     3, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dept',     '部门管理',     'MENU', '/system/dept',     'system/dept/index',     'office-building', 4, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dict',     '数据字典',     'MENU', '/system/dict',     'system/dict/index',     'collection', 5, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:rank','职级管理',     'MENU', '/system/rank','system/rank/index', 'medal',    6, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:config',   '参数配置',     'MENU', '/system/config',   'system/config/index',   'tools',    7, 1, 'ENABLED', 0)
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system'), 'system:user',     '用户管理',     'MENU', '/system/user',     'system/user/index',     'user',     1, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system'), 'system:role',     '角色管理',     'MENU', '/system/role',     'system/role/index',     'avatar',   2, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system'), 'system:menu',     '菜单管理',     'MENU', '/system/menu',     'system/menu/index',     'menu',     3, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system'), 'system:dept',     '部门管理',     'MENU', '/system/dept',     'system/dept/index',     'office-building', 4, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system'), 'system:dict',     '数据字典',     'MENU', '/system/dict',     'system/dict/index',     'collection', 5, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system'), 'system:rank','职级管理',     'MENU', '/system/rank','system/rank/index', 'medal',    6, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system'), 'system:config',   '参数配置',     'MENU', '/system/config',   'system/config/index',   'tools',    7, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 步骤 2b：插入业务根子菜单
-INSERT INTO pmis_permission
+INSERT INTO ydsz_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
 VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:opportunity', '商机管理', 'MENU', '/business/opportunity', 'business/opportunity/index', 'lightbulb', 1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:initiation',  '立项管理', 'MENU', '/business/initiation',  'business/initiation/index',  'document', 2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:contract',     '合同管理', 'MENU', '/business/contract',     'business/contract/index',     'tickets', 3, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:change',       '变更管理', 'MENU', '/business/change',       'business/change/index',       'refresh', 4, 1, 'ENABLED', 0)
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'business'), 'business:opportunity', '商机管理', 'MENU', '/business/opportunity', 'business/opportunity/index', 'lightbulb', 1, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'business'), 'business:initiation',  '立项管理', 'MENU', '/business/initiation',  'business/initiation/index',  'document', 2, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'business'), 'business:contract',     '合同管理', 'MENU', '/business/contract',     'business/contract/index',     'tickets', 3, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'business'), 'business:change',       '变更管理', 'MENU', '/business/change',       'business/change/index',       'refresh', 4, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 步骤 2c：插入执行根子菜单
-INSERT INTO pmis_permission
+INSERT INTO ydsz_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
 VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:wbs',         'WBS 任务',  'MENU', '/execution/wbs',         'execution/wbs/index',         'list',     1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:timesheet',   '工时管理',  'MENU', '/execution/timesheet',   'execution/timesheet/index',   'timer',    2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:attendance',  '考勤管理',  'MENU', '/execution/attendance',  'execution/attendance/index',  'calendar', 3, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:cost',        '成本管理',  'MENU', '/execution/cost',        'execution/cost/index',        'money',    4, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:revenue',     '收入管理',  'MENU', '/execution/revenue',     'execution/revenue/index',     'wallet',   5, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:risk',        '风险登记',  'MENU', '/execution/risk',        'execution/risk/index',        'warning',  6, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:profit',      '利润分析',  'MENU', '/execution/profit',      'execution/profit/index',      'data-line',7, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:delivery',    '交付管理',  'MENU', '/execution/delivery',    'execution/delivery/index',    'box',      8, 1, 'ENABLED', 0)
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:wbs',         'WBS 任务',  'MENU', '/execution/wbs',         'execution/wbs/index',         'list',     1, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:timesheet',   '工时管理',  'MENU', '/execution/timesheet',   'execution/timesheet/index',   'timer',    2, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:attendance',  '考勤管理',  'MENU', '/execution/attendance',  'execution/attendance/index',  'calendar', 3, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:cost',        '成本管理',  'MENU', '/execution/cost',        'execution/cost/index',        'money',    4, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:revenue',     '收入管理',  'MENU', '/execution/revenue',     'execution/revenue/index',     'wallet',   5, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:risk',        '风险登记',  'MENU', '/execution/risk',        'execution/risk/index',        'warning',  6, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:profit',      '利润分析',  'MENU', '/execution/profit',      'execution/profit/index',      'data-line',7, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'execution'), 'execution:delivery',    '交付管理',  'MENU', '/execution/delivery',    'execution/delivery/index',    'box',      8, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 步骤 2d：插入财务根子菜单
-INSERT INTO pmis_permission
+INSERT INTO ydsz_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
 VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'finance'), 'finance:invoice',  '发票管理', 'MENU', '/finance/invoice',  'finance/invoice/index',  'document-copy', 1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'finance'), 'finance:payment',  '回款管理', 'MENU', '/finance/payment',  'finance/payment/index',  'bank-card',    2, 1, 'ENABLED', 0)
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'finance'), 'finance:invoice',  '发票管理', 'MENU', '/finance/invoice',  'finance/invoice/index',  'document-copy', 1, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'finance'), 'finance:payment',  '回款管理', 'MENU', '/finance/payment',  'finance/payment/index',  'bank-card',    2, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 步骤 2e：插入报表根子菜单
-INSERT INTO pmis_permission
+INSERT INTO ydsz_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
 VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:profit',    '项目利润',   'MENU', '/report/profit',    'report/profit/index',    'pie-chart',    1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:cost',      '成本明细',   'MENU', '/report/cost',      'report/cost/index',      'data-board',   2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:lifecycle', '生命周期台账', 'MENU', '/report/lifecycle', 'report/lifecycle/index', 'connection',   3, 1, 'ENABLED', 0)
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'report'), 'report:profit',    '项目利润',   'MENU', '/report/profit',    'report/profit/index',    'pie-chart',    1, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'report'), 'report:cost',      '成本明细',   'MENU', '/report/cost',      'report/cost/index',      'data-board',   2, 1, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'report'), 'report:lifecycle', '生命周期台账', 'MENU', '/report/lifecycle', 'report/lifecycle/index', 'connection',   3, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 步骤 3：插入按钮级权限（依赖步骤 2 的二级菜单）
-INSERT INTO pmis_permission
+INSERT INTO ydsz_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
 VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:create', '新增用户', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:update', '编辑用户', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:delete', '删除用户', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:reset',  '重置密码', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:create', '新增角色', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:update', '编辑角色', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:delete', '删除角色', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:assign', '分配权限', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:create', '新增菜单', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:update', '编辑菜单', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:delete', '删除菜单', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0)
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:user'), 'auth:user:create', '新增用户', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:user'), 'auth:user:update', '编辑用户', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:user'), 'auth:user:delete', '删除用户', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:user'), 'auth:user:reset',  '重置密码', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:role'), 'auth:role:create', '新增角色', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:role'), 'auth:role:update', '编辑角色', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:role'), 'auth:role:delete', '删除角色', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:role'), 'auth:role:assign', '分配权限', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:menu'), 'auth:perm:create', '新增菜单', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:menu'), 'auth:perm:update', '编辑菜单', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
+    ((SELECT id FROM ydsz_permission WHERE perm_code = 'system:menu'), 'auth:perm:delete', '删除菜单', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 二. SUPER_ADMIN 角色绑定所有权限
-INSERT INTO pmis_role_permission (role_id, permission_id)
+INSERT INTO ydsz_role_permission (role_id, permission_id)
 SELECT
-    (SELECT id FROM pmis_role WHERE role_code = 'SUPER_ADMIN'),
+    (SELECT id FROM ydsz_role WHERE role_code = 'SUPER_ADMIN'),
     p.id
-FROM pmis_permission p
+FROM ydsz_permission p
 WHERE p.deleted = 0
   AND p.status = 'ENABLED'
 ON CONFLICT DO NOTHING;
 
 -- 三. admin 用户绑定到 SUPER_ADMIN 角色
-INSERT INTO pmis_user_role (user_id, role_id, created_by)
+INSERT INTO ydsz_user_role (user_id, role_id, created_by)
 SELECT
-    (SELECT id FROM pmis_user_account WHERE username = 'admin'),
-    (SELECT id FROM pmis_role WHERE role_code = 'SUPER_ADMIN'),
+    (SELECT id FROM ydsz_user_account WHERE username = 'admin'),
+    (SELECT id FROM ydsz_role WHERE role_code = 'SUPER_ADMIN'),
     0
 ON CONFLICT DO NOTHING;
 
@@ -5712,37 +5712,37 @@ ON CONFLICT DO NOTHING;
 -- 1. 项目收入 + 成本视图（按 initiation × period）
 -- ----------------------------
 -- 优化: 显式带 tenant_id,避免 JOIN 放大导致跨租户数据泄露
-CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost
+CREATE OR REPLACE VIEW ydsz_view_initiation_revenue_cost
     WITH (security_invoker = true) AS
 SELECT i.tenant_id,
        i.id              AS initiation_id,
-       COALESCE((SELECT SUM(amount) FROM pmis_project_revenue r
+       COALESCE((SELECT SUM(amount) FROM ydsz_project_revenue r
                   WHERE r.initiation_id = i.id AND r.deleted = 0
                     AND r.tenant_id = i.tenant_id), 0)         AS total_revenue,
-       COALESCE((SELECT SUM(amount) FROM pmis_project_invoice p
+       COALESCE((SELECT SUM(amount) FROM ydsz_project_invoice p
                   WHERE p.initiation_id = i.id AND p.deleted = 0
                     AND p.tenant_id = i.tenant_id), 0)         AS invoiced_amount,
-       COALESCE((SELECT SUM(amount) FROM pmis_project_revenue r2
+       COALESCE((SELECT SUM(amount) FROM ydsz_project_revenue r2
                   WHERE r2.initiation_id = i.id AND r2.deleted = 0
                     AND r2.status = 'CONFIRMED'
                     AND r2.tenant_id = i.tenant_id), 0)        AS confirmed_revenue,
-       COALESCE((SELECT SUM(amount) FROM pmis_cost_allocation
+       COALESCE((SELECT SUM(amount) FROM ydsz_cost_allocation
                   WHERE initiation_id = i.id AND deleted = 0 AND cost_type = 'LABOR'
                     AND tenant_id = i.tenant_id), 0)           AS labor_cost,
-       COALESCE((SELECT SUM(amount) FROM pmis_cost_purchase
+       COALESCE((SELECT SUM(amount) FROM ydsz_cost_purchase
                   WHERE initiation_id = i.id AND deleted = 0
                     AND tenant_id = i.tenant_id), 0)          AS purchase_cost,
-       COALESCE((SELECT SUM(amount) FROM pmis_project_expense
+       COALESCE((SELECT SUM(amount) FROM ydsz_project_expense
                   WHERE initiation_id = i.id AND deleted = 0
                     AND tenant_id = i.tenant_id), 0)          AS expense_cost
-FROM pmis_project_initiation i
+FROM ydsz_project_initiation i
 WHERE i.deleted = 0;
-COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现;每条子查询强制带 tenant_id = i.tenant_id 防止跨租户数据污染';
+COMMENT ON VIEW ydsz_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现;每条子查询强制带 tenant_id = i.tenant_id 防止跨租户数据污染';
 
 -- ----------------------------
 -- 2. 项目 EVM 预警分布
 -- ----------------------------
-CREATE OR REPLACE VIEW pmis_view_initiation_evm
+CREATE OR REPLACE VIEW ydsz_view_initiation_evm
     WITH (security_invoker = true) AS
 SELECT tenant_id,
        initiation_id,
@@ -5754,48 +5754,48 @@ SELECT tenant_id,
        COUNT(*) FILTER (WHERE alert_level = 'RED')    AS red_count,
        COUNT(*) FILTER (WHERE alert_level = 'YELLOW') AS yellow_count,
        COUNT(*) FILTER (WHERE alert_level = 'NORMAL') AS green_count
-FROM pmis_evm_measure
+FROM ydsz_evm_measure
 WHERE deleted = 0
 GROUP BY tenant_id, initiation_id;
-COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按 tenant_id + 立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
+COMMENT ON VIEW ydsz_view_initiation_evm IS '项目 EVM 预警分布视图: 按 tenant_id + 立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
 
 -- ----------------------------
 -- 3. 经营驾驶舱 KPI 总览视图
 -- ----------------------------
 -- 注意: 多租户场景下,此视图按 tenant_id 分组聚合,确保租户间数据隔离
-CREATE OR REPLACE VIEW pmis_view_cockpit_overview
+CREATE OR REPLACE VIEW ydsz_view_cockpit_overview
     WITH (security_invoker = true) AS
 SELECT
     tenant_id,
-    (SELECT COUNT(*) FROM pmis_project_initiation
+    (SELECT COUNT(*) FROM ydsz_project_initiation
         WHERE deleted = 0 AND stage IN ('APPROVED','IN_PROGRESS')
           AND tenant_id = t.tenant_id)                                            AS active_projects,
-    (SELECT COALESCE(SUM(amount), 0) FROM pmis_project_invoice
+    (SELECT COALESCE(SUM(amount), 0) FROM ydsz_project_invoice
         WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED')
           AND tenant_id = t.tenant_id)                                            AS total_invoiced,
-    (SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_project_payment
+    (SELECT COALESCE(SUM(allocated_amount), 0) FROM ydsz_project_payment
         WHERE deleted = 0 AND status = 'ALLOCATED'
           AND tenant_id = t.tenant_id)                                           AS confirmed_revenue
-FROM (SELECT DISTINCT tenant_id FROM pmis_project_initiation WHERE deleted = 0) t;
-COMMENT ON VIEW pmis_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 按 tenant_id 分组汇总 active_projects/total_invoiced/confirmed_revenue,单租户场景返回单行;多租户需前端按租户过滤;底层子查询都强制带 tenant_id 关联,杜绝跨租户数据污染;CockpitReportController#overview 直接读取';
+FROM (SELECT DISTINCT tenant_id FROM ydsz_project_initiation WHERE deleted = 0) t;
+COMMENT ON VIEW ydsz_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 按 tenant_id 分组汇总 active_projects/total_invoiced/confirmed_revenue,单租户场景返回单行;多租户需前端按租户过滤;底层子查询都强制带 tenant_id 关联,杜绝跨租户数据污染;CockpitReportController#overview 直接读取';
 
 -- ----------------------------
 -- 4. 项目风险预警视图
 -- ----------------------------
-CREATE OR REPLACE VIEW pmis_view_risk_dashboard
+CREATE OR REPLACE VIEW ydsz_view_risk_dashboard
     WITH (security_invoker = true) AS
 SELECT tenant_id,
        risk_level,
        COUNT(*) AS cnt
-FROM pmis_execution_risk
+FROM ydsz_execution_risk
 WHERE deleted = 0 AND status IN ('OPEN','MITIGATING')
 GROUP BY tenant_id, risk_level;
-COMMENT ON VIEW pmis_view_risk_dashboard IS '项目风险预警视图: 按 tenant_id + risk_level 聚合未关闭风险数,AdvancedReportService#riskDashboard 读取,单租户场景可按 risk_level 过滤';
+COMMENT ON VIEW ydsz_view_risk_dashboard IS '项目风险预警视图: 按 tenant_id + risk_level 聚合未关闭风险数,AdvancedReportService#riskDashboard 读取,单租户场景可按 risk_level 过滤';
 
 -- ----------------------------
 -- 5. 人效排行（按员工聚合活跃项目数 + 平均 allocation）
 -- ----------------------------
-CREATE OR REPLACE VIEW pmis_view_employee_utilization
+CREATE OR REPLACE VIEW ydsz_view_employee_utilization
     WITH (security_invoker = true) AS
 SELECT tenant_id,
        employee_id,
@@ -5803,10 +5803,10 @@ SELECT tenant_id,
        COUNT(*) FILTER (WHERE status IN ('ACTIVE','RESERVED','TRANSFERRING')) AS assigned_count,
        COALESCE(AVG(allocation) FILTER (WHERE status = 'ACTIVE'), 0) AS avg_allocation,
        COALESCE(SUM(allocation) FILTER (WHERE status = 'ACTIVE'), 0) AS total_allocation
-FROM pmis_resource_assignment
+FROM ydsz_resource_assignment
 WHERE deleted = 0
 GROUP BY tenant_id, employee_id;
-COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按 tenant_id + 员工聚合 active_count/assigned_count/avg_allocation,AdvancedReportService#utilizationRank 读取;Feign + try-catch 降级到 0,跨模块故障不阻塞驾驶舱';
+COMMENT ON VIEW ydsz_view_employee_utilization IS '人效排行视图: 按 tenant_id + 员工聚合 active_count/assigned_count/avg_allocation,AdvancedReportService#utilizationRank 读取;Feign + try-catch 降级到 0,跨模块故障不阻塞驾驶舱';
 
 -- --------------------------------------------------------------------
 
@@ -5816,15 +5816,15 @@ COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按 tenan
 -- V1.0.0_016  权限安全体系  脚本
 -- ============================================================
 -- 说明：批次 13 权限安全体系
--- 1) 数据权限：pmis_user_account 增加 data_scope / custom_dept_ids 字段
--- 2) 登录审计：pmis_login_audit
--- 3) 双因素认证：pmis_user_2fa
--- 4) 数据导出审计：pmis_data_export_audit
--- 5) 会话管理：pmis_user_session
+-- 1) 数据权限：ydsz_user_account 增加 data_scope / custom_dept_ids 字段
+-- 2) 登录审计：ydsz_login_audit
+-- 3) 双因素认证：ydsz_user_2fa
+-- 4) 数据导出审计：ydsz_data_export_audit
+-- 5) 会话管理：ydsz_user_session
 -- ============================================================
 
 -- ----------------------------
--- 1) 增强用户账号表 (已优化内联至 V1.0.0_001 pmis_user_account 定义)
+-- 1) 增强用户账号表 (已优化内联至 V1.0.0_001 ydsz_user_account 定义)
 -- ----------------------------
 -- data_scope / custom_dept_ids / mfa_enabled / mfa_type / last_pwd_change_at / pwd_change_count
 -- 已在 V1.0.0_001 中以最终结构内联(含 CHECK 约束),此处不再重复 ADD COLUMN
@@ -5832,7 +5832,7 @@ COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按 tenan
 -- ----------------------------
 -- 2) 登录审计
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_login_audit (
+CREATE TABLE IF NOT EXISTS ydsz_login_audit (
     id              VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     username        VARCHAR(64)   NOT NULL,
     user_id         VARCHAR(20),
@@ -5851,34 +5851,34 @@ CREATE TABLE IF NOT EXISTS pmis_login_audit (
     CONSTRAINT ck_login_audit_status    CHECK (status IN ('SUCCESS','FAIL','LOCKED','MFA_REQUIRED')),
     CONSTRAINT ck_login_audit_deleted   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_login_audit IS '登录审计日志表: 等保 2.0 要求,登录成功/失败全留存,支持溯源审计';
-COMMENT ON COLUMN pmis_login_audit.username IS '登录用户名: 失败时也可记录,便于排查撞库';
-COMMENT ON COLUMN pmis_login_audit.user_id IS '登录用户 ID: 成功时记录,失败可为 NULL';
-COMMENT ON COLUMN pmis_login_audit.login_at IS '登录时间';
-COMMENT ON COLUMN pmis_login_audit.login_ip IS '登录 IP: 用于异常登录检测';
-COMMENT ON COLUMN pmis_login_audit.user_agent IS '浏览器 UA: 用于设备指纹';
-COMMENT ON COLUMN pmis_login_audit.status IS '状态: SUCCESS 成功 / FAIL 失败 / LOCKED 锁定 / MFA_REQUIRED 待 MFA';
-COMMENT ON COLUMN pmis_login_audit.fail_reason IS '失败原因: 密码错误/账号锁定/MFA 失败等';
-COMMENT ON COLUMN pmis_login_audit.mfa_used IS '是否使用 MFA: true=已启用并使用';
-COMMENT ON COLUMN pmis_login_audit.mfa_success IS 'MFA 是否通过: NULL=未使用,true=通过,false=失败';
-COMMENT ON COLUMN pmis_login_audit.trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_login_audit.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_login_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_login_audit IS '登录审计日志表: 等保 2.0 要求,登录成功/失败全留存,支持溯源审计';
+COMMENT ON COLUMN ydsz_login_audit.username IS '登录用户名: 失败时也可记录,便于排查撞库';
+COMMENT ON COLUMN ydsz_login_audit.user_id IS '登录用户 ID: 成功时记录,失败可为 NULL';
+COMMENT ON COLUMN ydsz_login_audit.login_at IS '登录时间';
+COMMENT ON COLUMN ydsz_login_audit.login_ip IS '登录 IP: 用于异常登录检测';
+COMMENT ON COLUMN ydsz_login_audit.user_agent IS '浏览器 UA: 用于设备指纹';
+COMMENT ON COLUMN ydsz_login_audit.status IS '状态: SUCCESS 成功 / FAIL 失败 / LOCKED 锁定 / MFA_REQUIRED 待 MFA';
+COMMENT ON COLUMN ydsz_login_audit.fail_reason IS '失败原因: 密码错误/账号锁定/MFA 失败等';
+COMMENT ON COLUMN ydsz_login_audit.mfa_used IS '是否使用 MFA: true=已启用并使用';
+COMMENT ON COLUMN ydsz_login_audit.mfa_success IS 'MFA 是否通过: NULL=未使用,true=通过,false=失败';
+COMMENT ON COLUMN ydsz_login_audit.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_login_audit.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_login_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_login_audit_*)
 CREATE INDEX IF NOT EXISTS idx_login_audit_tenant_user_at
-    ON pmis_login_audit(tenant_id, username, login_at DESC)
+    ON ydsz_login_audit(tenant_id, username, login_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_login_audit_tenant_ip_at
-    ON pmis_login_audit(tenant_id, login_ip, login_at DESC)
+    ON ydsz_login_audit(tenant_id, login_ip, login_at DESC)
     WHERE deleted = 0 AND login_ip IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_login_audit_tenant_status_at
-    ON pmis_login_audit(tenant_id, status, login_at DESC)
+    ON ydsz_login_audit(tenant_id, status, login_at DESC)
     WHERE deleted = 0;
 
 -- ----------------------------
 -- 3) 双因素认证
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_user_2fa (
+CREATE TABLE IF NOT EXISTS ydsz_user_2fa (
     id              VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)        NOT NULL,
     mfa_type        VARCHAR(16)   NOT NULL DEFAULT 'TOTP',
@@ -5895,24 +5895,24 @@ CREATE TABLE IF NOT EXISTS pmis_user_2fa (
     CONSTRAINT ck_user_2fa_type         CHECK (mfa_type IN ('TOTP','SMS','EMAIL')),
     CONSTRAINT ck_user_2fa_deleted      CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_user_2fa IS '用户双因素认证表: 基于 TOTP（Time-based OTP）的双因素认证,使用 constant-time 比对防时序攻击';
-COMMENT ON COLUMN pmis_user_2fa.user_id IS '用户 ID';
-COMMENT ON COLUMN pmis_user_2fa.mfa_type IS 'MFA 类型: TOTP 时间型 / SMS 短信 / EMAIL 邮件';
-COMMENT ON COLUMN pmis_user_2fa.secret IS 'TOTP 密钥: Base32 编码,扫描二维码';
-COMMENT ON COLUMN pmis_user_2fa.binding_at IS '绑定时间';
-COMMENT ON COLUMN pmis_user_2fa.last_used_at IS '最近使用时间';
-COMMENT ON COLUMN pmis_user_2fa.backup_codes IS '备份码（密文）: 一次性,小写 hex 存储,已使用标记为 _used_<timestamp>';
-COMMENT ON COLUMN pmis_user_2fa.enabled IS '是否启用: true=启用';
-COMMENT ON COLUMN pmis_user_2fa.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_user_2fa.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_user_2fa IS '用户双因素认证表: 基于 TOTP（Time-based OTP）的双因素认证,使用 constant-time 比对防时序攻击';
+COMMENT ON COLUMN ydsz_user_2fa.user_id IS '用户 ID';
+COMMENT ON COLUMN ydsz_user_2fa.mfa_type IS 'MFA 类型: TOTP 时间型 / SMS 短信 / EMAIL 邮件';
+COMMENT ON COLUMN ydsz_user_2fa.secret IS 'TOTP 密钥: Base32 编码,扫描二维码';
+COMMENT ON COLUMN ydsz_user_2fa.binding_at IS '绑定时间';
+COMMENT ON COLUMN ydsz_user_2fa.last_used_at IS '最近使用时间';
+COMMENT ON COLUMN ydsz_user_2fa.backup_codes IS '备份码（密文）: 一次性,小写 hex 存储,已使用标记为 _used_<timestamp>';
+COMMENT ON COLUMN ydsz_user_2fa.enabled IS '是否启用: true=启用';
+COMMENT ON COLUMN ydsz_user_2fa.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_user_2fa.deleted IS '逻辑删除: 0=未删除,1=已删除';
 CREATE INDEX IF NOT EXISTS idx_user_2fa_tenant_user
-    ON pmis_user_2fa(tenant_id, user_id)
+    ON ydsz_user_2fa(tenant_id, user_id)
     WHERE deleted = 0;
 
 -- ----------------------------
 -- 4) 数据导出审计
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_data_export_audit (
+CREATE TABLE IF NOT EXISTS ydsz_data_export_audit (
     id              VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)        NOT NULL,
     username        VARCHAR(64)   NOT NULL,
@@ -5937,28 +5937,28 @@ CREATE TABLE IF NOT EXISTS pmis_data_export_audit (
     CONSTRAINT ck_dea_file_size_nonneg   CHECK (file_size IS NULL OR file_size >= 0),
     CONSTRAINT ck_dea_deleted            CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_data_export_audit IS '数据导出审计表: 合同/财务/薪酬等敏感数据导出全留存,@DataExportAudit 自动捕获';
-COMMENT ON COLUMN pmis_data_export_audit.user_id IS '导出用户 ID';
-COMMENT ON COLUMN pmis_data_export_audit.username IS '导出用户姓名（冗余）';
-COMMENT ON COLUMN pmis_data_export_audit.export_module IS '导出模块: PROJECT/EXECUTION/FINANCE 等';
-COMMENT ON COLUMN pmis_data_export_audit.export_action IS '导出动作: EXPORT 导出 / PRINT 打印 / DOWNLOAD 下载';
-COMMENT ON COLUMN pmis_data_export_audit.biz_type IS '业务类型';
-COMMENT ON COLUMN pmis_data_export_audit.row_count IS '导出行数: 自动检测 Collection/Number,作为审计基数';
-COMMENT ON COLUMN pmis_data_export_audit.file_name IS '导出文件名';
-COMMENT ON COLUMN pmis_data_export_audit.file_size IS '文件大小(字节)';
-COMMENT ON COLUMN pmis_data_export_audit.export_format IS '导出格式: XLSX/CSV/PDF';
-COMMENT ON COLUMN pmis_data_export_audit.query_summary IS '查询条件摘要: 用于审计导出范围';
-COMMENT ON COLUMN pmis_data_export_audit.trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_data_export_audit.client_ip IS '客户端 IP';
-COMMENT ON COLUMN pmis_data_export_audit.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_data_export_audit.exported_at IS '导出时间';
-COMMENT ON COLUMN pmis_data_export_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_data_export_audit IS '数据导出审计表: 合同/财务/薪酬等敏感数据导出全留存,@DataExportAudit 自动捕获';
+COMMENT ON COLUMN ydsz_data_export_audit.user_id IS '导出用户 ID';
+COMMENT ON COLUMN ydsz_data_export_audit.username IS '导出用户姓名（冗余）';
+COMMENT ON COLUMN ydsz_data_export_audit.export_module IS '导出模块: PROJECT/EXECUTION/FINANCE 等';
+COMMENT ON COLUMN ydsz_data_export_audit.export_action IS '导出动作: EXPORT 导出 / PRINT 打印 / DOWNLOAD 下载';
+COMMENT ON COLUMN ydsz_data_export_audit.biz_type IS '业务类型';
+COMMENT ON COLUMN ydsz_data_export_audit.row_count IS '导出行数: 自动检测 Collection/Number,作为审计基数';
+COMMENT ON COLUMN ydsz_data_export_audit.file_name IS '导出文件名';
+COMMENT ON COLUMN ydsz_data_export_audit.file_size IS '文件大小(字节)';
+COMMENT ON COLUMN ydsz_data_export_audit.export_format IS '导出格式: XLSX/CSV/PDF';
+COMMENT ON COLUMN ydsz_data_export_audit.query_summary IS '查询条件摘要: 用于审计导出范围';
+COMMENT ON COLUMN ydsz_data_export_audit.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_data_export_audit.client_ip IS '客户端 IP';
+COMMENT ON COLUMN ydsz_data_export_audit.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_data_export_audit.exported_at IS '导出时间';
+COMMENT ON COLUMN ydsz_data_export_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_export_audit_*)
 CREATE INDEX IF NOT EXISTS idx_dea_tenant_user_at
-    ON pmis_data_export_audit(tenant_id, user_id, exported_at DESC)
+    ON ydsz_data_export_audit(tenant_id, user_id, exported_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_dea_tenant_module_at
-    ON pmis_data_export_audit(tenant_id, export_module, exported_at DESC)
+    ON ydsz_data_export_audit(tenant_id, export_module, exported_at DESC)
     WHERE deleted = 0;
 
 -- 5) 敏感操作二次确认: 已下线（@RequireReAuth 流程整体移除,2026-07 简化）
@@ -5966,7 +5966,7 @@ CREATE INDEX IF NOT EXISTS idx_dea_tenant_module_at
 -- ----------------------------
 -- 6) 用户会话（单点登录/强制下线）
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_user_session (
+CREATE TABLE IF NOT EXISTS ydsz_user_session (
     id              VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)        NOT NULL,
     session_id      VARCHAR(64)   NOT NULL,
@@ -5991,28 +5991,28 @@ CREATE TABLE IF NOT EXISTS pmis_user_session (
     CONSTRAINT ck_user_session_expire    CHECK (expire_at > login_at),
     CONSTRAINT ck_user_session_deleted   CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_user_session IS '用户活跃会话表: 单点登录/强制下线管理,SessionService 维护生命周期';
-COMMENT ON COLUMN pmis_user_session.user_id IS '用户 ID';
-COMMENT ON COLUMN pmis_user_session.session_id IS '会话 ID: 唯一';
-COMMENT ON COLUMN pmis_user_session.token_jti IS 'JWT ID: 用于 token 失效';
-COMMENT ON COLUMN pmis_user_session.login_at IS '登录时间';
-COMMENT ON COLUMN pmis_user_session.last_active_at IS '最近活跃时间';
-COMMENT ON COLUMN pmis_user_session.expire_at IS '过期时间';
-COMMENT ON COLUMN pmis_user_session.client_ip IS '客户端 IP';
-COMMENT ON COLUMN pmis_user_session.user_agent IS '浏览器 UA';
-COMMENT ON COLUMN pmis_user_session.device_type IS '设备类型: WEB / IOS / ANDROID / DESKTOP';
-COMMENT ON COLUMN pmis_user_session.status IS '会话状态: ACTIVE 活跃 / EXPIRED 过期 / KICKED 踢出 / LOGOUT 主动登出';
-COMMENT ON COLUMN pmis_user_session.logout_at IS '登出时间';
-COMMENT ON COLUMN pmis_user_session.logout_reason IS '登出原因: USER_LOGOUT / ADMIN_KICK / EXPIRED';
-COMMENT ON COLUMN pmis_user_session.trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_user_session.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_user_session.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_user_session IS '用户活跃会话表: 单点登录/强制下线管理,SessionService 维护生命周期';
+COMMENT ON COLUMN ydsz_user_session.user_id IS '用户 ID';
+COMMENT ON COLUMN ydsz_user_session.session_id IS '会话 ID: 唯一';
+COMMENT ON COLUMN ydsz_user_session.token_jti IS 'JWT ID: 用于 token 失效';
+COMMENT ON COLUMN ydsz_user_session.login_at IS '登录时间';
+COMMENT ON COLUMN ydsz_user_session.last_active_at IS '最近活跃时间';
+COMMENT ON COLUMN ydsz_user_session.expire_at IS '过期时间';
+COMMENT ON COLUMN ydsz_user_session.client_ip IS '客户端 IP';
+COMMENT ON COLUMN ydsz_user_session.user_agent IS '浏览器 UA';
+COMMENT ON COLUMN ydsz_user_session.device_type IS '设备类型: WEB / IOS / ANDROID / DESKTOP';
+COMMENT ON COLUMN ydsz_user_session.status IS '会话状态: ACTIVE 活跃 / EXPIRED 过期 / KICKED 踢出 / LOGOUT 主动登出';
+COMMENT ON COLUMN ydsz_user_session.logout_at IS '登出时间';
+COMMENT ON COLUMN ydsz_user_session.logout_reason IS '登出原因: USER_LOGOUT / ADMIN_KICK / EXPIRED';
+COMMENT ON COLUMN ydsz_user_session.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_user_session.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_user_session.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_user_session_*)
 CREATE INDEX IF NOT EXISTS idx_user_session_tenant_user_status
-    ON pmis_user_session(tenant_id, user_id, status)
+    ON ydsz_user_session(tenant_id, user_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_user_session_tenant_expire
-    ON pmis_user_session(tenant_id, expire_at)
+    ON ydsz_user_session(tenant_id, expire_at)
     WHERE deleted = 0 AND status = 'ACTIVE';
 
 -- --------------------------------------------------------------------
@@ -6023,15 +6023,15 @@ CREATE INDEX IF NOT EXISTS idx_user_session_tenant_expire
 -- V1.0.0_017  项目售后管理  脚本
 -- ============================================================
 -- 说明：批次 14 项目售后管理（PRD 3.8）
--- 1) 质保期：pmis_warranty
--- 2) 运维工单：pmis_ops_ticket
--- 3) 满意度评价：pmis_satisfaction
+-- 1) 质保期：ydsz_warranty
+-- 2) 运维工单：ydsz_ops_ticket
+-- 3) 满意度评价：ydsz_satisfaction
 -- ============================================================
 
 -- ----------------------------
 -- 1) 质保期
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_warranty (
+CREATE TABLE IF NOT EXISTS ydsz_warranty (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     warranty_code       VARCHAR(64)  NOT NULL,
     initiation_id       VARCHAR(20)       NOT NULL,
@@ -6065,39 +6065,39 @@ CREATE TABLE IF NOT EXISTS pmis_warranty (
     CONSTRAINT ck_warranty_end_after      CHECK (end_date >= start_date),
     CONSTRAINT ck_warranty_deleted        CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_warranty IS '项目质保期表: 项目结项后自动创建,到期前 N 天提醒客户,status 状态机 ACTIVE/EXPIRING/EXPIRED/TERMINATED';
-COMMENT ON COLUMN pmis_warranty.warranty_code IS '质保单号: 业务唯一,如 WAR-2026-001';
-COMMENT ON COLUMN pmis_warranty.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_warranty.contract_id IS '所属合同 ID';
-COMMENT ON COLUMN pmis_warranty.project_type IS '项目类型: 冗余字段';
-COMMENT ON COLUMN pmis_warranty.project_level IS '项目级别: L1-L18,冗余字段';
-COMMENT ON COLUMN pmis_warranty.start_date IS '质保开始日期';
-COMMENT ON COLUMN pmis_warranty.end_date IS '质保结束日期';
-COMMENT ON COLUMN pmis_warranty.duration_months IS '质保期时长(月): 默认 12';
-COMMENT ON COLUMN pmis_warranty.notice_days IS '提前提醒天数: 到期前 N 天发通知,默认 30';
-COMMENT ON COLUMN pmis_warranty.notice_sent IS '是否已发送到期提醒: true=已发';
-COMMENT ON COLUMN pmis_warranty.notice_sent_at IS '提醒发送时间';
-COMMENT ON COLUMN pmis_warranty.status IS '状态: ACTIVE 生效中 / EXPIRING 即将到期 / EXPIRED 已到期 / TERMINATED 已终止';
-COMMENT ON COLUMN pmis_warranty.terminated_at IS '终止时间';
-COMMENT ON COLUMN pmis_warranty.terminated_reason IS '终止原因';
-COMMENT ON COLUMN pmis_warranty.contact_name IS '客户联系人姓名';
-COMMENT ON COLUMN pmis_warranty.contact_phone IS '客户联系人电话';
-COMMENT ON COLUMN pmis_warranty.remark IS '备注';
-COMMENT ON COLUMN pmis_warranty.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_warranty.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_warranty.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_warranty IS '项目质保期表: 项目结项后自动创建,到期前 N 天提醒客户,status 状态机 ACTIVE/EXPIRING/EXPIRED/TERMINATED';
+COMMENT ON COLUMN ydsz_warranty.warranty_code IS '质保单号: 业务唯一,如 WAR-2026-001';
+COMMENT ON COLUMN ydsz_warranty.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_warranty.contract_id IS '所属合同 ID';
+COMMENT ON COLUMN ydsz_warranty.project_type IS '项目类型: 冗余字段';
+COMMENT ON COLUMN ydsz_warranty.project_level IS '项目级别: L1-L18,冗余字段';
+COMMENT ON COLUMN ydsz_warranty.start_date IS '质保开始日期';
+COMMENT ON COLUMN ydsz_warranty.end_date IS '质保结束日期';
+COMMENT ON COLUMN ydsz_warranty.duration_months IS '质保期时长(月): 默认 12';
+COMMENT ON COLUMN ydsz_warranty.notice_days IS '提前提醒天数: 到期前 N 天发通知,默认 30';
+COMMENT ON COLUMN ydsz_warranty.notice_sent IS '是否已发送到期提醒: true=已发';
+COMMENT ON COLUMN ydsz_warranty.notice_sent_at IS '提醒发送时间';
+COMMENT ON COLUMN ydsz_warranty.status IS '状态: ACTIVE 生效中 / EXPIRING 即将到期 / EXPIRED 已到期 / TERMINATED 已终止';
+COMMENT ON COLUMN ydsz_warranty.terminated_at IS '终止时间';
+COMMENT ON COLUMN ydsz_warranty.terminated_reason IS '终止原因';
+COMMENT ON COLUMN ydsz_warranty.contact_name IS '客户联系人姓名';
+COMMENT ON COLUMN ydsz_warranty.contact_phone IS '客户联系人电话';
+COMMENT ON COLUMN ydsz_warranty.remark IS '备注';
+COMMENT ON COLUMN ydsz_warranty.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_warranty.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_warranty.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_warranty_*)
 CREATE INDEX IF NOT EXISTS idx_warranty_tenant_initiation
-    ON pmis_warranty(tenant_id, initiation_id)
+    ON ydsz_warranty(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_warranty_tenant_status_end
-    ON pmis_warranty(tenant_id, status, end_date)
+    ON ydsz_warranty(tenant_id, status, end_date)
     WHERE deleted = 0;
 
 -- ----------------------------
 -- 2) 运维工单
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
+CREATE TABLE IF NOT EXISTS ydsz_ops_ticket (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     ticket_code         VARCHAR(64)  NOT NULL,
     initiation_id       VARCHAR(20)       NOT NULL,
@@ -6139,56 +6139,56 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     CONSTRAINT ck_ops_due_order             CHECK (resolve_due_at >= response_due_at),
     CONSTRAINT ck_ops_deleted               CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_ops_ticket IS '运维工单表: 项目售后全流程闭环,SLA 跟踪（P1 4h/P2 1d/P3 3d/P4 7d）';
-COMMENT ON COLUMN pmis_ops_ticket.ticket_code IS '工单号: 业务唯一,如 TK-2026-001';
-COMMENT ON COLUMN pmis_ops_ticket.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_ops_ticket.warranty_id IS '所属质保期 ID';
-COMMENT ON COLUMN pmis_ops_ticket.title IS '工单标题';
-COMMENT ON COLUMN pmis_ops_ticket.description IS '问题描述';
-COMMENT ON COLUMN pmis_ops_ticket.category IS '工单类别: BUG 缺陷 / CHANGE 变更 / CONSULT 咨询 / COMPLAINT 投诉 / OTHER 其他';
-COMMENT ON COLUMN pmis_ops_ticket.priority IS '优先级: P1 紧急 / P2 高 / P3 中 / P4 低';
-COMMENT ON COLUMN pmis_ops_ticket.status IS '工单状态: OPEN 待受理 / ACCEPTED 已受理 / IN_PROGRESS 处理中 / RESOLVED 已解决 / CLOSED 已关闭 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_ops_ticket.reporter_id IS '报修人 ID';
-COMMENT ON COLUMN pmis_ops_ticket.reporter_name IS '报修人姓名（冗余）';
-COMMENT ON COLUMN pmis_ops_ticket.reporter_phone IS '报修人电话';
-COMMENT ON COLUMN pmis_ops_ticket.assignee_id IS '处理人 ID';
-COMMENT ON COLUMN pmis_ops_ticket.assignee_name IS '处理人姓名（冗余）';
-COMMENT ON COLUMN pmis_ops_ticket.accepted_at IS '受理时间';
-COMMENT ON COLUMN pmis_ops_ticket.started_at IS '开始处理时间';
-COMMENT ON COLUMN pmis_ops_ticket.resolved_at IS '解决时间';
-COMMENT ON COLUMN pmis_ops_ticket.closed_at IS '关闭时间';
-COMMENT ON COLUMN pmis_ops_ticket.response_due_at IS '响应 SLA 截止时间';
-COMMENT ON COLUMN pmis_ops_ticket.resolve_due_at IS '解决 SLA 截止时间';
-COMMENT ON COLUMN pmis_ops_ticket.response_breached IS '响应 SLA 是否超期: true=超期';
-COMMENT ON COLUMN pmis_ops_ticket.resolve_breached IS '解决 SLA 是否超期: true=超期';
-COMMENT ON COLUMN pmis_ops_ticket.resolution_note IS '解决方案说明';
-COMMENT ON COLUMN pmis_ops_ticket.customer_score IS '客户评分: 1-5';
-COMMENT ON COLUMN pmis_ops_ticket.customer_comment IS '客户评价';
-COMMENT ON COLUMN pmis_ops_ticket.file_ids IS '附件 ID 列表: 引用 pmis_file_metadata.id';
-COMMENT ON COLUMN pmis_ops_ticket.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_ops_ticket.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_ops_ticket.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_ops_ticket IS '运维工单表: 项目售后全流程闭环,SLA 跟踪（P1 4h/P2 1d/P3 3d/P4 7d）';
+COMMENT ON COLUMN ydsz_ops_ticket.ticket_code IS '工单号: 业务唯一,如 TK-2026-001';
+COMMENT ON COLUMN ydsz_ops_ticket.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_ops_ticket.warranty_id IS '所属质保期 ID';
+COMMENT ON COLUMN ydsz_ops_ticket.title IS '工单标题';
+COMMENT ON COLUMN ydsz_ops_ticket.description IS '问题描述';
+COMMENT ON COLUMN ydsz_ops_ticket.category IS '工单类别: BUG 缺陷 / CHANGE 变更 / CONSULT 咨询 / COMPLAINT 投诉 / OTHER 其他';
+COMMENT ON COLUMN ydsz_ops_ticket.priority IS '优先级: P1 紧急 / P2 高 / P3 中 / P4 低';
+COMMENT ON COLUMN ydsz_ops_ticket.status IS '工单状态: OPEN 待受理 / ACCEPTED 已受理 / IN_PROGRESS 处理中 / RESOLVED 已解决 / CLOSED 已关闭 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_ops_ticket.reporter_id IS '报修人 ID';
+COMMENT ON COLUMN ydsz_ops_ticket.reporter_name IS '报修人姓名（冗余）';
+COMMENT ON COLUMN ydsz_ops_ticket.reporter_phone IS '报修人电话';
+COMMENT ON COLUMN ydsz_ops_ticket.assignee_id IS '处理人 ID';
+COMMENT ON COLUMN ydsz_ops_ticket.assignee_name IS '处理人姓名（冗余）';
+COMMENT ON COLUMN ydsz_ops_ticket.accepted_at IS '受理时间';
+COMMENT ON COLUMN ydsz_ops_ticket.started_at IS '开始处理时间';
+COMMENT ON COLUMN ydsz_ops_ticket.resolved_at IS '解决时间';
+COMMENT ON COLUMN ydsz_ops_ticket.closed_at IS '关闭时间';
+COMMENT ON COLUMN ydsz_ops_ticket.response_due_at IS '响应 SLA 截止时间';
+COMMENT ON COLUMN ydsz_ops_ticket.resolve_due_at IS '解决 SLA 截止时间';
+COMMENT ON COLUMN ydsz_ops_ticket.response_breached IS '响应 SLA 是否超期: true=超期';
+COMMENT ON COLUMN ydsz_ops_ticket.resolve_breached IS '解决 SLA 是否超期: true=超期';
+COMMENT ON COLUMN ydsz_ops_ticket.resolution_note IS '解决方案说明';
+COMMENT ON COLUMN ydsz_ops_ticket.customer_score IS '客户评分: 1-5';
+COMMENT ON COLUMN ydsz_ops_ticket.customer_comment IS '客户评价';
+COMMENT ON COLUMN ydsz_ops_ticket.file_ids IS '附件 ID 列表: 引用 ydsz_file_metadata.id';
+COMMENT ON COLUMN ydsz_ops_ticket.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_ops_ticket.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_ops_ticket.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_ops_*)
 CREATE INDEX IF NOT EXISTS idx_ops_tenant_initiation
-    ON pmis_ops_ticket(tenant_id, initiation_id)
+    ON ydsz_ops_ticket(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ops_tenant_warranty
-    ON pmis_ops_ticket(tenant_id, warranty_id)
+    ON ydsz_ops_ticket(tenant_id, warranty_id)
     WHERE deleted = 0 AND warranty_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_ops_tenant_status
-    ON pmis_ops_ticket(tenant_id, status)
+    ON ydsz_ops_ticket(tenant_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ops_tenant_assignee_status
-    ON pmis_ops_ticket(tenant_id, assignee_id, status)
+    ON ydsz_ops_ticket(tenant_id, assignee_id, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_ops_tenant_priority_status
-    ON pmis_ops_ticket(tenant_id, priority, status)
+    ON ydsz_ops_ticket(tenant_id, priority, status)
     WHERE deleted = 0;
 
 -- ----------------------------
 -- 3) 满意度评价
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_satisfaction (
+CREATE TABLE IF NOT EXISTS ydsz_satisfaction (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     survey_code         VARCHAR(64)  NOT NULL,
     initiation_id       VARCHAR(20)       NOT NULL,
@@ -6224,37 +6224,37 @@ CREATE TABLE IF NOT EXISTS pmis_satisfaction (
     CONSTRAINT ck_satisfaction_attitude   CHECK (attitude        IS NULL OR attitude        BETWEEN 1 AND 5),
     CONSTRAINT ck_satisfaction_deleted    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_satisfaction IS '服务满意度评价表: 工单关闭/质保期结束可触发,4 维度评分（专业/及时/质量/态度）';
-COMMENT ON COLUMN pmis_satisfaction.survey_code IS '评价单号: 业务唯一,如 SAT-2026-001';
-COMMENT ON COLUMN pmis_satisfaction.initiation_id IS '所属立项 ID';
-COMMENT ON COLUMN pmis_satisfaction.ticket_id IS '关联工单 ID: 工单触发的评价';
-COMMENT ON COLUMN pmis_satisfaction.warranty_id IS '关联质保期 ID: 质保期触发的评价';
-COMMENT ON COLUMN pmis_satisfaction.score IS '总评分: 1-5';
-COMMENT ON COLUMN pmis_satisfaction.level IS '评价等级: VERY_SATISFIED 非常满意 / SATISFIED 满意 / NEUTRAL 一般 / UNSATISFIED 不满意 / VERY_UNSATISFIED 非常不满意';
-COMMENT ON COLUMN pmis_satisfaction.professionalism IS '专业度评分: 1-5';
-COMMENT ON COLUMN pmis_satisfaction.timeliness IS '及时性评分: 1-5';
-COMMENT ON COLUMN pmis_satisfaction.quality IS '质量评分: 1-5';
-COMMENT ON COLUMN pmis_satisfaction.attitude IS '态度评分: 1-5';
-COMMENT ON COLUMN pmis_satisfaction.comments IS '评价内容';
-COMMENT ON COLUMN pmis_satisfaction.suggest IS '改进建议';
-COMMENT ON COLUMN pmis_satisfaction.anonymous IS '是否匿名: true=匿名';
-COMMENT ON COLUMN pmis_satisfaction.evaluator_id IS '评价人 ID';
-COMMENT ON COLUMN pmis_satisfaction.evaluator_name IS '评价人姓名（冗余）';
-COMMENT ON COLUMN pmis_satisfaction.evaluated_at IS '评价时间';
-COMMENT ON COLUMN pmis_satisfaction.follow_up IS '是否需要回访: true=需要';
-COMMENT ON COLUMN pmis_satisfaction.follow_up_note IS '回访记录';
-COMMENT ON COLUMN pmis_satisfaction.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_satisfaction.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_satisfaction.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_satisfaction IS '服务满意度评价表: 工单关闭/质保期结束可触发,4 维度评分（专业/及时/质量/态度）';
+COMMENT ON COLUMN ydsz_satisfaction.survey_code IS '评价单号: 业务唯一,如 SAT-2026-001';
+COMMENT ON COLUMN ydsz_satisfaction.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN ydsz_satisfaction.ticket_id IS '关联工单 ID: 工单触发的评价';
+COMMENT ON COLUMN ydsz_satisfaction.warranty_id IS '关联质保期 ID: 质保期触发的评价';
+COMMENT ON COLUMN ydsz_satisfaction.score IS '总评分: 1-5';
+COMMENT ON COLUMN ydsz_satisfaction.level IS '评价等级: VERY_SATISFIED 非常满意 / SATISFIED 满意 / NEUTRAL 一般 / UNSATISFIED 不满意 / VERY_UNSATISFIED 非常不满意';
+COMMENT ON COLUMN ydsz_satisfaction.professionalism IS '专业度评分: 1-5';
+COMMENT ON COLUMN ydsz_satisfaction.timeliness IS '及时性评分: 1-5';
+COMMENT ON COLUMN ydsz_satisfaction.quality IS '质量评分: 1-5';
+COMMENT ON COLUMN ydsz_satisfaction.attitude IS '态度评分: 1-5';
+COMMENT ON COLUMN ydsz_satisfaction.comments IS '评价内容';
+COMMENT ON COLUMN ydsz_satisfaction.suggest IS '改进建议';
+COMMENT ON COLUMN ydsz_satisfaction.anonymous IS '是否匿名: true=匿名';
+COMMENT ON COLUMN ydsz_satisfaction.evaluator_id IS '评价人 ID';
+COMMENT ON COLUMN ydsz_satisfaction.evaluator_name IS '评价人姓名（冗余）';
+COMMENT ON COLUMN ydsz_satisfaction.evaluated_at IS '评价时间';
+COMMENT ON COLUMN ydsz_satisfaction.follow_up IS '是否需要回访: true=需要';
+COMMENT ON COLUMN ydsz_satisfaction.follow_up_note IS '回访记录';
+COMMENT ON COLUMN ydsz_satisfaction.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_satisfaction.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_satisfaction.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的 idx_satisfaction_*)
 CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_initiation
-    ON pmis_satisfaction(tenant_id, initiation_id)
+    ON ydsz_satisfaction(tenant_id, initiation_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_ticket
-    ON pmis_satisfaction(tenant_id, ticket_id)
+    ON ydsz_satisfaction(tenant_id, ticket_id)
     WHERE deleted = 0 AND ticket_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_level
-    ON pmis_satisfaction(tenant_id, level)
+    ON ydsz_satisfaction(tenant_id, level)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
@@ -6266,21 +6266,21 @@ CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_level
 -- ============================================================
 -- 说明：批次 15 智能化升级-系统内部数据管理（PRD 4.2）
 -- 1) 工时表新增 billable 字段（可计费标识）
--- 2) 预警分级推送表 pmis_alert_dispatch
--- 3) 每日对账表 pmis_project_reconcile_daily
+-- 2) 预警分级推送表 ydsz_alert_dispatch
+-- 3) 每日对账表 ydsz_project_reconcile_daily
 -- ============================================================
 
 -- ----------------------------
 -- 1) 工时表新增 billable 字段
 -- ----------------------------
-ALTER TABLE pmis_execution_time_entry
+ALTER TABLE ydsz_execution_time_entry
     ADD COLUMN IF NOT EXISTS billable SMALLINT NOT NULL DEFAULT 1;
-COMMENT ON COLUMN pmis_execution_time_entry.billable IS '可计费标识: 1=可计费（计入 BillableUtilization）,0=非计费';
+COMMENT ON COLUMN ydsz_execution_time_entry.billable IS '可计费标识: 1=可计费（计入 BillableUtilization）,0=非计费';
 
 -- ----------------------------
 -- 2) 预警分级推送表
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
+CREATE TABLE IF NOT EXISTS ydsz_alert_dispatch (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     alert_code          VARCHAR(64)  NOT NULL UNIQUE,
     alert_type          VARCHAR(32)  NOT NULL,
@@ -6312,44 +6312,44 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     CONSTRAINT ck_pad_retry_count      CHECK (retry_count >= 0 AND retry_count <= 10),
     CONSTRAINT ck_pad_deleted          CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_alert_dispatch IS '预警分级推送表: 黄/红不同层级触达,失败自动重试（最大 3 次,硬上限 10 次）';
-COMMENT ON COLUMN pmis_alert_dispatch.alert_code IS '预警编码: 业务唯一,如 ALERT-2026-001';
-COMMENT ON COLUMN pmis_alert_dispatch.alert_type IS '预警类型: BUDGET 预算 / EVM 挣值 / SLA 工单 / RISK 风险 / PROFIT 利润 / BENCH 闲置 / UTILIZATION 利用率 / OTHER 其他';
-COMMENT ON COLUMN pmis_alert_dispatch.alert_level IS '预警等级: YELLOW 黄色 / RED 红色';
-COMMENT ON COLUMN pmis_alert_dispatch.source_type IS '触发源类型: PROJECT/EVM/TICKET/BENCH/CONFIG/OTHER';
-COMMENT ON COLUMN pmis_alert_dispatch.source_id IS '触发源业务 ID';
-COMMENT ON COLUMN pmis_alert_dispatch.title IS '预警标题';
-COMMENT ON COLUMN pmis_alert_dispatch.content IS '预警内容（已渲染的模板）';
-COMMENT ON COLUMN pmis_alert_dispatch.target_role IS '目标角色: PM/PMO/CFO 等';
-COMMENT ON COLUMN pmis_alert_dispatch.target_user_ids IS '目标用户 ID 列表: 逗号分隔,精确触达';
-COMMENT ON COLUMN pmis_alert_dispatch.push_channels IS '推送渠道: INAPP 站内信 / EMAIL 邮件 / SMS 短信 / WECHAT 微信,逗号分隔';
-COMMENT ON COLUMN pmis_alert_dispatch.dispatched_at IS '派发时间';
-COMMENT ON COLUMN pmis_alert_dispatch.dispatched_by IS '派发人: 定时任务 / 系统 / 用户';
-COMMENT ON COLUMN pmis_alert_dispatch.status IS '发送状态: PENDING 待发送 / SENT 已发送 / FAILED 失败 / RETRYING 重试中';
-COMMENT ON COLUMN pmis_alert_dispatch.sent_at IS '发送成功时间';
-COMMENT ON COLUMN pmis_alert_dispatch.fail_reason IS '失败原因';
-COMMENT ON COLUMN pmis_alert_dispatch.retry_count IS '重试次数: 业务最大 3 次,硬上限 10 次';
-COMMENT ON COLUMN pmis_alert_dispatch.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_alert_dispatch.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_alert_dispatch.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_alert_dispatch IS '预警分级推送表: 黄/红不同层级触达,失败自动重试（最大 3 次,硬上限 10 次）';
+COMMENT ON COLUMN ydsz_alert_dispatch.alert_code IS '预警编码: 业务唯一,如 ALERT-2026-001';
+COMMENT ON COLUMN ydsz_alert_dispatch.alert_type IS '预警类型: BUDGET 预算 / EVM 挣值 / SLA 工单 / RISK 风险 / PROFIT 利润 / BENCH 闲置 / UTILIZATION 利用率 / OTHER 其他';
+COMMENT ON COLUMN ydsz_alert_dispatch.alert_level IS '预警等级: YELLOW 黄色 / RED 红色';
+COMMENT ON COLUMN ydsz_alert_dispatch.source_type IS '触发源类型: PROJECT/EVM/TICKET/BENCH/CONFIG/OTHER';
+COMMENT ON COLUMN ydsz_alert_dispatch.source_id IS '触发源业务 ID';
+COMMENT ON COLUMN ydsz_alert_dispatch.title IS '预警标题';
+COMMENT ON COLUMN ydsz_alert_dispatch.content IS '预警内容（已渲染的模板）';
+COMMENT ON COLUMN ydsz_alert_dispatch.target_role IS '目标角色: PM/PMO/CFO 等';
+COMMENT ON COLUMN ydsz_alert_dispatch.target_user_ids IS '目标用户 ID 列表: 逗号分隔,精确触达';
+COMMENT ON COLUMN ydsz_alert_dispatch.push_channels IS '推送渠道: INAPP 站内信 / EMAIL 邮件 / SMS 短信 / WECHAT 微信,逗号分隔';
+COMMENT ON COLUMN ydsz_alert_dispatch.dispatched_at IS '派发时间';
+COMMENT ON COLUMN ydsz_alert_dispatch.dispatched_by IS '派发人: 定时任务 / 系统 / 用户';
+COMMENT ON COLUMN ydsz_alert_dispatch.status IS '发送状态: PENDING 待发送 / SENT 已发送 / FAILED 失败 / RETRYING 重试中';
+COMMENT ON COLUMN ydsz_alert_dispatch.sent_at IS '发送成功时间';
+COMMENT ON COLUMN ydsz_alert_dispatch.fail_reason IS '失败原因';
+COMMENT ON COLUMN ydsz_alert_dispatch.retry_count IS '重试次数: 业务最大 3 次,硬上限 10 次';
+COMMENT ON COLUMN ydsz_alert_dispatch.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_alert_dispatch.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_alert_dispatch.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的单列索引)
 CREATE INDEX IF NOT EXISTS idx_pad_tenant_level_status
-    ON pmis_alert_dispatch(tenant_id, alert_level, status)
+    ON ydsz_alert_dispatch(tenant_id, alert_level, status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pad_tenant_type_dispatched
-    ON pmis_alert_dispatch(tenant_id, alert_type, dispatched_at DESC)
+    ON ydsz_alert_dispatch(tenant_id, alert_type, dispatched_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pad_tenant_source
-    ON pmis_alert_dispatch(tenant_id, source_type, source_id)
+    ON ydsz_alert_dispatch(tenant_id, source_type, source_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pad_tenant_target
-    ON pmis_alert_dispatch(tenant_id, target_role)
+    ON ydsz_alert_dispatch(tenant_id, target_role)
     WHERE deleted = 0;
 
 -- ----------------------------
 -- 3) 每日对账表
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_project_reconcile_daily (
+CREATE TABLE IF NOT EXISTS ydsz_project_reconcile_daily (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     reconcile_date      DATE         NOT NULL,
     reconcile_type      VARCHAR(32)  NOT NULL,
@@ -6373,46 +6373,46 @@ CREATE TABLE IF NOT EXISTS pmis_project_reconcile_daily (
     CONSTRAINT ck_prd_diff_pct_range    CHECK (diff_pct >= -1 AND diff_pct <= 1),
     CONSTRAINT ck_prd_deleted           CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_project_reconcile_daily IS '每日自动对账表: 成本/收入/回款/开票 跨模块校验,ReconcileServiceImpl 执行';
-COMMENT ON COLUMN pmis_project_reconcile_daily.reconcile_date IS '对账日期: 每日 02:00 触发';
-COMMENT ON COLUMN pmis_project_reconcile_daily.reconcile_type IS '对账类型: COST 成本 / REVENUE 收入 / PAYMENT 回款 / INVOICE 开票 / TIMESHEET 工时 / PROFIT 利润 / BENCH 闲置 / BUDGET 预算';
-COMMENT ON COLUMN pmis_project_reconcile_daily.initiation_id IS '所属立项 ID: 可空,NULL 表示全局维度';
-COMMENT ON COLUMN pmis_project_reconcile_daily.expected_amount IS '应计金额(元)';
-COMMENT ON COLUMN pmis_project_reconcile_daily.actual_amount IS '实计金额(元)';
-COMMENT ON COLUMN pmis_project_reconcile_daily.diff_amount IS '差异金额(元) = actual - expected';
-COMMENT ON COLUMN pmis_project_reconcile_daily.diff_pct IS '差异比例: -1 ~ 1,例如 0.05=5%';
-COMMENT ON COLUMN pmis_project_reconcile_daily.status IS '对账状态: OK 一致 / WARN 警告（|diff_pct| < 5%）/ FAIL 失败（|diff_pct| >= 5%）';
-COMMENT ON COLUMN pmis_project_reconcile_daily.detail IS '对账明细 JSON: 列出差异项';
-COMMENT ON COLUMN pmis_project_reconcile_daily.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_project_reconcile_daily.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_project_reconcile_daily.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_project_reconcile_daily IS '每日自动对账表: 成本/收入/回款/开票 跨模块校验,ReconcileServiceImpl 执行';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.reconcile_date IS '对账日期: 每日 02:00 触发';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.reconcile_type IS '对账类型: COST 成本 / REVENUE 收入 / PAYMENT 回款 / INVOICE 开票 / TIMESHEET 工时 / PROFIT 利润 / BENCH 闲置 / BUDGET 预算';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.initiation_id IS '所属立项 ID: 可空,NULL 表示全局维度';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.expected_amount IS '应计金额(元)';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.actual_amount IS '实计金额(元)';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.diff_amount IS '差异金额(元) = actual - expected';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.diff_pct IS '差异比例: -1 ~ 1,例如 0.05=5%';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.status IS '对账状态: OK 一致 / WARN 警告（|diff_pct| < 5%）/ FAIL 失败（|diff_pct| >= 5%）';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.detail IS '对账明细 JSON: 列出差异项';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_project_reconcile_daily.deleted IS '逻辑删除: 0=未删除,1=已删除';
 -- 复合/部分索引(替代零散的单列索引)
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_date_type
-    ON pmis_project_reconcile_daily(tenant_id, reconcile_date DESC, reconcile_type)
+    ON ydsz_project_reconcile_daily(tenant_id, reconcile_date DESC, reconcile_type)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_init_date
-    ON pmis_project_reconcile_daily(tenant_id, initiation_id, reconcile_date DESC)
+    ON ydsz_project_reconcile_daily(tenant_id, initiation_id, reconcile_date DESC)
     WHERE deleted = 0 AND initiation_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_status_date
-    ON pmis_project_reconcile_daily(tenant_id, status, reconcile_date DESC)
+    ON ydsz_project_reconcile_daily(tenant_id, status, reconcile_date DESC)
     WHERE deleted = 0 AND status IN ('WARN','FAIL');
 
 -- 唯一约束：每天每个维度只能有一条
 CREATE UNIQUE INDEX IF NOT EXISTS uk_prd_tenant_date_type_init
-    ON pmis_project_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, '0'), deleted);
+    ON ydsz_project_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, '0'), deleted);
 
 -- --------------------------------------------------------------------
 
 -- ============================ [019] init pmis alert thresholds ============================
 
 -- ====================================================================
--- 预警阈值配置（pmis_config，group=alert）
+-- 预警阈值配置（ydsz_config，group=alert）
 --
 --  说明：EVM / Bench / 预算 / 毛利率 / 利用率 等模块的告警阈值从此处读取，
---       业务模块通过 ConfigClient Feign 调用 ydsz-pmis-system 读取。
+--       业务模块通过 ConfigClient Feign 调用 ydsz-system 读取。
 -- ====================================================================
 
-INSERT INTO pmis_config (config_group, config_key, config_value, value_type, description, is_public, created_by)
+INSERT INTO ydsz_config (config_group, config_key, config_value, value_type, description, is_public, created_by)
 VALUES
     -- EVM 阈值
     ('alert', 'alert.cpi.yellow', '0.95', 'NUMBER', 'CPI 黄色预警阈值（低于即黄灯）', 0, 0),
@@ -6451,9 +6451,9 @@ ON CONFLICT (config_group, config_key, deleted) DO UPDATE
 --
 --  说明：可计费利用率（BillableUtilization）由 cronjob 每日计算后
 --        持久化到本表，驾驶舱 / 排行榜 / 趋势分析均直接读快照，
---        避免每次实时聚合 pmis_execution_time_entry 大表。
+--        避免每次实时聚合 ydsz_execution_time_entry 大表。
 --
---  写入路径：ydsz-pmis-cronjob 模块的
+--  写入路径：ydsz-cronjob 模块的
 --           BillableUtilizationJobHandler#execute
 --  读取路径：CockpitReportService / AdvancedReportService /
 --           BillableUtilizationController
@@ -6462,7 +6462,7 @@ ON CONFLICT (config_group, config_key, deleted) DO UPDATE
 --         PostgreSQL UPSERT ON CONFLICT 保证幂等。
 -- ====================================================================
 
-CREATE TABLE IF NOT EXISTS pmis_billable_utilization_snapshot (
+CREATE TABLE IF NOT EXISTS ydsz_billable_utilization_snapshot (
     id               VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     period           VARCHAR(7)  NOT NULL,                          -- yyyy-MM
     employee_id      VARCHAR(20)      NOT NULL,
@@ -6499,45 +6499,45 @@ CREATE TABLE IF NOT EXISTS pmis_billable_utilization_snapshot (
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0 优化)
 CREATE INDEX IF NOT EXISTS idx_billable_tenant_period
-    ON pmis_billable_utilization_snapshot (tenant_id, period DESC)
+    ON ydsz_billable_utilization_snapshot (tenant_id, period DESC)
     WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_billable_tenant_dept_period
-    ON pmis_billable_utilization_snapshot (tenant_id, department, period)
+    ON ydsz_billable_utilization_snapshot (tenant_id, department, period)
     WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_billable_tenant_grade_period
-    ON pmis_billable_utilization_snapshot (tenant_id, grade, period)
+    ON ydsz_billable_utilization_snapshot (tenant_id, grade, period)
     WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_billable_tenant_level_period
-    ON pmis_billable_utilization_snapshot (tenant_id, level_code, period)
+    ON ydsz_billable_utilization_snapshot (tenant_id, level_code, period)
     WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_billable_tenant_range
-    ON pmis_billable_utilization_snapshot (tenant_id, range_from, range_to)
+    ON ydsz_billable_utilization_snapshot (tenant_id, range_from, range_to)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_billable_utilization_snapshot IS '可计费利用率快照表: cronjob 每日计算并持久化,驾驶舱/排行榜/趋势分析均读快照,避免实时聚合大表';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.period IS '统计周期: 格式 yyyy-MM,例如 2026-06';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.employee_id IS '员工 ID';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.employee_name IS '员工姓名（冗余）';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.level_code IS '职级: L1-L18';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.department IS '所属部门: 冗余字段';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.total_hours IS '全部工时(小时)';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.billable_hours IS '可计费工时(小时): 仅 billable=1 的工时';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.overtime_hours IS '加班工时(小时)';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.leave_hours IS '请假工时(小时)';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.training_hours IS '培训工时(小时): training window 30 天上限';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.bench_hours IS 'Bench 闲置工时(小时)';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.utilization_pct IS '可计费利用率: 0-1,billable_hours / total_hours';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.grade IS '考核等级: EXCELLENT 优秀(>=0.9) / GOOD 良好(>=0.75) / NORMAL 正常(>=0.6) / WARN 警告(>=0.4) / CRITICAL 严重(<0.4)';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.range_from IS '统计区间开始日期';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.range_to IS '统计区间结束日期';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.snapshot_at IS '快照生成时间';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.source IS '数据来源: SCHEDULER 定时任务 / MANUAL 手动 / RETRO 追溯重算';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_billable_utilization_snapshot.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_billable_utilization_snapshot IS '可计费利用率快照表: cronjob 每日计算并持久化,驾驶舱/排行榜/趋势分析均读快照,避免实时聚合大表';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.period IS '统计周期: 格式 yyyy-MM,例如 2026-06';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.employee_id IS '员工 ID';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.employee_name IS '员工姓名（冗余）';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.level_code IS '职级: L1-L18';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.department IS '所属部门: 冗余字段';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.total_hours IS '全部工时(小时)';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.billable_hours IS '可计费工时(小时): 仅 billable=1 的工时';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.overtime_hours IS '加班工时(小时)';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.leave_hours IS '请假工时(小时)';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.training_hours IS '培训工时(小时): training window 30 天上限';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.bench_hours IS 'Bench 闲置工时(小时)';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.utilization_pct IS '可计费利用率: 0-1,billable_hours / total_hours';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.grade IS '考核等级: EXCELLENT 优秀(>=0.9) / GOOD 良好(>=0.75) / NORMAL 正常(>=0.6) / WARN 警告(>=0.4) / CRITICAL 严重(<0.4)';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.range_from IS '统计区间开始日期';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.range_to IS '统计区间结束日期';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.snapshot_at IS '快照生成时间';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.source IS '数据来源: SCHEDULER 定时任务 / MANUAL 手动 / RETRO 追溯重算';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_billable_utilization_snapshot.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 -- --------------------------------------------------------------------
 
@@ -6550,14 +6550,14 @@ COMMENT ON COLUMN pmis_billable_utilization_snapshot.deleted IS '逻辑删除: 0
 --   P5-2 预警重试补偿：每 5 分钟扫描 PENDING/FAILED 预警重发
 --   P6-1 每日自动对账：每日 02:00 跑成本/收入/回款/开票/工时/利润 对账
 --   P7-3 售后巡检    ：每日 03:00 扫质保期 + 运维工单 SLA
--- 表 pmis_job 已在 V1.0.0_006 创建。
+-- 表 ydsz_job 已在 V1.0.0_006 创建。
 -- ============================================================
 
 -- 清理旧记录（保证可重跑）
 
 
 -- ---------- P5-2 预警重试补偿 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (
     '预警重试补偿任务',
     'ALERT',
@@ -6569,7 +6569,7 @@ VALUES (
     1
 ) ON CONFLICT DO NOTHING;
 -- ---------- P6-1 每日自动对账 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (
     '每日对账任务',
     'RECONCILE',
@@ -6577,11 +6577,11 @@ VALUES (
     'dailyReconcileJobHandler',
     '0 0 2 * * ?',
     'NORMAL',
-    '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 pmis_project_reconcile_daily',
+    '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 ydsz_project_reconcile_daily',
     1
 ) ON CONFLICT DO NOTHING;
 -- ---------- P7-3 售后巡检 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (
     '售后巡检任务',
     'AFTERSALES',
@@ -6605,65 +6605,65 @@ VALUES (
 -- ============================================================
 
 -- 预算黄色预警
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'INAPP',
        '【预算黄色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%',
        'INAPP', 'PMIS', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
 
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'EMAIL',
        '【预算黄色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及黄色阈值(80%)。</p>',
        'EMAIL', 'PMIS', 'ENABLED', '预算黄色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
 
 -- 预算红色预警
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'INAPP',
        '【预算红色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%，已触及红色阈值(95%)，请立即关注',
        'INAPP', 'PMIS', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
 
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'EMAIL',
        '【预算红色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及红色阈值(95%)，请立即关注。</p>',
        'EMAIL', 'PMIS', 'ENABLED', '预算红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
 
 -- EVM 红色预警
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'INAPP',
        '【EVM 红色预警】${title}',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
 
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'EMAIL',
        '【EVM 红色预警】${title}',
        '<p>${content}</p>',
        'EMAIL', 'PMIS', 'ENABLED', 'EVM 红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
 
 -- SLA 红色预警（工单超时）
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_SLA_RED', 'INAPP',
        '【SLA 红色预警】工单 ${alertCode} 超时',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', '运维工单 SLA 超时红色预警', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
 
 -- 通用黄色预警兜底
-INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_OTHER_YELLOW', 'INAPP',
        '【黄色预警】${title}',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
 
 -- --------------------------------------------------------------------
 
@@ -6673,7 +6673,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_O
 -- PMIS 自建工作流引擎 DDL（对标 Warm-Flow 7 表极简设计）
 -- 版本: V1.0.0_023
 -- 描述: 自建轻量级工作流引擎，仅 7 张核心表
--- 命名约定: 所有工作流相关表均以 pmis_flow_ 开头
+-- 命名约定: 所有工作流相关表均以 ydsz_flow_ 开头
 -- 字段规范: 与 V1.0.0_001 对齐（created_by / created_at / updated_by / updated_at / deleted）
 -- 设计参考: Dromara Warm-Flow / FlowLong
 -- 适用场景: 立项审批、合同变更、销项审批等线性/会签流程
@@ -6682,7 +6682,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_O
 -- -----------------------------------------------------
 -- 0. 流程分类表（P1-6: 对标钉钉/飞书审批的分类管理）
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_category (
+CREATE TABLE IF NOT EXISTS ydsz_flow_category (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     category_code       VARCHAR(64)       NOT NULL,
@@ -6698,22 +6698,22 @@ CREATE TABLE IF NOT EXISTS pmis_flow_category (
     updated_by          VARCHAR(20)
 );
 
-COMMENT ON TABLE  pmis_flow_category IS 'P1-6: 流程分类表';
-COMMENT ON COLUMN pmis_flow_category.category_code IS '分类编码';
-COMMENT ON COLUMN pmis_flow_category.category_name IS '分类名称';
-COMMENT ON COLUMN pmis_flow_category.parent_id IS '父分类 ID';
+COMMENT ON TABLE  ydsz_flow_category IS 'P1-6: 流程分类表';
+COMMENT ON COLUMN ydsz_flow_category.category_code IS '分类编码';
+COMMENT ON COLUMN ydsz_flow_category.category_name IS '分类名称';
+COMMENT ON COLUMN ydsz_flow_category.parent_id IS '父分类 ID';
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfc_code
-    ON pmis_flow_category (tenant_id, category_code) WHERE deleted = 0;
+    ON ydsz_flow_category (tenant_id, category_code) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfc_parent
-    ON pmis_flow_category (parent_id) WHERE parent_id IS NOT NULL AND deleted = 0;
+    ON ydsz_flow_category (parent_id) WHERE parent_id IS NOT NULL AND deleted = 0;
 
 -- -----------------------------------------------------
 -- 1. 流程定义表（对标 Warm-Flow flow_definition）
 --    记录流程的整体信息（编码、名称、版本、表单路径、模型 JSON）
 -- -----------------------------------------------------
 -- P1-6: 已废弃,无需 DROP
-CREATE TABLE IF NOT EXISTS pmis_flow_definition(
+CREATE TABLE IF NOT EXISTS ydsz_flow_definition(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128) NOT NULL,
@@ -6750,40 +6750,40 @@ CREATE TABLE IF NOT EXISTS pmis_flow_definition(
     CONSTRAINT ck_pfd_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_definition IS '流程定义表: 记录流程的整体信息(编码/名称/版本/表单路径/模型 JSON)';
-COMMENT ON COLUMN pmis_flow_definition.flow_code IS '流程编码(业务语义: project_initiation/contract_change/...)';
-COMMENT ON COLUMN pmis_flow_definition.flow_name IS '流程名称';
-COMMENT ON COLUMN pmis_flow_definition.category IS '流程分类: project/contract/closure/admin';
-COMMENT ON COLUMN pmis_flow_definition.flow_version IS '流程版本(语义化版本,1.0/1.1/2.0)';
-COMMENT ON COLUMN pmis_flow_definition.version IS '乐观锁版本号';
-COMMENT ON COLUMN pmis_flow_definition.model_value IS '设计器模型: CLASSICS 经典 / MIMIC 仿钉钉';
-COMMENT ON COLUMN pmis_flow_definition.form_custom IS '审批表单是否自定义: Y 是 / N 否';
-COMMENT ON COLUMN pmis_flow_definition.form_path IS '审批表单路径(前端路由或外置表单 URL)';
-COMMENT ON COLUMN pmis_flow_definition.activity_status IS '激活状态: 0 挂起 / 1 激活';
-COMMENT ON COLUMN pmis_flow_definition.is_publish IS '发布状态: 0 未发布 / 1 已发布 / 9 失效';
-COMMENT ON COLUMN pmis_flow_definition.listener_type IS '监听器类型(START/TASK/END 等枚举字符串)';
-COMMENT ON COLUMN pmis_flow_definition.listener_path IS '监听器 Spring Bean 路径';
-COMMENT ON COLUMN pmis_flow_definition.ext IS '扩展字段(业务自定义 JSON 字符串)';
-COMMENT ON COLUMN pmis_flow_definition.description IS '流程描述';
-COMMENT ON COLUMN pmis_flow_definition.status IS '状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_definition.locked_by IS 'P2-4: 当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）';
-COMMENT ON COLUMN pmis_flow_definition.locked_at IS 'P2-4: 加锁时间（超过 lock-timeout-minutes 自动释放，默认 30 分钟）';
-COMMENT ON COLUMN pmis_flow_definition.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_definition.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
-COMMENT ON COLUMN pmis_flow_definition.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON TABLE  ydsz_flow_definition IS '流程定义表: 记录流程的整体信息(编码/名称/版本/表单路径/模型 JSON)';
+COMMENT ON COLUMN ydsz_flow_definition.flow_code IS '流程编码(业务语义: project_initiation/contract_change/...)';
+COMMENT ON COLUMN ydsz_flow_definition.flow_name IS '流程名称';
+COMMENT ON COLUMN ydsz_flow_definition.category IS '流程分类: project/contract/closure/admin';
+COMMENT ON COLUMN ydsz_flow_definition.flow_version IS '流程版本(语义化版本,1.0/1.1/2.0)';
+COMMENT ON COLUMN ydsz_flow_definition.version IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_flow_definition.model_value IS '设计器模型: CLASSICS 经典 / MIMIC 仿钉钉';
+COMMENT ON COLUMN ydsz_flow_definition.form_custom IS '审批表单是否自定义: Y 是 / N 否';
+COMMENT ON COLUMN ydsz_flow_definition.form_path IS '审批表单路径(前端路由或外置表单 URL)';
+COMMENT ON COLUMN ydsz_flow_definition.activity_status IS '激活状态: 0 挂起 / 1 激活';
+COMMENT ON COLUMN ydsz_flow_definition.is_publish IS '发布状态: 0 未发布 / 1 已发布 / 9 失效';
+COMMENT ON COLUMN ydsz_flow_definition.listener_type IS '监听器类型(START/TASK/END 等枚举字符串)';
+COMMENT ON COLUMN ydsz_flow_definition.listener_path IS '监听器 Spring Bean 路径';
+COMMENT ON COLUMN ydsz_flow_definition.ext IS '扩展字段(业务自定义 JSON 字符串)';
+COMMENT ON COLUMN ydsz_flow_definition.description IS '流程描述';
+COMMENT ON COLUMN ydsz_flow_definition.status IS '状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_definition.locked_by IS 'P2-4: 当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）';
+COMMENT ON COLUMN ydsz_flow_definition.locked_at IS 'P2-4: 加锁时间（超过 lock-timeout-minutes 自动释放，默认 30 分钟）';
+COMMENT ON COLUMN ydsz_flow_definition.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_definition.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
+COMMENT ON COLUMN ydsz_flow_definition.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfd_tenant_code_version
-    ON pmis_flow_definition(tenant_id, flow_code, version)
+    ON ydsz_flow_definition(tenant_id, flow_code, version)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfd_tenant_category
-    ON pmis_flow_definition(tenant_id, category)
+    ON ydsz_flow_definition(tenant_id, category)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfd_tenant_publish
-    ON pmis_flow_definition(tenant_id, is_publish)
+    ON ydsz_flow_definition(tenant_id, is_publish)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
-    ON pmis_flow_definition(tenant_id, status)
+    ON ydsz_flow_definition(tenant_id, status)
     WHERE deleted = 0;
 
 -- -----------------------------------------------------
@@ -6791,7 +6791,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
 --    流程中的各个节点：开始/审批/会签/网关/结束
 -- -----------------------------------------------------
 -- P1-6: 已废弃,无需 DROP
-CREATE TABLE IF NOT EXISTS pmis_flow_node(
+CREATE TABLE IF NOT EXISTS ydsz_flow_node(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -6817,37 +6817,37 @@ CREATE TABLE IF NOT EXISTS pmis_flow_node(
     CONSTRAINT ck_pfn_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_node IS '流程节点表: 流程中的各个节点(开始/审批/会签/网关/结束)';
-COMMENT ON COLUMN pmis_flow_node.definition_id IS '所属流程定义 ID';
-COMMENT ON COLUMN pmis_flow_node.flow_code IS '流程编码(冗余)';
-COMMENT ON COLUMN pmis_flow_node.node_type IS '节点类型: 0 开始 / 1 审批 / 2 抄送 / 3 条件 / 4 并行网关 / 5 互斥网关 / 6 结束 / 7 子流程';
-COMMENT ON COLUMN pmis_flow_node.node_code IS '节点编码(流程内唯一)';
-COMMENT ON COLUMN pmis_flow_node.node_name IS '节点名称';
-COMMENT ON COLUMN pmis_flow_node.permission_flag IS '办理人权限标识: role:hr / dept:10 / user:1001 / ${spel}';
-COMMENT ON COLUMN pmis_flow_node.skip_any_node IS '任意跳转目标节点编码';
-COMMENT ON COLUMN pmis_flow_node.coordinate IS '设计器坐标 JSON {x,y,width,height}';
-COMMENT ON COLUMN pmis_flow_node.skip_list IS '节点跳转路由集合 JSON';
-COMMENT ON COLUMN pmis_flow_node.ext IS '扩展字段 JSON';
-COMMENT ON COLUMN pmis_flow_node.status IS '状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_node.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_node.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON TABLE  ydsz_flow_node IS '流程节点表: 流程中的各个节点(开始/审批/会签/网关/结束)';
+COMMENT ON COLUMN ydsz_flow_node.definition_id IS '所属流程定义 ID';
+COMMENT ON COLUMN ydsz_flow_node.flow_code IS '流程编码(冗余)';
+COMMENT ON COLUMN ydsz_flow_node.node_type IS '节点类型: 0 开始 / 1 审批 / 2 抄送 / 3 条件 / 4 并行网关 / 5 互斥网关 / 6 结束 / 7 子流程';
+COMMENT ON COLUMN ydsz_flow_node.node_code IS '节点编码(流程内唯一)';
+COMMENT ON COLUMN ydsz_flow_node.node_name IS '节点名称';
+COMMENT ON COLUMN ydsz_flow_node.permission_flag IS '办理人权限标识: role:hr / dept:10 / user:1001 / ${spel}';
+COMMENT ON COLUMN ydsz_flow_node.skip_any_node IS '任意跳转目标节点编码';
+COMMENT ON COLUMN ydsz_flow_node.coordinate IS '设计器坐标 JSON {x,y,width,height}';
+COMMENT ON COLUMN ydsz_flow_node.skip_list IS '节点跳转路由集合 JSON';
+COMMENT ON COLUMN ydsz_flow_node.ext IS '扩展字段 JSON';
+COMMENT ON COLUMN ydsz_flow_node.status IS '状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_node.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_node.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfn_tenant_def_code
-    ON pmis_flow_node(tenant_id, definition_id, node_code)
+    ON ydsz_flow_node(tenant_id, definition_id, node_code)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfn_tenant_def_type
-    ON pmis_flow_node(tenant_id, definition_id, node_type)
+    ON ydsz_flow_node(tenant_id, definition_id, node_type)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfn_tenant_code
-    ON pmis_flow_node(tenant_id, flow_code)
+    ON ydsz_flow_node(tenant_id, flow_code)
     WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 3. 节点跳转关联表（对标 Warm-Flow flow_skip）
 --    节点之间的有向边：顺序流 / 条件分支 / 退回
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_skip(
+CREATE TABLE IF NOT EXISTS ydsz_flow_skip(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -6874,34 +6874,34 @@ CREATE TABLE IF NOT EXISTS pmis_flow_skip(
     CONSTRAINT ck_pfs_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_skip IS '节点跳转关联表: 节点之间的有向边,顺序流 / 条件分支 / 退回';
-COMMENT ON COLUMN pmis_flow_skip.definition_id IS '所属流程定义 ID';
-COMMENT ON COLUMN pmis_flow_skip.flow_code IS '流程编码';
-COMMENT ON COLUMN pmis_flow_skip.skip_name IS '跳转名称';
-COMMENT ON COLUMN pmis_flow_skip.skip_type IS '跳转类型: PASS 通过 / REJECT 退回 / FORWARD 前加签 / BACK 后加签';
-COMMENT ON COLUMN pmis_flow_skip.coordinate IS '设计器坐标 JSON {x,y,width,height}';
-COMMENT ON COLUMN pmis_flow_skip.skip_condition IS '跳转条件表达式(SpEL 或 ${var == value})';
-COMMENT ON COLUMN pmis_flow_skip.next_node_code IS '下一节点编码';
-COMMENT ON COLUMN pmis_flow_skip.next_node_type IS '下一节点类型: 同 pmis_flow_node.node_type';
-COMMENT ON COLUMN pmis_flow_skip.coordinate_next IS '下一节点坐标 JSON';
-COMMENT ON COLUMN pmis_flow_skip.skip_list IS '跳转路由集合 JSON';
-COMMENT ON COLUMN pmis_flow_skip.status IS '状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_skip.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_skip.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON TABLE  ydsz_flow_skip IS '节点跳转关联表: 节点之间的有向边,顺序流 / 条件分支 / 退回';
+COMMENT ON COLUMN ydsz_flow_skip.definition_id IS '所属流程定义 ID';
+COMMENT ON COLUMN ydsz_flow_skip.flow_code IS '流程编码';
+COMMENT ON COLUMN ydsz_flow_skip.skip_name IS '跳转名称';
+COMMENT ON COLUMN ydsz_flow_skip.skip_type IS '跳转类型: PASS 通过 / REJECT 退回 / FORWARD 前加签 / BACK 后加签';
+COMMENT ON COLUMN ydsz_flow_skip.coordinate IS '设计器坐标 JSON {x,y,width,height}';
+COMMENT ON COLUMN ydsz_flow_skip.skip_condition IS '跳转条件表达式(SpEL 或 ${var == value})';
+COMMENT ON COLUMN ydsz_flow_skip.next_node_code IS '下一节点编码';
+COMMENT ON COLUMN ydsz_flow_skip.next_node_type IS '下一节点类型: 同 ydsz_flow_node.node_type';
+COMMENT ON COLUMN ydsz_flow_skip.coordinate_next IS '下一节点坐标 JSON';
+COMMENT ON COLUMN ydsz_flow_skip.skip_list IS '跳转路由集合 JSON';
+COMMENT ON COLUMN ydsz_flow_skip.status IS '状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_skip.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_skip.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引)
 CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_next
-    ON pmis_flow_skip(tenant_id, definition_id, next_node_code)
+    ON ydsz_flow_skip(tenant_id, definition_id, next_node_code)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_type
-    ON pmis_flow_skip(tenant_id, definition_id, skip_type)
+    ON ydsz_flow_skip(tenant_id, definition_id, skip_type)
     WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 4. 流程实例表（对标 Warm-Flow flow_instance）
 --    每次启动流程生成一条实例记录
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_instance(
+CREATE TABLE IF NOT EXISTS ydsz_flow_instance(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
@@ -6943,60 +6943,60 @@ CREATE TABLE IF NOT EXISTS pmis_flow_instance(
     CONSTRAINT ck_pfi_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_instance IS '流程实例表: 每次启动流程生成一条实例记录,记录审批全过程';
-COMMENT ON COLUMN pmis_flow_instance.flow_code IS '流程编码';
-COMMENT ON COLUMN pmis_flow_instance.flow_name IS '流程名称(冗余,便于查询)';
-COMMENT ON COLUMN pmis_flow_instance.definition_id IS '所属流程定义 ID';
-COMMENT ON COLUMN pmis_flow_instance.flow_version IS '流程版本号';
-COMMENT ON COLUMN pmis_flow_instance.business_type IS '业务类型: PROJECT_INITIATION / CONTRACT_CHANGE / CLOSURE / LEAVE';
-COMMENT ON COLUMN pmis_flow_instance.business_id IS '业务对象 ID';
-COMMENT ON COLUMN pmis_flow_instance.business_no IS '业务单号: 例如立项编号';
-COMMENT ON COLUMN pmis_flow_instance.title IS '流程实例标题';
-COMMENT ON COLUMN pmis_flow_instance.initiator_id IS '发起人 ID';
-COMMENT ON COLUMN pmis_flow_instance.initiator_name IS '发起人姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_instance.current_node_code IS '当前节点编码';
-COMMENT ON COLUMN pmis_flow_instance.current_node_name IS '当前节点名称';
-COMMENT ON COLUMN pmis_flow_instance.variable IS '流程变量 JSON';
-COMMENT ON COLUMN pmis_flow_instance.flow_status IS '实例状态: RUNNING/SUSPENDED/COMPLETED/TERMINATED/REJECTED';
-COMMENT ON COLUMN pmis_flow_instance.activity_status IS '激活状态: 0 挂起 / 1 激活';
-COMMENT ON COLUMN pmis_flow_instance.start_at IS '开始时间';
-COMMENT ON COLUMN pmis_flow_instance.end_at IS '结束时间';
-COMMENT ON COLUMN pmis_flow_instance.duration_ms IS '总耗时(毫秒)';
-COMMENT ON COLUMN pmis_flow_instance.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_instance.tenant_id IS '租户 ID: 多租户隔离';
-COMMENT ON COLUMN pmis_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
-COMMENT ON COLUMN pmis_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
-COMMENT ON COLUMN pmis_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
-COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
-COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
+COMMENT ON TABLE  ydsz_flow_instance IS '流程实例表: 每次启动流程生成一条实例记录,记录审批全过程';
+COMMENT ON COLUMN ydsz_flow_instance.flow_code IS '流程编码';
+COMMENT ON COLUMN ydsz_flow_instance.flow_name IS '流程名称(冗余,便于查询)';
+COMMENT ON COLUMN ydsz_flow_instance.definition_id IS '所属流程定义 ID';
+COMMENT ON COLUMN ydsz_flow_instance.flow_version IS '流程版本号';
+COMMENT ON COLUMN ydsz_flow_instance.business_type IS '业务类型: PROJECT_INITIATION / CONTRACT_CHANGE / CLOSURE / LEAVE';
+COMMENT ON COLUMN ydsz_flow_instance.business_id IS '业务对象 ID';
+COMMENT ON COLUMN ydsz_flow_instance.business_no IS '业务单号: 例如立项编号';
+COMMENT ON COLUMN ydsz_flow_instance.title IS '流程实例标题';
+COMMENT ON COLUMN ydsz_flow_instance.initiator_id IS '发起人 ID';
+COMMENT ON COLUMN ydsz_flow_instance.initiator_name IS '发起人姓名(冗余)';
+COMMENT ON COLUMN ydsz_flow_instance.current_node_code IS '当前节点编码';
+COMMENT ON COLUMN ydsz_flow_instance.current_node_name IS '当前节点名称';
+COMMENT ON COLUMN ydsz_flow_instance.variable IS '流程变量 JSON';
+COMMENT ON COLUMN ydsz_flow_instance.flow_status IS '实例状态: RUNNING/SUSPENDED/COMPLETED/TERMINATED/REJECTED';
+COMMENT ON COLUMN ydsz_flow_instance.activity_status IS '激活状态: 0 挂起 / 1 激活';
+COMMENT ON COLUMN ydsz_flow_instance.start_at IS '开始时间';
+COMMENT ON COLUMN ydsz_flow_instance.end_at IS '结束时间';
+COMMENT ON COLUMN ydsz_flow_instance.duration_ms IS '总耗时(毫秒)';
+COMMENT ON COLUMN ydsz_flow_instance.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_instance.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON COLUMN ydsz_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
+COMMENT ON COLUMN ydsz_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
+COMMENT ON COLUMN ydsz_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
+COMMENT ON COLUMN ydsz_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
+COMMENT ON COLUMN ydsz_flow_instance.version IS '乐观锁版本号（P1-2）';
 
--- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_project_invoice) 的
+-- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (ydsz_project_invoice) 的
 --      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
 --      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
 -- 复合/部分索引(替代零散的单列索引)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_instance_tenant_biz
-    ON pmis_flow_instance(tenant_id, business_type, business_id)
+    ON ydsz_flow_instance(tenant_id, business_type, business_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_def
-    ON pmis_flow_instance(tenant_id, definition_id)
+    ON ydsz_flow_instance(tenant_id, definition_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_code_status
-    ON pmis_flow_instance(tenant_id, flow_code, flow_status)
+    ON ydsz_flow_instance(tenant_id, flow_code, flow_status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_status
-    ON pmis_flow_instance(tenant_id, flow_status)
+    ON ydsz_flow_instance(tenant_id, flow_status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_initiator
-    ON pmis_flow_instance(tenant_id, initiator_id, start_at DESC)
+    ON ydsz_flow_instance(tenant_id, initiator_id, start_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
-    ON pmis_flow_instance(tenant_id, start_at DESC)
+    ON ydsz_flow_instance(tenant_id, start_at DESC)
     WHERE deleted = 0;
 
 -- =====================================================
--- 5. 待办任务运行态表 pmis_flow_run_task
---    (2026-07-06 由 pmis_flow_task 重命名,与 pmis_flow_his_task 区分)
+-- 5. 待办任务运行态表 ydsz_flow_run_task
+--    (2026-07-06 由 ydsz_flow_task 重命名,与 ydsz_flow_his_task 区分)
 -- =====================================================
 -- 表结构要点:
 --   1. 核心索引:
@@ -7004,7 +7004,7 @@ CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
 --      - idx_pft_due         (due_at) WHERE task_status='PENDING' SLA 扫描
 --      - idx_pfrt_foreach_iter UNIQUE (instance_id, node_code, iter_var) WHERE iter_var IS NOT NULL
 --        (由 UK 约束自动创建,FOREACH 节点防止重复创建 task)
---      - idx_pmis_flow_run_task_priority_todo (priority DESC, created_at ASC) WHERE task_status IN ('PENDING','CLAIMED')
+--      - idx_ydsz_flow_run_task_priority_todo (priority DESC, created_at ASC) WHERE task_status IN ('PENDING','CLAIMED')
 --        待办按优先级+时间排序(P1-1,主索引块内创建)
 --   2. GAP-P1:version 是 MyBatis-Plus @Version 乐观锁,会签并发安全
 --   3. P1-5:vote_pass_rate 票签通过率阈值(0~1),performType='VOTE' 时生效
@@ -7018,7 +7018,7 @@ CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
 --      - priority 必须在 [1, 100] 之间(P1-1 取值约定)
 --      - approve_finished <= approve_count(已通过不能多于要求)
 --      - approve_count / approve_finished 非负
-CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
+CREATE TABLE IF NOT EXISTS ydsz_flow_run_task(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     instance_id        VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -7084,67 +7084,67 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     -- PG 不支持 UNIQUE 约束的 WHERE 子句,改为 partial unique index(建在 CREATE TABLE 之后)
 );
 
-COMMENT ON TABLE  pmis_flow_run_task IS '待办任务运行态表: 实例推进过程中产生的待办切片(运行态),办理人待办箱核心表,完成后归档到 pmis_flow_his_task';
-COMMENT ON COLUMN pmis_flow_run_task.instance_id IS '所属流程实例 ID';
-COMMENT ON COLUMN pmis_flow_run_task.flow_code IS '流程编码(冗余)';
-COMMENT ON COLUMN pmis_flow_run_task.definition_id IS '所属流程定义 ID';
-COMMENT ON COLUMN pmis_flow_run_task.node_code IS '当前节点编码';
-COMMENT ON COLUMN pmis_flow_run_task.node_name IS '当前节点名称';
-COMMENT ON COLUMN pmis_flow_run_task.node_type IS '节点类型(同 pmis_flow_node.node_type)';
-COMMENT ON COLUMN pmis_flow_run_task.business_type IS '业务类型';
-COMMENT ON COLUMN pmis_flow_run_task.business_id IS '业务对象 ID';
-COMMENT ON COLUMN pmis_flow_run_task.business_no IS '业务单号';
-COMMENT ON COLUMN pmis_flow_run_task.flow_name IS '流程名称';
-COMMENT ON COLUMN pmis_flow_run_task.title IS '任务标题';
-COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '转交人 ID: 上一步操作人';
-COMMENT ON COLUMN pmis_flow_run_task.assignor_name IS '转交人姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_run_task.assignee_type IS '办理人类型: USER/ROLE/DEPT/SPEL/FOREACH_PARALLEL';
-COMMENT ON COLUMN pmis_flow_run_task.assignee_id IS '办理人 ID(按 type 解析)';
-COMMENT ON COLUMN pmis_flow_run_task.assignee_name IS '办理人姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_run_task.permission_flag IS '权限标识: role:hr / dept:10 / user:1001 / ${spel}';
-COMMENT ON COLUMN pmis_flow_run_task.perform_type IS '会签类型: OR 或签 / SEQUENTIAL 顺序会签 / PARALLEL 并行会签 / VOTE 票签 / FOREACH_PARALLEL 多实例并行';
-COMMENT ON COLUMN pmis_flow_run_task.approve_count IS '会签所需通过人数(仅会签节点有效)';
-COMMENT ON COLUMN pmis_flow_run_task.approve_finished IS '会签当前已通过人数';
-COMMENT ON COLUMN pmis_flow_run_task.vote_pass_rate IS 'P1-5: VOTE 票签模式通过率阈值(0~1,默认 0.5 表示过半数),performType=VOTE 时生效';
-COMMENT ON COLUMN pmis_flow_run_task.task_status IS '任务状态: PENDING/CLAIMED/COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT/FROZEN';
-COMMENT ON COLUMN pmis_flow_run_task.comment IS '审批意见';
-COMMENT ON COLUMN pmis_flow_run_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_run_task.claim_at IS '签收时间';
-COMMENT ON COLUMN pmis_flow_run_task.finish_at IS '完成时间';
-COMMENT ON COLUMN pmis_flow_run_task.duration_ms IS '处理耗时(毫秒)';
-COMMENT ON COLUMN pmis_flow_run_task.due_at IS '截止时间: SLA 预警依据';
-COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
-COMMENT ON COLUMN pmis_flow_run_task.reminder_count IS 'P1-6: 已发送的 SLA 催办次数';
-COMMENT ON COLUMN pmis_flow_run_task.last_reminded_at IS 'P1-6: 最近一次催办时间';
-COMMENT ON COLUMN pmis_flow_run_task.sla_action IS 'P1-6: 最终触发的 SLA 动作(REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT)';
-COMMENT ON COLUMN pmis_flow_run_task.sla_escalated IS 'P1-6: 是否已升级(0 否 / 1 是,避免重复升级)';
-COMMENT ON COLUMN pmis_flow_run_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_run_task.iter_var IS 'GAP-P2-10: FOREACH 当前迭代元素值(循环节点每条独立 task 对应的集合元素,非循环节点为 NULL),UK 约束 (instance_id, node_code, iter_var) 防止重复创建';
-COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全,MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_flow_run_task.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON TABLE  ydsz_flow_run_task IS '待办任务运行态表: 实例推进过程中产生的待办切片(运行态),办理人待办箱核心表,完成后归档到 ydsz_flow_his_task';
+COMMENT ON COLUMN ydsz_flow_run_task.instance_id IS '所属流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_run_task.flow_code IS '流程编码(冗余)';
+COMMENT ON COLUMN ydsz_flow_run_task.definition_id IS '所属流程定义 ID';
+COMMENT ON COLUMN ydsz_flow_run_task.node_code IS '当前节点编码';
+COMMENT ON COLUMN ydsz_flow_run_task.node_name IS '当前节点名称';
+COMMENT ON COLUMN ydsz_flow_run_task.node_type IS '节点类型(同 ydsz_flow_node.node_type)';
+COMMENT ON COLUMN ydsz_flow_run_task.business_type IS '业务类型';
+COMMENT ON COLUMN ydsz_flow_run_task.business_id IS '业务对象 ID';
+COMMENT ON COLUMN ydsz_flow_run_task.business_no IS '业务单号';
+COMMENT ON COLUMN ydsz_flow_run_task.flow_name IS '流程名称';
+COMMENT ON COLUMN ydsz_flow_run_task.title IS '任务标题';
+COMMENT ON COLUMN ydsz_flow_run_task.assignor_id IS '转交人 ID: 上一步操作人';
+COMMENT ON COLUMN ydsz_flow_run_task.assignor_name IS '转交人姓名(冗余)';
+COMMENT ON COLUMN ydsz_flow_run_task.assignee_type IS '办理人类型: USER/ROLE/DEPT/SPEL/FOREACH_PARALLEL';
+COMMENT ON COLUMN ydsz_flow_run_task.assignee_id IS '办理人 ID(按 type 解析)';
+COMMENT ON COLUMN ydsz_flow_run_task.assignee_name IS '办理人姓名(冗余)';
+COMMENT ON COLUMN ydsz_flow_run_task.permission_flag IS '权限标识: role:hr / dept:10 / user:1001 / ${spel}';
+COMMENT ON COLUMN ydsz_flow_run_task.perform_type IS '会签类型: OR 或签 / SEQUENTIAL 顺序会签 / PARALLEL 并行会签 / VOTE 票签 / FOREACH_PARALLEL 多实例并行';
+COMMENT ON COLUMN ydsz_flow_run_task.approve_count IS '会签所需通过人数(仅会签节点有效)';
+COMMENT ON COLUMN ydsz_flow_run_task.approve_finished IS '会签当前已通过人数';
+COMMENT ON COLUMN ydsz_flow_run_task.vote_pass_rate IS 'P1-5: VOTE 票签模式通过率阈值(0~1,默认 0.5 表示过半数),performType=VOTE 时生效';
+COMMENT ON COLUMN ydsz_flow_run_task.task_status IS '任务状态: PENDING/CLAIMED/COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT/FROZEN';
+COMMENT ON COLUMN ydsz_flow_run_task.comment IS '审批意见';
+COMMENT ON COLUMN ydsz_flow_run_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_run_task.claim_at IS '签收时间';
+COMMENT ON COLUMN ydsz_flow_run_task.finish_at IS '完成时间';
+COMMENT ON COLUMN ydsz_flow_run_task.duration_ms IS '处理耗时(毫秒)';
+COMMENT ON COLUMN ydsz_flow_run_task.due_at IS '截止时间: SLA 预警依据';
+COMMENT ON COLUMN ydsz_flow_run_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
+COMMENT ON COLUMN ydsz_flow_run_task.reminder_count IS 'P1-6: 已发送的 SLA 催办次数';
+COMMENT ON COLUMN ydsz_flow_run_task.last_reminded_at IS 'P1-6: 最近一次催办时间';
+COMMENT ON COLUMN ydsz_flow_run_task.sla_action IS 'P1-6: 最终触发的 SLA 动作(REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT)';
+COMMENT ON COLUMN ydsz_flow_run_task.sla_escalated IS 'P1-6: 是否已升级(0 否 / 1 是,避免重复升级)';
+COMMENT ON COLUMN ydsz_flow_run_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_run_task.iter_var IS 'GAP-P2-10: FOREACH 当前迭代元素值(循环节点每条独立 task 对应的集合元素,非循环节点为 NULL),UK 约束 (instance_id, node_code, iter_var) 防止重复创建';
+COMMENT ON COLUMN ydsz_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全,MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_flow_run_task.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_assignee_status
-    ON pmis_flow_run_task(tenant_id, assignee_id, task_status)
+    ON ydsz_flow_run_task(tenant_id, assignee_id, task_status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_instance
-    ON pmis_flow_run_task(tenant_id, instance_id)
+    ON ydsz_flow_run_task(tenant_id, instance_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_biz
-    ON pmis_flow_run_task(tenant_id, business_type, business_id)
+    ON ydsz_flow_run_task(tenant_id, business_type, business_id)
     WHERE deleted = 0 AND business_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_node
-    ON pmis_flow_run_task(tenant_id, node_code)
+    ON ydsz_flow_run_task(tenant_id, node_code)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_status
-    ON pmis_flow_run_task(tenant_id, task_status)
+    ON ydsz_flow_run_task(tenant_id, task_status)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_due
-    ON pmis_flow_run_task(tenant_id, due_at)
+    ON ydsz_flow_run_task(tenant_id, due_at)
     WHERE deleted = 0 AND task_status = 'PENDING';
 -- P1-1: 待办按优先级+时间排序(仅 PENDING/CLAIMED 走索引)
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
-    ON pmis_flow_run_task (tenant_id, priority DESC, created_at ASC)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_priority_todo
+    ON ydsz_flow_run_task (tenant_id, priority DESC, created_at ASC)
     WHERE task_status IN ('PENDING', 'CLAIMED')
       AND status = 'ENABLED'
       AND deleted = 0;
@@ -7153,7 +7153,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
 -- 6. 历史任务表（对标 Warm-Flow flow_his_task）
 --    已完成任务的归档，避免主表膨胀
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
+CREATE TABLE IF NOT EXISTS ydsz_flow_his_task(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     instance_id        VARCHAR(20)       NOT NULL,
     task_id            VARCHAR(20)       NOT NULL,
@@ -7187,7 +7187,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
-    -- GAP-P2-10: FOREACH 归档追溯(从 pmis_flow_run_task 复制)
+    -- GAP-P2-10: FOREACH 归档追溯(从 ydsz_flow_run_task 复制)
     iter_var           VARCHAR(255),
     -- 数据完整性约束
     CONSTRAINT ck_pfht_assignee_type    CHECK (assignee_type IN ('USER','ROLE','DEPT','SPEL','FOREACH_PARALLEL')),
@@ -7202,55 +7202,55 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
     CONSTRAINT ck_pfht_deleted          CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_his_task IS '历史任务表: 已完成任务的归档,避免主表膨胀,审批历史追溯';
-COMMENT ON COLUMN pmis_flow_his_task.instance_id IS '所属流程实例 ID';
-COMMENT ON COLUMN pmis_flow_his_task.task_id IS '原始任务 ID: 引用 pmis_flow_run_task.id';
-COMMENT ON COLUMN pmis_flow_his_task.flow_code IS '流程编码';
-COMMENT ON COLUMN pmis_flow_his_task.definition_id IS '所属流程定义 ID';
-COMMENT ON COLUMN pmis_flow_his_task.node_code IS '节点编码';
-COMMENT ON COLUMN pmis_flow_his_task.node_name IS '节点名称';
-COMMENT ON COLUMN pmis_flow_his_task.node_type IS '节点类型';
-COMMENT ON COLUMN pmis_flow_his_task.business_type IS '业务类型';
-COMMENT ON COLUMN pmis_flow_his_task.business_id IS '业务对象 ID';
-COMMENT ON COLUMN pmis_flow_his_task.business_no IS '业务单号';
-COMMENT ON COLUMN pmis_flow_his_task.flow_name IS '流程名称';
-COMMENT ON COLUMN pmis_flow_his_task.title IS '任务标题';
-COMMENT ON COLUMN pmis_flow_his_task.assignee_type IS '办理人类型';
-COMMENT ON COLUMN pmis_flow_his_task.assignee_id IS '办理人 ID';
-COMMENT ON COLUMN pmis_flow_his_task.assignee_name IS '办理人姓名';
-COMMENT ON COLUMN pmis_flow_his_task.perform_type IS '会签类型';
-COMMENT ON COLUMN pmis_flow_his_task.approve_count IS '会签所需通过人数';
-COMMENT ON COLUMN pmis_flow_his_task.approve_finished IS '会签已通过人数';
-COMMENT ON COLUMN pmis_flow_his_task.vote_pass_rate IS 'P1-5: VOTE 票签通过率阈值(0~1,从 pmis_flow_run_task 归档)';
-COMMENT ON COLUMN pmis_flow_his_task.task_status IS '任务终态: COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT';
-COMMENT ON COLUMN pmis_flow_his_task.comment IS '审批意见';
-COMMENT ON COLUMN pmis_flow_his_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_his_task.claim_at IS '签收时间';
-COMMENT ON COLUMN pmis_flow_his_task.finish_at IS '完成时间';
-COMMENT ON COLUMN pmis_flow_his_task.duration_ms IS '处理耗时(毫秒)';
-COMMENT ON COLUMN pmis_flow_his_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_his_task.iter_var IS 'GAP-P2-10: FOREACH 归档时的迭代元素值(从 pmis_flow_run_task 复制,审批历史追溯)';
-COMMENT ON COLUMN pmis_flow_his_task.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON TABLE  ydsz_flow_his_task IS '历史任务表: 已完成任务的归档,避免主表膨胀,审批历史追溯';
+COMMENT ON COLUMN ydsz_flow_his_task.instance_id IS '所属流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_his_task.task_id IS '原始任务 ID: 引用 ydsz_flow_run_task.id';
+COMMENT ON COLUMN ydsz_flow_his_task.flow_code IS '流程编码';
+COMMENT ON COLUMN ydsz_flow_his_task.definition_id IS '所属流程定义 ID';
+COMMENT ON COLUMN ydsz_flow_his_task.node_code IS '节点编码';
+COMMENT ON COLUMN ydsz_flow_his_task.node_name IS '节点名称';
+COMMENT ON COLUMN ydsz_flow_his_task.node_type IS '节点类型';
+COMMENT ON COLUMN ydsz_flow_his_task.business_type IS '业务类型';
+COMMENT ON COLUMN ydsz_flow_his_task.business_id IS '业务对象 ID';
+COMMENT ON COLUMN ydsz_flow_his_task.business_no IS '业务单号';
+COMMENT ON COLUMN ydsz_flow_his_task.flow_name IS '流程名称';
+COMMENT ON COLUMN ydsz_flow_his_task.title IS '任务标题';
+COMMENT ON COLUMN ydsz_flow_his_task.assignee_type IS '办理人类型';
+COMMENT ON COLUMN ydsz_flow_his_task.assignee_id IS '办理人 ID';
+COMMENT ON COLUMN ydsz_flow_his_task.assignee_name IS '办理人姓名';
+COMMENT ON COLUMN ydsz_flow_his_task.perform_type IS '会签类型';
+COMMENT ON COLUMN ydsz_flow_his_task.approve_count IS '会签所需通过人数';
+COMMENT ON COLUMN ydsz_flow_his_task.approve_finished IS '会签已通过人数';
+COMMENT ON COLUMN ydsz_flow_his_task.vote_pass_rate IS 'P1-5: VOTE 票签通过率阈值(0~1,从 ydsz_flow_run_task 归档)';
+COMMENT ON COLUMN ydsz_flow_his_task.task_status IS '任务终态: COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT';
+COMMENT ON COLUMN ydsz_flow_his_task.comment IS '审批意见';
+COMMENT ON COLUMN ydsz_flow_his_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_his_task.claim_at IS '签收时间';
+COMMENT ON COLUMN ydsz_flow_his_task.finish_at IS '完成时间';
+COMMENT ON COLUMN ydsz_flow_his_task.duration_ms IS '处理耗时(毫秒)';
+COMMENT ON COLUMN ydsz_flow_his_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_his_task.iter_var IS 'GAP-P2-10: FOREACH 归档时的迭代元素值(从 ydsz_flow_run_task 复制,审批历史追溯)';
+COMMENT ON COLUMN ydsz_flow_his_task.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_instance_finish
-    ON pmis_flow_his_task(tenant_id, instance_id, finish_at DESC)
+    ON ydsz_flow_his_task(tenant_id, instance_id, finish_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_assignee_finish
-    ON pmis_flow_his_task(tenant_id, assignee_id, finish_at DESC)
+    ON ydsz_flow_his_task(tenant_id, assignee_id, finish_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_biz
-    ON pmis_flow_his_task(tenant_id, business_type, business_id)
+    ON ydsz_flow_his_task(tenant_id, business_type, business_id)
     WHERE deleted = 0 AND business_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_finish
-    ON pmis_flow_his_task(tenant_id, finish_at DESC)
+    ON ydsz_flow_his_task(tenant_id, finish_at DESC)
     WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 7. 流程用户表（对标 Warm-Flow flow_user）
 --    任务多办理人扩展（一个 task 可挂多个用户）
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_user(
+CREATE TABLE IF NOT EXISTS ydsz_flow_user(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     task_id            VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
@@ -7277,40 +7277,40 @@ CREATE TABLE IF NOT EXISTS pmis_flow_user(
     CONSTRAINT ck_pfu_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_user IS '流程用户表: 会签多办理人,一个 task 可挂多个用户';
-COMMENT ON COLUMN pmis_flow_user.task_id IS '所属任务 ID';
-COMMENT ON COLUMN pmis_flow_user.instance_id IS '所属流程实例 ID';
-COMMENT ON COLUMN pmis_flow_user.node_code IS '节点编码';
-COMMENT ON COLUMN pmis_flow_user.user_type IS '用户类型: USER/ROLE/DEPT';
-COMMENT ON COLUMN pmis_flow_user.user_id IS '用户 ID(按 type 解析)';
-COMMENT ON COLUMN pmis_flow_user.user_name IS '用户姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_user.processed IS '是否已处理: 0 否 / 1 是';
-COMMENT ON COLUMN pmis_flow_user.process_at IS '处理时间';
-COMMENT ON COLUMN pmis_flow_user.comment IS '处理意见';
-COMMENT ON COLUMN pmis_flow_user.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_user.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_user.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON TABLE  ydsz_flow_user IS '流程用户表: 会签多办理人,一个 task 可挂多个用户';
+COMMENT ON COLUMN ydsz_flow_user.task_id IS '所属任务 ID';
+COMMENT ON COLUMN ydsz_flow_user.instance_id IS '所属流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_user.node_code IS '节点编码';
+COMMENT ON COLUMN ydsz_flow_user.user_type IS '用户类型: USER/ROLE/DEPT';
+COMMENT ON COLUMN ydsz_flow_user.user_id IS '用户 ID(按 type 解析)';
+COMMENT ON COLUMN ydsz_flow_user.user_name IS '用户姓名(冗余)';
+COMMENT ON COLUMN ydsz_flow_user.processed IS '是否已处理: 0 否 / 1 是';
+COMMENT ON COLUMN ydsz_flow_user.process_at IS '处理时间';
+COMMENT ON COLUMN ydsz_flow_user.comment IS '处理意见';
+COMMENT ON COLUMN ydsz_flow_user.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_user.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_user.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfu_tenant_task_user
-    ON pmis_flow_user(tenant_id, task_id, user_id, user_type)
+    ON ydsz_flow_user(tenant_id, task_id, user_id, user_type)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfu_tenant_instance
-    ON pmis_flow_user(tenant_id, instance_id)
+    ON ydsz_flow_user(tenant_id, instance_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfu_tenant_user_processed
-    ON pmis_flow_user(tenant_id, user_id, processed)
+    ON ydsz_flow_user(tenant_id, user_id, processed)
     WHERE deleted = 0;
 
 -- 流程定义唯一性:同租户+flow_code+flow_version 唯一(支持 ON CONFLICT 幂等)
-CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_flow_definition_code_version
-    ON pmis_flow_definition (flow_code, flow_version, tenant_id)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_ydsz_flow_definition_code_version
+    ON ydsz_flow_definition (flow_code, flow_version, tenant_id)
     WHERE deleted = 0;
 
 -- =====================================================
 -- 初始化数据：PMIS 业务流定义
 -- =====================================================
-INSERT INTO pmis_flow_definition
+INSERT INTO ydsz_flow_definition
     (flow_code, flow_name, category, flow_version, model_value, form_custom, form_path,
      activity_status, is_publish, description, status, tenant_id, provider_trace_id,
      created_by, updated_by, version)
@@ -7324,7 +7324,7 @@ VALUES
     ('project_closure',    '项目销项审批', 'closure',  '1.0', 'CLASSICS', 'N',
      '/closure/detail', 1, 1,
      '项目销项审批：PM → 部门负责人 → 财务 → 分管领导', 'ENABLED', 1, 'init_v1', 0, 0, 1),
-    ('pmis_leave',         'PMIS 通用请假', 'admin',    '1.0', 'CLASSICS', 'N',
+    ('ydsz_leave',         'PMIS 通用请假', 'admin',    '1.0', 'CLASSICS', 'N',
      '/admin/leave/detail', 1, 1,
      'PMIS 通用请假：申请人 → 直属上级 → 人事', 'ENABLED', 1, 'init_v1', 0, 0, 1)
 ON CONFLICT (flow_code, flow_version, tenant_id) WHERE deleted = 0 DO NOTHING;
@@ -7340,64 +7340,64 @@ ON CONFLICT (flow_code, flow_version, tenant_id) WHERE deleted = 0 DO NOTHING;
 -- OptimisticLockerInnerInterceptor 实现乐观锁控制。
 --
 -- 涉及表：
---   pmis_project 项目域：initiation / contract / contract_change / project_change
---   pmis_finance 财务域：invoice / payment / customer_credit
---   pmis_execution 执行域：wbs_task / purchase / ops_ticket
+--   ydsz_project 项目域：initiation / contract / contract_change / project_change
+--   ydsz_finance 财务域：invoice / payment / customer_credit
+--   ydsz_execution 执行域：wbs_task / purchase / ops_ticket
 --
 -- 默认值 0：所有现有记录初始版本号为 0，下一次 UPDATE 时自动 +1。
 -- NOT NULL 约束：避免 NULL 导致乐观锁失效。
 -- ========================================================
 
 -- ========== 项目域 ==========
-ALTER TABLE pmis_project_initiation
+ALTER TABLE ydsz_project_initiation
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_project_contract
+ALTER TABLE ydsz_project_contract
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_project_contract_change
+ALTER TABLE ydsz_project_contract_change
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_project_change
+ALTER TABLE ydsz_project_change
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 财务域 ==========
--- 早期版本误加 pmis_finance. schema 前缀，但所有表均建在 public schema
+-- 早期版本误加 ydsz_finance. schema 前缀，但所有表均建在 public schema
 -- （与上方 project/execution 域的写法保持一致），执行时会报
--- "模式 pmis_finance 不存在" 错误，故去除 schema 前缀。
-ALTER TABLE pmis_project_invoice
+-- "模式 ydsz_finance 不存在" 错误，故去除 schema 前缀。
+ALTER TABLE ydsz_project_invoice
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_project_payment
+ALTER TABLE ydsz_project_payment
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_project_customer_credit
+ALTER TABLE ydsz_project_customer_credit
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 执行域 ==========
--- 早期版本把 pmis_cost_purchase 误写为 pmis_execution_purchase,
--- 把 pmis_ops_ticket 误写为 pmis_execution_ops_ticket。修正为实际
+-- 早期版本把 ydsz_cost_purchase 误写为 ydsz_execution_purchase,
+-- 把 ydsz_ops_ticket 误写为 ydsz_execution_ops_ticket。修正为实际
 -- 表名（@TableName 定义）以避免 "关系不存在" 错误。
-ALTER TABLE pmis_execution_wbs_task
+ALTER TABLE ydsz_execution_wbs_task
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_cost_purchase
+ALTER TABLE ydsz_cost_purchase
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_ops_ticket
+ALTER TABLE ydsz_ops_ticket
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 同步更新 init schema 脚本中的字段注释（仅文档作用，不影响运行） ==========
-COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_project_initiation.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_project_contract.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_project_contract_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_project_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_project_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_project_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_project_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_execution_wbs_task.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN ydsz_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 
 -- --------------------------------------------------------------------
 
@@ -7406,19 +7406,19 @@ COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），My
 -- =====================================================
 -- PMIS 工作流审计日志表 DDL（对标竞品审批轨迹能力）
 -- 版本: V1.0.0_025
--- 描述: 新增 pmis_flow_audit_log 表，记录审批全操作轨迹
+-- 描述: 新增 ydsz_flow_audit_log 表，记录审批全操作轨迹
 --       覆盖：START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM
 -- 设计参考: 钉钉/飞书审批操作日志 + Warm-Flow audit_log
 -- 适用场景: 审批轨迹查询、合规审计、操作回溯
 -- =====================================================
 
 -- -----------------------------------------------------
--- 8. 流程审计日志表（pmis_flow_audit_log）
+-- 8. 流程审计日志表（ydsz_flow_audit_log）
 --    记录流程全生命周期的操作轨迹：谁在何时对哪个实例/任务做了什么操作
 --    P1-4 重构: 改为按月 RANGE 分区表
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_audit_log CASCADE;
-CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
+DROP TABLE IF EXISTS ydsz_flow_audit_log CASCADE;
+CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log(
     id                 VARCHAR(20)    NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
     task_id            VARCHAR(20),
@@ -7453,50 +7453,50 @@ CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
     PRIMARY KEY (id, operated_at)
 ) PARTITION BY RANGE (operated_at);
 
-COMMENT ON TABLE  pmis_flow_audit_log IS '流程审计日志表: 记录流程全生命周期的操作轨迹(谁在何时对哪个实例/任务做了什么操作)';
-COMMENT ON COLUMN pmis_flow_audit_log.instance_id IS '流程实例 ID';
-COMMENT ON COLUMN pmis_flow_audit_log.task_id IS '任务 ID(可为空,实例级操作如 START/RECALL 没有对应任务)';
-COMMENT ON COLUMN pmis_flow_audit_log.flow_code IS '流程编码(冗余,便于查询)';
-COMMENT ON COLUMN pmis_flow_audit_log.business_type IS '业务类型: PROJECT_INITIATION/CONTRACT_CHANGE/CLOSURE 等';
-COMMENT ON COLUMN pmis_flow_audit_log.business_id IS '业务对象 ID';
-COMMENT ON COLUMN pmis_flow_audit_log.node_code IS '节点编码(操作发生的节点)';
-COMMENT ON COLUMN pmis_flow_audit_log.node_name IS '节点名称';
-COMMENT ON COLUMN pmis_flow_audit_log.action IS '操作类型: START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN_BEFORE/COUNTERSIGN_AFTER/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM/DELEGATE_RETURN/PARALLEL_PASS/SEQUENTIAL_PASS/VOTE_PASS';
-COMMENT ON COLUMN pmis_flow_audit_log.operator_id IS '操作人 ID';
-COMMENT ON COLUMN pmis_flow_audit_log.operator_name IS '操作人姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_audit_log.target_id IS '目标人 ID(转办/委派/加签的目标人)';
-COMMENT ON COLUMN pmis_flow_audit_log.target_name IS '目标人姓名';
-COMMENT ON COLUMN pmis_flow_audit_log.comment IS '审批意见 / 操作备注';
-COMMENT ON COLUMN pmis_flow_audit_log.operated_at IS '操作时间';
-COMMENT ON COLUMN pmis_flow_audit_log.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_audit_log.deleted IS '逻辑删除: 0=未删除,1=已删除';
-COMMENT ON COLUMN pmis_flow_audit_log.tenant_id IS '租户 ID(默认 1)';
-COMMENT ON COLUMN pmis_flow_audit_log.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
+COMMENT ON TABLE  ydsz_flow_audit_log IS '流程审计日志表: 记录流程全生命周期的操作轨迹(谁在何时对哪个实例/任务做了什么操作)';
+COMMENT ON COLUMN ydsz_flow_audit_log.instance_id IS '流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_audit_log.task_id IS '任务 ID(可为空,实例级操作如 START/RECALL 没有对应任务)';
+COMMENT ON COLUMN ydsz_flow_audit_log.flow_code IS '流程编码(冗余,便于查询)';
+COMMENT ON COLUMN ydsz_flow_audit_log.business_type IS '业务类型: PROJECT_INITIATION/CONTRACT_CHANGE/CLOSURE 等';
+COMMENT ON COLUMN ydsz_flow_audit_log.business_id IS '业务对象 ID';
+COMMENT ON COLUMN ydsz_flow_audit_log.node_code IS '节点编码(操作发生的节点)';
+COMMENT ON COLUMN ydsz_flow_audit_log.node_name IS '节点名称';
+COMMENT ON COLUMN ydsz_flow_audit_log.action IS '操作类型: START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN_BEFORE/COUNTERSIGN_AFTER/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM/DELEGATE_RETURN/PARALLEL_PASS/SEQUENTIAL_PASS/VOTE_PASS';
+COMMENT ON COLUMN ydsz_flow_audit_log.operator_id IS '操作人 ID';
+COMMENT ON COLUMN ydsz_flow_audit_log.operator_name IS '操作人姓名(冗余)';
+COMMENT ON COLUMN ydsz_flow_audit_log.target_id IS '目标人 ID(转办/委派/加签的目标人)';
+COMMENT ON COLUMN ydsz_flow_audit_log.target_name IS '目标人姓名';
+COMMENT ON COLUMN ydsz_flow_audit_log.comment IS '审批意见 / 操作备注';
+COMMENT ON COLUMN ydsz_flow_audit_log.operated_at IS '操作时间';
+COMMENT ON COLUMN ydsz_flow_audit_log.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_flow_audit_log.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN ydsz_flow_audit_log.tenant_id IS '租户 ID(默认 1)';
+COMMENT ON COLUMN ydsz_flow_audit_log.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 -- P1-4: 父表索引,自动传播到所有月度分区
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_instance_operated
-    ON pmis_flow_audit_log(tenant_id, instance_id, operated_at DESC)
+    ON ydsz_flow_audit_log(tenant_id, instance_id, operated_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_task_operated
-    ON pmis_flow_audit_log(tenant_id, task_id, operated_at DESC)
+    ON ydsz_flow_audit_log(tenant_id, task_id, operated_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_operator_operated
-    ON pmis_flow_audit_log(tenant_id, operator_id, operated_at DESC)
+    ON ydsz_flow_audit_log(tenant_id, operator_id, operated_at DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_biz
-    ON pmis_flow_audit_log(tenant_id, business_type, business_id)
+    ON ydsz_flow_audit_log(tenant_id, business_type, business_id)
     WHERE deleted = 0 AND business_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_action_operated
-    ON pmis_flow_audit_log(tenant_id, action, operated_at DESC)
+    ON ydsz_flow_audit_log(tenant_id, action, operated_at DESC)
     WHERE deleted = 0;
 -- P1-4: BRIN 索引(父表,自动传播) — 流程审计时间范围扫描
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_audit_log_brin
-    ON pmis_flow_audit_log USING BRIN (operated_at)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_brin
+    ON ydsz_flow_audit_log USING BRIN (operated_at)
     WITH (pages_per_range = 32);
 -- P1-4: provider_trace_id 索引(全链路追踪)
 CREATE INDEX IF NOT EXISTS idx_pfal_provider_trace
-    ON pmis_flow_audit_log (provider_trace_id)
+    ON ydsz_flow_audit_log (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- --------------------------------------------------------------------
@@ -7517,7 +7517,7 @@ CREATE INDEX IF NOT EXISTS idx_pfal_provider_trace
 -- -------------------------------------------
 -- 1. 抄送主表
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_cc(
+CREATE TABLE IF NOT EXISTS ydsz_flow_cc(
     id                 VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
@@ -7547,44 +7547,44 @@ CREATE TABLE IF NOT EXISTS pmis_flow_cc(
     CONSTRAINT ck_pfcc_deleted          CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_flow_cc IS '流程抄送记录 - 抄送中心查询主体（对标钉钉/飞书）';
-COMMENT ON COLUMN pmis_flow_cc.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN pmis_flow_cc.instance_id IS '流程实例 ID';
-COMMENT ON COLUMN pmis_flow_cc.task_id IS '触发的任务 ID（CC 节点任务，可空）';
-COMMENT ON COLUMN pmis_flow_cc.node_code IS '触发抄送的节点编码';
-COMMENT ON COLUMN pmis_flow_cc.node_name IS '节点名称';
-COMMENT ON COLUMN pmis_flow_cc.flow_code IS '流程定义编码';
-COMMENT ON COLUMN pmis_flow_cc.flow_name IS '流程名称';
-COMMENT ON COLUMN pmis_flow_cc.business_key IS '业务单据 ID';
-COMMENT ON COLUMN pmis_flow_cc.cc_user_id IS '抄送接收人 ID';
-COMMENT ON COLUMN pmis_flow_cc.cc_user_name IS '抄送接收人姓名';
-COMMENT ON COLUMN pmis_flow_cc.cc_type IS '抄送类型：CC_NODE=抄送节点 / MANUAL_CC=人工抄送 / AUTO_CC=自动抄送（如发起人）';
-COMMENT ON COLUMN pmis_flow_cc.trigger_user_id IS '触发抄送的人（发起人/审批人）';
-COMMENT ON COLUMN pmis_flow_cc.title IS '抄送标题';
-COMMENT ON COLUMN pmis_flow_cc.content IS '抄送内容/意见';
-COMMENT ON COLUMN pmis_flow_cc.read_status IS '已读状态：UNREAD / READ';
-COMMENT ON COLUMN pmis_flow_cc.read_at IS '已读时间';
-COMMENT ON COLUMN pmis_flow_cc.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_flow_cc.deleted IS '逻辑删除标记 0=未删 1=已删';
+COMMENT ON TABLE ydsz_flow_cc IS '流程抄送记录 - 抄送中心查询主体（对标钉钉/飞书）';
+COMMENT ON COLUMN ydsz_flow_cc.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_flow_cc.instance_id IS '流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_cc.task_id IS '触发的任务 ID（CC 节点任务，可空）';
+COMMENT ON COLUMN ydsz_flow_cc.node_code IS '触发抄送的节点编码';
+COMMENT ON COLUMN ydsz_flow_cc.node_name IS '节点名称';
+COMMENT ON COLUMN ydsz_flow_cc.flow_code IS '流程定义编码';
+COMMENT ON COLUMN ydsz_flow_cc.flow_name IS '流程名称';
+COMMENT ON COLUMN ydsz_flow_cc.business_key IS '业务单据 ID';
+COMMENT ON COLUMN ydsz_flow_cc.cc_user_id IS '抄送接收人 ID';
+COMMENT ON COLUMN ydsz_flow_cc.cc_user_name IS '抄送接收人姓名';
+COMMENT ON COLUMN ydsz_flow_cc.cc_type IS '抄送类型：CC_NODE=抄送节点 / MANUAL_CC=人工抄送 / AUTO_CC=自动抄送（如发起人）';
+COMMENT ON COLUMN ydsz_flow_cc.trigger_user_id IS '触发抄送的人（发起人/审批人）';
+COMMENT ON COLUMN ydsz_flow_cc.title IS '抄送标题';
+COMMENT ON COLUMN ydsz_flow_cc.content IS '抄送内容/意见';
+COMMENT ON COLUMN ydsz_flow_cc.read_status IS '已读状态：UNREAD / READ';
+COMMENT ON COLUMN ydsz_flow_cc.read_at IS '已读时间';
+COMMENT ON COLUMN ydsz_flow_cc.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_flow_cc.deleted IS '逻辑删除标记 0=未删 1=已删';
 
 -- 索引：抄送中心查询优化
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_tenant_user
-    ON pmis_flow_cc (tenant_id, cc_user_id, read_status, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_tenant_user
+    ON ydsz_flow_cc (tenant_id, cc_user_id, read_status, deleted)
     WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_instance
-    ON pmis_flow_cc (tenant_id, instance_id, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_instance
+    ON ydsz_flow_cc (tenant_id, instance_id, deleted)
     WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_biz
-    ON pmis_flow_cc (tenant_id, business_key, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_biz
+    ON ydsz_flow_cc (tenant_id, business_key, deleted)
     WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_created
-    ON pmis_flow_cc (tenant_id, created_at DESC)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_created
+    ON ydsz_flow_cc (tenant_id, created_at DESC)
     WHERE deleted = 0;
 
 -- -------------------------------------------
 -- 2. 抄送触发配置表（cc 配置由用户/系统预置，无需触发时由节点类型决定）
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_cc_rule(
+CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule(
     id                 VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -7602,13 +7602,13 @@ CREATE TABLE IF NOT EXISTS pmis_flow_cc_rule(
     CONSTRAINT ck_pfccr_deleted         CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_flow_cc_rule IS '流程抄送规则配置 - 自动抄送规则（如：变更金额>1万自动抄送 CEO）';
-COMMENT ON COLUMN pmis_flow_cc_rule.rule_type IS '规则类型：USER/ROLE/DEPT/SPEL';
-COMMENT ON COLUMN pmis_flow_cc_rule.rule_target IS '规则目标：用户/角色/部门/SpEL 表达式';
-COMMENT ON COLUMN pmis_flow_cc_rule.enabled IS '是否启用 0=停用 1=启用';
+COMMENT ON TABLE ydsz_flow_cc_rule IS '流程抄送规则配置 - 自动抄送规则（如：变更金额>1万自动抄送 CEO）';
+COMMENT ON COLUMN ydsz_flow_cc_rule.rule_type IS '规则类型：USER/ROLE/DEPT/SPEL';
+COMMENT ON COLUMN ydsz_flow_cc_rule.rule_target IS '规则目标：用户/角色/部门/SpEL 表达式';
+COMMENT ON COLUMN ydsz_flow_cc_rule.enabled IS '是否启用 0=停用 1=启用';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
-    ON pmis_flow_cc_rule (tenant_id, flow_code, node_code, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_tenant
+    ON ydsz_flow_cc_rule (tenant_id, flow_code, node_code, deleted)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
@@ -7620,7 +7620,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
 --  --------------------------------------------------------------------
 --  说明：
 --    1) AT 模式依赖此表保存 before/after 镜像，用于分支事务回滚
---    2) 必须在每个业务库（pmis / pmis_bill / pmis_archive ...）都建
+--    2) 必须在每个业务库（pmis / ydsz_bill / ydsz_archive ...）都建
 --    3) 配套 Nacos 配置：data-id = seata-client.properties
 --    4) 配套脚本：deploy/seata/verify-seata.sh 会自动检查本表存在
 --  --------------------------------------------------------------------
@@ -7672,49 +7672,49 @@ COMMENT ON COLUMN undo_log.log_modified IS '最后修改时间';
 -- =============================================================
 -- 工作流引擎对标差距补全 — 新增字段
 --
--- GAP-P0: 表单字段权限 (pmis_flow_node.form_fields_config)
--- GAP-P1: SLA 超时配置 (pmis_flow_node.sla_config)
--- GAP-P1: 子流程父子关系 (pmis_flow_instance.parent_instance_id / parent_node_code)
--- GAP-P1: 会签并发版本号 (pmis_flow_run_task.version)
+-- GAP-P0: 表单字段权限 (ydsz_flow_node.form_fields_config)
+-- GAP-P1: SLA 超时配置 (ydsz_flow_node.sla_config)
+-- GAP-P1: 子流程父子关系 (ydsz_flow_instance.parent_instance_id / parent_node_code)
+-- GAP-P1: 会签并发版本号 (ydsz_flow_run_task.version)
 -- =============================================================
 
 -- -------------------------------------------
--- 1. pmis_flow_node 新增字段
+-- 1. ydsz_flow_node 新增字段
 -- -------------------------------------------
-ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS form_fields_config TEXT;
-ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS sla_config TEXT;
+ALTER TABLE ydsz_flow_node ADD COLUMN IF NOT EXISTS form_fields_config TEXT;
+ALTER TABLE ydsz_flow_node ADD COLUMN IF NOT EXISTS sla_config TEXT;
 
-COMMENT ON COLUMN pmis_flow_node.form_fields_config IS 'GAP-P0: 表单字段权限 JSON — {"fieldKey":"EDIT|READONLY|HIDDEN",...}';
-COMMENT ON COLUMN pmis_flow_node.sla_config IS 'GAP-P1: SLA 超时配置 JSON — {"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT","reminderCount":3,"adminUserId":1}';
+COMMENT ON COLUMN ydsz_flow_node.form_fields_config IS 'GAP-P0: 表单字段权限 JSON — {"fieldKey":"EDIT|READONLY|HIDDEN",...}';
+COMMENT ON COLUMN ydsz_flow_node.sla_config IS 'GAP-P1: SLA 超时配置 JSON — {"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT","reminderCount":3,"adminUserId":1}';
 
 -- -------------------------------------------
--- 2. pmis_flow_instance 新增子流程字段
+-- 2. ydsz_flow_instance 新增子流程字段
 -- -------------------------------------------
-ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_instance_id VARCHAR(20);
-ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_node_code VARCHAR(64);
-ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS reject_reason      TEXT;
-ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS due_at             TIMESTAMPTZ;
-ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS version            INT NOT NULL DEFAULT 0;
+ALTER TABLE ydsz_flow_instance ADD COLUMN IF NOT EXISTS parent_instance_id VARCHAR(20);
+ALTER TABLE ydsz_flow_instance ADD COLUMN IF NOT EXISTS parent_node_code VARCHAR(64);
+ALTER TABLE ydsz_flow_instance ADD COLUMN IF NOT EXISTS reject_reason      TEXT;
+ALTER TABLE ydsz_flow_instance ADD COLUMN IF NOT EXISTS due_at             TIMESTAMPTZ;
+ALTER TABLE ydsz_flow_instance ADD COLUMN IF NOT EXISTS version            INT NOT NULL DEFAULT 0;
 
-COMMENT ON COLUMN pmis_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
-COMMENT ON COLUMN pmis_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
-COMMENT ON COLUMN pmis_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
-COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
-COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
+COMMENT ON COLUMN ydsz_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
+COMMENT ON COLUMN ydsz_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
+COMMENT ON COLUMN ydsz_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
+COMMENT ON COLUMN ydsz_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
+COMMENT ON COLUMN ydsz_flow_instance.version IS '乐观锁版本号（P1-2）';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_instance_parent
-    ON pmis_flow_instance (parent_instance_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_parent
+    ON ydsz_flow_instance (parent_instance_id)
     WHERE parent_instance_id IS NOT NULL;
 
 -- -------------------------------------------
--- 3. pmis_flow_run_task 新增乐观锁版本号
+-- 3. ydsz_flow_run_task 新增乐观锁版本号
 -- -------------------------------------------
-ALTER TABLE pmis_flow_run_task ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 0;
+ALTER TABLE ydsz_flow_run_task ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 0;
 
-COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全，防止多线程同时推进';
+COMMENT ON COLUMN ydsz_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全，防止多线程同时推进';
 
 -- -------------------------------------------
--- 4. pmis_flow_audit_log 新增 action 枚举值扩展（无需 DDL，仅文档说明）
+-- 4. ydsz_flow_audit_log 新增 action 枚举值扩展（无需 DDL，仅文档说明）
 -- 新增 action 值: AUTO_PASS / COUNTERSIGN_REMOVE / MARK_READ / COMMUNICATE / SLA_TIMEOUT / SLA_ESCALATE
 -- -------------------------------------------
 
@@ -7730,7 +7730,7 @@ COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 
 --   2. 边界定时器（boundaryTimer）: 挂在 userTask 上，到达时间未完成则触发超时分支
 --
 -- 设计：
---   - pmis_flow_timer: 定时器实例表（每创建一个定时器节点实例时写入一行）
+--   - ydsz_flow_timer: 定时器实例表（每创建一个定时器节点实例时写入一行）
 --   - timer_status: PENDING / FIRED / CANCELLED
 --   - fire_at: 到点时间，cronjob 每 30s 扫描一次到点的 PENDING 记录并触发
 --   - boundary_task_id: 边界定时器关联的 userTask ID
@@ -7739,7 +7739,7 @@ COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 
 -- -------------------------------------------
 -- 1. 定时器实例表
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_timer(
+CREATE TABLE IF NOT EXISTS ydsz_flow_timer(
     id                 VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
@@ -7772,23 +7772,23 @@ CREATE TABLE IF NOT EXISTS pmis_flow_timer(
     CONSTRAINT ck_pft_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_flow_timer IS '工作流定时器 - 中间定时器/边界定时器调度表';
-COMMENT ON COLUMN pmis_flow_timer.timer_type IS 'INTERMEDIATE 中间定时器 / BOUNDARY 边界定时器';
-COMMENT ON COLUMN pmis_flow_timer.timer_status IS 'PENDING 待执行 / FIRED 已触发 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_flow_timer.fire_at IS '到点时间，扫描器按此字段选取待执行记录';
+COMMENT ON TABLE ydsz_flow_timer IS '工作流定时器 - 中间定时器/边界定时器调度表';
+COMMENT ON COLUMN ydsz_flow_timer.timer_type IS 'INTERMEDIATE 中间定时器 / BOUNDARY 边界定时器';
+COMMENT ON COLUMN ydsz_flow_timer.timer_status IS 'PENDING 待执行 / FIRED 已触发 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_flow_timer.fire_at IS '到点时间，扫描器按此字段选取待执行记录';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 -- 索引：扫描器按 fire_at + status 选取
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_scan
-    ON pmis_flow_timer (tenant_id, timer_status, fire_at)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_tenant_scan
+    ON ydsz_flow_timer (tenant_id, timer_status, fire_at)
     WHERE deleted = 0;
 -- 索引：实例维度查询
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_instance
-    ON pmis_flow_timer (tenant_id, instance_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_tenant_instance
+    ON ydsz_flow_timer (tenant_id, instance_id)
     WHERE deleted = 0;
 -- 索引：边界定时器反向关联 userTask
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_boundary
-    ON pmis_flow_timer (tenant_id, boundary_task_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_tenant_boundary
+    ON ydsz_flow_timer (tenant_id, boundary_task_id)
     WHERE deleted = 0 AND boundary_task_id IS NOT NULL;
 
 -- -------------------------------------------
@@ -7809,7 +7809,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_boundary
 -- -------------------------------------------
 -- 3. 注册定时器扫描器调度任务（PMIS Cronjob）
 -- -------------------------------------------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (
     '工作流定时器扫描',
     'FLOW',
@@ -7842,7 +7842,7 @@ VALUES (
 -- -------------------------------------------
 -- 1. 委派代理主表
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
+CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth(
     id                    VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     owner_user_id         VARCHAR(20)       NOT NULL,
@@ -7882,47 +7882,47 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
     CONSTRAINT ck_pfda_deleted            CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_flow_delegate_auth IS '流程委派代理（长期授权）- 预置规则区间内任务自动转给被委派人';
-COMMENT ON COLUMN pmis_flow_delegate_auth.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_delegate_auth.owner_user_id IS '授权人（原办理人）ID';
-COMMENT ON COLUMN pmis_flow_delegate_auth.owner_user_name IS '授权人姓名';
-COMMENT ON COLUMN pmis_flow_delegate_auth.delegate_user_id IS '被授权人（代理人）ID';
-COMMENT ON COLUMN pmis_flow_delegate_auth.delegate_user_name IS '被授权人姓名';
-COMMENT ON COLUMN pmis_flow_delegate_auth.scope_type IS '匹配模式：ALL=全部 / FLOW=指定流程 / FLOW_NODE=指定流程+节点 / ROLE=指定角色';
-COMMENT ON COLUMN pmis_flow_delegate_auth.flow_code IS '流程编码（FLOW/FLOW_NODE 模式必填）';
-COMMENT ON COLUMN pmis_flow_delegate_auth.node_code IS '节点编码（FLOW_NODE 模式必填）';
-COMMENT ON COLUMN pmis_flow_delegate_auth.role_code IS '角色编码（ROLE 模式必填）';
-COMMENT ON COLUMN pmis_flow_delegate_auth.start_time IS '生效开始时间';
-COMMENT ON COLUMN pmis_flow_delegate_auth.end_time IS '生效结束时间';
-COMMENT ON COLUMN pmis_flow_delegate_auth.auth_status IS '状态：ENABLED/DISABLED/EXPIRED/REVOKED';
-COMMENT ON COLUMN pmis_flow_delegate_auth.reason IS '授权原因（出差/休假/授权）';
-COMMENT ON COLUMN pmis_flow_delegate_auth.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_flow_delegate_auth.deleted IS '逻辑删除标记';
+COMMENT ON TABLE ydsz_flow_delegate_auth IS '流程委派代理（长期授权）- 预置规则区间内任务自动转给被委派人';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.owner_user_id IS '授权人（原办理人）ID';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.owner_user_name IS '授权人姓名';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.delegate_user_id IS '被授权人（代理人）ID';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.delegate_user_name IS '被授权人姓名';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.scope_type IS '匹配模式：ALL=全部 / FLOW=指定流程 / FLOW_NODE=指定流程+节点 / ROLE=指定角色';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.flow_code IS '流程编码（FLOW/FLOW_NODE 模式必填）';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.node_code IS '节点编码（FLOW_NODE 模式必填）';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.role_code IS '角色编码（ROLE 模式必填）';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.start_time IS '生效开始时间';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.end_time IS '生效结束时间';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.auth_status IS '状态：ENABLED/DISABLED/EXPIRED/REVOKED';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.reason IS '授权原因（出差/休假/授权）';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.deleted IS '逻辑删除标记';
 
 -- 索引：按 owner 查询我的授权记录
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_owner
-    ON pmis_flow_delegate_auth (tenant_id, owner_user_id, auth_status, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_owner
+    ON ydsz_flow_delegate_auth (tenant_id, owner_user_id, auth_status, deleted)
     WHERE deleted = 0;
 
 -- 索引：按 delegate 查询代理给我的任务（创建任务时反向匹配）
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_delegate
-    ON pmis_flow_delegate_auth (tenant_id, delegate_user_id, auth_status, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_delegate
+    ON ydsz_flow_delegate_auth (tenant_id, delegate_user_id, auth_status, deleted)
     WHERE deleted = 0;
 
 -- 索引：按生效时间扫描待生效/已过期记录
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_time
-    ON pmis_flow_delegate_auth (tenant_id, start_time, end_time, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_time
+    ON ydsz_flow_delegate_auth (tenant_id, start_time, end_time, deleted)
     WHERE deleted = 0;
 
 -- 索引：按流程编码匹配（创建任务时）
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_flow
-    ON pmis_flow_delegate_auth (tenant_id, flow_code, auth_status, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_flow
+    ON ydsz_flow_delegate_auth (tenant_id, flow_code, auth_status, deleted)
     WHERE deleted = 0;
 
 -- -------------------------------------------
 -- 2. 委派代理使用日志（审计追溯：谁在什么时间被代理处理了什么任务）
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
+CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_log(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     auth_id            VARCHAR(20)       NOT NULL,
@@ -7945,21 +7945,21 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
     CONSTRAINT ck_pfdl_deleted          CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_flow_delegate_log IS '流程委派代理使用日志 - 审计代理操作';
-COMMENT ON COLUMN pmis_flow_delegate_log.auth_id IS '关联的授权 ID';
-COMMENT ON COLUMN pmis_flow_delegate_log.task_id IS '被代理的任务 ID';
-COMMENT ON COLUMN pmis_flow_delegate_log.op_type IS '操作类型：ACT=办理 / VIEW=查看';
-COMMENT ON COLUMN pmis_flow_delegate_log.action IS '办理动作：PASS/REJECT/CLAIM/TRANSFER';
-COMMENT ON COLUMN pmis_flow_delegate_log.comment IS '办理意见';
+COMMENT ON TABLE ydsz_flow_delegate_log IS '流程委派代理使用日志 - 审计代理操作';
+COMMENT ON COLUMN ydsz_flow_delegate_log.auth_id IS '关联的授权 ID';
+COMMENT ON COLUMN ydsz_flow_delegate_log.task_id IS '被代理的任务 ID';
+COMMENT ON COLUMN ydsz_flow_delegate_log.op_type IS '操作类型：ACT=办理 / VIEW=查看';
+COMMENT ON COLUMN ydsz_flow_delegate_log.action IS '办理动作：PASS/REJECT/CLAIM/TRANSFER';
+COMMENT ON COLUMN ydsz_flow_delegate_log.comment IS '办理意见';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_auth
-    ON pmis_flow_delegate_log (tenant_id, auth_id, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_log_auth
+    ON ydsz_flow_delegate_log (tenant_id, auth_id, deleted)
     WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_task
-    ON pmis_flow_delegate_log (tenant_id, task_id, deleted)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_log_task
+    ON ydsz_flow_delegate_log (tenant_id, task_id, deleted)
     WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_delegate
-    ON pmis_flow_delegate_log (tenant_id, delegate_user_id, created_at DESC)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_log_delegate
+    ON ydsz_flow_delegate_log (tenant_id, delegate_user_id, created_at DESC)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
@@ -7970,12 +7970,12 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_delegate
 -- V1.0.0_031  P1-5 报表订阅与导出记录表
 -- ============================================================
 -- 说明：定时报表生成与分发（P1-5）
---   pmis_report_subscription  报表订阅表
---   pmis_export_record        报表导出记录（P0-3 合并 source='SUBSCRIPTION'）
+--   ydsz_report_subscription  报表订阅表
+--   ydsz_export_record        报表导出记录（P0-3 合并 source='SUBSCRIPTION'）
 -- ============================================================
 
 -- 报表订阅表
-CREATE TABLE IF NOT EXISTS pmis_report_subscription (
+CREATE TABLE IF NOT EXISTS ydsz_report_subscription (
     id              VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
     subscriber_id   VARCHAR(20)       NOT NULL,
@@ -7996,25 +7996,25 @@ CREATE TABLE IF NOT EXISTS pmis_report_subscription (
     CONSTRAINT ck_prs_version      CHECK (version >= 0)
 );
 
-COMMENT ON TABLE pmis_report_subscription IS '报表订阅表';
-COMMENT ON COLUMN pmis_report_subscription.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_report_subscription.subscriber_id IS '订阅人ID';
-COMMENT ON COLUMN pmis_report_subscription.report_type IS '报表类型 (COCKPIT/EVM/PROFIT/UTILIZATION/BENCH_COST/RISK)';
-COMMENT ON COLUMN pmis_report_subscription.frequency IS '推送频率 (DAILY/WEEKLY/MONTHLY/REALTIME)';
-COMMENT ON COLUMN pmis_report_subscription.channels IS '推送渠道，逗号分隔 (EMAIL/DINGTALK/INAPP)';
-COMMENT ON COLUMN pmis_report_subscription.recipients IS '接收人邮箱，逗号分隔';
-COMMENT ON COLUMN pmis_report_subscription.enabled IS '是否启用 (1=启用, 0=停用)';
+COMMENT ON TABLE ydsz_report_subscription IS '报表订阅表';
+COMMENT ON COLUMN ydsz_report_subscription.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_report_subscription.subscriber_id IS '订阅人ID';
+COMMENT ON COLUMN ydsz_report_subscription.report_type IS '报表类型 (COCKPIT/EVM/PROFIT/UTILIZATION/BENCH_COST/RISK)';
+COMMENT ON COLUMN ydsz_report_subscription.frequency IS '推送频率 (DAILY/WEEKLY/MONTHLY/REALTIME)';
+COMMENT ON COLUMN ydsz_report_subscription.channels IS '推送渠道，逗号分隔 (EMAIL/DINGTALK/INAPP)';
+COMMENT ON COLUMN ydsz_report_subscription.recipients IS '接收人邮箱，逗号分隔';
+COMMENT ON COLUMN ydsz_report_subscription.enabled IS '是否启用 (1=启用, 0=停用)';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prs_tenant_subscriber
-    ON pmis_report_subscription (tenant_id, subscriber_id)
+    ON ydsz_report_subscription (tenant_id, subscriber_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prs_tenant_type_freq
-    ON pmis_report_subscription (tenant_id, report_type, frequency)
+    ON ydsz_report_subscription (tenant_id, report_type, frequency)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
--- P0-3 合并：原 pmis_report_export_record 已并入 pmis_export_record，
+-- P0-3 合并：原 ydsz_report_export_record 已并入 ydsz_export_record，
 --           通过 source='SUBSCRIPTION' 区分订阅触发的导出记录。
 -- --------------------------------------------------------------------
 
@@ -8028,14 +8028,14 @@ CREATE INDEX IF NOT EXISTS idx_prs_tenant_type_freq
 --   report-daily    日报：每天 08:00
 --   report-weekly   周报：每周一 08:00
 --   report-monthly  月报：每月 1 日 08:00
--- 表 pmis_job 已在 V1.0.0_006 创建。
+-- 表 ydsz_job 已在 V1.0.0_006 创建。
 -- ============================================================
 
 -- 清理旧记录（保证可重跑）
 
 
 -- ---------- 日报表生成与分发 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     '日报表生成与分发任务',
     'PMIS_REPORT',
@@ -8048,7 +8048,7 @@ VALUES (
     1
 ) ON CONFLICT DO NOTHING;
 -- ---------- 周报表生成与分发 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     '周报表生成与分发任务',
     'PMIS_REPORT',
@@ -8061,7 +8061,7 @@ VALUES (
     1
 ) ON CONFLICT DO NOTHING;
 -- ---------- 月报表生成与分发 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     '月报表生成与分发任务',
     'PMIS_REPORT',
@@ -8086,28 +8086,28 @@ VALUES (
 -- =============================================================
 
 -- -------------------------------------------
--- 1. pmis_flow_user 增加 weight 字段（每个办理人的票数/权重）
+-- 1. ydsz_flow_user 增加 weight 字段（每个办理人的票数/权重）
 -- -----------------------------------
-ALTER TABLE pmis_flow_user
+ALTER TABLE ydsz_flow_user
     ADD COLUMN IF NOT EXISTS weight INTEGER NOT NULL DEFAULT 1;
 
-COMMENT ON COLUMN pmis_flow_user.weight IS '办理人权重（默认 1，可配置 2/3 等）';
+COMMENT ON COLUMN ydsz_flow_user.weight IS '办理人权重（默认 1，可配置 2/3 等）';
 
 -- -----------------------------------
--- GAP-P0-3: pmis_flow_user 增加 sign_type 字段（区分原始审批人与加签人）
+-- GAP-P0-3: ydsz_flow_user 增加 sign_type 字段（区分原始审批人与加签人）
 -- -----------------------------------
-ALTER TABLE pmis_flow_user
+ALTER TABLE ydsz_flow_user
     ADD COLUMN IF NOT EXISTS sign_type VARCHAR(16) NOT NULL DEFAULT 'ORIGINAL';
 
-COMMENT ON COLUMN pmis_flow_user.sign_type IS '加签类型: ORIGINAL 原始审批人 / BEFORE 前加签 / AFTER 后加签 / PARALLEL 并加签 / ADD 追加处理人';
+COMMENT ON COLUMN ydsz_flow_user.sign_type IS '加签类型: ORIGINAL 原始审批人 / BEFORE 前加签 / AFTER 后加签 / PARALLEL 并加签 / ADD 追加处理人';
 
 -- -------------------------------------------
--- 2. pmis_flow_run_task 增加 vote_pass_rate 字段（VOTE 模式下的通过率阈值）
+-- 2. ydsz_flow_run_task 增加 vote_pass_rate 字段（VOTE 模式下的通过率阈值）
 -- -------------------------------------------
-ALTER TABLE pmis_flow_run_task
+ALTER TABLE ydsz_flow_run_task
     ADD COLUMN IF NOT EXISTS vote_pass_rate DECIMAL(5, 4) NOT NULL DEFAULT 0.5;
 
-COMMENT ON COLUMN pmis_flow_run_task.vote_pass_rate IS 'VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数）';
+COMMENT ON COLUMN ydsz_flow_run_task.vote_pass_rate IS 'VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数）';
 
 -- --------------------------------------------------------------------
 
@@ -8123,31 +8123,31 @@ COMMENT ON COLUMN pmis_flow_run_task.vote_pass_rate IS 'VOTE 模式通过率阈�
 --      3. 节点可配 slaConfig.reminderIntervalMinutes（重复提醒间隔，默认 60）
 --      4. 节点可配 slaConfig.maxReminders（最大提醒次数，默认 3）
 --      5. 节点可配 slaConfig.escalateUserId（升级目标用户，可空=管理员）
---      6. 任务表 pmis_flow_run_task 记录 reminder_count / last_reminded_at / sla_action
+--      6. 任务表 ydsz_flow_run_task 记录 reminder_count / last_reminded_at / sla_action
 -- =============================================================
 
 -- -------------------------------------------
--- 1. pmis_flow_run_task 增加 SLA 跟踪字段
+-- 1. ydsz_flow_run_task 增加 SLA 跟踪字段
 -- -------------------------------------------
-ALTER TABLE pmis_flow_run_task
+ALTER TABLE ydsz_flow_run_task
     ADD COLUMN IF NOT EXISTS reminder_count   INTEGER       NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_flow_run_task
+ALTER TABLE ydsz_flow_run_task
     ADD COLUMN IF NOT EXISTS last_reminded_at TIMESTAMP     DEFAULT NULL;
 
-ALTER TABLE pmis_flow_run_task
+ALTER TABLE ydsz_flow_run_task
     ADD COLUMN IF NOT EXISTS sla_action       VARCHAR(32)   DEFAULT NULL;
 
-ALTER TABLE pmis_flow_run_task
+ALTER TABLE ydsz_flow_run_task
     ADD COLUMN IF NOT EXISTS sla_escalated    SMALLINT      NOT NULL DEFAULT 0;
 
-COMMENT ON COLUMN pmis_flow_run_task.reminder_count   IS '已发送的 SLA 催办次数';
-COMMENT ON COLUMN pmis_flow_run_task.last_reminded_at IS '最近一次催办时间';
-COMMENT ON COLUMN pmis_flow_run_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
-COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
+COMMENT ON COLUMN ydsz_flow_run_task.reminder_count   IS '已发送的 SLA 催办次数';
+COMMENT ON COLUMN ydsz_flow_run_task.last_reminded_at IS '最近一次催办时间';
+COMMENT ON COLUMN ydsz_flow_run_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
+COMMENT ON COLUMN ydsz_flow_run_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
 
 -- -------------------------------------------
--- 2. pmis_flow_node 已存在 slaConfig 字段（V1.0.0_026 引入），无需变更
+-- 2. ydsz_flow_node 已存在 slaConfig 字段（V1.0.0_026 引入），无需变更
 --    扩展约定：
 --    slaConfig = {
 --      "timeoutMinutes": 120,            // 超时阈值
@@ -8172,7 +8172,7 @@ COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 �
 --   2. 预算 vs 实际成本（超支检测）
 --   3. WBS 进度 vs 工时完成率
 --   差异超阈值自动记录日志并触发告警。
--- 表 pmis_job 已在 V1.0.0_006 创建。
+-- 表 ydsz_job 已在 V1.0.0_006 创建。
 -- 注意：版本号 033/034 已被流程引擎占用，本任务使用 035。
 -- ============================================================
 
@@ -8180,7 +8180,7 @@ COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 �
 
 
 -- ---------- 数据一致性校验任务 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     'data-consistency-check',
     'PMIS_CRONJOB',
@@ -8205,8 +8205,8 @@ VALUES (
 -- 注意：版本号 033/034 已被流程引擎占用，本表使用 036。
 -- ============================================================
 
--- 异步导出记录表（同时承担历史 pmis_report_export_record 的角色，P0-3 合并）
-CREATE TABLE IF NOT EXISTS pmis_export_record (
+-- 异步导出记录表（同时承担历史 ydsz_report_export_record 的角色，P0-3 合并）
+CREATE TABLE IF NOT EXISTS ydsz_export_record (
     id              VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
     -- 来源：MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发（cronjob 模块）
@@ -8246,43 +8246,43 @@ CREATE TABLE IF NOT EXISTS pmis_export_record (
     )
 );
 
-COMMENT ON TABLE pmis_export_record IS '异步导出记录表（同时承载报表订阅导出，P0-3 合并）';
-COMMENT ON COLUMN pmis_export_record.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_export_record.source IS '来源：MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发';
-COMMENT ON COLUMN pmis_export_record.user_id IS '发起人 ID（MANUAL 必填，SUBSCRIPTION 取订阅人）';
-COMMENT ON COLUMN pmis_export_record.export_type IS '通用导出类型 (MANUAL 主用，如 PROJECT/CONTRACT/INVOICE/PAYMENT/EVM/AUDIT_LOG)';
-COMMENT ON COLUMN pmis_export_record.report_type IS '报表类型（SUBSCRIPTION 主用，如 COCKPIT/EVM/PROFIT/UTILIZATION）';
-COMMENT ON COLUMN pmis_export_record.subscription_id IS '关联订阅 ID（仅 SUBSCRIPTION 来源有值，引用 pmis_report_subscription.id）';
-COMMENT ON COLUMN pmis_export_record.file_name IS '文件名';
-COMMENT ON COLUMN pmis_export_record.file_key IS 'MinIO 文件 key';
-COMMENT ON COLUMN pmis_export_record.file_url IS '下载 URL';
-COMMENT ON COLUMN pmis_export_record.file_size IS '文件大小（字节）';
-COMMENT ON COLUMN pmis_export_record.status IS '状态 (PENDING/GENERATING/COMPLETED/SENT/FAILED/EXPIRED)';
-COMMENT ON COLUMN pmis_export_record.params IS '导出参数（JSON）';
-COMMENT ON COLUMN pmis_export_record.error_message IS '错误信息';
-COMMENT ON COLUMN pmis_export_record.completed_at IS '完成时间';
-COMMENT ON COLUMN pmis_export_record.expired_at IS '过期时间';
+COMMENT ON TABLE ydsz_export_record IS '异步导出记录表（同时承载报表订阅导出，P0-3 合并）';
+COMMENT ON COLUMN ydsz_export_record.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_export_record.source IS '来源：MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发';
+COMMENT ON COLUMN ydsz_export_record.user_id IS '发起人 ID（MANUAL 必填，SUBSCRIPTION 取订阅人）';
+COMMENT ON COLUMN ydsz_export_record.export_type IS '通用导出类型 (MANUAL 主用，如 PROJECT/CONTRACT/INVOICE/PAYMENT/EVM/AUDIT_LOG)';
+COMMENT ON COLUMN ydsz_export_record.report_type IS '报表类型（SUBSCRIPTION 主用，如 COCKPIT/EVM/PROFIT/UTILIZATION）';
+COMMENT ON COLUMN ydsz_export_record.subscription_id IS '关联订阅 ID（仅 SUBSCRIPTION 来源有值，引用 ydsz_report_subscription.id）';
+COMMENT ON COLUMN ydsz_export_record.file_name IS '文件名';
+COMMENT ON COLUMN ydsz_export_record.file_key IS 'MinIO 文件 key';
+COMMENT ON COLUMN ydsz_export_record.file_url IS '下载 URL';
+COMMENT ON COLUMN ydsz_export_record.file_size IS '文件大小（字节）';
+COMMENT ON COLUMN ydsz_export_record.status IS '状态 (PENDING/GENERATING/COMPLETED/SENT/FAILED/EXPIRED)';
+COMMENT ON COLUMN ydsz_export_record.params IS '导出参数（JSON）';
+COMMENT ON COLUMN ydsz_export_record.error_message IS '错误信息';
+COMMENT ON COLUMN ydsz_export_record.completed_at IS '完成时间';
+COMMENT ON COLUMN ydsz_export_record.expired_at IS '过期时间';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pex_tenant_user_created
-    ON pmis_export_record (tenant_id, user_id, created_at DESC)
+    ON ydsz_export_record (tenant_id, user_id, created_at DESC)
     WHERE deleted = 0 AND source = 'MANUAL';
 CREATE INDEX IF NOT EXISTS idx_pex_tenant_status
-    ON pmis_export_record (tenant_id, status)
+    ON ydsz_export_record (tenant_id, status)
     WHERE completed_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_pex_tenant_expired
-    ON pmis_export_record (tenant_id, expired_at)
+    ON ydsz_export_record (tenant_id, expired_at)
     WHERE expired_at IS NOT NULL;
 -- P0-3: 订阅维度索引（用于报表中心回溯）
 CREATE INDEX IF NOT EXISTS idx_pex_tenant_subscription
-    ON pmis_export_record (tenant_id, subscription_id, created_at DESC)
+    ON ydsz_export_record (tenant_id, subscription_id, created_at DESC)
     WHERE source = 'SUBSCRIPTION' AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pex_tenant_report_type
-    ON pmis_export_record (tenant_id, report_type, created_at DESC)
+    ON ydsz_export_record (tenant_id, report_type, created_at DESC)
     WHERE source = 'SUBSCRIPTION' AND deleted = 0;
 -- P0-3: 提供商追踪 ID 索引（与 060 节保持一致）
 CREATE INDEX IF NOT EXISTS idx_pex_provider_trace
-    ON pmis_export_record (provider_trace_id)
+    ON ydsz_export_record (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- --------------------------------------------------------------------
@@ -8293,14 +8293,14 @@ CREATE INDEX IF NOT EXISTS idx_pex_provider_trace
 -- V1.0.0_037  P2-3 流程历史归档表
 -- ============================================================
 -- 说明：流程实例/任务/变量归档到冷存储表，减小主表压力。
---   - pmis_flow_his_instance：归档的流程实例（已完成且超过 retention 天数）
---   - pmis_flow_his_variable：归档的流程变量（独立表，instance 归档时同步迁移）
+--   - ydsz_flow_his_instance：归档的流程实例（已完成且超过 retention 天数）
+--   - ydsz_flow_his_variable：归档的流程变量（独立表，instance 归档时同步迁移）
 --   - 触发：FlowHistoryArchiveJobHandler 每天 03:00 扫描
---   - 默认归档阈值：30 天（可在 pmis_job.params 配置）
+--   - 默认归档阈值：30 天（可在 ydsz_job.params 配置）
 -- ============================================================
 
--- 归档实例表（结构与 pmis_flow_instance 一致 + archived_at 字段）
-CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
+-- 归档实例表（结构与 ydsz_flow_instance 一致 + archived_at 字段）
+CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance(
     id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
@@ -8334,24 +8334,24 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
     CONSTRAINT ck_pfhi_time_range      CHECK (end_at IS NULL OR start_at IS NULL OR end_at >= start_at)
 );
 
-COMMENT ON TABLE  pmis_flow_his_instance IS '流程实例归档表: 已完成且超过 retention 天数的实例迁移至此';
-COMMENT ON COLUMN pmis_flow_his_instance.archived_at IS '归档时间';
+COMMENT ON TABLE  ydsz_flow_his_instance IS '流程实例归档表: 已完成且超过 retention 天数的实例迁移至此';
+COMMENT ON COLUMN ydsz_flow_his_instance.archived_at IS '归档时间';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_business
-    ON pmis_flow_his_instance(tenant_id, business_type, business_id);
+    ON ydsz_flow_his_instance(tenant_id, business_type, business_id);
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_flow_code_status
-    ON pmis_flow_his_instance(tenant_id, flow_code, flow_status);
+    ON ydsz_flow_his_instance(tenant_id, flow_code, flow_status);
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_initiator_archived
-    ON pmis_flow_his_instance(tenant_id, initiator_id, archived_at DESC);
+    ON ydsz_flow_his_instance(tenant_id, initiator_id, archived_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_end_at
-    ON pmis_flow_his_instance(tenant_id, end_at DESC)
+    ON ydsz_flow_his_instance(tenant_id, end_at DESC)
     WHERE end_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_archived_at
-    ON pmis_flow_his_instance(tenant_id, archived_at DESC);
+    ON ydsz_flow_his_instance(tenant_id, archived_at DESC);
 
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
-CREATE TABLE IF NOT EXISTS pmis_flow_his_variable(
+CREATE TABLE IF NOT EXISTS ydsz_flow_his_variable(
     id            VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id     VARCHAR(20)       NOT NULL DEFAULT '1',
     instance_id   VARCHAR(20)       NOT NULL,
@@ -8360,15 +8360,15 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_variable(
     archived_at   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-COMMENT ON TABLE pmis_flow_his_variable IS '流程变量归档表: instance.variable JSON 拆分到独立行';
+COMMENT ON TABLE ydsz_flow_his_variable IS '流程变量归档表: instance.variable JSON 拆分到独立行';
 
 CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance
-    ON pmis_flow_his_variable(tenant_id, instance_id);
+    ON ydsz_flow_his_variable(tenant_id, instance_id);
 CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance_key
-    ON pmis_flow_his_variable(tenant_id, instance_id, var_key);
+    ON ydsz_flow_his_variable(tenant_id, instance_id, var_key);
 
 -- 归档统计视图（管理员可见：实例总数/已归档/未归档）
-CREATE OR REPLACE VIEW pmis_view_flow_archive_stats
+CREATE OR REPLACE VIEW ydsz_view_flow_archive_stats
     WITH (security_invoker = true) AS
 SELECT
     COALESCE(main.flow_code, his.flow_code)   AS flow_code,
@@ -8377,19 +8377,19 @@ SELECT
     COALESCE(his.cnt_his, 0)                  AS archived_count
 FROM
     (SELECT flow_code, tenant_id, COUNT(*) AS cnt_main
-     FROM pmis_flow_instance
+     FROM ydsz_flow_instance
      WHERE deleted = 0
      GROUP BY flow_code, tenant_id) main
 FULL OUTER JOIN
     (SELECT flow_code, tenant_id, COUNT(*) AS cnt_his
-     FROM pmis_flow_his_instance
+     FROM ydsz_flow_his_instance
      GROUP BY flow_code, tenant_id) his
     ON main.flow_code = his.flow_code AND main.tenant_id = his.tenant_id;
 
-COMMENT ON VIEW pmis_view_flow_archive_stats IS '流程归档统计: active_count 主表实例数 / archived_count 已归档实例数';
+COMMENT ON VIEW ydsz_view_flow_archive_stats IS '流程归档统计: active_count 主表实例数 / archived_count 已归档实例数';
 
--- 注册归档任务到 pmis_job（每日 03:00 触发，阈值 30 天）
-INSERT INTO pmis_job
+-- 注册归档任务到 ydsz_job（每日 03:00 触发，阈值 30 天）
+INSERT INTO ydsz_job
     (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id, created_at, updated_at, deleted)
 VALUES
     ('流程历史归档任务', 'WORKFLOW', 'flowHistoryArchiveJob',
@@ -8420,24 +8420,24 @@ ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
 --   4. 出现问题可调用 rollbackCanary(defId) 回滚到稳定版
 -- ============================================================
 
-ALTER TABLE pmis_flow_definition
+ALTER TABLE ydsz_flow_definition
     ADD COLUMN IF NOT EXISTS canary_percent          SMALLINT     NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS canary_status           VARCHAR(16)  NOT NULL DEFAULT 'NONE',
     ADD COLUMN IF NOT EXISTS canary_strategy         VARCHAR(16)  NOT NULL DEFAULT 'USER_HASH',
     ADD COLUMN IF NOT EXISTS canary_rollout_log      TEXT;
 
-COMMENT ON COLUMN pmis_flow_definition.canary_percent IS
+COMMENT ON COLUMN ydsz_flow_definition.canary_percent IS
     '灰度比例 0-100（0=稳定版 / 100=全量灰度版）';
-COMMENT ON COLUMN pmis_flow_definition.canary_status IS
+COMMENT ON COLUMN ydsz_flow_definition.canary_status IS
     '灰度状态: NONE 无 / CANARYING 灰度中 / PROMOTED 已全量 / ROLLED_BACK 已回滚';
-COMMENT ON COLUMN pmis_flow_definition.canary_strategy IS
+COMMENT ON COLUMN ydsz_flow_definition.canary_strategy IS
     '灰度切流策略: USER_HASH 按发起人ID hash / RANDOM 随机 / WHITELIST 白名单';
-COMMENT ON COLUMN pmis_flow_definition.canary_rollout_log IS
+COMMENT ON COLUMN ydsz_flow_definition.canary_rollout_log IS
     '灰度发布历史 JSON 数组[{operatorId,operatorName,fromPercent,toPercent,operateAt,note}]';
 
 -- 灰度索引（按状态快速查询正在灰度中的定义）
 CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
-    ON pmis_flow_definition(canary_status)
+    ON ydsz_flow_definition(canary_status)
     WHERE deleted = 0 AND canary_status <> 'NONE';
 
 -- --------------------------------------------------------------------
@@ -8447,13 +8447,13 @@ CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
 -- =====================================================
 -- PMIS 批次12 DDL：考勤管理(出勤/加班/请假)
 -- 版本: V1.0.0_015
--- 描述: 出勤(pmis_attendance) + 加班(pmis_overtime) + 请假(pmis_leave)
+-- 描述: 出勤(ydsz_attendance) + 加班(ydsz_overtime) + 请假(ydsz_leave)
 -- =====================================================
 
 -- =====================================================
--- 1. 出勤记录表 pmis_attendance
+-- 1. 出勤记录表 ydsz_attendance
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_attendance (
+CREATE TABLE IF NOT EXISTS ydsz_attendance (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     employee_id         VARCHAR(20)       NOT NULL,
     employee_name       VARCHAR(64),
@@ -8479,35 +8479,35 @@ CREATE TABLE IF NOT EXISTS pmis_attendance (
     CONSTRAINT ck_pa_check_range      CHECK (check_in_time IS NULL OR check_out_time IS NULL OR check_out_time >= check_in_time),
     CONSTRAINT ck_pa_deleted          CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_attendance IS '员工出勤记录表: 每日打卡 + 工作时长统计,支撑项目工时分配';
-COMMENT ON COLUMN pmis_attendance.employee_id IS '员工 ID';
-COMMENT ON COLUMN pmis_attendance.employee_name IS '员工姓名（冗余）';
-COMMENT ON COLUMN pmis_attendance.attendance_date IS '出勤日期';
-COMMENT ON COLUMN pmis_attendance.check_in_time IS '上班打卡时间';
-COMMENT ON COLUMN pmis_attendance.check_out_time IS '下班打卡时间';
-COMMENT ON COLUMN pmis_attendance.work_hours IS '工作时长(小时)';
-COMMENT ON COLUMN pmis_attendance.overtime_hours IS '加班时长(小时)';
-COMMENT ON COLUMN pmis_attendance.status IS '出勤状态: NORMAL 正常 / LATE 迟到 / EARLY 早退 / ABSENT 缺勤 / LEAVE 请假 / OVERTIME 加班';
-COMMENT ON COLUMN pmis_attendance.work_type IS '日期类型: WORKDAY 工作日 / WEEKEND 周末 / HOLIDAY 节假日';
-COMMENT ON COLUMN pmis_attendance.remark IS '备注';
-COMMENT ON COLUMN pmis_attendance.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_attendance.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_attendance.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_attendance IS '员工出勤记录表: 每日打卡 + 工作时长统计,支撑项目工时分配';
+COMMENT ON COLUMN ydsz_attendance.employee_id IS '员工 ID';
+COMMENT ON COLUMN ydsz_attendance.employee_name IS '员工姓名（冗余）';
+COMMENT ON COLUMN ydsz_attendance.attendance_date IS '出勤日期';
+COMMENT ON COLUMN ydsz_attendance.check_in_time IS '上班打卡时间';
+COMMENT ON COLUMN ydsz_attendance.check_out_time IS '下班打卡时间';
+COMMENT ON COLUMN ydsz_attendance.work_hours IS '工作时长(小时)';
+COMMENT ON COLUMN ydsz_attendance.overtime_hours IS '加班时长(小时)';
+COMMENT ON COLUMN ydsz_attendance.status IS '出勤状态: NORMAL 正常 / LATE 迟到 / EARLY 早退 / ABSENT 缺勤 / LEAVE 请假 / OVERTIME 加班';
+COMMENT ON COLUMN ydsz_attendance.work_type IS '日期类型: WORKDAY 工作日 / WEEKEND 周末 / HOLIDAY 节假日';
+COMMENT ON COLUMN ydsz_attendance.remark IS '备注';
+COMMENT ON COLUMN ydsz_attendance.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_attendance.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_attendance.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pa_tenant_emp_date
-    ON pmis_attendance(tenant_id, employee_id, attendance_date DESC)
+    ON ydsz_attendance(tenant_id, employee_id, attendance_date DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pa_tenant_date
-    ON pmis_attendance(tenant_id, attendance_date DESC);
+    ON ydsz_attendance(tenant_id, attendance_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pa_tenant_status
-    ON pmis_attendance(tenant_id, status)
+    ON ydsz_attendance(tenant_id, status)
     WHERE deleted = 0;
 
 -- =====================================================
--- 2. 加班申请表 pmis_overtime
+-- 2. 加班申请表 ydsz_overtime
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_overtime (
+CREATE TABLE IF NOT EXISTS ydsz_overtime (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     overtime_code       VARCHAR(64)  NOT NULL,
     employee_id         VARCHAR(20)       NOT NULL,
@@ -8539,41 +8539,41 @@ CREATE TABLE IF NOT EXISTS pmis_overtime (
     CONSTRAINT ck_pot_time_range          CHECK (end_time > start_time),
     CONSTRAINT ck_pot_deleted             CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_overtime IS '加班申请表: WORKDAY 1.5x / WEEKEND 2.0x / HOLIDAY 3.0x 法定倍数';
-COMMENT ON COLUMN pmis_overtime.overtime_code IS '加班单号: 业务唯一,如 OT-2026-001';
-COMMENT ON COLUMN pmis_overtime.employee_id IS '员工 ID';
-COMMENT ON COLUMN pmis_overtime.employee_name IS '员工姓名（冗余）';
-COMMENT ON COLUMN pmis_overtime.overtime_date IS '加班日期';
-COMMENT ON COLUMN pmis_overtime.start_time IS '加班开始时间';
-COMMENT ON COLUMN pmis_overtime.end_time IS '加班结束时间';
-COMMENT ON COLUMN pmis_overtime.overtime_hours IS '加班时长(小时)';
-COMMENT ON COLUMN pmis_overtime.overtime_type IS '加班类型: WORKDAY 工作日 / WEEKEND 周末 / HOLIDAY 节假日';
-COMMENT ON COLUMN pmis_overtime.pay_rate IS '加班倍数: 1.5/2.0/3.0 倍,用于薪资计算';
-COMMENT ON COLUMN pmis_overtime.reason IS '加班原因';
-COMMENT ON COLUMN pmis_overtime.approval_id IS '审批流实例 ID: 关联工作流引擎';
-COMMENT ON COLUMN pmis_overtime.approval_status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_overtime.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_overtime.approver_name IS '审批人姓名（冗余）';
-COMMENT ON COLUMN pmis_overtime.approval_time IS '审批时间';
-COMMENT ON COLUMN pmis_overtime.approval_remark IS '审批意见';
-COMMENT ON COLUMN pmis_overtime.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_overtime.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_overtime.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_overtime IS '加班申请表: WORKDAY 1.5x / WEEKEND 2.0x / HOLIDAY 3.0x 法定倍数';
+COMMENT ON COLUMN ydsz_overtime.overtime_code IS '加班单号: 业务唯一,如 OT-2026-001';
+COMMENT ON COLUMN ydsz_overtime.employee_id IS '员工 ID';
+COMMENT ON COLUMN ydsz_overtime.employee_name IS '员工姓名（冗余）';
+COMMENT ON COLUMN ydsz_overtime.overtime_date IS '加班日期';
+COMMENT ON COLUMN ydsz_overtime.start_time IS '加班开始时间';
+COMMENT ON COLUMN ydsz_overtime.end_time IS '加班结束时间';
+COMMENT ON COLUMN ydsz_overtime.overtime_hours IS '加班时长(小时)';
+COMMENT ON COLUMN ydsz_overtime.overtime_type IS '加班类型: WORKDAY 工作日 / WEEKEND 周末 / HOLIDAY 节假日';
+COMMENT ON COLUMN ydsz_overtime.pay_rate IS '加班倍数: 1.5/2.0/3.0 倍,用于薪资计算';
+COMMENT ON COLUMN ydsz_overtime.reason IS '加班原因';
+COMMENT ON COLUMN ydsz_overtime.approval_id IS '审批流实例 ID: 关联工作流引擎';
+COMMENT ON COLUMN ydsz_overtime.approval_status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_overtime.approver_id IS '审批人 ID';
+COMMENT ON COLUMN ydsz_overtime.approver_name IS '审批人姓名（冗余）';
+COMMENT ON COLUMN ydsz_overtime.approval_time IS '审批时间';
+COMMENT ON COLUMN ydsz_overtime.approval_remark IS '审批意见';
+COMMENT ON COLUMN ydsz_overtime.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_overtime.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_overtime.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pot_tenant_emp_date
-    ON pmis_overtime(tenant_id, employee_id, overtime_date DESC)
+    ON ydsz_overtime(tenant_id, employee_id, overtime_date DESC)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pot_tenant_date
-    ON pmis_overtime(tenant_id, overtime_date DESC);
+    ON ydsz_overtime(tenant_id, overtime_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pot_tenant_status
-    ON pmis_overtime(tenant_id, approval_status)
+    ON ydsz_overtime(tenant_id, approval_status)
     WHERE deleted = 0;
 
 -- =====================================================
--- 3. 请假申请表 pmis_leave
+-- 3. 请假申请表 ydsz_leave
 -- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_leave (
+CREATE TABLE IF NOT EXISTS ydsz_leave (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     leave_code          VARCHAR(64)  NOT NULL,
     employee_id         VARCHAR(20)       NOT NULL,
@@ -8603,44 +8603,44 @@ CREATE TABLE IF NOT EXISTS pmis_leave (
     CONSTRAINT ck_pl_date_range          CHECK (end_date >= start_date),
     CONSTRAINT ck_pl_deleted             CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_leave IS '请假申请表: 7 种假期类型,自动算 leave_days';
-COMMENT ON COLUMN pmis_leave.leave_code IS '请假单号: 业务唯一,如 LV-2026-001';
-COMMENT ON COLUMN pmis_leave.employee_id IS '员工 ID';
-COMMENT ON COLUMN pmis_leave.employee_name IS '员工姓名（冗余）';
-COMMENT ON COLUMN pmis_leave.leave_type IS '假期类型: ANNUAL 年假 / SICK 病假 / PERSONAL 事假 / MARRIAGE 婚假 / MATERNITY 产假 / BEREAVEMENT 丧假 / OTHER 其他';
-COMMENT ON COLUMN pmis_leave.start_date IS '请假开始日期';
-COMMENT ON COLUMN pmis_leave.end_date IS '请假结束日期';
-COMMENT ON COLUMN pmis_leave.leave_days IS '请假天数(天)';
-COMMENT ON COLUMN pmis_leave.reason IS '请假原因';
-COMMENT ON COLUMN pmis_leave.attachment_url IS '证明附件 URL: 病假条/结婚证等';
-COMMENT ON COLUMN pmis_leave.approval_id IS '审批流实例 ID';
-COMMENT ON COLUMN pmis_leave.approval_status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_leave.approver_id IS '审批人 ID';
-COMMENT ON COLUMN pmis_leave.approver_name IS '审批人姓名（冗余）';
-COMMENT ON COLUMN pmis_leave.approval_time IS '审批时间';
-COMMENT ON COLUMN pmis_leave.approval_remark IS '审批意见';
-COMMENT ON COLUMN pmis_leave.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_leave.provider_trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN pmis_leave.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  ydsz_leave IS '请假申请表: 7 种假期类型,自动算 leave_days';
+COMMENT ON COLUMN ydsz_leave.leave_code IS '请假单号: 业务唯一,如 LV-2026-001';
+COMMENT ON COLUMN ydsz_leave.employee_id IS '员工 ID';
+COMMENT ON COLUMN ydsz_leave.employee_name IS '员工姓名（冗余）';
+COMMENT ON COLUMN ydsz_leave.leave_type IS '假期类型: ANNUAL 年假 / SICK 病假 / PERSONAL 事假 / MARRIAGE 婚假 / MATERNITY 产假 / BEREAVEMENT 丧假 / OTHER 其他';
+COMMENT ON COLUMN ydsz_leave.start_date IS '请假开始日期';
+COMMENT ON COLUMN ydsz_leave.end_date IS '请假结束日期';
+COMMENT ON COLUMN ydsz_leave.leave_days IS '请假天数(天)';
+COMMENT ON COLUMN ydsz_leave.reason IS '请假原因';
+COMMENT ON COLUMN ydsz_leave.attachment_url IS '证明附件 URL: 病假条/结婚证等';
+COMMENT ON COLUMN ydsz_leave.approval_id IS '审批流实例 ID';
+COMMENT ON COLUMN ydsz_leave.approval_status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / CANCELLED 已取消';
+COMMENT ON COLUMN ydsz_leave.approver_id IS '审批人 ID';
+COMMENT ON COLUMN ydsz_leave.approver_name IS '审批人姓名（冗余）';
+COMMENT ON COLUMN ydsz_leave.approval_time IS '审批时间';
+COMMENT ON COLUMN ydsz_leave.approval_remark IS '审批意见';
+COMMENT ON COLUMN ydsz_leave.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_leave.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_leave.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pl_tenant_emp
-    ON pmis_leave(tenant_id, employee_id)
+    ON ydsz_leave(tenant_id, employee_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pl_tenant_date_range
-    ON pmis_leave(tenant_id, start_date, end_date)
+    ON ydsz_leave(tenant_id, start_date, end_date)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pl_tenant_type
-    ON pmis_leave(tenant_id, leave_type)
+    ON ydsz_leave(tenant_id, leave_type)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pl_tenant_status
-    ON pmis_leave(tenant_id, approval_status)
+    ON ydsz_leave(tenant_id, approval_status)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
 
 -- ====================================================================
--- V1.0.0_040 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
+-- V1.0.0_040 已优化内联至 V1.0.0_001 的 ydsz_operation_log 定义中
 -- (before_data / after_data / biz_type / biz_id 已内联,并升级为 JSONB)
 -- ====================================================================
 
@@ -8653,7 +8653,7 @@ CREATE INDEX IF NOT EXISTS idx_pl_tenant_status
 -- --------------------------------------------------------
 -- 1. 规则定义主表
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_def (
+CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     id                    VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code             VARCHAR(128)    NOT NULL,
@@ -8685,29 +8685,29 @@ CREATE TABLE IF NOT EXISTS pmis_rule_def (
     CONSTRAINT ck_prd_deleted            CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_rule_def IS 'LiteRule 规则定义表';
-COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_def.rule_code IS '规则编码（租户内唯一）';
-COMMENT ON COLUMN pmis_rule_def.condition_expression IS '条件表达式（Aviator 语法，返回 boolean）';
-COMMENT ON COLUMN pmis_rule_def.severity_expression IS '严重度表达式（可选，动态决定严重度）';
-COMMENT ON COLUMN pmis_rule_def.priority IS '优先级（数值越小越先执行，默认100）';
-COMMENT ON COLUMN pmis_rule_def.mutex_group IS '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）';
+COMMENT ON TABLE  ydsz_rule_def IS 'LiteRule 规则定义表';
+COMMENT ON COLUMN ydsz_rule_def.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_def.rule_code IS '规则编码（租户内唯一）';
+COMMENT ON COLUMN ydsz_rule_def.condition_expression IS '条件表达式（Aviator 语法，返回 boolean）';
+COMMENT ON COLUMN ydsz_rule_def.severity_expression IS '严重度表达式（可选，动态决定严重度）';
+COMMENT ON COLUMN ydsz_rule_def.priority IS '优先级（数值越小越先执行，默认100）';
+COMMENT ON COLUMN ydsz_rule_def.mutex_group IS '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_category_enabled
-    ON pmis_rule_def (tenant_id, category, enabled)
+    ON ydsz_rule_def (tenant_id, category, enabled)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_priority
-    ON pmis_rule_def (tenant_id, priority)
+    ON ydsz_rule_def (tenant_id, priority)
     WHERE deleted = 0 AND enabled = TRUE;
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_mutex_group
-    ON pmis_rule_def (tenant_id, mutex_group)
+    ON ydsz_rule_def (tenant_id, mutex_group)
     WHERE deleted = 0 AND mutex_group IS NOT NULL;
 
 -- --------------------------------------------------------
 -- 2. 规则版本历史表（审计追踪 + 回滚）
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_version_history (
+CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
     id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
@@ -8722,18 +8722,18 @@ CREATE TABLE IF NOT EXISTS pmis_rule_version_history (
     CONSTRAINT ck_prvh_version             CHECK (version > 0)
 );
 
-COMMENT ON TABLE  pmis_rule_version_history IS 'LiteRule 规则版本历史表';
-COMMENT ON COLUMN pmis_rule_version_history.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_version_history.definition_json IS '规则定义 JSON 快照';
+COMMENT ON TABLE  ydsz_rule_version_history IS 'LiteRule 规则版本历史表';
+COMMENT ON COLUMN ydsz_rule_version_history.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_version_history.definition_json IS '规则定义 JSON 快照';
 
 CREATE INDEX IF NOT EXISTS idx_prvh_tenant_code
-    ON pmis_rule_version_history (tenant_id, rule_code, version DESC);
+    ON ydsz_rule_version_history (tenant_id, rule_code, version DESC);
 
 -- --------------------------------------------------------
 -- 3. 预置规则（从硬编码迁移为表达式配置）
 --    对标原 execution 模块 AlertRuleEngine 4 条内置规则
 -- --------------------------------------------------------
-INSERT INTO pmis_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
+INSERT INTO ydsz_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
 VALUES
 (
     'EVM_RED_EXCESS',
@@ -8750,7 +8750,7 @@ VALUES
     'SYSTEM'
 ) ON CONFLICT (tenant_id, rule_code, deleted) WHERE deleted = 0 DO NOTHING;
 
-INSERT INTO pmis_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
+INSERT INTO ydsz_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
 VALUES
 (
     'MARGIN_LOW',
@@ -8767,7 +8767,7 @@ VALUES
     'SYSTEM'
 ) ON CONFLICT (tenant_id, rule_code, deleted) WHERE deleted = 0 DO NOTHING;
 
-INSERT INTO pmis_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
+INSERT INTO ydsz_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
 VALUES
 (
     'BENCH_IDLE_COST_HIGH',
@@ -8784,7 +8784,7 @@ VALUES
     'SYSTEM'
 ) ON CONFLICT (tenant_id, rule_code, deleted) WHERE deleted = 0 DO NOTHING;
 
-INSERT INTO pmis_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
+INSERT INTO ydsz_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
 VALUES
 (
     'UTILIZATION_LOW',
@@ -8804,7 +8804,7 @@ VALUES
 -- --------------------------------------------------------
 -- 4. 初始版本快照
 -- --------------------------------------------------------
-INSERT INTO pmis_rule_version_history (rule_code, version, definition_json, change_desc, operator)
+INSERT INTO ydsz_rule_version_history (rule_code, version, definition_json, change_desc, operator)
 SELECT rule_code, 1,
        json_build_object(
            'code', rule_code,
@@ -8818,15 +8818,15 @@ SELECT rule_code, 1,
        )::text,
        '初始版本（从硬编码迁移为表达式配置）',
        'SYSTEM'
-FROM pmis_rule_def
+FROM ydsz_rule_def
 WHERE NOT EXISTS (
-    SELECT 1 FROM pmis_rule_version_history h WHERE h.rule_code = pmis_rule_def.rule_code
+    SELECT 1 FROM ydsz_rule_version_history h WHERE h.rule_code = ydsz_rule_def.rule_code
 );
 
 -- --------------------------------------------------------
 -- 5. 规则模板表（P2: 规则模板市场）
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_template (
+CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     id                    VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code         VARCHAR(128)    NOT NULL,
@@ -8855,19 +8855,19 @@ CREATE TABLE IF NOT EXISTS pmis_rule_template (
     CONSTRAINT ck_prt_deleted               CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_rule_template IS 'LiteRule 规则模板表（模板市场）';
-COMMENT ON COLUMN pmis_rule_template.tenant_id IS '租户 ID';
+COMMENT ON TABLE ydsz_rule_template IS 'LiteRule 规则模板表（模板市场）';
+COMMENT ON COLUMN ydsz_rule_template.tenant_id IS '租户 ID';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prt_tenant_category
-    ON pmis_rule_template (tenant_id, category)
+    ON ydsz_rule_template (tenant_id, category)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prt_tenant_industry
-    ON pmis_rule_template (tenant_id, industry)
+    ON ydsz_rule_template (tenant_id, industry)
     WHERE deleted = 0;
 
 -- 预置行业模板
-INSERT INTO pmis_rule_template (template_code, template_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, industry, tags)
+INSERT INTO ydsz_rule_template (template_code, template_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, industry, tags)
 VALUES
 (
     'TPL_EVM_RED',
@@ -8954,7 +8954,7 @@ ON CONFLICT (tenant_id, template_code, deleted) WHERE deleted = 0 DO NOTHING;
 -- ============================================
 
 -- 测试用例主表
-CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
+CREATE TABLE IF NOT EXISTS ydsz_rule_test_case (
     id                 VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     name               VARCHAR(256)    NOT NULL,
@@ -8972,23 +8972,23 @@ CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
     CONSTRAINT ck_prtc_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_rule_test_case IS 'P1-9: 规则测试用例表,用于规则评估的回归测试';
-COMMENT ON COLUMN pmis_rule_test_case.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_test_case.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_test_case.name IS '测试用例名称';
-COMMENT ON COLUMN pmis_rule_test_case.rule_code IS '关联规则编码 (可选, null 表示通用测试用例)';
-COMMENT ON COLUMN pmis_rule_test_case.facts_data IS '事实数据 JSON (输入参数)';
-COMMENT ON COLUMN pmis_rule_test_case.expected_triggered IS '预期触发的规则编码列表 JSON';
-COMMENT ON COLUMN pmis_rule_test_case.description IS '用例描述';
-COMMENT ON COLUMN pmis_rule_test_case.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_test_case.updated_at IS '更新时间';
+COMMENT ON TABLE ydsz_rule_test_case IS 'P1-9: 规则测试用例表,用于规则评估的回归测试';
+COMMENT ON COLUMN ydsz_rule_test_case.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_test_case.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_test_case.name IS '测试用例名称';
+COMMENT ON COLUMN ydsz_rule_test_case.rule_code IS '关联规则编码 (可选, null 表示通用测试用例)';
+COMMENT ON COLUMN ydsz_rule_test_case.facts_data IS '事实数据 JSON (输入参数)';
+COMMENT ON COLUMN ydsz_rule_test_case.expected_triggered IS '预期触发的规则编码列表 JSON';
+COMMENT ON COLUMN ydsz_rule_test_case.description IS '用例描述';
+COMMENT ON COLUMN ydsz_rule_test_case.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rule_test_case.updated_at IS '更新时间';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prtc_tenant_code
-    ON pmis_rule_test_case (tenant_id, rule_code)
+    ON ydsz_rule_test_case (tenant_id, rule_code)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prtc_tenant_name
-    ON pmis_rule_test_case (tenant_id, name)
+    ON ydsz_rule_test_case (tenant_id, name)
     WHERE deleted = 0;
 
 -- 更新触发器
@@ -9000,13 +9000,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trigger_rule_test_case_updated_at ON pmis_rule_test_case;
+DROP TRIGGER IF EXISTS trigger_rule_test_case_updated_at ON ydsz_rule_test_case;
 CREATE TRIGGER trigger_rule_test_case_updated_at
-    BEFORE UPDATE ON pmis_rule_test_case
+    BEFORE UPDATE ON ydsz_rule_test_case
     FOR EACH ROW EXECUTE FUNCTION update_rule_test_case_updated_at();
 
 -- 预置测试用例
-INSERT INTO pmis_rule_test_case (name, rule_code, facts_data, expected_triggered, description) VALUES
+INSERT INTO ydsz_rule_test_case (name, rule_code, facts_data, expected_triggered, description) VALUES
 ('EVM 3个红色告警项目', 'EVM_RED_EXCESS',
  '{"evmRedCount": 3, "projectCount": 10}',
  '["EVM_RED_EXCESS"]',
@@ -9040,31 +9040,31 @@ INSERT INTO pmis_rule_test_case (name, rule_code, facts_data, expected_triggered
 -- ============================================
 
 -- 1. 规则生命周期：添加状态字段
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'PUBLISHED';
 
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS effective_from TIMESTAMPTZ;
 
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS effective_to TIMESTAMPTZ;
 
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS reviewed_by VARCHAR(64);
 
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
 
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS review_comment VARCHAR(512);
 
 -- 状态索引（按租户过滤）
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_status
-    ON pmis_rule_def (tenant_id, status)
+    ON ydsz_rule_def (tenant_id, status)
     WHERE deleted = 0;
 
 -- 2. 执行链路追踪表
-CREATE TABLE IF NOT EXISTS pmis_rule_execution_trace (
+CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     trace_id          VARCHAR(20)     NOT NULL,
@@ -9083,33 +9083,33 @@ CREATE TABLE IF NOT EXISTS pmis_rule_execution_trace (
     created_at        TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
 
-COMMENT ON TABLE pmis_rule_execution_trace IS 'P1-11: 规则执行链路追踪表,一次评估一条记录';
-COMMENT ON COLUMN pmis_rule_execution_trace.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_execution_trace.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_execution_trace.trace_id IS '追踪 ID (同一批次评估共享)';
-COMMENT ON COLUMN pmis_rule_execution_trace.rule_code IS '规则编码';
-COMMENT ON COLUMN pmis_rule_execution_trace.rule_name IS '规则名称';
-COMMENT ON COLUMN pmis_rule_execution_trace.scenario IS '业务场景';
-COMMENT ON COLUMN pmis_rule_execution_trace.triggered IS '是否触发';
-COMMENT ON COLUMN pmis_rule_execution_trace.severity IS '严重度 (RED/YELLOW/GREEN/INFO)';
-COMMENT ON COLUMN pmis_rule_execution_trace.condition_result IS '条件表达式求值结果描述';
-COMMENT ON COLUMN pmis_rule_execution_trace.elapsed_ms IS '执行耗时 (毫秒)';
-COMMENT ON COLUMN pmis_rule_execution_trace.facts_snapshot IS '事实数据快照 JSON';
-COMMENT ON COLUMN pmis_rule_execution_trace.result_snapshot IS '结果快照 JSON';
-COMMENT ON COLUMN pmis_rule_execution_trace.error_message IS '错误信息';
-COMMENT ON COLUMN pmis_rule_execution_trace.created_at IS '创建时间';
+COMMENT ON TABLE ydsz_rule_execution_trace IS 'P1-11: 规则执行链路追踪表,一次评估一条记录';
+COMMENT ON COLUMN ydsz_rule_execution_trace.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_execution_trace.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_execution_trace.trace_id IS '追踪 ID (同一批次评估共享)';
+COMMENT ON COLUMN ydsz_rule_execution_trace.rule_code IS '规则编码';
+COMMENT ON COLUMN ydsz_rule_execution_trace.rule_name IS '规则名称';
+COMMENT ON COLUMN ydsz_rule_execution_trace.scenario IS '业务场景';
+COMMENT ON COLUMN ydsz_rule_execution_trace.triggered IS '是否触发';
+COMMENT ON COLUMN ydsz_rule_execution_trace.severity IS '严重度 (RED/YELLOW/GREEN/INFO)';
+COMMENT ON COLUMN ydsz_rule_execution_trace.condition_result IS '条件表达式求值结果描述';
+COMMENT ON COLUMN ydsz_rule_execution_trace.elapsed_ms IS '执行耗时 (毫秒)';
+COMMENT ON COLUMN ydsz_rule_execution_trace.facts_snapshot IS '事实数据快照 JSON';
+COMMENT ON COLUMN ydsz_rule_execution_trace.result_snapshot IS '结果快照 JSON';
+COMMENT ON COLUMN ydsz_rule_execution_trace.error_message IS '错误信息';
+COMMENT ON COLUMN ydsz_rule_execution_trace.created_at IS '创建时间';
 
 -- 数据完整性约束（表内）
-ALTER TABLE pmis_rule_execution_trace
+ALTER TABLE ydsz_rule_execution_trace
     ADD CONSTRAINT ck_prelapsed_nonneg  CHECK (elapsed_ms >= 0);
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pret_tenant_trace
-    ON pmis_rule_execution_trace (tenant_id, trace_id, created_at DESC);
+    ON ydsz_rule_execution_trace (tenant_id, trace_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pret_tenant_rule_code
-    ON pmis_rule_execution_trace (tenant_id, rule_code, created_at DESC);
+    ON ydsz_rule_execution_trace (tenant_id, rule_code, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pret_tenant_scenario
-    ON pmis_rule_execution_trace (tenant_id, scenario, created_at DESC);
+    ON ydsz_rule_execution_trace (tenant_id, scenario, created_at DESC);
 -- --------------------------------------------------------------------
 
 -- ============================ [044] add decision table ============================
@@ -9118,7 +9118,7 @@ CREATE INDEX IF NOT EXISTS idx_pret_tenant_scenario
 -- 决策表支持
 -- ============================================
 
-CREATE TABLE IF NOT EXISTS pmis_rule_decision_table (
+CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     id                 VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     table_code         VARCHAR(128)    NOT NULL,
@@ -9149,28 +9149,28 @@ CREATE TABLE IF NOT EXISTS pmis_rule_decision_table (
     CONSTRAINT ck_prdt_deleted            CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_rule_decision_table IS 'P1-12: 决策表 (DMN 简化版),条件/动作/行均以 JSON 存储';
-COMMENT ON COLUMN pmis_rule_decision_table.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_decision_table.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_decision_table.table_code IS '决策表编码 (租户内唯一)';
-COMMENT ON COLUMN pmis_rule_decision_table.table_name IS '决策表名称';
-COMMENT ON COLUMN pmis_rule_decision_table.description IS '描述';
-COMMENT ON COLUMN pmis_rule_decision_table.category IS '类别';
-COMMENT ON COLUMN pmis_rule_decision_table.condition_columns IS '条件列定义 JSON: [{name,label,type}]';
-COMMENT ON COLUMN pmis_rule_decision_table.action_columns IS '动作列定义 JSON: [{name,label,type}]';
-COMMENT ON COLUMN pmis_rule_decision_table.rows IS '决策行 JSON: [{conditions,actions}]';
-COMMENT ON COLUMN pmis_rule_decision_table.default_actions IS '默认动作 (未匹配行时使用) JSON';
-COMMENT ON COLUMN pmis_rule_decision_table.enabled IS '是否启用';
-COMMENT ON COLUMN pmis_rule_decision_table.priority IS '优先级';
-COMMENT ON COLUMN pmis_rule_decision_table.version IS '版本号';
-COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '创建人';
-COMMENT ON COLUMN pmis_rule_decision_table.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_decision_table.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_rule_decision_table.updated_at IS '更新时间';
+COMMENT ON TABLE ydsz_rule_decision_table IS 'P1-12: 决策表 (DMN 简化版),条件/动作/行均以 JSON 存储';
+COMMENT ON COLUMN ydsz_rule_decision_table.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_decision_table.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_decision_table.table_code IS '决策表编码 (租户内唯一)';
+COMMENT ON COLUMN ydsz_rule_decision_table.table_name IS '决策表名称';
+COMMENT ON COLUMN ydsz_rule_decision_table.description IS '描述';
+COMMENT ON COLUMN ydsz_rule_decision_table.category IS '类别';
+COMMENT ON COLUMN ydsz_rule_decision_table.condition_columns IS '条件列定义 JSON: [{name,label,type}]';
+COMMENT ON COLUMN ydsz_rule_decision_table.action_columns IS '动作列定义 JSON: [{name,label,type}]';
+COMMENT ON COLUMN ydsz_rule_decision_table.rows IS '决策行 JSON: [{conditions,actions}]';
+COMMENT ON COLUMN ydsz_rule_decision_table.default_actions IS '默认动作 (未匹配行时使用) JSON';
+COMMENT ON COLUMN ydsz_rule_decision_table.enabled IS '是否启用';
+COMMENT ON COLUMN ydsz_rule_decision_table.priority IS '优先级';
+COMMENT ON COLUMN ydsz_rule_decision_table.version IS '版本号';
+COMMENT ON COLUMN ydsz_rule_decision_table.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rule_decision_table.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rule_decision_table.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_rule_decision_table.updated_at IS '更新时间';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prdt_tenant_category_enabled
-    ON pmis_rule_decision_table (tenant_id, category, enabled)
+    ON ydsz_rule_decision_table (tenant_id, category, enabled)
     WHERE deleted = 0;
 -- --------------------------------------------------------------------
 
@@ -9179,7 +9179,7 @@ CREATE INDEX IF NOT EXISTS idx_prdt_tenant_category_enabled
 -- ============================================
 -- 决策表命中策略字段
 --
--- 为 pmis_rule_decision_table 增加 hit_policy 列，支持 DMN 标准命中策略：
+-- 为 ydsz_rule_decision_table 增加 hit_policy 列，支持 DMN 标准命中策略：
 --   UNIQUE  - 唯一命中，匹配多行时报错
 --   FIRST   - 首次命中（默认）
 --   PRIORITY- 优先级命中，返回优先级最高的匹配行
@@ -9187,10 +9187,10 @@ CREATE INDEX IF NOT EXISTS idx_prdt_tenant_category_enabled
 --   ANY     - 任意命中，返回任意一条匹配行
 -- ============================================
 
-ALTER TABLE pmis_rule_decision_table
+ALTER TABLE ydsz_rule_decision_table
     ADD COLUMN IF NOT EXISTS hit_policy VARCHAR(32) NOT NULL DEFAULT 'FIRST';
 
-COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY';
+COMMENT ON COLUMN ydsz_rule_decision_table.hit_policy IS '命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY';
 
 -- --------------------------------------------------------------------
 
@@ -9211,7 +9211,7 @@ COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/
 --   SIGNAL  — 信号事件（预留，暂不实现运行时）
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
+CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)          NOT NULL,
@@ -9248,25 +9248,25 @@ CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
     )
 );
 
-COMMENT ON TABLE pmis_flow_event_subscription IS '工作流事件订阅表 — BPMN 错误/消息事件运行时';
-COMMENT ON COLUMN pmis_flow_event_subscription.event_type IS '事件类型: MESSAGE 消息 / ERROR 错误 / SIGNAL 信号';
-COMMENT ON COLUMN pmis_flow_event_subscription.event_ref IS '事件引用标识（messageRef / errorRef / signalRef）';
-COMMENT ON COLUMN pmis_flow_event_subscription.correlation_key IS '消息关联键，用于业务级消息匹配';
-COMMENT ON COLUMN pmis_flow_event_subscription.boundary_task_id IS '边界事件关联的 userTask ID（中间事件为 NULL）';
-COMMENT ON COLUMN pmis_flow_event_subscription.subscription_status IS '订阅状态: WAITING 等待中 / COMPLETED 已触发 / CANCELLED 已取消';
+COMMENT ON TABLE ydsz_flow_event_subscription IS '工作流事件订阅表 — BPMN 错误/消息事件运行时';
+COMMENT ON COLUMN ydsz_flow_event_subscription.event_type IS '事件类型: MESSAGE 消息 / ERROR 错误 / SIGNAL 信号';
+COMMENT ON COLUMN ydsz_flow_event_subscription.event_ref IS '事件引用标识（messageRef / errorRef / signalRef）';
+COMMENT ON COLUMN ydsz_flow_event_subscription.correlation_key IS '消息关联键，用于业务级消息匹配';
+COMMENT ON COLUMN ydsz_flow_event_subscription.boundary_task_id IS '边界事件关联的 userTask ID（中间事件为 NULL）';
+COMMENT ON COLUMN ydsz_flow_event_subscription.subscription_status IS '订阅状态: WAITING 等待中 / COMPLETED 已触发 / CANCELLED 已取消';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_instance
-    ON pmis_flow_event_subscription(tenant_id, instance_id)
+    ON ydsz_flow_event_subscription(tenant_id, instance_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_event_match
-    ON pmis_flow_event_subscription(tenant_id, event_type, event_ref, subscription_status)
+    ON ydsz_flow_event_subscription(tenant_id, event_type, event_ref, subscription_status)
     WHERE deleted = 0 AND subscription_status = 'WAITING';
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_boundary
-    ON pmis_flow_event_subscription(tenant_id, boundary_task_id)
+    ON ydsz_flow_event_subscription(tenant_id, boundary_task_id)
     WHERE boundary_task_id IS NOT NULL AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_correlation
-    ON pmis_flow_event_subscription(tenant_id, correlation_key, subscription_status)
+    ON ydsz_flow_event_subscription(tenant_id, correlation_key, subscription_status)
     WHERE deleted = 0 AND correlation_key IS NOT NULL;
 
 -- --------------------------------------------------------------------
@@ -9274,39 +9274,39 @@ CREATE INDEX IF NOT EXISTS idx_pfes_tenant_correlation
 -- ============================ [047] add rule canary ============================
 
 -- ============================================================
--- 规则灰度发布：在 pmis_rule_def 表新增灰度路由字段
+-- 规则灰度发布：在 ydsz_rule_def 表新增灰度路由字段
 -- ============================================================
 
 -- 灰度比例（0.0~1.0，0 表示不启用灰度）
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS canary_ratio NUMERIC(5,4) NOT NULL DEFAULT 0.0;
 
 -- 灰度条件表达式列表（JSON 数组，AND 关系；为空时仅按比例分桶）
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS canary_conditions JSONB;
 
 -- 灰度候选版本的条件表达式（覆盖主版本 condition_expression）
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS canary_condition_expression TEXT;
 
 -- 灰度候选版本的严重度表达式（覆盖主版本 severity_expression）
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS canary_severity_expression TEXT;
 
-COMMENT ON COLUMN pmis_rule_def.canary_ratio IS '灰度比例（0~1.0，0 不启用灰度；启用后按比例将流量路由到候选版本）';
-COMMENT ON COLUMN pmis_rule_def.canary_conditions IS '灰度条件表达式列表（Aviator 语法，AND 关系；JSON 数组，示例：["tenantId == ''T001''"]）';
-COMMENT ON COLUMN pmis_rule_def.canary_condition_expression IS '灰度候选版本条件表达式（覆盖主版本，进行 A/B 验证）';
-COMMENT ON COLUMN pmis_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式（覆盖主版本）';
+COMMENT ON COLUMN ydsz_rule_def.canary_ratio IS '灰度比例（0~1.0，0 不启用灰度；启用后按比例将流量路由到候选版本）';
+COMMENT ON COLUMN ydsz_rule_def.canary_conditions IS '灰度条件表达式列表（Aviator 语法，AND 关系；JSON 数组，示例：["tenantId == ''T001''"]）';
+COMMENT ON COLUMN ydsz_rule_def.canary_condition_expression IS '灰度候选版本条件表达式（覆盖主版本，进行 A/B 验证）';
+COMMENT ON COLUMN ydsz_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式（覆盖主版本）';
 
 -- 灰度规则索引（按租户过滤）
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_canary_ratio
-    ON pmis_rule_def (tenant_id, canary_ratio)
+    ON ydsz_rule_def (tenant_id, canary_ratio)
     WHERE deleted = 0 AND canary_ratio > 0;
 
 -- ------------------------------------------------------------
 -- 灰度分桶统计表（运营监控：rule_code -> 主桶/灰桶计数）
 -- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_canary_bucket (
+CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
     id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
@@ -9322,15 +9322,15 @@ CREATE TABLE IF NOT EXISTS pmis_rule_canary_bucket (
     CONSTRAINT ck_prcb_bucket_count           CHECK (bucket_count >= 0)
 );
 
-COMMENT ON TABLE  pmis_rule_canary_bucket IS '规则灰度分桶统计表（按日聚合，便于运营对比新旧版本流量）';
-COMMENT ON COLUMN pmis_rule_canary_bucket.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_canary_bucket.bucket_type IS '桶类型：PRIMARY=主版本，CANARY=候选版本';
+COMMENT ON TABLE  ydsz_rule_canary_bucket IS '规则灰度分桶统计表（按日聚合，便于运营对比新旧版本流量）';
+COMMENT ON COLUMN ydsz_rule_canary_bucket.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_canary_bucket.bucket_type IS '桶类型：PRIMARY=主版本，CANARY=候选版本';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prcb_tenant_rule_date
-    ON pmis_rule_canary_bucket (tenant_id, rule_code, stat_date DESC);
+    ON ydsz_rule_canary_bucket (tenant_id, rule_code, stat_date DESC);
 CREATE INDEX IF NOT EXISTS idx_prcb_tenant_date
-    ON pmis_rule_canary_bucket (tenant_id, stat_date DESC);
+    ON ydsz_rule_canary_bucket (tenant_id, stat_date DESC);
 
 -- --------------------------------------------------------------------
 
@@ -9351,12 +9351,12 @@ CREATE INDEX IF NOT EXISTS idx_prcb_tenant_date
 --   76-100: 紧急
 -- ============================================================
 
-ALTER TABLE pmis_flow_run_task
+ALTER TABLE ydsz_flow_run_task
     ADD COLUMN IF NOT EXISTS priority INT NOT NULL DEFAULT 50;
 
-COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100，默认 50），待办默认按 priority DESC, created_at ASC 排序';
+COMMENT ON COLUMN ydsz_flow_run_task.priority IS 'P1-1: 任务优先级（1-100，默认 50），待办默认按 priority DESC, created_at ASC 排序';
 
--- 注: idx_pmis_flow_run_task_priority_todo 部分索引已上移到主索引块(pmis_flow_run_task 紧邻处),
+-- 注: idx_ydsz_flow_run_task_priority_todo 部分索引已上移到主索引块(ydsz_flow_run_task 紧邻处),
 --     此处不再重复创建,保证表结构集中。
 
 -- --------------------------------------------------------------------
@@ -9367,14 +9367,14 @@ COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100�
 -- 规则状态字段数据库层 CHECK 约束（纵深防御，配合应用层 RuleStatus 状态机校验）
 -- ============================================================
 
--- pmis_rule_def.status 限定合法状态值
-ALTER TABLE pmis_rule_def
+-- ydsz_rule_def.status 限定合法状态值
+ALTER TABLE ydsz_rule_def
     DROP CONSTRAINT IF EXISTS ck_rule_def_status_valid;
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD CONSTRAINT ck_rule_def_status_valid
     CHECK (status IN ('DRAFT', 'REVIEW', 'PUBLISHED', 'DISABLED', 'ARCHIVED'));
 
-COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
+COMMENT ON CONSTRAINT ck_rule_def_status_valid ON ydsz_rule_def IS
     '规则状态合法性约束，配合应用层 RuleStatus.canTransitionTo 状态机校验';
 
 -- --------------------------------------------------------------------
@@ -9382,7 +9382,7 @@ COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
 -- ============================ [050] add pmis flow notify outbox ============================
 
 -- ============================================================
--- V1.0.0_050  P2-1 可靠消息投递 — 工作流通知外发箱（pmis_flow_notify_outbox）
+-- V1.0.0_050  P2-1 可靠消息投递 — 工作流通知外发箱（ydsz_flow_notify_outbox）
 -- ============================================================
 -- 说明：本地消息表（Outbox Pattern），保证业务事务与消息投递的最终一致性。
 --   工作流关键事件（任务创建/通过/驳回/转办/委派/催办/超时/实例终止等）
@@ -9399,7 +9399,7 @@ COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
 -- 状态机：PENDING → SENT（成功）/ DEAD（超过最大重试次数）
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
+CREATE TABLE IF NOT EXISTS ydsz_flow_notify_outbox (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     -- 事件标识
@@ -9440,30 +9440,30 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
     )
 );
 
-COMMENT ON TABLE pmis_flow_notify_outbox IS '工作流通知外发箱 — 可靠消息投递（Outbox Pattern，P2-1 阶段一），由扫描任务异步投递到 NotificationClient / IM / 邮件 / 短信';
-COMMENT ON COLUMN pmis_flow_notify_outbox.event_type IS '事件类型: TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等';
-COMMENT ON COLUMN pmis_flow_notify_outbox.biz_type IS '业务类型: WORKFLOW_TASK / WORKFLOW_INSTANCE / WORKFLOW_CC';
-COMMENT ON COLUMN pmis_flow_notify_outbox.payload IS 'JSON 载荷，由接收方解析';
-COMMENT ON COLUMN pmis_flow_notify_outbox.target_channels IS '投递通道: INAPP / IM / EMAIL / SMS（逗号分隔）';
-COMMENT ON COLUMN pmis_flow_notify_outbox.target_user_ids IS '接收用户 ID 列表（逗号分隔）';
-COMMENT ON COLUMN pmis_flow_notify_outbox.status IS '投递状态: PENDING 待投递 / SENT 已投递 / DEAD 死信';
-COMMENT ON COLUMN pmis_flow_notify_outbox.retry_count IS '已重试次数';
-COMMENT ON COLUMN pmis_flow_notify_outbox.max_retries IS '最大重试次数（默认 5）';
-COMMENT ON COLUMN pmis_flow_notify_outbox.next_retry_at IS '下次重试时间（指数退避：30s/60s/120s/300s/600s）';
-COMMENT ON COLUMN pmis_flow_notify_outbox.error_msg IS '最近一次失败原因';
+COMMENT ON TABLE ydsz_flow_notify_outbox IS '工作流通知外发箱 — 可靠消息投递（Outbox Pattern，P2-1 阶段一），由扫描任务异步投递到 NotificationClient / IM / 邮件 / 短信';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.event_type IS '事件类型: TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.biz_type IS '业务类型: WORKFLOW_TASK / WORKFLOW_INSTANCE / WORKFLOW_CC';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.payload IS 'JSON 载荷，由接收方解析';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.target_channels IS '投递通道: INAPP / IM / EMAIL / SMS（逗号分隔）';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.target_user_ids IS '接收用户 ID 列表（逗号分隔）';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.status IS '投递状态: PENDING 待投递 / SENT 已投递 / DEAD 死信';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.retry_count IS '已重试次数';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.max_retries IS '最大重试次数（默认 5）';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.next_retry_at IS '下次重试时间（指数退避：30s/60s/120s/300s/600s）';
+COMMENT ON COLUMN ydsz_flow_notify_outbox.error_msg IS '最近一次失败原因';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_pending_scan
-    ON pmis_flow_notify_outbox(tenant_id, status, next_retry_at)
+    ON ydsz_flow_notify_outbox(tenant_id, status, next_retry_at)
     WHERE deleted = 0 AND status = 'PENDING';
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_biz
-    ON pmis_flow_notify_outbox(tenant_id, biz_type, biz_id)
+    ON ydsz_flow_notify_outbox(tenant_id, biz_type, biz_id)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_instance
-    ON pmis_flow_notify_outbox(tenant_id, instance_id)
+    ON ydsz_flow_notify_outbox(tenant_id, instance_id)
     WHERE deleted = 0 AND instance_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_trace
-    ON pmis_flow_notify_outbox(tenant_id, provider_trace_id)
+    ON ydsz_flow_notify_outbox(tenant_id, provider_trace_id)
     WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 
 -- --------------------------------------------------------------------
@@ -9472,13 +9472,13 @@ CREATE INDEX IF NOT EXISTS idx_pfno_tenant_trace
 
 -- ============================================================
 -- 评分卡 / 决策树 / 脚本规则持久化
--- （原 V1.0.0_048 与 add_pmis_flow_run_task_priority 版本号冲突，迁移到 051）
+-- （原 V1.0.0_048 与 add_ydsz_flow_run_task_priority 版本号冲突，迁移到 051）
 -- ============================================================
 
 -- --------------------------------------------------------
 -- 1. 评分卡规则定义表
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_scorecard (
+CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     id               VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id        VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code        VARCHAR(128)    NOT NULL,
@@ -9508,22 +9508,22 @@ CREATE TABLE IF NOT EXISTS pmis_rule_scorecard (
     CONSTRAINT ck_prs2_deleted            CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_rule_scorecard IS '评分卡规则定义表';
-COMMENT ON COLUMN pmis_rule_scorecard.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_scorecard.base_score IS '基础分（命中因子前的基础值，默认 100）';
-COMMENT ON COLUMN pmis_rule_scorecard.red_threshold IS '红色阈值（总分低于此值为 RED）';
-COMMENT ON COLUMN pmis_rule_scorecard.yellow_threshold IS '黄色阈值（总分低于此值为 YELLOW）';
-COMMENT ON COLUMN pmis_rule_scorecard.factors IS '评分因子数组，JSON 格式：[{"conditionExpression":"...","score":-30,"description":"..."}]';
+COMMENT ON TABLE  ydsz_rule_scorecard IS '评分卡规则定义表';
+COMMENT ON COLUMN ydsz_rule_scorecard.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_scorecard.base_score IS '基础分（命中因子前的基础值，默认 100）';
+COMMENT ON COLUMN ydsz_rule_scorecard.red_threshold IS '红色阈值（总分低于此值为 RED）';
+COMMENT ON COLUMN ydsz_rule_scorecard.yellow_threshold IS '黄色阈值（总分低于此值为 YELLOW）';
+COMMENT ON COLUMN ydsz_rule_scorecard.factors IS '评分因子数组，JSON 格式：[{"conditionExpression":"...","score":-30,"description":"..."}]';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prs2_tenant_category_enabled
-    ON pmis_rule_scorecard (tenant_id, category, enabled)
+    ON ydsz_rule_scorecard (tenant_id, category, enabled)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------
 -- 2. 决策树规则定义表
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_decision_tree (
+CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
@@ -9548,19 +9548,19 @@ CREATE TABLE IF NOT EXISTS pmis_rule_decision_tree (
     CONSTRAINT ck_prdt2_deleted        CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_rule_decision_tree IS '决策树规则定义表';
-COMMENT ON COLUMN pmis_rule_decision_tree.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_decision_tree.root_node IS '决策树根节点 JSON：{conditionExpression, trueBranch, falseBranch, leaf, severity, title, description}';
+COMMENT ON TABLE  ydsz_rule_decision_tree IS '决策树规则定义表';
+COMMENT ON COLUMN ydsz_rule_decision_tree.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_decision_tree.root_node IS '决策树根节点 JSON：{conditionExpression, trueBranch, falseBranch, leaf, severity, title, description}';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prdt2_tenant_category_enabled
-    ON pmis_rule_decision_tree (tenant_id, category, enabled)
+    ON ydsz_rule_decision_tree (tenant_id, category, enabled)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------
 -- 3. 脚本规则定义表
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_script (
+CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     id               VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id        VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code        VARCHAR(128)    NOT NULL,
@@ -9588,14 +9588,14 @@ CREATE TABLE IF NOT EXISTS pmis_rule_script (
     CONSTRAINT ck_prsc_deleted          CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_rule_script IS '脚本规则定义表（Groovy JSR-223）';
-COMMENT ON COLUMN pmis_rule_script.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_script.script IS 'Groovy 脚本内容（沙箱模式下禁止 System/反射/IO/网络访问）';
-COMMENT ON COLUMN pmis_rule_script.sandbox_enabled IS '是否启用沙箱（默认 TRUE）';
+COMMENT ON TABLE  ydsz_rule_script IS '脚本规则定义表（Groovy JSR-223）';
+COMMENT ON COLUMN ydsz_rule_script.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_script.script IS 'Groovy 脚本内容（沙箱模式下禁止 System/反射/IO/网络访问）';
+COMMENT ON COLUMN ydsz_rule_script.sandbox_enabled IS '是否启用沙箱（默认 TRUE）';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prsc_tenant_category_enabled
-    ON pmis_rule_script (tenant_id, category, enabled)
+    ON ydsz_rule_script (tenant_id, category, enabled)
     WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
@@ -9606,7 +9606,7 @@ CREATE INDEX IF NOT EXISTS idx_prsc_tenant_category_enabled
 --  PMIS PostgreSQL 索引调优 SQL（批次 19）
 -- ---------------------------------------------------------------------
 --  适用版本：PostgreSQL 16.x
---  执行方式：psql -f index-tuning.sql -U pmis_app -d pmis
+--  执行方式：psql -f index-tuning.sql -U ydsz_app -d pmis
 --  用途：补全 200+ 表的复合索引/部分索引/BRIN/表达式索引，覆盖 4 阶段新模块
 -- =====================================================================
 
@@ -9618,31 +9618,31 @@ SET statement_timeout = '5min';
 -- =====================================================================
 
 -- 项目立项表
-CREATE INDEX IF NOT EXISTS idx_pmis_initiation_tenant_created
-    ON pmis_project_initiation (tenant_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_initiation_status_created
-    ON pmis_project_initiation (stage, created_at DESC)
+CREATE INDEX IF NOT EXISTS idx_ydsz_initiation_tenant_created
+    ON ydsz_project_initiation (tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ydsz_initiation_status_created
+    ON ydsz_project_initiation (stage, created_at DESC)
     WHERE deleted = 0;
 
 -- 项目变更表（4.1.1）
-CREATE INDEX IF NOT EXISTS idx_pmis_change_initiation_status
-    ON pmis_project_change (initiation_id, status, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_change_major_flag
-    ON pmis_project_change (initiation_id, major_flag)
+CREATE INDEX IF NOT EXISTS idx_ydsz_change_initiation_status
+    ON ydsz_project_change (initiation_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ydsz_change_major_flag
+    ON ydsz_project_change (initiation_id, major_flag)
     WHERE major_flag = 1;
-CREATE INDEX IF NOT EXISTS idx_pmis_change_change_code
-    ON pmis_project_change (change_code);
-CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
-    ON pmis_project_change (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_change_change_code
+    ON ydsz_project_change (change_code);
+CREATE INDEX IF NOT EXISTS idx_ydsz_change_provider_trace
+    ON ydsz_project_change (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
--- P1-6 清理: 移除 [SKIPPED-FWD-REF] 索引(原引用表 pmis_project_closure / pmis_contract_template /
---   pmis_after_sales_* / pmis_project_delivery / pmis_evm_record / pmis_daily_reconcile /
---   pmis_agent_orchestration / pmis_agent_blackboard 暂未落地,见文件头 §Missing-Tables 列表)
+-- P1-6 清理: 移除 [SKIPPED-FWD-REF] 索引(原引用表 ydsz_project_closure / ydsz_contract_template /
+--   ydsz_after_sales_* / ydsz_project_delivery / ydsz_evm_record / ydsz_daily_reconcile /
+--   ydsz_agent_orchestration / ydsz_agent_blackboard 暂未落地,见文件头 §Missing-Tables 列表)
 --   后续落地时按 §Missing-Tables 章节补充即可
 
 -- =====================================================================
---  2) EVM 看板（4.2 联动）—— pmis_evm_record 表暂未落地,索引随之略
+--  2) EVM 看板（4.2 联动）—— ydsz_evm_record 表暂未落地,索引随之略
 -- =====================================================================
 
 -- =====================================================================
@@ -9651,17 +9651,17 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
 -- 注意: 部门维度 (department, period) 查询已被 V1.0.0_020 内联的
 --       idx_billable_tenant_dept_period (tenant_id, department, period) 覆盖,
 --       单租户下前缀 tenant_id 仍可走索引扫描,无需重复创建
-CREATE INDEX IF NOT EXISTS idx_pmis_utilization_user_period
-    ON pmis_billable_utilization_snapshot (employee_id, period DESC);
+CREATE INDEX IF NOT EXISTS idx_ydsz_utilization_user_period
+    ON ydsz_billable_utilization_snapshot (employee_id, period DESC);
 
 -- =====================================================================
 --  4) 预警 / 对账（4.2.2/4.2.3）
 -- =====================================================================
-CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
-    ON pmis_alert_dispatch (target_role, sent_at DESC)
+CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_recipient
+    ON ydsz_alert_dispatch (target_role, sent_at DESC)
     WHERE status IN ('PENDING', 'FAILED');
-CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
-    ON pmis_alert_dispatch (retry_count, sent_at DESC)
+CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_retry
+    ON ydsz_alert_dispatch (retry_count, sent_at DESC)
     WHERE status = 'FAILED' AND retry_count < 3;
 
 
@@ -9669,45 +9669,45 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
 -- =====================================================================
 --  6) 财务对账（voucher / payment / invoice）
 -- =====================================================================
-CREATE INDEX IF NOT EXISTS idx_pmis_invoice_status_issued
-    ON pmis_project_invoice (status, invoice_date DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_invoice_customer_status
-    ON pmis_project_invoice (customer_id, status, invoice_date DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
-    ON pmis_project_payment (contract_id, status)
+CREATE INDEX IF NOT EXISTS idx_ydsz_invoice_status_issued
+    ON ydsz_project_invoice (status, invoice_date DESC);
+CREATE INDEX IF NOT EXISTS idx_ydsz_invoice_customer_status
+    ON ydsz_project_invoice (customer_id, status, invoice_date DESC);
+CREATE INDEX IF NOT EXISTS idx_ydsz_payment_unallocated
+    ON ydsz_project_payment (contract_id, status)
     WHERE status IN ('RECEIVED', 'PARTIAL');
--- 注：pmis_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用
--- CREATE INDEX IF NOT EXISTS idx_pmis_voucher_period_status
---     ON pmis_voucher (period, status, created_at DESC);
+-- 注：ydsz_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用
+-- CREATE INDEX IF NOT EXISTS idx_ydsz_voucher_period_status
+--     ON ydsz_voucher (period, status, created_at DESC);
 
 -- =====================================================================
 --  7) 时区/时间相关 BRIN 索引（日志/审计表 100w+ 行）
 -- =====================================================================
--- P1-4: pmis_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
---       pmis_msg_log 仍非分区表,保留原 BRIN
-CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
-    ON pmis_msg_log USING BRIN (created_at)
+-- P1-4: ydsz_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
+--       ydsz_msg_log 仍非分区表,保留原 BRIN
+CREATE INDEX IF NOT EXISTS idx_ydsz_message_log_brin_sent
+    ON ydsz_msg_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 
 -- =====================================================================
 --  8) 表达式索引（状态名/类型名查询）
 -- =====================================================================
-CREATE INDEX IF NOT EXISTS idx_pmis_initiation_status_lower
-    ON pmis_project_initiation (lower(stage));
-CREATE INDEX IF NOT EXISTS idx_pmis_change_status_lower
-    ON pmis_project_change (lower(status));
+CREATE INDEX IF NOT EXISTS idx_ydsz_initiation_status_lower
+    ON ydsz_project_initiation (lower(stage));
+CREATE INDEX IF NOT EXISTS idx_ydsz_change_status_lower
+    ON ydsz_project_change (lower(status));
 
 -- =====================================================================
 --  9) 统计信息更新
 -- =====================================================================
-ANALYZE pmis_project_initiation;
-ANALYZE pmis_project_change;
+ANALYZE ydsz_project_initiation;
+ANALYZE ydsz_project_change;
 -- P1-6 清理: 移除 [SKIPPED-FWD-REF] ANALYZE(表暂未落地,见文件头 §Missing-Tables)
-ANALYZE pmis_billable_utilization_snapshot;
-ANALYZE pmis_alert_dispatch;
-ANALYZE pmis_project_invoice;
-ANALYZE pmis_project_payment;
-ANALYZE pmis_operation_log;
+ANALYZE ydsz_billable_utilization_snapshot;
+ANALYZE ydsz_alert_dispatch;
+ANALYZE ydsz_project_invoice;
+ANALYZE ydsz_project_payment;
+ANALYZE ydsz_operation_log;
 
 -- =====================================================================
 --  10) 索引使用情况监控 SQL（运维参考）
@@ -9727,7 +9727,7 @@ ANALYZE pmis_operation_log;
 
 SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
   FROM pg_indexes
- WHERE schemaname = 'public' AND indexname LIKE 'idx_pmis_%';
+ WHERE schemaname = 'public' AND indexname LIKE 'idx_ydsz_%';
 
 -- --------------------------------------------------------------------
 
@@ -9737,7 +9737,7 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
 -- LiteRule 模块多租户字段预留（与项目其他业务表对齐）
 --
 -- 说明：
---   项目其他业务表（pmis_project_*、pmis_flow_* 等）已普遍预埋
+--   项目其他业务表（ydsz_project_*、ydsz_flow_* 等）已普遍预埋
 --   tenant_id VARCHAR(20) NOT NULL DEFAULT '1' 字段。LiteRule 模块的表
 --   此前完全缺失该字段，本次补齐以保持 schema 一致性。
 --
@@ -9748,50 +9748,50 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
 -- ============================================================
 
 -- 1. 规则定义表
-ALTER TABLE pmis_rule_def
+ALTER TABLE ydsz_rule_def
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_def_tenant ON pmis_rule_def (tenant_id);
-COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用）';
+CREATE INDEX IF NOT EXISTS idx_rule_def_tenant ON ydsz_rule_def (tenant_id);
+COMMENT ON COLUMN ydsz_rule_def.tenant_id IS '租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用）';
 
 -- 2. 规则版本历史表
-ALTER TABLE pmis_rule_version_history
+ALTER TABLE ydsz_rule_version_history
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_version_tenant ON pmis_rule_version_history (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rule_version_tenant ON ydsz_rule_version_history (tenant_id);
 
 -- 3. 规则执行轨迹表
-ALTER TABLE pmis_rule_execution_trace
+ALTER TABLE ydsz_rule_execution_trace
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_trace_tenant ON pmis_rule_execution_trace (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rule_trace_tenant ON ydsz_rule_execution_trace (tenant_id);
 
 -- 4. 决策表定义表
-ALTER TABLE pmis_rule_decision_table
+ALTER TABLE ydsz_rule_decision_table
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_dt_tenant ON pmis_rule_decision_table (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rule_dt_tenant ON ydsz_rule_decision_table (tenant_id);
 
 -- 5. 评分卡定义表
-ALTER TABLE pmis_rule_scorecard
+ALTER TABLE ydsz_rule_scorecard
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_scorecard_tenant ON pmis_rule_scorecard (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rule_scorecard_tenant ON ydsz_rule_scorecard (tenant_id);
 
 -- 6. 决策树定义表
-ALTER TABLE pmis_rule_decision_tree
+ALTER TABLE ydsz_rule_decision_tree
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_tree_tenant ON pmis_rule_decision_tree (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rule_tree_tenant ON ydsz_rule_decision_tree (tenant_id);
 
 -- 7. 脚本规则定义表
-ALTER TABLE pmis_rule_script
+ALTER TABLE ydsz_rule_script
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_script_tenant ON pmis_rule_script (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rule_script_tenant ON ydsz_rule_script (tenant_id);
 
 -- 8. 灰度分桶统计表
-ALTER TABLE pmis_rule_canary_bucket
+ALTER TABLE ydsz_rule_canary_bucket
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_bucket (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON ydsz_rule_canary_bucket (tenant_id);
 
 -- --------------------------------------------------------------------
 
 -- ====================================================================
--- V1.0.0_054 已优化内联至 V1.0.0_001 的 pmis_user_account 定义中
+-- V1.0.0_054 已优化内联至 V1.0.0_001 的 ydsz_user_account 定义中
 -- (dept_id / leader_id / position_code 字段及对应 3 个索引均已内联)
 -- ====================================================================
 
@@ -9799,11 +9799,11 @@ CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_buc
 
 -- ============================================================
 -- P2-4 变量空间元数据：规则表达式中可引用的变量定义表
--- @author ydsz-pmis-team
+-- @author ydsz-team
 -- @since 1.4.0
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS pmis_rule_variable_def (
+CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     var_name          VARCHAR(128)    NOT NULL,
@@ -9826,21 +9826,21 @@ CREATE TABLE IF NOT EXISTS pmis_rule_variable_def (
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prvd_tenant_category
-    ON pmis_rule_variable_def (tenant_id, category, enabled)
+    ON ydsz_rule_variable_def (tenant_id, category, enabled)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_variable_def IS '规则变量定义表：规则表达式中可引用的变量元数据';
-COMMENT ON COLUMN pmis_rule_variable_def.var_name     IS '变量名（如 cpi / budgetAmount / evmRedCount）';
-COMMENT ON COLUMN pmis_rule_variable_def.var_type     IS '变量类型（java.lang.Number / java.lang.String 等）';
-COMMENT ON COLUMN pmis_rule_variable_def.description   IS '变量描述（中文，供前端编辑器提示）';
-COMMENT ON COLUMN pmis_rule_variable_def.sample_value  IS '示例值（用于前端编辑器预览和 dryRun 默认 facts）';
-COMMENT ON COLUMN pmis_rule_variable_def.category      IS '变量来源类别（EVM / PROJECT / FINANCE / BENCH 等）';
-COMMENT ON COLUMN pmis_rule_variable_def.required       IS '是否必填（前端编辑器可标记必填变量）';
-COMMENT ON COLUMN pmis_rule_variable_def.enabled        IS '是否启用';
-COMMENT ON COLUMN pmis_rule_variable_def.tenant_id      IS '租户 ID（单租户部署默认 1）';
+COMMENT ON TABLE  ydsz_rule_variable_def IS '规则变量定义表：规则表达式中可引用的变量元数据';
+COMMENT ON COLUMN ydsz_rule_variable_def.var_name     IS '变量名（如 cpi / budgetAmount / evmRedCount）';
+COMMENT ON COLUMN ydsz_rule_variable_def.var_type     IS '变量类型（java.lang.Number / java.lang.String 等）';
+COMMENT ON COLUMN ydsz_rule_variable_def.description   IS '变量描述（中文，供前端编辑器提示）';
+COMMENT ON COLUMN ydsz_rule_variable_def.sample_value  IS '示例值（用于前端编辑器预览和 dryRun 默认 facts）';
+COMMENT ON COLUMN ydsz_rule_variable_def.category      IS '变量来源类别（EVM / PROJECT / FINANCE / BENCH 等）';
+COMMENT ON COLUMN ydsz_rule_variable_def.required       IS '是否必填（前端编辑器可标记必填变量）';
+COMMENT ON COLUMN ydsz_rule_variable_def.enabled        IS '是否启用';
+COMMENT ON COLUMN ydsz_rule_variable_def.tenant_id      IS '租户 ID（单租户部署默认 1）';
 
 -- 内置变量种子数据（EVM 类）
-INSERT INTO pmis_rule_variable_def (var_name, var_type, description, sample_value, category, required) VALUES
+INSERT INTO ydsz_rule_variable_def (var_name, var_type, description, sample_value, category, required) VALUES
     ('cpi',                'java.lang.Number',  '成本绩效指数（CPI），>1 表示成本节约',     '0.85', 'EVM',     TRUE),
     ('spi',                'java.lang.Number',  '进度绩效指数（SPI），>1 表示进度超前',     '0.92', 'EVM',     TRUE),
     ('evmRedCount',        'java.lang.Integer', '红色 EVM 预警数量',                       '3',    'EVM',     FALSE),
@@ -9891,71 +9891,71 @@ ON CONFLICT (tenant_id, var_name, deleted) WHERE deleted = 0 DO NOTHING;
 -- ============================================================
 
 -- 1. 字典类型
-ALTER TABLE pmis_dict_type ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_dict_type_tenant ON pmis_dict_type(tenant_id);
+ALTER TABLE ydsz_dict_type ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_dict_type_tenant ON ydsz_dict_type(tenant_id);
 
 -- 2. 字典项
-ALTER TABLE pmis_dict_item ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_dict_item_tenant ON pmis_dict_item(tenant_id);
+ALTER TABLE ydsz_dict_item ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_dict_item_tenant ON ydsz_dict_item(tenant_id);
 
 -- 3. 字典版本
-ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_dict_version_tenant ON pmis_dict_version(tenant_id);
+ALTER TABLE ydsz_dict_version ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_dict_version_tenant ON ydsz_dict_version(tenant_id);
 
 -- 4. 角色
-ALTER TABLE pmis_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_role_tenant ON pmis_role(tenant_id);
+ALTER TABLE ydsz_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_role_tenant ON ydsz_role(tenant_id);
 
 -- 5. 权限
-ALTER TABLE pmis_permission ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_permission_tenant ON pmis_permission(tenant_id);
+ALTER TABLE ydsz_permission ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_permission_tenant ON ydsz_permission(tenant_id);
 
 -- 6. 用户-角色关联
-ALTER TABLE pmis_user_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON pmis_user_role(tenant_id);
+ALTER TABLE ydsz_user_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON ydsz_user_role(tenant_id);
 
 -- 7. 角色-权限关联
-ALTER TABLE pmis_role_permission ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON pmis_role_permission(tenant_id);
+ALTER TABLE ydsz_role_permission ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON ydsz_role_permission(tenant_id);
 
 -- 8. 部门
-ALTER TABLE pmis_department ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_department_tenant ON pmis_department(tenant_id);
+ALTER TABLE ydsz_department ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_department_tenant ON ydsz_department(tenant_id);
 
 -- 9. 岗位
-ALTER TABLE pmis_position ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_position_tenant ON pmis_position(tenant_id);
+ALTER TABLE ydsz_position ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_position_tenant ON ydsz_position(tenant_id);
 
 -- 10. 职级
-ALTER TABLE pmis_rank ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rank_tenant ON pmis_rank(tenant_id);
+ALTER TABLE ydsz_rank ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rank_tenant ON ydsz_rank(tenant_id);
 
 -- 11. 职级费率
-ALTER TABLE pmis_rank_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rank_rate_tenant ON pmis_rank_rate(tenant_id);
+ALTER TABLE ydsz_rank_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rank_rate_tenant ON ydsz_rank_rate(tenant_id);
 
 -- 12. 员工
-ALTER TABLE pmis_employee ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_employee_tenant ON pmis_employee(tenant_id);
+ALTER TABLE ydsz_employee ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_employee_tenant ON ydsz_employee(tenant_id);
 
 -- 13. 员工标签
-ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_emp_tag_tenant ON pmis_employee_tag(tenant_id);
+ALTER TABLE ydsz_employee_tag ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_emp_tag_tenant ON ydsz_employee_tag(tenant_id);
 
 -- 14. 用户账号
-ALTER TABLE pmis_user_account ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_user_account_tenant ON pmis_user_account(tenant_id);
+ALTER TABLE ydsz_user_account ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_user_account_tenant ON ydsz_user_account(tenant_id);
 
 -- 15. 通知
-ALTER TABLE pmis_msg_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_notification_tenant ON pmis_msg_notification(tenant_id);
+ALTER TABLE ydsz_msg_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_notification_tenant ON ydsz_msg_notification(tenant_id);
 
 -- 16. 配置
-ALTER TABLE pmis_config ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_config_tenant ON pmis_config(tenant_id);
+ALTER TABLE ydsz_config ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_config_tenant ON ydsz_config(tenant_id);
 
 -- 17. 操作日志（V1.0.0_008 已含 tenant_id，跳过 ADD COLUMN，仅补索引）
-CREATE INDEX IF NOT EXISTS idx_pol_tenant ON pmis_operation_log(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pol_tenant ON ydsz_operation_log(tenant_id);
 
 -- ============================================================
 -- 二、关键查询路径复合索引（H2.4）
@@ -9963,25 +9963,25 @@ CREATE INDEX IF NOT EXISTS idx_pol_tenant ON pmis_operation_log(tenant_id);
 -- ============================================================
 
 CREATE INDEX IF NOT EXISTS idx_dict_type_tenant_created
-    ON pmis_dict_type(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_dict_type(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_dict_item_tenant_created
-    ON pmis_dict_item(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_dict_item(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_role_tenant_created
-    ON pmis_role(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_role(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_department_tenant_created
-    ON pmis_department(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_department(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_position_tenant_created
-    ON pmis_position(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_position(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_rank_tenant_created
-    ON pmis_rank(tenant_id, sort_order) WHERE deleted = 0;
+    ON ydsz_rank(tenant_id, sort_order) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_employee_tenant_created
-    ON pmis_employee(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_employee(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_user_account_tenant_created
-    ON pmis_user_account(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_user_account(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_notification_tenant_created
-    ON pmis_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_config_tenant_created
-    ON pmis_config(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_config(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- ============================================================
 -- 三、外键关联列反向查询索引（H2.3）
@@ -9989,38 +9989,38 @@ CREATE INDEX IF NOT EXISTS idx_config_tenant_created
 
 -- 角色-权限：按 permission_id 反向查询"该权限被哪些角色引用"
 CREATE INDEX IF NOT EXISTS idx_role_permission_perm
-    ON pmis_role_permission(permission_id) WHERE deleted = 0;
+    ON ydsz_role_permission(permission_id) WHERE deleted = 0;
 
 -- 员工-岗位：按 position_id 查询"该岗位下的员工"
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
-    ON pmis_employee(position_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_position
+    ON ydsz_employee(position_id) WHERE deleted = 0;
 
 -- 用户账号-员工：按 employee_id 反向查询
-CREATE INDEX IF NOT EXISTS idx_pmis_user_employee
-    ON pmis_user_account(employee_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_user_employee
+    ON ydsz_user_account(employee_id) WHERE deleted = 0;
 
 -- 部门-负责人：按 leader_id 反向查询
-CREATE INDEX IF NOT EXISTS idx_pmis_dept_leader
-    ON pmis_department(leader_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_dept_leader
+    ON ydsz_department(leader_id) WHERE deleted = 0;
 
 -- 通知-发送人：按 sender_id 查询"我发出的通知"
-CREATE INDEX IF NOT EXISTS idx_pmis_notif_sender
-    ON pmis_msg_notification(sender_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_notif_sender
+    ON ydsz_msg_notification(sender_id) WHERE deleted = 0;
 
 -- ============================================================
 -- 四、逻辑删除字段索引覆盖（H3.2）
 --   对 V1.0.0_001 中未建 deleted 索引的表补建
 -- ============================================================
 
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_version_deleted ON pmis_dict_version(deleted);
-CREATE INDEX IF NOT EXISTS idx_pmis_role_permission_deleted ON pmis_role_permission(deleted);
-CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_deleted ON pmis_employee_tag(deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_dict_version_deleted ON ydsz_dict_version(deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_role_permission_deleted ON ydsz_role_permission(deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_emp_tag_deleted ON ydsz_employee_tag(deleted);
 
 -- ============================================================
--- 五、pmis_flow_notify_outbox 表 tenant_id 索引（H2.5）
+-- 五、ydsz_flow_notify_outbox 表 tenant_id 索引（H2.5）
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_peo_tenant_status
-    ON pmis_flow_notify_outbox(tenant_id, status, next_retry_at) WHERE deleted = 0;
+    ON ydsz_flow_notify_outbox(tenant_id, status, next_retry_at) WHERE deleted = 0;
 
 -- ============================================================
 -- 六、undo_log 性能索引（H1.8）
@@ -10035,69 +10035,69 @@ CREATE INDEX IF NOT EXISTS idx_undo_log_status_modified ON undo_log(log_status, 
 -- ============================================================
 
 -- 任务执行日志表
-ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_job_log_tenant ON pmis_job_log(tenant_id);
+ALTER TABLE ydsz_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_job_log_tenant ON ydsz_job_log(tenant_id);
 
 -- 商机跟进记录
-ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_ppof_tenant ON pmis_project_opportunity_follow(tenant_id);
+ALTER TABLE ydsz_project_opportunity_follow ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_ppof_tenant ON ydsz_project_opportunity_follow(tenant_id);
 
 -- 项目预算明细
-ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_ppbi_tenant ON pmis_project_budget_item(tenant_id);
+ALTER TABLE ydsz_project_budget_item ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_ppbi_tenant ON ydsz_project_budget_item(tenant_id);
 
 -- 门径评审记录
-ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_ppgr_tenant ON pmis_project_gate_review(tenant_id);
+ALTER TABLE ydsz_project_gate_review ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_ppgr_tenant ON ydsz_project_gate_review(tenant_id);
 
 -- 报表订阅
-ALTER TABLE pmis_report_subscription ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_report_sub_tenant ON pmis_report_subscription(tenant_id);
+ALTER TABLE ydsz_report_subscription ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_report_sub_tenant ON ydsz_report_subscription(tenant_id);
 
 -- 异步导出记录（P0-3 合并：原报表导出记录已并入此表）
-ALTER TABLE pmis_export_record ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_export_rec_tenant ON pmis_export_record(tenant_id);
+ALTER TABLE ydsz_export_record ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_export_rec_tenant ON ydsz_export_record(tenant_id);
 
 -- 流程历史变量归档表
-ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_flow_his_var_tenant ON pmis_flow_his_variable(tenant_id);
+ALTER TABLE ydsz_flow_his_variable ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_flow_his_var_tenant ON ydsz_flow_his_variable(tenant_id);
 
 -- 规则模板表（053 漏补）
-ALTER TABLE pmis_rule_template ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_template_tenant ON pmis_rule_template(tenant_id);
+ALTER TABLE ydsz_rule_template ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rule_template_tenant ON ydsz_rule_template(tenant_id);
 
 -- 规则测试用例表（053 漏补）
-ALTER TABLE pmis_rule_test_case ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_test_case_tenant ON pmis_rule_test_case(tenant_id);
+ALTER TABLE ydsz_rule_test_case ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rule_test_case_tenant ON ydsz_rule_test_case(tenant_id);
 
-ANALYZE pmis_dict_type;
-ANALYZE pmis_dict_item;
-ANALYZE pmis_dict_version;
-ANALYZE pmis_role;
-ANALYZE pmis_permission;
-ANALYZE pmis_user_role;
-ANALYZE pmis_role_permission;
-ANALYZE pmis_department;
-ANALYZE pmis_position;
-ANALYZE pmis_rank;
-ANALYZE pmis_rank_rate;
-ANALYZE pmis_employee;
-ANALYZE pmis_employee_tag;
-ANALYZE pmis_user_account;
-ANALYZE pmis_msg_notification;
-ANALYZE pmis_config;
-ANALYZE pmis_operation_log;
-ANALYZE pmis_flow_notify_outbox;
+ANALYZE ydsz_dict_type;
+ANALYZE ydsz_dict_item;
+ANALYZE ydsz_dict_version;
+ANALYZE ydsz_role;
+ANALYZE ydsz_permission;
+ANALYZE ydsz_user_role;
+ANALYZE ydsz_role_permission;
+ANALYZE ydsz_department;
+ANALYZE ydsz_position;
+ANALYZE ydsz_rank;
+ANALYZE ydsz_rank_rate;
+ANALYZE ydsz_employee;
+ANALYZE ydsz_employee_tag;
+ANALYZE ydsz_user_account;
+ANALYZE ydsz_msg_notification;
+ANALYZE ydsz_config;
+ANALYZE ydsz_operation_log;
+ANALYZE ydsz_flow_notify_outbox;
 ANALYZE undo_log;
-ANALYZE pmis_job_log;
-ANALYZE pmis_project_opportunity_follow;
-ANALYZE pmis_project_budget_item;
-ANALYZE pmis_project_gate_review;
-ANALYZE pmis_report_subscription;
-ANALYZE pmis_export_record;
-ANALYZE pmis_flow_his_variable;
-ANALYZE pmis_rule_template;
-ANALYZE pmis_rule_test_case;
+ANALYZE ydsz_job_log;
+ANALYZE ydsz_project_opportunity_follow;
+ANALYZE ydsz_project_budget_item;
+ANALYZE ydsz_project_gate_review;
+ANALYZE ydsz_report_subscription;
+ANALYZE ydsz_export_record;
+ANALYZE ydsz_flow_his_variable;
+ANALYZE ydsz_rule_template;
+ANALYZE ydsz_rule_test_case;
 
 -- --------------------------------------------------------------------
 
@@ -10137,9 +10137,9 @@ END $$;
 -- 三方审批账号映射表 + 回调日志表
 --
 -- P0-2: 三方审批 SDK（钉钉/飞书/企微）回调接入
---   1. pmis_flow_third_party_account — 系统用户与三方平台账号的映射关系，
+--   1. ydsz_flow_third_party_account — 系统用户与三方平台账号的映射关系，
 --      并缓存 access_token / refresh_token（加密存储），供回调时反查系统用户。
---   2. pmis_flow_third_party_log — 三方审批回调原始数据落库，便于重放/排障/对账。
+--   2. ydsz_flow_third_party_log — 三方审批回调原始数据落库，便于重放/排障/对账。
 --
 -- 兼容性：
 --   - 全部使用 IF NOT EXISTS，可重复执行
@@ -10150,7 +10150,7 @@ END $$;
 -- -------------------------------------------
 -- 1. 三方审批账号映射表
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
+CREATE TABLE IF NOT EXISTS ydsz_flow_third_party_account (
     id                 VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     user_id            VARCHAR(20)          NOT NULL,
@@ -10175,34 +10175,34 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
     CONSTRAINT ck_pftpa_deleted        CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_flow_third_party_account IS 'P0-2: 三方审批账号映射表（钉钉/飞书/企微）';
-COMMENT ON COLUMN pmis_flow_third_party_account.user_id IS '系统用户 ID';
-COMMENT ON COLUMN pmis_flow_third_party_account.platform IS '平台: DINGTALK/FEISHU/WECOM';
-COMMENT ON COLUMN pmis_flow_third_party_account.open_id IS '三方 openId';
-COMMENT ON COLUMN pmis_flow_third_party_account.union_id IS '三方 unionId';
-COMMENT ON COLUMN pmis_flow_third_party_account.corp_id IS '企业 ID';
-COMMENT ON COLUMN pmis_flow_third_party_account.agent_id IS '应用 ID';
-COMMENT ON COLUMN pmis_flow_third_party_account.access_token IS '访问令牌(加密存储)';
-COMMENT ON COLUMN pmis_flow_third_party_account.refresh_token IS '刷新令牌(加密存储)';
-COMMENT ON COLUMN pmis_flow_third_party_account.token_expire_at IS '令牌过期时间';
-COMMENT ON COLUMN pmis_flow_third_party_account.status IS '状态: ACTIVE/INACTIVE/REVOKED';
-COMMENT ON COLUMN pmis_flow_third_party_account.deleted IS '逻辑删除标记 0=未删 1=已删';
+COMMENT ON TABLE ydsz_flow_third_party_account IS 'P0-2: 三方审批账号映射表（钉钉/飞书/企微）';
+COMMENT ON COLUMN ydsz_flow_third_party_account.user_id IS '系统用户 ID';
+COMMENT ON COLUMN ydsz_flow_third_party_account.platform IS '平台: DINGTALK/FEISHU/WECOM';
+COMMENT ON COLUMN ydsz_flow_third_party_account.open_id IS '三方 openId';
+COMMENT ON COLUMN ydsz_flow_third_party_account.union_id IS '三方 unionId';
+COMMENT ON COLUMN ydsz_flow_third_party_account.corp_id IS '企业 ID';
+COMMENT ON COLUMN ydsz_flow_third_party_account.agent_id IS '应用 ID';
+COMMENT ON COLUMN ydsz_flow_third_party_account.access_token IS '访问令牌(加密存储)';
+COMMENT ON COLUMN ydsz_flow_third_party_account.refresh_token IS '刷新令牌(加密存储)';
+COMMENT ON COLUMN ydsz_flow_third_party_account.token_expire_at IS '令牌过期时间';
+COMMENT ON COLUMN ydsz_flow_third_party_account.status IS '状态: ACTIVE/INACTIVE/REVOKED';
+COMMENT ON COLUMN ydsz_flow_third_party_account.deleted IS '逻辑删除标记 0=未删 1=已删';
 
 -- 复合/部分索引
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pftpa_tenant_user_platform
-    ON pmis_flow_third_party_account(tenant_id, user_id, platform)
+    ON ydsz_flow_third_party_account(tenant_id, user_id, platform)
     WHERE deleted = 0;
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pftpa_tenant_platform_openid
-    ON pmis_flow_third_party_account(tenant_id, platform, open_id)
+    ON ydsz_flow_third_party_account(tenant_id, platform, open_id)
     WHERE deleted = 0 AND open_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pftpa_tenant_platform_union
-    ON pmis_flow_third_party_account(tenant_id, platform, union_id)
+    ON ydsz_flow_third_party_account(tenant_id, platform, union_id)
     WHERE union_id IS NOT NULL;
 
 -- -------------------------------------------
 -- 2. 三方审批回调日志表
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
+CREATE TABLE IF NOT EXISTS ydsz_flow_third_party_log (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     platform            VARCHAR(20)     NOT NULL,
@@ -10224,21 +10224,21 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
     CONSTRAINT ck_pftpl_sync_back_status CHECK (sync_back_status IN ('NOT_REQUIRED','PENDING','SUCCESS','FAIL'))
 );
 
-COMMENT ON TABLE pmis_flow_third_party_log IS 'P0-2: 三方审批回调日志表';
-COMMENT ON COLUMN pmis_flow_third_party_log.platform IS '平台: DINGTALK/FEISHU/WECOM';
-COMMENT ON COLUMN pmis_flow_third_party_log.event_type IS '事件类型';
-COMMENT ON COLUMN pmis_flow_third_party_log.process_instance_id IS '三方流程实例 ID';
-COMMENT ON COLUMN pmis_flow_third_party_log.business_type IS '业务类型';
-COMMENT ON COLUMN pmis_flow_third_party_log.business_id IS '业务 ID';
-COMMENT ON COLUMN pmis_flow_third_party_log.callback_data IS '回调原始数据';
-COMMENT ON COLUMN pmis_flow_third_party_log.handle_status IS '处理状态: PENDING/SUCCESS/FAIL';
-COMMENT ON COLUMN pmis_flow_third_party_log.error_msg IS '处理失败原因';
+COMMENT ON TABLE ydsz_flow_third_party_log IS 'P0-2: 三方审批回调日志表';
+COMMENT ON COLUMN ydsz_flow_third_party_log.platform IS '平台: DINGTALK/FEISHU/WECOM';
+COMMENT ON COLUMN ydsz_flow_third_party_log.event_type IS '事件类型';
+COMMENT ON COLUMN ydsz_flow_third_party_log.process_instance_id IS '三方流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_third_party_log.business_type IS '业务类型';
+COMMENT ON COLUMN ydsz_flow_third_party_log.business_id IS '业务 ID';
+COMMENT ON COLUMN ydsz_flow_third_party_log.callback_data IS '回调原始数据';
+COMMENT ON COLUMN ydsz_flow_third_party_log.handle_status IS '处理状态: PENDING/SUCCESS/FAIL';
+COMMENT ON COLUMN ydsz_flow_third_party_log.error_msg IS '处理失败原因';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_platform_created
-    ON pmis_flow_third_party_log(tenant_id, platform, created_at DESC);
+    ON ydsz_flow_third_party_log(tenant_id, platform, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
-    ON pmis_flow_third_party_log(tenant_id, handle_status, created_at DESC)
+    ON ydsz_flow_third_party_log(tenant_id, handle_status, created_at DESC)
     WHERE handle_status = 'PENDING';
 
 -- --------------------------------------------------------------------
@@ -10246,7 +10246,7 @@ CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
 -- ====================================================================
 -- >>>>>>>>>> SUPPLEMENT: code-discovered tables (no migration script yet)
 --   The following tables are referenced by MyBatis-Plus entities /
---   mappers in ydsz-pmis-backend, but no migration script has been
+--   mappers in ydsz-backend, but no migration script has been
 --   created yet. They are appended here for completeness so the
 --   single-file initialization can be used on a fresh database.
 --   Once a migration is published for each of them, this
@@ -10254,11 +10254,11 @@ CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
 -- ====================================================================
 
 -- ----------------------------------------------------------------
--- pmis_flow_template -- P3-1: process template marketplace
+-- ydsz_flow_template -- P3-1: process template marketplace
 -- P2-9: 增加 parent_template_id / version / version_label /
 --       inherit_type / is_latest 字段，支持模板继承与版本化
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_template (
+CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code   VARCHAR(128)    NOT NULL,
@@ -10293,42 +10293,42 @@ CREATE TABLE IF NOT EXISTS pmis_flow_template (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_category_sort
-    ON pmis_flow_template (tenant_id, category, sort_order)
+    ON ydsz_flow_template (tenant_id, category, sort_order)
     WHERE deleted = 0 AND is_latest = 1;
 -- P2-9: 按 template_code 查最新版本的高效索引
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_code_latest
-    ON pmis_flow_template (tenant_id, template_code, is_latest)
+    ON ydsz_flow_template (tenant_id, template_code, is_latest)
     WHERE deleted = 0;
 -- P2-9: 按父模板反查继承关系
 CREATE INDEX IF NOT EXISTS idx_pft_parent_template
-    ON pmis_flow_template (tenant_id, parent_template_id)
+    ON ydsz_flow_template (tenant_id, parent_template_id)
     WHERE deleted = 0 AND parent_template_id IS NOT NULL;
 
-COMMENT ON TABLE  pmis_flow_template IS 'P3-1: 流程模板市场表, 预置常用流程模板供一键导入; P2-9: 支持模板继承与版本化';
-COMMENT ON COLUMN pmis_flow_template.id IS '主键 ID';
-COMMENT ON COLUMN pmis_flow_template.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_template.template_code IS '模板编码 (租户内 + 版本内唯一)';
-COMMENT ON COLUMN pmis_flow_template.template_name IS '模板名称';
-COMMENT ON COLUMN pmis_flow_template.category IS '分类 (HR/FINANCE/ADMIN/PROJECT/GENERAL)';
-COMMENT ON COLUMN pmis_flow_template.description IS '模板描述';
-COMMENT ON COLUMN pmis_flow_template.icon IS '图标 URL';
-COMMENT ON COLUMN pmis_flow_template.bpmn_xml IS 'BPMN 2.0 XML 流程定义';
-COMMENT ON COLUMN pmis_flow_template.form_path IS '关联表单路径';
-COMMENT ON COLUMN pmis_flow_template.use_count IS '使用次数';
-COMMENT ON COLUMN pmis_flow_template.sort_order IS '排序值, 升序';
-COMMENT ON COLUMN pmis_flow_template.parent_template_id IS 'P2-9: 父模板 ID (跨模板继承关系, STANDALONE 时为空)';
-COMMENT ON COLUMN pmis_flow_template.version IS 'P2-9: 模板版本号 (从 1 开始单调递增)';
-COMMENT ON COLUMN pmis_flow_template.version_label IS 'P2-9: 版本标签 (如 v1.0 / v2.0-rc1)';
-COMMENT ON COLUMN pmis_flow_template.inherit_type IS 'P2-9: 继承类型 STANDALONE=独立 / CLONE=克隆 / INHERIT=继承';
-COMMENT ON COLUMN pmis_flow_template.is_latest IS 'P2-9: 是否当前 template_code 下最新版本 0=否 1=是';
-COMMENT ON COLUMN pmis_flow_template.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_flow_template.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_flow_template.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_flow_template IS 'P3-1: 流程模板市场表, 预置常用流程模板供一键导入; P2-9: 支持模板继承与版本化';
+COMMENT ON COLUMN ydsz_flow_template.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_flow_template.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_flow_template.template_code IS '模板编码 (租户内 + 版本内唯一)';
+COMMENT ON COLUMN ydsz_flow_template.template_name IS '模板名称';
+COMMENT ON COLUMN ydsz_flow_template.category IS '分类 (HR/FINANCE/ADMIN/PROJECT/GENERAL)';
+COMMENT ON COLUMN ydsz_flow_template.description IS '模板描述';
+COMMENT ON COLUMN ydsz_flow_template.icon IS '图标 URL';
+COMMENT ON COLUMN ydsz_flow_template.bpmn_xml IS 'BPMN 2.0 XML 流程定义';
+COMMENT ON COLUMN ydsz_flow_template.form_path IS '关联表单路径';
+COMMENT ON COLUMN ydsz_flow_template.use_count IS '使用次数';
+COMMENT ON COLUMN ydsz_flow_template.sort_order IS '排序值, 升序';
+COMMENT ON COLUMN ydsz_flow_template.parent_template_id IS 'P2-9: 父模板 ID (跨模板继承关系, STANDALONE 时为空)';
+COMMENT ON COLUMN ydsz_flow_template.version IS 'P2-9: 模板版本号 (从 1 开始单调递增)';
+COMMENT ON COLUMN ydsz_flow_template.version_label IS 'P2-9: 版本标签 (如 v1.0 / v2.0-rc1)';
+COMMENT ON COLUMN ydsz_flow_template.inherit_type IS 'P2-9: 继承类型 STANDALONE=独立 / CLONE=克隆 / INHERIT=继承';
+COMMENT ON COLUMN ydsz_flow_template.is_latest IS 'P2-9: 是否当前 template_code 下最新版本 0=否 1=是';
+COMMENT ON COLUMN ydsz_flow_template.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_flow_template.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_flow_template.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_flow_auto_trigger -- P3-2: process auto-trigger
+-- ydsz_flow_auto_trigger -- P3-2: process auto-trigger
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
+CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
     id                   VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id            VARCHAR(20)          NOT NULL DEFAULT '1',
     source_flow_code     VARCHAR(64)     NOT NULL,
@@ -10349,28 +10349,28 @@ CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pfat_tenant_src_enabled
-    ON pmis_flow_auto_trigger (tenant_id, source_flow_code, enabled)
+    ON ydsz_flow_auto_trigger (tenant_id, source_flow_code, enabled)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_flow_auto_trigger IS 'P3-2: 流程完成时自动触发下游流程的规则表';
-COMMENT ON COLUMN pmis_flow_auto_trigger.id IS '主键 ID';
-COMMENT ON COLUMN pmis_flow_auto_trigger.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_auto_trigger.source_flow_code IS '源流程编码 (触发方)';
-COMMENT ON COLUMN pmis_flow_auto_trigger.target_flow_code IS '目标流程编码 (被触发方)';
-COMMENT ON COLUMN pmis_flow_auto_trigger.condition_expression IS 'Aviator 条件表达式;为空则无条件触发';
-COMMENT ON COLUMN pmis_flow_auto_trigger.description IS '触发规则说明';
-COMMENT ON COLUMN pmis_flow_auto_trigger.enabled IS '是否启用 1=启用 0=禁用';
-COMMENT ON COLUMN pmis_flow_auto_trigger.sort_order IS '触发顺序';
-COMMENT ON COLUMN pmis_flow_auto_trigger.created_by IS '创建人';
-COMMENT ON COLUMN pmis_flow_auto_trigger.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_flow_auto_trigger.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_flow_auto_trigger.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_flow_auto_trigger IS 'P3-2: 流程完成时自动触发下游流程的规则表';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.source_flow_code IS '源流程编码 (触发方)';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.target_flow_code IS '目标流程编码 (被触发方)';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.condition_expression IS 'Aviator 条件表达式;为空则无条件触发';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.description IS '触发规则说明';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.enabled IS '是否启用 1=启用 0=禁用';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.sort_order IS '触发顺序';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_flow_notify_channel -- P3-3: notification channel config
+-- ydsz_flow_notify_channel -- P3-3: notification channel config
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
+CREATE TABLE IF NOT EXISTS ydsz_flow_notify_channel (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     channel_type      VARCHAR(32)     NOT NULL,
@@ -10390,26 +10390,26 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pfnc_tenant_type_enabled
-    ON pmis_flow_notify_channel (tenant_id, channel_type, enabled)
+    ON ydsz_flow_notify_channel (tenant_id, channel_type, enabled)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_flow_notify_channel IS 'P3-3: 工作流通知通道配置表 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
-COMMENT ON COLUMN pmis_flow_notify_channel.id IS '主键 ID';
-COMMENT ON COLUMN pmis_flow_notify_channel.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '通道类型 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT/FEISHU)';
-COMMENT ON COLUMN pmis_flow_notify_channel.channel_name IS '通道名称';
-COMMENT ON COLUMN pmis_flow_notify_channel.config IS '配置 JSON (Webhook URL, 短信模板编码等)';
-COMMENT ON COLUMN pmis_flow_notify_channel.enabled IS '是否启用 1=启用 0=禁用';
-COMMENT ON COLUMN pmis_flow_notify_channel.created_by IS '创建人';
-COMMENT ON COLUMN pmis_flow_notify_channel.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_flow_notify_channel.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_flow_notify_channel.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_flow_notify_channel.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_flow_notify_channel IS 'P3-3: 工作流通知通道配置表 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
+COMMENT ON COLUMN ydsz_flow_notify_channel.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_flow_notify_channel.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_flow_notify_channel.channel_type IS '通道类型 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT/FEISHU)';
+COMMENT ON COLUMN ydsz_flow_notify_channel.channel_name IS '通道名称';
+COMMENT ON COLUMN ydsz_flow_notify_channel.config IS '配置 JSON (Webhook URL, 短信模板编码等)';
+COMMENT ON COLUMN ydsz_flow_notify_channel.enabled IS '是否启用 1=启用 0=禁用';
+COMMENT ON COLUMN ydsz_flow_notify_channel.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_flow_notify_channel.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_flow_notify_channel.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_flow_notify_channel.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_flow_notify_channel.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_flow_task_comment -- P1-3: task comment thread
+-- ydsz_flow_task_comment -- P1-3: task comment thread
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_task_comment (
+CREATE TABLE IF NOT EXISTS ydsz_flow_task_comment (
     id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id     VARCHAR(20)          NOT NULL,
@@ -10432,33 +10432,33 @@ CREATE TABLE IF NOT EXISTS pmis_flow_task_comment (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pftc_tenant_task_created
-    ON pmis_flow_task_comment (tenant_id, task_id, created_at)
+    ON ydsz_flow_task_comment (tenant_id, task_id, created_at)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pftc_tenant_parent
-    ON pmis_flow_task_comment (tenant_id, parent_id)
+    ON ydsz_flow_task_comment (tenant_id, parent_id)
     WHERE deleted = 0 AND parent_id IS NOT NULL;
 
-COMMENT ON TABLE  pmis_flow_task_comment IS 'P1-3: 工作流任务评论表 (楼中楼, 通过 parent_id 形成嵌套回复)';
-COMMENT ON COLUMN pmis_flow_task_comment.id IS '主键 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.instance_id IS '流程实例 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.task_id IS '任务 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.node_code IS '节点编码';
-COMMENT ON COLUMN pmis_flow_task_comment.user_id IS '评论人 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.user_name IS '评论人姓名 (冗余)';
-COMMENT ON COLUMN pmis_flow_task_comment.content IS '评论内容';
-COMMENT ON COLUMN pmis_flow_task_comment.type IS '评论类型: COMMENT/QUESTION/REPLY';
-COMMENT ON COLUMN pmis_flow_task_comment.parent_id IS '父评论 ID (楼中楼, 0=根评论)';
-COMMENT ON COLUMN pmis_flow_task_comment.created_by IS '创建人';
-COMMENT ON COLUMN pmis_flow_task_comment.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_flow_task_comment.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_flow_task_comment.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_flow_task_comment.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_flow_task_comment IS 'P1-3: 工作流任务评论表 (楼中楼, 通过 parent_id 形成嵌套回复)';
+COMMENT ON COLUMN ydsz_flow_task_comment.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_flow_task_comment.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_flow_task_comment.instance_id IS '流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_task_comment.task_id IS '任务 ID';
+COMMENT ON COLUMN ydsz_flow_task_comment.node_code IS '节点编码';
+COMMENT ON COLUMN ydsz_flow_task_comment.user_id IS '评论人 ID';
+COMMENT ON COLUMN ydsz_flow_task_comment.user_name IS '评论人姓名 (冗余)';
+COMMENT ON COLUMN ydsz_flow_task_comment.content IS '评论内容';
+COMMENT ON COLUMN ydsz_flow_task_comment.type IS '评论类型: COMMENT/QUESTION/REPLY';
+COMMENT ON COLUMN ydsz_flow_task_comment.parent_id IS '父评论 ID (楼中楼, 0=根评论)';
+COMMENT ON COLUMN ydsz_flow_task_comment.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_flow_task_comment.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_flow_task_comment.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_flow_task_comment.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_flow_task_comment.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_rule_chain_graph -- P0-1: rule chain visual canvas
+-- ydsz_rule_chain_graph -- P0-1: rule chain visual canvas
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
+CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code         VARCHAR(128)    NOT NULL,
@@ -10482,29 +10482,29 @@ CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
 );
 
 CREATE INDEX IF NOT EXISTS idx_prcg_tenant_scenario_status
-    ON pmis_rule_chain_graph (tenant_id, scenario, status)
+    ON ydsz_rule_chain_graph (tenant_id, scenario, status)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_chain_graph IS 'P0-1: 规则链可视化画布 JSON 存储表';
-COMMENT ON COLUMN pmis_rule_chain_graph.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_chain_graph.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_chain_graph.rule_code IS '关联规则编码';
-COMMENT ON COLUMN pmis_rule_chain_graph.name IS '画布名称';
-COMMENT ON COLUMN pmis_rule_chain_graph.description IS '画布描述';
-COMMENT ON COLUMN pmis_rule_chain_graph.scenario IS '业务场景';
-COMMENT ON COLUMN pmis_rule_chain_graph.graph_version IS '画布版本号';
-COMMENT ON COLUMN pmis_rule_chain_graph.status IS '画布状态: DRAFT/PUBLISHED/ARCHIVED';
-COMMENT ON COLUMN pmis_rule_chain_graph.content_json IS '画布节点/连线 JSON';
-COMMENT ON COLUMN pmis_rule_chain_graph.created_by IS '创建人';
-COMMENT ON COLUMN pmis_rule_chain_graph.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_chain_graph.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_rule_chain_graph.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_rule_chain_graph IS 'P0-1: 规则链可视化画布 JSON 存储表';
+COMMENT ON COLUMN ydsz_rule_chain_graph.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_chain_graph.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_chain_graph.rule_code IS '关联规则编码';
+COMMENT ON COLUMN ydsz_rule_chain_graph.name IS '画布名称';
+COMMENT ON COLUMN ydsz_rule_chain_graph.description IS '画布描述';
+COMMENT ON COLUMN ydsz_rule_chain_graph.scenario IS '业务场景';
+COMMENT ON COLUMN ydsz_rule_chain_graph.graph_version IS '画布版本号';
+COMMENT ON COLUMN ydsz_rule_chain_graph.status IS '画布状态: DRAFT/PUBLISHED/ARCHIVED';
+COMMENT ON COLUMN ydsz_rule_chain_graph.content_json IS '画布节点/连线 JSON';
+COMMENT ON COLUMN ydsz_rule_chain_graph.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rule_chain_graph.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rule_chain_graph.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_rule_chain_graph.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_rule_dependency -- P1-8: rule dependency
+-- ydsz_rule_dependency -- P1-8: rule dependency
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
+CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     id                       VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id                VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code                VARCHAR(128)    NOT NULL,
@@ -10525,28 +10525,28 @@ CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
 );
 
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_rule
-    ON pmis_rule_dependency (tenant_id, rule_code)
+    ON ydsz_rule_dependency (tenant_id, rule_code)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_depends_cascade
-    ON pmis_rule_dependency (tenant_id, depends_on_rule_code, cascade_on_disable)
+    ON ydsz_rule_dependency (tenant_id, depends_on_rule_code, cascade_on_disable)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_dependency IS 'P1-8: 规则间依赖关系表 (EXECUTE/READ_RESULT/SOFT)';
-COMMENT ON COLUMN pmis_rule_dependency.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_dependency.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_dependency.rule_code IS '规则编码';
-COMMENT ON COLUMN pmis_rule_dependency.depends_on_rule_code IS '被依赖的规则编码';
-COMMENT ON COLUMN pmis_rule_dependency.dependency_type IS '依赖类型: EXECUTE/READ_RESULT/SOFT';
-COMMENT ON COLUMN pmis_rule_dependency.cascade_on_disable IS '上游禁用时是否级联禁用 1=是 0=否';
-COMMENT ON COLUMN pmis_rule_dependency.description IS '依赖说明';
-COMMENT ON COLUMN pmis_rule_dependency.created_by IS '创建人';
-COMMENT ON COLUMN pmis_rule_dependency.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_rule_dependency IS 'P1-8: 规则间依赖关系表 (EXECUTE/READ_RESULT/SOFT)';
+COMMENT ON COLUMN ydsz_rule_dependency.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_dependency.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_dependency.rule_code IS '规则编码';
+COMMENT ON COLUMN ydsz_rule_dependency.depends_on_rule_code IS '被依赖的规则编码';
+COMMENT ON COLUMN ydsz_rule_dependency.dependency_type IS '依赖类型: EXECUTE/READ_RESULT/SOFT';
+COMMENT ON COLUMN ydsz_rule_dependency.cascade_on_disable IS '上游禁用时是否级联禁用 1=是 0=否';
+COMMENT ON COLUMN ydsz_rule_dependency.description IS '依赖说明';
+COMMENT ON COLUMN ydsz_rule_dependency.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rule_dependency.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rule_dependency.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_rule_ab_policy -- P1-10: AB test auto-rollback policy
+-- ydsz_rule_ab_policy -- P1-10: AB test auto-rollback policy
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
+CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     id                      VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code               VARCHAR(128)    NOT NULL,
@@ -10576,32 +10576,32 @@ CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
 );
 
 CREATE INDEX IF NOT EXISTS idx_prap_tenant_rule
-    ON pmis_rule_ab_policy (tenant_id, rule_code)
+    ON ydsz_rule_ab_policy (tenant_id, rule_code)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_ab_policy IS 'P1-10: AB Test 自动回滚策略表';
-COMMENT ON COLUMN pmis_rule_ab_policy.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_ab_policy.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_ab_policy.rule_code IS '规则编码';
-COMMENT ON COLUMN pmis_rule_ab_policy.auto_rollback_enabled IS '是否启用自动回滚 1=是 0=否';
-COMMENT ON COLUMN pmis_rule_ab_policy.rollback_action IS '回滚动作: AUTO 自动回滚/NOTIFY 仅通知负责人';
-COMMENT ON COLUMN pmis_rule_ab_policy.error_rate_threshold IS '触发回滚的错误率阈值 (0~1)';
-COMMENT ON COLUMN pmis_rule_ab_policy.min_sample_size IS '最小评估样本数';
-COMMENT ON COLUMN pmis_rule_ab_policy.check_window_minutes IS '评估窗口 (分钟)';
-COMMENT ON COLUMN pmis_rule_ab_policy.notify_channels IS '通知通道 (逗号分隔, 引用 pmis_flow_notify_channel.id)';
-COMMENT ON COLUMN pmis_rule_ab_policy.description IS '策略描述';
-COMMENT ON COLUMN pmis_rule_ab_policy.last_evaluated_at IS '最近一次评估时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.last_rollback_at IS '最近一次回滚时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.created_by IS '创建人';
-COMMENT ON COLUMN pmis_rule_ab_policy.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_rule_ab_policy.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_rule_ab_policy IS 'P1-10: AB Test 自动回滚策略表';
+COMMENT ON COLUMN ydsz_rule_ab_policy.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_ab_policy.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_ab_policy.rule_code IS '规则编码';
+COMMENT ON COLUMN ydsz_rule_ab_policy.auto_rollback_enabled IS '是否启用自动回滚 1=是 0=否';
+COMMENT ON COLUMN ydsz_rule_ab_policy.rollback_action IS '回滚动作: AUTO 自动回滚/NOTIFY 仅通知负责人';
+COMMENT ON COLUMN ydsz_rule_ab_policy.error_rate_threshold IS '触发回滚的错误率阈值 (0~1)';
+COMMENT ON COLUMN ydsz_rule_ab_policy.min_sample_size IS '最小评估样本数';
+COMMENT ON COLUMN ydsz_rule_ab_policy.check_window_minutes IS '评估窗口 (分钟)';
+COMMENT ON COLUMN ydsz_rule_ab_policy.notify_channels IS '通知通道 (逗号分隔, 引用 ydsz_flow_notify_channel.id)';
+COMMENT ON COLUMN ydsz_rule_ab_policy.description IS '策略描述';
+COMMENT ON COLUMN ydsz_rule_ab_policy.last_evaluated_at IS '最近一次评估时间';
+COMMENT ON COLUMN ydsz_rule_ab_policy.last_rollback_at IS '最近一次回滚时间';
+COMMENT ON COLUMN ydsz_rule_ab_policy.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rule_ab_policy.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rule_ab_policy.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_rule_ab_policy.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_rule_ab_policy.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_rule_ab_rollback -- P1-10: AB test rollback history
+-- ydsz_rule_ab_rollback -- P1-10: AB test rollback history
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
+CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code         VARCHAR(128)    NOT NULL,
@@ -10624,26 +10624,26 @@ CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
 );
 
 CREATE INDEX IF NOT EXISTS idx_prar_tenant_rule_created
-    ON pmis_rule_ab_rollback (tenant_id, rule_code, created_at DESC)
+    ON ydsz_rule_ab_rollback (tenant_id, rule_code, created_at DESC)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_ab_rollback IS 'P1-10: AB Test 回滚历史表';
-COMMENT ON COLUMN pmis_rule_ab_rollback.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_ab_rollback.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_ab_rollback.rule_code IS '规则编码';
-COMMENT ON COLUMN pmis_rule_ab_rollback.trigger_reason IS '触发原因: ERROR_RATE/MANUAL/OWNER_REQUEST';
-COMMENT ON COLUMN pmis_rule_ab_rollback.error_rate IS '回滚时的错误率';
-COMMENT ON COLUMN pmis_rule_ab_rollback.sample_size IS '评估样本数';
-COMMENT ON COLUMN pmis_rule_ab_rollback.from_canary IS '是否从灰度版本回滚 1=是 0=否';
-COMMENT ON COLUMN pmis_rule_ab_rollback.operator IS '操作人 (SYSTEM=自动)';
-COMMENT ON COLUMN pmis_rule_ab_rollback.notify_status IS '通知发送状态: PENDING/SUCCESS/FAILED';
-COMMENT ON COLUMN pmis_rule_ab_rollback.created_at IS '回滚时间';
-COMMENT ON COLUMN pmis_rule_ab_rollback.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_rule_ab_rollback IS 'P1-10: AB Test 回滚历史表';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.rule_code IS '规则编码';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.trigger_reason IS '触发原因: ERROR_RATE/MANUAL/OWNER_REQUEST';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.error_rate IS '回滚时的错误率';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.sample_size IS '评估样本数';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.from_canary IS '是否从灰度版本回滚 1=是 0=否';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.operator IS '操作人 (SYSTEM=自动)';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.notify_status IS '通知发送状态: PENDING/SUCCESS/FAILED';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.created_at IS '回滚时间';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_rule_pack -- P2-14: rule pack marketplace
+-- ydsz_rule_pack -- P2-14: rule pack marketplace
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_pack (
+CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
@@ -10676,41 +10676,41 @@ CREATE TABLE IF NOT EXISTS pmis_rule_pack (
 );
 
 CREATE INDEX IF NOT EXISTS idx_prp_tenant_industry_enabled
-    ON pmis_rule_pack (tenant_id, industry, enabled)
+    ON ydsz_rule_pack (tenant_id, industry, enabled)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_pack IS 'P2-14: 规则集市场表 (按行业/场景打包)';
-COMMENT ON COLUMN pmis_rule_pack.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_pack.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_pack.pack_code IS '规则集编码';
-COMMENT ON COLUMN pmis_rule_pack.pack_version IS '规则集版本号 (语义化)';
-COMMENT ON COLUMN pmis_rule_pack.pack_name IS '规则集名称';
-COMMENT ON COLUMN pmis_rule_pack.industry IS '适用行业';
-COMMENT ON COLUMN pmis_rule_pack.tags IS '标签, 逗号分隔';
-COMMENT ON COLUMN pmis_rule_pack.rule_codes IS '包含的规则编码列表 (逗号分隔)';
-COMMENT ON COLUMN pmis_rule_pack.rule_snapshots IS 'P2-8: 该版本固化的规则定义快照 (RuleDefinition JSON 数组)';
-COMMENT ON COLUMN pmis_rule_pack.previous_version IS 'P2-8: 升级来源版本号 (版本链路追踪)';
-COMMENT ON COLUMN pmis_rule_pack.description IS '描述';
-COMMENT ON COLUMN pmis_rule_pack.author IS '作者';
-COMMENT ON COLUMN pmis_rule_pack.download_count IS '下载次数';
-COMMENT ON COLUMN pmis_rule_pack.rating IS '评分 (0~5)';
-COMMENT ON COLUMN pmis_rule_pack.enabled IS '是否上架 1=是 0=否';
-COMMENT ON COLUMN pmis_rule_pack.official IS '是否官方 1=是 0=否';
-COMMENT ON COLUMN pmis_rule_pack.created_by IS '创建人';
-COMMENT ON COLUMN pmis_rule_pack.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_pack.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_rule_pack.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_rule_pack IS 'P2-14: 规则集市场表 (按行业/场景打包)';
+COMMENT ON COLUMN ydsz_rule_pack.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_pack.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_pack.pack_code IS '规则集编码';
+COMMENT ON COLUMN ydsz_rule_pack.pack_version IS '规则集版本号 (语义化)';
+COMMENT ON COLUMN ydsz_rule_pack.pack_name IS '规则集名称';
+COMMENT ON COLUMN ydsz_rule_pack.industry IS '适用行业';
+COMMENT ON COLUMN ydsz_rule_pack.tags IS '标签, 逗号分隔';
+COMMENT ON COLUMN ydsz_rule_pack.rule_codes IS '包含的规则编码列表 (逗号分隔)';
+COMMENT ON COLUMN ydsz_rule_pack.rule_snapshots IS 'P2-8: 该版本固化的规则定义快照 (RuleDefinition JSON 数组)';
+COMMENT ON COLUMN ydsz_rule_pack.previous_version IS 'P2-8: 升级来源版本号 (版本链路追踪)';
+COMMENT ON COLUMN ydsz_rule_pack.description IS '描述';
+COMMENT ON COLUMN ydsz_rule_pack.author IS '作者';
+COMMENT ON COLUMN ydsz_rule_pack.download_count IS '下载次数';
+COMMENT ON COLUMN ydsz_rule_pack.rating IS '评分 (0~5)';
+COMMENT ON COLUMN ydsz_rule_pack.enabled IS '是否上架 1=是 0=否';
+COMMENT ON COLUMN ydsz_rule_pack.official IS '是否官方 1=是 0=否';
+COMMENT ON COLUMN ydsz_rule_pack.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_rule_pack.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_rule_pack.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_rule_pack.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- P2-8: 兼容已存在库，幂等补充知识包版本管理新列
-ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS rule_snapshots    TEXT;
-ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS previous_version  VARCHAR(32);
+ALTER TABLE ydsz_rule_pack ADD COLUMN IF NOT EXISTS rule_snapshots    TEXT;
+ALTER TABLE ydsz_rule_pack ADD COLUMN IF NOT EXISTS previous_version  VARCHAR(32);
 
 
 -- ----------------------------------------------------------------
--- pmis_rule_pack_install -- P2-14: rule pack install history
+-- ydsz_rule_pack_install -- P2-14: rule pack install history
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
+CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
@@ -10728,20 +10728,20 @@ CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
 );
 
 CREATE INDEX IF NOT EXISTS idx_prpi_tenant_code_installed
-    ON pmis_rule_pack_install (tenant_id, pack_code, installed_at DESC)
+    ON ydsz_rule_pack_install (tenant_id, pack_code, installed_at DESC)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_pack_install IS 'P2-14: 规则集安装历史表 (按租户)';
-COMMENT ON COLUMN pmis_rule_pack_install.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_pack_install.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_pack_install.pack_code IS '规则集编码';
-COMMENT ON COLUMN pmis_rule_pack_install.pack_version IS '规则集版本号';
-COMMENT ON COLUMN pmis_rule_pack_install.installed_by IS '安装操作人';
-COMMENT ON COLUMN pmis_rule_pack_install.installed_at IS '安装时间';
-COMMENT ON COLUMN pmis_rule_pack_install.status IS '安装状态: SUCCESS/FAILED/ROLLBACK';
-COMMENT ON COLUMN pmis_rule_pack_install.error_message IS '失败时的错误信息';
-COMMENT ON COLUMN pmis_rule_pack_install.created_at IS '记录创建时间';
-COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已删';
+COMMENT ON TABLE  ydsz_rule_pack_install IS 'P2-14: 规则集安装历史表 (按租户)';
+COMMENT ON COLUMN ydsz_rule_pack_install.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_rule_pack_install.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_rule_pack_install.pack_code IS '规则集编码';
+COMMENT ON COLUMN ydsz_rule_pack_install.pack_version IS '规则集版本号';
+COMMENT ON COLUMN ydsz_rule_pack_install.installed_by IS '安装操作人';
+COMMENT ON COLUMN ydsz_rule_pack_install.installed_at IS '安装时间';
+COMMENT ON COLUMN ydsz_rule_pack_install.status IS '安装状态: SUCCESS/FAILED/ROLLBACK';
+COMMENT ON COLUMN ydsz_rule_pack_install.error_message IS '失败时的错误信息';
+COMMENT ON COLUMN ydsz_rule_pack_install.created_at IS '记录创建时间';
+COMMENT ON COLUMN ydsz_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ====================================================================
 -- ============================ [060] field type unification ============================
@@ -10749,13 +10749,13 @@ COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已
 -- V1.0.0_060  H2.7 / P1-1 字段类型统一
 -- ----------------------------------------------------------------------------
 -- 背景:历史演进过程中出现了若干类型不一致:
---   1. pmis_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(20) — 同含义字段类型不一致
---   2. pmis_flow_his_task 完全缺失 assignor_id 列(主表有,历史表没有)
---   3. pmis_project_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
---   4. pmis_dict_version 缺 updated_at/updated_by/tenant_id,且 created_at/effective_date 用了 TIMESTAMP 而非 TIMESTAMPTZ
+--   1. ydsz_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(20) — 同含义字段类型不一致
+--   2. ydsz_flow_his_task 完全缺失 assignor_id 列(主表有,历史表没有)
+--   3. ydsz_project_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
+--   4. ydsz_dict_version 缺 updated_at/updated_by/tenant_id,且 created_at/effective_date 用了 TIMESTAMP 而非 TIMESTAMPTZ
 --
 -- 已审查但**保留原样**的差异(具备合理业务理由):
---   - 11 张 pmis_rule_* 表的 created_by/updated_by 为 VARCHAR(64) DEFAULT 'SYSTEM'
+--   - 11 张 ydsz_rule_* 表的 created_by/updated_by 为 VARCHAR(64) DEFAULT 'SYSTEM'
 --     原因:对应 Java 实体明确使用 String createdBy/updatedBy(rule 责任人可为工号/SSO 用户名等非纯数字 ID)
 --     修改风险:RuleDefinitionDO 等 11 个 DTO/Service/Controller 的 ownerBy 字段全部受影响
 --     决议:保持 VARCHAR(64) 不变,但统一 DEFAULT 值与 COMMENT 文案(见下方)
@@ -10765,107 +10765,107 @@ COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已
 -- 0) 11 张 rule 表 created_by/updated_by 文案统一(DEFAULT 'SYSTEM' 已是项目约定,保留)
 --    仅刷新 COMMENT 文案,便于后续维护者理解
 -- ----------------------------------------------------------------------------
-COMMENT ON COLUMN pmis_rule_def.created_by           IS '创建人(VARCHAR(64) 支持工号/SSO用户名,DEFAULT ''SYSTEM'' 表示系统兜底)';
-COMMENT ON COLUMN pmis_rule_pack.created_by          IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_template.created_by      IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_test_case.created_by     IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_execution_trace.created_by IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_scorecard.created_by     IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_decision_tree.created_by IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_script.created_by        IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_chain_graph.created_by   IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_dependency.created_by    IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_def.created_by           IS '创建人(VARCHAR(64) 支持工号/SSO用户名,DEFAULT ''SYSTEM'' 表示系统兜底)';
+COMMENT ON COLUMN ydsz_rule_pack.created_by          IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_template.created_by      IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_test_case.created_by     IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_execution_trace.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_decision_table.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_scorecard.created_by     IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_decision_tree.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_script.created_by        IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_chain_graph.created_by   IS '创建人(同 rule_def)';
+COMMENT ON COLUMN ydsz_rule_dependency.created_by    IS '创建人(同 rule_def)';
 
 -- ----------------------------------------------------------------------------
--- 1) pmis_flow_run_task.assignor_id BIGINT -> VARCHAR(20),与 assignee_id 对齐
---    pmis_flow_his_task 补齐 assignor_id 列
+-- 1) ydsz_flow_run_task.assignor_id BIGINT -> VARCHAR(20),与 assignee_id 对齐
+--    ydsz_flow_his_task 补齐 assignor_id 列
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_flow_run_task ALTER COLUMN assignor_id TYPE VARCHAR(20) USING assignor_id::VARCHAR(20);
-ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_id VARCHAR(20);
-ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_name VARCHAR(64);
-COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
-COMMENT ON COLUMN pmis_flow_his_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
-COMMENT ON COLUMN pmis_flow_his_task.assignor_name IS '原审批人姓名';
+ALTER TABLE ydsz_flow_run_task ALTER COLUMN assignor_id TYPE VARCHAR(20) USING assignor_id::VARCHAR(20);
+ALTER TABLE ydsz_flow_his_task ADD COLUMN IF NOT EXISTS assignor_id VARCHAR(20);
+ALTER TABLE ydsz_flow_his_task ADD COLUMN IF NOT EXISTS assignor_name VARCHAR(64);
+COMMENT ON COLUMN ydsz_flow_run_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
+COMMENT ON COLUMN ydsz_flow_his_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
+COMMENT ON COLUMN ydsz_flow_his_task.assignor_name IS '原审批人姓名';
 
 -- 同步主表与历史表 assignor_id 索引(若已存在则跳过)
 CREATE INDEX IF NOT EXISTS idx_pfrt_assignor
-    ON pmis_flow_run_task (assignor_id)
+    ON ydsz_flow_run_task (assignor_id)
     WHERE deleted = 0 AND assignor_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pfht_assignor
-    ON pmis_flow_his_task (assignor_id)
+    ON ydsz_flow_his_task (assignor_id)
     WHERE deleted = 0 AND assignor_id IS NOT NULL;
 
 -- FOREACH 节点 partial unique index(替代原 UNIQUE ... WHERE 约束,PG 不支持该约束语法)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfrt_foreach_iter
-    ON pmis_flow_run_task (instance_id, node_code, iter_var)
+    ON ydsz_flow_run_task (instance_id, node_code, iter_var)
     WHERE iter_var IS NOT NULL AND deleted = 0;
 
 -- ----------------------------------------------------------------------------
--- 2) pmis_project_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
+-- 2) ydsz_project_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_project_invoice ALTER COLUMN tax_period TYPE VARCHAR(7);
-COMMENT ON COLUMN pmis_project_invoice.tax_period IS '税务所属期: 格式 YYYY-MM(7 字符,VARCHAR(7) 精确匹配 CHECK 约束)';
+ALTER TABLE ydsz_project_invoice ALTER COLUMN tax_period TYPE VARCHAR(7);
+COMMENT ON COLUMN ydsz_project_invoice.tax_period IS '税务所属期: 格式 YYYY-MM(7 字符,VARCHAR(7) 精确匹配 CHECK 约束)';
 
 -- ----------------------------------------------------------------------------
--- 3) pmis_dict_version 字段补齐
+-- 3) ydsz_dict_version 字段补齐
 --    - 新增 updated_at / updated_by / tenant_id(对齐 BaseDO 5 字段基线)
 --    - created_at / effective_date 统一为 TIMESTAMPTZ(全工程时间字段统一约定)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS updated_by    VARCHAR(20) NOT NULL DEFAULT 'SYSTEM';
-ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS tenant_id     VARCHAR(20) NOT NULL DEFAULT '1';
-ALTER TABLE pmis_dict_version ALTER COLUMN created_at     TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';
-ALTER TABLE pmis_dict_version ALTER COLUMN effective_date TYPE TIMESTAMPTZ USING effective_date AT TIME ZONE 'UTC';
+ALTER TABLE ydsz_dict_version ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE ydsz_dict_version ADD COLUMN IF NOT EXISTS updated_by    VARCHAR(20) NOT NULL DEFAULT 'SYSTEM';
+ALTER TABLE ydsz_dict_version ADD COLUMN IF NOT EXISTS tenant_id     VARCHAR(20) NOT NULL DEFAULT '1';
+ALTER TABLE ydsz_dict_version ALTER COLUMN created_at     TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';
+ALTER TABLE ydsz_dict_version ALTER COLUMN effective_date TYPE TIMESTAMPTZ USING effective_date AT TIME ZONE 'UTC';
 
-COMMENT ON COLUMN pmis_dict_version.updated_by    IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_dict_version.updated_at    IS '最后修改时间';
-COMMENT ON COLUMN pmis_dict_version.tenant_id     IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_dict_version.updated_by    IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_dict_version.updated_at    IS '最后修改时间';
+COMMENT ON COLUMN ydsz_dict_version.tenant_id     IS '租户 ID(单租户部署默认 1)';
 
 -- 复合索引(与全工程惯例一致)
 CREATE INDEX IF NOT EXISTS idx_pdv_tenant_type
-    ON pmis_dict_version (tenant_id, type_code)
+    ON ydsz_dict_version (tenant_id, type_code)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pdv_tenant_type_created
-    ON pmis_dict_version (tenant_id, type_code, created_at DESC)
+    ON ydsz_dict_version (tenant_id, type_code, created_at DESC)
     WHERE deleted = 0;
 
-ANALYZE pmis_dict_version;
-ANALYZE pmis_flow_run_task;
-ANALYZE pmis_flow_his_task;
-ANALYZE pmis_project_invoice;
+ANALYZE ydsz_dict_version;
+ANALYZE ydsz_flow_run_task;
+ANALYZE ydsz_flow_his_task;
+ANALYZE ydsz_project_invoice;
 
 -- ----------------------------------------------------------------------------
 -- 4) 人员ID字段 BIGINT -> VARCHAR(20) 统一(对齐其它 _by 雪花 ID 约定)
---    - pmis_project_revenue.confirmed_by                          BIGINT -> VARCHAR(20)
---    - pmis_project_invoice.applied_by / approved_by / issued_by BIGINT -> VARCHAR(20)
---    - pmis_project_payment.confirmed_by / recorded_by            BIGINT -> VARCHAR(20)
+--    - ydsz_project_revenue.confirmed_by                          BIGINT -> VARCHAR(20)
+--    - ydsz_project_invoice.applied_by / approved_by / issued_by BIGINT -> VARCHAR(20)
+--    - ydsz_project_payment.confirmed_by / recorded_by            BIGINT -> VARCHAR(20)
 --    USING ::VARCHAR(20) 处理历史 BIGINT 数据(雪花 ID 字符串可直接转型)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_project_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
-ALTER TABLE pmis_project_invoice ALTER COLUMN applied_by   TYPE VARCHAR(20) USING applied_by::VARCHAR(20);
-ALTER TABLE pmis_project_invoice ALTER COLUMN approved_by  TYPE VARCHAR(20) USING approved_by::VARCHAR(20);
-ALTER TABLE pmis_project_invoice ALTER COLUMN issued_by    TYPE VARCHAR(20) USING issued_by::VARCHAR(20);
-ALTER TABLE pmis_project_payment ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
-ALTER TABLE pmis_project_payment ALTER COLUMN recorded_by  TYPE VARCHAR(20) USING recorded_by::VARCHAR(20);
+ALTER TABLE ydsz_project_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE ydsz_project_invoice ALTER COLUMN applied_by   TYPE VARCHAR(20) USING applied_by::VARCHAR(20);
+ALTER TABLE ydsz_project_invoice ALTER COLUMN approved_by  TYPE VARCHAR(20) USING approved_by::VARCHAR(20);
+ALTER TABLE ydsz_project_invoice ALTER COLUMN issued_by    TYPE VARCHAR(20) USING issued_by::VARCHAR(20);
+ALTER TABLE ydsz_project_payment ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE ydsz_project_payment ALTER COLUMN recorded_by  TYPE VARCHAR(20) USING recorded_by::VARCHAR(20);
 
-COMMENT ON COLUMN pmis_project_revenue.confirmed_by   IS '确认人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_project_invoice.applied_by    IS '申请人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_project_invoice.approved_by   IS '审批人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_project_invoice.issued_by     IS '开票人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_project_payment.confirmed_by  IS '确认人ID(雪花ID VARCHAR(20))';
-COMMENT ON COLUMN pmis_project_payment.recorded_by   IS '录入人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN ydsz_project_revenue.confirmed_by   IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN ydsz_project_invoice.applied_by    IS '申请人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN ydsz_project_invoice.approved_by   IS '审批人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN ydsz_project_invoice.issued_by     IS '开票人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN ydsz_project_payment.confirmed_by  IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN ydsz_project_payment.recorded_by   IS '录入人ID(雪花ID VARCHAR(20))';
 
-ANALYZE pmis_project_revenue;
-ANALYZE pmis_project_payment;
+ANALYZE ydsz_project_revenue;
+ANALYZE ydsz_project_payment;
 
 -- ====================================================================
 -- ============================ [061] merge export tables ============================
 -- ====================================================================
--- V1.0.0_061  P0-3 合并 pmis_export_record 与 pmis_report_export_record
+-- V1.0.0_061  P0-3 合并 ydsz_export_record 与 ydsz_report_export_record
 -- ----------------------------------------------------------------------------
 -- 背景:
---   pmis_export_record(下载中心,P2-11)与 pmis_report_export_record(订阅报表,P1-5)
+--   ydsz_export_record(下载中心,P2-11)与 ydsz_report_export_record(订阅报表,P1-5)
 --   结构高度重复,均记录 Excel 导出 + MinIO 存储 + 状态流转,导致:
 --     1. 两表字段语义重叠(file_url/file_key/status/created_at…)
 --     2. ReportScheduleServiceImpl 直接使用 SQL INSERT,字段错位(generated_at 在
@@ -10874,28 +10874,28 @@ ANALYZE pmis_project_payment;
 --     4. 监控/统计(导出成功率、平均耗时)需 UNION 两表,体验差
 --
 -- 合并方案:
---   保留 pmis_export_record 作为主表,新增:
+--   保留 ydsz_export_record 作为主表,新增:
 --     - source            VARCHAR(16)  MANUAL 用户主动 / SUBSCRIPTION 订阅触发
 --     - subscription_id   VARCHAR(20)  仅 SUBSCRIPTION 来源有值
 --     - report_type       VARCHAR(50)  仅 SUBSCRIPTION 来源有值(订阅报表类型)
 --   user_id 改为可空:MANUAL 必填,SUBSCRIPTION 取订阅人
 --   状态枚举统一: PENDING/GENERATING/COMPLETED/SENT/FAILED/EXPIRED
 --   互斥 CHECK 约束: MANUAL 必须有 user_id 且无 subscription_id,反之亦然
---   删除原 pmis_report_export_record 表
+--   删除原 ydsz_report_export_record 表
 --   同步改造 Java 实体与 Service(ReportScheduleServiceImpl 改用同一张表)
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
--- 1) pmis_export_record 新增 source / subscription_id / report_type 三列
+-- 1) ydsz_export_record 新增 source / subscription_id / report_type 三列
 --    user_id 由 NOT NULL 改为可空(MANUAL 必填,SUBSCRIPTION 取订阅人)
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_export_record ALTER COLUMN user_id DROP NOT NULL;
+ALTER TABLE ydsz_export_record ALTER COLUMN user_id DROP NOT NULL;
 
-ALTER TABLE pmis_export_record
+ALTER TABLE ydsz_export_record
     ADD COLUMN IF NOT EXISTS source          VARCHAR(16) NOT NULL DEFAULT 'MANUAL';
-ALTER TABLE pmis_export_record
+ALTER TABLE ydsz_export_record
     ADD COLUMN IF NOT EXISTS subscription_id VARCHAR(20);
-ALTER TABLE pmis_export_record
+ALTER TABLE ydsz_export_record
     ADD COLUMN IF NOT EXISTS report_type     VARCHAR(50);
 
 -- 互斥 CHECK 约束(若已存在则跳过)
@@ -10904,9 +10904,9 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint
         WHERE conname = 'ck_pex_source'
-          AND conrelid = 'pmis_export_record'::regclass
+          AND conrelid = 'ydsz_export_record'::regclass
     ) THEN
-        ALTER TABLE pmis_export_record
+        ALTER TABLE ydsz_export_record
             ADD CONSTRAINT ck_pex_source CHECK (source IN ('MANUAL', 'SUBSCRIPTION'));
     END IF;
 END $$;
@@ -10916,9 +10916,9 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint
         WHERE conname = 'ck_pex_source_link'
-          AND conrelid = 'pmis_export_record'::regclass
+          AND conrelid = 'ydsz_export_record'::regclass
     ) THEN
-        ALTER TABLE pmis_export_record
+        ALTER TABLE ydsz_export_record
             ADD CONSTRAINT ck_pex_source_link CHECK (
                 (source = 'MANUAL'      AND user_id IS NOT NULL AND subscription_id IS NULL) OR
                 (source = 'SUBSCRIPTION' AND subscription_id IS NOT NULL)
@@ -10933,42 +10933,42 @@ BEGIN
     IF EXISTS (
         SELECT 1 FROM pg_constraint
         WHERE conname = 'ck_pex_status'
-          AND conrelid = 'pmis_export_record'::regclass
+          AND conrelid = 'ydsz_export_record'::regclass
     ) THEN
-        ALTER TABLE pmis_export_record DROP CONSTRAINT ck_pex_status;
+        ALTER TABLE ydsz_export_record DROP CONSTRAINT ck_pex_status;
     END IF;
-    ALTER TABLE pmis_export_record
+    ALTER TABLE ydsz_export_record
         ADD CONSTRAINT ck_pex_status CHECK (status IN ('PENDING','GENERATING','COMPLETED','SENT','FAILED','EXPIRED'));
 END $$;
 
-COMMENT ON COLUMN pmis_export_record.source          IS '来源:MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发(P0-3 合并引入)';
-COMMENT ON COLUMN pmis_export_record.subscription_id IS '关联订阅 ID(仅 SUBSCRIPTION 来源有值)';
-COMMENT ON COLUMN pmis_export_record.report_type     IS '报表类型(SUBSCRIPTION 主用,如 COCKPIT/EVM/PROFIT)';
+COMMENT ON COLUMN ydsz_export_record.source          IS '来源:MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发(P0-3 合并引入)';
+COMMENT ON COLUMN ydsz_export_record.subscription_id IS '关联订阅 ID(仅 SUBSCRIPTION 来源有值)';
+COMMENT ON COLUMN ydsz_export_record.report_type     IS '报表类型(SUBSCRIPTION 主用,如 COCKPIT/EVM/PROFIT)';
 
 -- ----------------------------------------------------------------------------
 -- 2) 订阅维度索引
 -- ----------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_pex_tenant_subscription
-    ON pmis_export_record (tenant_id, subscription_id, created_at DESC)
+    ON ydsz_export_record (tenant_id, subscription_id, created_at DESC)
     WHERE source = 'SUBSCRIPTION' AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pex_tenant_report_type
-    ON pmis_export_record (tenant_id, report_type, created_at DESC)
+    ON ydsz_export_record (tenant_id, report_type, created_at DESC)
     WHERE source = 'SUBSCRIPTION' AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pex_provider_trace
-    ON pmis_export_record (provider_trace_id)
+    ON ydsz_export_record (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- ----------------------------------------------------------------------------
--- 3) 删除原 pmis_report_export_record 表
+-- 3) 删除原 ydsz_report_export_record 表
 --    需先解除可能的外键引用(本项目暂未建立外键,直接 DROP)
 -- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS pmis_report_export_record CASCADE;
+DROP TABLE IF EXISTS ydsz_report_export_record CASCADE;
 
 -- ----------------------------------------------------------------------------
 -- 4) 同步重建 source=user_id 复合索引(原 user_id NOT NULL 索引已可用,无需重建)
 -- ----------------------------------------------------------------------------
 
-ANALYZE pmis_export_record;
+ANALYZE ydsz_export_record;
 
 -- ====================================================================
 -- ============================ [062] monthly partitioning for audit logs ============================
@@ -10976,22 +10976,22 @@ ANALYZE pmis_export_record;
 -- V1.0.0_062  P1-4 日志/审计表按月分区 + BRIN
 -- ----------------------------------------------------------------------------
 -- 背景:
---   pmis_operation_log / pmis_flow_audit_log 预计 100w+/年
+--   ydsz_operation_log / ydsz_flow_audit_log 预计 100w+/年
 --   单表 B-Tree 索引老化慢、清理成本高(DELETE 真空)、备份耗时长
 --   改造目标: 按月 RANGE 分区,主键包含分区键,索引与 BRIN 自动级联
 --
 -- 父表 DDL 改造:
---   - pmis_operation_log       PARTITION BY RANGE (created_at)  PRIMARY KEY (id, created_at)
---   - pmis_flow_audit_log      PARTITION BY RANGE (operated_at) PRIMARY KEY (id, operated_at)
+--   - ydsz_operation_log       PARTITION BY RANGE (created_at)  PRIMARY KEY (id, created_at)
+--   - ydsz_flow_audit_log      PARTITION BY RANGE (operated_at) PRIMARY KEY (id, operated_at)
 --
 -- 维护建议:
 --   - 每季度巡检,确保 DEFAULT 分区无新增数据
---   - 新增月份分区: CREATE TABLE pmis_operation_log_yYYYYmMM PARTITION OF ...
---   - 数据归档: ALTER TABLE pmis_operation_log DETACH PARTITION y2026m01
+--   - 新增月份分区: CREATE TABLE ydsz_operation_log_yYYYYmMM PARTITION OF ...
+--   - 数据归档: ALTER TABLE ydsz_operation_log DETACH PARTITION y2026m01
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
--- 1) pmis_operation_log 月度分区 (2026-01 ~ 2027-12 共 24 个月)
+-- 1) ydsz_operation_log 月度分区 (2026-01 ~ 2027-12 共 24 个月)
 -- ----------------------------------------------------------------------------
 DO $$
 DECLARE
@@ -11003,27 +11003,27 @@ BEGIN
     FOR i IN 0..23 LOOP
         partition_date := DATE '2026-01-01' + (i || ' month')::INTERVAL;
         next_date := partition_date + INTERVAL '1 month';
-        partition_name := 'pmis_operation_log_y' ||
+        partition_name := 'ydsz_operation_log_y' ||
                           TO_CHAR(partition_date, 'YYYY') || 'm' ||
                           TO_CHAR(partition_date, 'MM');
         EXECUTE FORMAT(
-            'CREATE TABLE IF NOT EXISTS %I PARTITION OF pmis_operation_log FOR VALUES FROM (%L) TO (%L)',
+            'CREATE TABLE IF NOT EXISTS %I PARTITION OF ydsz_operation_log FOR VALUES FROM (%L) TO (%L)',
             partition_name, partition_date, next_date
         );
     END LOOP;
 END $$;
 
 -- DEFAULT 兜底分区(新分区未及时创建时数据落入此分区,触发告警后补建)
-CREATE TABLE IF NOT EXISTS pmis_operation_log_default
-    PARTITION OF pmis_operation_log DEFAULT;
+CREATE TABLE IF NOT EXISTS ydsz_operation_log_default
+    PARTITION OF ydsz_operation_log DEFAULT;
 
-COMMENT ON TABLE pmis_operation_log_default IS
-    'pmis_operation_log 的 DEFAULT 兜底分区:'
+COMMENT ON TABLE ydsz_operation_log_default IS
+    'ydsz_operation_log 的 DEFAULT 兜底分区:'
     '接收超出已建月份范围的数据,运维需监控并及时创建对应月份分区;'
     '建表语句不可独立 DROP,需先 ALTER TABLE ... DETACH PARTITION';
 
 -- ----------------------------------------------------------------------------
--- 2) pmis_flow_audit_log 月度分区 (2026-01 ~ 2027-12 共 24 个月)
+-- 2) ydsz_flow_audit_log 月度分区 (2026-01 ~ 2027-12 共 24 个月)
 -- ----------------------------------------------------------------------------
 DO $$
 DECLARE
@@ -11035,27 +11035,27 @@ BEGIN
     FOR i IN 0..23 LOOP
         partition_date := DATE '2026-01-01' + (i || ' month')::INTERVAL;
         next_date := partition_date + INTERVAL '1 month';
-        partition_name := 'pmis_flow_audit_log_y' ||
+        partition_name := 'ydsz_flow_audit_log_y' ||
                           TO_CHAR(partition_date, 'YYYY') || 'm' ||
                           TO_CHAR(partition_date, 'MM');
         EXECUTE FORMAT(
-            'CREATE TABLE IF NOT EXISTS %I PARTITION OF pmis_flow_audit_log FOR VALUES FROM (%L) TO (%L)',
+            'CREATE TABLE IF NOT EXISTS %I PARTITION OF ydsz_flow_audit_log FOR VALUES FROM (%L) TO (%L)',
             partition_name, partition_date, next_date
         );
     END LOOP;
 END $$;
 
 -- DEFAULT 兜底分区
-CREATE TABLE IF NOT EXISTS pmis_flow_audit_log_default
-    PARTITION OF pmis_flow_audit_log DEFAULT;
+CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log_default
+    PARTITION OF ydsz_flow_audit_log DEFAULT;
 
-COMMENT ON TABLE pmis_flow_audit_log_default IS
-    'pmis_flow_audit_log 的 DEFAULT 兜底分区:'
+COMMENT ON TABLE ydsz_flow_audit_log_default IS
+    'ydsz_flow_audit_log 的 DEFAULT 兜底分区:'
     '接收超出已建月份范围的流程审计数据,运维需监控并及时创建对应月份分区;'
     '建表语句不可独立 DROP,需先 ALTER TABLE ... DETACH PARTITION';
 
-ANALYZE pmis_operation_log;
-ANALYZE pmis_flow_audit_log;
+ANALYZE ydsz_operation_log;
+ANALYZE ydsz_flow_audit_log;
 
 -- ====================================================================
 -- ============================ [063] tg_set_updated_at trigger ============================
@@ -11070,21 +11070,21 @@ ANALYZE pmis_flow_audit_log;
 --   解决: 数据库层兜底触发器,确保 updated_at 始终反映真实变更时间
 --
 -- 设计:
---   - 通用函数 pmis_set_updated_at(): 取 NEW.updated_at 与 CURRENT_TIMESTAMP 的较大值
+--   - 通用函数 ydsz_set_updated_at(): 取 NEW.updated_at 与 CURRENT_TIMESTAMP 的较大值
 --   - 触发器命名: tg_<table>_updated_at,行级 BEFORE UPDATE
 --   - 仅当 NEW 与 OLD 实际有差异时才更新(避免无意义 UPDATE 触发)
 --   - 不影响 created_at / created_by(只读)
 --
 -- 挂载原则:
 --   - 仅挂载"核心业务表"(用户/权限/项目/合同/财务/工作流主表)
---   - 不挂载日志表(pmis_operation_log/flow_audit_log 自身无 updated_at)
+--   - 不挂载日志表(ydsz_operation_log/flow_audit_log 自身无 updated_at)
 --   - 不挂载字典/配置/只读表
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
 -- 1) 通用触发器函数(BEFORE UPDATE 行级,只更新 updated_at)
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION pmis_set_updated_at()
+CREATE OR REPLACE FUNCTION ydsz_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     -- 行无实际变更时不更新(避免 no-op UPDATE 触发)
@@ -11095,15 +11095,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION pmis_set_updated_at() IS
+COMMENT ON FUNCTION ydsz_set_updated_at() IS
     '通用 updated_at 维护:BEFORE UPDATE 时将 NEW.updated_at 置为 CURRENT_TIMESTAMP;'
     '仅当 NEW 与 OLD 实际不同时触发(避免 no-op UPDATE 引起的批量时间漂移)';
 
 -- ----------------------------------------------------------------------------
 -- 2) 通用挂载辅助函数
---    用法: SELECT pmis_attach_updated_at_trigger('pmis_user_account');
+--    用法: SELECT ydsz_attach_updated_at_trigger('ydsz_user_account');
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION pmis_attach_updated_at_trigger(p_table_name TEXT)
+CREATE OR REPLACE FUNCTION ydsz_attach_updated_at_trigger(p_table_name TEXT)
 RETURNS VOID AS $$
 DECLARE
     trigger_name TEXT;
@@ -11125,7 +11125,7 @@ BEGIN
         WHERE table_schema = 'public'
           AND table_name = p_table_name
     ) THEN
-        RAISE WARNING '[pmis_attach_updated_at_trigger] 表不存在,跳过: %', p_table_name;
+        RAISE WARNING '[ydsz_attach_updated_at_trigger] 表不存在,跳过: %', p_table_name;
         RETURN;
     END IF;
 
@@ -11136,22 +11136,22 @@ BEGIN
           AND table_name = p_table_name
           AND column_name = 'updated_at'
     ) THEN
-        RAISE WARNING '[pmis_attach_updated_at_trigger] 表无 updated_at 列,跳过: %', p_table_name;
+        RAISE WARNING '[ydsz_attach_updated_at_trigger] 表无 updated_at 列,跳过: %', p_table_name;
         RETURN;
     END IF;
 
     EXECUTE FORMAT(
         'CREATE TRIGGER %I BEFORE UPDATE ON %I '
-        'FOR EACH ROW EXECUTE FUNCTION pmis_set_updated_at()',
+        'FOR EACH ROW EXECUTE FUNCTION ydsz_set_updated_at()',
         trigger_name, p_table_name
     );
 
-    RAISE NOTICE '[pmis_attach_updated_at_trigger] 挂载成功: % (trigger: %)',
+    RAISE NOTICE '[ydsz_attach_updated_at_trigger] 挂载成功: % (trigger: %)',
         p_table_name, trigger_name;
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION pmis_attach_updated_at_trigger(TEXT) IS
+COMMENT ON FUNCTION ydsz_attach_updated_at_trigger(TEXT) IS
     '通用挂载函数: 为指定 public 表添加 tg_<table>_updated_at BEFORE UPDATE 触发器;'
     '已挂载 / 表不存在 / 缺 updated_at 列时静默跳过';
 
@@ -11159,31 +11159,31 @@ COMMENT ON FUNCTION pmis_attach_updated_at_trigger(TEXT) IS
 -- 3) 挂载到核心业务表(15 张)
 --    选择标准: 频繁 UPDATE + updated_at 业务强相关 + 跨服务写路径多
 -- ----------------------------------------------------------------------------
-SELECT pmis_attach_updated_at_trigger('pmis_user_account');         -- 用户账号
-SELECT pmis_attach_updated_at_trigger('pmis_employee');             -- 员工
-SELECT pmis_attach_updated_at_trigger('pmis_department');           -- 部门
-SELECT pmis_attach_updated_at_trigger('pmis_position');             -- 岗位
-SELECT pmis_attach_updated_at_trigger('pmis_role');                 -- 角色
-SELECT pmis_attach_updated_at_trigger('pmis_config');               -- 系统配置
-SELECT pmis_attach_updated_at_trigger('pmis_dict_item');            -- 字典项
-SELECT pmis_attach_updated_at_trigger('pmis_dict_version');         -- 字典版本
-SELECT pmis_attach_updated_at_trigger('pmis_project_initiation');   -- 立项
-SELECT pmis_attach_updated_at_trigger('pmis_project_change');       -- 变更
-SELECT pmis_attach_updated_at_trigger('pmis_finance_contract');     -- 合同
-SELECT pmis_attach_updated_at_trigger('pmis_project_invoice');      -- 发票
-SELECT pmis_attach_updated_at_trigger('pmis_project_payment');      -- 回款
-SELECT pmis_attach_updated_at_trigger('pmis_flow_instance');        -- 流程实例
-SELECT pmis_attach_updated_at_trigger('pmis_flow_definition');      -- 流程定义
+SELECT ydsz_attach_updated_at_trigger('ydsz_user_account');         -- 用户账号
+SELECT ydsz_attach_updated_at_trigger('ydsz_employee');             -- 员工
+SELECT ydsz_attach_updated_at_trigger('ydsz_department');           -- 部门
+SELECT ydsz_attach_updated_at_trigger('ydsz_position');             -- 岗位
+SELECT ydsz_attach_updated_at_trigger('ydsz_role');                 -- 角色
+SELECT ydsz_attach_updated_at_trigger('ydsz_config');               -- 系统配置
+SELECT ydsz_attach_updated_at_trigger('ydsz_dict_item');            -- 字典项
+SELECT ydsz_attach_updated_at_trigger('ydsz_dict_version');         -- 字典版本
+SELECT ydsz_attach_updated_at_trigger('ydsz_project_initiation');   -- 立项
+SELECT ydsz_attach_updated_at_trigger('ydsz_project_change');       -- 变更
+SELECT ydsz_attach_updated_at_trigger('ydsz_finance_contract');     -- 合同
+SELECT ydsz_attach_updated_at_trigger('ydsz_project_invoice');      -- 发票
+SELECT ydsz_attach_updated_at_trigger('ydsz_project_payment');      -- 回款
+SELECT ydsz_attach_updated_at_trigger('ydsz_flow_instance');        -- 流程实例
+SELECT ydsz_attach_updated_at_trigger('ydsz_flow_definition');      -- 流程定义
 
 -- ----------------------------------------------------------------------------
--- 3.1) 批量挂载剩余所有含 updated_at 列的 pmis_ 表
+-- 3.1) 批量挂载剩余所有含 updated_at 列的 ydsz_ 表
 --      上方 15 张核心表已显式挂载; 此处用 DO 块动态扫描 information_schema,
---      为所有尚未挂载触发器且含 updated_at 列的 pmis_ 表自动挂载。
---      pmis_attach_updated_at_trigger() 自身幂等: 已挂载 / 表不存在 / 缺
+--      为所有尚未挂载触发器且含 updated_at 列的 ydsz_ 表自动挂载。
+--      ydsz_attach_updated_at_trigger() 自身幂等: 已挂载 / 表不存在 / 缺
 --      updated_at 列时均静默跳过, 故可安全覆盖全部表。
 --      覆盖: 规则/成本/利润/EVM/费率/资源/考勤/运维/工单/满意度/对账/
 --      利用率/工作流子表/报表/导出/2FA/会话等(约 80+ 张表)。
---      日志表(pmis_operation_log / pmis_flow_audit_log 等)无 updated_at 列,
+--      日志表(ydsz_operation_log / ydsz_flow_audit_log 等)无 updated_at 列,
 --      会被辅助函数自动跳过。
 -- ----------------------------------------------------------------------------
 DO $$
@@ -11203,7 +11203,7 @@ BEGIN
           -- 排除分区子表(由父表继承,无需单独挂载)
           AND c.table_name NOT LIKE '%_default'
     LOOP
-        PERFORM pmis_attach_updated_at_trigger(t_name);
+        PERFORM ydsz_attach_updated_at_trigger(t_name);
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
@@ -11222,282 +11222,282 @@ $$ LANGUAGE plpgsql;
 -- 设计:
 --   - NULLABLE 字段   -> partial index WHERE provider_trace_id IS NOT NULL
 --   - NOT NULL DEFAULT '' -> partial index WHERE provider_trace_id <> ''
---   - 索引命名: idx_pmis_<table>_trace,与既有规则一致
+--   - 索引命名: idx_ydsz_<table>_trace,与既有规则一致
 --   - 触发器/外键/CHECK 约束: 不新增(本节仅补齐索引,无 schema 变更)
 --   - 性能影响: 每张表一个 partial index,索引体积可控
 -- ----------------------------------------------------------------------------
 -- 涉及表(63 张,按业务模块分组):
 
 -- 1) 项目/执行(7 张)
-CREATE INDEX IF NOT EXISTS idx_pmis_project_change_trace
-    ON pmis_project_change (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_project_change_trace
+    ON ydsz_project_change (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_execution_delivery_standard_trace
-    ON pmis_execution_delivery_standard (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_execution_delivery_standard_trace
+    ON ydsz_execution_delivery_standard (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_execution_delivery_item_trace
-    ON pmis_execution_delivery_item (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_execution_delivery_item_trace
+    ON ydsz_execution_delivery_item (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_execution_closure_trace
-    ON pmis_execution_closure (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_execution_closure_trace
+    ON ydsz_execution_closure (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_attendance_trace
-    ON pmis_attendance (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_attendance_trace
+    ON ydsz_attendance (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_overtime_trace
-    ON pmis_overtime (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_overtime_trace
+    ON ydsz_overtime (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_leave_trace
-    ON pmis_leave (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_leave_trace
+    ON ydsz_leave (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 -- 2) 财务/合同(4 张)
-CREATE INDEX IF NOT EXISTS idx_pmis_finance_invoice_trace
-    ON pmis_project_invoice (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_finance_invoice_trace
+    ON ydsz_project_invoice (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_finance_payment_trace
-    ON pmis_project_payment (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_finance_payment_trace
+    ON ydsz_project_payment (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_finance_customer_credit_trace
-    ON pmis_project_customer_credit (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_finance_customer_credit_trace
+    ON ydsz_project_customer_credit (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 -- 3) 资源/计费(6 张)
-CREATE INDEX IF NOT EXISTS idx_pmis_evm_measure_trace
-    ON pmis_evm_measure (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_evm_measure_trace
+    ON ydsz_evm_measure (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_rate_card_trace
-    ON pmis_rate_card (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rate_card_trace
+    ON ydsz_rate_card (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_rate_internal_trace
-    ON pmis_rate_internal (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rate_internal_trace
+    ON ydsz_rate_internal (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_profit_simulation_trace
-    ON pmis_project_profit_simulation (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_profit_simulation_trace
+    ON ydsz_project_profit_simulation (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_resource_pool_trace
-    ON pmis_resource_pool (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_resource_pool_trace
+    ON ydsz_resource_pool (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_employee_tag_trace
-    ON pmis_employee_tag (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_employee_tag_trace
+    ON ydsz_employee_tag (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_resource_assignment_trace
-    ON pmis_resource_assignment (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_resource_assignment_trace
+    ON ydsz_resource_assignment (provider_trace_id)
     WHERE provider_trace_id <> '';
-CREATE INDEX IF NOT EXISTS idx_pmis_bench_record_trace
-    ON pmis_bench_record (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_bench_record_trace
+    ON ydsz_bench_record (provider_trace_id)
     WHERE provider_trace_id <> '';
 
 -- 4) 运维/告警/工单(5 张)
-CREATE INDEX IF NOT EXISTS idx_pmis_warranty_trace
-    ON pmis_warranty (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_warranty_trace
+    ON ydsz_warranty (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_trace
-    ON pmis_ops_ticket (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_ops_ticket_trace
+    ON ydsz_ops_ticket (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_trace
-    ON pmis_satisfaction (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_satisfaction_trace
+    ON ydsz_satisfaction (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_trace
-    ON pmis_alert_dispatch (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_alert_dispatch_trace
+    ON ydsz_alert_dispatch (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_trace
-    ON pmis_project_reconcile_daily (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_reconcile_daily_trace
+    ON ydsz_project_reconcile_daily (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- 5) 工作流核心(11 张)
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_definition_trace
-    ON pmis_flow_definition (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_definition_trace
+    ON ydsz_flow_definition (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_node_trace
-    ON pmis_flow_node (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_node_trace
+    ON ydsz_flow_node (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_skip_trace
-    ON pmis_flow_skip (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_trace
+    ON ydsz_flow_skip (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_instance_trace
-    ON pmis_flow_instance (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_trace
+    ON ydsz_flow_instance (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_trace
-    ON pmis_flow_run_task (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_trace
+    ON ydsz_flow_run_task (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_his_task_trace
-    ON pmis_flow_his_task (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_trace
+    ON ydsz_flow_his_task (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_his_instance_trace
-    ON pmis_flow_his_instance (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_trace
+    ON ydsz_flow_his_instance (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_user_trace
-    ON pmis_flow_user (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_user_trace
+    ON ydsz_flow_user (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_trace
-    ON pmis_flow_cc (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_trace
+    ON ydsz_flow_cc (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_trace
-    ON pmis_flow_cc_rule (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_trace
+    ON ydsz_flow_cc_rule (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_trace
-    ON pmis_flow_timer (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_trace
+    ON ydsz_flow_timer (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_trace
-    ON pmis_flow_delegate_auth (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_trace
+    ON ydsz_flow_delegate_auth (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_trace
-    ON pmis_flow_delegate_log (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_log_trace
+    ON ydsz_flow_delegate_log (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- 6) 报表订阅(1 张)
-CREATE INDEX IF NOT EXISTS idx_pmis_report_subscription_trace
-    ON pmis_report_subscription (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_report_subscription_trace
+    ON ydsz_report_subscription (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- 7) 规则引擎(13 张)
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_trace
-    ON pmis_rule_def (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_trace
+    ON ydsz_rule_def (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_version_history_trace
-    ON pmis_rule_version_history (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_version_history_trace
+    ON ydsz_rule_version_history (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_template_trace
-    ON pmis_rule_template (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_template_trace
+    ON ydsz_rule_template (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_test_case_trace
-    ON pmis_rule_test_case (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_test_case_trace
+    ON ydsz_rule_test_case (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_execution_trace_trace
-    ON pmis_rule_execution_trace (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_execution_trace_trace
+    ON ydsz_rule_execution_trace (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_decision_table_trace
-    ON pmis_rule_decision_table (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_table_trace
+    ON ydsz_rule_decision_table (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_event_subscription_trace
-    ON pmis_flow_event_subscription (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_trace
+    ON ydsz_flow_event_subscription (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_canary_bucket_trace
-    ON pmis_rule_canary_bucket (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_canary_bucket_trace
+    ON ydsz_rule_canary_bucket (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_scorecard_trace
-    ON pmis_rule_scorecard (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_trace
+    ON ydsz_rule_scorecard (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_decision_tree_trace
-    ON pmis_rule_decision_tree (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_tree_trace
+    ON ydsz_rule_decision_tree (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_script_trace
-    ON pmis_rule_script (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_script_trace
+    ON ydsz_rule_script (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_variable_def_trace
-    ON pmis_rule_variable_def (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_variable_def_trace
+    ON ydsz_rule_variable_def (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_chain_graph_trace
-    ON pmis_rule_chain_graph (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_chain_graph_trace
+    ON ydsz_rule_chain_graph (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_dependency_trace
-    ON pmis_rule_dependency (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_dependency_trace
+    ON ydsz_rule_dependency (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_ab_policy_trace
-    ON pmis_rule_ab_policy (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_policy_trace
+    ON ydsz_rule_ab_policy (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_ab_rollback_trace
-    ON pmis_rule_ab_rollback (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_rollback_trace
+    ON ydsz_rule_ab_rollback (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_pack_trace
-    ON pmis_rule_pack (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_trace
+    ON ydsz_rule_pack (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_pack_install_trace
-    ON pmis_rule_pack_install (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_trace
+    ON ydsz_rule_pack_install (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- 8) 工作流扩展(8 张: 第三方/模板/DMN/触发器等)
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_third_party_account_trace
-    ON pmis_flow_third_party_account (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_third_party_account_trace
+    ON ydsz_flow_third_party_account (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_third_party_log_trace
-    ON pmis_flow_third_party_log (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_third_party_log_trace
+    ON ydsz_flow_third_party_log (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_template_trace
-    ON pmis_flow_template (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_trace
+    ON ydsz_flow_template (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_auto_trigger_trace
-    ON pmis_flow_auto_trigger (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_trace
+    ON ydsz_flow_auto_trigger (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_notify_channel_trace
-    ON pmis_flow_notify_channel (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_notify_channel_trace
+    ON ydsz_flow_notify_channel (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_task_comment_trace
-    ON pmis_flow_task_comment (provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_task_comment_trace
+    ON ydsz_flow_task_comment (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
-COMMENT ON INDEX idx_pmis_project_change_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_execution_delivery_standard_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_execution_delivery_item_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_execution_closure_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_finance_invoice_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_finance_payment_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_finance_customer_credit_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_evm_measure_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rate_card_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rate_internal_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_profit_simulation_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_resource_pool_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_employee_tag_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_resource_assignment_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_bench_record_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_warranty_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_ops_ticket_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_satisfaction_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_alert_dispatch_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_reconcile_daily_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_attendance_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_overtime_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_leave_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_definition_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_node_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_skip_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_instance_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_run_task_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_his_task_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_his_instance_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_user_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_cc_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_cc_rule_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_timer_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_delegate_auth_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_delegate_log_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_report_subscription_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_def_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_version_history_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_template_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_test_case_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_execution_trace_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_decision_table_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_event_subscription_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_canary_bucket_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_scorecard_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_decision_tree_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_script_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_variable_def_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_chain_graph_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_dependency_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_ab_policy_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_ab_rollback_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_pack_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_rule_pack_install_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_third_party_account_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_third_party_log_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_template_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_auto_trigger_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_notify_channel_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_task_comment_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_project_change_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_execution_delivery_standard_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_execution_delivery_item_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_execution_closure_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_finance_invoice_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_finance_payment_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_finance_customer_credit_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_evm_measure_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rate_card_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rate_internal_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_profit_simulation_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_resource_pool_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_employee_tag_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_resource_assignment_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_bench_record_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_warranty_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_ops_ticket_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_satisfaction_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_alert_dispatch_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_reconcile_daily_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_attendance_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_overtime_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_leave_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_definition_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_node_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_skip_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_instance_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_run_task_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_his_task_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_his_instance_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_user_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_cc_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_cc_rule_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_timer_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_delegate_auth_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_delegate_log_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_report_subscription_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_def_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_version_history_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_template_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_test_case_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_execution_trace_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_decision_table_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_event_subscription_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_canary_bucket_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_scorecard_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_decision_tree_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_script_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_variable_def_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_chain_graph_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_dependency_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_ab_policy_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_ab_rollback_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_pack_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_rule_pack_install_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_third_party_account_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_third_party_log_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_template_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_auto_trigger_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_notify_channel_trace IS 'P1-7: provider_trace_id 反查';
+COMMENT ON INDEX idx_ydsz_flow_task_comment_trace IS 'P1-7: provider_trace_id 反查';
 
 -- ====================================================================
--- ============================ [065] pmis_meta_schema_version ============================
+-- ============================ [065] ydsz_meta_schema_version ============================
 -- ====================================================================
 -- V1.0.0_065  P2-9  schema 元数据版本表 + 清理合并生成器注释
 -- ----------------------------------------------------------------------------
 -- 背景:
 --   - 历史 SQL 文件在 §GENERATOR NOTE 块中保留了"前向引用表清单",但缺乏
 --     运行时可查询的 schema 元数据。
---   - 增加 pmis_meta_schema_version 表,持久化:
+--   - 增加 ydsz_meta_schema_version 表,持久化:
 --       1. 当前 schema 版本号与生成时间
 --       2. 文件合并元数据(原 V1.0.0_xxx 文件数)
 --       3. 已知的"前向引用表"清单(供上线前查漏)
@@ -11505,7 +11505,7 @@ COMMENT ON INDEX idx_pmis_flow_task_comment_trace IS 'P1-7: provider_trace_id �
 --   - 应用启动时可 SELECT 校验版本号,提前发现 schema 漂移
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS pmis_meta_schema_version (
+CREATE TABLE IF NOT EXISTS ydsz_meta_schema_version (
     id                  VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     version             VARCHAR(32)  NOT NULL,
     pg_version          VARCHAR(32)  NOT NULL,
@@ -11521,23 +11521,23 @@ CREATE TABLE IF NOT EXISTS pmis_meta_schema_version (
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_meta_schema_version UNIQUE (version, deleted)
+    CONSTRAINT uk_ydsz_meta_schema_version UNIQUE (version, deleted)
 );
 
-COMMENT ON TABLE pmis_meta_schema_version IS
+COMMENT ON TABLE ydsz_meta_schema_version IS
     'P2-9: schema 元数据版本表;记录当前 schema 的版本、生成参数、'
     '前向引用表清单与补齐索引统计;应用启动时可 SELECT 校验漂移';
 
-COMMENT ON COLUMN pmis_meta_schema_version.version IS 'schema 版本号,如 V1.0.0';
-COMMENT ON COLUMN pmis_meta_schema_version.pg_version IS '目标 PostgreSQL 主版本,如 18';
-COMMENT ON COLUMN pmis_meta_schema_version.files_merged IS '本次合并的 V1.0.0_xxx 文件数';
-COMMENT ON COLUMN pmis_meta_schema_version.generated_at IS '合并生成时间';
-COMMENT ON COLUMN pmis_meta_schema_version.applied_at IS '实际初始化执行时间';
-COMMENT ON COLUMN pmis_meta_schema_version.pending_tables IS '前向引用表清单(逗号分隔),上线前需补建';
-COMMENT ON COLUMN pmis_meta_schema_version.notes IS '其它需要记录的元数据,如索引统计';
+COMMENT ON COLUMN ydsz_meta_schema_version.version IS 'schema 版本号,如 V1.0.0';
+COMMENT ON COLUMN ydsz_meta_schema_version.pg_version IS '目标 PostgreSQL 主版本,如 18';
+COMMENT ON COLUMN ydsz_meta_schema_version.files_merged IS '本次合并的 V1.0.0_xxx 文件数';
+COMMENT ON COLUMN ydsz_meta_schema_version.generated_at IS '合并生成时间';
+COMMENT ON COLUMN ydsz_meta_schema_version.applied_at IS '实际初始化执行时间';
+COMMENT ON COLUMN ydsz_meta_schema_version.pending_tables IS '前向引用表清单(逗号分隔),上线前需补建';
+COMMENT ON COLUMN ydsz_meta_schema_version.notes IS '其它需要记录的元数据,如索引统计';
 
 -- 1) 初始化一条元数据行
-INSERT INTO pmis_meta_schema_version
+INSERT INTO ydsz_meta_schema_version
     (version, pg_version, files_merged, generated_at, applied_at, pending_tables, notes)
 VALUES
     ('V1.0.0', '18', 58,
@@ -11546,12 +11546,12 @@ VALUES
      NULL,
      'P1-7: 75/75 provider_trace_id 索引已全量覆盖;'
      'P2-8: 112/112 COMMENT ON TABLE 覆盖率 100%;'
-     'P2-9: 引入 pmis_meta_schema_version 元数据表;'
+     'P2-9: 引入 ydsz_meta_schema_version 元数据表;'
      '历史前向引用表已全部落地(表名重命名后已存在),无 pending 表')
 ON CONFLICT (version, deleted) DO NOTHING;
 
 -- 2) 创建通用查询视图(供应用启动时探测当前 schema 版本)
-CREATE OR REPLACE VIEW pmis_view_current_schema_version
+CREATE OR REPLACE VIEW ydsz_view_current_schema_version
     WITH (security_invoker = true) AS
 SELECT
     version,
@@ -11561,12 +11561,12 @@ SELECT
     applied_at,
     pending_tables,
     notes
-FROM pmis_meta_schema_version
+FROM ydsz_meta_schema_version
 WHERE deleted = 0
 ORDER BY applied_at DESC
 LIMIT 1;
 
-COMMENT ON VIEW pmis_view_current_schema_version IS
+COMMENT ON VIEW ydsz_view_current_schema_version IS
     'P2-9: 当前生效的 schema 版本快照(取 applied_at 最近一条)';
 
 -- ====================================================================
@@ -11577,67 +11577,67 @@ COMMENT ON VIEW pmis_view_current_schema_version IS
 -- 范围:
 --   P3-13  冷热数据分层与历史分区归档(pg_partman / OSS 冷归档)
 --   P3-14  敏感字段加密落盘(手机号/身份证/银行卡 SM4 + 哈希索引列)
---   P3-15  pmis_data_export_audit 接入 OPLOG 字段,支持 UDF 检索
+--   P3-15  ydsz_data_export_audit 接入 OPLOG 字段,支持 UDF 检索
 --
 -- 设计原则:
 --   - 本节不在 V1.0.0 阶段真正改表(避免破坏 entity-SQL 对齐,影响 mvn test)
 --   - 仅:
 --       1) 预留元数据表的 plan_notes 字段,记录 P3 任务规划
---       2) 在 pmis_meta_schema_version 中追加 P3 任务说明
+--       2) 在 ydsz_meta_schema_version 中追加 P3 任务说明
 --       3) 给出"如何开启 P3 任务"的标准化扩展点(SQL 模板)
 --   - 真正落地时: 业务方确认 → 新增 ALTER TABLE → 同步 Java 实体 → mvn test
 -- ----------------------------------------------------------------------------
 
--- 1) 扩 pmis_meta_schema_version: 增 plan_notes 列(预留 P3 任务说明,无破坏性)
-ALTER TABLE pmis_meta_schema_version
+-- 1) 扩 ydsz_meta_schema_version: 增 plan_notes 列(预留 P3 任务说明,无破坏性)
+ALTER TABLE ydsz_meta_schema_version
     ADD COLUMN IF NOT EXISTS plan_notes TEXT NOT NULL DEFAULT '';
 
-COMMENT ON COLUMN pmis_meta_schema_version.plan_notes IS
+COMMENT ON COLUMN ydsz_meta_schema_version.plan_notes IS
     'P3 任务规划备注:P3-13/14/15 落地的设计预留字段,'
     '记录哪些 P3 任务已规划、待业务方确认后才能真正启用';
 
 -- 2) 把 P3 任务说明写进 V1.0.0 这次初始化
-UPDATE pmis_meta_schema_version
+UPDATE ydsz_meta_schema_version
    SET plan_notes = COALESCE(plan_notes, '') ||
         E'\nP3-13 [PERF] 冷热数据分层:' ||
-        E'\n  - 目标: pmis_operation_log / pmis_flow_audit_log 月份超过 12 个月的冷分区' ||
+        E'\n  - 目标: ydsz_operation_log / ydsz_flow_audit_log 月份超过 12 个月的冷分区' ||
         E'\n          ATTACH 到独立 cold tablespace + OSS 归档' ||
         E'\n  - 实施: 引入 pg_partman 扩展(parent table + retention 配置)' ||
         E'\n  - 影响: 表/索引结构不变,仅物理文件搬迁;Java 实体无需调整' ||
         E'\n' ||
         E'\nP3-14 [SEC] 敏感字段加密:' ||
-        E'\n  - 目标: pmis_employee.id_card / phone / bank_card 等 7 类敏感字段' ||
+        E'\n  - 目标: ydsz_employee.id_card / phone / bank_card 等 7 类敏感字段' ||
         E'\n          落盘前用 SM4 加密(列: <col>_cipher VARCHAR(512))' ||
         E'\n          同步增加 <col>_hash VARCHAR(64) 唯一索引列(支持等值查询)' ||
         E'\n  - 实施: 引入 pgcrypto + 自研 KMS 密钥版本号' ||
         E'\n  - 影响: 字段数翻倍,Java 实体需配套 @SensitiveField 注解 + 加密拦截器' ||
         E'\n' ||
         E'\nP3-15 [AUDIT] OPLOG 字段:' ||
-        E'\n  - 目标: pmis_data_export_audit 增 op_log_id (BIGINT) + op_log_type (VARCHAR)' ||
-        E'\n          关联到 pmis_operation_log.id,支持"导出行为 → 原始操作"的反查' ||
-        E'\n  - 实施: ALTER TABLE ADD COLUMN,新增索引 idx_pmis_data_export_audit_oplog' ||
+        E'\n  - 目标: ydsz_data_export_audit 增 op_log_id (BIGINT) + op_log_type (VARCHAR)' ||
+        E'\n          关联到 ydsz_operation_log.id,支持"导出行为 → 原始操作"的反查' ||
+        E'\n  - 实施: ALTER TABLE ADD COLUMN,新增索引 idx_ydsz_data_export_audit_oplog' ||
         E'\n  - 影响: 导出服务实现需在写导出审计时填这两个字段'
    WHERE version = 'V1.0.0' AND deleted = 0;
 
 -- 3) 给出 P3 启用模板(注释,真正启用时去掉 -- 即可)
 -- ----------------------------------------------------------------------------
--- [TEMPLATE] P3-14 启用:在 pmis_employee 加密敏感字段
--- ALTER TABLE pmis_employee
+-- [TEMPLATE] P3-14 启用:在 ydsz_employee 加密敏感字段
+-- ALTER TABLE ydsz_employee
 --     ADD COLUMN IF NOT EXISTS id_card_cipher VARCHAR(512) NOT NULL DEFAULT '',
 --     ADD COLUMN IF NOT EXISTS id_card_hash   VARCHAR(64)  NOT NULL DEFAULT '',
 --     ADD COLUMN IF NOT EXISTS phone_cipher   VARCHAR(512) NOT NULL DEFAULT '',
 --     ADD COLUMN IF NOT EXISTS phone_hash     VARCHAR(64)  NOT NULL DEFAULT '';
--- CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_employee_id_card_hash
---     ON pmis_employee (tenant_id, id_card_hash) WHERE deleted = 0 AND id_card_hash <> '';
--- CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_employee_phone_hash
---     ON pmis_employee (tenant_id, phone_hash) WHERE deleted = 0 AND phone_hash <> '';
+-- CREATE UNIQUE INDEX IF NOT EXISTS uk_ydsz_employee_id_card_hash
+--     ON ydsz_employee (tenant_id, id_card_hash) WHERE deleted = 0 AND id_card_hash <> '';
+-- CREATE UNIQUE INDEX IF NOT EXISTS uk_ydsz_employee_phone_hash
+--     ON ydsz_employee (tenant_id, phone_hash) WHERE deleted = 0 AND phone_hash <> '';
 -- ----------------------------------------------------------------------------
--- [TEMPLATE] P3-15 启用: pmis_data_export_audit 接入 OPLOG
--- ALTER TABLE pmis_data_export_audit
+-- [TEMPLATE] P3-15 启用: ydsz_data_export_audit 接入 OPLOG
+-- ALTER TABLE ydsz_data_export_audit
 --     ADD COLUMN IF NOT EXISTS op_log_id   VARCHAR(20),
 --     ADD COLUMN IF NOT EXISTS op_log_type VARCHAR(32) NOT NULL DEFAULT '';
--- CREATE INDEX IF NOT EXISTS idx_pmis_data_export_audit_oplog
---     ON pmis_data_export_audit (op_log_id) WHERE op_log_id IS NOT NULL;
+-- CREATE INDEX IF NOT EXISTS idx_ydsz_data_export_audit_oplog
+--     ON ydsz_data_export_audit (op_log_id) WHERE op_log_id IS NOT NULL;
 -- ----------------------------------------------------------------------------
 
 -- ====================================================================
@@ -11647,7 +11647,7 @@ UPDATE pmis_meta_schema_version
 -- 支持 ${flowName}/${nodeName}/${assigneeName} 等变量占位符
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
+CREATE TABLE IF NOT EXISTS ydsz_flow_notify_template (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code       VARCHAR(64)     NOT NULL,               -- 模板编码: TASK_CREATED / TASK_URGED / TASK_TIMEOUT 等
@@ -11673,26 +11673,26 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
     CONSTRAINT ck_pfnt_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_notify_template IS 'P1-2: 工作流通知模板表 — 通知内容模板化管理，支持 ${var} 变量占位符。P1-5: locale 字段支持多语言';
-COMMENT ON COLUMN pmis_flow_notify_template.template_code IS '模板编码: TASK_CREATED / TASK_COMPLETED / TASK_REJECTED / TASK_URGED / TASK_TIMEOUT / INSTANCE_TERMINATED / CC_CREATED 等';
-COMMENT ON COLUMN pmis_flow_notify_template.channel IS '通知通道: INAPP / EMAIL / SMS / WEBHOOK / DINGTALK / FEISHU / WECOM';
-COMMENT ON COLUMN pmis_flow_notify_template.locale IS 'P1-5: 语言区域（zh_CN / en_US 等），同一 templateCode+channel 可配置多语言模板，默认 zh_CN';
-COMMENT ON COLUMN pmis_flow_notify_template.title IS '标题模板（支持 ${flowName} ${nodeName} ${assigneeName} ${instanceId} ${taskId} 等占位符）';
-COMMENT ON COLUMN pmis_flow_notify_template.content IS '内容模板（支持与 title 相同的占位符）';
-COMMENT ON COLUMN pmis_flow_notify_template.enabled IS '是否启用: 1=启用 0=禁用';
+COMMENT ON TABLE  ydsz_flow_notify_template IS 'P1-2: 工作流通知模板表 — 通知内容模板化管理，支持 ${var} 变量占位符。P1-5: locale 字段支持多语言';
+COMMENT ON COLUMN ydsz_flow_notify_template.template_code IS '模板编码: TASK_CREATED / TASK_COMPLETED / TASK_REJECTED / TASK_URGED / TASK_TIMEOUT / INSTANCE_TERMINATED / CC_CREATED 等';
+COMMENT ON COLUMN ydsz_flow_notify_template.channel IS '通知通道: INAPP / EMAIL / SMS / WEBHOOK / DINGTALK / FEISHU / WECOM';
+COMMENT ON COLUMN ydsz_flow_notify_template.locale IS 'P1-5: 语言区域（zh_CN / en_US 等），同一 templateCode+channel 可配置多语言模板，默认 zh_CN';
+COMMENT ON COLUMN ydsz_flow_notify_template.title IS '标题模板（支持 ${flowName} ${nodeName} ${assigneeName} ${instanceId} ${taskId} 等占位符）';
+COMMENT ON COLUMN ydsz_flow_notify_template.content IS '内容模板（支持与 title 相同的占位符）';
+COMMENT ON COLUMN ydsz_flow_notify_template.enabled IS '是否启用: 1=启用 0=禁用';
 
 CREATE INDEX IF NOT EXISTS idx_pfnt_tenant_code_locale
-    ON pmis_flow_notify_template (tenant_id, template_code, channel, locale)
+    ON ydsz_flow_notify_template (tenant_id, template_code, channel, locale)
     WHERE deleted = 0 AND enabled = 1;
 CREATE INDEX IF NOT EXISTS idx_pfnt_tenant_enabled
-    ON pmis_flow_notify_template (tenant_id, enabled)
+    ON ydsz_flow_notify_template (tenant_id, enabled)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfnt_trace
-    ON pmis_flow_notify_template (provider_trace_id)
+    ON ydsz_flow_notify_template (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- 初始化默认模板（P1-5: locale 默认 zh_CN）
-INSERT INTO pmis_flow_notify_template (id, tenant_id, template_code, template_name, channel, locale, title, content, description)
+INSERT INTO ydsz_flow_notify_template (id, tenant_id, template_code, template_name, channel, locale, title, content, description)
 VALUES
     ('1', '1', 'TASK_CREATED', '任务创建通知', 'INAPP', 'zh_CN',
      '您有一个新的审批待办',
@@ -11759,7 +11759,7 @@ ON CONFLICT DO NOTHING;
 -- P1-6: Webhook 事件订阅 — 外部系统注册回调 URL，订阅工作流事件
 -- 投递流程：事件触发 → 查匹配订阅 → HMAC-SHA256 签名 → 写入 outbox → 异步 HTTP POST
 
-CREATE TABLE IF NOT EXISTS pmis_flow_webhook_subscription (
+CREATE TABLE IF NOT EXISTS ydsz_flow_webhook_subscription (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     name                VARCHAR(128)    NOT NULL,               -- 订阅名称
@@ -11782,17 +11782,17 @@ CREATE TABLE IF NOT EXISTS pmis_flow_webhook_subscription (
     CONSTRAINT ck_pfws_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_webhook_subscription IS 'P1-6: 工作流 Webhook 事件订阅表 — 外部系统注册回调 URL 订阅工作流事件';
-COMMENT ON COLUMN pmis_flow_webhook_subscription.callback_url IS '回调 URL（HTTPS 推荐），投递时 HTTP POST 该 URL';
-COMMENT ON COLUMN pmis_flow_webhook_subscription.secret IS 'HMAC-SHA256 签名密钥，投递时以 X-Webhook-Signature: sha256=<hex> 头部携带签名';
-COMMENT ON COLUMN pmis_flow_webhook_subscription.event_types IS '订阅事件类型（逗号分隔，如 TASK_CREATED,TASK_COMPLETED），空表示订阅全部事件';
-COMMENT ON COLUMN pmis_flow_webhook_subscription.enabled IS '是否启用: 1=启用 0=禁用';
+COMMENT ON TABLE  ydsz_flow_webhook_subscription IS 'P1-6: 工作流 Webhook 事件订阅表 — 外部系统注册回调 URL 订阅工作流事件';
+COMMENT ON COLUMN ydsz_flow_webhook_subscription.callback_url IS '回调 URL（HTTPS 推荐），投递时 HTTP POST 该 URL';
+COMMENT ON COLUMN ydsz_flow_webhook_subscription.secret IS 'HMAC-SHA256 签名密钥，投递时以 X-Webhook-Signature: sha256=<hex> 头部携带签名';
+COMMENT ON COLUMN ydsz_flow_webhook_subscription.event_types IS '订阅事件类型（逗号分隔，如 TASK_CREATED,TASK_COMPLETED），空表示订阅全部事件';
+COMMENT ON COLUMN ydsz_flow_webhook_subscription.enabled IS '是否启用: 1=启用 0=禁用';
 
 CREATE INDEX IF NOT EXISTS idx_pfws_tenant_enabled
-    ON pmis_flow_webhook_subscription (tenant_id, enabled)
+    ON ydsz_flow_webhook_subscription (tenant_id, enabled)
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfws_trace
-    ON pmis_flow_webhook_subscription (provider_trace_id)
+    ON ydsz_flow_webhook_subscription (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
@@ -11802,7 +11802,7 @@ CREATE INDEX IF NOT EXISTS idx_pfws_trace
 -- 免打扰时段内（支持跨午夜，如 22:00→08:00）+ digestMode=1 时，站内推送延迟到时段结束后投递
 -- 每个用户在租户内至多一条偏好记录（uk_pfnp_tenant_user）
 
-CREATE TABLE IF NOT EXISTS pmis_flow_notify_preference (
+CREATE TABLE IF NOT EXISTS ydsz_flow_notify_preference (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     user_id             VARCHAR(20)       NOT NULL,               -- 用户 ID
@@ -11823,13 +11823,13 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_preference (
     CONSTRAINT ck_pfnp_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_notify_preference IS 'P1-7: 工作流通知偏好表 — 用户免打扰时段与通知聚合配置';
-COMMENT ON COLUMN pmis_flow_notify_preference.quiet_hours_start IS '免打扰开始时间 HH:mm（如 22:00），NULL 表示不启用免打扰';
-COMMENT ON COLUMN pmis_flow_notify_preference.quiet_hours_end IS '免打扰结束时间 HH:mm（如 08:00），支持跨午夜（start > end 时跨次日）';
-COMMENT ON COLUMN pmis_flow_notify_preference.digest_mode IS '1=启用聚合（免打扰时段内延迟投递） 0=立即逐条投递（忽略免打扰）';
+COMMENT ON TABLE  ydsz_flow_notify_preference IS 'P1-7: 工作流通知偏好表 — 用户免打扰时段与通知聚合配置';
+COMMENT ON COLUMN ydsz_flow_notify_preference.quiet_hours_start IS '免打扰开始时间 HH:mm（如 22:00），NULL 表示不启用免打扰';
+COMMENT ON COLUMN ydsz_flow_notify_preference.quiet_hours_end IS '免打扰结束时间 HH:mm（如 08:00），支持跨午夜（start > end 时跨次日）';
+COMMENT ON COLUMN ydsz_flow_notify_preference.digest_mode IS '1=启用聚合（免打扰时段内延迟投递） 0=立即逐条投递（忽略免打扰）';
 
 CREATE INDEX IF NOT EXISTS idx_pfnp_tenant_user
-    ON pmis_flow_notify_preference (tenant_id, user_id)
+    ON ydsz_flow_notify_preference (tenant_id, user_id)
     WHERE deleted = 0;
 
 -- ====================================================================
@@ -11840,7 +11840,7 @@ CREATE INDEX IF NOT EXISTS idx_pfnp_tenant_user
 -- 审批时提交的附件（图片/文档/视频等）统一落库，支持查询与下载
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS pmis_flow_attachment (
+CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
@@ -11869,19 +11869,19 @@ CREATE TABLE IF NOT EXISTS pmis_flow_attachment (
     CONSTRAINT ck_pffa_deleted    CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_attachment IS 'P1-6: 工作流审批附件表 — 审批时提交的图片/文档/视频等附件统一落库';
-COMMENT ON COLUMN pmis_flow_attachment.instance_id IS '关联流程实例 ID';
-COMMENT ON COLUMN pmis_flow_attachment.task_id IS '关联任务 ID（实例级附件可为空）';
-COMMENT ON COLUMN pmis_flow_attachment.biz_type IS '附件业务类型: TASK=任务附件 / INSTANCE=实例附件 / COMMENT=意见附件';
-COMMENT ON COLUMN pmis_flow_attachment.storage_key IS '存储对象的 key（OSS/COS/MinIO 对象 key 或本地相对路径）';
-COMMENT ON COLUMN pmis_flow_attachment.download_url IS '临时下载地址（前端可直接展示，可能过期）';
+COMMENT ON TABLE  ydsz_flow_attachment IS 'P1-6: 工作流审批附件表 — 审批时提交的图片/文档/视频等附件统一落库';
+COMMENT ON COLUMN ydsz_flow_attachment.instance_id IS '关联流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_attachment.task_id IS '关联任务 ID（实例级附件可为空）';
+COMMENT ON COLUMN ydsz_flow_attachment.biz_type IS '附件业务类型: TASK=任务附件 / INSTANCE=实例附件 / COMMENT=意见附件';
+COMMENT ON COLUMN ydsz_flow_attachment.storage_key IS '存储对象的 key（OSS/COS/MinIO 对象 key 或本地相对路径）';
+COMMENT ON COLUMN ydsz_flow_attachment.download_url IS '临时下载地址（前端可直接展示，可能过期）';
 
 CREATE INDEX IF NOT EXISTS idx_pffa_instance
-    ON pmis_flow_attachment (instance_id, deleted) WHERE deleted = 0;
+    ON ydsz_flow_attachment (instance_id, deleted) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pffa_task
-    ON pmis_flow_attachment (task_id, deleted) WHERE task_id IS NOT NULL AND deleted = 0;
+    ON ydsz_flow_attachment (task_id, deleted) WHERE task_id IS NOT NULL AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pffa_trace
-    ON pmis_flow_attachment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
+    ON ydsz_flow_attachment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
 -- ============================ [069] P2-1 委派沟通记录表 ============================
@@ -11890,7 +11890,7 @@ CREATE INDEX IF NOT EXISTS idx_pffa_trace
 -- 委托人与被委托人之间可在被委托任务上留言沟通，沟通记录持久化留存
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS pmis_flow_delegate_message (
+CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_message (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     task_id             VARCHAR(20)       NOT NULL,               -- 关联被委托任务
@@ -11911,23 +11911,23 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_message (
     CONSTRAINT ck_pfdm_deleted      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_delegate_message IS 'P2-1: 委派沟通记录表 — 委托人与被委托人之间的留言沟通，持久化留存';
-COMMENT ON COLUMN pmis_flow_delegate_message.task_id IS '关联被委托任务 ID';
-COMMENT ON COLUMN pmis_flow_delegate_message.sender_role IS '发送人角色: OWNER=委托人 / DELEGATE=被委托人';
-COMMENT ON COLUMN pmis_flow_delegate_message.read_flag IS '是否已读: 0=未读 1=已读';
+COMMENT ON TABLE  ydsz_flow_delegate_message IS 'P2-1: 委派沟通记录表 — 委托人与被委托人之间的留言沟通，持久化留存';
+COMMENT ON COLUMN ydsz_flow_delegate_message.task_id IS '关联被委托任务 ID';
+COMMENT ON COLUMN ydsz_flow_delegate_message.sender_role IS '发送人角色: OWNER=委托人 / DELEGATE=被委托人';
+COMMENT ON COLUMN ydsz_flow_delegate_message.read_flag IS '是否已读: 0=未读 1=已读';
 
 CREATE INDEX IF NOT EXISTS idx_pfdm_task
-    ON pmis_flow_delegate_message (task_id, deleted) WHERE deleted = 0;
+    ON ydsz_flow_delegate_message (task_id, deleted) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfdm_instance
-    ON pmis_flow_delegate_message (instance_id, deleted) WHERE deleted = 0;
+    ON ydsz_flow_delegate_message (instance_id, deleted) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfdm_trace
-    ON pmis_flow_delegate_message (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
+    ON ydsz_flow_delegate_message (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
 -- ============================ [070] P2-2 流程评论多级回复表 ============================
 -- ====================================================================
 -- GAP-15: 审批评论多级回复（对标钉钉/飞书审批评论区）
--- 独立于 pmis_flow_audit_log（审计日志是操作轨迹，不可变），
+-- 独立于 ydsz_flow_audit_log（审计日志是操作轨迹，不可变），
 -- 评论是讨论（可回复、可删除），关注点正交。
 -- 支持：
 --   1) 一级评论（parent_comment_id = NULL）
@@ -11935,7 +11935,7 @@ CREATE INDEX IF NOT EXISTS idx_pfdm_trace
 --   3) 软删除（deleted=1 保留层级结构，前端显示"该评论已删除"）
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS pmis_flow_comment (
+CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
@@ -11959,22 +11959,22 @@ CREATE TABLE IF NOT EXISTS pmis_flow_comment (
     CONSTRAINT ck_pfc_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_comment IS 'P2-2: 流程评论表 — 审批评论多级回复（对标钉钉/飞书审批评论区）';
-COMMENT ON COLUMN pmis_flow_comment.instance_id IS '关联流程实例 ID';
-COMMENT ON COLUMN pmis_flow_comment.task_id IS '关联任务 ID（实例级评论可为空）';
-COMMENT ON COLUMN pmis_flow_comment.content IS '评论内容（富文本/纯文本）';
-COMMENT ON COLUMN pmis_flow_comment.parent_comment_id IS '父评论 ID（一级评论为 NULL，二级及以下回复指向父评论 ID）';
-COMMENT ON COLUMN pmis_flow_comment.reply_to_user_id IS '被回复人 ID（回复某条评论时标记，一级评论为 NULL）';
-COMMENT ON COLUMN pmis_flow_comment.reply_to_user_name IS '被回复人姓名（冗余，便于前端展示）';
+COMMENT ON TABLE  ydsz_flow_comment IS 'P2-2: 流程评论表 — 审批评论多级回复（对标钉钉/飞书审批评论区）';
+COMMENT ON COLUMN ydsz_flow_comment.instance_id IS '关联流程实例 ID';
+COMMENT ON COLUMN ydsz_flow_comment.task_id IS '关联任务 ID（实例级评论可为空）';
+COMMENT ON COLUMN ydsz_flow_comment.content IS '评论内容（富文本/纯文本）';
+COMMENT ON COLUMN ydsz_flow_comment.parent_comment_id IS '父评论 ID（一级评论为 NULL，二级及以下回复指向父评论 ID）';
+COMMENT ON COLUMN ydsz_flow_comment.reply_to_user_id IS '被回复人 ID（回复某条评论时标记，一级评论为 NULL）';
+COMMENT ON COLUMN ydsz_flow_comment.reply_to_user_name IS '被回复人姓名（冗余，便于前端展示）';
 
 CREATE INDEX IF NOT EXISTS idx_pfc_instance
-    ON pmis_flow_comment (tenant_id, instance_id, created_at) WHERE deleted = 0;
+    ON ydsz_flow_comment (tenant_id, instance_id, created_at) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfc_parent
-    ON pmis_flow_comment (parent_comment_id, created_at) WHERE parent_comment_id IS NOT NULL AND deleted = 0;
+    ON ydsz_flow_comment (parent_comment_id, created_at) WHERE parent_comment_id IS NOT NULL AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfc_task
-    ON pmis_flow_comment (task_id, created_at) WHERE task_id IS NOT NULL AND deleted = 0;
+    ON ydsz_flow_comment (task_id, created_at) WHERE task_id IS NOT NULL AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfc_trace
-    ON pmis_flow_comment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
+    ON ydsz_flow_comment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
 -- ===================== P1-2: 审批常用语表 ===========================
@@ -11983,7 +11983,7 @@ CREATE INDEX IF NOT EXISTS idx_pfc_trace
 -- 系统预设（is_system=1）全局共享，用户自定义（is_system=0）按用户隔离。
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS pmis_flow_quick_comment (
+CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     user_id             VARCHAR(20)       NOT NULL,               -- 所属用户（系统预设时为 'SYSTEM'）
@@ -11999,35 +11999,35 @@ CREATE TABLE IF NOT EXISTS pmis_flow_quick_comment (
     updated_by          VARCHAR(20)
 );
 
-COMMENT ON TABLE  pmis_flow_quick_comment IS 'P1-2: 审批常用语表 — 用户预设常用审批意见，一键填入';
-COMMENT ON COLUMN pmis_flow_quick_comment.user_id IS '所属用户 ID（系统预设为 SYSTEM）';
-COMMENT ON COLUMN pmis_flow_quick_comment.content IS '常用语内容';
-COMMENT ON COLUMN pmis_flow_quick_comment.comment_type IS '意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE';
-COMMENT ON COLUMN pmis_flow_quick_comment.sort_num IS '排序号（越小越靠前）';
-COMMENT ON COLUMN pmis_flow_quick_comment.use_count IS '使用次数（统计用）';
-COMMENT ON COLUMN pmis_flow_quick_comment.is_system IS '是否系统预设（1=是，0=否）';
+COMMENT ON TABLE  ydsz_flow_quick_comment IS 'P1-2: 审批常用语表 — 用户预设常用审批意见，一键填入';
+COMMENT ON COLUMN ydsz_flow_quick_comment.user_id IS '所属用户 ID（系统预设为 SYSTEM）';
+COMMENT ON COLUMN ydsz_flow_quick_comment.content IS '常用语内容';
+COMMENT ON COLUMN ydsz_flow_quick_comment.comment_type IS '意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE';
+COMMENT ON COLUMN ydsz_flow_quick_comment.sort_num IS '排序号（越小越靠前）';
+COMMENT ON COLUMN ydsz_flow_quick_comment.use_count IS '使用次数（统计用）';
+COMMENT ON COLUMN ydsz_flow_quick_comment.is_system IS '是否系统预设（1=是，0=否）';
 
 CREATE INDEX IF NOT EXISTS idx_pfqc_user
-    ON pmis_flow_quick_comment (tenant_id, user_id, deleted);
+    ON ydsz_flow_quick_comment (tenant_id, user_id, deleted);
 CREATE INDEX IF NOT EXISTS idx_pfqc_system
-    ON pmis_flow_quick_comment (tenant_id, is_system, deleted) WHERE is_system = 1;
+    ON ydsz_flow_quick_comment (tenant_id, is_system, deleted) WHERE is_system = 1;
 
 -- 系统预设常用语初始化数据
-INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+INSERT INTO ydsz_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '1', '1', 'SYSTEM', '同意', 'AGREE', 1, 0, 1, NOW(), NOW()
-WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '1');
-INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_flow_quick_comment WHERE id = '1');
+INSERT INTO ydsz_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '2', '1', 'SYSTEM', '已阅', NULL, 2, 0, 1, NOW(), NOW()
-WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '2');
-INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_flow_quick_comment WHERE id = '2');
+INSERT INTO ydsz_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '3', '1', 'SYSTEM', '不同意，请补充材料后重新提交', 'DISAGREE', 3, 0, 1, NOW(), NOW()
-WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '3');
-INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_flow_quick_comment WHERE id = '3');
+INSERT INTO ydsz_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '4', '1', 'SYSTEM', '请确认金额是否正确', 'INQUIRE', 4, 0, 1, NOW(), NOW()
-WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '4');
-INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_flow_quick_comment WHERE id = '4');
+INSERT INTO ydsz_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '5', '1', 'SYSTEM', '建议优化方案后重新审批', 'SUGGEST', 5, 0, 1, NOW(), NOW()
-WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '5');
+WHERE NOT EXISTS (SELECT 1 FROM ydsz_flow_quick_comment WHERE id = '5');
 
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT
@@ -12036,7 +12036,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '5');
 -- ====================================================================
 -- P0-2: 消息批次表（异步批量发送）
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_batch(
+CREATE TABLE IF NOT EXISTS ydsz_msg_batch(
     id                VARCHAR(20)    NOT NULL,
     batch_id          VARCHAR(64)    NOT NULL,
     batch_name        VARCHAR(128),
@@ -12063,14 +12063,14 @@ CREATE TABLE IF NOT EXISTS pmis_msg_batch(
     CONSTRAINT uk_pmb_batch_id UNIQUE (batch_id),
     CONSTRAINT ck_pmb_status CHECK (status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'))
 );
-CREATE INDEX IF NOT EXISTS idx_pmb_batch_id ON pmis_msg_batch(batch_id);
-CREATE INDEX IF NOT EXISTS idx_pmb_status ON pmis_msg_batch(status);
-CREATE INDEX IF NOT EXISTS idx_pmb_created_at ON pmis_msg_batch(created_at);
+CREATE INDEX IF NOT EXISTS idx_pmb_batch_id ON ydsz_msg_batch(batch_id);
+CREATE INDEX IF NOT EXISTS idx_pmb_status ON ydsz_msg_batch(status);
+CREATE INDEX IF NOT EXISTS idx_pmb_created_at ON ydsz_msg_batch(created_at);
 
 -- ====================================================================
 -- P1-6: 消息模板版本历史表
 -- ====================================================================
-CREATE TABLE IF NOT EXISTS pmis_msg_template_version(
+CREATE TABLE IF NOT EXISTS ydsz_msg_template_version(
     id                VARCHAR(20)    NOT NULL,
     template_code     VARCHAR(128)   NOT NULL,
     version           INTEGER        NOT NULL,
@@ -12089,12 +12089,12 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template_version(
     CONSTRAINT uk_pmtv_code_version UNIQUE (template_code, version),
     CONSTRAINT ck_pmtv_audit_status CHECK (audit_status IN ('APPROVED', 'REJECTED'))
 );
-CREATE INDEX IF NOT EXISTS idx_pmtv_template_code ON pmis_msg_template_version(template_code);
+CREATE INDEX IF NOT EXISTS idx_pmtv_template_code ON ydsz_msg_template_version(template_code);
 
 -- ============================================================
 -- NextWiki 网盘知识库服务 - 数据库表结构（V1.0.0）
--- 模块: ydsz-pmis-nextwiki (port 8800)
--- 物理 Mapper 路径：ydsz-pmis-nextwiki/ydsz-pmis-nextwiki-infra/.../mapper/
+-- 模块: ydsz-nextwiki (port 8800)
+-- 物理 Mapper 路径：ydsz-nextwiki/ydsz-nextwiki-infra/.../mapper/
 -- 说明: 网盘文件管理、版本控制、分享ACL、标签、回收站、配额
 -- ============================================================
 
@@ -12344,13 +12344,13 @@ WHERE NOT EXISTS (SELECT 1 FROM nw_storage_quota WHERE scope_type = 'tenant' AND
 COMMIT;
 
 DO $$ BEGIN
-  COMMENT ON COLUMN pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
-  COMMENT ON COLUMN pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
-  COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
-  COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
-  COMMENT ON COLUMN pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
-  COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
-  COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
+  COMMENT ON COLUMN ydsz_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
+  COMMENT ON COLUMN ydsz_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
+  COMMENT ON COLUMN ydsz_job_dag_node.loop_count IS '循环次数(LOOP节点)';
+  COMMENT ON COLUMN ydsz_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
+  COMMENT ON COLUMN ydsz_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
+  COMMENT ON COLUMN ydsz_job_dag_node.loop_count IS '循环次数(LOOP节点)';
+  COMMENT ON COLUMN ydsz_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
 EXCEPTION WHEN undefined_table THEN
-  RAISE NOTICE 'pmis_job_dag_node not found, skipping';
+  RAISE NOTICE 'ydsz_job_dag_node not found, skipping';
 END $$;

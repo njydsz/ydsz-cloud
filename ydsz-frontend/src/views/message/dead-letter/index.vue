@@ -6,7 +6,7 @@
   - 操作列：重发（确认对话框 → POST /dead-letter/{logId}/resend）
   - 分页
   @module views/message/dead-letter
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

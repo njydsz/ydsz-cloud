@@ -18,7 +18,7 @@
 ## 目录结构
 
 ```
-ydsz-pmis-frontend/
+ydsz-frontend/
 ├── public/                     # 静态资源
 ├── src/
 │   ├── api/                    # 接口请求层

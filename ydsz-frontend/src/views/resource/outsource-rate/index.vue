@@ -1,6 +1,6 @@
 <!--
   @file 外包职级费率管理
-  @description 外包职级费率管理页面（V1-V18）：展示外包职级列表并按段位分类，支持月薪+差旅报销+差旅补贴成本核算。对应路由 /resource/outsource-rate，后端服务 ydsz-pmis-userinfo。
+  @description 外包职级费率管理页面（V1-V18）：展示外包职级列表并按段位分类，支持月薪+差旅报销+差旅补贴成本核算。对应路由 /resource/outsource-rate，后端服务 ydsz-userinfo。
   @module views/resource/outsource-rate
 -->
 <script setup lang="ts">

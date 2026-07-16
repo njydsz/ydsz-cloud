@@ -1,7 +1,0 @@
-com.njydsz.pmis.common.jdbc.config.MybatisPlusConfiguration
-com.njydsz.pmis.common.jdbc.config.MapperScanConfiguration
-com.njydsz.pmis.common.jdbc.config.HikariCPConfiguration
-com.njydsz.pmis.common.jdbc.config.SqlTraceAutoConfiguration
-com.njydsz.pmis.common.jdbc.config.ReadWriteSplittingAutoConfiguration
-com.njydsz.pmis.common.jdbc.config.DatabaseCircuitBreakerAutoConfiguration
-com.njydsz.pmis.common.jdbc.exception.DataIntegrityExceptionHandler

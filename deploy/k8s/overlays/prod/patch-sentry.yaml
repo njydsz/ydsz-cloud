@@ -11,7 +11,7 @@
 #   前端错误采样率：100%
 #   前端性能采样率：20%
 #
-# 后端：环境变量 PMIS_SENTRY_* → Spring Boot relaxed binding → pmis.sentry.*
+# 后端：环境变量 PMIS_SENTRY_* → Spring Boot relaxed binding → ydsz.sentry.*
 # 前端：通过 Ingress 注入 <meta name="sentry-dsn"> 或 CI/CD 构建时注入 .env
 # =============================================================================
 apiVersion: v1

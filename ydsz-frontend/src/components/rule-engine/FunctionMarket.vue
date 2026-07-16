@@ -6,7 +6,7 @@
   - 函数签名 + 描述 + 示例
   - 点击插入到表达式编辑器
   @module components/rule-engine/FunctionMarket
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

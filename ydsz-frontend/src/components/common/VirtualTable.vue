@@ -6,7 +6,7 @@
   - 数据量超过 50 行时自动启用纵向虚拟滚动，保证万级数据渲染流畅
   - 场景: 大数据量列表页
   @module components/common/VirtualTable
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script lang="ts">

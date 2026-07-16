@@ -12,25 +12,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-{{ $svc.name }}
+  name: ydsz-{{ $svc.name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
-    app: ydsz-pmis-{{ $svc.name }}
+    {{- include "ydsz.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
+    app: ydsz-{{ $svc.name }}
     tier: backend
 spec:
   replicas: {{ $svc.replicas | default 2 }}
   selector:
     matchLabels:
-      app: ydsz-pmis-{{ $svc.name }}
+      app: ydsz-{{ $svc.name }}
   template:
     metadata:
       labels:
-        {{- include "ydsz-pmis.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 8 }}
-        app: ydsz-pmis-{{ $svc.name }}
+        {{- include "ydsz.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 8 }}
+        app: ydsz-{{ $svc.name }}
         tier: backend
     spec:
-      serviceAccountName: {{ include "ydsz-pmis.serviceAccountName" $root }}
+      serviceAccountName: {{ include "ydsz.serviceAccountName" $root }}
       {{- with $root.Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -45,7 +45,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-{{ $svc.name }}
+                    app: ydsz-{{ $svc.name }}
                 topologyKey: kubernetes.io/hostname
       {{- end }}
       {{- with $root.Values.backend.topologySpreadConstraints }}
@@ -62,7 +62,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $svc.name }}
-          image: {{ include "ydsz-pmis.image" (dict "registry" $registry "repository" $backend.image.repository "name" $svc.name "tag" ($svc.tag | default $globalTag)) | quote }}
+          image: {{ include "ydsz.image" (dict "registry" $registry "repository" $backend.image.repository "name" $svc.name "tag" ($svc.tag | default $globalTag)) | quote }}
           imagePullPolicy: {{ $backend.image.pullPolicy }}
           ports:
             - name: http
@@ -125,15 +125,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-{{ $svc.name }}
+  name: ydsz-{{ $svc.name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
-    app: ydsz-pmis-{{ $svc.name }}
+    {{- include "ydsz.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
+    app: ydsz-{{ $svc.name }}
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-{{ $svc.name }}
+    app: ydsz-{{ $svc.name }}
   ports:
     - name: http
       port: {{ $svc.port }}

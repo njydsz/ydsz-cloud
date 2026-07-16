@@ -6,7 +6,7 @@
   - 支持 affix 固定标签（首页不可关闭）
   - 批次 30-1：右键菜单（关闭其他/关闭全部/刷新当前）+ 最大标签数限制
   @module layout/default/components/TagsView
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.4.0
 -->
 <script setup lang="ts">

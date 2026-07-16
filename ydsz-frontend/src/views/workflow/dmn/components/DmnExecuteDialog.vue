@@ -5,7 +5,7 @@
     用于发布前 / 上线后对决策表进行规则命中验证。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/dmn/components/DmnExecuteDialog
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

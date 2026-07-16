@@ -29,7 +29,7 @@ common/
 │   ├── seata/                       #  Seata(application.yml + file.conf + registry.conf)
 │   └── xxl-job/                     #  XXL-Job(application.properties)
 ├── nacos/                           # PMIS 业务 Nacos 配置
-│   └── ydsz-pmis-common.yaml        #  7 微服务共享的 spring.* / nacos / redis / feign 配置
+│   └── ydsz-common.yaml        #  7 微服务共享的 spring.* / nacos / redis / feign 配置
 └── sql/                             # 通用 SQL(非主库初始化)
     └── tables_xxl_job_pg.sql        #  XXL-Job 的 PG 表
 ```
@@ -67,14 +67,14 @@ common/
 
 ## 3. Nacos 共享配置 nacos/
 
-`ydsz-pmis-common.yaml` 是 PMIS 7 个微服务启动时从 Nacos 拉取的**共享配置**。内容覆盖:
+`ydsz-common.yaml` 是 PMIS 7 个微服务启动时从 Nacos 拉取的**共享配置**。内容覆盖:
 
 | 分类 | 配置项 |
 |---|---|
 | 数据源 | `spring.datasource.*` (PG / Druid) |
 | 缓存 | `spring.redis.*` / `spring.redisson.*` |
 | 注册与配置中心 | `spring.cloud.nacos.*` |
-| Feign 客户端 | `ydsz-pmis.feign.{userinfo,project,workflow,system}.url` |
+| Feign 客户端 | `ydsz.feign.{userinfo,project,workflow,system}.url` |
 | 限流 | `spring.cloud.sentinel.transport.*` |
 | 分布式事务 | `spring.cloud.alibaba.seata.*` |
 | 消息 | `spring.cloud.stream.rocketmq.*` / `rocketmq.*` |
@@ -95,7 +95,7 @@ common/
 
 ### 3.2 修改生效
 
-修改 `ydsz-pmis-common.yaml` 后:
+修改 `ydsz-common.yaml` 后:
 
 ```bash
 # 1. 重新导入
@@ -134,7 +134,7 @@ PGPASSWORD=<your-pgis-password> psql -h 127.0.0.1 -U pmis -d ydsz_pmis \
 | 改动 | 影响范围 | 后续操作 |
 |---|---|---|
 | 修改 `conf/*` 模板 | 后续 ubuntu/windows 安装 | 重跑安装脚本覆盖 |
-| 修改 `nacos/ydsz-pmis-common.yaml` | 所有从 Nacos 拉配置的微服务 | 重新 `import-nacos-config.sh` + 重启服务 |
+| 修改 `nacos/ydsz-common.yaml` | 所有从 Nacos 拉配置的微服务 | 重新 `import-nacos-config.sh` + 重启服务 |
 | 修改 `sql/*` | 通常只对新部署生效 | 手动执行 SQL |
 | 修改任何文件 | **不要把 .env 密码提交** | 见仓库根 `.gitignore` |
 

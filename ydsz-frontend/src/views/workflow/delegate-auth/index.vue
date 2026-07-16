@@ -5,7 +5,7 @@
     支持创建 / 撤回 / 启停授权，以及代理范围（ALL/FLOW/TASK）与生效时间配置。
     适用 PC 端后台办公场景。
   @module views/workflow/delegate-auth
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

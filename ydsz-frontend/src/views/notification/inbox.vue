@@ -8,7 +8,7 @@
   - 支持撤回(仅自己发送的通知)
   - WebSocket 实时刷新（降级 60s 轮询）
   @module views/notification/inbox
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

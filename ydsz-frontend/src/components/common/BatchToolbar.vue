@@ -5,7 +5,7 @@
   - Emits: clear(清空选择)
   - 配合 v-permission 指令实现按钮级权限控制
   @module components/common/BatchToolbar
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script lang="ts">

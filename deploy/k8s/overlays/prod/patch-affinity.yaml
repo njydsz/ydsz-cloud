@@ -5,7 +5,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-gateway
+  name: ydsz-gateway
   namespace: pmis
 spec:
   template:
@@ -17,7 +17,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-gateway
+                    app: ydsz-gateway
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -25,7 +25,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-gateway
+              app: ydsz-gateway
       containers:
         - name: gateway
           startupProbe:
@@ -40,7 +40,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-userinfo
+  name: ydsz-userinfo
   namespace: pmis
 spec:
   template:
@@ -52,7 +52,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-userinfo
+                    app: ydsz-userinfo
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -60,7 +60,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-userinfo
+              app: ydsz-userinfo
       containers:
         - name: userinfo
           startupProbe:
@@ -75,7 +75,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-system
+  name: ydsz-system
   namespace: pmis
 spec:
   template:
@@ -87,7 +87,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-system
+                    app: ydsz-system
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -95,7 +95,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-system
+              app: ydsz-system
       containers:
         - name: system
           startupProbe:
@@ -110,7 +110,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-project
+  name: ydsz-project
   namespace: pmis
 spec:
   template:
@@ -122,7 +122,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-project
+                    app: ydsz-project
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -130,7 +130,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-project
+              app: ydsz-project
       containers:
         - name: project
           startupProbe:
@@ -145,7 +145,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-message
+  name: ydsz-message
   namespace: pmis
 spec:
   template:
@@ -157,7 +157,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-message
+                    app: ydsz-message
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -165,7 +165,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-message
+              app: ydsz-message
       containers:
         - name: message
           startupProbe:
@@ -180,7 +180,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-cronjob
+  name: ydsz-cronjob
   namespace: pmis
 spec:
   template:
@@ -192,7 +192,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-cronjob
+                    app: ydsz-cronjob
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -200,7 +200,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-cronjob
+              app: ydsz-cronjob
       containers:
         - name: cronjob
           startupProbe:
@@ -215,7 +215,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-workflow
+  name: ydsz-workflow
   namespace: pmis
 spec:
   template:
@@ -227,7 +227,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-workflow
+                    app: ydsz-workflow
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -235,7 +235,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-workflow
+              app: ydsz-workflow
       containers:
         - name: workflow
           startupProbe:
@@ -250,7 +250,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-agent
+  name: ydsz-agent
   namespace: pmis
 spec:
   template:
@@ -262,7 +262,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-agent
+                    app: ydsz-agent
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -270,7 +270,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-agent
+              app: ydsz-agent
       containers:
         - name: agent
           startupProbe:
@@ -287,7 +287,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-sales
+  name: ydsz-sales
   namespace: pmis
 spec:
   template:
@@ -299,7 +299,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-sales
+                    app: ydsz-sales
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -307,7 +307,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-sales
+              app: ydsz-sales
       containers:
         - name: sales
           startupProbe:
@@ -322,7 +322,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-finance
+  name: ydsz-finance
   namespace: pmis
 spec:
   template:
@@ -334,7 +334,7 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ydsz-pmis-finance
+                    app: ydsz-finance
                 topologyKey: kubernetes.io/hostname
       topologySpreadConstraints:
         - maxSkew: 1
@@ -342,7 +342,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: ydsz-pmis-finance
+              app: ydsz-finance
       containers:
         - name: finance
           startupProbe:

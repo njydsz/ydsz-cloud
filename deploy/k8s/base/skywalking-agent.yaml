@@ -16,7 +16,7 @@ data:
   # SkyWalking OAP Server 地址 (集群内服务名)
   SW_AGENT_COLLECTOR_BACKEND_SERVICES: "skywalking-oap.monitoring:11800"
   # 服务实例名称前缀 (各服务通过 env 覆盖 SERVICE_NAME)
-  SW_AGENT_NAME: "ydsz-pmis"
+  SW_AGENT_NAME: "ydsz"
   # P2-12: 采样率配置
   #   -1 表示全量采样 (开发环境)
   #   生产环境通过 overlay patch 覆盖为 5000 (每 3 秒采样 5000 条)
@@ -98,7 +98,7 @@ data:
               name: skywalking-agent-config
         env:
           - name: SW_AGENT_NAME
-            value: "ydsz-pmis-gateway"  # 各服务替换为实际名称
+            value: "ydsz-gateway"  # 各服务替换为实际名称
         volumeMounts:
           - name: skywalking-agent
             mountPath: /skywalking/agent

@@ -5,7 +5,7 @@
   - 高亮未使用变量和热点变量
   - 支持点击变量查看引用详情
   @module components/rule-engine/VariableLineageGraph
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

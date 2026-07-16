@@ -6,7 +6,7 @@
                - 节点大小按被依赖数量缩放
                - 点击节点查看规则详情并跳转编辑
   @module views/execution/rule-engine/dependency-graph
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.5.0
 -->
 <template>

@@ -2,7 +2,7 @@
  * @file 混沌工程 API (批次 24 P2-2 chaos_dashboard)
  * @description 提供混沌实验的注册、查询、启停、注销、历史查询与 dry-run 注入能力。
  *
- * 与后端 com.njydsz.pmis.config.controller.ChaosController 对齐。
+ * 与后端 com.njydsz.config.controller.ChaosController 对齐。
  *
  * 权限码 (PermissionCodes.SYS_CHAOS_*):
  *   - sys:chaos:view      - 列表/历史

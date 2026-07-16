@@ -14,7 +14,7 @@
   4. 行展开（expandable）：通过 #expand 插槽渲染展开内容
   5. 空 CTA（emptyCta）：空状态时展示引导按钮
   @module components/common/ProTable
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.4.0
 -->
 <script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">

@@ -4,7 +4,7 @@
  * 导出所有规则引擎相关组件，供外部按需引入。
  *
  * @module components/rule-engine
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 2.0.0
  */
 

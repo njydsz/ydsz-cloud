@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-agent
+  name: ydsz-agent
   namespace: pmis
   labels:
-    app: ydsz-pmis-agent
+    app: ydsz-agent
     tier: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ydsz-pmis-agent
+      app: ydsz-agent
   template:
     metadata:
       labels:
-        app: ydsz-pmis-agent
+        app: ydsz-agent
         tier: backend
     spec:
       # 优雅停机宽限期，给 @PreDestroy（SSE 心跳线程池、DAG 编排器）足够时间 drain
@@ -27,7 +27,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: agent
-          image: ydsz-pmis/agent:IMAGE_TAG
+          image: ydsz/agent:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -109,12 +109,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-agent
+  name: ydsz-agent
   namespace: pmis
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-agent
+    app: ydsz-agent
   ports:
   - name: http
     port: 9007

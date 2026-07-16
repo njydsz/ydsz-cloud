@@ -4,5 +4,5 @@ metadata:
   name: pmis
   labels:
     name: pmis
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
     app.kubernetes.io/managed-by: kustomize

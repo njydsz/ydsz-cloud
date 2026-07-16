@@ -6,7 +6,7 @@
   - Emits: update:modelValue / submit / cancel / change / exceed
   - 场景: 流程审批 / 转办 / 委派 / 抄送等需要填写意见的场景
   @module components/common/CommentEditor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

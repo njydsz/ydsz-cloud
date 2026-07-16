@@ -5,7 +5,7 @@
     调整比例、全量发布、回滚、灰度日志全流程。
     配套自研工作流 v2 引擎（pmis_flow_*）使用，PC 端专用。
   @module views/workflow/canary
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

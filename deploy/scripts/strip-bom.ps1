@@ -7,10 +7,10 @@
 .PARAMETER Path
     要扫描的根目录路径，默认为脚本所在项目的 backend 目录
 .EXAMPLE
-    .\strip-bom.ps1 -Path "D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend"
+    .\strip-bom.ps1 -Path "D:\Code\ydsz\ydsz\ydsz-backend"
 #>
 param(
-    [string]$Path = "D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend"
+    [string]$Path = "D:\Code\ydsz\ydsz\ydsz-backend"
 )
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)

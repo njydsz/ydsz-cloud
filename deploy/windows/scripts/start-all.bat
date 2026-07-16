@@ -28,8 +28,8 @@ REM 路径
 set SCRIPT_DIR=%~dp0
 set ROOT_DIR=%SCRIPT_DIR%..\..\..
 for %%I in ("%ROOT_DIR%") do set ROOT_DIR=%%~fI
-set BACKEND_DIR=%ROOT_DIR%\ydsz-pmis-backend
-set FRONTEND_DIR=%ROOT_DIR%\ydsz-pmis-frontend
+set BACKEND_DIR=%ROOT_DIR%\ydsz-backend
+set FRONTEND_DIR=%ROOT_DIR%\ydsz-frontend
 set LOG_DIR=%ROOT_DIR%\.run-logs
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
@@ -98,7 +98,7 @@ REM ----------------------------------------------------------------------------
 if /I not "%1"=="frontend" if /I not "%1"=="infra" (
   echo [%TIMESTAMP%] [INFO] 步骤 4/6 - 编译公共模块（首次 3-5 分钟）
   cd /d "%BACKEND_DIR%"
-  call mvn -q -pl ydsz-pmis-common,ydsz-pmis-literule -am install -DskipTests
+  call mvn -q -pl ydsz-common,ydsz-literule -am install -DskipTests
   if errorlevel 1 (echo [ERROR] 公共模块编译失败 & exit /b 1)
   echo [%TIMESTAMP%] [OK] 公共模块编译完成
 )
@@ -115,7 +115,7 @@ if /I not "%1"=="frontend" if /I not "%1"=="infra" (
   REM            -> sales(9010) / finance(9011)
   powershell -NoProfile -Command ^
     "$ErrorActionPreference = 'SilentlyContinue';" ^
-    "$modules = @('ydsz-pmis-gateway','ydsz-pmis-userinfo','ydsz-pmis-system','ydsz-pmis-project','ydsz-pmis-message','ydsz-pmis-cronjob','ydsz-pmis-workflow','ydsz-pmis-agent','ydsz-pmis-nextwiki','ydsz-pmis-sales','ydsz-pmis-finance');" ^
+    "$modules = @('ydsz-gateway','ydsz-userinfo','ydsz-system','ydsz-project','ydsz-message','ydsz-cronjob','ydsz-workflow','ydsz-agent','ydsz-nextwiki','ydsz-sales','ydsz-finance');" ^
     "$ports = @(9000,9001,9002,9003,9004,9005,9006,9007,8800,9010,9011);" ^
     "$logDir = '%LOG_DIR%';" ^
     "$backendDir = '%BACKEND_DIR%';" ^

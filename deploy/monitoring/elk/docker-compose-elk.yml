@@ -40,7 +40,7 @@ services:
     image: docker.elastic.co/logstash/logstash:8.17.0
     container_name: pmis-logstash
     volumes:
-      - ./logstash-pipeline.conf:/usr/share/logstash/pipeline/pmis.conf:ro
+      - ./logstash-pipeline.conf:/usr/share/logstash/pipeline/ydsz.conf:ro
       - ./pmis-index-template.json:/usr/share/logstash/config/pmis-index-template.json:ro
     ports:
       - "5044:5044"

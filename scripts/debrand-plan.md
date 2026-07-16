@@ -1,244 +1,120 @@
-# ydsz-pmis 全仓库去 Ydsz 品牌化方案
+# ydsz 全仓库去 pmis 品牌化方案
 
-> **状态**：方案规划稿，待用户决策目标品牌名后启动
-> **范围**：ydsz-pmis 整个仓库（后端 24 个 Maven 模块 + 前端 + 部署 + 脚本）
-> **当前进度**：ydsz-pmis-common-json 模块已完成去 Ydsz 化（详见上文 P0/P1 阶段）
-
----
-
-## 一、摸底数据（来源：scripts/audit-brand-residue.py）
-
-### 1.1 全仓库规模
-
-| 维度 | 数值 |
-|---|---|
-| 含 Ydsz 标识的文件总数 | 3,561 |
-| 受影响模块数 | 11（10 个 ydsz-pmis-* 模块 + deploy + 其它） |
-| `njydsz` 字面出现次数 | 12,435（groupId / package 路径） |
-| `ydsz-pmis` 字面出现次数 | 6,683（artifactId / 文件目录） |
-| Java 源文件中 `package com.njydsz.pmis.*` | 2,919 |
-| pom.xml 中 `groupId` 含 `com.njydsz` | 690 处 / 122 个文件 |
-| pom.xml 中 `artifactId` 含 `ydsz-` | 786 处 / 122 个文件 |
-| Java 类名含 Ydsz 前缀 | 17 处 / 15 个文件（其他 5 个 common 子模块） |
-| `Ydsz*.java` 文件名残留 | **0**（本次 P1-1 阶段已清零） |
-
-### 1.2 模块分布 Top 5
-
-| 模块 | 含品牌文件数 | 说明 |
-|---|---|---|
-| ydsz-pmis-backend | 3,241 | 24 个后端 Maven 模块 |
-| deploy | 147 | K8s / Helm / Docker / SQL / 脚本 |
-| ydsz-pmis-frontend | 144 | Vue 3.5 + Element Plus |
-| .github | 5 | GitHub Actions workflow |
-| .trae | 3 | Trae 规则文件 |
-
-### 1.3 其他 5 个 common 子模块残留的 Ydsz 类（**模块外残留**）
-
-| 模块 | 类 |
-|---|---|
-| ydsz-pmis-common-cache | `YdszCacheProperties` / `YdszCacheManager` / `YdszCacheAutoConfiguration` |
-| ydsz-pmis-common-redis | `YdszCacheableAspect` / `@YdszCacheable` |
-| ydsz-pmis-common-feign | `YdszFeignLogger` / `YdszFeignErrorDecoder` |
-| ydsz-pmis-common-exception | `YdszTimeoutException` / `YdszSecurityException` / `AbstractYdszException` |
-| ydsz-pmis-common-lock | `YdszDistributedLockAspect` / `@YdszDistributedLock` |
+> **状态**：执行中（2026-07-16 启动，用户决策：立即全量重构）
+> **品牌定位**：项目品牌标识是 **ydsz**（不是 pmis）。pmis 是遗留产品代号，须从全仓库移除。
+> **方向反转**：2026-07-15 的「去 Ydsz 化」（`YdszJson*` → `Json*`、`YdszCache*` → `LocalCache*`）方向错误，本次回退为 `Ydsz` 前缀。
+> **范围**：ydsz 整个仓库（后端 Maven 模块 + 前端 + 部署 + 脚本 + 规则 + 文档）
 
 ---
 
-## 二、品牌策略选项
+## 一、替换策略（混合）
 
-> **请先回答决策点 1，再启动大规模改造**
-
-### 选项 A：完全去 Ydsz + 去 njydsz（彻底去品牌化）
-
-- **目标**：`Ydsz*` → `*`；`com.njydsz.pmis` → `com.pmis`；`ydsz-pmis-*` → `pmis-*`
-- **优点**：
-  - 命名最简洁，最易记忆
-  - 与 Spring 生态（`com.fasterxml.jackson`）风格一致
-  - 重构后无任何品牌痕迹
-- **缺点**：
-  - 改动量最大（~12,000 处 import 路径、~700 处 groupId、~800 处 artifactId、~3,500 处目录/文件名）
-  - groupId 修改后旧依赖地址失效，需要发布到新 Maven 仓库坐标
-  - package 路径修改触发类加载器变更，需要重新打 Docker 镜像
-
-### 选项 B：保留 Pmis/PMIS 品牌（推荐）
-
-- **目标**：`Ydsz*` → `Pmis*`；`com.njydsz.pmis` → `com.pmis`；`ydsz-pmis-*` → `pmis-*`
-- **优点**：
-  - 保留项目身份（"PMIS" 业务品牌），去 Ydsz 旧公司前缀
-  - 改动可控，分批滚动替换
-  - 与现有部署架构（K8s namespace、Helm release）逐步迁移
-- **缺点**：
-  - 仍有"pmis"品牌烙印，对外开源化时需进一步清理
-
-### 选项 C：保守分步（最小变更）
-
-- **目标**：仅清理 Java 类名/文件名 Ydsz 前缀（其他 5 个 common 模块的 15 个 Ydsz* 类），保留 `com.njydsz.pmis` / `ydsz-pmis-*` 不动
-- **优点**：
-  - 改动量最小（仅 15 个类 + 引用方 ~50 处）
-  - 无破坏性 API 变更
-  - 与 ydsz-pmis-common-json 模块已完成的去 Ydsz 化对齐
-- **缺点**：
-  - 项目身份仍带 Ydsz（仅去 Ydsz 公开类名）
-
-### 选项 D：保留现状（Ydsz 是项目品牌而非公司品牌）
-
-- **目标**：把 Ydsz 视为品牌名称（类似"Apache"、"Spring"），仅修复 P0 阻断性问题，不做大规模去品牌化
-- **优点**：
-  - 0 改动
-- **缺点**：
-  - 与 ydsz-pmis-common-json 已完成的工作方向不一致
-  - 长期看仍存在混淆（"Ydsz" 看起来像公司名而非项目名）
-
----
-
-## 三、改造范围（按选项 B 推荐方案）
-
-### 3.1 改动维度与预估工作量
-
-| 维度 | 涉及数量 | 改动方式 | 风险等级 |
+| 层级 | 旧 | 新 | 示例 |
 |---|---|---|---|
-| Java 类名 / 文件名 | 15 个 Ydsz* 类（其他 5 个 common 模块） | 批量 sed + IDE 重命名 | 🟢 低 |
-| Java import 路径 | ~72 处 | sed 全局替换 | 🟢 低 |
-| Maven groupId | 122 个 pom.xml，690 处 | 批量改 + 同步 settings.xml | 🟡 中 |
-| Maven artifactId | 122 个 pom.xml，786 处 | 批量改 + 同步 ydsz-pmis-* 目录 | 🟡 中 |
-| package 声明 | 2,919 处 | 批量改 + 同步 import 路径 | 🟠 高 |
-| 目录/文件名（Maven 模块） | ~24 个 ydsz-pmis-* 顶层目录 | 移动 + 改 pom.xml parent | 🟠 高 |
-| K8s 资源 | ~50 个 YAML（deploy/k8s + helm + argo） | sed 替换 namespace + service name | 🟡 中 |
-| Docker 镜像 tag | Dockerfile + image 引用 | sed 替换 | 🟡 中 |
-| Nacos dataId / group | 若干 bootstrap.yml | sed 替换 namespace | 🟡 中 |
-| 前端 | 144 个文件 | sed 替换 import path + vite.config | 🟠 高 |
-| GitHub Actions | 5 个 workflow | sed 替换 | 🟢 低 |
-| .trae 规则 | 3 个 | sed 替换 | 🟢 低 |
+| Java 包路径 | `com.njydsz.{module}.*` | `com.njydsz.{module}.*` | `com.njydsz.project` → `com.njydsz.project` |
+| Maven 模块名/目录 | `ydsz-*` | `ydsz-*` | `ydsz-backend` → `ydsz-backend` |
+| SQL 表前缀 | `pmis_*` | `ydsz_*` | `pmis_job` → `ydsz_job` |
+| Java 类名 | `PmisXxx` | `YdszXxx` | `PmisWorkflowFacade` → `YdszWorkflowFacade` |
+| json/cache 模块类名（回退） | `Json*` / `LocalCache*` | `YdszJson*` / `YdszCache*` | `Json` → `YdszJson`、`LocalCache` → `YdszCache` |
+| 配置键 | `pmis.*` | `ydsz.*` | `pmis.message.receipt-timeout-minutes` → `ydsz.message.receipt-timeout-minutes` |
+| 分布式锁 key / 权限码 | `pmis:*` | `ydsz:*` | `pmis:msg:receipt:pull:lock` → `ydsz:msg:receipt:pull:lock` |
+| Helm / K8s 资源 | `ydsz` | `ydsz` | `deploy/helm/ydsz/` → `deploy/helm/ydsz/` |
 
-### 3.2 风险评估
+### 不替换（例外）
 
-| 风险点 | 影响 | 缓解措施 |
+1. **第三方依赖版本**：pom.xml / package.json 中的 dependencies 版本号。
+2. **协议规范版本**：OpenAPI Spec 3.0.3、W3C Trace Context "00"。
+3. **SQL 脚本文件名前缀**：`V1.0.0_{module}.sql` 的 `V1.0.0` 是初始化脚本标识。
+4. **任务批次编号**：`P1.3.0 重构` 等开发任务批次编号。
+5. **字符串字面量中的 FQN**：反射类名等（但包路径段 `pmis` 仍需删除）。
+
+---
+
+## 二、摸底数据
+
+### 2.1 全仓库规模（2026-07-16 统计）
+
+| 维度 | 数值 | 来源 |
 |---|---|---|
-| `package com.njydsz.pmis` 变更导致 Java 类加载失败 | 整个后端不可用 | 1) 一次性提交 + 全量回归 2) 保留 `com.njydsz.pmis` 包名作为兼容期（用 Pmis* 替代 Ydsz* 类名，包名不变） |
-| `spring.application.name` 变更导致服务注册失败 | Nacos 注册不上 | 1) 同步更新 Nacos 配置 2) 灰度滚动重启 |
-| `bootstrap.yml` 配置文件中的 `namespace` 变更 | Nacos 配置读不到 | 1) 同步迁移 Nacos namespace 数据 2) 保留旧 namespace 作为只读 |
-| Docker image tag 变更导致 K8s 拉不到镜像 | 服务启动失败 | 1) 同时 push 旧/新 tag 2) K8s 滚动升级用新 tag |
-| 前端 `import` 路径变更 | 编译失败 | 1) IDE 自动跟随 2) 全量 `pnpm build` 验证 |
-| Git 历史可读性 | code review 困难 | 1) 使用 `git log --follow` 跟踪重命名 2) 提交信息明确说明 |
+| `com.njydsz` 出现次数 | 604+（文件列表截断，实际 2,919 package 声明） | Grep |
+| SQL 中 `pmis_` 出现次数 | 8,687 处 / 15 文件 | Grep `deploy/sql` |
+| `ydsz-` 出现次数 | 10,625 处 / 100+ 文件 | Grep 全仓库 |
+| `Pmis*.java` 类文件 | 2 个 | Glob |
 
----
+### 2.2 Pmis* 类清单
 
-## 四、执行计划（按选项 B，分 4 个阶段）
-
-### 阶段 1：代码层去 Ydsz（其他 5 个 common 模块）
-
-**目标**：把 15 个 Ydsz* 类重命名为 Pmis* / 纯名
-**风险**：🟢 低
-**改动量**：~50 个文件
-**预计耗时**：2-3 小时
-
-```
-1. 列出 15 个 Ydsz* 类的全部引用方
-2. 编写 Python 脚本批量重命名（rename-ydsz-common-modules.py）
-3. mvn -pl ydsz-pmis-common -am clean install 验证
-4. 更新 ydsz-pmis-common-json 的 check-brand-consistency.sh 扩展到 common 全模块
-```
-
-### 阶段 2：Maven 坐标重命名
-
-**目标**：`ydsz-pmis-*` → `pmis-*`（artifactId）+ 保持 groupId 不动
-**风险**：🟡 中
-**改动量**：~122 个 pom.xml
-**预计耗时**：4-6 小时
-
-```
-1. 重命名所有 Maven 顶层目录：ydsz-pmis-backend/ ydsz-pmis-frontend/
-2. 重命名所有子模块目录：ydsz-pmis-common/ ydsz-pmis-system/ ...
-3. 批量替换所有 pom.xml 中的 <artifactId>
-4. 批量替换所有 pom.xml 中的 <parent><artifactId> 引用
-5. 批量替换所有 settings.xml / .mvn/maven.config
-6. mvn validate 验证
-```
-
-### 阶段 3：Java package 路径重命名
-
-**目标**：`com.njydsz.pmis.*` → `com.pmis.*`（或保持 com.njydsz.pmis 不动）
-**风险**：🟠 高
-**改动量**：~3,000 个文件
-**预计耗时**：1-2 天
-
-```
-1. 用 OpenRewrite 脚本批量重命名 package + import
-2. 同步更新 META-INF/services 文件中的 FQN
-3. 同步更新 resources/ 下的 *.json / *.xml 中硬编码的 FQN
-4. mvn clean install 验证
-5. 启动各 server 子模块验证
-```
-
-### 阶段 4：部署/运维/前端
-
-**目标**：K8s / Helm / Docker / Nacos / 前端 import path 全部对齐
-**风险**：🟠 高
-**改动量**：~300 个文件
-**预计耗时**：2-3 天
-
-```
-1. K8s namespace 替换
-2. Helm release name 替换
-3. Docker image tag 替换
-4. Nacos namespace / dataId 替换
-5. 前端 import path / vite.config.ts base path 替换
-6. Argo Workflow / Chaos Mesh CRD 替换
-7. GitHub Actions workflow 替换
-8. 全链路 e2e 验证（smoke-* 脚本）
-```
-
----
-
-## 五、回滚预案
-
-每个阶段都需具备：
-1. **Git tag 锚点**：每个阶段开始前打 `git tag pre-phase-N-debrand`
-2. **分支隔离**：每个阶段一个独立 feature 分支
-3. **灰度回滚**：如果 K8s 滚动升级失败，立即回滚到旧 image tag
-4. **Nacos 双 namespace**：新 namespace 数据先同步，待切流量后再删旧 namespace
-
----
-
-## 六、CI 防退化扩展
-
-将 [check-brand-consistency.sh](file:///d:/Code/ydsz/ydsz-pmis/deploy/scripts/check-brand-consistency.sh) 从「仅 ydsz-pmis-common-json」扩展到：
-
-```
-1. 所有后端模块的 Ydsz* 类名/文件名检测
-2. 所有 pom.xml 的 groupId / artifactId 检测
-3. 所有 Java 源文件的 package 声明检测
-4. 所有 *.yml / *.yaml / *.json 中的 K8s/Nacos 资源检测
-5. 前端 src/ 下的 import path 检测
-```
-
-预计扩展后 12 项检查门禁（与 P1-4 现有 6 项合并）。
-
----
-
-## 七、待用户决策
-
-1. **品牌策略**：A（彻底去品牌） / B（推荐：去 Ydsz 保留 Pmis） / C（保守分步） / D（保留现状）？
-2. **执行节奏**：一次性全量（风险高） / 分阶段滚动（推荐） / 仅本模块（ydsz-pmis-common-json，已完成）？
-3. **改造起点**：本任务仅 ydsz-pmis-common-json 模块已完成，其他 5 个 common 模块是否一并纳入本轮优化？
-
----
-
-## 八、本任务（ydsz-pmis-common-json）阶段完成清单
-
-| 任务 | 状态 | 验证方式 |
+| 类 | 路径 | 新名 |
 |---|---|---|
-| P0-1 AutoConfiguration.imports 类名修复 | ✅ | bash check-brand-consistency.sh |
-| P0-2 native-image.json 反射类名修复 | ✅ | mvn clean package |
-| P0-3 pom.xml description 修复 | ✅ | pom.xml diff |
-| P0-4 4 个 Ydsz*Engine/Provider 类重命名 | ✅ | mvn compile |
-| P0-5 README.md 重写 | ✅ | README.md diff |
-| P0-6 编译 + 打包验证 | ✅ | mvn clean package BUILD SUCCESS |
-| P1-1 22 个 Ydsz*.java 文件名批量重命名 | ✅ | check-brand-consistency.sh |
-| P1-2 Javadoc @author 清理 | ✅ | check-brand-consistency.sh |
-| P1-3 spring-configuration-metadata.json | ✅ | mvn compile + IDE 提示 |
-| P1-4 check-brand-consistency.sh 门禁 | ✅ | 6 项检查全 PASS |
-| P1-5 mvn clean package 完整验证 | ✅ | BUILD SUCCESS |
-| P2-1 全仓库 Ydsz 残留摸底 | ✅ | scripts/brand-residue-report.json |
-| P2-2 全仓库去 Ydsz 化方案 | ✅ | 本文档 |
-| P2-3 写入 project_memory.md | ⏳ | 待本任务收尾 |
+| `PmisWorkflowFacade` | `ydsz-workflow/.../facade/` | `YdszWorkflowFacade` |
+| `PmisBusinessMetricsJob` | `ydsz-project/.../metrics/` | `YdszBusinessMetricsJob` |
+
+### 2.3 json/cache 模块回退清单
+
+| 模块 | 当前类名（2026-07-15 重命名后） | 回退为 |
+|---|---|---|
+| common-json | `Json`（24 个公开类） | `YdszJson*` |
+| common-json | `SerializerEngine` / `DeserializerEngine` / `SerializationProvider` / `DeserializationProvider` | `YdszSerializerEngine` 等 |
+| common-cache | `LocalCache` / `LocalCacheManager` / `LocalCacheProperties` / `LocalCacheAutoConfiguration` / `SpringLocalCache` | `YdszCache` / `YdszCacheManager` / `YdszCacheProperties` / `YdszCacheAutoConfiguration` / `SpringYdszCache` |
+
+---
+
+## 三、执行步骤
+
+### 步骤 1：批量文本替换（Python 脚本）
+
+脚本：`scripts/debrand-pmis-fullrepo.py`
+
+按以下顺序替换文件**内容**（不动文件路径）：
+
+1. `com.njydsz.` → `com.njydsz.`（包路径、import、字符串字面量）
+2. `com\njydsz\pmis\` → `com\njydsz\`（Windows 路径形式，resources 中的 FQN）
+3. `ydsz-` → `ydsz-`（artifactId、目录引用、配置）
+4. `pmis_` → `ydsz_`（SQL 文件 + Java `@TableName` 注解）
+5. `pmis.` → `ydsz.`（配置键，仅 yml/yaml/properties 文件）
+6. `pmis:` → `ydsz:`（分布式锁 key、权限码命名空间）
+7. 类名 `Pmis` → `Ydsz`（词边界匹配，仅 Java 文件）
+
+### 步骤 2：物理目录迁移
+
+1. `com/njydsz/` → `com/njydsz/`（移动 Java 源文件目录树）
+2. `ydsz-backend` → `ydsz-backend`（顶层模块目录）
+3. `ydsz-frontend` → `ydsz-frontend`
+4. 所有 `ydsz-*` 子模块目录 → `ydsz-*`
+5. `deploy/helm/ydsz/` → `deploy/helm/ydsz/`
+
+### 步骤 3：类文件重命名
+
+1. `PmisWorkflowFacade.java` → `YdszWorkflowFacade.java`
+2. `PmisBusinessMetricsJob.java` → `YdszBusinessMetricsJob.java`
+3. json 模块：`Json*.java` → `YdszJson*.java`（回退）
+4. cache 模块：`LocalCache*.java` → `YdszCache*.java`（回退）
+5. 同步更新 `AutoConfiguration.imports`、`native-image.json`、`spring-configuration-metadata.json`
+
+### 步骤 4：验证
+
+1. `mvn clean compile`（后端编译）
+2. `pnpm build`（前端编译）
+3. `bash deploy/scripts/check-brand-consistency.sh`（门禁检测 pmis 残留）
+
+---
+
+## 四、回滚预案
+
+1. **Git tag 锚点**：重构前打 `git tag pre-debrand-pmis`。
+2. **分支隔离**：在独立 feature 分支执行。
+3. **失败回滚**：`git reset --hard pre-debrand-pmis`。
+
+---
+
+## 五、CI 防退化
+
+[deploy/scripts/check-brand-consistency.sh](file:///d:/Code/ydsz/ydsz/deploy/scripts/check-brand-consistency.sh) 改为检测 **pmis 残留**：
+
+1. Java 源文件中 `com.njydsz` 包路径残留
+2. pom.xml 中 `ydsz-*` artifactId 残留
+3. SQL 文件中 `pmis_` 表前缀残留
+4. Java 类名 `Pmis*` 残留
+5. 配置文件中 `pmis.` 配置键残留
+6. 分布式锁 key `pmis:*` 残留
+
+命中任一项即阻断提交。

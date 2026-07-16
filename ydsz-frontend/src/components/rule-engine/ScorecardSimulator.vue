@@ -5,7 +5,7 @@
   - 实时计算总分和等级
   - 评分明细展示
   @module components/rule-engine/ScorecardSimulator
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

@@ -6,7 +6,7 @@
   - 点击跳转并自动调用 recordAccess 记录访问
   - API 调用失败时降级为空列表，不阻断渲染
   @module components/common/QuickAccess
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

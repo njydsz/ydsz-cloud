@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-cronjob
+  name: ydsz-cronjob
   namespace: pmis
   labels:
-    app: ydsz-pmis-cronjob
+    app: ydsz-cronjob
     tier: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-cronjob
+      app: ydsz-cronjob
   template:
     metadata:
       labels:
-        app: ydsz-pmis-cronjob
+        app: ydsz-cronjob
         tier: backend
     spec:
       # P0-7: 优雅停机宽限期，给 @PreDestroy drain 逻辑足够时间（默认 30s 不够）
       terminationGracePeriodSeconds: 60
       containers:
         - name: cronjob
-          image: ydsz-pmis/cronjob:IMAGE_TAG
+          image: ydsz/cronjob:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -58,12 +58,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-cronjob
+  name: ydsz-cronjob
   namespace: pmis
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-cronjob
+    app: ydsz-cronjob
   ports:
   - name: http
     port: 9005

@@ -10,7 +10,7 @@
     * 底部"查看全部"入口，跳转到 /notification/inbox
     * 点击通知项若有 actionUrl 则跳转
   @module components/common/NotificationBell
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

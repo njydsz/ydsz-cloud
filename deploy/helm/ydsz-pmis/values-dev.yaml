@@ -2,8 +2,8 @@
 #  YDSZ PMIS · Helm Chart DEV 环境覆盖值
 # -----------------------------------------------------------------------------
 #  用法:
-#    helm install pmis deploy/helm/ydsz-pmis -n pmis-dev \
-#      -f deploy/helm/ydsz-pmis/values-dev.yaml
+#    helm install pmis deploy/helm/ydsz -n pmis-dev \
+#      -f deploy/helm/ydsz/values-dev.yaml
 # =============================================================================
 
 global:

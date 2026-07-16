@@ -6,7 +6,7 @@
   - 支持按角色预设加载、布局持久化、编辑/删除小部件
   - 各小部件内容通过具名插槽 widget.id 注入
   @module components/common/CustomDashboard
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

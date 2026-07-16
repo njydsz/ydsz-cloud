@@ -15,7 +15,7 @@
 [CmdletBinding()]
 param(
     [string]$Tag = "v1.0.0-SNAPSHOT",
-    [string]$Registry = "ydsz-pmis",
+    [string]$Registry = "ydsz",
     [switch]$Push
 )
 
@@ -35,8 +35,8 @@ $services = @(
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot  = Split-Path -Parent (Split-Path -Parent $scriptDir)
-$backendDir   = Join-Path $repoRoot "ydsz-pmis-backend"
-$frontendDir = Join-Path $repoRoot "ydsz-pmis-frontend"
+$backendDir   = Join-Path $repoRoot "ydsz-backend"
+$frontendDir = Join-Path $repoRoot "ydsz-frontend"
 
 Write-Host "================================================================"
 Write-Host "  YDSZ PMIS · 批量构建 Docker 镜像"
@@ -56,7 +56,7 @@ foreach ($svc in $services) {
     $success = $false
     try {
         docker build `
-            --build-arg MODULE_NAME="ydsz-pmis-$($svc.name)" `
+            --build-arg MODULE_NAME="ydsz-$($svc.name)" `
             --build-arg APP_PORT="$($svc.port)" `
             -t $image `
             -f "$backendDir/Dockerfile" `
@@ -103,5 +103,5 @@ Write-Host ""
 Write-Host "下一步:"
 Write-Host "  1. 推送镜像:    .\deploy\scripts\build-images.ps1 -Tag $Tag -Registry $Registry -Push"
 Write-Host "  2. K8s 部署:    kubectl apply -k deploy/k8s/overlays/dev"
-Write-Host "  3. Helm 部署:   helm install pmis deploy/helm/ydsz-pmis -n pmis -f deploy/helm/ydsz-pmis/values-dev.yaml"
+Write-Host "  3. Helm 部署:   helm install pmis deploy/helm/ydsz -n pmis -f deploy/helm/ydsz/values-dev.yaml"
 Write-Host "  4. 冒烟测试:    .\deploy\scripts\smoke-test.ps1 -GatewayUrl http://<gateway-ip>:9000"

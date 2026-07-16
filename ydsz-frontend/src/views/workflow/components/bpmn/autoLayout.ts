@@ -15,7 +15,7 @@
  *   持久化：moveShape 触发 commandStack.changed，saveXML 时新坐标写入 BPMNDI 段，
  *   部署后实例详情/回放均能透传。
  *
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 

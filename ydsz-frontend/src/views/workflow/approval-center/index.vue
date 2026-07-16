@@ -7,7 +7,7 @@
     ./composables/useApprovalActions.ts。
     适用范围：PC 端，不适用于移动端 / 独立 H5。
   @module views/workflow/approval-center
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

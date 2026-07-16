@@ -3,7 +3,7 @@
  * @description 提供项目变更（ProjectChange）模块的增删改查、状态迁移、按立项查询、聚合统计及合法状态迁移查询等接口；
  *              对应后端 ProjectChangeController（/initiation/change）。批次 19 补全。
  * @module api/initiation/change
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import { request } from '@/utils/request'

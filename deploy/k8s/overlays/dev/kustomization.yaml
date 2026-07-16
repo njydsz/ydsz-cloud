@@ -14,25 +14,25 @@ namePrefix: dev-
 # 镜像 tag 替换(开发环境用 SNAPSHOT)
 # P2-9: 补齐 message/agent/sales/finance 镜像 tag，避免残留 IMAGE_TAG 占位符
 images:
-  - name: ydsz-pmis/gateway
+  - name: ydsz/gateway
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/system
+  - name: ydsz/system
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/userinfo
+  - name: ydsz/userinfo
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/project
+  - name: ydsz/project
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/cronjob
+  - name: ydsz/cronjob
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/workflow
+  - name: ydsz/workflow
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/message
+  - name: ydsz/message
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/agent
+  - name: ydsz/agent
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/sales
+  - name: ydsz/sales
     newTag: v1.0.0-SNAPSHOT
-  - name: ydsz-pmis/finance
+  - name: ydsz/finance
     newTag: v1.0.0-SNAPSHOT
 
 # 单实例 + DEV ConfigMap 覆盖（调试日志 + 全量采样）

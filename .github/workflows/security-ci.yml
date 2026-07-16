@@ -16,15 +16,15 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'ydsz-pmis-backend/**'
-      - 'ydsz-pmis-frontend/**'
+      - 'ydsz-backend/**'
+      - 'ydsz-frontend/**'
       - 'deploy/**'
       - '.github/workflows/security-ci.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'ydsz-pmis-backend/**'
-      - 'ydsz-pmis-frontend/**'
+      - 'ydsz-backend/**'
+      - 'ydsz-frontend/**'
       - 'deploy/**'
 
 jobs:
@@ -78,7 +78,7 @@ jobs:
           echo ""
           # 找到所有包含写操作映射的 Java 文件（排除 test 和 framework infra）
           write_files=$(grep -rlE '@(PostMapping|PutMapping|DeleteMapping|PatchMapping)' \
-            --include='*.java' ydsz-pmis-backend/ | grep -v '/test/' | grep -v '/common/filter/' || true)
+            --include='*.java' ydsz-backend/ | grep -v '/test/' | grep -v '/common/filter/' || true)
           if [ -z "$write_files" ]; then
             echo "未发现写操作接口，跳过检查"
           else
@@ -105,7 +105,7 @@ jobs:
           echo "扫描通过 @RequestParam 接收 token 的接口（可能是 CSRF 漏洞点）"
           echo ""
           token_hits=$(grep -rnE '@RequestParam.*[Tt]oken' \
-            --include='*.java' ydsz-pmis-backend/ | grep -v '/test/' || true)
+            --include='*.java' ydsz-backend/ | grep -v '/test/' || true)
           if [ -z "$token_hits" ]; then
             echo "未检测到 @RequestParam token 接收点"
           else

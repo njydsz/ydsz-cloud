@@ -3,7 +3,7 @@
   @description 表格化编辑器：评分因子（条件 + 分值 + 权重）增删改查、风险等级阈值/评级映射配置、
                实时总分预览与 dry-run 仿真、JSON 导出。
   @module views/execution/rule-engine/scorecard-editor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.5.0
 -->
 <template>

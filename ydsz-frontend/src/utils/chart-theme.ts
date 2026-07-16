@@ -30,7 +30,7 @@
  * ```
  *
  * @module utils/chart-theme
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.4.0
  */
 import * as echarts from '@/utils/echarts'

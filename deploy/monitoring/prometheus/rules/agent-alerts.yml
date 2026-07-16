@@ -58,7 +58,7 @@ spec:
             team: agent
           annotations:
             summary: "Agent LLM 认证失败"
-            description: "LLM Provider 返回 401/403，API Key 可能过期或无效，请检查 pmis.agent.llm.api-key 配置。"
+            description: "LLM Provider 返回 401/403，API Key 可能过期或无效，请检查 ydsz.agent.llm.api-key 配置。"
             runbook_url: "https://wiki.example.com/runbooks/agent/llm-auth-failed"
 
         # P2: LLM 限流频繁 — 需要调整配额或增加 Fallback

@@ -5,7 +5,7 @@
   - 通过 setLocale / getLocale 操作 locale
   - 场景: 顶栏多语言切换入口
   @module components/common/LanguageSwitcher
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

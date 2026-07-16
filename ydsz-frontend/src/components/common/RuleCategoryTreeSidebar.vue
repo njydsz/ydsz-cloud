@@ -6,7 +6,7 @@
   - 数据来源: ruleApi.getCategoryTree
   - 场景: 规则引擎列表页左侧分类筛选
   @module components/common/RuleCategoryTreeSidebar
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

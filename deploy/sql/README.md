@@ -56,7 +56,7 @@ deploy/sql/
 ├── README.md               # 本文件
 └── modules/                # 按后端服务拆分的独立 SQL(便于单独初始化/审查)
     ├── V1.0.0_all.sql          # 模块引用脚本(\i 依次引用各子模块,等价于 V1.0.0.sql)
-    ├── V1.0.0_common.sql       # 已合并至 system(存根, ydsz-pmis-common 非独立服务)
+    ├── V1.0.0_common.sql       # 已合并至 system(存根, ydsz-common 非独立服务)
     ├── V1.0.0_system.sql       # 系统管理 (配置/文件/审计/导出/扩展/触发器/undo_log)
     ├── V1.0.0_userinfo.sql     # 用户信息 (认证/用户/组织/权限/资源/考勤)
     ├── V1.0.0_sales.sql        # 商务销售 (商机/合同/合同模板, port 9010, 6 张表)
@@ -83,7 +83,7 @@ deploy/sql/
 
 | 模块 | 端口 | 表数量 | 主要表归属说明 |
 |---|---|---|---|
-| common | - | 0(存根) | **已合并至 system**。`ydsz-pmis-common` 是公共依赖库(lib),非独立后端服务,无 Mapper/Service,不持有独立 DDL |
+| common | - | 0(存根) | **已合并至 system**。`ydsz-common` 是公共依赖库(lib),非独立后端服务,无 Mapper/Service,不持有独立 DDL |
 | system | - | 11 | `pmis_config` / `pmis_tenant_quota` / `pmis_file` / `pmis_operation_log`(+ DEFAULT 分区) / `pmis_login_audit` / `pmis_data_export_audit` / `pmis_dict_version` / `pmis_report_subscription` / `pmis_export_record` / `pmis_meta_schema_version` + 全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log |
 | userinfo | - | 22 | RBAC(`pmis_role` / `pmis_permission` / `pmis_user_*`)+ 用户/部门/岗位/字典主表(`pmis_dict_type` / `pmis_dict_item` / `pmis_department` / `pmis_employee` / `pmis_position`)+ 职级系列(**`pmis_rank` / `pmis_rank_rate`**,RankMapper 在 userinfo)+ 资源/考勤(`pmis_resource_assignment` / `pmis_bench_record` / `pmis_attendance` / `pmis_overtime` / `pmis_leave`)+ 兼职/外包费率 |
 | **project** | **9003** | **34** | 立项/预算/门审(`pmis_project_initiation` / `pmis_project_budget_item` / `pmis_project_gate_review`)+ 执行-WBS/工时(`pmis_execution_wbs_task` / `pmis_execution_time_entry`)+ 执行-成本/采购(`pmis_cost_allocation` / `pmis_cost_purchase`)+ EVM/费率(`pmis_evm_measure` / `pmis_rate_card` / `pmis_rate_internal`)+ 风险/变更(`pmis_execution_risk` / `pmis_project_change`)+ 交付/结项(`pmis_execution_delivery_standard` / `pmis_execution_delivery_item` / `pmis_execution_closure`)+ 售后/工单/满意度(`pmis_warranty` / `pmis_ops_ticket` / `pmis_satisfaction`)+ 资源利用/预警(`pmis_billable_utilization_snapshot` / `pmis_alert_dispatch`)+ **原 sales 6 张**(商机/合同)+ **原 finance 8 张**(`pmis_project_expense` / `pmis_project_revenue` / `pmis_project_profit_snapshot` / `pmis_project_profit_simulation` / `pmis_project_invoice` / `pmis_project_payment` / `pmis_project_customer_credit` / `pmis_project_reconcile_daily`) |
@@ -99,7 +99,7 @@ deploy/sql/
 
 **核心原则:DDL 跟着「物理 Mapper 实际所在后端模块」走,而不是按表名「看起来像哪个模块」**。
 
-- 任何表的归属以 `ydsz-pmis-{module}/src/main/java/.../infra/mapper/XxxMapper.java` 的物理路径为准
+- 任何表的归属以 `ydsz-{module}/src/main/java/.../infra/mapper/XxxMapper.java` 的物理路径为准
 
 #### 2026-07-12 DDD 拆分（project → sales/finance/project + literule 迁移）
 
@@ -145,7 +145,7 @@ sales 和 finance 模块已合并回 project 模块，`V1.0.0_sales.sql` 和 `V1
 - 职级表原命名 `pmis_job_level` 带 `job_` 易与 cronjob 任务引擎混淆,已重命名为 `pmis_rank` / `pmis_rank_rate`,`RankMapper` 在 `userinfo` 模块 → 归 `V1.0.0_userinfo.sql`,**不归 cronjob**
 - `pmis_dict_type` / `pmis_dict_item` 主表 Mapper 在 userinfo → 归 userinfo;`pmis_dict_version` 字典版本 Mapper 在 system → 归 system
 - 通用预警派发表 `pmis_alert_dispatch` 由 project + cronjob + agent 共用 → 归 `V1.0.0_project.sql`(物理 Mapper 在 project)
-- `common` 脚本**已合并至 system**。`ydsz-pmis-common` 不是独立后端服务,是公共依赖库(lib),无 Mapper/Service,不持有独立 DDL。全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log 统一由 `V1.0.0_system.sql` 承载
+- `common` 脚本**已合并至 system**。`ydsz-common` 不是独立后端服务,是公共依赖库(lib),无 Mapper/Service,不持有独立 DDL。全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log 统一由 `V1.0.0_system.sql` 承载
 
 文件顶部使用清晰的 `=====` 注释块对每张表/视图进行分段,便于 PR Review 与 diff 阅读。
 
@@ -194,15 +194,15 @@ SELECT pg_catalog.pg_get_userbyid(relowner) AS owner,
 
 ```bash
 # 1. 创建库（通过 PGPASSWORD 环境变量传入数据库密码，请替换为你的实际密码）
-PGPASSWORD=<your-postgres-password> createdb -h 127.0.0.1 -U postgres ydsz-pmis
+PGPASSWORD=<your-postgres-password> createdb -h 127.0.0.1 -U postgres ydsz
 
 # 2. 单文件初始化(本项目唯一的 SQL 文件,所有 DDL + DML 都在里面)
-PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
+PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz \
   -v ON_ERROR_STOP=1 \
   -f deploy/sql/V1.0.0.sql
 
 #    或者使用模块化引用脚本(等价于上面的单文件,按模块顺序执行):
-# PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
+# PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz \
 #   -v ON_ERROR_STOP=1 \
 #   -f deploy/sql/modules/V1.0.0_all.sql
 
@@ -241,7 +241,7 @@ git diff --name-only origin/main -- deploy/sql/ \
   | grep -E '^deploy/sql/V(1\.[1-9]|[2-9]\.)' && exit 1
 
 # 2) 禁止 Flyway / Liquibase 依赖
-mvn -pl ydsz-pmis-backend -am dependency:tree | grep -iE 'flyway|liquibase' && exit 1
+mvn -pl ydsz-backend -am dependency:tree | grep -iE 'flyway|liquibase' && exit 1
 ```
 
 ---
@@ -267,7 +267,7 @@ A:把里面的 `ALTER TABLE` / `COMMENT` 等 DDL **直接复制粘贴到 `V1.0.0
 
 ### Q4.`pmis_migration_log` 表是什么?
 
-A:**和 DB schema migration 无关**。它是 `ydsz-pmis-common::EncryptedFieldMigrationService` 用来跟踪「敏感字段从明文 → 密文」灰度切换的审计表,业务向的、一次性的、可清空。
+A:**和 DB schema migration 无关**。它是 `ydsz-common::EncryptedFieldMigrationService` 用来跟踪「敏感字段从明文 → 密文」灰度切换的审计表,业务向的、一次性的、可清空。
 
 ### Q5.`pmis_database_change_log` 表为什么在 `PmisTenantLineHandler` 的忽略列表里?
 
@@ -283,9 +283,9 @@ A:项目未上线,**没有生产数据** → 直接 `dropdb` + 重新 `psql -f V
 
 - [`../README.md`](../README.md) — 部署总入口
 - [`../common/README.md`](../common/README.md) — 中间件配置 + 通用 SQL(XXL-Job)
-- [`../../ydsz-pmis-backend/Dockerfile`](../../ydsz-pmis-backend/Dockerfile) — 后端多阶段构建
+- [`../../ydsz-backend/Dockerfile`](../../ydsz-backend/Dockerfile) — 后端多阶段构建
 - [`../../README.md`](../../README.md) — 项目仓库入口
-- 项目记忆:`.trae-cn/memory/projects/-d-Code-ydsz-ydsz-pmis/project_memory.md` — Hard Constraints
+- 项目记忆:`.trae-cn/memory/projects/-d-Code-ydsz-ydsz/project_memory.md` — Hard Constraints
 
 ---
 
@@ -309,9 +309,9 @@ A:项目未上线,**没有生产数据** → 直接 `dropdb` + 重新 `psql -f V
 |---|---|---|---|---|
 | P1-1 | 拆分 | DDD 拆分 | 原 `V1.0.0_project.sql` (42 张表) 拆分为 `V1.0.0_sales.sql` (6 表) / `V1.0.0_finance.sql` (8 表) / `V1.0.0_project.sql` (20 表) + 8 张 literule 业务表追加到 `V1.0.0_literule.sql` | DONE |
 | P1-2 | 拆分 | DDD 拆分 | 表归属基于物理 Mapper 位置:`sales/infra/mapper/` → `V1.0.0_sales.sql`, `finance/infra/mapper/` → `V1.0.0_finance.sql`, `project/infra/mapper/` → `V1.0.0_project.sql`, `literule/infra/mapper/` → `V1.0.0_literule.sql` | DONE |
-| P1-3 | 文档 | 模块 README | 创建 `ydsz-pmis-sales/README.md` (商机/合同管理,6 表,Feign Client 对外 7 方法) | DONE |
-| P1-4 | 文档 | 模块 README | 创建 `ydsz-pmis-finance/README.md` (财务会计,8 表,Feign Client 对外 13 方法) | DONE |
-| P1-5 | 文档 | 模块 README | 更新 `ydsz-pmis-project/README.md` (项目执行,20 表,DDD 五层架构) | DONE |
+| P1-3 | 文档 | 模块 README | 创建 `ydsz-sales/README.md` (商机/合同管理,6 表,Feign Client 对外 7 方法) | DONE |
+| P1-4 | 文档 | 模块 README | 创建 `ydsz-finance/README.md` (财务会计,8 表,Feign Client 对外 13 方法) | DONE |
+| P1-5 | 文档 | 模块 README | 更新 `ydsz-project/README.md` (项目执行,20 表,DDD 五层架构) | DONE |
 | P1-6 | 文档 | SQL README | 更新 `deploy/sql/README.md` 至 v3.0,反映 sales/finance/project 拆分,更新目录结构/表分布/拆分规则 | DONE |
 | P1-7 | 引用 | V1.0.0_all.sql | 更新 `modules/V1.0.0_all.sql` 引用顺序:system → userinfo → **sales → finance → project** → cronjob → message → workflow → agent → literule | DONE |
 

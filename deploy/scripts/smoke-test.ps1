@@ -58,12 +58,12 @@ try {
 Write-Host ""
 Write-Host "▶ 3. 后端微服务健康检查"
 $services = @(
-    @{name="ydsz-pmis-system";   port=9001},
-    @{name="ydsz-pmis-userinfo"; port=9002},
-    @{name="ydsz-pmis-project";  port=9003},
-    @{name="ydsz-pmis-cronjob";  port=9004},
-    @{name="ydsz-pmis-workflow"; port=9005},
-    @{name="ydsz-pmis-agent";    port=9006}
+    @{name="ydsz-system";   port=9001},
+    @{name="ydsz-userinfo"; port=9002},
+    @{name="ydsz-project";  port=9003},
+    @{name="ydsz-cronjob";  port=9004},
+    @{name="ydsz-workflow"; port=9005},
+    @{name="ydsz-agent";    port=9006}
 )
 foreach ($svc in $services) {
     try {
@@ -85,7 +85,7 @@ Write-Host "▶ 4. 登录接口"
 $token = $null
 try {
     $body = @{ username = $SmokeUser; password = $SmokePass } | ConvertTo-Json
-    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-pmis-userinfo/auth/login" -Method POST -ContentType "application/json" -Body $body -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
+    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-userinfo/auth/login" -Method POST -ContentType "application/json" -Body $body -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
     $json = $resp.Content | ConvertFrom-Json
     $token = $json.data.token
     if ($token) {
@@ -102,7 +102,7 @@ Write-Host ""
 Write-Host "▶ 5. 鉴权链路"
 if ($token) {
     try {
-        $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-pmis-userinfo/users/me" -Headers @{ Authorization = "Bearer $token" } -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
+        $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-userinfo/users/me" -Headers @{ Authorization = "Bearer $token" } -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
         Ok "GET /users/me with token → 200"
     } catch {
         $code = $_.Exception.Response.StatusCode.value__
@@ -126,7 +126,7 @@ try {
 Write-Host ""
 Write-Host "▶ 7. CORS 预检"
 try {
-    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-pmis-userinfo/auth/login" -Method OPTIONS `
+    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-userinfo/auth/login" -Method OPTIONS `
         -Headers @{ "Origin"="http://localhost:5173"; "Access-Control-Request-Method"="POST"; "Access-Control-Request-Headers"="Content-Type" } `
         -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
     Ok "OPTIONS preflight → $($resp.StatusCode)"
@@ -143,7 +143,7 @@ try {
 Write-Host ""
 Write-Host "▶ 8. 内部头剥离"
 try {
-    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-pmis-userinfo/users/me" `
+    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-userinfo/users/me" `
         -Headers @{ "X-User-Id"="99999"; "X-Username"="fake-admin"; "X-User-Roles"="ROLE_ADMIN" } `
         -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
     Fail "伪造 X-User-Id → 200 (网关未剥离伪造头)"
@@ -160,7 +160,7 @@ try {
 Write-Host ""
 Write-Host "▶ 9. 路径穿越拦截"
 try {
-    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-pmis-userinfo/../../etc/passwd" -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
+    $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-userinfo/../../etc/passwd" -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
     Fail "/../../etc/passwd → 200 (可能存在路径穿越漏洞)"
 } catch {
     $code = $_.Exception.Response.StatusCode.value__

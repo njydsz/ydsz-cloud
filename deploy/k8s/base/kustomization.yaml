@@ -32,32 +32,32 @@ resources:
 
 # 镜像 tag 由 overlay 覆盖(默认 latest,实际部署请改为具体版本)
 images:
-  - name: ydsz-pmis/gateway
+  - name: ydsz/gateway
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/userinfo
+  - name: ydsz/userinfo
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/system
+  - name: ydsz/system
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/project
+  - name: ydsz/project
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/sales
+  - name: ydsz/sales
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/finance
+  - name: ydsz/finance
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/message
+  - name: ydsz/message
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/cronjob
+  - name: ydsz/cronjob
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/workflow
+  - name: ydsz/workflow
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/agent
+  - name: ydsz/agent
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/nextwiki
+  - name: ydsz/nextwiki
     newTag: IMAGE_TAG
 
 # 公共标签
 labels:
   - includeSelectors: true
     pairs:
-      app.kubernetes.io/part-of: ydsz-pmis
+      app.kubernetes.io/part-of: ydsz
       app.kubernetes.io/managed-by: kustomize

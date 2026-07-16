@@ -1,7 +1,7 @@
 # Fix BOM: Remove UTF-8 BOM (EF BB BF) from Java source files
 $files = @(
-    "d:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-common/ydsz-pmis-common-util/src/main/java/com/njydsz/pmis/common/util/CursorHelper.java",
-    "d:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-common/ydsz-pmis-common-util/src/main/java/com/njydsz/pmis/common/util/json/YamlUtils.java"
+    "d:/Code/ydsz/ydsz/ydsz-backend/ydsz-common/ydsz-common-util/src/main/java/com/njydsz/common/util/CursorHelper.java",
+    "d:/Code/ydsz/ydsz/ydsz-backend/ydsz-common/ydsz-common-util/src/main/java/com/njydsz/common/util/json/YamlUtils.java"
 )
 
 foreach ($file in $files) {

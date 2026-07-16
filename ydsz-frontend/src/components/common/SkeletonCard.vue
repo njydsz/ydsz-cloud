@@ -5,7 +5,7 @@
   - 按 count 等分宽度并排展示骨架卡片
   - 场景: 首屏占位、骨架屏
   @module components/common/SkeletonCard
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

@@ -6,7 +6,7 @@
   - 条件表达式配置
   - 模式预览
   @module components/rule-engine/CepPatternEditor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

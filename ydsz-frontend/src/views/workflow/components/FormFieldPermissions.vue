@@ -6,7 +6,7 @@
     与 FormRenderer 配合，审批页面按权限动态渲染字段状态。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/components/FormFieldPermissions
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <template>

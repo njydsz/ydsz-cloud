@@ -2,7 +2,7 @@
   @file 决策表可视化编辑器（P1-6）
   @description 表格化编辑器：HitPolicy 切换、行列增删、列类型显式声明、命中预览。
   @module views/execution/rule-engine/decision-table-editor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.5.0
 -->
 <template>

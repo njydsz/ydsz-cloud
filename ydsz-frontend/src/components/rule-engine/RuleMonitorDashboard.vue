@@ -6,7 +6,7 @@
   - 规则健康度评分
   - 实时执行流
   @module components/rule-engine/RuleMonitorDashboard
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

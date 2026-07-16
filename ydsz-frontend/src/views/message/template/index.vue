@@ -8,7 +8,7 @@
   - 审核对话框：审核状态/审核备注
   - 分页
   @module views/message/template
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

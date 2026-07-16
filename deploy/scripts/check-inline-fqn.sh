@@ -9,7 +9,7 @@
 # 详细文档：deploy/docs/architecture/coding-standards.md
 #
 # 用法：
-#   ./check-inline-fqn.sh                          # 检测 ydsz-pmis-backend 目录
+#   ./check-inline-fqn.sh                          # 检测 ydsz-backend 目录
 #   ./check-inline-fqn.sh <src-dir>                # 检测指定目录
 #   ./check-inline-fqn.sh <src-dir> --strict       # 严格模式：有违规即 exit 1
 #
@@ -37,7 +37,7 @@
 # =============================================================================
 set -euo pipefail
 
-SRC_DIR="${1:-ydsz-pmis-backend}"
+SRC_DIR="${1:-ydsz-backend}"
 STRICT="${2:-}"
 
 TMPFILE=$(mktemp)

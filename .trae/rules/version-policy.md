@@ -1,10 +1,10 @@
 # 项目版本号统一为 1.0.0
 
-> **项目工程规范（强制）** — 适用于 ydsz-pmis 整个仓库的所有源码、构建、部署、文档文件，不可豁免。
+> **项目工程规范（强制）** — 适用于 ydsz 整个仓库的所有源码、构建、部署、文档文件，不可豁免。
 
 ## 规则定义
 
-**ydsz-pmis 项目当前处于开发阶段未上线，所有代码文件的版本号统一为 `1.0.0`**。禁止出现 `1.3.0` / `2.0.0` / `3.5.0` 等任何非 `1.0.0` 的项目自身版本号。项目正式上线后，由产品/架构组统一决策升级版本号，在此之前任何人都不得擅自变更版本号基线。
+**ydsz 项目当前处于开发阶段未上线，所有代码文件的版本号统一为 `1.0.0`**。禁止出现 `1.3.0` / `2.0.0` / `3.5.0` 等任何非 `1.0.0` 的项目自身版本号。项目正式上线后，由产品/架构组统一决策升级版本号，在此之前任何人都不得擅自变更版本号基线。
 
 ## 版本号基线（单一来源）
 
@@ -28,8 +28,8 @@
 
 ## 适用范围
 
-- **所有 Java 后端模块**（`ydsz-pmis-backend/ydsz-pmis-*`，含 api / domain / infra / server / web 五层子模块 + `ydsz-pmis-common` 公共依赖库）
-- **所有前端模块**（`ydsz-pmis-frontend`）的 `package.json`、源码、Dockerfile
+- **所有 Java 后端模块**（`ydsz-backend/ydsz-*`，含 api / domain / infra / server / web 五层子模块 + `ydsz-common` 公共依赖库）
+- **所有前端模块**（`ydsz-frontend`）的 `package.json`、源码、Dockerfile
 - **所有部署配置**（`deploy/helm/`、`deploy/k8s/`、`deploy/scripts/`、`deploy/docker/`）
 - **所有 CI 流水线**（Jenkinsfile、GitHub Actions、`.gitlab-ci.yml`）
 - **所有文档**（项目根 `README.md`、各模块 `README.md`、`deploy/docs/`）
@@ -59,7 +59,7 @@ global:
 
 # ❌ K8s kustomization.yaml 使用了 v1.3.0-SNAPSHOT
 images:
-  - name: ydsz-pmis/gateway
+  - name: ydsz/gateway
     newTag: v1.3.0-SNAPSHOT
 ```
 
@@ -94,7 +94,7 @@ global:
 
 # ✅ K8s kustomization.yaml
 images:
-  - name: ydsz-pmis/gateway
+  - name: ydsz/gateway
     newTag: v1.0.0-SNAPSHOT
 ```
 
@@ -111,15 +111,15 @@ images:
 new Info().title("...").version("1.0.0")
 
 // ✅ Contact.email 填真实邮箱
-private String email = "devops@pmis.example.com";
-.email("devops@pmis.example.com")
+private String email = "devops@ydsz.example.com";
+.email("devops@ydsz.example.com")
 ```
 
 ## 实施约束
 
 ### 1. Maven 版本号单一来源
 
-- `ydsz-pmis-backend/pom.xml` 中 `<revision>1.0.0-SNAPSHOT</revision>` 是所有后端模块版本号的**唯一来源**，子模块通过 `<parent>` 继承，**禁止**在子模块 `pom.xml` 中硬编码 `<version>`。
+- `ydsz-backend/pom.xml` 中 `<revision>1.0.0-SNAPSHOT</revision>` 是所有后端模块版本号的**唯一来源**，子模块通过 `<parent>` 继承，**禁止**在子模块 `pom.xml` 中硬编码 `<version>`。
 - 修改版本号只需改 `<revision>` 属性，**禁止**逐个模块修改。
 
 ### 2. 部署配置版本号同步
@@ -157,9 +157,9 @@ private String email = "devops@pmis.example.com";
 
 ## 相关文件
 
-- [ydsz-pmis-backend/pom.xml](file:///d:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/pom.xml#L38) — Maven `<revision>` 属性（版本号唯一来源）
-- [ydsz-pmis-frontend/package.json](file:///d:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/package.json#L3) — 前端 npm 版本号
-- [deploy/helm/ydsz-pmis/Chart.yaml](file:///d:/Code/ydsz/ydsz-pmis/deploy/helm/ydsz-pmis/Chart.yaml#L11) — Helm Chart 版本号
-- [deploy/helm/ydsz-pmis/values.yaml](file:///d:/Code/ydsz/ydsz-pmis/deploy/helm/ydsz-pmis/values.yaml#L20) — 全局镜像 tag
+- [ydsz-backend/pom.xml](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/pom.xml#L38) — Maven `<revision>` 属性（版本号唯一来源）
+- [ydsz-frontend/package.json](file:///d:/Code/ydsz/ydsz-pmis/ydsz-frontend/package.json#L3) — 前端 npm 版本号
+- [deploy/helm/ydsz/Chart.yaml](file:///d:/Code/ydsz/ydsz-pmis/deploy/helm/ydsz/Chart.yaml#L11) — Helm Chart 版本号
+- [deploy/helm/ydsz/values.yaml](file:///d:/Code/ydsz/ydsz-pmis/deploy/helm/ydsz/values.yaml#L20) — 全局镜像 tag
 - [deploy/scripts/build-images.sh](file:///d:/Code/ydsz/ydsz-pmis/deploy/scripts/build-images.sh#L22) — 构建脚本默认 tag
 - 项目记忆：c:\Users\Marvin\.trae-cn\memory\projects\-d-Code-ydsz-ydsz-pmis\project_memory.md → Hard Constraints → "项目版本号统一为 1.0.0"

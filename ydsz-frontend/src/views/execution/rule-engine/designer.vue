@@ -2,7 +2,7 @@
   @file 规则链可视化编排画布（P0-1）
   @description 节点拖拽 + 边连接 + 缩放/平移 + 撤销/重做 + dagre 自动布局
   @module views/execution/rule-engine/designer
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.5.0
 -->
 <template>

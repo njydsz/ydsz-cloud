@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-workflow
+  name: ydsz-workflow
   namespace: pmis
   labels:
-    app: ydsz-pmis-workflow
+    app: ydsz-workflow
     tier: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ydsz-pmis-workflow
+      app: ydsz-workflow
   template:
     metadata:
       labels:
-        app: ydsz-pmis-workflow
+        app: ydsz-workflow
         tier: backend
     spec:
       containers:
         - name: workflow
-          image: ydsz-pmis/workflow:IMAGE_TAG
+          image: ydsz/workflow:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -64,12 +64,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-workflow
+  name: ydsz-workflow
   namespace: pmis
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-workflow
+    app: ydsz-workflow
   ports:
   - name: http
     port: 9006

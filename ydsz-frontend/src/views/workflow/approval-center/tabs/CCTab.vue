@@ -6,7 +6,7 @@
     通过 emit('refresh-badge') 通知父组件刷新未读角标。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/approval-center/tabs/CCTab
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

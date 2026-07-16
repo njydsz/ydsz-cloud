@@ -5,7 +5,7 @@
   - 优先使用 map[value] 解析；未命中则回退到 fallbackType 与值本身
   - 场景: 状态/审批结果/工作流节点等枚举展示
   @module components/common/StatusTag
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

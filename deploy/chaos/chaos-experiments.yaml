@@ -37,7 +37,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-night
-    service: ydsz-pmis-userinfo
+    service: ydsz-userinfo
 spec:
   action: delay
   mode: all
@@ -45,7 +45,7 @@ spec:
     namespaces:
       - pmis
     labelSelectors:
-      app: ydsz-pmis-userinfo
+      app: ydsz-userinfo
   delay:
     latency: "200ms"
     correlation: "100"
@@ -66,7 +66,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-night
-    service: ydsz-pmis-userinfo
+    service: ydsz-userinfo
 spec:
   action: pod-kill
   mode: one
@@ -74,7 +74,7 @@ spec:
     namespaces:
       - pmis
     labelSelectors:
-      app: ydsz-pmis-userinfo
+      app: ydsz-userinfo
   scheduler:
     cron: "@every 30m"
   duration: "10m"
@@ -98,14 +98,14 @@ spec:
     namespaces:
       - pmis
     labelSelectors:
-      app: ydsz-pmis-workflow
+      app: ydsz-workflow
   direction: to
   target:
     selector:
       namespaces:
         - pmis
       labelSelectors:
-        app: ydsz-pmis-project
+        app: ydsz-project
     mode: all
   duration: "3m"
   scheduler:
@@ -123,14 +123,14 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-night
-    service: ydsz-pmis-project
+    service: ydsz-project
 spec:
   mode: one
   selector:
     namespaces:
       - pmis
     labelSelectors:
-      app: ydsz-pmis-project
+      app: ydsz-project
   stressors:
     cpu:
       workers: 2
@@ -151,7 +151,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-night
-    service: ydsz-pmis-gateway
+    service: ydsz-gateway
 spec:
   action: error
   mode: all
@@ -159,7 +159,7 @@ spec:
     namespaces:
       - pmis
     labelSelectors:
-      app: ydsz-pmis-gateway
+      app: ydsz-gateway
   duration: "2m"
   scheduler:
     cron: "@every 24h"

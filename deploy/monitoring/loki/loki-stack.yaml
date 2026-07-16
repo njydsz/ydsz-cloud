@@ -20,7 +20,7 @@ kind: Namespace
 metadata:
   name: observability
   labels:
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 
 # =============================================================================
 # 1. Loki 配置 ConfigMap(单节点模式,文件系统存储)
@@ -33,7 +33,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: loki
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 data:
   loki-config.yml: |
     auth_enabled: false
@@ -118,7 +118,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: loki
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   serviceName: loki
   replicas: 1
@@ -193,7 +193,7 @@ spec:
         name: storage
         labels:
           app.kubernetes.io/name: loki
-          app.kubernetes.io/part-of: ydsz-pmis
+          app.kubernetes.io/part-of: ydsz
       spec:
         accessModes:
           - ReadWriteOnce
@@ -212,7 +212,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: loki
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   type: ClusterIP
   selector:
@@ -238,7 +238,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: promtail
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 data:
   promtail-config.yml: |
     server:
@@ -343,7 +343,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: promtail
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   selector:
     matchLabels:
@@ -450,7 +450,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: promtail
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   type: ClusterIP
   selector:
@@ -479,7 +479,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: loki
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 data:
   loki-rules.yaml: |
     groups:

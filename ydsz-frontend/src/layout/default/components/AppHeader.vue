@@ -5,7 +5,7 @@
   - 集成了全局搜索入口（Ctrl+K）和通知铃铛
   - 退出登录走二次确认 + userStore.logout
   @module layout/default/components/AppHeader
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

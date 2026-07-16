@@ -6,7 +6,7 @@
   - 快捷键: Ctrl+Enter 触发 validate，Ctrl+Space 强制补全
   - 场景: 规则引擎条件表达式、严重度表达式
   @module components/common/ExpressionEditor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

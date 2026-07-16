@@ -4,7 +4,7 @@
   - 固定首页 → 当前路由链路
   - 自动识别 i18n key（以 route. 开头则翻译，否则原样）
   @module layout/default/components/Breadcrumb
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

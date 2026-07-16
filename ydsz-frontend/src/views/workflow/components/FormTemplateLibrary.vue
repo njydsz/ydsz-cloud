@@ -6,7 +6,7 @@
     数据来源：../form-design/templates.ts 中的 FORM_TEMPLATES 预置模板。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/components/FormTemplateLibrary
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

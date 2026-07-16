@@ -8,7 +8,7 @@
   - 最近使用命令 localStorage 持久化
   - 数据来源: @/api/search、@/api/favorite
   @module components/common/GlobalSearch
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

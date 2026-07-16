@@ -10,7 +10,7 @@
     审批操作逻辑通过 useApprovalActions（策略模式）注入。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/approval-center/tabs/TodoTab
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

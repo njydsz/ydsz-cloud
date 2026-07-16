@@ -55,7 +55,7 @@ k8s/
 | kustomize | ≥ 5.0 | 内置于 `kubectl apply -k` |
 | K8S 集群 | ≥ 1.27 | 任意发行版(EKS / AKS / 阿里云 ACK / 自建) |
 | metrics-server | latest | **PROD HPA 依赖** |
-| 镜像仓库 | — | 推送 7 个 `ydsz-pmis/{gateway,system,...}` 镜像 |
+| 镜像仓库 | — | 推送 7 个 `ydsz/{gateway,system,...}` 镜像 |
 
 ### 2.2 一键部署
 
@@ -124,12 +124,12 @@ kubectl delete -k deploy/k8s/overlays/prod
 
 ### 5.1 修改镜像仓库地址
 
-`base/kustomization.yaml` 默认 `ydsz-pmis/{gateway,system,...}`,需改为你的仓库:
+`base/kustomization.yaml` 默认 `ydsz/{gateway,system,...}`,需改为你的仓库:
 
 ```yaml
 images:
-  - name: ydsz-pmis/gateway
-    newName: registry.cn-hangzhou.aliyuncs.com/your-org/ydsz-pmis-gateway
+  - name: ydsz/gateway
+    newName: registry.cn-hangzhou.aliyuncs.com/your-org/ydsz-gateway
     newTag: v1.0.0
 ```
 
@@ -138,8 +138,8 @@ images:
 ```yaml
 # overlays/prod/kustomization.yaml
 images:
-  - name: ydsz-pmis/gateway
-    newName: registry.cn-hangzhou.aliyuncs.com/your-org/ydsz-pmis-gateway
+  - name: ydsz/gateway
+    newName: registry.cn-hangzhou.aliyuncs.com/your-org/ydsz-gateway
     newTag: v1.0.0
 ```
 
@@ -149,19 +149,19 @@ images:
 
 ```bash
 # 方式 1：批量构建所有 7 个后端服务 + 前端（推荐）
-bash deploy/scripts/build-images.sh v1.0.0 ydsz-pmis
+bash deploy/scripts/build-images.sh v1.0.0 ydsz
 # 或 PowerShell
-.\deploy\scripts\build-images.ps1 -Tag v1.0.0 -Registry ydsz-pmis
+.\deploy\scripts\build-images.ps1 -Tag v1.0.0 -Registry ydsz
 
 # 方式 2：构建并推送到私有仓库
 bash deploy/scripts/build-images.sh v1.0.0 registry.cn-hangzhou.aliyuncs.com/your-org
 PUSH=true bash deploy/scripts/build-images.sh v1.0.0 registry.cn-hangzhou.aliyuncs.com/your-org
 
 # 方式 3：单服务手动构建
-docker build -t ydsz-pmis/gateway:v1.0.0 \
-  --build-arg MODULE_NAME=ydsz-pmis-gateway \
+docker build -t ydsz/gateway:v1.0.0 \
+  --build-arg MODULE_NAME=ydsz-gateway \
   --build-arg APP_PORT=9000 \
-  -f ydsz-pmis-backend/Dockerfile ydsz-pmis-backend/
+  -f ydsz-backend/Dockerfile ydsz-backend/
 ```
 
 **镜像构建特性**（对齐阿里/字节容器化规范）:
@@ -173,8 +173,8 @@ docker build -t ydsz-pmis/gateway:v1.0.0 \
 - Actuator 健康检查
 
 详细说明见:
-- [后端 Dockerfile](../../ydsz-pmis-backend/Dockerfile)
-- [前端 Dockerfile](../../ydsz-pmis-frontend/Dockerfile)
+- [后端 Dockerfile](../../ydsz-backend/Dockerfile)
+- [前端 Dockerfile](../../ydsz-frontend/Dockerfile)
 - [批量构建脚本](../scripts/build-images.sh)
 
 ---
@@ -210,8 +210,8 @@ docker build -t ydsz-pmis/gateway:v1.0.0 \
 
 ## 8. 待办与未来规划
 
-- [x] 镜像构建 Dockerfile（已提供，见 `ydsz-pmis-backend/Dockerfile` 与 `ydsz-pmis-frontend/Dockerfile`）
-- [x] Helm Chart（已提供，见 `deploy/helm/ydsz-pmis/`）
+- [x] 镜像构建 Dockerfile（已提供，见 `ydsz-backend/Dockerfile` 与 `ydsz-frontend/Dockerfile`）
+- [x] Helm Chart（已提供，见 `deploy/helm/ydsz/`）
 - [x] 冒烟测试脚本（已提供，见 `deploy/scripts/smoke-test.sh/.ps1`）
 - [ ] Ingress 模板(各集群规范不同,留空)
 - [ ] NetworkPolicy 模板

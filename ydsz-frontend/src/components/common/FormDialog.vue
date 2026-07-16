@@ -8,7 +8,7 @@
   - Expose: formRef / validate / clearValidate / resetFields / focusFirstInput
   - 支持未保存修改确认、全屏切换、自动聚焦、按钮文案可配、可拖拽
   @module components/common/FormDialog
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.4.0
 -->
 <script setup lang="ts">

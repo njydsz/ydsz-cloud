@@ -131,16 +131,16 @@ YDSZ PMIS · 项目运营管理系统 · README
 
 | # | 模块 | artifactId | 端口 | 职责 |
 |---|---|---|---|---|
-| 1 | API 网关 | ydsz-pmis-gateway | **9000** | 路由 + 鉴权 + 限流 + CORS |
-| 2 | 用户信息 | ydsz-pmis-userinfo | **9001** | 登录 / Token / 2FA / 登录审计 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签 |
-| 3 | 系统基础 | ydsz-pmis-system | **9002** | 文件 / 配置 / 审计 |
-| 4 | 项目 | ydsz-pmis-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润 |
-| 5 | 消息中心 | ydsz-pmis-message | **9004** | 多渠道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）+ 模板 + 偏好 + 订阅 + 限流 + 撤回 + 聚合 + 回执 |
-| 6 | 调度 | ydsz-pmis-cronjob | **9005** | Leader 选举 + DB 行锁 + Redis 分布式锁 + 故障转移 + 租户隔离 + 告警通道 |
-| 7 | 工作流 | ydsz-pmis-workflow | **9006** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 ⚠️ **仅 PC 端** |
-| 8 | AI Agent | ydsz-pmis-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
-| — | 公共（库） | ydsz-pmis-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
-| — | 轻量规则引擎（库） | ydsz-pmis-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（不独立部署） |
+| 1 | API 网关 | ydsz-gateway | **9000** | 路由 + 鉴权 + 限流 + CORS |
+| 2 | 用户信息 | ydsz-userinfo | **9001** | 登录 / Token / 2FA / 登录审计 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签 |
+| 3 | 系统基础 | ydsz-system | **9002** | 文件 / 配置 / 审计 |
+| 4 | 项目 | ydsz-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润 |
+| 5 | 消息中心 | ydsz-message | **9004** | 多渠道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）+ 模板 + 偏好 + 订阅 + 限流 + 撤回 + 聚合 + 回执 |
+| 6 | 调度 | ydsz-cronjob | **9005** | Leader 选举 + DB 行锁 + Redis 分布式锁 + 故障转移 + 租户隔离 + 告警通道 |
+| 7 | 工作流 | ydsz-workflow | **9006** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 ⚠️ **仅 PC 端** |
+| 8 | AI Agent | ydsz-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
+| — | 公共（库） | ydsz-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
+| — | 轻量规则引擎（库） | ydsz-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（不独立部署） |
 
 ### 4.3 模块依赖拓扑
 
@@ -215,10 +215,10 @@ literule  → common
 
 ```bash
 # 后端 - 9 模块测试
-mvn -pl ydsz-pmis-backend -am test
+mvn -pl ydsz-backend -am test
 
 # 前端单元测试
-cd ydsz-pmis-frontend && pnpm test
+cd ydsz-frontend && pnpm test
 
 # 前端类型检查
 pnpm type-check
@@ -232,19 +232,19 @@ mvn -DskipDependencyCheck=false org.owasp:dependency-check-maven:check  # OWASP
 ## 六、仓库结构
 
 ```text
-ydsz-pmis/
-├── ydsz-pmis-backend/          # 后端 8 部署单元 + 2 库
-│   ├── ydsz-pmis-common/       # 公共组件库 + nacos-config 共享配置模板（不独立部署）
-│   ├── ydsz-pmis-gateway/      # 9000 API 网关
-│   ├── ydsz-pmis-literule/     # --  轻量规则引擎 (库, 不独立部署)
-│   ├── ydsz-pmis-userinfo/     # 9001 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
-│   ├── ydsz-pmis-system/       # 9002 文件/配置/审计
-│   ├── ydsz-pmis-project/      # 9003 项目/执行/财务/报表 (商机→售后全生命周期)
-│   ├── ydsz-pmis-message/      # 9004 消息中心(多渠道/模板/偏好/订阅/限流/回执)
-│   ├── ydsz-pmis-cronjob/      # 9005 分布式任务调度
-│   ├── ydsz-pmis-workflow/     # 9006 自研工作流 + BPMN
-│   └── ydsz-pmis-agent/        # 9007 AI Agent
-├── ydsz-pmis-frontend/         # 前端 (Vue 3.5 + Vite 5.4)
+ydsz/
+├── ydsz-backend/          # 后端 8 部署单元 + 2 库
+│   ├── ydsz-common/       # 公共组件库 + nacos-config 共享配置模板（不独立部署）
+│   ├── ydsz-gateway/      # 9000 API 网关
+│   ├── ydsz-literule/     # --  轻量规则引擎 (库, 不独立部署)
+│   ├── ydsz-userinfo/     # 9001 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
+│   ├── ydsz-system/       # 9002 文件/配置/审计
+│   ├── ydsz-project/      # 9003 项目/执行/财务/报表 (商机→售后全生命周期)
+│   ├── ydsz-message/      # 9004 消息中心(多渠道/模板/偏好/订阅/限流/回执)
+│   ├── ydsz-cronjob/      # 9005 分布式任务调度
+│   ├── ydsz-workflow/     # 9006 自研工作流 + BPMN
+│   └── ydsz-agent/        # 9007 AI Agent
+├── ydsz-frontend/         # 前端 (Vue 3.5 + Vite 5.4)
 │   ├── src/api/                # 1:1 后端 Controller 封装
 │   ├── src/views/              # 57 个业务页面
 │   ├── src/components/common/  # 20+ 通用组件 (含 vxe-table 通用列表)
@@ -254,7 +254,7 @@ ydsz-pmis/
 ├── deploy/                     # 部署全套(按环境分子目录)
 │   ├── common/                 # 跨环境共享资源(中间件配置模板 + Nacos 共享配置 + SQL)
 │   │   ├── conf/               # 7 中间件原生部署配置(postgres/redis/nacos/minio/seata/rocketmq/xxl-job)
-│   │   ├── nacos/              # PMIS 共享 Nacos 配置 ydsz-pmis-common.yaml
+│   │   ├── nacos/              # PMIS 共享 Nacos 配置 ydsz-common.yaml
 │   │   └── sql/                # 通用 SQL(XXL-Job PG 表等)
 │   ├── docker/                 # Docker 容器化(7 中间件 + docker-compose.dev.yml)
 │   ├── k8s/                    # K8S 部署(Kustomize:base + overlays/dev|sit|uat|prod)
@@ -315,11 +315,11 @@ ydsz-pmis/
 
 ### 7.4 平台适配范围（团队共识 · 硬约束）
 
-> 自 2026-07-06 起明确：**本项目自研工作流引擎（`ydsz-pmis-workflow` 模块及其全部前端页面）永远不适配移动端 App 与独立 H5 应用**。
+> 自 2026-07-06 起明确：**本项目自研工作流引擎（`ydsz-workflow` 模块及其全部前端页面）永远不适配移动端 App 与独立 H5 应用**。
 
 | 维度 | 范围 |
 |---|---|
-| ✅ 支持 | PC Web（`ydsz-pmis-frontend`，Vue 3.5 + Element Plus，桌面浏览器 ≥ 1280px） |
+| ✅ 支持 | PC Web（`ydsz-frontend`，Vue 3.5 + Element Plus，桌面浏览器 ≥ 1280px） |
 | ❌ 不支持 | 原生 iOS/Android App、uni-app / Taro 移动端、独立的移动 H5 子应用、PWA 移动模式 |
 | 🔁 移动端审批替代方案 | ① 对接企业微信 / 钉钉 / 飞书（已实现 `WeComSignatureUtil` / `DingTalkSignatureUtil` / `FeishuSignatureUtil`）；② 独立「轻审批 H5」应用（仅查询/同意/驳回，不含设计器/监控） |
 
@@ -333,12 +333,12 @@ ydsz-pmis/
 **实施约束**：
 
 - 前端代码中工作流相关页面/组件严禁引入 `vant` / `uni-ui` / `taro-ui` 等移动端 UI 库；
-- 后端 `ydsz-pmis-workflow` 模块 API 默认响应 PC 端字段结构（包含完整流程图 JSON、表单 Schema、审批历史），不为移动端裁剪；
+- 后端 `ydsz-workflow` 模块 API 默认响应 PC 端字段结构（包含完整流程图 JSON、表单 Schema、审批历史），不为移动端裁剪；
 - 任何 PR 不得引入「工作流模块移动端适配」相关代码，code review 必须拦截。
 
 ### 7.5 电子签章能力范围（团队共识 · 硬约束）
 
-> 自 2026-07-06 起明确：**`ydsz-pmis-workflow` 模块及其全部前端页面永远不会集成电子签章（e-sign）能力**。该决策与 7.4 同级，属于「不会做」清单。
+> 自 2026-07-06 起明确：**`ydsz-workflow` 模块及其全部前端页面永远不会集成电子签章（e-sign）能力**。该决策与 7.4 同级，属于「不会做」清单。
 
 **不集成的范围**（不限于）：
 
@@ -354,18 +354,18 @@ ydsz-pmis/
 1. **业务定位决定**：项目运营管理系统（B 端内部工具）关注「审批流转」，电子签章属于法务/合同独立业务线，关注「签署生效」与法律效力。两者职责正交，合并会污染领域模型。
 2. **合规与法律风险**：电子签章涉及 CA 认证、密评、等保三级、合同法/电子签名法合规审计、证据链保全、不可抵赖性。集成到自研工作流引擎会引入不可控的法律责任（一旦签署无效需由系统方举证）。
 3. **避免厂商锁定**：电子签章 SaaS 普遍采用年度授权 + 证书计费 + 私有化部署差异，自研引擎不应承担这部分采购与运维成本。
-4. **解耦架构**：签章是合同生命周期的一环，应在「合同管理」（`ydsz-pmis-project` 模块的 `ContractDO` 链路）独立抽象，由合同服务对接电子签章平台，工作流引擎仅作为「审批节点触发方」。
+4. **解耦架构**：签章是合同生命周期的一环，应在「合同管理」（`ydsz-project` 模块的 `ContractDO` 链路）独立抽象，由合同服务对接电子签章平台，工作流引擎仅作为「审批节点触发方」。
 
 **实施约束**（code review 必查）：
 
-- 后端 `ydsz-pmis-workflow` 模块不得新增 `ElectronicSign*` / `Esign*` / `SignatureCert*` / `PdfSeal*` / `ContractSign*` 等 Controller / Service / Entity / Mapper；
-- `ydsz-pmis-workflow/pom.xml` 不得引入任何电子签章相关依赖（如 `esign-sdk` / `fadada-sdk` / `bouncycastle` 签章扩展 / `itextpdf` 签章模块等）；
+- 后端 `ydsz-workflow` 模块不得新增 `ElectronicSign*` / `Esign*` / `SignatureCert*` / `PdfSeal*` / `ContractSign*` 等 Controller / Service / Entity / Mapper；
+- `ydsz-workflow/pom.xml` 不得引入任何电子签章相关依赖（如 `esign-sdk` / `fadada-sdk` / `bouncycastle` 签章扩展 / `itextpdf` 签章模块等）；
 - 前端工作流相关页面 / 组件不得引入签章相关组件库（如 `vue-esign` / `pdf-lib` 签章插件 / `signature_pad` 在工作流场景的复用等）；
 - 权限码（`PermissionCodes`）不得增加 `esign:*` / `contract.sign:*` / `workflow:esign:*` 等命名空间；
 - SQL 脚本（`deploy/sql/V*.sql`）不得新增 `pmis_sign_*` / `pmis_cert_*` / `pmis_contract_sign_*` 表；
-- 如业务侧确有签署需求，须在 `ydsz-pmis-project` 的合同服务通过「外部跳转 / Webhook 回调」方式对接独立电子签章服务，工作流引擎仅传递 `contractId` + `signStatus` 等轻量状态字段，不持有签署原文或证书数据。
+- 如业务侧确有签署需求，须在 `ydsz-project` 的合同服务通过「外部跳转 / Webhook 回调」方式对接独立电子签章服务，工作流引擎仅传递 `contractId` + `signStatus` 等轻量状态字段，不持有签署原文或证书数据。
 
-**未来扩展点（不包含在本约束内）**：合同服务（`ydsz-pmis-project`）可按需集成电子签章能力，但必须走独立 RFC + 法务/合规评审，不允许直接绕过本约束。
+**未来扩展点（不包含在本约束内）**：合同服务（`ydsz-project`）可按需集成电子签章能力，但必须走独立 RFC + 法务/合规评审，不允许直接绕过本约束。
 
 ---
 
@@ -447,10 +447,10 @@ ydsz-pmis/
   - 端口按 pom.xml 构建顺序重排（userinfo 9001, system 9002, project 9003, message 9004, cronjob 9005, workflow 9006, agent 9007）
   - 8 个 bootstrap.yml（Nacos 连接 + 端口 + shared-configs 引用）
   - 21 套 Nacos 配置模板（7 服务 × 3 环境）放置在 `src/main/resources/nacos-config/`
-  - `ydsz-pmis-common` 模块下集中维护 Nacos 共享配置 `ydsz-pmis-common.yaml`
+  - `ydsz-common` 模块下集中维护 Nacos 共享配置 `ydsz-common.yaml`
   - 10 个子模块独立 README（快速上手 + 配置 + 启动 + 常见问题）
 - **文档密级**: 内部受控
-- **仓库地址**: `https://gitlab.njydsz.com/ydsz/oursource/ydsz-pmis`
+- **仓库地址**: `https://gitlab.njydsz.com/ydsz/oursource/ydsz`
 - **许可**: 南京云顶数字科技有限公司内部使用
 
 ---

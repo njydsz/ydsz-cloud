@@ -18,7 +18,7 @@
  * onMounted(() => setOption({...}))
  * ```
  *
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import { onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'

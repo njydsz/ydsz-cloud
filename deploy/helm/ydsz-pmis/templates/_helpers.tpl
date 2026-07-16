@@ -5,7 +5,7 @@
 {{/*
 生成镜像全名：{registry}/{repository}/{name}:{tag}
 */}}
-{{- define "ydsz-pmis.image" -}}
+{{- define "ydsz.image" -}}
 {{- $registry := .registry -}}
 {{- $repository := .repository -}}
 {{- $name := .name -}}
@@ -20,9 +20,9 @@
 {{/*
 生成 ServiceAccount 名
 */}}
-{{- define "ydsz-pmis.serviceAccountName" -}}
+{{- define "ydsz.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-{{- default (printf "ydsz-pmis-sa") .Values.serviceAccount.name -}}
+{{- default (printf "ydsz-sa") .Values.serviceAccount.name -}}
 {{- else -}}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
@@ -31,17 +31,17 @@
 {{/*
 生成完整应用名（带 release 前缀）
 */}}
-{{- define "ydsz-pmis.fullname" -}}
+{{- define "ydsz.fullname" -}}
 {{- printf "%s-%s" .Release.Name .name -}}
 {{- end -}}
 
 {{/*
 公共标签
 */}}
-{{- define "ydsz-pmis.labels" -}}
+{{- define "ydsz.labels" -}}
 app.kubernetes.io/name: {{ .name }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/part-of: ydsz-pmis
+app.kubernetes.io/part-of: ydsz
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
@@ -50,6 +50,6 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 {{/*
 后端微服务名（不带前缀，如 gateway / system）
 */}}
-{{- define "ydsz-pmis.serviceName" -}}
+{{- define "ydsz.serviceName" -}}
 {{- .name -}}
 {{- end -}}

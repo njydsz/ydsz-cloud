@@ -3,7 +3,7 @@
   @description 树形编辑器：条件节点（菱形/圆角矩形）与决策节点（按严重度着色）的增删改查、
                拖拽调整、表达式校验、dry-run 预览与 JSON 导出。
   @module views/execution/rule-engine/decision-tree-editor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.5.0
 -->
 <template>

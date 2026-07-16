@@ -9,30 +9,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-frontend
+  name: ydsz-frontend
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" "frontend" "Release" .Release "Chart" .Chart) | nindent 4 }}
-    app: ydsz-pmis-frontend
+    {{- include "ydsz.labels" (dict "name" "frontend" "Release" .Release "Chart" .Chart) | nindent 4 }}
+    app: ydsz-frontend
     tier: frontend
 spec:
   replicas: {{ $frontend.replicas | default 2 }}
   selector:
     matchLabels:
-      app: ydsz-pmis-frontend
+      app: ydsz-frontend
   template:
     metadata:
       labels:
-        {{- include "ydsz-pmis.labels" (dict "name" "frontend" "Release" .Release "Chart" .Chart) | nindent 8 }}
-        app: ydsz-pmis-frontend
+        {{- include "ydsz.labels" (dict "name" "frontend" "Release" .Release "Chart" .Chart) | nindent 8 }}
+        app: ydsz-frontend
         tier: frontend
     spec:
-      serviceAccountName: {{ include "ydsz-pmis.serviceAccountName" . }}
+      serviceAccountName: {{ include "ydsz.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: frontend
-          image: {{ include "ydsz-pmis.image" (dict "registry" $registry "repository" $frontend.image.repository "name" "" "tag" ($frontend.image.tag | default $globalTag)) | trimSuffix "/" | quote }}
+          image: {{ include "ydsz.image" (dict "registry" $registry "repository" $frontend.image.repository "name" "" "tag" ($frontend.image.tag | default $globalTag)) | trimSuffix "/" | quote }}
           imagePullPolicy: {{ $frontend.image.pullPolicy }}
           ports:
             - name: http
@@ -56,15 +56,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-frontend
+  name: ydsz-frontend
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" "frontend" "Release" .Release "Chart" .Chart) | nindent 4 }}
-    app: ydsz-pmis-frontend
+    {{- include "ydsz.labels" (dict "name" "frontend" "Release" .Release "Chart" .Chart) | nindent 4 }}
+    app: ydsz-frontend
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-frontend
+    app: ydsz-frontend
   ports:
     - name: http
       port: {{ $frontend.port }}

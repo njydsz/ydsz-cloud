@@ -14,13 +14,13 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-gateway-hpa
+  name: ydsz-gateway-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-gateway
+    name: ydsz-gateway
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -55,26 +55,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-gateway-pdb
+  name: ydsz-gateway-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-gateway
+      app: ydsz-gateway
 
 ---
 # Agent HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-agent-hpa
+  name: ydsz-agent-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-agent
+    name: ydsz-agent
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -109,26 +109,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-agent-pdb
+  name: ydsz-agent-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-agent
+      app: ydsz-agent
 
 ---
 # Workflow HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-workflow-hpa
+  name: ydsz-workflow-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-workflow
+    name: ydsz-workflow
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -163,26 +163,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-workflow-pdb
+  name: ydsz-workflow-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-workflow
+      app: ydsz-workflow
 
 ---
 # Project HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-project-hpa
+  name: ydsz-project-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-project
+    name: ydsz-project
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -217,26 +217,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-project-pdb
+  name: ydsz-project-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-project
+      app: ydsz-project
 
 ---
 # Sales HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-sales-hpa
+  name: ydsz-sales-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-sales
+    name: ydsz-sales
   minReplicas: 2
   maxReplicas: 4
   metrics:
@@ -271,26 +271,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-sales-pdb
+  name: ydsz-sales-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-sales
+      app: ydsz-sales
 
 ---
 # Finance HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-finance-hpa
+  name: ydsz-finance-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-finance
+    name: ydsz-finance
   minReplicas: 2
   maxReplicas: 4
   metrics:
@@ -325,26 +325,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-finance-pdb
+  name: ydsz-finance-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-finance
+      app: ydsz-finance
 
 ---
 # System HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-system-hpa
+  name: ydsz-system-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-system
+    name: ydsz-system
   minReplicas: 2
   maxReplicas: 4
   metrics:
@@ -379,26 +379,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-system-pdb
+  name: ydsz-system-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-system
+      app: ydsz-system
 
 ---
 # Message HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-message-hpa
+  name: ydsz-message-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-message
+    name: ydsz-message
   minReplicas: 2
   maxReplicas: 4
   metrics:
@@ -433,26 +433,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-message-pdb
+  name: ydsz-message-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-message
+      app: ydsz-message
 
 ---
 # Userinfo HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-userinfo-hpa
+  name: ydsz-userinfo-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-userinfo
+    name: ydsz-userinfo
   minReplicas: 2
   maxReplicas: 4
   metrics:
@@ -487,26 +487,26 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-userinfo-pdb
+  name: ydsz-userinfo-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-userinfo
+      app: ydsz-userinfo
 
 ---
 # Nextwiki HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-nextwiki-hpa
+  name: ydsz-nextwiki-hpa
   namespace: pmis
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-nextwiki
+    name: ydsz-nextwiki
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -535,10 +535,10 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-nextwiki-pdb
+  name: ydsz-nextwiki-pdb
   namespace: pmis
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-nextwiki
+      app: ydsz-nextwiki

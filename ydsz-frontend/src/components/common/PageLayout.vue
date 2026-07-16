@@ -8,7 +8,7 @@
   - Slots: search / toolbar / table / default(右上角)
   - 内置 BatchToolbar / SkeletonTable / EmptyState 联动
   @module components/common/PageLayout
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

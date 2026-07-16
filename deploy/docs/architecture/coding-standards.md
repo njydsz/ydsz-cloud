@@ -1,6 +1,6 @@
-# ydsz-pmis 编码规范
+# ydsz 编码规范
 
-> 本文档收录 ydsz-pmis 项目强制遵守的公司代码规范。所有提交代码（含 AI 生成代码）必须符合以下规则。
+> 本文档收录 ydsz 项目强制遵守的公司代码规范。所有提交代码（含 AI 生成代码）必须符合以下规则。
 
 ---
 
@@ -20,21 +20,21 @@
 
 | # | 场景 | 违规示例 | 正确写法 |
 |---|------|----------|----------|
-| 1 | **参数类型** | `create(@RequestBody com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto)` | `import ...InitiationCreateDTO;` → `create(@RequestBody InitiationCreateDTO dto)` |
-| 2 | **方法引用** | `wrapper.eq(com.njydsz.pmis.cronjob.domain.entity.job.JobDO::getStatus, "NORMAL")` | `import ...JobDO;` → `wrapper.eq(JobDO::getStatus, "NORMAL")` |
-| 3 | **new 表达式** | `new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...)` | `import ...ExecutionReplayService;` → `new ExecutionReplayService(...)` |
-| 4 | **`.class` 字面量** | `com.njydsz.pmis.common.exception.SysException.class` | `SysException.class` |
+| 1 | **参数类型** | `create(@RequestBody com.njydsz.project.api.dto.InitiationCreateDTO dto)` | `import ...InitiationCreateDTO;` → `create(@RequestBody InitiationCreateDTO dto)` |
+| 2 | **方法引用** | `wrapper.eq(com.njydsz.cronjob.domain.entity.job.JobDO::getStatus, "NORMAL")` | `import ...JobDO;` → `wrapper.eq(JobDO::getStatus, "NORMAL")` |
+| 3 | **new 表达式** | `new com.njydsz.literule.server.replay.ExecutionReplayService(...)` | `import ...ExecutionReplayService;` → `new ExecutionReplayService(...)` |
+| 4 | **`.class` 字面量** | `com.njydsz.common.exception.SysException.class` | `SysException.class` |
 | 5 | **注解** | `@org.springframework.boot.autoconfigure.condition.ConditionalOnBean(...)` | `@ConditionalOnBean(...)` |
 | 6 | **静态方法调用** | `org.junit.jupiter.api.Assertions.assertThrows(...)` | `import static ...assertThrows;` → `assertThrows(...)` |
-| 7 | **instanceof 检查** | `x instanceof com.njydsz.pmis.common.exception.SysException` | `x instanceof SysException` |
-| 8 | **泛型类型参数** | `new LambdaQueryWrapper<com.njydsz.pmis.cronjob.domain.entity.job.JobDO>()` | `new LambdaQueryWrapper<JobDO>()` |
-| 9 | **for-each 变量类型** | `for (com.njydsz.pmis.literule.api.Rule rule : ...)` | `for (Rule rule : ...)` |
+| 7 | **instanceof 检查** | `x instanceof com.njydsz.common.exception.SysException` | `x instanceof SysException` |
+| 8 | **泛型类型参数** | `new LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.job.JobDO>()` | `new LambdaQueryWrapper<JobDO>()` |
+| 9 | **for-each 变量类型** | `for (com.njydsz.literule.api.Rule rule : ...)` | `for (Rule rule : ...)` |
 
 ### 1.3 例外
 
-1. **字符串字面量**中的 FQN（如反射类名 `"com.njydsz.pmis.literule.core.MicrometerRuleMetrics"`）可保留完整路径。
+1. **字符串字面量**中的 FQN（如反射类名 `"com.njydsz.literule.core.MicrometerRuleMetrics"`）可保留完整路径。
 2. **Javadoc `{@link FQN}` 引用**（仅 `{@link}` 标签）可保留完整路径（当目标类未在代码中使用、仅作 Javadoc 交叉引用时）。但如果该类已被 import，则必须使用简单类名 `{@link SimpleName}`。**注意：此例外仅适用于 `{@link}` 标签，不适用于 `@throws`、`@see`、`@param`、`@return` 等其他 Javadoc 标签——这些标签中的 FQN 均属违规。**
-3. **同名类冲突**（Java 语言限制）：当当前类与目标类简单名相同（如 `com.njydsz.pmis.cronjob.server.core.dag.DagEdge` 与 `com.njydsz.pmis.common.dag.DagEdge`），Java 不允许同时 import 两个同名类，此时对其中一个使用 FQN 是合法的。此类 FQN 必须在行尾添加 `// FQN-OK: name conflict with <ClassName>` 注释说明原因。
+3. **同名类冲突**（Java 语言限制）：当当前类与目标类简单名相同（如 `com.njydsz.cronjob.server.core.dag.DagEdge` 与 `com.njydsz.common.dag.DagEdge`），Java 不允许同时 import 两个同名类，此时对其中一个使用 FQN 是合法的。此类 FQN 必须在行尾添加 `// FQN-OK: name conflict with <ClassName>` 注释说明原因。
 4. **`@ConditionalOnClass(name = "FQN")` 注解**：Spring 的 `@ConditionalOnClass` 的 `name` 参数是字符串类型，属于字符串字面量例外，不算违规。
 
 ### 1.4 执行机制
@@ -49,23 +49,23 @@
 
 ```java
 // ❌ InitiationFeignClient.java — 方法参数使用行内 FQN
-Result<String> create(@RequestBody com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto);
+Result<String> create(@RequestBody com.njydsz.project.api.dto.InitiationCreateDTO dto);
 
 // ❌ InitiationFeignClientFallbackFactory.java — 方法参数使用行内 FQN
-public Result<String> create(com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto) {
+public Result<String> create(com.njydsz.project.api.dto.InitiationCreateDTO dto) {
 
 // ❌ FinanceDataController.java — 方法引用使用行内 FQN
-wrapper.orderByDesc(com.njydsz.pmis.finance.domain.entity.ProfitSnapshot::getSnapshotAt);
+wrapper.orderByDesc(com.njydsz.finance.domain.entity.ProfitSnapshot::getSnapshotAt);
 
 // ❌ JobStatsController.java — new + 泛型 + 方法引用全用行内 FQN
-jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.domain.entity.job.JobDO>()
-    .eq(com.njydsz.pmis.cronjob.domain.entity.job.JobDO::getStatus, "NORMAL"));
+jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.cronjob.domain.entity.job.JobDO>()
+    .eq(com.njydsz.cronjob.domain.entity.job.JobDO::getStatus, "NORMAL"));
 
 // ❌ LiteRuleAutoConfiguration.java — new 表达式使用行内 FQN
-new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...);
+new com.njydsz.literule.server.replay.ExecutionReplayService(...);
 
 // ❌ AdvancedReportServiceImpl.java — 注解 + 常量使用行内 FQN
-@com.baomidou.dynamic.datasource.annotation.DS(com.njydsz.pmis.common.datasource.DataSourceConstants.SLAVE)
+@com.baomidou.dynamic.datasource.annotation.DS(com.njydsz.common.datasource.DataSourceConstants.SLAVE)
 ```
 
 ---
@@ -131,7 +131,7 @@ Map<String, Object> map = new HashMap<>();
 
 ### 3.1 规则定义
 
-在 ydsz-pmis 项目中执行脚本命令时（包括但不限于批量文件处理、文本替换、代码生成、数据转换、文件读写等），**必须优先使用 Python**，禁止使用 PowerShell。
+在 ydsz 项目中执行脚本命令时（包括但不限于批量文件处理、文本替换、代码生成、数据转换、文件读写等），**必须优先使用 Python**，禁止使用 PowerShell。
 
 ### 3.2 原因
 
@@ -163,7 +163,7 @@ pathlib.Path("src/main/java/.../Example.java").write_text(new_content, encoding=
 # 使用 Python 批量处理多个文件
 import pathlib
 
-for f in pathlib.Path("ydsz-pmis-backend").rglob("*.java"):
+for f in pathlib.Path("ydsz-backend").rglob("*.java"):
     content = f.read_text(encoding="utf-8")
     if "oldText" in content:
         f.write_text(content.replace("oldText", "newText"), encoding="utf-8")
@@ -203,8 +203,8 @@ Get-ChildItem -Recurse -Filter "*.java" | ForEach-Object {
 ## 4. 忽略单元测试覆盖率检查
 
 **级别**：项目决策（全局禁用）
-**生效范围**：所有后端 Maven 模块（`ydsz-pmis-backend/**`）
-**关联配置**：`ydsz-pmis-backend/pom.xml` `<skipJacoco>true</skipJacoco>`
+**生效范围**：所有后端 Maven 模块（`ydsz-backend/**`）
+**关联配置**：`ydsz-backend/pom.xml` `<skipJacoco>true</skipJacoco>`
 
 ### 4.1 决策背景
 
@@ -248,8 +248,8 @@ CI 流水线（`.github/workflows/backend-ci.yml`）的 `build` job 仅执行 `m
 
 | 日期 | 版本 | 变更内容 | 作者 |
 |------|------|----------|------|
-| 2026-07-12 | 1.0 | 初始创建，收录「禁止行内 FQN」规范 | ydsz-pmis-team |
-| 2026-07-13 | 1.1 | 修复例外描述矛盾：@throws/@see/@param/@return 中的 FQN 均属违规（仅 {@link} 可保留）；新增 @ConditionalOnClass 例外；更新执行机制（CI 强制） | ydsz-pmis-team |
-| 2026-07-13 | 1.2 | 新增「禁止使用 @SuppressWarnings 注解」规范（Section 2） | ydsz-pmis-team |
-| 2026-07-14 | 1.3 | 新增「脚本执行优先使用 Python 而非 PowerShell」规范（Section 3） | ydsz-pmis-team |
-| 2026-07-14 | 1.4 | 新增「忽略单元测试覆盖率检查」规范（Section 4），全局禁用 JaCoCo | ydsz-pmis-team |
+| 2026-07-12 | 1.0 | 初始创建，收录「禁止行内 FQN」规范 | ydsz-team |
+| 2026-07-13 | 1.1 | 修复例外描述矛盾：@throws/@see/@param/@return 中的 FQN 均属违规（仅 {@link} 可保留）；新增 @ConditionalOnClass 例外；更新执行机制（CI 强制） | ydsz-team |
+| 2026-07-13 | 1.2 | 新增「禁止使用 @SuppressWarnings 注解」规范（Section 2） | ydsz-team |
+| 2026-07-14 | 1.3 | 新增「脚本执行优先使用 Python 而非 PowerShell」规范（Section 3） | ydsz-team |
+| 2026-07-14 | 1.4 | 新增「忽略单元测试覆盖率检查」规范（Section 4），全局禁用 JaCoCo | ydsz-team |

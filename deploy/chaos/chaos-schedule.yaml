@@ -24,7 +24,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-night
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   # 周六 02:00 (Asia/Shanghai = UTC+8, UTC 18:00 周五)
   # Cron 格式: 分 时 日 月 周
@@ -70,7 +70,7 @@ spec:
                   host=$(echo $svc | cut -d: -f1)
                   port=$(echo $svc | cut -d: -f2)
                   echo "  - Checking ${host}:${port}/actuator/health"
-                  curl -sf --max-time 5 "http://${host}.${host}.pmis.svc.cluster.local:${port}/actuator/health" > /dev/null \
+                  curl -sf --max-time 5 "http://${host}.${host}.ydsz.svc.cluster.local:${port}/actuator/health" > /dev/null \
                     || { echo "  FAIL: ${host} unhealthy, aborting chaos night"; exit 1; }
                   echo "  OK: ${host} healthy"
                 done
@@ -84,7 +84,7 @@ spec:
           selector:
             namespaces: [pmis]
             labelSelectors:
-              app: ydsz-pmis-userinfo
+              app: ydsz-userinfo
           delay:
             latency: "200ms"
             correlation: "100"
@@ -99,7 +99,7 @@ spec:
           selector:
             namespaces: [pmis]
             labelSelectors:
-              app: ydsz-pmis-gateway
+              app: ydsz-gateway
           duration: "30s"
 
       - name: exp-network-partition-workflow-project
@@ -111,12 +111,12 @@ spec:
           selector:
             namespaces: [pmis]
             labelSelectors:
-              app: ydsz-pmis-workflow
+              app: ydsz-workflow
           target:
             selector:
               namespaces: [pmis]
               labelSelectors:
-                app: ydsz-pmis-project
+                app: ydsz-project
             mode: all
           duration: "2m"
 
@@ -127,7 +127,7 @@ spec:
           selector:
             namespaces: [pmis]
             labelSelectors:
-              app: ydsz-pmis-project
+              app: ydsz-project
           stressors:
             cpu:
               workers: 2
@@ -142,7 +142,7 @@ spec:
           selector:
             namespaces: [pmis]
             labelSelectors:
-              app: ydsz-pmis-message
+              app: ydsz-message
           duration: "90s"
 
       - name: post-check-health
@@ -161,7 +161,7 @@ spec:
                 for svc in gateway:9000 userinfo:9001 system:9002 project:9003 message:9004; do
                   host=$(echo $svc | cut -d: -f1)
                   port=$(echo $svc | cut -d: -f2)
-                  if curl -sf --max-time 5 "http://${host}.${host}.pmis.svc.cluster.local:${port}/actuator/health" > /dev/null; then
+                  if curl -sf --max-time 5 "http://${host}.${host}.ydsz.svc.cluster.local:${port}/actuator/health" > /dev/null; then
                     echo "  OK: ${host} healthy"
                   else
                     echo "  FAIL: ${host} still unhealthy after 60s recovery"
@@ -186,7 +186,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-periodic
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   # 每 12h 执行一次(07:00 + 19:00 UTC = 15:00 + 03:00 Asia/Shanghai)
   schedule: "0 7,19 * * *"
@@ -199,7 +199,7 @@ spec:
     selector:
       namespaces: [pmis]
       labelSelectors:
-        app: ydsz-pmis-userinfo
+        app: ydsz-userinfo
     duration: "10s"
 
 ---
@@ -210,7 +210,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-periodic
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   # 每 12h 执行一次,与 userinfo-pod-kill 错开 1h(08:00 + 20:00 UTC)
   schedule: "0 8,20 * * *"
@@ -223,7 +223,7 @@ spec:
     selector:
       namespaces: [pmis]
       labelSelectors:
-        app: ydsz-pmis-finance
+        app: ydsz-finance
     delay:
       latency: "100ms"
       correlation: "100"
@@ -238,7 +238,7 @@ metadata:
   namespace: chaos-mesh
   labels:
     experiment: chaos-periodic
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 spec:
   # 每 24h 执行一次(09:00 UTC = 17:00 Asia/Shanghai)
   schedule: "0 9 * * *"
@@ -251,5 +251,5 @@ spec:
     selector:
       namespaces: [pmis]
       labelSelectors:
-        app: ydsz-pmis-system
+        app: ydsz-system
     duration: "10s"

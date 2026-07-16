@@ -7,7 +7,7 @@
  * - 同时挂载 mounted 和 updated 钩子，权限动态调整时自动重新评估
  * - 对 el-button 设置 disabled 属性；对原生元素设置 aria-disabled + pointer-events
  * @module directives/permission
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import type { App, Directive, DirectiveBinding } from 'vue'

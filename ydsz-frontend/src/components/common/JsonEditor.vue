@@ -5,7 +5,7 @@
   - Emits: update:modelValue / validate
   - 场景: 表单设计器 schema 编辑、流程定义 JSON 查看
   @module components/common/JsonEditor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

@@ -7,7 +7,7 @@
     支持保存表单 schema 到后端，作为流程节点的动态表单来源。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/form-design
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

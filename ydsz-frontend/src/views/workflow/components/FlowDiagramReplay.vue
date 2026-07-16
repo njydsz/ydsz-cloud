@@ -6,7 +6,7 @@
     P3-1 增强：自动滚屏到当前节点、步骤类型筛选、节点点击与坐标回滚联动。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/components/FlowDiagramReplay
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

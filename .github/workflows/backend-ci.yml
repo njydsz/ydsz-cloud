@@ -1,10 +1,10 @@
 # =============================================================================
 # PMIS 后端 CI 流水线
 # -----------------------------------------------------------------------------
-# 作用:   对 ydsz-pmis-backend/ 模块进行构建 + 静态检查 + 安全扫描，是合并 PR
+# 作用:   对 ydsz-backend/ 模块进行构建 + 静态检查 + 安全扫描，是合并 PR
 #         与 push 到 main/develop 时的质量门禁
-# 触发:   push 到 main/develop 分支 (限定 ydsz-pmis-backend/** 路径)
-#         pull_request 到 main (限定 ydsz-pmis-backend/** 路径)
+# 触发:   push 到 main/develop 分支 (限定 ydsz-backend/** 路径)
+#         pull_request 到 main (限定 ydsz-backend/** 路径)
 # 关联:   与 cd-deploy.yml 串行 (CI 通过 → CD 构建镜像)
 #
 # Job 编排:
@@ -25,16 +25,16 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'ydsz-pmis-backend/**'
+      - 'ydsz-backend/**'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'ydsz-pmis-backend/**'
+      - 'ydsz-backend/**'
 
 defaults:
   run:
-    working-directory: ydsz-pmis-backend
+    working-directory: ydsz-backend
 
 jobs:
   build:
@@ -65,18 +65,18 @@ jobs:
         working-directory: .
         run: |
           chmod +x deploy/scripts/check-inline-fqn.sh
-          bash deploy/scripts/check-inline-fqn.sh ydsz-pmis-backend --strict
+          bash deploy/scripts/check-inline-fqn.sh ydsz-backend --strict
 
       - name: 幂等注解覆盖检查
         # 扫描所有写接口(@PostMapping/@PutMapping/@DeleteMapping/@PatchMapping)
         # 是否标注了 @Idempotent 或 @IdempotentExempt;未标注的以 ERROR 阻断 CI
-        # 注意:defaults.run.working-directory 是 ydsz-pmis-backend,这里切换到
-        # 仓库根目录,使脚本路径 ydsz-pmis-backend/scripts/... 与参数 ydsz-pmis-backend
+        # 注意:defaults.run.working-directory 是 ydsz-backend,这里切换到
+        # 仓库根目录,使脚本路径 ydsz-backend/scripts/... 与参数 ydsz-backend
         # 均相对于仓库根目录解析
         working-directory: .
         run: |
-          chmod +x ydsz-pmis-backend/scripts/check-idempotent-coverage.sh
-          bash ydsz-pmis-backend/scripts/check-idempotent-coverage.sh ydsz-pmis-backend
+          chmod +x ydsz-backend/scripts/check-idempotent-coverage.sh
+          bash ydsz-backend/scripts/check-idempotent-coverage.sh ydsz-backend
 
       - name: 静态扫描 DB Migration 依赖与增量脚本（拦截 Flyway / Liquibase / migration 目录）
         # 项目规范（deploy/sql/README.md §1）：不引入任何自动化 schema migration 框架，禁止增量脚本
@@ -93,9 +93,9 @@ jobs:
             exit 1
           fi
           # 2) pom 属性扫描
-          if grep -rnE '<(flyway|liquibase)\.version>' ydsz-pmis-backend/ ; then
+          if grep -rnE '<(flyway|liquibase)\.version>' ydsz-backend/ ; then
             echo "::error::检测到 pom.xml 中 flyway.version / liquibase.version 属性声明，违反项目规范"
-            grep -rnE '<(flyway|liquibase)\.version>' ydsz-pmis-backend/
+            grep -rnE '<(flyway|liquibase)\.version>' ydsz-backend/
             exit 1
           fi
           # 3) 增量脚本目录扫描
@@ -118,9 +118,9 @@ jobs:
             exit 1
           fi
           # 4) 业务模块 db/migration 目录扫描
-          if find ydsz-pmis-backend -type d -name 'migration' -path '*/db/migration*' | grep -q . ; then
+          if find ydsz-backend -type d -name 'migration' -path '*/db/migration*' | grep -q . ; then
             echo "::error::检测到 src/main/resources/db/migration/ 目录，违反项目规范"
-            find ydsz-pmis-backend -type d -name 'migration' -path '*/db/migration*'
+            find ydsz-backend -type d -name 'migration' -path '*/db/migration*'
             exit 1
           fi
           echo "✅ 未检测到 Flyway / Liquibase 依赖、增量脚本目录或 db/migration 目录"
@@ -167,16 +167,16 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('ydsz-pmis-backend/**/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('ydsz-backend/**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
       - name: Run Checkstyle
-        working-directory: ydsz-pmis-backend
+        working-directory: ydsz-backend
         run: mvn -B -ntp checkstyle:check
       - name: SpotBugs Analysis
-        working-directory: ydsz-pmis-backend
+        working-directory: ydsz-backend
         run: mvn -B -ntp spotbugs:check -DskipTests
       - name: SonarQube Scan (mandatory Quality Gate)
-        working-directory: ydsz-pmis-backend
+        working-directory: ydsz-backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -186,7 +186,7 @@ jobs:
           fi
           # 复用 build job 已编译的产物，-DskipTests 避免触发 test 阶段
           mvn -B -ntp -DskipTests sonar:sonar \
-            -Dsonar.projectKey=ydsz-pmis-backend \
+            -Dsonar.projectKey=ydsz-backend \
             -Dsonar.organization=ydsz \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN \
@@ -210,10 +210,10 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('ydsz-pmis-backend/**/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('ydsz-backend/**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
       - name: OWASP Dependency Check
-        working-directory: ydsz-pmis-backend
+        working-directory: ydsz-backend
         # P0-4 修复：显式传 -DskipDependencyCheck=false 双保险，避免 pom 默认值变更时静默跳过
         run: |
           mvn -B -ntp org.owasp:dependency-check-maven:9.0.9:check \
@@ -225,7 +225,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: security-report
-          path: ydsz-pmis-backend/target/dependency-check-report/
+          path: ydsz-backend/target/dependency-check-report/
           retention-days: 7
 
   # ============================================================

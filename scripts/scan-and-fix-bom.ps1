@@ -1,5 +1,5 @@
 # Scan all Java files in the project for UTF-8 BOM
-$rootPath = "d:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend"
+$rootPath = "d:/Code/ydsz/ydsz/ydsz-backend"
 $javaFiles = Get-ChildItem -Path $rootPath -Recurse -Filter "*.java" -ErrorAction SilentlyContinue
 $bomFiles = @()
 

@@ -7,7 +7,7 @@
   - Slots: action(CTA 按钮) / default(额外说明)
   - 场景: 列表空、搜索无结果、网络异常、无权限
   @module components/common/EmptyState
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

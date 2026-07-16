@@ -6,7 +6,7 @@
   - 关键能力: 状态机 FOLLOWING → QUOTED → NEGOTIATING → WON → CONVERTED / LOST；赢率评估；转立项
   - 关联的后端接口: @/api/opportunity
 
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

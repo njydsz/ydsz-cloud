@@ -86,6 +86,6 @@ optimizer.optimize(candidateRules, context);
 3. **增量评估**：支持 facts 部分更新，仅重评估受影响的规则
 
 ---
-*评估人: ydsz-pmis-team*
+*评估人: ydsz-team*
 *评估日期: 2026-07-11*
 *版本: 2.1.0*

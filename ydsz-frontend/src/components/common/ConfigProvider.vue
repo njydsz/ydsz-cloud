@@ -4,7 +4,7 @@
   - 由 App.vue 在根节点包裹，子树无需再单独配置
   - 默认中文 + default 尺寸
   @module components/common/ConfigProvider
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

@@ -6,7 +6,7 @@
  * - 工具函数: toOptions / getLabel
  * - 新代码应优先使用本文件常量，旧代码逐步迁移
  * @module constants/businessEnums
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import type { OptionVO } from '@/types/api'

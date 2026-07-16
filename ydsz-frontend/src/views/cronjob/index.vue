@@ -7,7 +7,7 @@
   - 操作列：编辑/暂停|恢复/触发/删除/查看日志/GLUE代码/历史版本
   - 新建/编辑对话框：FormDialog 组件，scheduleType 控制不同字段显示
   @module views/cronjob
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

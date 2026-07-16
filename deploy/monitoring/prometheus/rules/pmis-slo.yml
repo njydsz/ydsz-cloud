@@ -32,7 +32,7 @@ spec:
       interval: 30s
       rules:
         # SLO: 30 天窗口可用性 < 99.9%
-        - record: pmis:slo_availability:ratio_30d
+        - record: ydsz:slo_availability:ratio_30d
           expr: |
             1 - (
               sum(rate(http_server_requests_seconds_count{job=~"pmis-.*",status=~"5.."}[30d]))
@@ -81,7 +81,7 @@ spec:
       interval: 30s
       rules:
         # SLO: P99 延迟记录 (5m 窗口)
-        - record: pmis:slo_latency_p99:seconds_5m
+        - record: ydsz:slo_latency_p99:seconds_5m
           expr: |
             histogram_quantile(0.99,
               sum(rate(http_server_requests_seconds_bucket{job=~"pmis-.*"}[5m])) by (le, job)
@@ -89,7 +89,7 @@ spec:
 
         # SLO 违规: P99 > 1s 持续 5 分钟
         - alert: PmisSloLatencyViolation
-          expr: pmis:slo_latency_p99:seconds_5m > 1
+          expr: ydsz:slo_latency_p99:seconds_5m > 1
           for: 5m
           labels:
             severity: P2
@@ -106,13 +106,13 @@ spec:
       interval: 5m
       rules:
         # 30 天 SLO 达成状态
-        - record: pmis:slo_availability:status
+        - record: ydsz:slo_availability:status
           expr: |
-            (pmis:slo_availability:ratio_30d >= 0.999)
+            (ydsz:slo_availability:ratio_30d >= 0.999)
 
         # 月度 SLO 即将突破 (可用性 < 99.95%, 剩余 budget < 50%)
         - alert: PmisSloBudgetExhausted
-          expr: pmis:slo_availability:ratio_30d < 0.9995
+          expr: ydsz:slo_availability:ratio_30d < 0.9995
           for: 30m
           labels:
             severity: P2

@@ -4,7 +4,7 @@
                顶部 6 张关键指标卡，下方通过 useECharts 渲染项目群横向柱状图与 30 天 KPI 折线趋势，
                支持 60 秒自动轮询刷新（autoRefresh 开关可关闭）。
   @module views/report/executive
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">
@@ -13,7 +13,7 @@
  *
  * 核心 KPI + 健康度评分 + 项目群对比 + KPI 趋势
  *
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'

@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-sales
+  name: ydsz-sales
   namespace: pmis
   labels:
-    app: ydsz-pmis-sales
+    app: ydsz-sales
     tier: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ydsz-pmis-sales
+      app: ydsz-sales
   template:
     metadata:
       labels:
-        app: ydsz-pmis-sales
+        app: ydsz-sales
         tier: backend
     spec:
       containers:
         - name: sales
-          image: ydsz-pmis/sales:IMAGE_TAG
+          image: ydsz/sales:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -51,12 +51,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-sales
+  name: ydsz-sales
   namespace: pmis
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-sales
+    app: ydsz-sales
   ports:
   - name: http
     port: 9010

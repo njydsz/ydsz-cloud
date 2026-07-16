@@ -7,7 +7,7 @@
   - 底部最近告警列表（FAILED/TIMEOUT 日志）
   - 使用 useECharts composable 渲染图表
   @module views/cronjob/monitor
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

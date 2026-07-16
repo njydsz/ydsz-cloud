@@ -6,7 +6,7 @@
  * - 元素卸载时自动 disconnect，避免内存泄漏
  * - 适用于长列表、表格头像、相册等大量图片场景
  * @module directives/lazy
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import type { App, Directive, DirectiveBinding } from 'vue'

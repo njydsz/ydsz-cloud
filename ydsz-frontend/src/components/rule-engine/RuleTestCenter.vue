@@ -6,7 +6,7 @@
   - CI/CD 集成：通过率 < 100% 时红色高亮
   - 支持 JSON 事实数据编辑
   @module components/rule-engine/RuleTestCenter
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

@@ -6,7 +6,7 @@
     与表单设计器入口页（../form-design/index.vue）配合，支持 JSON 编辑模式切换。
     配套自研工作流 v2 引擎的动态表单，PC 端专用。
   @module views/workflow/components/FormDesigner
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

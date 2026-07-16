@@ -5,7 +5,7 @@
     用于将源流程定义下的存量实例批量迁移到新版本/新定义，支持字段映射。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/instance-migration
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

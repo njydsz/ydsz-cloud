@@ -4,12 +4,12 @@ metadata:
   name: pmis-common-config
   namespace: pmis
   labels:
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 data:
   # Spring Cloud Alibaba Nacos 地址
-  # 集群内部访问请把 host 替换为 Service DNS: nacos-server.pmis.svc.cluster.local
-  SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: "nacos-server.pmis.svc.cluster.local:8848"
-  SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: "nacos-server.pmis.svc.cluster.local:8848"
+  # 集群内部访问请把 host 替换为 Service DNS: nacos-server.ydsz.svc.cluster.local
+  SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: "nacos-server.ydsz.svc.cluster.local:8848"
+  SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: "nacos-server.ydsz.svc.cluster.local:8848"
   SPRING_CLOUD_NACOS_NAMESPACE: "pmis"
 
   # 公共日志/编码

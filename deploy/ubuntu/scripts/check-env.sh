@@ -134,8 +134,8 @@ log "[8/8] 项目结构"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 for f in \
-  "$ROOT_DIR/ydsz-pmis-backend/pom.xml" \
-  "$ROOT_DIR/ydsz-pmis-frontend/package.json" \
+  "$ROOT_DIR/ydsz-backend/pom.xml" \
+  "$ROOT_DIR/ydsz-frontend/package.json" \
   "$ROOT_DIR/deploy/sql/V1.0.0.sql" \
   "$ROOT_DIR/deploy/docker/docker-compose.dev.yml"; do
   if [[ -f "$f" ]]; then

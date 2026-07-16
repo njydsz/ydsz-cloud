@@ -1,6 +1,6 @@
 <!--
   @file 兼职职级费率管理
-  @description 兼职职级费率管理页面（P1-P18）：左侧展示兼职职级列表并按段位分类，右侧展示所选职级的生效费率（月薪、商业保险、总成本、对外人天、对内人天等）及历史版本。对应路由 /resource/part-time-rate，后端服务 ydsz-pmis-userinfo。
+  @description 兼职职级费率管理页面（P1-P18）：左侧展示兼职职级列表并按段位分类，右侧展示所选职级的生效费率（月薪、商业保险、总成本、对外人天、对内人天等）及历史版本。对应路由 /resource/part-time-rate，后端服务 ydsz-userinfo。
   @module views/resource/part-time-rate
 -->
 <script setup lang="ts">

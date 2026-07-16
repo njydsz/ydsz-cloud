@@ -108,24 +108,24 @@ min_wal_size = 256MB
 
 ```bash
 # 1. 确认误操作时间和表名
-PSQL_CMD="psql -h 127.0.0.1 -U postgres -d ydsz-pmis"
+PSQL_CMD="psql -h 127.0.0.1 -U postgres -d ydsz"
 $PSQL_CMD -c "SELECT now();"  # 记录当前时间
 
 # 2. 找到最近的备份文件
-ls -lt /data/backups/postgres/ydsz-pmis_full_*.dump | head -3
+ls -lt /data/backups/postgres/ydsz_full_*.dump | head -3
 
 # 3. 预检查备份文件
-/opt/pmis/scripts/pg-backup.sh --verify /data/backups/postgres/ydsz-pmis_full_20260710_020000.dump
+/opt/pmis/scripts/pg-backup.sh --verify /data/backups/postgres/ydsz_full_20260710_020000.dump
 
 # 4. 创建临时恢复数据库
-createdb -h 127.0.0.1 -U postgres ydsz-pmis-restore
+createdb -h 127.0.0.1 -U postgres ydsz-restore
 
 # 5. 恢复备份到临时库
-pg_restore -h 127.0.0.1 -U postgres -d ydsz-pmis-restore -j 4 \
-  /data/backups/postgres/ydsz-pmis_full_20260710_020000.dump
+pg_restore -h 127.0.0.1 -U postgres -d ydsz-restore -j 4 \
+  /data/backups/postgres/ydsz_full_20260710_020000.dump
 
 # 6. 从临时库导出误操作的表
-pg_dump -h 127.0.0.1 -U postgres -d ydsz-pmis-restore \
+pg_dump -h 127.0.0.1 -U postgres -d ydsz-restore \
   --table=pmis_project \
   --data-only \
   --format=plain \
@@ -140,7 +140,7 @@ $PSQL_CMD -f /tmp/pmis_project_restore.sql
 $PSQL_CMD -c "SELECT count(*) FROM pmis_project;"
 
 # 9. 清理临时资源
-dropdb -h 127.0.0.1 -U postgres ydsz-pmis-restore
+dropdb -h 127.0.0.1 -U postgres ydsz-restore
 rm /tmp/pmis_project_restore.sql
 ```
 
@@ -187,8 +187,8 @@ tail -f /var/log/postgresql/postgresql-*.log | grep -E "recovery|restore|consist
 
 # 9. 等待恢复完成（日志出现 "database system is ready to accept connections"）
 # 10. 验证数据
-psql -U postgres -d ydsz-pmis -c "SELECT count(*) FROM pmis_user;"
-psql -U postgres -d ydsz-pmis -c "SELECT count(*) FROM pmis_project;"
+psql -U postgres -d ydsz -c "SELECT count(*) FROM pmis_user;"
+psql -U postgres -d ydsz -c "SELECT count(*) FROM pmis_project;"
 
 # 11. 恢复应用服务
 kubectl scale deploy -n pmis-prod --replicas=3 deployment/pmis-gateway deployment/pmis-userinfo deployment/pmis-system
@@ -205,12 +205,12 @@ kubectl scale deploy -n pmis-prod --replicas=3 deployment/pmis-gateway deploymen
 # (假设新 PG 已安装并初始化)
 
 # 2. 从 OSS 下载最近的备份
-ossutil cp oss://pmis-backup/postgres/ydsz-pmis_full_latest.dump /tmp/
+ossutil cp oss://pmis-backup/postgres/ydsz_full_latest.dump /tmp/
 ossutil cp -r oss://pmis-backup/wal-archive/ /data/backups/wal-archive/
 
 # 3. 恢复全量逻辑备份
-createdb -U postgres ydsz-pmis
-pg_restore -U postgres -d ydsz-pmis -j 4 /tmp/ydsz-pmis_full_latest.dump
+createdb -U postgres ydsz
+pg_restore -U postgres -d ydsz -j 4 /tmp/ydsz_full_latest.dump
 
 # 4. 应用 WAL 归档（PITR 到最新状态）
 # (参考场景 B 的步骤 6-8)

@@ -2,7 +2,7 @@
 # =============================================================================
 #  YDSZ PMIS · Nacos 共享配置导入脚本
 # -----------------------------------------------------------------------------
-#  用途:    将 deploy/common/nacos/ydsz-pmis-common.yaml 导入到 Nacos
+#  用途:    将 deploy/common/nacos/ydsz-common.yaml 导入到 Nacos
 #  依赖:    curl / nacos 已启动 (http://127.0.0.1:8848)
 #  用法:    ./deploy/ubuntu/scripts/import-nacos-config.sh [namespace] [group]
 #           默认: namespace=pmis, group=dev
@@ -17,7 +17,7 @@ NACOS_ADDR=${NACOS_SERVER_ADDR:-127.0.0.1:8848}
 USERNAME=${NACOS_USERNAME:-nacos}
 PASSWORD=${NACOS_PASSWORD:-nacos}
 
-DATA_ID="ydsz-pmis-common.yaml"
+DATA_ID="ydsz-common.yaml"
 CONFIG_FILE="$ROOT_DIR/deploy/common/nacos/$DATA_ID"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then

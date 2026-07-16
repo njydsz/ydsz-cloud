@@ -81,13 +81,13 @@ echo "▶ 3. 后端微服务健康检查（通过 Gateway 路由）"
 #   cronjob 9005 / workflow 9006 / agent 9007
 # 通过 Gateway 路由访问，端口仅作参考（实际由 Gateway 转发）
 SERVICES=(
-    "ydsz-pmis-userinfo:9001"
-    "ydsz-pmis-system:9002"
-    "ydsz-pmis-project:9003"
-    "ydsz-pmis-message:9004"
-    "ydsz-pmis-cronjob:9005"
-    "ydsz-pmis-workflow:9006"
-    "ydsz-pmis-agent:9007"
+    "ydsz-userinfo:9001"
+    "ydsz-system:9002"
+    "ydsz-project:9003"
+    "ydsz-message:9004"
+    "ydsz-cronjob:9005"
+    "ydsz-workflow:9006"
+    "ydsz-agent:9007"
 )
 for SVC in "${SERVICES[@]}"; do
     NAME="${SVC%%:*}"
@@ -104,7 +104,7 @@ done
 # ----------------------------------------------------------------------------
 echo ""
 echo "▶ 4. 登录接口"
-LOGIN_RESP=$(curl -s --max-time ${TIMEOUT} -X POST "${GATEWAY_URL}/ydsz-pmis-userinfo/auth/login" \
+LOGIN_RESP=$(curl -s --max-time ${TIMEOUT} -X POST "${GATEWAY_URL}/ydsz-userinfo/auth/login" \
     -H "Content-Type: application/json" \
     -d "{\"username\":\"${SMOKE_USER}\",\"password\":\"${SMOKE_PASS}\"}")
 TOKEN=$(echo "${LOGIN_RESP}" | grep -oE '"token":"[^"]+"' | head -1 | cut -d'"' -f4)
@@ -121,7 +121,7 @@ echo ""
 echo "▶ 5. 鉴权链路"
 if [[ -n "${TOKEN}" ]]; then
     ME_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time ${TIMEOUT} \
-        "${GATEWAY_URL}/ydsz-pmis-userinfo/users/me" \
+        "${GATEWAY_URL}/ydsz-userinfo/users/me" \
         -H "Authorization: Bearer ${TOKEN}")
     if [[ "${ME_CODE}" == "200" ]]; then
         ok "GET /users/me with token → 200"
@@ -149,7 +149,7 @@ fi
 # ----------------------------------------------------------------------------
 echo ""
 echo "▶ 7. CORS 预检"
-CORS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time ${TIMEOUT} -X OPTIONS "${GATEWAY_URL}/ydsz-pmis-userinfo/auth/login" \
+CORS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time ${TIMEOUT} -X OPTIONS "${GATEWAY_URL}/ydsz-userinfo/auth/login" \
     -H "Origin: http://localhost:5173" \
     -H "Access-Control-Request-Method: POST" \
     -H "Access-Control-Request-Headers: Content-Type")
@@ -165,7 +165,7 @@ fi
 echo ""
 echo "▶ 8. 内部头剥离"
 FORGED_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time ${TIMEOUT} \
-    "${GATEWAY_URL}/ydsz-pmis-userinfo/users/me" \
+    "${GATEWAY_URL}/ydsz-userinfo/users/me" \
     -H "X-User-Id: 99999" \
     -H "X-Username: fake-admin" \
     -H "X-User-Roles: ROLE_ADMIN")
@@ -181,7 +181,7 @@ fi
 echo ""
 echo "▶ 9. 路径穿越拦截"
 TRAVERSAL_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time ${TIMEOUT} \
-    "${GATEWAY_URL}/ydsz-pmis-userinfo/../../etc/passwd")
+    "${GATEWAY_URL}/ydsz-userinfo/../../etc/passwd")
 if [[ "${TRAVERSAL_CODE}" == "400" ]]; then
     ok "/../../etc/passwd → 400 (路径穿越已拦截)"
 else

@@ -5,89 +5,89 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-gateway-pdb
+  name: ydsz-gateway-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-gateway
+      app: ydsz-gateway
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-system-pdb
+  name: ydsz-system-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-system
+      app: ydsz-system
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-userinfo-pdb
+  name: ydsz-userinfo-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-userinfo
+      app: ydsz-userinfo
 ---
 # Project 副本数 4，允许 2 个不可用（等价于原 minAvailable: 2）
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-project-pdb
+  name: ydsz-project-pdb
   namespace: pmis
 spec:
   maxUnavailable: 2
   selector:
     matchLabels:
-      app: ydsz-pmis-project
+      app: ydsz-project
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-workflow-pdb
+  name: ydsz-workflow-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-workflow
+      app: ydsz-workflow
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-message-pdb
+  name: ydsz-message-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-message
+      app: ydsz-message
 ---
 # P2-9: 补齐 sales / finance PDB（maxUnavailable: 1，与 base 策略一致）
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-sales-pdb
+  name: ydsz-sales-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-sales
+      app: ydsz-sales
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-finance-pdb
+  name: ydsz-finance-pdb
   namespace: pmis
 spec:
   maxUnavailable: 1
   selector:
     matchLabels:
-      app: ydsz-pmis-finance
+      app: ydsz-finance

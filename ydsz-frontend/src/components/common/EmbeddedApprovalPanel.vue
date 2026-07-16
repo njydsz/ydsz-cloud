@@ -5,7 +5,7 @@
   - Emits: start / view-diagram / approve / reject
   - 展示流程状态、当前节点、待办与流转历史
   @module components/common/EmbeddedApprovalPanel
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <template>

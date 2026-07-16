@@ -6,7 +6,7 @@
  * - 默认不持久化：仅当 store 在选项中显式声明 `persist` 时才开启
  * - 敏感数据混淆：序列化后整体 Base64 编码（轻量混淆，非加密）
  * @module plugins/pinia-persist
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import type { Pinia } from 'pinia'

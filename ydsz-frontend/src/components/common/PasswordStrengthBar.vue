@@ -7,7 +7,7 @@
   - 支持两种模式：自带输入框（v-model）或纯展示（:password）
   - 计算来自 @/composables/usePasswordStrength
   @module components/common/PasswordStrengthBar
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

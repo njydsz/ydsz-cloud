@@ -9,10 +9,10 @@
 # 本文件不再重复。
 #
 # Service 行为说明：
-#   - 初始 selector 为 app: ydsz-pmis-{svc}（与原 Service 一致）
+#   - 初始 selector 为 app: ydsz-{svc}（与原 Service 一致）
 #   - Argo Rollouts 控制器会在发布过程中动态修改 selector 指向
 #     pod-template-hash，实现流量切分
-#   - 用户流量入口仍为 base/ 中的 ydsz-pmis-{svc} Service（不变）
+#   - 用户流量入口仍为 base/ 中的 ydsz-{svc} Service（不变）
 #
 # 使用方式：
 #   kubectl apply -f deploy/k8s/rollouts/rollout-services.yaml
@@ -25,15 +25,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-userinfo-canary
+  name: ydsz-userinfo-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-userinfo
+    app: ydsz-userinfo
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-userinfo
+    app: ydsz-userinfo
   ports:
     - name: http
       port: 9001
@@ -42,15 +42,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-userinfo-stable
+  name: ydsz-userinfo-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-userinfo
+    app: ydsz-userinfo
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-userinfo
+    app: ydsz-userinfo
   ports:
     - name: http
       port: 9001
@@ -63,15 +63,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-system-canary
+  name: ydsz-system-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-system
+    app: ydsz-system
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-system
+    app: ydsz-system
   ports:
     - name: http
       port: 9002
@@ -80,15 +80,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-system-stable
+  name: ydsz-system-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-system
+    app: ydsz-system
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-system
+    app: ydsz-system
   ports:
     - name: http
       port: 9002
@@ -101,15 +101,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-project-canary
+  name: ydsz-project-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-project
+    app: ydsz-project
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-project
+    app: ydsz-project
   ports:
     - name: http
       port: 9003
@@ -118,15 +118,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-project-stable
+  name: ydsz-project-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-project
+    app: ydsz-project
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-project
+    app: ydsz-project
   ports:
     - name: http
       port: 9003
@@ -139,15 +139,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-message-canary
+  name: ydsz-message-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-message
+    app: ydsz-message
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-message
+    app: ydsz-message
   ports:
     - name: http
       port: 9004
@@ -156,15 +156,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-message-stable
+  name: ydsz-message-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-message
+    app: ydsz-message
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-message
+    app: ydsz-message
   ports:
     - name: http
       port: 9004
@@ -177,15 +177,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-cronjob-canary
+  name: ydsz-cronjob-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-cronjob
+    app: ydsz-cronjob
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-cronjob
+    app: ydsz-cronjob
   ports:
     - name: http
       port: 9005
@@ -194,15 +194,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-cronjob-stable
+  name: ydsz-cronjob-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-cronjob
+    app: ydsz-cronjob
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-cronjob
+    app: ydsz-cronjob
   ports:
     - name: http
       port: 9005
@@ -215,15 +215,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-workflow-canary
+  name: ydsz-workflow-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-workflow
+    app: ydsz-workflow
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-workflow
+    app: ydsz-workflow
   ports:
     - name: http
       port: 9006
@@ -232,15 +232,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-workflow-stable
+  name: ydsz-workflow-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-workflow
+    app: ydsz-workflow
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-workflow
+    app: ydsz-workflow
   ports:
     - name: http
       port: 9006
@@ -253,15 +253,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-agent-canary
+  name: ydsz-agent-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-agent
+    app: ydsz-agent
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-agent
+    app: ydsz-agent
   ports:
     - name: http
       port: 9007
@@ -270,15 +270,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-agent-stable
+  name: ydsz-agent-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-agent
+    app: ydsz-agent
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-agent
+    app: ydsz-agent
   ports:
     - name: http
       port: 9007
@@ -291,15 +291,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-sales-canary
+  name: ydsz-sales-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-sales
+    app: ydsz-sales
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-sales
+    app: ydsz-sales
   ports:
     - name: http
       port: 9010
@@ -308,15 +308,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-sales-stable
+  name: ydsz-sales-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-sales
+    app: ydsz-sales
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-sales
+    app: ydsz-sales
   ports:
     - name: http
       port: 9010
@@ -329,15 +329,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-finance-canary
+  name: ydsz-finance-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-finance
+    app: ydsz-finance
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-finance
+    app: ydsz-finance
   ports:
     - name: http
       port: 9011
@@ -346,15 +346,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-finance-stable
+  name: ydsz-finance-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-finance
+    app: ydsz-finance
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-finance
+    app: ydsz-finance
   ports:
     - name: http
       port: 9011
@@ -367,15 +367,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-nextwiki-canary
+  name: ydsz-nextwiki-canary
   namespace: pmis
   labels:
-    app: ydsz-pmis-nextwiki
+    app: ydsz-nextwiki
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-nextwiki
+    app: ydsz-nextwiki
   ports:
     - name: http
       port: 8800
@@ -384,15 +384,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-nextwiki-stable
+  name: ydsz-nextwiki-stable
   namespace: pmis
   labels:
-    app: ydsz-pmis-nextwiki
+    app: ydsz-nextwiki
     tier: service
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-nextwiki
+    app: ydsz-nextwiki
   ports:
     - name: http
       port: 8800

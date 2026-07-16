@@ -19,8 +19,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'ydsz-pmis-backend/**'
-      - 'ydsz-pmis-frontend/**'
+      - 'ydsz-backend/**'
+      - 'ydsz-frontend/**'
       - 'deploy/docker/**'
       - 'deploy/k8s/**'
       - 'deploy/helm/**'
@@ -56,17 +56,17 @@ jobs:
           #                              9003 project / 9004 message / 9005 cronjob
           #                              9006 workflow / 9007 agent
           #                              9008 finance / 9009 sales / 8800 nextwiki
-          - { name: gateway,   port: 9000,  module: ydsz-pmis-gateway }
-          - { name: userinfo,  port: 9001,  module: ydsz-pmis-userinfo }
-          - { name: system,    port: 9002,  module: ydsz-pmis-system }
-          - { name: project,   port: 9003,  module: ydsz-pmis-project }
-          - { name: message,   port: 9004,  module: ydsz-pmis-message }
-          - { name: cronjob,   port: 9005,  module: ydsz-pmis-cronjob }
-          - { name: workflow,  port: 9006,  module: ydsz-pmis-workflow }
-          - { name: agent,     port: 9007,  module: ydsz-pmis-agent }
-          - { name: finance,   port: 9008,  module: ydsz-pmis-finance }
-          - { name: sales,     port: 9009,  module: ydsz-pmis-sales }
-          - { name: nextwiki,  port: 8800,  module: ydsz-pmis-nextwiki }
+          - { name: gateway,   port: 9000,  module: ydsz-gateway }
+          - { name: userinfo,  port: 9001,  module: ydsz-userinfo }
+          - { name: system,    port: 9002,  module: ydsz-system }
+          - { name: project,   port: 9003,  module: ydsz-project }
+          - { name: message,   port: 9004,  module: ydsz-message }
+          - { name: cronjob,   port: 9005,  module: ydsz-cronjob }
+          - { name: workflow,  port: 9006,  module: ydsz-workflow }
+          - { name: agent,     port: 9007,  module: ydsz-agent }
+          - { name: finance,   port: 9008,  module: ydsz-finance }
+          - { name: sales,     port: 9009,  module: ydsz-sales }
+          - { name: nextwiki,  port: 8800,  module: ydsz-nextwiki }
     steps:
       - uses: actions/checkout@v4
 
@@ -84,8 +84,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # context 为后端根目录，Dockerfile 内通过多阶段构建完成 Maven 编译
-          context: ydsz-pmis-backend
-          file: ydsz-pmis-backend/Dockerfile
+          context: ydsz-backend
+          file: ydsz-backend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
@@ -116,8 +116,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # context 为前端根目录，Dockerfile 内通过多阶段构建完成 pnpm install + build
-          context: ydsz-pmis-frontend
-          file: ydsz-pmis-frontend/Dockerfile
+          context: ydsz-frontend
+          file: ydsz-frontend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }}
@@ -218,29 +218,29 @@ jobs:
       - name: Deploy to Staging
         run: |
           # 更新所有微服务镜像（命名空间统一为 pmis，与 deploy/k8s/base/namespace.yaml 一致）
-          # Deployment 命名遵循 deploy/k8s/base/*.yaml 的 ydsz-pmis- 前缀（P0-2 修复命名一致性）
-          # Container 命名遵循 deploy/k8s/base/*.yaml 的容器名（与 service 同名，无 ydsz-pmis- 前缀）
+          # Deployment 命名遵循 deploy/k8s/base/*.yaml 的 ydsz- 前缀（P0-2 修复命名一致性）
+          # Container 命名遵循 deploy/k8s/base/*.yaml 的容器名（与 service 同名，无 ydsz- 前缀）
           for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki; do
-            kubectl set image deployment/ydsz-pmis-${svc} \
+            kubectl set image deployment/ydsz-${svc} \
               ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
           done
           # 更新前端镜像（前端容器名为 frontend，与后端服务命名规则一致）
-          kubectl set image deployment/ydsz-pmis-frontend \
+          kubectl set image deployment/ydsz-frontend \
             frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }} \
             -n ${{ env.K8S_NAMESPACE }}
 
       - name: Wait for Rollout
         run: |
           for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
-            echo "Waiting for ydsz-pmis-${svc} rollout..."
-            kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            echo "Waiting for ydsz-${svc} rollout..."
+            kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done
 
       - name: Smoke Test
         run: |
           chmod +x deploy/scripts/smoke-test.sh
-          STAGING_URL=https://staging.pmis.ydsz.cn ./deploy/scripts/smoke-test.sh
+          STAGING_URL=https://staging.ydsz.ydsz.cn ./deploy/scripts/smoke-test.sh
 
   # ==================== 部署 Production（kubectl 滚动更新 + Prometheus 错误率自动回滚） ====================
   deploy-production:
@@ -249,7 +249,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.target == 'production'
     environment:
       name: production
-      url: https://pmis.ydsz.cn
+      url: https://ydsz.ydsz.cn
     steps:
       - uses: actions/checkout@v4
 
@@ -263,19 +263,19 @@ jobs:
           # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败并回滚
           ERROR_RATE_THRESHOLD=0.01
           for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
-            echo "==> 开始滚动更新: ydsz-pmis-${svc}"
+            echo "==> 开始滚动更新: ydsz-${svc}"
 
-            # 更新镜像触发滚动更新（P0-2 修复：Deployment 名为 ydsz-pmis-${svc}，容器名为 ${svc}）
-            kubectl set image deployment/ydsz-pmis-${svc} \
+            # 更新镜像触发滚动更新（P0-2 修复：Deployment 名为 ydsz-${svc}，容器名为 ${svc}）
+            kubectl set image deployment/ydsz-${svc} \
               ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
 
             # 等待滚动更新完成（超时 10 分钟）
-            echo "Waiting for ydsz-pmis-${svc} rollout..."
-            if ! kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=600s; then
-              echo "ERROR: ydsz-pmis-${svc} 滚动更新超时，执行回滚"
-              kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            echo "Waiting for ydsz-${svc} rollout..."
+            if ! kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=600s; then
+              echo "ERROR: ydsz-${svc} 滚动更新超时，执行回滚"
+              kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
@@ -283,37 +283,37 @@ jobs:
             sleep 30
 
             # 通过 Prometheus 查询错误率（5xx / 总请求，最近 5 分钟）
-            # Pod 命名遵循 <deployment>-<hash>，故正则用 ydsz-pmis-${svc}.*
+            # Pod 命名遵循 <deployment>-<hash>，故正则用 ydsz-${svc}.*
             ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/query" \
-              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-pmis-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-pmis-${svc}.*\"}[5m]))" \
+              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-${svc}.*\"}[5m]))" \
               | jq -r '.data.result[0].value[1] // "0"')
-            echo "ydsz-pmis-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
+            echo "ydsz-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
 
             if [ "$(echo "${ERROR_RATE} > ${ERROR_RATE_THRESHOLD}" | bc -l)" = "1" ]; then
-              echo "ERROR: ydsz-pmis-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，执行回滚！"
-              kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+              echo "ERROR: ydsz-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，执行回滚！"
+              kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
-            # 检查 Pod 健康状态（Pod label app=ydsz-pmis-${svc}，与 deploy/k8s/base/*.yaml 一致）
-            UNHEALTHY=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=ydsz-pmis-${svc} \
+            # 检查 Pod 健康状态（Pod label app=ydsz-${svc}，与 deploy/k8s/base/*.yaml 一致）
+            UNHEALTHY=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=ydsz-${svc} \
               --field-selector=status.phase!=Running,status.phase!=Succeeded \
               --no-headers 2>/dev/null | wc -l)
             if [ "${UNHEALTHY}" -gt "0" ]; then
-              echo "ERROR: ydsz-pmis-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，执行回滚！"
-              kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+              echo "ERROR: ydsz-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，执行回滚！"
+              kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
-            echo "✅ ydsz-pmis-${svc} 部署成功"
+            echo "✅ ydsz-${svc} 部署成功"
           done
 
       - name: Production Smoke Test
         run: |
           chmod +x deploy/scripts/smoke-test.sh
-          PRODUCTION_URL=https://pmis.ydsz.cn ./deploy/scripts/smoke-test.sh
+          PRODUCTION_URL=https://ydsz.ydsz.cn ./deploy/scripts/smoke-test.sh
 
       - name: Notify Deploy Success
         if: success()
@@ -338,8 +338,8 @@ jobs:
       - name: Rollback Production
         run: |
           for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
-            echo "==> 回滚 ydsz-pmis-${svc} 到上一版本"
-            kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-            kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            echo "==> 回滚 ydsz-${svc} 到上一版本"
+            kubectl rollout undo deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }}
+            kubectl rollout status deployment/ydsz-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done
           echo "✅ 所有服务已回滚到上一版本"

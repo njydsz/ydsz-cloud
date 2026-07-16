@@ -24,16 +24,16 @@ app version:      {{ .Chart.AppVersion }}
 ------------------------------------------------------------------------------
 
 1. 检查 Pod 状态:
-   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/part-of=ydsz-pmis
+   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/part-of=ydsz
 
 2. 检查 Service:
-   kubectl -n {{ .Release.Namespace }} get svc -l app.kubernetes.io/part-of=ydsz-pmis
+   kubectl -n {{ .Release.Namespace }} get svc -l app.kubernetes.io/part-of=ydsz
 
 3. 等待所有 Pod Ready:
    kubectl -n {{ .Release.Namespace }} wait --for=condition=Ready pod --all --timeout=300s
 
 4. 端口转发访问 gateway:
-   kubectl -n {{ .Release.Namespace }} port-forward svc/ydsz-pmis-gateway 9000:9000
+   kubectl -n {{ .Release.Namespace }} port-forward svc/ydsz-gateway 9000:9000
    curl http://127.0.0.1:9000/actuator/health
 
 5. 运行冒烟测试:

@@ -6,7 +6,7 @@
     数据落库前做 JSON 序列化与反序列化校验。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/dmn/components/DmnEditDialog
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

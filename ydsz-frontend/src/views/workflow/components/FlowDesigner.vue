@@ -12,7 +12,7 @@
       6. 内置 4 套模板（立项 / 变更 / 结项 / 通用）。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/components/FlowDesigner
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

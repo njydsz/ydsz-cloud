@@ -1,10 +1,10 @@
 # =====================================================================
-#  YDSZ PMIS · Nacos 共享配置 (ydsz-pmis-common.yaml)
+#  YDSZ PMIS · Nacos 共享配置 (ydsz-common.yaml)
 #  --------------------------------------------------------------------
 #  作用:   所有 10 个微服务都通过 spring.cloud.nacos.config.shared-configs
 #          引用此 dataId,实现"一处修改全集群生效"
 #  部署:   Nacos 控制台 → 配置管理 → 新建配置
-#          DataId:    ydsz-pmis-common.yaml
+#          DataId:    ydsz-common.yaml
 #          Group:      dev
 #          配置格式:   YAML
 #          导入脚本:   deploy/ubuntu/scripts/import-nacos-config.sh
@@ -42,7 +42,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
     username: ${DB_USER:pmis}
     # ⚠️ 生产环境必须使用 Jasypt 加密：password: ENC(加密后的密码串)
     # 开发环境可使用明文/环境变量，生产通过 JASYPT_ENCRYPTOR_PASSWORD 环境变量注入主密码后自动解密
@@ -85,14 +85,14 @@ spring:
     strict: true
     datasource:
       master:
-        url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
+        url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
         username: ${DB_USER:pmis}
         password: ${DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
       # 从库：当前指向同一数据库 URL，生产环境分离后修改为从库地址
       # HA：生产环境可设置 DB_SLAVE_HOST 指向流复制从库
       slave:
-        url: jdbc:postgresql://${DB_SLAVE_HOST:${DB_HOST:127.0.0.1}}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8
+        url: jdbc:postgresql://${DB_SLAVE_HOST:${DB_HOST:127.0.0.1}}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8
         username: ${DB_USER:pmis}
         password: ${DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
@@ -169,9 +169,9 @@ feign:
         read-timeout: 3000
         logger-level: BASIC
       # 报表/导出/AI 等长耗时接口分组，由 @FeignClient(name="...") 匹配
-      ydsz-pmis-project:
+      ydsz-project:
         read-timeout: 10000
-      ydsz-pmis-agent:
+      ydsz-agent:
         read-timeout: 30000
   # 关闭默认重试，统一由 Resilience4j Retry 接管
   compression:
@@ -205,7 +205,7 @@ resilience4j:
           - java.net.SocketTimeoutException
           - org.springframework.web.client.ResourceAccessException
         ignore-exceptions:
-          - com.njydsz.pmis.common.exception.SysException
+          - com.njydsz.common.exception.SysException
           - java.lang.IllegalArgumentException
       dbRetry:
         max-attempts: 2
@@ -232,7 +232,7 @@ springdoc:
     enabled: true
     tags-sorter: alpha
     operations-sorter: alpha
-  packages-to-scan: com.njydsz.pmis
+  packages-to-scan: com.njydsz
   default-flat-param-object: true
 
 # ---------- Knife4j 增强 OpenAPI UI 共享配置 ----------
@@ -244,7 +244,7 @@ knife4j:
     language: zh_cn
     enable-version: true
     enable-swagger-models: true
-    document-url: https://doc.pmis.example.com
+    document-url: https://doc.ydsz.example.com
   # 生产环境通过 profile 控制关闭
   production: ${knife4j.production:false}
 
@@ -252,7 +252,7 @@ knife4j:
 logging:
   level:
     root: ${LOG_ROOT_LEVEL:INFO}
-    "[com.njydsz.pmis]": ${LOG_PMIS_LEVEL:DEBUG}
+    "[com.njydsz]": ${LOG_PMIS_LEVEL:DEBUG}
     "[org.springframework.cloud.gateway]": INFO
     "[com.alibaba.nacos]": WARN
     "[com.baomidou.mybatisplus]": INFO
@@ -262,7 +262,7 @@ logging:
 # ---------- PMIS 业务密钥 ----------
 # ⚠️ 生产环境必须使用 Jasypt 加密：secret: ENC(加密后的密钥串)
 # 开发环境可通过 JWT_SECRET 环境变量注入明文，生产通过 JASYPT_ENCRYPTOR_PASSWORD 自动解密 ENC()
-pmis:
+ydsz:
   jwt:
     secret: ${JWT_SECRET:}
     issuer: pmis
@@ -309,7 +309,7 @@ pmis:
   # ---------- Sentry 错误监控（P0-5：生产环境启用） ----------
   # 生产环境通过 K8s ConfigMap/Secret 或环境变量注入 DSN，此处提供默认结构
   # 开发环境默认关闭（enabled=false），生产环境设为 true 并注入 DSN
-  # 环境变量映射：PMIS_SENTRY_ENABLED → pmis.sentry.enabled（Spring Boot relaxed binding）
+  # 环境变量映射：PMIS_SENTRY_ENABLED → ydsz.sentry.enabled（Spring Boot relaxed binding）
   sentry:
     enabled: ${PMIS_SENTRY_ENABLED:false}
     dsn: ${PMIS_SENTRY_DSN:}

@@ -5,7 +5,7 @@
     负责"我发起的"流程实例列表展示、查询（流程编码 / 状态筛选）。
     配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/approval-center/tabs/InitiatedTab
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

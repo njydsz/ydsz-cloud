@@ -3,7 +3,7 @@
  * @description 定义项目变更（ProjectChange）模块的 VO/DTO 及聚合行类型；
  *              与后端 ProjectChangeController 的请求/响应结构保持一致。批次 19 补全。
  * @module api/initiation/change
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 

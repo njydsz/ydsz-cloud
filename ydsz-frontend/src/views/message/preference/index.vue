@@ -6,7 +6,7 @@
   - 操作列：编辑（弹窗 upsert）/删除（确认对话框）
   - 新增偏好按钮
   @module views/message/preference
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

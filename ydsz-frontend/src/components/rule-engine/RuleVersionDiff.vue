@@ -5,7 +5,7 @@
   - 变更类型颜色编码（新增=绿、修改=橙、删除=红）
   - 变更摘要统计
   @module components/rule-engine/RuleVersionDiff
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

@@ -4,7 +4,7 @@
                支持回放、上下文快照查看、详细错误展示。
                P2-5: 新增树形视图（按 traceId 分组展示规则链路）与甘特图视图（按耗时可视化）。
   @module views/execution/rule-engine/traces
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.5.0
 -->
 <template>

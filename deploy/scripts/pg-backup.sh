@@ -35,7 +35,7 @@ set -euo pipefail
 PG_HOST="${PG_HOST:-127.0.0.1}"
 PG_PORT="${PG_PORT:-5432}"
 PG_USER="${PG_USER:-postgres}"
-PG_DB="${PG_DB:-ydsz-pmis}"
+PG_DB="${PG_DB:-ydsz}"
 # PGPASSWORD 环境变量传入密码
 
 BACKUP_DIR="${BACKUP_DIR:-/data/backups/postgres}"

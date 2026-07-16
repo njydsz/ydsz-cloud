@@ -7,7 +7,7 @@ metadata:
   name: {{ .Release.Name }}-common-config
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" "common-config" "Release" .Release "Chart" .Chart) | nindent 4 }}
+    {{- include "ydsz.labels" (dict "name" "common-config" "Release" .Release "Chart" .Chart) | nindent 4 }}
 data:
   SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: {{ .Values.global.nacos.serverAddr | quote }}
   SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: {{ .Values.global.nacos.serverAddr | quote }}

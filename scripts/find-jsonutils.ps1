@@ -1,4 +1,4 @@
-$files = Get-ChildItem -Path 'd:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend' -Recurse -Include '*.java'
+$files = Get-ChildItem -Path 'd:\Code\ydsz\ydsz\ydsz-backend' -Recurse -Include '*.java'
 $results = @()
 foreach ($f in $files) {
     $matches = Select-String -Path $f.FullName -Pattern 'JsonUtils' -AllMatches

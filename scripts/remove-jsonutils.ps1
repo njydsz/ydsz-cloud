@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$rootDir = "d:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend"
+$rootDir = "d:\Code\ydsz\ydsz\ydsz-backend"
 
 # Find all Java files that reference JsonUtils (excluding JsonUtils.java itself)
 $files = Get-ChildItem -Path $rootDir -Recurse -Include '*.java' |
@@ -22,7 +22,7 @@ foreach ($file in $files) {
 
     # Fix import: if the file imported JsonUtils, replace with YdszJson import
     if ($content -match 'import com\.njydsz\.pmis\.common\.util\.json\.JsonUtils;') {
-        $content = $content -replace 'import com\.njydsz\.pmis\.common\.util\.json\.JsonUtils;', 'import com.njydsz.pmis.common.json.YdszJson;'
+        $content = $content -replace 'import com\.njydsz\.pmis\.common\.util\.json\.JsonUtils;', 'import com.njydsz.common.json.YdszJson;'
     }
 
     if ($content -ne $original) {

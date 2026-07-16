@@ -9,7 +9,7 @@
   - 双向绑定支持 number/string(仅 ID) 与 object(完整用户) 两种形态
   - 场景: 工作流审批人/委派人/抄送人、业务表单负责人字段
   @module components/common/UserPicker
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

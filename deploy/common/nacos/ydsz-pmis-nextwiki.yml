@@ -1,10 +1,10 @@
 # =====================================================================
-#  YDSZ PMIS · NextWiki 网盘知识库服务专属配置 (ydsz-pmis-nextwiki.yml)
+#  YDSZ PMIS · NextWiki 网盘知识库服务专属配置 (ydsz-nextwiki.yml)
 #  --------------------------------------------------------------------
 #  作用:   NextWiki 服务通过 spring.cloud.nacos.config.shared-configs
 #          引用此 dataId,实现配置外部化与动态刷新
 #  部署:   Nacos 控制台 → 配置管理 → 新建配置
-#          DataId:    ydsz-pmis-nextwiki.yml
+#          DataId:    ydsz-nextwiki.yml
 #          Group:      dev
 #          配置格式:   YAML
 #          导入脚本:   deploy/ubuntu/scripts/import-nacos-config.sh

@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$rootDir = "d:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend"
+$rootDir = "d:\Code\ydsz\ydsz\ydsz-backend"
 
 $files = Get-ChildItem -Path $rootDir -Recurse -Filter "*.java" |
     Select-String -Pattern 'JsonUtils\.' -List |
@@ -13,12 +13,12 @@ foreach ($file in $files) {
     $original = $content
 
     # 1. Replace import
-    $content = $content -replace 'import com\.njydsz\.pmis\.common\.util\.json\.JsonUtils;', 'import com.njydsz.pmis.common.json.YdszJson;'
+    $content = $content -replace 'import com\.njydsz\.pmis\.common\.util\.json\.JsonUtils;', 'import com.njydsz.common.json.YdszJson;'
 
     # 2. Replace JsonUtils.JsonException -> YdszJsonException (in catch blocks, type refs)
     $content = $content -replace 'JsonUtils\.JsonException', 'YdszJsonException'
     # Also handle the import if it was explicitly imported
-    $content = $content -replace 'import com\.njydsz\.pmis\.common\.util\.json\.JsonUtils\.JsonException;', 'import com.njydsz.pmis.common.json.exception.YdszJsonException;'
+    $content = $content -replace 'import com\.njydsz\.pmis\.common\.util\.json\.JsonUtils\.JsonException;', 'import com.njydsz.common.json.exception.YdszJsonException;'
 
     # 3. Replace API calls (order matters - longer patterns first!)
     # JsonUtils.fromJsonToList(json, Class) -> YdszJson.parseArray(json, Class)

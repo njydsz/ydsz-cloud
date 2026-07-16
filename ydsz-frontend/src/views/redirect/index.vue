@@ -7,7 +7,7 @@
   *  4. 由于原 fullPath 的组件实例已被销毁（路由切换），重新进入时触发重建 → 完成刷新
   *  全程无视觉闪烁（中转页不渲染任何 UI）
   * @module views/redirect
-  * @author ydsz-pmis-team
+  * @author ydsz-team
   * @since 1.4.0
 -->
 <script setup lang="ts">

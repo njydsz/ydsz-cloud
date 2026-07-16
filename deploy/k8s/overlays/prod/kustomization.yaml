@@ -20,28 +20,28 @@ resources:
   - patch-tracing.yaml
 
 images:
-  - name: ydsz-pmis/gateway
+  - name: ydsz/gateway
     newTag: v1.0.0
-  - name: ydsz-pmis/userinfo
+  - name: ydsz/userinfo
     newTag: v1.0.0
-  - name: ydsz-pmis/system
+  - name: ydsz/system
     newTag: v1.0.0
-  - name: ydsz-pmis/project
+  - name: ydsz/project
     newTag: v1.0.0
-  - name: ydsz-pmis/message
+  - name: ydsz/message
     newTag: v1.0.0
-  - name: ydsz-pmis/cronjob
+  - name: ydsz/cronjob
     newTag: v1.0.0
-  - name: ydsz-pmis/workflow
+  - name: ydsz/workflow
     newTag: v1.0.0
-  - name: ydsz-pmis/agent
+  - name: ydsz/agent
     newTag: v1.0.0
   # P2-9: 补齐 sales / finance 镜像 tag，避免部署时残留字面占位符 IMAGE_TAG
-  - name: ydsz-pmis/sales
+  - name: ydsz/sales
     newTag: v1.0.0
-  - name: ydsz-pmis/finance
+  - name: ydsz/finance
     newTag: v1.0.0
-  - name: ydsz-pmis/nextwiki
+  - name: ydsz/nextwiki
     newTag: v1.0.0
 
 patches:

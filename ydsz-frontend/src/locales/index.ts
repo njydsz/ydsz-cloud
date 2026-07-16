@@ -21,7 +21,7 @@
  *    文案数据仍保留在 locales/* 下，避免双语同步失控。
  *
  * @module locales/index
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 import { createI18n } from 'vue-i18n'

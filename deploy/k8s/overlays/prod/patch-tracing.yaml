@@ -25,7 +25,7 @@ metadata:
   name: pmis-tracing-config
   namespace: pmis
   labels:
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
 data:
   # 启用 tracing 上报（dev 环境默认关闭，prod 环境强制开启）
   TRACING_EXPORT_ENABLED: "true"

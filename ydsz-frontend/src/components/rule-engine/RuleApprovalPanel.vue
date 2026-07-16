@@ -6,7 +6,7 @@
   - 审批历史
   - 审批意见
   @module components/rule-engine/RuleApprovalPanel
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 2.0.0
 -->
 <script setup lang="ts">

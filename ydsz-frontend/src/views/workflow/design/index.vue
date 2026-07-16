@@ -7,7 +7,7 @@
     附：版本管理（列表 / 切换 / 差异对比）、模拟运行、模板导入导出。
     配套自研工作流 v2 引擎，PC 端专用，不含电子签章能力。
   @module views/workflow/design
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

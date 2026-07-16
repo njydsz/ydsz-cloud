@@ -1,5 +1,5 @@
 {
-  "name": "ydsz-pmis-frontend",
+  "name": "ydsz-frontend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
   "homepage": "https://pmis.example.com",
   "repository": {
     "type": "git",
-    "url": "https://git.pmis.example.com/ydsz-pmis/ydsz-pmis-frontend.git"
+    "url": "https://git.pmis.example.com/ydsz/ydsz-frontend.git"
   },
   "bugs": {
     "url": "https://jira.pmis.example.com"

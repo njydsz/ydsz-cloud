@@ -13,7 +13,7 @@
 #   1. 已部署 Prometheus Operator(kube-prometheus-stack helm chart)
 #   2. Prometheus CRD 的 serviceMonitorSelector.matchLabels 包含 release: prometheus
 #   3. PMIS 各 Service 的 port name 为 http(已确认 gateway/system/project 一致)
-#   4. kustomize labels 已为所有 Service 注入 app.kubernetes.io/part-of: ydsz-pmis
+#   4. kustomize labels 已为所有 Service 注入 app.kubernetes.io/part-of: ydsz
 #   5. 微服务 Actuator 已暴露 /actuator/prometheus(见 application.yml management.endpoints)
 #
 # 部署:
@@ -25,7 +25,7 @@ metadata:
   name: pmis-services
   namespace: pmis
   labels:
-    app.kubernetes.io/part-of: ydsz-pmis
+    app.kubernetes.io/part-of: ydsz
     app.kubernetes.io/managed-by: kustomize
     # release 标签需与 Prometheus Operator 的 serviceMonitorSelector matchLabels 一致
     # kube-prometheus-stack 默认使用 release: <helm-release-name>
@@ -39,7 +39,7 @@ spec:
   # (kustomization.yaml labels.includeSelectors: true 已为所有 Service 打此标签)
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: ydsz-pmis
+      app.kubernetes.io/part-of: ydsz
   endpoints:
     # port name 需与 Service.ports[].name 一致(已确认 gateway/system/project 均为 http)
     - port: http

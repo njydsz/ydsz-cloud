@@ -138,7 +138,7 @@ upload_all() {
     local failed=0
 
     # PG 逻辑备份
-    for f in "${BACKUP_DIR}/postgres/ydsz-pmis_full_${DATE}"*.dump; do
+    for f in "${BACKUP_DIR}/postgres/ydsz_full_${DATE}"*.dump; do
         [ -f "$f" ] || continue
         upload_file "$f" || failed=$((failed + 1))
     done

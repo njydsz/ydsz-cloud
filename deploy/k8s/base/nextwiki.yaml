@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-nextwiki
+  name: ydsz-nextwiki
   namespace: pmis
   labels:
-    app: ydsz-pmis-nextwiki
+    app: ydsz-nextwiki
     tier: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ydsz-pmis-nextwiki
+      app: ydsz-nextwiki
   template:
     metadata:
       labels:
-        app: ydsz-pmis-nextwiki
+        app: ydsz-nextwiki
         tier: backend
     spec:
       containers:
         - name: nextwiki
-          image: ydsz-pmis/nextwiki:IMAGE_TAG
+          image: ydsz/nextwiki:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -68,12 +68,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-nextwiki
+  name: ydsz-nextwiki
   namespace: pmis
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-nextwiki
+    app: ydsz-nextwiki
   ports:
   - name: http
     port: 8800

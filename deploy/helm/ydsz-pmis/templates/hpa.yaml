@@ -8,15 +8,15 @@ HPA：仅对 services.*.hpa.enabled=true 的服务生成
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-{{ $svc.name }}
+  name: ydsz-{{ $svc.name }}
   namespace: {{ $root.Release.Namespace }}
   labels:
-    {{- include "ydsz-pmis.labels" (dict "name" (printf "%s-hpa" $svc.name) "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
+    {{- include "ydsz.labels" (dict "name" (printf "%s-hpa" $svc.name) "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ydsz-pmis-{{ $svc.name }}
+    name: ydsz-{{ $svc.name }}
   minReplicas: {{ $svc.hpa.minReplicas | default 2 }}
   maxReplicas: {{ $svc.hpa.maxReplicas | default 10 }}
   metrics:

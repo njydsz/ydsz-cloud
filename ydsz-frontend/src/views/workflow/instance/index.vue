@@ -6,7 +6,7 @@
     移动端使用 useResponsive 适配：流程图与时间线纵向排版。
     配套自研工作流 v2 引擎，PC 为主，兼顾响应式。
   @module views/workflow/instance
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

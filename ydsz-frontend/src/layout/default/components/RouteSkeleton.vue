@@ -5,7 +5,7 @@
   - 避免白屏闪烁，提升用户感知性能
   - 配合 <Suspense> 的 #fallback 插槽使用
   @module layout/default/components/RouteSkeleton
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <template>

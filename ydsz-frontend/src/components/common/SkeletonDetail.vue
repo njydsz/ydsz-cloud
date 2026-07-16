@@ -5,7 +5,7 @@
   - 包含头部圆形占位 + 标题 + 多行文本
   - 场景: 详情页/表单页首屏占位
   @module components/common/SkeletonDetail
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

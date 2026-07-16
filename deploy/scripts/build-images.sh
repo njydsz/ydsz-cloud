@@ -20,7 +20,7 @@
 set -euo pipefail
 
 TAG="${1:-v1.0.0-SNAPSHOT}"
-REGISTRY="${2:-ydsz-pmis}"
+REGISTRY="${2:-ydsz}"
 PUSH="${PUSH:-false}"
 
 # 服务列表（name:port）
@@ -40,8 +40,8 @@ SERVICES=(
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-BACKEND_DIR="${REPO_ROOT}/ydsz-pmis-backend"
-FRONTEND_DIR="${REPO_ROOT}/ydsz-pmis-frontend"
+BACKEND_DIR="${REPO_ROOT}/ydsz-backend"
+FRONTEND_DIR="${REPO_ROOT}/ydsz-frontend"
 
 # 颜色
 GREEN=$'\033[0;32m'
@@ -68,7 +68,7 @@ for SVC in "${SERVICES[@]}"; do
     echo ""
     echo "${YELLOW}▶ 构建后端镜像: ${IMAGE}${NC}"
     if docker build \
-        --build-arg MODULE_NAME=ydsz-pmis-${NAME} \
+        --build-arg MODULE_NAME=ydsz-${NAME} \
         --build-arg APP_PORT=${PORT} \
         -t "${IMAGE}" \
         -f "${BACKEND_DIR}/Dockerfile" \
@@ -112,5 +112,5 @@ echo ""
 echo "下一步:"
 echo "  1. 推送镜像:    PUSH=true bash $0 ${TAG} ${REGISTRY}"
 echo "  2. K8s 部署:    kubectl apply -k deploy/k8s/overlays/dev"
-echo "  3. Helm 部署:   helm install pmis deploy/helm/ydsz-pmis -n pmis -f deploy/helm/ydsz-pmis/values-dev.yaml"
+echo "  3. Helm 部署:   helm install pmis deploy/helm/ydsz -n pmis -f deploy/helm/ydsz/values-dev.yaml"
 echo "  4. 冒烟测试:    bash deploy/scripts/smoke-test.sh http://<gateway-ip>:9000"

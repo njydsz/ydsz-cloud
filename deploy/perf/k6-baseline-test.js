@@ -17,7 +17,7 @@
  *   - p95 < 200ms（详情查询）
  *   - 错误率 < 1%
  *
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 

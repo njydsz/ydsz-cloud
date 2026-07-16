@@ -5,7 +5,7 @@
  * - WIDGET_PRESETS 预置角色模板（PM / FINANCE / EXECUTIVE）
  * - 供 CustomDashboard 组件与业务页面共享
  * @module types/dashboard
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 

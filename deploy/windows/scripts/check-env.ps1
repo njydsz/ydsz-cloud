@@ -85,8 +85,8 @@ if ($totalMem -ge 8) { Check-Ok "${totalMem}GB 可用" } else { Check-Warn "可�
 Write-Host "`n[8/8] 项目结构" -ForegroundColor Cyan
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPath))
 $files = @(
-  "ydsz-pmis-backend\pom.xml",
-  "ydsz-pmis-frontend\package.json",
+  "ydsz-backend\pom.xml",
+  "ydsz-frontend\package.json",
   "deploy\sql\V1.0.0.sql",
   "deploy\docker\docker-compose.dev.yml"
 )

@@ -6,7 +6,7 @@
   - 监听路由变化自动重置；超出重试上限引导联系管理员
   - 生产环境自动上报 Sentry，开发环境展示详细错误
   @module components/common/ErrorBoundary
-  @author ydsz-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

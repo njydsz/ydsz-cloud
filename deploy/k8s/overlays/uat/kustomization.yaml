@@ -12,17 +12,17 @@ resources:
 namePrefix: uat-
 
 images:
-  - name: ydsz-pmis/gateway
+  - name: ydsz/gateway
     newTag: v1.0.0-rc.2
-  - name: ydsz-pmis/system
+  - name: ydsz/system
     newTag: v1.0.0-rc.2
-  - name: ydsz-pmis/userinfo
+  - name: ydsz/userinfo
     newTag: v1.0.0-rc.2
-  - name: ydsz-pmis/project
+  - name: ydsz/project
     newTag: v1.0.0-rc.2
-  - name: ydsz-pmis/cronjob
+  - name: ydsz/cronjob
     newTag: v1.0.0-rc.2
-  - name: ydsz-pmis/workflow
+  - name: ydsz/workflow
     newTag: v1.0.0-rc.2
 
 # P2-12: UAT 环境 30% 采样

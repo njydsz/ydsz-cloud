@@ -6,7 +6,7 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| `ydsz-pmis-common.yaml` | 全集群共享配置（数据源、Redis、Feign、日志、密钥等） |
+| `ydsz-common.yaml` | 全集群共享配置（数据源、Redis、Feign、日志、密钥等） |
 
 导入方式参考 `deploy/ubuntu/scripts/import-nacos-config.sh`。
 
@@ -29,7 +29,7 @@ PMIS 提供统一的密钥管理抽象（`SecretProvider`），业务代码通�
 
 ### 方式二：Nacos 配置（开发环境）
 
-在 `ydsz-pmis-common.yaml` 中直接配置 `pmis.kms.secrets.*`：
+在 `ydsz-common.yaml` 中直接配置 `pmis.kms.secrets.*`：
 
 ```yaml
 pmis:

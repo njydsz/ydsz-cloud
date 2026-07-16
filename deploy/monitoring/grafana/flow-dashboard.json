@@ -2,7 +2,7 @@
   "annotations": {
     "list": []
   },
-  "description": "ydsz-pmis 工作流引擎监控看板 — 实例/任务/SLA/效率分析",
+  "description": "ydsz 工作流引擎监控看板 — 实例/任务/SLA/效率分析",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,

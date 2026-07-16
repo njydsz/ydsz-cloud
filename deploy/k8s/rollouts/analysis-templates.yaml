@@ -10,7 +10,7 @@
 #
 # 标签说明：
 #   Micrometer 通过 management.metrics.tags.application 注入 `application` 标签，
-#   值为 Spring 应用名（spring.application.name，如 ydsz-pmis-gateway）。
+#   值为 Spring 应用名（spring.application.name，如 ydsz-gateway）。
 #   AnalysisTemplate 的 args.service-name 应传入 Spring 应用名，而非 K8s Service 名。
 #
 # 使用方式：
