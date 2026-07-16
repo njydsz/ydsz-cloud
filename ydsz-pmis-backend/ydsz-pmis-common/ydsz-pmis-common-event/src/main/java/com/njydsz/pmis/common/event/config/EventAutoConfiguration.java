@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.event.config;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
 import org.slf4j.Logger;
@@ -12,15 +13,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.pmis.common.domain.event.EventStore;
 import com.njydsz.pmis.common.event.gateway.EventPublishGateway;
 import com.njydsz.pmis.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.pmis.common.event.health.OutboxHealthIndicator;
 import com.njydsz.pmis.common.event.model.DatabaseDialect;
 import com.njydsz.pmis.common.event.processor.OutboxProcessor;
 import com.njydsz.pmis.common.event.repository.OutboxRepository;
+import com.njydsz.pmis.common.event.service.OutboxEventStore;
 import com.njydsz.pmis.common.event.service.OutboxService;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -33,7 +36,12 @@ import javax.sql.DataSource;
  * <p>当 {@code pmis.event.outbox.enabled=true}（默认）且容器中存在
  * {@link JdbcTemplate} 时自动装配。
  *
- * <p>自动检测数据库方言（PostgreSQL/MySQL/Oracle），适配 LIMIT 语法和 JSON 列处理。
+ * <p>投递网关优先级：
+ * <ol>
+ *   <li>容器中已有的 {@link EventPublishGateway} Bean（业务模块自定义）</li>
+ *   <li>当 RocketMQTemplate 在 classpath 时，通过 {@link RocketMqGatewayConfiguration} 自动注册</li>
+ *   <li>降级为 {@link NoopEventPublishGateway}（生产环境应设置 fail-on-noop=true 阻止启动）</li>
+ * </ol>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -42,12 +50,14 @@ import javax.sql.DataSource;
 @EnableConfigurationProperties(EventProperties.class)
 @ConditionalOnProperty(prefix = "pmis.event.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(JdbcTemplate.class)
-@EnableScheduling
+@Import(RocketMqGatewayConfiguration.class)
 public class EventAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(EventAutoConfiguration.class);
 
     private OutboxProcessor outboxProcessor;
+    private EventPublishGateway activeGateway;
+    private EventProperties activeProperties;
 
     /**
      * Outbox 仓储
@@ -78,13 +88,25 @@ public class EventAutoConfiguration {
     }
 
     /**
+     * 领域事件存储适配器（实现 common-domain 的 EventStore SPI）
+     *
+     * <p>当容器中不存在其他 EventStore 实现时，自动注册基于 Outbox 的适配器。
+     */
+    @Bean
+    @ConditionalOnMissingBean(EventStore.class)
+    public OutboxEventStore outboxEventStore(OutboxService outboxService) {
+        log.info("OutboxEventStore registered as default EventStore implementation");
+        return new OutboxEventStore(outboxService);
+    }
+
+    /**
      * 事件投递网关（降级实现）
      *
-     * <p>当容器中不存在其他 EventPublishGateway 实现时使用 Noop 实现。
+     * <p>当容器中不存在其他 EventPublishGateway 实现且 RocketMQTemplate 不可用时使用 Noop 实现。
      */
     @Bean
     @ConditionalOnMissingBean(EventPublishGateway.class)
-    public EventPublishGateway eventPublishGateway() {
+    public EventPublishGateway noopEventPublishGateway(EventProperties properties) {
         log.warn("No EventPublishGateway found, using NoopEventPublishGateway. "
                 + "Messages will not be actually published to any message queue.");
         return new NoopEventPublishGateway();
@@ -98,6 +120,8 @@ public class EventAutoConfiguration {
                                            EventPublishGateway publishGateway,
                                            EventProperties properties,
                                            ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        this.activeGateway = publishGateway;
+        this.activeProperties = properties;
         OutboxProcessor processor = new OutboxProcessor(
                 outboxRepository,
                 publishGateway,
@@ -117,6 +141,20 @@ public class EventAutoConfiguration {
     public OutboxHealthIndicator outboxHealthIndicator(OutboxRepository outboxRepository,
                                                         EventProperties properties) {
         return new OutboxHealthIndicator(outboxRepository, properties);
+    }
+
+    /**
+     * 启动后检查：如果使用 NoopEventPublishGateway 且 fail-on-noop=true，抛异常阻止启动
+     */
+    @PostConstruct
+    public void validateGateway() {
+        if (activeProperties != null && activeProperties.isFailOnNoop()
+                && activeGateway instanceof NoopEventPublishGateway) {
+            throw new IllegalStateException(
+                    "NoopEventPublishGateway is in use and pmis.event.outbox.fail-on-noop=true. "
+                            + "Please provide an EventPublishGateway implementation (e.g. RocketMQ) "
+                            + "or set pmis.event.outbox.fail-on-noop=false to suppress this check.");
+        }
     }
 
     @PreDestroy

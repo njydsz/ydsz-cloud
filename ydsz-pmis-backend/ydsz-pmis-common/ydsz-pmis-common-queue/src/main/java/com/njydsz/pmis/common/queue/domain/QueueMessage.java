@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.pmis.common.queue.compress.MessageCompressor;
 import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -64,6 +65,11 @@ public class QueueMessage implements Serializable {
      * 反序列化 payload 最大长度限制（16MB），防止恶意超大消息导致 OOM
      */
     private static final int MAX_PAYLOAD_LENGTH = 16 * 1024 * 1024;
+
+    /**
+     * 消息压缩阈值（超过此大小的 payload 在 toPayload 时自动压缩）
+     */
+    private static final int COMPRESS_THRESHOLD = 4 * 1024;
 
     /**
      * 消息体内容
@@ -220,7 +226,7 @@ public class QueueMessage implements Serializable {
         if (message.getExpireMillis() == null) {
             message.setExpireMillis(0L);
         }
-        return Json.toJson(message);
+        return MessageCompressor.compressIfNeeded(Json.toJson(message), COMPRESS_THRESHOLD);
     }
 
     /**
@@ -236,6 +242,7 @@ public class QueueMessage implements Serializable {
         if (StringUtils.isBlank(payload)) {
             return null;
         }
+        payload = MessageCompressor.decompressIfNeeded(payload);
         if (payload.length() > MAX_PAYLOAD_LENGTH) {
             throw new IllegalArgumentException(
                     "消息 payload 超过最大长度限制: " + payload.length() + " > " + MAX_PAYLOAD_LENGTH);

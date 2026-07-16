@@ -3,7 +3,9 @@ package com.njydsz.pmis.common.notify.tracking;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 
 /**
@@ -309,25 +312,16 @@ public class EmailTrackingService {
 	 * 构建事件 JSON 字符串
 	 */
 	private String buildEventJson(TrackingEvent event, long timestamp, String userAgent,
-								java.util.Map<String, String> metadata) {
-		StringBuilder sb = new StringBuilder("{");
-		sb.append("\"event\":\"").append(event.name()).append("\",");
-		sb.append("\"timestamp\":").append(timestamp);
+								Map<String, String> metadata) {
+		Map<String, Object> eventMap = new HashMap<>();
+		eventMap.put("event", event.name());
+		eventMap.put("timestamp", timestamp);
 		if (userAgent != null) {
-			sb.append(",\"userAgent\":\"").append(userAgent.replace("\"", "\\\"")).append("\"");
+			eventMap.put("userAgent", userAgent);
 		}
 		if (metadata != null && !metadata.isEmpty()) {
-			sb.append(",\"metadata\":{");
-			boolean first = true;
-			for (java.util.Map.Entry<String, String> entry : metadata.entrySet()) {
-				if (!first) sb.append(",");
-				first = false;
-				sb.append("\"").append(entry.getKey()).append("\":\"")
-						.append(entry.getValue().replace("\"", "\\\"")).append("\"");
-			}
-			sb.append("}");
+			eventMap.put("metadata", metadata);
 		}
-		sb.append("}");
-		return sb.toString();
+		return Json.toJson(eventMap);
 	}
 }

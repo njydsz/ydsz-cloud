@@ -1,12 +1,15 @@
 package com.njydsz.pmis.common.event.repository;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.njydsz.pmis.common.event.model.DatabaseDialect;
 import com.njydsz.pmis.common.event.model.OutboxMessage;
@@ -46,13 +49,8 @@ public class OutboxRepository {
     private final String tableName;
     private final DatabaseDialect dialect;
 
-    /**
-     * @param jdbcTemplate JDBC 模板
-     * @param tableName     Outbox 表名（默认 pmis_outbox）
-     */
-    public OutboxRepository(JdbcTemplate jdbcTemplate, String tableName) {
-        this(jdbcTemplate, tableName, DatabaseDialect.UNKNOWN);
-    }
+    /** 缓存 SimpleJdbcInsert 实例，避免每次 save 都查数据库元数据 */
+    private final SimpleJdbcInsert jdbcInsert;
 
     /**
      * @param jdbcTemplate JDBC 模板
@@ -66,6 +64,7 @@ public class OutboxRepository {
         this.jdbcTemplate = jdbcTemplate;
         this.tableName = tableName;
         this.dialect = dialect != null ? dialect : DatabaseDialect.UNKNOWN;
+        this.jdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName(tableName);
     }
 
     /**
@@ -74,9 +73,6 @@ public class OutboxRepository {
      * @param message 消息实体
      */
     public void save(OutboxMessage message) {
-        SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate)
-                .withTableName(tableName);
-
         Map<String, Object> params = new HashMap<>(16);
         params.put("id", message.getId());
         params.put("aggregate_id", message.getAggregateId());
@@ -94,9 +90,11 @@ public class OutboxRepository {
         params.put("deduplication_id", message.getDeduplicationId());
         params.put("schema_version", message.getSchemaVersion());
         params.put("content_type", message.getContentType());
-        params.put("priority", message.getPriority());
+        params.put("priority", message.getPriority() != null
+                ? message.getPriority()
+                : OutboxMessage.DEFAULT_PRIORITY);
         params.put("trace_id", message.getTraceId());
-        insert.execute(params);
+        jdbcInsert.execute(params);
     }
 
     /**
@@ -110,15 +108,47 @@ public class OutboxRepository {
                 + " WHERE status = ? AND (next_retry_at IS NULL OR next_retry_at <= ?)"
                 + " ORDER BY priority DESC, created_at ASC"
                 + dialect.limitClause();
-        return jdbcTemplate.query(sql, new OutboxRowMapper(),
+        return jdbcTemplate.query(sql, OutboxRowMapper.INSTANCE,
                 OutboxStatus.PENDING.name(), Timestamp.from(Instant.now()), limit);
     }
 
     /**
-     * 原子 claim 消息：将指定消息状态从 PENDING 改为 PROCESSING
+     * 批量原子 claim 消息（单条 SQL，避免 N+1 查询）
      *
-     * <p>多实例部署时，仅一个实例能成功 claim（UPDATE 影响行数为 1），
-     * 其余实例的 UPDATE 不会匹配到该行（status 已变为 PROCESSING）。
+     * <p>将指定 ID 列表中状态为 PENDING 的消息一次性改为 PROCESSING。
+     * 返回成功 claim 的消息数量。
+     *
+     * @param ids 消息 ID 列表
+     * @return 成功 claim 的数量
+     */
+    public int claimBatchForProcessing(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) {
+                placeholders.append(",");
+            }
+            placeholders.append("?");
+        }
+        String sql = "UPDATE " + tableName
+                + " SET status = ?, updated_at = ?"
+                + " WHERE id IN (" + placeholders + ") AND status = ?";
+
+        Object[] params = new Object[ids.size() + 3];
+        params[0] = OutboxStatus.PROCESSING.name();
+        params[1] = Timestamp.from(Instant.now());
+        for (int i = 0; i < ids.size(); i++) {
+            params[i + 2] = ids.get(i);
+        }
+        params[ids.size() + 2] = OutboxStatus.PENDING.name();
+
+        return jdbcTemplate.update(sql, params);
+    }
+
+    /**
+     * 原子 claim 消息：将指定消息状态从 PENDING 改为 PROCESSING
      *
      * @param id 消息 ID
      * @return true 表示 claim 成功，false 表示消息已被其他实例 claim
@@ -137,8 +167,6 @@ public class OutboxRepository {
 
     /**
      * 回收超时的 PROCESSING 消息（实例宕机后恢复）
-     *
-     * <p>将 updated_at 早于指定时间的 PROCESSING 消息重置为 PENDING。
      *
      * @param thresholdMinutes 超时阈值（分钟）
      * @return 回收的消息数量
@@ -225,37 +253,6 @@ public class OutboxRepository {
     }
 
     /**
-     * 按 tenantId 查询各状态消息数
-     *
-     * @param tenantId 租户 ID
-     * @return 状态 → 数量
-     */
-    public Map<String, Long> countByStatusAndTenant(String tenantId) {
-        String sql = "SELECT status, COUNT(*) as cnt FROM " + tableName
-                + " WHERE tenant_id = ? GROUP BY status";
-        return jdbcTemplate.query(sql, rs -> {
-            Map<String, Long> result = new HashMap<>();
-            while (rs.next()) {
-                result.put(rs.getString("status"), rs.getLong("cnt"));
-            }
-            return result;
-        }, tenantId);
-    }
-
-    /**
-     * 按 tenantId 清理已投递的消息
-     *
-     * @param tenantId   租户 ID
-     * @param beforeTime 早于此时间的 SENT 消息将被删除
-     * @return 删除条数
-     */
-    public int deleteSentBeforeByTenant(String tenantId, Instant beforeTime) {
-        String sql = "DELETE FROM " + tableName
-                + " WHERE status = ? AND tenant_id = ? AND sent_at < ?";
-        return jdbcTemplate.update(sql, OutboxStatus.SENT.name(), tenantId, Timestamp.from(beforeTime));
-    }
-
-    /**
      * 根据 deduplicationId 查询是否已存在
      *
      * @param deduplicationId 幂等去重 ID
@@ -274,6 +271,10 @@ public class OutboxRepository {
         return count != null && count > 0;
     }
 
+    String getTableName() {
+        return tableName;
+    }
+
     private String serializeHeaders(Map<String, String> headers) {
         if (headers == null || headers.isEmpty()) {
             return null;
@@ -286,7 +287,7 @@ public class OutboxRepository {
         }
     }
 
-    private Map<String, String> deserializeHeaders(String json) {
+    private static Map<String, String> deserializeHeaders(String json) {
         if (json == null || json.isBlank()) {
             return Map.of();
         }
@@ -299,9 +300,12 @@ public class OutboxRepository {
     }
 
     /**
-     * Outbox 消息行映射器
+     * Outbox 消息行映射器（静态，复用实例，使用 ResultSetMetaData 避免异常开销）
      */
-    private class OutboxRowMapper implements RowMapper<OutboxMessage> {
+    static final class OutboxRowMapper implements RowMapper<OutboxMessage> {
+
+        static final OutboxRowMapper INSTANCE = new OutboxRowMapper();
+
         @Override
         public OutboxMessage mapRow(ResultSet rs, int rowNum) throws SQLException {
             Timestamp nextRetry = rs.getTimestamp("next_retry_at");
@@ -325,39 +329,38 @@ public class OutboxRepository {
                     .sentAt(sentAt != null ? sentAt.toInstant() : null)
                     .errorMessage(rs.getString("error_message"));
 
-            // 兼容旧表（无新字段的表不会报错）
-            try {
+            // 使用 ResultSetMetaData 一次性检查列是否存在，避免 try-catch SQLException 开销
+            Set<String> columns = getColumnNames(rs);
+            if (columns.contains("tenant_id")) {
                 builder.tenantId(rs.getString("tenant_id"));
-            } catch (SQLException ignored) {
-                // 列不存在时忽略
             }
-            try {
+            if (columns.contains("deduplication_id")) {
                 builder.deduplicationId(rs.getString("deduplication_id"));
-            } catch (SQLException ignored) {
-                // 列不存在时忽略
             }
-            try {
+            if (columns.contains("schema_version")) {
                 builder.schemaVersion(rs.getString("schema_version"));
-            } catch (SQLException ignored) {
-                // 列不存在时忽略
             }
-            try {
+            if (columns.contains("content_type")) {
                 builder.contentType(rs.getString("content_type"));
-            } catch (SQLException ignored) {
-                // 列不存在时忽略
             }
-            try {
-                builder.priority(rs.getInt("priority"));
-            } catch (SQLException ignored) {
-                builder.priority(OutboxMessage.DEFAULT_PRIORITY);
+            if (columns.contains("priority")) {
+                builder.priority(rs.getObject("priority", Integer.class));
             }
-            try {
+            if (columns.contains("trace_id")) {
                 builder.traceId(rs.getString("trace_id"));
-            } catch (SQLException ignored) {
-                // 列不存在时忽略
             }
 
             return builder.build();
+        }
+
+        private Set<String> getColumnNames(ResultSet rs) throws SQLException {
+            ResultSetMetaData meta = rs.getMetaData();
+            int count = meta.getColumnCount();
+            Set<String> names = new HashSet<>(count);
+            for (int i = 1; i <= count; i++) {
+                names.add(meta.getColumnLabel(i).toLowerCase());
+            }
+            return names;
         }
     }
 }

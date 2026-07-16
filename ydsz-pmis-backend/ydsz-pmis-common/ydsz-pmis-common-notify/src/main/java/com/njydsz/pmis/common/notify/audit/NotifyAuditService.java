@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.core.NotifyTraceContext;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
@@ -72,7 +73,7 @@ public class NotifyAuditService {
         }
         auditEntry.put("title_hash", hashTitle(title));
 
-        AUDIT_LOG.info(formatAuditEntry(auditEntry));
+        AUDIT_LOG.info(Json.toJson(auditEntry));
     }
 
     /**
@@ -143,23 +144,4 @@ public class NotifyAuditService {
         return error.length() > 500 ? error.substring(0, 500) + "..." : error;
     }
 
-    /**
-     * 格式化审计条目为可读的键值对字符串
-     *
-     * @param entry 审计条目
-     * @return 格式化的审计日志字符串
-     */
-    private String formatAuditEntry(Map<String, Object> entry) {
-        StringBuilder sb = new StringBuilder("{");
-        boolean first = true;
-        for (Map.Entry<String, Object> e : entry.entrySet()) {
-            if (!first) {
-                sb.append(", ");
-            }
-            first = false;
-            sb.append("\"").append(e.getKey()).append("\": \"").append(e.getValue()).append("\"");
-        }
-        sb.append("}");
-        return sb.toString();
-    }
 }

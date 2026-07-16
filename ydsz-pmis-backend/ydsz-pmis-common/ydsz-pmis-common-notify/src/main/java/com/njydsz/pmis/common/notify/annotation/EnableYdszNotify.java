@@ -18,7 +18,6 @@ import com.njydsz.pmis.common.notify.config.NotifyConfiguration;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @see NotifyConfiguration
  */
 @Target(ElementType.TYPE)

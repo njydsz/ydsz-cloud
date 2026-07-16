@@ -64,7 +64,6 @@ import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Component
 @ConditionalOnClass(JavaMailSender.class)
@@ -145,19 +144,19 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("邮件通知未启用", channelName());
+			return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
 		}
 		if (!isValidEmail(receiver)) {
-			return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, channelName());
+			return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, getChannel().getName());
 		}
 		// P3-13：去重检查
 		if (isDuplicate(receiver, title, content)) {
 			log.debug("邮件去重命中，跳过发送: to={}, subject={}", receiver, title);
-			return NotifySendResult.success("dedup-skipped", channelName());
+			return NotifySendResult.success("dedup-skipped", getChannel().getName());
 		}
 		// P0-2：SMTP 健康检查
 		if (!isSmtpHealthy()) {
-			return NotifySendResult.failure("SMTP 服务不健康", channelName());
+			return NotifySendResult.failure("SMTP 服务不健康", getChannel().getName());
 		}
 		long startTime = System.nanoTime();
 		boolean success = false;
@@ -179,11 +178,11 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 			success = true;
 			log.debug("邮件通知发送成功: to={}, subject={}", receiver, subject);
-			return NotifySendResult.success("email-sent", channelName());
+			return NotifySendResult.success("email-sent", getChannel().getName());
 		} catch (Exception e) {
 			log.error("邮件通知发送失败: to={}, subject={}, error={}", receiver, title, e.getMessage(), e);
 			recordFailure(e);
-			return NotifySendResult.failure(e.getMessage(), channelName());
+			return NotifySendResult.failure(e.getMessage(), getChannel().getName());
 		} finally {
 			// P1-4：记录指标
 			recordMetrics(success, System.nanoTime() - startTime);
@@ -193,10 +192,10 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("邮件通知未启用", channelName());
+			return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
 		}
 		if (!isValidEmail(receiver)) {
-			return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, channelName());
+			return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, getChannel().getName());
 		}
 		try {
 			Map<String, Object> params;
@@ -217,17 +216,17 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 		} catch (Exception e) {
 			log.error("邮件模板通知发送失败: to={}, template={}, error={}",
 					receiver, templateCode, e.getMessage(), e);
-			return NotifySendResult.failure(e.getMessage(), channelName());
+			return NotifySendResult.failure(e.getMessage(), getChannel().getName());
 		}
 	}
 
 	@Override
 	public NotifySendResult batchSend(List<String> receivers, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("邮件通知未启用", channelName());
+			return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
 		}
 		if (receivers == null || receivers.isEmpty()) {
-			return NotifySendResult.failure("收件人列表为空", channelName());
+			return NotifySendResult.failure("收件人列表为空", getChannel().getName());
 		}
 		int successCount = 0;
 		int failureCount = 0;
@@ -240,10 +239,10 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 			}
 		}
 		if (failureCount == 0) {
-			return NotifySendResult.success("batch:" + successCount, channelName());
+			return NotifySendResult.success("batch:" + successCount, getChannel().getName());
 		}
 		return NotifySendResult.failure(
-				"部分发送失败: 成功" + successCount + "/" + receivers.size(), channelName());
+				"部分发送失败: 成功" + successCount + "/" + receivers.size(), getChannel().getName());
 	}
 
 	@Override
@@ -266,22 +265,22 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	 */
 	public NotifySendResult sendEmail(EmailMessage message) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("邮件通知未启用", channelName());
+			return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
 		}
 		if (message == null || !StringUtils.hasText(message.getTo())) {
-			return NotifySendResult.failure("收件人地址为空", channelName());
+			return NotifySendResult.failure("收件人地址为空", getChannel().getName());
 		}
 		if (!isValidEmailList(message.getTo())) {
-			return NotifySendResult.failure("收件人邮箱地址无效: " + message.getTo(), channelName());
+			return NotifySendResult.failure("收件人邮箱地址无效: " + message.getTo(), getChannel().getName());
 		}
 		// P3-13：去重检查
 		if (isDuplicate(message.getTo(), message.getSubject(), message.getContent())) {
 			log.debug("邮件去重命中，跳过发送: to={}, subject={}", message.getTo(), message.getSubject());
-			return NotifySendResult.success("dedup-skipped", channelName());
+			return NotifySendResult.success("dedup-skipped", getChannel().getName());
 		}
 		// P0-2：SMTP 健康检查
 		if (!isSmtpHealthy()) {
-			return NotifySendResult.failure("SMTP 服务不健康", channelName());
+			return NotifySendResult.failure("SMTP 服务不健康", getChannel().getName());
 		}
 		long startTime = System.nanoTime();
 		boolean success = false;
@@ -314,12 +313,12 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 					message.getTo(), subject,
 					message.getAttachments() != null ? message.getAttachments().size() : 0,
 					message.getInlineResources() != null ? message.getInlineResources().size() : 0);
-			return NotifySendResult.success(messageId, channelName());
+			return NotifySendResult.success(messageId, getChannel().getName());
 		} catch (Exception e) {
 			log.error("高级邮件发送失败: to={}, subject={}, error={}",
 					message.getTo(), message.getSubject(), e.getMessage(), e);
 			recordFailure(e);
-			return NotifySendResult.failure(e.getMessage(), channelName());
+			return NotifySendResult.failure(e.getMessage(), getChannel().getName());
 		} finally {
 			// P1-4：记录指标
 			recordMetrics(success, System.nanoTime() - startTime);
@@ -407,9 +406,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	private void recordMetrics(boolean success, long durationNanos) {
 		NotifyMetrics metrics = metricsProvider.getIfAvailable();
 		if (metrics != null) {
-			metrics.recordEmailSend(channelName(), success, Duration.ofNanos(durationNanos), null);
+			metrics.recordEmailSend(getChannel().getName(), success, Duration.ofNanos(durationNanos), null);
 			if (!success) {
-				metrics.recordEmailFailure(channelName(), "send_error", "send_failure");
+				metrics.recordEmailFailure(getChannel().getName(), "send_error", "send_failure");
 			}
 		}
 	}
@@ -420,7 +419,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	private void recordFailure(Exception e) {
 		NotifyMetrics metrics = metricsProvider.getIfAvailable();
 		if (metrics != null) {
-			metrics.recordEmailFailure(channelName(), e.getClass().getSimpleName(), e.getClass().getName());
+			metrics.recordEmailFailure(getChannel().getName(), e.getClass().getSimpleName(), e.getClass().getName());
 		}
 	}
 
@@ -432,10 +431,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	}
 
 	// ==================== 内部方法 ====================
-
-	private String channelName() {
-		return "邮件";
-	}
 
 	/**
 	 * 构建邮件主题（添加默认前缀）

@@ -24,7 +24,6 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class NotifyTemplate implements Serializable {
 

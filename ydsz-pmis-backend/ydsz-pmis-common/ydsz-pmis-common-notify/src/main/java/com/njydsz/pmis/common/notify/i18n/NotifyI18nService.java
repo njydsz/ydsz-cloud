@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class NotifyI18nService {
 

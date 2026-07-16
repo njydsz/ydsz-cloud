@@ -247,6 +247,12 @@ public class RedisListSubscriber implements IMessageSubscriber {
             if (queueMessage == null) {
                 queueMessage = QueueMessage.of(message);
             }
+            if (queueMessage.isExpired()) {
+                log.warn("[RedisList] 消息已过期，丢弃处理，channel={}, traceId={}, expireMillis={}",
+                        channel, queueMessage.getTraceId(), queueMessage.getExpireMillis());
+                ackSuccess = true;
+                return;
+            }
             if (handler != null) {
                 handler.onMessage(queueMessage);
             }

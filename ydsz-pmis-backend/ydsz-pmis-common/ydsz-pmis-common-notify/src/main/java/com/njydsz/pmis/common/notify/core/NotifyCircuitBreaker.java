@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.notify.core;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,8 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  *       探测成功则回到 CLOSED，探测失败则重新进入 OPEN</li>
  * </ul>
  *
- * <p><b>配置参数：</b>
- * <ul>
- *   <li>{@code failureThreshold} — 连续失败阈值（默认 5 次）</li>
- *   <li>{@code recoveryTimeoutMs} — 熔断恢复等待时间（默认 60 秒）</li>
- * </ul>
+ * <p><b>线程安全（P1-4）：</b>使用 {@link AtomicReference} + CAS 操作确保状态转换原子性，
+ * HALF_OPEN 状态仅允许单个探测请求通过。
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
@@ -33,13 +31,9 @@ public class NotifyCircuitBreaker {
 
     private static final Logger log = LoggerFactory.getLogger(NotifyCircuitBreaker.class);
 
-    /** 默认连续失败阈值 */
     private static final int DEFAULT_FAILURE_THRESHOLD = 5;
-
-    /** 默认恢复等待时间（毫秒） */
     private static final long DEFAULT_RECOVERY_TIMEOUT_MS = 60_000L;
 
-    /** 熔断状态 */
     public enum State {
         CLOSED, OPEN, HALF_OPEN
     }
@@ -48,27 +42,19 @@ public class NotifyCircuitBreaker {
     private final int failureThreshold;
     private final long recoveryTimeoutMs;
 
-    private volatile State state = State.CLOSED;
+    /** 使用 AtomicReference 确保状态转换原子性（P1-4） */
+    private final AtomicReference<State> stateRef = new AtomicReference<>(State.CLOSED);
     private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
     private volatile long lastFailureTime = 0;
     private volatile long openedAt = 0;
 
-    /**
-     * 使用默认参数创建熔断器
-     *
-     * @param channel 通知渠道
-     */
+    /** HALF_OPEN 状态下的探测许可数，确保仅单个请求通过 */
+    private final AtomicInteger halfOpenPermits = new AtomicInteger(0);
+
     public NotifyCircuitBreaker(NotifyChannel channel) {
         this(channel, DEFAULT_FAILURE_THRESHOLD, DEFAULT_RECOVERY_TIMEOUT_MS);
     }
 
-    /**
-     * 创建熔断器
-     *
-     * @param channel           通知渠道
-     * @param failureThreshold  连续失败阈值
-     * @param recoveryTimeoutMs 恢复等待时间（毫秒）
-     */
     public NotifyCircuitBreaker(NotifyChannel channel, int failureThreshold, long recoveryTimeoutMs) {
         this.channel = channel;
         this.failureThreshold = failureThreshold > 0 ? failureThreshold : DEFAULT_FAILURE_THRESHOLD;
@@ -78,98 +64,83 @@ public class NotifyCircuitBreaker {
     /**
      * 尝试获取熔断器许可
      *
-     * <p>当熔断器处于 OPEN 状态时，如果恢复时间已到则切换到 HALF_OPEN。
+     * <p>线程安全：使用 CAS 确保 OPEN→HALF_OPEN 转换仅由一个线程执行。
      *
      * @return true 表示允许通过，false 表示被熔断拒绝
      */
     public boolean tryAcquire() {
-        if (state == State.CLOSED) {
+        State currentState = stateRef.get();
+        if (currentState == State.CLOSED) {
             return true;
         }
-        if (state == State.OPEN) {
+        if (currentState == State.OPEN) {
             long now = System.currentTimeMillis();
             if (now - openedAt >= recoveryTimeoutMs) {
-                state = State.HALF_OPEN;
-                log.info("[NotifyCircuitBreaker] 渠道[{}]熔断器进入半开状态，尝试探测", channel.getName());
-                return true;
+                // CAS: OPEN → HALF_OPEN，仅一个线程成功转换
+                if (stateRef.compareAndSet(State.OPEN, State.HALF_OPEN)) {
+                    log.info("[NotifyCircuitBreaker] 渠道[{}]熔断器进入半开状态，尝试探测", channel.getName());
+                    halfOpenPermits.set(1);
+                    return true;
+                }
+                // CAS 失败，其他线程已转换，检查是否仍有探测许可
+                return stateRef.get() == State.HALF_OPEN && halfOpenPermits.getAndDecrement() > 0;
             }
             return false;
         }
-        // HALF_OPEN：仅允许单个探测请求
-        return true;
+        // HALF_OPEN：仅允许有许可的请求通过
+        return halfOpenPermits.getAndDecrement() > 0;
     }
 
     /**
      * 记录成功
-     *
-     * <p>重置失败计数，将状态切换回 CLOSED。
      */
     public void recordSuccess() {
         consecutiveFailures.set(0);
-        if (state != State.CLOSED) {
+        State old = stateRef.getAndSet(State.CLOSED);
+        if (old != State.CLOSED) {
             log.info("[NotifyCircuitBreaker] 渠道[{}]熔断器恢复，切换到 CLOSED 状态", channel.getName());
-            state = State.CLOSED;
         }
     }
 
     /**
      * 记录失败
-     *
-     * <p>增加失败计数，达到阈值后切换到 OPEN 状态。
      */
     public void recordFailure() {
         lastFailureTime = System.currentTimeMillis();
         int failures = consecutiveFailures.incrementAndGet();
 
-        if (state == State.HALF_OPEN) {
-            // 半开状态下探测失败，重新熔断
-            state = State.OPEN;
-            openedAt = System.currentTimeMillis();
-            log.warn("[NotifyCircuitBreaker] 渠道[{}]半开探测失败，重新熔断", channel.getName());
+        State currentState = stateRef.get();
+        if (currentState == State.HALF_OPEN) {
+            // 半开探测失败，CAS 重新熔断
+            if (stateRef.compareAndSet(State.HALF_OPEN, State.OPEN)) {
+                openedAt = System.currentTimeMillis();
+                log.warn("[NotifyCircuitBreaker] 渠道[{}]半开探测失败，重新熔断", channel.getName());
+            }
             return;
         }
 
-        if (failures >= failureThreshold && state == State.CLOSED) {
-            state = State.OPEN;
-            openedAt = System.currentTimeMillis();
-            log.error("[NotifyCircuitBreaker] 渠道[{}]连续失败 {} 次达到阈值，熔断器开启，恢复等待 {}ms",
-                    channel.getName(), failures, recoveryTimeoutMs);
+        if (failures >= failureThreshold && currentState == State.CLOSED) {
+            if (stateRef.compareAndSet(State.CLOSED, State.OPEN)) {
+                openedAt = System.currentTimeMillis();
+                log.error("[NotifyCircuitBreaker] 渠道[{}]连续失败 {} 次达到阈值，熔断器开启，恢复等待 {}ms",
+                        channel.getName(), failures, recoveryTimeoutMs);
+            }
         }
     }
 
-    /**
-     * 获取当前熔断状态
-     *
-     * @return 熔断状态
-     */
     public State getState() {
-        return state;
+        return stateRef.get();
     }
 
-    /**
-     * 获取连续失败次数
-     *
-     * @return 连续失败次数
-     */
     public int getConsecutiveFailures() {
         return consecutiveFailures.get();
     }
 
-    /**
-     * 获取通知渠道
-     *
-     * @return 通知渠道
-     */
     public NotifyChannel getChannel() {
         return channel;
     }
 
-    /**
-     * 判断熔断器是否处于熔断状态
-     *
-     * @return true 表示处于 OPEN 或 HALF_OPEN 状态
-     */
     public boolean isOpen() {
-        return state != State.CLOSED;
+        return stateRef.get() != State.CLOSED;
     }
 }

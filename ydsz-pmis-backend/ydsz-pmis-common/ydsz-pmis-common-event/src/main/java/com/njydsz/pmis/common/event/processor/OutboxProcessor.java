@@ -2,8 +2,11 @@ package com.njydsz.pmis.common.event.processor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -12,9 +15,11 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.pmis.common.event.config.EventProperties;
 import com.njydsz.pmis.common.event.gateway.EventPublishGateway;
 import com.njydsz.pmis.common.event.model.OutboxMessage;
+import com.njydsz.pmis.common.event.model.OutboxStatus;
 import com.njydsz.pmis.common.event.repository.OutboxRepository;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
@@ -26,14 +31,15 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p>核心增强：
  * <ul>
- *   <li>原子 claim 机制：多实例部署时通过 DB UPDATE 原子抢占消息，避免重复投递</li>
- *   <li>超时回收：定期回收卡在 PROCESSING 状态的消息（实例宕机恢复）</li>
- *   <li>批量投递：利用 MQ 批量发送能力提升吞吐量</li>
- *   <li>Timer 指标：P50/P90/P99 投递耗时监控</li>
+ *   <li>批量 claim：单条 SQL 原子批量抢占消息，避免 N+1 查询</li>
+ *   <li>多线程投递：轮询和投递分离，MQ 慢时不阻塞轮询</li>
+ *   <li>超时回收：定期回收卡在 PROCESSING 状态的消息</li>
+ *   <li>Gauge 指标：队列深度按状态暴露到 Prometheus</li>
+ *   <li>分离 Timer：批量投递和单条投递独立计时</li>
  *   <li>自动清理：定期清理已投递的历史消息</li>
  * </ul>
  *
- * <p>退避策略：baseDelay * 2^retryCount，最大不超过 maxBackoffSeconds。
+ * <p>退避策略：baseDelay * 2^min(retryCount,30)，最大不超过 maxBackoffSeconds。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -42,15 +48,23 @@ public class OutboxProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(OutboxProcessor.class);
 
+    /** 位移量上限，防止 1L << retryCount 整数溢出 */
+    private static final int MAX_SHIFT = 30;
+
     private final OutboxRepository outboxRepository;
     private final EventPublishGateway publishGateway;
     private final EventProperties properties;
     private final ScheduledExecutorService scheduler;
+    private final ThreadPoolExecutor publishExecutor;
 
     private final Counter publishSuccessCounter;
     private final Counter publishFailureCounter;
     private final Counter deadLetterCounter;
-    private final Timer publishTimer;
+    private final Timer singlePublishTimer;
+    private final Timer batchPublishTimer;
+
+    /** 缓存的队列深度（每次轮询后更新，供 Gauge 读取） */
+    private volatile Map<String, Long> cachedStatusCounts = Map.of();
 
     private volatile boolean running = false;
 
@@ -67,11 +81,27 @@ public class OutboxProcessor {
         this.outboxRepository = outboxRepository;
         this.publishGateway = publishGateway;
         this.properties = properties;
+
+        // 调度线程（单线程，仅负责轮询和 claim）
         this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "outbox-processor");
+            Thread t = new Thread(r, "outbox-scheduler");
             t.setDaemon(true);
             return t;
         });
+
+        // 投递线程池（可配置线程数，负责实际 MQ 发送）
+        int workerThreads = Math.max(1, properties.getWorkerThreads());
+        this.publishExecutor = new ThreadPoolExecutor(
+                workerThreads, workerThreads,
+                60L, TimeUnit.SECONDS,
+                new SynchronousQueue<>(),
+                r -> {
+                    Thread t = new Thread(r, "outbox-worker");
+                    t.setDaemon(true);
+                    return t;
+                },
+                new ThreadPoolExecutor.CallerRunsPolicy()
+        );
 
         if (meterRegistry != null) {
             this.publishSuccessCounter = Counter.builder("pmis.outbox.publish.success")
@@ -83,17 +113,35 @@ public class OutboxProcessor {
             this.deadLetterCounter = Counter.builder("pmis.outbox.dead_letter")
                     .description("Outbox messages moved to dead letter")
                     .register(meterRegistry);
-            this.publishTimer = Timer.builder("pmis.outbox.publish.duration")
-                    .description("Outbox message publish duration")
+            this.singlePublishTimer = Timer.builder("pmis.outbox.publish.single.duration")
+                    .description("Outbox single message publish duration")
                     .publishPercentiles(0.5, 0.9, 0.99)
                     .publishPercentileHistogram()
                     .register(meterRegistry);
+            this.batchPublishTimer = Timer.builder("pmis.outbox.publish.batch.duration")
+                    .description("Outbox batch publish duration")
+                    .publishPercentiles(0.5, 0.9, 0.99)
+                    .publishPercentileHistogram()
+                    .register(meterRegistry);
+
+            // 队列深度 Gauge
+            for (OutboxStatus status : OutboxStatus.values()) {
+                Gauge.builder("pmis.outbox.queue.size", () -> getCachedCount(status))
+                        .tag("status", status.name())
+                        .description("Outbox queue depth by status")
+                        .register(meterRegistry);
+            }
         } else {
             this.publishSuccessCounter = null;
             this.publishFailureCounter = null;
             this.deadLetterCounter = null;
-            this.publishTimer = null;
+            this.singlePublishTimer = null;
+            this.batchPublishTimer = null;
         }
+    }
+
+    private long getCachedCount(OutboxStatus status) {
+        return cachedStatusCounts.getOrDefault(status.name(), 0L);
     }
 
     /**
@@ -124,8 +172,8 @@ public class OutboxProcessor {
                     cleanupInterval, cleanupInterval, TimeUnit.HOURS);
         }
 
-        log.info("OutboxProcessor started: pollInterval={}s, batchSize={}, staleThreshold={}min",
-                pollInterval, properties.getBatchSize(), staleThreshold);
+        log.info("OutboxProcessor started: pollInterval={}s, batchSize={}, workerThreads={}, staleThreshold={}min",
+                pollInterval, properties.getBatchSize(), properties.getWorkerThreads(), staleThreshold);
     }
 
     /**
@@ -134,12 +182,17 @@ public class OutboxProcessor {
     public void stop() {
         running = false;
         scheduler.shutdown();
+        publishExecutor.shutdown();
         try {
             if (!scheduler.awaitTermination(10, TimeUnit.SECONDS)) {
                 scheduler.shutdownNow();
             }
+            if (!publishExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                publishExecutor.shutdownNow();
+            }
         } catch (InterruptedException e) {
             scheduler.shutdownNow();
+            publishExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
         log.info("OutboxProcessor stopped");
@@ -150,35 +203,47 @@ public class OutboxProcessor {
      */
     void processBatch() {
         try {
+            // 更新队列深度缓存（供 Gauge 读取）
+            cachedStatusCounts = outboxRepository.countByStatus();
+
             List<OutboxMessage> messages = outboxRepository.findPending(properties.getBatchSize());
             if (messages.isEmpty()) {
                 return;
             }
             log.debug("Processing {} pending outbox messages", messages.size());
 
-            // 原子 claim 每条消息，仅处理 claim 成功的
-            List<OutboxMessage> claimed = messages.stream()
-                    .filter(msg -> {
-                        boolean claimedFlag = outboxRepository.claimForProcessing(msg.getId());
-                        if (!claimedFlag) {
-                            log.debug("Message already claimed by another instance: id={}", msg.getId());
-                        }
-                        return claimedFlag;
-                    })
-                    .toList();
+            // 批量 claim（单条 SQL）
+            List<String> ids = messages.stream().map(OutboxMessage::getId).toList();
+            int claimedCount = outboxRepository.claimBatchForProcessing(ids);
 
-            if (claimed.isEmpty()) {
+            if (claimedCount == 0) {
                 return;
             }
 
-            // 尝试批量投递
-            if (claimed.size() > 1) {
-                processBatchPublish(claimed);
+            if (claimedCount == messages.size()) {
+                // 快速路径：全部 claim 成功
+                dispatchPublish(messages);
             } else {
-                processSingle(claimed.get(0));
+                // 部分被其他实例 claim，逐条 claim 失败的消息跳过
+                for (OutboxMessage msg : messages) {
+                    if (outboxRepository.claimForProcessing(msg.getId())) {
+                        dispatchPublish(List.of(msg));
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("Error processing outbox batch", e);
+        }
+    }
+
+    /**
+     * 分发投递任务到工作线程池
+     */
+    private void dispatchPublish(List<OutboxMessage> messages) {
+        if (messages.size() > 1) {
+            publishExecutor.execute(() -> processBatchPublish(messages));
+        } else {
+            publishExecutor.execute(() -> processSingle(messages.get(0)));
         }
     }
 
@@ -201,10 +266,9 @@ public class OutboxProcessor {
                     handleFailure(message, "Gateway returned false in batch");
                 }
             }
-            recordTimer(publishTimer, durationNanos);
+            recordTimer(batchPublishTimer, durationNanos);
         } catch (Exception e) {
-            long durationNanos = System.nanoTime() - startNanos;
-            recordTimer(publishTimer, durationNanos);
+            recordTimer(batchPublishTimer, System.nanoTime() - startNanos);
             // 批量投递失败，降级为逐条投递
             log.warn("Batch publish failed, falling back to single publish", e);
             for (OutboxMessage message : messages) {
@@ -217,8 +281,7 @@ public class OutboxProcessor {
         long startNanos = System.nanoTime();
         try {
             boolean success = publishGateway.publish(message);
-            long durationNanos = System.nanoTime() - startNanos;
-            recordTimer(publishTimer, durationNanos);
+            recordTimer(singlePublishTimer, System.nanoTime() - startNanos);
 
             if (success) {
                 outboxRepository.markAsSent(message.getId());
@@ -228,8 +291,7 @@ public class OutboxProcessor {
                 handleFailure(message, "Gateway returned false");
             }
         } catch (Exception e) {
-            long durationNanos = System.nanoTime() - startNanos;
-            recordTimer(publishTimer, durationNanos);
+            recordTimer(singlePublishTimer, System.nanoTime() - startNanos);
             handleFailure(message, e.getMessage());
         }
     }
@@ -253,18 +315,19 @@ public class OutboxProcessor {
     /**
      * 指数退避计算
      *
+     * <p>使用 {@code Math.min(retryCount, MAX_SHIFT)} 防止位移溢出。
+     *
      * @param retryCount 当前重试次数
      * @return 退避秒数
      */
     private long calculateBackoff(int retryCount) {
-        long backoff = properties.getBaseBackoffSeconds() * (1L << retryCount);
+        int shift = Math.min(retryCount, MAX_SHIFT);
+        long backoff = properties.getBaseBackoffSeconds() * (1L << shift);
         return Math.min(backoff, properties.getMaxBackoffSeconds());
     }
 
     /**
      * 回收超时的 PROCESSING 消息
-     *
-     * @param thresholdMinutes 超时阈值（分钟）
      */
     private void reclaimStaleMessages(int thresholdMinutes) {
         try {
@@ -275,7 +338,7 @@ public class OutboxProcessor {
     }
 
     /**
-     * 清理已投递消息（定期维护调用）
+     * 清理已投递消息
      *
      * @param retentionDays 保留天数
      */

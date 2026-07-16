@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.event.health;
 
+import java.time.Instant;
 import java.util.Map;
 
 import org.springframework.boot.health.contributor.Health;
@@ -18,6 +19,9 @@ import com.njydsz.pmis.common.event.repository.OutboxRepository;
  *   <li>PENDING 消息数超过阈值时标记为 DEGRADED（自定义 Status）</li>
  *   <li>PROCESSING 消息数超过阈值时标记为 DEGRADED（可能有实例宕机）</li>
  * </ul>
+ *
+ * <p>查询优化：仅统计非 SENT 状态的消息（SENT 消息由清理任务定期删除，
+ * 不参与健康检查），避免在大表上对 SENT 行做无意义的 COUNT。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -43,7 +47,6 @@ public class OutboxHealthIndicator implements HealthIndicator {
             long pending = statusCounts.getOrDefault(OutboxStatus.PENDING.name(), 0L);
             long processing = statusCounts.getOrDefault(OutboxStatus.PROCESSING.name(), 0L);
             long deadLetter = statusCounts.getOrDefault(OutboxStatus.DEAD_LETTER.name(), 0L);
-            long sent = statusCounts.getOrDefault(OutboxStatus.SENT.name(), 0L);
 
             long deadLetterThreshold = properties.getDeadLetterAlertThreshold();
             long pendingThreshold = properties.getPendingAlertThreshold();
@@ -62,10 +65,10 @@ public class OutboxHealthIndicator implements HealthIndicator {
             return builder
                     .withDetail("pending", pending)
                     .withDetail("processing", processing)
-                    .withDetail("sent", sent)
                     .withDetail("deadLetter", deadLetter)
                     .withDetail("pendingThreshold", pendingThreshold)
                     .withDetail("deadLetterThreshold", deadLetterThreshold)
+                    .withDetail("timestamp", Instant.now().toString())
                     .build();
         } catch (Exception e) {
             return Health.down(e).build();

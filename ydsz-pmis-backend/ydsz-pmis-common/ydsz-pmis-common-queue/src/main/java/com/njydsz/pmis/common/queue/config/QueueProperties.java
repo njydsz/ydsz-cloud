@@ -148,6 +148,11 @@ public class QueueProperties {
     private long dedupWindowMillis = 300_000L;
 
     /**
+     * 熔断器配置
+     */
+    private CircuitBreakerConfig circuitBreaker = new CircuitBreakerConfig();
+
+    /**
      * 消息去重解析后的窗口
      */
     public long resolvedDedupWindowMillis() {
@@ -294,6 +299,27 @@ public class QueueProperties {
      * 异步消费者线程池配置
      */
     private ExecutorConfig consumerExecutor = new ExecutorConfig();
+
+    /**
+     * 熔断器配置项
+     */
+    @Data
+    public static class CircuitBreakerConfig {
+        /**
+         * 是否启用熔断器（默认 true）
+         */
+        private boolean enabled = true;
+
+        /**
+         * 连续失败阈值（默认 10 次）
+         */
+        private int failureThreshold = 10;
+
+        /**
+         * 熔断开启后的恢复等待时间（毫秒，默认 60000 = 1 分钟）
+         */
+        private long openStateTimeoutMillis = 60_000L;
+    }
 
     /**
      * 异步消费者线程池配置项

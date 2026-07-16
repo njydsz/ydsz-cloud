@@ -1,6 +1,5 @@
 package com.njydsz.pmis.common.event.gateway;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 

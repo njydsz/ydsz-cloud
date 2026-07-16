@@ -24,6 +24,7 @@ import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.metrics.MessageMetrics;
 import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
 import com.njydsz.pmis.common.queue.recovery.ConsumerThreadGuard;
+import com.njydsz.pmis.common.queue.retry.RetryPolicy;
 import com.njydsz.pmis.common.queue.service.IMessageHandler;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
 import com.njydsz.pmis.common.queue.trace.MessageTracer;
@@ -62,6 +63,7 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
     private final MessageMetrics messageMetrics;
     private final ConsumerRateLimiter rateLimiter;
     private final ExecutorService consumerExecutor;
+    private final RetryPolicy retryPolicy;
     private volatile ConsumerThreadGuard threadGuard;
 
     public RedisStreamSubscriber(RedisTemplate<String, Object> redisTemplate,
@@ -91,6 +93,7 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
         this.messageMetrics = new MessageMetrics(channel, "redis-stream");
         this.rateLimiter = queueProperties.createRateLimiter();
         this.consumerExecutor = consumerExecutor;
+        this.retryPolicy = RetryPolicy.exponentialBackoff(retryMax, 1000L, 30000L);
         ensureGroup();
         log.info("[RedisStream] 订阅者初始化完成（复用 ydsz-pmis-common-redis 连接），channel={}, group={}, consumer={}",
                 channel, group, consumer);
@@ -245,10 +248,14 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
                 log.error("[RedisStream] 消息已转入死信队列，channel={}, dlq={}, traceId={}, retryCount={}",
                         channel, dlqChannel, message.getTraceId(), nextRetry, ex);
             } else {
+                long delayMillis = retryPolicy.getDelayMillis(nextRetry - 1);
+                if (delayMillis > 0) {
+                    sleepQuietly(delayMillis);
+                }
                 writeStream(channel, message);
                 redisTemplate.opsForStream().acknowledge(channel, group, entry.getId());
-                log.warn("[RedisStream] 消息将重试，channel={}, traceId={}, retry={}/{}/max={}",
-                        channel, message.getTraceId(), nextRetry, retryMax, ex.getMessage());
+                log.warn("[RedisStream] 消息将重试，channel={}, traceId={}, retry={}/{}, delay={}ms, error={}",
+                        channel, message.getTraceId(), nextRetry, retryMax, delayMillis, ex.getMessage());
             }
         } catch (Exception writeEx) {
             log.error("[RedisStream] 死信处理异常，channel={}, traceId={}", channel, message.getTraceId(), writeEx);

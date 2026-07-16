@@ -12,12 +12,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.tree.JsonNode;
+import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -34,15 +33,13 @@ import java.util.Base64;
  *     sms:
  *       provider: aliyun
  *       endpoint: https://dysmsapi.aliyuncs.com
- *       access-key: your-access-key
- *       secret-key: your-secret-key
+ *       access-key-id: your-access-key-id
+ *       access-key-secret: your-access-key-secret
  * }</pre>
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
-@Component
-@ConditionalOnProperty(prefix = "ydsz.notify.sms", name = "provider", havingValue = "aliyun")
 public class AliyunSmsProvider implements SmsProvider {
 
     private static final Logger log = LoggerFactory.getLogger(AliyunSmsProvider.class);
@@ -121,10 +118,7 @@ public class AliyunSmsProvider implements SmsProvider {
     }
 
     private HttpHeaders jsonHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Accept-Charset", StandardCharsets.UTF_8.name());
-        return headers;
+        return NotifyChannelStrategy.jsonHeaders();
     }
 
     private String buildAuthorization(String payload) {

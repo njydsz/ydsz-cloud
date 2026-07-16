@@ -1,6 +1,10 @@
 package com.njydsz.pmis.common.notify.channel;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
@@ -12,7 +16,6 @@ import com.njydsz.pmis.common.notify.template.TemplateEngine;
  * <p>每种通知渠道实现该接口，通过策略模式实现渠道自动分发。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 public interface NotifyChannelStrategy {
@@ -90,5 +93,17 @@ public interface NotifyChannelStrategy {
             return NotifySendResult.failure("卡片消息为空", "unknown");
         }
         return send(receiver, card.getTitle(), card.getContent());
+    }
+
+    /**
+     * 创建 JSON 格式的 HTTP 请求头（共用工具方法）。
+     *
+     * @return Content-Type 为 application/json 的 HTTP 请求头
+     */
+    static HttpHeaders jsonHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Accept-Charset", StandardCharsets.UTF_8.name());
+        return headers;
     }
 }

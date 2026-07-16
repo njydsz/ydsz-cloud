@@ -25,39 +25,13 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
     private static final int DEFAULT_MAX_RETRIES = 5;
     private static final int DEFAULT_CAPACITY = 10000;
     private static final int DEFAULT_BATCH_SIZE = 100;
+    private static final long PROBE_INTERVAL_MS = 30_000L;
 
     private final NotifyRetryQueue primary;
     private final NotifyRetryQueue fallback;
     private final DeadLetterHandler deadLetterHandler;
     private volatile boolean redisAvailable;
-
-    /**
-     * 创建持久化重试队列
-     *
-     * @param redisTemplate     Redis 模板（为 null 时直接使用内存队列）
-     * @param maxRetries        最大重试次数
-     * @param capacity          内存队列容量（降级时使用）
-     * @param batchSize         批量处理大小
-     */
-    public PersistentNotifyRetryQueue(StringRedisTemplate redisTemplate,
-                                      int maxRetries, int capacity, int batchSize) {
-        this(redisTemplate, maxRetries, capacity, batchSize, null);
-    }
-
-    /**
-     * 创建持久化重试队列
-     *
-     * @param redisTemplate     Redis 模板（为 null 时直接使用内存队列）
-     * @param maxRetries        最大重试次数
-     * @param capacity          内存队列容量（降级时使用）
-     * @param batchSize         批量处理大小
-     * @param redisKeyPrefix    Redis Key 前缀
-     */
-    public PersistentNotifyRetryQueue(StringRedisTemplate redisTemplate,
-                                      int maxRetries, int capacity, int batchSize,
-                                      String redisKeyPrefix) {
-        this(redisTemplate, maxRetries, capacity, batchSize, redisKeyPrefix, null);
-    }
+    private volatile long lastProbeTime = 0;
 
     /**
      * 创建持久化重试队列（带死信处理器）
@@ -111,17 +85,23 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
 
     /**
      * 获取当前实际使用的队列实例
+     *
+     * <p>P2-7: 优化为周期性探测（每 30 秒），避免每次操作都发起 Redis 往返。
      */
     private NotifyRetryQueue delegate() {
         if (redisAvailable) {
-            try {
-                // 每次操作前轻量探测 Redis 可用性
-                primary.getQueueSize();
-                return primary;
-            } catch (Exception e) {
-                log.warn("[PersistentNotifyRetryQueue] Redis 运行时异常，降级到内存队列, error={}", e.getMessage());
-                redisAvailable = false;
+            long now = System.currentTimeMillis();
+            if (now - lastProbeTime > PROBE_INTERVAL_MS) {
+                lastProbeTime = now;
+                try {
+                    primary.getQueueSize();
+                } catch (Exception e) {
+                    log.warn("[PersistentNotifyRetryQueue] Redis 探测失败，降级到内存队列, error={}", e.getMessage());
+                    redisAvailable = false;
+                    return fallback;
+                }
             }
+            return primary;
         }
         return fallback;
     }

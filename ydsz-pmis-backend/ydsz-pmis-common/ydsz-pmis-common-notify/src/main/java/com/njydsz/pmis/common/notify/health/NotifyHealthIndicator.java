@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
@@ -32,10 +31,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
-@Component
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.notify", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class NotifyHealthIndicator implements HealthIndicator {

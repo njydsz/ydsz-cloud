@@ -10,11 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +23,6 @@ import java.util.Map;
  * <p>通过企业微信群机器人 Webhook 发送消息。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Component
@@ -54,7 +52,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("企业微信通知未启用", channelName());
+			return NotifySendResult.failure("企业微信通知未启用", getChannel().getName());
 		}
 		try {
 			Map<String, Object> body = Map.of(
@@ -64,7 +62,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 					)
 			);
 			String json = Json.toJson(body);
-			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, jsonHeaders()), String.class);
+			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
 
 			// 校验企业微信响应 errcode
 			if (response != null && !response.isEmpty()) {
@@ -74,7 +72,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 					if (errcode != 0) {
 						String errmsg = respJson.has("errmsg") ? respJson.get("errmsg").asText() : "";
 						log.error("企业微信通知返回错误, errcode={}, errmsg={}", errcode, errmsg);
-						return NotifySendResult.failure("企业微信响应错误: errcode=" + errcode + ", errmsg=" + errmsg, channelName());
+						return NotifySendResult.failure("企业微信响应错误: errcode=" + errcode + ", errmsg=" + errmsg, getChannel().getName());
 					}
 				} catch (Exception parseEx) {
 					log.warn("企业微信响应解析失败: {}, 按成功处理", parseEx.getMessage());
@@ -82,16 +80,16 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 			}
 
 			log.debug("企业微信通知发送成功: {}", title);
-			return NotifySendResult.success(response, channelName());
+			return NotifySendResult.success(response, getChannel().getName());
 		} catch (Exception e) {
 			log.error("企业微信通知发送失败: {}", e.getMessage(), e);
-			return NotifySendResult.failure(e.getMessage(), channelName());
+			return NotifySendResult.failure(e.getMessage(), getChannel().getName());
 		}
 	}
 
 	@Override
 	public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
-		Map<String, Object> params = templateParams instanceof Map ? (Map<String, Object>) templateParams : Map.of();
+		Map<String, Object> params = extractParams(templateParams);
 		String content = templateEngine.render(templateCode, params);
 		return send(receiver, templateCode, content);
 	}
@@ -120,23 +118,14 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 		return webhook != null && !webhook.isEmpty();
 	}
 
-    /**
-     * 获取渠道名称
-     *
-     * @return 企业微信渠道名称
-     */
-    private String channelName() {
-		return "企业微信";
-	}
-
-    /**
-     * 构建 JSON 请求头
-     *
-     * @return Content-Type 为 application/json 的 HTTP 请求头
-     */
-    private HttpHeaders jsonHeaders() {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		return headers;
+	private Map<String, Object> extractParams(Object templateParams) {
+		if (templateParams instanceof Map<?, ?> rawMap) {
+			Map<String, Object> params = new HashMap<>();
+			for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+				params.put(String.valueOf(entry.getKey()), entry.getValue());
+			}
+			return params;
+		}
+		return Map.of();
 	}
 }

@@ -17,6 +17,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.pmis.common.queue.controller.DeadLetterQueueController;
 import com.njydsz.pmis.common.queue.dedup.DedupCleanupScheduler;
 import com.njydsz.pmis.common.queue.dedup.MessageDeduplicator;
 import com.njydsz.pmis.common.queue.health.QueueHealthIndicator;
@@ -305,6 +306,25 @@ public class QueueConfiguration {
     public QueueHealthIndicator queueHealthIndicator() {
         log.info("[Queue] 创建消息队列健康检查器");
         return new QueueHealthIndicator(queueProperties, redisServiceProvider);
+    }
+
+    // ==================== REST API 配置 ====================
+
+    /**
+     * 注册死信队列管理 REST API
+     *
+     * <p>当 DeadLetterQueueService 和 spring-web 在 classpath 中时自动注册。
+     *
+     * @param deadLetterQueueService 死信队列服务
+     * @return 死信队列控制器实例
+     */
+    @Bean
+    @ConditionalOnBean(DeadLetterQueueService.class)
+    @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestController")
+    @ConditionalOnMissingBean(DeadLetterQueueController.class)
+    public DeadLetterQueueController deadLetterQueueController(DeadLetterQueueService deadLetterQueueService) {
+        log.info("[Queue] 注册死信队列管理 REST API");
+        return new DeadLetterQueueController(deadLetterQueueService);
     }
 
     // ==================== Micrometer 指标配置 ====================
