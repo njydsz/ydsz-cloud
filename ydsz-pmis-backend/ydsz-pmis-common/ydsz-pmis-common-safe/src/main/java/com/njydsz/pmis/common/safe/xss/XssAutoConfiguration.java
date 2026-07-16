@@ -32,7 +32,7 @@ public class XssAutoConfiguration {
     @PostConstruct
     public void registerXssDeserializer() {
         if (jsonEnabled) {
-            XssJacksonConfig.registerXssProtection();
+            XssJsonConfig.registerXssProtection();
             log.debug("ydsz Safe: XssStringDeserializer registered for XSS JSON body protection.");
         }
     }

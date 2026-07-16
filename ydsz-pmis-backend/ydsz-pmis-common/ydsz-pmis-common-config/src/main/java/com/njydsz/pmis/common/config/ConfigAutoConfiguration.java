@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ApplicationContextInitializedEvent;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import com.njydsz.pmis.common.config.encrypt.ConfigEncryptor;
@@ -31,13 +31,13 @@ import com.njydsz.pmis.common.config.encrypt.EncryptablePropertyResolver;
 @AutoConfiguration
 @EnableConfigurationProperties(ConfigProperties.class)
 @ConditionalOnProperty(prefix = "pmis.config.encrypt", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class ConfigAutoConfiguration implements ApplicationListener<ApplicationContextInitializedEvent> {
+public class ConfigAutoConfiguration implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigAutoConfiguration.class);
 
     @Override
-    public void onApplicationEvent(ApplicationContextInitializedEvent event) {
-        ConfigurableEnvironment environment = event.getApplicationContext().getEnvironment();
+    public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
+        ConfigurableEnvironment environment = event.getEnvironment();
 
         String secretKey = resolveSecretKey(environment);
         if (secretKey == null || secretKey.isBlank()) {

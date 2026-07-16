@@ -437,8 +437,10 @@ public class FeignConfiguration {
      * 注册熔断器状态持久化组件。
      *
      * <p>当 Redis 在 classpath 中时，将熔断状态持久化到 Redis，
-     * 应用重启后可恢复熔断状态。
+     * 应用重启后可恢复熔断状态。TTL 可通过
+     * {@code ydsz.feign.circuit-breaker.state-ttl-seconds} 配置。
      *
+     * @param feignProperties      Feign 配置属性
      * @param redisServiceProvider Redis 服务提供者（可选）
      * @return CircuitBreakerStatePersistence 实例
      */
@@ -446,7 +448,9 @@ public class FeignConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnClass(RedisService.class)
     public CircuitBreakerStatePersistence circuitBreakerStatePersistence(
+            FeignProperties feignProperties,
             ObjectProvider<RedisService> redisServiceProvider) {
-        return new CircuitBreakerStatePersistence(redisServiceProvider);
+        int ttlSeconds = feignProperties.getCircuitBreaker().getStateTtlSeconds();
+        return new CircuitBreakerStatePersistence(redisServiceProvider, java.time.Duration.ofSeconds(ttlSeconds));
     }
 }

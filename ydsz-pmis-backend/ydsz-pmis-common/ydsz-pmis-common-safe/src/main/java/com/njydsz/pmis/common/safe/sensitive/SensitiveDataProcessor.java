@@ -18,6 +18,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -204,7 +206,8 @@ public final class SensitiveDataProcessor {
                     // Record 组件可能没有对应的声明字段，忽略
                 }
 
-                if (annotation != null && annotation.enabled() && value != null) {
+                if (annotation != null && annotation.enabled() && value != null
+                        && shouldDesensitize(annotation)) {
                     String desensitized = SensitiveUtil.desensitize(
                             value.toString(),
                             annotation.value(),
@@ -294,7 +297,8 @@ public final class SensitiveDataProcessor {
                     Object fieldValue = field.get(bean);
 
                     SensitiveData annotation = field.getAnnotation(SensitiveData.class);
-                    if (annotation != null && annotation.enabled() && fieldValue != null) {
+                    if (annotation != null && annotation.enabled() && fieldValue != null
+                            && shouldDesensitize(annotation)) {
                         String desensitized = SensitiveUtil.desensitize(
                                 fieldValue.toString(),
                                 annotation.value(),
@@ -437,5 +441,51 @@ public final class SensitiveDataProcessor {
             current = current.getSuperclass();
         }
         return false;
+    }
+
+    /**
+     * 检查当前字段是否应该执行脱敏（基于角色白名单）
+     *
+     * <p>当 {@code @SensitiveData(roles = {"ADMIN"})} 指定了角色白名单时，
+     * 如果当前用户拥有白名单中的任一角色，则跳过脱敏（返回原始值）。
+     * 角色从 HTTP 请求头 {@code X-User-Role} 获取（逗号分隔）。
+     *
+     * @param annotation 字段上的敏感数据注解
+     * @return true 表示应执行脱敏，false 表示跳过（用户有豁免角色）
+     */
+    private static boolean shouldDesensitize(SensitiveData annotation) {
+        String[] roles = annotation.roles();
+        if (roles == null || roles.length == 0) {
+            return true;
+        }
+        String userRoles = getCurrentUserRoles();
+        if (userRoles == null || userRoles.isEmpty()) {
+            return true;
+        }
+        for (String role : roles) {
+            if (userRoles.contains(role)) {
+                logger.debug("用户拥有豁免角色 {}，跳过脱敏", role);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 从当前 HTTP 请求中获取用户角色
+     *
+     * @return 用户角色字符串（逗号分隔），非 Web 环境返回 null
+     */
+    private static String getCurrentUserRoles() {
+        try {
+            ServletRequestAttributes attrs =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs == null) {
+                return null;
+            }
+            return attrs.getRequest().getHeader("X-User-Role");
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

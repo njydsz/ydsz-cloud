@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.auth.aspect;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -44,6 +45,12 @@ public class AuthPermissionAspect {
 
     private final RbacPermissionEvaluator evaluator;
 
+    /**
+     * 缓存 Method -> [classAnnotation, methodAnnotation] 避免每次请求做反射查找
+     */
+    private final ConcurrentHashMap<Method, CachedMenuAnnotation> menuAnnotationCache = new ConcurrentHashMap<>(256);
+    private final ConcurrentHashMap<Method, CachedApiAnnotation> apiAnnotationCache = new ConcurrentHashMap<>(256);
+
     public AuthPermissionAspect(RbacPermissionEvaluator evaluator) {
         this.evaluator = evaluator;
     }
@@ -71,21 +78,24 @@ public class AuthPermissionAspect {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         Class<?> targetClass = joinPoint.getTarget().getClass();
 
-        AuthMenuPermission classAnnotation = AnnotationUtils.findAnnotation(targetClass, AuthMenuPermission.class);
-        AuthMenuPermission methodAnnotation = AnnotationUtils.findAnnotation(method, AuthMenuPermission.class);
+        CachedMenuAnnotation cached = menuAnnotationCache.computeIfAbsent(method, m -> {
+            AuthMenuPermission classAnn = AnnotationUtils.findAnnotation(targetClass, AuthMenuPermission.class);
+            AuthMenuPermission methodAnn = AnnotationUtils.findAnnotation(m, AuthMenuPermission.class);
+            return new CachedMenuAnnotation(classAnn, methodAnn);
+        });
 
-        if (classAnnotation == null && methodAnnotation == null) {
+        if (cached.classAnnotation == null && cached.methodAnnotation == null) {
             return joinPoint.proceed();
         }
 
         Map<String, Object> userInfo = evaluator.loadCurrentUserInfo();
 
-        if (classAnnotation != null) {
-            evaluator.validateMenu(userInfo, classAnnotation);
+        if (cached.classAnnotation != null) {
+            evaluator.validateMenu(userInfo, cached.classAnnotation);
         }
 
-        if (methodAnnotation != null) {
-            evaluator.validateMenu(userInfo, methodAnnotation);
+        if (cached.methodAnnotation != null) {
+            evaluator.validateMenu(userInfo, cached.methodAnnotation);
         }
 
         return joinPoint.proceed();
@@ -106,23 +116,32 @@ public class AuthPermissionAspect {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         Class<?> targetClass = joinPoint.getTarget().getClass();
 
-        AuthApiPermission classAnnotation = AnnotationUtils.findAnnotation(targetClass, AuthApiPermission.class);
-        AuthApiPermission methodAnnotation = AnnotationUtils.findAnnotation(method, AuthApiPermission.class);
+        CachedApiAnnotation cached = apiAnnotationCache.computeIfAbsent(method, m -> {
+            AuthApiPermission classAnn = AnnotationUtils.findAnnotation(targetClass, AuthApiPermission.class);
+            AuthApiPermission methodAnn = AnnotationUtils.findAnnotation(m, AuthApiPermission.class);
+            return new CachedApiAnnotation(classAnn, methodAnn);
+        });
 
-        if (classAnnotation == null && methodAnnotation == null) {
+        if (cached.classAnnotation == null && cached.methodAnnotation == null) {
             return joinPoint.proceed();
         }
 
         Map<String, Object> userInfo = evaluator.loadCurrentUserInfo();
 
-        if (classAnnotation != null) {
-            evaluator.validateApi(userInfo, classAnnotation);
+        if (cached.classAnnotation != null) {
+            evaluator.validateApi(userInfo, cached.classAnnotation);
         }
 
-        if (methodAnnotation != null) {
-            evaluator.validateApi(userInfo, methodAnnotation);
+        if (cached.methodAnnotation != null) {
+            evaluator.validateApi(userInfo, cached.methodAnnotation);
         }
 
         return joinPoint.proceed();
+    }
+
+    private record CachedMenuAnnotation(AuthMenuPermission classAnnotation, AuthMenuPermission methodAnnotation) {
+    }
+
+    private record CachedApiAnnotation(AuthApiPermission classAnnotation, AuthApiPermission methodAnnotation) {
     }
 }
