@@ -154,7 +154,7 @@ public final class ContextPropagationUtils {
      * @param getter   上下文值读取器
      * @deprecated 使用 {@link #registerContextProvider(String, Supplier, BiConsumer)} 替代
      */
-    @Deprecated(since = "1.3.0", forRemoval = true)
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public static void registerContextProvider(String name, Supplier<String> getter) {
         registerContextProvider(name, getter, (n, v) -> { });
     }

@@ -7,7 +7,7 @@ package com.njydsz.pmis.common.util.id;
  * Snowflake 算法依赖单调递增的时间戳，时钟回拨会导致 ID 重复。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class ClockBackwardException extends RuntimeException {
 

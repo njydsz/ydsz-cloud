@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P2-4/P2-5/P2-6/P2-7/P2-8 高级功能 API 聚合。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * P1-4: 消息质量反馈服务实现。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

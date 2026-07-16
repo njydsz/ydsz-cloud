@@ -16,7 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 文档摘要与关键词提取器
  * <p>
- * P2 功能：基于 TF-IDF 算法的轻量级文档摘要和关键词提取，
+ * P2 功能：基于词频统计的轻量级文档摘要和关键词提取。
+ * <p>
+ * <b>注意：</b>此实现为轻量级离线方案，摘要仅取前 N 句（无评分算法），
+ * 中文分词使用简单 bigram（无专业分词器）。如需高质量摘要，
+ * 推荐接入 LLM 服务（如 ydsz-pmis-agent 模块）。
+ * <p>
  * 不依赖外部 AI 服务，适用于离线场景。
  *
  * <p><b>能力：</b>
@@ -28,8 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 @Slf4j
 @Component

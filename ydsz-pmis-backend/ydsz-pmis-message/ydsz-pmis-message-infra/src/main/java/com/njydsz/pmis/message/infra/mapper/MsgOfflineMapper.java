@@ -13,7 +13,7 @@ import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
  * P0-3: 离线消息持久化 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Mapper
 public interface MsgOfflineMapper extends BaseMapper<MsgOfflineDO> {

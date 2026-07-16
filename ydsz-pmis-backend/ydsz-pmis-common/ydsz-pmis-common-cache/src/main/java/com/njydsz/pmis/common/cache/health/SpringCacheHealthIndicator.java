@@ -21,7 +21,7 @@ import com.njydsz.pmis.common.cache.spring.LocalCacheManager;
  *   <li>DOWN → Health.down()
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class SpringCacheHealthIndicator implements HealthIndicator {
 

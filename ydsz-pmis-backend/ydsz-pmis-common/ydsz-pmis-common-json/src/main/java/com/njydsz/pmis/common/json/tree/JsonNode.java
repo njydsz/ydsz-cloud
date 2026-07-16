@@ -27,7 +27,7 @@ import java.util.Map;
  * int age = node.get("age").asInt();
  * </pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public abstract class JsonNode {
 

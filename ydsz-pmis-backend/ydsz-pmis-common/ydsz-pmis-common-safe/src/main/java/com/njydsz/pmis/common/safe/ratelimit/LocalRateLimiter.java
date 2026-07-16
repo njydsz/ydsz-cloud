@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * 使用 Semaphore 控制并发请求数，配合时间窗口定期释放许可。
  * 虽然不如 Redis 滑动窗口精确，但在 Redis 不可用时提供基本的过载保护。
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class LocalRateLimiter {
 

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * 对于非紧急消息，推荐在用户最活跃的时段推送，提升消息打开率和用户体验。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface DeliveryTimeOptimizer {
 

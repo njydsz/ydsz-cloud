@@ -7,7 +7,7 @@ package com.njydsz.pmis.common.socket.serialize;
  * 业务方可替换为 Protobuf 等其他协议实现。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface MessageSerializer {
 

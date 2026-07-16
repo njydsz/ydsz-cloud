@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>事务消息降级为同步发送（common-queue 抽象暂不支持事务消息）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

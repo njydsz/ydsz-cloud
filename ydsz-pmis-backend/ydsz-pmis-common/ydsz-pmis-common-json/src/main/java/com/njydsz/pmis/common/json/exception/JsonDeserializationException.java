@@ -5,7 +5,7 @@ package com.njydsz.pmis.common.json.exception;
  *
  * <p>在 JSON 反序列化过程中抛出的异常，包含行列号和上下文片段。</p>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class JsonDeserializationException extends JsonException {
 

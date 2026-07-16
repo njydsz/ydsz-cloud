@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对标 PowerJob 的多分区调度能力，提升调度吞吐量和可用性。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

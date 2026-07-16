@@ -6,11 +6,11 @@
 #    bash deploy/scripts/build-images.sh [TAG] [REGISTRY]
 #
 #  示例:
-#    # 构建所有 7 个后端服务 + 前端，tag=v1.3.0，推送到本地
-#    bash deploy/scripts/build-images.sh v1.3.0
+#    # 构建所有 7 个后端服务 + 前端，tag=v1.0.0，推送到本地
+#    bash deploy/scripts/build-images.sh v1.0.0
 #
 #    # 构建并推送到私有仓库
-#    bash deploy/scripts/build-images.sh v1.3.0 registry.cn-hangzhou.aliyuncs.com/your-org
+#    bash deploy/scripts/build-images.sh v1.0.0 registry.cn-hangzhou.aliyuncs.com/your-org
 #
 #  依赖:
 #    - Docker 24+ (启用 BuildKit)
@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-TAG="${1:-v1.3.0-SNAPSHOT}"
+TAG="${1:-v1.0.0-SNAPSHOT}"
 REGISTRY="${2:-ydsz-pmis}"
 PUSH="${PUSH:-false}"
 

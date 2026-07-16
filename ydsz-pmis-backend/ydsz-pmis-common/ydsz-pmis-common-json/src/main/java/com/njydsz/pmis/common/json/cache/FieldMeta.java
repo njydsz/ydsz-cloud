@@ -47,7 +47,7 @@ import com.njydsz.pmis.common.json.annotation.JsonInclude;
  *   <li>命令模式 - 自定义序列化/反序列化方法</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class FieldMeta {
 

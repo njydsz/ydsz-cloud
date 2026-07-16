@@ -39,7 +39,7 @@ import com.njydsz.pmis.common.exception.custom.RateLimitException;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @DisplayName("Agent 请求守卫 AgentRequestGuard 测试")
 @ExtendWith(MockitoExtension.class)

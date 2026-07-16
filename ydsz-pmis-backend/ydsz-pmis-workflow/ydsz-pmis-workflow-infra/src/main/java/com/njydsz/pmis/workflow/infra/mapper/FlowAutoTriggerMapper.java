@@ -14,7 +14,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowAutoTriggerDO;
  * <p>对应 pmis_flow_auto_trigger 表，提供按源流程编码查询启用规则。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowAutoTriggerMapper extends BaseMapper<FlowAutoTriggerDO> {

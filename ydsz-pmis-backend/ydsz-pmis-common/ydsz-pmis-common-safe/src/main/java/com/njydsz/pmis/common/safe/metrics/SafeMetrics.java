@@ -29,7 +29,7 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code safe_filter_duration_seconds} - 安全过滤器处理耗时</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class SafeMetrics {
 

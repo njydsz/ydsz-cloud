@@ -44,7 +44,7 @@ import java.lang.reflect.Type;
  *   <li>提取 actualTypeArguments[0] 获取泛型类型</li>
  * </ol>
  *
- * @since 1.3.0
+ * @since 1.0.0
  * @see Type
  * @see ParameterizedType
  */

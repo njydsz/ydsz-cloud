@@ -341,6 +341,26 @@ public class MinioStorage extends AbstractFileStorage {
     }
 
     @Override
+    protected boolean supportsServerSideCopy() {
+        return true;
+    }
+
+    @Override
+    protected void doCopyObject(String srcBucket, String srcObject, String destBucket, String destObject) {
+        try {
+            minioClient.copyObject(
+                CopyObjectArgs.builder()
+                    .source(CopySource.builder().bucket(srcBucket).object(srcObject).build())
+                    .bucket(destBucket)
+                    .object(destObject)
+                    .build());
+        } catch (Exception e) {
+            log.error("Minio server-side copy failed: {} ", e.getMessage());
+            throw new BusinessException(FileExceptionCode.OBJECT_COPY_FAILED);
+        }
+    }
+
+    @Override
     protected String normalizeObjectKey(String objectKey) {
         if (objectKey.startsWith("/")) {
             return objectKey.substring(1);

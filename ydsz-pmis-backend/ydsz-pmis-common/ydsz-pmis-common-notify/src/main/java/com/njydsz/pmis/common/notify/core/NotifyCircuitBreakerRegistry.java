@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  * 熔断器参数可通过 {@link com.njydsz.pmis.common.notify.config.NotifyProperties} 配置。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class NotifyCircuitBreakerRegistry {
 

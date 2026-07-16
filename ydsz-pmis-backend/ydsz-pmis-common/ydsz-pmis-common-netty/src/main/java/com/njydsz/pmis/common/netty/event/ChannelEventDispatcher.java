@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>该 Handler 是 {@code @Sharable} 的，可被多个 Channel 共享。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @ChannelHandler.Sharable

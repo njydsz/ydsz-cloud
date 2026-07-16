@@ -10,11 +10,15 @@ import com.njydsz.pmis.common.docs.enums.DocumentFormat;
  * 文档脱敏接口
  * <p>
  * 对文档中检测到的 PII 进行遮挡或替换脱敏。
+ * <p>
+ * <b>当前实现状态：</b>
+ * <ul>
+ *   <li>{@link com.njydsz.pmis.common.docs.security.redact.TextRedactor} - 支持纯文本类格式（TXT/MD/HTML/CSV/XML）</li>
+ *   <li>PDF 脱敏 - 暂未实现（需要 PDFBox 操作页面内容流覆盖文本区域）</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 public interface DocumentRedactor {
 

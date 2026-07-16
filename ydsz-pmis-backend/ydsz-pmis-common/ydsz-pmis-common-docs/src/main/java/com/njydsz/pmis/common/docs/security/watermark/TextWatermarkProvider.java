@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -32,8 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 @Slf4j
 @Component
@@ -64,7 +63,10 @@ public class TextWatermarkProvider implements WatermarkProvider {
             try (PDDocument document = Loader.loadPDF(tempFile.toFile());
                  ByteArrayOutputStream output = new ByteArrayOutputStream()) {
 
-                PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+                PDFont font = loadFont(document);
+                if (font == null) {
+                    font = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+                }
 
                 for (PDPage page : document.getPages()) {
                     try (PDPageContentStream contentStream = new PDPageContentStream(
@@ -116,6 +118,31 @@ public class TextWatermarkProvider implements WatermarkProvider {
         }
     }
 
+
+    /**
+     * 尝试加载嵌入中文字体，失败时回退到 Helvetica（仅支持 ASCII）
+     */
+    private PDFont loadFont(PDDocument document) {
+        // 尝试从系统字体目录加载中文字体
+        String[] fontPaths = {
+            System.getProperty("java.home") + "/lib/fonts/fontconfig",
+            "C:/Windows/Fonts/simhei.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
+        };
+        for (String path : fontPaths) {
+            try {
+                var file = new java.io.File(path);
+                if (file.exists()) {
+                    return PDType0Font.load(document, file);
+                }
+            } catch (Exception e) {
+                log.debug("[TextWatermarkProvider] 字体加载失败: {}", path);
+            }
+        }
+        log.warn("[TextWatermarkProvider] 未找到中文字体, 回退到 Helvetica（不支持中文水印）");
+        return null;
+    }
     @Override
     public boolean supports(DocumentFormat format) {
         return format == DocumentFormat.PDF;

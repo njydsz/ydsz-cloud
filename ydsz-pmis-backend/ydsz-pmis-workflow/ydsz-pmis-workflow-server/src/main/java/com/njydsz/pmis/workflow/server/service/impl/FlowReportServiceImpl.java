@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>每周一 9:00 自动生成并推送周报，每月 1 号 9:00 自动生成并推送月报。
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

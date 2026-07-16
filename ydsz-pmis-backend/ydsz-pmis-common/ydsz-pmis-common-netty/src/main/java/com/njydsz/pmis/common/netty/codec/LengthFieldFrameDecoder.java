@@ -17,7 +17,7 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
  * maxFrameLength 默认 1MB，可通过构造参数调整。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class LengthFieldFrameDecoder extends LengthFieldBasedFrameDecoder {
 

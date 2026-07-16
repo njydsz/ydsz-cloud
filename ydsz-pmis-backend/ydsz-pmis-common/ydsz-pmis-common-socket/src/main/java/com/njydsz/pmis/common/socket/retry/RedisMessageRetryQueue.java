@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 超过最大重试次数的消息移入 {@link RedisDeadLetterQueue}。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

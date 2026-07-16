@@ -37,7 +37,7 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
  * </ol>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class DeserializationProvider {
 

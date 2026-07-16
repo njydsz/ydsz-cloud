@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Redis Key 格式：{@code dnd:{userId}} → "22:00-08:00 Asia/Shanghai"
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * // 输出：{"name":"iPhone","price":999.0}
  * </pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

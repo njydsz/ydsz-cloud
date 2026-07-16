@@ -36,7 +36,7 @@ import com.njydsz.pmis.common.safe.ip.IpAccessService;
  *       window-seconds: 60
  * }</pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  * @see SecurityEvent
  * @see IpAccessService
  */

@@ -34,7 +34,7 @@ import com.njydsz.pmis.common.json.Json;
  * <p>方法签名要求：{@code void method(ChannelHandlerContext ctx, Map<String, Object> data)}
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class MessageDispatcher extends ChannelInboundHandlerAdapter {

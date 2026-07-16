@@ -2,8 +2,6 @@ package com.njydsz.pmis.common.docs.security.scanner;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 @Slf4j
 @Component
@@ -58,21 +54,20 @@ public class MacroDetector implements DocumentSecurityScanner {
                     .build());
         }
 
-        // ZIP 容器内容检测
-        try {
-            Path tempFile = Files.createTempFile("pmis-docs-macro-", ".tmp");
-            inputStream.transferTo(Files.newOutputStream(tempFile));
-            byte[] fileBytes = Files.readAllBytes(tempFile);
-            Files.deleteIfExists(tempFile);
-
-            // 检测 vbaProject.bin（OOXML 中的 VBA 宏标记）
-            if (containsVbaProject(fileBytes)) {
-                findings.add(SecurityScanResult.SecurityFinding.builder()
-                        .type("macro")
-                        .description("检测到 VBA 宏项目 (vbaProject.bin)")
-                        .level(SecurityLevel.HIGH)
-                        .location("OOXML 容器")
-                        .build());
+        // ZIP 容器内容检测（使用 ZipInputStream 流式遍历，避免全量读取 OOM）
+        try (var zis = new java.util.zip.ZipInputStream(inputStream)) {
+            var entry = zis.getNextEntry();
+            while (entry != null) {
+                if (VBA_PROJECT_ENTRY.equals(entry.getName())) {
+                    findings.add(SecurityScanResult.SecurityFinding.builder()
+                            .type("macro")
+                            .description("检测到 VBA 宏项目 (vbaProject.bin)")
+                            .level(SecurityLevel.HIGH)
+                            .location("OOXML 容器")
+                            .build());
+                    break;
+                }
+                entry = zis.getNextEntry();
             }
         } catch (IOException e) {
             log.warn("[MacroDetector] 读取文件失败: {}", fileName, e);
@@ -85,30 +80,6 @@ public class MacroDetector implements DocumentSecurityScanner {
                 .build();
     }
 
-    /**
-     * 检测 ZIP 容器中是否包含 vbaProject.bin
-     */
-    private boolean containsVbaProject(byte[] fileBytes) {
-        // 简单字节搜索
-        String target = VBA_PROJECT_ENTRY;
-        byte[] targetBytes = target.getBytes();
-        if (fileBytes.length < targetBytes.length) {
-            return false;
-        }
-        for (int i = 0; i <= fileBytes.length - targetBytes.length; i++) {
-            boolean match = true;
-            for (int j = 0; j < targetBytes.length; j++) {
-                if (fileBytes[i + j] != targetBytes[j]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     private String extractExtension(String fileName) {
         if (fileName == null) {

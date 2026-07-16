@@ -5,7 +5,7 @@ package com.njydsz.pmis.common.json.exception;
  * 
  * <p>所有 Json 相关异常的基类。</p>
  * 
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class JsonException extends RuntimeException {
     

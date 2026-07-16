@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>当 {@link NettyChannelMetrics} 为 {@code null} 时降级为空操作。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @ChannelHandler.Sharable

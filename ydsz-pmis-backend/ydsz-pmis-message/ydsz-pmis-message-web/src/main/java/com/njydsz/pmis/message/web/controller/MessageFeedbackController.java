@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
  * <p>提供用户对消息质量的评分和反馈接口。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Tag(name = "消息反馈", description = "消息质量评分与用户反馈")
 @RestController

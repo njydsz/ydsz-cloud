@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  * {@link AbstractNettyClient} Bean 中，业务方无需手动处理。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @AutoConfiguration

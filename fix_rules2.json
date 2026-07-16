@@ -1,0 +1,14 @@
+[
+  {
+    "file": "spring\\web\\ExcelWebSupport.java",
+    "desc": "P1-6: use ByteArrayOutputStream for Content-Length",
+    "old": "            ExcelFacade.write(response.getOutputStream(), clazz)\n                    .sheet(sheetName != null ? sheetName : \"Sheet1\")\n                    .doWrite(data);",
+    "new": "            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();\n            ExcelFacade.write(baos, clazz)\n                    .sheet(sheetName != null ? sheetName : \"Sheet1\")\n                    .doWrite(data);\n            byte[] bytes = baos.toByteArray();\n            response.setContentLength(bytes.length);\n            response.getOutputStream().write(bytes);\n            response.getOutputStream().flush();"
+  },
+  {
+    "file": "core\\ExcelFacade.java",
+    "desc": "P2-4: unify ThreadLocal to DownloadContext",
+    "old": "    private static final ThreadLocal<String> DOWNLOAD_CONTENT_TYPE = new ThreadLocal<>();\n    private static final ThreadLocal<String> DOWNLOAD_FILE_NAME = new ThreadLocal<>();\n\n    public static String getDownloadContentType() {\n        return DOWNLOAD_CONTENT_TYPE.get();\n    }\n\n    public static String getDownloadFileName() {\n        return DOWNLOAD_FILE_NAME.get();\n    }\n\n    public static void clearDownloadContext() {\n        DOWNLOAD_CONTENT_TYPE.remove();\n        DOWNLOAD_FILE_NAME.remove();\n    }\n\n    /**\n     * 生成 Web 下载响应的工具方法 (带内容类型)\n     *\n     * @param fileName 下载文件名\n     * @param isXlsx 是否为 xlsx 格式\n     * @param contentType 自定义内容类型 (null 时使用默认值)\n     */\n    public static void setWebResponse(String fileName, boolean isXlsx, String contentType) {\n        if (contentType == null) {\n            contentType = isXlsx\n                ? \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\"\n                : \"application/vnd.ms-excel\"\n        }\n        DOWNLOAD_CONTENT_TYPE.set(contentType);\n        DOWNLOAD_FILE_NAME.set(fileName);\n    }",
+    "new": "    /**\n     * 生成 Web 下载响应的工具方法 (带内容类型)\n     *\n     * <p>使用 DownloadContext 管理下载上下文，统一 ThreadLocal 管理。</p>\n     *\n     * @param fileName 下载文件名\n     * @param isXlsx 是否为 xlsx 格式\n     * @param contentType 自定义内容类型 (已废弃，由 ExcelWebSupport 统一处理)\n     */\n    public static void setWebResponse(String fileName, boolean isXlsx, String contentType) {\n        com.njydsz.pmis.common.excel.spring.DownloadContext.setFileName(\n            fileName + (isXlsx ? \".xlsx\" : \".xls\"));\n    }"
+  }
+]

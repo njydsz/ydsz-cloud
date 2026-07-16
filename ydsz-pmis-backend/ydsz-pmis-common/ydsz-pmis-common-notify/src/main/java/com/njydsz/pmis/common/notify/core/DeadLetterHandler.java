@@ -10,7 +10,7 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  * <p>当重试队列中的消息超过最大重试次数后，将其移入死信队列进行人工干预或后续处理。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface DeadLetterHandler {
 

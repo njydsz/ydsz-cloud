@@ -100,10 +100,7 @@ public class ExcelConfig {
     private int compressionLevel = Deflater.BEST_SPEED;
 
     /**
-     * 私有构造函数,防止外部实例化
- * @author ydsz-pmis-team
- * @email pmis-dev@njydsz.com
- * @version 1.0.0
+     * 私有构造函数，防止外部实例化。
      */
     private ExcelConfig() {
     }

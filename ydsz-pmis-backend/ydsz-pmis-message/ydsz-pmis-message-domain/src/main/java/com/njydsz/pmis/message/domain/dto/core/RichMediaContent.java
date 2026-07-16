@@ -15,7 +15,7 @@ import lombok.Data;
  * 通道实现按需解析并渲染为通道特定的富媒体格式。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 public class RichMediaContent {

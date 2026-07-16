@@ -19,8 +19,6 @@ import com.njydsz.pmis.common.docs.security.pii.PiiDetector;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 @Component
 public class PhoneDetector implements PiiDetector {

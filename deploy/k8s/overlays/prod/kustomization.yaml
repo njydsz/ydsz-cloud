@@ -21,28 +21,28 @@ resources:
 
 images:
   - name: ydsz-pmis/gateway
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/userinfo
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/system
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/project
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/message
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/cronjob
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/workflow
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/agent
-    newTag: v1.3.0
+    newTag: v1.0.0
   # P2-9: 补齐 sales / finance 镜像 tag，避免部署时残留字面占位符 IMAGE_TAG
   - name: ydsz-pmis/sales
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/finance
-    newTag: v1.3.0
+    newTag: v1.0.0
   - name: ydsz-pmis/nextwiki
-    newTag: v1.3.0
+    newTag: v1.0.0
 
 patches:
   - path: patch-replicas.yaml

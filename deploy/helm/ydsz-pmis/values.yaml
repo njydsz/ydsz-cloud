@@ -17,7 +17,7 @@
 global:
   imageRegistry: ""                    # 留空则用镜像名前缀 ydsz-pmis/
   imagePullSecrets: []                 # 私有仓库认证: [{ name: regcred }]
-  imageTag: v1.3.0                     # 全局镜像 tag（被 services.*.tag 覆盖）
+  imageTag: v1.0.0                     # 全局镜像 tag（被 services.*.tag 覆盖）
   storageClass: ""                     # 留空则用集群默认 StorageClass
   timezone: Asia/Shanghai
 

@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  *   <li>name: JSON 中 type 属性的值，用于识别该子类型</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({})

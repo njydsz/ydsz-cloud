@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * private String secretKey;       // 强制可见
  * </pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})

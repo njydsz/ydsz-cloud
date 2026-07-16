@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  * 从 MDC 中获取当前 traceId，注入到通知请求中，便于跨服务问题排查。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class NotifyTraceContext {
 

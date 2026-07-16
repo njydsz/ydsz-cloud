@@ -9,7 +9,7 @@ import lombok.Data;
  * 从文档中提取的嵌入图片信息。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 @Builder

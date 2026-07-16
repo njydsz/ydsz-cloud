@@ -50,6 +50,13 @@ public class PgSearchEngine implements SearchEngine {
 
     /** P1-11: 内存索引最大容量 */
     private static final int MAX_MEMORY_INDEX_SIZE = 10000;
+    /** P2-14: Allowed sort columns whitelist */
+    private static final java.util.Set<String> ALLOWED_COLUMNS = java.util.Set.of(
+            "id", "doc_type", "title", "subtitle", "content", "snippet",
+            "tags", "status", "path", "tenant_id", "created_by", "created_at",
+            "updated_by", "updated_at", "searchable_text", "metadata",
+            "created_at_ts", "updated_at_ts"
+    );
 
     private final JdbcTemplate jdbcTemplate;
     private final String searchConfig;
@@ -63,7 +70,14 @@ public class PgSearchEngine implements SearchEngine {
     private final ScheduledExecutorService probeExecutor;
 
     public PgSearchEngine(DataSource dataSource, SearchProperties properties) {
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this(new JdbcTemplate(dataSource), properties);
+    }
+
+    public PgSearchEngine(JdbcTemplate jdbcTemplate) {
+        this(jdbcTemplate, new SearchProperties());
+    }
+
+    private PgSearchEngine(JdbcTemplate jdbcTemplate, SearchProperties properties) {
         this.properties = properties;
         this.searchConfig = detectSearchConfig();
         this.available = initIndexTable();
@@ -80,26 +94,6 @@ public class PgSearchEngine implements SearchEngine {
         });
         startRecoveryProbe();
     }
-
-    public PgSearchEngine(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.properties = new SearchProperties();
-        this.searchConfig = detectSearchConfig();
-        this.available = initIndexTable();
-        this.memoryIndex = Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, IndexDocument> eldest) {
-                return size() > MAX_MEMORY_INDEX_SIZE;
-            }
-        });
-        this.probeExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "pg-search-probe");
-            t.setDaemon(true);
-            return t;
-        });
-        startRecoveryProbe();
-    }
-
     @Override
     public SearchResponse search(SearchRequest request) {
         if (!available) {
@@ -708,8 +702,12 @@ public class PgSearchEngine implements SearchEngine {
         if (column == null) {
             return "id";
         }
-        String sanitized = column.replaceAll("[^a-zA-Z0-9_]", "");
-        return sanitized.isEmpty() ? "id" : sanitized;
+        String lower = column.toLowerCase();
+        if (ALLOWED_COLUMNS.contains(lower)) {
+            return lower;
+        }
+        log.warn("[PgSearchEngine] Column not in whitelist, fallback to id: {}", column);
+        return "id";
     }
 
     private String simpleHighlight(String text, String keyword, String preTag, String postTag) {

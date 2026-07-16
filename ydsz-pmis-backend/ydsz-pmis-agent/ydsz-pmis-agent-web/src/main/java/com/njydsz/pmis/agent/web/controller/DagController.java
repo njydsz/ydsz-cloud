@@ -23,7 +23,7 @@ import com.njydsz.pmis.common.core.response.BaseResponse;
  * <p>提供 YAML DSL 驱动的多 Agent 编排执行接口。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @RestController
 @RequestMapping("/agent/dag")

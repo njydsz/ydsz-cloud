@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * 端口通过 {@code pmis.message.tcp-push.port} 配置（默认 9123）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

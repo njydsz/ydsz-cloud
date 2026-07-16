@@ -30,7 +30,7 @@ import com.njydsz.pmis.common.json.provider.SerializationProvider;
  *   <li>不手动 flush，由 Spring 框架统一管理输出流生命周期</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
 

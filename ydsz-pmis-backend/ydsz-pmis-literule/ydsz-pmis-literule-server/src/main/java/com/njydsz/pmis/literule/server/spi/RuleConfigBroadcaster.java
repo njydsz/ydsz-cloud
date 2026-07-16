@@ -17,7 +17,7 @@ import com.njydsz.pmis.literule.domain.event.RuleConfigRefreshEvent;
  *
  * <p>防止广播风暴：广播消息携带 sourceNodeId，接收方忽略本节点发出的消息。
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface RuleConfigBroadcaster {
 

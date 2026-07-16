@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对标钉钉"已审批人自动跳过"能力。
  * 同一用户在流程中已审批过的后续节点自动跳过，避免重复审批。
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

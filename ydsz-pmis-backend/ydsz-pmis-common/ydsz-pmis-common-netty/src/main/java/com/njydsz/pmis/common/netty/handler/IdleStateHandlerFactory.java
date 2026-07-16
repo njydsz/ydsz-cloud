@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
  * 业务侧可通过 {@code @ChannelHandler.Sharable} 的 {@code userEventTriggered} 处理。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @RequiredArgsConstructor
 public class IdleStateHandlerFactory {

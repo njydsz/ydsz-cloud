@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.feign.MessageRequest;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface MessageQueueOperations {
 

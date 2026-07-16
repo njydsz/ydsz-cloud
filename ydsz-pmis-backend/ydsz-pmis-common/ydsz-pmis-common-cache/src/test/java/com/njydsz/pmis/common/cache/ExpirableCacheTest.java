@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.cache.support.Expiry;
  *   <li>TTL 抖动（防雪崩）
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @DisplayName("ExpirableCache 单元测试")
 class ExpirableCacheTest {

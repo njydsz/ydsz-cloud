@@ -13,17 +13,17 @@ namePrefix: uat-
 
 images:
   - name: ydsz-pmis/gateway
-    newTag: v1.3.0-rc.2
+    newTag: v1.0.0-rc.2
   - name: ydsz-pmis/system
-    newTag: v1.3.0-rc.2
+    newTag: v1.0.0-rc.2
   - name: ydsz-pmis/userinfo
-    newTag: v1.3.0-rc.2
+    newTag: v1.0.0-rc.2
   - name: ydsz-pmis/project
-    newTag: v1.3.0-rc.2
+    newTag: v1.0.0-rc.2
   - name: ydsz-pmis/cronjob
-    newTag: v1.3.0-rc.2
+    newTag: v1.0.0-rc.2
   - name: ydsz-pmis/workflow
-    newTag: v1.3.0-rc.2
+    newTag: v1.0.0-rc.2
 
 # P2-12: UAT 环境 30% 采样
 configMapGenerator:

@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.json.Json;
  * Json 数组实现
  * 对应 fastjson2 的 JSONArray，提供动态 JSON 数组操作
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class JsonArray extends ArrayList<Object> {
 

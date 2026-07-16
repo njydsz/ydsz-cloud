@@ -2,7 +2,7 @@
 #  YDSZ PMIS · 前端 Dockerfile（多阶段构建：Node 构建 + Nginx 运行）
 # -----------------------------------------------------------------------------
 #  构建示例:
-#    docker build -t ydsz-pmis/frontend:v1.3.0 \
+#    docker build -t ydsz-pmis/frontend:v1.0.0 \
 #      --build-arg API_BASE=/api \
 #      -f ydsz-pmis-frontend/Dockerfile ydsz-pmis-frontend/
 #

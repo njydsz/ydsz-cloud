@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 生成的 {@link SslContext} 可直接用于 Netty Pipeline 的 SSL Handler。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SslContextFactory {

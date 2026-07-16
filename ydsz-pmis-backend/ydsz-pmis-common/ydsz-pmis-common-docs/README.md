@@ -100,23 +100,22 @@ PMIS 文档智能处理框架 — 8 种格式解析（PDF / Word / Excel / PPT /
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   docs:
-    parser:
-      max-file-size: 50MB
-      ocr-enabled: false
-    security:
-      scan-enabled: true
-      block-on-macro: true
-    pii:
-      detect-enabled: true
-      redact-enabled: false
-    watermark:
-      enabled: false
-      text: "PMIS CONFIDENTIAL"
-    async:
-      thread-pool-size: 4
-      queue-capacity: 100
+    enabled: true
+    max-file-size-mb: 50
+    parse-timeout-seconds: 60
+    security-scan-enabled: true
+    pii-detection-enabled: true
+    preprocess-enabled: true
+    watermark-enabled: true
+    redact-enabled: true
+    async-pool-size: 4
+    async-queue-capacity: 100
+    max-chunk-size: 2000
+    chunk-overlap: 200
+    security-max-scan-pages: 50
+    block-on-high-risk: false
 ```
 
 ## 自动配置

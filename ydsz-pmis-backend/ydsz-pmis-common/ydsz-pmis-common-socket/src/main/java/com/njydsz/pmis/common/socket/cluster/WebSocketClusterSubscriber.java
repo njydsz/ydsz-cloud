@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * 如果消息被压缩则解压（P2-3）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

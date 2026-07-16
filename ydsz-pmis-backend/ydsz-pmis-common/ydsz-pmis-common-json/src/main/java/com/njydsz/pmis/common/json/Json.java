@@ -64,7 +64,7 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *   <li>JIT 友好设计 - 便于 JVM 内联优化</li>
  * </ul>
  * 
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class Json {
 

@@ -7,7 +7,7 @@
 # =============================================================================
 
 global:
-  imageTag: v1.3.0-SNAPSHOT
+  imageTag: v1.0.0-SNAPSHOT
   nacos:
     serverAddr: nacos-server.pmis-dev.svc.cluster.local:8848
     namespace: pmis-dev

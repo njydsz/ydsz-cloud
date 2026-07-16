@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * 本扫描器对 JobRelation 的巡检逻辑保留向后兼容，后续版本将完全迁移到 DAG 体系。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

@@ -18,7 +18,7 @@ import lombok.Data;
  * @param extraProps 额外配置属性（连接器实现特定）
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 public class ConnectorConfig {

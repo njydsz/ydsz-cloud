@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * // 返回 Dog 实例
  * </pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

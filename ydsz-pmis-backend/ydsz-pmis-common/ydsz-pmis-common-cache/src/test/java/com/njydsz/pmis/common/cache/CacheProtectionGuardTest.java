@@ -30,7 +30,7 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
  *   <li>参数校验
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @DisplayName("CacheProtectionGuard 单元测试")
 class CacheProtectionGuardTest {

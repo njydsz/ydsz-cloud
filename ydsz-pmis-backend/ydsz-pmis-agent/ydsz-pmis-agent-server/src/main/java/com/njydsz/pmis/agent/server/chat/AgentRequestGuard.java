@@ -29,7 +29,7 @@ import com.njydsz.pmis.common.exception.custom.RateLimitException;
  * 默认 10 QPM（每分钟 10 次）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Component
 public class AgentRequestGuard {

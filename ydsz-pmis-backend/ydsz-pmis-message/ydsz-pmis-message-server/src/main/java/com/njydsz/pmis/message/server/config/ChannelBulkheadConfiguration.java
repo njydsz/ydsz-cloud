@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>拒绝策略：CallerRunsPolicy（队列满时由调用线程执行，形成背压）
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

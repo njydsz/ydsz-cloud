@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>当 MeterRegistry 不在 classpath 时降级为空操作（no-op）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class NettyChannelMetrics {

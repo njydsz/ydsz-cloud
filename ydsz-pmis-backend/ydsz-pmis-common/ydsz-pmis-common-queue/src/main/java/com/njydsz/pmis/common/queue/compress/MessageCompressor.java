@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * 压缩标记前缀 {@code "GZIP:"} 用于在接收端自动识别并解压。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public final class MessageCompressor {

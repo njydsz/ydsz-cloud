@@ -33,7 +33,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  *   <li>{@link JsonModuleRegistrar} — 模块注册器（自动发现 JsonModule Bean）</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @AutoConfiguration
 @EnableConfigurationProperties(JsonProperties.class)

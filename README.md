@@ -4,7 +4,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 --------------------------------------------------------------------------------
 项目代号:   YDSZ PMIS
 所属公司:   南京云顶数字科技有限公司
-版本:       v1.3.0-SNAPSHOT
+版本:       v1.0.0-SNAPSHOT
 最近更新:   2026-07-08
 维护团队:   PMIS 研发部
 文档密级:   内部受控 · 禁止外传
@@ -24,7 +24,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 
 > 南京云顶数字科技有限公司 · 软件定制 + 人力外包 双业态 · 业财一体化精细化运营平台
 >
->- **当前版本**: `v1.3.0-SNAPSHOT` · **最近更新**: 2026-07-06
+>- **当前版本**: `v1.0.0-SNAPSHOT` · **最近更新**: 2026-07-06
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-6DB33F?logo=springboot)]()
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.2-6DB33F?logo=spring)]()
@@ -441,7 +441,7 @@ ydsz-pmis/
 
 ## 十三、版本与许可
 
-- **当前版本**: v1.3.0-SNAPSHOT（批次 28 完成，2026-07-04）
+- **当前版本**: v1.0.0-SNAPSHOT（批次 28 完成，2026-07-04）
 - **首发版本**: v1.0.0 GA（2026-06-30）
 - **本次更新（2026-07-08）**:
   - 端口按 pom.xml 构建顺序重排（userinfo 9001, system 9002, project 9003, message 9004, cronjob 9005, workflow 9006, agent 9007）
@@ -455,5 +455,5 @@ ydsz-pmis/
 
 ---
 
-> 本 README 由 PMIS 团队维护，与代码同步更新（v1.3.0_2026-07-06）。
+> 本 README 由 PMIS 团队维护，与代码同步更新（v1.0.0_2026-07-06）。
 > 任何变更请走 PR + Code Review 流程。

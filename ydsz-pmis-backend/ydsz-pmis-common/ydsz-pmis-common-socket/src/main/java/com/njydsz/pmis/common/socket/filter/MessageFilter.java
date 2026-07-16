@@ -10,7 +10,7 @@ package com.njydsz.pmis.common.socket.filter;
  * 会在推送前依次调用所有注册的 Filter。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface MessageFilter {
 

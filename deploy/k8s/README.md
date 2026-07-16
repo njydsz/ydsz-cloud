@@ -112,7 +112,7 @@ kubectl delete -k deploy/k8s/overlays/prod
 | gateway 副本 | 1 | 2 | 2 | **3 (HPA 3-10)** |
 | project 副本 | 1 | 2 | 3 | **4 (HPA 4-12)** |
 | agent 副本 | 1 | 1 | 1 | **2 (HPA 2-6)** |
-| 镜像 tag | v1.3.0-SNAPSHOT | v1.3.0-rc.1 | v1.3.0-rc.2 | v1.3.0 |
+| 镜像 tag | v1.0.0-SNAPSHOT | v1.0.0-rc.1 | v1.0.0-rc.2 | v1.0.0 |
 | 日志级别 | DEBUG | INFO | INFO | INFO |
 | 资源限制 | 弱 | 弱 | 中 | 强 |
 | PDB | — | — | — | ✓ |
@@ -130,7 +130,7 @@ kubectl delete -k deploy/k8s/overlays/prod
 images:
   - name: ydsz-pmis/gateway
     newName: registry.cn-hangzhou.aliyuncs.com/your-org/ydsz-pmis-gateway
-    newTag: v1.3.0
+    newTag: v1.0.0
 ```
 
 或者直接在 overlay 中覆盖:
@@ -140,7 +140,7 @@ images:
 images:
   - name: ydsz-pmis/gateway
     newName: registry.cn-hangzhou.aliyuncs.com/your-org/ydsz-pmis-gateway
-    newTag: v1.3.0
+    newTag: v1.0.0
 ```
 
 ### 5.2 构建并推送(7 个后端服务 + 1 个前端)
@@ -149,16 +149,16 @@ images:
 
 ```bash
 # 方式 1：批量构建所有 7 个后端服务 + 前端（推荐）
-bash deploy/scripts/build-images.sh v1.3.0 ydsz-pmis
+bash deploy/scripts/build-images.sh v1.0.0 ydsz-pmis
 # 或 PowerShell
-.\deploy\scripts\build-images.ps1 -Tag v1.3.0 -Registry ydsz-pmis
+.\deploy\scripts\build-images.ps1 -Tag v1.0.0 -Registry ydsz-pmis
 
 # 方式 2：构建并推送到私有仓库
-bash deploy/scripts/build-images.sh v1.3.0 registry.cn-hangzhou.aliyuncs.com/your-org
-PUSH=true bash deploy/scripts/build-images.sh v1.3.0 registry.cn-hangzhou.aliyuncs.com/your-org
+bash deploy/scripts/build-images.sh v1.0.0 registry.cn-hangzhou.aliyuncs.com/your-org
+PUSH=true bash deploy/scripts/build-images.sh v1.0.0 registry.cn-hangzhou.aliyuncs.com/your-org
 
 # 方式 3：单服务手动构建
-docker build -t ydsz-pmis/gateway:v1.3.0 \
+docker build -t ydsz-pmis/gateway:v1.0.0 \
   --build-arg MODULE_NAME=ydsz-pmis-gateway \
   --build-arg APP_PORT=9000 \
   -f ydsz-pmis-backend/Dockerfile ydsz-pmis-backend/

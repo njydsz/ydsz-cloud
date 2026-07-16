@@ -17,7 +17,7 @@ import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
  *   <li>解析深度限制: 委托至 {@link JsonConfig#getMaxDepth()}，默认 256</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class DeserializationConfig {
     

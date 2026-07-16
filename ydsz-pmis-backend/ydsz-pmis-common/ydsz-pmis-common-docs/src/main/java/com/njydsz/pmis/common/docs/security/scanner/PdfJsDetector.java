@@ -31,13 +31,17 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 @Slf4j
 @Component
 @ConditionalOnClass(name = "org.apache.pdfbox.Loader")
 public class PdfJsDetector implements DocumentSecurityScanner {
+
+    private final com.njydsz.pmis.common.docs.config.DocsProperties properties;
+
+    public PdfJsDetector(com.njydsz.pmis.common.docs.config.DocsProperties properties) {
+        this.properties = properties;
+    }
 
     @Override
     public SecurityScanResult scan(InputStream inputStream, String fileName, DocumentFormat format) {
@@ -85,7 +89,8 @@ public class PdfJsDetector implements DocumentSecurityScanner {
                 }
 
                 // 3. 检测每页中的可疑链接和 JavaScript
-                int pageCount = Math.min(document.getNumberOfPages(), 50);
+                int maxScan = properties.getSecurityMaxScanPages();
+                int pageCount = maxScan > 0 ? Math.min(document.getNumberOfPages(), maxScan) : document.getNumberOfPages();
                 for (int i = 0; i < pageCount; i++) {
                     var page = document.getPage(i);
                     if (page == null) {

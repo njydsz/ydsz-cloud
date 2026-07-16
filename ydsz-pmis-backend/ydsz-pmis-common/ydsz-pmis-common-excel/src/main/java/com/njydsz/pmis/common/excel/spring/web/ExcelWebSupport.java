@@ -88,9 +88,14 @@ public class ExcelWebSupport {
                 DownloadContext.setSheetName(sheetName);
             }
 
-            ExcelFacade.write(response.getOutputStream(), clazz)
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            ExcelFacade.write(baos, clazz)
                     .sheet(sheetName != null ? sheetName : "Sheet1")
                     .doWrite(data);
+            byte[] bytes = baos.toByteArray();
+            response.setContentLength(bytes.length);
+            response.getOutputStream().write(bytes);
+            response.getOutputStream().flush();
         } catch (IOException e) {
             log.error("Excel 下载写入失败: fileName={}", fileName, e);
             throw new ExcelWriteException(ExcelExceptionCode.WRITE_IO_ERROR,

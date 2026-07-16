@@ -7,8 +7,6 @@ package com.njydsz.pmis.common.docs.enums;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 public enum DocumentFormat {
 
@@ -57,6 +55,29 @@ public enum DocumentFormat {
 
     public String getMimeType() {
         return mimeType;
+    }
+
+    /**
+     * 使用 Apache Tika 检测文档的实际 MIME 类型
+     * <p>
+     * 与文件扩展名交叉验证，不匹配时返回 UNKNOWN。
+     *
+     * @param inputStream 文档输入流（会消耗部分字节）
+     * @return 检测到的文档格式，无法确定时返回 {@link #UNKNOWN}
+     */
+    public static DocumentFormat fromContent(java.io.InputStream inputStream) {
+        try {
+            var tika = new org.apache.tika.Tika();
+            String mimeType = tika.detect(inputStream);
+            for (DocumentFormat format : values()) {
+                if (format.mimeType.equals(mimeType)) {
+                    return format;
+                }
+            }
+        } catch (Exception ignored) {
+            // Tika 检测失败时回退到扩展名
+        }
+        return UNKNOWN;
     }
 
     /**

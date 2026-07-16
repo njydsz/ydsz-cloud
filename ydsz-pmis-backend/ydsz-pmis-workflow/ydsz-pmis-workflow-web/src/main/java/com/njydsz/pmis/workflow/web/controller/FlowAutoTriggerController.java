@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * 触发规则在流程实例完成时自动生效，无需手动调用。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "流程自动触发规则")

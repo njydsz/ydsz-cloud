@@ -13,8 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
 import com.njydsz.pmis.common.excel.core.context.AnalysisContext;
+import com.njydsz.pmis.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.pmis.common.excel.core.listener.ReadListener;
 import com.njydsz.pmis.common.excel.core.metadata.ReadMetadata;
+import com.njydsz.pmis.common.excel.api.validator.DataValidator;
 import com.njydsz.pmis.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.pmis.common.excel.core.reader.HeaderAnalyzer;
 import com.njydsz.pmis.common.excel.core.reader.InputSourceDetector;
@@ -408,6 +410,8 @@ public class ExcelReader {
      * @throws RuntimeException 读取过程中发生错误时抛出
      */
     public <T> void doRead(ReadListener<T> listener) {
+        long startTime = System.nanoTime();
+        boolean useFastReader = false;
         try {
             if (listener != null) {
                 listeners.add(listener);
@@ -445,6 +449,7 @@ public class ExcelReader {
                 }
 
                 if (fileSizeMB >= thresholdMB || ExcelConfig.getInstance().isUseFastReader()) {
+                    useFastReader = true;
                     try (FileInputStream fis = new FileInputStream(
                             filePath != null ? filePath : metadata.getFile().getAbsolutePath())) {
                         SuperFastExcelReader superFastReader = new SuperFastExcelReader();
@@ -461,6 +466,7 @@ public class ExcelReader {
                         superFastReader.read(fis);
                     }
                     notifyEnd();
+                    ExcelMetrics.recordRead(java.time.Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", true);
                     return;
                 }
             }
@@ -470,8 +476,10 @@ public class ExcelReader {
             } else {
                 readXls();
             }
+            ExcelMetrics.recordRead(java.time.Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", true);
         } catch (Exception e) {
             log.error("Excel 读取异常", e);
+            ExcelMetrics.recordRead(java.time.Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", false);
             throw new RuntimeException("Excel 读取异常: " + e.getMessage(), e);
         }
     }
@@ -646,6 +654,15 @@ public class ExcelReader {
 
             if (data != null && hasListeners) {
                 context.incrementRow();
+                try {
+                    DataValidator.validate(data, rowIndex);
+                } catch (Exception ve) {
+                    log.warn("Data validation failed, row={", rowIndex, ve);
+                    for (int i = 0; i < listenerCount; i++) {
+                        ((ReadListener) listeners.get(i)).onError(context, ve);
+                    }
+                    continue;
+                }
                 if (batchSize > 0) {
                     if (batchBuffer == null) {
                         batchBuffer = new ArrayList<>(batchSize);

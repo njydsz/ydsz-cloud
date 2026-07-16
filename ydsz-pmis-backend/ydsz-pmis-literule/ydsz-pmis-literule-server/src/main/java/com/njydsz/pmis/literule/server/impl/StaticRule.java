@@ -45,7 +45,7 @@ public class StaticRule implements Rule {
      * @param priority  优先级
      * @param scope     作用域（null 表示全部场景）
      * @param evaluator 评估函数
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public StaticRule(String code, String name, String category, int priority, String scope,
                       Function<RuleContext, RuleResult> evaluator) {

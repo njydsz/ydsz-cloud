@@ -28,7 +28,7 @@ import com.njydsz.pmis.common.cache.multilevel.MultiLevelCache;
  *   <li>统计计数（L1/L2 命中率）
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @DisplayName("MultiLevelCache 单元测试")
 class MultiLevelCacheTest {

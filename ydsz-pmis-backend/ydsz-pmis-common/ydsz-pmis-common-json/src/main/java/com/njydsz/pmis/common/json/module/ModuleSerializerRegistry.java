@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.json.serializer.JsonSerializer;
  *
  * <p>用于在模块中注册自定义序列化器，提供类型安全的注册接口。</p>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class ModuleSerializerRegistry {
 

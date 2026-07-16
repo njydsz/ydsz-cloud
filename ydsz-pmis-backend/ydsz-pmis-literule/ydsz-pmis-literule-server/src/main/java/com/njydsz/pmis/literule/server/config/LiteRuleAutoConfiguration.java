@@ -265,7 +265,7 @@ public class LiteRuleAutoConfiguration {
      *
      * @param evaluator 表达式求值器
      * @return ABTestService 实例
-     * @since 1.3.0
+     * @since 1.0.0
      */
     @Bean
     @ConditionalOnMissingBean

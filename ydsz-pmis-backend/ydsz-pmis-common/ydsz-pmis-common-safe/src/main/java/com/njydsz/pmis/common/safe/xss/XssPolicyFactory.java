@@ -16,7 +16,7 @@ import org.owasp.html.Sanitizers;
  *   <li>RELAXED：保留格式化+图片+链接+样式+表格（富文本编辑器推荐）</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class XssPolicyFactory {
 

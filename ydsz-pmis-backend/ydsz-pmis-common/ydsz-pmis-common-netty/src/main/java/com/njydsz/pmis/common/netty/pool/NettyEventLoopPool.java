@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>优雅关闭时等待 {@code shutdownGracefully()} 完成，避免在途消息丢失。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class NettyEventLoopPool {

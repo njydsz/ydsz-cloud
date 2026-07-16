@@ -775,7 +775,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置是否启用统计
      *
      * @param statsEnabled 是否启用
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public void setStatsEnabled(boolean statsEnabled) {
         this.statsEnabled = statsEnabled;
@@ -785,7 +785,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取是否启用统计
      *
      * @return 是否启用
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public boolean isStatsEnabled() {
         return statsEnabled;
@@ -795,7 +795,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 将引擎作为统计记录器暴露给编排层使用
      *
      * @return StatsRecorder 实例
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public StatsRecorder asStatsRecorder() {
         return this;
@@ -1309,7 +1309,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @param rule     规则
      * @param scenario 当前场景
      * @return 是否应评估
-     * @since 1.3.0
+     * @since 1.0.0
      */
     private boolean shouldEvaluate(Rule rule, String scenario) {
         if (scenario == null || "DEFAULT".equals(scenario)) {

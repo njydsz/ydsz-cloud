@@ -17,7 +17,7 @@ import java.util.Map;
  *   <li>业务类型匹配：根据当前上下文（如项目管理模块）推荐相关分类模板</li>
  * </ol>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface FlowTemplateRecommendService {
 

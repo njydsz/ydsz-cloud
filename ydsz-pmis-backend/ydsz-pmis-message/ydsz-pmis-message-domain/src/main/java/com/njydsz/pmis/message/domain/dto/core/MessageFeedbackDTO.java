@@ -6,7 +6,7 @@ import lombok.Data;
  * P1-4: 消息反馈请求 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 public class MessageFeedbackDTO {

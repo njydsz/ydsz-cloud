@@ -321,7 +321,7 @@ public class CacheStats {
    *     .build();
    * }</pre>
    *
-   * @since 1.3.0
+   * @since 1.0.0
    */
   public static final class Builder {
     private long hitCount;

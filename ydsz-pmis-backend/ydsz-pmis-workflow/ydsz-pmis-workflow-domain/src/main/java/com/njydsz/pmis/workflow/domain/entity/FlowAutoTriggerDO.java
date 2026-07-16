@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
  * 每条记录描述一条"源流程 -> 目标流程"的触发规则，支持条件表达式过滤。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

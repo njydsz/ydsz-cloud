@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
  * 用户上线时合并 Redis 缓存和数据库记录一并推送。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

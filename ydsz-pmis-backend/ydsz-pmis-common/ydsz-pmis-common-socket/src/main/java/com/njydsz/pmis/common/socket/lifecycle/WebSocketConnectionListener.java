@@ -10,7 +10,7 @@ package com.njydsz.pmis.common.socket.lifecycle;
  * 会在连接/断开时自动调用所有注册的 Listener。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface WebSocketConnectionListener {
 

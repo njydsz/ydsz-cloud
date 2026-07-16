@@ -31,7 +31,7 @@ import com.njydsz.pmis.common.json.Json;
  *   <li>内存占用：仅 O(1) 内存</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class JsonGenerator implements Closeable {
 

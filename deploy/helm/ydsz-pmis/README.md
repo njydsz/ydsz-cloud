@@ -9,7 +9,7 @@
 
 ```
 helm/ydsz-pmis/
-├── Chart.yaml              # Chart 元数据（v1.3.0）
+├── Chart.yaml              # Chart 元数据（v1.0.0）
 ├── values.yaml             # 全局默认值
 ├── values-dev.yaml         # DEV 环境覆盖（1 副本 + DEBUG）
 ├── values-sit.yaml         # SIT 环境覆盖（2 副本 + INFO）
@@ -82,7 +82,7 @@ helm uninstall pmis -n pmis
 
 | 维度 | dev | sit | uat | prod |
 |---|---|---|---|---|
-| 镜像 tag | v1.3.0-SNAPSHOT | v1.3.0-rc.1 | v1.3.0-rc.2 | **v1.3.0** |
+| 镜像 tag | v1.0.0-SNAPSHOT | v1.0.0-rc.1 | v1.0.0-rc.2 | **v1.0.0** |
 | springProfile | dev | sit | uat | prod |
 | 日志级别 | DEBUG | INFO | INFO | INFO |
 | gateway 副本 | 1 | 2 | 2 | **3 (HPA 3-10)** |
@@ -103,7 +103,7 @@ helm uninstall pmis -n pmis
 helm install pmis deploy/helm/ydsz-pmis -n pmis \
   -f deploy/helm/ydsz-pmis/values-prod.yaml \
   --set global.imageRegistry=registry.cn-hangzhou.aliyuncs.com/your-org \
-  --set global.imageTag=v1.3.0
+  --set global.imageTag=v1.0.0
 ```
 
 ### 4.2 覆盖单个服务副本数

@@ -36,7 +36,7 @@ public class FinanceWebConfig {
                 .info(new Info()
                         .title("PMIS 财务会计服务 API")
                         .description("发票管理 / 回款管理 / 费用报销 / 收入确认 / 利润核算 / 对账 / 信用评估")
-                        .version("2.0.0")
+                        .version("1.0.0")
                         .contact(new Contact().name("ydsz-pmis-team"))
                         .license(new License().name("Proprietary")));
     }

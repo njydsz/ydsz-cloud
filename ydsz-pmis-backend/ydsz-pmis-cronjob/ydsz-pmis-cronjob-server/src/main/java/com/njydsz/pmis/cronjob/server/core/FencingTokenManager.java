@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对标 SchedulerX 的 Fencing 机制和 PowerJob 的 Leader 选举安全设计。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

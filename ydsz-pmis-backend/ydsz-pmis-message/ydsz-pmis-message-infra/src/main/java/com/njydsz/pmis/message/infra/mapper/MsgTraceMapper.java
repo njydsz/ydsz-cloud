@@ -9,7 +9,7 @@ import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
  * 消息轨迹 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Mapper
 public interface MsgTraceMapper extends BaseMapper<MsgTraceDO> {

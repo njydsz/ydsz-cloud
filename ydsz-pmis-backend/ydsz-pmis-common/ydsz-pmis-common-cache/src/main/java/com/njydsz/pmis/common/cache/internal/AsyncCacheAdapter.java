@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.cache.support.AsyncFunction;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
 

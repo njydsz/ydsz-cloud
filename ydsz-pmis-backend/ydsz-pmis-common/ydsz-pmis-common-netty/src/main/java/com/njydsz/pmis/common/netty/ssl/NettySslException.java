@@ -7,7 +7,7 @@ package com.njydsz.pmis.common.netty.ssl;
  * 便于调用方精确捕获和处理。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class NettySslException extends RuntimeException {
 

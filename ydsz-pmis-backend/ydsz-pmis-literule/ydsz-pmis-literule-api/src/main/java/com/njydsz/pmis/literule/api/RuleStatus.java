@@ -52,7 +52,7 @@ public enum RuleStatus {
      *
      * @param code 状态编码（大小写不敏感）
      * @return 对应的 RuleStatus；未匹配返回 null
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public static RuleStatus fromCode(String code) {
         if (code == null || code.isBlank()) {

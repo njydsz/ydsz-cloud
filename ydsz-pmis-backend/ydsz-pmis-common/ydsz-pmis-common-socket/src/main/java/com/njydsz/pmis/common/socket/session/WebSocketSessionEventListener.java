@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>集成心跳注册/注销（P0-3）和连接生命周期钩子（P3-5）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class WebSocketSessionEventListener {

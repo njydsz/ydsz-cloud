@@ -11,7 +11,7 @@ import lombok.Data;
  * 不同外部系统的任务模型差异通过字段映射转换为本结构。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 public class ConnectorTaskInfo {

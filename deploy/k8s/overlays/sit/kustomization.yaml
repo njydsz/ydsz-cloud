@@ -13,17 +13,17 @@ namePrefix: sit-
 
 images:
   - name: ydsz-pmis/gateway
-    newTag: v1.3.0-rc.1
+    newTag: v1.0.0-rc.1
   - name: ydsz-pmis/system
-    newTag: v1.3.0-rc.1
+    newTag: v1.0.0-rc.1
   - name: ydsz-pmis/userinfo
-    newTag: v1.3.0-rc.1
+    newTag: v1.0.0-rc.1
   - name: ydsz-pmis/project
-    newTag: v1.3.0-rc.1
+    newTag: v1.0.0-rc.1
   - name: ydsz-pmis/cronjob
-    newTag: v1.3.0-rc.1
+    newTag: v1.0.0-rc.1
   - name: ydsz-pmis/workflow
-    newTag: v1.3.0-rc.1
+    newTag: v1.0.0-rc.1
 
 # P2-12: SIT 环境 50% 采样
 configMapGenerator:

@@ -498,8 +498,10 @@ public class ExcelWriter {
             
             if (useFastWriter && isXlsx && !append && isDefaultSheetName
                     && metadata.getClazz() != null && !isMultiSheetWriting) {
+                useFastPath = true;
                 SuperFastExcelWriter fastWriter = new SuperFastExcelWriter(metadata);
                 fastWriter.doWrite(data);
+                ExcelMetrics.recordWrite(java.time.Duration.ofNanos(System.nanoTime() - startTime), rowCount, "fast", true);
                 return;
             }
 
@@ -537,8 +539,11 @@ public class ExcelWriter {
                 markWriteCompleted();
             }
 
+            ExcelMetrics.recordWrite(java.time.Duration.ofNanos(System.nanoTime() - startTime), rowCount, useFastPath ? "fast" : "poi", true);
+
         } catch (Exception e) {
             log.error("Excel写入异常", e);
+            ExcelMetrics.recordWrite(java.time.Duration.ofNanos(System.nanoTime() - startTime), rowCount, useFastPath ? "fast" : "poi", false);
             throw ExcelWriteException.dataWriteFailed(
                 currentRowIndex, null, null, e);
         }
@@ -568,7 +573,8 @@ public class ExcelWriter {
      *
      * @return true 如果可以写入，false 如果已经完成过写入
      */
-    /** ppackage-private */ boolean canWrite() {
+    /** Package-private: check if write is still possible */
+    boolean canWrite() {
         return !writeCompleted;
     }
 
@@ -1007,7 +1013,7 @@ public class ExcelWriter {
                         ultraFastCellWriter.writeFast(cell, value, prop.dateFormat);
                     }
                 } catch (Exception e) {
-                    log.warn("写入第{}行第{}列异常", e);
+                    log.warn("写入第{}行第{}列异常", rowNum + 1, j, e);
                     cell.setBlank();
                 }
             }

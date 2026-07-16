@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * 每用户连接数通过 {@link OnlineUserService#getSessionCount} 查询 Redis。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

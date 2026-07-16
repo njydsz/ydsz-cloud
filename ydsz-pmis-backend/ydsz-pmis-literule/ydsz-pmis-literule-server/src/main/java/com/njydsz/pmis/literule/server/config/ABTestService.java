@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>模板调整后，验证标题/描述输出是否符合预期</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ABTestService {

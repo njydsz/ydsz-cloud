@@ -82,10 +82,10 @@ public abstract class BaseOpenApiConfiguration {
         return new Info()
                 .title(getTitle())
                 .description(getDescription())
-                .version("3.5.0")
+                .version("1.0.0")
                 .contact(new Contact()
                         .name("Marvin Lee")
-                        .email("1.3.0")
+                        .email("devops@pmis.example.com")
                         .url("https://njydsz.pmis.com.cn"));
     }
 

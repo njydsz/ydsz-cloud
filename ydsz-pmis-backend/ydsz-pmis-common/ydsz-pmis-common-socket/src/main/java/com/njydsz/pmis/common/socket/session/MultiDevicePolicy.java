@@ -4,7 +4,7 @@ package com.njydsz.pmis.common.socket.session;
  * 多端登录策略枚举（P1-3）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public enum MultiDevicePolicy {
 

@@ -19,8 +19,6 @@ import com.njydsz.pmis.common.exception.enums.ExceptionCode;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 public enum DocumentExceptionCode implements ExceptionCode {
 

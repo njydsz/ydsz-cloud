@@ -13,7 +13,7 @@ import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO.Node;
  * 支持按 msgId / bizType+bizId / traceId 查询完整轨迹。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface MessageTraceService {
 

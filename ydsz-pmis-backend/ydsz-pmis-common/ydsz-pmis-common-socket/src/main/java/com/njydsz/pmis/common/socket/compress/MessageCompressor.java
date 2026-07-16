@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * 压缩后 Base64 编码以兼容 STOMP 文本协议。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

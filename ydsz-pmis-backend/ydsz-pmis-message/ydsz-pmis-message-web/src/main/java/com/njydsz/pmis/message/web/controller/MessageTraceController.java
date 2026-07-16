@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  * <p>提供按 msgId / traceId / bizType+bizId 查询消息完整轨迹的接口。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
 @RestController

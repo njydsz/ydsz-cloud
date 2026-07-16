@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 将抛出异常终止 Spring 容器启动；{@code failFast=false} 时仅记录错误日志。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class NettyServerLifecycle implements SmartLifecycle {

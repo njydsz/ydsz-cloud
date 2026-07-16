@@ -93,7 +93,7 @@ public class AesGcmCrypto {
      * @return Base64 编码的密文（IV || ciphertext+tag）
      * @deprecated 使用 {@link #encrypt(String)} 替代
      */
-    @Deprecated(since = "1.3.0", forRemoval = true)
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public String encrypt(String plaintext, String keyId) {
         return encrypt(plaintext);
     }
@@ -132,7 +132,7 @@ public class AesGcmCrypto {
      * @return 明文
      * @deprecated 使用 {@link #decrypt(String)} 替代
      */
-    @Deprecated(since = "1.3.0", forRemoval = true)
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public String decrypt(String base64Ciphertext, String keyId) {
         return decrypt(base64Ciphertext);
     }

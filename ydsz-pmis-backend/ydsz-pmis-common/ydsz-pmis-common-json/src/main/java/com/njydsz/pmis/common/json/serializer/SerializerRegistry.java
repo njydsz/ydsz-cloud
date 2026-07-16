@@ -25,7 +25,7 @@ import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
  *   <li>注册操作原子执行</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class SerializerRegistry {
 

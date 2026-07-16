@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.json.config.JsonConfig;
  *   <li>最大序列化深度</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class JsonHealthIndicator implements HealthIndicator {
 

@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
  * <p>提供全通道消息已读状态更新和未读数量查询接口。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")
 @RestController

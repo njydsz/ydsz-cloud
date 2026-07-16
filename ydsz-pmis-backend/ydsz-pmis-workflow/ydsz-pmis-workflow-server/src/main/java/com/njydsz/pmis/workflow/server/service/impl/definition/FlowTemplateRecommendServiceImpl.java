@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>业务类型匹配（权重 0.2）：根据 businessType 过滤相关分类</li>
  * </ol>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

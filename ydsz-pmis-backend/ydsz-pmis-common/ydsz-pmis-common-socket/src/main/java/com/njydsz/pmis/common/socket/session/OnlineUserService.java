@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>每个 session 记录设置 TTL（默认 1h，由心跳续期），防止异常断开导致僵尸 session。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

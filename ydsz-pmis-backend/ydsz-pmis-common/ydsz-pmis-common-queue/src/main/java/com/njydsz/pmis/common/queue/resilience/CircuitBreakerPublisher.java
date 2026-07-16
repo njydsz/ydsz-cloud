@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 避免持续向不可用的 MQ 引擎发送请求导致线程阻塞和级联故障。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class CircuitBreakerPublisher implements IMessagePublisher {

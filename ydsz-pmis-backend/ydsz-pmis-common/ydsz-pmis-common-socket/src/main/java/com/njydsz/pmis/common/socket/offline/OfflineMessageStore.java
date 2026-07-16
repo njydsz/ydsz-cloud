@@ -9,7 +9,7 @@ import java.util.List;
  * 业务方可覆写为 DB 持久化实现（如 message-server 的 DB 溢出存储）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface OfflineMessageStore {
 

@@ -29,7 +29,7 @@ import java.io.Serializable;
  * String json = Json.toJson(user);
  * </pre>
  * 
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface PropertyNamingStrategy extends Serializable {
     

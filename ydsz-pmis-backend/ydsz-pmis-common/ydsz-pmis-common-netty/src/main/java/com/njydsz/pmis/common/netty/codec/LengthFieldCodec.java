@@ -27,7 +27,7 @@ import io.netty.handler.codec.LengthFieldPrepender;
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class LengthFieldCodec {
 

@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供与外部调度系统的集成接口：测试连接、导入任务、导出任务、查询远程任务。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "生态连接器")

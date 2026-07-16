@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.netty.server.AbstractNettyServer;
  * <p>当所有 Server 都正常运行时状态为 UP，任一 Server 未运行时状态为 DOWN。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class NettyHealthIndicator implements HealthIndicator {
 

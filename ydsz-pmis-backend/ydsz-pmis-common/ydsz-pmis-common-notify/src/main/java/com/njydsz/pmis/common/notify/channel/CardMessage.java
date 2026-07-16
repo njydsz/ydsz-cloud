@@ -9,7 +9,7 @@ import java.util.List;
  * 包含标题、内容、按钮、跳转链接等交互元素。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class CardMessage {
 

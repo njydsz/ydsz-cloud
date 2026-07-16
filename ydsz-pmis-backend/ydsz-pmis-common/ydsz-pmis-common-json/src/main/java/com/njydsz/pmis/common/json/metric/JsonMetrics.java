@@ -26,7 +26,7 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code pmis.json.deserialize.failure} — 反序列化失败次数</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnClass(MeterRegistry.class)

@@ -7,7 +7,7 @@ package com.njydsz.pmis.literule.api;
  * 也能将执行结果统一记录到引擎统计中，消除编排层与引擎层统计割裂问题。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @FunctionalInterface
 public interface StatsRecorder {

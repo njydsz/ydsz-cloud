@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>封装推送失败的消息及其重试状态，用于 {@link MessageRetryQueue} 管理。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 @NoArgsConstructor

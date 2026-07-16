@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * 可适配任何 TokenService 实现，解耦更彻底。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

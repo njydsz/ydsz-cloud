@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.excel.converter.impl;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 import com.njydsz.pmis.common.excel.converter.CellValueConverter;
@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.excel.converter.ConvertContext;
  */
 public class EnumConverter implements CellValueConverter {
 
-    private static final Map<Class<?>, Map<String, Enum<?>>> CUSTOM_MAPPINGS = new HashMap<>();
+    private static final Map<Class<?>, Map<String, Enum<?>>> CUSTOM_MAPPINGS = new ConcurrentHashMap<>();
 
     @Override
     public boolean supports(Class<?> targetType) {
@@ -67,7 +67,7 @@ public class EnumConverter implements CellValueConverter {
      * @param enumValue 枚举值
      */
     public static void registerMapping(Class<?> enumClass, String stringValue, Enum<?> enumValue) {
-        CUSTOM_MAPPINGS.computeIfAbsent(enumClass, k -> new HashMap<>())
+        CUSTOM_MAPPINGS.computeIfAbsent(enumClass, k -> new ConcurrentHashMap<>())
             .put(stringValue, enumValue);
     }
 }

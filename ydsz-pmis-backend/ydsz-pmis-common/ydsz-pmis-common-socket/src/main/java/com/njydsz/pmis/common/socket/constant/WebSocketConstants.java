@@ -6,7 +6,7 @@ package com.njydsz.pmis.common.socket.constant;
  * <p>从 {@code MessageConstants} 上迁的 WS_ 前缀常量，供 common-socket 模块及业务侧复用。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class WebSocketConstants {
 

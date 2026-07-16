@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.notify.enums.NotifyPriority;
  * <p>封装一次通知发送所需的全部上下文信息，支持事务后发送、优先级路由等高级特性。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class NotifyRequest {
 

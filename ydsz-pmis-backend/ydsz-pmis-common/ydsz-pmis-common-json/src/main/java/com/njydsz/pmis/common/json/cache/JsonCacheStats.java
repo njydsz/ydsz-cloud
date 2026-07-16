@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.json.provider.SerializationContext;
  *   <li>ThreadLocal 内存占用估计</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class JsonCacheStats {
 

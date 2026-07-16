@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  * 服务重启后丢失。生产环境建议使用 Redis 持久化实现。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class InMemoryDeadLetterHandler implements DeadLetterHandler {
 

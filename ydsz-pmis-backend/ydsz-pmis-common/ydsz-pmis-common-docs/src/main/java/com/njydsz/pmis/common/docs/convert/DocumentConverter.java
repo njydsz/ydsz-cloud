@@ -14,7 +14,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -36,8 +36,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 @Slf4j
 @Component
@@ -72,6 +70,7 @@ public class DocumentConverter {
             switch (sourceFormat) {
                 case DOCX -> convertWordToText(inputStream, writer);
                 case XLSX -> convertExcelToText(inputStream, writer);
+                case PDF -> convertPdfToText(inputStream, writer);
                 case PPTX -> convertPptToText(inputStream, writer);
                 default -> throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED,
                         "不支持的源格式: " + sourceFormat);
@@ -105,7 +104,7 @@ public class DocumentConverter {
      * Excel → 纯文本
      */
     private void convertExcelToText(InputStream input, Writer writer) throws IOException {
-        try (XSSFWorkbook workbook = new XSSFWorkbook(input)) {
+        try (var workbook = WorkbookFactory.create(input)) {
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
                 Sheet sheet = workbook.getSheetAt(i);
                 writer.write("=== ");
@@ -155,6 +154,15 @@ public class DocumentConverter {
         }
     }
 
+
+    /**
+     * PDF -> 纯文本
+     */
+    private void convertPdfToText(InputStream input, Writer writer) throws IOException {
+        var parser = new com.njydsz.pmis.common.docs.parser.impl.PdfDocumentParser();
+        var content = parser.parse(input, "convert.pdf", com.njydsz.pmis.common.docs.domain.ParseOptions.builder().build());
+        writer.write(content.getText());
+    }
     /**
      * 获取单元格值
      */

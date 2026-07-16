@@ -10,7 +10,7 @@ import java.util.Map;
  * 各厂商通过实现此接口并配合 {@code @ConditionalOnProperty} 条件注册。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface SmsProvider {
 

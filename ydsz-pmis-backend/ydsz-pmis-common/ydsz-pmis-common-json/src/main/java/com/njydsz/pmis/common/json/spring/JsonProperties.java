@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
  *     monitoring-enabled: false
  * }</pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "pmis.json")
 public class JsonProperties {

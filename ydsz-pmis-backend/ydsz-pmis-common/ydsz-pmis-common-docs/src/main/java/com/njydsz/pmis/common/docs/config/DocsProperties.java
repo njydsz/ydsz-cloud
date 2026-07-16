@@ -14,7 +14,7 @@ import lombok.Data;
  * 所有配置统一前缀 {@code ydsz.docs.*}.
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 @Validated

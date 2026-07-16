@@ -10,7 +10,7 @@ import java.util.Objects;
  * <p>Plan-and-Execute 模式中由 Planner 生成的步骤序列。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class ExecutionPlan implements Serializable {
 

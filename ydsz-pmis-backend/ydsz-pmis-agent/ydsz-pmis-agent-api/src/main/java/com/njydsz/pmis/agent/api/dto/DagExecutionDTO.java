@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * DAG 编排请求 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Schema(description = "DAG 编排请求")
 public class DagExecutionDTO implements Serializable {

@@ -5,16 +5,16 @@
 #    powershell -ExecutionPolicy Bypass -File deploy\scripts\build-images.ps1 [-Tag TAG] [-Registry REG] [-Push]
 #
 #  示例:
-#    # 构建所有 7 个后端服务 + 前端，tag=v1.3.0-SNAPSHOT
+#    # 构建所有 7 个后端服务 + 前端，tag=v1.0.0-SNAPSHOT
 #    .\deploy\scripts\build-images.ps1
 #
 #    # 构建并推送
-#    .\deploy\scripts\build-images.ps1 -Tag v1.3.0 -Registry registry.cn-hangzhou.aliyuncs.com/your-org -Push
+#    .\deploy\scripts\build-images.ps1 -Tag v1.0.0 -Registry registry.cn-hangzhou.aliyuncs.com/your-org -Push
 # =============================================================================
 
 [CmdletBinding()]
 param(
-    [string]$Tag = "v1.3.0-SNAPSHOT",
+    [string]$Tag = "v1.0.0-SNAPSHOT",
     [string]$Registry = "ydsz-pmis",
     [switch]$Push
 )

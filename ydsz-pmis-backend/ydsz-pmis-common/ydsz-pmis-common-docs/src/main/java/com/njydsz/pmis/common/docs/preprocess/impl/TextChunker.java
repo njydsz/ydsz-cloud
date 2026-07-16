@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.njydsz.pmis.common.docs.config.DocsProperties;
+
 import com.njydsz.pmis.common.docs.domain.DocumentContent;
 import com.njydsz.pmis.common.docs.domain.DocumentSection;
 import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
@@ -27,18 +29,16 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 1.3.0
  */
 @Slf4j
 @Component
 public class TextChunker implements DocumentPreprocessor {
 
     /** 默认最大块大小（字符数） */
-    private static final int DEFAULT_MAX_CHUNK_SIZE = 2000;
+    private static final int properties.getMaxChunkSize() = 2000;
 
     /** 默认块重叠大小（字符数） */
-    private static final int DEFAULT_OVERLAP = 200;
+    private static final int properties.getChunkOverlap() = 200;
 
     @Override
     public DocumentContent process(DocumentContent content) {
@@ -47,13 +47,13 @@ public class TextChunker implements DocumentPreprocessor {
         }
 
         String text = content.getText();
-        if (text.length() <= DEFAULT_MAX_CHUNK_SIZE) {
+        if (text.length() <= properties.getMaxChunkSize()) {
             // 文本不够长，无需分块
             return content;
         }
 
         List<DocumentSection> chunkedSections = new ArrayList<>();
-        List<String> chunks = splitIntoChunks(text, DEFAULT_MAX_CHUNK_SIZE, DEFAULT_OVERLAP);
+        List<String> chunks = splitIntoChunks(text, properties.getMaxChunkSize(), properties.getChunkOverlap());
 
         for (int i = 0; i < chunks.size(); i++) {
             chunkedSections.add(DocumentSection.builder()

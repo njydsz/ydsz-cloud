@@ -3,7 +3,7 @@
 # =============================================================================
 
 global:
-  imageTag: v1.3.0-rc.2
+  imageTag: v1.0.0-rc.2
   nacos:
     serverAddr: nacos-server.pmis-uat.svc.cluster.local:8848
     namespace: pmis-uat

@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @param <T> 业务消息类型
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @ChannelHandler.Sharable

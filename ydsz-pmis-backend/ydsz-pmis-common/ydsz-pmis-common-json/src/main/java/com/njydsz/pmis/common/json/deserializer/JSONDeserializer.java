@@ -21,7 +21,7 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
  * </pre>
  *
  * @param <T> 反序列化的目标类型
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface JsonDeserializer<T> {
 

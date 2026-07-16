@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * PUSH / WEBHOOK 等无对应枚举值的通道不会被适配。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {

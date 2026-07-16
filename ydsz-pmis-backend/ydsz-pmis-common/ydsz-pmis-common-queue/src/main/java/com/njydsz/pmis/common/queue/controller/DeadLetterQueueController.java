@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * 当死信队列服务可用时自动注册。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

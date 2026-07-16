@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 消息压缩工具类测试
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 class MessageCompressorTest {
 

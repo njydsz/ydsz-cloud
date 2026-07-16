@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 保留最近 1000 条死信消息，供人工排查。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

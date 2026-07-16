@@ -16,7 +16,7 @@
  *   部署后实例详情/回放均能透传。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 
 import dagre from 'dagre'

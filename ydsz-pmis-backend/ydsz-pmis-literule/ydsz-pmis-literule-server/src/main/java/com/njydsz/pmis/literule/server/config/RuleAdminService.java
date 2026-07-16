@@ -93,7 +93,7 @@ public class RuleAdminService {
      * 设置分布式广播器
      *
      * @param broadcaster 广播器实例
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
         this.broadcaster = broadcaster;
@@ -103,7 +103,7 @@ public class RuleAdminService {
      * 设置节点标识
      *
      * @param nodeId 节点标识
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
@@ -113,7 +113,7 @@ public class RuleAdminService {
      * 设置是否启用 dry-run 仿真
      *
      * @param dryRunEnabled 是否启用
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public void setDryRunEnabled(boolean dryRunEnabled) {
         this.dryRunEnabled = dryRunEnabled;
@@ -694,7 +694,7 @@ public class RuleAdminService {
      * 广播器不可用时仅本地生效（向后兼容）。
      *
      * @param event 规则变更事件
-     * @since 1.3.0
+     * @since 1.0.0
      */
     private void publishRefreshEvent(RuleConfigRefreshEvent event) {
         // 1. 本地事件（当前节点热加载）

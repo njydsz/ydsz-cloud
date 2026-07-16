@@ -15,7 +15,7 @@ import java.util.Map;
  *   <li>支持 zh_CN / en_US 两种语言，默认 zh_CN</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface FlowI18nService {
 

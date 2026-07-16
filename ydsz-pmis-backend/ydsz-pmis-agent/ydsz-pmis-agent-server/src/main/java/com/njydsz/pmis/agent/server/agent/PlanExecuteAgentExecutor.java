@@ -36,7 +36,7 @@ import com.njydsz.pmis.agent.server.config.AgentProperties;
  * </ol>
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class PlanExecuteAgentExecutor implements AgentExecutor {
 

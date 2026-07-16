@@ -21,7 +21,7 @@ import com.njydsz.pmis.common.cache.stats.CacheStats;
  *   <li>EMPTY 常量
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @DisplayName("CacheStats 单元测试")
 class CacheStatsTest {

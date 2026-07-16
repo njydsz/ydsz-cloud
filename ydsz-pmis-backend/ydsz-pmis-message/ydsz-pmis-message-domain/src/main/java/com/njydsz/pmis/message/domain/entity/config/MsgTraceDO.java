@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
  * 通过 msgId 关联，按时间顺序串联形成完整链路。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

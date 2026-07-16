@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.json.Json;
  * Json 对象实现
  * 对应 fastjson2 的 JSONObject，提供动态 JSON 对象操作
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class JsonObject extends LinkedHashMap<String, Object> {
 

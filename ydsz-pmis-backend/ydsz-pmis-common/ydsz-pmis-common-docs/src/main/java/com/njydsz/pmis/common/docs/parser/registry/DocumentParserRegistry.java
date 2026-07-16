@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>线程安全性：</b>使用 {@link ConcurrentHashMap} 存储注册表，线程安全。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

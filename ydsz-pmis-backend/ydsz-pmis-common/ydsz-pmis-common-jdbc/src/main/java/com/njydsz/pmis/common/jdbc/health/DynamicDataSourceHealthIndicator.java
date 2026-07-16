@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 仅读取 HikariPoolMXBean 指标，不获取连接。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class DynamicDataSourceHealthIndicator implements HealthIndicator {

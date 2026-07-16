@@ -9,7 +9,7 @@ import com.njydsz.pmis.message.domain.entity.config.MsgFeedbackDO;
  * P1-4: 消息用户反馈 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Mapper
 public interface MsgFeedbackMapper extends BaseMapper<MsgFeedbackDO> {

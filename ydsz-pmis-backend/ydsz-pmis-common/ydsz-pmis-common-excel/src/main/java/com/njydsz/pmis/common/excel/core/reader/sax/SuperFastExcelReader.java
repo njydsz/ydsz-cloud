@@ -26,7 +26,7 @@ import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor.ObjectInstantia
  * 超高。Excel 读取。。。XML 流式解析实现
  *
  * <p>完全不依。POI 。OPCPpackage、SharedStringsTable、SAXParser 等组件，
- * 直接通过 ZipInputStream 解压 xlsx 文件，手动解。XML 提取数据。/p>
+ * 直接通过 ZipInputStream 解压 xlsx 文件，手动解析 XML 提取数据。</p>
  *
  * <h3>核心优化</h3>
  * <ul>
@@ -201,8 +201,8 @@ public class SuperFastExcelReader {
     /**
      * 设置监听器列。
      */
-    public void setListeners(List<?> listenerList) {
-        this.listeners = (List<ReadListener<?>>) listenerList;
+    public void setListeners(List<ReadListener<?>> listeners) {
+        this.listeners = listeners;
     }
 
     /**

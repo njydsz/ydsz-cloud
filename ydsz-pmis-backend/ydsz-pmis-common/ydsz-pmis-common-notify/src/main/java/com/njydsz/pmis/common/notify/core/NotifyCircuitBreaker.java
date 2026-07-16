@@ -25,7 +25,7 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  * HALF_OPEN 状态仅允许单个探测请求通过。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class NotifyCircuitBreaker {
 

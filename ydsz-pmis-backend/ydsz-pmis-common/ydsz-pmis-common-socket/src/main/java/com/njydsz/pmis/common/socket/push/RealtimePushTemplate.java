@@ -7,7 +7,7 @@ package com.njydsz.pmis.common.socket.push;
  * 无需关心底层 STOMP / Redis Pub/Sub 集群广播 / 降级策略的具体实现。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface RealtimePushTemplate {
 

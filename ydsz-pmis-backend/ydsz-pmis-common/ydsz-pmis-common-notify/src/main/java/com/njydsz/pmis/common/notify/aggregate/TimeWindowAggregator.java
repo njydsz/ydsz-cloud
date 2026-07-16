@@ -19,7 +19,7 @@ import com.njydsz.pmis.common.notify.enums.NotifyPriority;
  * P0 级别消息跳过聚合，立即发送。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class TimeWindowAggregator implements NotificationAggregator {
 

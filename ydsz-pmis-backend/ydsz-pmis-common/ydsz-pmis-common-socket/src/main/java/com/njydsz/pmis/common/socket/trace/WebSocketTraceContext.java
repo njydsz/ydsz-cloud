@@ -13,7 +13,7 @@ import org.slf4j.MDC;
  * 订阅端收到消息后恢复 MDC 上下文，实现跨节点链路关联。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class WebSocketTraceContext {
 

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * 轨迹记录失败时仅记日志，不抛异常。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

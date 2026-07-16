@@ -52,7 +52,7 @@ public interface Rule {
      * 默认返回 null 表示适用于全部场景。
      *
      * @return 作用域；null 表示适用于全部场景
-     * @since 1.3.0
+     * @since 1.0.0
      */
     default String getScope() {
         return null;

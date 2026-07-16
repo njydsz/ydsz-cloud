@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.json.module.JsonModuleRegistry;
  * <p>自动发现所有实现 {@link JsonModule.SpringFactory} 接口的 Bean 并注册到
  * {@link JsonModuleRegistry}。
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class JsonModuleRegistrar {
 

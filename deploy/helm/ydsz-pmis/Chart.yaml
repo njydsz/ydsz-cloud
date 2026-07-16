@@ -8,8 +8,8 @@ apiVersion: v2
 name: ydsz-pmis
 description: 南京云顶 PMIS · 项目管理信息系统 Helm Chart（7 个后端微服务 + 1 个前端）
 type: application
-version: 1.3.0
-appVersion: "1.3.0"
+version: 1.0.0
+appVersion: "1.0.0"
 home: https://github.com/njydsz/ydsz-pmis
 maintainers:
   - name: PMIS Team

@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用项目统一的 {@link Json} 引擎进行序列化/反序列化。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class JsonMessageSerializer implements MessageSerializer {

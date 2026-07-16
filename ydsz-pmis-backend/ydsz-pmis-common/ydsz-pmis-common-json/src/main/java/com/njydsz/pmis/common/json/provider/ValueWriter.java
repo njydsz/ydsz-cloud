@@ -32,7 +32,7 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *   <li>循环引用检测 - 使用 IdentityHashMap 保证引用比较</li>
  * </ul>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public final class ValueWriter {
 

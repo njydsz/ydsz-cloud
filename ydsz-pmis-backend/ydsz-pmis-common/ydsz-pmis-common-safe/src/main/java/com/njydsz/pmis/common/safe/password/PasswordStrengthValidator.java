@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  * }
  * }</pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class PasswordStrengthValidator {
 

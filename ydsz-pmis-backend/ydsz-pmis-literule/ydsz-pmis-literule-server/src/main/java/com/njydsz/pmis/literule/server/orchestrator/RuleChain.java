@@ -235,7 +235,7 @@ public class RuleChain {
      * @param branches    分支映射：分支 key -&gt; 分支规则
      * @param defaultRule 默认分支规则（未命中任何分支时执行，可为 null）
      * @return SWITCH 类型规则链
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public static RuleChain switchOn(String branchKey, Map<String, Rule> branches, Rule defaultRule) {
         Objects.requireNonNull(branchKey, "branchKey 不能为 null");
@@ -452,7 +452,7 @@ public class RuleChain {
      * @param evaluator     表达式求值器（IF/SWITCH 嵌套链需要）
      * @param statsRecorder 统计记录器（可为 null，表示不记录统计）
      * @return 已触发的规则结果列表；无触发返回空列表
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         return evaluate(context, evaluator, statsRecorder, null, 0);
@@ -467,7 +467,7 @@ public class RuleChain {
      * @param parallelExecutor 并行执行线程池（WHEN 链使用，null 则用 ForkJoinPool）
      * @param timeoutMs        超时毫秒（0=不超时）
      * @return 已触发的规则结果列表
-     * @since 1.3.0
+     * @since 1.0.0
      */
     public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator,
                                      StatsRecorder statsRecorder,
@@ -660,7 +660,7 @@ public class RuleChain {
      *
      * <p>修复：使用可变副本注入迭代变量，避免对不可变 facts Map 调用 put/remove 抛出异常。
      *
-     * @since 1.3.0 修复 FOR 循环不可变 Map bug
+     * @since 1.0.0 修复 FOR 循环不可变 Map bug
      */
     private List<RuleResult> evaluateFor(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();

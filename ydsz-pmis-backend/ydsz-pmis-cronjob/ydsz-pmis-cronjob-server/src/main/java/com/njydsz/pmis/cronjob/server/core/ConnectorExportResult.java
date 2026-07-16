@@ -15,7 +15,7 @@ import lombok.Data;
  * @param errors     错误详情列表
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 public class ConnectorExportResult {

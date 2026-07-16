@@ -33,7 +33,7 @@ import java.lang.annotation.*;
  * }
  * </pre>
  * 
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

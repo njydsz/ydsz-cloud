@@ -36,7 +36,12 @@ import com.njydsz.pmis.common.file.domain.ObjectMetadata;
 import com.njydsz.pmis.common.file.domain.PolicyResult;
 import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
+import com.njydsz.pmis.common.file.metrics.FileMetrics;
+import com.njydsz.pmis.common.file.service.FileDedupService;
 import com.njydsz.pmis.common.file.util.FileTypeValidator;
+import com.njydsz.pmis.common.file.virus.VirusScanner;
+import com.njydsz.pmis.common.json.Json;
+import java.util.stream.Collectors;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.Getter;
@@ -145,6 +150,10 @@ public abstract class AbstractFileStorage implements IFileStorage {
      * 并发上传保护器（可选）
      */
     protected UploadConcurrencyGuard concurrencyGuard;
+    protected FileDedupService fileDedupService;
+    protected VirusScanner virusScanner;
+    protected FileMetrics fileMetrics;
+    protected StorageRetryHelper retryHelper;
 
     /**
      * 分片上传配置（可选，为空时不使用 MD5 校验）
@@ -285,6 +294,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
         this.concurrencyGuard = guard;
     }
 
+    public void setFileDedupService(FileDedupService service) { this.fileDedupService = service; }
+    public void setVirusScanner(VirusScanner scanner) { this.virusScanner = scanner; }
+    public void setFileMetrics(FileMetrics metrics) { this.fileMetrics = metrics; }
+    public void setRetryHelper(StorageRetryHelper helper) { this.retryHelper = helper; }
+
+    protected boolean supportsServerSideCopy() { return false; }
+
+    protected void doCopyObject(String srcBucket, String srcObject, String destBucket, String destObject) {
+        throw new UnsupportedOperationException("Server-side copy not supported");
+    }
+
     /**
      * 清理过期的分片上传上下文
      * <p>建议定时调用（如每小时一次）清理超时未完成的上传任务
@@ -352,6 +372,13 @@ public abstract class AbstractFileStorage implements IFileStorage {
         String resolvedDestObject = resolveObjectKey(resolvedDestBucket, destObjectName);
 
         try {
+            // P0-7: Try server-side copy first
+            if (supportsServerSideCopy()) {
+                doCopyObject(resolvedSrcBucket, resolvedSrcObject, resolvedDestBucket, resolvedDestObject);
+                log.info("copyObject via server-side copy success");
+                return;
+            }
+            // Fallback: download + upload
             ObjectMetadata metadata = doGetMetadata(resolvedSrcBucket, resolvedSrcObject);
             if (metadata == null) {
                 throw new BusinessException(FileExceptionCode.FILE_NOT_FOUND);
@@ -412,6 +439,44 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         FileTypeValidator.validate(file);
 
+        // P0-6: maxFileSize validation
+        Long maxFileSize = fileProperties.getMaxFileSize();
+        if (maxFileSize != null) {
+            if (maxFileSize > 0) {
+                if (file.getSize() > maxFileSize) {
+                    throw new BusinessException(FileExceptionCode.FILE_SIZE_EXCEEDED);
+                }
+            }
+        }
+
+        // P0-1: File dedup check
+        String dedupHash = null;
+        if (fileDedupService != null) {
+            try {
+                dedupHash = fileDedupService.calculateHash(file.getInputStream());
+                String existingUrl = fileDedupService.checkExisting(file.getSize(), dedupHash);
+                if (existingUrl != null) {
+                    if (fileMetrics != null) fileMetrics.recordDedupHit();
+                    FileStorage dedupResult = buildFileStorage(file);
+                    dedupResult.setUuidName(resolvedObjectName);
+                    dedupResult.setUrl(existingUrl);
+                    return dedupResult;
+                }
+                if (fileMetrics != null) fileMetrics.recordDedupMiss();
+            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Dedup check failed"); }
+        }
+
+        // P0-2: Virus scan
+        if (virusScanner != null) {
+            try {
+                VirusScanner.ScanResult scanResult = virusScanner.scan(file.getInputStream(), file.getOriginalFilename());
+                if (scanResult == VirusScanner.ScanResult.INFECTED) {
+                    if (fileMetrics != null) fileMetrics.recordVirusDetected();
+                    throw new BusinessException(FileExceptionCode.FILE_VIRUS_DETECTED);
+                }
+            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Virus scan failed"); }
+        }
+
         // 获取并发上传锁
         String lockToken = acquireConcurrencyLock(resolvedObjectName);
 
@@ -423,6 +488,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             listener.onStart(totalBytes);
         }
 
+        long startTime = System.nanoTime();
         try (InputStream inputStream = file.getInputStream()) {
             doPutObject(resolvedBucket, resolvedObjectName, inputStream,
                     file.getSize(), file.getContentType());
@@ -433,6 +499,14 @@ public abstract class AbstractFileStorage implements IFileStorage {
             if (listener != null) {
                 listener.onSuccess(resolvedObjectName);
             }
+            // P0-1: Register hash for dedup
+            if (fileDedupService != null) {
+                if (dedupHash != null) {
+                    try { fileDedupService.registerHash(file.getSize(), dedupHash, fileStorage.getUrl()); } catch (Exception e) { log.warn("Dedup register failed"); }
+                }
+            }
+            // P0-3: Record upload metrics
+            if (fileMetrics != null) fileMetrics.recordUpload(System.nanoTime() - startTime);
             return fileStorage;
         } catch (BusinessException e) {
             if (listener != null) {
@@ -476,16 +550,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
         }
         List<String> successList = new ArrayList<>();
         Map<String, String> failedMap = new ConcurrentHashMap<>();
-        for (String objectName : objectNames) {
+        // P0-8: Parallel batch delete
+        objectNames.parallelStream().forEach(objectName -> {
             try {
                 delete(bucketName, objectName);
                 successList.add(objectName);
             } catch (Exception e) {
                 String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
                 failedMap.put(objectName, errorMsg);
-                log.error("[Storage] batch delete failed, object={}, message={}", objectName, errorMsg, e);
+                log.error("batch delete failed, object={}", objectName, e);
             }
-        }
+        });
         return new BatchDeleteResult(List.copyOf(successList), Map.copyOf(failedMap));
     }
 
@@ -499,6 +574,23 @@ public abstract class AbstractFileStorage implements IFileStorage {
         String resolvedBucket = resolveBucketName(bucketName);
         String resolvedObjectName = resolveObjectKey(resolvedBucket, objectName);
 
+        // P1-7: Set response headers
+        ObjectMetadata metadata = doGetMetadata(resolvedBucket, resolvedObjectName);
+        if (metadata != null) {
+            String contentType = metadata.getContentType() != null ? metadata.getContentType() : "application/octet-stream";
+            response.setContentType(contentType);
+            if (metadata.getSize() > 0) {
+                response.setContentLengthLong(metadata.getSize());
+            }
+        }
+        String fileName = resolvedObjectName;
+        int lastSlash = fileName.lastIndexOf('/');
+        if (lastSlash >= 0) {
+            fileName = fileName.substring(lastSlash + 1);
+        }
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        response.setHeader("Accept-Ranges", "bytes");
+        long dlStart = System.nanoTime();
         try (InputStream is = doGetObject(resolvedBucket, resolvedObjectName, offset, length);
              OutputStream os = response.getOutputStream()) {
             byte[] buffer = new byte[8192];
@@ -507,7 +599,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
                 os.write(buffer, 0, read);
             }
             os.flush();
-            log.info("[Storage] file download success, bucket={}, object={}", resolvedBucket, resolvedObjectName);
+            if (fileMetrics != null) fileMetrics.recordDownload(System.nanoTime() - dlStart);
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
@@ -584,6 +676,13 @@ public abstract class AbstractFileStorage implements IFileStorage {
         validatePartNumber(partNumber);
 
         try {
+            String chunkObjectName = buildChunkObjectName(resolvedObjectName, uploadId, partNumber);
+            // P2-2: Stream when MD5 check is disabled
+            if (!isChunkMd5CheckEnabled()) {
+                try (InputStream uploadStream = file.getInputStream()) {
+                    doUploadPart(resolvedBucket, chunkObjectName, uploadId, partNumber, uploadStream, file.getSize());
+                }
+            } else {
             byte[] chunkData = file.getBytes();
 
             // 流式更新 MD5 摘要，仅缓存 MessageDigest 状态而非原始数据，避免 OOM
@@ -601,6 +700,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             String chunkObjectName = buildChunkObjectName(resolvedObjectName, uploadId, partNumber);
             doUploadPart(resolvedBucket, chunkObjectName, uploadId, partNumber,
                     new ByteArrayInputStream(chunkData), file.getSize());
+            }
 
             MultipartContextStore.MultipartContextData context = multipartContextStore.get(uploadId);
             if (context == null) {
@@ -710,24 +810,6 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile("(\\.\\.)|(%2e%2e)|(%2E%2E)");
-
-    /**
-     * 转义 JSON 字符串中的特殊字符
-     * <p>用于安全地将字符串嵌入 JSON 文本中，防止注入。
-     *
-     * @param value 待转义的字符串
-     * @return 转义后的字符串
-     */
-    protected static String escapeJsonString(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-    }
 
     /**
      * 校验路径是否在安全目录范围内，防止目录穿越攻击

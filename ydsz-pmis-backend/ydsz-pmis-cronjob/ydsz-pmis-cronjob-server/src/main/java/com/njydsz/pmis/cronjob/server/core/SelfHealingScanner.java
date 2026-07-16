@@ -58,7 +58,7 @@ import lombok.extern.slf4j.Slf4j;
  * 仅 Leader 节点执行扫描，避免多节点重复修复。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

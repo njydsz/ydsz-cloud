@@ -53,7 +53,7 @@ import com.njydsz.pmis.common.safe.util.ClientIpResolver;
  *   <li>限流通过 → 执行原方法；限流拒绝 → 返回 429</li>
  * </ol>
  *
- * @since 1.3.0
+ * @since 1.0.0
  * @see RateLimit
  * @see RateLimitFilter
  */

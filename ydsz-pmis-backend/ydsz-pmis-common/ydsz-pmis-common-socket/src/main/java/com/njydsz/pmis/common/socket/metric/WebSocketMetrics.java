@@ -20,7 +20,7 @@ import io.micrometer.core.instrument.Timer;
  * <p>当 MeterRegistry 不在 classpath 时降级为空操作（no-op）。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public class WebSocketMetrics {
 

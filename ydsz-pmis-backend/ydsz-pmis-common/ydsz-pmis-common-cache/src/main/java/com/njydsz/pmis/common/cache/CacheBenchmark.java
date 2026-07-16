@@ -38,7 +38,7 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
  * java -jar target/benchmarks.jar CacheBenchmark -wi 3 -i 5 -f 1
  * </pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  */
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

@@ -13,7 +13,7 @@ import java.util.List;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public interface MessageRetryQueue {
 

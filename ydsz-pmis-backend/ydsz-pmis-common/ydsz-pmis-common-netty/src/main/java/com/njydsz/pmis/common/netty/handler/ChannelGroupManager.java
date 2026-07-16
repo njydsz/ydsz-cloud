@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * 同时维护业务级 Channel 分组（按 groupKey 分组），支持按分组推送。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ChannelGroupManager {

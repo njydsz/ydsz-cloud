@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>对应前端 {@code UniversalSearchDoc}，一次请求返回多种实体类型的搜索结果。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Data
 @Builder

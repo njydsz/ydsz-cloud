@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>TTL：默认 60s，超时后可被重推
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

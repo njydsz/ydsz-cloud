@@ -6,7 +6,7 @@ package com.njydsz.pmis.common.socket.enums;
  * <p>用于消息优先级排序，高优先级消息优先推送和补偿。
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 public enum MessagePriority {
 

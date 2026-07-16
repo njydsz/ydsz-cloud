@@ -76,7 +76,7 @@ import com.njydsz.pmis.common.safe.util.ClientIpResolver;import com.njydsz.pmis.
  * request.setHeader("X-Signature", signature);
  * }</pre>
  *
- * @since 1.3.0
+ * @since 1.0.0
  * @see ApiSignatureProperties
  * @see NonceCache
  */
