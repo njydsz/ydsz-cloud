@@ -54,7 +54,6 @@ import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
  * </pre>
  *
  * @since 1.0.0
- * @since 1.0.0
  * @see ColumnScopeInfo
  * @see ColumnScopeAware
  */

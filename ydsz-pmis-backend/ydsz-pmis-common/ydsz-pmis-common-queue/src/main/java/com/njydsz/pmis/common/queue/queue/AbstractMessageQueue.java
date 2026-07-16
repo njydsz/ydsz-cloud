@@ -24,7 +24,6 @@ import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public abstract class AbstractMessageQueue implements IMessageQueue {
 

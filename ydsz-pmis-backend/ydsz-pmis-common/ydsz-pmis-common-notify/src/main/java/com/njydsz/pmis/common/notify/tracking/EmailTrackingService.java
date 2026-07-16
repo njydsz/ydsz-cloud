@@ -16,10 +16,13 @@ import org.springframework.util.StringUtils;
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 
 /**
- * 邮件追踪与已读回执服务（P1-5）
+ * 邮件追踪与已读回执服务（P1-5 + P3-1 增强）
  *
  * <p>在 HTML 邮件末尾注入 1&times;1 透明追踪像素，当收件人打开邮件时，
  * 邮件客户端自动请求追踪 URL，服务端记录打开事件。
+ *
+ * <p><b>P3-1 增强：</b>支持多种追踪事件类型（SENT/DELIVERED/OPENED/CLICKED/BOUNCED/COMPLAINED），
+ * 通过 Webhook 接收第三方服务商的事件推送。
  *
  * <p><b>追踪像素原理：</b>
  * <pre>{@code
@@ -33,12 +36,13 @@ import com.njydsz.pmis.common.notify.config.NotifyProperties;
  *   <li>首次打开时间</li>
  *   <li>最近打开时间</li>
  *   <li>打开设备/客户端（通过 User-Agent）</li>
+ *   <li>邮件投递状态（P3-1：sent/delivered/bounced/complained）</li>
+ *   <li>点击事件（P3-1）</li>
  * </ul>
  *
  * <p>当 Redis 不可用时，降级为内存计数器。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 public class EmailTrackingService {
@@ -49,6 +53,8 @@ public class EmailTrackingService {
 	private static final String REDIS_KEY_OPEN_FIRST = "notify:track:open:first:";
 	private static final String REDIS_KEY_OPEN_LAST = "notify:track:open:last:";
 	private static final String REDIS_KEY_OPEN_UA = "notify:track:open:ua:";
+	private static final String REDIS_KEY_EVENT = "notify:track:event:";
+	private static final String REDIS_KEY_CLICK_COUNT = "notify:track:click:count:";
 
 	/** Redis Key 过期时间（30 天） */
 	private static final Duration REDIS_TTL = Duration.ofDays(30);
@@ -65,6 +71,8 @@ public class EmailTrackingService {
 	private final ConcurrentMap<String, AtomicLong> memoryOpenCount = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, Long> memoryFirstOpen = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, Long> memoryLastOpen = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, AtomicLong> memoryClickCount = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, String> memoryDeliveryStatus = new ConcurrentHashMap<>();
 
 	public EmailTrackingService(NotifyProperties properties, StringRedisTemplate redisTemplate) {
 		this.properties = properties;
@@ -176,5 +184,150 @@ public class EmailTrackingService {
 		} catch (Exception e) {
 			return messageId.length() > 16 ? messageId.substring(0, 16) : messageId;
 		}
+	}
+
+	// ==================== P3-1 增强事件追踪 ====================
+
+	/**
+	 * 邮件追踪事件类型（P3-1）
+	 */
+	public enum TrackingEvent {
+		SENT, DELIVERED, OPENED, CLICKED, BOUNCED, COMPLAINED, UNSUBSCRIBED
+	}
+
+	/**
+	 * 记录追踪事件（P3-1）
+	 *
+	 * <p>支持通过 Webhook 接收第三方邮件服务商的事件推送。
+	 *
+	 * @param trackingId 追踪 ID
+	 * @param event      事件类型
+	 * @param userAgent  User-Agent（可为 null）
+	 * @param metadata   附加元数据（可为 null）
+	 */
+	public void recordEvent(String trackingId, TrackingEvent event, String userAgent,
+							java.util.Map<String, String> metadata) {
+		if (trackingId == null || event == null) {
+			return;
+		}
+		long now = System.currentTimeMillis();
+
+		switch (event) {
+			case OPENED -> recordOpen(trackingId, userAgent);
+			case CLICKED -> recordClick(trackingId);
+			case BOUNCED, COMPLAINED, UNSUBSCRIBED -> recordDeliveryStatus(trackingId, event.name());
+			case DELIVERED -> recordDeliveryStatus(trackingId, "DELIVERED");
+			case SENT -> recordDeliveryStatus(trackingId, "SENT");
+		}
+
+		// 存储完整事件记录
+		if (redisTemplate != null) {
+			try {
+				String eventJson = buildEventJson(event, now, userAgent, metadata);
+				redisTemplate.opsForList().rightPush(REDIS_KEY_EVENT + trackingId, eventJson);
+				redisTemplate.expire(REDIS_KEY_EVENT + trackingId, REDIS_TTL);
+			} catch (Exception e) {
+				log.debug("[EmailTrackingService] Redis 存储事件失败: {}", e.getMessage());
+			}
+		}
+
+		log.info("[EmailTrackingService] 追踪事件记录: trackingId={}, event={}", trackingId, event);
+	}
+
+	/**
+	 * 记录点击事件（P3-1）
+	 *
+	 * @param trackingId 追踪 ID
+	 */
+	public void recordClick(String trackingId) {
+		if (redisTemplate != null) {
+			try {
+				redisTemplate.opsForValue().increment(REDIS_KEY_CLICK_COUNT + trackingId);
+				return;
+			} catch (Exception e) {
+				log.debug("[EmailTrackingService] Redis 记录点击失败: {}", e.getMessage());
+			}
+		}
+		memoryClickCount.computeIfAbsent(trackingId, k -> new AtomicLong(0)).incrementAndGet();
+	}
+
+	/**
+	 * 获取邮件点击次数（P3-1）
+	 *
+	 * @param trackingId 追踪 ID
+	 * @return 点击次数
+	 */
+	public long getClickCount(String trackingId) {
+		if (redisTemplate != null) {
+			try {
+				String count = redisTemplate.opsForValue().get(REDIS_KEY_CLICK_COUNT + trackingId);
+				return count != null ? Long.parseLong(count) : 0;
+			} catch (Exception e) {
+				log.debug("[EmailTrackingService] Redis 查询点击次数失败: {}", e.getMessage());
+			}
+		}
+		AtomicLong count = memoryClickCount.get(trackingId);
+		return count != null ? count.get() : 0;
+	}
+
+	/**
+	 * 记录投递状态（P3-1）
+	 *
+	 * @param trackingId 追踪 ID
+	 * @param status     投递状态
+	 */
+	private void recordDeliveryStatus(String trackingId, String status) {
+		if (redisTemplate != null) {
+			try {
+				redisTemplate.opsForValue().set(REDIS_KEY_EVENT + "status:" + trackingId, status, REDIS_TTL);
+				return;
+			} catch (Exception e) {
+				log.debug("[EmailTrackingService] Redis 记录投递状态失败: {}", e.getMessage());
+			}
+		}
+		memoryDeliveryStatus.put(trackingId, status);
+	}
+
+	/**
+	 * 获取投递状态（P3-1）
+	 *
+	 * @param trackingId 追踪 ID
+	 * @return 投递状态，未记录返回 null
+	 */
+	public String getDeliveryStatus(String trackingId) {
+		if (redisTemplate != null) {
+			try {
+				return redisTemplate.opsForValue().get(REDIS_KEY_EVENT + "status:" + trackingId);
+			} catch (Exception e) {
+				log.debug("[EmailTrackingService] Redis 查询投递状态失败: {}", e.getMessage());
+			}
+		}
+		return memoryDeliveryStatus.get(trackingId);
+	}
+
+	/**
+	 * 构建事件 JSON 字符串
+	 */
+	private String buildEventJson(TrackingEvent event, long timestamp, String userAgent,
+								java.util.Map<String, String> metadata) {
+		StringBuilder sb = new StringBuilder("{");
+		sb.append("\"event\":\"").append(event.name()).append("\",");
+		sb.append("\"timestamp\":").append(timestamp);
+		if (userAgent != null) {
+			sb.append(",\"userAgent\":\"").append(userAgent.replace("\"", "\\\"")).append("\"");
+		}
+		if (metadata != null && !metadata.isEmpty()) {
+			sb.append(",\"metadata\":{");
+			boolean first = true;
+			for (java.util.Map.Entry<String, String> entry : metadata.entrySet()) {
+				if (!first) sb.append(",");
+				first = false;
+				sb.append("\"").append(entry.getKey()).append("\":\"")
+						.append(entry.getValue().replace("\"", "\\\"")).append("\"");
+			}
+			sb.append("}");
+		}
+		sb.append("}");
+		return sb.toString();
 	}
 }

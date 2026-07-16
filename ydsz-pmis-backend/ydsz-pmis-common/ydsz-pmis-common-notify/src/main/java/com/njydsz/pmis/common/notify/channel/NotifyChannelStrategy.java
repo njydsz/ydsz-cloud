@@ -74,4 +74,21 @@ public interface NotifyChannelStrategy {
     default void setTemplateEngine(TemplateEngine templateEngine) {
         // 默认空实现，按需覆盖
     }
+
+    /**
+     * 发送卡片消息（P3-4 富文本/交互消息支持）。
+     *
+     * <p>支持卡片标题、正文、按钮、跳转链接等交互元素。
+     * 默认实现降级为普通文本发送，IM 渠道可覆盖此方法实现原生卡片消息。
+     *
+     * @param receiver 接收者
+     * @param card     卡片消息定义
+     * @return 发送结果
+     */
+    default NotifySendResult sendCard(String receiver, CardMessage card) {
+        if (card == null) {
+            return NotifySendResult.failure("卡片消息为空", "unknown");
+        }
+        return send(receiver, card.getTitle(), card.getContent());
+    }
 }

@@ -304,9 +304,9 @@ public class AuditAspect {
             auditLog.setOperatorName(context.getOperatorName());
 
             // 设置租户 ID（从 RequestContext 透传）
-            auditLog.setTenantId(context.getExtra("tenantId"));
+            auditLog.setTenantId(context.getExtra("tenantId", String.class));
             // 设置链路追踪 ID（已从 extraInfo 迁移到独立列）
-            auditLog.setTraceId(context.getExtra("traceId"));
+            auditLog.setTraceId(context.getExtra("traceId", String.class));
         }
 
         if (audit.recordRequest() && properties.isRecordRequest()) {

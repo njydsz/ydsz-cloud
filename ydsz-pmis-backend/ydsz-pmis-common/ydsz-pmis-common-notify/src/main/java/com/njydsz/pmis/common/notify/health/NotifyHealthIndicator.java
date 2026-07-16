@@ -139,7 +139,6 @@ public class NotifyHealthIndicator implements HealthIndicator {
             List<NotifyChannelStrategy> strategies = strategiesProvider.getIfAvailable();
             if (strategies != null) {
                 for (NotifyChannelStrategy strategy : strategies) {
-                    String channelName = strategy.getChannel().getName();
                     String key = strategy.getChannel().name().toLowerCase();
                     if (strategy.isEnabled()) {
                         channels.put(key + "_enabled", true);

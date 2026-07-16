@@ -25,12 +25,17 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.pmis.common.notify.audit.NotifyAuditService;
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
+import com.njydsz.pmis.common.notify.core.DeadLetterHandler;
+import com.njydsz.pmis.common.notify.core.InMemoryDeadLetterHandler;
+import com.njydsz.pmis.common.notify.core.NotifyCircuitBreakerRegistry;
 import com.njydsz.pmis.common.notify.core.NotifyRetryQueue;
 import com.njydsz.pmis.common.notify.core.NotifyService;
 import com.njydsz.pmis.common.notify.core.NotifyServiceImpl;
 import com.njydsz.pmis.common.notify.core.PersistentNotifyRetryQueue;
+import com.njydsz.pmis.common.notify.core.TransactionalNotifyPublisher;
 import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
 import com.njydsz.pmis.common.notify.fallback.NotifyFallbackManager;
 import com.njydsz.pmis.common.notify.i18n.NotifyI18nService;
@@ -338,7 +343,95 @@ public class NotifyConfiguration {
 		return new NotifyI18nService();
 	}
 
-	// ==================== RestTemplate ====================
+	// ==================== P0-3 熔断器 ====================
+
+	/**
+	 * 创建渠道熔断器注册中心（P0-3）
+	 *
+	 * @return NotifyCircuitBreakerRegistry 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyCircuitBreakerRegistry.class)
+	public NotifyCircuitBreakerRegistry notifyCircuitBreakerRegistry() {
+		log.info("[NotifyConfiguration] NotifyCircuitBreakerRegistry bean registered");
+		return new NotifyCircuitBreakerRegistry();
+	}
+
+	// ==================== P0-2 死信队列 ====================
+
+	/**
+	 * 创建死信队列处理器（P0-2）
+	 *
+	 * @return DeadLetterHandler 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(DeadLetterHandler.class)
+	public DeadLetterHandler notifyDeadLetterHandler() {
+		log.info("[NotifyConfiguration] InMemoryDeadLetterHandler bean registered");
+		return new InMemoryDeadLetterHandler();
+	}
+
+	// ==================== P1-4 审计日志 ====================
+
+	/**
+	 * 创建通知审计服务（P1-4）
+	 *
+	 * @return NotifyAuditService 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyAuditService.class)
+	public NotifyAuditService notifyAuditService() {
+		log.info("[NotifyConfiguration] NotifyAuditService bean registered");
+		return new NotifyAuditService();
+	}
+
+	// ==================== P2-3 消息聚合器 ====================
+
+	/**
+	 * 创建时间窗口消息聚合器（P2-3）
+	 *
+	 * @return TimeWindowAggregator 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	public com.njydsz.pmis.common.notify.aggregate.TimeWindowAggregator notifyAggregator() {
+		log.info("[NotifyConfiguration] TimeWindowAggregator bean registered");
+		return new com.njydsz.pmis.common.notify.aggregate.TimeWindowAggregator(30, 100);
+	}
+
+	// ==================== P3-2 模板变量校验器 ====================
+
+	/**
+	 * 创建模板变量校验器（P3-2）
+	 *
+	 * @return TemplateVariableValidator 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	public com.njydsz.pmis.common.notify.template.TemplateVariableValidator templateVariableValidator() {
+		log.info("[NotifyConfiguration] TemplateVariableValidator bean registered");
+		return new com.njydsz.pmis.common.notify.template.TemplateVariableValidator();
+	}
+
+	// ==================== P3-3 国际化语言解析器 ====================
+
+	/**
+	 * 创建通知国际化语言解析器（P3-3）
+	 *
+	 * @param preferenceManager 用户偏好管理器
+	 * @param i18nService       国际化服务
+	 * @return NotifyI18nResolver 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	public com.njydsz.pmis.common.notify.i18n.NotifyI18nResolver notifyI18nResolver(
+			com.njydsz.pmis.common.notify.preference.NotifyPreferenceManager preferenceManager,
+			com.njydsz.pmis.common.notify.i18n.NotifyI18nService i18nService) {
+		log.info("[NotifyConfiguration] NotifyI18nResolver bean registered");
+		return new com.njydsz.pmis.common.notify.i18n.NotifyI18nResolver(preferenceManager, i18nService);
+	}
+
+	// ==================== RestTemplate =====================
 
 	/**
 	 * 创建用于通知渠道 HTTP 调用的 {@link RestTemplate}。
@@ -387,7 +480,8 @@ public class NotifyConfiguration {
 	public NotifyService notifyService(ListableBeanFactory beanFactory,
 			ObjectProvider<TemplateEngine> templateEngineProvider,
 			ObjectProvider<NotifyRateLimiterManager> rateLimiterManagerProvider,
-			@Qualifier("notifyVirtualThreadExecutor") ObjectProvider<ExecutorService> executorProvider) {
+			@Qualifier("notifyVirtualThreadExecutor") ObjectProvider<ExecutorService> executorProvider,
+			ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerRegistryProvider) {
 		List<NotifyChannelStrategy> strategies = beanFactory.getBeansOfType(NotifyChannelStrategy.class)
 				.values()
 				.stream()
@@ -404,9 +498,12 @@ public class NotifyConfiguration {
 		NotifyRateLimiterManager rateLimiterManager = rateLimiterManagerProvider.getIfAvailable();
 		ExecutorService parallelExecutor = executorProvider.getIfAvailable();
 
-		log.info("[NotifyConfiguration] NotifyService bean registered, strategies={}, rateLimitEnabled={}, parallelEnabled={}",
-				strategies.size(), rateLimiterManager != null, parallelExecutor != null);
-		NotifyService service = new NotifyServiceImpl(strategies, rateLimiterManager, parallelExecutor);
+		// P0-3：注入熔断器注册中心
+		NotifyCircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerRegistryProvider.getIfAvailable();
+
+		log.info("[NotifyConfiguration] NotifyService bean registered, strategies={}, rateLimitEnabled={}, parallelEnabled={}, circuitBreaker={}",
+				strategies.size(), rateLimiterManager != null, parallelExecutor != null, circuitBreakerRegistry != null);
+		NotifyService service = new NotifyServiceImpl(strategies, rateLimiterManager, parallelExecutor, circuitBreakerRegistry);
 		notifyServiceInstance = service;
 		return service;
 	}
@@ -423,22 +520,25 @@ public class NotifyConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(NotifyRetryQueue.class)
 	public NotifyRetryQueue notifyRetryQueue(NotifyProperties properties,
-			ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+			ObjectProvider<StringRedisTemplate> redisTemplateProvider,
+			ObjectProvider<DeadLetterHandler> deadLetterHandlerProvider) {
 		NotifyProperties.RetryQueueConfig retryConfig = properties.getRetryQueue();
 		StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+		DeadLetterHandler dlqHandler = deadLetterHandlerProvider.getIfAvailable();
 
 		NotifyRetryQueue queue;
 		if (retryConfig.isPersistent()) {
 			queue = new PersistentNotifyRetryQueue(redisTemplate,
 					retryConfig.getMaxRetries(), retryConfig.getCapacity(),
-					retryConfig.getBatchSize(), retryConfig.getRedisKeyPrefix());
-			log.info("[NotifyConfiguration] PersistentNotifyRetryQueue bean registered, persistent=true, maxRetries={}, batchSize={}, redisKeyPrefix={}",
-					retryConfig.getMaxRetries(), retryConfig.getBatchSize(), retryConfig.getRedisKeyPrefix());
+					retryConfig.getBatchSize(), retryConfig.getRedisKeyPrefix(), dlqHandler);
+			log.info("[NotifyConfiguration] PersistentNotifyRetryQueue bean registered, persistent=true, maxRetries={}, batchSize={}, redisKeyPrefix={}, dlq={}",
+					retryConfig.getMaxRetries(), retryConfig.getBatchSize(), retryConfig.getRedisKeyPrefix(), dlqHandler != null);
 		} else {
 			queue = new PersistentNotifyRetryQueue(null,
-					retryConfig.getMaxRetries(), retryConfig.getCapacity(), retryConfig.getBatchSize());
-			log.info("[NotifyConfiguration] In-memory NotifyRetryQueue bean registered, persistent=false, maxRetries={}, batchSize={}",
-					retryConfig.getMaxRetries(), retryConfig.getBatchSize());
+					retryConfig.getMaxRetries(), retryConfig.getCapacity(), retryConfig.getBatchSize(),
+					null, dlqHandler);
+			log.info("[NotifyConfiguration] In-memory NotifyRetryQueue bean registered, persistent=false, maxRetries={}, batchSize={}, dlq={}",
+					retryConfig.getBatchSize(), dlqHandler != null);
 		}
 		retryQueueInstance = queue;
 		return queue;
@@ -462,7 +562,27 @@ public class NotifyConfiguration {
 		return new AsyncNotifyService(notifyService, retryQueue, executor);
 	}
 
-	// ==================== 虚拟线程池 ====================
+	// ==================== P0-1 事务安全通知发布器 ====================
+
+	/**
+	 * 创建事务安全通知发布器（P0-1）
+	 *
+	 * <p>确保通知发送在业务事务提交后才执行，避免数据不一致。
+	 *
+	 * @param asyncNotifyService  异步通知服务
+	 * @param eventPublisher      Spring 事件发布器
+	 * @return TransactionalNotifyPublisher 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(TransactionalNotifyPublisher.class)
+	public TransactionalNotifyPublisher transactionalNotifyPublisher(
+			AsyncNotifyService asyncNotifyService,
+			org.springframework.context.ApplicationEventPublisher eventPublisher) {
+		log.info("[NotifyConfiguration] TransactionalNotifyPublisher bean registered");
+		return new TransactionalNotifyPublisher(eventPublisher, asyncNotifyService);
+	}
+
+	// ==================== 虚拟线程池 =====================
 
 	/**
 	 * 创建共享的虚拟线程池，供通知模块各组件使用

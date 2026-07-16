@@ -171,6 +171,24 @@ public class NotifyMetrics {
 	}
 
 	/**
+	 * 记录熔断器状态变更（P1-2）
+	 *
+	 * @param channel 渠道名称
+	 * @param state   熔断器状态
+	 */
+	public void recordCircuitBreakerState(String channel, String state) {
+		if (meterRegistry == null) {
+			return;
+		}
+		counterCache.computeIfAbsent(
+				METRIC_CIRCUIT_BREAKER + "_" + channel + "_" + state,
+				k -> Counter.builder(METRIC_CIRCUIT_BREAKER)
+						.tag("channel", channel)
+						.tag("state", state)
+						.register(meterRegistry));
+	}
+
+	/**
 	 * 判断 Micrometer 是否可用
 	 *
 	 * @return true 表示指标收集功能正常

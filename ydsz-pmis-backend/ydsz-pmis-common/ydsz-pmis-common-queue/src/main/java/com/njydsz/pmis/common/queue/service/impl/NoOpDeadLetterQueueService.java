@@ -12,7 +12,6 @@ import com.njydsz.pmis.common.queue.service.DeadLetterQueueService;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class NoOpDeadLetterQueueService implements DeadLetterQueueService {
 

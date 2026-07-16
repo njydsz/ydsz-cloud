@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
@@ -486,60 +487,74 @@ public class RbacPermissionEvaluator {
     }
 
     private void validateRoles(Set<String> userRoles, Set<String> requiredRoles, boolean orMode, PermissionType type) {
-        boolean ok;
-        if (orMode) {
-            ok = userRoles.stream().anyMatch(requiredRoles::contains);
-        } else {
-            ok = userRoles.containsAll(requiredRoles);
+        MDC.put("permission.type", type.name());
+        MDC.put("permission.checkMode", orMode ? "OR" : "AND");
+        try {
+            boolean ok;
+            if (orMode) {
+                ok = userRoles.stream().anyMatch(requiredRoles::contains);
+            } else {
+                ok = userRoles.containsAll(requiredRoles);
+            }
+            if (!ok) {
+                recordDeny(type.name(), requiredRoles.toString(), resolveCurrentResource());
+                throw PermissionDeniedException.denied()
+                        .userId(resolveUserId())
+                        .userRoles(userRoles)
+                        .requiredPermissions(requiredRoles)
+                        .permissionType(type)
+                        .resource(resolveCurrentResource())
+                        .checkMode(orMode ? "OR" : "AND")
+                        .build();
+            }
+            recordAllow(type.name());
+        } finally {
+            MDC.remove("permission.type");
+            MDC.remove("permission.checkMode");
         }
-        if (!ok) {
-            recordDeny(type.name(), requiredRoles.toString(), resolveCurrentResource());
-            throw PermissionDeniedException.denied()
-                    .userId(resolveUserId())
-                    .userRoles(userRoles)
-                    .requiredPermissions(requiredRoles)
-                    .permissionType(type)
-                    .resource(resolveCurrentResource())
-                    .checkMode(orMode ? "OR" : "AND")
-                    .build();
-        }
-        recordAllow(type.name());
     }
 
     private void validatePermissions(Set<String> grantedPerms, Set<String> requiredPerms,
                                       boolean orMode, PermissionType type, Set<String> userGrantedPerms) {
-        Set<String> matchedPermissions = new HashSet<>();
-        Set<String> missingPermissions = new HashSet<>();
+        MDC.put("permission.type", type.name());
+        MDC.put("permission.checkMode", orMode ? "OR" : "AND");
+        try {
+            Set<String> matchedPermissions = new HashSet<>();
+            Set<String> missingPermissions = new HashSet<>();
 
-        for (String required : requiredPerms) {
-            boolean found = hasPermission(grantedPerms, required);
-            if (found) {
-                matchedPermissions.add(required);
-            } else {
-                missingPermissions.add(required);
+            for (String required : requiredPerms) {
+                boolean found = hasPermission(grantedPerms, required);
+                if (found) {
+                    matchedPermissions.add(required);
+                } else {
+                    missingPermissions.add(required);
+                }
             }
-        }
 
-        boolean ok;
-        if (orMode) {
-            ok = !matchedPermissions.isEmpty();
-        } else {
-            ok = missingPermissions.isEmpty();
-        }
+            boolean ok;
+            if (orMode) {
+                ok = !matchedPermissions.isEmpty();
+            } else {
+                ok = missingPermissions.isEmpty();
+            }
 
-        if (!ok) {
-            recordDeny(type.name(), missingPermissions.toString(), resolveCurrentResource());
-            throw PermissionDeniedException.denied()
-                    .userId(resolveUserId())
-                    .userRoles(parseUserRoles(loadCurrentUserInfo()))
-                    .requiredPermissions(requiredPerms)
-                    .grantedPermissions(userGrantedPerms)
-                    .permissionType(type)
-                    .resource(resolveCurrentResource())
-                    .checkMode(orMode ? "OR" : "AND")
-                    .build();
+            if (!ok) {
+                recordDeny(type.name(), missingPermissions.toString(), resolveCurrentResource());
+                throw PermissionDeniedException.denied()
+                        .userId(resolveUserId())
+                        .userRoles(parseUserRoles(loadCurrentUserInfo()))
+                        .requiredPermissions(requiredPerms)
+                        .grantedPermissions(userGrantedPerms)
+                        .permissionType(type)
+                        .resource(resolveCurrentResource())
+                        .checkMode(orMode ? "OR" : "AND")
+                        .build();
+            }
+            recordAllow(type.name());
+        } finally {
+            MDC.remove("permission.type");
+            MDC.remove("permission.checkMode");
         }
-        recordAllow(type.name());
     }
 
     private boolean hasPermission(Set<String> granted, String required) {

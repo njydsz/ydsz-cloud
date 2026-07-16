@@ -7,7 +7,6 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  * @Date: 2024/1/25 14:23
  */
 public interface IMessageQueueProvider extends AutoCloseable {
