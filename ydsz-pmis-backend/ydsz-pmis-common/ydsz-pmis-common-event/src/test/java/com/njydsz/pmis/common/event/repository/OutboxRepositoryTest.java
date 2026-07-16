@@ -8,10 +8,12 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
@@ -30,7 +32,7 @@ class OutboxRepositoryTest {
 
     private JdbcTemplate jdbcTemplate;
     private OutboxRepository repository;
-    private javax.sql.DataSource dataSource;
+    private DataSource dataSource;
 
     @BeforeEach
     void setUp() {
@@ -43,9 +45,9 @@ class OutboxRepositoryTest {
         repository = new OutboxRepository(jdbcTemplate, "pmis_outbox", DatabaseDialect.UNKNOWN);
     }
 
-    @org.junit.jupiter.api.AfterEach
+    @AfterEach
     void tearDown() {
-        if (dataSource instanceof org.springframework.jdbc.datasource.embedded.EmbeddedDatabase db) {
+        if (dataSource instanceof EmbeddedDatabase db) {
             db.shutdown();
         }
     }

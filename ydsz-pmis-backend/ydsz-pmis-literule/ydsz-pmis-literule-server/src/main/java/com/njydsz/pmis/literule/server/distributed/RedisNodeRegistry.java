@@ -111,7 +111,7 @@ public class RedisNodeRegistry implements NodeRegistry {
 
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
-                    ClusterNode node = Json.parseMap(entry.getValue(), ClusterNode.class);
+                    ClusterNode node = Json.fromJson(entry.getValue(), ClusterNode.class);
                     if (node == null || node.getNodeId() == null) {
                         deadNodeIds.add(entry.getKey());
                         continue;
@@ -165,7 +165,7 @@ public class RedisNodeRegistry implements NodeRegistry {
 
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
-                    ClusterNode node = Json.parseMap(entry.getValue(), ClusterNode.class);
+                    ClusterNode node = Json.fromJson(entry.getValue(), ClusterNode.class);
                     if (node == null || !node.isAlive(now, heartbeatTimeoutMs)) {
                         deadNodeIds.add(entry.getKey());
                     }
