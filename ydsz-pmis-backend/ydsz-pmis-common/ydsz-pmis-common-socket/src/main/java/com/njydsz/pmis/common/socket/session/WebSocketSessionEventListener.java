@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.socket.session;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -37,6 +38,9 @@ public class WebSocketSessionEventListener {
     private final OfflineMessageStore offlineMessageStore;
     private final SimpMessagingTemplate messagingTemplate;
 
+    /** 本节点活跃连接计数器（供 HealthIndicator 读取） */
+    private final AtomicLong activeConnections = new AtomicLong(0);
+
     /**
      * 连接成功事件：标记上线 + 补偿离线消息。
      *
@@ -57,6 +61,9 @@ public class WebSocketSessionEventListener {
             return;
         }
         onlineUserService.markOnline(userId, sessionId);
+        activeConnections.incrementAndGet();
+        log.info("[WS-Session] 用户连接: userId={}, sessionId={}, localActive={}",
+                userId, sessionId, activeConnections.get());
         drainAndPushOfflineMessages(userId);
     }
 
@@ -78,7 +85,27 @@ public class WebSocketSessionEventListener {
             return;
         }
         onlineUserService.markOffline(userId, sessionId);
-        log.info("[WS-Session] 用户断开: userId={}, sessionId={}", userId, sessionId);
+        activeConnections.decrementAndGet();
+        log.info("[WS-Session] 用户断开: userId={}, sessionId={}, localActive={}",
+                userId, sessionId, activeConnections.get());
+    }
+
+    /**
+     * 获取本节点活跃连接数（供 HealthIndicator 使用）。
+     *
+     * @return 当前活跃连接数
+     */
+    public long getActiveConnections() {
+        return activeConnections.get();
+    }
+
+    /**
+     * 获取活跃连接计数器引用（供 HealthIndicator 直接引用）。
+     *
+     * @return AtomicLong 计数器实例
+     */
+    public AtomicLong getActiveConnectionsCounter() {
+        return activeConnections;
     }
 
     /**

@@ -11,7 +11,7 @@ import lombok.Data;
  * WebSocket 可配置化属性。
  *
  * <p>支持通过 YAML 配置文件灵活控制 WebSocket 端点、心跳、消息大小限制、
- * 空闲超时、跨域策略、集群广播开关等，避免硬编码。
+ * 空闲超时、跨域策略、集群广播开关、熔断降级、消息可靠性、多端策略等，避免硬编码。
  *
  * <p>配置示例：
  * <pre>{@code
@@ -20,9 +20,11 @@ import lombok.Data;
  *     enabled: true
  *     endpoint: /ws
  *     allowed-origin-patterns: ["*"]
+ *     sock-js-enabled: true
  *     heartbeat:
  *       server-interval: 10000
  *       client-interval: 10000
+ *       stale-session-timeout: 60000
  *     message-size-limit: 65536
  *     send-timeout-ms: 5000
  *     session-ttl-seconds: 3600
@@ -32,11 +34,36 @@ import lombok.Data;
  *     offline:
  *       enabled: true
  *       max-cache: 100
- *       ttl-seconds: 2592000
+ *       ttl: 30d
+ *       db-persist-threshold: 50
  *     rate-limit:
  *       enabled: false
  *       max-per-user-per-minute: 60
  *       max-per-ip-per-minute: 300
+ *     circuit-breaker:
+ *       failure-rate-threshold: 0.5
+ *       sliding-window-size: 20
+ *       half-open-after: 30s
+ *     retry:
+ *       enabled: true
+ *       max-retries: 3
+ *       retry-delay: 5s
+ *       dead-letter-enabled: true
+ *     ack:
+ *       enabled: false
+ *       timeout: 30s
+ *     multi-device:
+ *       policy: ALLOW_ALL
+ *       max-sessions-per-user: 5
+ *     connection-limit:
+ *       max-global-connections: 10000
+ *       max-per-user-connections: 5
+ *     compression:
+ *       enabled: false
+ *       min-size: 1024
+ *     slow-connection:
+ *       enabled: true
+ *       threshold-ms: 5000
  * }</pre>
  *
  * @author ydsz-pmis-team
@@ -79,12 +106,35 @@ public class WebSocketProperties {
     /** 速率限制配置 */
     private RateLimit rateLimit = new RateLimit();
 
+    /** 熔断降级配置 */
+    private CircuitBreaker circuitBreaker = new CircuitBreaker();
+
+    /** 消息重试配置 */
+    private Retry retry = new Retry();
+
+    /** ACK 确认配置 */
+    private Ack ack = new Ack();
+
+    /** 多端登录策略配置 */
+    private MultiDevice multiDevice = new MultiDevice();
+
+    /** 连接数限制配置 */
+    private ConnectionLimit connectionLimit = new ConnectionLimit();
+
+    /** 消息压缩配置 */
+    private Compression compression = new Compression();
+
+    /** 慢连接检测配置 */
+    private SlowConnection slowConnection = new SlowConnection();
+
     @Data
     public static class Heartbeat {
         /** 服务端心跳间隔（毫秒） */
         private long serverInterval = 10000L;
         /** 客户端心跳间隔（毫秒） */
         private long clientInterval = 10000L;
+        /** 僵尸 Session 超时阈值（毫秒），超过此时间未收到心跳则清理 */
+        private long staleSessionTimeout = 60000L;
     }
 
     @Data
@@ -115,5 +165,67 @@ public class WebSocketProperties {
         private int maxPerUserPerMinute = 60;
         /** 每 IP 每分钟最大消息数 */
         private int maxPerIpPerMinute = 300;
+    }
+
+    @Data
+    public static class CircuitBreaker {
+        /** 失败率阈值（0-1），超过则熔断 */
+        private double failureRateThreshold = 0.5;
+        /** 滑动窗口大小 */
+        private int slidingWindowSize = 20;
+        /** 熔断后多久进入半开状态 */
+        private Duration halfOpenAfter = Duration.ofSeconds(30);
+    }
+
+    @Data
+    public static class Retry {
+        /** 是否启用消息重试 */
+        private boolean enabled = true;
+        /** 最大重试次数 */
+        private int maxRetries = 3;
+        /** 重试延迟 */
+        private Duration retryDelay = Duration.ofSeconds(5);
+        /** 是否启用死信队列 */
+        private boolean deadLetterEnabled = true;
+    }
+
+    @Data
+    public static class Ack {
+        /** 是否启用 ACK 确认 */
+        private boolean enabled = false;
+        /** ACK 超时时间 */
+        private Duration timeout = Duration.ofSeconds(30);
+    }
+
+    @Data
+    public static class MultiDevice {
+        /** 多端登录策略：ALLOW_ALL / MUTEX / NEW_REPLACE_OLD */
+        private String policy = "ALLOW_ALL";
+        /** 每用户最大并发 Session 数 */
+        private int maxSessionsPerUser = 5;
+    }
+
+    @Data
+    public static class ConnectionLimit {
+        /** 全局最大连接数 */
+        private int maxGlobalConnections = 10000;
+        /** 每用户最大连接数 */
+        private int maxPerUserConnections = 5;
+    }
+
+    @Data
+    public static class Compression {
+        /** 是否启用消息压缩 */
+        private boolean enabled = false;
+        /** 触发压缩的最小消息大小（字节） */
+        private int minSize = 1024;
+    }
+
+    @Data
+    public static class SlowConnection {
+        /** 是否启用慢连接检测 */
+        private boolean enabled = true;
+        /** 慢连接阈值（毫秒） */
+        private long thresholdMs = 5000L;
     }
 }

@@ -53,13 +53,15 @@ public class ChannelGroupManager {
     }
 
     /**
-     * 从全局组和所有业务分组移除 Channel。
+     * 从全局组和所有业务分组移除 Channel，并清理空分组。
      *
      * @param channel Netty Channel
      */
     public void remove(Channel channel) {
         globalGroup.remove(channel);
         businessGroups.values().forEach(g -> g.remove(channel));
+        // 清理空分组，避免长期运行后积累大量空 ChannelGroup
+        businessGroups.entrySet().removeIf(e -> e.getValue().isEmpty());
     }
 
     /**

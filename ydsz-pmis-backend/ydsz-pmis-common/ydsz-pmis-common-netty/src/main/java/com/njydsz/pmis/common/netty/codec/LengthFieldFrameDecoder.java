@@ -1,7 +1,5 @@
 package com.njydsz.pmis.common.netty.codec;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 /**
@@ -54,11 +52,5 @@ public class LengthFieldFrameDecoder extends LengthFieldBasedFrameDecoder {
     public LengthFieldFrameDecoder(int maxFrameLength) {
         super(maxFrameLength, LENGTH_FIELD_OFFSET, LENGTH_FIELD_LENGTH,
                 LENGTH_ADJUSTMENT, INITIAL_BYTES_TO_STRIP);
-    }
-
-    @Override
-    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        // 委托父类完成长度域解码（拆包/组包），返回完整的帧 ByteBuf
-        return super.decode(ctx, in);
     }
 }

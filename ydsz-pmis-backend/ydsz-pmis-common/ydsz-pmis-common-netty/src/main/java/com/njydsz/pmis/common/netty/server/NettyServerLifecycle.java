@@ -17,20 +17,43 @@ import lombok.extern.slf4j.Slf4j;
  * <p>自动扫描 Spring 容器中所有 {@link AbstractNettyServer} 子类 Bean，
  * 无需手动调用 {@code start()} / {@code stop()}。
  *
+ * <p>支持 fail-fast 模式：当 {@code failFast=true} 时，任一 Server 启动失败
+ * 将抛出异常终止 Spring 容器启动；{@code failFast=false} 时仅记录错误日志。
+ *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
 @Slf4j
-@RequiredArgsConstructor
 public class NettyServerLifecycle implements SmartLifecycle, SmartInitializingSingleton {
 
     private final List<AbstractNettyServer> servers;
+    private final boolean failFast;
     private volatile boolean running = false;
+
+    /**
+     * 构造 Netty Server 生命周期管理器（failFast 默认 true）。
+     *
+     * @param servers Netty Server 列表
+     */
+    public NettyServerLifecycle(List<AbstractNettyServer> servers) {
+        this(servers, true);
+    }
+
+    /**
+     * 构造 Netty Server 生命周期管理器。
+     *
+     * @param servers  Netty Server 列表
+     * @param failFast 是否启用 fail-fast 模式
+     */
+    public NettyServerLifecycle(List<AbstractNettyServer> servers, boolean failFast) {
+        this.servers = servers;
+        this.failFast = failFast;
+    }
 
     @Override
     public void afterSingletonsInstantiated() {
-        // Spring 容器初始化完成后，不自动启动；等 SmartLifecycle.start() 触发
-        log.info("[Netty-Lifecycle] 检测到 {} 个 Netty Server 待启动", servers.size());
+        log.info("[Netty-Lifecycle] 检测到 {} 个 Netty Server 待启动, failFast={}",
+                servers.size(), failFast);
     }
 
     @Override
@@ -44,8 +67,16 @@ public class NettyServerLifecycle implements SmartLifecycle, SmartInitializingSi
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.error("[Netty-Lifecycle] {} 启动被中断", server.getClass().getSimpleName(), e);
+                if (failFast) {
+                    throw new RuntimeException("Netty Server 启动被中断: "
+                            + server.getClass().getSimpleName(), e);
+                }
             } catch (Exception e) {
                 log.error("[Netty-Lifecycle] {} 启动失败", server.getClass().getSimpleName(), e);
+                if (failFast) {
+                    throw new RuntimeException("Netty Server 启动失败: "
+                            + server.getClass().getSimpleName(), e);
+                }
             }
         }
         running = true;
