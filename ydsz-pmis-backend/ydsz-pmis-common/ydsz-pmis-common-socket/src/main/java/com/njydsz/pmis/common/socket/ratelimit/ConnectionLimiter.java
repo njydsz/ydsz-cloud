@@ -2,7 +2,6 @@ package com.njydsz.pmis.common.socket.ratelimit;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
 import com.njydsz.pmis.common.socket.session.OnlineUserService;

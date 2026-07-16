@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.socket.monitor;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,13 +39,13 @@ public class SlowConnectionDetector {
     public void recordPushDuration(String sessionId, long durationMs) {
         if (!properties.getSlowConnection().isEnabled()) {
             webSocketMetrics.recordPushDuration(sessionId != null ? "USER" : "BROADCAST",
-                    java.time.Duration.ofMillis(durationMs));
+                    Duration.ofMillis(durationMs));
             return;
         }
 
         long threshold = properties.getSlowConnection().getThresholdMs();
         if (durationMs > threshold) {
-            webSocketMetrics.recordPushDuration("SLOW", java.time.Duration.ofMillis(durationMs));
+            webSocketMetrics.recordPushDuration("SLOW", Duration.ofMillis(durationMs));
             if (sessionId != null) {
                 slowConnectionCounts.computeIfAbsent(sessionId, k -> new AtomicLong(0))
                         .incrementAndGet();
@@ -57,7 +58,7 @@ public class SlowConnectionDetector {
             }
         } else {
             String pushType = sessionId != null ? "USER" : "BROADCAST";
-            webSocketMetrics.recordPushDuration(pushType, java.time.Duration.ofMillis(durationMs));
+            webSocketMetrics.recordPushDuration(pushType, Duration.ofMillis(durationMs));
         }
     }
 

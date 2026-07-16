@@ -224,7 +224,7 @@ public class WebSocketAutoConfiguration {
             WebSocketProperties properties) {
         log.info("[WebSocket] 注册 WebSocketHeartbeatHandler (staleTimeout={}ms)",
                 properties.getHeartbeat().getStaleSessionTimeout());
-        return new WebSocketHeartbeatHandler(onlineUserService, properties);
+        return new WebSocketHeartbeatHandler(properties);
     }
 
     // ==================== P1-2: ACK 确认 ====================

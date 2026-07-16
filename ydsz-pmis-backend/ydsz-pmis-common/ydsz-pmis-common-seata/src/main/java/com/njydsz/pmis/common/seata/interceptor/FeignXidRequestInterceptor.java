@@ -28,7 +28,7 @@ public class FeignXidRequestInterceptor implements RequestInterceptor {
 
     private final XidPropagator xidPropagator;
 
-    public FeignXidXidRequestInterceptor(XidPropagator xidPropagator) {
+    public FeignXidRequestInterceptor(XidPropagator xidPropagator) {
         this.xidPropagator = xidPropagator;
     }
 

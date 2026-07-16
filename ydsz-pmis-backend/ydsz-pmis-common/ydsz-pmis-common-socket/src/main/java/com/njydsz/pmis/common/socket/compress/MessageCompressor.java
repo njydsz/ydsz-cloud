@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.socket.compress;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -78,7 +79,7 @@ public class MessageCompressor {
     private String compress(String data) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try (GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
-            gzip.write(data.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            gzip.write(data.getBytes(StandardCharsets.UTF_8));
         }
         return COMPRESSED_PREFIX + Base64.getEncoder().encodeToString(bos.toByteArray());
     }
@@ -90,7 +91,7 @@ public class MessageCompressor {
         byte[] compressed = Base64.getDecoder().decode(base64);
         try (ByteArrayInputStream bis = new ByteArrayInputStream(compressed);
              GZIPInputStream gzip = new GZIPInputStream(bis)) {
-            return new String(gzip.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            return new String(gzip.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 

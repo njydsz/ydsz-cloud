@@ -32,6 +32,13 @@ public class MicrometerMetricsCollector implements MetricsCollector {
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, DistributionSummary> histogramCache = new ConcurrentHashMap<>();
 
+    /** Timer SLO 配置（启用百分位和直方图，支持 Prometheus Exemplar） */
+    private static final Duration[] TIMER_SLOS = {
+            Duration.ofMillis(50), Duration.ofMillis(100), Duration.ofMillis(250),
+            Duration.ofMillis(500), Duration.ofMillis(1000), Duration.ofMillis(5000)
+    };
+    private static final double[] HISTOGRAM_SLOS = {1, 5, 10, 50, 100, 500, 1000};
+
     public MicrometerMetricsCollector(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         this.fallback = new InMemoryMetricsCollector();
@@ -85,6 +92,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
                     Timer.builder(name)
                             .description(description)
                             .tags(toTags(tags))
+                            .sla(TIMER_SLOS)
                             .register(meterRegistry));
             timer.record(duration);
         } catch (Exception e) {
@@ -105,6 +113,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
                     DistributionSummary.builder(name)
                             .description(description)
                             .tags(toTags(tags))
+                            .sla(HISTOGRAM_SLOS)
                             .register(meterRegistry));
             summary.record(value);
         } catch (Exception e) {

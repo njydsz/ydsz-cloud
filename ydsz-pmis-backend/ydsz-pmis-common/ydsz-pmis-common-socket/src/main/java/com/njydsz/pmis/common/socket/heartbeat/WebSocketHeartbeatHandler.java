@@ -9,7 +9,6 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
-import com.njydsz.pmis.common.socket.session.OnlineUserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketHeartbeatHandler {
 
     private final Map<String, Long> sessionHeartbeats = new ConcurrentHashMap<>();
-    private final OnlineUserService onlineUserService;
     private final WebSocketProperties properties;
 
     /**

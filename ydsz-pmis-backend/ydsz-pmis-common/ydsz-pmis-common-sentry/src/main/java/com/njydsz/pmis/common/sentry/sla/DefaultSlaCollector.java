@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.sentry.sla;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,7 +50,7 @@ public class DefaultSlaCollector implements SlaCollector {
                     .findFirst()
                     .orElse(null);
 
-            Map<String, String> tags = new java.util.HashMap<>(3);
+            Map<String, String> tags = new HashMap<>(3);
             tags.put("sla", name);
             tags.put("step", stepName != null ? stepName : "unknown");
             tags.put("success", String.valueOf(success));
@@ -81,7 +82,7 @@ public class DefaultSlaCollector implements SlaCollector {
             return;
         }
 
-        Map<String, String> tags = new java.util.HashMap<>(2);
+        Map<String, String> tags = new HashMap<>(2);
         tags.put("sla", name);
         tags.put("success", String.valueOf(success));
 

@@ -15,17 +15,21 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.pmis.common.sentry.alerting.AlertConverger;
 import com.njydsz.pmis.common.sentry.alerting.DefaultAlertPublisher;
+import com.njydsz.pmis.common.sentry.alerting.NotifyAlertHandler;
 import com.njydsz.pmis.common.sentry.health.SentryHealthIndicator;
 import com.njydsz.pmis.common.sentry.health.SystemResourceHealthIndicator;
+import com.njydsz.pmis.common.sentry.logging.AsyncLogPublisher;
 import com.njydsz.pmis.common.sentry.logging.DualLogPublisher;
 import com.njydsz.pmis.common.sentry.logging.ElkLogPublisher;
 import com.njydsz.pmis.common.sentry.logging.LokiLogPublisher;
 import com.njydsz.pmis.common.sentry.metrics.InMemoryMetricsCollector;
 import com.njydsz.pmis.common.sentry.metrics.MicrometerMetricsCollector;
 import com.njydsz.pmis.common.sentry.metrics.SystemMetricsCollector;
+import com.njydsz.pmis.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.pmis.common.sentry.sla.DefaultSlaCollector;
 import com.njydsz.pmis.common.sentry.sla.SlaMetricAspect;
 import com.njydsz.pmis.common.sentry.spi.AlertPublisher;
@@ -34,6 +38,8 @@ import com.njydsz.pmis.common.sentry.spi.MetricsCollector;
 import com.njydsz.pmis.common.sentry.spi.SlaCollector;
 import com.njydsz.pmis.common.sentry.spi.TraceContext;
 import com.njydsz.pmis.common.sentry.tracing.DefaultTraceContext;
+import com.njydsz.pmis.common.sentry.tracing.OpenTelemetryTraceContext;
+import com.njydsz.pmis.common.sentry.tracing.SkyWalkingTraceContext;
 import com.njydsz.pmis.common.sentry.tracing.SlowTraceDetector;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -51,10 +57,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(SentryProperties.class)
+@EnableScheduling
 @ConditionalOnProperty(prefix = "ydsz.sentry", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SentryAutoConfiguration {
 
     private ScheduledExecutorService systemMetricsScheduler;
+    private ScheduledExecutorService selfMonitorScheduler;
+    private AsyncLogPublisher asyncLogPublisher;
 
     // ==================== 指标采集 ====================
 
@@ -96,40 +105,88 @@ public class SentryAutoConfiguration {
         return collector;
     }
 
+    // ==================== 熔断器 ====================
+
+    @Bean("elkCircuitBreaker")
+    @ConditionalOnMissingBean(name = "elkCircuitBreaker")
+    @ConditionalOnProperty(prefix = "ydsz.sentry.logging.elk", name = "enabled", havingValue = "true")
+    public CircuitBreaker elkCircuitBreaker(SentryProperties properties) {
+        SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
+        return new CircuitBreaker("elk-logstash",
+                cb.getFailureRateThreshold(), cb.getSlidingWindowSize(),
+                cb.getHalfOpenAfterSeconds() * 1000L);
+    }
+
+    @Bean("lokiCircuitBreaker")
+    @ConditionalOnMissingBean(name = "lokiCircuitBreaker")
+    @ConditionalOnProperty(prefix = "ydsz.sentry.logging.loki", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public CircuitBreaker lokiCircuitBreaker(SentryProperties properties) {
+        SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
+        return new CircuitBreaker("loki",
+                cb.getFailureRateThreshold(), cb.getSlidingWindowSize(),
+                cb.getHalfOpenAfterSeconds() * 1000L);
+    }
+
     // ==================== 日志发布 ====================
 
     @Bean
     @ConditionalOnMissingBean(LogPublisher.class)
-    public LogPublisher logPublisher(SentryProperties properties) {
+    public LogPublisher logPublisher(SentryProperties properties,
+                                     org.springframework.beans.factory.ObjectProvider<CircuitBreaker> circuitBreakers) {
         List<LogPublisher> publishers = new ArrayList<>();
 
         SentryProperties.ElkConfig elkConfig = properties.getLogging().getElk();
         if (elkConfig.isEnabled()) {
+            CircuitBreaker elkCb = circuitBreakers.stream()
+                    .filter(cb -> "elk-logstash".equals(cb.getName()))
+                    .findFirst()
+                    .orElse(null);
             publishers.add(new ElkLogPublisher(
                     elkConfig.getHost(), elkConfig.getPort(), elkConfig.getProtocol(),
                     elkConfig.getConnectTimeoutMillis(), elkConfig.getReadTimeoutMillis(),
-                    elkConfig.getMaxRetryAttempts(), elkConfig.getCircuitBreakerThreshold()));
+                    elkConfig.getMaxRetryAttempts(), elkCb));
         }
 
         SentryProperties.LokiConfig lokiConfig = properties.getLogging().getLoki();
         if (lokiConfig.isEnabled()) {
+            CircuitBreaker lokiCb = circuitBreakers.stream()
+                    .filter(cb -> "loki".equals(cb.getName()))
+                    .findFirst()
+                    .orElse(null);
             publishers.add(new LokiLogPublisher(
                     lokiConfig.getUrl(), lokiConfig.getConnectTimeoutSeconds(),
-                    lokiConfig.getMaxRetryAttempts(), lokiConfig.getCircuitBreakerThreshold()));
+                    lokiConfig.getMaxRetryAttempts(), lokiCb));
         }
 
         if (publishers.isEmpty()) {
             log.warn("[Sentry] 未启用任何日志发布器, 使用 Loki 默认配置");
+            CircuitBreaker lokiCb = circuitBreakers.stream()
+                    .filter(cb -> "loki".equals(cb.getName()))
+                    .findFirst()
+                    .orElse(null);
             publishers.add(new LokiLogPublisher(
                     lokiConfig.getUrl(), lokiConfig.getConnectTimeoutSeconds(),
-                    lokiConfig.getMaxRetryAttempts(), lokiConfig.getCircuitBreakerThreshold()));
+                    lokiConfig.getMaxRetryAttempts(), lokiCb));
         }
 
+        LogPublisher delegate;
         if (publishers.size() == 1) {
-            return publishers.get(0);
+            delegate = publishers.get(0);
+        } else {
+            delegate = new DualLogPublisher(publishers, properties.getLogging().getDual().isFailOnAllError());
         }
 
-        return new DualLogPublisher(publishers, properties.getLogging().getDual().isFailOnAllError());
+        // 异步包装
+        SentryProperties.AsyncConfig asyncConfig = properties.getLogging().getAsync();
+        if (asyncConfig.isEnabled()) {
+            asyncLogPublisher = new AsyncLogPublisher(delegate,
+                    asyncConfig.getQueueCapacity(),
+                    asyncConfig.getBatchSize(),
+                    asyncConfig.getFlushIntervalMillis(),
+                    asyncConfig.getMaxRatePerSecond());
+            return asyncLogPublisher;
+        }
+        return delegate;
     }
 
     // ==================== 链路追踪 ====================
@@ -141,9 +198,18 @@ public class SentryAutoConfiguration {
         if ("skywalking".equals(primary)) {
             try {
                 Class.forName("org.apache.skywalking.apm.toolkit.trace.TraceContext");
-                return new com.njydsz.pmis.common.sentry.tracing.SkyWalkingTraceContext();
+                return new SkyWalkingTraceContext();
             } catch (ClassNotFoundException e) {
-                log.info("[Sentry] SkyWalking agent 未检测到, 降级到 DefaultTraceContext");
+                log.info("[Sentry] SkyWalking agent 未检测到, 尝试 OpenTelemetry");
+            }
+        }
+        if ("opentelemetry".equals(primary) || "skywalking".equals(primary)) {
+            try {
+                if (OpenTelemetryTraceContext.isAvailable()) {
+                    return new OpenTelemetryTraceContext();
+                }
+            } catch (Exception e) {
+                log.info("[Sentry] OpenTelemetry SDK 不可用, 降级到 DefaultTraceContext");
             }
         }
         return new DefaultTraceContext();
@@ -164,9 +230,26 @@ public class SentryAutoConfiguration {
     @ConditionalOnMissingBean(AlertPublisher.class)
     @ConditionalOnProperty(prefix = "ydsz.sentry.alerting", name = "enabled",
             havingValue = "true", matchIfMissing = true)
-    public AlertPublisher alertPublisher(SentryProperties properties) {
+    public AlertPublisher alertPublisher(SentryProperties properties,
+                                         org.springframework.beans.factory.ObjectProvider<com.njydsz.pmis.common.notify.core.NotifyService> notifyServiceProvider) {
         DefaultAlertPublisher publisher = new DefaultAlertPublisher(
                 properties.getAlerting().isLogAlerts());
+
+        // 当 NotifyService 可用时注册通知处理器
+        com.njydsz.pmis.common.notify.core.NotifyService notifyService = notifyServiceProvider.getIfAvailable();
+        if (notifyService != null) {
+            NotifyAlertHandler handler = new NotifyAlertHandler(
+                    notifyService,
+                    properties.getAlerting().getDingtalkReceiver(),
+                    properties.getAlerting().getEmailReceiver());
+            publisher.registerHandler(com.njydsz.pmis.common.sentry.domain.AlertSeverity.P0, handler);
+            publisher.registerHandler(com.njydsz.pmis.common.sentry.domain.AlertSeverity.P1, handler);
+            publisher.registerHandler(com.njydsz.pmis.common.sentry.domain.AlertSeverity.P2, handler);
+            log.info("[Sentry] NotifyAlertHandler 已注册, 告警将通过 common-notify 发送");
+        } else {
+            log.info("[Sentry] NotifyService 不可用, 告警仅记录日志");
+        }
+
         return new AlertConverger(publisher, properties.getAlerting().getSilencePeriodMillis());
     }
 
@@ -184,8 +267,19 @@ public class SentryAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "ydsz.sentry.sla", name = "enabled",
             havingValue = "true", matchIfMissing = true)
-    public SlaMetricAspect slaMetricAspect(DefaultSlaCollector slaCollector) {
+    public SlaMetricAspect slaMetricAspect(SlaCollector slaCollector) {
         return new SlaMetricAspect(slaCollector);
+    }
+
+    // ==================== 自监控指标 ====================
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SentrySelfMonitor sentrySelfMonitor(MetricsCollector metricsCollector,
+                                                 LogPublisher logPublisher,
+                                                 AlertPublisher alertPublisher,
+                                                 SentryProperties properties) {
+        return new SentrySelfMonitor(metricsCollector, logPublisher, alertPublisher);
     }
 
     // ==================== 健康检查 ====================
@@ -213,6 +307,9 @@ public class SentryAutoConfiguration {
 
     @PreDestroy
     public void destroy() {
+        if (asyncLogPublisher != null) {
+            asyncLogPublisher.close();
+        }
         if (systemMetricsScheduler != null) {
             systemMetricsScheduler.shutdown();
             try {
@@ -224,6 +321,68 @@ public class SentryAutoConfiguration {
                 Thread.currentThread().interrupt();
             }
             log.info("[Sentry] 系统资源指标定时采集已停止");
+        }
+        if (selfMonitorScheduler != null) {
+            selfMonitorScheduler.shutdown();
+            try {
+                if (!selfMonitorScheduler.awaitTermination(3, TimeUnit.SECONDS)) {
+                    selfMonitorScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                selfMonitorScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    /**
+     * 自监控指标上报器
+     *
+     * <p>定时上报 Sentry 各组件的可用性指标到 MetricsCollector，
+     * 供 Prometheus 告警规则使用。
+     */
+    @lombok.extern.slf4j.Slf4j
+    public static class SentrySelfMonitor {
+
+        private final MetricsCollector metricsCollector;
+        private final LogPublisher logPublisher;
+        private final AlertPublisher alertPublisher;
+
+        public SentrySelfMonitor(MetricsCollector metricsCollector,
+                                  LogPublisher logPublisher,
+                                  AlertPublisher alertPublisher) {
+            this.metricsCollector = metricsCollector;
+            this.logPublisher = logPublisher;
+            this.alertPublisher = alertPublisher;
+            log.info("[Sentry] SentrySelfMonitor 初始化完成");
+        }
+
+        @org.springframework.scheduling.annotation.Scheduled(fixedRate = 15000)
+        public void reportSelfMetrics() {
+            try {
+                if (metricsCollector != null) {
+                    metricsCollector.setGauge("ydsz.sentry.metrics.available",
+                            "指标采集器可用性", null, metricsCollector.isAvailable() ? 1.0 : 0.0);
+                }
+                if (logPublisher != null) {
+                    metricsCollector.setGauge("ydsz.sentry.logging.available",
+                            "日志发布器可用性", null, logPublisher.isAvailable() ? 1.0 : 0.0);
+                }
+                if (alertPublisher != null) {
+                    metricsCollector.setGauge("ydsz.sentry.alerting.available",
+                            "告警发布器可用性", null, alertPublisher.isAvailable() ? 1.0 : 0.0);
+                }
+                if (alertPublisher instanceof AlertConverger converger) {
+                    metricsCollector.setGauge("ydsz.sentry.alert.suppression_rate",
+                            "告警抑制率", null, converger.getSuppressionRate());
+                    metricsCollector.setGauge("ydsz.sentry.alert.total",
+                            "告警总数", null, converger.getTotalAlerts());
+                    metricsCollector.setGauge("ydsz.sentry.alert.suppressed",
+                            "被抑制告警数", null, converger.getSuppressedAlerts());
+                }
+            } catch (Exception e) {
+                log.debug("[Sentry] 自监控指标上报异常: {}", e.getMessage());
+            }
         }
     }
 }

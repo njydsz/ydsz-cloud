@@ -76,6 +76,12 @@
             <artifactId>spring-web</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- jakarta servlet (optional, for XID servlet filter) -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

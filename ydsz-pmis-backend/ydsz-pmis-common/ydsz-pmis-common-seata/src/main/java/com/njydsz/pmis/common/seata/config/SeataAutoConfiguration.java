@@ -13,10 +13,18 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
 import com.njydsz.pmis.common.seata.api.TransactionType;
 import com.njydsz.pmis.common.seata.api.TccTransactionLogStore;
+import com.njydsz.pmis.common.seata.api.XidPropagator;
+import com.njydsz.pmis.common.seata.impl.DefaultXidPropagator;
+import com.njydsz.pmis.common.seata.impl.GlobalTransactionExecutor;
 import com.njydsz.pmis.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.pmis.common.seata.impl.LocalTransactionManager;
+import com.njydsz.pmis.common.seata.impl.SagaOrchestrator;
+import com.njydsz.pmis.common.seata.impl.SeataGlobalTransactionExecutor;
+import com.njydsz.pmis.common.seata.impl.SeataTransactionManager;
 import com.njydsz.pmis.common.seata.impl.TccTransactionManager;
 import com.njydsz.pmis.common.seata.impl.TccTransactionRecoveryScanner;
+import com.njydsz.pmis.common.seata.interceptor.FeignXidRequestInterceptor;
+import com.njydsz.pmis.common.seata.interceptor.XidServletFilter;
 
 /**
  * 分布式事务自动配置
@@ -124,12 +132,61 @@ public class SeataAutoConfiguration {
     }
 
     /**
-     * Seata AT 模式配置（待实现）
+     * XID 传播器（P0-6）
+     */
+    @Bean
+    @ConditionalOnMissingBean(XidPropagator.class)
+    public XidPropagator xidPropagator() {
+        return new DefaultXidPropagator();
+    }
+
+    /**
+     * Feign XID 请求拦截器（当 Feign 在类路径时注册）
+     */
+    @Bean
+    @ConditionalOnClass(name = "feign.RequestInterceptor")
+    @ConditionalOnMissingBean(FeignXidRequestInterceptor.class)
+    public FeignXidRequestInterceptor feignXidRequestInterceptor(XidPropagator xidPropagator) {
+        return new FeignXidRequestInterceptor(xidPropagator);
+    }
+
+    /**
+     * XID Servlet 过滤器（当 Spring Web 在类路径时注册）
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.web.filter.OncePerRequestFilter")
+    @ConditionalOnMissingBean(XidServletFilter.class)
+    public XidServletFilter xidServletFilter(XidPropagator xidPropagator) {
+        return new XidServletFilter(xidPropagator);
+    }
+
+    /**
+     * SAGA 事务编排器（P0-3）
+     *
+     * <p>可通过 {@code pmis.seata.saga-enabled=false} 关闭
+     */
+    @Bean
+    @ConditionalOnMissingBean(SagaOrchestrator.class)
+    @ConditionalOnProperty(prefix = "pmis.seata", name = "saga-enabled", havingValue = "true", matchIfMissing = true)
+    public SagaOrchestrator sagaOrchestrator(SeataProperties properties) {
+        return new SagaOrchestrator(properties);
+    }
+
+    /**
+     * Seata AT 模式配置
+     *
+     * <p>当 Seata 在类路径且 {@code seata-at-enabled=true} 时注册
+     * {@link GlobalTransactionExecutor} 和 {@link SeataTransactionManager}。
      */
     @org.springframework.context.annotation.Configuration
-    @ConditionalOnClass(name = "org.apache.seata.spring.annotation.GlobalTransactional")
+    @ConditionalOnClass(name = "org.apache.seata.tm.api.GlobalTransactionContext")
     @ConditionalOnProperty(prefix = "pmis.seata", name = "seata-at-enabled", havingValue = "true", matchIfMissing = true)
     public static class SeataAtConfiguration {
-        // TODO: 实现 SeataTransactionManager 并在此注册为 Bean
+
+        @Bean
+        @ConditionalOnMissingBean(GlobalTransactionExecutor.class)
+        public GlobalTransactionExecutor globalTransactionExecutor() throws Exception {
+            return new SeataGlobalTransactionExecutor();
+        }
     }
 }

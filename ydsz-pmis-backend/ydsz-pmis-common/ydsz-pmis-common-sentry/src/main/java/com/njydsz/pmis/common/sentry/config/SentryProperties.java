@@ -9,52 +9,6 @@ import lombok.Data;
  *
  * <p>配置前缀：{@code ydsz.sentry}
  *
- * <pre>
- * ydsz:
- *   sentry:
- *     enabled: true
- *     app-name: pmis-service
- *     hostname: auto
- *     profile: ${spring.profiles.active:dev}
- *     metrics:
- *       primary: micrometer          # micrometer / memory
- *       enable-system-metrics: true
- *       system-metrics-interval: 15s
- *       circuit-breaker:
- *         enabled: true
- *         failure-rate-threshold: 0.3
- *         sliding-window-size: 100
- *         half-open-after-seconds: 30
- *     logging:
- *       primary: elk                 # elk / loki / dual
- *       elk:
- *         enabled: true
- *         host: logstash
- *         port: 5044
- *         protocol: tcp             # tcp / udp
- *         connect-timeout-millis: 3000
- *         read-timeout-millis: 5000
- *         max-retry-attempts: 3
- *         circuit-breaker-threshold: 10
- *       loki:
- *         enabled: true
- *         url: http://loki:3100
- *         connect-timeout-seconds: 5
- *         max-retry-attempts: 3
- *         circuit-breaker-threshold: 10
- *       dual:
- *         fail-on-all-error: false
- *     tracing:
- *       primary: skywalking          # skywalking / default
- *       slow-trace-threshold-millis: 3000
- *     alerting:
- *       enabled: true
- *       silence-period-millis: 300000
- *       log-alerts: true
- *     sla:
- *       enabled: true
- * </pre>
- *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
@@ -132,6 +86,9 @@ public class SentryProperties {
 
         /** 双发配置 */
         private DualConfig dual = new DualConfig();
+
+        /** 异步配置 */
+        private AsyncConfig async = new AsyncConfig();
     }
 
     @Data
@@ -162,8 +119,26 @@ public class SentryProperties {
     }
 
     @Data
+    public static class AsyncConfig {
+        /** 是否启用异步日志发布 */
+        private boolean enabled = true;
+
+        /** 队列容量 */
+        private int queueCapacity = 8192;
+
+        /** 批量发送大小 */
+        private int batchSize = 100;
+
+        /** 刷新间隔（毫秒） */
+        private long flushIntervalMillis = 1000;
+
+        /** 令牌桶限流（每秒最大发送量，0 表示不限流） */
+        private int maxRatePerSecond = 0;
+    }
+
+    @Data
     public static class TracingConfig {
-        /** 主追踪系统：skywalking / default */
+        /** 主追踪系统：skywalking / opentelemetry / default */
         private String primary = "skywalking";
 
         /** 慢追踪阈值（毫秒） */
@@ -179,6 +154,12 @@ public class SentryProperties {
 
         /** 是否记录告警日志 */
         private boolean logAlerts = true;
+
+        /** 钉钉告警接收者 */
+        private String dingtalkReceiver = "";
+
+        /** 邮件告警接收者 */
+        private String emailReceiver = "";
     }
 
     @Data
