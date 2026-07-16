@@ -1027,6 +1027,51 @@ public class Json {
         }
     }
 
+    // ==================== 字段级排除（列权限等场景） ====================
+
+    /**
+     * 设置序列化时需要排除的字段名集合。
+     *
+     * <p>设置后，当前线程后续的序列化操作会跳过集合中名称匹配的字段。
+     * 调用者负责在 finally 块中调用 {@link #clearExcludedFields()} 清理 ThreadLocal。
+     *
+     * @param fieldNames 需要排除的字段名集合，null 表示清除排除
+     */
+    public static void setExcludedFields(java.util.Set<String> fieldNames) {
+        SerializationProvider.setExcludedFields(fieldNames);
+    }
+
+    /**
+     * 清除序列化字段排除设置。
+     *
+     * <p>必须在 finally 块中调用，防止 ThreadLocal 泄漏。
+     */
+    public static void clearExcludedFields() {
+        SerializationProvider.setExcludedFields(null);
+    }
+
+    /**
+     * 序列化对象并排除指定字段（自动清理 ThreadLocal）。
+     *
+     * <p>便捷方法，内部设置排除集合、序列化、清理 ThreadLocal。
+     *
+     * @param obj 要序列化的对象
+     * @param excludedFieldNames 需要排除的字段名集合
+     * @return JSON 字符串（排除指定字段后的）
+     */
+    public static String toJsonExcludeFields(Object obj, java.util.Set<String> excludedFieldNames) {
+        if (obj == null) {
+            return "null";
+        }
+        java.util.Set<String> previous = SerializationProvider.getExcludedFields();
+        try {
+            SerializationProvider.setExcludedFields(excludedFieldNames);
+            return recordSerialize(() -> SerializerEngine.serialize(obj));
+        } finally {
+            SerializationProvider.setExcludedFields(previous);
+        }
+    }
+
     // ==================== 安全检查 ====================
 
     /**

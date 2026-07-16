@@ -212,7 +212,7 @@ public class UserModelReadStrategy implements ReadStrategy {
 
             return instance;
         } catch (Exception e) {
-            log.warn("解析行数据异。{}", e);
+            log.warn("解析行数据异常", e);
             return null;
         }
     }

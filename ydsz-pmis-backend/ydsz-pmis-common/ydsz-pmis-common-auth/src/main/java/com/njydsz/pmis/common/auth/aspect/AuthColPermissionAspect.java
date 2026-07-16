@@ -33,6 +33,7 @@ import com.njydsz.pmis.common.auth.util.AuthColPermissionSigner;
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationExecutor;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -183,25 +184,51 @@ public class AuthColPermissionAspect {
         if (returnValue == null) {
             return null;
         }
-        if (returnValue instanceof Collection) {
-            List<Object> filtered = new ArrayList<>();
-            for (Object item : (Collection<?>) returnValue) {
-                filtered.add(filterObject(item, mode, colInfo, strict, desensitizeCtx, table));
-            }
-            return filtered;
-        }
-        if (returnValue.getClass().isArray()) {
-            int length = Array.getLength(returnValue);
-            List<Object> filtered = new ArrayList<>(length);
-            for (int i = 0; i < length; i++) {
-                filtered.add(filterObject(Array.get(returnValue, i), mode, colInfo, strict, desensitizeCtx, table));
-            }
-            return filtered;
-        }
-        if (filterRecordsProperty(returnValue, mode, colInfo, strict, desensitizeCtx, table)) {
+        // 收集需要排除的字段名
+        Set<String> excludedFields = collectExcludedFields(mode, colInfo, strict, table);
+        if (excludedFields.isEmpty()) {
+            // 无需排除字段，直接返回原始值
             return returnValue;
         }
-        return filterObject(returnValue, mode, colInfo, strict, desensitizeCtx, table);
+        // 使用 YdszJson 序列化时排除字段 + 反序列化回原始类型
+        try {
+            String json = Json.toJsonExcludeFields(returnValue, excludedFields);
+            return Json.toObject(json, returnValue.getClass());
+        } catch (Exception e) {
+            log.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());
+            // 降级：仍然使用反射方式过滤
+            if (returnValue instanceof Collection) {
+                List<Object> filtered = new ArrayList<>();
+                for (Object item : (Collection<?>) returnValue) {
+                    filtered.add(filterObject(item, mode, colInfo, strict, desensitizeCtx, table));
+                }
+                return filtered;
+            }
+            return filterObject(returnValue, mode, colInfo, strict, desensitizeCtx, table);
+        }
+    }
+
+    /**
+     * 收集在指定模式下无读权限的字段名集合。
+     *
+     * @param mode 列权限模式
+     * @param colInfo 列权限信息
+     * @param strict 是否严格模式
+     * @param table 表名
+     * @return 需要排除的字段名集合
+     */
+    private Set<String> collectExcludedFields(AuthColPermission.ColumnMode mode,
+                                             ColumnPermissionInfo colInfo, boolean strict, String table) {
+        if (colInfo == null || colInfo.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<String> excluded = new HashSet<>();
+        for (String columnName : colInfo.getAllColumns()) {
+            if (!isReadable(columnName, mode, colInfo, strict)) {
+                excluded.add(columnName);
+            }
+        }
+        return excluded;
     }
 
     private Object filterObject(Object obj, AuthColPermission.ColumnMode mode,

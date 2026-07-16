@@ -22,14 +22,13 @@ import org.springframework.validation.annotation.Validated;
  *     record-response: false
  *     sensitive-params: [password, token, secret]
  *     retention-days: 90
+ *     executor-queue-capacity: 200
  *     async:
- *       enabled: true
  *       batch-size: 100
  *       queue-capacity: 10000
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Validated
@@ -125,8 +124,8 @@ public class AuditProperties {
     @Min(1)
     private int maxPoolSize = 4;
 
-    /** 异步记录队列容量 */
-    private int queueCapacity = 200;
+    /** 异步记录线程池等待队列容量（用于 ThreadPoolTaskExecutor 的工作队列） */
+    private int executorQueueCapacity = 200;
 
     /** 是否启用分表（默认不启用） */
     private boolean shardingEnabled = false;
@@ -281,12 +280,28 @@ public class AuditProperties {
         this.maxPoolSize = maxPoolSize;
     }
 
+    /**
+     * @deprecated 使用 {@link #getExecutorQueueCapacity()} 替代
+     */
+    @Deprecated
     public int getQueueCapacity() {
-        return queueCapacity;
+        return executorQueueCapacity;
     }
 
+    /**
+     * @deprecated 使用 {@link #setExecutorQueueCapacity(int)} 替代
+     */
+    @Deprecated
     public void setQueueCapacity(int queueCapacity) {
-        this.queueCapacity = queueCapacity;
+        this.executorQueueCapacity = queueCapacity;
+    }
+
+    public int getExecutorQueueCapacity() {
+        return executorQueueCapacity;
+    }
+
+    public void setExecutorQueueCapacity(int executorQueueCapacity) {
+        this.executorQueueCapacity = executorQueueCapacity;
     }
 
     public boolean isShardingEnabled() {
@@ -332,11 +347,6 @@ public class AuditProperties {
     public static class AsyncProperties {
 
         /**
-         * 是否启用异步写入
-         */
-        private boolean enabled = true;
-
-        /**
          * 批量写入阈值（条数，达到后立即触发刷盘）
          */
         private int batchSize = 100;
@@ -351,13 +361,10 @@ public class AuditProperties {
          */
         private int queueCapacity = 10000;
 
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
+        /**
+         * Disruptor WaitStrategy 策略名称（可选值：blocking / sleeping / yielding，默认 blocking）
+         */
+        private String waitStrategy = "blocking";
 
         public int getBatchSize() {
             return batchSize;
@@ -381,6 +388,14 @@ public class AuditProperties {
 
         public void setQueueCapacity(int queueCapacity) {
             this.queueCapacity = queueCapacity;
+        }
+
+        public String getWaitStrategy() {
+            return waitStrategy;
+        }
+
+        public void setWaitStrategy(String waitStrategy) {
+            this.waitStrategy = waitStrategy;
         }
     }
 }

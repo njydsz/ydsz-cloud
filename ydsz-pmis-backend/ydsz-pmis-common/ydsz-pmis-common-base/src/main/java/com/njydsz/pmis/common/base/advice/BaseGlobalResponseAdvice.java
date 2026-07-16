@@ -22,36 +22,11 @@ import com.njydsz.pmis.common.json.Json;
  * <p>子类覆盖 {@link #wrapStringBody(String)} 处理 String 类型返回值的差异：
  * Web 端调用 {@code BaseResponse.success(msg)}，App 端调用 {@code BaseResponse.successMsg(msg)}。
  *
- * <p><b>优化说明：</b>
- * <p>支持通过构造器注入自定义 ObjectMapper，提升可测试性和灵活性。
- * 若未注入，则使用 Json 的默认 ObjectMapper。
- *
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */
 public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Object> {
-
-    /**
-     * JSON 序列化器（可选注入）
-     */
-    private final ObjectMapper objectMapper;
-
-    /**
-     * 默认构造器（使用 Json 的默认 ObjectMapper）
-     */
-    protected BaseGlobalResponseAdvice() {
-        this.objectMapper = null;
-    }
-
-    /**
-     * 构造器注入自定义 ObjectMapper
-     *
-     * @param objectMapper JSON 序列化器
-     */
-    protected BaseGlobalResponseAdvice(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public boolean supports(@NonNull MethodParameter returnType, @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
@@ -70,7 +45,6 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
         if (body instanceof String) {
             BaseResponse<String> result = wrapStringBody((String) body);
             try {
-                ObjectMapper mapper = objectMapper != null ? objectMapper : Json.getMapper();
                 return Json.toJson(result);
             } catch (Exception e) {
                 return result;

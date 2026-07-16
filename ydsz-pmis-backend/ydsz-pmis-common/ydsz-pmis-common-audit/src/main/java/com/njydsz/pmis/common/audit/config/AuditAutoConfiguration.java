@@ -58,7 +58,6 @@ import lombok.RequiredArgsConstructor;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @AutoConfiguration
 @RequiredArgsConstructor
@@ -104,20 +103,6 @@ public class AuditAutoConfiguration {
     }
 
     /**
-     * 创建默认审计日志存储 Bean
-     * 当系统中不存在 AuditStorage 类型的 Bean 时自动创建，输出到控制台
-     *
-     * @param dataSource 数据源（可选，此 Bean 不依赖数据源）
-     * @return 默认审计日志存储
-     */
-    @Bean
-    @ConditionalOnMissingBean(value = AuditStorage.class, ignored = JdbcAuditStorage.class)
-    public AuditStorage defaultAuditStorage(DataSource dataSource) {
-        log.info("初始化默认审计日志存储: DefaultAuditStorage(控制台输出)");
-        return new DefaultAuditStorage();
-    }
-
-    /**
      * 创建 JDBC 审计日志存储 Bean
      * 当存在 DataSource 且未提供自定义 AuditStorage 时创建
      *
@@ -136,6 +121,19 @@ public class AuditAutoConfiguration {
         log.info("初始化 JDBC 审计日志存储: JdbcAuditStorage, 分表策略={}, 基础表名={}",
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", baseTableName);
         return new JdbcAuditStorage(dataSource, shardingStrategy, baseTableName);
+    }
+
+    /**
+     * 创建默认审计日志存储 Bean
+     * 当系统中不存在 DataSource 时降级为控制台输出
+     *
+     * @return 默认审计日志存储
+     */
+    @Bean
+    @ConditionalOnMissingBean(AuditStorage.class)
+    public AuditStorage defaultAuditStorage() {
+        log.info("初始化默认审计日志存储: DefaultAuditStorage(控制台输出)，未检测到 DataSource，降级使用控制台存储");
+        return new DefaultAuditStorage();
     }
 
     /**
@@ -166,7 +164,7 @@ public class AuditAutoConfiguration {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(properties.getCorePoolSize());
         executor.setMaxPoolSize(properties.getMaxPoolSize());
-        executor.setQueueCapacity(properties.getQueueCapacity());
+        executor.setQueueCapacity(properties.getExecutorQueueCapacity());
         executor.setThreadNamePrefix("audit-async-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
@@ -212,7 +210,7 @@ public class AuditAutoConfiguration {
             log.info("初始化 Disruptor 审计记录器: DisruptorAuditRecorder, RingBuffer容量={}, 批量阈值={}, 分表策略={}",
                     asyncProps.getQueueCapacity(), asyncProps.getBatchSize(),
                     shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
-            DisruptorAuditRecorder recorder = new DisruptorAuditRecorder(dataSource, properties, shardingStrategy, baseTableName);
+            DisruptorAuditRecorder recorder = new DisruptorAuditRecorder(dataSource, properties, shardingStrategy, baseTableName, properties.getAsync().getWaitStrategy());
             this.asyncAuditRecorder = null; // Disruptor 自己管理停机
             return recorder;
         }
@@ -284,12 +282,12 @@ public class AuditAutoConfiguration {
      */
     @Bean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-    @ConditionalOnBean(DataSource.class)
+    @ConditionalOnBean(AuditRecorder.class)
     @ConditionalOnProperty(prefix = "ydsz.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "auditHealthIndicator")
-    public AuditHealthIndicator auditHealthIndicator(DataSource dataSource, AuditProperties properties) {
+    public AuditHealthIndicator auditHealthIndicator(AuditRecorder auditRecorder, AuditProperties properties) {
         log.info("初始化审计健康检查指示器: AuditHealthIndicator");
-        return new AuditHealthIndicator(dataSource, properties);
+        return new AuditHealthIndicator(auditRecorder, properties);
     }
 
     /**

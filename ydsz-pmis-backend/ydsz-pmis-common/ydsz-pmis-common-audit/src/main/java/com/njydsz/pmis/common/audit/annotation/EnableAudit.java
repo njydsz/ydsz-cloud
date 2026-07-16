@@ -28,11 +28,12 @@ import com.njydsz.pmis.common.audit.core.AuditRecorder;
  * }</pre>
  *
  * @author ydsz-pmis-team
- * 
- * 
  * @since 1.0.0
+ * @deprecated 请使用 {@link EnableYdszAudit} 替代。AuditAutoConfiguration 已通过 AutoConfiguration.imports 自动注册，
+ *             无需手动添加开关注解。
  * @see AuditAutoConfiguration
  */
+@Deprecated
 @Inherited
 @Documented
 @Target(ElementType.TYPE)

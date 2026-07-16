@@ -197,14 +197,35 @@ public final class SerializationProvider {
     }
 
     /**
-     * 判断指定字段名是否被排除。
+     * 判断指定字段是否被排除。
      *
-     * @param jsonName 字段的 JSON 名称
+     * <p>支持两种输入格式：
+     * <ul>
+     *   <li>纯字段名：{@code fieldName}</li>
+     *   <li>JSON 键格式：{@code "fieldName":}（BeanSerializer 内部格式）</li>
+     * </ul>
+     *
+     * @param keyOrName 字段的 JSON 键或纯名称
      * @return true 表示该字段应被排除
      */
-    public static boolean isFieldExcluded(String jsonName) {
+    public static boolean isFieldExcluded(String keyOrName) {
         Set<String> excluded = EXCLUDED_FIELDS.get();
-        return excluded != null && excluded.contains(jsonName);
+        if (excluded == null || keyOrName == null) {
+            return false;
+        }
+        // 直接匹配纯字段名
+        if (excluded.contains(keyOrName)) {
+            return true;
+        }
+        // 尝试从 JSON 键格式 "fieldName": 中提取纯名称
+        if (keyOrName.length() >= 3 && keyOrName.charAt(0) == '"') {
+            int end = keyOrName.indexOf('"', 1);
+            if (end > 0) {
+                String name = keyOrName.substring(1, end);
+                return excluded.contains(name);
+            }
+        }
+        return false;
     }
 
     /**

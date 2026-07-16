@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
@@ -22,10 +23,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
+import com.lmax.disruptor.WaitStrategy;
+import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.njydsz.pmis.common.audit.config.AuditProperties;
@@ -49,12 +53,13 @@ import com.njydsz.pmis.common.audit.sharding.TableShardingStrategy;
  *   <li>支持批量消费（batch handler）</li>
  *   <li>支持分表策略写入</li>
  *   <li>优雅停机时自动刷新剩余日志</li>
- *   <li>队列满时支持阻塞等待（BackPressure）</li>
+ *   <li>批量写入失败时磁盘兜底，不丢失审计日志</li>
+ *   <li>队列满计数监控指标</li>
+ *   <li>WaitStrategy 可配置（blocking / sleeping / yielding）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
 
@@ -107,8 +112,20 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
     /** 上次刷新时间戳 */
     private volatile long lastFlushTime = System.currentTimeMillis();
 
+    /** 磁盘兜底写入器 */
+    private final AuditFallbackWriter fallbackWriter = new AuditFallbackWriter();
+
+    /** 队列满告警计数 */
+    private final AtomicLong queueFullWarnCount = new AtomicLong(0);
+
+    /** 累计写入成功计数 */
+    private final AtomicLong successCount = new AtomicLong(0);
+
+    /** 累计写入失败计数 */
+    private final AtomicLong failureCount = new AtomicLong(0);
+
     /**
-     * 构造函数
+     * 构造函数（使用默认 BlockingWaitStrategy）
      *
      * @param dataSource       数据源
      * @param properties       审计配置属性
@@ -117,6 +134,21 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
      */
     public DisruptorAuditRecorder(DataSource dataSource, AuditProperties properties,
                                    TableShardingStrategy shardingStrategy, String baseTableName) {
+        this(dataSource, properties, shardingStrategy, baseTableName, "blocking");
+    }
+
+    /**
+     * 构造函数 — 支持自定义 WaitStrategy
+     *
+     * @param dataSource       数据源
+     * @param properties       审计配置属性
+     * @param shardingStrategy 分表策略（可为 null）
+     * @param baseTableName    基础表名
+     * @param waitStrategyName  等待策略名称（blocking / sleeping / yielding）
+     */
+    public DisruptorAuditRecorder(DataSource dataSource, AuditProperties properties,
+                                   TableShardingStrategy shardingStrategy, String baseTableName,
+                                   String waitStrategyName) {
         Objects.requireNonNull(dataSource, "DataSource must not be null");
         Objects.requireNonNull(properties, "AuditProperties must not be null");
         this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -128,13 +160,16 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         // 创建线程工厂
         ThreadFactory threadFactory = new CustomizableThreadFactory("audit-disruptor-");
 
+        // 根据配置选择 WaitStrategy
+        WaitStrategy waitStrategy = resolveWaitStrategy(waitStrategyName);
+
         // 创建 Disruptor
         this.disruptor = new Disruptor<>(
                 AuditLogEvent.FACTORY,
                 asyncProps.getQueueCapacity(),
                 threadFactory,
                 ProducerType.MULTI,
-                new SleepingWaitStrategy()
+                waitStrategy
         );
 
         // 设置批量事件处理器
@@ -144,9 +179,26 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         disruptor.start();
         this.ringBuffer = disruptor.getRingBuffer();
 
-        log.info("【Disruptor审计记录器】启动成功, RingBuffer容量={}, 批量阈值={}, 分表策略={}",
+        log.info("【Disruptor审计记录器】启动成功, RingBuffer容量={}, 批量阈值={}, 分表策略={}, WaitStrategy={}",
                 asyncProps.getQueueCapacity(), asyncProps.getBatchSize(),
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
+                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", waitStrategyName);
+    }
+
+    /**
+     * 根据策略名称解析 WaitStrategy
+     *
+     * @param name 策略名称（blocking / sleeping / yielding）
+     * @return WaitStrategy 实例
+     */
+    private WaitStrategy resolveWaitStrategy(String name) {
+        if (name == null || name.isEmpty()) {
+            return new BlockingWaitStrategy();
+        }
+        return switch (name.toLowerCase()) {
+            case "sleeping" -> new SleepingWaitStrategy();
+            case "yielding" -> new YieldingWaitStrategy();
+            default -> new BlockingWaitStrategy();
+        };
     }
 
     @Override
@@ -167,6 +219,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
                 saveSingle(auditLog);
             } catch (Exception e) {
                 log.error("【Disruptor审计记录器】同步写入失败", e);
+                fallbackWriter.writeToFallback(auditLog);
             }
             return;
         }
@@ -197,6 +250,33 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
     @Override
     public String getName() {
         return "DisruptorAuditRecorder";
+    }
+
+    /**
+     * 获取队列满告警累计次数
+     *
+     * @return 队列满告警累计触发次数
+     */
+    public long getQueueFullWarnCount() {
+        return queueFullWarnCount.get();
+    }
+
+    /**
+     * 获取累计写入成功次数
+     *
+     * @return 成功次数
+     */
+    public long getSuccessCount() {
+        return successCount.get();
+    }
+
+    /**
+     * 获取累计写入失败次数
+     *
+     * @return 失败次数
+     */
+    public long getFailureCount() {
+        return failureCount.get();
     }
 
     /**
@@ -237,7 +317,6 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         lastFlushTime = System.currentTimeMillis();
 
         int total = batch.size();
-        int successCount = 0;
 
         try {
             if (shardingStrategy != null) {
@@ -247,12 +326,14 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
                     int end = Math.min(offset + BATCH_SLICE_SIZE, total);
                     List<AuditLog> slice = batch.subList(offset, end);
                     saveBatchDirect(slice);
-                    successCount += slice.size();
                 }
             }
-            log.debug("【Disruptor审计记录器】批量写入成功, total={}, success={}", total, successCount);
+            successCount.addAndGet(total);
+            log.debug("【Disruptor审计记录器】批量写入成功, total={}", total);
         } catch (Exception e) {
-            log.error("【Disruptor审计记录器】批量写入失败, count={}", total, e);
+            failureCount.addAndGet(total);
+            log.error("【Disruptor审计记录器】批量写入失败, count={}, 尝试磁盘兜底", total, e);
+            fallbackWriter.writeBatchToFallback(batch);
         }
     }
 
@@ -390,7 +471,8 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
             // 刷新剩余的批量缓冲区
             flushBatch();
 
-            log.info("【Disruptor审计记录器】优雅停机完成");
+            log.info("【Disruptor审计记录器】优雅停机完成, 累计成功={}, 累计失败={}",
+                    successCount.get(), failureCount.get());
         } catch (Exception e) {
             log.error("【Disruptor审计记录器】优雅停机失败", e);
             disruptor.halt();

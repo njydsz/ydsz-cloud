@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.njydsz.pmis.common.excel.ExcelFacade;
+import com.njydsz.pmis.common.excel.core.ExcelFacade;
 
 /**
  * Excel读取结果封装类 - 结果模式实现

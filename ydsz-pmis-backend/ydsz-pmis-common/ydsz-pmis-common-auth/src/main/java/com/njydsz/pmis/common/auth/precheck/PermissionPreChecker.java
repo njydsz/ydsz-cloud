@@ -6,7 +6,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
+import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
+import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
+import com.njydsz.pmis.common.auth.model.DataScopeInfo;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
+import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
+import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
 import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
 import com.njydsz.pmis.common.auth.util.PermissionUtils;
@@ -65,6 +70,8 @@ public class PermissionPreChecker {
     private final AuthProperties properties;
     private final RbacUserInfoService userInfoService;
     private final RolePermissionLoader rolePermissionLoader;
+    private final DataPermissionResolver dataPermissionResolver;
+    private final ColumnPermissionResolver columnPermissionResolver;
 
     /**
      * 权限预检模式。
@@ -366,6 +373,84 @@ public class PermissionPreChecker {
 
     private boolean hasPermission(Set<String> granted, String required) {
         return PermissionUtils.hasPermission(granted, required, properties.isWildcardEnabled());
+    }
+
+    /**
+     * 预检当前用户的行级数据权限范围。
+     *
+     * <p>返回当前用户可访问的数据维度（租户/公司/部门/项目/区域等），
+     * 前端可据此动态控制 UI 显示。
+     *
+     * @return 预检结果，包含数据权限范围信息
+     */
+    public PermissionCheckResult checkRowPermission() {
+        try {
+            DataScopeInfo dataScope = dataPermissionResolver.resolve();
+            boolean hasDataScope = dataScope != null && (
+                    dataScope.getScope() != null
+                    || StringUtils.isNotBlank(dataScope.getTenantId())
+                    || StringUtils.isNotBlank(dataScope.getUserId())
+                    || (dataScope.getCompanyIds() != null && !dataScope.getCompanyIds().isEmpty())
+                    || (dataScope.getDeptIds() != null && !dataScope.getDeptIds().isEmpty())
+                    || (dataScope.getProjectIds() != null && !dataScope.getProjectIds().isEmpty())
+                    || (dataScope.getRegionIds() != null && !dataScope.getRegionIds().isEmpty())
+            );
+            return PermissionCheckResult.builder()
+                    .checkPassed(hasDataScope)
+                    .hasPermission(hasDataScope)
+                    .message(hasDataScope ? "行级数据权限范围已解析" : "无行级数据权限")
+                    .suggestion(hasDataScope ? null : "请联系管理员配置数据权限")
+                    .build();
+        } catch (Exception e) {
+            log.warn("行权限预检失败: {}", e.getMessage());
+            return PermissionCheckResult.builder()
+                    .checkPassed(false)
+                    .hasPermission(false)
+                    .message("行权限预检异常: " + e.getMessage())
+                    .suggestion("请稍后重试或联系管理员")
+                    .build();
+        }
+    }
+
+    /**
+     * 预检当前用户的列级权限，返回无权限的字段列表。
+     *
+     * @param table 目标表名
+     * @return 预检结果，包含不可读的字段列表
+     */
+    public PermissionCheckResult checkColumnPermission(String table) {
+        try {
+            ColumnScopeInfo scopeInfo = columnPermissionResolver.resolve();
+            if (scopeInfo == null) {
+                return PermissionCheckResult.builder()
+                        .checkPassed(true)
+                        .hasPermission(true)
+                        .message("列权限无配置，默认全部可见")
+                        .build();
+            }
+            Set<String> visibleColumns = scopeInfo.getVisibleColumns(table);
+            Set<String> hiddenColumns = new HashSet<>();
+            if (visibleColumns != null && !visibleColumns.isEmpty()) {
+                // 在有配置的情况下，不在 visible 集合中的字段为隐藏字段
+                hiddenColumns.add("* (仅可见: " + String.join(", ", visibleColumns) + ")");
+            }
+            boolean hasColumnPermission = hiddenColumns.isEmpty();
+            return PermissionCheckResult.builder()
+                    .checkPassed(hasColumnPermission)
+                    .hasPermission(hasColumnPermission)
+                    .missingPermissions(hiddenColumns)
+                    .message(hasColumnPermission ? "列权限检查通过" : "部分字段无读权限")
+                    .suggestion(hasColumnPermission ? null : "仅可见字段: " + (visibleColumns != null ? String.join(", ", visibleColumns) : "无"))
+                    .build();
+        } catch (Exception e) {
+            log.warn("列权限预检失败: {}", e.getMessage());
+            return PermissionCheckResult.builder()
+                    .checkPassed(false)
+                    .hasPermission(false)
+                    .message("列权限预检异常: " + e.getMessage())
+                    .suggestion("请稍后重试或联系管理员")
+                    .build();
+        }
     }
 
     private String resolveUserId(Map<String, Object> userInfo) {
