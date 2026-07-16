@@ -88,7 +88,6 @@ public class WebSocketHeartbeatHandler {
                 cleaned++;
             }
         }
-        }
         if (cleaned > 0) {
             log.info("[WS-Heartbeat] 僵尸 Session 清理完成, 清理数={}, 剩余活跃={}",
                     cleaned, sessionHeartbeats.size());

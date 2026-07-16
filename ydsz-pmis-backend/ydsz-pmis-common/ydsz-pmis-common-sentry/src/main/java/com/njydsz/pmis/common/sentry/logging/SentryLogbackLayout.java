@@ -2,6 +2,8 @@ package com.njydsz.pmis.common.sentry.logging;
 
 import java.net.InetAddress;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
 import com.njydsz.pmis.common.sentry.domain.LogLevel;
@@ -73,6 +75,7 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
             builder.username(event.getMDCPropertyMap().get("username"));
             // 可配置的额外 MDC 字段
             if (mdcFields != null && !mdcFields.isBlank()) {
+                Map<String, Object> extraMdc = new LinkedHashMap<>();
                 for (String field : mdcFields.split(",")) {
                     String trimmed = field.trim();
                     if (!trimmed.isEmpty()
@@ -81,9 +84,12 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
                             && !"username".equals(trimmed)) {
                         String value = event.getMDCPropertyMap().get(trimmed);
                         if (value != null) {
-                            builder.addExtra(trimmed, value);
+                            extraMdc.put(trimmed, value);
                         }
                     }
+                }
+                if (!extraMdc.isEmpty()) {
+                    builder.extra(extraMdc);
                 }
             }
         }

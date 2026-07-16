@@ -15,7 +15,7 @@ minio:
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.project.entity
+  type-aliases-package: com.njydsz.pmis.project.domain.entity
 
 # UAT 环境关闭文档 UI
 springdoc:
@@ -27,29 +27,35 @@ knife4j:
   production: true
 
 # Seata 分布式事务（AT 模式）
-seata:
-  enabled: true
-  application-id: ${spring.application.name}
-  tx-service-group: pmis-tx-group
-  enable-auto-data-source-proxy: true
-  registry:
-    type: nacos
-    nacos:
-      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-      namespace: pmis
-      group: SEATA_GROUP
-  config:
-    type: nacos
-    nacos:
-      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-      namespace: pmis
-      group: SEATA_GROUP
-      data-id: seata-client.properties
-  service:
-    vgroup-mapping:
-      pmis-tx-group: default
-    grouplist:
-      default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+# 2026-07-16: sales/finance 合并到 project 后,跨服务分布式事务降级为同进程本地事务
+pmis:
+  seata:
+    enabled: false
+    default-type: LOCAL
+
+# seata:
+#   enabled: true
+#   application-id: ${spring.application.name}
+#   tx-service-group: pmis-tx-group
+#   enable-auto-data-source-proxy: true
+#   registry:
+#     type: nacos
+#     nacos:
+#       server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+#       namespace: pmis
+#       group: SEATA_GROUP
+#   config:
+#     type: nacos
+#     nacos:
+#       server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+#       namespace: pmis
+#       group: SEATA_GROUP
+#       data-id: seata-client.properties
+#   service:
+#     vgroup-mapping:
+#       pmis-tx-group: default
+#     grouplist:
+#       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
 
 # UAT 环境 PMIS 业务日志降为 INFO
 logging:

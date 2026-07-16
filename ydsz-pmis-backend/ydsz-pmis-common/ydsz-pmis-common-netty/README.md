@@ -83,7 +83,7 @@ pmis:
     shutdown-quiet-period-seconds: 2  # 优雅关闭静默期
     shutdown-timeout-seconds: 15    # 优雅关闭超时
     fail-fast: true                 # Server 启动失败终止应用
-    native-transport: auto          # 原生传输（auto/enabled/disabled）
+    native-transport: AUTO          # 原生传输（auto/enabled/disabled）
     idle:
       reader-idle-seconds: 60       # 读空闲超时
       writer-idle-seconds: 30       # 写空闲超时

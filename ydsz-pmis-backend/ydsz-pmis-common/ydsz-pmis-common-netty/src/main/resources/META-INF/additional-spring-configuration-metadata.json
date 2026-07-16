@@ -70,7 +70,7 @@
       "name": "pmis.netty.native-transport",
       "type": "java.lang.String",
       "description": "原生传输模式（auto=自动检测, enabled=强制启用, disabled=禁用）。",
-      "defaultValue": "auto"
+      "defaultValue": "AUTO"
     },
     {
       "name": "pmis.netty.idle.reader-idle-seconds",

@@ -24,9 +24,7 @@
         <module>ydsz-pmis-literule</module>
         <module>ydsz-pmis-userinfo</module>
         <module>ydsz-pmis-system</module>
-        <module>ydsz-pmis-sales</module>
         <module>ydsz-pmis-project</module>
-        <module>ydsz-pmis-finance</module>
         <module>ydsz-pmis-message</module>
         <module>ydsz-pmis-cronjob</module>
         <module>ydsz-pmis-workflow</module>
@@ -345,18 +343,7 @@
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-literule</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-sales</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-finance</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
+            </dependency>            <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-message</artifactId>
                 <version>${project.version}</version>
@@ -377,18 +364,7 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- DDD 子模块：api（Feign 门面） -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-sales-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-finance-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
+            <!-- DDD 子模块：api（Feign 门面） -->            <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-system-api</artifactId>
                 <version>${project.version}</version>
@@ -435,18 +411,7 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- DDD 子模块：domain -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-sales-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-finance-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
+            <!-- DDD 子模块：domain -->            <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-system-domain</artifactId>
                 <version>${project.version}</version>
@@ -493,18 +458,7 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- DDD 子模块：infra -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-sales-infra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-finance-infra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
+            <!-- DDD 子模块：infra -->            <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-system-infra</artifactId>
                 <version>${project.version}</version>
@@ -551,18 +505,7 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- DDD 子模块：server -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-sales-server</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-finance-server</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
+            <!-- DDD 子模块：server -->            <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-system-server</artifactId>
                 <version>${project.version}</version>
@@ -609,18 +552,7 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- DDD 子模块：web -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-sales-web</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-finance-web</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
+            <!-- DDD 子模块：web -->            <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-system-web</artifactId>
                 <version>${project.version}</version>

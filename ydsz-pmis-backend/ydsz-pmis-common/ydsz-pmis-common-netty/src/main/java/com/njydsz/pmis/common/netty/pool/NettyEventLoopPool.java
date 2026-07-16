@@ -51,9 +51,9 @@ public class NettyEventLoopPool {
      * @param nativeTransportMode        原生传输模式（auto / enabled / disabled）
      */
     public NettyEventLoopPool(long shutdownQuietPeriodSeconds, long shutdownTimeoutSeconds,
-                              String nativeTransportMode) {
+                              com.njydsz.pmis.common.netty.config.NettyProperties.NativeTransportMode nativeTransportMode) {
         this(shutdownQuietPeriodSeconds, shutdownTimeoutSeconds,
-                NativeTransportDetector.detect(nativeTransportMode));
+                NativeTransportDetector.detect(nativeTransportMode.name().toLowerCase()));
     }
 
     /**

@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
@@ -14,7 +15,6 @@ import com.njydsz.pmis.common.seata.api.TransactionType;
 import com.njydsz.pmis.common.seata.api.TccTransactionLogStore;
 import com.njydsz.pmis.common.seata.api.XidPropagator;
 import com.njydsz.pmis.common.seata.impl.DefaultXidPropagator;
-import com.njydsz.pmis.common.seata.impl.GlobalTransactionExecutor;
 import com.njydsz.pmis.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.pmis.common.seata.impl.LocalTransactionManager;
 import com.njydsz.pmis.common.seata.impl.SagaOrchestrator;
@@ -82,7 +82,7 @@ public class SeataAutoConfiguration {
         if (logStore != null) {
             return new TccTransactionManager(logStore, properties);
         }
-        return new TccTransactionManager();
+        return new TccTransactionManager(null, properties, metricsProvider, auditProvider);
     }
 
     /**
@@ -110,7 +110,10 @@ public class SeataAutoConfiguration {
     public DistributedTransactionManager distributedTransactionManager(
             SeataProperties properties,
             ObjectProvider<PlatformTransactionManager> txManagerProvider,
-            ObjectProvider<TccTransactionManager> tccManagerProvider) {
+            ObjectProvider<TccTransactionManager> tccManagerProvider,
+            ObjectProvider<SeataTransactionManager> seataTmProvider,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider) {
 
         if (properties.getDefaultType() == TransactionType.TCC) {
             TccTransactionManager tcc = tccManagerProvider.getIfAvailable();
@@ -121,7 +124,9 @@ public class SeataAutoConfiguration {
         }
 
         if (properties.getDefaultType() == TransactionType.SEATA_AT) {
-            // SeataTransactionManager 待实现，降级为 Local
+            // P0-F2: delegate to SeataTransactionManager
+            SeataTransactionManager seataTm = seataTmProvider.getIfAvailable();
+            if (seataTm != null) { return seataTm; } 待实现，降级为 Local
         }
 
         PlatformTransactionManager txManager = txManagerProvider.getIfAvailable();
@@ -131,7 +136,7 @@ public class SeataAutoConfiguration {
                     + "Ensure spring-dataSource / jdbc starter is on the classpath, "
                     + "or set pmis.seata.default-type=TCC to use TCC mode without DataSource.");
         }
-        return new LocalTransactionManager(txManager);
+        return new LocalTransactionManager(txManager, metricsProvider, auditProvider);
     }
 
     /**
@@ -194,7 +199,7 @@ public class SeataAutoConfiguration {
     @ConditionalOnMissingBean(SeataHealthIndicator.class)
     public SeataHealthIndicator seataHealthIndicator(
             SeataProperties properties,
-            ObjectProvider<GlobalTransactionExecutor> globalExecutorProvider,
+            ObjectProvider<SeataGlobalTransactionExecutor> globalExecutorProvider,
             ObjectProvider<TccTransactionLogStore> logStoreProvider) {
         return new SeataHealthIndicator(properties, globalExecutorProvider, logStoreProvider);
     }
@@ -207,8 +212,11 @@ public class SeataAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(SagaOrchestrator.class)
     @ConditionalOnProperty(prefix = "pmis.seata", name = "saga-enabled", havingValue = "true", matchIfMissing = true)
-    public SagaOrchestrator sagaOrchestrator(SeataProperties properties) {
-        return new SagaOrchestrator(properties);
+    public SagaOrchestrator sagaOrchestrator(
+            SeataProperties properties,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider) {
+        return new SagaOrchestrator(properties, metricsProvider, auditProvider);
     }
 
     /**
@@ -223,9 +231,18 @@ public class SeataAutoConfiguration {
     public static class SeataAtConfiguration {
 
         @Bean
-        @ConditionalOnMissingBean(GlobalTransactionExecutor.class)
-        public GlobalTransactionExecutor globalTransactionExecutor() throws Exception {
+        @ConditionalOnMissingBean(SeataGlobalTransactionExecutor.class)
+        public SeataGlobalTransactionExecutor seataGlobalTransactionExecutor() throws Exception {
             return new SeataGlobalTransactionExecutor();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean(SeataTransactionManager.class)
+        public SeataTransactionManager seataTransactionManager(
+                SeataGlobalTransactionExecutor globalExecutor,
+                ObjectProvider<SeataMetrics> metricsProvider,
+                ObjectProvider<TransactionAuditLogger> auditProvider) {
+            return new SeataTransactionManager(globalExecutor, metricsProvider, auditProvider);
         }
     }
 }

@@ -41,7 +41,6 @@ public class NettyChannelMetrics {
     private static final String METRIC_RECONNECT_ATTEMPTS = "pmis.netty.reconnect.attempts";
     private static final String METRIC_RECONNECT_SUCCESSES = "pmis.netty.reconnect.successes";
 
-    private final MeterRegistry meterRegistry; // kept for future use (e.g., dynamic counter registration)
     private final AtomicLong activeChannels = new AtomicLong(0);
     private final AtomicLong totalBytesRead = new AtomicLong(0);
     private final AtomicLong totalBytesWritten = new AtomicLong(0);
@@ -59,7 +58,6 @@ public class NettyChannelMetrics {
      * @param meterRegistry MeterRegistry（可为 null，降级为 no-op）
      */
     public NettyChannelMetrics(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
         if (meterRegistry != null) {
             Gauge.builder(METRIC_CHANNELS_ACTIVE, activeChannels, AtomicLong::doubleValue)
                     .description("活跃 Netty Channel 数")

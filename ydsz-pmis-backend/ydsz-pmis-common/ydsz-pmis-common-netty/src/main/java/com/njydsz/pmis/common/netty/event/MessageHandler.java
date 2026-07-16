@@ -43,10 +43,4 @@ public @interface MessageHandler {
      */
     String type();
 
-    /**
-     * 是否需要认证后才处理（默认 true）。
-     *
-     * @return true 表示需要认证
-     */
-    boolean requireAuth() default true;
 }

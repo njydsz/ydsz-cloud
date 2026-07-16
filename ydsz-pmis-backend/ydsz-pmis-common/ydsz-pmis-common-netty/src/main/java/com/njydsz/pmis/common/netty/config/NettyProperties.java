@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.netty.config;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.Data;
 
@@ -53,6 +53,7 @@ import lombok.Data;
  * @since 1.3.0
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "pmis.netty")
 public class NettyProperties {
 
@@ -93,10 +94,15 @@ public class NettyProperties {
     private boolean failFast = true;
 
     /** 原生传输模式（auto=自动检测, enabled=强制启用, disabled=禁用） */
-    @NotBlank
-    private String nativeTransport = "auto";
+    private NativeTransportMode nativeTransport = NativeTransportMode.AUTO;
 
     /** 空闲检测配置 */
+    public enum NativeTransportMode {
+        AUTO,
+        ENABLED,
+        DISABLED
+    }
+
     private Idle idle = new Idle();
 
     /** SSL/TLS 配置 */

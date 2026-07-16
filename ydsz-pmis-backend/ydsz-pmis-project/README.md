@@ -9,14 +9,14 @@
 | **类型** | 部署单元（独立启动） |
 | **端口** | **9003** |
 | **服务名** | `ydsz-pmis-project` |
-| **数据库** | PostgreSQL（共享主库，20 张表） |
-| **依赖** | Nacos、PostgreSQL、Redis、MinIO、Seata、sales(Feign)、finance(Feign)、literule |
+| **数据库** | PostgreSQL（共享主库，34 张表） |
+| **依赖** | Nacos、PostgreSQL、Redis、MinIO、literule |
 
 ## 核心职责
 
-PMIS 项目执行模块，覆盖**立项 → 执行 → 交付 → 收尾 → 售后**全链路。
+PMIS 项目管理服务，覆盖**立项 → 执行 → 交付 → 收尾 → 售后**全链路，同时承载**商务销售**（商机/合同/变更/模板）与**财务会计**（发票/回款/费用/收入/利润/对账/信用）能力。
 
-> **注**：商机与合同管理已拆分至 `ydsz-pmis-sales`（端口 9010），财务管理已拆分至 `ydsz-pmis-finance`（端口 9011）。
+> **2026-07-16 合并**：原 `ydsz-pmis-sales`（端口 9010）和 `ydsz-pmis-finance`（端口 9011）已合并到本服务，跨域 Feign 契约全部下线，财务/销售数据通过同进程 Mapper 直接查询。API 路径统一为 `/api/project/**`，数据库表前缀统一为 `pmis_project_*`。
 
 ### 1. 业务链路
 
@@ -203,16 +203,12 @@ mvn -pl ydsz-pmis-project -am test
 
 ### 调用其他服务（通过 Feign）
 
-- `ydsz-pmis-sales` → 查询商机/合同信息
-- `ydsz-pmis-finance` → 查询发票/付款/利润快照
 - `ydsz-pmis-userinfo` → 获取用户/部门信息
 - `ydsz-pmis-workflow` → 触发立项审批
 - `ydsz-pmis-literule` → 规则引擎（风险预警）
 
 ### 被其他服务调用
 
-- `ydsz-pmis-sales` → 获取项目信息（商机转立项）
-- `ydsz-pmis-finance` → 获取项目信息（利润核算）
 - `ydsz-pmis-cronjob` → 拉取任务数据
 - `ydsz-pmis-agent` → 获取项目数据（AI 分析）
 - `ydsz-pmis-workflow` → 获取项目信息（流程节点）
