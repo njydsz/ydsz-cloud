@@ -2,8 +2,10 @@ package com.njydsz.pmis.common.socket.cluster;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.pmis.common.socket.config.WebSocketProperties;
 import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.socket.config.WebSocketProperties;
+import com.njydsz.pmis.common.socket.resilience.WebSocketCircuitBreaker;
+import com.njydsz.pmis.common.socket.trace.WebSocketTraceContext;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * WebSocket session，实现多节点集群推送。
  *
  * <p>降级策略：Redis 异常时返回 false，调用方回退到本地直接推送。
+ * 熔断保护：连续失败时触发熔断，直接返回 false 降级（P0-2）。
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
@@ -26,6 +29,7 @@ public class WebSocketClusterPublisher {
 
     private final StringRedisTemplate redisTemplate;
     private final WebSocketProperties properties;
+    private final WebSocketCircuitBreaker circuitBreaker;
 
     /**
      * 发布集群推送消息到 Redis Channel。
@@ -37,16 +41,21 @@ public class WebSocketClusterPublisher {
         if (message == null) {
             return false;
         }
-        try {
-            String json = Json.toJson(message);
-            String channel = properties.getCluster().getChannel();
-            redisTemplate.convertAndSend(channel, json);
-            log.debug("[WS-Cluster] 发布集群推送: type={} userId={} topic={}",
-                    message.getPushType(), message.getUserId(), message.getTopic());
-            return true;
-        } catch (Exception e) {
-            log.warn("[WS-Cluster] 发布失败,降级本地推送: err={}", e.getMessage());
-            return false;
+        if (message.getTraceId() == null) {
+            message.setTraceId(WebSocketTraceContext.getOrGenerateTraceId());
         }
+        return circuitBreaker.execute(
+                () -> doPublish(message),
+                () -> false
+        );
+    }
+
+    private boolean doPublish(WebSocketClusterMessage message) {
+        String json = Json.toJson(message);
+        String channel = properties.getCluster().getChannel();
+        redisTemplate.convertAndSend(channel, json);
+        log.debug("[WS-Cluster] 发布集群推送: type={} userId={} topic={} traceId={}",
+                message.getPushType(), message.getUserId(), message.getTopic(), message.getTraceId());
+        return true;
     }
 }

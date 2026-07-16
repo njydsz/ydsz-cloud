@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.socket.cluster;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,6 +47,15 @@ public class WebSocketClusterMessage implements Serializable {
     /** 消息内容（JSON 字符串，由推送端序列化） */
     private String payloadJson;
 
+    /** 链路追踪 ID（P1-1） */
+    private String traceId;
+
+    /** 灰度标签（P3-3），客户端匹配 tags 后才推送 */
+    private List<String> tags;
+
+    /** 消息优先级（P1-4）：URGENT / HIGH / NORMAL / LOW */
+    private String priority;
+
     /**
      * 构造用户推送消息。
      *
@@ -55,7 +65,7 @@ public class WebSocketClusterMessage implements Serializable {
      * @return 集群推送消息
      */
     public static WebSocketClusterMessage forUser(String userId, String type, String payloadJson) {
-        return new WebSocketClusterMessage("USER", userId, null, type, payloadJson);
+        return new WebSocketClusterMessage("USER", userId, null, type, payloadJson, null, null, null);
     }
 
     /**
@@ -66,7 +76,7 @@ public class WebSocketClusterMessage implements Serializable {
      * @return 集群推送消息
      */
     public static WebSocketClusterMessage forBroadcast(String type, String payloadJson) {
-        return new WebSocketClusterMessage("BROADCAST", null, null, type, payloadJson);
+        return new WebSocketClusterMessage("BROADCAST", null, null, type, payloadJson, null, null, null);
     }
 
     /**
@@ -77,6 +87,6 @@ public class WebSocketClusterMessage implements Serializable {
      * @return 集群推送消息
      */
     public static WebSocketClusterMessage forTopic(String topic, String payloadJson) {
-        return new WebSocketClusterMessage("TOPIC", null, topic, null, payloadJson);
+        return new WebSocketClusterMessage("TOPIC", null, topic, null, payloadJson, null, null, null);
     }
 }

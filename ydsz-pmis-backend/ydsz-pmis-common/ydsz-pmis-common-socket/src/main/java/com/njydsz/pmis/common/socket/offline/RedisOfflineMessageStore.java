@@ -7,9 +7,10 @@ import java.util.Map;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
 import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
-import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.socket.resilience.WebSocketCircuitBreaker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,39 +35,49 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
 
     private final StringRedisTemplate redisTemplate;
     private final WebSocketProperties properties;
+    private final WebSocketCircuitBreaker circuitBreaker;
 
     @Override
     public void cacheOffline(String userId, String type, Object payload) {
         if (userId == null) {
             return;
         }
-        try {
-            String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
-            Map<String, Object> envelope = Map.of(
-                    "type", type == null ? "UNKNOWN" : type,
-                    "payload", payload,
-                    "timestamp", System.currentTimeMillis());
-            String json = Json.toJson(envelope);
-            redisTemplate.opsForList().leftPush(key, json);
-            redisTemplate.opsForList().trim(key, 0, properties.getOffline().getMaxCache() - 1);
-            redisTemplate.expire(key, properties.getOffline().getTtl());
-
-            Long size = redisTemplate.opsForList().size(key);
-            if (size != null && size > properties.getOffline().getDbPersistThreshold()) {
-                log.warn("[WS-Offline] Redis 缓存超阈值,建议业务侧实现溢出持久化: userId={}, size={}", userId, size);
-            }
-
-            log.debug("[WS-Offline] 缓存离线消息: userId={}, type={}", userId, type);
-        } catch (Exception e) {
-            log.warn("[WS-Offline] 缓存离线消息失败，降级忽略: userId={}, err={}", userId, e.getMessage());
-        }
+        circuitBreaker.execute(
+                () -> doCacheOffline(userId, type, payload),
+                () -> log.warn("[WS-Offline] 熔断中, 跳过缓存: userId={}", userId)
+        );
     }
+
+    private void doCacheOffline(String userId, String type, Object payload) {
+        String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
+        Map<String, Object> envelope = Map.of(
+                "type", type == null ? "UNKNOWN" : type,
+                "payload", payload,
+                "timestamp", System.currentTimeMillis());
+        String json = Json.toJson(envelope);
+        redisTemplate.opsForList().leftPush(key, json);
+        redisTemplate.opsForList().trim(key, 0, properties.getOffline().getMaxCache() - 1);
+        redisTemplate.expire(key, properties.getOffline().getTtl());
+
+        Long size = redisTemplate.opsForList().size(key);
+        if (size != null && size > properties.getOffline().getDbPersistThreshold()) {
+            log.warn("[WS-Offline] Redis 缓存超阈值,建议业务侧实现溢出持久化: userId={}, size={}", userId, size);
+        }
+
+        log.debug("[WS-Offline] 缓存离线消息: userId={}, type={}", userId, type);
 
     @Override
     public List<String> drainOffline(String userId) {
         if (userId == null) {
             return List.of();
         }
+        return circuitBreaker.execute(
+                () -> doDrainOffline(userId),
+                () -> List.of()
+        );
+    }
+
+    private List<String> doDrainOffline(String userId) {
         String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
         List<String> raw = redisTemplate.opsForList().range(key, 0, -1);
         if (raw == null || raw.isEmpty()) {
@@ -85,13 +96,13 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
         if (userId == null) {
             return 0L;
         }
-        try {
-            String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
-            Long size = redisTemplate.opsForList().size(key);
-            return size == null ? 0L : size;
-        } catch (Exception e) {
-            log.debug("[WS-Offline] Redis 计数失败: {}", e.getMessage());
-            return 0L;
-        }
+        return circuitBreaker.execute(
+                () -> {
+                    String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
+                    Long size = redisTemplate.opsForList().size(key);
+                    return size == null ? 0L : size;
+                },
+                () -> 0L
+        );
     }
 }

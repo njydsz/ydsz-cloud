@@ -4,8 +4,10 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.socket.compress.MessageCompressor;
+import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
+import com.njydsz.pmis.common.socket.trace.WebSocketTraceContext;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +22,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code TOPIC}：推送到 {@code /topic/{topic}}</li>
  * </ul>
  *
- * <p>推送失败不影响其他消息（try-catch 降级，仅 warn 日志）。
+ * <p>收到消息后从 {@link WebSocketClusterMessage#getTraceId()} 恢复 MDC traceId（P1-1），
+ * 如果消息被压缩则解压（P2-3）。
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
@@ -30,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketClusterSubscriber implements MessageListener {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final MessageCompressor messageCompressor;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -47,12 +51,14 @@ public class WebSocketClusterSubscriber implements MessageListener {
         if (clusterMsg == null) {
             return;
         }
-        try {
-            dispatchToLocal(clusterMsg);
-        } catch (Exception e) {
-            log.warn("[WS-Cluster] 本地推送失败: type={} err={}",
-                    clusterMsg.getPushType(), e.getMessage());
-        }
+        WebSocketTraceContext.runWithTrace(clusterMsg.getTraceId(), () -> {
+            try {
+                dispatchToLocal(clusterMsg);
+            } catch (Exception e) {
+                log.warn("[WS-Cluster] 本地推送失败: type={} err={}",
+                        clusterMsg.getPushType(), e.getMessage());
+            }
+        });
     }
 
     /**
@@ -62,17 +68,21 @@ public class WebSocketClusterSubscriber implements MessageListener {
      */
     private void dispatchToLocal(WebSocketClusterMessage msg) {
         String pushType = msg.getPushType();
+        String payloadJson = msg.getPayloadJson();
+        if (messageCompressor != null) {
+            payloadJson = messageCompressor.decompressIfNeeded(payloadJson);
+        }
         if ("USER".equals(pushType) && msg.getUserId() != null) {
             String destination = WebSocketConstants.WS_USER_DESTINATION_PREFIX
                     + msg.getUserId() + "/notifications";
-            messagingTemplate.convertAndSend(destination, msg.getPayloadJson());
+            messagingTemplate.convertAndSend(destination, payloadJson);
         } else if ("BROADCAST".equals(pushType)) {
             messagingTemplate.convertAndSend(
-                    WebSocketConstants.WS_BROADCAST_DESTINATION, msg.getPayloadJson());
+                    WebSocketConstants.WS_BROADCAST_DESTINATION, payloadJson);
         } else if ("TOPIC".equals(pushType) && msg.getTopic() != null) {
             messagingTemplate.convertAndSend(
                     WebSocketConstants.WS_TOPIC_DESTINATION_PREFIX + msg.getTopic(),
-                    msg.getPayloadJson());
+                    payloadJson);
         } else {
             log.warn("[WS-Cluster] 未知推送类型或参数缺失: type={} userId={} topic={}",
                     pushType, msg.getUserId(), msg.getTopic());

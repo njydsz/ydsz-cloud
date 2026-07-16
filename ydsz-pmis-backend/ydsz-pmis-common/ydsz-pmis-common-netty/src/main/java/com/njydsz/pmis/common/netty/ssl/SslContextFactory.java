@@ -57,7 +57,7 @@ public class SslContextFactory {
             log.info("[Netty-SSL] 服务端 SSL 上下文创建成功, needClientAuth={}", needClientAuth);
             return builder.build();
         } catch (Exception e) {
-            throw new RuntimeException("创建服务端 SSL 上下文失败: " + e.getMessage(), e);
+            throw new NettySslException("server", "创建服务端 SSL 上下文失败: " + e.getMessage(), e);
         }
     }
 
@@ -80,7 +80,7 @@ public class SslContextFactory {
             log.info("[Netty-SSL] 客户端 SSL 上下文创建成功");
             return builder.build();
         } catch (Exception e) {
-            throw new RuntimeException("创建客户端 SSL 上下文失败: " + e.getMessage(), e);
+            throw new NettySslException("client", "创建客户端 SSL 上下文失败: " + e.getMessage(), e);
         }
     }
 

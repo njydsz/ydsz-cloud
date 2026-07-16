@@ -1,71 +1,120 @@
 package com.njydsz.pmis.common.seata.impl;
 
-import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
 import com.njydsz.pmis.common.seata.api.TransactionType;
 
 /**
  * 本地事务管理器（降级实现）
  *
- * <p>当 Seata 不可用时使用，仅提供本地 {@code @Transactional} 语义。
+ * <p>当 Seata 不可用时使用，通过 {@link TransactionTemplate} 提供本地数据库事务语义。
  * 不提供跨服务事务保证，适用于单机模式或开发环境。
+ *
+ * <p><b>P0-8 修复</b>：移除方法级 {@code @Transactional} 注解（自调用场景下 AOP 代理不生效，
+ * 且未注入 {@link PlatformTransactionManager}），改为通过 {@link TransactionTemplate}
+ * 编程式事务管理，确保事务行为可控。
  *
  * @author ydsz-pmis-team
  * @since 3.5.0
  */
-public class LocalTransactionManager implements DistributedTransactionManager {
+public class LocalTransactionManager extends AbstractTransactionManager {
 
     private static final Logger log = LoggerFactory.getLogger(LocalTransactionManager.class);
 
-    private static final ThreadLocal<String> XID_HOLDER = new ThreadLocal<>();
+    private final TransactionTemplate transactionTemplate;
+
+    /**
+     * 构造本地事务管理器
+     *
+     * @param transactionManager Spring 事务管理器（由 Spring 容器注入，
+     *                           在单数据源场景下为 {@code DataSourceTransactionManager}）
+     */
+    public LocalTransactionManager(PlatformTransactionManager transactionManager) {
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
 
     @Override
-    @Transactional
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
-        String xid = UUID.randomUUID().toString();
-        XID_HOLDER.set(xid);
-        log.debug("Local transaction started: name={}, xid={}", transactionName, xid);
+        String xid = beginXid(transactionName);
         try {
-            T result = action.call();
+            T result = transactionTemplate.execute(status -> {
+                try {
+                    return action.call();
+                } catch (Exception e) {
+                    status.setRollbackOnly();
+                    throw new TransactionExecutionException("Local transaction failed: " + transactionName, e);
+                } catch (Error e) {
+                    status.setRollbackOnly();
+                    throw e;
+                }
+            });
             log.debug("Local transaction committed: name={}, xid={}", transactionName, xid);
             return result;
+        } catch (TransactionExecutionException e) {
+            log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e.getCause());
+            throw (Exception) e.getCause();
         } catch (Exception e) {
             log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e);
             throw e;
         } finally {
-            XID_HOLDER.remove();
+            endXid();
         }
     }
 
     @Override
-    @Transactional
     public <T> T executeWithCompensation(String transactionName,
                                           Callable<T> action,
                                           Runnable compensation) throws Exception {
-        String xid = UUID.randomUUID().toString();
-        XID_HOLDER.set(xid);
+        String xid = beginXid(transactionName);
         log.debug("Saga transaction started: name={}, xid={}", transactionName, xid);
         try {
-            T result = action.call();
+            T result = transactionTemplate.execute(status -> {
+                try {
+                    return action.call();
+                } catch (Exception e) {
+                    status.setRollbackOnly();
+                    throw new TransactionExecutionException("Saga action failed: " + transactionName, e);
+                } catch (Error e) {
+                    status.setRollbackOnly();
+                    throw e;
+                }
+            });
             log.debug("Saga transaction completed: name={}, xid={}", transactionName, xid);
             return result;
-        } catch (Exception e) {
-            log.error("Saga transaction failed, executing compensation: name={}, xid={}", transactionName, xid, e);
-            try {
-                compensation.run();
-                log.info("Compensation completed: name={}, xid={}", transactionName, xid);
-            } catch (Exception ce) {
-                log.error("Compensation failed: name={}, xid={}", transactionName, xid, ce);
+        } catch (TransactionExecutionException e) {
+            Throwable cause = e.getCause();
+            log.error("Saga transaction failed, executing compensation: name={}, xid={}", transactionName, xid, cause);
+            runCompensation(transactionName, xid, compensation);
+            if (cause instanceof Exception ex) {
+                throw ex;
             }
             throw e;
+        } catch (Exception e) {
+            log.error("Saga transaction failed, executing compensation: name={}, xid={}", transactionName, xid, e);
+            runCompensation(transactionName, xid, compensation);
+            throw e;
         } finally {
-            XID_HOLDER.remove();
+            endXid();
+        }
+    }
+
+    /**
+     * 执行补偿操作，捕获并记录补偿异常（不阻断主异常抛出）
+     */
+    private void runCompensation(String transactionName, String xid, Runnable compensation) {
+        if (compensation == null) {
+            return;
+        }
+        try {
+            compensation.run();
+            log.info("Compensation completed: name={}, xid={}", transactionName, xid);
+        } catch (Exception ce) {
+            log.error("Compensation failed: name={}, xid={}", transactionName, xid, ce);
         }
     }
 
@@ -74,8 +123,14 @@ public class LocalTransactionManager implements DistributedTransactionManager {
         return TransactionType.LOCAL;
     }
 
-    @Override
-    public String getCurrentXid() {
-        return XID_HOLDER.get();
+    /**
+     * 内部运行时异常，用于在 {@link TransactionTemplate} 回调中包装受检异常
+     */
+    private static class TransactionExecutionException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        TransactionExecutionException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }
