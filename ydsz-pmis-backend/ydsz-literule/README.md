@@ -12,7 +12,7 @@
 | **JVM 进程** | 独立 JVM 进程，独立端口，注册到 Nacos |
 | **服务注册** | Nacos Discovery（服务名 `ydsz-literule`） |
 | **配置中心** | Nacos Config（`spring-cloud-starter-alibaba-nacos-config`） |
-| **当前版本** | `1.0.0-SNAPSHOT`（与 parent `ydsz-parent` 对齐） |
+| **当前版本** | `1.0.0-SNAPSHOT`（与 parent `ydsz-backend` 对齐） |
 | **脚手架状态** | ⚠️ 当前缺少 `@SpringBootApplication` 启动类与 `application.yml` / `bootstrap.yml`，`ydsz-literule-web` 的 `spring-boot-maven-plugin` 配置了 `<skip>true</skip>`。**补齐独立部署脚手架是 P0 优化项**（见文末优化建议） |
 
 ## 分层结构（DDD 五层）

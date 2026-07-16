@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.njydsz</groupId>
-    <artifactId>ydsz-parent</artifactId>
+    <artifactId>ydsz-backend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>ydsz-parent</name>
+    <name>ydsz-backend</name>
     <description>DDD Module</description>
 
     <modules>
