@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -17,17 +18,22 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.pmis.common.event.gateway.EventPublishGateway;
 import com.njydsz.pmis.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.pmis.common.event.health.OutboxHealthIndicator;
+import com.njydsz.pmis.common.event.model.DatabaseDialect;
 import com.njydsz.pmis.common.event.processor.OutboxProcessor;
 import com.njydsz.pmis.common.event.repository.OutboxRepository;
 import com.njydsz.pmis.common.event.service.OutboxService;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
+import javax.sql.DataSource;
+
 /**
  * Outbox 事件模块自动配置
  *
  * <p>当 {@code pmis.event.outbox.enabled=true}（默认）且容器中存在
  * {@link JdbcTemplate} 时自动装配。
+ *
+ * <p>自动检测数据库方言（PostgreSQL/MySQL/Oracle），适配 LIMIT 语法和 JSON 列处理。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -49,8 +55,14 @@ public class EventAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public OutboxRepository outboxRepository(JdbcTemplate jdbcTemplate,
-                                              EventProperties properties) {
-        return new OutboxRepository(jdbcTemplate, properties.getTableName());
+                                              EventProperties properties,
+                                              ObjectProvider<DataSource> dataSourceProvider) {
+        DataSource dataSource = dataSourceProvider.getIfAvailable();
+        DatabaseDialect dialect = dataSource != null
+                ? DatabaseDialect.detect(dataSource)
+                : DatabaseDialect.UNKNOWN;
+        log.info("Outbox repository initialized: table={}, dialect={}", properties.getTableName(), dialect);
+        return new OutboxRepository(jdbcTemplate, properties.getTableName(), dialect);
     }
 
     /**
@@ -59,8 +71,10 @@ public class EventAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public OutboxService outboxService(OutboxRepository outboxRepository,
-                                       EventProperties properties) {
-        return new OutboxService(outboxRepository, properties.getMaxRetries());
+                                       EventProperties properties,
+                                       ObjectProvider<EventPublishGateway> gatewayProvider) {
+        EventPublishGateway syncGateway = properties.isEnableSyncPublish() ? gatewayProvider.getIfAvailable() : null;
+        return new OutboxService(outboxRepository, properties, syncGateway);
     }
 
     /**
@@ -71,7 +85,8 @@ public class EventAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(EventPublishGateway.class)
     public EventPublishGateway eventPublishGateway() {
-        log.warn("No EventPublishGateway found, using NoopEventPublishGateway. Messages will not be actually published.");
+        log.warn("No EventPublishGateway found, using NoopEventPublishGateway. "
+                + "Messages will not be actually published to any message queue.");
         return new NoopEventPublishGateway();
     }
 
@@ -86,10 +101,7 @@ public class EventAutoConfiguration {
         OutboxProcessor processor = new OutboxProcessor(
                 outboxRepository,
                 publishGateway,
-                properties.getPollIntervalSeconds(),
-                properties.getBatchSize(),
-                properties.getBaseBackoffSeconds(),
-                properties.getMaxBackoffSeconds(),
+                properties,
                 meterRegistryProvider.getIfAvailable()
         );
         this.outboxProcessor = processor;
@@ -101,8 +113,10 @@ public class EventAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public OutboxHealthIndicator outboxHealthIndicator(OutboxRepository outboxRepository) {
-        return new OutboxHealthIndicator(outboxRepository);
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    public OutboxHealthIndicator outboxHealthIndicator(OutboxRepository outboxRepository,
+                                                        EventProperties properties) {
+        return new OutboxHealthIndicator(outboxRepository, properties);
     }
 
     @PreDestroy

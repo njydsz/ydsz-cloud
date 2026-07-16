@@ -24,6 +24,12 @@ import lombok.ToString;
  *   <li>{@code status} - 投递状态</li>
  *   <li>{@code retryCount} - 重试次数</li>
  *   <li>{@code nextRetryAt} - 下次重试时间（指数退避）</li>
+ *   <li>{@code tenantId} - 租户 ID（多租户隔离）</li>
+ *   <li>{@code deduplicationId} - 幂等去重 ID（下游消费端去重）</li>
+ *   <li>{@code schemaVersion} - 事件 Schema 版本号（如 "v1.0.0"）</li>
+ *   <li>{@code contentType} - 内容类型（如 "application/vnd.ydsz.order.v1+json"）</li>
+ *   <li>{@code priority} - 优先级（0-9，9 最高，默认 5）</li>
+ *   <li>{@code traceId} - 链路追踪 ID</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -33,6 +39,9 @@ import lombok.ToString;
 @Builder
 @ToString
 public class OutboxMessage {
+
+    /** 默认优先级 */
+    public static final int DEFAULT_PRIORITY = 5;
 
     /** 主键 ID */
     private final String id;
@@ -76,6 +85,25 @@ public class OutboxMessage {
     /** 错误信息（最后一次失败的异常消息） */
     private String errorMessage;
 
+    /** 租户 ID（多租户隔离） */
+    private final String tenantId;
+
+    /** 幂等去重 ID（下游消费端去重） */
+    private final String deduplicationId;
+
+    /** 事件 Schema 版本号（如 "v1.0.0"） */
+    private final String schemaVersion;
+
+    /** 内容类型（如 "application/vnd.ydsz.order.v1+json"） */
+    private final String contentType;
+
+    /** 优先级（0-9，9 最高，默认 5） */
+    @Builder.Default
+    private final int priority = DEFAULT_PRIORITY;
+
+    /** 链路追踪 ID */
+    private final String traceId;
+
     /**
      * 标记为已投递成功
      */
@@ -103,5 +131,13 @@ public class OutboxMessage {
         } else {
             this.status = OutboxStatus.PENDING;
         }
+    }
+
+    /**
+     * 标记为处理中（被某个实例 claim）
+     */
+    public void markAsProcessing() {
+        this.status = OutboxStatus.PROCESSING;
+        this.updatedAt = Instant.now();
     }
 }

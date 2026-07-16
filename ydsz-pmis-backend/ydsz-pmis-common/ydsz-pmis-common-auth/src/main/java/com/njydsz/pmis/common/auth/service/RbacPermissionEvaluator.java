@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.auth.annotation.PermissionMode;
 import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
@@ -153,7 +154,7 @@ public class RbacPermissionEvaluator {
     }
 
     private void validateMenu0(Map<String, Object> userInfo, String[] permissionCodes, String[] roleCodes,
-                                AuthMenuPermission.PermissionType type, AuthMenuPermission.Mode mode) {
+                                AuthMenuPermission.PermissionType type, PermissionMode mode) {
         if (!properties.isEnabled()) return;
         Set<String> requiredRoles = arrayToSet(roleCodes);
         Set<String> requiredPerms = arrayToSet(permissionCodes);
@@ -195,7 +196,7 @@ public class RbacPermissionEvaluator {
      * @param mode 校验模式（AND/OR）
      */
     public void validateMenu(String[] permissionCodes, String[] roleCodes,
-                            AuthMenuPermission.PermissionType type, AuthMenuPermission.Mode mode) {
+                            AuthMenuPermission.PermissionType type, PermissionMode mode) {
         validateMenu0(loadCurrentUserInfo(), permissionCodes, roleCodes, type, mode);
     }
 

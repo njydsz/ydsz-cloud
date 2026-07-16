@@ -1,15 +1,20 @@
 package com.njydsz.pmis.common.notify.health;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
+import com.njydsz.pmis.common.notify.core.NotifyCircuitBreakerRegistry;
+import com.njydsz.pmis.common.notify.core.NotifyRetryQueue;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,9 +41,18 @@ import lombok.extern.slf4j.Slf4j;
 public class NotifyHealthIndicator implements HealthIndicator {
 
     private final NotifyProperties notifyProperties;
+    private final ObjectProvider<List<NotifyChannelStrategy>> strategiesProvider;
+    private final ObjectProvider<NotifyRetryQueue> retryQueueProvider;
+    private final ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerProvider;
 
-    public NotifyHealthIndicator(NotifyProperties notifyProperties) {
+    public NotifyHealthIndicator(NotifyProperties notifyProperties,
+                                 ObjectProvider<List<NotifyChannelStrategy>> strategiesProvider,
+                                 ObjectProvider<NotifyRetryQueue> retryQueueProvider,
+                                 ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerProvider) {
         this.notifyProperties = notifyProperties;
+        this.strategiesProvider = strategiesProvider;
+        this.retryQueueProvider = retryQueueProvider;
+        this.circuitBreakerProvider = circuitBreakerProvider;
     }
 
     @Override
@@ -119,6 +133,39 @@ public class NotifyHealthIndicator implements HealthIndicator {
                 configuredCount++;
             } else {
                 channels.put("insite", "disabled");
+            }
+
+            // P1-3：渠道实际可用性探测
+            List<NotifyChannelStrategy> strategies = strategiesProvider.getIfAvailable();
+            if (strategies != null) {
+                for (NotifyChannelStrategy strategy : strategies) {
+                    String channelName = strategy.getChannel().getName();
+                    String key = strategy.getChannel().name().toLowerCase();
+                    if (strategy.isEnabled()) {
+                        channels.put(key + "_enabled", true);
+                        channels.put(key + "_ready", "ready");
+                    } else {
+                        channels.put(key + "_enabled", false);
+                        channels.put(key + "_ready", "disabled");
+                    }
+                }
+            }
+
+            // P0-3：熔断器状态报告
+            NotifyCircuitBreakerRegistry breakerRegistry = circuitBreakerProvider.getIfAvailable();
+            if (breakerRegistry != null) {
+                Map<String, Object> breakerStates = new LinkedHashMap<>();
+                breakerRegistry.getAllStates().forEach((channel, state) ->
+                        breakerStates.put(channel.getName(), state.name()));
+                channels.put("circuit_breakers", breakerStates);
+            }
+
+            // P0-2：重试队列状态报告
+            NotifyRetryQueue retryQueue = retryQueueProvider.getIfAvailable();
+            if (retryQueue != null) {
+                channels.put("retry_queue_size", retryQueue.getQueueSize());
+                channels.put("retry_queue_permanent_failures", retryQueue.getPermanentFailCount());
+                channels.put("retry_queue_dropped", retryQueue.getDroppedCount());
             }
 
             Health.Builder builder = Health.up()

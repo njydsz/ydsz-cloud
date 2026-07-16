@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.event.gateway;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.event.model.OutboxMessage;
 
 /**
@@ -24,4 +26,26 @@ public interface EventPublishGateway {
      * @throws Exception 投递异常
      */
     boolean publish(OutboxMessage message) throws Exception;
+
+    /**
+     * 批量投递消息到消息队列
+     *
+     * <p>实现类可利用 MQ 的批量发送能力提升吞吐量。
+     * 默认实现逐条调用 {@link #publish}，支持批量发送的实现类应覆盖此方法。
+     *
+     * @param messages Outbox 消息列表
+     * @return 每条消息的投递结果（true=成功，false=失败），顺序与输入一致
+     * @throws Exception 投递异常
+     */
+    default List<Boolean> publishBatch(List<OutboxMessage> messages) throws Exception {
+        return messages.stream()
+                .map(msg -> {
+                    try {
+                        return publish(msg);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .toList();
+    }
 }

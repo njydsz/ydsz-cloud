@@ -39,7 +39,7 @@ import java.lang.annotation.*;
  * public void saveUser(UserDTO dto) { ... }
  *
  * // 多按钮权限 OR 校验（拥有其一即可）
- * &#64;AuthMenuPermission(permissionCodes = {"sys:user:delete", "sys:user:manage"}, type = PermissionType.BUTTON, mode = Mode.OR)
+ * &#64;AuthMenuPermission(permissionCodes = {"sys:user:delete", "sys:user:manage"}, type = PermissionType.BUTTON, mode = PermissionMode.OR)
  * public void deleteUser(Long id) { ... }
  *
  * // 限定特定角色才能访问
@@ -103,8 +103,8 @@ public @interface AuthMenuPermission {
      * 多权限码的校验模式。
      *
      * <ul>
-     *   <li>{@link Mode#AND}：必须拥有全部权限码（默认）</li>
-     *   <li>{@link Mode#OR}：拥有任意一个权限码即可</li>
+     *   <li>{@link PermissionMode#AND}：必须拥有全部权限码（默认）</li>
+     *   <li>{@link PermissionMode#OR}：拥有任意一个权限码即可</li>
      * </ul>
      *
      * @return 校验模式

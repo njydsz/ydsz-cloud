@@ -7,6 +7,8 @@ import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -15,7 +17,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.pmis.common.queue.dedup.DedupCleanupScheduler;
+import com.njydsz.pmis.common.queue.dedup.MessageDeduplicator;
+import com.njydsz.pmis.common.queue.health.QueueHealthIndicator;
 import com.njydsz.pmis.common.queue.manager.QueueManager;
+import com.njydsz.pmis.common.queue.metrics.QueueMetricsBinder;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.queue.MessageQueueFactory;
 import com.njydsz.pmis.common.queue.scheduler.DeadLetterRetryScheduler;
@@ -27,6 +33,8 @@ import com.njydsz.pmis.common.queue.trace.MessageTraceAspect;
 import com.njydsz.pmis.common.queue.trace.MessageTraceRecorder;
 import com.njydsz.pmis.common.queue.trace.RedisMessageTraceRecorder;
 import com.njydsz.pmis.common.redis.service.RedisService;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 import lombok.extern.slf4j.Slf4j;
 /**
@@ -54,7 +62,6 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j
@@ -198,6 +205,41 @@ public class QueueConfiguration {
         return null;
     }
 
+    // ==================== 消息去重配置 ====================
+
+    /**
+     * 创建内存消息去重器（单实例场景）
+     *
+     * <p>当 ydsz.queue.dedup-enabled=true 且 RedisService 不可用时创建。
+     * 分布式场景应使用 RedisMessageDeduplicator。
+     *
+     * @return 内存去重器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(MessageDeduplicator.class)
+    @ConditionalOnProperty(prefix = "ydsz.queue", name = "dedup-enabled", havingValue = "true")
+    public MessageDeduplicator messageDeduplicator() {
+        long window = queueProperties.resolvedDedupWindowMillis();
+        log.info("[Queue] 创建内存消息去重器，窗口: {}ms", window);
+        return new MessageDeduplicator(window);
+    }
+
+    /**
+     * 创建去重记录定时清理调度器
+     *
+     * <p>当 MessageDeduplicator Bean 存在时自动创建，定期清理过期去重记录。
+     *
+     * @param messageDeduplicator 内存去重器实例
+     * @return 清理调度器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(DedupCleanupScheduler.class)
+    @ConditionalOnBean(MessageDeduplicator.class)
+    public DedupCleanupScheduler dedupCleanupScheduler(MessageDeduplicator messageDeduplicator) {
+        log.info("[Queue] 创建去重记录定时清理调度器");
+        return new DedupCleanupScheduler(messageDeduplicator);
+    }
+
     // ==================== 消息轨迹相关配置 ====================
 
     /**
@@ -245,5 +287,52 @@ public class QueueConfiguration {
     public MessageTraceAspect messageTraceAspect(MessageTraceRecorder traceRecorder) {
         log.info("[Queue] 注册消息轨迹 AOP 切面");
         return new MessageTraceAspect(traceRecorder);
+    }
+
+    // ==================== 健康检查配置 ====================
+
+    /**
+     * 创建消息队列健康检查器
+     *
+     * <p>当 spring-boot-health 模块在 classpath 中时自动注册。
+     * Redis 类型复用 RedisService 连接检查，非 Redis 类型通过 TCP 端口连通性检查。
+     *
+     * @return 健康检查器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(QueueHealthIndicator.class)
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    public QueueHealthIndicator queueHealthIndicator() {
+        log.info("[Queue] 创建消息队列健康检查器");
+        return new QueueHealthIndicator(queueProperties, redisServiceProvider);
+    }
+
+    // ==================== Micrometer 指标配置 ====================
+
+    /**
+     * 创建消息队列 Micrometer 指标桥接器
+     *
+     * <p>当 classpath 中存在 Micrometer MeterRegistry 时自动注册。
+     * 将 QueueManager 中所有队列的 MessageMetrics 暴露为 Prometheus 指标。
+     *
+     * @param queueManager 队列管理器
+     * @param meterRegistry MeterRegistry 实例（可选依赖）
+     * @return 指标桥接器实例，当 MeterRegistry 不可用时返回 null
+     */
+    @Bean
+    @ConditionalOnClass(MeterRegistry.class)
+    @ConditionalOnBean({QueueManager.class, MeterRegistry.class})
+    @ConditionalOnMissingBean(QueueMetricsBinder.class)
+    public QueueMetricsBinder queueMetricsBinder(QueueManager queueManager,
+                                                   ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
+        if (meterRegistry == null) {
+            log.info("[Queue] MeterRegistry 不可用，跳过 Micrometer 指标注册");
+            return null;
+        }
+        QueueMetricsBinder binder = new QueueMetricsBinder(queueManager);
+        binder.bindTo(meterRegistry);
+        log.info("[Queue] 创建消息队列 Micrometer 指标桥接器");
+        return binder;
     }
 }

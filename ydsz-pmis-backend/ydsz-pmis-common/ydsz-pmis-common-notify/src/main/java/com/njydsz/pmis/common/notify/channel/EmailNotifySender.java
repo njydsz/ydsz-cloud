@@ -407,9 +407,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	private void recordMetrics(boolean success, long durationNanos) {
 		NotifyMetrics metrics = metricsProvider.getIfAvailable();
 		if (metrics != null) {
-			metrics.recordEmailSend(channelName(), success, Duration.ofNanos(durationNanos));
+			metrics.recordEmailSend(channelName(), success, Duration.ofNanos(durationNanos), null);
 			if (!success) {
-				metrics.recordEmailFailure(channelName(), "send_error");
+				metrics.recordEmailFailure(channelName(), "send_error", "send_failure");
 			}
 		}
 	}
@@ -420,7 +420,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	private void recordFailure(Exception e) {
 		NotifyMetrics metrics = metricsProvider.getIfAvailable();
 		if (metrics != null) {
-			metrics.recordEmailFailure(channelName(), e.getClass().getSimpleName());
+			metrics.recordEmailFailure(channelName(), e.getClass().getSimpleName(), e.getClass().getName());
 		}
 	}
 

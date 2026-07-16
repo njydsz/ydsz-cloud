@@ -13,9 +13,9 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  * 持久化重试队列（优先 Redis，自动降级内存）
  *
  * <p>内部优先使用 Redis；当 Redis 不可用时自动降级到内置内存队列，保障服务可用性。
+ * <p>超过最大重试次数的消息自动移入死信队列（P0-2）。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
  * @since 1.0.0
  */
 public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
@@ -28,6 +28,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
 
     private final NotifyRetryQueue primary;
     private final NotifyRetryQueue fallback;
+    private final DeadLetterHandler deadLetterHandler;
     private volatile boolean redisAvailable;
 
     /**
@@ -55,11 +56,29 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
     public PersistentNotifyRetryQueue(StringRedisTemplate redisTemplate,
                                       int maxRetries, int capacity, int batchSize,
                                       String redisKeyPrefix) {
+        this(redisTemplate, maxRetries, capacity, batchSize, redisKeyPrefix, null);
+    }
+
+    /**
+     * 创建持久化重试队列（带死信处理器）
+     *
+     * @param redisTemplate     Redis 模板（为 null 时直接使用内存队列）
+     * @param maxRetries        最大重试次数
+     * @param capacity          内存队列容量（降级时使用）
+     * @param batchSize         批量处理大小
+     * @param redisKeyPrefix    Redis Key 前缀
+     * @param deadLetterHandler 死信处理器（P0-2，可为 null）
+     */
+    public PersistentNotifyRetryQueue(StringRedisTemplate redisTemplate,
+                                      int maxRetries, int capacity, int batchSize,
+                                      String redisKeyPrefix,
+                                      DeadLetterHandler deadLetterHandler) {
         int mr = maxRetries > 0 ? maxRetries : DEFAULT_MAX_RETRIES;
         int cap = capacity > 0 ? capacity : DEFAULT_CAPACITY;
         int bs = batchSize > 0 ? batchSize : DEFAULT_BATCH_SIZE;
+        this.deadLetterHandler = deadLetterHandler != null ? deadLetterHandler : new InMemoryDeadLetterHandler();
 
-        this.fallback = new InMemoryFallbackRetryQueue(mr, cap, bs);
+        this.fallback = new InMemoryFallbackRetryQueue(mr, cap, bs, this.deadLetterHandler);
 
         if (redisTemplate != null) {
             this.primary = new RedisNotifyRetryQueue(redisTemplate, mr, bs, redisKeyPrefix);
@@ -166,6 +185,13 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
     }
 
     /**
+     * 获取死信处理器（P0-2）
+     */
+    public DeadLetterHandler getDeadLetterHandler() {
+        return deadLetterHandler;
+    }
+
+    /**
      * 内置内存降级队列实现（不对外暴露，仅用于 PersistentNotifyRetryQueue 内部降级）
      */
     private static class InMemoryFallbackRetryQueue implements NotifyRetryQueue {
@@ -179,11 +205,14 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
         private final AtomicInteger permanentFailCount = new AtomicInteger(0);
         private final AtomicInteger droppedCount = new AtomicInteger(0);
         private final int batchSize;
+        private final DeadLetterHandler deadLetterHandler;
 
-        InMemoryFallbackRetryQueue(int maxRetries, int capacity, int batchSize) {
+        InMemoryFallbackRetryQueue(int maxRetries, int capacity, int batchSize,
+                                    DeadLetterHandler deadLetterHandler) {
             this.maxRetries = maxRetries;
             this.capacity = capacity;
             this.batchSize = batchSize;
+            this.deadLetterHandler = deadLetterHandler;
             this.queue = new ArrayBlockingQueue<>(capacity);
         }
 
@@ -289,8 +318,13 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
 
             if (entry.retryCount > maxRetries) {
                 permanentFailCount.incrementAndGet();
-                log.error("[NotifyRetryQueue] 重试超过最大次数，标记永久失败, channel={}, receiver={}, totalRetries={}, lastError={}",
+                log.error("[NotifyRetryQueue] 重试超过最大次数，移入死信队列, channel={}, receiver={}, totalRetries={}, lastError={}",
                         entry.channel.getName(), entry.receiver, entry.retryCount, entry.lastError);
+                // P0-2：移入死信队列
+                if (deadLetterHandler != null) {
+                    deadLetterHandler.moveToDeadLetter(entry.channel, entry.receiver, entry.title,
+                            entry.content, entry.retryCount, entry.lastError);
+                }
                 return;
             }
 

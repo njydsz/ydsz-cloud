@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.pmis.common.auth.hierarchy.PermissionHierarchy;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
@@ -30,6 +33,8 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * 
  */
 public final class PermissionUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(PermissionUtils.class);
 
     /**
      * 正则模式缓存最大容量
@@ -79,6 +84,8 @@ public final class PermissionUtils {
         if (granted == null || granted.isEmpty() || StringUtils.isBlank(required)) {
             return false;
         }
+        // 权限码格式校验
+        validatePermissionCodeFormat(required);
         // 先检查直接匹配
         String req = required.trim();
         for (String g : granted) {
@@ -88,6 +95,28 @@ public final class PermissionUtils {
         }
         // 检查权限继承层级：拥有父权限自动拥有子权限
         return PermissionHierarchy.hasPermission(granted, req, wildcardEnabled);
+    }
+
+    /**
+     * 校验权限码格式是否符合三段式规范（领域:资源:操作）。
+     *
+     * <p>不符合格式的权限码不影响校验逻辑，仅记录告警日志。
+     * 通配符权限码（含 *）跳过校验。
+     *
+     * @param permissionCode 权限码
+     */
+    private static void validatePermissionCodeFormat(String permissionCode) {
+        if (permissionCode == null || permissionCode.isBlank()) {
+            return;
+        }
+        // 通配符权限码跳过格式校验
+        if (permissionCode.contains("*")) {
+            return;
+        }
+        long colonCount = permissionCode.chars().filter(c -> c == ':').count();
+        if (colonCount < 2) {
+            log.warn("权限码格式不符合三段式规范（领域:资源:操作）: {}，建议检查权限配置", permissionCode);
+        }
     }
 
     /**

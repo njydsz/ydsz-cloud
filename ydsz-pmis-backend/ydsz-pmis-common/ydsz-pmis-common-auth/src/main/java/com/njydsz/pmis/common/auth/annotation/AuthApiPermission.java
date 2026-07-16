@@ -23,7 +23,7 @@ import java.lang.annotation.*;
  * public UserVO getUser(Long id) { ... }
  *
  * // 校验多个接口权限码（OR 模式：满足其一即可）
- * &#64;AuthApiPermission(apiCodes = {"sys:user:view", "sys:user:manage"}, mode = Mode.OR)
+ * &#64;AuthApiPermission(apiCodes = {"sys:user:view", "sys:user:manage"}, mode = PermissionMode.OR)
  * public UserVO getUser(Long id) { ... }
  *
  * // 校验指定角色
@@ -75,8 +75,8 @@ public @interface AuthApiPermission {
      * 多权限码的校验模式。
      *
      * <ul>
-     *   <li>{@link Mode#AND}：必须拥有全部权限码（默认）</li>
-     *   <li>{@link Mode#OR}：拥有任意一个权限码即可</li>
+     *   <li>{@link PermissionMode#AND}：必须拥有全部权限码（默认）</li>
+     *   <li>{@link PermissionMode#OR}：拥有任意一个权限码即可</li>
      * </ul>
      *
      * @return 校验模式

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.queue.queue;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
@@ -31,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
 public class MessageQueueFactory implements IMessageQueueProvider {
@@ -39,6 +40,7 @@ public class MessageQueueFactory implements IMessageQueueProvider {
     private final QueueProperties properties;
     private final RedisService redisService;
     private final ExecutorService consumerExecutor;
+    private final List<IMessageQueue> createdQueues = new CopyOnWriteArrayList<>();
 
     /**
      * 构造函数（推荐）
@@ -58,7 +60,15 @@ public class MessageQueueFactory implements IMessageQueueProvider {
 
     @Override
     public void close() {
-        log.info("MessageQueueFactory 关闭");
+        log.info("[MessageQueueFactory] 关闭，共 {} 个队列实例", createdQueues.size());
+        for (IMessageQueue queue : createdQueues) {
+            try {
+                queue.close();
+            } catch (Exception e) {
+                log.warn("[MessageQueueFactory] 关闭队列实例时异常: {}", queue.getType(), e);
+            }
+        }
+        createdQueues.clear();
     }
 
     @Override
@@ -66,24 +76,34 @@ public class MessageQueueFactory implements IMessageQueueProvider {
         if (type == null) {
             throw BusinessException.builder().key("队列类型不能为空").build();
         }
+        IMessageQueue queue;
         switch (type) {
             case LIST:
-                return createRedisListMQ();
+                queue = createRedisListMQ();
+                break;
             case PUBSUB:
-                return createRedisPubSubMQ();
+                queue = createRedisPubSubMQ();
+                break;
             case STREAM:
-                return createRedisStreamMQ();
+                queue = createRedisStreamMQ();
+                break;
             case KAFKA:
-                return createKafkaMQ();
+                queue = createKafkaMQ();
+                break;
             case ROCKET:
-                return createRocketMQ();
+                queue = createRocketMQ();
+                break;
             case RABBIT:
-                return createRabbitMQ();
+                queue = createRabbitMQ();
+                break;
             case ACTIVE:
-                return createActiveMQ();
+                queue = createActiveMQ();
+                break;
             default:
                 throw BusinessException.builder().key("不支持的消息平台: " + type).build();
         }
+        createdQueues.add(queue);
+        return queue;
     }
 
     private IMessageQueue createRedisListMQ() {

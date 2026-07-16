@@ -6,11 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.enums.QueueType;
@@ -22,19 +19,25 @@ import lombok.extern.slf4j.Slf4j;
  * 消息队列健康检查
  *
  * <p>根据实际队列类型（Kafka/RabbitMQ/RocketMQ/Redis）检查对应中间件连通性。
- * Redis 类型复用 ydsz-pmis-common-redis 连接进行检查，非 Redis 类型通过 TCP 端口连通性检查。
+ * <ul>
+ *   <li>Redis 类型：复用 ydsz-pmis-common-redis 连接执行 PING 命令</li>
+ *   <li>非 Redis 类型：通过 TCP 端口连通性检查（使用各 MQ 默认端口）</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
-@Configuration
-@ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-@ConditionalOnProperty(prefix = "ydsz.queue", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class QueueHealthIndicator implements HealthIndicator {
 
     private static final int HEALTH_CHECK_TIMEOUT_MS = 2000;
+
+    /** 各 MQ 类型的默认端口 */
+    private static final int DEFAULT_REDIS_PORT = 6379;
+    private static final int DEFAULT_KAFKA_PORT = 9092;
+    private static final int DEFAULT_RABBIT_PORT = 5672;
+    private static final int DEFAULT_ROCKET_PORT = 9876;
+    private static final int DEFAULT_ACTIVE_PORT = 61616;
 
     private final RedisService redisService;
     private final QueueProperties queueProperties;
@@ -85,7 +88,7 @@ public class QueueHealthIndicator implements HealthIndicator {
     }
 
     /**
-     * 检查 Redis 队列健康状态
+     * 检查 Redis 队列健康状态（协议级 PING）
      */
     private Health.Builder checkRedisHealth() {
         if (redisService == null) {
@@ -102,7 +105,8 @@ public class QueueHealthIndicator implements HealthIndicator {
                 .withDetail("mqType", "redis")
                 .withDetail("host", queueProperties.resolvedHost())
                 .withDetail("port", queueProperties.resolvedPort())
-                .withDetail("responseTimeMs", responseTime);
+                .withDetail("responseTimeMs", responseTime)
+                .withDetail("checkMethod", "redis-ping");
     }
 
     /**
@@ -122,6 +126,7 @@ public class QueueHealthIndicator implements HealthIndicator {
         details.put("port", port);
         details.put("responseTimeMs", responseTime);
         details.put("connected", connected);
+        details.put("checkMethod", "tcp-port");
 
         if (connected) {
             return Health.up().withDetails(details);
@@ -134,18 +139,25 @@ public class QueueHealthIndicator implements HealthIndicator {
 
     /**
      * 根据队列类型解析对应的端口
+     *
+     * <p>逻辑：
+     * <ul>
+     *   <li>如果用户显式配置了端口（非 Redis 默认 6379），则使用用户配置</li>
+     *   <li>如果端口仍为 Redis 默认 6379，则使用各 MQ 类型的默认端口</li>
+     * </ul>
      */
     private int resolvePort(QueueType type) {
+        int configuredPort = queueProperties.resolvedPort();
         if (type == QueueType.KAFKA) {
-            return queueProperties.resolvedPort() != 6379 ? queueProperties.resolvedPort() : 9092;
+            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_KAFKA_PORT;
         } else if (type == QueueType.RABBIT) {
-            return queueProperties.resolvedPort() != 6379 ? queueProperties.resolvedPort() : 5672;
+            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_RABBIT_PORT;
         } else if (type == QueueType.ROCKET) {
-            return queueProperties.resolvedPort() != 6379 ? queueProperties.resolvedPort() : 9876;
+            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_ROCKET_PORT;
         } else if (type == QueueType.ACTIVE) {
-            return queueProperties.resolvedPort() != 6379 ? queueProperties.resolvedPort() : 61616;
+            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_ACTIVE_PORT;
         }
-        return queueProperties.resolvedPort();
+        return configuredPort;
     }
 
     /**

@@ -18,6 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import org.springframework.util.ReflectionUtils;
 
 import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
@@ -77,6 +80,7 @@ public class AuthColPermissionAspect {
 
     private static final Logger log = LoggerFactory.getLogger(AuthColPermissionAspect.class);
     private static final ColumnDesensitizationExecutor DESENSITIZER = ColumnDesensitizationExecutor.getInstance();
+    private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
 
     /**
      * 缓存 Method -> ResolvedColumnPermission 的映射，避免重复反射解析注解
@@ -120,8 +124,11 @@ public class AuthColPermissionAspect {
             return joinPoint.proceed();
         }
 
+        // SpEL 动态解析表名
+        String resolvedTable = resolveTableIfSpel(ann.table, joinPoint);
+
         Map<String, String> snapshot = RequestHolder.snapshotExtraHeaders();
-        ColumnPermissionBundle bundle = buildColumnPermissionBundle(ann.table);
+        ColumnPermissionBundle bundle = buildColumnPermissionBundle(resolvedTable);
         boolean hasReturn = signature.getReturnType() != void.class;
 
         try {
@@ -133,13 +140,41 @@ public class AuthColPermissionAspect {
 
             if (hasReturn && returnValue != null) {
                 returnValue = filterReturnObject(returnValue, ann.mode, bundle.permissionInfo,
-                        bundle.strict, bundle.desensitizationContext, ann.table);
+                        bundle.strict, bundle.desensitizationContext, resolvedTable);
             }
 
             return returnValue;
         } finally {
             AuthContext.clear();
             RequestHolder.restoreExtraHeaders(snapshot);
+        }
+    }
+
+    /**
+     * 如果 table 值是 SpEL 表达式（以 # 开头），则使用 SpEL 动态解析；
+     * 否则直接返回原始值。
+     */
+    private String resolveTableIfSpel(String table, ProceedingJoinPoint joinPoint) {
+        if (table == null || table.isBlank()) {
+            return table;
+        }
+        if (!table.startsWith("#")) {
+            return table;
+        }
+        try {
+            String[] paramNames = ((MethodSignature) joinPoint.getSignature()).getParameterNames();
+            Object[] args = joinPoint.getArgs();
+            SimpleEvaluationContext context = SimpleEvaluationContext.forReadOnlyDataBinding().build();
+            if (paramNames != null) {
+                for (int i = 0; i < paramNames.length && i < args.length; i++) {
+                    context.setVariable(paramNames[i], args[i]);
+                }
+            }
+            String resolved = SPEL_PARSER.parseExpression(table).getValue(context, String.class);
+            return resolved != null ? resolved : table;
+        } catch (Exception e) {
+            log.warn("SpEL 解析表名失败: table={}, error={}", table, e.getMessage());
+            return table;
         }
     }
 

@@ -7,6 +7,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
@@ -30,6 +33,8 @@ import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
  */
 public class NotifyServiceImpl implements NotifyService {
 
+	private static final Logger log = LoggerFactory.getLogger(NotifyServiceImpl.class);
+
 	private static final Pattern EMAIL_PATTERN = Pattern.compile(
 			"^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$");
 
@@ -45,25 +50,50 @@ public class NotifyServiceImpl implements NotifyService {
 	 */
 	private final ExecutorService parallelExecutor;
 
+	/** 渠道熔断器注册中心（可选依赖，P0-3） */
+	private final NotifyCircuitBreakerRegistry circuitBreakerRegistry;
+
 	public NotifyServiceImpl(List<NotifyChannelStrategy> strategyList) {
-		this(strategyList, null, null);
+		this(strategyList, null, null, null);
 	}
 
 	public NotifyServiceImpl(List<NotifyChannelStrategy> strategyList, NotifyRateLimiterManager rateLimiterManager) {
-		this(strategyList, rateLimiterManager, null);
+		this(strategyList, rateLimiterManager, null, null);
 	}
 
 	public NotifyServiceImpl(List<NotifyChannelStrategy> strategyList, NotifyRateLimiterManager rateLimiterManager,
 							 ExecutorService parallelExecutor) {
+		this(strategyList, rateLimiterManager, parallelExecutor, null);
+	}
+
+	/**
+	 * 构造通知服务实现
+	 *
+	 * @param strategyList           渠道策略列表
+	 * @param rateLimiterManager     限流管理器（可选）
+	 * @param parallelExecutor       并行线程池（可选）
+	 * @param circuitBreakerRegistry 熔断器注册中心（可选，P0-3）
+	 */
+	public NotifyServiceImpl(List<NotifyChannelStrategy> strategyList, NotifyRateLimiterManager rateLimiterManager,
+							 ExecutorService parallelExecutor, NotifyCircuitBreakerRegistry circuitBreakerRegistry) {
 		this.channelStrategies = strategyList.stream()
 				.filter(NotifyChannelStrategy::isEnabled)
 				.collect(Collectors.toMap(NotifyChannelStrategy::getChannel, s -> s));
 		this.rateLimiterManager = rateLimiterManager;
 		this.parallelExecutor = parallelExecutor;
+		this.circuitBreakerRegistry = circuitBreakerRegistry;
+		log.info("[NotifyServiceImpl] 初始化完成, strategies={}, rateLimit={}, parallel={}, circuitBreaker={}",
+				channelStrategies.size(), rateLimiterManager != null, parallelExecutor != null,
+				circuitBreakerRegistry != null);
 	}
 
 	@Override
 	public NotifySendResult send(NotifyChannel channel, String receiver, String title, String content) {
+		// P0-3：熔断检查
+		if (!tryAcquireCircuitBreaker(channel)) {
+			return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
+		}
+
 		// 限流检查
 		if (!tryAcquireRateLimit(channel)) {
 			return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
@@ -71,13 +101,26 @@ public class NotifyServiceImpl implements NotifyService {
 
 		NotifyChannelStrategy strategy = channelStrategies.get(channel);
 		if (strategy == null) {
+			recordCircuitFailure(channel);
 			return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
 		}
-		return strategy.send(receiver, title, content);
+
+		NotifySendResult result = strategy.send(receiver, title, content);
+		if (result.isSuccess()) {
+			recordCircuitSuccess(channel);
+		} else {
+			recordCircuitFailure(channel);
+		}
+		return result;
 	}
 
 	@Override
 	public NotifySendResult sendTemplate(NotifyChannel channel, String receiver, String templateCode, Object templateParams) {
+		// P0-3：熔断检查
+		if (!tryAcquireCircuitBreaker(channel)) {
+			return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
+		}
+
 		// 限流检查
 		if (!tryAcquireRateLimit(channel)) {
 			return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
@@ -85,9 +128,17 @@ public class NotifyServiceImpl implements NotifyService {
 
 		NotifyChannelStrategy strategy = channelStrategies.get(channel);
 		if (strategy == null) {
+			recordCircuitFailure(channel);
 			return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
 		}
-		return strategy.sendTemplate(receiver, templateCode, templateParams);
+
+		NotifySendResult result = strategy.sendTemplate(receiver, templateCode, templateParams);
+		if (result.isSuccess()) {
+			recordCircuitSuccess(channel);
+		} else {
+			recordCircuitFailure(channel);
+		}
+		return result;
 	}
 
 	/**
@@ -184,6 +235,37 @@ public class NotifyServiceImpl implements NotifyService {
 			return true; // 未配置限流管理器，直接放行
 		}
 		return rateLimiterManager.tryAcquire(channel);
+	}
+
+	/**
+	 * 尝试获取渠道熔断许可（P0-3）
+	 *
+	 * @param channel 通知渠道
+	 * @return true 表示允许通过，false 表示被熔断
+	 */
+	private boolean tryAcquireCircuitBreaker(NotifyChannel channel) {
+		if (circuitBreakerRegistry == null) {
+			return true;
+		}
+		return circuitBreakerRegistry.tryAcquire(channel);
+	}
+
+	/**
+	 * 记录渠道发送成功（P0-3 熔断器）
+	 */
+	private void recordCircuitSuccess(NotifyChannel channel) {
+		if (circuitBreakerRegistry != null) {
+			circuitBreakerRegistry.recordSuccess(channel);
+		}
+	}
+
+	/**
+	 * 记录渠道发送失败（P0-3 熔断器）
+	 */
+	private void recordCircuitFailure(NotifyChannel channel) {
+		if (circuitBreakerRegistry != null) {
+			circuitBreakerRegistry.recordFailure(channel);
+		}
 	}
 
 	/**

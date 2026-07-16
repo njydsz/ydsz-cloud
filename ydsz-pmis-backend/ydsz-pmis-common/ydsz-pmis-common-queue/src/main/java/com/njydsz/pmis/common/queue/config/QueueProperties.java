@@ -139,6 +139,23 @@ public class QueueProperties {
     private long deadLetterRetryInterval = 60000;
 
     /**
+     * 是否启用消息去重（默认 false，分布式场景推荐使用 RedisMessageDeduplicator）
+     */
+    private boolean dedupEnabled = false;
+
+    /**
+     * 消息去重窗口（毫秒，默认 300000 = 5 分钟）
+     */
+    private long dedupWindowMillis = 300_000L;
+
+    /**
+     * 消息去重解析后的窗口
+     */
+    public long resolvedDedupWindowMillis() {
+        return dedupWindowMillis > 0 ? dedupWindowMillis : 300_000L;
+    }
+
+    /**
      * 解析后的队列类型
      */
     public QueueType resolvedType() {

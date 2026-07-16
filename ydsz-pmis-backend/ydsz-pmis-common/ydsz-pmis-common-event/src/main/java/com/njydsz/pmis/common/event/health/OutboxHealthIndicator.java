@@ -2,12 +2,10 @@ package com.njydsz.pmis.common.event.health;
 
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
+import com.njydsz.pmis.common.event.config.EventProperties;
 import com.njydsz.pmis.common.event.model.OutboxStatus;
 import com.njydsz.pmis.common.event.repository.OutboxRepository;
 
@@ -16,24 +14,26 @@ import com.njydsz.pmis.common.event.repository.OutboxRepository;
  *
  * <p>检查 Outbox 表中的消息积压情况：
  * <ul>
- *   <li>DEAD_LETTER 消息数 > 0 时标记为 DOWN</li>
+ *   <li>DEAD_LETTER 消息数 > 阈值时标记为 DOWN</li>
  *   <li>PENDING 消息数超过阈值时标记为 DEGRADED（自定义 Status）</li>
+ *   <li>PROCESSING 消息数超过阈值时标记为 DEGRADED（可能有实例宕机）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Component
-@ConditionalOnClass(HealthIndicator.class)
-@ConditionalOnBean(OutboxRepository.class)
 public class OutboxHealthIndicator implements HealthIndicator {
 
-    private static final long PENDING_WARNING_THRESHOLD = 1000;
-
     private final OutboxRepository outboxRepository;
+    private final EventProperties properties;
 
-    public OutboxHealthIndicator(OutboxRepository outboxRepository) {
+    /**
+     * @param outboxRepository Outbox 仓储
+     * @param properties       事件配置属性（用于读取告警阈值）
+     */
+    public OutboxHealthIndicator(OutboxRepository outboxRepository, EventProperties properties) {
         this.outboxRepository = outboxRepository;
+        this.properties = properties;
     }
 
     @Override
@@ -41,13 +41,19 @@ public class OutboxHealthIndicator implements HealthIndicator {
         try {
             Map<String, Long> statusCounts = outboxRepository.countByStatus();
             long pending = statusCounts.getOrDefault(OutboxStatus.PENDING.name(), 0L);
+            long processing = statusCounts.getOrDefault(OutboxStatus.PROCESSING.name(), 0L);
             long deadLetter = statusCounts.getOrDefault(OutboxStatus.DEAD_LETTER.name(), 0L);
             long sent = statusCounts.getOrDefault(OutboxStatus.SENT.name(), 0L);
 
+            long deadLetterThreshold = properties.getDeadLetterAlertThreshold();
+            long pendingThreshold = properties.getPendingAlertThreshold();
+
             Health.Builder builder;
-            if (deadLetter > 0) {
+            if (deadLetter > deadLetterThreshold) {
                 builder = Health.down();
-            } else if (pending > PENDING_WARNING_THRESHOLD) {
+            } else if (pending > pendingThreshold) {
+                builder = Health.status("DEGRADED");
+            } else if (processing > pendingThreshold / 2) {
                 builder = Health.status("DEGRADED");
             } else {
                 builder = Health.up();
@@ -55,9 +61,11 @@ public class OutboxHealthIndicator implements HealthIndicator {
 
             return builder
                     .withDetail("pending", pending)
+                    .withDetail("processing", processing)
                     .withDetail("sent", sent)
                     .withDetail("deadLetter", deadLetter)
-                    .withDetail("threshold", PENDING_WARNING_THRESHOLD)
+                    .withDetail("pendingThreshold", pendingThreshold)
+                    .withDetail("deadLetterThreshold", deadLetterThreshold)
                     .build();
         } catch (Exception e) {
             return Health.down(e).build();
