@@ -57,7 +57,7 @@ public class LocalTransactionManager extends AbstractTransactionManager {
             return result;
         } catch (TransactionExecutionException e) {
             log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e.getCause());
-            throw (Exception) e.getCause();
+            Throwable cause = e.getCause(); if (cause instanceof Exception) { throw (Exception) cause; } throw e;
         } catch (Exception e) {
             log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e);
             throw e;

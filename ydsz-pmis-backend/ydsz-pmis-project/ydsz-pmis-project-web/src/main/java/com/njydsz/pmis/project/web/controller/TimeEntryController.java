@@ -44,7 +44,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "工时管理")
 @RestController
-@RequestMapping("/execution/timeEntry")
+@RequestMapping("/api/project/execution/timeEntry")
 @RequiredArgsConstructor
 @Validated
 public class TimeEntryController {

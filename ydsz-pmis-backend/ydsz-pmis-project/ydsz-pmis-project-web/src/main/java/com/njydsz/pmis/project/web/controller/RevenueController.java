@@ -40,7 +40,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "收入确认")
 @RestController
-@RequestMapping("/finance/revenue")
+@RequestMapping("/api/project/finance/revenue")
 @RequiredArgsConstructor
 @Validated
 public class RevenueController {

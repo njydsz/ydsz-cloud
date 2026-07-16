@@ -32,6 +32,12 @@
             <artifactId>ydsz-pmis-common-exception</artifactId>
         </dependency>
 
+        <!-- common-json -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
+
         <!-- Netty（核心依赖，由 Spring Boot BOM 管理版本） -->
         <dependency>
             <groupId>io.netty</groupId>

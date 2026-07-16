@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/dashboard/layout")
+@RequestMapping("/api/project/dashboard/layout")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "仪表盘布局", description = "用户仪表盘布局保存与加载（跨设备同步）")

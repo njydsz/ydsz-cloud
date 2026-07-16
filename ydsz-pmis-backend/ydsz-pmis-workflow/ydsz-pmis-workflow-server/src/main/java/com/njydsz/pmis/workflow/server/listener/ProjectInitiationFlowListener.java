@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.context.event.EventListener;
@@ -13,10 +12,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
-import com.njydsz.pmis.project.api.client.InitiationFeignClient;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
@@ -37,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>本监听器兼任两层职责：
  * <ol>
- *   <li>业务流程联动（调用 initiationService / wbsService 同步立项及任务分解）</li>
+ *   <li>业务流程联动（原通过 InitiationFeignClient 跨服务联动立项状态，Feign 契约下线后待迁移至消息队列异步路径）</li>
  *   <li>通知触达（对标用友 BPM / 钉钉审批的实时通知能力）</li>
  * </ol>
  *
@@ -48,10 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProjectInitiationFlowListener implements FlowEventListener {
 
-    /** 立项状态联动重试最大次数 */
-    private static final int LINKAGE_MAX_ATTEMPTS = 3;
-    /** 立项状态联动重试退避（毫秒） */
-    private static final long LINKAGE_BACKOFF_MS = 50L;
     /** 立项业务键前缀（见 InitiationServiceImpl#startProcess: PMIS_INIT_ + id） */
     private static final String INIT_BIZ_KEY_PREFIX = "PMIS_INIT_";
 
@@ -60,8 +53,6 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     private final FlowRunTaskMapper taskMapper;
     /** P1-3: 子流程服务（监听器作为子流程完成回调的入口） */
     private final FlowSubProcessService subProcessService;
-    /** P1-7: 立项状态联动 Feign 客户端（审批中 / 已批准 / 已驳回） */
-    private final InitiationFeignClient initiationFeignClient;
     /** P1-7: 实时推送 Feign 客户端（IM 渠道待办通知） */
     private final NotificationClient notificationClient;
 
@@ -73,8 +64,9 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         FlowInstanceDO instance = instanceId == null ? null : instanceMapper.selectById(instanceId);
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            linkageWithRetry("markProcessing", initiationId,
-                    () -> initiationFeignClient.markProcessing(initiationId));
+            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markProcessing 联动立项状态，
+            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
+            log.info("[FlowListener] 立项状态联动待迁移: action=markProcessing initiationId={}", initiationId);
         }
     }
 
@@ -139,8 +131,9 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         // P1-7: 流程通过 → 标记立项为已批准（APPROVED）
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            linkageWithRetry("markApproved", initiationId,
-                    () -> initiationFeignClient.markApproved(initiationId));
+            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markApproved 联动立项状态，
+            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
+            log.info("[FlowListener] 立项状态联动待迁移: action=markApproved initiationId={}", initiationId);
         }
     }
 
@@ -174,8 +167,9 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         // P1-7: 流程驳回 → 标记立项为已驳回（REJECTED）
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            linkageWithRetry("markRejected", initiationId,
-                    () -> initiationFeignClient.markRejected(initiationId, reason));
+            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markRejected 联动立项状态，
+            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
+            log.info("[FlowListener] 立项状态联动待迁移: action=markRejected initiationId={}", initiationId);
         }
     }
 
@@ -189,8 +183,9 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            linkageWithRetry("markProcessing(recover)", initiationId,
-                    () -> initiationFeignClient.markProcessing(initiationId));
+            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markProcessing 恢复立项状态，
+            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
+            log.info("[FlowListener] 立项状态联动待迁移: action=markProcessing(recover) initiationId={}", initiationId);
         }
     }
 
@@ -361,44 +356,6 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
             log.warn("[FlowListener] 无法从业务键解析立项 ID: bizId={}", bizId);
             return null;
         }
-    }
-
-    /**
-     * 立项状态联动 —— 带退避重试，吞掉异常避免影响主流程。
-     *
-     * <p>跨服务调用可能因网络抖动瞬时失败，重试 {@value #LINKAGE_MAX_ATTEMPTS} 次。
-     * 最终失败仅记录告警，不抛出（状态可由对账任务补偿）。
-     *
-     * @param action       动作名（日志用）
-     * @param initiationId 立项 ID
-     * @param call         Feign 调用
-     */
-    private void linkageWithRetry(String action, String initiationId, Supplier<BaseResponse<Void>> call) {
-        for (int attempt = 1; attempt <= LINKAGE_MAX_ATTEMPTS; attempt++) {
-            try {
-                BaseResponse<Void> result = call.get();
-                if (result != null && result.isSuccess()) {
-                    log.info("[FlowListener] 立项状态联动成功: action={} initiationId={} attempt={}",
-                            action, initiationId, attempt);
-                    return;
-                }
-                log.warn("[FlowListener] 立项状态联动返回失败: action={} initiationId={} attempt={} result={}",
-                        action, initiationId, attempt, result);
-            } catch (Exception e) {
-                log.warn("[FlowListener] 立项状态联动异常: action={} initiationId={} attempt={}: {}",
-                        action, initiationId, attempt, e.getMessage());
-            }
-            if (attempt < LINKAGE_MAX_ATTEMPTS) {
-                try {
-                    Thread.sleep(LINKAGE_BACKOFF_MS);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-            }
-        }
-        log.error("[FlowListener][ALERT] 立项状态联动最终失败: action={} initiationId={}",
-                action, initiationId);
     }
 
     /**

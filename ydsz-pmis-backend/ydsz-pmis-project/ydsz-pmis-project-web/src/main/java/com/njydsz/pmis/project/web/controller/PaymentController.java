@@ -44,7 +44,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "回款管理")
 @RestController
-@RequestMapping("/finance/payment")
+@RequestMapping("/api/project/finance/payment")
 @RequiredArgsConstructor
 @Validated
 public class PaymentController {

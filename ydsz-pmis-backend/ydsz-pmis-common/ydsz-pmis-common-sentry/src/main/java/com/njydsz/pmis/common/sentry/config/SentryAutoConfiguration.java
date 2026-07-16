@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
 
+import org.springframework.beans.factory.ObjectProvider;
+
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,10 +18,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.pmis.common.sentry.alerting.AlertConverger;
 import com.njydsz.pmis.common.sentry.alerting.DefaultAlertPublisher;
+import com.njydsz.pmis.common.notify.core.NotifyService;
 import com.njydsz.pmis.common.sentry.alerting.NotifyAlertHandler;
+import com.njydsz.pmis.common.sentry.domain.AlertSeverity;
 import com.njydsz.pmis.common.sentry.health.SentryHealthIndicator;
 import com.njydsz.pmis.common.sentry.health.SystemResourceHealthIndicator;
 import com.njydsz.pmis.common.sentry.logging.AsyncLogPublisher;
@@ -42,6 +47,7 @@ import com.njydsz.pmis.common.sentry.tracing.OpenTelemetryTraceContext;
 import com.njydsz.pmis.common.sentry.tracing.SkyWalkingTraceContext;
 import com.njydsz.pmis.common.sentry.tracing.SlowTraceDetector;
 
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +68,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SentryAutoConfiguration {
 
     private ScheduledExecutorService systemMetricsScheduler;
-    private ScheduledExecutorService selfMonitorScheduler;
     private AsyncLogPublisher asyncLogPublisher;
 
     // ==================== 指标采集 ====================
@@ -132,7 +137,7 @@ public class SentryAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(LogPublisher.class)
     public LogPublisher logPublisher(SentryProperties properties,
-                                     org.springframework.beans.factory.ObjectProvider<CircuitBreaker> circuitBreakers) {
+                                     ObjectProvider<CircuitBreaker> circuitBreakers) {
         List<LogPublisher> publishers = new ArrayList<>();
 
         SentryProperties.ElkConfig elkConfig = properties.getLogging().getElk();
@@ -231,20 +236,20 @@ public class SentryAutoConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.sentry.alerting", name = "enabled",
             havingValue = "true", matchIfMissing = true)
     public AlertPublisher alertPublisher(SentryProperties properties,
-                                         org.springframework.beans.factory.ObjectProvider<com.njydsz.pmis.common.notify.core.NotifyService> notifyServiceProvider) {
+                                         ObjectProvider<NotifyService> notifyServiceProvider) {
         DefaultAlertPublisher publisher = new DefaultAlertPublisher(
                 properties.getAlerting().isLogAlerts());
 
         // 当 NotifyService 可用时注册通知处理器
-        com.njydsz.pmis.common.notify.core.NotifyService notifyService = notifyServiceProvider.getIfAvailable();
+        NotifyService notifyService = notifyServiceProvider.getIfAvailable();
         if (notifyService != null) {
             NotifyAlertHandler handler = new NotifyAlertHandler(
                     notifyService,
                     properties.getAlerting().getDingtalkReceiver(),
                     properties.getAlerting().getEmailReceiver());
-            publisher.registerHandler(com.njydsz.pmis.common.sentry.domain.AlertSeverity.P0, handler);
-            publisher.registerHandler(com.njydsz.pmis.common.sentry.domain.AlertSeverity.P1, handler);
-            publisher.registerHandler(com.njydsz.pmis.common.sentry.domain.AlertSeverity.P2, handler);
+            publisher.registerHandler(AlertSeverity.P0, handler);
+            publisher.registerHandler(AlertSeverity.P1, handler);
+            publisher.registerHandler(AlertSeverity.P2, handler);
             log.info("[Sentry] NotifyAlertHandler 已注册, 告警将通过 common-notify 发送");
         } else {
             log.info("[Sentry] NotifyService 不可用, 告警仅记录日志");
@@ -322,17 +327,6 @@ public class SentryAutoConfiguration {
             }
             log.info("[Sentry] 系统资源指标定时采集已停止");
         }
-        if (selfMonitorScheduler != null) {
-            selfMonitorScheduler.shutdown();
-            try {
-                if (!selfMonitorScheduler.awaitTermination(3, TimeUnit.SECONDS)) {
-                    selfMonitorScheduler.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                selfMonitorScheduler.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
     }
 
     /**
@@ -341,7 +335,7 @@ public class SentryAutoConfiguration {
      * <p>定时上报 Sentry 各组件的可用性指标到 MetricsCollector，
      * 供 Prometheus 告警规则使用。
      */
-    @lombok.extern.slf4j.Slf4j
+    @Slf4j
     public static class SentrySelfMonitor {
 
         private final MetricsCollector metricsCollector;
@@ -357,7 +351,7 @@ public class SentryAutoConfiguration {
             log.info("[Sentry] SentrySelfMonitor 初始化完成");
         }
 
-        @org.springframework.scheduling.annotation.Scheduled(fixedRate = 15000)
+        @Scheduled(fixedRate = 15000)
         public void reportSelfMetrics() {
             try {
                 if (metricsCollector != null) {
@@ -367,6 +361,14 @@ public class SentryAutoConfiguration {
                 if (logPublisher != null) {
                     metricsCollector.setGauge("ydsz.sentry.logging.available",
                             "日志发布器可用性", null, logPublisher.isAvailable() ? 1.0 : 0.0);
+                    if (logPublisher instanceof AsyncLogPublisher async) {
+                        metricsCollector.setGauge("ydsz.sentry.logging.queue_size",
+                                "异步日志队列积压数", null, async.getQueueSize());
+                        metricsCollector.setGauge("ydsz.sentry.logging.dropped_total",
+                                "异步日志丢弃总数", null, async.getDroppedCount());
+                        metricsCollector.setGauge("ydsz.sentry.logging.published_total",
+                                "异步日志已发布总数", null, async.getTotalPublished());
+                    }
                 }
                 if (alertPublisher != null) {
                     metricsCollector.setGauge("ydsz.sentry.alerting.available",

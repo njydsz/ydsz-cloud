@@ -174,7 +174,9 @@ public class NettyAutoConfiguration {
     @Bean
     public BeanPostProcessor nettyDependencyInjector(
             NettyChannelMetrics metrics,
-            NettyEventLoopPool eventLoopPool) {
+            NettyEventLoopPool eventLoopPool,
+            @Autowired(required = false) ChannelEventDispatcher channelEventDispatcher,
+            @Autowired(required = false) MessageDispatcher messageDispatcher) {
         return new BeanPostProcessor() {
             @Override
             public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {

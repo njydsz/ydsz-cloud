@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "对内成本费率")
 @RestController
-@RequestMapping("/resource/rateInternal")
+@RequestMapping("/api/project/resource/rateInternal")
 @RequiredArgsConstructor
 @Validated
 public class RateInternalController {

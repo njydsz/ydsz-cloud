@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "客户信用")
 @RestController
-@RequestMapping("/finance/credit")
+@RequestMapping("/api/project/finance/credit")
 @RequiredArgsConstructor
 @Validated
 public class CustomerCreditController {

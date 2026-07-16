@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/sales/data")
+@RequestMapping("/api/project/sales/data")
 @RequiredArgsConstructor
 @Tag(name = "商务数据查询", description = "内部跨域数据查询接口")
 public class SalesDataController {

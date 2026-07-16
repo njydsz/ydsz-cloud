@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "服务满意度评价")
 @RestController
-@RequestMapping("/afterSales/satisfaction")
+@RequestMapping("/api/project/afterSales/satisfaction")
 @RequiredArgsConstructor
 @Validated
 public class SatisfactionController {

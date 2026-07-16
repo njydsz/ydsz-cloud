@@ -40,7 +40,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "项目交付物管理")
 @RestController
-@RequestMapping("/execution/delivery")
+@RequestMapping("/api/project/execution/delivery")
 @RequiredArgsConstructor
 @Validated
 public class DeliveryController {

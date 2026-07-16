@@ -43,7 +43,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "WBS 任务管理")
 @RestController
-@RequestMapping("/execution/wbs")
+@RequestMapping("/api/project/execution/wbs")
 @RequiredArgsConstructor
 @Validated
 public class WbsTaskController {

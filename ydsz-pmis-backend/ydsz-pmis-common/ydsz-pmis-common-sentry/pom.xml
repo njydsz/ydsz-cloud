@@ -110,20 +110,6 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        <!-- Logstash Logback Encoder（结构化 JSON 日志，可选） -->
-        <dependency>
-            <groupId>net.logstash.logback</groupId>
-            <artifactId>logstash-logback-encoder</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-        <!-- Resilience4j 降级/熔断（可选） -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-circuitbreaker</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
         <!-- SkyWalking Trace（可选） -->
         <dependency>
             <groupId>org.apache.skywalking</groupId>

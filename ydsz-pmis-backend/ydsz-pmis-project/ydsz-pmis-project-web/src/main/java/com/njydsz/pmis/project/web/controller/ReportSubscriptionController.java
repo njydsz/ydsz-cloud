@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/report/subscription")
+@RequestMapping("/api/project/report/subscription")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "报表订阅", description = "报表订阅计划管理：创建/查询/暂停/删除")

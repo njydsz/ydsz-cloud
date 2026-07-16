@@ -43,7 +43,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "风险管理", description = "风险管理相关接口")
 @RestController
-@RequestMapping("/execution/risk")
+@RequestMapping("/api/project/execution/risk")
 @RequiredArgsConstructor
 @Validated
 public class RiskController {

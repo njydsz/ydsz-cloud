@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
 import com.njydsz.pmis.common.sentry.spi.LogPublisher;
@@ -80,14 +81,14 @@ public class AsyncLogPublisher implements LogPublisher, AutoCloseable {
     }
 
     /**
-     * 消费循环：批量取 + 批量发
+     * 消费循环：批量出队 + 批量推送（委托 delegate.publishBatch 实现真正批量 HTTP）
      */
     private void consumeLoop() {
         List<LogEvent> batch = new ArrayList<>(batchSize);
         while (running || !queue.isEmpty()) {
             try {
                 // 阻塞等待第一条
-                LogEvent first = queue.poll(flushIntervalMillis, java.util.concurrent.TimeUnit.MILLISECONDS);
+                LogEvent first = queue.poll(flushIntervalMillis, TimeUnit.MILLISECONDS);
                 if (first != null) {
                     batch.add(first);
                     // 尝试批量取更多（非阻塞）
@@ -99,14 +100,13 @@ public class AsyncLogPublisher implements LogPublisher, AutoCloseable {
                     if (maxRatePerSecond > 0) {
                         waitForTokens(batch.size());
                     }
-                    // 批量发送
-                    for (LogEvent event : batch) {
-                        try {
-                            delegate.publish(event);
-                            totalPublished.incrementAndGet();
-                        } catch (Exception e) {
-                            log.debug("[Sentry] 异步日志发送失败: {}", e.getMessage());
+                    // 批量发送（委托给 delegate.publishBatch，支持 Loki 单次 HTTP 推送）
+                    try {
+                        if (delegate.publishBatch(batch)) {
+                            totalPublished.addAndGet(batch.size());
                         }
+                    } catch (Exception e) {
+                        log.debug("[Sentry] 异步日志批量发送失败: {}", e.getMessage());
                     }
                     batch.clear();
                 }

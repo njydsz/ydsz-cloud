@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "预算强管控")
 @RestController
-@RequestMapping("/execution/budget")
+@RequestMapping("/api/project/execution/budget")
 @RequiredArgsConstructor
 @Validated
 public class BudgetController {

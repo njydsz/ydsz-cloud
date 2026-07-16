@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/aggregate")
+@RequestMapping("/api/project/aggregate")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "BFF聚合", description = "前端聚合接口，一次请求返回复合数据")

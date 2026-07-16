@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "合同补充协议")
 @RestController
-@RequestMapping("/contract/supplement")
+@RequestMapping("/api/project/contract/supplement")
 @RequiredArgsConstructor
 @Validated
 public class ContractSupplementController {

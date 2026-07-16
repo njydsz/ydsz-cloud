@@ -187,15 +187,22 @@ public abstract class AbstractNettyServer {
                             pipeline.addLast("trafficMonitor", trafficHandler);
                         }
 
-                        // 子类自定义 Pipeline
-                        initChannelPipeline(ch);
-
-                        // 指标监控 — 连接事件统计
+                        // è¿æäºä»¶çæ§(ååç½®)
                         if (connectionHandler != null) {
                             pipeline.addLast("connectionEvent", connectionHandler);
                         }
 
-                        // 注册到 ChannelGroup
+                        if (channelEventDispatcher != null) {
+                            pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
+                        }
+
+                        // åç±»èªå®ä¹ Pipeline
+                        initChannelPipeline(ch);
+
+                        if (messageDispatcher != null) {
+                            pipeline.addLast("messageDispatcher", messageDispatcher);
+                        }
+
                         channelGroupManager.add(ch);
                     }
                 });
@@ -337,5 +344,13 @@ public abstract class AbstractNettyServer {
                     properties.getNativeTransport());
         }
         return eventLoopPool;
+    }
+
+    public void setChannelEventDispatcher(ChannelEventDispatcher channelEventDispatcher) {
+        this.channelEventDispatcher = channelEventDispatcher;
+    }
+
+    public void setMessageDispatcher(MessageDispatcher messageDispatcher) {
+        this.messageDispatcher = messageDispatcher;
     }
 }

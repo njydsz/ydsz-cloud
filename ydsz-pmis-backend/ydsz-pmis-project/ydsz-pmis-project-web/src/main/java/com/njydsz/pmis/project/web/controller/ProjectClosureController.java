@@ -40,7 +40,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "项目结项管理")
 @RestController
-@RequestMapping("/closure")
+@RequestMapping("/api/project/closure")
 @RequiredArgsConstructor
 @Validated
 public class ProjectClosureController {

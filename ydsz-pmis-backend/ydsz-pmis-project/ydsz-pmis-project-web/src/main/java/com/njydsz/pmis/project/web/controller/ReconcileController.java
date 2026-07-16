@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "执行-对账")
 @RestController
-@RequestMapping("/finance/reconcile")
+@RequestMapping("/api/project/finance/reconcile")
 @RequiredArgsConstructor
 @Validated
 public class ReconcileController {

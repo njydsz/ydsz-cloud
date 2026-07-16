@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "每日自动对账")
 @RestController
-@RequestMapping("/finance/dailyReconcile")
+@RequestMapping("/api/project/finance/dailyReconcile")
 @RequiredArgsConstructor
 @Validated
 public class DailyReconcileController {

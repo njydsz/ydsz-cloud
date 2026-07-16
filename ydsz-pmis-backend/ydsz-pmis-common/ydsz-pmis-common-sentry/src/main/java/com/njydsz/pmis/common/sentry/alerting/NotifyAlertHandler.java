@@ -56,7 +56,7 @@ public class NotifyAlertHandler implements DefaultAlertPublisher.AlertHandler {
         return switch (severity) {
             case P0, P1 -> NotifyChannel.DINGTALK;
             case P2 -> NotifyChannel.EMAIL;
-            case P3 -> NotifyChannel.DINGTALK;
+            case P3 -> NotifyChannel.DINGTALK; // unreachable: P3 filtered in handle()
         };
     }
 
@@ -64,7 +64,7 @@ public class NotifyAlertHandler implements DefaultAlertPublisher.AlertHandler {
         return switch (severity) {
             case P0, P1 -> dingtalkReceiver;
             case P2 -> emailReceiver;
-            case P3 -> dingtalkReceiver;
+            case P3 -> dingtalkReceiver; // unreachable: P3 filtered in handle()
         };
     }
 

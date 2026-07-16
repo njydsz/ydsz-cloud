@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "报表导出")
 @RestController
-@RequestMapping("/report/export")
+@RequestMapping("/api/project/report/export")
 @RequiredArgsConstructor
 @Validated
 public class ReportExportController {

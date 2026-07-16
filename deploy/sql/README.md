@@ -86,9 +86,7 @@ deploy/sql/
 | common | - | 0(存根) | **已合并至 system**。`ydsz-pmis-common` 是公共依赖库(lib),非独立后端服务,无 Mapper/Service,不持有独立 DDL |
 | system | - | 11 | `pmis_config` / `pmis_tenant_quota` / `pmis_file` / `pmis_operation_log`(+ DEFAULT 分区) / `pmis_login_audit` / `pmis_data_export_audit` / `pmis_dict_version` / `pmis_report_subscription` / `pmis_export_record` / `pmis_meta_schema_version` + 全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log |
 | userinfo | - | 22 | RBAC(`pmis_role` / `pmis_permission` / `pmis_user_*`)+ 用户/部门/岗位/字典主表(`pmis_dict_type` / `pmis_dict_item` / `pmis_department` / `pmis_employee` / `pmis_position`)+ 职级系列(**`pmis_rank` / `pmis_rank_rate`**,RankMapper 在 userinfo)+ 资源/考勤(`pmis_resource_assignment` / `pmis_bench_record` / `pmis_attendance` / `pmis_overtime` / `pmis_leave`)+ 兼职/外包费率 |
-| **sales** | **9010** | **6** | 商机主表(`pmis_project_opportunity`)+ 商机跟进(`pmis_project_opportunity_follow`)+ 合同(`pmis_project_contract` / `pmis_project_contract_supplement` / `pmis_project_contract_change`)+ 合同模板(`pmis_project_contract_template`) |
-| **finance** | **9011** | **8** | 费用(`pmis_cost_expense`)+ 收入(`pmis_profit_revenue`)+ 利润快照(`pmis_profit_snapshot`)+ 利润模拟(`pmis_profit_simulation`)+ 发票(`pmis_finance_invoice`)+ 付款(`pmis_finance_payment`)+ 客户信用(`pmis_finance_customer_credit`)+ 日对账(`pmis_reconcile_daily`) |
-| **project** | **9003** | **20** | 立项/预算/门审(`pmis_project_initiation` / `pmis_project_budget_item` / `pmis_project_gate_review`)+ 执行-WBS/工时(`pmis_execution_wbs_task` / `pmis_execution_time_entry`)+ 执行-成本/采购(`pmis_cost_allocation` / `pmis_cost_purchase`)+ EVM/费率(`pmis_evm_measure` / `pmis_rate_card` / `pmis_rate_internal`)+ 风险/变更(`pmis_execution_risk` / `pmis_project_change`)+ 交付/结项(`pmis_execution_delivery_standard` / `pmis_execution_delivery_item` / `pmis_execution_closure`)+ 售后/工单/满意度(`pmis_warranty` / `pmis_ops_ticket` / `pmis_satisfaction`)+ 资源利用/预警(`pmis_billable_utilization_snapshot` / `pmis_alert_dispatch`) |
+| **project** | **9003** | **34** | 立项/预算/门审(`pmis_project_initiation` / `pmis_project_budget_item` / `pmis_project_gate_review`)+ 执行-WBS/工时(`pmis_execution_wbs_task` / `pmis_execution_time_entry`)+ 执行-成本/采购(`pmis_cost_allocation` / `pmis_cost_purchase`)+ EVM/费率(`pmis_evm_measure` / `pmis_rate_card` / `pmis_rate_internal`)+ 风险/变更(`pmis_execution_risk` / `pmis_project_change`)+ 交付/结项(`pmis_execution_delivery_standard` / `pmis_execution_delivery_item` / `pmis_execution_closure`)+ 售后/工单/满意度(`pmis_warranty` / `pmis_ops_ticket` / `pmis_satisfaction`)+ 资源利用/预警(`pmis_billable_utilization_snapshot` / `pmis_alert_dispatch`)+ **原 sales 6 张**(商机/合同)+ **原 finance 8 张**(`pmis_project_expense` / `pmis_project_revenue` / `pmis_project_profit_snapshot` / `pmis_project_profit_simulation` / `pmis_project_invoice` / `pmis_project_payment` / `pmis_project_customer_credit` / `pmis_project_reconcile_daily`) |
 | cronjob | - | 20 | `pmis_job`(任务定义主表)+ 18 张 `pmis_job_*` 子表(节点/日志/DAG/告警/历史/慢日志/产物/WebHook) |
 | message | - | 24 | `pmis_msg_*` (含 7 张月度分区表) + `pmis_notification_*` + 模板/回执/统计 |
 | workflow | - | 34 | `pmis_flow_*` + 流程审计日志 `pmis_flow_audit_log` + 视图 |
@@ -124,6 +122,23 @@ deploy/sql/
 - 交付/结项: `pmis_execution_delivery_standard` / `pmis_execution_delivery_item` / `pmis_execution_closure`
 - 售后/工单/满意度: `pmis_warranty` / `pmis_ops_ticket` / `pmis_satisfaction`
 - 资源利用/预警: `pmis_billable_utilization_snapshot` / `pmis_alert_dispatch`
+
+#### 2026-07-16 合并（sales/finance → project，表前缀统一）
+
+sales 和 finance 模块已合并回 project 模块，`V1.0.0_sales.sql` 和 `V1.0.0_finance.sql` 已删除，内容合并至 `V1.0.0_project.sql`（34 张表）。finance 的 8 张表已重命名为 `pmis_project_*` 前缀:
+
+| 旧表名 | 新表名 |
+|---|---|
+| `pmis_cost_expense` | `pmis_project_expense` |
+| `pmis_profit_revenue` | `pmis_project_revenue` |
+| `pmis_profit_snapshot` | `pmis_project_profit_snapshot` |
+| `pmis_finance_invoice` | `pmis_project_invoice` |
+| `pmis_finance_payment` | `pmis_project_payment` |
+| `pmis_finance_customer_credit` | `pmis_project_customer_credit` |
+| `pmis_profit_simulation` | `pmis_project_profit_simulation` |
+| `pmis_reconcile_daily` | `pmis_project_reconcile_daily` |
+
+> 索引名（如 `idx_pmis_finance_invoice_trace`）保持不变，仅表名引用已更新。
 
 #### 历史拆分规则(2026-07-10 重构)
 

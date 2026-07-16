@@ -21,6 +21,9 @@ import com.njydsz.pmis.common.seata.api.TccTransactionLogStore;
  */
 public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
 
+    private static final int MAX_ENTRIES = 10000;
+    private static final long RETENTION_HOURS = 1;
+
     private final ConcurrentHashMap<String, TccTransactionLog> store = new ConcurrentHashMap<>();
 
     private static String key(String xid, String branchId) {
@@ -29,6 +32,9 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
 
     @Override
     public void save(TccTransactionLog txLog) {
+        if (store.size() >= MAX_ENTRIES) {
+            cleanupFinalStateLogs();
+        }
         store.put(key(txLog.getXid(), txLog.getBranchId()), txLog);
     }
 
@@ -59,5 +65,15 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
     @Override
     public void delete(String xid, String branchId) {
         store.remove(key(xid, branchId));
+    }
+
+    public void cleanupFinalStateLogs() {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(RETENTION_HOURS);
+        store.entrySet().removeIf(entry -> {
+            TccTransactionLog log = entry.getValue();
+            return log.getStatus().isFinal()
+                    && log.getFinishedAt() != null
+                    && log.getFinishedAt().isBefore(cutoff);
+        });
     }
 }

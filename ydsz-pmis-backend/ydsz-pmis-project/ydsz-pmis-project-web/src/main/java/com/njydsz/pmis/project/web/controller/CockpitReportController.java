@@ -32,7 +32,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "经营驾驶舱")
 @RestController
-@RequestMapping("/report/cockpit")
+@RequestMapping("/api/project/report/cockpit")
 @RequiredArgsConstructor
 @Validated
 public class CockpitReportController {

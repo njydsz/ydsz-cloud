@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/report/asyncExport")
+@RequestMapping("/api/project/report/asyncExport")
 @RequiredArgsConstructor
 @Tag(name = "异步导出", description = "异步导出任务管理与下载中心")
 @Validated

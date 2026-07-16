@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "合同模板管理")
 @RestController
-@RequestMapping("/contract/template")
+@RequestMapping("/api/project/contract/template")
 @RequiredArgsConstructor
 @Validated
 public class ContractTemplateController {

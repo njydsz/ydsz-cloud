@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "合同变更")
 @RestController
-@RequestMapping("/contract/change")
+@RequestMapping("/api/project/contract/change")
 @RequiredArgsConstructor
 @Validated
 public class ContractChangeController {

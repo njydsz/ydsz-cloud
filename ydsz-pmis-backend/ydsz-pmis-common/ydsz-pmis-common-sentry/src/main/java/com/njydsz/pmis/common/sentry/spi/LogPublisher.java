@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.sentry.spi;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
 
 /**

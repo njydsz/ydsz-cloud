@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.sentry.logging;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -32,6 +34,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
     private final HttpClient httpClient;
     private final int maxRetryAttempts;
     private final CircuitBreaker circuitBreaker;
+    private final int requestTimeoutSeconds;
 
     public LokiLogPublisher(String lokiUrl, int connectTimeoutSeconds,
                             int maxRetryAttempts, CircuitBreaker circuitBreaker) {
@@ -40,6 +43,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
                 : lokiUrl + "/loki/api/v1/push";
         this.maxRetryAttempts = maxRetryAttempts;
         this.circuitBreaker = circuitBreaker;
+        this.requestTimeoutSeconds = connectTimeoutSeconds;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
                 .build();
@@ -61,7 +65,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
                             .uri(URI.create(pushUrl))
                             .header("Content-Type", "application/json")
                             .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
-                            .timeout(Duration.ofSeconds(10))
+                            .timeout(Duration.ofSeconds(requestTimeoutSeconds))
                             .build();
 
                     HttpResponse<Void> response = httpClient.send(request,
@@ -127,6 +131,57 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
     }
 
     @Override
+    public boolean publishBatch(List<LogEvent> events) {
+        if (events == null || events.isEmpty()) {
+            return false;
+        }
+        if (!isAvailable()) {
+            return false;
+        }
+        String payload = buildLokiBatchPayload(events);
+        byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
+        return circuitBreaker.execute(() -> {
+            for (int attempt = 1; attempt <= maxRetryAttempts; attempt++) {
+                try {
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(pushUrl))
+                            .header("Content-Type", "application/json")
+                            .POST(HttpRequest.BodyPublishers.ofByteArray(bytes))
+                            .timeout(Duration.ofSeconds(requestTimeoutSeconds))
+                            .build();
+                    HttpResponse<Void> response = httpClient.send(request,
+                            HttpResponse.BodyHandlers.discarding());
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        return true;
+                    }
+                } catch (Exception e) {
+                    // retry
+                }
+                if (attempt < maxRetryAttempts) {
+                    try { Thread.sleep(200L * attempt); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+                }
+            }
+            return false;
+        }, () -> false);
+    }
+
+    private String buildLokiBatchPayload(List<LogEvent> events) {
+        String appName = events.get(0).getAppName() != null ? events.get(0).getAppName() : "pmis";
+        List<Object[]> values = new ArrayList<>(events.size());
+        for (LogEvent event : events) {
+            String ts = String.valueOf(event.getTimestamp().toEpochMilli() * 1_000_000);
+            String line = LogEventSerializer.toJson(event);
+            values.add(new Object[]{ts, line});
+        }
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("app", appName);
+        labels.put("level", events.get(0).getLevel() != null ? events.get(0).getLevel().name() : "INFO");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("streams", new Object[]{ Map.of("stream", labels, "values", values) });
+        return Json.toJson(payload);
+    }
+
+        @Override
     public boolean isAvailable() {
         return circuitBreaker == null || circuitBreaker.getState() != CircuitBreaker.State.OPEN;
     }

@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
@@ -52,7 +51,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(SeataProperties.class)
-@EnableScheduling
 @ConditionalOnProperty(prefix = "pmis.seata", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SeataAutoConfiguration {
 

@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "全文检索")
 @RestController
-@RequestMapping("/search")
+@RequestMapping("/api/project/search")
 @RequiredArgsConstructor
 @Validated
 public class SearchController {

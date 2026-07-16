@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "批量导入")
 @RestController
-@RequestMapping("/importExport")
+@RequestMapping("/api/project/importExport")
 @RequiredArgsConstructor
 @Validated
 public class ImportExportController {

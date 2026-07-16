@@ -43,7 +43,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "项目变更管理")
 @RestController
-@RequestMapping("/initiation/change")
+@RequestMapping("/api/project/initiation/change")
 @RequiredArgsConstructor
 @Validated
 public class ProjectChangeController {

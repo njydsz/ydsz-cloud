@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "可计费利用率")
 @RestController
-@RequestMapping("/resource/utilization")
+@RequestMapping("/api/project/resource/utilization")
 @RequiredArgsConstructor
 @Validated
 public class BillableUtilizationController {

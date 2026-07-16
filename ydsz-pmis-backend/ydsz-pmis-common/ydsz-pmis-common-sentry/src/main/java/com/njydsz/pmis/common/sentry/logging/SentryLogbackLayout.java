@@ -36,14 +36,16 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
     private String appName = "pmis";
     private String hostname;
     private String profile = "dev";
-    private volatile String cachedHostname;
+    private String mdcFields = "traceId,userId,username";
 
     @Override
     public void start() {
         if (appName == null || appName.isBlank()) {
             appName = "pmis";
         }
-        cachedHostname = detectHostname();
+        if (hostname == null || hostname.isBlank()) {
+            hostname = detectHostname();
+        }
         super.start();
     }
 
@@ -61,14 +63,29 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
                 .thread(event.getThreadName())
                 .message(event.getFormattedMessage())
                 .appName(appName)
-                .hostname(hostname != null ? hostname : cachedHostname)
+                .hostname(hostname)
                 .profile(profile);
 
-        // MDC 字段提取
+        // MDC 字段提取（支持可配置字段列表）
         if (event.getMDCPropertyMap() != null) {
             builder.traceId(event.getMDCPropertyMap().get("traceId"));
             builder.userId(event.getMDCPropertyMap().get("userId"));
             builder.username(event.getMDCPropertyMap().get("username"));
+            // 可配置的额外 MDC 字段
+            if (mdcFields != null && !mdcFields.isBlank()) {
+                for (String field : mdcFields.split(",")) {
+                    String trimmed = field.trim();
+                    if (!trimmed.isEmpty()
+                            && !"traceId".equals(trimmed)
+                            && !"userId".equals(trimmed)
+                            && !"username".equals(trimmed)) {
+                        String value = event.getMDCPropertyMap().get(trimmed);
+                        if (value != null) {
+                            builder.addExtra(trimmed, value);
+                        }
+                    }
+                }
+            }
         }
 
         // 异常堆栈
@@ -132,5 +149,9 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
 
     public void setProfile(String profile) {
         this.profile = profile;
+    }
+
+    public void setMdcFields(String mdcFields) {
+        this.mdcFields = mdcFields;
     }
 }

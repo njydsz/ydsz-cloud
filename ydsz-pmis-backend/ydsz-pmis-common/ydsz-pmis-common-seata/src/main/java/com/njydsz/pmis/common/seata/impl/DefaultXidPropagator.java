@@ -17,7 +17,7 @@ public class DefaultXidPropagator implements XidPropagator {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultXidPropagator.class);
 
-    private static final ThreadLocal<String> XID_CONTEXT = new ThreadLocal<>();
+    // P0-F5: 委托 AbstractTransactionManager 的统一 ThreadLocal
 
     @Override
     public String serialize(String xid) {
@@ -35,18 +35,18 @@ public class DefaultXidPropagator implements XidPropagator {
     @Override
     public void bind(String xid) {
         if (xid != null) {
-            XID_CONTEXT.set(xid);
+            AbstractTransactionManager.setXidToHolder(xid);
             log.debug("XID bound to current thread: {}", xid);
         }
     }
 
     @Override
     public String currentXid() {
-        return XID_CONTEXT.get();
+        return AbstractTransactionManager.getXidFromHolder();
     }
 
     @Override
     public void unbind() {
-        XID_CONTEXT.remove();
+        AbstractTransactionManager.removeXidFromHolder();
     }
 }

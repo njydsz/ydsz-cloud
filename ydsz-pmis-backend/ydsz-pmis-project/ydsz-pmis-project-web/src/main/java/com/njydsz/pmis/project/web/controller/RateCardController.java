@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "对外报价费率 Rate Card")
 @RestController
-@RequestMapping("/resource/rateCard")
+@RequestMapping("/api/project/resource/rateCard")
 @RequiredArgsConstructor
 @Validated
 public class RateCardController {

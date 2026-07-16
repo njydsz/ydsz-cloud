@@ -2,7 +2,6 @@ package com.njydsz.pmis.common.netty.server;
 
 import java.util.List;
 
-import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.SmartLifecycle;
 
 import lombok.extern.slf4j.Slf4j;
@@ -23,20 +22,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.3.0
  */
 @Slf4j
-public class NettyServerLifecycle implements SmartLifecycle, SmartInitializingSingleton {
+public class NettyServerLifecycle implements SmartLifecycle {
 
     private final List<AbstractNettyServer> servers;
     private final boolean failFast;
     private volatile boolean running = false;
-
-    /**
-     * 构造 Netty Server 生命周期管理器（failFast 默认 true）。
-     *
-     * @param servers Netty Server 列表
-     */
-    public NettyServerLifecycle(List<AbstractNettyServer> servers) {
-        this(servers, true);
-    }
 
     /**
      * 构造 Netty Server 生命周期管理器。
@@ -49,11 +39,6 @@ public class NettyServerLifecycle implements SmartLifecycle, SmartInitializingSi
         this.failFast = failFast;
     }
 
-    @Override
-    public void afterSingletonsInstantiated() {
-        log.info("[Netty-Lifecycle] 检测到 {} 个 Netty Server 待启动, failFast={}",
-                servers.size(), failFast);
-    }
 
     @Override
     public void start() {

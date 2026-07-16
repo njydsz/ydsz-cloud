@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "商机跟进")
 @RestController
-@RequestMapping("/opportunity/follow")
+@RequestMapping("/api/project/opportunity/follow")
 @RequiredArgsConstructor
 @Validated
 public class OpportunityFollowController {

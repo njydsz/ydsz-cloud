@@ -33,9 +33,6 @@ public class SeataMetrics {
     private final ObjectProvider<MeterRegistry> registryProvider;
 
     private final AtomicLong activeTxCount = new AtomicLong(0);
-    private final AtomicLong confirmRetryCount = new AtomicLong(0);
-    private final AtomicLong cancelRetryCount = new AtomicLong(0);
-    private final AtomicLong sagaCompensationCount = new AtomicLong(0);
 
     public SeataMetrics(ObjectProvider<MeterRegistry> registryProvider) {
         this.registryProvider = registryProvider;
@@ -70,8 +67,7 @@ public class SeataMetrics {
     }
 
     public void recordConfirmRetry() {
-        confirmRetryCount.incrementAndGet();
-        MeterRegistry registry = registryProvider.getIfAvailable();
+MeterRegistry registry = registryProvider.getIfAvailable();
         if (registry != null) {
             Counter.builder("seata.tcc.confirm.retry")
                     .register(registry)
@@ -80,8 +76,7 @@ public class SeataMetrics {
     }
 
     public void recordCancelRetry() {
-        cancelRetryCount.incrementAndGet();
-        MeterRegistry registry = registryProvider.getIfAvailable();
+MeterRegistry registry = registryProvider.getIfAvailable();
         if (registry != null) {
             Counter.builder("seata.tcc.cancel.retry")
                     .register(registry)
@@ -90,8 +85,7 @@ public class SeataMetrics {
     }
 
     public void recordSagaCompensation() {
-        sagaCompensationCount.incrementAndGet();
-        MeterRegistry registry = registryProvider.getIfAvailable();
+MeterRegistry registry = registryProvider.getIfAvailable();
         if (registry != null) {
             Counter.builder("seata.saga.compensation.count")
                     .register(registry)
@@ -103,15 +97,4 @@ public class SeataMetrics {
         return activeTxCount.get();
     }
 
-    public long getConfirmRetryCount() {
-        return confirmRetryCount.get();
-    }
-
-    public long getCancelRetryCount() {
-        return cancelRetryCount.get();
-    }
-
-    public long getSagaCompensationCount() {
-        return sagaCompensationCount.get();
-    }
 }

@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "预警分级推送")
 @RestController
-@RequestMapping("/alertDispatch")
+@RequestMapping("/api/project/alertDispatch")
 @RequiredArgsConstructor
 @Validated
 public class AlertDispatchController {

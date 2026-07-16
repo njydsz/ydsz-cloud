@@ -12,8 +12,9 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 /**
  * 项目管理服务启动类
  *
- * <p>承载项目执行域业务能力：立项/WBS/EVM/风险/工时/采购/预算/报表/驾驶舱。
- * <p>跨域财务数据通过 {@link com.njydsz.pmis.finance.api.client.FinanceDataClient} Feign 调用获取。
+ * <p>承载项目执行域全量业务能力：立项/WBS/EVM/风险/工时/采购/预算/报表/驾驶舱。
+ * <p>原 sales/finance 模块已合并到本服务，跨域 Feign 契约已全部下线，
+ * 财务/销售数据现通过同进程 Mapper 直接查询。
  *
  * @author ydsz-pmis-team
  * @since 2.0.0
@@ -21,7 +22,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.project", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePackages = {"com.njydsz.pmis.project.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePackages = {"com.njydsz.pmis.common.feign"})
 @MapperScan({"com.njydsz.pmis.project.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
 @EnableScheduling
 public class ProjectApplication {

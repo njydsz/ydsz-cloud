@@ -38,7 +38,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "采购成本")
 @RestController
-@RequestMapping("/execution/purchase")
+@RequestMapping("/api/project/execution/purchase")
 @RequiredArgsConstructor
 @Validated
 public class PurchaseController {

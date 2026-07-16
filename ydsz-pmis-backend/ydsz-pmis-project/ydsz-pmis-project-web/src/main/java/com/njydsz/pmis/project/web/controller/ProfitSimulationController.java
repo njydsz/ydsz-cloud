@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "利润测算")
 @RestController
-@RequestMapping("/finance/profitSimulation")
+@RequestMapping("/api/project/finance/profitSimulation")
 @RequiredArgsConstructor
 @Validated
 public class ProfitSimulationController {

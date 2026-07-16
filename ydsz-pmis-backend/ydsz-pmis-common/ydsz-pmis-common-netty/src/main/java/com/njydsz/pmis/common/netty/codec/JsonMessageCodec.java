@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.netty.codec;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import com.njydsz.pmis.common.json.Json;
 
@@ -86,7 +87,7 @@ public class JsonMessageCodec<T> extends MessageToByteEncoder<T> {
     public MessageToMessageDecoder<ByteBuf> createDecoder() {
         return new MessageToMessageDecoder<>() {
             @Override
-            protected void decode(ChannelHandlerContext ctx, ByteBuf msg, java.util.List<Object> out) throws Exception {
+            protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
                 T message = JsonMessageCodec.this.decode(msg);
                 out.add(message);
             }

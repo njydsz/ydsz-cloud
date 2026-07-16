@@ -3,12 +3,10 @@ package com.njydsz.pmis.common.socket.heartbeat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
+import com.njydsz.pmis.common.socket.session.OnlineUserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,30 +29,25 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebSocketHeartbeatHandler {
 
-    private final Map<String, Long> sessionHeartbeats = new ConcurrentHashMap<>();
     private final WebSocketProperties properties;
+    private final OnlineUserService onlineUserService;
+    private final Map<String, Long> sessionHeartbeats = new ConcurrentHashMap<>();
+    private final Map<String, String> sessionUserMap = new ConcurrentHashMap<>();
 
     /**
      * 注册新连接的 Session。
      *
      * @param sessionId STOMP Session ID
      */
-    public void registerSession(String sessionId) {
+    public void registerSession(String sessionId, String userId) {
         if (sessionId != null) {
             sessionHeartbeats.put(sessionId, System.currentTimeMillis());
+            if (userId != null) {
+                sessionUserMap.put(sessionId, userId);
+            }
         }
     }
 
-    /**
-     * 续期 Session 心跳（收到客户端心跳帧时调用）。
-     *
-     * @param sessionId STOMP Session ID
-     */
-    public void renewHeartbeat(String sessionId) {
-        if (sessionId != null) {
-            sessionHeartbeats.put(sessionId, System.currentTimeMillis());
-        }
-    }
 
     /**
      * 移除已断开的 Session。
@@ -64,31 +57,10 @@ public class WebSocketHeartbeatHandler {
     public void unregisterSession(String sessionId) {
         if (sessionId != null) {
             sessionHeartbeats.remove(sessionId);
+            sessionUserMap.remove(sessionId);
         }
     }
 
-    /**
-     * 监听连接事件，注册 Session。
-     *
-     * @param event 连接事件
-     */
-    public void onSessionConnected(SessionConnectedEvent event) {
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionId = accessor.getSessionId();
-        registerSession(sessionId);
-        log.debug("[WS-Heartbeat] Session 注册: sessionId={}", sessionId);
-    }
-
-    /**
-     * 监听断开事件，移除 Session。
-     *
-     * @param event 断开事件
-     */
-    public void onSessionDisconnect(SessionDisconnectEvent event) {
-        String sessionId = event.getSessionId();
-        unregisterSession(sessionId);
-        log.debug("[WS-Heartbeat] Session 移除: sessionId={}", sessionId);
-    }
 
     /**
      * 定时扫描僵尸 Session（每 30 秒执行一次）。
@@ -101,14 +73,21 @@ public class WebSocketHeartbeatHandler {
         long now = System.currentTimeMillis();
         long staleTimeout = properties.getHeartbeat().getStaleSessionTimeout();
         int cleaned = 0;
-        for (Map.Entry<String, Long> entry : sessionHeartbeats.entrySet()) {
+        var iterator = sessionHeartbeats.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
             if (now - entry.getValue() > staleTimeout) {
                 String sessionId = entry.getKey();
                 log.warn("[WS-Heartbeat] 检测到僵尸 Session, 清理: sessionId={}, idleMs={}",
                         sessionId, now - entry.getValue());
-                sessionHeartbeats.remove(sessionId);
+                String userId = sessionUserMap.remove(sessionId);
+                iterator.remove();
+                if (userId != null && onlineUserService != null) {
+                    onlineUserService.markOffline(userId, sessionId);
+                }
                 cleaned++;
             }
+        }
         }
         if (cleaned > 0) {
             log.info("[WS-Heartbeat] 僵尸 Session 清理完成, 清理数={}, 剩余活跃={}",

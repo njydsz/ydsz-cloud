@@ -36,9 +36,6 @@ public class AlertEvent {
     /** 告警标签 */
     private Map<String, String> labels;
 
-    /** 告警注解 */
-    private Map<String, String> annotations;
-
     /** 触发时间 */
     @Builder.Default
     private Instant firedAt = Instant.now();

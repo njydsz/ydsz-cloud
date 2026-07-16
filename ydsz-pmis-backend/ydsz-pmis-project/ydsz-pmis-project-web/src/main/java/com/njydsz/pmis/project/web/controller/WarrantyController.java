@@ -38,7 +38,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "项目质保期管理")
 @RestController
-@RequestMapping("/afterSales/warranty")
+@RequestMapping("/api/project/afterSales/warranty")
 @RequiredArgsConstructor
 @Validated
 public class WarrantyController {

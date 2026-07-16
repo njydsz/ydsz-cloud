@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.netty.client;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.njydsz.pmis.common.netty.config.NettyProperties;
+import com.njydsz.pmis.common.netty.event.ChannelEventDispatcher;
+import com.njydsz.pmis.common.netty.event.MessageDispatcher;
 import com.njydsz.pmis.common.netty.handler.ConnectionEventHandler;
 import com.njydsz.pmis.common.netty.handler.IdleStateHandlerFactory;
 import com.njydsz.pmis.common.netty.handler.TrafficMonitoringHandler;
@@ -145,15 +147,22 @@ public abstract class AbstractNettyClient {
                             }
 
                             // 子类自定义 Pipeline
-                            initChannelPipeline(ch);
-
-                            // 指标监控 — 连接事件统计
                             if (connectionHandler != null) {
                                 pipeline.addLast("connectionEvent", connectionHandler);
                             }
 
-                            // 断线重连
-                            if (properties.getReconnect().isEnabled()) {
+                            if (channelEventDispatcher != null) {
+                                pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
+                            }
+
+                            // åç±»èªå®ä¹ Pipeline
+                            initChannelPipeline(ch);
+
+                            if (messageDispatcher != null) {
+                                pipeline.addLast("messageDispatcher", messageDispatcher);
+                            }
+
+                            // æ­çº¿éè¿
                                 pipeline.addLast("reconnect", createReconnectHandler());
                             }
                         }
@@ -246,7 +255,7 @@ public abstract class AbstractNettyClient {
                 }
                 try {
                     connect();
-                    if (metrics != null) {
+                    if (isConnected() && metrics != null) {
                         metrics.incrementReconnectSuccesses();
                     }
                 } catch (Exception e) {
@@ -297,5 +306,13 @@ public abstract class AbstractNettyClient {
                     properties.getNativeTransport());
         }
         return eventLoopPool;
+    }
+
+    public void setChannelEventDispatcher(ChannelEventDispatcher channelEventDispatcher) {
+        this.channelEventDispatcher = channelEventDispatcher;
+    }
+
+    public void setMessageDispatcher(MessageDispatcher messageDispatcher) {
+        this.messageDispatcher = messageDispatcher;
     }
 }

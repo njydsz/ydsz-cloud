@@ -42,7 +42,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "合同管理", description = "合同管理相关接口")
 @RestController
-@RequestMapping("/contract")
+@RequestMapping("/api/project/contract")
 @RequiredArgsConstructor
 @Validated
 public class ContractController {

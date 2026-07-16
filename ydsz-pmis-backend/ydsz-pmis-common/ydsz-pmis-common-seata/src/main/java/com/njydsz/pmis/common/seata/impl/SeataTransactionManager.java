@@ -38,9 +38,9 @@ public class SeataTransactionManager extends AbstractTransactionManager {
 
     private static final Logger log = LoggerFactory.getLogger(SeataTransactionManager.class);
 
-    private final GlobalTransactionExecutor globalExecutor;
+    private final SeataGlobalTransactionExecutor globalExecutor;
 
-    public SeataTransactionManager(GlobalTransactionExecutor globalExecutor) {
+    public SeataTransactionManager(SeataGlobalTransactionExecutor globalExecutor) {
         this.globalExecutor = globalExecutor;
     }
 

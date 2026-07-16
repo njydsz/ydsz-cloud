@@ -78,33 +78,4 @@ public class SeataProperties {
 
     /** 事务超时判定阈值（毫秒），超过此时间未 Confirm/Cancel 的事务将被恢复扫描处理 */
     private long recoveryTimeoutThresholdMs = 60000;
-
-    // ============= Seata 2.x 客户端配置（P2-7） =============
-
-    /** TM 全局提交重试次数 */
-    private int tmCommitRetryCount = 3;
-
-    /** TM 全局回滚重试次数 */
-    private int tmRollbackRetryCount = 3;
-
-    /** RM 是否上报成功结果 */
-    private boolean rmReportSuccessEnable = false;
-
-    /** RM 全局锁重试间隔（毫秒） */
-    private int rmLockRetryIntervalMs = 10;
-
-    /** RM 全局锁重试次数 */
-    private int rmLockRetryTimes = 30;
-
-    /** undo_log 数据校验 */
-    private boolean undoDataValidation = true;
-
-    /** undo_log 序列化方式 */
-    private String undoLogSerialization = "jackson";
-
-    /** undo_log 压缩 */
-    private boolean undoCompressData = true;
-
-    /** undo_log 压缩类型 */
-    private String undoCompressType = "zip";
 }

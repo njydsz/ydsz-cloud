@@ -38,7 +38,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "运维工单管理")
 @RestController
-@RequestMapping("/afterSales/opsTicket")
+@RequestMapping("/api/project/afterSales/opsTicket")
 @RequiredArgsConstructor
 @Validated
 public class OpsTicketController {

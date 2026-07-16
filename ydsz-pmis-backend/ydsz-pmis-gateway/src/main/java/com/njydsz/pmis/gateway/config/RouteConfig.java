@@ -77,29 +77,13 @@ public class RouteConfig {
                         .uri("lb://ydsz-pmis-userinfo"))
 
                 // ===== 业务服务 =====
-                // 项目业务服务
-                .route("ydsz-pmis-project", r -> r.path(
-                                "/project/**",
-                                "/execution/**",
-                                "/invoices/**",
-                                "/payments/**",
-                                "/timesheets/**",
-                                "/resources/**",
-                                "/customers/**",
-                                "/reports/**",
-                                "/dashboard/**")
+                // 项目业务服务(2026-07-16 合并 sales/finance 后,所有 Controller 路径统一为 /api/project/**)
+                // 兼容旧路径:直接转发到 ydsz-pmis-project,Controller 已统一前缀
+                .route("ydsz-pmis-project", r -> r.path("/api/project/**")
                         .uri("lb://ydsz-pmis-project"))
                 // 项目业务服务 (v1 API 版本前缀)
-                .route("ydsz-pmis-project-v1", r -> r.path(
-                                "/api/v1/project/**",
-                                "/api/v1/execution/**",
-                                "/api/v1/invoices/**",
-                                "/api/v1/payments/**",
-                                "/api/v1/timesheets/**",
-                                "/api/v1/resources/**",
-                                "/api/v1/customers/**",
-                                "/api/v1/reports/**",
-                                "/api/v1/dashboard/**")
+                // /api/v1/api/project/** -> stripPrefix(2) -> /api/project/**
+                .route("ydsz-pmis-project-v1", r -> r.path("/api/v1/api/project/**")
                         .filters(f -> f.stripPrefix(2))
                         .uri("lb://ydsz-pmis-project"))
 

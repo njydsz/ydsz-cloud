@@ -40,7 +40,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "EVM 挣值管理")
 @RestController
-@RequestMapping("/execution/evm")
+@RequestMapping("/api/project/execution/evm")
 @RequiredArgsConstructor
 @Validated
 public class EvmController {

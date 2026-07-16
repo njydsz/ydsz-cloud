@@ -45,7 +45,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "发票管理", description = "发票管理相关接口")
 @RestController
-@RequestMapping("/finance/invoice")
+@RequestMapping("/api/project/finance/invoice")
 @RequiredArgsConstructor
 @Validated
 public class InvoiceController {

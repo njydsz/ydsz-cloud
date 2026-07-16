@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/finance/data")
+@RequestMapping("/api/project/finance/data")
 @RequiredArgsConstructor
 @Tag(name = "财务数据查询", description = "内部跨域数据查询接口")
 public class FinanceDataController {

@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "基础报表")
 @RestController
-@RequestMapping("/report")
+@RequestMapping("/api/project/report")
 @RequiredArgsConstructor
 @Validated
 public class ReportController {

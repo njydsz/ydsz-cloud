@@ -42,9 +42,6 @@ public class AlertConverger implements AlertPublisher {
     /** 静默记录（key=dedupKey, value=上次通知时间） */
     private final ConcurrentHashMap<String, Instant> silenceMap = new ConcurrentHashMap<>();
 
-    /** 聚合窗口内计数（key=dedupKey, value=count） */
-    private final ConcurrentHashMap<String, AtomicInteger> windowCounts = new ConcurrentHashMap<>();
-
     public AlertConverger(AlertPublisher delegate, long silencePeriodMillis) {
         this.delegate = delegate;
         this.silencePeriodMillis = silencePeriodMillis;
@@ -59,7 +56,6 @@ public class AlertConverger implements AlertPublisher {
         // 检查静默期
         if (isSilenced(dedupKey)) {
             suppressedAlerts.incrementAndGet();
-            windowCounts.computeIfAbsent(dedupKey, k -> new AtomicInteger(0)).incrementAndGet();
             log.debug("[Sentry] 告警被静默: key={}, suppressed={}", dedupKey, suppressedAlerts.get());
             return false;
         }
@@ -100,7 +96,6 @@ public class AlertConverger implements AlertPublisher {
      * 获取静默中的告警数量
      */
     public int getActiveSilenceCount() {
-        cleanupExpiredSilence();
         return silenceMap.size();
     }
 
@@ -127,21 +122,6 @@ public class AlertConverger implements AlertPublisher {
             return 0;
         }
         return (double) suppressedAlerts.get() / total;
-    }
-
-    /**
-     * 获取窗口内聚合计数
-     */
-    public int getWindowCount(String dedupKey) {
-        AtomicInteger count = windowCounts.get(dedupKey);
-        return count != null ? count.get() : 0;
-    }
-
-    /**
-     * 重置窗口计数
-     */
-    public void resetWindowCounts() {
-        windowCounts.clear();
     }
 
     @Override

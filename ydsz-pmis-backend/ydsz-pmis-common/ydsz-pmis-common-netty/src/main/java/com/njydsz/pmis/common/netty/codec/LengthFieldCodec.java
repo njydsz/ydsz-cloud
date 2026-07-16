@@ -1,9 +1,6 @@
 package com.njydsz.pmis.common.netty.codec;
 
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldPrepender;
 
 /**
@@ -64,25 +61,4 @@ public final class LengthFieldCodec {
         pipeline.addLast("frameEncoder", new LengthFieldPrepender(lengthFieldLength));
     }
 
-    /**
-     * 创建包含 Length Field 编解码器的 ChannelInitializer。
-     *
-     * @param maxFrameLength    最大帧长度
-     * @param lengthFieldLength 长度字段字节数
-     * @param businessHandlers  业务 Handler 数组
-     * @return ChannelInitializer
-     */
-    public static ChannelInitializer<SocketChannel> createInitializer(
-            int maxFrameLength, int lengthFieldLength, ChannelHandler... businessHandlers) {
-        return new ChannelInitializer<>() {
-            @Override
-            protected void initChannel(SocketChannel ch) {
-                ChannelPipeline pipeline = ch.pipeline();
-                addToPipeline(pipeline, maxFrameLength, lengthFieldLength);
-                if (businessHandlers != null) {
-                    pipeline.addLast(businessHandlers);
-                }
-            }
-        };
-    }
 }

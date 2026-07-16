@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * @author ydsz-pmis-team
  * @since 3.5.0
  */
-public class SeataGlobalTransactionExecutor implements GlobalTransactionExecutor {
+public class SeataGlobalTransactionExecutor  {
 
     private static final Logger log = LoggerFactory.getLogger(SeataGlobalTransactionExecutor.class);
 

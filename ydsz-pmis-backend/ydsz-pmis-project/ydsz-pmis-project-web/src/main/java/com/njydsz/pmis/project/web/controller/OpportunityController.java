@@ -43,7 +43,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "商机管理", description = "商机管理相关接口")
 @RestController
-@RequestMapping("/opportunity")
+@RequestMapping("/api/project/opportunity")
 @RequiredArgsConstructor
 @Validated
 public class OpportunityController {
