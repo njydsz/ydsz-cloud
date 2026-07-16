@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.notify.core;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;

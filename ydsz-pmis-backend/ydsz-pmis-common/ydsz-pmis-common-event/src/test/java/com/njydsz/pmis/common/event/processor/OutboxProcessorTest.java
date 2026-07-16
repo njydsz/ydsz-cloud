@@ -47,15 +47,17 @@ class OutboxProcessorTest {
         properties.setBaseBackoffSeconds(1);
         properties.setMaxBackoffSeconds(60);
         properties.setStaleProcessingThresholdMinutes(5);
+        properties.setWorkerThreads(1); // 同步执行，测试可靠
+        when(outboxRepository.countByStatus()).thenReturn(Map.of());
         processor = new OutboxProcessor(outboxRepository, publishGateway, properties, null);
     }
 
     @Test
-    @DisplayName("claim 成功的消息被投递并标记为 SENT")
-    void processBatch_claimAndPublishSuccess() throws Exception {
+    @DisplayName("批量 claim 成功的消息被投递并标记为 SENT")
+    void processBatch_batchClaimAndPublishSuccess() throws Exception {
         OutboxMessage msg = buildMessage("msg-1", 0);
         when(outboxRepository.findPending(10)).thenReturn(List.of(msg));
-        when(outboxRepository.claimForProcessing("msg-1")).thenReturn(true);
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(1);
         when(publishGateway.publish(msg)).thenReturn(true);
 
         processor.processBatch();
@@ -65,11 +67,11 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("claim 失败的消息不会被投递")
-    void processBatch_claimFailed() throws Exception {
+    @DisplayName("批量 claim 返回 0 时不投递")
+    void processBatch_batchClaimFailed() throws Exception {
         OutboxMessage msg = buildMessage("msg-1", 0);
         when(outboxRepository.findPending(10)).thenReturn(List.of(msg));
-        when(outboxRepository.claimForProcessing("msg-1")).thenReturn(false);
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(0);
 
         processor.processBatch();
 
@@ -78,11 +80,26 @@ class OutboxProcessorTest {
     }
 
     @Test
+    @DisplayName("批量 claim 部分成功时降级为逐条 claim")
+    void processBatch_partialClaim_fallbackToSingle() throws Exception {
+        OutboxMessage msg = buildMessage("msg-1", 0);
+        when(outboxRepository.findPending(10)).thenReturn(List.of(msg));
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(0); // batch claim failed
+        when(outboxRepository.claimForProcessing("msg-1")).thenReturn(true);
+        when(publishGateway.publish(msg)).thenReturn(true);
+
+        processor.processBatch();
+
+        verify(outboxRepository).claimForProcessing("msg-1");
+        verify(outboxRepository).markAsSent("msg-1");
+    }
+
+    @Test
     @DisplayName("投递失败时调用 markAsFailed 并指数退避")
     void processBatch_publishFailure() throws Exception {
         OutboxMessage msg = buildMessage("msg-1", 0);
         when(outboxRepository.findPending(10)).thenReturn(List.of(msg));
-        when(outboxRepository.claimForProcessing("msg-1")).thenReturn(true);
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(1);
         when(publishGateway.publish(msg)).thenReturn(false);
 
         processor.processBatch();
@@ -96,7 +113,7 @@ class OutboxProcessorTest {
     void processBatch_publishException() throws Exception {
         OutboxMessage msg = buildMessage("msg-1", 0);
         when(outboxRepository.findPending(10)).thenReturn(List.of(msg));
-        when(outboxRepository.claimForProcessing("msg-1")).thenReturn(true);
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(1);
         when(publishGateway.publish(msg)).thenThrow(new RuntimeException("MQ down"));
 
         processor.processBatch();
@@ -121,7 +138,7 @@ class OutboxProcessorTest {
         OutboxMessage msg1 = buildMessage("msg-1", 0);
         OutboxMessage msg2 = buildMessage("msg-2", 0);
         when(outboxRepository.findPending(10)).thenReturn(List.of(msg1, msg2));
-        when(outboxRepository.claimForProcessing(anyString())).thenReturn(true);
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(2);
         when(publishGateway.publishBatch(anyList())).thenReturn(List.of(true, true));
 
         processor.processBatch();
@@ -136,7 +153,7 @@ class OutboxProcessorTest {
         OutboxMessage msg1 = buildMessage("msg-1", 0);
         OutboxMessage msg2 = buildMessage("msg-2", 0);
         when(outboxRepository.findPending(10)).thenReturn(List.of(msg1, msg2));
-        when(outboxRepository.claimForProcessing(anyString())).thenReturn(true);
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(2);
         when(publishGateway.publishBatch(anyList())).thenThrow(new RuntimeException("Batch failed"));
         when(publishGateway.publish(any())).thenReturn(true);
 
@@ -145,6 +162,21 @@ class OutboxProcessorTest {
         verify(publishGateway, atLeast(2)).publish(any());
         verify(outboxRepository).markAsSent("msg-1");
         verify(outboxRepository).markAsSent("msg-2");
+    }
+
+    @Test
+    @DisplayName("退避计算：baseDelay * 2^retryCount，不超过 maxBackoff")
+    void calculateBackoff_withinBounds() throws Exception {
+        properties.setBaseBackoffSeconds(10);
+        properties.setMaxBackoffSeconds(100);
+
+        // retry 0: 10 * 1 = 10
+        OutboxMessage msg0 = buildMessage("msg-0", 0);
+        when(outboxRepository.findPending(10)).thenReturn(List.of(msg0));
+        when(outboxRepository.claimBatchForProcessing(anyList())).thenReturn(1);
+        when(publishGateway.publish(msg0)).thenReturn(false);
+        processor.processBatch();
+        verify(outboxRepository).markAsFailed(eq("msg-0"), anyString(), eq(10L));
     }
 
     private OutboxMessage buildMessage(String id, int retryCount) {
@@ -158,6 +190,7 @@ class OutboxProcessorTest {
                 .status(OutboxStatus.PENDING)
                 .retryCount(retryCount)
                 .maxRetries(3)
+                .priority(5)
                 .nextRetryAt(Instant.now())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())

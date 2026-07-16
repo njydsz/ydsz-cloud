@@ -24,6 +24,12 @@
             <artifactId>ydsz-pmis-common-util</artifactId>
         </dependency>
 
+        <!-- YdszJson 统一 JSON 引擎 -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-exception</artifactId>
@@ -37,13 +43,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Jackson（邮件队列序列化） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-json</artifactId>
             <optional>true</optional>
         </dependency>
 

@@ -25,7 +25,6 @@ import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.provider.SmsProvider;
-import com.njydsz.pmis.common.notify.template.TemplateEngine;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -63,19 +62,16 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	private final NotifyProperties.SmsConfig smsConfig;
 	private final RestTemplate restTemplate;
-	private final TemplateEngine templateEngine;
 	private final ExecutorService virtualThreadExecutor;
 	private final SmsProvider smsProvider;
 
 	public SmsNotifySender(
 			NotifyProperties notifyProperties,
 			RestTemplate restTemplate,
-			TemplateEngine templateEngine,
 			@Qualifier("notifyVirtualThreadExecutor") ExecutorService virtualThreadExecutor,
 			ObjectProvider<SmsProvider> smsProviderProvider) {
 		this.smsConfig = notifyProperties.getSms();
 		this.restTemplate = restTemplate;
-		this.templateEngine = templateEngine;
 		this.virtualThreadExecutor = virtualThreadExecutor;
 		this.smsProvider = smsProviderProvider.getIfAvailable();
 		if (this.smsProvider != null) {

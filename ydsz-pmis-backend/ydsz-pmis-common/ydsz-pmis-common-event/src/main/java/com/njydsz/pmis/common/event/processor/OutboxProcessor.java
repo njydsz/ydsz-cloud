@@ -238,12 +238,18 @@ public class OutboxProcessor {
 
     /**
      * 分发投递任务到工作线程池
+     *
+     * <p>当 workerThreads=1 时直接在调度线程中执行（同步），避免线程切换开销。
+     * 当 workerThreads>1 时提交到线程池异步执行。
      */
     private void dispatchPublish(List<OutboxMessage> messages) {
-        if (messages.size() > 1) {
-            publishExecutor.execute(() -> processBatchPublish(messages));
+        Runnable task = messages.size() > 1
+                ? () -> processBatchPublish(messages)
+                : () -> processSingle(messages.get(0));
+        if (properties.getWorkerThreads() <= 1) {
+            task.run();
         } else {
-            publishExecutor.execute(() -> processSingle(messages.get(0)));
+            publishExecutor.execute(task);
         }
     }
 

@@ -20,6 +20,7 @@ public enum NotifyChannel {
 	WECOM(3, "企业微信"),
 	DINGTALK(4, "钉钉"),
 	FEISHU(5, "飞书"),
+	/** 站内信渠道。当前版本暂未实现，将在后续版本补充。 */
 	INSITE(6, "站内信");
 
 	private final int code;

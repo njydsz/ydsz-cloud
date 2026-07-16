@@ -76,7 +76,7 @@ COMMENT ON COLUMN pmis_outbox.aggregate_type IS '聚合根类型';
 COMMENT ON COLUMN pmis_outbox.event_type IS '事件类型';
 COMMENT ON COLUMN pmis_outbox.payload IS '事件负载 JSON';
 COMMENT ON COLUMN pmis_outbox.headers IS '扩展头 JSON';
-COMMENT ON COLUMN pmis_outbox.status IS '状态: PENDING/PROCESSING/SENT/DEAD_LETTER/FAILED';
+COMMENT ON COLUMN pmis_outbox.status IS '状态: PENDING/PROCESSING/SENT/DEAD_LETTER';
 COMMENT ON COLUMN pmis_outbox.retry_count IS '重试次数';
 COMMENT ON COLUMN pmis_outbox.max_retries IS '最大重试次数';
 COMMENT ON COLUMN pmis_outbox.next_retry_at IS '下次重试时间';

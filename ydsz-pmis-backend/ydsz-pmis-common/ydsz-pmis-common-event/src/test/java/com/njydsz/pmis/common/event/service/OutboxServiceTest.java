@@ -43,14 +43,13 @@ class OutboxServiceTest {
         properties.setDefaultPriority(5);
         properties.setDefaultSchemaVersion("v1.0.0");
         properties.setEnableTenantIsolation(false);
+        // autoDedup 默认 false：不自动生成 deduplicationId
         outboxService = new OutboxService(outboxRepository, properties, null);
     }
 
     @Test
-    @DisplayName("appendToOutbox 基本写入")
+    @DisplayName("appendToOutbox 基本写入（autoDedup=false，不生成 deduplicationId）")
     void appendToOutbox_basic() {
-        when(outboxRepository.existsByDeduplicationId(anyString())).thenReturn(false);
-
         outboxService.appendToOutbox("Order", "order-001", "OrderCreated", "{\"id\":1}");
 
         ArgumentCaptor<OutboxMessage> captor = ArgumentCaptor.forClass(OutboxMessage.class);
@@ -65,7 +64,7 @@ class OutboxServiceTest {
         assertEquals(0, saved.getRetryCount());
         assertEquals(5, saved.getMaxRetries());
         assertNotNull(saved.getId());
-        assertNotNull(saved.getDeduplicationId());
+        assertNull(saved.getDeduplicationId()); // autoDedup=false，不生成
         assertEquals("v1.0.0", saved.getSchemaVersion());
         assertEquals(5, saved.getPriority());
     }
@@ -73,8 +72,6 @@ class OutboxServiceTest {
     @Test
     @DisplayName("appendToOutbox 带 headers")
     void appendToOutbox_withHeaders() {
-        when(outboxRepository.existsByDeduplicationId(anyString())).thenReturn(false);
-
         outboxService.appendToOutbox("Order", "order-001", "OrderCreated",
                 "{\"id\":1}", Map.of("source", "api"));
 
@@ -93,8 +90,36 @@ class OutboxServiceTest {
     }
 
     @Test
-    @DisplayName("幂等去重：deduplicationId 已存在时跳过写入")
-    void appendToOutbox_duplicateSkipped() {
+    @DisplayName("显式传入 deduplicationId 时进行幂等检查")
+    void appendToOutbox_explicitDedup_checked() {
+        when(outboxRepository.existsByDeduplicationId("custom-dedup-id")).thenReturn(true);
+
+        outboxService.appendToOutbox("Order", "order-001", "OrderCreated",
+                "{\"id\":1}", Map.of(), 5, "v1.0.0", null, "custom-dedup-id");
+
+        verify(outboxRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("autoDedup=true 时自动生成 deduplicationId 并检查")
+    void appendToOutbox_autoDedup_enabled() {
+        properties.setAutoDedup(true);
+        when(outboxRepository.existsByDeduplicationId(anyString())).thenReturn(false);
+
+        outboxService.appendToOutbox("Order", "order-001", "OrderCreated", "{\"id\":1}");
+
+        ArgumentCaptor<OutboxMessage> captor = ArgumentCaptor.forClass(OutboxMessage.class);
+        verify(outboxRepository).save(captor.capture());
+
+        OutboxMessage saved = captor.getValue();
+        assertNotNull(saved.getDeduplicationId());
+        assertEquals(64, saved.getDeduplicationId().length()); // SHA-256 hex truncated to 32 chars
+    }
+
+    @Test
+    @DisplayName("autoDedup=true 且重复时跳过写入")
+    void appendToOutbox_autoDedup_duplicateSkipped() {
+        properties.setAutoDedup(true);
         when(outboxRepository.existsByDeduplicationId(anyString())).thenReturn(true);
 
         outboxService.appendToOutbox("Order", "order-001", "OrderCreated", "{\"id\":1}");
@@ -119,5 +144,18 @@ class OutboxServiceTest {
         assertEquals("v2.0.0", saved.getSchemaVersion());
         assertEquals("application/vnd.ydsz.order.v2+json", saved.getContentType());
         assertEquals("custom-dedup-id", saved.getDeduplicationId());
+    }
+
+    @Test
+    @DisplayName("显式设置优先级 0 时保留 0（不被默认值覆盖）")
+    void appendToOutbox_priorityZero_preserved() {
+        outboxService.appendToOutbox("Order", "order-001", "OrderCreated",
+                "{\"id\":1}", Map.of(), 0, "v1.0.0", null, null);
+
+        ArgumentCaptor<OutboxMessage> captor = ArgumentCaptor.forClass(OutboxMessage.class);
+        verify(outboxRepository).save(captor.capture());
+
+        OutboxMessage saved = captor.getValue();
+        assertEquals(0, saved.getPriority());
     }
 }

@@ -42,10 +42,13 @@ import com.njydsz.pmis.common.notify.core.PersistentNotifyRetryQueue;
 import com.njydsz.pmis.common.notify.core.TransactionalNotifyPublisher;
 import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
 import com.njydsz.pmis.common.notify.fallback.NotifyFallbackManager;
+import com.njydsz.pmis.common.notify.health.NotifyHealthIndicator;
 import com.njydsz.pmis.common.notify.i18n.NotifyI18nResolver;
 import com.njydsz.pmis.common.notify.i18n.NotifyI18nService;
 import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
 import com.njydsz.pmis.common.notify.preference.NotifyPreferenceManager;
+import com.njydsz.pmis.common.notify.provider.AliyunSmsProvider;
+import com.njydsz.pmis.common.notify.provider.SmsProvider;
 import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
 import com.njydsz.pmis.common.notify.security.DkimSigner;
 import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
@@ -300,6 +303,32 @@ public class NotifyConfiguration {
 	public TemplateVariableValidator templateVariableValidator() {
 		log.info("[NotifyConfiguration] TemplateVariableValidator bean registered");
 		return new TemplateVariableValidator();
+	}
+
+	// ==================== AliyunSmsProvider ====================
+
+	@Bean
+	@ConditionalOnMissingBean(SmsProvider.class)
+	@ConditionalOnProperty(prefix = "ydsz.notify.sms", name = "provider", havingValue = "aliyun")
+	public AliyunSmsProvider aliyunSmsProvider(RestTemplate restTemplate, NotifyProperties properties) {
+		NotifyProperties.SmsConfig sms = properties.getSms();
+		log.info("[NotifyConfiguration] AliyunSmsProvider bean registered, endpoint={}", sms.getEndpoint());
+		return new AliyunSmsProvider(restTemplate, sms.getEndpoint(),
+				sms.getAccessKeyId(), sms.getAccessKeySecret());
+	}
+
+	// ==================== 健康检查 ====================
+
+	@Bean
+	@ConditionalOnMissingBean(NotifyHealthIndicator.class)
+	@ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+	public NotifyHealthIndicator notifyHealthIndicator(NotifyProperties notifyProperties,
+			ObjectProvider<List<NotifyChannelStrategy>> strategiesProvider,
+			ObjectProvider<NotifyRetryQueue> retryQueueProvider,
+			ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerProvider) {
+		log.info("[NotifyConfiguration] NotifyHealthIndicator bean registered");
+		return new NotifyHealthIndicator(notifyProperties, strategiesProvider,
+				retryQueueProvider, circuitBreakerProvider);
 	}
 
 	// ==================== RestTemplate =====================

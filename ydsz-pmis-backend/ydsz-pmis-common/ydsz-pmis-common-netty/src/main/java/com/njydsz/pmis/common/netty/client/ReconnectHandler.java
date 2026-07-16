@@ -118,7 +118,7 @@ public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
         return retryCount.get();
     }
 
-    private ChannelHandlerContext ctx;
+    private volatile ChannelHandlerContext ctx;
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
