@@ -10,7 +10,6 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.util.TimeValue;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,7 +21,6 @@ import com.njydsz.pmis.common.feign.aspect.FeignRequestInterceptor;
 import com.njydsz.pmis.common.feign.aspect.YdszFeignErrorDecoder;
 import com.njydsz.pmis.common.feign.aspect.YdszFeignLogger;
 import com.njydsz.pmis.common.feign.circuitbreaker.CircuitBreakerStatePersistence;
-import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerMetricsExporter;
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.njydsz.pmis.common.feign.codec.JsonDecoder;
 import com.njydsz.pmis.common.feign.codec.JsonEncoder;
@@ -359,23 +357,6 @@ public class FeignConfiguration {
                 .disableRedirectHandling()
                 .disableAutomaticRetries()
                 .build();
-    }
-
-    /**
-     * 创建熔断器指标导出器，将熔断状态、失败率等指标暴露到 Actuator Metrics。
-     * <p>仅当 Micrometer MeterRegistry 在 classpath 中时生效。
-     *
-     * @param circuitBreakerStrategy 熔断器策略
-     * @param meterRegistry  Micrometer 注册表
-     * @return FeignCircuitBreakerMetricsExporter 实例
-     */
-    @Bean
-    @ConditionalOnClass(MeterRegistry.class)
-    @ConditionalOnBean(MeterRegistry.class)
-    @ConditionalOnMissingBean
-    public FeignCircuitBreakerMetricsExporter feignCircuitBreakerMetricsExporter(
-            FeignCircuitBreakerStrategy circuitBreakerStrategy, MeterRegistry meterRegistry) {
-        return new FeignCircuitBreakerMetricsExporter(circuitBreakerStrategy, meterRegistry);
     }
 
     /**

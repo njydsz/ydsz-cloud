@@ -3,6 +3,18 @@ package com.njydsz.pmis.common.feign.fallback;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,17 +127,49 @@ public abstract class DefaultFallbackFactory<T> implements FallbackFactory<T> {
                     if (returnType == void.class) {
                         return null;
                     }
-                    // 如果方法返回类型是 BaseResponse 或其子类，返回错误响应
                     if (BaseResponse.class.isAssignableFrom(returnType)) {
                         return BaseResponse.error(
                                 "B01004",
                                 errorMsg
                         );
                     }
-                    // 对于其他返回类型，返回 null 或默认值
+                    if (Collection.class.isAssignableFrom(returnType)) {
+                        return createEmptyCollection(returnType);
+                    }
+                    if (Map.class.isAssignableFrom(returnType)) {
+                        return new HashMap<>();
+                    }
                     return getDefaultValue(returnType);
                 }
         );
+    }
+
+    /**
+     * 根据集合接口类型创建空集合实例。
+     *
+     * @param collectionType 集合类型
+     * @return 空集合实例
+     */
+    private Object createEmptyCollection(Class<?> collectionType) {
+        if (List.class.isAssignableFrom(collectionType)) {
+            if (LinkedList.class.isAssignableFrom(collectionType)) {
+                return new LinkedList<>();
+            }
+            return new ArrayList<>();
+        }
+        if (Set.class.isAssignableFrom(collectionType)) {
+            if (NavigableSet.class.isAssignableFrom(collectionType)) {
+                return new TreeSet<>();
+            }
+            if (LinkedHashSet.class.isAssignableFrom(collectionType)) {
+                return new LinkedHashSet<>();
+            }
+            return new HashSet<>();
+        }
+        if (Collection.class.isAssignableFrom(collectionType)) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>();
     }
 
     /**

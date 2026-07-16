@@ -2,12 +2,8 @@ package com.njydsz.pmis.common.jdbc.health;
 
 import javax.sql.DataSource;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.context.annotation.Bean;
 
 import com.zaxxer.hikari.HikariDataSource;
 

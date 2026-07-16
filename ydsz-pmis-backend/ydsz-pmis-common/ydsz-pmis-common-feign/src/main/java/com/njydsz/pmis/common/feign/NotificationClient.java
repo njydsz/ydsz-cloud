@@ -19,7 +19,7 @@ import com.njydsz.pmis.common.feign.fallback.NotificationClientFallbackFactory;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-message", contextId = "notificationClient",
+@FeignClient(name = FeignClientConstants.MESSAGE, contextId = "notificationClient",
         fallbackFactory = NotificationClientFallbackFactory.class)
 public interface NotificationClient {
 
@@ -29,7 +29,7 @@ public interface NotificationClient {
      * @param dto 通知内容
      * @return 发送结果
      */
-    @PostMapping("/api/message/notification/send")
+    @PostMapping(FeignClientConstants.MESSAGE_PATH_NOTIFICATION_SEND)
     BaseResponse<Void> send(@RequestBody NotificationFeignDTO dto);
 
     /**
@@ -40,7 +40,7 @@ public interface NotificationClient {
      * @param dto    推送数据
      * @return 推送结果
      */
-    @PostMapping("/api/message/notification/push-realtime")
+    @PostMapping(FeignClientConstants.MESSAGE_PATH_NOTIFICATION_PUSH_REALTIME)
     BaseResponse<Void> pushRealtime(@RequestParam("userId") String userId,
                                     @RequestParam("type") String type,
                                     @RequestBody RealtimePushDTO dto);
@@ -52,7 +52,7 @@ public interface NotificationClient {
      * @param dto  推送数据
      * @return 推送结果
      */
-    @PostMapping("/api/message/notification/broadcast")
+    @PostMapping(FeignClientConstants.MESSAGE_PATH_NOTIFICATION_BROADCAST)
     BaseResponse<Void> broadcast(@RequestParam("type") String type,
                                  @RequestBody RealtimePushDTO dto);
 }

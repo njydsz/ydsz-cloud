@@ -19,7 +19,7 @@ import org.springframework.core.annotation.AliasFor;
  * <p><b>使用示例：</b>
  * <pre>{@code
  * @SpringBootApplication
- * @EnableYdszFeign(basePpackages = "com.njydsz.pmis.order.client")
+ * @EnableYdszFeign(basePackages = "com.njydsz.pmis.order.client")
  * public class OrderApplication {
  *     public static void main(String[] args) {
  *         SpringApplication.run(OrderApplication.class, args);
@@ -29,7 +29,6 @@ import org.springframework.core.annotation.AliasFor;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -38,7 +37,7 @@ import org.springframework.core.annotation.AliasFor;
 public @interface EnableYdszFeign {
 
     /**
-     * 等同于 {@link #basePpackages}，指定 Feign 客户端扫描包路径。
+     * 等同于 {@link #basePackages}，指定 Feign 客户端扫描包路径。
      */
     @AliasFor(annotation = EnableFeignClients.class, attribute = "value")
     String[] value() default {};
@@ -46,14 +45,14 @@ public @interface EnableYdszFeign {
     /**
      * Feign 客户端扫描的基础包路径，默认为 {@code com.njydsz.pmis}。
      */
-    @AliasFor(annotation = EnableFeignClients.class, attribute = "basePpackages")
-    String[] basePpackages() default {"com.njydsz.pmis"};
+    @AliasFor(annotation = EnableFeignClients.class, attribute = "basePackages")
+    String[] basePackages() default {"com.njydsz.pmis"};
 
     /**
      * 指定类所在的包作为 Feign 客户端扫描路径。
      */
-    @AliasFor(annotation = EnableFeignClients.class, attribute = "basePpackageClasses")
-    Class<?>[] basePpackageClasses() default {};
+    @AliasFor(annotation = EnableFeignClients.class, attribute = "basePackageClasses")
+    Class<?>[] basePackageClasses() default {};
 
     /**
      * Feign 客户端的默认配置类。

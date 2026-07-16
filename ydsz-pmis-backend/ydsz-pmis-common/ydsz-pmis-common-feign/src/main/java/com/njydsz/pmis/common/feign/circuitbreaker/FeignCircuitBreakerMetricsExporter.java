@@ -5,8 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -34,8 +32,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@ConditionalOnClass({MeterRegistry.class, FeignCircuitBreakerStrategy.class})
-@ConditionalOnBean({FeignCircuitBreakerStrategy.class, MeterRegistry.class})
 public class FeignCircuitBreakerMetricsExporter {
 
     private static final Logger log = LoggerFactory.getLogger(FeignCircuitBreakerMetricsExporter.class);
@@ -43,21 +39,28 @@ public class FeignCircuitBreakerMetricsExporter {
     private static final String PREFIX = "feign.circuit.breaker";
     private static final String TAG_SERVICE = "service";
 
-    private final FeignCircuitBreakerStrategy circuitBreakerStrategy;
     private final MeterRegistry meterRegistry;
     private final Set<String> registeredServices = ConcurrentHashMap.newKeySet();
+
+    private volatile FeignCircuitBreakerStrategy circuitBreakerStrategy;
 
     /**
      * 构造熔断器指标导出器。
      *
-     * @param circuitBreakerStrategy Feign 熔断器策略
-     * @param meterRegistry          Micrometer 指标注册表
+     * @param meterRegistry Micrometer 指标注册表
      */
-    public FeignCircuitBreakerMetricsExporter(FeignCircuitBreakerStrategy circuitBreakerStrategy,
-                                               MeterRegistry meterRegistry) {
-        this.circuitBreakerStrategy = circuitBreakerStrategy;
+    public FeignCircuitBreakerMetricsExporter(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         log.info("[FeignCircuitBreakerMetricsExporter] 熔断器指标导出已启用");
+    }
+
+    /**
+     * 设置熔断器策略（用于解决与策略之间的循环依赖）。
+     *
+     * @param circuitBreakerStrategy Feign 熔断器策略
+     */
+    public void setCircuitBreakerStrategy(FeignCircuitBreakerStrategy circuitBreakerStrategy) {
+        this.circuitBreakerStrategy = circuitBreakerStrategy;
     }
 
     /**
@@ -75,48 +78,64 @@ public class FeignCircuitBreakerMetricsExporter {
         registeredServices.add(serviceName);
 
         Gauge.builder(PREFIX + ".state", () -> {
-                    FeignCircuitBreakerStrategy.CircuitBreakerState state = circuitBreakerStrategy.getState(serviceName);
-                    return state == FeignCircuitBreakerStrategy.CircuitBreakerState.CLOSED ? 0
-                            : state == FeignCircuitBreakerStrategy.CircuitBreakerState.OPEN ? 1
-                            : state == FeignCircuitBreakerStrategy.CircuitBreakerState.HALF_OPEN ? 2
-                            : state == FeignCircuitBreakerStrategy.CircuitBreakerState.FORCED_OPEN ? 3 : -1;
+                    FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
+                    if (strategy == null) {
+                        return -1.0;
+                    }
+                    FeignCircuitBreakerStrategy.CircuitBreakerState state = strategy.getState(serviceName);
+                    return state == FeignCircuitBreakerStrategy.CircuitBreakerState.CLOSED ? 0.0
+                            : state == FeignCircuitBreakerStrategy.CircuitBreakerState.OPEN ? 1.0
+                            : state == FeignCircuitBreakerStrategy.CircuitBreakerState.HALF_OPEN ? 2.0
+                            : state == FeignCircuitBreakerStrategy.CircuitBreakerState.FORCED_OPEN ? 3.0 : -1.0;
                 })
                 .tag(TAG_SERVICE, serviceName)
                 .description("Circuit breaker state: 0=CLOSED, 1=OPEN, 2=HALF_OPEN, 3=FORCED_OPEN")
                 .register(meterRegistry);
 
-        Gauge.builder(PREFIX + ".failure.rate", () ->
-                        circuitBreakerStrategy.getMetrics(serviceName).getFailureRate())
+        Gauge.builder(PREFIX + ".failure.rate", () -> {
+                    FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
+                    return strategy != null ? strategy.getMetrics(serviceName).getFailureRate() : 0.0;
+                })
                 .tag(TAG_SERVICE, serviceName)
                 .description("Failure rate percentage")
                 .register(meterRegistry);
 
-        Gauge.builder(PREFIX + ".total.calls", () ->
-                        (double) circuitBreakerStrategy.getMetrics(serviceName).getTotalCalls())
+        Gauge.builder(PREFIX + ".total.calls", () -> {
+                    FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
+                    return strategy != null ? (double) strategy.getMetrics(serviceName).getTotalCalls() : 0.0;
+                })
                 .tag(TAG_SERVICE, serviceName)
                 .description("Total call count")
                 .register(meterRegistry);
 
-        Gauge.builder(PREFIX + ".success.calls", () ->
-                        (double) circuitBreakerStrategy.getMetrics(serviceName).getSuccessfulCalls())
+        Gauge.builder(PREFIX + ".success.calls", () -> {
+                    FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
+                    return strategy != null ? (double) strategy.getMetrics(serviceName).getSuccessfulCalls() : 0.0;
+                })
                 .tag(TAG_SERVICE, serviceName)
                 .description("Successful call count")
                 .register(meterRegistry);
 
-        Gauge.builder(PREFIX + ".failed.calls", () ->
-                        (double) circuitBreakerStrategy.getMetrics(serviceName).getFailedCalls())
+        Gauge.builder(PREFIX + ".failed.calls", () -> {
+                    FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
+                    return strategy != null ? (double) strategy.getMetrics(serviceName).getFailedCalls() : 0.0;
+                })
                 .tag(TAG_SERVICE, serviceName)
                 .description("Failed call count")
                 .register(meterRegistry);
 
-        Gauge.builder(PREFIX + ".slow.calls", () ->
-                        (double) circuitBreakerStrategy.getMetrics(serviceName).getSlowCalls())
+        Gauge.builder(PREFIX + ".slow.calls", () -> {
+                    FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
+                    return strategy != null ? (double) strategy.getMetrics(serviceName).getSlowCalls() : 0.0;
+                })
                 .tag(TAG_SERVICE, serviceName)
                 .description("Slow call count")
                 .register(meterRegistry);
 
-        Gauge.builder(PREFIX + ".avg.duration", () ->
-                        (double) circuitBreakerStrategy.getMetrics(serviceName).getAverageDuration())
+        Gauge.builder(PREFIX + ".avg.duration", () -> {
+                    FeignCircuitBreakerStrategy strategy = circuitBreakerStrategy;
+                    return strategy != null ? (double) strategy.getMetrics(serviceName).getAverageDuration() : 0.0;
+                })
                 .tag(TAG_SERVICE, serviceName)
                 .description("Average call duration in milliseconds")
                 .register(meterRegistry);

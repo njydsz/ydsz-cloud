@@ -17,7 +17,6 @@ import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -39,6 +39,23 @@ public class Resilience4jFeignConfiguration {
     private static final Logger log = LoggerFactory.getLogger(Resilience4jFeignConfiguration.class);
 
     /**
+     * 注册熔断器指标导出器。
+     *
+     * <p>当 Micrometer MeterRegistry 在 classpath 中时自动创建。
+     * 使用单参数构造（仅 MeterRegistry），策略通过 setter 注入以避免循环依赖。
+     *
+     * @param meterRegistry Micrometer 指标注册表
+     * @return FeignCircuitBreakerMetricsExporter 实例
+     */
+    @Bean
+    @ConditionalOnClass(MeterRegistry.class)
+    @ConditionalOnBean(MeterRegistry.class)
+    @ConditionalOnMissingBean
+    public FeignCircuitBreakerMetricsExporter feignCircuitBreakerMetricsExporter(MeterRegistry meterRegistry) {
+        return new FeignCircuitBreakerMetricsExporter(meterRegistry);
+    }
+
+    /**
      * 注册 Resilience4j 熔断器策略 Bean。
      *
      * <p>自动注入 {@link CircuitBreakerStatePersistence}（用于状态持久化）
@@ -55,29 +72,16 @@ public class Resilience4jFeignConfiguration {
             FeignProperties properties,
             ObjectProvider<CircuitBreakerStatePersistence> statePersistenceProvider,
             ObjectProvider<FeignCircuitBreakerMetricsExporter> metricsExporterProvider) {
-        log.info("[Feign] 使用 Resilience4j 熔断器策略");
-        return new Resilience4jCircuitBreakerAdapter(
+        FeignCircuitBreakerMetricsExporter exporter = metricsExporterProvider.getIfAvailable();
+        Resilience4jCircuitBreakerAdapter adapter = new Resilience4jCircuitBreakerAdapter(
                 properties,
                 statePersistenceProvider.getIfAvailable(),
-                metricsExporterProvider.getIfAvailable()
+                exporter
         );
-    }
-
-    /**
-     * 注册熔断器指标导出器。
-     *
-     * <p>当 Micrometer MeterRegistry 在 classpath 中时自动创建。
-     *
-     * @param meterRegistry Micrometer 指标注册表
-     * @return FeignCircuitBreakerMetricsExporter 实例
-     */
-    @Bean
-    @ConditionalOnClass(MeterRegistry.class)
-    @ConditionalOnBean(MeterRegistry.class)
-    @ConditionalOnMissingBean
-    public FeignCircuitBreakerMetricsExporter feignCircuitBreakerMetricsExporter(
-            ObjectProvider<FeignCircuitBreakerStrategy> strategyProvider,
-            MeterRegistry meterRegistry) {
-        return new FeignCircuitBreakerMetricsExporter(strategyProvider.getIfAvailable(), meterRegistry);
+        if (exporter != null) {
+            exporter.setCircuitBreakerStrategy(adapter);
+        }
+        log.info("[Feign] 使用 Resilience4j 熔断器策略");
+        return adapter;
     }
 }

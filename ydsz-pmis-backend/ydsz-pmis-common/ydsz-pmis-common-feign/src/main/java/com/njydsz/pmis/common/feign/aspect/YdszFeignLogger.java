@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 import org.slf4j.LoggerFactory;
 
 import feign.Logger;
+import feign.Request;
+import feign.Response;
 
 /**
  * YdszFeign 日志增强处理器。
@@ -31,6 +33,9 @@ import feign.Logger;
 public class YdszFeignLogger extends Logger {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("com.njydsz.pmis.feign"); // FQN-OK: name conflict with feign.Logger
+
+    /** Feign 日志级别 */
+    private volatile Logger.Level logLevel = Logger.Level.BASIC;
 
     /**
      * 需要脱敏的敏感字段名称集合（不区分大小写匹配）
@@ -67,7 +72,56 @@ public class YdszFeignLogger extends Logger {
     }
 
     /**
+     * 设置 Feign 日志级别。
+     *
+     * @param logLevel 日志级别
+     */
+    public void setLogLevel(Logger.Level logLevel) {
+        this.logLevel = logLevel != null ? logLevel : Logger.Level.BASIC;
+    }
+
+    /**
+     * 根据 Feign 日志级别选择对应的 SLF4J 日志级别输出。
+     *
+     * @param level Feign 日志级别
+     */
+    private void logByLevel(Logger.Level level, String configKey, String format, Object... args) {
+        String msg = methodTag(configKey) + format;
+        switch (level) {
+            case NONE -> { /* no-op */ }
+            case BASIC -> {
+                if (LOG.isInfoEnabled()) {
+                    LOG.info(msg, args);
+                }
+            }
+            case HEADERS -> {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(msg, args);
+                }
+            }
+            case FULL -> {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(msg, args);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void logRequest(String configKey, Logger.Level logLevel, Request request) {
+        this.logLevel = logLevel;
+    }
+
+    @Override
+    protected Response logAndRebufferResponse(String configKey, Logger.Level logLevel, Response response, long elapsedTime) throws java.io.IOException {
+        this.logLevel = logLevel;
+        return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
+    }
+
+    /**
      * 输出日志，自动对敏感字段值进行脱敏处理。
+     *
+     * <p>根据 Feign 配置的日志级别选择对应的 SLF4J 级别输出。
      *
      * @param configKey Feign 配置键
      * @param format    日志格式字符串
@@ -76,16 +130,8 @@ public class YdszFeignLogger extends Logger {
     @Override
     protected void log(String configKey, String format, Object... args) {
         String safeFormat = maskSensitiveData(format);
-        LOG.info(methodTag(configKey) + safeFormat, args);
+        logByLevel(this.logLevel, configKey, safeFormat, args);
     }
-
-    /**
-     * 对日志消息中的敏感字段值进行脱敏处理
-     * <p>安全加固：防止 password、token、secret 等敏感信息泄露到日志中
-     *
-     * @param message 原始日志消息
-     * @return 脱敏后的安全日志消息
-     */
     private static String maskSensitiveData(String message) {
         if (message == null || message.isEmpty()) {
             return message;
@@ -98,12 +144,12 @@ public class YdszFeignLogger extends Logger {
     }
 
     /**
-     * 将指定字段的值替换为脱敏标记
-     * <p>支持格式：{@code fieldName: value}、{@code fieldName=value}、{@code "fieldName":"value"}
+     * 对日志消息中的敏感字段值进行脱敏处理。
      *
-     * @param message   日志消息
-     * @param fieldName 字段名称
-     * @return 脱敏后的消息
+     * <p>安全加固：防止 password、token、secret 等敏感信息泄露到日志中。
+     *
+     * @param message 原始日志消息
+     * @return 脱敏后的安全日志消息
      */
     private static String maskFieldValue(String message, String fieldName) {
         /* JSON 格式： "fieldName":"value" 或 "fieldName": "value" */

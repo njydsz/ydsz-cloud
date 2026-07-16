@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.feign.fallback.MessageServiceClientFallbackFactory
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-message", contextId = "messageServiceClient",
+@FeignClient(name = FeignClientConstants.MESSAGE, contextId = "messageServiceClient",
         fallbackFactory = MessageServiceClientFallbackFactory.class)
 public interface MessageServiceClient {
 
@@ -25,6 +25,6 @@ public interface MessageServiceClient {
      * @param request 消息请求
      * @return 发送结果
      */
-    @PostMapping("/api/message/send")
+    @PostMapping(FeignClientConstants.MESSAGE_PATH_SEND)
     BaseResponse<MessageResult> send(@RequestBody MessageRequest request);
 }

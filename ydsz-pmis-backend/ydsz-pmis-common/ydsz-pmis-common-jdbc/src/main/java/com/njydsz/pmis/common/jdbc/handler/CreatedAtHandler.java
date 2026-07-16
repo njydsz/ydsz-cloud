@@ -1,13 +1,10 @@
 package com.njydsz.pmis.common.jdbc.handler;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import com.njydsz.pmis.common.jdbc.config.FieldFillConfiguration;
 import com.njydsz.pmis.common.jdbc.enums.FieldFillStrategyEnum;
 
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.TimestampValue;
+import net.sf.jsqlparser.expression.Function;
 
 /**
  * 创建时间字段填充处理器
@@ -38,8 +35,6 @@ import net.sf.jsqlparser.expression.TimestampValue;
  */
 public class CreatedAtHandler extends AbstractFieldFillHandler {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     /**
      * 构造创建时间填充处理器
      *
@@ -51,8 +46,10 @@ public class CreatedAtHandler extends AbstractFieldFillHandler {
 
     @Override
     protected Expression doGetFieldFillValue() {
-        String date = LocalDateTime.now().format(FORMATTER);
-        return new TimestampValue(date);
+        // 使用 CURRENT_TIMESTAMP 函数，由数据库计算时间戳，避免 SQL 文本嵌入
+        Function func = new Function();
+        func.setName("CURRENT_TIMESTAMP");
+        return func;
     }
 
     @Override

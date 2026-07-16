@@ -101,6 +101,8 @@ public class HikariCPConfiguration {
         config.setIdleTimeout(properties.getIdleTimeout());
         config.setMaxLifetime(properties.getMaxLifetime());
         config.setLeakDetectionThreshold(properties.getEffectiveLeakDetectionThreshold());
+        config.setKeepaliveTime(properties.getKeepaliveTime());
+        config.setValidationTimeout(properties.getValidationTimeout());
         config.setPoolName(properties.getPoolName());
         config.setRegisterMbeans(properties.isRegisterMbeans());
 

@@ -70,6 +70,21 @@ public class HikariCPProperties {
     private long leakDetectionThreshold = 30000L;
 
     /**
+     * 连接保活时间（毫秒）
+     * HikariCP 会定期验证空闲连接，防止被数据库端超时断开。
+     * 应小于 max-lifetime。
+     * 默认值：120000（2 分钟）
+     */
+    private long keepaliveTime = 120000L;
+
+    /**
+     * 连接校验超时时间（毫秒）
+     * 获取连接时校验的最大等待时间。
+     * 默认值：5000（5 秒）
+     */
+    private long validationTimeout = 5000L;
+
+    /**
      * 连接测试查询语句（可选）
      * 如果未设置，会根据 JDBC URL 自动推断。
      */

@@ -53,6 +53,8 @@ public class GzipRequestCompressInterceptor implements RequestInterceptor {
     private static final String VALUE_GZIP = "gzip";
     /** Content-Type 请求头名称 */
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
+    /** Accept-Encoding 请求头名称 */
+    private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
 
     /** 最小压缩阈值（字节），小于此值的请求体不压缩 */
     private final int minCompressSize;
@@ -118,6 +120,8 @@ public class GzipRequestCompressInterceptor implements RequestInterceptor {
             requestTemplate.body(compressedBody, StandardCharsets.UTF_8);
             requestTemplate.header(HEADER_CONTENT_ENCODING, VALUE_GZIP);
         }
+
+        requestTemplate.header(HEADER_ACCEPT_ENCODING, VALUE_GZIP);
     }
 
     private boolean isExcludedContentType(String contentType) {
