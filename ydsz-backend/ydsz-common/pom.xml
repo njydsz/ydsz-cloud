@@ -13,7 +13,7 @@
     <artifactId>ydsz-common</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-common</name>
-    <description>PMIS Common - 公共依赖聚合模块（从 ydsz-common 一比一迁移）</description>
+    <description>公共依赖聚合模块</description>
 
     <properties>
         <!-- ydsz-common 第三方依赖版本（父 POM 未管理的部分） -->

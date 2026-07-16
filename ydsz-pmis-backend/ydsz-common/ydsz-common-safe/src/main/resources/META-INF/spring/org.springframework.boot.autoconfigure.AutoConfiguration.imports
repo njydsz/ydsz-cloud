@@ -1,3 +1,0 @@
-com.njydsz.pmis.common.safe.config.SafeConfiguration
-com.njydsz.pmis.common.safe.xss.XssAutoConfiguration
-com.njydsz.pmis.common.safe.captcha.config.CaptchaAutoConfiguration
