@@ -1,0 +1,64 @@
+# =====================================================================
+#  PMIS 消息通知引擎 bootstrap 配置（自研大厂级统一通知中心）
+#  --------------------------------------------------------------------
+#  端口：9004
+#  职责：
+#    - 多渠道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）
+#    - 模板管理（i18n/版本/审核/场景）
+#    - 站内通知（优先级/聚合/撤回/跳转）
+#    - 用户偏好（免打扰/频率上限/聚合/语言）
+#    - 订阅管理（主题级订阅/退订）
+#    - 消息路由（条件路由/通道降级）
+#    - 限流（Redisson 令牌桶）
+#    - 回执（送达/已读/点击/失败/超时）
+#    - 撤回 / 聚合 / 监控 / 灰度
+#    - 异步（RocketMQ 生产/消费/死信 + Redis SET NX EX 幂等）
+#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、RocketMQ、Mail
+#  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
+# =====================================================================
+
+server:
+  # HTTP 监听端口（按构建顺序 5/7）
+  port: 9004
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: ydsz-message
+  profiles:
+    # 默认 dev，可通过 -Dspring.profiles.active=dev|sit|uat|prod 或 ENV SPRING_PROFILES_ACTIVE 覆盖
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      # ---------- 服务注册 ----------
+      discovery:
+        enabled: true
+        register-enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:pmis}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        metadata:
+          version: 1.0.0
+          port: 9004
+        ip-type: IPv4
+      # ---------- 配置中心 ----------
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:pmis}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        file-extension: yaml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: ydsz-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true

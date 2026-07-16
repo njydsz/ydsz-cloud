@@ -1,0 +1,238 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.sentry.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Sentry 监控模块。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.app-name",
+      "type": "java.lang.String",
+      "description": "应用名称，用于日志和指标标识。",
+      "defaultValue": "pmis"
+    },
+    {
+      "name": "ydsz.sentry.hostname",
+      "type": "java.lang.String",
+      "description": "主机名，auto 表示自动探测。",
+      "defaultValue": "auto"
+    },
+    {
+      "name": "ydsz.sentry.profile",
+      "type": "java.lang.String",
+      "description": "环境标识（dev/sit/uat/prod）。",
+      "defaultValue": "dev"
+    },
+    {
+      "name": "ydsz.sentry.metrics.primary",
+      "type": "java.lang.String",
+      "description": "主指标采集器：micrometer 或 memory。",
+      "defaultValue": "micrometer"
+    },
+    {
+      "name": "ydsz.sentry.metrics.enable-system-metrics",
+      "type": "java.lang.Boolean",
+      "description": "是否启用系统资源指标采集。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.metrics.system-metrics-interval-seconds",
+      "type": "java.lang.Integer",
+      "description": "系统资源指标采集间隔（秒）。",
+      "defaultValue": 15
+    },
+    {
+      "name": "ydsz.sentry.metrics.circuit-breaker.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用指标采集熔断器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.metrics.circuit-breaker.failure-rate-threshold",
+      "type": "java.lang.Double",
+      "description": "熔断器失败率阈值（0.0~1.0）。",
+      "defaultValue": 0.3
+    },
+    {
+      "name": "ydsz.sentry.metrics.circuit-breaker.sliding-window-size",
+      "type": "java.lang.Integer",
+      "description": "熔断器滑动窗口大小。",
+      "defaultValue": 100
+    },
+    {
+      "name": "ydsz.sentry.metrics.circuit-breaker.half-open-after-seconds",
+      "type": "java.lang.Integer",
+      "description": "熔断器半开恢复时间（秒）。",
+      "defaultValue": 30
+    },
+    {
+      "name": "ydsz.sentry.logging.primary",
+      "type": "java.lang.String",
+      "description": "主日志方案：elk、loki 或 dual。",
+      "defaultValue": "loki"
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 ELK 日志发布器。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.host",
+      "type": "java.lang.String",
+      "description": "Logstash 主机地址。",
+      "defaultValue": "logstash"
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.port",
+      "type": "java.lang.Integer",
+      "description": "Logstash 端口。",
+      "defaultValue": 5044
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.protocol",
+      "type": "java.lang.String",
+      "description": "ELK 传输协议：tcp 或 udp。",
+      "defaultValue": "tcp"
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.connect-timeout-millis",
+      "type": "java.lang.Integer",
+      "description": "ELK 连接超时（毫秒）。",
+      "defaultValue": 3000
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.read-timeout-millis",
+      "type": "java.lang.Integer",
+      "description": "ELK 读取超时（毫秒）。",
+      "defaultValue": 5000
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.max-retry-attempts",
+      "type": "java.lang.Integer",
+      "description": "ELK 最大重试次数。",
+      "defaultValue": 3
+    },
+    {
+      "name": "ydsz.sentry.logging.elk.circuit-breaker-threshold",
+      "type": "java.lang.Integer",
+      "description": "ELK 熔断器连续失败阈值。",
+      "defaultValue": 10
+    },
+    {
+      "name": "ydsz.sentry.logging.loki.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Loki 日志发布器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.logging.loki.url",
+      "type": "java.lang.String",
+      "description": "Loki 推送 URL。",
+      "defaultValue": "http://loki:3100"
+    },
+    {
+      "name": "ydsz.sentry.logging.loki.connect-timeout-seconds",
+      "type": "java.lang.Integer",
+      "description": "Loki 连接超时（秒）。",
+      "defaultValue": 5
+    },
+    {
+      "name": "ydsz.sentry.logging.loki.max-retry-attempts",
+      "type": "java.lang.Integer",
+      "description": "Loki 最大重试次数。",
+      "defaultValue": 3
+    },
+    {
+      "name": "ydsz.sentry.logging.loki.circuit-breaker-threshold",
+      "type": "java.lang.Integer",
+      "description": "Loki 熔断器连续失败阈值。",
+      "defaultValue": 10
+    },
+    {
+      "name": "ydsz.sentry.logging.dual.fail-on-all-error",
+      "type": "java.lang.Boolean",
+      "description": "双发模式下所有发布器都失败才算失败。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.sentry.logging.async.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用异步日志发布。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.logging.async.queue-capacity",
+      "type": "java.lang.Integer",
+      "description": "异步日志队列容量。",
+      "defaultValue": 8192
+    },
+    {
+      "name": "ydsz.sentry.logging.async.batch-size",
+      "type": "java.lang.Integer",
+      "description": "异步日志批量发送大小。",
+      "defaultValue": 100
+    },
+    {
+      "name": "ydsz.sentry.logging.async.flush-interval-millis",
+      "type": "java.lang.Long",
+      "description": "异步日志刷新间隔（毫秒）。",
+      "defaultValue": 1000
+    },
+    {
+      "name": "ydsz.sentry.logging.async.max-rate-per-second",
+      "type": "java.lang.Integer",
+      "description": "异步日志令牌桶限流（每秒最大发送量，0 表示不限流）。",
+      "defaultValue": 0
+    },
+    {
+      "name": "ydsz.sentry.tracing.primary",
+      "type": "java.lang.String",
+      "description": "主追踪系统：skywalking、opentelemetry 或 default。",
+      "defaultValue": "skywalking"
+    },
+    {
+      "name": "ydsz.sentry.tracing.slow-trace-threshold-millis",
+      "type": "java.lang.Long",
+      "description": "慢追踪阈值（毫秒）。",
+      "defaultValue": 3000
+    },
+    {
+      "name": "ydsz.sentry.alerting.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用告警。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.alerting.silence-period-millis",
+      "type": "java.lang.Long",
+      "description": "告警静默期（毫秒）。",
+      "defaultValue": 300000
+    },
+    {
+      "name": "ydsz.sentry.alerting.log-alerts",
+      "type": "java.lang.Boolean",
+      "description": "是否记录告警日志。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.sentry.alerting.dingtalk-receiver",
+      "type": "java.lang.String",
+      "description": "钉钉告警接收者（webhook 地址或群 ID）。",
+      "defaultValue": ""
+    },
+    {
+      "name": "ydsz.sentry.alerting.email-receiver",
+      "type": "java.lang.String",
+      "description": "邮件告警接收者地址。",
+      "defaultValue": ""
+    },
+    {
+      "name": "ydsz.sentry.sla.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 SLA 框架。",
+      "defaultValue": true
+    }
+  ]
+}
