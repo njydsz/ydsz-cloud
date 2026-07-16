@@ -1,0 +1,23 @@
+{{/*
+PDB：当 podDisruptionBudget.enabled=true 时为所有后端服务生成
+*/}}
+{{- if .Values.podDisruptionBudget.enabled -}}
+{{- $root := . -}}
+{{- range $svcName, $svc := .Values.services -}}
+{{- if $svc.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-{{ $svc.name }}-pdb
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "ydsz.labels" (dict "name" (printf "%s-pdb" $svc.name) "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
+spec:
+  minAvailable: {{ $root.Values.podDisruptionBudget.minAvailable | default 1 }}
+  selector:
+    matchLabels:
+      app: ydsz-{{ $svc.name }}
+{{- end }}
+{{- end }}
+{{- end -}}

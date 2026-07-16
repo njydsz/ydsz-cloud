@@ -1,0 +1,122 @@
+package com.njydsz.agent.server.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+/**
+ * Agent 模块配置属性
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@ConfigurationProperties(prefix = "ydsz.agent")
+public class AgentProperties {
+
+    /** 是否启用 Agent 模块 */
+    private boolean enabled = true;
+
+    /** LLM 配置 */
+    private Llm llm = new Llm();
+
+    /** 记忆配置 */
+    private Memory memory = new Memory();
+
+    /** RAG 配置 */
+    private Rag rag = new Rag();
+
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public Llm getLlm() { return llm; }
+    public void setLlm(Llm llm) { this.llm = llm; }
+    public Memory getMemory() { return memory; }
+    public void setMemory(Memory memory) { this.memory = memory; }
+    public Rag getRag() { return rag; }
+    public void setRag(Rag rag) { this.rag = rag; }
+
+    public static class Llm {
+        /** 默认 Provider（openai / deepseek / qwen / ollama） */
+        private String defaultProvider = "openai";
+        /** 默认模型名称 */
+        private String defaultModel = "gpt-4o-mini";
+        /** API Key */
+        private String apiKey = "";
+        /** API Base URL */
+        private String baseUrl = "https://api.openai.com/v1";
+        /** 默认温度 */
+        private double temperature = 0.7;
+        /** 默认最大 Token */
+        private int maxTokens = 2048;
+        /** 调用超时（秒） */
+        private int timeoutSeconds = 60;
+
+        public String getDefaultProvider() { return defaultProvider; }
+        public void setDefaultProvider(String defaultProvider) { this.defaultProvider = defaultProvider; }
+        public String getDefaultModel() { return defaultModel; }
+        public void setDefaultModel(String defaultModel) { this.defaultModel = defaultModel; }
+        public String getApiKey() { return apiKey; }
+        public void setApiKey(String apiKey) { this.apiKey = apiKey; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+        public double getTemperature() { return temperature; }
+        public void setTemperature(double temperature) { this.temperature = temperature; }
+        public int getMaxTokens() { return maxTokens; }
+        public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }
+        public int getTimeoutSeconds() { return timeoutSeconds; }
+        public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
+    }
+
+    public static class Memory {
+        /** 对话记忆 TTL（小时） */
+        private int ttlHours = 24;
+        /** 滑动窗口最大消息数 */
+        private int maxMessages = 20;
+
+        public int getTtlHours() { return ttlHours; }
+        public void setTtlHours(int ttlHours) { this.ttlHours = ttlHours; }
+        public int getMaxMessages() { return maxMessages; }
+        public void setMaxMessages(int maxMessages) { this.maxMessages = maxMessages; }
+    }
+
+    public static class Rag {
+        /** 是否启用 RAG */
+        private boolean enabled = false;
+        /** 向量存储类型（pgvector / memory） */
+        private String vectorStore = "memory";
+        /** Embedding 模型 */
+        private String embeddingModel = "text-embedding-3-small";
+        /** Embedding API Key（默认复用 LLM API Key） */
+        private String embeddingApiKey = "";
+        /** Embedding API Base URL（默认复用 LLM Base URL） */
+        private String embeddingBaseUrl = "";
+        /** 向量维度 */
+        private int dimension = 1536;
+        /** 分块大小 */
+        private int chunkSize = 500;
+        /** 分块重叠 */
+        private int chunkOverlap = 50;
+        /** 检索 Top-K */
+        private int topK = 5;
+        /** 最小相似度阈值 */
+        private double minScore = 0.7;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getVectorStore() { return vectorStore; }
+        public void setVectorStore(String vectorStore) { this.vectorStore = vectorStore; }
+        public String getEmbeddingModel() { return embeddingModel; }
+        public void setEmbeddingModel(String embeddingModel) { this.embeddingModel = embeddingModel; }
+        public String getEmbeddingApiKey() { return embeddingApiKey; }
+        public void setEmbeddingApiKey(String embeddingApiKey) { this.embeddingApiKey = embeddingApiKey; }
+        public String getEmbeddingBaseUrl() { return embeddingBaseUrl; }
+        public void setEmbeddingBaseUrl(String embeddingBaseUrl) { this.embeddingBaseUrl = embeddingBaseUrl; }
+        public int getDimension() { return dimension; }
+        public void setDimension(int dimension) { this.dimension = dimension; }
+        public int getChunkSize() { return chunkSize; }
+        public void setChunkSize(int chunkSize) { this.chunkSize = chunkSize; }
+        public int getChunkOverlap() { return chunkOverlap; }
+        public void setChunkOverlap(int chunkOverlap) { this.chunkOverlap = chunkOverlap; }
+        public int getTopK() { return topK; }
+        public void setTopK(int topK) { this.topK = topK; }
+        public double getMinScore() { return minScore; }
+        public void setMinScore(double minScore) { this.minScore = minScore; }
+    }
+}

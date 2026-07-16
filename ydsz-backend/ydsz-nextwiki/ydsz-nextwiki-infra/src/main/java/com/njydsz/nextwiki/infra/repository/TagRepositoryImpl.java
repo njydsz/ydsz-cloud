@@ -1,0 +1,94 @@
+package com.njydsz.nextwiki.infra.repository;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Repository;
+
+import com.njydsz.nextwiki.domain.entity.FileTag;
+import com.njydsz.nextwiki.domain.entity.Tag;
+import com.njydsz.nextwiki.domain.repository.TagRepository;
+import com.njydsz.nextwiki.infra.mapper.TagMapper;
+
+import lombok.RequiredArgsConstructor;
+
+/**
+ * 标签仓储实现
+ *
+ * @author ydsz-team
+ * @since 1.4.0
+ */
+@Repository
+@RequiredArgsConstructor
+public class TagRepositoryImpl implements TagRepository {
+
+    private final TagMapper tagMapper;
+
+    @Override
+    public Tag save(Tag tag) {
+        tagMapper.insert(tag);
+        return tag;
+    }
+
+    @Override
+    public Tag findById(String id) {
+        return tagMapper.selectById(id);
+    }
+
+    @Override
+    public Tag findByName(String name) {
+        return tagMapper.selectByName(name);
+    }
+
+    @Override
+    public List<Tag> findAll() {
+        return tagMapper.selectAll();
+    }
+
+    @Override
+    public List<Tag> findByFileNodeId(String fileNodeId) {
+        return tagMapper.selectByFileNodeId(fileNodeId);
+    }
+
+    @Override
+    public void bindTag(String fileNodeId, String tagId) {
+        FileTag fileTag = FileTag.builder()
+                .id(UUID.randomUUID().toString().replace("-", ""))
+                .fileNodeId(fileNodeId)
+                .tagId(tagId)
+                .revision(0)
+                .deleted(0)
+                .build();
+        tagMapper.insertFileTag(fileTag);
+    }
+
+    @Override
+    public void unbindTag(String fileNodeId, String tagId) {
+        tagMapper.deleteFileTag(fileNodeId, tagId);
+    }
+
+    @Override
+    public void unbindAllByFileNodeId(String fileNodeId) {
+        tagMapper.deleteAllFileTags(fileNodeId);
+    }
+
+    @Override
+    public List<FileTag> findFileTagsByFileNodeId(String fileNodeId) {
+        return tagMapper.selectFileTagsByFileNodeId(fileNodeId);
+    }
+
+    @Override
+    public void incrementUsage(String tagId) {
+        tagMapper.incrementUsage(tagId);
+    }
+
+    @Override
+    public void decrementUsage(String tagId) {
+        tagMapper.decrementUsage(tagId);
+    }
+
+    @Override
+    public List<String> findFileNodeIdsByTagName(String tagName) {
+        return tagMapper.findFileNodeIdsByTagName(tagName);
+    }
+}

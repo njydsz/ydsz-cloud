@@ -1,0 +1,249 @@
+package com.njydsz.common.json.provider;
+
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.common.json.autotype.AutoTypeChecker;
+import com.njydsz.common.json.config.DeserializationConfig;
+import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.parser.JsonParser;
+import com.njydsz.common.json.reader.JSONReader;
+/**
+ * Json 反序列化提供者（零拷贝优化版。
+ *
+ * <p>架构层级：Json => Engine => Provider => Parser</p>
+ *
+ * <p><b>核心优化：</b></p>
+ * <ul>
+ *   <li>零拷贝反序列。- 直接解析 JSON 到对象字段，消除 Map 中转</li>
+ *   <li>Constructor 缓存 - 避免每次反射获取</li>
+ *   <li>HashMap 字段查找 - O(1) 替代 O(n)</li>
+ *   <li>快速路。- 简单对象（。 字段）直接内联解。</li>
+ *   <li>JsonType 支持 - 泛型类型推断</li>
+ *   <li>Builder 模式支持 - 链式构建对象</li>
+ *   <li>Creator 模式支持 - 自定义构造函数反序列。</li>
+ *   <li>多态类型支。- @JsonTypeInfo 自动识别子类型</li>
+ * </ul>
+ *
+ * <p><b>反序列化流程：</b></p>
+ * <ol>
+ *   <li>检查缓存- 查找已编译的反序列化。</li>
+ *   <li>选择策略 - 根据类型选择合适的反序列化方式</li>
+ *   <li>执行解析 - 调用 ZeroCopyDeserializer 。JsonParser</li>
+ *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
+ * </ol>
+ *
+ * @since 1.0.0
+ */
+public final class DeserializationProvider {
+
+    /**
+     * 反序列化策略缓存（线程安全，避免每次反序列化都重新查找策略链。
+     *
+     * <p>缓存 Class -> DeserializationStrategy 的映射，类似于序列化端的 ASM 序列化器缓存。
+     * 首次反序列化某类型时，会遍历策略链（ASM -> BeanReader -> Creator -> Builder -> ZeroCopy），
+     * 找到可用策略后缓存，后续直接使用缓存策略，跳过策略选择开销。/p>
+     */
+    private static final ConcurrentHashMap<Class<?>, DeserializationStrategy> STRATEGY_CACHE =
+        new ConcurrentHashMap<>(256);
+
+    /** 反序列化策略枚举 */
+    private enum DeserializationStrategy {
+        /** 基本类型（String/Integer/Long/Double/Float/Boolean。*/
+        PRIMITIVE,
+        /** Object 类型 */
+        OBJECT,
+        /** Map 类型 */
+        MAP,
+        /** List 类型 */
+        LIST,
+        /** Bean 类型 - 。BeanDeserializerEngine */
+        BEAN
+    }
+
+    private DeserializationProvider() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 反序列化 JSON 字符串（零拷贝优化版。
+     */
+    
+    public static <T> T deserialize(String json, Class<T> clazz) {
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+
+        // 统一安全门控：AutoTypeChecker 作为唯一的类型安全检查入口
+        AutoTypeChecker.checkType(clazz);
+
+        Class<?> actualType = resolvePolymorphicType(json, clazz);
+        if (actualType != clazz) {
+            AutoTypeChecker.checkType(actualType);
+        }
+
+        // 深度检查（使用全局配置）
+        DeserializationConfig config = DeserializationConfig.getInstance();
+        validateDepth(json, config.getMaxDepth());
+
+        Object result = deserializeValue(json, actualType);
+        return result != null ? clazz.cast(result) : null;
+    }
+
+    private static Object deserializeValue(String json, Class<?> type) {
+        // 快速路径：基本类型直接判断（无需缓存查找开销。
+        if (type == String.class) return TypeConverter.parseStringValue(json);
+        if (type == Integer.class || type == int.class) return TypeConverter.parseIntValue(json);
+        if (type == Long.class || type == long.class) return TypeConverter.parseLongValue(json);
+        if (type == Double.class || type == double.class) return TypeConverter.parseDoubleValue(json);
+        if (type == Float.class || type == float.class) return TypeConverter.parseFloatValue(json);
+        if (type == Boolean.class || type == boolean.class) return TypeConverter.parseBooleanValue(json);
+        if (type == Object.class) return parseValue(json);
+        if (type == Map.class) return JsonParser.parseObject(json);
+        if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
+
+        // 缓存路径：使用策略缓存避免每次反序列化都重新判断类型
+        DeserializationStrategy strategy = STRATEGY_CACHE.get(type);
+        if (strategy == null) {
+            // 首次遇到此类型，确定策略并缓存
+            strategy = DeserializationStrategy.BEAN; // 。PRIMITIVE/OBJECT/MAP/LIST 的都。BEAN
+            STRATEGY_CACHE.put(type, strategy);
+        }
+
+        return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
+    }
+
+    /**
+     * 反序列化 JSON 字符串（带特性配置）
+     */
+    public static <T> T deserialize(String json, Class<T> clazz, long features) {
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+
+        // 安全检查：最大长度限制（防止 DoS 攻击。
+        if (json.length() > JSONReader.DEFAULT_MAX_JSON_LENGTH) {
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "JSON length limit exceeded: " + json.length() + " > " + JSONReader.DEFAULT_MAX_JSON_LENGTH
+            );
+        }
+
+        if (JSONReader.Feature.LimitDepth.isEnabled(features)) {
+            validateDepth(json, JSONReader.DEFAULT_MAX_DEPTH);
+        }
+
+        return deserialize(json, clazz);
+    }
+
+    /**
+     * 验证 JSON 深度（防止栈溢出攻击。
+     */
+    private static void validateDepth(String json, int maxDepth) {
+        int depth = 0;
+        for (int i = 0; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (c == '{' || c == '[') {
+                depth++;
+                if (depth > maxDepth) {
+                    throw new JsonDeserializationException(
+                        JsonDeserializationException.PARSE_ERROR,
+                        "JSON depth limit exceeded: " + depth + " > " + maxDepth
+                    );
+                }
+            } else if (c == '}' || c == ']') {
+                depth--;
+            }
+        }
+    }
+
+    /**
+     * 解析多态类型
+     *
+     * <p>如果目标类有 @JsonTypeInfo 注解，则根据 JSON 中的类型属性。
+     * 识别具体子类型并返回。/p>
+     *
+     * @param json JSON 字符。
+     * @param baseType 基类
+     * @return 解析后的具体类型，如果不支持多态返回基。
+     */
+    
+    private static Class<?> resolvePolymorphicType(String json, Class<?> baseType) {
+        return PolymorphicTypeResolver.resolveType(json, baseType);
+    }
+
+    private static Object parseValue(String json) {
+        json = json.trim();
+        if (json.equals("null")) {
+            return null;
+        }
+        if (json.startsWith("{")) {
+            return JsonParser.parseObject(json);
+        }
+        if (json.startsWith("[")) {
+            return JsonParser.parseArray(json);
+        }
+        if (json.equals("true")) {
+            return Boolean.TRUE;
+        }
+        if (json.equals("false")) {
+            return Boolean.FALSE;
+        }
+        if (json.startsWith("\"")) {
+            return TypeConverter.parseStringValue(json);
+        }
+        try {
+            if (json.contains(".") || json.contains("E") || json.contains("e")) {
+                return Double.parseDouble(json);
+            }
+            return Long.parseLong(json);
+        } catch (NumberFormatException e) {
+            return json;
+        }
+    }
+
+    /**
+     * 反序列化 JSON 字符串（支持 Type。
+     */
+    
+    public static <T> T deserialize(String json, Type type) {
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+
+        if (type instanceof Class<?> clazz) {
+            AutoTypeChecker.checkType(clazz);
+            Object result = deserializeValue(json, clazz);
+            return captureType(result);
+        }
+
+        if (type instanceof ParameterizedType pt) {
+            Type rawType = pt.getRawType();
+
+            if (rawType == List.class || rawType == ArrayList.class) {
+                Type elementType = pt.getActualTypeArguments()[0];
+                if (elementType instanceof Class<?> elementClass) {
+                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {
+                        return captureType(BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass));
+                    } else {
+                        return captureType(BeanDeserializerEngine.deserializeBeanListFast(json, elementClass));
+                    }
+                }
+            }
+        }
+
+        if (json.trim().startsWith("[")) {
+            return captureType(JsonParser.parseArray(json));
+        }
+
+        return captureType(JsonParser.parseObject(json));
+    }
+
+    private static <T> T captureType(Object value) {
+        return (T) value;
+    }
+}

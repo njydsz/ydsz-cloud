@@ -1,0 +1,340 @@
+# =====================================================================
+#  YDSZ PMIS · Nacos 共享配置 (ydsz-common.yaml)
+#  --------------------------------------------------------------------
+#  作用:   所有 10 个微服务都通过 spring.cloud.nacos.config.shared-configs
+#          引用此 dataId,实现"一处修改全集群生效"
+#  部署:   Nacos 控制台 → 配置管理 → 新建配置
+#          DataId:    ydsz-common.yaml
+#          Group:      dev
+#          配置格式:   YAML
+#          导入脚本:   deploy/ubuntu/scripts/import-nacos-config.sh
+# =====================================================================
+
+# ---------- Spring Jackson（所有服务共用） ----------
+# 统一日期格式 / 时区 / 非空序列化策略，避免各服务重复声明
+# ---------- Management / Actuator（所有服务共用） ----------
+# 统一 Prometheus 指标暴露端口与标签，避免各服务 exposure 列表不一致
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ---------- 数据源（所有服务共用） ----------
+# 安全说明: DB_PASSWORD 无默认值，必须通过环境变量/Nacos 配置注入
+# HA 说明: 生产环境 PG 流复制 HA 时，DB_HOST 可填逗号分隔的多主机
+#          如 DB_HOST=pg-primary,pg-standby，配合 DB_HA_PARAMS=targetServerType=primary
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
+    username: ${DB_USER:pmis}
+    # ⚠️ 生产环境必须使用 Jasypt 加密：password: ENC(加密后的密码串)
+    # 开发环境可使用明文/环境变量，生产通过 JASYPT_ENCRYPTOR_PASSWORD 环境变量注入主密码后自动解密
+    password: ${DB_PASSWORD}
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall,slf4j
+      web-stat-filter:
+        enabled: true
+      # Druid 监控台：生产环境(profile=prod)必须关闭，dev 环境可开启但口令必须从环境变量注入
+      stat-view-servlet:
+        enabled: ${DRUID_STAT_ENABLED:false}
+        url-pattern: /druid/*
+        login-username: ${DRUID_STAT_USERNAME:}
+        login-password: ${DRUID_STAT_PASSWORD:}
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+          slow-sql-millis: 2000
+
+  # ---------- 动态数据源（读写分离 P2-3） ----------
+  # baomidou dynamic-datasource：primary 默认走主库，@DS("slave") 走从库
+  # strict=true 严格模式：未匹配 @DS 时走 primary，避免误用从库写数据
+  # master/slave 复用现有 Druid 连接池全局配置（spring.datasource.dynamic.druid）
+  # 注意：现有 spring.datasource.druid 单数据源配置保留不动，由 dynamic-datasource 接管数据源创建
+  dynamic:
+    primary: master
+    strict: true
+    datasource:
+      master:
+        url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
+        username: ${DB_USER:pmis}
+        password: ${DB_PASSWORD}
+        driver-class-name: org.postgresql.Driver
+      # 从库：当前指向同一数据库 URL，生产环境分离后修改为从库地址
+      # HA：生产环境可设置 DB_SLAVE_HOST 指向流复制从库
+      slave:
+        url: jdbc:postgresql://${DB_SLAVE_HOST:${DB_HOST:127.0.0.1}}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8
+        username: ${DB_USER:pmis}
+        password: ${DB_PASSWORD}
+        driver-class-name: org.postgresql.Driver
+    # Druid 全局配置（所有数据源共用，复用现有连接池参数）
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall,slf4j
+
+  # ---------- Redis（所有服务共用） ----------
+  # 安全说明: REDIS_PASSWORD 无默认值，必须通过环境变量注入
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      # ⚠️ 生产环境必须使用 Jasypt 加密：password: ENC(加密后的密码串)
+      # 开发环境可使用明文/环境变量，生产通过 JASYPT_ENCRYPTOR_PASSWORD 环境变量注入主密码后自动解密
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DB:0}
+      timeout: 5s
+      # HA：Redis Sentinel 模式（生产环境设置 REDIS_SENTINEL_MASTER 即启用）
+      # 开发环境不设置 REDIS_SENTINEL_MASTER，自动回退到单机 host:port
+      sentinel:
+        master: ${REDIS_SENTINEL_MASTER:}
+        nodes: ${REDIS_SENTINEL_NODES:}
+        password: ${REDIS_SENTINEL_PASSWORD:}
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 0
+          max-wait: 5s
+
+  # ---------- Spring Cache（统一使用 Redis） ----------
+  # P1-10: TTL/序列化/前缀由 PmisCacheConfig 统一接管，按 cacheName 差异化配置（防雪崩）
+  # 此处仅保留 type=redis 触发 Spring Boot 自动装配 RedisConnectionFactory
+  cache:
+    type: redis
+
+# ---------- MyBatis-Plus 共享配置 ----------
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: AUTO
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# ---------- Feign 超时与重试共享配置 ----------
+# 大厂规范: 跨服务调用必须显式配置超时，避免下游慢响应拖垮上游线程池
+#   - connectTimeout: TCP 连接建立超时（ms），1s 内连不上即失败
+#   - readTimeout:    响应读取超时（ms），普通接口 3s，报表接口由 @FeignClient 覆盖为 10s
+# Feign 默认不重试（避免幂等问题），重试由 Resilience4j 在 Aspect 层统一处理
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 1000
+        read-timeout: 3000
+        logger-level: BASIC
+      # 报表/导出/AI 等长耗时接口分组，由 @FeignClient(name="...") 匹配
+      ydsz-project:
+        read-timeout: 10000
+      ydsz-agent:
+        read-timeout: 30000
+  # 关闭默认重试，统一由 Resilience4j Retry 接管
+  compression:
+    request:
+      enabled: true
+      mime-types: application/json
+    response:
+      enabled: true
+
+# ---------- Spring Cloud OpenFeign + Sentinel 熔断 ----------
+# 启用 Sentinel 对 Feign 的熔断降级支持
+spring.cloud.openfeign:
+  circuitbreaker:
+    enabled: true
+
+# ---------- Resilience4j 重试配置 ----------
+# 与 Sentinel 熔断互补: Sentinel 负责熔断/限流, Resilience4j 负责重试
+# 仅对网络抖动/超时重试，不对业务异常重试（避免雪崩）
+resilience4j:
+  retry:
+    instances:
+      feignRetry:
+        max-attempts: 3
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2.0
+        exponential-max-wait-duration: 2s
+        retry-exceptions:
+          - java.util.concurrent.TimeoutException
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - com.njydsz.common.exception.SysException
+          - java.lang.IllegalArgumentException
+      dbRetry:
+        max-attempts: 2
+        wait-duration: 100ms
+        retry-exceptions:
+          - org.springframework.dao.OptimisticLockingFailureException
+  circuitbreaker:
+    instances:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+
+# ---------- SpringDoc / OpenAPI 共享配置 ----------
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  packages-to-scan: com.njydsz
+  default-flat-param-object: true
+
+# ---------- Knife4j 增强 OpenAPI UI 共享配置 ----------
+# 基于 SpringDoc 2.x，UI 入口: /doc.html
+# 生产环境通过 profile 注入 KNIFE4J_PRODUCTION=true 关闭 UI（屏蔽接口文档泄露）
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-version: true
+    enable-swagger-models: true
+    document-url: https://doc.ydsz.example.com
+  # 生产环境通过 profile 控制关闭
+  production: ${knife4j.production:false}
+
+# ---------- 日志共享配置 ----------
+logging:
+  level:
+    root: ${LOG_ROOT_LEVEL:INFO}
+    "[com.njydsz]": ${LOG_PMIS_LEVEL:DEBUG}
+    "[org.springframework.cloud.gateway]": INFO
+    "[com.alibaba.nacos]": WARN
+    "[com.baomidou.mybatisplus]": INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
+
+# ---------- PMIS 业务密钥 ----------
+# ⚠️ 生产环境必须使用 Jasypt 加密：secret: ENC(加密后的密钥串)
+# 开发环境可通过 JWT_SECRET 环境变量注入明文，生产通过 JASYPT_ENCRYPTOR_PASSWORD 自动解密 ENC()
+ydsz:
+  jwt:
+    secret: ${JWT_SECRET:}
+    issuer: pmis
+  # ---------- IP 白名单（P2-8 安全加固） ----------
+  # 网关层全局 IP 白名单，非白名单 IP 返回 403
+  # 动态生效：修改后通过 Nacos @RefreshScope 自动刷新，无需重启
+  security:
+    # IP 白名单（为空表示不启用）
+    # 支持 CIDR 表示法：192.168.1.0/24
+    # 支持单个 IP：10.0.0.1
+    # 多个条目以逗号分隔：192.168.1.0/24,10.0.0.1
+    ip-whitelist: ""
+    # 是否启用 IP 白名单（即使配置了白名单，也需要此开关为 true 才生效）
+    ip-whitelist-enabled: false
+    # 白名单放行的路径前缀（这些路径不校验 IP）
+    ip-whitelist-skip-paths:
+      - /health
+      - /auth/login
+
+  # ---------- KMS 密钥管理（P2-9：轻量级密钥管理方案） ----------
+  # 密钥提供者：environment（默认）/ jasypt / vault（未来扩展）
+  # 密钥配置（开发环境直接配置明文，生产环境用 ENC() 加密或环境变量注入）
+  kms:
+    # 密钥提供者类型：
+    #   environment - 从环境变量/Nacos 配置读取（默认，开发阶段）
+    #   jasypt      - 通过 Jasypt 解密 ENC() 密文（生产推荐）
+    #   vault       - 从 HashiCorp Vault 读取（未来扩展，预留）
+    provider: environment
+    # 密钥配置（开发环境直接配置明文，生产环境用 ENC() 加密或环境变量注入）
+    # 这些值可以通过环境变量覆盖：PMIS_SECRETS_DB_PASSWORD 等
+    # 环境变量名转换规则：db.password → PMIS_SECRETS_DB_PASSWORD
+    secrets:
+      db.password: ${DB_PASSWORD:}
+      redis.password: ${REDIS_PASSWORD:}
+      jwt.secret: ${PMIS_JWT_SECRET:}
+    # Vault 配置（未来扩展，当前预留不启用）
+    vault:
+      enabled: false
+      # host: vault.example.com
+      # port: 8200
+      # token: ${VAULT_TOKEN:}
+      # backend: secret
+
+  # ---------- Sentry 错误监控（P0-5：生产环境启用） ----------
+  # 生产环境通过 K8s ConfigMap/Secret 或环境变量注入 DSN，此处提供默认结构
+  # 开发环境默认关闭（enabled=false），生产环境设为 true 并注入 DSN
+  # 环境变量映射：PMIS_SENTRY_ENABLED → ydsz.sentry.enabled（Spring Boot relaxed binding）
+  sentry:
+    enabled: ${PMIS_SENTRY_ENABLED:false}
+    dsn: ${PMIS_SENTRY_DSN:}
+    environment: ${PMIS_SENTRY_ENVIRONMENT:dev}
+    release: ${PMIS_SENTRY_RELEASE:pmis-1.0.0}
+    # 后端性能采样率：生产环境 10%（避免高吞吐下 Sentry 压力过大），dev 环境 100%
+    traces-sample-rate: ${PMIS_SENTRY_TRACES_SAMPLE_RATE:0.1}
+    # 错误采样率：100%（所有异常均上报）
+    sample-rate: ${PMIS_SENTRY_SAMPLE_RATE:1.0}
+
+# ---------- Jasypt 配置加密（P0-4：敏感配置加密） ----------
+# starter 自动配置：启动时解密 ENC(xxx) 格式的配置，无需额外配置类
+# 主密码通过环境变量 JASYPT_ENCRYPTOR_PASSWORD 注入，不写入配置文件
+# 降级说明：若运行环境未安装 JCE unlimited strength（JDK 8u161 之前需手动装），
+#           PBEWithHMACSHA512AndAES_256 会报异常，此时降级为 PBEWithMD5AndDES（弱但不需 JCE）
+jasypt:
+  encryptor:
+    # 主密码，生产环境通过环境变量 JASYPT_ENCRYPTOR_PASSWORD 注入，不写入配置文件
+    password: ${JASYPT_ENCRYPTOR_PASSWORD:}
+    # 加密算法，BCrypt 不可逆，用 PBEWithHMACSHA512AndAES_256（需 JCE unlimited strength）
+    # 降级方案：algorithm: PBEWithMD5AndDES（弱但不需 JCE）
+    algorithm: PBEWithHMACSHA512AndAES_256
+    # 密钥迭代次数
+    iv-generator-classname: org.jasypt.iv.RandomIvGenerator
+    property:
+      # 仅解密 ENC(xxx) 格式的配置
+      prefix: "ENC("
+      suffix: ")"

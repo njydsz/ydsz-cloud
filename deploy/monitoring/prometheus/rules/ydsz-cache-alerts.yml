@@ -1,0 +1,67 @@
+# PMIS Cache - Prometheus Alerting Rules
+# 缓存框架告警规则
+
+groups:
+  - name: pmis-cache
+    rules:
+      # P0: 缓存命中率低
+      - alert: PMISCacheLowHitRate
+        expr: |
+          avg by (cache_name, application) (
+            cache_hit_rate{application!=""}
+          ) < 0.3
+        for: 10m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "缓存命中率低: {{ $labels.cache_name }}"
+          description: "缓存 {{ $labels.cache_name }} 命中率低于 30%，当前值: {{ $value | humanizePercentage }}"
+
+      # P0: 缓存大小持续增长
+      - alert: PMISCacheSizeGrowing
+        expr: |
+          deriv(cache_size{application!=""}[30m]) > 0
+        for: 30m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "缓存大小持续增长: {{ $labels.cache_name }}"
+          description: "缓存 {{ $labels.cache_name }} 大小在过去 30 分钟内持续增长，可能存在内存泄漏"
+
+      # P1: Write-Behind 死信队列积压
+      - alert: PMISCacheDeadLetterQueueGrowing
+        expr: |
+          cache_dead_letter_count{application!=""} > 0
+        for: 5m
+        labels:
+          severity: critical
+          category: cache
+        annotations:
+          summary: "Write-Behind 死信队列积压: {{ $labels.cache_name }}"
+          description: "缓存 {{ $labels.cache_name }} 的 Write-Behind 死信队列有 {{ $value }} 条积压消息"
+
+      # P1: 缓存淘汰率过高
+      - alert: PMISCacheHighEvictionRate
+        expr: |
+          rate(cache_evictions_total{application!=""}[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "缓存淘汰率过高: {{ $labels.cache_name }}"
+          description: "缓存 {{ $labels.cache_name }} 每秒淘汰超过 100 条，可能需要扩容"
+
+      # P2: GET 操作 P99 延迟过高
+      - alert: PMISCacheHighGetLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(cache_get_duration_seconds_bucket{application!=""}[5m])) by (le, cache_name)) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "缓存 GET P99 延迟过高: {{ $labels.cache_name }}"
+          description: "缓存 {{ $labels.cache_name }} 的 GET 操作 P99 延迟超过 100ms"

@@ -1,0 +1,61 @@
+==============================================================================
+  YDSZ PMIS · Helm Chart 部署完成
+==============================================================================
+
+namespace:        {{ .Release.Namespace }}
+release:          {{ .Release.Name }}
+chart version:    {{ .Chart.Version }}
+app version:      {{ .Chart.AppVersion }}
+
+已部署的后端微服务:
+{{- range $svcName, $svc := .Values.services }}
+{{- if $svc.enabled }}
+  - {{ $svc.name }} (port {{ $svc.port }}, replicas {{ $svc.replicas }})
+{{- end }}
+{{- end }}
+
+{{- if .Values.frontend.enabled }}
+已部署的前端:
+  - frontend (port {{ .Values.frontend.port }}, replicas {{ .Values.frontend.replicas }})
+{{- end }}
+
+------------------------------------------------------------------------------
+  验证步骤
+------------------------------------------------------------------------------
+
+1. 检查 Pod 状态:
+   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/part-of=ydsz
+
+2. 检查 Service:
+   kubectl -n {{ .Release.Namespace }} get svc -l app.kubernetes.io/part-of=ydsz
+
+3. 等待所有 Pod Ready:
+   kubectl -n {{ .Release.Namespace }} wait --for=condition=Ready pod --all --timeout=300s
+
+4. 端口转发访问 gateway:
+   kubectl -n {{ .Release.Namespace }} port-forward svc/ydsz-gateway 9000:9000
+   curl http://127.0.0.1:9000/actuator/health
+
+5. 运行冒烟测试:
+   bash deploy/scripts/smoke-test.sh http://127.0.0.1:9000
+
+{{- if .Values.services.gateway.ingress.enabled }}
+
+6. 通过 Ingress 访问:
+   http://{{ .Values.services.gateway.ingress.host }}
+{{- end }}
+
+------------------------------------------------------------------------------
+  下一步
+------------------------------------------------------------------------------
+
+- 配置日志聚合: ELK / Loki + Promtail
+- 配置监控告警: Prometheus + Grafana + AlertManager
+- 配置链路追踪: SkyWalking / Jaeger
+- 生产环境务必:
+  1. 用 external-secrets 替换 Secret 明文密码
+  2. 启用 NetworkPolicy
+  3. 配置 ResourceQuota + LimitRange
+  4. 启用 mTLS（Istio / Linkerd）
+
+详见: deploy/k8s/README.md

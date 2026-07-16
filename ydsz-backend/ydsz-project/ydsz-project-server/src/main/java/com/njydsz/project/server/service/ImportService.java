@@ -1,0 +1,53 @@
+package com.njydsz.project.server.service;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+
+/**
+ * 批量导入服务（统一路由）
+ *
+ * <p>支持模板下载与文件解析，路由由 bizType 决定具体 DTO + 业务 Service。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public interface ImportService {
+
+    /**
+     * 下载模板
+     *
+     * @param bizType 业务类型 rate-card / rate-internal / time-entry / employee / initiation
+     * @return 模板包（headClass 用于前端预解析，bytes 为 xlsx 流，filename 中文友好）
+     */
+    TemplateBundle buildTemplate(String bizType);
+
+    /**
+     * 导入文件
+     *
+     * @param bizType 业务类型
+     * @param file    上传的 xlsx 文件
+     * @return 导入结果（成功行数 / 失败行数 / 失败原因明细）
+     */
+    ImportResult importFile(String bizType, MultipartFile file) throws IOException;
+
+    /**
+     * 模板包（DTO 类 + 字节流 + 文件名）
+     */
+    record TemplateBundle(Class<?> headClass, byte[] bytes, String filename) {
+    }
+
+    /**
+     * 导入结果
+     */
+    record ImportResult(int totalCount, int successCount, int failedCount, List<FailureRow> failures) {
+    }
+
+    /**
+     * 失败行
+     */
+    record FailureRow(int rowIndex, Map<String, String> rowData, String reason) {
+    }
+}

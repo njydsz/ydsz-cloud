@@ -1,0 +1,19 @@
+{{/*
+公共 ConfigMap：Nacos 注册中心 + 公共环境变量
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-common-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ydsz.labels" (dict "name" "common-config" "Release" .Release "Chart" .Chart) | nindent 4 }}
+data:
+  SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: {{ .Values.global.nacos.serverAddr | quote }}
+  SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: {{ .Values.global.nacos.serverAddr | quote }}
+  SPRING_CLOUD_NACOS_NAMESPACE: {{ .Values.global.nacos.namespace | quote }}
+  SPRING_CLOUD_NACOS_USERNAME: {{ .Values.global.nacos.username | quote }}
+  TZ: {{ .Values.global.timezone | quote }}
+  {{- range $k, $v := .Values.backend.env }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}

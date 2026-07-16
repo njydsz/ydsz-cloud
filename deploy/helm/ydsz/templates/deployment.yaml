@@ -1,0 +1,143 @@
+{{/*
+后端微服务 Deployment + Service
+遍历 services 字典，对每个 enabled=true 的服务生成 Deployment+Service
+*/}}
+{{- $root := . -}}
+{{- $backend := .Values.backend -}}
+{{- $globalTag := .Values.global.imageTag -}}
+{{- $registry := .Values.global.imageRegistry -}}
+{{- range $svcName, $svc := .Values.services -}}
+{{- if $svc.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-{{ $svc.name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "ydsz.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
+    app: ydsz-{{ $svc.name }}
+    tier: backend
+spec:
+  replicas: {{ $svc.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app: ydsz-{{ $svc.name }}
+  template:
+    metadata:
+      labels:
+        {{- include "ydsz.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 8 }}
+        app: ydsz-{{ $svc.name }}
+        tier: backend
+    spec:
+      serviceAccountName: {{ include "ydsz.serviceAccountName" $root }}
+      {{- with $root.Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml $root.Values.podSecurityContext | nindent 8 }}
+      {{- if $root.Values.backend.affinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ydsz-{{ $svc.name }}
+                topologyKey: kubernetes.io/hostname
+      {{- end }}
+      {{- with $root.Values.backend.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $svc.name }}
+          image: {{ include "ydsz.image" (dict "registry" $registry "repository" $backend.image.repository "name" $svc.name "tag" ($svc.tag | default $globalTag)) | quote }}
+          imagePullPolicy: {{ $backend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.port }}
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ $backend.springProfile | quote }}
+            - name: JAVA_OPTS
+              value: {{ $backend.jvmOpts | quote }}
+            - name: TZ
+              value: {{ $root.Values.global.timezone | quote }}
+            - name: NACOS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Release.Name }}-db-secret
+                  key: NACOS_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: {{ $root.Release.Name }}-common-config
+            - secretRef:
+                name: {{ $root.Release.Name }}-db-secret
+          resources:
+            {{- if $svc.resources }}
+            {{- toYaml $svc.resources | nindent 12 }}
+            {{- else }}
+            {{- toYaml $backend.resources | nindent 12 }}
+            {{- end }}
+          {{- if $root.Values.backend.probes.startup }}
+          startupProbe:
+            httpGet:
+              path: {{ $backend.probes.startup.path }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $backend.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ $backend.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ $backend.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ $backend.probes.startup.failureThreshold }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: {{ $backend.probes.readiness.path }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $backend.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ $backend.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ $backend.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ $backend.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ $backend.probes.liveness.path }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $backend.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ $backend.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ $backend.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ $backend.probes.liveness.failureThreshold }}
+          {{- with $root.Values.backend.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-{{ $svc.name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "ydsz.labels" (dict "name" $svc.name "Release" $root.Release "Chart" $root.Chart) | nindent 4 }}
+    app: ydsz-{{ $svc.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-{{ $svc.name }}
+  ports:
+    - name: http
+      port: {{ $svc.port }}
+      targetPort: {{ $svc.port }}
+      protocol: TCP
+{{- end }}
+{{- end }}

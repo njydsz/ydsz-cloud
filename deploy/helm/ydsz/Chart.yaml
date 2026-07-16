@@ -1,0 +1,22 @@
+# ============================================================
+# Helm Chart 元数据
+#
+# 定义 YDSZ PMIS 项目的 Helm Chart 信息（名称、版本、维护者、关键字）
+# 渲染逻辑与默认参数见同目录 values.yaml，环境差异见 values-{dev,uat,sit,prod}.yaml
+# ============================================================
+apiVersion: v2
+name: ydsz
+description: 南京云顶 PMIS · 项目管理信息系统 Helm Chart（7 个后端微服务 + 1 个前端）
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://github.com/njydsz/ydsz
+maintainers:
+  - name: PMIS Team
+    email: devops@ydsz.example.com
+keywords:
+  - pmis
+  - project-management
+  - spring-cloud
+  - microservices
+icon: https://raw.githubusercontent.com/njydsz/ydsz/main/docs/logo.png
