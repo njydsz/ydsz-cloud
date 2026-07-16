@@ -17,6 +17,7 @@ import com.njydsz.pmis.common.feign.config.FeignProperties;
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
 import com.njydsz.pmis.common.util.http.ServletUtils;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.util.ip.IpAddrUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
@@ -60,13 +61,6 @@ public class FeignRequestInterceptor implements RequestInterceptor {
     private final FeignProperties feignProperties;
 
     /**
-     * 使用默认配置构造请求拦截器。
-     */
-    public FeignRequestInterceptor() {
-        this(new FeignProperties());
-    }
-
-    /**
      * 使用自定义配置构造请求拦截器。
      *
      * @param feignProperties Feign 配置属性
@@ -106,6 +100,9 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         }
 
         Set<String> headersToPropagate = feignProperties.getPropagation().getHeaders();
+
+        // 非Web环境自动生成请求 ID，保证可追溯性
+        ensureRequestId(requestTemplate, httpServletRequest);
 
         propagateIdentityHeaders(requestTemplate, httpServletRequest, headersToPropagate);
         propagateDataPermissionHeaders(requestTemplate, headersToPropagate);
@@ -292,6 +289,26 @@ public class FeignRequestInterceptor implements RequestInterceptor {
                         .map(String::toLowerCase)
                         .collect(Collectors.joining(",")))
                 .collect(Collectors.joining(";"));
+    }
+
+    /**
+     * 确保请求 ID 存在。非Web环境下自动生成 traceId 作为请求标识。
+     *
+     * @param requestTemplate Feign 请求模板
+     * @param request         HttpServletRequest（可为 null）
+     */
+    private void ensureRequestId(RequestTemplate requestTemplate, HttpServletRequest request) {
+        if (hasHeader(requestTemplate, "X-Request-Id")) {
+            return;
+        }
+        String requestId = resolveHeader(request, "X-Request-Id");
+        if (StringUtils.isEmpty(requestId)) {
+            requestId = TracerUtils.getTraceId();
+            if (StringUtils.isEmpty(requestId)) {
+                requestId = TracerUtils.generateTraceId();
+            }
+        }
+        setHeaderIfAbsent(requestTemplate, "X-Request-Id", requestId);
     }
 
     /**

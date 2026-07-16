@@ -55,9 +55,6 @@ public class ResponseUnwrapDecoder implements Decoder {
 
     private static final Logger log = LoggerFactory.getLogger(ResponseUnwrapDecoder.class);
 
-    /** 成功响应码 */
-    private static final String SUCCESS_CODE = "A00000";
-
     /** 委托的实际解码器 */
     private final Decoder delegate;
 
@@ -169,8 +166,7 @@ public class ResponseUnwrapDecoder implements Decoder {
      * @return true 表示成功
      */
     private boolean isSuccess(IResponse<?> response) {
-        String code = response.getCode();
-        return SUCCESS_CODE.equals(code);
+        return response.isSuccess();
     }
 
     /**

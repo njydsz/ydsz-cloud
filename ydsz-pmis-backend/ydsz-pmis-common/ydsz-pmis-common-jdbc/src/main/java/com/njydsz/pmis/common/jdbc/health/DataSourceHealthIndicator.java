@@ -1,8 +1,6 @@
 package com.njydsz.pmis.common.jdbc.health;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -27,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>最小空闲连接数（min）</li>
  * </ul>
  *
+ * <p><b>设计说明：</b>健康检查仅读取 HikariPoolMXBean 的指标数据，不实际获取数据库连接，
+ * 避免在连接池高负载时加剧连接竞争。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -46,9 +47,10 @@ public class DataSourceHealthIndicator implements HealthIndicator {
         }
         try {
             HikariDataSource pool = hikariDataSource;
-            int active = pool.getHikariPoolMXBean().getActiveConnections();
-            int idle = pool.getHikariPoolMXBean().getIdleConnections();
-            int threadsAwaitingConnection = pool.getHikariPoolMXBean().getThreadsAwaitingConnection();
+            var mxBean = pool.getHikariPoolMXBean();
+            int active = mxBean.getActiveConnections();
+            int idle = mxBean.getIdleConnections();
+            int threadsAwaitingConnection = mxBean.getThreadsAwaitingConnection();
             int max = pool.getMaximumPoolSize();
             int min = pool.getMinimumIdle();
 
@@ -62,27 +64,6 @@ public class DataSourceHealthIndicator implements HealthIndicator {
                     .withDetail("max", max)
                     .withDetail("min", min)
                     .withDetail("utilization", String.format("%.2f%%", utilization * 100));
-
-            // 执行实际连通性检查（SELECT 1）
-            try (Connection conn = pool.getConnection()) {
-                boolean isValid = conn.isValid(3);
-                builder.withDetail("connectivity", isValid ? "OK" : "FAILED");
-                if (!isValid) {
-                    return Health.down()
-                            .withDetail("error", "Connection.isValid() returned false")
-                            .withDetail("active", active)
-                            .withDetail("idle", idle)
-                            .withDetail("max", max)
-                            .build();
-                }
-            } catch (SQLException e) {
-                log.warn("数据库连通性检查失败", e);
-                return Health.down(e)
-                        .withDetail("active", active)
-                        .withDetail("idle", idle)
-                        .withDetail("max", max)
-                        .build();
-            }
 
             // 如果等待线程数过多，标记为降级
             if (threadsAwaitingConnection > max / 2) {

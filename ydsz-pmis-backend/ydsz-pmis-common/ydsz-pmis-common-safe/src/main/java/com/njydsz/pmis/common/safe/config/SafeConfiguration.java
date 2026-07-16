@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.safe.config;
 
 import java.util.List;
 
+import com.njydsz.pmis.common.safe.sensitive.SensitiveDataProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.annotation.PostConstruct;
@@ -28,7 +29,7 @@ import com.njydsz.pmis.common.safe.advice.XssRequestBodyAdvice;
 import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
 import com.njydsz.pmis.common.safe.alert.SecurityEventAggregator;
 import com.njydsz.pmis.common.safe.alert.SecurityEventListener;
-import com.njdsz.pmis.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.audit.SecurityAuditLogger;
 import com.njydsz.pmis.common.safe.metrics.SafeMetrics;
 import com.njydsz.pmis.common.safe.config.condition.XssConverterModeCondition;
@@ -55,7 +56,6 @@ import com.njydsz.pmis.common.safe.ratelimit.RateLimitFilter;
 import com.njydsz.pmis.common.safe.ratelimit.RateLimitProperties;
 import com.njydsz.pmis.common.safe.ratelimit.MultiDimensionRateLimiter;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataAdvice;
-import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
 
 /**
  * 安全模块自动配置
@@ -403,7 +403,7 @@ public class SafeConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(SensitiveDataAdvice.class)
-    public SensitiveDataAdvice sensitiveDataAdvice(SensitiveDataConfiguration configuration) {
+    public SensitiveDataAdvice sensitiveDataAdvice(SensitiveDataProperties configuration) {
         log.info("注册敏感数据脱敏 AOP 拦截器，启用状态: {}", configuration.isEnabled());
         return new SensitiveDataAdvice(configuration);
     }

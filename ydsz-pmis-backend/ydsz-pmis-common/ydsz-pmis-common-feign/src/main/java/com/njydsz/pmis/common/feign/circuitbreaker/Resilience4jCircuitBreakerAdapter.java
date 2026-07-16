@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 
@@ -24,52 +25,26 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowT
  *   <li>可配置的失败率、慢调用率阈值</li>
  *   <li>滑动窗口统计（基于次数或时间）</li>
  *   <li>自动状态转换：CLOSED → OPEN → HALF_OPEN → CLOSED</li>
+ *   <li>熔断状态持久化到 Redis（应用重启后恢复）</li>
+ *   <li>指标自动注册到 Micrometer</li>
  * </ul>
- *
- * <p><b>熔断器状态转换：</b>
- * <pre>
- * CLOSED（正常） → 失败率/慢调用率超过阈值 → OPEN（熔断）
- * OPEN（熔断） → 等待时间到期 → HALF_OPEN（半开）
- * HALF_OPEN（半开） → 成功 → CLOSED（恢复）
- * HALF_OPEN（半开） → 失败 → OPEN（重新熔断）
- * </pre>
- *
- * <p><b>配置示例（YAML）：</b>
- * <pre>
- * ydsz:
- *   feign:
- *     circuit-breaker:
- *       enabled: true
- *       failure-rate-threshold: 50
- *       slow-call-rate-threshold: 100
- *       slow-call-duration-threshold: 3000
- *       permitted-number-of-calls-in-half-open-state: 10
- *       sliding-window-size: 100
- *       sliding-window-type: COUNT_BASED
- *       wait-duration-in-open-state: 60
- * </pre>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @see FeignCircuitBreaker
- * @see FeignCircuitBreakerStrategy
  */
 public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
 
     private static final Logger log = LoggerFactory.getLogger(Resilience4jCircuitBreakerAdapter.class);
 
-    /** Resilience4j 资源名前缀 */
     private static final String RESOURCE_PREFIX = "feign:";
 
-    private final ConcurrentHashMap<String, CircuitBreaker> circuitBreakers =
-            new ConcurrentHashMap<>();
-
+    private final ConcurrentHashMap<String, CircuitBreaker> circuitBreakers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CircuitBreakerState> stateCache = new ConcurrentHashMap<>();
-
     private final ConcurrentHashMap<String, CircuitBreakerMetrics> metricsCache = new ConcurrentHashMap<>();
 
     private final CircuitBreakerConfig config;
+    private final CircuitBreakerStatePersistence statePersistence;
+    private final FeignCircuitBreakerMetricsExporter metricsExporter;
 
     /**
      * 根据 FeignProperties 配置创建适配器。
@@ -77,8 +52,23 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
      * @param properties Feign 配置属性
      */
     public Resilience4jCircuitBreakerAdapter(FeignProperties properties) {
+        this(properties, null, null);
+    }
+
+    /**
+     * 使用完整依赖创建适配器。
+     *
+     * @param properties       Feign 配置属性
+     * @param statePersistence 熔断状态持久化组件（可选）
+     * @param metricsExporter  熔断指标导出器（可选）
+     */
+    public Resilience4jCircuitBreakerAdapter(FeignProperties properties,
+                                              CircuitBreakerStatePersistence statePersistence,
+                                              FeignCircuitBreakerMetricsExporter metricsExporter) {
         FeignProperties.CircuitBreaker cb = properties.getCircuitBreaker();
         this.config = buildConfig(cb);
+        this.statePersistence = statePersistence;
+        this.metricsExporter = metricsExporter;
         log.info("[Resilience4jCircuitBreaker] 初始化完成, failureRateThreshold={}%, " +
                         "slowCallRateThreshold={}%, slowCallDurationThreshold={}ms, " +
                         "permittedCallsInHalfOpen={}, slidingWindowSize={}, slidingWindowType={}, " +
@@ -95,6 +85,8 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
      */
     public Resilience4jCircuitBreakerAdapter(CircuitBreakerConfig config) {
         this.config = config;
+        this.statePersistence = null;
+        this.metricsExporter = null;
     }
 
     @Override
@@ -112,6 +104,11 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
         CircuitBreakerState state = toState(cb.getState());
         stateCache.put(serviceName, state);
+
+        if (state == CircuitBreakerState.OPEN && statePersistence != null) {
+            statePersistence.persistState(serviceName, state);
+        }
+
         return cb.tryAcquirePermission();
     }
 
@@ -127,15 +124,26 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
     public void recordFailure(String serviceName, long elapsedTime, Throwable throwable) {
         CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
         cb.onError(elapsedTime, TimeUnit.MILLISECONDS, throwable);
-        stateCache.put(serviceName, toState(cb.getState()));
+        CircuitBreakerState newState = toState(cb.getState());
+        stateCache.put(serviceName, newState);
         log.warn("[Resilience4jCircuitBreaker] 调用失败, service={}, cause={}", serviceName, throwable.getMessage());
         updateMetrics(serviceName, false, elapsedTime);
+
+        if (statePersistence != null && newState == CircuitBreakerState.OPEN) {
+            statePersistence.persistState(serviceName, newState);
+        }
     }
 
     @Override
     public CircuitBreakerState getState(String serviceName) {
         CircuitBreaker cb = circuitBreakers.get(serviceName);
         if (cb == null) {
+            if (statePersistence != null) {
+                CircuitBreakerState restored = statePersistence.restoreState(serviceName);
+                if (restored != null) {
+                    return restored;
+                }
+            }
             return CircuitBreakerState.CLOSED;
         }
         return toState(cb.getState());
@@ -154,6 +162,9 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         }
         stateCache.put(serviceName, CircuitBreakerState.CLOSED);
         metricsCache.remove(serviceName);
+        if (statePersistence != null) {
+            statePersistence.clearState(serviceName);
+        }
         log.info("[Resilience4jCircuitBreaker] 熔断器已重置, service={}", serviceName);
     }
 
@@ -191,22 +202,37 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
     /**
      * 获取或创建指定服务的 Resilience4j CircuitBreaker 实例。
+     *
+     * <p>创建新实例时：
+     * <ol>
+     *   <li>尝试从 Redis 恢复之前的熔断状态</li>
+     *   <li>自动注册 Micrometer 指标</li>
+     * </ol>
      */
     private CircuitBreaker getOrCreateCircuitBreaker(String serviceName) {
-        return circuitBreakers.computeIfAbsent(serviceName, name ->
-                CircuitBreaker.of(toResource(name), config));
+        return circuitBreakers.computeIfAbsent(serviceName, name -> {
+            CircuitBreaker cb = CircuitBreaker.of(toResource(name), config);
+
+            if (statePersistence != null) {
+                CircuitBreakerState restored = statePersistence.restoreState(name);
+                if (restored == CircuitBreakerState.OPEN) {
+                    cb.transitionToForcedOpenState();
+                    log.info("[Resilience4jCircuitBreaker] 从 Redis 恢复熔断状态为 OPEN, service={}", name);
+                }
+            }
+
+            if (metricsExporter != null) {
+                metricsExporter.registerServiceMetrics(name);
+            }
+
+            return cb;
+        });
     }
 
-    /**
-     * 将服务名转换为 Resilience4j 资源名。
-     */
     private String toResource(String serviceName) {
         return RESOURCE_PREFIX + serviceName;
     }
 
-    /**
-     * 构建 Resilience4j CircuitBreakerConfig。
-     */
     private CircuitBreakerConfig buildConfig(FeignProperties.CircuitBreaker cb) {
         SlidingWindowType windowType = "TIME_BASED".equalsIgnoreCase(cb.getSlidingWindowType())
                 ? SlidingWindowType.TIME_BASED
@@ -223,9 +249,6 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
                 .build();
     }
 
-    /**
-     * 将 Resilience4j CircuitBreaker.State 转换为内部状态枚举。
-     */
     private CircuitBreakerState toState(CircuitBreaker.State state) {
         return switch (state) {
             case CLOSED -> CircuitBreakerState.CLOSED;
@@ -237,13 +260,6 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         };
     }
 
-    /**
-     * 更新本地指标。
-     *
-     * <p>使用 {@link java.util.concurrent.atomic.LongAdder#increment()} 原子递增，
-     * 替代原先非原子的 read-modify-write（getTotalCalls()+1 → setTotalCalls），
-     * 消除高并发下的竞态条件。
-     */
     private void updateMetrics(String serviceName, boolean success, long elapsedTime) {
         CircuitBreakerMetrics m = metricsCache.computeIfAbsent(serviceName, k -> new CircuitBreakerMetrics());
         m.incrementTotalCalls();
@@ -255,7 +271,6 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         if (elapsedTime >= config.getSlowCallDurationThreshold().toMillis()) {
             m.incrementSlowCalls();
         }
-        // 速率计算基于最新计数值，容忍短暂的不一致
         long total = m.getTotalCalls();
         if (total > 0) {
             m.setFailureRate((double) m.getFailedCalls() / total * 100.0);

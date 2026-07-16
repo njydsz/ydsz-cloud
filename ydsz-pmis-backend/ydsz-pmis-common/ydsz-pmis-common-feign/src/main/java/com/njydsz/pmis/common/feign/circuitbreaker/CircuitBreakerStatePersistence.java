@@ -18,12 +18,12 @@ import com.njydsz.pmis.common.redis.service.RedisService;
  * <p><b>Redis 存储格式：</b>
  * <pre>
  * ydsz:feign:circuit:{serviceName} -> "OPEN|1716624000000"
- * ydsz:feign:circuit:ttl -> 3600（秒）
  * </pre>
+ *
+ * <p><b>TTL 管理：</b>依赖 Redis 自身的 TTL 自动过期，不进行双重过期检查。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 @ConditionalOnClass(RedisService.class)
 public class CircuitBreakerStatePersistence {
@@ -31,18 +31,32 @@ public class CircuitBreakerStatePersistence {
     private static final Logger log = LoggerFactory.getLogger(CircuitBreakerStatePersistence.class);
 
     private static final String KEY_PREFIX = "ydsz:feign:circuit:";
-    private static final Duration DEFAULT_TTL = Duration.ofHours(1);
 
     private final RedisService redisService;
     private final Duration ttl;
 
+    /**
+     * 使用默认 TTL（1 小时）构造。
+     *
+     * @param redisServiceProvider Redis 服务提供者（可选）
+     */
     public CircuitBreakerStatePersistence(ObjectProvider<RedisService> redisServiceProvider) {
-        this.redisService = redisServiceProvider.getIfAvailable();
-        this.ttl = DEFAULT_TTL;
+        this(redisServiceProvider, Duration.ofHours(1));
     }
 
     /**
-     * 持久化熔断器状态到 Redis
+     * 使用自定义 TTL 构造。
+     *
+     * @param redisServiceProvider Redis 服务提供者（可选）
+     * @param ttl                  状态持久化 TTL
+     */
+    public CircuitBreakerStatePersistence(ObjectProvider<RedisService> redisServiceProvider, Duration ttl) {
+        this.redisService = redisServiceProvider.getIfAvailable();
+        this.ttl = ttl != null ? ttl : Duration.ofHours(1);
+    }
+
+    /**
+     * 持久化熔断器状态到 Redis。
      *
      * @param serviceName 服务名称
      * @param state       熔断器状态
@@ -54,7 +68,6 @@ public class CircuitBreakerStatePersistence {
         }
         if (state == FeignCircuitBreakerStrategy.CircuitBreakerState.CLOSED
                 || state == FeignCircuitBreakerStrategy.CircuitBreakerState.DISABLED) {
-            // CLOSED 和 DISABLED 状态不需要持久化，直接删除已有记录
             clearState(serviceName);
             return;
         }
@@ -69,7 +82,9 @@ public class CircuitBreakerStatePersistence {
     }
 
     /**
-     * 从 Redis 恢复熔断器状态
+     * 从 Redis 恢复熔断器状态。
+     *
+     * <p>依赖 Redis TTL 自动过期，不做双重过期检查。
      *
      * @param serviceName 服务名称
      * @return 持久化的状态，无记录时返回 null
@@ -89,15 +104,7 @@ public class CircuitBreakerStatePersistence {
             if (parts.length >= 1) {
                 FeignCircuitBreakerStrategy.CircuitBreakerState state =
                         FeignCircuitBreakerStrategy.CircuitBreakerState.valueOf(parts[0]);
-                long savedTimestamp = parts.length >= 2 ? Long.parseLong(parts[1]) : 0;
-                long elapsed = System.currentTimeMillis() - savedTimestamp;
-                // 如果记录已过期（超过 ttl），则清除并返回 null
-                if (elapsed > ttl.toMillis()) {
-                    clearState(serviceName);
-                    return null;
-                }
-                log.info("从 Redis 恢复熔断器状态, service={}, state={}, elapsed={}ms",
-                        serviceName, state, elapsed);
+                log.info("从 Redis 恢复熔断器状态, service={}, state={}", serviceName, state);
                 return state;
             }
             return null;
@@ -108,7 +115,7 @@ public class CircuitBreakerStatePersistence {
     }
 
     /**
-     * 清除指定服务的熔断器状态记录
+     * 清除指定服务的熔断器状态记录。
      *
      * @param serviceName 服务名称
      */
@@ -117,8 +124,7 @@ public class CircuitBreakerStatePersistence {
             return;
         }
         try {
-            String key = buildKey(serviceName);
-            redisService.del(key);
+            redisService.del(buildKey(serviceName));
         } catch (Exception e) {
             log.debug("清除熔断器状态记录失败, service={}", serviceName, e);
         }

@@ -449,42 +449,13 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
     /**
      * 设置拦截器配置属性
      *
-     * <p>该方法由 Spring 在初始化拦截器时自动调用，
-     * 将配置文件中的属性值绑定到拦截器的成员变量上。
-     *
-     * <p>支持的配置项：
-     * <ul>
-     *   <li>revisionColumn：版本号字段名，默认 "revision"</li>
-     *   <li>defaultRevisionValue：INSERT 时的默认值，默认 0</li>
-     *   <li>enabled：是否启用，默认 true</li>
-     * </ul>
+     * <p>在 Spring Boot 环境下，配置通过 @ConfigurationProperties + setter 注入，
+     * 此方法仅为兼容 MyBatis 原生 XML 配置方式保留。
      *
      * @param properties 配置属性
      */
     @Override
     public void setProperties(Properties properties) {
-        if (properties == null) {
-            return;
-        }
-
-        String column = properties.getProperty("revisionColumn");
-        if (StringUtils.isNotBlank(column)) {
-            this.revisionColumn = column;
-        }
-
-        String defaultVal = properties.getProperty("defaultRevisionValue");
-        if (StringUtils.isNotBlank(defaultVal)) {
-            try {
-                this.defaultRevisionValue = Long.parseLong(defaultVal);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid defaultRevisionValue: {}, using default: 0", defaultVal);
-            }
-        }
-
-        String enabledStr = properties.getProperty("enabled", "true");
-        this.enabled = Boolean.parseBoolean(enabledStr);
-
-        log.info("OptimisticLockInterceptor initialized: revisionColumn={}, defaultRevisionValue={}, enabled={}",
-                revisionColumn, defaultRevisionValue, enabled);
+        // Spring Boot 环境下配置通过 @ConfigurationProperties 注入，此方法不会被调用
     }
 }

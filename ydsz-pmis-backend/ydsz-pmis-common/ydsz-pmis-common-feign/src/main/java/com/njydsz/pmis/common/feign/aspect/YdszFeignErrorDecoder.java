@@ -61,10 +61,6 @@ public class YdszFeignErrorDecoder implements ErrorDecoder {
     private final ErrorDecoder defaultErrorDecoder = new Default();
     private final FeignProperties feignProperties;
 
-    public YdszFeignErrorDecoder() {
-        this(new FeignProperties());
-    }
-
     /**
      * 使用自定义配置构造错误解码器。
      *

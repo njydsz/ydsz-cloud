@@ -6,6 +6,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+
 /**
  * 数据库操作熔断器
  *
@@ -17,6 +20,12 @@ import org.slf4j.LoggerFactory;
  *   <li>CLOSED — 正常状态，所有请求通过</li>
  *   <li>OPEN — 熔断状态，所有请求被快速拒绝</li>
  *   <li>HALF_OPEN — 半开状态，允许有限请求探测恢复</li>
+ * </ul>
+ *
+ * <p>可观测性：通过 {@link #bindTo(MeterRegistry)} 暴露 Micrometer 指标：
+ * <ul>
+ *   <li>{@code dbc.circuitbreaker.state} Gauge — 熔断器状态（0=CLOSED, 1=OPEN, 2=HALF_OPEN）</li>
+ *   <li>{@code dbc.circuitbreaker.consecutive.failures} Gauge — 当前连续失败次数</li>
  * </ul>
  *
  * <p>配置示例：
@@ -155,6 +164,23 @@ public class DatabaseCircuitBreaker {
      */
     public int getConsecutiveFailures() {
         return consecutiveFailures.get();
+    }
+
+    /**
+     * 将熔断器指标绑定到 Micrometer MeterRegistry
+     *
+     * @param registry Micrometer 指标注册表
+     */
+    public void bindTo(MeterRegistry registry) {
+        if (registry == null) {
+            return;
+        }
+        Gauge.builder("dbc.circuitbreaker.state", () -> state.ordinal())
+                .description("Database circuit breaker state (0=CLOSED, 1=OPEN, 2=HALF_OPEN)")
+                .register(registry);
+        Gauge.builder("dbc.circuitbreaker.consecutive.failures", consecutiveFailures::get)
+                .description("Database circuit breaker consecutive failure count")
+                .register(registry);
     }
 
     /**

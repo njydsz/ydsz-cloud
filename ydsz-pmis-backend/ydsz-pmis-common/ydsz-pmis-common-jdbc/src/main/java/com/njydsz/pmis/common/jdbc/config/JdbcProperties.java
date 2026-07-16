@@ -20,7 +20,7 @@ import lombok.Data;
  * ydsz:
  *   jdbc:
  *     enabled: true
- *     mapper-scan-ppackages: com.njydsz.pmis.**.mapper
+     *     mapper-scan-packages: com.njydsz.pmis.**.mapper
  *     slow-sql:
  *       enabled: true
  *       threshold-millis: 1000

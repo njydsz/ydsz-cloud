@@ -325,7 +325,7 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
                     .append(commandType.name()).append(" | ")
                     .append(methodId).append(" | ")
                     .append(elapsed).append("ms | ")
-                    .append("0行");
+                    .append("影响行数: N/A");
 
             if (!parameters.isEmpty()) {
                 auditLog.append(" | 参数: ").append(parameters);

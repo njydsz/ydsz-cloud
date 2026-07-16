@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.jdbc.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import com.njydsz.pmis.common.jdbc.interceptor.CircuitBreakerInterceptor;
 import com.njydsz.pmis.common.jdbc.monitor.DatabaseCircuitBreaker;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.plugin.Interceptor;
 
@@ -32,17 +34,25 @@ import org.apache.ibatis.plugin.Interceptor;
 public class DatabaseCircuitBreakerAutoConfiguration {
 
     /**
-     * 创建数据库熔断器实例
+     * 创建数据库熔断器实例并绑定 Micrometer 指标
      *
-     * @param properties 熔断器配置属性
+     * @param properties            熔断器配置属性
+     * @param meterRegistryProvider Micrometer 注册表 Provider
      * @return DatabaseCircuitBreaker 实例
      */
     @Bean
-    public DatabaseCircuitBreaker databaseCircuitBreaker(CircuitBreakerProperties properties) {
-        return new DatabaseCircuitBreaker(
+    public DatabaseCircuitBreaker databaseCircuitBreaker(CircuitBreakerProperties properties,
+                                                         ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        DatabaseCircuitBreaker breaker = new DatabaseCircuitBreaker(
                 properties.getFailureThreshold(),
                 properties.getOpenDurationMillis(),
                 properties.getHalfOpenProbeSize());
+        // 绑定 Micrometer 指标
+        MeterRegistry registry = meterRegistryProvider.getIfAvailable();
+        if (registry != null) {
+            breaker.bindTo(registry);
+        }
+        return breaker;
     }
 
     /**

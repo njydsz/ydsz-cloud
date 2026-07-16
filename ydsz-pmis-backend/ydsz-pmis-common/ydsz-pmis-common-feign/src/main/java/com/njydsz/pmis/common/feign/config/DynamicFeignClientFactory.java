@@ -8,8 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-
 import feign.Feign;
 import feign.Logger;
 import feign.Request;
@@ -24,23 +22,21 @@ import lombok.extern.slf4j.Slf4j;
  * 动态 Feign 客户端工厂。
  *
  * <p>维护 Feign 客户端实例缓存，当配置发生变化时自动重建客户端。
- * 结合 {@link RefreshScope} 实现配置热更新。
  *
  * <p>主要功能：
  * <ul>
  *   <li>缓存 Feign.Builder 实例，避免重复创建</li>
  *   <li>配置变化时清除缓存并重建</li>
  *   <li>支持排除特定客户端不参与重建</li>
+ *   <li>支持 per-client 超时配置（通过 {@code ydsz.feign.client-timeouts}）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see FeignConfigRefresher
  * @see FeignProperties
  */
 @Slf4j
-@RefreshScope
 public class DynamicFeignClientFactory {
 
     /**
@@ -178,8 +174,8 @@ public class DynamicFeignClientFactory {
             builder.requestInterceptor(interceptor);
         }
 
-        // 配置超时
-        Request.Options options = buildRequestOptions();
+        // 配置超时（支持 per-client 超时配置）
+        Request.Options options = buildRequestOptions(clientName);
         builder.options(options);
 
         // 配置解码器和编码器
@@ -199,10 +195,30 @@ public class DynamicFeignClientFactory {
     /**
      * 构建请求超时配置。
      *
+     * <p>优先使用 per-client 超时配置（{@code ydsz.feign.client-timeouts.<clientName>}），
+     * 未配置的客户端使用全局 {@code ydsz.feign.timeout}。
+     *
+     * @param clientName 客户端名称
      * @return Request.Options 实例
      */
-    private Request.Options buildRequestOptions() {
+    private Request.Options buildRequestOptions(String clientName) {
         FeignProperties.Timeout timeoutConfig = feignProperties.getTimeout();
+
+        FeignProperties.Timeout clientTimeout = feignProperties.getClientTimeouts() != null
+                ? feignProperties.getClientTimeouts().get(clientName)
+                : null;
+        if (clientTimeout != null) {
+            log.debug("[Feign] 使用 per-client 超时配置, clientName={}, connect={}ms, read={}ms",
+                    clientName, clientTimeout.getConnect(), clientTimeout.getRead());
+            return new Request.Options(
+                    clientTimeout.getConnect(),
+                    TimeUnit.MILLISECONDS,
+                    clientTimeout.getRead(),
+                    TimeUnit.MILLISECONDS,
+                    true
+            );
+        }
+
         return new Request.Options(
                 timeoutConfig.getConnect(),
                 TimeUnit.MILLISECONDS,

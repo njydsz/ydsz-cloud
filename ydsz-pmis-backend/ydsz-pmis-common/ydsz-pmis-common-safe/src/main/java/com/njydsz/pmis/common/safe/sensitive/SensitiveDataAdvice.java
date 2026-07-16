@@ -75,14 +75,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
  * 
  * @see SensitiveData
  * @see SensitiveDataProcessor
- * @see SensitiveDataConfiguration
+ * @see SensitiveDataProperties
  */
 @RestControllerAdvice
 public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
 
     private static final Logger log = LoggerFactory.getLogger(SensitiveDataAdvice.class);
 
-    private final SensitiveDataConfiguration configuration;
+    private final SensitiveDataProperties configuration;
 
     /**
      * 缓存类的敏感字段检查结果，避免重复反射检查
@@ -90,7 +90,7 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
      */
     private final Map<Class<?>, Boolean> sensitiveClassCache = new ConcurrentHashMap<>();
 
-    public SensitiveDataAdvice(SensitiveDataConfiguration configuration) {
+    public SensitiveDataAdvice(SensitiveDataProperties configuration) {
         this.configuration = configuration;
     }
 
@@ -236,7 +236,7 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
         }
 
         return configuration.getGlobalRules().stream()
-            .filter(SensitiveDataConfiguration.GlobalDesensitizeRule::isEnabled)
+            .filter(SensitiveDataProperties.GlobalDesensitizeRule::isEnabled)
             .anyMatch(rule -> matchesFieldName(fieldName, rule.getFieldName()));
     }
 

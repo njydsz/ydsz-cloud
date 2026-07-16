@@ -30,7 +30,15 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
-import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.AllTableColumns;
+import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.ParenthesedSelect;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.Values;
 import net.sf.jsqlparser.statement.update.Update;
 
 /**
@@ -636,7 +644,7 @@ public class ColPermissionInnerInterceptor extends JsqlParserSupport implements 
     }
 
     /**
-     * 标准化列名，去除表限定前缀（如 table.column 中的 table.）并转为小写
+     * 标准化列名，去除反引号/双引号包裹和表限定前缀，并转为小写
      *
      * @param col 列名
      * @return 标准化后的列名，为空时返回空字符串
@@ -646,9 +654,18 @@ public class ColPermissionInnerInterceptor extends JsqlParserSupport implements 
             return "";
         }
         String out = col;
+        // 去除反引号（MySQL）和双引号（PostgreSQL/ANSI）包裹
+        if (out.startsWith("`") && out.endsWith("`")) {
+            out = out.substring(1, out.length() - 1);
+        } else if (out.startsWith("\"") && out.endsWith("\"")) {
+            out = out.substring(1, out.length() - 1);
+        }
+        // 去除表限定前缀（如 table.column 中的 table.）
         if (out.contains(".")) {
             out = out.substring(out.lastIndexOf('.') + 1);
         }
+        // 再次去除可能残留的反引号/双引号
+        out = out.replace("`", "").replace("\"", "");
         return out.toLowerCase();
     }
 }

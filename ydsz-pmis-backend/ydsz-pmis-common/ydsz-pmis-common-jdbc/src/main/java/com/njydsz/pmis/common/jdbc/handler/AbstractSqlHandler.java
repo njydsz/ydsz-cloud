@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.jdbc.handler;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.njydsz.pmis.common.jdbc.domain.InterceptConfig;
 import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * SQL 拦截器抽象基类
@@ -63,14 +65,26 @@ public abstract class AbstractSqlHandler {
         if (customIgnore()) {
             return true;
         }
+        if (tableName == null) {
+            return true;
+        }
 
         InterceptTableStrategy interceptTableStrategy = interceptConfig.getInterceptTableStrategy();
         Set<String> tables = interceptConfig.getTables();
+        String normalizedTableName = tableName.trim().toLowerCase();
+
+        // 标准化配置表集合为小写，确保大小写不敏感匹配
+        Set<String> normalizedTables = new HashSet<>(tables.size());
+        for (String table : tables) {
+            if (table != null) {
+                normalizedTables.add(table.trim().toLowerCase());
+            }
+        }
 
         if (InterceptTableStrategy.EXCLUDE.equals(interceptTableStrategy)) {
-            return tables.contains(tableName);
+            return normalizedTables.contains(normalizedTableName);
         } else if (InterceptTableStrategy.INCLUDE.equals(interceptTableStrategy)) {
-            return !tables.contains(tableName);
+            return !normalizedTables.contains(normalizedTableName);
         } else {
             throw new IllegalStateException("未指定表拦截策略");
         }
@@ -85,26 +99,16 @@ public abstract class AbstractSqlHandler {
      * @return 最终使用的列名
      */
     protected String handleColumn(String column) {
-        if (isNotBlank(column)) {
+        if (StringUtils.isNotBlank(column)) {
             return column;
         }
 
         column = getDefaultColumn();
-        if (isNotBlank(column)) {
+        if (StringUtils.isNotBlank(column)) {
             return column;
         }
 
         throw new IllegalStateException(this.getClass() + "未指定填充字段,请检查");
-    }
-
-    /**
-     * 判断字符串是否非空
-     *
-     * @param str 待判断字符串
-     * @return true 表示非空，false 表示空
-     */
-    public static boolean isNotBlank(String str) {
-        return str != null && str.trim().length() > 0;
     }
 
     /**

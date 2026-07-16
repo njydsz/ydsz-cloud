@@ -144,6 +144,20 @@ public class HikariCPConfiguration {
         }
 
         log.info("HikariCP 数据源已初始化，池名: {}", dataSource.getPoolName());
+
+        // 连接池预热：预创建 minIdle 个连接，避免首批请求冷启动延迟
+        int minIdle = hikariConfig.getMinimumIdle();
+        int warmed = 0;
+        for (int i = 0; i < minIdle; i++) {
+            try (var conn = dataSource.getConnection()) {
+                warmed++;
+            } catch (Exception e) {
+                log.warn("连接池预热失败 (第 {} 个连接): {}", i + 1, e.getMessage());
+                break;
+            }
+        }
+        log.info("HikariCP 连接池预热完成: {}/{} 个连接已就绪", warmed, minIdle);
+
         return dataSource;
     }
 

@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.feign.interceptor;
 import org.jspecify.annotations.Nullable;
 
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 import feign.InvocationContext;
 import feign.Response;
@@ -154,9 +155,22 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
             String configKey = context.toString();
             int hashIdx = configKey.indexOf('#');
             if (hashIdx > 0) {
-                return configKey.substring(0, hashIdx);
+                String servicePart = configKey.substring(0, hashIdx);
+                if (StringUtils.isNotEmpty(servicePart)) {
+                    return servicePart;
+                }
             }
-            return configKey;
+            int atIdx = configKey.indexOf('@');
+            if (atIdx > 0) {
+                String servicePart = configKey.substring(0, atIdx);
+                if (StringUtils.isNotEmpty(servicePart)) {
+                    return servicePart;
+                }
+            }
+            if (StringUtils.isNotEmpty(configKey)) {
+                return configKey;
+            }
+            return "unknown";
         } catch (Exception e) {
             return "unknown";
         }
@@ -172,10 +186,13 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
         try {
             String configKey = context.toString();
             int hashIdx = configKey.indexOf('#');
-            if (hashIdx > 0) {
+            if (hashIdx > 0 && hashIdx < configKey.length() - 1) {
                 int parenIdx = configKey.indexOf('(', hashIdx);
                 if (parenIdx > hashIdx) {
-                    return configKey.substring(hashIdx + 1, parenIdx);
+                    String methodPart = configKey.substring(hashIdx + 1, parenIdx);
+                    if (StringUtils.isNotEmpty(methodPart)) {
+                        return methodPart;
+                    }
                 }
             }
             return "UNKNOWN";
