@@ -1,10 +1,9 @@
 package com.njydsz.common.app.filter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -165,7 +164,7 @@ public class AppSignatureFilter extends OncePerRequestFilter {
         if (redisTemplate != null) {
             String nonceKey = NONCE_CACHE_PREFIX + nonce;
             Boolean setSuccess = redisTemplate.opsForValue().setIfAbsent(
-                    nonceKey, "1", properties.getNonceCacheTtl(), TimeUnit.SECONDS);
+                    nonceKey, "1", Duration.ofSeconds(properties.getNonceCacheTtl()));
             if (setSuccess == null || !setSuccess) {
                 log.warn("【App签名验证】Nonce 重复（疑似重放攻击） | uri={} | nonce={}", request.getRequestURI(), nonce);
                 recordMetrics("nonce_replay", startTime);

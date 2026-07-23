@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
 @Component
@@ -55,7 +54,7 @@ public class AppRequestLogInterceptor extends BaseRequestLogInterceptor {
      * @return 请求追踪 ID
      */
     @Override
-    protected String resolveRequestId(HttpServletRequest request) {
+    public String resolveRequestId(HttpServletRequest request) {
         String requestId = RequestHolder.getExtraHeader(REQUEST_ID_HEADER);
         if (requestId == null || requestId.isBlank()) {
             requestId = RequestIdGenerator.generateId();

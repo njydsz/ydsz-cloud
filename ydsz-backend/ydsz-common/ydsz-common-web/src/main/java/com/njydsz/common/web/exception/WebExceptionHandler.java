@@ -1,12 +1,5 @@
 package com.njydsz.common.web.exception;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -48,13 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class WebExceptionHandler extends BaseExceptionHandler {
 
-    private final MessageSource messageSource;
-
-    public WebExceptionHandler(MessageSource messageSource,
-                                ExceptionMetrics exceptionMetrics,
+    public WebExceptionHandler(ExceptionMetrics exceptionMetrics,
                                 ExceptionProperties properties,
                                 ExceptionAlertPublisher alertPublisher) {
-        this.messageSource = messageSource;
         setExceptionMetrics(exceptionMetrics);
         setExceptionProperties(properties);
         setAlertPublisher(alertPublisher);

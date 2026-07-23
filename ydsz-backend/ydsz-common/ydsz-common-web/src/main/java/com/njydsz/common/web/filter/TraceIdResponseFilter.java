@@ -21,7 +21,7 @@ import com.njydsz.common.web.config.WebTraceProperties;
  * </ol>
  *
  * @author ydsz-team
-* 
+ *
  * @see BaseRequestIdResponseFilter
  * @see TracerUtils
  */
@@ -31,23 +31,11 @@ public class TraceIdResponseFilter extends BaseRequestIdResponseFilter {
         super(traceProperties);
     }
 
-    /**
-     * 解析请求 ID（TraceId）
-     *
-     * @param request HTTP 请求
-     * @return TraceId 字符串
-     */
     @Override
-    protected String resolveRequestId(HttpServletRequest request) {
+    public String resolveRequestId(HttpServletRequest request) {
         return TracerUtils.getOrCreateTraceId();
     }
 
-    /**
-     * 过滤器完成后清理 TraceId
-     *
-     * @param request  HTTP 请求
-     * @param response HTTP 响应
-     */
     @Override
     protected void afterFilter(HttpServletRequest request, HttpServletResponse response) {
         TracerUtils.clear();

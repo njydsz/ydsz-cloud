@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.exception.alert.ExceptionAlertPublisher;
@@ -28,17 +27,17 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnClass({MessageSource.class, WebExceptionHandler.class})
+@ConditionalOnClass(WebExceptionHandler.class)
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
 public class WebExceptionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(WebExceptionHandler.class)
-    public WebExceptionHandler webExceptionHandler(MessageSource messageSource,
-                                                    ObjectProvider<ExceptionMetrics> exceptionMetrics,
-                                                    ObjectProvider<ExceptionProperties> properties,
-                                                    ObjectProvider<ExceptionAlertPublisher> alertPublisher) {
-        return new WebExceptionHandler(messageSource,
+    public WebExceptionHandler webExceptionHandler(
+            ObjectProvider<ExceptionMetrics> exceptionMetrics,
+            ObjectProvider<ExceptionProperties> properties,
+            ObjectProvider<ExceptionAlertPublisher> alertPublisher) {
+        return new WebExceptionHandler(
                 exceptionMetrics.getIfAvailable(),
                 properties.getIfAvailable(),
                 alertPublisher.getIfAvailable());

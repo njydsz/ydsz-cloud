@@ -36,7 +36,7 @@ public class RequestLogInterceptor extends BaseRequestLogInterceptor {
     }
 
     @Override
-    protected String resolveRequestId(HttpServletRequest request) {
+    public String resolveRequestId(HttpServletRequest request) {
         return TracerUtils.getTraceId();
     }
 

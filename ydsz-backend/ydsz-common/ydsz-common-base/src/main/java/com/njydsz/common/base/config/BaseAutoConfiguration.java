@@ -119,7 +119,7 @@ public class BaseAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public BaseHealthIndicator baseHealthIndicator(BaseSecurityHeadersProperties securityHeadersProperties,
                                                     DocProperties docProperties) {
         return new BaseHealthIndicator(securityHeadersProperties, docProperties);

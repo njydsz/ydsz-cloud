@@ -17,7 +17,6 @@ import com.njydsz.common.util.auth.RequestHolder;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  * @see RequestHolder
  */
 public class AppAuthInfo extends BaseAuthInfo {

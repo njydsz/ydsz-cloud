@@ -1,5 +1,6 @@
 package com.njydsz.common.web.metrics;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,19 +55,19 @@ public class WebMetrics {
     public void recordAuthSuccess(long durationNanos) {
         totalAuthRequests.incrementAndGet();
         getCounter(METRIC_AUTH_TOTAL, "result", "success").increment();
-        getTimer(METRIC_AUTH_DURATION).record(java.time.Duration.ofNanos(durationNanos));
+        getTimer(METRIC_AUTH_DURATION).record(Duration.ofNanos(durationNanos));
     }
 
     public void recordAuthFailure(long durationNanos) {
         totalAuthRequests.incrementAndGet();
         totalAuthFailures.incrementAndGet();
         getCounter(METRIC_AUTH_TOTAL, "result", "failure").increment();
-        getTimer(METRIC_AUTH_DURATION).record(java.time.Duration.ofNanos(durationNanos));
+        getTimer(METRIC_AUTH_DURATION).record(Duration.ofNanos(durationNanos));
     }
 
     public void recordRequest(String method, int status, long durationNanos) {
         getCounter(METRIC_REQUEST_TOTAL, "method", method, "status", String.valueOf(status)).increment();
-        getTimer(METRIC_REQUEST_DURATION, "method", method).record(java.time.Duration.ofNanos(durationNanos));
+        getTimer(METRIC_REQUEST_DURATION, "method", method).record(Duration.ofNanos(durationNanos));
     }
 
     public void recordRateLimitRejected() {

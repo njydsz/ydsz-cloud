@@ -12,7 +12,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
-import com.njydsz.common.base.interceptor.RequestIdResolver;
 import com.njydsz.common.util.http.ServletUtils;
 import com.njydsz.common.util.string.StringUtils;
 

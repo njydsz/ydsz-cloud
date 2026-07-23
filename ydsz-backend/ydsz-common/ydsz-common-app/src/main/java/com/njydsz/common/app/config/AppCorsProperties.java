@@ -14,7 +14,6 @@ import com.njydsz.common.base.config.BaseCorsProperties;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.app.cors")
 public class AppCorsProperties extends BaseCorsProperties {

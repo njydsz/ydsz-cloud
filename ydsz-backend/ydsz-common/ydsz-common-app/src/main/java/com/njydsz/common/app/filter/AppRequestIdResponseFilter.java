@@ -20,7 +20,6 @@ import com.njydsz.common.util.auth.RequestHolder;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class AppRequestIdResponseFilter extends BaseRequestIdResponseFilter {
 
@@ -43,7 +42,7 @@ public class AppRequestIdResponseFilter extends BaseRequestIdResponseFilter {
      * @return 请求追踪 ID
      */
     @Override
-    protected String resolveRequestId(HttpServletRequest request) {
+    public String resolveRequestId(HttpServletRequest request) {
         String requestId = RequestHolder.getExtraHeader(HEADER_REQUEST_ID);
         if (requestId == null || requestId.isBlank()) {
             requestId = RequestIdGenerator.generateId();

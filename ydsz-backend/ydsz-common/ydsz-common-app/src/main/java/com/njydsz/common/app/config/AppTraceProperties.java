@@ -17,7 +17,6 @@ import lombok.EqualsAndHashCode;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  * @see BaseTraceProperties
  */
 @Data

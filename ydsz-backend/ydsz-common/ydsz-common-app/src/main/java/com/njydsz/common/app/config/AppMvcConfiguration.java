@@ -17,6 +17,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import com.njydsz.common.app.advice.AppGlobalResponseAdvice;
+import com.njydsz.common.app.auth.AppAuthHandler;
 import com.njydsz.common.app.exception.AppExceptionHandler;
 import com.njydsz.common.app.filter.AppAuthFilter;
 import com.njydsz.common.app.filter.AppContentCachingFilter;
@@ -162,7 +163,7 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     @Bean("appAuthHandler")
     @ConditionalOnMissingBean(name = "appAuthHandler")
     public AuthHandler appAuthHandler() {
-        return new com.njydsz.common.app.auth.AppAuthHandler();
+        return new AppAuthHandler();
     }
 
     /**
