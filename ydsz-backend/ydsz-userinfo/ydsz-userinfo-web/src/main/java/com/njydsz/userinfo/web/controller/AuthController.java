@@ -45,7 +45,7 @@ public class AuthController {
     @Operation(summary = "获取图形验证码")
     @GetMapping("/captcha")
     public BaseResponse<CaptchaVO> captcha() {
-        return BaseResponse.ok(authService.generateCaptcha());
+        return BaseResponse.success(authService.generateCaptcha());
     }
 
     /**
@@ -60,7 +60,7 @@ public class AuthController {
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/login")
     public BaseResponse<LoginResultVO> login(@Valid @RequestBody LoginDTO dto) {
-        return BaseResponse.ok(authService.login(dto));
+        return BaseResponse.success(authService.login(dto));
     }
 
     /**
@@ -73,7 +73,7 @@ public class AuthController {
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/refresh")
     public BaseResponse<LoginResultVO> refresh(@Parameter(description = "刷新Token") @RequestParam String refreshToken) {
-        return BaseResponse.ok(authService.refresh(refreshToken));
+        return BaseResponse.success(authService.refresh(refreshToken));
     }
 
     /**
@@ -97,6 +97,6 @@ public class AuthController {
             }
         }
         authService.logout(userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

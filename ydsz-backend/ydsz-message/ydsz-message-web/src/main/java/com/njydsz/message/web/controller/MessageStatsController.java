@@ -57,7 +57,7 @@ public class MessageStatsController {
     public BaseResponse<MessageStatsVO> overview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return BaseResponse.ok(messageStatsService.getOverview(start, end));
+        return BaseResponse.success(messageStatsService.getOverview(start, end));
     }
 
     /**
@@ -73,7 +73,7 @@ public class MessageStatsController {
     public BaseResponse<List<ChannelStatsVO>> channelStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return BaseResponse.ok(messageStatsService.getChannelStats(start, end));
+        return BaseResponse.success(messageStatsService.getChannelStats(start, end));
     }
 
     /**
@@ -89,7 +89,7 @@ public class MessageStatsController {
     public BaseResponse<ReceiptStatsVO> receiptStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return BaseResponse.ok(messageStatsService.getReceiptStats(start, end));
+        return BaseResponse.success(messageStatsService.getReceiptStats(start, end));
     }
 
     /**
@@ -112,7 +112,7 @@ public class MessageStatsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String templateCode) {
-        return BaseResponse.ok(messageStatsService.getFunnel(start, end, channel, templateCode));
+        return BaseResponse.success(messageStatsService.getFunnel(start, end, channel, templateCode));
     }
 
     /**
@@ -130,6 +130,6 @@ public class MessageStatsController {
     public BaseResponse<CostStatsVO> cost(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return BaseResponse.ok(messageStatsService.getCostStats(start, end));
+        return BaseResponse.success(messageStatsService.getCostStats(start, end));
     }
 }

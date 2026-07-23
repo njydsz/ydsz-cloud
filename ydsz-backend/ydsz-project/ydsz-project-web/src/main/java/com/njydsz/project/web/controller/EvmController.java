@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -59,7 +58,7 @@ public class EvmController {
     @Idempotent(key = "evm:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
-        return BaseResponse.ok(service.save(dto));
+        return BaseResponse.success(service.save(dto));
     }
 
     /**
@@ -72,7 +71,7 @@ public class EvmController {
     @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/{id}")
     public BaseResponse<EvmMeasureVO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -85,7 +84,7 @@ public class EvmController {
     @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/byInitiation")
     public BaseResponse<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.listByInitiation(initiationId));
+        return BaseResponse.success(service.listByInitiation(initiationId));
     }
 
     /**
@@ -98,7 +97,7 @@ public class EvmController {
     @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/byWbs")
     public BaseResponse<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
-        return BaseResponse.ok(service.listByWbs(wbsTaskId));
+        return BaseResponse.success(service.listByWbs(wbsTaskId));
     }
 
     /**
@@ -111,7 +110,7 @@ public class EvmController {
     @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/trend")
     public BaseResponse<List<Map<String, Object>>> trend(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.trend(initiationId));
+        return BaseResponse.success(service.trend(initiationId));
     }
 
     /**
@@ -124,7 +123,7 @@ public class EvmController {
     @AuthApiPermission(apiCodes = "execution:evm:dashboard")
     @GetMapping("/dashboard")
     public BaseResponse<Map<String, Object>> dashboard(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.dashboard(initiationId));
+        return BaseResponse.success(service.dashboard(initiationId));
     }
 
     /**
@@ -144,7 +143,7 @@ public class EvmController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String alertLevel) {
-        return BaseResponse.ok(service.page(page, size, initiationId, alertLevel));
+        return BaseResponse.success(service.page(page, size, initiationId, alertLevel));
     }
 
     /**
@@ -155,11 +154,10 @@ public class EvmController {
      */
     @Operation(summary = "删除")
     @AuthApiPermission(apiCodes = "execution:evm:delete")
-    @OperationLog(module = "挣值管理", action = "删除EVM测量", bizType = "EVM_MEASURE")
     @Idempotent(key = "evm:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

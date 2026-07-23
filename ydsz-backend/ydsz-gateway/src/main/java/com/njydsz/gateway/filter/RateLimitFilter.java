@@ -283,7 +283,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             response.getHeaders().add("Retry-After", String.valueOf(properties.getResponseHeaders().getRetryAfter()));
         }
 
-        BaseResponse<Void> body = BaseResponse.failed("429", "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
+        BaseResponse<Void> body = BaseResponse.error("429", "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
         byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 

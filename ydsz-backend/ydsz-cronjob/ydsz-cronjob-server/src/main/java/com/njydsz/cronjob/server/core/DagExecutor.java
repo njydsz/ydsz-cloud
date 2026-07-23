@@ -7,9 +7,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobRelationDO;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobRelationMapper;
 import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 
@@ -87,9 +85,9 @@ public class DagExecutor {
      * 触发单个后继任务。
      */
     private void triggerOneDependent(JobRelationDO relation, String parentJobId, boolean parentSuccess) {
-        FailStrategy strategy = FailStrategy.parse(relation.getFailStrategy());
+        DagFailureStrategy strategy = DagFailureStrategy.parse(relation.getFailStrategy());
         // 前置失败 + FAIL_FAST → 跳过
-        if (!parentSuccess && strategy == FailStrategy.FAIL_FAST) {
+        if (!parentSuccess && strategy == DagFailureStrategy.FAIL_FAST) {
             log.info("[DagExecutor] 前置失败 + FAIL_FAST, 跳过后继: parent={} child={}",
                     parentJobId, relation.getChildJobId());
             return;

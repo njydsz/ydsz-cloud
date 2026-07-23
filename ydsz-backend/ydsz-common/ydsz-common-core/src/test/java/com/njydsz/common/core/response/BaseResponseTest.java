@@ -100,7 +100,7 @@ class BaseResponseTest {
         @Test
         @DisplayName("保留异常类名和消息")
         void failed_preservesExceptionType() {
-            BaseResponse<String> resp = BaseResponse.failed(new NullPointerException("null ref"));
+            BaseResponse<String> resp = BaseResponse.error(new NullPointerException("null ref"));
             assertThat(resp.getMsg()).contains("NullPointerException");
             assertThat(resp.getMsg()).contains("null ref");
         }
@@ -108,7 +108,7 @@ class BaseResponseTest {
         @Test
         @DisplayName("异常无消息时仅显示类名")
         void failed_noMessage() {
-            BaseResponse<String> resp = BaseResponse.failed(new IllegalStateException());
+            BaseResponse<String> resp = BaseResponse.error(new IllegalStateException());
             assertThat(resp.getMsg()).contains("IllegalStateException");
         }
     }

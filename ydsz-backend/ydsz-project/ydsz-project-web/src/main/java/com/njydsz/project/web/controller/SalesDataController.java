@@ -41,10 +41,10 @@ public class SalesDataController {
     @Operation(summary = "合同总金额")
     public BaseResponse<BigDecimal> sumContractAmount() {
         try {
-            return BaseResponse.ok(nz(contractMapper.sumAllAmount()));
+            return BaseResponse.success(nz(contractMapper.sumAllAmount()));
         } catch (Exception e) {
             log.error("[SalesData] sumContractAmount 失败: {}", e.getMessage());
-            return BaseResponse.ok(BigDecimal.ZERO);
+            return BaseResponse.success(BigDecimal.ZERO);
         }
     }
 
@@ -52,10 +52,10 @@ public class SalesDataController {
     @Operation(summary = "按项目查询合同金额")
     public BaseResponse<BigDecimal> sumContractAmountByInitiation(@RequestParam("initiationId") String initiationId) {
         try {
-            return BaseResponse.ok(nz(contractMapper.sumByInitiation(initiationId)));
+            return BaseResponse.success(nz(contractMapper.sumByInitiation(initiationId)));
         } catch (Exception e) {
             log.error("[SalesData] sumContractAmountByInitiation 失败: {}", e.getMessage());
-            return BaseResponse.ok(BigDecimal.ZERO);
+            return BaseResponse.success(BigDecimal.ZERO);
         }
     }
 
@@ -63,10 +63,10 @@ public class SalesDataController {
     @Operation(summary = "按客户统计合同金额")
     public BaseResponse<List<Map<String, Object>>> sumContractByCustomer() {
         try {
-            return BaseResponse.ok(contractMapper.sumByCustomer());
+            return BaseResponse.success(contractMapper.sumByCustomer());
         } catch (Exception e) {
             log.error("[SalesData] sumContractByCustomer 失败: {}", e.getMessage());
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
     }
 
@@ -74,10 +74,10 @@ public class SalesDataController {
     @Operation(summary = "按年度统计合同金额")
     public BaseResponse<List<Map<String, Object>>> sumContractByYear() {
         try {
-            return BaseResponse.ok(contractMapper.sumByYear());
+            return BaseResponse.success(contractMapper.sumByYear());
         } catch (Exception e) {
             log.error("[SalesData] sumContractByYear 失败: {}", e.getMessage());
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
     }
 
@@ -85,10 +85,10 @@ public class SalesDataController {
     @Operation(summary = "按最近月份统计合同金额")
     public BaseResponse<List<Map<String, Object>>> sumContractByRecentMonth(@RequestParam("limit") Integer limit) {
         try {
-            return BaseResponse.ok(contractMapper.sumByRecentMonth(limit));
+            return BaseResponse.success(contractMapper.sumByRecentMonth(limit));
         } catch (Exception e) {
             log.error("[SalesData] sumContractByRecentMonth 失败: {}", e.getMessage());
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
     }
 
@@ -96,10 +96,10 @@ public class SalesDataController {
     @Operation(summary = "商机总数")
     public BaseResponse<Integer> countOpportunities() {
         try {
-            return BaseResponse.ok(opportunityMapper.selectCount(null).intValue());
+            return BaseResponse.success(opportunityMapper.selectCount(null).intValue());
         } catch (Exception e) {
             log.error("[SalesData] countOpportunities 失败: {}", e.getMessage());
-            return BaseResponse.ok(0);
+            return BaseResponse.success(0);
         }
     }
 
@@ -107,10 +107,10 @@ public class SalesDataController {
     @Operation(summary = "按项目类型统计合同金额")
     public BaseResponse<List<Map<String, Object>>> sumContractByProjectType() {
         try {
-            return BaseResponse.ok(contractMapper.sumByProjectType());
+            return BaseResponse.success(contractMapper.sumByProjectType());
         } catch (Exception e) {
             log.error("[SalesData] sumContractByProjectType 失败: {}", e.getMessage());
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
     }
 

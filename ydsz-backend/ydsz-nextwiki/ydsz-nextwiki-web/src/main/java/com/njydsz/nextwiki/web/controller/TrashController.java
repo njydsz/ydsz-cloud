@@ -41,7 +41,7 @@ public class TrashController {
     @Operation(summary = "查询回收站列表")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_LIST)
     public BaseResponse<List<TrashItem>> list(@RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(trashApplicationService.listTrash(userId));
+        return BaseResponse.success(trashApplicationService.listTrash(userId));
     }
 
     @PostMapping("/{trashItemId}/restore")
@@ -51,7 +51,7 @@ public class TrashController {
             @PathVariable String trashItemId,
             @RequestHeader("X-User-Id") String userId) {
         trashApplicationService.restore(trashItemId, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @PostMapping("/batch-restore")
@@ -61,7 +61,7 @@ public class TrashController {
             @RequestBody List<String> trashItemIds,
             @RequestHeader("X-User-Id") String userId) {
         trashApplicationService.batchRestore(trashItemIds, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @DeleteMapping("/{trashItemId}")
@@ -71,7 +71,7 @@ public class TrashController {
             @PathVariable String trashItemId,
             @RequestHeader("X-User-Id") String userId) {
         trashApplicationService.purge(trashItemId, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @DeleteMapping("/empty")
@@ -79,6 +79,6 @@ public class TrashController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_EMPTY)
     public BaseResponse<Void> emptyTrash(@RequestHeader("X-User-Id") String userId) {
         trashApplicationService.emptyTrash(userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

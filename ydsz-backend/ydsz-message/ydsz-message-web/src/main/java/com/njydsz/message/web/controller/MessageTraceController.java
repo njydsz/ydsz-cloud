@@ -45,7 +45,7 @@ public class MessageTraceController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/msg/{msgId}")
     public BaseResponse<List<MsgTraceDO>> getByMsgId(@PathVariable String msgId) {
-        return BaseResponse.ok(messageTraceService.getTraceByMsgId(msgId));
+        return BaseResponse.success(messageTraceService.getTraceByMsgId(msgId));
     }
 
     /**
@@ -58,7 +58,7 @@ public class MessageTraceController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/trace/{traceId}")
     public BaseResponse<List<MsgTraceDO>> getByTraceId(@PathVariable String traceId) {
-        return BaseResponse.ok(messageTraceService.getTraceByTraceId(traceId));
+        return BaseResponse.success(messageTraceService.getTraceByTraceId(traceId));
     }
 
     /**
@@ -73,6 +73,6 @@ public class MessageTraceController {
     @GetMapping("/biz")
     public BaseResponse<List<MsgTraceDO>> getByBiz(@RequestParam String bizType,
                                               @RequestParam String bizId) {
-        return BaseResponse.ok(messageTraceService.getTraceByBiz(bizType, bizId));
+        return BaseResponse.success(messageTraceService.getTraceByBiz(bizType, bizId));
     }
 }

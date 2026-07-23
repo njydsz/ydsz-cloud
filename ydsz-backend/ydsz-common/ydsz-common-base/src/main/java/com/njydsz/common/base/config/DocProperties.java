@@ -221,15 +221,6 @@ public class DocProperties {
          * 分组描述
          */
         private String description = "默认分组";
-
-        /**
-         * 基础包路径，用于扫描 Controller
-         *
-         * @deprecated 使用 {@link #packages} 替代，字段名将从 base-package 统一
-         */
-        @Deprecated
-        private String basePackage = "";
-
         /**
          * 基础路径匹配规则
          */

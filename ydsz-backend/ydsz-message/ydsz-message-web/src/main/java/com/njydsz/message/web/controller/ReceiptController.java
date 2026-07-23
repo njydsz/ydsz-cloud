@@ -50,7 +50,7 @@ public class ReceiptController {
     @PostMapping("/callback")
     public BaseResponse<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
         receiptService.callback(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -63,6 +63,6 @@ public class ReceiptController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_VIEW)
     @GetMapping("/{logId}")
     public BaseResponse<List<MsgReceiptDO>> listByLogId(@PathVariable String logId) {
-        return BaseResponse.ok(receiptService.listByLogId(logId));
+        return BaseResponse.success(receiptService.listByLogId(logId));
     }
 }

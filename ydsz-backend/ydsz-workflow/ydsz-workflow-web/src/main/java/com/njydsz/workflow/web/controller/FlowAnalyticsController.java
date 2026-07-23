@@ -42,7 +42,7 @@ public class FlowAnalyticsController {
     public BaseResponse<Object> overview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
-        return BaseResponse.ok(analyticsService.overview(startTime, endTime, TenantContext.getTenantId()));
+        return BaseResponse.success(analyticsService.overview(startTime, endTime, TenantContext.getTenantId()));
     }
 
     /**
@@ -59,7 +59,7 @@ public class FlowAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
             @RequestParam(defaultValue = "20") int limit) {
-        return BaseResponse.ok(analyticsService.approverEfficiency(startTime, endTime, TenantContext.getTenantId(), limit));
+        return BaseResponse.success(analyticsService.approverEfficiency(startTime, endTime, TenantContext.getTenantId(), limit));
     }
 
     /**
@@ -74,7 +74,7 @@ public class FlowAnalyticsController {
     public BaseResponse<Object> flowEfficiency(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
-        return BaseResponse.ok(analyticsService.flowEfficiencyComparison(startTime, endTime, TenantContext.getTenantId()));
+        return BaseResponse.success(analyticsService.flowEfficiencyComparison(startTime, endTime, TenantContext.getTenantId()));
     }
 
     /**
@@ -86,7 +86,7 @@ public class FlowAnalyticsController {
     @GetMapping("/nodeDuration")
     @Operation(summary = "节点耗时分析")
     public BaseResponse<Object> nodeDuration(@RequestParam String flowCode) {
-        return BaseResponse.ok(analyticsService.nodeDurationStats(flowCode, TenantContext.getTenantId()));
+        return BaseResponse.success(analyticsService.nodeDurationStats(flowCode, TenantContext.getTenantId()));
     }
 
     /**
@@ -103,6 +103,6 @@ public class FlowAnalyticsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
             @RequestParam(defaultValue = "DAY") String granularity) {
-        return BaseResponse.ok(analyticsService.approvalTrend(startTime, endTime, TenantContext.getTenantId(), granularity));
+        return BaseResponse.success(analyticsService.approvalTrend(startTime, endTime, TenantContext.getTenantId(), granularity));
     }
 }

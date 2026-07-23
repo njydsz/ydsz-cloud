@@ -42,7 +42,7 @@ public class FlowConditionExprController {
     public BaseResponse<String> build(@RequestBody Map<String, String> body) {
         String conditionJson = body.get("conditionJson");
         String engine = body.getOrDefault("engine", "AVIATOR");
-        return BaseResponse.ok(conditionExprService.buildExpression(conditionJson, engine));
+        return BaseResponse.success(conditionExprService.buildExpression(conditionJson, engine));
     }
 
     /**
@@ -57,7 +57,7 @@ public class FlowConditionExprController {
     public BaseResponse<String> parse(@RequestBody Map<String, String> body) {
         String expression = body.get("expression");
         String engine = body.getOrDefault("engine", "AVIATOR");
-        return BaseResponse.ok(conditionExprService.parseExpression(expression, engine));
+        return BaseResponse.success(conditionExprService.parseExpression(expression, engine));
     }
 
     /**
@@ -72,7 +72,7 @@ public class FlowConditionExprController {
     public BaseResponse<Map<String, Object>> validate(@RequestBody Map<String, String> body) {
         String expression = body.get("expression");
         String engine = body.getOrDefault("engine", "AVIATOR");
-        return BaseResponse.ok(conditionExprService.validateExpression(expression, engine));
+        return BaseResponse.success(conditionExprService.validateExpression(expression, engine));
     }
 
     /**
@@ -83,7 +83,7 @@ public class FlowConditionExprController {
     @GetMapping("/operators")
     @Operation(summary = "获取可用的操作符列表")
     public BaseResponse<List<Map<String, String>>> operators() {
-        return BaseResponse.ok(conditionExprService.getOperators());
+        return BaseResponse.success(conditionExprService.getOperators());
     }
 
     /**
@@ -94,7 +94,7 @@ public class FlowConditionExprController {
     @GetMapping("/valueTypes")
     @Operation(summary = "获取可用的值类型列表")
     public BaseResponse<List<Map<String, String>>> valueTypes() {
-        return BaseResponse.ok(conditionExprService.getValueTypes());
+        return BaseResponse.success(conditionExprService.getValueTypes());
     }
 
     // ==================== P1-4: 可视化编辑增强 API ====================
@@ -108,7 +108,7 @@ public class FlowConditionExprController {
     @GetMapping("/variables/{definitionId}")
     @Operation(summary = "获取流程定义的可用变量列表")
     public BaseResponse<List<Map<String, String>>> variables(@PathVariable String definitionId) {
-        return BaseResponse.ok(conditionExprService.getVariablesByDefinition(definitionId));
+        return BaseResponse.success(conditionExprService.getVariablesByDefinition(definitionId));
     }
 
     /**
@@ -125,7 +125,7 @@ public class FlowConditionExprController {
         @SuppressWarnings("unchecked")
         Map<String, Object> variables = body.get("variables") instanceof Map<?, ?> m
                 ? (Map<String, Object>) m : Map.of();
-        return BaseResponse.ok(conditionExprService.previewExpression(expression, variables, engine));
+        return BaseResponse.success(conditionExprService.previewExpression(expression, variables, engine));
     }
 
     /**
@@ -136,6 +136,6 @@ public class FlowConditionExprController {
     @GetMapping("/templates")
     @Operation(summary = "获取条件模板列表")
     public BaseResponse<List<Map<String, String>>> templates() {
-        return BaseResponse.ok(conditionExprService.getConditionTemplates());
+        return BaseResponse.success(conditionExprService.getConditionTemplates());
     }
 }

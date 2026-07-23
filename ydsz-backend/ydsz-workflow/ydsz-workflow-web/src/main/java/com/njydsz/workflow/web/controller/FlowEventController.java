@@ -50,7 +50,7 @@ public class FlowEventController {
     @GetMapping("/info")
     @Operation(summary = "查询工作流引擎信息")
     public BaseResponse<Map<String, Object>> info() {
-        return BaseResponse.ok(Map.of(
+        return BaseResponse.success(Map.of(
                 "engineType", workflowFacade.engineType(),
                 "available", true
         ));
@@ -80,7 +80,7 @@ public class FlowEventController {
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
+        return BaseResponse.success(eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
     }
 
     /**
@@ -103,7 +103,7 @@ public class FlowEventController {
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
+        return BaseResponse.success(eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
     }
 
     /**
@@ -115,6 +115,6 @@ public class FlowEventController {
     @GetMapping("/instance/{instanceId}/eventSubscriptions")
     public BaseResponse<List<FlowEventSubscriptionDO>> listEventSubscriptions(
             @PathVariable String instanceId) {
-        return BaseResponse.ok(eventSubscriptionService.listByInstance(instanceId));
+        return BaseResponse.success(eventSubscriptionService.listByInstance(instanceId));
     }
 }

@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -47,11 +46,10 @@ public class AlertController {
      */
     @Operation(summary = "创建告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_CREATE)
-    @OperationLog(module = "任务调度", action = "创建告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:createRule", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rule")
     public BaseResponse<String> createRule(@Valid @RequestBody AlertRuleSaveDTO dto) {
-        return BaseResponse.ok(alertService.createRule(dto));
+        return BaseResponse.success(alertService.createRule(dto));
     }
 
     /**
@@ -63,12 +61,11 @@ public class AlertController {
      */
     @Operation(summary = "更新告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_UPDATE)
-    @OperationLog(module = "任务调度", action = "更新告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:updateRule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}")
     public BaseResponse<Void> updateRule(@PathVariable String id, @Valid @RequestBody AlertRuleSaveDTO dto) {
         alertService.updateRule(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -79,12 +76,11 @@ public class AlertController {
      */
     @Operation(summary = "删除告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_DELETE)
-    @OperationLog(module = "任务调度", action = "删除告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/rule/{id}")
     public BaseResponse<Void> deleteRule(@PathVariable String id) {
         alertService.deleteRule(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -97,7 +93,7 @@ public class AlertController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rule/{id}")
     public BaseResponse<JobAlertRuleDO> getRuleById(@PathVariable String id) {
-        return BaseResponse.ok(alertService.getRuleById(id));
+        return BaseResponse.success(alertService.getRuleById(id));
     }
 
     /**
@@ -109,7 +105,7 @@ public class AlertController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rules")
     public BaseResponse<List<JobAlertRuleDO>> listRules() {
-        return BaseResponse.ok(alertService.listRules());
+        return BaseResponse.success(alertService.listRules());
     }
 
     /**
@@ -121,12 +117,11 @@ public class AlertController {
      */
     @Operation(summary = "启用/禁用告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_UPDATE)
-    @OperationLog(module = "任务调度", action = "切换告警规则启用状态", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:toggleRule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}/toggle")
     public BaseResponse<Void> toggleRule(@PathVariable String id, @RequestParam Integer enabled) {
         alertService.toggleRule(id, enabled);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -143,6 +138,6 @@ public class AlertController {
             @PathVariable String jobId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since) {
-        return BaseResponse.ok(alertService.queryAlertLogs(jobId, since));
+        return BaseResponse.success(alertService.queryAlertLogs(jobId, since));
     }
 }

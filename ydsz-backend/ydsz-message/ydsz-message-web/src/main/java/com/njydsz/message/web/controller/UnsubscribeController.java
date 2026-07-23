@@ -64,9 +64,9 @@ public class UnsubscribeController {
     @PostMapping("/oneClick")
     public BaseResponse<MsgSubscriptionDO> oneClick(@RequestParam String token) {
         if (token == null || token.isBlank()) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
-        return BaseResponse.ok(unsubscribeService.unsubscribeByToken(token));
+        return BaseResponse.success(unsubscribeService.unsubscribeByToken(token));
     }
 
     /**
@@ -83,9 +83,9 @@ public class UnsubscribeController {
     @GetMapping("/preview")
     public BaseResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
         if (token == null || token.isBlank()) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
-        return BaseResponse.ok(unsubscribeService.previewToken(token));
+        return BaseResponse.success(unsubscribeService.previewToken(token));
     }
 
     /**
@@ -98,7 +98,7 @@ public class UnsubscribeController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
     public BaseResponse<PageResponse<MsgSubscriptionDO>> page(UnsubscribeQueryDTO query) {
-        return BaseResponse.ok(unsubscribeService.pageUnsubscribed(query));
+        return BaseResponse.success(unsubscribeService.pageUnsubscribed(query));
     }
 
     /**
@@ -119,9 +119,9 @@ public class UnsubscribeController {
         if (userId == null || userId.isBlank()
                 || topicCode == null || topicCode.isBlank()
                 || channel == null || channel.isBlank()) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         unsubscribeService.resubscribe(userId, topicCode, channel);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

@@ -129,23 +129,6 @@ public class PageResponse<T> extends BaseResponse<T> {
     public static <T> PageResponse<T> success(Long total, Long pageNum, Long pageSize, T data) {
         return of(BaseResponse.SUCCESS, resolveMessage(BaseResponse.MSG_OPERATION_SUCCESS, "操作成功"), total, pageNum, pageSize, data);
     }
-
-    /**
-     * 创建成功分页响应（无分页信息）
-     *
-     * <p>此方法设置 total=0、pageNum=1、pageSize=10，对于非分页数据具有误导性。
-     * 非分页场景请直接使用 {@link BaseResponse#success(Object)}。</p>
-     *
-     * @param data 分页数据
-     * @param <T>  数据类型
-     * @return 成功分页响应
-     * @deprecated 非分页场景请使用 {@link BaseResponse#success(Object)}，分页场景请使用 {@link #success(Long, Long, Long, Object)}
-     */
-    @Deprecated
-    public static <T> PageResponse<T> success(T data) {
-        return success(0L, 1L, 10L, data);
-    }
-
     /**
      * 创建失败分页响应
      *
@@ -195,48 +178,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      */
     public static <T> PageResponse<T> empty() {
         return success(0L, 1L, (long) PageConstants.DEFAULT_PAGE_SIZE, null);
-    }
-
-    /**
-     * 从列表构建分页响应（向后兼容）
-     *
-     * <p>旧版 API 中 {@code PageResponse<T>} 的 {@code T} 表示列表元素类型，
-     * 此方法接受 {@code List<T>} 并将其作为 data 字段存储，
-     * 配合 {@link #getList()} 方法可获取回列表。
-     *
-     * <p><b>注意：</b>此方法内部使用了 unchecked cast，存在类型安全风险。</p>
-     *
-     * @param list     数据列表
-     * @param total    总记录数
-     * @param pageNum  当前页码
-     * @param pageSize 每页记录数
-     * @param <T>      元素类型
-     * @return 分页响应对象
-     * @deprecated 使用 {@link #success(Long, Long, Long, Object)} 并指定 {@code T = List<X>}
-     */
-    @Deprecated
-    public static <T> PageResponse<T> of(List<T> list, long total, long pageNum, long pageSize) {
-        return success(total, pageNum, pageSize, (T) list);
-    }
-
-    /**
-     * 获取数据列表（向后兼容）
-     *
-     * <p>当 data 字段为 List 类型时返回该列表，否则返回空列表。
-     * 用于兼容旧版 {@code PageResponse<T>} 中 {@code T} 为元素类型的用法。
-     *
-     * <p><b>注意：</b>此方法内部使用了 unchecked cast，存在类型安全风险。</p>
-     *
-     * @return 数据列表
-     * @deprecated 直接使用 {@link #getData()} 并自行转换为 List
-     */
-    @Deprecated
-    public List<T> getList() {
-        Object data = getData();
-        return data instanceof List ? (List<T>) data : List.of();
-    }
-
-    /**
+    }    /**
      * 是否有下一页
      *
      * @return 有下一页返回true，否则返回false

@@ -63,7 +63,7 @@ public class FlowInstanceController {
     @PostMapping("/instance/start")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
-        return BaseResponse.ok(workflowFacade.startProcess(dto));
+        return BaseResponse.success(workflowFacade.startProcess(dto));
     }
 
     /**
@@ -87,7 +87,7 @@ public class FlowInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<Map<String, Object>> batchStartInstances(
             @Valid @RequestBody List<FlowStartProcessDTO> dtos) {
-        return BaseResponse.ok(instanceService.batchStartInstances(dtos));
+        return BaseResponse.success(instanceService.batchStartInstances(dtos));
     }
 
     /**
@@ -100,7 +100,7 @@ public class FlowInstanceController {
     @GetMapping("/instance/byBusiness")
     public BaseResponse<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
                                                  @RequestParam String businessId) {
-        return BaseResponse.ok(workflowFacade.getByBusiness(businessType, businessId));
+        return BaseResponse.success(workflowFacade.getByBusiness(businessType, businessId));
     }
 
     /**
@@ -115,7 +115,7 @@ public class FlowInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
         workflowFacade.terminateProcess(id, reason);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -129,7 +129,7 @@ public class FlowInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> suspend(@PathVariable String id) {
         workflowFacade.suspendProcess(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -143,7 +143,7 @@ public class FlowInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> activate(@PathVariable String id) {
         workflowFacade.activateProcess(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -162,7 +162,7 @@ public class FlowInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<Boolean> recall(@PathVariable String id,
                                   @RequestParam(required = false) String targetNodeCode) {
-        return BaseResponse.ok(instanceService.recall(id, AuthContext.getUserId(), targetNodeCode));
+        return BaseResponse.success(instanceService.recall(id, AuthContext.getUserId(), targetNodeCode));
     }
 
     /**
@@ -176,7 +176,7 @@ public class FlowInstanceController {
     @GetMapping("/instance/{id}/recallableNodes")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
-        return BaseResponse.ok(instanceService.listRecallableNodes(id, AuthContext.getUserId()));
+        return BaseResponse.success(instanceService.listRecallableNodes(id, AuthContext.getUserId()));
     }
 
     /**
@@ -198,7 +198,7 @@ public class FlowInstanceController {
     public BaseResponse<Boolean> rollback(@PathVariable String id,
                                     @RequestParam String reason,
                                     @RequestParam(required = false, defaultValue = "7") int maxRollbackDays) {
-        return BaseResponse.ok(instanceService.rollback(id, AuthContext.getUserId(), reason, maxRollbackDays));
+        return BaseResponse.success(instanceService.rollback(id, AuthContext.getUserId(), reason, maxRollbackDays));
     }
 
     /**
@@ -220,7 +220,7 @@ public class FlowInstanceController {
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
                                     @RequestBody(required = false) Map<String, Object> variables) {
-        return BaseResponse.ok(workflowFacade.resubmitProcess(id, AuthContext.getUserId(),
+        return BaseResponse.success(workflowFacade.resubmitProcess(id, AuthContext.getUserId(),
                 variables, comment, redoMode));
     }
 
@@ -232,7 +232,7 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/{id}/auditTrail")
     public BaseResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
-        return BaseResponse.ok(workflowFacade.listAuditTrail(id));
+        return BaseResponse.success(workflowFacade.listAuditTrail(id));
     }
 
     /**
@@ -243,7 +243,7 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/{id}/timeline")
     public BaseResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
-        return BaseResponse.ok(workflowFacade.getTimeline(id));
+        return BaseResponse.success(workflowFacade.getTimeline(id));
     }
 
     /**
@@ -254,7 +254,7 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/{id}/diagram")
     public BaseResponse<Map<String, Object>> diagram(@PathVariable String id) {
-        return BaseResponse.ok(workflowFacade.getDiagram(id));
+        return BaseResponse.success(workflowFacade.getDiagram(id));
     }
 
     /**
@@ -268,7 +268,7 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/{id}/replay")
     public BaseResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
-        return BaseResponse.ok(workflowFacade.getReplaySteps(id));
+        return BaseResponse.success(workflowFacade.getReplaySteps(id));
     }
 
     /**
@@ -295,7 +295,7 @@ public class FlowInstanceController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(instanceService.page(businessType, initiatorId, flowStatus,
+        return BaseResponse.success(instanceService.page(businessType, initiatorId, flowStatus,
                 startTime, endTime, tid, pageNo, pageSize));
     }
 
@@ -327,7 +327,7 @@ public class FlowInstanceController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        return BaseResponse.ok(instanceService.page(null, AuthContext.getUserId(), status,
+        return BaseResponse.success(instanceService.page(null, AuthContext.getUserId(), status,
                 startTime, endTime, AuthContext.getTenantIdOrDefault("1"),
                 pageNum, pageSize));
     }
@@ -359,7 +359,7 @@ public class FlowInstanceController {
             @RequestParam(required = false) String flowStatus,
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime) {
-        return BaseResponse.ok(workflowFacade.listAllInstances(businessType, flowStatus,
+        return BaseResponse.success(workflowFacade.listAllInstances(businessType, flowStatus,
                 startTime, endTime, page, size));
     }
 
@@ -371,7 +371,7 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/{id}/variables")
     public BaseResponse<Map<String, Object>> getVariables(@PathVariable String id) {
-        return BaseResponse.ok(instanceService.getVariables(id));
+        return BaseResponse.success(instanceService.getVariables(id));
     }
 
     /**
@@ -389,7 +389,7 @@ public class FlowInstanceController {
     public BaseResponse<Void> setVariables(@PathVariable String id,
                                      @Valid @RequestBody FlowInstanceVariablesDTO dto) {
         instanceService.setVariables(id, dto.getVariables());
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -406,7 +406,7 @@ public class FlowInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public BaseResponse<List<String>> urge(@PathVariable String id,
                                  @RequestParam(required = false) String comment) {
-        return BaseResponse.ok(workflowFacade.urgeTask(id, AuthContext.getUserId(), comment));
+        return BaseResponse.success(workflowFacade.urgeTask(id, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -420,7 +420,7 @@ public class FlowInstanceController {
     public BaseResponse<List<String>> urgeByNode(@PathVariable String id,
                                            @RequestParam(required = false) String nodeCode,
                                            @RequestParam(required = false) String comment) {
-        return BaseResponse.ok(workflowFacade.urgeNodeTask(id, nodeCode, AuthContext.getUserId(), comment));
+        return BaseResponse.success(workflowFacade.urgeNodeTask(id, nodeCode, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -434,6 +434,6 @@ public class FlowInstanceController {
     public BaseResponse<Map<String, Object>> getFormRenderData(
             @PathVariable String instanceId,
             @RequestParam(required = false) String taskId) {
-        return BaseResponse.ok(instanceService.getFormRenderData(instanceId, taskId));
+        return BaseResponse.success(instanceService.getFormRenderData(instanceId, taskId));
     }
 }

@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.VersionableDO;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,7 +23,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_definition")
-public class FlowDefinitionDO extends VersionableDO {
+public class FlowDefinitionDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -120,7 +119,7 @@ public class FlowDefinitionDO extends VersionableDO {
      */
     private String canaryRolloutLog;
 
-    /** 乐观锁版本号由 VersionableDO 继承，无需在此声明 */
+    /** 乐观锁版本号由 BaseDO 继承，无需在此声明 */
 
     // ============================== P2-4: 设计器协同编辑锁定 ==============================
 

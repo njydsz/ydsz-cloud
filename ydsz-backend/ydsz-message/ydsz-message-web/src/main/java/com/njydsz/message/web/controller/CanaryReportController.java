@@ -55,6 +55,6 @@ public class CanaryReportController {
             @RequestParam String canaryKey,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return BaseResponse.ok(canaryReportService.getReport(canaryKey, start, end));
+        return BaseResponse.success(canaryReportService.getReport(canaryKey, start, end));
     }
 }

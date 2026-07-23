@@ -65,7 +65,7 @@ public class DashboardLayoutController {
         }
 
         log.info("[DashboardLayout] 保存布局: userId={}, key={}", userId, layoutKey);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -84,10 +84,10 @@ public class DashboardLayoutController {
         );
 
         if (rows.isEmpty()) {
-            return BaseResponse.ok(Map.of("layoutConfig", "{}"));
+            return BaseResponse.success(Map.of("layoutConfig", "{}"));
         }
 
-        return BaseResponse.ok(Map.of("layoutConfig", rows.get(0).get("layout_config")));
+        return BaseResponse.success(Map.of("layoutConfig", rows.get(0).get("layout_config")));
     }
 
     /**
@@ -105,6 +105,6 @@ public class DashboardLayoutController {
                 userId, layoutKey
         );
         log.info("[DashboardLayout] 重置布局: userId={}, key={}", userId, layoutKey);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

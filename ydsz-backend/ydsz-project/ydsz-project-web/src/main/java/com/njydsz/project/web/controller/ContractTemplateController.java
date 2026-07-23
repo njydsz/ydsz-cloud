@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -58,7 +57,7 @@ public class ContractTemplateController {
     @Idempotent(key = "contractTemplate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -73,7 +72,7 @@ public class ContractTemplateController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ContractTemplateStatusDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -85,11 +84,10 @@ public class ContractTemplateController {
     @Operation(summary = "删除模板")
     @AuthApiPermission(apiCodes = "project:contractTemplate:delete")
     @Idempotent(key = "contractTemplate:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @OperationLog(module = "合同模板", action = "删除模板", bizType = "CONTRACT_TEMPLATE")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -102,7 +100,7 @@ public class ContractTemplateController {
     @AuthApiPermission(apiCodes = "project:contractTemplate:list")
     @GetMapping("/{id}")
     public BaseResponse<ContractTemplateDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -124,7 +122,7 @@ public class ContractTemplateController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.page(page, size, keyword, contractType, status));
+        return BaseResponse.success(service.page(page, size, keyword, contractType, status));
     }
 
     /**
@@ -140,6 +138,6 @@ public class ContractTemplateController {
     public BaseResponse<List<ContractTemplateDO>> listByType(
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.listByType(contractType, status));
+        return BaseResponse.success(service.listByType(contractType, status));
     }
 }

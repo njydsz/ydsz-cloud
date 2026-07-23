@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
@@ -44,13 +43,12 @@ public class QuotaController {
     public BaseResponse<StorageQuota> getQuota(
             @RequestParam(defaultValue = "user") String scopeType,
             @RequestParam String scopeId) {
-        return BaseResponse.ok(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
+        return BaseResponse.success(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
     }
 
     @PostMapping("/set")
     @Operation(summary = "设置配额（管理员）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)
-    @OperationLog(module = "网盘", action = "设置配额", bizType = "QUOTA", saveResult = true)
     public BaseResponse<StorageQuota> setQuota(
             @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -60,6 +58,6 @@ public class QuotaController {
                 request.getQuotaLimit(),
                 request.getFileCountLimit(),
                 userId);
-        return BaseResponse.ok(quota);
+        return BaseResponse.success(quota);
     }
 }

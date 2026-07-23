@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -58,11 +57,10 @@ public class BenchController {
      */
     @Operation(summary = "入池 / 出池 业务动作")
     @AuthApiPermission(apiCodes = "resource:bench:act")
-    @OperationLog(module = "Bench 池", action = "入/出池", bizType = "BENCH_RECORD")
     @Idempotent(key = "bench:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")
     public BaseResponse<String> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
-        return BaseResponse.ok(benchService.act(dto));
+        return BaseResponse.success(benchService.act(dto));
     }
 
     /**
@@ -74,7 +72,7 @@ public class BenchController {
     @Operation(summary = "Bench 详情")
     @GetMapping("/{id}")
     public BaseResponse<BenchRecordDO> get(@PathVariable String id) {
-        return BaseResponse.ok(benchService.getById(id));
+        return BaseResponse.success(benchService.getById(id));
     }
 
     /**
@@ -86,7 +84,7 @@ public class BenchController {
     @Operation(summary = "员工当前 Bench 记录")
     @GetMapping("/active/{employeeId}")
     public BaseResponse<BenchRecordDO> getActiveByEmployee(@PathVariable String employeeId) {
-        return BaseResponse.ok(benchService.getActiveByEmployee(employeeId));
+        return BaseResponse.success(benchService.getActiveByEmployee(employeeId));
     }
 
     /**
@@ -97,7 +95,7 @@ public class BenchController {
     @Operation(summary = "按池汇总")
     @GetMapping("/aggregate/byPool")
     public BaseResponse<List<Map<String, Object>>> aggregateByPool() {
-        return BaseResponse.ok(benchService.aggregateByPool());
+        return BaseResponse.success(benchService.aggregateByPool());
     }
 
     /**
@@ -112,7 +110,7 @@ public class BenchController {
     public BaseResponse<List<Map<String, Object>>> flowByDateRange(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(benchService.flowByDateRange(from, to));
+        return BaseResponse.success(benchService.flowByDateRange(from, to));
     }
 
     /**
@@ -131,7 +129,7 @@ public class BenchController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String poolId,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(benchService.page(page, size, poolId, status));
+        return BaseResponse.success(benchService.page(page, size, poolId, status));
     }
 
     /**
@@ -142,7 +140,7 @@ public class BenchController {
     @Operation(summary = "累计闲置成本")
     @GetMapping("/totalIdleCost")
     public BaseResponse<BigDecimal> totalIdleCost() {
-        return BaseResponse.ok(benchService.totalIdleCost());
+        return BaseResponse.success(benchService.totalIdleCost());
     }
 
     /**
@@ -154,11 +152,11 @@ public class BenchController {
     @GetMapping("/dashboard")
     public BaseResponse<Map<String, Object>> dashboard() {
         if (benchService instanceof BenchServiceImpl impl) {
-            return BaseResponse.ok(impl.dashboard());
+            return BaseResponse.success(impl.dashboard());
         }
         Map<String, Object> out = new HashMap<>();
         out.put("activePools", benchService.aggregateByPool());
         out.put("totalIdleCost", benchService.totalIdleCost());
-        return BaseResponse.ok(out);
+        return BaseResponse.success(out);
     }
 }

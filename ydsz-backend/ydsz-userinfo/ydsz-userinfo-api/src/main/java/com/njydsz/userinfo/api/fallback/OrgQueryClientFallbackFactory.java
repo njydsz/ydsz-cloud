@@ -31,42 +31,42 @@ public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryCl
         return new OrgQueryClient() {
             @Override
             public BaseResponse<List<Long>> listUserIdsByRoleCode(String roleCode) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<String> getDeptLeaderByDeptId(Long deptId) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<String> getDeptLeaderByDeptCode(String deptCode) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<List<String>> listRoleCodesByUserId(String userId) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
 
             @Override
             public BaseResponse<List<String>> listDeptIdsByUserId(String userId) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
 
             @Override
             public BaseResponse<List<Long>> listUserIdsByDeptId(Long deptId) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<List<Long>> listUserIdsByPositionCode(String positionCode) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<String> getLeaderByUserId(String userId) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

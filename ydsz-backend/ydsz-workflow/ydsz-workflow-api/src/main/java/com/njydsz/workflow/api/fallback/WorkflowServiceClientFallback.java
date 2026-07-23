@@ -26,17 +26,17 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
         return new WorkflowServiceClient() {
             @Override
             public BaseResponse<String> startProcess(Map<String, Object> body) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<Map<String, Object>> getByBusiness(String businessType, String businessId) {
-                return BaseResponse.ok(null);
+                return BaseResponse.success(null);
             }
 
             @Override
             public BaseResponse<Void> terminate(String processInstanceId, String reason) {
-                return BaseResponse.ok();
+                return BaseResponse.success();
             }
         };
     }

@@ -44,7 +44,7 @@ public class AggregateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
     public BaseResponse<Page<MsgAggregateDO>> page(PageQuery query) {
-        return BaseResponse.ok(aggregateService.page(query));
+        return BaseResponse.success(aggregateService.page(query));
     }
 
     /**
@@ -59,7 +59,7 @@ public class AggregateController {
     @Idempotent(key = "aggregate:flushByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flush")
     public BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
-        return BaseResponse.ok(aggregateService.flushByGroup(group, receiver));
+        return BaseResponse.success(aggregateService.flushByGroup(group, receiver));
     }
 
     /**
@@ -72,6 +72,6 @@ public class AggregateController {
     @Idempotent(key = "aggregate:flushDue", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flushDue")
     public BaseResponse<Integer> flushDue() {
-        return BaseResponse.ok(aggregateService.flushDue());
+        return BaseResponse.success(aggregateService.flushDue());
     }
 }

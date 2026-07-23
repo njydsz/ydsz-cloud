@@ -79,7 +79,7 @@ public class TaskTopologyController {
     public BaseResponse<Map<String, Object>> getDagInstanceTopology(@PathVariable String dagInstanceId) {
         JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
 
         // 加载 DAG 定义
@@ -97,7 +97,7 @@ public class TaskTopologyController {
         topology.put("dagInstance", instance);
         topology.put("nodeInstances", nodeInstances);
 
-        return BaseResponse.ok(topology);
+        return BaseResponse.success(topology);
     }
 
     /**
@@ -114,6 +114,6 @@ public class TaskTopologyController {
                 .eq(JobLogDO::getDeleted, 0)
                 .orderByDesc(JobLogDO::getCreatedAt)
                 .last("LIMIT 20");
-        return BaseResponse.ok(jobLogMapper.selectList(wrapper));
+        return BaseResponse.success(jobLogMapper.selectList(wrapper));
     }
 }

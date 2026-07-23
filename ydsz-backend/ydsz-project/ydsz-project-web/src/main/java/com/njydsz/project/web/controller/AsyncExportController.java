@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.safe.annotation.RateLimit;
 import com.njydsz.project.server.service.AsyncExportService;
@@ -76,7 +75,6 @@ public class AsyncExportController {
         return Map.of("url", url != null ? url : "", "success", url != null);
     }
 
-    @OperationLog(module = "异步导出", action = "删除导出记录", bizType = "ASYNC_EXPORT")
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @DeleteMapping("/{recordId}")
     @Operation(summary = "删除导出记录")

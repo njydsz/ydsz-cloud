@@ -30,7 +30,7 @@ public class BatchExecutorConfig {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(2);
         executor.setMaxPoolSize(4);
-        executor.setQueueCapacity(200);
+        executor.setExecutorQueueCapacity(200);
         executor.setThreadNamePrefix("msg-batch-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();

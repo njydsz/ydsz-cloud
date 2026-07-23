@@ -84,20 +84,6 @@ public class AesGcmCrypto {
             throw new IllegalStateException("AES-GCM encryption failed", e);
         }
     }
-
-    /**
-     * 加密并返回 Base64 字符串（带 keyId 参数，向后兼容）
-     *
-     * @param plaintext 明文
-     * @param keyId     业务 keyId（当前实现忽略此参数）
-     * @return Base64 编码的密文（IV || ciphertext+tag）
-     * @deprecated 使用 {@link #encrypt(String)} 替代
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public String encrypt(String plaintext, String keyId) {
-        return encrypt(plaintext);
-    }
-
     /**
      * 解密 Base64 密文
      *
@@ -123,20 +109,6 @@ public class AesGcmCrypto {
             throw new IllegalStateException("AES-GCM decryption failed", e);
         }
     }
-
-    /**
-     * 解密 Base64 密文（带 keyId 参数，向后兼容）
-     *
-     * @param base64Ciphertext Base64 编码的密文
-     * @param keyId            业务 keyId（当前实现忽略此参数）
-     * @return 明文
-     * @deprecated 使用 {@link #decrypt(String)} 替代
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public String decrypt(String base64Ciphertext, String keyId) {
-        return decrypt(base64Ciphertext);
-    }
-
     /**
      * 生成随机 IV
      *

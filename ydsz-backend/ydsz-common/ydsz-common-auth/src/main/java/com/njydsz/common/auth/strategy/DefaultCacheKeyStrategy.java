@@ -1,9 +1,5 @@
 package com.njydsz.common.auth.strategy;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -37,15 +33,5 @@ public class DefaultCacheKeyStrategy implements CacheKeyStrategy {
         String rolesPart = String.join(",", new TreeSet<>(roleCodes));
         String raw = prefix + "|" + rolesPart;
         return KEY_PREFIX + AuthDigestUtils.sha256Hex(raw);
-    }
-
-    /**
-     * 计算 SHA-256 摘要并转为十六进制字符串。
-     *
-     * @deprecated 使用 {@link AuthDigestUtils#sha256Hex(String)}
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    private static String sha256(String input) {
-        return AuthDigestUtils.sha256Hex(input);
     }
 }

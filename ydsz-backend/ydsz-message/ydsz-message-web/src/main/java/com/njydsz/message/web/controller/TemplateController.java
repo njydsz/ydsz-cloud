@@ -52,7 +52,7 @@ public class TemplateController {
     @Idempotent(key = "template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
-        return BaseResponse.ok(templateService.create(dto));
+        return BaseResponse.success(templateService.create(dto));
     }
 
     /**
@@ -67,7 +67,7 @@ public class TemplateController {
     @Idempotent(key = "template:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
-        return BaseResponse.ok(templateService.update(id, dto));
+        return BaseResponse.success(templateService.update(id, dto));
     }
 
     /**
@@ -82,7 +82,7 @@ public class TemplateController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         templateService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -95,7 +95,7 @@ public class TemplateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
     @GetMapping("/{id}")
     public BaseResponse<MsgTemplateDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(templateService.getById(id));
+        return BaseResponse.success(templateService.getById(id));
     }
 
     /**
@@ -108,7 +108,7 @@ public class TemplateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
     public BaseResponse<Page<MsgTemplateDO>> page(TemplateQueryDTO query) {
-        return BaseResponse.ok(templateService.page(query));
+        return BaseResponse.success(templateService.page(query));
     }
 
     /**
@@ -125,6 +125,6 @@ public class TemplateController {
     public BaseResponse<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
         dto.setId(id);
         templateService.audit(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

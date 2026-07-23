@@ -49,7 +49,7 @@ public class FlowAttachmentController {
      */
     @GetMapping("/attachment/task/{taskId}")
     public BaseResponse<List<FlowAttachmentDO>> listByTask(@PathVariable String taskId) {
-        return BaseResponse.ok(attachmentService.listByTask(taskId));
+        return BaseResponse.success(attachmentService.listByTask(taskId));
     }
 
     /**
@@ -60,7 +60,7 @@ public class FlowAttachmentController {
      */
     @GetMapping("/attachment/instance/{instanceId}")
     public BaseResponse<List<FlowAttachmentDO>> listByInstance(@PathVariable String instanceId) {
-        return BaseResponse.ok(attachmentService.listByInstance(instanceId));
+        return BaseResponse.success(attachmentService.listByInstance(instanceId));
     }
 
     /**
@@ -75,7 +75,7 @@ public class FlowAttachmentController {
     public BaseResponse<Void> delete(@PathVariable String attachmentId,
                                @RequestParam String operatorId) {
         attachmentService.delete(attachmentId, operatorId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -97,6 +97,6 @@ public class FlowAttachmentController {
     @GetMapping("/attachment/{attachmentId}/preview")
     @Operation(summary = "附件在线预览（根据文件类型返回预览策略）")
     public BaseResponse<FlowAttachmentPreviewVO> preview(@PathVariable String attachmentId) {
-        return BaseResponse.ok(attachmentService.previewAttachment(attachmentId));
+        return BaseResponse.success(attachmentService.previewAttachment(attachmentId));
     }
 }

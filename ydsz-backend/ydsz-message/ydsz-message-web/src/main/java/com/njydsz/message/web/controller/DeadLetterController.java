@@ -60,7 +60,7 @@ public class DeadLetterController {
             query = new MessageLogQueryDTO();
         }
         query.setStatus(MessageStatusEnum.DEAD.name());
-        return BaseResponse.ok(messageLogService.page(query));
+        return BaseResponse.success(messageLogService.page(query));
     }
 
     /**
@@ -78,9 +78,9 @@ public class DeadLetterController {
     @PostMapping("/{logId}/resend")
     public BaseResponse<Void> resend(@PathVariable String logId) {
         if (logId == null || logId.isBlank()) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
         }
         messageLogService.resendDead(logId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

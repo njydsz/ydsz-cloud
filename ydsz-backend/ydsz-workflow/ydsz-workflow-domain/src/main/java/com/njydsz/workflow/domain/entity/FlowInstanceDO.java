@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.VersionableDO;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +22,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_instance")
-public class FlowInstanceDO extends VersionableDO {
+public class FlowInstanceDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -105,7 +104,7 @@ public class FlowInstanceDO extends VersionableDO {
     @TableField("due_at")
     private LocalDateTime dueAt;
 
-    /** 乐观锁版本号由 VersionableDO 继承，无需在此声明 */
+    /** 乐观锁版本号由 BaseDO 继承，无需在此声明 */
 
     /** 退回原因（最近一次 REJECT 操作的备注，重审时清空） */
     private String rejectReason;

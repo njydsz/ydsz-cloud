@@ -69,41 +69,6 @@ public class RedisRateLimiter {
             "  redis.call('EXPIRE', KEYS[1], ARGV[1]) " +
             "end " +
             "return current";
-
-    /**
-     * 滑动窗口限流 Lua 脚本
-     *
-     * <p>逻辑：
-     * <ol>
-     *   <li>移除 ZSET 中早于窗口起始时间的元素</li>
-     *   <li>获取 ZSET 当前元素数</li>
-     *   <li>若小于限流阈值，则添加当前请求到 ZSET</li>
-     *   <li>设置 ZSET 过期时间（窗口长度 + 1 秒）</li>
-     *   <li>返回是否允许（1=允许，0=拒绝）以及当前计数</li>
-     * </ol>
-     *
-     * @deprecated 此脚本使用 ZSET 存储每个请求的唯一 member，高并发下内存占用较高。
-     * 建议使用 {@link #tryAcquireSlidingWindowBucketed} 替代，后者使用分桶 Hash 计数，
-     * 内存占用恒定（O(bucketCount) 而非 O(requestCount)）。
-     */
-    @Deprecated
-    private static final String SLIDING_WINDOW_LUA =
-            "local key = KEYS[1] " +
-            "local now = tonumber(ARGV[1]) " +
-            "local windowMs = tonumber(ARGV[2]) " +
-            "local limit = tonumber(ARGV[3]) " +
-            "local member = ARGV[4] " +
-            "local windowStart = now - windowMs " +
-            "redis.call('ZREMRANGEBYSCORE', key, '-inf', windowStart) " +
-            "local current = redis.call('ZCARD', key) " +
-            "if current < limit then " +
-            "  redis.call('ZADD', key, now, member) " +
-            "  redis.call('PEXPIRE', key, windowMs + 1000) " +
-            "  return {1, current + 1} " +
-            "else " +
-            "  return {0, current} " +
-            "end";
-
     /**
      * 令牌桶限流 Lua 脚本
      *
@@ -220,47 +185,6 @@ public class RedisRateLimiter {
             return handleException("固定窗口限流", key, e);
         }
     }
-
-    /**
-     * 滑动窗口限流
-     *
-     * <p>在任意时刻起算的 window 时间范围内，最多允许 limit 次请求。
-     * 使用 ZSET 记录请求时间戳，移除早于窗口的过期记录后判断当前数量。
-     * 适用场景：严格限流、避免突发流量。
-     *
-     * @param key    限流维度键
-     * @param limit  窗口内最大请求数
-     * @param window 时间窗口长度
-     * @return true=允许，false=拒绝
-     */
-    public boolean tryAcquireSlidingWindow(String key, int limit, Duration window) {
-        if (key == null || limit <= 0 || window == null || window.isZero() || window.isNegative()) {
-            return false;
-        }
-        try {
-            String formattedKey = formatKey(key);
-            long now = System.currentTimeMillis();
-            long windowMs = window.toMillis();
-            String member = now + ":" + Thread.currentThread().threadId() + ":" + Math.random();
-            DefaultRedisScript<?> script = getOrCreateScript(
-                    "sliding_window", SLIDING_WINDOW_LUA, List.class);
-            Object rawResult = redisTemplate.execute(script,
-                    Collections.singletonList(formattedKey),
-                    String.valueOf(now),
-                    String.valueOf(windowMs),
-                    String.valueOf(limit),
-                    member);
-            List<Long> result = castToLongList(rawResult);
-            if (result.isEmpty()) {
-                return false;
-            }
-            return result.get(0) != null && result.get(0) == 1L;
-        } catch (Exception e) {
-            log.error("【RedisRateLimiter】滑动窗口限流异常 | key={} | error={}", key, e);
-            return handleException("滑动窗口限流", key, e);
-        }
-    }
-
     /**
      * 令牌桶限流
      *

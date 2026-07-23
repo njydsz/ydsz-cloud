@@ -50,7 +50,7 @@ public class DagInstanceControlController {
     @PostMapping("/{instanceId}/pause")
     public BaseResponse<Boolean> pause(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.pause(instanceId);
-        return success ? BaseResponse.ok(true) : BaseResponse.fail("暂停失败：实例不存在或非 RUNNING 状态");
+        return success ? BaseResponse.success(true) : BaseResponse.error("暂停失败：实例不存在或非 RUNNING 状态");
     }
 
     /**
@@ -64,7 +64,7 @@ public class DagInstanceControlController {
     @PostMapping("/{instanceId}/resume")
     public BaseResponse<Boolean> resume(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.resume(instanceId);
-        return success ? BaseResponse.ok(true) : BaseResponse.fail("恢复失败：实例不存在或非 PAUSED 状态");
+        return success ? BaseResponse.success(true) : BaseResponse.error("恢复失败：实例不存在或非 PAUSED 状态");
     }
 
     /**
@@ -78,7 +78,7 @@ public class DagInstanceControlController {
     @PostMapping("/{instanceId}/cancel")
     public BaseResponse<Boolean> cancel(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.cancel(instanceId);
-        return success ? BaseResponse.ok(true) : BaseResponse.fail("取消失败：实例不存在或已终态");
+        return success ? BaseResponse.success(true) : BaseResponse.error("取消失败：实例不存在或已终态");
     }
 
     /**
@@ -94,6 +94,6 @@ public class DagInstanceControlController {
     public BaseResponse<Boolean> retryNode(@PathVariable String instanceId,
                                       @RequestParam String jobKey) {
         boolean success = dagInstanceControlService.retryNode(instanceId, jobKey);
-        return success ? BaseResponse.ok(true) : BaseResponse.fail("重试失败：节点不存在或非 FAILED 状态");
+        return success ? BaseResponse.success(true) : BaseResponse.error("重试失败：节点不存在或非 FAILED 状态");
     }
 }

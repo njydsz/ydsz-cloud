@@ -59,7 +59,7 @@ public class FlowCanaryController {
             @RequestParam(required = false) String note) {
         canaryService.publishCanary(definitionId, initialPercent, strategy,
                 AuthContext.getUserId(), AuthContext.getUsername(), note);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -81,7 +81,7 @@ public class FlowCanaryController {
             @RequestParam(required = false) String note) {
         canaryService.adjustCanaryPercent(definitionId, newPercent,
                 AuthContext.getUserId(), AuthContext.getUsername(), note);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -101,7 +101,7 @@ public class FlowCanaryController {
             @RequestParam(required = false) String note) {
         canaryService.promoteCanary(definitionId,
                 AuthContext.getUserId(), AuthContext.getUsername(), note);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -121,7 +121,7 @@ public class FlowCanaryController {
             @RequestParam(required = false) String note) {
         canaryService.rollbackCanary(definitionId,
                 AuthContext.getUserId(), AuthContext.getUsername(), note);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -136,6 +136,6 @@ public class FlowCanaryController {
             @PathVariable String flowCode,
             @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(canaryService.listCanaryRolloutLog(flowCode, tid));
+        return BaseResponse.success(canaryService.listCanaryRolloutLog(flowCode, tid));
     }
 }

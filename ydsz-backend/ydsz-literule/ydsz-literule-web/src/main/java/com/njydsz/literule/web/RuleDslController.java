@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
@@ -82,7 +81,7 @@ public class RuleDslController {
         String format = (String) request.getOrDefault("format", "yaml");
 
         if (content == null || content.isBlank()) {
-            return BaseResponse.fail("DSL 内容不能为空");
+            return BaseResponse.error("DSL 内容不能为空");
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -118,16 +117,16 @@ public class RuleDslController {
             result.put("errors", errors);
             result.put("ruleCount", ruleCount);
             result.put("chainCount", dsl.getChains() != null ? dsl.getChains().size() : 0);
-            return BaseResponse.ok(result);
+            return BaseResponse.success(result);
 
         } catch (IllegalArgumentException e) {
             result.put("valid", false);
             result.put("errors", List.of(e.getMessage()));
             result.put("ruleCount", 0);
-            return BaseResponse.ok(result);
+            return BaseResponse.success(result);
         } catch (Exception e) {
             log.warn("[DSL] 校验失败: {}", e.getMessage());
-            return BaseResponse.fail("DSL 解析失败: " + e.getMessage());
+            return BaseResponse.error("DSL 解析失败: " + e.getMessage());
         }
     }
 
@@ -144,17 +143,17 @@ public class RuleDslController {
         String format = (String) request.getOrDefault("format", "yaml");
 
         if (content == null || content.isBlank()) {
-            return BaseResponse.fail("DSL 内容不能为空");
+            return BaseResponse.error("DSL 内容不能为空");
         }
 
         try {
             RuleDsl dsl = "json".equalsIgnoreCase(format)
                     ? RuleDslParser.parseJson(content)
                     : RuleDslParser.parseYaml(content);
-            return BaseResponse.ok(dsl);
+            return BaseResponse.success(dsl);
         } catch (Exception e) {
             log.warn("[DSL] 解析失败: {}", e.getMessage());
-            return BaseResponse.fail("DSL 解析失败: " + e.getMessage());
+            return BaseResponse.error("DSL 解析失败: " + e.getMessage());
         }
     }
 
@@ -168,7 +167,6 @@ public class RuleDslController {
      * @return 导入结果（成功/失败计数 + 详细信息）
      */
     @PostMapping("/import")
-    @OperationLog(module = "规则引擎", action = "DSL导入")
     @Operation(summary = "导入DSL规则", description = "将 YAML/JSON DSL 导入到规则引擎")
     public BaseResponse<Map<String, Object>> importDsl(@RequestBody Map<String, Object> request) {
         String content = (String) request.get("content");
@@ -176,7 +174,7 @@ public class RuleDslController {
         String operator = (String) request.getOrDefault("operator", "SYSTEM");
 
         if (content == null || content.isBlank()) {
-            return BaseResponse.fail("DSL 内容不能为空");
+            return BaseResponse.error("DSL 内容不能为空");
         }
 
         try {
@@ -216,11 +214,11 @@ public class RuleDslController {
                     dsl.getRules() != null ? dsl.getRules().size() : 0, successCount, failCount));
 
             log.info("[DSL] 导入完成: success={}, fail={}", successCount, failCount);
-            return BaseResponse.ok(result);
+            return BaseResponse.success(result);
 
         } catch (Exception e) {
             log.warn("[DSL] 导入失败: {}", e.getMessage());
-            return BaseResponse.fail("DSL 导入失败: " + e.getMessage());
+            return BaseResponse.error("DSL 导入失败: " + e.getMessage());
         }
     }
 
@@ -244,7 +242,7 @@ public class RuleDslController {
         }
 
         if (allRules.isEmpty()) {
-            return BaseResponse.fail("没有可导出的规则");
+            return BaseResponse.error("没有可导出的规则");
         }
 
         String yaml = RuleDslExporter.exportYaml(allRules, "exported-rules",
@@ -254,7 +252,7 @@ public class RuleDslController {
         result.put("format", "yaml");
         result.put("ruleCount", allRules.size());
         result.put("content", yaml);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -268,7 +266,7 @@ public class RuleDslController {
     public BaseResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+            return BaseResponse.error("规则不存在: " + ruleCode);
         }
 
         String yaml = RuleDslExporter.exportSingleRule(def);
@@ -277,7 +275,7 @@ public class RuleDslController {
         result.put("format", "yaml");
         result.put("ruleCode", ruleCode);
         result.put("content", yaml);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -296,7 +294,7 @@ public class RuleDslController {
         String format = (String) request.getOrDefault("format", "yaml");
 
         if (content == null || content.isBlank()) {
-            return BaseResponse.fail("DSL 内容不能为空");
+            return BaseResponse.error("DSL 内容不能为空");
         }
 
         Object factsObj = request.get("facts");
@@ -340,11 +338,11 @@ public class RuleDslController {
                 }
             }
 
-            return BaseResponse.ok(results);
+            return BaseResponse.success(results);
 
         } catch (Exception e) {
             log.warn("[DSL] 预览失败: {}", e.getMessage());
-            return BaseResponse.fail("DSL 预览失败: " + e.getMessage());
+            return BaseResponse.error("DSL 预览失败: " + e.getMessage());
         }
     }
 }

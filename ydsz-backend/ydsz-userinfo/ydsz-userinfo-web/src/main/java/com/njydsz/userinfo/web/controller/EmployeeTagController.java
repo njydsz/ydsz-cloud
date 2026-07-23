@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -52,11 +51,10 @@ public class EmployeeTagController {
      */
     @Operation(summary = "添加标签")
     @AuthApiPermission(apiCodes = PermissionCodes.RESOURCE_TAG_CREATE)
-    @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:add", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
-        return BaseResponse.ok(tagService.add(dto));
+        return BaseResponse.success(tagService.add(dto));
     }
 
     /**
@@ -67,12 +65,11 @@ public class EmployeeTagController {
      */
     @Operation(summary = "删除标签")
     @AuthApiPermission(apiCodes = PermissionCodes.RESOURCE_TAG_DELETE)
-    @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:remove", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> remove(@PathVariable String id) {
         tagService.remove(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -84,13 +81,12 @@ public class EmployeeTagController {
      */
     @Operation(summary = "覆盖式设置员工标签")
     @AuthApiPermission(apiCodes = PermissionCodes.RESOURCE_TAG_UPDATE)
-    @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:replaceByEmployee", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/replace/{employeeId}")
     public BaseResponse<Void> replaceByEmployee(@PathVariable String employeeId,
                                      @Valid @RequestBody List<EmployeeTagCreateDTO> tags) {
         tagService.replaceByEmployee(employeeId, tags);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -102,7 +98,7 @@ public class EmployeeTagController {
     @Operation(summary = "按员工查询")
     @GetMapping("/byEmployee/{employeeId}")
     public BaseResponse<List<EmployeeTagDO>> listByEmployee(@PathVariable String employeeId) {
-        return BaseResponse.ok(tagService.listByEmployee(employeeId));
+        return BaseResponse.success(tagService.listByEmployee(employeeId));
     }
 
     /**
@@ -116,6 +112,6 @@ public class EmployeeTagController {
     @GetMapping("/candidates")
     public BaseResponse<List<EmployeeTagDO>> candidates(@RequestParam String tagType,
                                              @RequestParam(required = false) String tagCode) {
-        return BaseResponse.ok(tagService.findCandidates(tagType, tagCode));
+        return BaseResponse.success(tagService.findCandidates(tagType, tagCode));
     }
 }

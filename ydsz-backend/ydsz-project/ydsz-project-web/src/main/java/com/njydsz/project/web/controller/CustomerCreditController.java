@@ -58,7 +58,7 @@ public class CustomerCreditController {
     @Idempotent(key = "customerCredit:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/assess")
     public BaseResponse<CustomerCreditDO> assess(@Valid @RequestBody CreditAssessmentDTO dto) {
-        return BaseResponse.ok(service.assess(dto));
+        return BaseResponse.success(service.assess(dto));
     }
 
     /**
@@ -71,7 +71,7 @@ public class CustomerCreditController {
     @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/customer/{customerId}")
     public BaseResponse<CustomerCreditDO> getByCustomer(@PathVariable String customerId) {
-        return BaseResponse.ok(service.getByCustomer(customerId));
+        return BaseResponse.success(service.getByCustomer(customerId));
     }
 
     /**
@@ -84,7 +84,7 @@ public class CustomerCreditController {
     @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/profile/{customerId}")
     public BaseResponse<Map<String, Object>> profile(@PathVariable String customerId) {
-        return BaseResponse.ok(service.profile(customerId));
+        return BaseResponse.success(service.profile(customerId));
     }
 
     /**
@@ -96,7 +96,7 @@ public class CustomerCreditController {
     @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/distribution")
     public BaseResponse<List<Map<String, Object>>> distribution() {
-        return BaseResponse.ok(service.distribution());
+        return BaseResponse.success(service.distribution());
     }
 
     /**
@@ -109,7 +109,7 @@ public class CustomerCreditController {
     @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/byLevel")
     public BaseResponse<List<CustomerCreditDO>> listByLevel(@RequestParam CreditLevel level) {
-        return BaseResponse.ok(service.listByLevel(level));
+        return BaseResponse.success(service.listByLevel(level));
     }
 
     /**
@@ -129,6 +129,6 @@ public class CustomerCreditController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String level) {
-        return BaseResponse.ok(service.page(page, size, keyword, level));
+        return BaseResponse.success(service.page(page, size, keyword, level));
     }
 }

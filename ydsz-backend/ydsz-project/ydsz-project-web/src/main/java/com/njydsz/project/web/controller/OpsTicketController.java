@@ -51,7 +51,7 @@ public class OpsTicketController {
     @Idempotent(key = "opsTicket:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     @Operation(summary = "派单")
@@ -60,7 +60,7 @@ public class OpsTicketController {
     @PostMapping("/assign")
     public BaseResponse<Void> assign(@Valid @RequestBody OpsTicketAssignDTO dto) {
         service.assign(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "状态变更")
@@ -69,7 +69,7 @@ public class OpsTicketController {
     @PostMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "关闭工单并评价")
@@ -78,7 +78,7 @@ public class OpsTicketController {
     @PostMapping("/closeEvaluate")
     public BaseResponse<Void> closeAndEvaluate(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.closeAndEvaluate(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "SLA 扫描")
@@ -86,7 +86,7 @@ public class OpsTicketController {
     @Idempotent(key = "opsTicket:scanSla", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/sla")
     public BaseResponse<Integer> scanSla() {
-        return BaseResponse.ok(service.scanSlaBreaches());
+        return BaseResponse.success(service.scanSlaBreaches());
     }
 
     @Operation(summary = "工单分页")
@@ -100,7 +100,7 @@ public class OpsTicketController {
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String keyword) {
-        return BaseResponse.ok(PageResponse.ofPage(service.page(page, size, status, priority,
+        return BaseResponse.success(PageResponse.ofPage(service.page(page, size, status, priority,
                 initiationId, assigneeId, keyword)));
     }
 
@@ -108,27 +108,27 @@ public class OpsTicketController {
     @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/slaSummary")
     public BaseResponse<List<Map<String, Object>>> slaSummary() {
-        return BaseResponse.ok(service.slaSummary());
+        return BaseResponse.success(service.slaSummary());
     }
 
     @Operation(summary = "按状态聚合")
     @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(service.aggregateByStatus(initiationId));
+        return BaseResponse.success(service.aggregateByStatus(initiationId));
     }
 
     @Operation(summary = "工单详情")
     @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/{id}")
     public BaseResponse<OpsTicketDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     @Operation(summary = "按项目查询工单")
     @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/byInitiation/{initiationId}")
     public BaseResponse<List<OpsTicketDO>> listByInitiation(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.listByInitiation(initiationId));
+        return BaseResponse.success(service.listByInitiation(initiationId));
     }
 }

@@ -61,7 +61,7 @@ public class RuleAuditLogController {
         if (limit <= 0 || limit > 200) {
             limit = 50;
         }
-        return BaseResponse.ok(auditLogService.queryRecent(limit));
+        return BaseResponse.success(auditLogService.queryRecent(limit));
     }
 
     /**
@@ -79,7 +79,7 @@ public class RuleAuditLogController {
         if (limit <= 0 || limit > 200) {
             limit = 50;
         }
-        return BaseResponse.ok(auditLogService.queryByRuleCode(ruleCode, limit));
+        return BaseResponse.success(auditLogService.queryByRuleCode(ruleCode, limit));
     }
 
     /**
@@ -97,7 +97,7 @@ public class RuleAuditLogController {
         if (limit <= 0 || limit > 200) {
             limit = 50;
         }
-        return BaseResponse.ok(auditLogService.queryByOperator(operator, limit));
+        return BaseResponse.success(auditLogService.queryByOperator(operator, limit));
     }
 
     /**
@@ -117,9 +117,9 @@ public class RuleAuditLogController {
         }
         try {
             AuditAction auditAction = AuditAction.valueOf(action.toUpperCase());
-            return BaseResponse.ok(auditLogService.queryByAction(auditAction, limit));
+            return BaseResponse.success(auditLogService.queryByAction(auditAction, limit));
         } catch (IllegalArgumentException e) {
-            return BaseResponse.fail("非法的操作类型: " + action
+            return BaseResponse.error("非法的操作类型: " + action
                     + "，合法值: CREATE / UPDATE / TOGGLE / STATUS_CHANGE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT / DELETE / DRY_RUN / STRESS_TEST / REPLAY");
         }
     }
@@ -144,9 +144,9 @@ public class RuleAuditLogController {
         try {
             LocalDateTime start = LocalDateTime.parse(startTime);
             LocalDateTime end = LocalDateTime.parse(endTime);
-            return BaseResponse.ok(auditLogService.queryByTimeRange(start, end, limit));
+            return BaseResponse.success(auditLogService.queryByTimeRange(start, end, limit));
         } catch (Exception e) {
-            return BaseResponse.fail("时间格式错误，请使用 ISO 格式（如 2026-07-01T00:00:00）: " + e.getMessage());
+            return BaseResponse.error("时间格式错误，请使用 ISO 格式（如 2026-07-01T00:00:00）: " + e.getMessage());
         }
     }
 }

@@ -66,7 +66,7 @@ public class ReportSubscriptionController {
         );
 
         log.info("[ReportSubscription] 创建订阅: id={}, reportType={}, cron={}", id, dto.getReportType(), dto.getCronExpression());
-        return BaseResponse.ok(id);
+        return BaseResponse.success(id);
     }
 
     /**
@@ -86,7 +86,7 @@ public class ReportSubscriptionController {
                         "WHERE created_by = ? AND deleted = 0 ORDER BY created_at DESC",
                 userId
         );
-        return BaseResponse.ok(list);
+        return BaseResponse.success(list);
     }
 
     /**
@@ -103,7 +103,7 @@ public class ReportSubscriptionController {
                 "UPDATE ydsz_report_subscription SET status = ?, updated_at = ? WHERE id = ?",
                 status, LocalDateTime.now(), id
         );
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -119,7 +119,7 @@ public class ReportSubscriptionController {
                 "UPDATE ydsz_report_subscription SET deleted = 1, updated_at = ? WHERE id = ?",
                 LocalDateTime.now(), id
         );
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -143,7 +143,7 @@ public class ReportSubscriptionController {
                         "WHERE subscription_id = ? ORDER BY run_at DESC LIMIT ? OFFSET ?",
                 id, size, offset
         );
-        return BaseResponse.ok(history);
+        return BaseResponse.success(history);
     }
 
     /**

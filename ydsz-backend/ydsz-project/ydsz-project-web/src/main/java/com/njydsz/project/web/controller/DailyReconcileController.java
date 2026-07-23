@@ -46,7 +46,7 @@ public class DailyReconcileController {
     @Idempotent(key = "dailyReconcile:run", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
     public BaseResponse<Integer> run(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(service.runDaily(date));
+        return BaseResponse.success(service.runDaily(date));
     }
 
     /**
@@ -63,7 +63,7 @@ public class DailyReconcileController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.queryByDateRange(from, to, status));
+        return BaseResponse.success(service.queryByDateRange(from, to, status));
     }
 
     /**
@@ -78,7 +78,7 @@ public class DailyReconcileController {
     public BaseResponse<List<Map<String, Object>>> aggregate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(service.aggregateStatus(from, to));
+        return BaseResponse.success(service.aggregateStatus(from, to));
     }
 
     /**
@@ -97,6 +97,6 @@ public class DailyReconcileController {
             @RequestParam double actual,
             @RequestParam(defaultValue = "0.01") double warnPct,
             @RequestParam(defaultValue = "0.05") double errorPct) {
-        return BaseResponse.ok(service.classify(expected, actual, warnPct, errorPct));
+        return BaseResponse.success(service.classify(expected, actual, warnPct, errorPct));
     }
 }

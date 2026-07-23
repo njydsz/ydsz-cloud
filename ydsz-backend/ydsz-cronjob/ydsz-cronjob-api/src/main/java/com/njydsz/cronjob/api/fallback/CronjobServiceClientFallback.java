@@ -28,14 +28,14 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
             @Override
             public BaseResponse<String> trigger(String jobId) {
                 log.warn("[CronjobServiceClient] trigger 降级: jobId={}, reason=cronjob服务不可用", jobId);
-                return BaseResponse.ok(null);
+                return BaseResponse.success(null);
             }
 
             @Override
             public BaseResponse<String> trigger(String jobId, boolean holdLock) {
                 log.warn("[CronjobServiceClient] trigger 降级: jobId={}, holdLock={}, reason=cronjob服务不可用",
                         jobId, holdLock);
-                return BaseResponse.ok(null);
+                return BaseResponse.success(null);
             }
         };
     }

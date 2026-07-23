@@ -139,9 +139,9 @@ public class ThreadPoolHotUpdateListener {
         // 2. queueCapacity — 记录新值（队列无法 resize，下次创建时生效）
         Integer newQueueCapacity = executorConfig.getInteger("queueCapacity");
         if (newQueueCapacity != null && newQueueCapacity >= 0) {
-            int oldQueue = cronjobProperties.getExecutor().getQueueCapacity();
+            int oldQueue = cronjobProperties.getExecutor().getExecutorQueueCapacity();
             if (newQueueCapacity != oldQueue) {
-                cronjobProperties.getExecutor().setQueueCapacity(newQueueCapacity);
+                cronjobProperties.getExecutor().setExecutorQueueCapacity(newQueueCapacity);
                 changed = true;
                 log.info("[ThreadPoolHotUpdate] queueCapacity: {} -> {} (下次创建线程池时生效)", oldQueue, newQueueCapacity);
             }

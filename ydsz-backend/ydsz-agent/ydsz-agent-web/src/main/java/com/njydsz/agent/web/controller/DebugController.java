@@ -102,11 +102,11 @@ public class DebugController {
         log.info("[Debug-API] 重放链路: traceId={}", traceId);
         TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
         if (meta == null) {
-            return BaseResponse.failed("TRACE_NOT_FOUND", "链路不存在或不支持重放: " + traceId);
+            return BaseResponse.error("TRACE_NOT_FOUND", "链路不存在或不支持重放: " + traceId);
         }
         List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
         if (steps.isEmpty()) {
-            return BaseResponse.failed("TRACE_EMPTY", "链路无步骤记录，无法提取重放输入: " + traceId);
+            return BaseResponse.error("TRACE_EMPTY", "链路无步骤记录，无法提取重放输入: " + traceId);
         }
         String userInput = steps.get(0).getContent();
         String conversationId = meta.getConversationId();

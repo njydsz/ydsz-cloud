@@ -40,6 +40,6 @@ public class PasswordScanController {
     @GetMapping("/scan")
     public BaseResponse<PasswordScanResultDTO> scan(
             @RequestParam(defaultValue = "90") int expireDays) {
-        return BaseResponse.ok(scanService.scan(expireDays));
+        return BaseResponse.success(scanService.scan(expireDays));
     }
 }

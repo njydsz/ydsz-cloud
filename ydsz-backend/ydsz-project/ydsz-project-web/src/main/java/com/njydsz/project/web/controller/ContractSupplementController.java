@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.project.domain.dto.ContractSupplementDTO;
@@ -54,7 +53,7 @@ public class ContractSupplementController {
     @Idempotent(key = "contractSupplement:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ContractSupplementDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -64,12 +63,11 @@ public class ContractSupplementController {
      * @return 空结果
      */
     @Operation(summary = "删除补充协议")
-    @OperationLog(module = "合同管理", action = "删除补充协议", bizType = "CONTRACT_SUPPLEMENT")
     @Idempotent(key = "contractSupplement:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -81,7 +79,7 @@ public class ContractSupplementController {
     @Operation(summary = "补充协议详情")
     @GetMapping("/{id}")
     public BaseResponse<ContractSupplementDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -93,7 +91,7 @@ public class ContractSupplementController {
     @Operation(summary = "按合同列出")
     @GetMapping("/list")
     public BaseResponse<List<ContractSupplementDO>> listByContract(@RequestParam String contractId) {
-        return BaseResponse.ok(service.listByContract(contractId));
+        return BaseResponse.success(service.listByContract(contractId));
     }
 
     /**
@@ -110,6 +108,6 @@ public class ContractSupplementController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String contractId) {
-        return BaseResponse.ok(service.page(page, size, contractId));
+        return BaseResponse.success(service.page(page, size, contractId));
     }
 }

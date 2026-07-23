@@ -284,7 +284,7 @@ public class AuditProperties {
      * @deprecated 使用 {@link #getExecutorQueueCapacity()} 替代
      */
     @Deprecated
-    public int getQueueCapacity() {
+    public int getExecutorQueueCapacity() {
         return executorQueueCapacity;
     }
 
@@ -292,7 +292,7 @@ public class AuditProperties {
      * @deprecated 使用 {@link #setExecutorQueueCapacity(int)} 替代
      */
     @Deprecated
-    public void setQueueCapacity(int queueCapacity) {
+    public void setExecutorQueueCapacity(int queueCapacity) {
         this.executorQueueCapacity = queueCapacity;
     }
 
@@ -382,11 +382,11 @@ public class AuditProperties {
             this.batchIntervalMillis = batchIntervalMillis;
         }
 
-        public int getQueueCapacity() {
+        public int getExecutorQueueCapacity() {
             return queueCapacity;
         }
 
-        public void setQueueCapacity(int queueCapacity) {
+        public void setExecutorQueueCapacity(int queueCapacity) {
             this.queueCapacity = queueCapacity;
         }
 

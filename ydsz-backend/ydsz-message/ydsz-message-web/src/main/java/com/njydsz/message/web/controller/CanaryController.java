@@ -50,7 +50,7 @@ public class CanaryController {
     @Idempotent(key = "canary:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
-        return BaseResponse.ok(canaryService.upsert(dto));
+        return BaseResponse.success(canaryService.upsert(dto));
     }
 
     /**
@@ -63,7 +63,7 @@ public class CanaryController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/{canaryKey}")
     public BaseResponse<MsgCanaryDO> getByKey(@PathVariable String canaryKey) {
-        return BaseResponse.ok(canaryService.getByKey(canaryKey));
+        return BaseResponse.success(canaryService.getByKey(canaryKey));
     }
 
     /**
@@ -76,7 +76,7 @@ public class CanaryController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
     public BaseResponse<Page<MsgCanaryDO>> page(PageQuery query) {
-        return BaseResponse.ok(canaryService.page(query));
+        return BaseResponse.success(canaryService.page(query));
     }
 
     /**
@@ -90,6 +90,6 @@ public class CanaryController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/hit")
     public BaseResponse<Boolean> hit(@RequestParam String canaryKey, @RequestParam String bucketValue) {
-        return BaseResponse.ok(canaryService.hit(canaryKey, bucketValue));
+        return BaseResponse.success(canaryService.hit(canaryKey, bucketValue));
     }
 }

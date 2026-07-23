@@ -126,9 +126,9 @@ public class CEPController {
     public BaseResponse<List<CEPPattern>> listPatterns() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.error("CEP 引擎未启用");
         }
-        return BaseResponse.ok(engine.listPatterns());
+        return BaseResponse.success(engine.listPatterns());
     }
 
     /**
@@ -142,13 +142,13 @@ public class CEPController {
     public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.error("CEP 引擎未启用");
         }
         try {
             engine.registerPattern(pattern);
-            return BaseResponse.ok();
+            return BaseResponse.success();
         } catch (IllegalArgumentException e) {
-            return BaseResponse.fail(e.getMessage());
+            return BaseResponse.error(e.getMessage());
         }
     }
 
@@ -163,10 +163,10 @@ public class CEPController {
     public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.error("CEP 引擎未启用");
         }
         engine.unregisterPattern(patternId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -190,7 +190,7 @@ public class CEPController {
     public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.error("CEP 引擎未启用");
         }
         int hitsBefore = (int) engine.totalHits();
         CEPEvent event = toEvent(body);
@@ -199,7 +199,7 @@ public class CEPController {
         Map<String, Object> result = new HashMap<>();
         result.put("fed", true);
         result.put("triggeredHits", hitsAfter - hitsBefore);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -213,17 +213,17 @@ public class CEPController {
     public BaseResponse<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.error("CEP 引擎未启用");
         }
         if (events == null || events.isEmpty()) {
-            return BaseResponse.ok(Map.of("fed", 0, "triggeredHits", 0));
+            return BaseResponse.success(Map.of("fed", 0, "triggeredHits", 0));
         }
         int hitsBefore = (int) engine.totalHits();
         for (Map<String, Object> body : events) {
             engine.feed(toEvent(body));
         }
         int hitsAfter = (int) engine.totalHits();
-        return BaseResponse.ok(Map.of("fed", events.size(), "triggeredHits", hitsAfter - hitsBefore));
+        return BaseResponse.success(Map.of("fed", events.size(), "triggeredHits", hitsAfter - hitsBefore));
     }
 
     /**
@@ -234,7 +234,7 @@ public class CEPController {
     @GetMapping("/hits")
     public BaseResponse<List<CEPHit>> recentHits() {
         synchronized (recentHits) {
-            return BaseResponse.ok(new ArrayList<>(recentHits));
+            return BaseResponse.success(new ArrayList<>(recentHits));
         }
     }
 
@@ -247,9 +247,9 @@ public class CEPController {
     public BaseResponse<Map<String, Object>> stats() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.error("CEP 引擎未启用");
         }
-        return BaseResponse.ok(Map.of(
+        return BaseResponse.success(Map.of(
                 "patternCount", engine.patternCount(),
                 "totalHits", engine.totalHits()
         ));
@@ -309,12 +309,12 @@ public class CEPController {
     public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.error("CEP 引擎未启用");
         }
         try {
             Object patternObj = body.get("pattern");
             if (patternObj == null) {
-                return BaseResponse.fail("pattern 不能为空");
+                return BaseResponse.error("pattern 不能为空");
             }
             CEPPattern pattern = objectMapper.convertValue(patternObj, CEPPattern.class);
             if (pattern.getId() == null || pattern.getId().isBlank()) {
@@ -323,7 +323,7 @@ public class CEPController {
             String patternId = pattern.getId();
             Object eventsObj = body.get("events");
             if (!(eventsObj instanceof List<?> eventsList)) {
-                return BaseResponse.fail("events 必须为数组");
+                return BaseResponse.error("events 必须为数组");
             }
 
             // 注册临时模式
@@ -353,10 +353,10 @@ public class CEPController {
             result.put("fedEvents", eventsList.size());
             result.put("triggeredHits", hitsAfter - hitsBefore);
             result.put("hits", testHits);
-            return BaseResponse.ok(result);
+            return BaseResponse.success(result);
         } catch (Exception e) {
             log.warn("[CEP] 测试模式失败: {}", e.getMessage());
-            return BaseResponse.fail("测试失败: " + e.getMessage());
+            return BaseResponse.error("测试失败: " + e.getMessage());
         }
     }
 }

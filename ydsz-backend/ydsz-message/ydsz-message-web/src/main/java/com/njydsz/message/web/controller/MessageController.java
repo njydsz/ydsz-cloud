@@ -64,7 +64,7 @@ public class MessageController {
     @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
-        return BaseResponse.ok(messageService.send(request));
+        return BaseResponse.success(messageService.send(request));
     }
 
     /**
@@ -78,7 +78,7 @@ public class MessageController {
     @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendDirect")
     public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
-        return BaseResponse.ok(messageService.sendDirect(dto));
+        return BaseResponse.success(messageService.sendDirect(dto));
     }
 
     /**
@@ -94,11 +94,11 @@ public class MessageController {
     @PostMapping("/sendAsync")
     public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "消息请求为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "消息请求为空");
         }
         // P0-3: 先落库 PENDING 再投递 MQ，保证消息不丢失
         MessageResult result = messageService.sendAsync(request);
-        BaseResponse<MessageResult> response = BaseResponse.ok(result);
+        BaseResponse<MessageResult> response = BaseResponse.success(result);
         response.setMsg("ASYNC_QUEUED");
         return response;
     }
@@ -113,7 +113,7 @@ public class MessageController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
     public BaseResponse<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
-        return BaseResponse.ok(messageService.pageLog(query));
+        return BaseResponse.success(messageService.pageLog(query));
     }
 
     /**
@@ -130,7 +130,7 @@ public class MessageController {
     @Idempotent(key = "message:sendTransactionally", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendTransactional")
     public BaseResponse<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
-        return BaseResponse.ok(messageService.sendTransactionally(request));
+        return BaseResponse.success(messageService.sendTransactionally(request));
     }
 
     /**
@@ -147,9 +147,9 @@ public class MessageController {
     public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {
         if (requests == null || requests.isEmpty()) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "消息列表为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "消息列表为空");
         }
-        return BaseResponse.ok(messageService.batchSend(requests, batchId));
+        return BaseResponse.success(messageService.batchSend(requests, batchId));
     }
 
     /**
@@ -170,6 +170,6 @@ public class MessageController {
         query.setBizId(batchId);
         query.setPageNum((int) page);
         query.setPageSize((int) size);
-        return BaseResponse.ok(messageService.pageLog(query));
+        return BaseResponse.success(messageService.pageLog(query));
     }
 }

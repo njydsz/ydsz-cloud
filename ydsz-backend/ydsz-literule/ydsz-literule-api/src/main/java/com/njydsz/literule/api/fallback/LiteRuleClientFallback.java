@@ -33,7 +33,7 @@ public class LiteRuleClientFallback implements FallbackFactory<LiteRuleClient> {
             @Override
             public BaseResponse<List<RuleResult>> dryRun(String ruleCode, Map<String, Object> facts) {
                 log.warn("[LiteRuleClient] dryRun 降级: ruleCode={}, reason=规则引擎服务不可用", ruleCode);
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
         };
     }

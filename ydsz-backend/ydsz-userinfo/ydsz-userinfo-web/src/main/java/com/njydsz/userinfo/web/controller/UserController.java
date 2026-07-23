@@ -10,7 +10,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
@@ -59,7 +58,7 @@ public class UserController {
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping
     public BaseResponse<Page<UserVO>> page(@Valid UserQueryDTO query) {
-        return BaseResponse.ok(userAccountService.pageVo(query));
+        return BaseResponse.success(userAccountService.pageVo(query));
     }
 
     /**
@@ -72,7 +71,7 @@ public class UserController {
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}")
     public BaseResponse<UserVO> get(@Parameter(description = "用户ID") @PathVariable String id) {
-        return BaseResponse.ok(userAccountService.findVoById(id));
+        return BaseResponse.success(userAccountService.findVoById(id));
     }
 
     /**
@@ -84,7 +83,7 @@ public class UserController {
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/me")
     public BaseResponse<UserVO> me() {
-        return BaseResponse.ok(userAccountService.findVoById(AuthContext.getUserId()));
+        return BaseResponse.success(userAccountService.findVoById(AuthContext.getUserId()));
     }
 
     /**
@@ -99,7 +98,7 @@ public class UserController {
     @PostMapping("/me/password")
     public BaseResponse<Void> changeMyPassword(@Valid @RequestBody PasswordChangeDTO dto) {
         userAccountService.changePassword(AuthContext.getUserId(), dto.getOldPassword(), dto.getNewPassword());
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -111,7 +110,6 @@ public class UserController {
      */
     @Operation(summary = "创建用户")
     @AuthApiPermission(apiCodes = "auth:user:create")
-    @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_7aa2293e}")
     @YdszDistributedLock(key = "user:create:#{#dto.username}", waitTime = 3, leaseTime = 10, message = "正在创建用户，请稍后")
@@ -126,7 +124,7 @@ public class UserController {
         u.setUsername(username);
         u.setEmployeeId(employeeId);
         u.setStatus("ENABLED");
-        return BaseResponse.ok(userAccountService.create(u, password));
+        return BaseResponse.success(userAccountService.create(u, password));
     }
 
     /**
@@ -137,7 +135,6 @@ public class UserController {
      */
     @Operation(summary = "更新用户")
     @AuthApiPermission(apiCodes = "auth:user:update")
-    @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
     @Idempotent(key = "user:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@Parameter(description = "用户ID") @PathVariable String id,
@@ -146,7 +143,7 @@ public class UserController {
         UserAccountDO user = new UserAccountDO();
         BeanUtils.copyProperties(dto, user);
         userAccountService.update(user);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -157,12 +154,11 @@ public class UserController {
      */
     @Operation(summary = "删除用户")
     @AuthApiPermission(apiCodes = "auth:user:delete")
-    @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @Idempotent(key = "user:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "用户ID") @PathVariable String id) {
         userAccountService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -174,7 +170,6 @@ public class UserController {
      */
     @Operation(summary = "重置密码")
     @AuthApiPermission(apiCodes = "auth:user:resetPassword")
-    @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_538560c7}")
     @Idempotent(key = "user:resetPassword", ttlSeconds = 5, message = "请勿重复提交")
@@ -182,7 +177,7 @@ public class UserController {
     public BaseResponse<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable String id,
                                       @Valid @RequestBody PasswordResetDTO dto) {
         userAccountService.resetPassword(id, dto.getNewPassword());
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -194,12 +189,11 @@ public class UserController {
      */
     @Operation(summary = "启用/禁用用户")
     @AuthApiPermission(apiCodes = "auth:user:toggle")
-    @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
     @Idempotent(key = "user:toggleStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/status")
     public BaseResponse<Void> toggleStatus(@Parameter(description = "用户ID") @PathVariable String id, @Parameter(description = "目标状态") @RequestParam @NotBlank String status) {
         userAccountService.toggleStatus(id, status);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -211,13 +205,12 @@ public class UserController {
      */
     @Operation(summary = "为用户分配角色")
     @AuthApiPermission(apiCodes = "auth:user:assign")
-    @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
     @YdszDistributedLock(key = "user:assignRoles:#{#id}", waitTime = 3, leaseTime = 15, message = "正在分配角色，请稍后")
     @Idempotent(key = "user:assignRoles", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/roles")
     public BaseResponse<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
         userAccountService.assignRoles(id, roleIds);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -230,6 +223,6 @@ public class UserController {
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}/roles")
     public BaseResponse<List<String>> listRoles(@Parameter(description = "用户ID") @PathVariable String id) {
-        return BaseResponse.ok(userAccountService.listRoleIds(id));
+        return BaseResponse.success(userAccountService.listRoleIds(id));
     }
 }

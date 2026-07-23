@@ -45,7 +45,7 @@ public class JobHistoryController {
     @Operation(summary = "获取任务版本列表")
     @GetMapping("/versions")
     public BaseResponse<List<JobHistoryDO>> versions(@RequestParam String jobId) {
-        return BaseResponse.ok(jobHistoryService.listVersions(jobId));
+        return BaseResponse.success(jobHistoryService.listVersions(jobId));
     }
 
     /**
@@ -59,7 +59,7 @@ public class JobHistoryController {
     @GetMapping("/detail")
     public BaseResponse<JobHistoryDO> detail(@RequestParam String jobId,
                                         @RequestParam Integer version) {
-        return BaseResponse.ok(jobHistoryService.getVersion(jobId, version));
+        return BaseResponse.success(jobHistoryService.getVersion(jobId, version));
     }
 
     /**
@@ -74,7 +74,7 @@ public class JobHistoryController {
     @PostMapping("/rollback")
     public BaseResponse<JobDO> rollback(@RequestParam String jobId,
                                    @RequestParam Integer version) {
-        return BaseResponse.ok(jobHistoryService.rollback(jobId, version));
+        return BaseResponse.success(jobHistoryService.rollback(jobId, version));
     }
 
     /**
@@ -90,6 +90,6 @@ public class JobHistoryController {
     public BaseResponse<List<Map<String, Object>>> compare(@RequestParam String jobId,
                                                       @RequestParam("v1") Integer version1,
                                                       @RequestParam("v2") Integer version2) {
-        return BaseResponse.ok(jobHistoryService.compareVersions(jobId, version1, version2));
+        return BaseResponse.success(jobHistoryService.compareVersions(jobId, version1, version2));
     }
 }

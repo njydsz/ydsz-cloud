@@ -44,7 +44,7 @@ public class AnalysisController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<StorageAnalysisApplicationService.StorageOverview> getOverview(
             @RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(storageAnalysisService.getUserOverview(userId));
+        return BaseResponse.success(storageAnalysisService.getUserOverview(userId));
     }
 
     @GetMapping("/by-type")
@@ -52,7 +52,7 @@ public class AnalysisController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<Map<String, StorageAnalysisApplicationService.TypeStats>> statsByType(
             @RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(storageAnalysisService.statsByType(userId));
+        return BaseResponse.success(storageAnalysisService.statsByType(userId));
     }
 
     @GetMapping("/top-large-files")
@@ -61,7 +61,7 @@ public class AnalysisController {
     public BaseResponse<List<FileNode>> topLargeFiles(
             @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "10") int limit) {
-        return BaseResponse.ok(storageAnalysisService.topLargeFiles(userId, limit));
+        return BaseResponse.success(storageAnalysisService.topLargeFiles(userId, limit));
     }
 
     @PostMapping("/summary")
@@ -69,6 +69,6 @@ public class AnalysisController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<AiSummaryApplicationService.DocumentAnalysis> analyze(
             @RequestBody String content) {
-        return BaseResponse.ok(aiSummaryService.analyze(content));
+        return BaseResponse.success(aiSummaryService.analyze(content));
     }
 }

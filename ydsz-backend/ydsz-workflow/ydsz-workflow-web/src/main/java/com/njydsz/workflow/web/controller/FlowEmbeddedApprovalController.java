@@ -74,9 +74,9 @@ public class FlowEmbeddedApprovalController {
             }
         }
         if (uid == null) {
-            return BaseResponse.failed(BaseResultCode.UNAUTHORIZED, "未登录");
+            return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "未登录");
         }
-        return BaseResponse.ok(embeddedApprovalService.loadPanel(businessType, businessId, uid));
+        return BaseResponse.success(embeddedApprovalService.loadPanel(businessType, businessId, uid));
     }
 
     /**
@@ -104,7 +104,7 @@ public class FlowEmbeddedApprovalController {
             dto.setUserName(u.getUsername());
         }
         embeddedApprovalService.quickAction(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -133,6 +133,6 @@ public class FlowEmbeddedApprovalController {
             dto.setUserName(u.getUsername());
         }
         embeddedApprovalService.quickAction(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

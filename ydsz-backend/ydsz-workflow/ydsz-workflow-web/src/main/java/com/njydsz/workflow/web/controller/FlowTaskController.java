@@ -69,7 +69,7 @@ public class FlowTaskController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_VIEW)
     @GetMapping("/task/{taskId}")
     public BaseResponse<Map<String, Object>> taskDetail(@PathVariable String taskId) {
-        return BaseResponse.ok(workflowFacade.getTaskDetail(taskId));
+        return BaseResponse.success(workflowFacade.getTaskDetail(taskId));
     }
 
     /**
@@ -85,7 +85,7 @@ public class FlowTaskController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> claim(@RequestParam String taskId) {
         workflowFacade.claimTask(taskId, AuthContext.getUserId());
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -102,7 +102,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.completeTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -119,7 +119,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.rejectTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -134,10 +134,10 @@ public class FlowTaskController {
     public BaseResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         List<Map<String, Object>> nodes = hisTaskMapper.listPassedNodes(task.getInstanceId());
-        return BaseResponse.ok(nodes);
+        return BaseResponse.success(nodes);
     }
 
     /**
@@ -153,7 +153,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.transferTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -169,7 +169,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.delegateTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -185,7 +185,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.countersignBeforeTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -201,7 +201,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.countersignAfterTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -218,7 +218,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.countersignParallelTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -234,7 +234,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.jumpTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -258,7 +258,7 @@ public class FlowTaskController {
         dto.setUserName(AuthContext.getUsername());
         dto.setAction("JUMP");
         workflowFacade.jumpTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -276,7 +276,7 @@ public class FlowTaskController {
     public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                   @RequestParam(required = false) String comment) {
         workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -294,7 +294,7 @@ public class FlowTaskController {
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false) String targetNodeCode) {
         taskService.batchReject(taskIds, AuthContext.getUserId(), comment, targetNodeCode);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -315,7 +315,7 @@ public class FlowTaskController {
                                       @RequestParam(required = false) String targetUserName) {
         taskService.batchTransfer(taskIds, AuthContext.getUserId(), comment,
                 targetUserId, targetUserName);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -330,7 +330,7 @@ public class FlowTaskController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> batchUrge(@RequestParam List<String> instanceIds,
                                      @RequestParam(required = false) String comment) {
-        return BaseResponse.ok(taskService.batchUrge(instanceIds, AuthContext.getUserId(), comment));
+        return BaseResponse.success(taskService.batchUrge(instanceIds, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -345,7 +345,7 @@ public class FlowTaskController {
     @PostMapping("/task/passAll")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> passAll(@RequestParam(required = false) String comment) {
-        return BaseResponse.ok(workflowFacade.passAllTodoTasks(AuthContext.getUserId(), comment));
+        return BaseResponse.success(workflowFacade.passAllTodoTasks(AuthContext.getUserId(), comment));
     }
 
     /**
@@ -360,7 +360,7 @@ public class FlowTaskController {
     @GetMapping("/task/todo")
     public BaseResponse<List<Map<String, Object>>> todo(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(workflowFacade.listTodoTasks(AuthContext.getUserId(), page, size));
+        return BaseResponse.success(workflowFacade.listTodoTasks(AuthContext.getUserId(), page, size));
     }
 
     /**
@@ -375,7 +375,7 @@ public class FlowTaskController {
     @GetMapping("/task/done")
     public BaseResponse<List<Map<String, Object>>> done(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(workflowFacade.listDoneTasks(AuthContext.getUserId(), page, size));
+        return BaseResponse.success(workflowFacade.listDoneTasks(AuthContext.getUserId(), page, size));
     }
 
     /**
@@ -389,7 +389,7 @@ public class FlowTaskController {
     public BaseResponse<List<FlowRunTaskDO>> overdue(@RequestParam(required = false) String assigneeId,
                                          @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(taskService.listOverdue(assigneeId, tid));
+        return BaseResponse.success(taskService.listOverdue(assigneeId, tid));
     }
 
     /**
@@ -404,7 +404,7 @@ public class FlowTaskController {
     public BaseResponse<Void> timeoutTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
         taskService.timeoutTask(taskId, reason);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -431,7 +431,7 @@ public class FlowTaskController {
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
+        return BaseResponse.success(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize));
     }
 
@@ -450,7 +450,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         taskService.countersignRemove(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -464,7 +464,7 @@ public class FlowTaskController {
     public BaseResponse<Void> markRead(@PathVariable String taskId) {
         String userId = AuthContext.getUserId();
         taskService.markRead(taskId, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -480,7 +480,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         taskService.communicate(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -496,7 +496,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.saveDraft(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -512,7 +512,7 @@ public class FlowTaskController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.addApprover(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -529,7 +529,7 @@ public class FlowTaskController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> retract(@PathVariable String hisTaskId,
                                   @RequestParam(required = false) String comment) {
-        return BaseResponse.ok(taskService.retract(hisTaskId, AuthContext.getUserId(), comment));
+        return BaseResponse.success(taskService.retract(hisTaskId, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -548,7 +548,7 @@ public class FlowTaskController {
     public BaseResponse<Void> suspendTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
         workflowFacade.suspendTask(taskId, AuthContext.getUserId(), reason);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -562,7 +562,7 @@ public class FlowTaskController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> activateTask(@PathVariable String taskId) {
         workflowFacade.activateTask(taskId, AuthContext.getUserId());
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     // ============== P1-7: WebSocket 待办数实时推送 ==============
@@ -576,13 +576,13 @@ public class FlowTaskController {
     public BaseResponse<Map<String, Object>> myTodoCount() {
         String userId = AuthContext.getUserId();
         if (userId == null) {
-            return BaseResponse.ok(Map.of("userId", 0, "todoCount", 0));
+            return BaseResponse.success(Map.of("userId", 0, "todoCount", 0));
         }
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         // P0-1 修复：移除 countOverdue 死代码（结果被覆盖），直接用 listTodoByUser 计算待办数
         var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
         long count = tasks == null ? 0 : tasks.size();
-        return BaseResponse.ok(Map.of(
+        return BaseResponse.success(Map.of(
                 "userId", userId,
                 "todoCount", count,
                 "timestamp", System.currentTimeMillis()
@@ -599,10 +599,10 @@ public class FlowTaskController {
     public BaseResponse<Boolean> pushMyTodoCount() {
         String userId = AuthContext.getUserId();
         if (userId == null) {
-            return BaseResponse.ok(false);
+            return BaseResponse.success(false);
         }
         todoCountPushService.pushTodoCount(userId);
-        return BaseResponse.ok(true);
+        return BaseResponse.success(true);
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============
@@ -619,7 +619,7 @@ public class FlowTaskController {
             @RequestParam String flowCode,
             @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(taskService.nodeDurationStats(flowCode, tid));
+        return BaseResponse.success(taskService.nodeDurationStats(flowCode, tid));
     }
 
     /**
@@ -632,6 +632,6 @@ public class FlowTaskController {
     public BaseResponse<List<FlowRunTaskDO>> statsOverdue(
             @RequestParam(required = false) String assigneeId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(taskService.listOverdue(assigneeId, tenantId));
+        return BaseResponse.success(taskService.listOverdue(assigneeId, tenantId));
     }
 }

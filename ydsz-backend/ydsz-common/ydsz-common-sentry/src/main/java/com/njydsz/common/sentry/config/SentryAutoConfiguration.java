@@ -208,7 +208,7 @@ public class SentryAutoConfiguration {
         SentryProperties.AsyncConfig asyncConfig = properties.getLogging().getAsync();
         if (asyncConfig.isEnabled()) {
             asyncLogPublisher = new AsyncLogPublisher(delegate,
-                    asyncConfig.getQueueCapacity(),
+                    asyncConfig.getExecutorQueueCapacity(),
                     asyncConfig.getBatchSize(),
                     asyncConfig.getFlushIntervalMillis(),
                     asyncConfig.getMaxRatePerSecond());

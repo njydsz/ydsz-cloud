@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
@@ -58,7 +57,6 @@ public class FileController {
      */
     @Operation(summary = "上传文件")
     @AuthApiPermission(apiCodes = PermissionCodes.FILE_STORAGE_UPLOAD)
-    @OperationLog(module = "文件存储", action = "上传文件", bizType = "FILE")
     @Idempotent(key = "file:upload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/upload")
     public BaseResponse<FileDO> upload(
@@ -73,7 +71,7 @@ public class FileController {
         if (dto.getUploaderName() == null) {
             dto.setUploaderName(AuthContext.getUsername());
         }
-        return BaseResponse.ok(fileService.upload(file, dto));
+        return BaseResponse.success(fileService.upload(file, dto));
     }
 
     /**
@@ -85,13 +83,12 @@ public class FileController {
      */
     @Operation(summary = "删除文件")
     @AuthApiPermission(apiCodes = PermissionCodes.FILE_STORAGE_DELETE)
-    @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
     @Idempotent(key = "file:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(
             @Parameter(description = "文件ID") @PathVariable String id) throws Exception {
         fileService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -103,12 +100,11 @@ public class FileController {
      */
     @Operation(summary = "批量删除")
     @AuthApiPermission(apiCodes = PermissionCodes.FILE_STORAGE_DELETE)
-    @OperationLog(module = "文件存储", action = "批量删除文件", bizType = "FILE")
     @Idempotent(key = "file:deleteBatch", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/batch")
     public BaseResponse<Void> deleteBatch(@Valid @RequestBody List<String> ids) throws Exception {
         fileService.deleteBatch(ids);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -121,7 +117,7 @@ public class FileController {
     @GetMapping("/{id}")
     public BaseResponse<FileDO> getById(
             @Parameter(description = "文件ID") @PathVariable String id) {
-        return BaseResponse.ok(fileService.getById(id));
+        return BaseResponse.success(fileService.getById(id));
     }
 
     /**
@@ -136,7 +132,7 @@ public class FileController {
     public BaseResponse<String> presignedUrl(
             @Parameter(description = "文件ID") @PathVariable String id,
             @Parameter(description = "URL有效期（秒）") @RequestParam(required = false) @Min(1) Integer expireSeconds) {
-        return BaseResponse.ok(fileService.getPresignedUrl(id, expireSeconds));
+        return BaseResponse.success(fileService.getPresignedUrl(id, expireSeconds));
     }
 
     /**
@@ -177,7 +173,7 @@ public class FileController {
     public BaseResponse<List<FileDO>> listByBiz(
             @Parameter(description = "业务类型") @RequestParam @NotBlank String bizType,
             @Parameter(description = "业务单据ID") @RequestParam @NotBlank String bizId) {
-        return BaseResponse.ok(fileService.listByBiz(bizType, bizId));
+        return BaseResponse.success(fileService.listByBiz(bizType, bizId));
     }
 
     /**
@@ -198,6 +194,6 @@ public class FileController {
             @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
             @Parameter(description = "业务单据ID") @RequestParam(required = false) String bizId,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword) {
-        return BaseResponse.ok(fileService.page(page, size, bizType, bizId, keyword));
+        return BaseResponse.success(fileService.page(page, size, bizType, bizId, keyword));
     }
 }

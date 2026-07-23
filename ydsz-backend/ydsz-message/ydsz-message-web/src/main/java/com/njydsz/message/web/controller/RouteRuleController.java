@@ -53,7 +53,7 @@ public class RouteRuleController {
     @Idempotent(key = "routeRule:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
-        return BaseResponse.ok(routeRuleService.create(dto));
+        return BaseResponse.success(routeRuleService.create(dto));
     }
 
     /**
@@ -68,7 +68,7 @@ public class RouteRuleController {
     @Idempotent(key = "routeRule:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
-        return BaseResponse.ok(routeRuleService.update(id, dto));
+        return BaseResponse.success(routeRuleService.update(id, dto));
     }
 
     /**
@@ -83,7 +83,7 @@ public class RouteRuleController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         routeRuleService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -96,7 +96,7 @@ public class RouteRuleController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
     @GetMapping("/{id}")
     public BaseResponse<MsgRouteRuleDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(routeRuleService.getById(id));
+        return BaseResponse.success(routeRuleService.getById(id));
     }
 
     /**
@@ -109,7 +109,7 @@ public class RouteRuleController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
     public BaseResponse<Page<MsgRouteRuleDO>> page(PageQuery query) {
-        return BaseResponse.ok(routeRuleService.page(query));
+        return BaseResponse.success(routeRuleService.page(query));
     }
 
     /**
@@ -121,6 +121,6 @@ public class RouteRuleController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/enabled")
     public BaseResponse<List<MsgRouteRuleDO>> listEnabled() {
-        return BaseResponse.ok(routeRuleService.listEnabled());
+        return BaseResponse.success(routeRuleService.listEnabled());
     }
 }

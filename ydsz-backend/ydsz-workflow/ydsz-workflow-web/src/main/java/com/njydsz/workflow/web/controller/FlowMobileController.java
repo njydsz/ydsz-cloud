@@ -70,7 +70,7 @@ public class FlowMobileController {
     public BaseResponse<Map<String, Object>> home() {
         String userId = AuthContext.getUserId();
         if (userId == null) {
-            return BaseResponse.ok(Map.of(
+            return BaseResponse.success(Map.of(
                     "todoCount", 0,
                     "doneCount", 0,
                     "overdueCount", 0,
@@ -106,7 +106,7 @@ public class FlowMobileController {
         result.put("overdueCount", overdueCount);
         result.put("todoList", topTodos);
         result.put("timestamp", System.currentTimeMillis());
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     // ==================== 精简待办列表 ====================
@@ -125,12 +125,12 @@ public class FlowMobileController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
         String userId = AuthContext.getUserId();
         if (userId == null) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         List<FlowRunTaskDO> tasks = taskService.listTodoByUser(userId, null, null, tenantId);
         if (tasks == null || tasks.isEmpty()) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         // 按优先级降序、创建时间升序排序
         List<FlowRunTaskDO> sorted = new ArrayList<>(tasks);
@@ -145,7 +145,7 @@ public class FlowMobileController {
         List<MobileTodoVO> result = sorted.subList(fromIndex, toIndex).stream()
                 .map(MobileTodoVO::from)
                 .toList();
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     // ==================== 精简已办列表 ====================
@@ -164,12 +164,12 @@ public class FlowMobileController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
         String userId = AuthContext.getUserId();
         if (userId == null) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         List<FlowRunTaskDO> tasks = taskService.listDoneByAssignee(userId, tenantId);
         if (tasks == null || tasks.isEmpty()) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         // 按完成时间降序
         List<FlowRunTaskDO> sorted = new ArrayList<>(tasks);
@@ -182,7 +182,7 @@ public class FlowMobileController {
         List<MobileTodoVO> result = sorted.subList(fromIndex, toIndex).stream()
                 .map(MobileTodoVO::from)
                 .toList();
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     // ==================== 精简任务详情 ====================
@@ -199,9 +199,9 @@ public class FlowMobileController {
     public BaseResponse<MobileTaskDetailVO> taskDetail(@PathVariable String taskId) {
         Map<String, Object> detail = workflowFacade.getTaskDetail(taskId);
         if (detail == null || detail.isEmpty()) {
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
-        return BaseResponse.ok(MobileTaskDetailVO.from(detail));
+        return BaseResponse.success(MobileTaskDetailVO.from(detail));
     }
 
     // ==================== 快速操作 ====================
@@ -225,7 +225,7 @@ public class FlowMobileController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.completeTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -247,7 +247,7 @@ public class FlowMobileController {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
         workflowFacade.rejectTask(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -264,7 +264,7 @@ public class FlowMobileController {
     public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                     @RequestParam(required = false) String comment) {
         workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     // ==================== 精简审批轨迹 ====================
@@ -280,12 +280,12 @@ public class FlowMobileController {
     public BaseResponse<List<MobileTimelineVO>> timeline(@PathVariable String instanceId) {
         List<Map<String, Object>> timeline = workflowFacade.getTimeline(instanceId);
         if (timeline == null || timeline.isEmpty()) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         List<MobileTimelineVO> result = timeline.stream()
                 .map(MobileTimelineVO::from)
                 .toList();
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     // ==================== 移动端 VO ====================

@@ -96,12 +96,12 @@ public class ImportExportController {
             @PathVariable String bizType,
             @RequestParam("file") MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
-            return BaseResponse.failed("400", "上传文件为空");
+            return BaseResponse.error("400", "上传文件为空");
         }
         ImportService.ImportResult R = importService.importFile(bizType, file);
         log.info("[ImportFile] bizType={} fileSize={} success={} failed={}",
                 bizType, file.getSize(), R.successCount(), R.failedCount());
-        return BaseResponse.ok(R);
+        return BaseResponse.success(R);
     }
 
 }

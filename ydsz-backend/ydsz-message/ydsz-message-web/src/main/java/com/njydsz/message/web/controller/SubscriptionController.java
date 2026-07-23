@@ -50,7 +50,7 @@ public class SubscriptionController {
     @Idempotent(key = "subscription:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
-        return BaseResponse.ok(subscriptionService.upsert(dto));
+        return BaseResponse.success(subscriptionService.upsert(dto));
     }
 
     /**
@@ -63,7 +63,7 @@ public class SubscriptionController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/user/{userId}")
     public BaseResponse<List<MsgSubscriptionDO>> listByUser(@PathVariable String userId) {
-        return BaseResponse.ok(subscriptionService.listByUser(userId));
+        return BaseResponse.success(subscriptionService.listByUser(userId));
     }
 
     /**
@@ -78,7 +78,7 @@ public class SubscriptionController {
     @GetMapping("/topic/{topicCode}/{channel}")
     public BaseResponse<List<MsgSubscriptionDO>> listByTopic(@PathVariable String topicCode,
                                                        @PathVariable String channel) {
-        return BaseResponse.ok(subscriptionService.listByTopic(topicCode, channel));
+        return BaseResponse.success(subscriptionService.listByTopic(topicCode, channel));
     }
 
     /**
@@ -97,6 +97,6 @@ public class SubscriptionController {
                                     @RequestParam String topicCode,
                                     @RequestParam String channel) {
         subscriptionService.unsubscribe(userId, topicCode, channel);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

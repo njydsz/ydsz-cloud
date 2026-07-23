@@ -68,7 +68,7 @@ public class JobStatsController {
             @RequestParam String jobId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return BaseResponse.ok(jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate));
+        return BaseResponse.success(jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate));
     }
 
     /**
@@ -122,7 +122,7 @@ public class JobStatsController {
         summary.put("failCount", failCount);
         summary.put("timeoutCount", timeoutCount);
         summary.put("avgDurationMs", durationSamples > 0 ? totalDuration / durationSamples : 0L);
-        return BaseResponse.ok(summary);
+        return BaseResponse.success(summary);
     }
 
     // ==================== P1-2: 运维监控仪表盘增强 ====================
@@ -177,7 +177,7 @@ public class JobStatsController {
             dashboard.put("systemMetrics", systemMetrics);
         }
 
-        return BaseResponse.ok(dashboard);
+        return BaseResponse.success(dashboard);
     }
 
     /**
@@ -190,7 +190,7 @@ public class JobStatsController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/recent-failures")
     public BaseResponse<List<JobLogDO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
-        return BaseResponse.ok(jobLogMapper.selectList(
+        return BaseResponse.success(jobLogMapper.selectList(
                 new LambdaQueryWrapper<JobLogDO>()
                         .eq(JobLogDO::getStatus, "FAILED")
                         .orderByDesc(JobLogDO::getStartTime)
@@ -224,6 +224,6 @@ public class JobStatsController {
             entry.put("count", count);
             heatmap.add(entry);
         }
-        return BaseResponse.ok(heatmap);
+        return BaseResponse.success(heatmap);
     }
 }

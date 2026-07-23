@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -62,7 +61,7 @@ public class RiskController {
     @Idempotent(key = "risk:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RiskCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -77,7 +76,7 @@ public class RiskController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -89,11 +88,10 @@ public class RiskController {
     @Operation(summary = "删除")
     @AuthApiPermission(apiCodes = "execution:risk:delete")
     @Idempotent(key = "risk:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @OperationLog(module = "风险管理", action = "删除风险", bizType = "RISK")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "风险ID") @PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -106,7 +104,7 @@ public class RiskController {
     @AuthApiPermission(apiCodes = "execution:risk:list")
     @GetMapping("/{id}")
     public BaseResponse<RiskVO> get(@Parameter(description = "风险ID") @PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -130,7 +128,7 @@ public class RiskController {
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel,
             @Parameter(description = "立项ID") @RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
+        return BaseResponse.success(service.page(page, size, keyword, status, riskLevel, initiationId));
     }
 
     /**
@@ -143,6 +141,6 @@ public class RiskController {
     @AuthApiPermission(apiCodes = "execution:risk:list")
     @GetMapping("/aggregate/byLevel")
     public BaseResponse<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam String initiationId) {
-        return BaseResponse.ok(service.aggregateByLevel(initiationId));
+        return BaseResponse.success(service.aggregateByLevel(initiationId));
     }
 }

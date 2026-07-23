@@ -8,7 +8,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -51,7 +50,7 @@ public class RoleController {
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping
     public BaseResponse<Page<RoleDO>> page(@Valid RoleQueryDTO query) {
-        return BaseResponse.ok(roleService.page(query));
+        return BaseResponse.success(roleService.page(query));
     }
 
     /**
@@ -63,7 +62,7 @@ public class RoleController {
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/all")
     public BaseResponse<List<RoleDO>> listAll() {
-        return BaseResponse.ok(roleService.listAllEnabled());
+        return BaseResponse.success(roleService.listAllEnabled());
     }
 
     /**
@@ -76,7 +75,7 @@ public class RoleController {
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
     public BaseResponse<RoleDO> get(@Parameter(description = "角色ID") @PathVariable String id) {
-        return BaseResponse.ok(roleService.getById(id));
+        return BaseResponse.success(roleService.getById(id));
     }
 
     /**
@@ -87,11 +86,10 @@ public class RoleController {
      */
     @Operation(summary = "创建角色")
     @AuthApiPermission(apiCodes = "auth:role:create")
-    @OperationLog(module = "权限管理", action = "创建角色", bizType = "ROLE")
     @Idempotent(key = "role:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RoleFormDTO dto) {
-        return BaseResponse.ok(roleService.create(dto));
+        return BaseResponse.success(roleService.create(dto));
     }
 
     /**
@@ -102,12 +100,11 @@ public class RoleController {
      */
     @Operation(summary = "更新角色")
     @AuthApiPermission(apiCodes = "auth:role:update")
-    @OperationLog(module = "权限管理", action = "更新角色", bizType = "ROLE")
     @Idempotent(key = "role:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody RoleFormDTO dto) {
         roleService.update(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -118,12 +115,11 @@ public class RoleController {
      */
     @Operation(summary = "删除角色")
     @AuthApiPermission(apiCodes = "auth:role:delete")
-    @OperationLog(module = "权限管理", action = "删除角色", bizType = "ROLE")
     @Idempotent(key = "role:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "角色ID") @PathVariable String id) {
         roleService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -135,13 +131,12 @@ public class RoleController {
      */
     @Operation(summary = "为角色分配权限")
     @AuthApiPermission(apiCodes = "auth:role:assign")
-    @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
     @YdszDistributedLock(key = "role:assignPermissions:#{#id}", waitTime = 3, leaseTime = 15, message = "正在分配权限，请稍后")
     @Idempotent(key = "role:assignPermissions", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/permissions")
     public BaseResponse<Void> assignPermissions(@Parameter(description = "角色ID") @PathVariable String id, @Valid @RequestBody List<String> permissionIds) {
         roleService.assignPermissions(id, permissionIds);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -154,6 +149,6 @@ public class RoleController {
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}/permissions")
     public BaseResponse<List<String>> listPermissions(@Parameter(description = "角色ID") @PathVariable String id) {
-        return BaseResponse.ok(roleService.listPermissionIds(id));
+        return BaseResponse.success(roleService.listPermissionIds(id));
     }
 }

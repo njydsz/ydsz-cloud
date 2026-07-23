@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.util.TraceIdUtil;
 import com.njydsz.cronjob.domain.entity.job.JobDO;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -181,15 +180,15 @@ public class PreciseSchedulingManager {
         Runnable task = () -> {
             try {
                 preLoadedTasks.remove(job.getId());
-                TraceIdUtil.getOrCreate();
+                TracerUtils.getOrCreate();
                 String logId = taskDispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
                 log.info("[PreciseScheduling] 精准派发: key={} logId={} delayMs={} traceId={}",
-                        job.getJobKey(), logId, delayMs, TraceIdUtil.get());
+                        job.getJobKey(), logId, delayMs, TracerUtils.get());
             } catch (Exception e) {
                 log.error("[PreciseScheduling] 精准派发异常: key={} reason={}",
                         job.getJobKey(), e.getMessage(), e);
             } finally {
-                TraceIdUtil.clear();
+                TracerUtils.clear();
             }
         };
         ScheduledFuture<?> future = preciseScheduler.schedule(task, delayMs, TimeUnit.MILLISECONDS);

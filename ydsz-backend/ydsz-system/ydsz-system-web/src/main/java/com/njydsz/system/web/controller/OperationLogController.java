@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
@@ -76,7 +75,7 @@ public class OperationLogController {
             @Parameter(description = "截止时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
-        return BaseResponse.ok(PageResponse.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
+        return BaseResponse.success(PageResponse.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
     }
 
     /**
@@ -111,7 +110,7 @@ public class OperationLogController {
             @Parameter(description = "截止时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
-        return BaseResponse.ok(service.pageByCursor(size, cursor, userId, bizType, status, module, startTime, endTime));
+        return BaseResponse.success(service.pageByCursor(size, cursor, userId, bizType, status, module, startTime, endTime));
     }
 
     /**
@@ -127,7 +126,7 @@ public class OperationLogController {
     public BaseResponse<List<OperationLogDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return BaseResponse.ok(service.listByUser(userId, limit));
+        return BaseResponse.success(service.listByUser(userId, limit));
     }
 
     /**
@@ -145,7 +144,7 @@ public class OperationLogController {
             @Parameter(description = "业务类型") @RequestParam String bizType,
             @Parameter(description = "业务单据ID") @RequestParam String bizId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return BaseResponse.ok(service.listByBiz(bizType, bizId, limit));
+        return BaseResponse.success(service.listByBiz(bizType, bizId, limit));
     }
 
     /**
@@ -156,12 +155,11 @@ public class OperationLogController {
      */
     @Operation(summary = "清理 N 天前日志")
     @AuthApiPermission(apiCodes = PermissionCodes.AUDIT_LOG_CLEAN)
-    @OperationLog(module = "操作日志", action = "清理历史日志", bizType = "AUDIT_LOG", saveParams = true)
     @IdempotentExempt("审计清理接口，无需幂等")
     @PostMapping("/clean")
     public BaseResponse<Integer> clean(
             @Parameter(description = "保留天数") @RequestParam(defaultValue = "90") int days) {
-        return BaseResponse.ok(service.cleanBefore(days));
+        return BaseResponse.success(service.cleanBefore(days));
     }
 
     /**

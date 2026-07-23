@@ -35,20 +35,20 @@ public class PreviewController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_GENERATE)
     public BaseResponse<Void> generatePreview(@PathVariable String fileNodeId) {
         previewService.generatePreview(fileNodeId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @GetMapping("/supported")
     @Operation(summary = "检查文件是否支持预览")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_VIEW)
     public BaseResponse<Boolean> isSupported(@RequestParam String suffix) {
-        return BaseResponse.ok(previewService.isPreviewSupported(suffix));
+        return BaseResponse.success(previewService.isPreviewSupported(suffix));
     }
 
     @GetMapping("/type")
     @Operation(summary = "获取预览类型")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_VIEW)
     public BaseResponse<String> getPreviewType(@RequestParam String suffix) {
-        return BaseResponse.ok(previewService.getPreviewType(suffix));
+        return BaseResponse.success(previewService.getPreviewType(suffix));
     }
 }

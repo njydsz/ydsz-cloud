@@ -57,7 +57,7 @@ public class ExpenseController {
     @Idempotent(key = "expense:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ExpenseCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -72,7 +72,7 @@ public class ExpenseController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -87,7 +87,7 @@ public class ExpenseController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -100,7 +100,7 @@ public class ExpenseController {
     @AuthApiPermission(apiCodes = "execution:expense:list")
     @GetMapping("/{id}")
     public BaseResponse<ExpenseDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -126,6 +126,6 @@ public class ExpenseController {
             @RequestParam(required = false) String expenseType,
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, expenseType, employeeId, initiationId));
+        return BaseResponse.success(service.page(page, size, keyword, status, expenseType, employeeId, initiationId));
     }
 }

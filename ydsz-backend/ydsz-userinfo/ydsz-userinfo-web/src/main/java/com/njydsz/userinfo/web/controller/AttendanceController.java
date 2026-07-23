@@ -14,7 +14,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -58,11 +57,10 @@ public class AttendanceController {
      */
     @Operation(summary = "登记出勤")
     @AuthApiPermission(apiCodes = "attendance:record:create")
-    @OperationLog(module = "考勤", action = "登记出勤", bizType = "ATTENDANCE")
     @Idempotent(key = "attendance:recordAttendance", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/record")
     public BaseResponse<String> recordAttendance(@Valid @RequestBody AttendanceCreateDTO dto) {
-        return BaseResponse.ok(attendanceService.recordAttendance(dto));
+        return BaseResponse.success(attendanceService.recordAttendance(dto));
     }
 
     /**
@@ -84,7 +82,7 @@ public class AttendanceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(attendanceService.pageAttendance(employeeId, startDate, endDate, page, size));
+        return BaseResponse.success(attendanceService.pageAttendance(employeeId, startDate, endDate, page, size));
     }
 
     /**
@@ -101,7 +99,7 @@ public class AttendanceController {
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return BaseResponse.ok(attendanceService.statByStatus(employeeId, startDate, endDate));
+        return BaseResponse.success(attendanceService.statByStatus(employeeId, startDate, endDate));
     }
 
     // ============== 加班 ==============
@@ -114,11 +112,10 @@ public class AttendanceController {
      */
     @Operation(summary = "提交加班申请")
     @AuthApiPermission(apiCodes = "attendance:overtime:create")
-    @OperationLog(module = "考勤", action = "提交加班", bizType = "OVERTIME")
     @Idempotent(key = "attendance:submitOvertime", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/overtime")
     public BaseResponse<String> submitOvertime(@Valid @RequestBody OvertimeCreateDTO dto) {
-        return BaseResponse.ok(attendanceService.submitOvertime(dto));
+        return BaseResponse.success(attendanceService.submitOvertime(dto));
     }
 
     /**
@@ -133,7 +130,6 @@ public class AttendanceController {
      */
     @Operation(summary = "审批加班")
     @AuthApiPermission(apiCodes = "attendance:overtime:approve")
-    @OperationLog(module = "考勤", action = "审批加班", bizType = "OVERTIME")
     @Idempotent(key = "attendance:approveOvertime", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/overtime/{id}/approve")
     public BaseResponse<Void> approveOvertime(
@@ -143,7 +139,7 @@ public class AttendanceController {
             @RequestHeader(value = "X-Username", required = false) String approverName,
             @RequestParam(required = false) String remark) {
         attendanceService.approveOvertime(id, action, approverId, approverName, remark);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -163,7 +159,7 @@ public class AttendanceController {
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(attendanceService.pageOvertime(employeeId, approvalStatus, page, size));
+        return BaseResponse.success(attendanceService.pageOvertime(employeeId, approvalStatus, page, size));
     }
 
     /**
@@ -175,7 +171,7 @@ public class AttendanceController {
     @Operation(summary = "加班详情")
     @GetMapping("/overtime/{id}")
     public BaseResponse<OvertimeDO> getOvertime(@PathVariable @NotBlank String id) {
-        return BaseResponse.ok(attendanceService.getOvertime(id));
+        return BaseResponse.success(attendanceService.getOvertime(id));
     }
 
     // ============== 请假 ==============
@@ -188,11 +184,10 @@ public class AttendanceController {
      */
     @Operation(summary = "提交请假申请")
     @AuthApiPermission(apiCodes = "attendance:leave:create")
-    @OperationLog(module = "考勤", action = "提交请假", bizType = "LEAVE")
     @Idempotent(key = "attendance:submitLeave", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/leave")
     public BaseResponse<String> submitLeave(@Valid @RequestBody LeaveCreateDTO dto) {
-        return BaseResponse.ok(attendanceService.submitLeave(dto));
+        return BaseResponse.success(attendanceService.submitLeave(dto));
     }
 
     /**
@@ -207,7 +202,6 @@ public class AttendanceController {
      */
     @Operation(summary = "审批请假")
     @AuthApiPermission(apiCodes = "attendance:leave:approve")
-    @OperationLog(module = "考勤", action = "审批请假", bizType = "LEAVE")
     @Idempotent(key = "attendance:approveLeave", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/leave/{id}/approve")
     public BaseResponse<Void> approveLeave(
@@ -217,7 +211,7 @@ public class AttendanceController {
             @RequestHeader(value = "X-Username", required = false) String approverName,
             @RequestParam(required = false) String remark) {
         attendanceService.approveLeave(id, action, approverId, approverName, remark);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -237,7 +231,7 @@ public class AttendanceController {
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(attendanceService.pageLeave(employeeId, approvalStatus, page, size));
+        return BaseResponse.success(attendanceService.pageLeave(employeeId, approvalStatus, page, size));
     }
 
     /**
@@ -249,7 +243,7 @@ public class AttendanceController {
     @Operation(summary = "请假详情")
     @GetMapping("/leave/{id}")
     public BaseResponse<LeaveDO> getLeave(@PathVariable @NotBlank String id) {
-        return BaseResponse.ok(attendanceService.getLeave(id));
+        return BaseResponse.success(attendanceService.getLeave(id));
     }
 
     /**
@@ -266,6 +260,6 @@ public class AttendanceController {
             @RequestParam @NotBlank String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return BaseResponse.ok(attendanceService.listApprovedLeaves(employeeId, startDate, endDate));
+        return BaseResponse.success(attendanceService.listApprovedLeaves(employeeId, startDate, endDate));
     }
 }

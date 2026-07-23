@@ -38,7 +38,7 @@ public class FlowOfflineForwardController {
     @PostMapping("/auto")
     @Operation(summary = "按代理授权规则自动转发已有待办")
     public BaseResponse<Integer> autoForward(@RequestParam String authId) {
-        return BaseResponse.ok(offlineAutoForwardService.autoForwardByAuth(authId));
+        return BaseResponse.success(offlineAutoForwardService.autoForwardByAuth(authId));
     }
 
     /**
@@ -55,6 +55,6 @@ public class FlowOfflineForwardController {
             @RequestParam String userId,
             @RequestParam String delegateUserId) {
         String operatorId = AuthContext.getUserId();
-        return BaseResponse.ok(offlineAutoForwardService.manualForward(userId, delegateUserId, operatorId));
+        return BaseResponse.success(offlineAutoForwardService.manualForward(userId, delegateUserId, operatorId));
     }
 }

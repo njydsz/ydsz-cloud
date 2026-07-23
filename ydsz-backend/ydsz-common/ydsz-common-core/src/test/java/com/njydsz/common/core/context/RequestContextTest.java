@@ -192,7 +192,7 @@ class RequestContextTest {
             RequestContext.setUserId("user-001");
             RequestContext.setTenantId("tenant-001");
 
-            Map<String, Object> captured = RequestContext.capture();
+            Map<String, Object> captured = RequestContext.snapshot();
             RequestContext.clear();
 
             java.util.concurrent.Callable<String> task = RequestContext.wrapCallable(
@@ -214,7 +214,7 @@ class RequestContextTest {
         @DisplayName("runWithContext 在指定上下文中执行后清理")
         void runWithContext() {
             RequestContext.setUserId("user-001");
-            Map<String, Object> captured = RequestContext.capture();
+            Map<String, Object> captured = RequestContext.snapshot();
             RequestContext.clear();
 
             String result = RequestContext.runWithContext(captured, () -> RequestContext.getUserId());

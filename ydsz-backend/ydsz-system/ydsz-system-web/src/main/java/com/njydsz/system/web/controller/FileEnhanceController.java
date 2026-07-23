@@ -61,7 +61,7 @@ public class FileEnhanceController {
         Map<String, Object> result = new HashMap<>();
         result.put("safe", safe);
         result.put("filename", file.getOriginalFilename());
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -84,7 +84,7 @@ public class FileEnhanceController {
         String uploadId = fileEnhanceService.initMultipartUpload(filename, totalSize, totalChunks);
         Map<String, Object> result = new HashMap<>();
         result.put("uploadId", uploadId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -107,7 +107,7 @@ public class FileEnhanceController {
         Map<String, Object> result = new HashMap<>();
         result.put("success", success);
         result.put("chunkIndex", chunkIndex);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -125,7 +125,7 @@ public class FileEnhanceController {
         Map<String, Object> result = new HashMap<>();
         result.put("fileKey", fileKey != null ? fileKey : "");
         result.put("success", fileKey != null);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -142,7 +142,7 @@ public class FileEnhanceController {
         fileEnhanceService.abortMultipartUpload(uploadId);
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -158,6 +158,6 @@ public class FileEnhanceController {
         String url = fileEnhanceService.generatePreviewUrl(fileKey);
         Map<String, Object> result = new HashMap<>();
         result.put("previewUrl", url);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 }

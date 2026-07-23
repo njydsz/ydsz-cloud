@@ -13,7 +13,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.context.AuthContext;
-import com.njydsz.common.auth.context.PermissionContextHolder;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.auth.security.RateLimiter;
 import com.njydsz.common.core.constant.FilterIgnoreConstant;
@@ -86,7 +85,7 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
             // 清理所有 ThreadLocal 变量，防止在异步线程池场景下的上下文泄漏
             RequestHolder.remove();
             AuthContext.clear();
-            PermissionContextHolder.clear();
+            AuthContext.clear();
             doPostAuth(request, response, System.currentTimeMillis() - startTime);
         }
     }

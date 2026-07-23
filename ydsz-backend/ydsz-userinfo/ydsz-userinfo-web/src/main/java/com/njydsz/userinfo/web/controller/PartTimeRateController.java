@@ -56,7 +56,7 @@ public class PartTimeRateController {
     @Idempotent(key = "partTimeRate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody PartTimeRateCreateDTO dto) {
-        return BaseResponse.ok(partTimeRateService.create(dto));
+        return BaseResponse.success(partTimeRateService.create(dto));
     }
 
     /**
@@ -71,7 +71,7 @@ public class PartTimeRateController {
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody PartTimeRateUpdateDTO dto) {
         partTimeRateService.update(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -85,7 +85,7 @@ public class PartTimeRateController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         partTimeRateService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -97,7 +97,7 @@ public class PartTimeRateController {
     @Operation(summary = "兼职职级费率详情")
     @GetMapping("/{id}")
     public BaseResponse<PartTimeRateDO> get(@PathVariable String id) {
-        return BaseResponse.ok(partTimeRateService.getById(id));
+        return BaseResponse.success(partTimeRateService.getById(id));
     }
 
     /**
@@ -109,7 +109,7 @@ public class PartTimeRateController {
     @Operation(summary = "兼职职级费率分页")
     @GetMapping
     public BaseResponse<Page<PartTimeRateDO>> page(@Valid PartTimeRatePageDTO query) {
-        return BaseResponse.ok(partTimeRateService.page(
+        return BaseResponse.success(partTimeRateService.page(
                 query.getPageNum(),
                 Math.min(query.getPageSize(), 200),
                 query.getKeyword(),
@@ -129,7 +129,7 @@ public class PartTimeRateController {
     public BaseResponse<PartTimeRateDO> matchEffective(@RequestParam String rateCode,
                                                  @RequestParam(required = false)
                                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(partTimeRateService.matchEffective(rateCode, date));
+        return BaseResponse.success(partTimeRateService.matchEffective(rateCode, date));
     }
 
     /**
@@ -142,6 +142,6 @@ public class PartTimeRateController {
     @GetMapping("/effective")
     public BaseResponse<List<PartTimeRateDO>> listEffective(@RequestParam(required = false)
                                                       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(partTimeRateService.listEffective(date));
+        return BaseResponse.success(partTimeRateService.listEffective(date));
     }
 }

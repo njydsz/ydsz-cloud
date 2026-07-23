@@ -49,6 +49,6 @@ public class OrchestrationController {
     @Idempotent(key = "orchestration:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
     public BaseResponse<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {
-        return BaseResponse.ok(orchestrationService.execute(flow));
+        return BaseResponse.success(orchestrationService.execute(flow));
     }
 }

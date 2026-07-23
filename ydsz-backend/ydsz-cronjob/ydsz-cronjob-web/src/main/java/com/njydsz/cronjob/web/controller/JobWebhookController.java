@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -43,7 +42,6 @@ public class JobWebhookController {
      */
     @Operation(summary = "新增 WebHook 订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @OperationLog(module = "任务调度", action = "新增WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@RequestBody JobWebhookDO webhook) {
@@ -55,7 +53,7 @@ public class JobWebhookController {
             webhook.setHttpMethod("POST");
         }
         webhookMapper.insert(webhook);
-        return BaseResponse.ok(webhook.getId());
+        return BaseResponse.success(webhook.getId());
     }
 
     /**
@@ -66,13 +64,12 @@ public class JobWebhookController {
      */
     @Operation(summary = "更新 WebHook 订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @OperationLog(module = "任务调度", action = "更新WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public BaseResponse<Void> update(@RequestBody JobWebhookDO webhook) {
         webhook.setUpdatedAt(LocalDateTime.now());
         webhookMapper.updateById(webhook);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -83,7 +80,6 @@ public class JobWebhookController {
      */
     @Operation(summary = "删除 WebHook 订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @OperationLog(module = "任务调度", action = "删除WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -92,7 +88,7 @@ public class JobWebhookController {
         update.setDeleted(1);
         update.setUpdatedAt(LocalDateTime.now());
         webhookMapper.updateById(update);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -118,7 +114,7 @@ public class JobWebhookController {
                 .eq(jobKey != null && !jobKey.isBlank(),
                         w -> w.getJobKey(), jobKey)
                 .orderByDesc(w -> w.getCreatedAt());
-        return BaseResponse.ok(webhookMapper.selectPage(new Page<>(page, size), wrapper));
+        return BaseResponse.success(webhookMapper.selectPage(new Page<>(page, size), wrapper));
     }
 
     /**
@@ -130,7 +126,7 @@ public class JobWebhookController {
     @Operation(summary = "查询 WebHook 详情")
     @GetMapping("/{id}")
     public BaseResponse<JobWebhookDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(webhookMapper.selectById(id));
+        return BaseResponse.success(webhookMapper.selectById(id));
     }
 
     /**
@@ -146,10 +142,10 @@ public class JobWebhookController {
     public BaseResponse<Void> testWebhook(@PathVariable String id) {
         JobWebhookDO webhook = webhookMapper.selectById(id);
         if (webhook == null) {
-            return BaseResponse.fail("WebHook not found");
+            return BaseResponse.error("WebHook not found");
         }
         // 测试事件通过 WebhookEventDispatcher 发送
         // 这里仅返回成功，实际推送通过 Async 异步执行
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

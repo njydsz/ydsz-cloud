@@ -45,6 +45,6 @@ public class BudgetController {
     @AuthApiPermission(apiCodes = "execution:budget:view")
     @GetMapping("/occupancy")
     public BaseResponse<Map<String, Object>> occupancy(@RequestParam String initiationId) {
-        return BaseResponse.ok(budgetGuard.occupancy(initiationId));
+        return BaseResponse.success(budgetGuard.occupancy(initiationId));
     }
 }

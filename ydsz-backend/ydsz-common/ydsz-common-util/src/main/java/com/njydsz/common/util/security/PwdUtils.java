@@ -347,15 +347,4 @@ public class PwdUtils {
             return PasswordStrength.WEAK;
         }
     }
-
-    /**
-     * 检查密码强度（返回字符串，向后兼容）
-     * @param password 密码
-     * @return 密码强度字符串（WEAK/MEDIUM/STRONG）
-     * @deprecated 使用 {@link #checkPasswordStrength(String)} 返回枚举类型
-     */
-    @Deprecated
-    public static String checkPasswordStrengthStr(String password) {
-        return checkPasswordStrength(password).name();
-    }
 }

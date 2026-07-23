@@ -64,31 +64,7 @@ public class BaseQuery implements Serializable {
      * <p>用于过滤数据状态，子类可按需覆盖为具体业务状态枚举值。
      * 默认值为空，由各子类根据业务语义自行定义。
      */
-    private String status;
-
-    /**
-     * 开始时间（字符串格式）
-     *
-     * <p>用于时间范围查询的起始时间，字符串格式。
-     * 通常与 endTime 配合使用。
-     *
-     * @deprecated 建议使用 {@link #startDateTime}（LocalDateTime 类型）替代
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    private transient String startTime;
-
-    /**
-     * 结束时间（字符串格式）
-     *
-     * <p>用于时间范围查询的结束时间，字符串格式。
-     * 通常与 startTime 配合使用。
-     *
-     * @deprecated 建议使用 {@link #endDateTime}（LocalDateTime 类型）替代
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    private transient String endTime;
-
-    /**
+    private String status;    /**
      * 开始时间（类型安全版本）
      *
      * <p>用于时间范围查询的起始时间，使用 {@link LocalDateTime} 类型
@@ -103,17 +79,6 @@ public class BaseQuery implements Serializable {
      * 替代 {@link #endTime} 字符串版本，避免手动解析和格式问题。
      */
     private transient LocalDateTime endDateTime;
-
-    /**
-     * 关键字（已废弃）
-     *
-     * <p>用于多字段搜索的关键字，与 searchKey 语义高度重叠。
-     *
-     * @deprecated 使用 {@link #searchKey} 替代
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    private String keyword;
-
     /**
      * 租户ID
      *
@@ -151,8 +116,7 @@ public class BaseQuery implements Serializable {
      * @return 有任一时间边界返回 true
      */
     public boolean hasTimeRange() {
-        return startTime != null || endTime != null
-                || startDateTime != null || endDateTime != null;
+        return startDateTime != null || endDateTime != null;
     }
 
     /**

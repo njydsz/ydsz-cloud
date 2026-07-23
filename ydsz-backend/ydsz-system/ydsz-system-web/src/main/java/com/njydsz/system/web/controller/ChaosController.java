@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.chaos.ChaosExperiment;
 import com.njydsz.common.chaos.ChaosOutcome;
@@ -74,7 +73,7 @@ public class ChaosController {
     @AuthApiPermission(apiCodes = "sys:chaos:view")
     @GetMapping("/experiments")
     public BaseResponse<List<ChaosExperiment>> list() {
-        return BaseResponse.ok(chaosService.list());
+        return BaseResponse.success(chaosService.list());
     }
 
     /**
@@ -92,7 +91,7 @@ public class ChaosController {
                 .filter(e -> target.equals(e.getTarget()))
                 .findFirst()
                 .orElse(null);
-        return BaseResponse.ok(found);
+        return BaseResponse.success(found);
     }
 
     /**
@@ -103,12 +102,11 @@ public class ChaosController {
      */
     @Operation(summary = "注册新实验")
     @AuthApiPermission(apiCodes = "sys:chaos:create")
-    @OperationLog(module = "混沌工程", action = "注册实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:register", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/experiments")
     public BaseResponse<Void> register(@RequestBody @Valid ChaosExperiment experiment) {
         chaosService.register(experiment);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -120,7 +118,6 @@ public class ChaosController {
      */
     @Operation(summary = "修改实验 (按 target 覆盖)")
     @AuthApiPermission(apiCodes = "sys:chaos:create")
-    @OperationLog(module = "混沌工程", action = "更新实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}")
     public BaseResponse<Void> update(
@@ -128,7 +125,7 @@ public class ChaosController {
             @RequestBody @Valid ChaosExperiment experiment) {
         experiment.setTarget(target);
         chaosService.register(experiment);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -140,7 +137,6 @@ public class ChaosController {
      */
     @Operation(summary = "启停实验")
     @AuthApiPermission(apiCodes = "sys:chaos:trigger")
-    @OperationLog(module = "混沌工程", action = "启停实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}/enabled")
     public BaseResponse<Void> toggle(
@@ -152,7 +148,7 @@ public class ChaosController {
                 .orElseThrow(() -> new IllegalArgumentException("实验不存在: " + target));
         exp.setEnabled(enabled);
         chaosService.register(exp);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -163,13 +159,12 @@ public class ChaosController {
      */
     @Operation(summary = "注销实验")
     @AuthApiPermission(apiCodes = "sys:chaos:delete")
-    @OperationLog(module = "混沌工程", action = "注销实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:unregister", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/experiments/{target}")
     public BaseResponse<Void> unregister(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
         chaosService.unregister(target);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -181,7 +176,7 @@ public class ChaosController {
     @AuthApiPermission(apiCodes = "sys:chaos:view")
     @GetMapping("/history")
     public BaseResponse<List<ChaosService.ChaosEvent>> history() {
-        return BaseResponse.ok(chaosService.recentHistory());
+        return BaseResponse.success(chaosService.recentHistory());
     }
 
     /**
@@ -191,12 +186,11 @@ public class ChaosController {
      */
     @Operation(summary = "清空历史")
     @AuthApiPermission(apiCodes = "sys:chaos:trigger")
-    @OperationLog(module = "混沌工程", action = "清空实验历史", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:clearHistory", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/history/clear")
     public BaseResponse<Void> clearHistory() {
         chaosService.clearHistory();
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -220,7 +214,7 @@ public class ChaosController {
             outcome = ChaosOutcome.INJECTED;
             error = ex.getClass().getName() + ": " + ex.getMessage();
         }
-        return BaseResponse.ok(Map.of(
+        return BaseResponse.success(Map.of(
                 "target", target,
                 "outcome", outcome.name(),
                 "error", error == null ? "" : error

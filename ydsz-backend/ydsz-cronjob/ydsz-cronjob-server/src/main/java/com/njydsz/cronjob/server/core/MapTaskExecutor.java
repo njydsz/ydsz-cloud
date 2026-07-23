@@ -22,7 +22,6 @@ import com.njydsz.common.core.job.MapProcessor;
 import com.njydsz.common.core.job.MapReduceProcessor;
 import com.njydsz.common.core.job.MapTask;
 import com.njydsz.common.core.job.ProcessResult;
-import com.njydsz.common.util.TraceIdUtil;
 import com.njydsz.cronjob.domain.entity.job.JobDO;
 import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
 import com.njydsz.cronjob.domain.entity.job.JobTaskDO;
@@ -241,7 +240,7 @@ public class MapTaskExecutor {
 
         int maxParallel = cronjobProperties.getMapReduce().getMaxParallelSubTasks();
         Semaphore semaphore = new Semaphore(maxParallel);
-        String traceId = TraceIdUtil.get();
+        String traceId = TracerUtils.get();
 
         // 为每个子任务创建 TaskDO 并提交并行执行
         List<CompletableFuture<ProcessResult>> futures = new ArrayList<>(subTasks.size());

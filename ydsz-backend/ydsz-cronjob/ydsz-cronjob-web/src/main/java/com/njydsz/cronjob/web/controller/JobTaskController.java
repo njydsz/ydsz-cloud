@@ -49,7 +49,7 @@ public class JobTaskController {
     @Operation(summary = "查询子任务列表")
     @GetMapping("/list")
     public BaseResponse<List<JobTaskDO>> list(@RequestParam String logId) {
-        return BaseResponse.ok(jobTaskMapper.selectByLogId(logId));
+        return BaseResponse.success(jobTaskMapper.selectByLogId(logId));
     }
 
     /**
@@ -72,6 +72,6 @@ public class JobTaskController {
         wrapper.eq(JobTaskDO::getLogId, logId)
                 .eq(JobTaskDO::getDeleted, 0)
                 .orderByAsc(JobTaskDO::getCreatedAt);
-        return BaseResponse.ok(jobTaskMapper.selectPage(pageObj, wrapper));
+        return BaseResponse.success(jobTaskMapper.selectPage(pageObj, wrapper));
     }
 }

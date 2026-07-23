@@ -57,7 +57,7 @@ public class FlowDesignerController {
     @GetMapping("/definition/{id}/designer")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Map<String, Object>> getDesignerData(@PathVariable String id) {
-        return BaseResponse.ok(definitionService.getDesignerData(id));
+        return BaseResponse.success(definitionService.getDesignerData(id));
     }
 
     /**
@@ -77,7 +77,7 @@ public class FlowDesignerController {
                                           @Valid @RequestBody FlowDesignerDataDTO dto) {
         Map<String, Object> designerData = YdszJson.parseMap(dto.getDesignerData());
         definitionService.saveDesignerData(id, designerData);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     // ============== P2-4: 设计器协同编辑锁定 API ==============
@@ -105,7 +105,7 @@ public class FlowDesignerController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> lockDefinition(@PathVariable String id) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(definitionService.lockDefinition(id, userId));
+        return BaseResponse.success(definitionService.lockDefinition(id, userId));
     }
 
     /**
@@ -122,7 +122,7 @@ public class FlowDesignerController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> unlockDefinition(@PathVariable String id) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(definitionService.unlockDefinition(id, userId));
+        return BaseResponse.success(definitionService.unlockDefinition(id, userId));
     }
 
     /**
@@ -143,7 +143,7 @@ public class FlowDesignerController {
     @Operation(summary = "查询流程定义锁定状态")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Map<String, Object>> getLockStatus(@PathVariable String id) {
-        return BaseResponse.ok(definitionService.getLockStatus(id));
+        return BaseResponse.success(definitionService.getLockStatus(id));
     }
 
     // ============== GAP-V2-02: 表单引擎字段配置 ==============
@@ -159,7 +159,7 @@ public class FlowDesignerController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<String> getFormConfig(@PathVariable String id,
                                          @PathVariable String nodeCode) {
-        return BaseResponse.ok(definitionService.getFormConfig(id, nodeCode));
+        return BaseResponse.success(definitionService.getFormConfig(id, nodeCode));
     }
 
     /**
@@ -177,7 +177,7 @@ public class FlowDesignerController {
                                         @PathVariable String nodeCode,
                                         @RequestBody String formFieldsConfig) {
         definitionService.saveFormConfig(id, nodeCode, formFieldsConfig);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     // ============== P1-2: 节点 SLA 配置 ==============
@@ -193,7 +193,7 @@ public class FlowDesignerController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<String> getSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode) {
-        return BaseResponse.ok(definitionService.getSlaConfig(id, nodeCode));
+        return BaseResponse.success(definitionService.getSlaConfig(id, nodeCode));
     }
 
     /**
@@ -212,7 +212,7 @@ public class FlowDesignerController {
                                         @RequestBody Map<String, Object> slaConfig) {
         String json = slaConfig == null ? null : YdszJson.toJson(slaConfig);
         definitionService.saveSlaConfig(id, nodeCode, json);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     // ============== GAP-P2: 流程模板库 ==============
@@ -226,7 +226,7 @@ public class FlowDesignerController {
     @GetMapping("/template/list")
     public BaseResponse<List<Map<String, Object>>> listTemplates(
             @RequestParam(required = false) String category) {
-        return BaseResponse.ok(templateService.listTemplates(category));
+        return BaseResponse.success(templateService.listTemplates(category));
     }
 
     /**
@@ -241,7 +241,7 @@ public class FlowDesignerController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
     public BaseResponse<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {
-        return BaseResponse.ok(templateService.importTemplate(templateCode, flowName));
+        return BaseResponse.success(templateService.importTemplate(templateCode, flowName));
     }
 
     /**
@@ -252,6 +252,6 @@ public class FlowDesignerController {
      */
     @GetMapping("/template/{templateCode}")
     public BaseResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
-        return BaseResponse.ok(templateService.getTemplate(templateCode));
+        return BaseResponse.success(templateService.getTemplate(templateCode));
     }
 }

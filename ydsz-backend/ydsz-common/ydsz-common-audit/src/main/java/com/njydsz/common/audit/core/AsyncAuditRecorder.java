@@ -146,7 +146,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         this.properties = Objects.requireNonNull(properties, "AuditProperties must not be null");
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.asyncProps = properties.getAsync();
-        this.queue = new LinkedBlockingQueue<>(asyncProps.getQueueCapacity());
+        this.queue = new LinkedBlockingQueue<>(asyncProps.getExecutorQueueCapacity());
         this.scheduler = ExecutorUtils.newScheduledThreadPool(1, "audit-scheduler");
         this.shardingStrategy = shardingStrategy;
         this.baseTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
@@ -160,7 +160,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         );
 
         log.info("【异步审计记录器】启动成功, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 分表策略={}",
-                asyncProps.getQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
+                asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
     }
 
@@ -230,7 +230,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 
         if ("DISCARD_NEWEST".equalsIgnoreCase(strategy)) {
             log.error("【异步审计记录器】队列已满({}), 最新审计日志将被丢弃, id={}",
-                    asyncProps.getQueueCapacity(), auditLog.getId());
+                    asyncProps.getExecutorQueueCapacity(), auditLog.getId());
             return;
         }
 
@@ -263,7 +263,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
             lastWarnLogTime = now;
             double usageRatio = getQueueUsageRatio();
             log.error("【异步审计记录器】队列已满! 容量={}, 当前={}, 使用率={}%, 策略={}, 累计触发={}",
-                    asyncProps.getQueueCapacity(), queue.size(),
+                    asyncProps.getExecutorQueueCapacity(), queue.size(),
                     String.format("%.1f", usageRatio * 100), strategy, warnCount);
         }
     }
@@ -274,7 +274,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
      * @return 使用率，范围 [0.0, 1.0]
      */
     public double getQueueUsageRatio() {
-        int capacity = asyncProps.getQueueCapacity();
+        int capacity = asyncProps.getExecutorQueueCapacity();
         if (capacity <= 0) {
             return 0.0;
         }

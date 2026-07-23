@@ -61,7 +61,7 @@ public class JobLogController {
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "100") int size) {
-        return BaseResponse.ok(jobLogContentService.pageByLogId(logId, page, size));
+        return BaseResponse.success(jobLogContentService.pageByLogId(logId, page, size));
     }
 
     /**
@@ -93,7 +93,7 @@ public class JobLogController {
     @Operation(summary = "统计日志行数")
     @GetMapping("/content/count")
     public BaseResponse<Integer> countContent(@RequestParam String logId) {
-        return BaseResponse.ok(jobLogContentService.countByLogId(logId));
+        return BaseResponse.success(jobLogContentService.countByLogId(logId));
     }
 
     // ==================== 内部辅助方法 ====================

@@ -73,7 +73,7 @@ public class DevWarmupController {
         result.put("jit", warmupJit());
 
         log.info("[DevWarmup] 全量预热完成: {}", result);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -102,7 +102,7 @@ public class DevWarmupController {
             result.put("redis", "DOWN: " + e.getMessage());
         }
 
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /** 数据库预热 */

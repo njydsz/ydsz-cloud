@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -61,7 +60,7 @@ public class DeliveryController {
     @Idempotent(key = "delivery:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/standard")
     public BaseResponse<String> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
-        return BaseResponse.ok(service.createStandard(dto));
+        return BaseResponse.success(service.createStandard(dto));
     }
 
     /**
@@ -72,12 +71,11 @@ public class DeliveryController {
      */
     @Operation(summary = "删除交付物标准")
     @AuthApiPermission(apiCodes = "execution:delivery:delete")
-    @OperationLog(module = "交付物管理", action = "删除交付物标准", bizType = "DELIVERY_STANDARD")
     @Idempotent(key = "delivery:deleteStandard", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/standard/{id}")
     public BaseResponse<Void> deleteStandard(@PathVariable String id) {
         service.deleteStandard(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -90,7 +88,7 @@ public class DeliveryController {
     @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/standard/{id}")
     public BaseResponse<DeliveryStandardDO> getStandard(@PathVariable String id) {
-        return BaseResponse.ok(service.getStandardById(id));
+        return BaseResponse.success(service.getStandardById(id));
     }
 
     /**
@@ -108,7 +106,7 @@ public class DeliveryController {
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String projectLevel,
             @RequestParam(required = false) String stage) {
-        return BaseResponse.ok(service.listStandards(projectType, projectLevel, stage));
+        return BaseResponse.success(service.listStandards(projectType, projectLevel, stage));
     }
 
     /**
@@ -121,7 +119,7 @@ public class DeliveryController {
     @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/standard/count")
     public BaseResponse<Integer> countStandardsByType(@RequestParam String projectType) {
-        return BaseResponse.ok(service.countStandardsByType(projectType));
+        return BaseResponse.success(service.countStandardsByType(projectType));
     }
 
     // ========== 实例管理 ==========
@@ -137,7 +135,7 @@ public class DeliveryController {
     @Idempotent(key = "delivery:createItem", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/item")
     public BaseResponse<String> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
-        return BaseResponse.ok(service.createItem(dto));
+        return BaseResponse.success(service.createItem(dto));
     }
 
     /**
@@ -152,7 +150,7 @@ public class DeliveryController {
     @PutMapping("/item/status")
     public BaseResponse<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
         service.changeItemStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -169,7 +167,7 @@ public class DeliveryController {
     public BaseResponse<Void> markTrCompleted(@PathVariable String id,
                                    @RequestParam Integer completed) {
         service.markTrCompleted(id, completed);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -180,12 +178,11 @@ public class DeliveryController {
      */
     @Operation(summary = "删除交付物实例")
     @AuthApiPermission(apiCodes = "execution:delivery:delete")
-    @OperationLog(module = "交付物管理", action = "删除交付物实例", bizType = "DELIVERY_ITEM")
     @Idempotent(key = "delivery:deleteItem", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/item/{id}")
     public BaseResponse<Void> deleteItem(@PathVariable String id) {
         service.deleteItem(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -198,7 +195,7 @@ public class DeliveryController {
     @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/item/{id}")
     public BaseResponse<DeliveryItemDO> getItem(@PathVariable String id) {
-        return BaseResponse.ok(service.getItemById(id));
+        return BaseResponse.success(service.getItemById(id));
     }
 
     /**
@@ -211,7 +208,7 @@ public class DeliveryController {
     @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/item/listByInitiation/{initiationId}")
     public BaseResponse<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.listItemsByInitiation(initiationId));
+        return BaseResponse.success(service.listItemsByInitiation(initiationId));
     }
 
     /**
@@ -226,7 +223,7 @@ public class DeliveryController {
     @GetMapping("/item/listByStage")
     public BaseResponse<List<DeliveryItemDO>> listItemsByStage(@RequestParam String initiationId,
                                                     @RequestParam String stage) {
-        return BaseResponse.ok(service.listItemsByStage(initiationId, stage));
+        return BaseResponse.success(service.listItemsByStage(initiationId, stage));
     }
 
     /**
@@ -239,7 +236,7 @@ public class DeliveryController {
     @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/item/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateItemStatus(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.aggregateItemStatus(initiationId));
+        return BaseResponse.success(service.aggregateItemStatus(initiationId));
     }
 
     // ========== 阶段门控 ==========
@@ -259,6 +256,6 @@ public class DeliveryController {
             @RequestParam String initiationId,
             @RequestParam String targetStage,
             @RequestParam(required = false) String projectLevel) {
-        return BaseResponse.ok(service.checkStageGate(initiationId, targetStage, projectLevel));
+        return BaseResponse.success(service.checkStageGate(initiationId, targetStage, projectLevel));
     }
 }

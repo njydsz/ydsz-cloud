@@ -66,7 +66,7 @@ public class DataExportAuditController {
         if (StringUtils.hasText(exportModule)) w.eq(DataExportAuditDO::getExportModule, exportModule);
         if (StringUtils.hasText(exportAction)) w.like(DataExportAuditDO::getExportAction, exportAction);
         w.orderByDesc(DataExportAuditDO::getExportedAt);
-        return BaseResponse.ok(PageResponse.ofPage(mapper.selectPage(p, w)));
+        return BaseResponse.success(PageResponse.ofPage(mapper.selectPage(p, w)));
     }
 
     /**
@@ -82,6 +82,6 @@ public class DataExportAuditController {
     public BaseResponse<List<DataExportAuditDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return BaseResponse.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
+        return BaseResponse.success(mapper.selectByUser(userId, Math.min(limit, 200)));
     }
 }

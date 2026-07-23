@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -55,11 +54,10 @@ public class ResourceAssignmentController {
      */
     @Operation(summary = "分配动作（RESERVE/START/TRANSFER/RELEASE/CANCEL）")
     @AuthApiPermission(apiCodes = "resource:assign:act")
-    @OperationLog(module = "资源分配", action = "分配动作", bizType = "RESOURCE_ASSIGN")
     @Idempotent(key = "resourceAssignment:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")
     public BaseResponse<String> act(@Valid @RequestBody ResourceAssignmentCreateDTO dto) {
-        return BaseResponse.ok(assignmentService.act(dto));
+        return BaseResponse.success(assignmentService.act(dto));
     }
 
     /**
@@ -71,7 +69,7 @@ public class ResourceAssignmentController {
     @Operation(summary = "分配详情")
     @GetMapping("/{id}")
     public BaseResponse<ResourceAssignmentDO> get(@PathVariable String id) {
-        return BaseResponse.ok(assignmentService.getById(id));
+        return BaseResponse.success(assignmentService.getById(id));
     }
 
     /**
@@ -83,7 +81,7 @@ public class ResourceAssignmentController {
     @Operation(summary = "按员工查询")
     @GetMapping("/byEmployee/{employeeId}")
     public BaseResponse<List<ResourceAssignmentDO>> listByEmployee(@PathVariable String employeeId) {
-        return BaseResponse.ok(assignmentService.listByEmployee(employeeId));
+        return BaseResponse.success(assignmentService.listByEmployee(employeeId));
     }
 
     /**
@@ -95,7 +93,7 @@ public class ResourceAssignmentController {
     @Operation(summary = "按项目查询")
     @GetMapping("/byInitiation/{initiationId}")
     public BaseResponse<List<ResourceAssignmentDO>> listByInitiation(@PathVariable String initiationId) {
-        return BaseResponse.ok(assignmentService.listByInitiation(initiationId));
+        return BaseResponse.success(assignmentService.listByInitiation(initiationId));
     }
 
     /**
@@ -107,7 +105,7 @@ public class ResourceAssignmentController {
     @Operation(summary = "员工活跃项目数")
     @GetMapping("/activeCount/{employeeId}")
     public BaseResponse<Integer> activeCount(@PathVariable String employeeId) {
-        return BaseResponse.ok(assignmentService.activeCount(employeeId));
+        return BaseResponse.success(assignmentService.activeCount(employeeId));
     }
 
     /**
@@ -119,7 +117,7 @@ public class ResourceAssignmentController {
     @Operation(summary = "员工利用率")
     @GetMapping("/utilization/{employeeId}")
     public BaseResponse<Map<String, Object>> utilization(@PathVariable String employeeId) {
-        return BaseResponse.ok(assignmentService.utilization(employeeId));
+        return BaseResponse.success(assignmentService.utilization(employeeId));
     }
 
     /**
@@ -140,6 +138,6 @@ public class ResourceAssignmentController {
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(assignmentService.page(page, size, employeeId, initiationId, status));
+        return BaseResponse.success(assignmentService.page(page, size, employeeId, initiationId, status));
     }
 }

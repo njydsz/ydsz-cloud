@@ -46,12 +46,12 @@ public class BenchResourceClientFallback implements FallbackFactory<BenchResourc
                 data.put("source", "DOWN");
                 data.put("activePools", Collections.emptyList());
                 data.put("totalIdleCost", BigDecimal.ZERO);
-                return BaseResponse.ok(data);
+                return BaseResponse.success(data);
             }
 
             @Override
             public BaseResponse<List<Map<String, Object>>> listResourceAssignmentsByInitiation(String initiationId) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
         };
     }

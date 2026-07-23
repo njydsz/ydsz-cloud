@@ -57,7 +57,7 @@ public class SessionController {
     @GetMapping("/active")
     public BaseResponse<List<UserSessionDO>> active() {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(sessionService.listActive(userId));
+        return BaseResponse.success(sessionService.listActive(userId));
     }
 
     /**
@@ -71,7 +71,7 @@ public class SessionController {
     @DeleteMapping("/{sessionId}")
     public BaseResponse<Void> invalidate(@PathVariable String sessionId) {
         sessionService.invalidate(sessionId, "用户主动下线");
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -84,7 +84,7 @@ public class SessionController {
     @DeleteMapping("/others")
     public BaseResponse<Integer> kickOthers() {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(sessionService.kickOthers(userId, ""));
+        return BaseResponse.success(sessionService.kickOthers(userId, ""));
     }
 
     /**
@@ -111,7 +111,7 @@ public class SessionController {
         if (StringUtils.hasText(clientIp)) w.like(UserSessionDO::getClientIp, clientIp);
         w.orderByDesc(UserSessionDO::getLoginAt);
         Page<UserSessionDO> p = sessionMapper.selectPage(new Page<>(page, size), w);
-        return BaseResponse.ok(PageResponse.success(p.getTotal(), p.getCurrent(), p.getSize(), p.getRecords()));
+        return BaseResponse.success(PageResponse.success(p.getTotal(), p.getCurrent(), p.getSize(), p.getRecords()));
     }
 
     /**
@@ -125,6 +125,6 @@ public class SessionController {
     @DeleteMapping("/admin/{sessionId}")
     public BaseResponse<Void> adminKick(@PathVariable String sessionId) {
         sessionService.invalidate(sessionId, "管理员强制下线");
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

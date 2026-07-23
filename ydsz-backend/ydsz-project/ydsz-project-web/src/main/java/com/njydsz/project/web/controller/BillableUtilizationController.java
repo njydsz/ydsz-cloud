@@ -52,7 +52,7 @@ public class BillableUtilizationController {
     public BaseResponse<List<Map<String, Object>>> aggregate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(service.aggregate(from, to));
+        return BaseResponse.success(service.aggregate(from, to));
     }
 
     /**
@@ -70,7 +70,7 @@ public class BillableUtilizationController {
             @RequestParam String employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(service.personal(employeeId, from, to));
+        return BaseResponse.success(service.personal(employeeId, from, to));
     }
 
     /**
@@ -88,7 +88,7 @@ public class BillableUtilizationController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "20") int top) {
-        return BaseResponse.ok(service.rank(from, to, top));
+        return BaseResponse.success(service.rank(from, to, top));
     }
 
     /**
@@ -104,7 +104,7 @@ public class BillableUtilizationController {
     public BaseResponse<Map<String, Object>> overall(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(service.overall(from, to));
+        return BaseResponse.success(service.overall(from, to));
     }
 
     /**
@@ -120,7 +120,7 @@ public class BillableUtilizationController {
     public BaseResponse<List<Map<String, Object>>> alerts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(service.scanAlerts(from, to));
+        return BaseResponse.success(service.scanAlerts(from, to));
     }
 
     /**
@@ -136,7 +136,7 @@ public class BillableUtilizationController {
     public BaseResponse<Map<String, Object>> evaluate(
             @RequestParam double totalHours,
             @RequestParam double billableHours) {
-        return BaseResponse.ok(service.evaluate(totalHours, billableHours));
+        return BaseResponse.success(service.evaluate(totalHours, billableHours));
     }
 
     /**
@@ -153,7 +153,7 @@ public class BillableUtilizationController {
     public BaseResponse<Map<String, Object>> recompute(
             @RequestParam(required = false) String period,
             @RequestParam(defaultValue = "false") boolean recomputeAll) {
-        return BaseResponse.ok(service.recompute(period, recomputeAll));
+        return BaseResponse.success(service.recompute(period, recomputeAll));
     }
 
     /**
@@ -167,6 +167,6 @@ public class BillableUtilizationController {
     @GetMapping("/snapshotAverage")
     public BaseResponse<Map<String, Object>> snapshotAverage(
             @RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.snapshotAverage(period));
+        return BaseResponse.success(service.snapshotAverage(period));
     }
 }

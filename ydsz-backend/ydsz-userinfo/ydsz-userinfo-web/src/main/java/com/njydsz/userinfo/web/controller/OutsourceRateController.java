@@ -56,7 +56,7 @@ public class OutsourceRateController {
     @Idempotent(key = "outsourceRate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody OutsourceRateCreateDTO dto) {
-        return BaseResponse.ok(outsourceRateService.create(dto));
+        return BaseResponse.success(outsourceRateService.create(dto));
     }
 
     /**
@@ -71,7 +71,7 @@ public class OutsourceRateController {
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody OutsourceRateUpdateDTO dto) {
         outsourceRateService.update(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -85,7 +85,7 @@ public class OutsourceRateController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         outsourceRateService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -97,7 +97,7 @@ public class OutsourceRateController {
     @Operation(summary = "外包职级费率详情")
     @GetMapping("/{id}")
     public BaseResponse<OutsourceRateDO> get(@PathVariable String id) {
-        return BaseResponse.ok(outsourceRateService.getById(id));
+        return BaseResponse.success(outsourceRateService.getById(id));
     }
 
     /**
@@ -109,7 +109,7 @@ public class OutsourceRateController {
     @Operation(summary = "外包职级费率分页")
     @GetMapping
     public BaseResponse<Page<OutsourceRateDO>> page(@Valid OutsourceRatePageDTO query) {
-        return BaseResponse.ok(outsourceRateService.page(
+        return BaseResponse.success(outsourceRateService.page(
                 query.getPageNum(),
                 Math.min(query.getPageSize(), 200),
                 query.getKeyword(),
@@ -129,7 +129,7 @@ public class OutsourceRateController {
     public BaseResponse<OutsourceRateDO> matchEffective(@RequestParam String rateCode,
                                                    @RequestParam(required = false)
                                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(outsourceRateService.matchEffective(rateCode, date));
+        return BaseResponse.success(outsourceRateService.matchEffective(rateCode, date));
     }
 
     /**
@@ -142,6 +142,6 @@ public class OutsourceRateController {
     @GetMapping("/effective")
     public BaseResponse<List<OutsourceRateDO>> listEffective(@RequestParam(required = false)
                                                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(outsourceRateService.listEffective(date));
+        return BaseResponse.success(outsourceRateService.listEffective(date));
     }
 }

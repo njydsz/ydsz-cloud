@@ -42,7 +42,7 @@ public class TemplatePreviewController {
     @PostMapping("/by-code")
     public BaseResponse<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
-            return BaseResponse.fail("模板编码不能为空");
+            return BaseResponse.error("模板编码不能为空");
         }
         MsgTemplateDO template = templateService.loadByCodeAndChannel(
                 req.getTemplateCode(),
@@ -50,7 +50,7 @@ public class TemplatePreviewController {
                 StringUtils.hasText(req.getLocale()) ? req.getLocale() : "zh-CN",
                 TenantContext.getTenantId());
         if (template == null) {
-            return BaseResponse.fail("模板不存在: " + req.getTemplateCode());
+            return BaseResponse.error("模板不存在: " + req.getTemplateCode());
         }
 
         Map<String, Object> params = req.getParams() == null ? new HashMap<>() : new HashMap<>(req.getParams());
@@ -67,18 +67,18 @@ public class TemplatePreviewController {
         result.put("content", templateEngine.render(template.getContent(), params));
         result.put("subject", templateEngine.render(
                 template.getSubject() == null ? "" : template.getSubject(), params));
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @Operation(summary = "预览自定义模板内容")
     @PostMapping("/raw")
     public BaseResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplate())) {
-            return BaseResponse.fail("模板内容不能为空");
+            return BaseResponse.error("模板内容不能为空");
         }
         Map<String, Object> params = req.getParams() == null ? new HashMap<>() : req.getParams();
         String rendered = templateEngine.render(req.getTemplate(), params);
-        return BaseResponse.ok(rendered);
+        return BaseResponse.success(rendered);
     }
 
     @lombok.Data

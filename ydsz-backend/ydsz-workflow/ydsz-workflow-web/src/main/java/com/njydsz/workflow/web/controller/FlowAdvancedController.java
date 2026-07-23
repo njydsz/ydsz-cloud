@@ -49,14 +49,14 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-4: 获取周报数据")
     public BaseResponse<Map<String, Object>> weeklyReport() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(reportService.generateWeeklyReport(tenantId));
+        return BaseResponse.success(reportService.generateWeeklyReport(tenantId));
     }
 
     @GetMapping("/report/monthly")
     @Operation(summary = "P2-4: 获取月报数据")
     public BaseResponse<Map<String, Object>> monthlyReport() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(reportService.generateMonthlyReport(tenantId));
+        return BaseResponse.success(reportService.generateMonthlyReport(tenantId));
     }
 
     @Idempotent(key = "flowAdvanced:sendWeekly", ttlSeconds = 10, message = "请勿重复提交")
@@ -65,7 +65,7 @@ public class FlowAdvancedController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendWeekly() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(reportService.sendWeeklyReport(tenantId));
+        return BaseResponse.success(reportService.sendWeeklyReport(tenantId));
     }
 
     @Idempotent(key = "flowAdvanced:sendMonthly", ttlSeconds = 10, message = "请勿重复提交")
@@ -74,7 +74,7 @@ public class FlowAdvancedController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendMonthly() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(reportService.sendMonthlyReport(tenantId));
+        return BaseResponse.success(reportService.sendMonthlyReport(tenantId));
     }
 
     // ==================== P2-5: 多实例合并审批 ====================
@@ -86,13 +86,13 @@ public class FlowAdvancedController {
     public BaseResponse<String> merge(@RequestParam List<String> instanceIds) {
         String userId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(mergeService.mergeInstances(instanceIds, userId, tenantId));
+        return BaseResponse.success(mergeService.mergeInstances(instanceIds, userId, tenantId));
     }
 
     @GetMapping("/merge/{mergeGroupId}")
     @Operation(summary = "P2-5: 查询合并组详情")
     public BaseResponse<Map<String, Object>> getMergeGroup(@PathVariable String mergeGroupId) {
-        return BaseResponse.ok(mergeService.getMergeGroup(mergeGroupId));
+        return BaseResponse.success(mergeService.getMergeGroup(mergeGroupId));
     }
 
     @Idempotent(key = "flowAdvanced:mergePass", ttlSeconds = 5, message = "请勿重复提交")
@@ -102,7 +102,7 @@ public class FlowAdvancedController {
     public BaseResponse<Integer> mergePass(@PathVariable String mergeGroupId,
                                        @RequestParam(required = false) String comment) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(mergeService.batchPassMerged(mergeGroupId, userId, comment));
+        return BaseResponse.success(mergeService.batchPassMerged(mergeGroupId, userId, comment));
     }
 
     @Idempotent(key = "flowAdvanced:mergeReject", ttlSeconds = 5, message = "请勿重复提交")
@@ -112,7 +112,7 @@ public class FlowAdvancedController {
     public BaseResponse<Integer> mergeReject(@PathVariable String mergeGroupId,
                                           @RequestParam(required = false) String comment) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(mergeService.batchRejectMerged(mergeGroupId, userId, comment));
+        return BaseResponse.success(mergeService.batchRejectMerged(mergeGroupId, userId, comment));
     }
 
     @GetMapping("/mergeable")
@@ -120,7 +120,7 @@ public class FlowAdvancedController {
     public BaseResponse<List<Map<String, Object>>> mergeable() {
         String userId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(mergeService.listMergeable(userId, tenantId));
+        return BaseResponse.success(mergeService.listMergeable(userId, tenantId));
     }
 
     // ==================== P2-6: 会签动态完成条件 ====================
@@ -133,7 +133,7 @@ public class FlowAdvancedController {
                                              @RequestParam BigDecimal votePassRate) {
         String userId = AuthContext.getUserId();
         countersignDynamicService.updateCompletionCondition(taskId, votePassRate, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Idempotent(key = "flowAdvanced:updateApproveCount", ttlSeconds = 5, message = "请勿重复提交")
@@ -144,7 +144,7 @@ public class FlowAdvancedController {
                                              @RequestParam Integer approveCount) {
         String userId = AuthContext.getUserId();
         countersignDynamicService.updateApproveCount(taskId, approveCount, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     // ==================== P2-7: 跨节点办理人去重 ====================
@@ -153,13 +153,13 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-7: 检查用户是否已审批过")
     public BaseResponse<Boolean> hasApproved(@PathVariable String instanceId,
                                          @PathVariable String userId) {
-        return BaseResponse.ok(dedupService.hasAlreadyApproved(instanceId, userId));
+        return BaseResponse.success(dedupService.hasAlreadyApproved(instanceId, userId));
     }
 
     @GetMapping("/dedup/{instanceId}/approvedUsers")
     @Operation(summary = "P2-7: 获取实例已审批人列表")
     public BaseResponse<List<String>> approvedUsers(@PathVariable String instanceId) {
-        return BaseResponse.ok(dedupService.getApprovedUserIds(instanceId).stream().toList());
+        return BaseResponse.success(dedupService.getApprovedUserIds(instanceId).stream().toList());
     }
 
     // ==================== P2-8: 催办限流可视化 ====================
@@ -182,7 +182,7 @@ public class FlowAdvancedController {
             remaining = 0;
         }
         boolean canUrge = remaining <= 0;
-        return BaseResponse.ok(Map.of(
+        return BaseResponse.success(Map.of(
                 "canUrge", canUrge,
                 "remainingSeconds", remaining,
                 "cooldownSeconds", cooldownSeconds,

@@ -41,7 +41,7 @@ public class DictController {
     @RateLimit(key = "dict", qps = 50, windowSeconds = 60)
     @GetMapping("/types")
     public BaseResponse<List<DictTypeDO>> listTypes() {
-        return BaseResponse.ok(dictService.listAllTypes());
+        return BaseResponse.success(dictService.listAllTypes());
     }
 
     /**
@@ -54,7 +54,7 @@ public class DictController {
     @RateLimit(key = "dict", qps = 50, windowSeconds = 60)
     @GetMapping("/items")
     public BaseResponse<List<DictItemDO>> listItems(@RequestParam String typeCode) {
-        return BaseResponse.ok(dictService.listItems(typeCode));
+        return BaseResponse.success(dictService.listItems(typeCode));
     }
 
     /**
@@ -68,6 +68,6 @@ public class DictController {
     @PostMapping("/refresh")
     public BaseResponse<Void> refresh(@RequestParam String typeCode) {
         dictService.refreshCache(typeCode);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

@@ -51,7 +51,7 @@ public class ReconcileController {
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(reconcileService.reconcileAll(initiationId, from, to));
+        return BaseResponse.success(reconcileService.reconcileAll(initiationId, from, to));
     }
 
     /**
@@ -64,7 +64,7 @@ public class ReconcileController {
     @AuthApiPermission(apiCodes = "execution:reconcile:view")
     @GetMapping("/missingCost")
     public BaseResponse<List<ReconcileResult>> missingCost(@RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(reconcileService.checkMissingCost(initiationId));
+        return BaseResponse.success(reconcileService.checkMissingCost(initiationId));
     }
 
     /**
@@ -82,6 +82,6 @@ public class ReconcileController {
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(reconcileService.checkTimeEntryAnomaly(initiationId, from, to));
+        return BaseResponse.success(reconcileService.checkTimeEntryAnomaly(initiationId, from, to));
     }
 }

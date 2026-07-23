@@ -236,7 +236,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.BAD_REQUEST);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        BaseResponse<Void> body = BaseResponse.failed("400", "error.BAD_REQUEST");
+        BaseResponse<Void> body = BaseResponse.error("400", "error.BAD_REQUEST");
         byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
@@ -256,7 +256,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         // traceId 已在 filter 开头统一写入响应头，此处无需重复设置
 
-        BaseResponse<Void> body = BaseResponse.failed("20001", msg);
+        BaseResponse<Void> body = BaseResponse.error("20001", msg);
         body.setTraceId(traceId);
         byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
 

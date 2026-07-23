@@ -166,7 +166,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         // 创建 Disruptor
         this.disruptor = new Disruptor<>(
                 AuditLogEvent.FACTORY,
-                asyncProps.getQueueCapacity(),
+                asyncProps.getExecutorQueueCapacity(),
                 threadFactory,
                 ProducerType.MULTI,
                 waitStrategy
@@ -180,7 +180,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         this.ringBuffer = disruptor.getRingBuffer();
 
         log.info("【Disruptor审计记录器】启动成功, RingBuffer容量={}, 批量阈值={}, 分表策略={}, WaitStrategy={}",
-                asyncProps.getQueueCapacity(), asyncProps.getBatchSize(),
+                asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(),
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", waitStrategyName);
     }
 

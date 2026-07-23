@@ -37,7 +37,7 @@ public class ChangelogController {
     @Operation(summary = "查询系统变更日志")
     @GetMapping
     public BaseResponse<List<ChangelogEntry>> getChangelog() {
-        return BaseResponse.ok(CHANGELOG_ENTRIES);
+        return BaseResponse.success(CHANGELOG_ENTRIES);
     }
 
     /** 变更日志条目 */

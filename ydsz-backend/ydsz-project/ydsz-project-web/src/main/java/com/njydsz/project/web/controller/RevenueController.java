@@ -59,7 +59,7 @@ public class RevenueController {
     @Idempotent(key = "revenue:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RevenueCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -75,7 +75,7 @@ public class RevenueController {
     @PutMapping("/{id}/confirm")
     public BaseResponse<Void> confirm(@PathVariable String id, @RequestParam String confirmedBy) {
         service.confirm(id, confirmedBy);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -90,7 +90,7 @@ public class RevenueController {
     @PutMapping("/{id}/reverse")
     public BaseResponse<Void> reverse(@PathVariable String id) {
         service.reverse(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -105,7 +105,7 @@ public class RevenueController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -118,7 +118,7 @@ public class RevenueController {
     @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/{id}")
     public BaseResponse<RevenueDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -144,7 +144,7 @@ public class RevenueController {
             @RequestParam(required = false) String contractId,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
+        return BaseResponse.success(service.page(page, size, keyword, status, contractId, initiationId, period));
     }
 
     /**
@@ -157,7 +157,7 @@ public class RevenueController {
     @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/aggregate/byContract")
     public BaseResponse<List<Map<String, Object>>> sumByContract(@RequestParam String contractId) {
-        return BaseResponse.ok(service.sumByContract(contractId));
+        return BaseResponse.success(service.sumByContract(contractId));
     }
 
     /**
@@ -170,6 +170,6 @@ public class RevenueController {
     @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/aggregate/byPeriod")
     public BaseResponse<List<Map<String, Object>>> sumByPeriod(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.sumByPeriod(initiationId));
+        return BaseResponse.success(service.sumByPeriod(initiationId));
     }
 }

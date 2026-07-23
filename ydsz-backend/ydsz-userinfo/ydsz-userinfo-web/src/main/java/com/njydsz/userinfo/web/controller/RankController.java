@@ -40,7 +40,7 @@ public class RankController {
     @Operation(summary = "所有职级 (L1-L18)")
     @GetMapping
     public BaseResponse<List<RankDO>> list() {
-        return BaseResponse.ok(rankService.listAllLevels());
+        return BaseResponse.success(rankService.listAllLevels());
     }
 
     /**
@@ -55,7 +55,7 @@ public class RankController {
     public BaseResponse<RankRateDO> getRate(@RequestParam String levelCode,
                                  @RequestParam(required = false)
                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(rankService.getEffectiveRate(levelCode, date));
+        return BaseResponse.success(rankService.getEffectiveRate(levelCode, date));
     }
 
     /**
@@ -67,6 +67,6 @@ public class RankController {
     @Operation(summary = "查询某职级所有版本")
     @GetMapping("/rate/versions")
     public BaseResponse<List<RankRateDO>> listVersions(@RequestParam String levelCode) {
-        return BaseResponse.ok(rankService.listAllVersions(levelCode));
+        return BaseResponse.success(rankService.listAllVersions(levelCode));
     }
 }

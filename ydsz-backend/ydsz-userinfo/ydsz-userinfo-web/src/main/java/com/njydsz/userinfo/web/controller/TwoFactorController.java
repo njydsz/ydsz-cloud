@@ -47,7 +47,7 @@ public class TwoFactorController {
     public BaseResponse<TwoFactorBindResult> bind() {
         String userId = AuthContext.getUserId();
         String account = AuthContext.getUsername();
-        return BaseResponse.ok(service.bindTotp(userId, account));
+        return BaseResponse.success(service.bindTotp(userId, account));
     }
 
     /**
@@ -61,7 +61,7 @@ public class TwoFactorController {
     @PostMapping("/confirm")
     public BaseResponse<Boolean> confirm(@RequestParam String otp) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.confirmBind(userId, otp));
+        return BaseResponse.success(service.confirmBind(userId, otp));
     }
 
     /**
@@ -75,7 +75,7 @@ public class TwoFactorController {
     @PostMapping("/verify")
     public BaseResponse<Boolean> verify(@RequestParam String otp) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.verify(userId, otp));
+        return BaseResponse.success(service.verify(userId, otp));
     }
 
     /**
@@ -89,7 +89,7 @@ public class TwoFactorController {
     @PostMapping("/verifyBackup")
     public BaseResponse<Boolean> verifyBackup(@RequestParam String code) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.verifyBackup(userId, code));
+        return BaseResponse.success(service.verifyBackup(userId, code));
     }
 
     /**
@@ -103,7 +103,7 @@ public class TwoFactorController {
     public BaseResponse<Void> disable() {
         String userId = AuthContext.getUserId();
         service.disable(userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -115,7 +115,7 @@ public class TwoFactorController {
     @GetMapping("/me")
     public BaseResponse<User2FADO> me() {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.find(userId));
+        return BaseResponse.success(service.find(userId));
     }
 
     /**
@@ -127,6 +127,6 @@ public class TwoFactorController {
     @GetMapping("/backupCodes")
     public BaseResponse<List<String>> backupCodes() {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.listBackupCodesMasked(userId));
+        return BaseResponse.success(service.listBackupCodesMasked(userId));
     }
 }

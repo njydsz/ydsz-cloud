@@ -54,7 +54,7 @@ public class ProfitController {
     @Idempotent(key = "profit:snapshot", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/snapshot")
     public BaseResponse<String> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
-        return BaseResponse.ok(service.generateSnapshot(dto));
+        return BaseResponse.success(service.generateSnapshot(dto));
     }
 
     /**
@@ -68,7 +68,7 @@ public class ProfitController {
     @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/snapshot")
     public BaseResponse<ProfitSnapshotDO> get(@RequestParam String initiationId, @RequestParam String period) {
-        return BaseResponse.ok(service.getByInitiationAndPeriod(initiationId, period));
+        return BaseResponse.success(service.getByInitiationAndPeriod(initiationId, period));
     }
 
     /**
@@ -81,7 +81,7 @@ public class ProfitController {
     @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/snapshots/{initiationId}")
     public BaseResponse<List<ProfitSnapshotDO>> list(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.listByInitiation(initiationId));
+        return BaseResponse.success(service.listByInitiation(initiationId));
     }
 
     /**
@@ -94,7 +94,7 @@ public class ProfitController {
     @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/trend/{initiationId}")
     public BaseResponse<List<Map<String, Object>>> trend(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.trendByPeriod(initiationId));
+        return BaseResponse.success(service.trendByPeriod(initiationId));
     }
 
     /**
@@ -108,6 +108,6 @@ public class ProfitController {
     @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/healthScore")
     public BaseResponse<Integer> healthScore(@RequestParam String initiationId, @RequestParam String period) {
-        return BaseResponse.ok(service.healthScore(initiationId, period));
+        return BaseResponse.success(service.healthScore(initiationId, period));
     }
 }

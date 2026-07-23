@@ -60,7 +60,7 @@ public class ProfitSimulationController {
     @Idempotent(key = "profitSimulation:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -75,7 +75,7 @@ public class ProfitSimulationController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -90,7 +90,7 @@ public class ProfitSimulationController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -103,7 +103,7 @@ public class ProfitSimulationController {
     @AuthApiPermission(apiCodes = "execution:simulation:list")
     @GetMapping("/{id}")
     public BaseResponse<ProfitSimulationDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -116,7 +116,7 @@ public class ProfitSimulationController {
     @AuthApiPermission(apiCodes = "execution:simulation:list")
     @GetMapping("/byInitiation")
     public BaseResponse<List<ProfitSimulationDO>> listByInitiation(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.listByInitiation(initiationId));
+        return BaseResponse.success(service.listByInitiation(initiationId));
     }
 
     /**
@@ -129,7 +129,7 @@ public class ProfitSimulationController {
     @AuthApiPermission(apiCodes = "execution:simulation:list")
     @GetMapping("/compare")
     public BaseResponse<List<Map<String, Object>>> compare(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.compare(initiationId));
+        return BaseResponse.success(service.compare(initiationId));
     }
 
     /**
@@ -151,6 +151,6 @@ public class ProfitSimulationController {
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String scenarioType,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.page(page, size, initiationId, scenarioType, status));
+        return BaseResponse.success(service.page(page, size, initiationId, scenarioType, status));
     }
 }

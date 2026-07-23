@@ -67,7 +67,7 @@ public class FlowCommentController {
         String userId = AuthContext.getUserId();
         String userName = AuthContext.getUsername();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(commentService.addComment(dto, userId, userName, tenantId));
+        return BaseResponse.success(commentService.addComment(dto, userId, userName, tenantId));
     }
 
     /**
@@ -80,7 +80,7 @@ public class FlowCommentController {
     @Operation(summary = "查询实例全部评论（树结构）")
     public BaseResponse<List<FlowCommentDO>> listByInstance(@PathVariable String instanceId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(commentService.listByInstance(tenantId, instanceId));
+        return BaseResponse.success(commentService.listByInstance(tenantId, instanceId));
     }
 
     /**
@@ -93,7 +93,7 @@ public class FlowCommentController {
     @Operation(summary = "查询实例一级评论")
     public BaseResponse<List<FlowCommentDO>> listRootComments(@PathVariable String instanceId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(commentService.listRootComments(tenantId, instanceId));
+        return BaseResponse.success(commentService.listRootComments(tenantId, instanceId));
     }
 
     /**
@@ -105,7 +105,7 @@ public class FlowCommentController {
     @GetMapping("/replies/{parentCommentId}")
     @Operation(summary = "查询父评论下的回复")
     public BaseResponse<List<FlowCommentDO>> listReplies(@PathVariable String parentCommentId) {
-        return BaseResponse.ok(commentService.listReplies(parentCommentId));
+        return BaseResponse.success(commentService.listReplies(parentCommentId));
     }
 
     /**
@@ -120,6 +120,6 @@ public class FlowCommentController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Boolean> deleteComment(@PathVariable String commentId) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(commentService.deleteComment(commentId, userId));
+        return BaseResponse.success(commentService.deleteComment(commentId, userId));
     }
 }

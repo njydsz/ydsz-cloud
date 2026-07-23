@@ -2,9 +2,7 @@ package com.njydsz.common.auth.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.HexFormat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,15 +51,6 @@ public class TokenBlacklistService {
     private String buildBlacklistKey(String token) {
         return BLACKLIST_KEY_PREFIX + AuthDigestUtils.sha256Hex(token);
     }
-
-    /**
-     * @deprecated 使用 {@link AuthDigestUtils#sha256Hex(String)}
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    private static String sha256(String input) {
-        return AuthDigestUtils.sha256Hex(input);
-    }
-
     /**
      * 将 Token 加入黑名单（登出）
      *

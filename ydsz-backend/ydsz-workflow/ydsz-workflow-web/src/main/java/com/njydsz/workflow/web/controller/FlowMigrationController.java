@@ -51,7 +51,7 @@ public class FlowMigrationController {
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/instance/migrate")
     public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
-        return BaseResponse.ok(instanceMigrationService.migrate(dto));
+        return BaseResponse.success(instanceMigrationService.migrate(dto));
     }
 
     /**
@@ -63,7 +63,7 @@ public class FlowMigrationController {
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/instance/migrate/preview")
     public BaseResponse<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
-        return BaseResponse.ok(instanceMigrationService.previewMigration(dto));
+        return BaseResponse.success(instanceMigrationService.previewMigration(dto));
     }
 
     /**
@@ -80,6 +80,6 @@ public class FlowMigrationController {
     public BaseResponse<Map<String, String>> autoMapNodes(
             @RequestParam Long sourceDefinitionId,
             @RequestParam Long targetDefinitionId) {
-        return BaseResponse.ok(instanceMigrationService.autoMapNodes(sourceDefinitionId, targetDefinitionId));
+        return BaseResponse.success(instanceMigrationService.autoMapNodes(sourceDefinitionId, targetDefinitionId));
     }
 }

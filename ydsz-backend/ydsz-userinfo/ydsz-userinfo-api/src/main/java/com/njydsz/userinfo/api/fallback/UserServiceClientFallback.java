@@ -30,28 +30,28 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
         return new UserServiceClient() {
             @Override
             public BaseResponse<Map<String, Object>> getEmployee(String id) {
-                return BaseResponse.failed(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public BaseResponse<String> getCustomerName(String customerId) {
-                return BaseResponse.ok("");
+                return BaseResponse.success("");
             }
 
             @Override
             public BaseResponse<Map<String, String>> batchEmployeeName(List<String> ids) {
-                return BaseResponse.ok(Map.of());
+                return BaseResponse.success(Map.of());
             }
 
             @Override
             public BaseResponse<Map<String, String>> batchCustomerName(List<String> customerIds) {
                 log.warn("[UserServiceClientFallback] batchCustomerName 降级: ids={}", customerIds);
-                return BaseResponse.ok(Map.of());
+                return BaseResponse.success(Map.of());
             }
 
             @Override
             public BaseResponse<BigDecimal> getLevelRate(String levelCode) {
-                return BaseResponse.ok(BigDecimal.ZERO);
+                return BaseResponse.success(BigDecimal.ZERO);
             }
         };
     }

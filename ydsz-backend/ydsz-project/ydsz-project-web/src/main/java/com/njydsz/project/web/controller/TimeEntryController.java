@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -63,7 +62,7 @@ public class TimeEntryController {
     @Idempotent(key = "timeEntry:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -78,7 +77,7 @@ public class TimeEntryController {
     @PutMapping("/{id}/submit")
     public BaseResponse<Void> submit(@PathVariable String id) {
         service.submit(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -93,7 +92,7 @@ public class TimeEntryController {
     @PutMapping("/approve")
     public BaseResponse<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
         service.approve(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -105,11 +104,10 @@ public class TimeEntryController {
     @Operation(summary = "删除工时")
     @AuthApiPermission(apiCodes = "execution:time:delete")
     @Idempotent(key = "timeEntry:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @OperationLog(module = "工时管理", action = "删除工时", bizType = "TIME_ENTRY")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -122,7 +120,7 @@ public class TimeEntryController {
     @AuthApiPermission(apiCodes = "execution:time:list")
     @GetMapping("/{id}")
     public BaseResponse<TimeEntryDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -152,7 +150,7 @@ public class TimeEntryController {
             @RequestParam(required = false) String taskId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));
+        return BaseResponse.success(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));
     }
 
     /**
@@ -170,7 +168,7 @@ public class TimeEntryController {
             @RequestParam String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return BaseResponse.ok(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));
+        return BaseResponse.success(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));
     }
 
     /**
@@ -186,7 +184,7 @@ public class TimeEntryController {
     public BaseResponse<List<Map<String, Object>>> detectCrossProject(
             @RequestParam String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate) {
-        return BaseResponse.ok(service.detectCrossProject(employeeId, entryDate));
+        return BaseResponse.success(service.detectCrossProject(employeeId, entryDate));
     }
 
     /**
@@ -204,6 +202,6 @@ public class TimeEntryController {
     public BaseResponse<Map<String, Object>> abnormalStat(
             @RequestParam String initiationId,
             @RequestParam(required = false) String month) {
-        return BaseResponse.ok(service.abnormalStat(initiationId, month));
+        return BaseResponse.success(service.abnormalStat(initiationId, month));
     }
 }

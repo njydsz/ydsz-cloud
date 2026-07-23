@@ -58,12 +58,12 @@ public class PasswordStatusController {
     public BaseResponse<Map<String, Object>> getPasswordStatus() {
         String userId = AuthContext.getUserId();
         if (userId == null || userId.isEmpty()) {
-            return BaseResponse.ok(Map.of("status", "UNKNOWN"));
+            return BaseResponse.success(Map.of("status", "UNKNOWN"));
         }
 
         UserAccountDO account = userAccountMapper.selectById(userId);
         if (account == null) {
-            return BaseResponse.ok(Map.of("status", "UNKNOWN"));
+            return BaseResponse.success(Map.of("status", "UNKNOWN"));
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -109,6 +109,6 @@ public class PasswordStatusController {
         result.put("pwdChangeCount", account.getPwdChangeCount());
         result.put("expireDays", PASSWORD_EXPIRE_DAYS);
 
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 }

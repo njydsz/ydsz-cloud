@@ -43,7 +43,7 @@ public class FlowCustomButtonController {
     public BaseResponse<List<Map<String, Object>>> list(
             @RequestParam String definitionId,
             @RequestParam String nodeCode) {
-        return BaseResponse.ok(customButtonService.getCustomButtons(definitionId, nodeCode));
+        return BaseResponse.success(customButtonService.getCustomButtons(definitionId, nodeCode));
     }
 
     /**
@@ -62,7 +62,7 @@ public class FlowCustomButtonController {
             @RequestParam String nodeCode,
             @RequestBody List<Map<String, Object>> buttons) {
         customButtonService.saveCustomButtons(definitionId, nodeCode, buttons);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -83,6 +83,6 @@ public class FlowCustomButtonController {
             @RequestParam(required = false) String comment,
             @RequestBody(required = false) Map<String, Object> variables) {
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(customButtonService.executeButton(taskId, buttonCode, userId, comment, variables));
+        return BaseResponse.success(customButtonService.executeButton(taskId, buttonCode, userId, comment, variables));
     }
 }

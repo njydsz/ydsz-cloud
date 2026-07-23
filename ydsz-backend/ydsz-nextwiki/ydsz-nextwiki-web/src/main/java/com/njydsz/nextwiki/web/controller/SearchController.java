@@ -48,7 +48,7 @@ public class SearchController {
 
         SearchResultVO result = searchApplicationService.search(
                 request.getKeyword(), userId, scope, page, pageSize);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PostMapping("/rebuild")
@@ -56,6 +56,6 @@ public class SearchController {
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH_REBUILD)
     public BaseResponse<Void> rebuildIndices(@RequestHeader("X-User-Id") String userId) {
         searchApplicationService.rebuildAllIndices();
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

@@ -78,27 +78,27 @@ public class OrgQueryFeignController {
     @GetMapping("/usersByRole")
     public BaseResponse<List<String>> listUserIdsByRoleCode(@RequestParam("roleCode") String roleCode) {
         if (roleCode == null || roleCode.isBlank()) {
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
         try {
             RoleDO role = roleMapper.selectByCode(roleCode.trim());
             if (role == null || role.getId() == null) {
                 log.debug("[OrgQuery] 角色编码未命中: roleCode={}", roleCode);
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
             List<String> userIds = userRoleMapper.selectUserIdsByRoleId(role.getId());
             if (userIds == null) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
             // 去重 + 过滤 null
             List<String> cleaned = userIds.stream()
                     .filter(Objects::nonNull)
                     .distinct()
                     .collect(Collectors.toList());
-            return BaseResponse.ok(cleaned);
+            return BaseResponse.success(cleaned);
         } catch (Exception e) {
             log.warn("[OrgQuery] 按角色查询用户失败: roleCode={} err={}", roleCode, e.getMessage());
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
     }
 
@@ -112,18 +112,18 @@ public class OrgQueryFeignController {
     @GetMapping("/deptLeader")
     public BaseResponse<String> getDeptLeaderByDeptId(@RequestParam("deptId") String deptId) {
         if (deptId == null) {
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
         try {
             DepartmentDO dept = departmentMapper.selectById(deptId);
             if (dept == null) {
                 log.debug("[OrgQuery] 部门 ID 未命中: deptId={}", deptId);
-                return BaseResponse.ok(null);
+                return BaseResponse.success(null);
             }
-            return BaseResponse.ok(dept.getLeaderId());
+            return BaseResponse.success(dept.getLeaderId());
         } catch (Exception e) {
             log.warn("[OrgQuery] 按部门 ID 查负责人失败: deptId={} err={}", deptId, e.getMessage());
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
     }
 
@@ -137,18 +137,18 @@ public class OrgQueryFeignController {
     @GetMapping("/deptLeaderByCode")
     public BaseResponse<String> getDeptLeaderByDeptCode(@RequestParam("deptCode") String deptCode) {
         if (deptCode == null || deptCode.isBlank()) {
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
         try {
             DepartmentDO dept = departmentMapper.selectByCode(deptCode.trim());
             if (dept == null) {
                 log.debug("[OrgQuery] 部门编码未命中: deptCode={}", deptCode);
-                return BaseResponse.ok(null);
+                return BaseResponse.success(null);
             }
-            return BaseResponse.ok(dept.getLeaderId());
+            return BaseResponse.success(dept.getLeaderId());
         } catch (Exception e) {
             log.warn("[OrgQuery] 按部门编码查负责人失败: deptCode={} err={}", deptCode, e.getMessage());
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
     }
 
@@ -164,12 +164,12 @@ public class OrgQueryFeignController {
     @GetMapping("/userRoleCodes")
     public BaseResponse<List<String>> listRoleCodesByUserId(@RequestParam("userId") String userId) {
         if (userId == null) {
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
         try {
             List<RoleDO> roles = roleService.listByUserId(userId);
             if (roles == null || roles.isEmpty()) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
             List<String> codes = roles.stream()
                     .map(RoleDO::getRoleCode)
@@ -177,10 +177,10 @@ public class OrgQueryFeignController {
                     .filter(c -> !c.isBlank())
                     .distinct()
                     .collect(Collectors.toList());
-            return BaseResponse.ok(codes);
+            return BaseResponse.success(codes);
         } catch (Exception e) {
             log.warn("[OrgQuery] 查询用户角色失败: userId={} err={}", userId, e.getMessage());
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
     }
 
@@ -196,17 +196,17 @@ public class OrgQueryFeignController {
     @GetMapping("/userDeptIds")
     public BaseResponse<List<String>> listDeptIdsByUserId(@RequestParam("userId") String userId) {
         if (userId == null) {
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
         try {
             String deptId = userAccountMapper.selectDeptIdByUserId(userId);
             if (deptId == null) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
-            return BaseResponse.ok(List.of(deptId));
+            return BaseResponse.success(List.of(deptId));
         } catch (Exception e) {
             log.warn("[OrgQuery] 查询用户部门 ID 失败: userId={} err={}", userId, e.getMessage());
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
     }
 
@@ -220,21 +220,21 @@ public class OrgQueryFeignController {
     @GetMapping("/usersByDept")
     public BaseResponse<List<String>> listUserIdsByDeptId(@RequestParam("deptId") String deptId) {
         if (deptId == null) {
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
         try {
             List<String> userIds = userAccountMapper.selectUserIdsByDeptId(deptId);
             if (userIds == null) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
             List<String> cleaned = userIds.stream()
                     .filter(Objects::nonNull)
                     .distinct()
                     .collect(Collectors.toList());
-            return BaseResponse.ok(cleaned);
+            return BaseResponse.success(cleaned);
         } catch (Exception e) {
             log.warn("[OrgQuery] 按部门查询用户失败: deptId={} err={}", deptId, e.getMessage());
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
     }
 
@@ -248,21 +248,21 @@ public class OrgQueryFeignController {
     @GetMapping("/usersByPosition")
     public BaseResponse<List<String>> listUserIdsByPositionCode(@RequestParam("positionCode") String positionCode) {
         if (positionCode == null || positionCode.isBlank()) {
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
         try {
             List<String> userIds = userAccountMapper.selectUserIdsByPositionCode(positionCode.trim());
             if (userIds == null) {
-                return BaseResponse.ok(Collections.emptyList());
+                return BaseResponse.success(Collections.emptyList());
             }
             List<String> cleaned = userIds.stream()
                     .filter(Objects::nonNull)
                     .distinct()
                     .collect(Collectors.toList());
-            return BaseResponse.ok(cleaned);
+            return BaseResponse.success(cleaned);
         } catch (Exception e) {
             log.warn("[OrgQuery] 按岗位查询用户失败: positionCode={} err={}", positionCode, e.getMessage());
-            return BaseResponse.ok(Collections.emptyList());
+            return BaseResponse.success(Collections.emptyList());
         }
     }
 
@@ -276,14 +276,14 @@ public class OrgQueryFeignController {
     @GetMapping("/leaderByUser")
     public BaseResponse<String> getLeaderByUserId(@RequestParam("userId") String userId) {
         if (userId == null) {
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
         try {
             String leaderId = userAccountMapper.selectLeaderIdByUserId(userId);
-            return BaseResponse.ok(leaderId);
+            return BaseResponse.success(leaderId);
         } catch (Exception e) {
             log.warn("[OrgQuery] 查询直属上级失败: userId={} err={}", userId, e.getMessage());
-            return BaseResponse.ok(null);
+            return BaseResponse.success(null);
         }
     }
 }

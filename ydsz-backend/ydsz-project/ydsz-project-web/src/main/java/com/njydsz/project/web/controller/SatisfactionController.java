@@ -48,7 +48,7 @@ public class SatisfactionController {
     @Idempotent(key = "satisfaction:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
-        return BaseResponse.ok(service.submit(dto));
+        return BaseResponse.success(service.submit(dto));
     }
 
     @Operation(summary = "标记跟进")
@@ -57,7 +57,7 @@ public class SatisfactionController {
     @PostMapping("/followUp")
     public BaseResponse<Void> markFollowUp(@RequestParam String id, @RequestParam(required = false) String note) {
         service.markFollowUp(id, note);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "关闭跟进")
@@ -66,21 +66,21 @@ public class SatisfactionController {
     @PostMapping("/followUp/close")
     public BaseResponse<Void> closeFollowUp(@RequestParam String id) {
         service.closeFollowUp(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "整体满意度均值")
     @AuthApiPermission(apiCodes = "aftersales:satisfaction:list")
     @GetMapping("/overall")
     public BaseResponse<Map<String, Object>> overall() {
-        return BaseResponse.ok(service.overall());
+        return BaseResponse.success(service.overall());
     }
 
     @Operation(summary = "等级分布")
     @AuthApiPermission(apiCodes = "aftersales:satisfaction:list")
     @GetMapping("/levelDistribution")
     public BaseResponse<List<Map<String, Object>>> levelDistribution() {
-        return BaseResponse.ok(service.levelDistribution());
+        return BaseResponse.success(service.levelDistribution());
     }
 
     @Operation(summary = "分页")
@@ -92,6 +92,6 @@ public class SatisfactionController {
             @RequestParam(required = false) String level,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String keyword) {
-        return BaseResponse.ok(PageResponse.ofPage(service.page(page, size, level, initiationId, keyword)));
+        return BaseResponse.success(PageResponse.ofPage(service.page(page, size, level, initiationId, keyword)));
     }
 }

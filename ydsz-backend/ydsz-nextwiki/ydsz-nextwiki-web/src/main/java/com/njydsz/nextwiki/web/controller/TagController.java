@@ -44,14 +44,14 @@ public class TagController {
             @RequestBody NextwikiDTOs.CreateTagRequest request,
             @RequestHeader("X-User-Id") String userId) {
         Tag tag = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
-        return BaseResponse.ok(tag);
+        return BaseResponse.success(tag);
     }
 
     @GetMapping
     @Operation(summary = "查询所有标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> listTags() {
-        return BaseResponse.ok(tagApplicationService.getAllTags());
+        return BaseResponse.success(tagApplicationService.getAllTags());
     }
 
     @PostMapping("/bind")
@@ -61,20 +61,20 @@ public class TagController {
             @RequestBody NextwikiDTOs.BindTagRequest request,
             @RequestHeader("X-User-Id") String userId) {
         tagApplicationService.batchBindTags(request.getFileNodeId(), request.getTagIds(), userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @GetMapping("/file/{fileNodeId}")
     @Operation(summary = "查询文件的标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> getFileTags(@PathVariable String fileNodeId) {
-        return BaseResponse.ok(tagApplicationService.getFileTags(fileNodeId));
+        return BaseResponse.success(tagApplicationService.getFileTags(fileNodeId));
     }
 
     @GetMapping("/recommend/{fileNodeId}")
     @Operation(summary = "推荐标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> recommendTags(@PathVariable String fileNodeId) {
-        return BaseResponse.ok(tagApplicationService.recommendTags(fileNodeId));
+        return BaseResponse.success(tagApplicationService.recommendTags(fileNodeId));
     }
 }

@@ -43,7 +43,7 @@ public class FlowI18nController {
     public BaseResponse<List<Map<String, String>>> enumDescriptions(
             @PathVariable String enumType,
             @RequestParam(required = false) String locale) {
-        return BaseResponse.ok(i18nService.getEnumDescriptions(enumType, locale));
+        return BaseResponse.success(i18nService.getEnumDescriptions(enumType, locale));
     }
 
     /**
@@ -60,7 +60,7 @@ public class FlowI18nController {
             @PathVariable String enumType,
             @PathVariable String enumName,
             @RequestParam(required = false) String locale) {
-        return BaseResponse.ok(i18nService.getEnumDescription(enumType, enumName, locale));
+        return BaseResponse.success(i18nService.getEnumDescription(enumType, enumName, locale));
     }
 
     /**
@@ -71,6 +71,6 @@ public class FlowI18nController {
     @GetMapping("/locales")
     @Operation(summary = "获取支持的语言列表")
     public BaseResponse<List<Map<String, String>>> supportedLocales() {
-        return BaseResponse.ok(i18nService.getSupportedLocales());
+        return BaseResponse.success(i18nService.getSupportedLocales());
     }
 }

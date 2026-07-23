@@ -48,6 +48,6 @@ public class MessageArchiveController {
             @RequestParam(defaultValue = "20") int pageSize) {
         Page<MsgLogDO> result = messageArchiveService.search(keyword, channel, status, bizType,
                 startTime, endTime, TenantContext.getTenantId(), pageNum, pageSize);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 }

@@ -10,7 +10,6 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.featureflag.FeatureFlag;
 import com.njydsz.common.core.featureflag.FeatureFlagService;
@@ -57,7 +56,7 @@ public class FeatureFlagController {
     @AuthApiPermission(apiCodes = "sys:featureFlag:view")
     @GetMapping("/snapshot")
     public BaseResponse<List<FeatureFlagSnapshot>> snapshot() {
-        return BaseResponse.ok(featureFlagService.snapshot());
+        return BaseResponse.success(featureFlagService.snapshot());
     }
 
     /**
@@ -69,7 +68,7 @@ public class FeatureFlagController {
     @AuthApiPermission(apiCodes = "sys:featureFlag:view")
     @GetMapping("/snapshot/grouped")
     public BaseResponse<Map<String, List<FeatureFlagSnapshot>>> snapshotByCategory() {
-        return BaseResponse.ok(featureFlagService.snapshotByCategory());
+        return BaseResponse.success(featureFlagService.snapshotByCategory());
     }
 
     /**
@@ -88,9 +87,9 @@ public class FeatureFlagController {
         try {
             flag = FeatureFlag.valueOf(key);
         } catch (IllegalArgumentException e) {
-            return BaseResponse.ok(false);
+            return BaseResponse.success(false);
         }
-        return BaseResponse.ok(featureFlagService.isEnabled(flag, userId));
+        return BaseResponse.success(featureFlagService.isEnabled(flag, userId));
     }
 
     /**
@@ -102,7 +101,6 @@ public class FeatureFlagController {
      */
     @Operation(summary = "启停指定 flag")
     @AuthApiPermission(apiCodes = "sys:featureFlag:update")
-    @OperationLog(module = "特性开关", action = "更新开关", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:setEnabled", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/enabled")
     public BaseResponse<Boolean> setEnabled(
@@ -110,7 +108,7 @@ public class FeatureFlagController {
             @Parameter(description = "是否启用") @RequestParam boolean enabled) {
         FeatureFlag flag = parseFlag(key);
         boolean effective = featureFlagService.setEnabled(flag, enabled);
-        return BaseResponse.ok(effective);
+        return BaseResponse.success(effective);
     }
 
     /**
@@ -122,7 +120,6 @@ public class FeatureFlagController {
      */
     @Operation(summary = "设置灰度发布比例 (0-100)")
     @AuthApiPermission(apiCodes = "sys:featureFlag:update")
-    @OperationLog(module = "特性开关", action = "更新灰度", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:setRollout", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/rollout")
     public BaseResponse<Integer> setRollout(
@@ -130,7 +127,7 @@ public class FeatureFlagController {
             @Parameter(description = "灰度百分比（0-100）") @RequestParam @Min(0) @Max(100) int percentage) {
         FeatureFlag flag = parseFlag(key);
         int clamped = featureFlagService.setRolloutPercentage(flag, percentage);
-        return BaseResponse.ok(clamped);
+        return BaseResponse.success(clamped);
     }
 
     /**
@@ -140,12 +137,11 @@ public class FeatureFlagController {
      */
     @Operation(summary = "强制刷新本地缓存")
     @AuthApiPermission(apiCodes = "sys:featureFlag:update")
-    @OperationLog(module = "特性开关", action = "刷新缓存", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
     public BaseResponse<Void> refresh() {
         featureFlagService.refresh();
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**

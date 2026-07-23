@@ -174,7 +174,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-        BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_FORBIDDEN");
+        BaseResponse<Void> body = BaseResponse.error("403", "error.IP_FORBIDDEN");
         body.setTraceId(traceId);
         byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);

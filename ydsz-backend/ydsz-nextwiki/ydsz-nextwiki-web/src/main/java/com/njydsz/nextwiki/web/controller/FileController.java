@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.domain.query.PageResult;
@@ -53,7 +52,6 @@ public class FileController {
     @PostMapping("/upload")
     @Operation(summary = "上传文件", description = "支持单文件上传，自动创建版本记录")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    @OperationLog(module = "网盘", action = "上传文件", bizType = "FILE", saveResult = true)
     public BaseResponse<FileNodeVO> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "parentId", required = false) String parentId,
@@ -63,7 +61,7 @@ public class FileController {
 
         FileNodeVO result = fileApplicationService.upload(file, parentId, rename, versionRemark, userId);
         healthIndicator.recordUpload();
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PostMapping("/folders")
@@ -75,7 +73,7 @@ public class FileController {
 
         FileNodeVO result = fileApplicationService.createFolder(
                 request.getParentId(), request.getName(), userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @GetMapping("/list")
@@ -92,46 +90,43 @@ public class FileController {
 
         PageResult<FileNodeVO> result = fileApplicationService.listFiles(
                 parentId, userId, sortBy, sortDir, type, page, pageSize);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PutMapping("/{nodeId}/move")
     @Operation(summary = "移动文件/文件夹")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
-    @OperationLog(module = "网盘", action = "移动文件", bizType = "FILE")
     public BaseResponse<FileNodeVO> move(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.MoveRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
         FileNodeVO result = fileApplicationService.move(nodeId, request.getTargetParentId(), userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PutMapping("/{nodeId}/rename")
     @Operation(summary = "重命名文件/文件夹")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
-    @OperationLog(module = "网盘", action = "重命名文件", bizType = "FILE")
     public BaseResponse<FileNodeVO> rename(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.RenameRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
         FileNodeVO result = fileApplicationService.rename(nodeId, request.getNewName(), userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @DeleteMapping("/{nodeId}")
     @Operation(summary = "删除文件/文件夹（移入回收站）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-    @OperationLog(module = "网盘", action = "删除文件", bizType = "FILE")
     public BaseResponse<Void> delete(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId) {
 
         fileApplicationService.delete(nodeId, userId);
         healthIndicator.recordDelete();
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @PostMapping("/batch/delete")
@@ -142,7 +137,7 @@ public class FileController {
             @RequestHeader("X-User-Id") String userId) {
 
         FileApplicationService.BatchResult result = fileApplicationService.batchDelete(nodeIds, userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PostMapping("/batch/move")
@@ -154,7 +149,7 @@ public class FileController {
 
         FileApplicationService.BatchResult result = fileApplicationService.batchMove(
                 request.getNodeIds(), request.getTargetParentId(), userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PostMapping("/{nodeId}/copy")
@@ -166,14 +161,14 @@ public class FileController {
             @RequestHeader("X-User-Id") String userId) {
 
         FileNodeVO result = fileApplicationService.copy(nodeId, targetParentId, userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @GetMapping("/{nodeId}/versions")
     @Operation(summary = "获取版本历史")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
     public BaseResponse<List<FileVersion>> getVersionHistory(@PathVariable String nodeId) {
-        return BaseResponse.ok(fileApplicationService.getVersionHistory(nodeId));
+        return BaseResponse.success(fileApplicationService.getVersionHistory(nodeId));
     }
 
     @PostMapping("/{nodeId}/versions/{version}/rollback")
@@ -185,7 +180,7 @@ public class FileController {
             @RequestHeader("X-User-Id") String userId) {
 
         FileNodeVO result = fileApplicationService.rollbackVersion(nodeId, version, userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PutMapping("/{nodeId}/star")
@@ -196,6 +191,6 @@ public class FileController {
             @RequestHeader("X-User-Id") String userId) {
 
         fileApplicationService.toggleStar(nodeId, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

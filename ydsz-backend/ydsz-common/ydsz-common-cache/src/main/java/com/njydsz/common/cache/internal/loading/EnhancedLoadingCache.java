@@ -227,46 +227,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             false);
     instance.scheduleAutoRefresh();
     return instance;
-  }
-
-  /**
-   * 默认构造函数（无自动刷新）
-   *
-   * @param cache 底层缓存
-   * @param loader 缓存加载器
-   * @deprecated 使用 {@link #create(Cache, CacheLoader)} 替代
-   */
-  @Deprecated
-    public EnhancedLoadingCache(Cache<K, V> cache, CacheLoader<K, V> loader) {
-    this(cache, loader, null, 0, TimeUnit.NANOSECONDS, null, true, true);
-  }
-
-  /**
-   * 完整构造函数
-   *
-   * @param cache 底层缓存
-   * @param loader 缓存加载器
-   * @param executor 异步执行器（可选）
-   * @param refreshInterval 自动刷新间隔
-   * @param refreshUnit 刷新间隔单位
-   * @param refreshExecutor 刷新任务执行器（可选，已废弃，使用 executor）
-   * @param recordStats 是否启用统计
-   * @deprecated 使用 {@link #create(Cache, CacheLoader, Executor, long, TimeUnit, Executor, boolean)}
-   *     替代
-   */
-  @Deprecated
-    public EnhancedLoadingCache(
-      Cache<K, V> cache,
-      CacheLoader<K, V> loader,
-      Executor executor,
-      long refreshInterval,
-      TimeUnit refreshUnit,
-      Executor refreshExecutor,
-      boolean recordStats) {
-    this(cache, loader, executor, refreshInterval, refreshUnit, refreshExecutor, recordStats, true);
-  }
-
-  /**
+  }  /**
    * 内部构造函数
    *
    * @param scheduleRefresh 是否在构造时立即调度自动刷新（仅 deprecated 公开构造函数传 true， 工厂方法传 false，由工厂方法在构造完成后调度）

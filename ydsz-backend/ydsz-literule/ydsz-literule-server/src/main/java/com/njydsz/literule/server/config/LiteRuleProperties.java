@@ -30,18 +30,6 @@ public class LiteRuleProperties {
 
     /** 是否启用表达式沙箱（限制危险函数和类访问） */
     private boolean sandboxEnabled = true;
-
-    /**
-     * 表达式引擎类型（2.1.0 起已废弃，仅保留 LiteExpr）
-     *
-     * <p>2.1.0 起移除了 Aviator / QLExpress 多引擎适配，仅保留自研 LiteExpr。
-     * 此字段保留用于向后兼容，但不再产生实际效果。
-     *
-     * @deprecated 2.1.0 起仅保留 LiteExpr，不再支持引擎切换
-     */
-    @Deprecated
-    private String evaluator = "liteexpr";
-
     /** 是否启用执行轨迹记录（1.4.0） */
     private boolean traceEnabled = true;
 

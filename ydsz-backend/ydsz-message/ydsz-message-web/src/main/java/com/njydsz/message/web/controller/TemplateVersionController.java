@@ -57,7 +57,7 @@ public class TemplateVersionController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @GetMapping("/list/{templateCode}")
     public BaseResponse<List<MsgTemplateVersionDO>> listVersions(@PathVariable String templateCode) {
-        return BaseResponse.ok(templateVersionService.listVersions(templateCode));
+        return BaseResponse.success(templateVersionService.listVersions(templateCode));
     }
 
     /**
@@ -72,7 +72,7 @@ public class TemplateVersionController {
     @Idempotent(key = "templateVersion:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
     public BaseResponse<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
-        return BaseResponse.ok(templateVersionService.rollbackToVersion(templateCode, version));
+        return BaseResponse.success(templateVersionService.rollbackToVersion(templateCode, version));
     }
 
     /**
@@ -87,9 +87,9 @@ public class TemplateVersionController {
     @PostMapping("/preview")
     public BaseResponse<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
         if (dto == null) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "预览参数为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "预览参数为空");
         }
-        return BaseResponse.ok(templateVersionService.preview(dto));
+        return BaseResponse.success(templateVersionService.preview(dto));
     }
 
     /**
@@ -104,8 +104,8 @@ public class TemplateVersionController {
     @PostMapping("/testSend")
     public BaseResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
         if (dto == null) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "试发参数为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "试发参数为空");
         }
-        return BaseResponse.ok(templateVersionService.testSend(dto));
+        return BaseResponse.success(templateVersionService.testSend(dto));
     }
 }

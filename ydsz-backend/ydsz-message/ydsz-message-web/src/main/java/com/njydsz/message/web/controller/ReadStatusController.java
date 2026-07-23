@@ -53,7 +53,7 @@ public class ReadStatusController {
     @PostMapping("/read/{msgId}")
     public BaseResponse<Boolean> markRead(@PathVariable String msgId,
                                      @RequestParam String userId) {
-        return BaseResponse.ok(readStatusSyncService.markRead(msgId, userId));
+        return BaseResponse.success(readStatusSyncService.markRead(msgId, userId));
     }
 
     /**
@@ -69,7 +69,7 @@ public class ReadStatusController {
     @PostMapping("/readBatch")
     public BaseResponse<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
                                           @RequestParam String userId) {
-        return BaseResponse.ok(readStatusSyncService.markReadBatch(msgIds, userId));
+        return BaseResponse.success(readStatusSyncService.markReadBatch(msgIds, userId));
     }
 
     /**
@@ -85,7 +85,7 @@ public class ReadStatusController {
     @PostMapping("/notification/{notificationId}")
     public BaseResponse<Boolean> markNotificationRead(@PathVariable String notificationId,
                                                   @RequestParam String userId) {
-        return BaseResponse.ok(readStatusSyncService.markNotificationRead(notificationId, userId));
+        return BaseResponse.success(readStatusSyncService.markNotificationRead(notificationId, userId));
     }
 
     /**
@@ -101,7 +101,7 @@ public class ReadStatusController {
     @PostMapping("/notification/readAll")
     public BaseResponse<Integer> markAllNotificationsRead(@RequestParam String userId,
                                                       @RequestParam(required = false) String bizType) {
-        return BaseResponse.ok(readStatusSyncService.markAllNotificationsRead(userId, bizType));
+        return BaseResponse.success(readStatusSyncService.markAllNotificationsRead(userId, bizType));
     }
 
     /**
@@ -118,6 +118,6 @@ public class ReadStatusController {
                                                      @RequestParam(required = false) String channel) {
         long total = readStatusSyncService.getUnreadCount(userId);
         long byChannel = channel != null ? readStatusSyncService.getUnreadCountByChannel(userId, channel) : total;
-        return BaseResponse.ok(Map.of("total", total, "byChannel", byChannel));
+        return BaseResponse.success(Map.of("total", total, "byChannel", byChannel));
     }
 }

@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.ApiMetrics;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -59,10 +57,9 @@ public class ContractController {
     @Operation(summary = "创建合同")
     @AuthApiPermission(apiCodes = "project:contract:create")
     @Idempotent(key = "contract:create", ttlSeconds = 5, message = "请勿重复提交")
-    @ApiMetrics("contract:create")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ContractCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -79,7 +76,7 @@ public class ContractController {
                                      @Valid @RequestBody ContractStatusDTO dto) {
         dto.setId(id);
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -91,11 +88,10 @@ public class ContractController {
     @Operation(summary = "删除合同")
     @AuthApiPermission(apiCodes = "project:contract:delete")
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @OperationLog(module = "合同管理", action = "删除合同", bizType = "CONTRACT")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "合同ID") @PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -108,7 +104,7 @@ public class ContractController {
     @AuthApiPermission(apiCodes = "project:contract:list")
     @GetMapping("/{id}")
     public BaseResponse<ContractDO> get(@Parameter(description = "合同ID") @PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -132,7 +128,7 @@ public class ContractController {
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "合同类型") @RequestParam(required = false) String contractType,
             @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, contractType, riskLevel));
+        return BaseResponse.success(service.page(page, size, keyword, status, contractType, riskLevel));
     }
 
     /**
@@ -146,7 +142,7 @@ public class ContractController {
     @Idempotent(key = "contract:evaluateRisk", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/evaluateRisk")
     public BaseResponse<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable String id) {
-        return BaseResponse.ok(service.evaluateRisk(id));
+        return BaseResponse.success(service.evaluateRisk(id));
     }
 
     /**
@@ -159,7 +155,7 @@ public class ContractController {
     @AuthApiPermission(apiCodes = "project:contract:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(service.aggregateByStatus(tenantId));
+        return BaseResponse.success(service.aggregateByStatus(tenantId));
     }
 
     /**
@@ -172,6 +168,6 @@ public class ContractController {
     @AuthApiPermission(apiCodes = "project:contract:list")
     @GetMapping("/aggregate/risk")
     public BaseResponse<List<Map<String, Object>>> aggregateByRisk(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(service.aggregateByRisk(tenantId));
+        return BaseResponse.success(service.aggregateByRisk(tenantId));
     }
 }

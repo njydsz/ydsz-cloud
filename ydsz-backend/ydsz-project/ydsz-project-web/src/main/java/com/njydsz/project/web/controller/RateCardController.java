@@ -60,7 +60,7 @@ public class RateCardController {
     @Idempotent(key = "rateCard:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RateCardCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -76,7 +76,7 @@ public class RateCardController {
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -91,7 +91,7 @@ public class RateCardController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -104,7 +104,7 @@ public class RateCardController {
     @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/{id}")
     public BaseResponse<RateCardDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -124,7 +124,7 @@ public class RateCardController {
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String customerLevel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(service.matchEffective(levelCode, projectType, customerLevel, date));
+        return BaseResponse.success(service.matchEffective(levelCode, projectType, customerLevel, date));
     }
 
     /**
@@ -137,7 +137,7 @@ public class RateCardController {
     @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/byLevel")
     public BaseResponse<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
-        return BaseResponse.ok(service.listByLevel(levelCode));
+        return BaseResponse.success(service.listByLevel(levelCode));
     }
 
     /**
@@ -157,6 +157,6 @@ public class RateCardController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String levelCode,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.page(page, size, levelCode, status));
+        return BaseResponse.success(service.page(page, size, levelCode, status));
     }
 }

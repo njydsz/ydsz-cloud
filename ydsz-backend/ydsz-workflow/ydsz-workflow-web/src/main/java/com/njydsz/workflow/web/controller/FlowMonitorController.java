@@ -77,7 +77,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(efficiencyService.efficiencyStats(tenantId, startTime, endTime));
+        return BaseResponse.success(efficiencyService.efficiencyStats(tenantId, startTime, endTime));
     }
 
     /**
@@ -92,7 +92,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String flowCode,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
+        return BaseResponse.success(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
     }
 
     /**
@@ -109,7 +109,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String endTime,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(efficiencyService.approverRanking(tenantId, startTime, endTime, limit));
+        return BaseResponse.success(efficiencyService.approverRanking(tenantId, startTime, endTime, limit));
     }
 
     /**
@@ -126,7 +126,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
+        return BaseResponse.success(efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
     }
 
     /**
@@ -144,7 +144,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(efficiencyService.healthScore(tenantId, startTime, endTime));
+        return BaseResponse.success(efficiencyService.healthScore(tenantId, startTime, endTime));
     }
 
     // ============== P0-3 / P2-4: 监控看板聚合端点 ==============
@@ -214,7 +214,7 @@ public class FlowMonitorController {
             overview.put("overdueTaskCount", 0);
         }
 
-        return BaseResponse.ok(overview);
+        return BaseResponse.success(overview);
     }
 
     /**
@@ -265,7 +265,7 @@ public class FlowMonitorController {
         int to = Math.min(from + pageSize, total);
         List<Map<String, Object>> page = from < to ? all.subList(from, to) : new ArrayList<>();
 
-        return BaseResponse.ok(PageResponse.of(page, total, pageNum, pageSize));
+        return BaseResponse.success(PageResponse.of(page, total, pageNum, pageSize));
     }
 
     /**
@@ -397,7 +397,7 @@ public class FlowMonitorController {
             row.put("completedCount", entry.getValue()[1]);
             result.add(row);
         }
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -440,7 +440,7 @@ public class FlowMonitorController {
                 result.add(item);
             }
         }
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     /**
@@ -482,7 +482,7 @@ public class FlowMonitorController {
                 result.add(item);
             }
         }
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     // ============== P2-7: 监控仪表盘 UI 增强 ==============
@@ -562,7 +562,7 @@ public class FlowMonitorController {
             dashboard.put("healthScore", new LinkedHashMap<>());
         }
 
-        return BaseResponse.ok(dashboard);
+        return BaseResponse.success(dashboard);
     }
 
     /**
@@ -583,7 +583,7 @@ public class FlowMonitorController {
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         List<Map<String, Object>> rows = runTaskMapper.selectOverdueTopN(tenantId, limit);
-        return BaseResponse.ok(rows != null ? rows : new ArrayList<>());
+        return BaseResponse.success(rows != null ? rows : new ArrayList<>());
     }
 
     /**
@@ -602,7 +602,7 @@ public class FlowMonitorController {
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         List<Map<String, Object>> rows = runTaskMapper.selectWorkloadByAssignee(tenantId, limit);
-        return BaseResponse.ok(rows != null ? rows : new ArrayList<>());
+        return BaseResponse.success(rows != null ? rows : new ArrayList<>());
     }
 
     /**
@@ -631,7 +631,7 @@ public class FlowMonitorController {
         LocalDateTime startDt = parseDateTime(startTime);
         LocalDateTime endDt = parseDateTime(endTime);
         List<Map<String, Object>> rows = hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startDt, endDt);
-        return BaseResponse.ok(rows != null ? rows : new ArrayList<>());
+        return BaseResponse.success(rows != null ? rows : new ArrayList<>());
     }
 
     // ============== P2-7: 私有辅助方法 ==============

@@ -61,7 +61,7 @@ public class FlowTemplateController {
     @GetMapping("/list")
     public BaseResponse<List<Map<String, Object>>> listTemplates(
             @RequestParam(required = false) String category) {
-        return BaseResponse.ok(templateService.listTemplates(category));
+        return BaseResponse.success(templateService.listTemplates(category));
     }
 
     /**
@@ -73,7 +73,7 @@ public class FlowTemplateController {
     @Operation(summary = "模板详情（含 BPMN XML）")
     @GetMapping("/{templateCode}")
     public BaseResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
-        return BaseResponse.ok(templateService.getTemplate(templateCode));
+        return BaseResponse.success(templateService.getTemplate(templateCode));
     }
 
     /**
@@ -91,7 +91,7 @@ public class FlowTemplateController {
     @PostMapping("/{templateCode}/import")
     public BaseResponse<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {
-        return BaseResponse.ok(templateService.importTemplate(templateCode, flowName));
+        return BaseResponse.success(templateService.importTemplate(templateCode, flowName));
     }
 
     /**
@@ -112,7 +112,7 @@ public class FlowTemplateController {
                                          @RequestParam String templateName,
                                          @RequestParam(required = false, defaultValue = "GENERAL") String category) {
         templateService.exportAsTemplate(definitionId, templateName, category);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     // ============================== P2-9: 模板继承与版本化 ==============================
@@ -126,7 +126,7 @@ public class FlowTemplateController {
     @Operation(summary = "P2-9: 列出模板全部版本")
     @GetMapping("/{templateCode}/versions")
     public BaseResponse<List<Map<String, Object>>> listTemplateVersions(@PathVariable String templateCode) {
-        return BaseResponse.ok(templateService.listTemplateVersions(templateCode));
+        return BaseResponse.success(templateService.listTemplateVersions(templateCode));
     }
 
     /**
@@ -140,7 +140,7 @@ public class FlowTemplateController {
     @GetMapping("/{templateCode}/versions/{version}")
     public BaseResponse<Map<String, Object>> getTemplateVersion(@PathVariable String templateCode,
                                                           @PathVariable Integer version) {
-        return BaseResponse.ok(templateService.getTemplateVersion(templateCode, version));
+        return BaseResponse.success(templateService.getTemplateVersion(templateCode, version));
     }
 
     /**
@@ -157,7 +157,7 @@ public class FlowTemplateController {
     @PostMapping("/{templateCode}/newVersion")
     public BaseResponse<Integer> createNewVersion(@PathVariable String templateCode,
                                             @RequestParam(required = false) String versionLabel) {
-        return BaseResponse.ok(templateService.createNewVersion(templateCode, versionLabel));
+        return BaseResponse.success(templateService.createNewVersion(templateCode, versionLabel));
     }
 
     /**
@@ -178,7 +178,7 @@ public class FlowTemplateController {
                                         @RequestParam String newTemplateCode,
                                         @RequestParam String newTemplateName,
                                         @RequestParam(required = false) String newCategory) {
-        return BaseResponse.ok(templateService.cloneTemplate(templateCode, newTemplateCode,
+        return BaseResponse.success(templateService.cloneTemplate(templateCode, newTemplateCode,
                 newTemplateName, newCategory));
     }
 
@@ -200,7 +200,7 @@ public class FlowTemplateController {
                                             @RequestParam String newTemplateCode,
                                             @RequestParam String newTemplateName,
                                             @RequestParam(required = false) String newCategory) {
-        return BaseResponse.ok(templateService.inheritFromParent(parentTemplateCode, newTemplateCode,
+        return BaseResponse.success(templateService.inheritFromParent(parentTemplateCode, newTemplateCode,
                 newTemplateName, newCategory));
     }
 
@@ -214,7 +214,7 @@ public class FlowTemplateController {
     @GetMapping("/{parentTemplateCode}/inherited")
     public BaseResponse<List<Map<String, Object>>> listInheritedTemplates(
             @PathVariable String parentTemplateCode) {
-        return BaseResponse.ok(templateService.listInheritedTemplates(parentTemplateCode));
+        return BaseResponse.success(templateService.listInheritedTemplates(parentTemplateCode));
     }
 
     /**
@@ -230,7 +230,7 @@ public class FlowTemplateController {
     @Idempotent(key = "flowTemplate:syncFromParent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{childTemplateCode}/sync")
     public BaseResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {
-        return BaseResponse.ok(templateService.syncFromParent(childTemplateCode));
+        return BaseResponse.success(templateService.syncFromParent(childTemplateCode));
     }
 
     // ============================== P2-2: 模板智能推荐 ==============================
@@ -250,7 +250,7 @@ public class FlowTemplateController {
             @RequestParam(defaultValue = "5") int topN) {
         String userId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(recommendService.recommendTemplates(userId, tenantId, topN));
+        return BaseResponse.success(recommendService.recommendTemplates(userId, tenantId, topN));
     }
 
     /**
@@ -267,6 +267,6 @@ public class FlowTemplateController {
             @RequestParam(defaultValue = "5") int topN) {
         String userId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
+        return BaseResponse.success(recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
     }
 }

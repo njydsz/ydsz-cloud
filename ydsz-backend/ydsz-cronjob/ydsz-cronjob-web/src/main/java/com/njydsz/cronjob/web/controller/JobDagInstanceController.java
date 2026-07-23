@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -45,7 +44,7 @@ public class JobDagInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}")
     public BaseResponse<JobDagInstanceDO> getInstanceById(@PathVariable String instanceId) {
-        return BaseResponse.ok(jobDagInstanceService.getInstanceById(instanceId));
+        return BaseResponse.success(jobDagInstanceService.getInstanceById(instanceId));
     }
 
     /**
@@ -60,7 +59,7 @@ public class JobDagInstanceController {
     @GetMapping("/dag/{dagId}")
     public BaseResponse<List<JobDagInstanceDO>> listByDagId(@PathVariable String dagId,
                                                        @RequestParam(defaultValue = "20") int limit) {
-        return BaseResponse.ok(jobDagInstanceService.listByDagId(dagId, limit));
+        return BaseResponse.success(jobDagInstanceService.listByDagId(dagId, limit));
     }
 
     /**
@@ -73,7 +72,7 @@ public class JobDagInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/status/{status}")
     public BaseResponse<List<JobDagInstanceDO>> listByStatus(@PathVariable String status) {
-        return BaseResponse.ok(jobDagInstanceService.listByStatus(status));
+        return BaseResponse.success(jobDagInstanceService.listByStatus(status));
     }
 
     /**
@@ -86,7 +85,7 @@ public class JobDagInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/nodes")
     public BaseResponse<List<JobDagNodeInstanceDO>> listNodes(@PathVariable String instanceId) {
-        return BaseResponse.ok(jobDagInstanceService.listNodes(instanceId));
+        return BaseResponse.success(jobDagInstanceService.listNodes(instanceId));
     }
 
     /**
@@ -99,7 +98,7 @@ public class JobDagInstanceController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/visualization")
     public BaseResponse<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
-        return BaseResponse.ok(jobDagInstanceService.getVisualization(instanceId));
+        return BaseResponse.success(jobDagInstanceService.getVisualization(instanceId));
     }
 
     /**
@@ -110,12 +109,11 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "暂停 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @OperationLog(module = "任务调度", action = "暂停DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:pauseInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/pause")
     public BaseResponse<Void> pauseInstance(@PathVariable String instanceId) {
         jobDagInstanceService.pauseInstance(instanceId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -126,12 +124,11 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "恢复 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @OperationLog(module = "任务调度", action = "恢复DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:resumeInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/resume")
     public BaseResponse<Void> resumeInstance(@PathVariable String instanceId) {
         jobDagInstanceService.resumeInstance(instanceId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -142,12 +139,11 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "取消 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @OperationLog(module = "任务调度", action = "取消DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:cancelInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/cancel")
     public BaseResponse<Void> cancelInstance(@PathVariable String instanceId) {
         jobDagInstanceService.cancelInstance(instanceId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -159,11 +155,10 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "更新 DAG 实例上下文")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @OperationLog(module = "任务调度", action = "更新DAG实例上下文", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:updateContext", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/context")
     public BaseResponse<Void> updateContext(@PathVariable String instanceId, @RequestBody String contextJson) {
         jobDagInstanceService.updateContext(instanceId, contextJson);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

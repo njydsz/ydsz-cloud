@@ -58,7 +58,7 @@ public class SearchController {
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.execution.msg_9aaebb77}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") @Max(100) int size) {
-        return BaseResponse.ok(searchService.searchProjects(keyword,
+        return BaseResponse.success(searchService.searchProjects(keyword,
                 PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"))));
     }
 
@@ -72,7 +72,7 @@ public class SearchController {
     @PostMapping("/reindex")
     public BaseResponse<String> reindex() {
         searchService.reindexAll();
-        return BaseResponse.ok("reindex started");
+        return BaseResponse.success("reindex started");
     }
 
     /**
@@ -91,6 +91,6 @@ public class SearchController {
     public BaseResponse<List<UniversalSearchVO>> searchAll(
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
             @RequestParam(defaultValue = "5") @Min(value = 1, message = "{validation.execution.msg_15154512}") @Max(20) int size) {
-        return BaseResponse.ok(searchService.searchAll(keyword, size));
+        return BaseResponse.success(searchService.searchAll(keyword, size));
     }
 }

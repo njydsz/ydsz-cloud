@@ -47,7 +47,7 @@ public class FlowSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Integer> slaScan() {
         int processed = slaService.scanAndProcess();
-        return BaseResponse.ok(processed);
+        return BaseResponse.success(processed);
     }
 
     /**
@@ -62,9 +62,9 @@ public class FlowSlaController {
     public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
-            return BaseResponse.failed(BaseResultCode.NOT_FOUND, "任务不存在: " + taskId);
+            return BaseResponse.error(BaseResultCode.NOT_FOUND, "任务不存在: " + taskId);
         }
         boolean ok = slaService.processOverdue(task);
-        return BaseResponse.ok(ok);
+        return BaseResponse.success(ok);
     }
 }

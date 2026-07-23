@@ -53,7 +53,7 @@ public class FlowCcController {
         String userId = AuthContext.getUserId();
         int pageNo = query.getPageNum();
         int pageSize = query.getPageSize();
-        return BaseResponse.ok(ccService.listCcByUser(userId, query.getReadStatus(),
+        return BaseResponse.success(ccService.listCcByUser(userId, query.getReadStatus(),
                 query.getFlowCode(), tenantId, pageNo, pageSize));
     }
 
@@ -66,7 +66,7 @@ public class FlowCcController {
     public BaseResponse<Long> ccUnreadCount() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(ccService.countUnread(userId, tenantId));
+        return BaseResponse.success(ccService.countUnread(userId, tenantId));
     }
 
     /**
@@ -81,7 +81,7 @@ public class FlowCcController {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
         ccService.markRead(tenantId, userId, id);
-        return BaseResponse.ok(Boolean.TRUE);
+        return BaseResponse.success(Boolean.TRUE);
     }
 
     /**
@@ -94,6 +94,6 @@ public class FlowCcController {
     public BaseResponse<Integer> ccMarkAllRead() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
-        return BaseResponse.ok(ccService.markAllRead(tenantId, userId));
+        return BaseResponse.success(ccService.markAllRead(tenantId, userId));
     }
 }

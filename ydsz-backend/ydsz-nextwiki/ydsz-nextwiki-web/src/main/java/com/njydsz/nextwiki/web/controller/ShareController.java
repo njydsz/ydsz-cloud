@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
@@ -42,7 +41,6 @@ public class ShareController {
     @PostMapping
     @Operation(summary = "创建分享链接")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
-    @OperationLog(module = "网盘", action = "创建分享", bizType = "SHARE", saveResult = true)
     public BaseResponse<ShareLink> createShare(
             @RequestBody NextwikiDTOs.CreateShareRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -54,7 +52,7 @@ public class ShareController {
                 request.getExpireTime(),
                 request.getMaxAccessCount(),
                 userId);
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @PostMapping("/verify")
@@ -65,25 +63,24 @@ public class ShareController {
                 request.getShareCode(),
                 request.getExtractCode(),
                 request.getPassword());
-        return BaseResponse.ok(result);
+        return BaseResponse.success(result);
     }
 
     @DeleteMapping("/{shareId}")
     @Operation(summary = "撤销分享")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_REVOKE)
-    @OperationLog(module = "网盘", action = "撤销分享", bizType = "SHARE")
     public BaseResponse<Void> revoke(
             @PathVariable String shareId,
             @RequestHeader("X-User-Id") String userId) {
 
         shareApplicationService.revoke(shareId, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @GetMapping("/my")
     @Operation(summary = "查询我的分享列表")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
     public BaseResponse<List<ShareLink>> myShares(@RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(shareApplicationService.findByUserId(userId));
+        return BaseResponse.success(shareApplicationService.findByUserId(userId));
     }
 }

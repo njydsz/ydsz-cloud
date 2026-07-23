@@ -60,7 +60,7 @@ public class RateInternalController {
     @Idempotent(key = "rateInternal:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RateInternalCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -76,7 +76,7 @@ public class RateInternalController {
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateInternalCreateDTO dto) {
         service.update(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -91,7 +91,7 @@ public class RateInternalController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -104,7 +104,7 @@ public class RateInternalController {
     @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/{id}")
     public BaseResponse<RateInternalDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -122,7 +122,7 @@ public class RateInternalController {
             @RequestParam String levelCode,
             @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(service.matchEffective(levelCode, departmentId, date));
+        return BaseResponse.success(service.matchEffective(levelCode, departmentId, date));
     }
 
     /**
@@ -138,7 +138,7 @@ public class RateInternalController {
     public BaseResponse<List<RateInternalDO>> listByLevelAndDept(
             @RequestParam String levelCode,
             @RequestParam(required = false) String departmentId) {
-        return BaseResponse.ok(service.listByLevelAndDept(levelCode, departmentId));
+        return BaseResponse.success(service.listByLevelAndDept(levelCode, departmentId));
     }
 
     /**
@@ -160,6 +160,6 @@ public class RateInternalController {
             @RequestParam(required = false) String levelCode,
             @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.page(page, size, levelCode, departmentId, status));
+        return BaseResponse.success(service.page(page, size, levelCode, departmentId, status));
     }
 }

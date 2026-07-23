@@ -5,7 +5,6 @@ import java.io.Serial;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.VersionableDO;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,7 +37,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_dmn_decision")
-public class FlowDmnDecisionDO extends VersionableDO {
+public class FlowDmnDecisionDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;

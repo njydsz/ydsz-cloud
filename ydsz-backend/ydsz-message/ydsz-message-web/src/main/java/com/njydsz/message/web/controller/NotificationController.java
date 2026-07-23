@@ -62,7 +62,7 @@ public class NotificationController {
     @Idempotent(key = "notification:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
-        return BaseResponse.ok(notificationService.send(dto));
+        return BaseResponse.success(notificationService.send(dto));
     }
 
     /**
@@ -75,7 +75,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
     public BaseResponse<Page<MsgNotificationDO>> inbox(NotificationQueryDTO query) {
-        return BaseResponse.ok(notificationService.inbox(AuthContext.getUserId(), query));
+        return BaseResponse.success(notificationService.inbox(AuthContext.getUserId(), query));
     }
 
     /**
@@ -87,7 +87,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/unreadCount")
     public BaseResponse<Long> countUnread() {
-        return BaseResponse.ok(notificationService.countUnread(AuthContext.getUserId()));
+        return BaseResponse.success(notificationService.countUnread(AuthContext.getUserId()));
     }
 
     /**
@@ -101,7 +101,7 @@ public class NotificationController {
     @Idempotent(key = "notification:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/read")
     public BaseResponse<Boolean> markRead(@PathVariable String id) {
-        return BaseResponse.ok(notificationService.markRead(AuthContext.getUserId(), id));
+        return BaseResponse.success(notificationService.markRead(AuthContext.getUserId(), id));
     }
 
     /**
@@ -114,7 +114,7 @@ public class NotificationController {
     @Idempotent(key = "notification:markAllRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/readAll")
     public BaseResponse<Integer> markAllRead() {
-        return BaseResponse.ok(notificationService.markAllRead(AuthContext.getUserId()));
+        return BaseResponse.success(notificationService.markAllRead(AuthContext.getUserId()));
     }
 
     /**
@@ -129,7 +129,7 @@ public class NotificationController {
     @DeleteMapping
     public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
         notificationService.delete(AuthContext.getUserId(), ids);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -143,7 +143,7 @@ public class NotificationController {
     @Idempotent(key = "notification:recall", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/recall")
     public BaseResponse<Boolean> recall(@PathVariable String id) {
-        return BaseResponse.ok(recallService.recallNotification(AuthContext.getUserId(), id));
+        return BaseResponse.success(recallService.recallNotification(AuthContext.getUserId(), id));
     }
 
     /**
@@ -164,7 +164,7 @@ public class NotificationController {
             @Valid @RequestBody RealtimePushDTO payload) {
         Object data = payload != null ? payload.getData() : null;
         realtimePushService.pushToUser(userId, type, data);
-        return BaseResponse.ok(Map.of("success", true, "userId", userId, "type", type));
+        return BaseResponse.success(Map.of("success", true, "userId", userId, "type", type));
     }
 
     /**
@@ -182,6 +182,6 @@ public class NotificationController {
             @RequestParam String type,
             @Valid @RequestBody Object payload) {
         realtimePushService.broadcast(type, payload);
-        return BaseResponse.ok(Map.of("success", true, "type", type));
+        return BaseResponse.success(Map.of("success", true, "type", type));
     }
 }

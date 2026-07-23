@@ -96,7 +96,7 @@ public class DownloadController {
         String signedUrl = downloadApplicationService.generateSignedUrl(nodeId, userId, ip);
 
         log.info("[DownloadController] 生成签名URL: nodeId={}, userId={}", nodeId, userId);
-        return BaseResponse.ok(signedUrl);
+        return BaseResponse.success(signedUrl);
     }
 
     /**

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -64,11 +63,10 @@ public class GlueCodeController {
      */
     @Operation(summary = "保存 GLUE 代码（新版本）")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
-    @OperationLog(module = "GLUE 在线编码", action = "保存 GLUE 代码", bizType = "CRONJOB_GLUE", saveResult = true)
     @Idempotent(key = "glueCode:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/save")
     public BaseResponse<GlueCodeDO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
-        return BaseResponse.ok(glueCodeService.save(
+        return BaseResponse.success(glueCodeService.save(
                 request.getJobId(),
                 request.getSourceCode(),
                 request.getLanguage(),
@@ -85,7 +83,7 @@ public class GlueCodeController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/latest")
     public BaseResponse<GlueCodeDO> latest(@RequestParam String jobId) {
-        return BaseResponse.ok(glueCodeService.getLatest(jobId));
+        return BaseResponse.success(glueCodeService.getLatest(jobId));
     }
 
     /**
@@ -98,7 +96,7 @@ public class GlueCodeController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/versions")
     public BaseResponse<List<GlueCodeDO>> versions(@RequestParam String jobId) {
-        return BaseResponse.ok(glueCodeService.listVersions(jobId));
+        return BaseResponse.success(glueCodeService.listVersions(jobId));
     }
 
     /**
@@ -109,11 +107,10 @@ public class GlueCodeController {
      */
     @Operation(summary = "回滚到指定版本")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
-    @OperationLog(module = "GLUE 在线编码", action = "回滚 GLUE 代码", bizType = "CRONJOB_GLUE", saveResult = true)
     @Idempotent(key = "glueCode:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
     public BaseResponse<GlueCodeDO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
-        return BaseResponse.ok(glueCodeService.rollback(request.getJobId(), request.getVersion()));
+        return BaseResponse.success(glueCodeService.rollback(request.getJobId(), request.getVersion()));
     }
 
     /**
@@ -130,11 +127,10 @@ public class GlueCodeController {
      */
     @Operation(summary = "在线测试 GLUE 代码")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_TEST)
-    @OperationLog(module = "GLUE 在线编码", action = "在线测试 GLUE 代码", bizType = "CRONJOB_GLUE", saveResult = true)
     @RateLimit(key = "glue:test", qps = 10, windowSeconds = 60, message = "在线测试过于频繁，请稍后重试")
     @PostMapping("/test")
     public BaseResponse<Map<String, Object>> test(@Valid @RequestBody GlueTestRequest request) {
-        return BaseResponse.ok(glueCodeService.testCode(
+        return BaseResponse.success(glueCodeService.testCode(
                 request.getSourceCode(),
                 request.getLanguage(),
                 request.getParamsJson()));
@@ -152,7 +148,7 @@ public class GlueCodeController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/template")
     public BaseResponse<Map<String, String>> template(@RequestParam(defaultValue = "GROOVY") String language) {
-        return BaseResponse.ok(glueCodeService.getCodeTemplate(language));
+        return BaseResponse.success(glueCodeService.getCodeTemplate(language));
     }
 
     /**
@@ -169,7 +165,7 @@ public class GlueCodeController {
     public BaseResponse<Map<String, Object>> diff(@RequestParam String jobId,
                                              @RequestParam Integer versionA,
                                              @RequestParam Integer versionB) {
-        return BaseResponse.ok(glueCodeService.diffVersions(jobId, versionA, versionB));
+        return BaseResponse.success(glueCodeService.diffVersions(jobId, versionA, versionB));
     }
 
     /**

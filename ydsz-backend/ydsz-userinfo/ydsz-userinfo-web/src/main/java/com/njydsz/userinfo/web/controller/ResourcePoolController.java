@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -56,11 +55,10 @@ public class ResourcePoolController {
      */
     @Operation(summary = "创建资源池")
     @AuthApiPermission(apiCodes = "resource:pool:create")
-    @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
-        return BaseResponse.ok(poolService.create(dto));
+        return BaseResponse.success(poolService.create(dto));
     }
 
     /**
@@ -72,12 +70,11 @@ public class ResourcePoolController {
      */
     @Operation(summary = "更新资源池")
     @AuthApiPermission(apiCodes = "resource:pool:update")
-    @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
         poolService.update(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -88,12 +85,11 @@ public class ResourcePoolController {
      */
     @Operation(summary = "删除资源池")
     @AuthApiPermission(apiCodes = "resource:pool:delete")
-    @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         poolService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -105,7 +101,7 @@ public class ResourcePoolController {
     @Operation(summary = "资源池详情")
     @GetMapping("/{id}")
     public BaseResponse<ResourcePoolDO> get(@PathVariable String id) {
-        return BaseResponse.ok(poolService.getById(id));
+        return BaseResponse.success(poolService.getById(id));
     }
 
     /**
@@ -117,7 +113,7 @@ public class ResourcePoolController {
     @Operation(summary = "按类型查询")
     @GetMapping("/byType")
     public BaseResponse<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
-        return BaseResponse.ok(poolService.listByType(poolType));
+        return BaseResponse.success(poolService.listByType(poolType));
     }
 
     /**
@@ -129,7 +125,7 @@ public class ResourcePoolController {
     @Operation(summary = "按部门查询")
     @GetMapping("/byDept/{departmentId}")
     public BaseResponse<List<ResourcePoolDO>> listByDept(@PathVariable String departmentId) {
-        return BaseResponse.ok(poolService.listByDept(departmentId));
+        return BaseResponse.success(poolService.listByDept(departmentId));
     }
 
     /**
@@ -148,6 +144,6 @@ public class ResourcePoolController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String poolType,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(poolService.page(page, size, poolType, status));
+        return BaseResponse.success(poolService.page(page, size, poolType, status));
     }
 }

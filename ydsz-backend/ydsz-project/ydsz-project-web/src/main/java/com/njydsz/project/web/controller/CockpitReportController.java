@@ -53,7 +53,7 @@ public class CockpitReportController {
     @GetMapping("/overview")
     public BaseResponse<CockpitKpiVO> overview(@RequestParam(required = false) String period,
                                      CockpitDrillDownDTO drillDown) {
-        return BaseResponse.ok(service.overview(period, drillDown));
+        return BaseResponse.success(service.overview(period, drillDown));
     }
 
     /**
@@ -69,7 +69,7 @@ public class CockpitReportController {
     @GetMapping("/evmHealth")
     public BaseResponse<Map<String, Integer>> evmHealth(@RequestParam(required = false) String period,
                                              CockpitDrillDownDTO drillDown) {
-        return BaseResponse.ok(service.evmHealthDistribution(period, drillDown));
+        return BaseResponse.success(service.evmHealthDistribution(period, drillDown));
     }
 
     /**
@@ -83,7 +83,7 @@ public class CockpitReportController {
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/benchCost")
     public BaseResponse<Map<String, Object>> benchCost(CockpitDrillDownDTO drillDown) {
-        return BaseResponse.ok(service.benchCostSummary(drillDown));
+        return BaseResponse.success(service.benchCostSummary(drillDown));
     }
 
     /**
@@ -97,7 +97,7 @@ public class CockpitReportController {
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/utilization")
     public BaseResponse<Map<String, Object>> utilization(CockpitDrillDownDTO drillDown) {
-        return BaseResponse.ok(service.utilizationSummary(drillDown));
+        return BaseResponse.success(service.utilizationSummary(drillDown));
     }
 
     /**
@@ -111,7 +111,7 @@ public class CockpitReportController {
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/dept")
     public BaseResponse<List<Map<String, Object>>> drillDept(@RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.drillByDept(period));
+        return BaseResponse.success(service.drillByDept(period));
     }
 
     /**
@@ -125,7 +125,7 @@ public class CockpitReportController {
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/projectType")
     public BaseResponse<List<Map<String, Object>>> drillProjectType(@RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.drillByProjectType(period));
+        return BaseResponse.success(service.drillByProjectType(period));
     }
 
     /**
@@ -139,7 +139,7 @@ public class CockpitReportController {
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/customer")
     public BaseResponse<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.drillByCustomer(period));
+        return BaseResponse.success(service.drillByCustomer(period));
     }
 
     /**
@@ -152,7 +152,7 @@ public class CockpitReportController {
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/contractYearlyTrend")
     public BaseResponse<Map<String, Object>> contractYearlyTrend() {
-        return BaseResponse.ok(service.contractAmountYearlyTrend());
+        return BaseResponse.success(service.contractAmountYearlyTrend());
     }
 
     // ========== 批次18 增量端点 ==========
@@ -170,7 +170,7 @@ public class CockpitReportController {
     @GetMapping("/alerts")
     public BaseResponse<CockpitAlertSummaryVO> alerts(@RequestParam(required = false) String period,
                                             CockpitDrillDownDTO drillDown) {
-        return BaseResponse.ok(service.alertSummary(period, drillDown));
+        return BaseResponse.success(service.alertSummary(period, drillDown));
     }
 
     /**
@@ -186,7 +186,7 @@ public class CockpitReportController {
     @GetMapping("/projectGroup")
     public BaseResponse<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
                                                       CockpitDrillDownDTO drillDown) {
-        return BaseResponse.ok(service.projectGroupOverview(period, drillDown));
+        return BaseResponse.success(service.projectGroupOverview(period, drillDown));
     }
 
     /**
@@ -202,7 +202,7 @@ public class CockpitReportController {
     @GetMapping("/executive")
     public BaseResponse<ExecutiveOverviewVO> executive(@RequestParam(required = false) String period,
                                              CockpitDrillDownDTO drillDown) {
-        return BaseResponse.ok(service.executiveOverview(period, drillDown));
+        return BaseResponse.success(service.executiveOverview(period, drillDown));
     }
 
     /**
@@ -216,6 +216,6 @@ public class CockpitReportController {
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/kpiTrend")
     public BaseResponse<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {
-        return BaseResponse.ok(service.kpiTrend(months));
+        return BaseResponse.success(service.kpiTrend(months));
     }
 }

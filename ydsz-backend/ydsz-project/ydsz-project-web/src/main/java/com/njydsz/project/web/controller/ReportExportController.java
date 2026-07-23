@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.DataExportAudit;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.project.server.service.ReportExportService;
 
@@ -54,7 +53,7 @@ public class ReportExportController {
     @Operation(summary = "查询可导出的列定义")
     @GetMapping("/columns")
     public BaseResponse<List<ReportExportService.ColumnDef>> columns(@RequestParam String type) {
-        return BaseResponse.ok(exportService.columnsOf(type));
+        return BaseResponse.success(exportService.columnsOf(type));
     }
 
     /**
@@ -72,7 +71,6 @@ public class ReportExportController {
      * @throws IOException 写入响应流时发生 I/O 异常
      */
     @Operation(summary = "下载报表（XLSX/CSV，P2-6）")
-    @DataExportAudit(module = "项目管理", action = "导出报表", bizType = "REPORT")
     @GetMapping("/download")
     public void download(
             @RequestParam String type,

@@ -47,7 +47,7 @@ public class ConnectorController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/types")
     public BaseResponse<List<String>> types() {
-        return BaseResponse.ok(connectorManager.getRegisteredTypes());
+        return BaseResponse.success(connectorManager.getRegisteredTypes());
     }
 
     /**
@@ -60,9 +60,9 @@ public class ConnectorController {
                                            @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return BaseResponse.fail("不支持的连接器类型: " + type);
+            return BaseResponse.error("不支持的连接器类型: " + type);
         }
-        return BaseResponse.ok(connector.testConnection(config));
+        return BaseResponse.success(connector.testConnection(config));
     }
 
     /**
@@ -75,9 +75,9 @@ public class ConnectorController {
                                                             @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return BaseResponse.fail("不支持的连接器类型: " + type);
+            return BaseResponse.error("不支持的连接器类型: " + type);
         }
-        return BaseResponse.ok(connector.listRemoteTasks(config));
+        return BaseResponse.success(connector.listRemoteTasks(config));
     }
 
     /**
@@ -90,9 +90,9 @@ public class ConnectorController {
                                                         @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return BaseResponse.fail("不支持的连接器类型: " + type);
+            return BaseResponse.error("不支持的连接器类型: " + type);
         }
-        return BaseResponse.ok(connector.importTasks(config));
+        return BaseResponse.success(connector.importTasks(config));
     }
 
     /**
@@ -104,9 +104,9 @@ public class ConnectorController {
     public BaseResponse<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {
         JobConnector connector = connectorManager.getConnector(request.getType());
         if (connector == null) {
-            return BaseResponse.fail("不支持的连接器类型: " + request.getType());
+            return BaseResponse.error("不支持的连接器类型: " + request.getType());
         }
-        return BaseResponse.ok(connector.exportTasks(request.getTasks(), request.getConfig()));
+        return BaseResponse.success(connector.exportTasks(request.getTasks(), request.getConfig()));
     }
 
     /**

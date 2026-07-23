@@ -39,7 +39,7 @@ public class BatchImportController {
             @RequestParam("files") MultipartFile[] files,
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(batchImportService.batchUpload(files, parentId, userId));
+        return BaseResponse.success(batchImportService.batchUpload(files, parentId, userId));
     }
 
     @PostMapping("/zip")
@@ -49,6 +49,6 @@ public class BatchImportController {
             @RequestParam("file") MultipartFile zipFile,
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(batchImportService.importFromZip(zipFile, parentId, userId));
+        return BaseResponse.success(batchImportService.importFromZip(zipFile, parentId, userId));
     }
 }

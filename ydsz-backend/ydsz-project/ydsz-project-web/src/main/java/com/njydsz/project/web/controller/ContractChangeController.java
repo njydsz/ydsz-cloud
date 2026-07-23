@@ -55,7 +55,7 @@ public class ContractChangeController {
     @Idempotent(key = "contractChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> apply(@Valid @RequestBody ContractChangeDTO dto) {
-        return BaseResponse.ok(service.apply(dto));
+        return BaseResponse.success(service.apply(dto));
     }
 
     /**
@@ -70,7 +70,7 @@ public class ContractChangeController {
     @PutMapping("/{id}/submit")
     public BaseResponse<Void> submit(@PathVariable String id) {
         service.submit(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -89,7 +89,7 @@ public class ContractChangeController {
                            @RequestParam String approverId,
                            @RequestParam String approverName) {
         service.approve(id, approverId, approverName);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -110,7 +110,7 @@ public class ContractChangeController {
                           @RequestParam String approverName,
                           @RequestParam(required = false) String reason) {
         service.reject(id, approverId, approverName, reason);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -123,7 +123,7 @@ public class ContractChangeController {
     @AuthApiPermission(apiCodes = "project:contractChange:list")
     @GetMapping("/{id}")
     public BaseResponse<ContractChangeDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -143,7 +143,7 @@ public class ContractChangeController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String contractId,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.page(page, size, contractId, status));
+        return BaseResponse.success(service.page(page, size, contractId, status));
     }
 
     /**
@@ -156,6 +156,6 @@ public class ContractChangeController {
     @AuthApiPermission(apiCodes = "project:contractChange:list")
     @GetMapping("/list")
     public BaseResponse<List<ContractChangeDO>> listByContract(@RequestParam String contractId) {
-        return BaseResponse.ok(service.listByContract(contractId));
+        return BaseResponse.success(service.listByContract(contractId));
     }
 }

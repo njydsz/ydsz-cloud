@@ -3,7 +3,6 @@ package com.njydsz.common.core.context;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
@@ -190,28 +189,6 @@ public final class RequestContext {
         }
         return (T) value;
     }
-
-    /**
-     * 获取属性（Optional）
-     *
-     * <p><b>注意：</b>此方法使用了 unchecked cast，存在类型安全风险。
-     * 推荐使用 {@link #getOptional(ContextKey)} 强类型版本。</p>
-     *
-     * @param key 属性键
-     * @param <T> 类型
-     * @return Optional 包装的属性值
-     * @deprecated 使用 {@link #getOptional(ContextKey)} 替代，提供编译期类型安全
-     */
-    @Deprecated
-    public static <T> Optional<T> getOptional(String key) {
-        Object value = CONTEXT_HOLDER.get().get(key);
-        Optional<T> result = Optional.empty();
-        if (value != null) {
-            result = Optional.of((T) value);
-        }
-        return result;
-    }
-
     /**
      * 通过强类型 Key 获取属性（Optional）
      *
@@ -282,48 +259,7 @@ public final class RequestContext {
         } finally {
             clear();
         }
-    }
-
-    /**
-     * 捕获当前线程的上下文为 Map，用于异步场景的上下文传播
-     *
-     * <p>在父线程中调用此方法获取上下文快照，然后在子线程中通过
-     * {@link #runWithContext(Map, Supplier)} 或 {@link #wrapCallable(Callable, Map)}
-     * 恢复上下文执行。</p>
-     *
-     * @return 上下文 Map 的副本
-     * @deprecated 项目已使用 TransmittableThreadLocal，配合 TTL Agent 或 TtlExecutors
-     * 可自动传播上下文，无需手动捕获/恢复
-     */
-    @Deprecated
-    public static Map<String, Object> capture() {
-        Map<String, Object> current = CONTEXT_HOLDER.get();
-        return current.isEmpty() ? new HashMap<>() : new HashMap<>(current);
-    }
-
-    /**
-     * 在指定上下文中执行 Supplier，执行完毕后自动清除上下文
-     *
-     * <p>用于异步场景：先在父线程通过 {@link #capture()} 捕获上下文，
-     * 再在子线程中调用此方法恢复上下文执行逻辑。</p>
-     *
-     * @param context  通过 {@link #capture()} 捕获的上下文
-     * @param supplier 要执行的逻辑
-     * @param <T>      返回值类型
-     * @return supplier 的返回值
-     * @deprecated 使用 TransmittableThreadLocal + TtlExecutors 自动传播替代
-     */
-    @Deprecated
-    public static <T> T runWithContext(Map<String, Object> context, Supplier<T> supplier) {
-        try {
-            restore(context);
-            return supplier.get();
-        } finally {
-            clear();
-        }
-    }
-
-    /**
+    }    /**
      * 在指定上下文中执行 Runnable，执行完毕后自动清除上下文
      *
      * <p>用于异步场景：先在父线程通过 {@link #capture()} 捕获上下文，
@@ -342,36 +278,6 @@ public final class RequestContext {
             clear();
         }
     }
-
-    /**
-     * 包装 Callable 以在执行时自动传播指定的上下文
-     *
-     * <p>适用于 {@link CompletableFuture}、线程池等异步场景：</p>
-     * <pre>
-     * Map&lt;String, Object&gt; ctx = RequestContext.capture();
-     * CompletableFuture.supplyAsync(RequestContext.wrapCallable(() -&gt; {
-     *     return RequestContext.getUserId();
-     * }, ctx));
-     * </pre>
-     *
-     * @param callable 要包装的 Callable
-     * @param context  通过 {@link #capture()} 捕获的上下文
-     * @param <T>      返回值类型
-     * @return 包装后的 Callable，执行时会自动恢复和清理上下文
-     * @deprecated 使用 TransmittableThreadLocal + TtlExecutors.getTtlExecutor() 自动传播替代
-     */
-    @Deprecated
-    public static <T> Callable<T> wrapCallable(Callable<T> callable, Map<String, Object> context) {
-        return () -> {
-            try {
-                restore(context);
-                return callable.call();
-            } finally {
-                clear();
-            }
-        };
-    }
-
     /**
      * 获取当前上下文快照
      *

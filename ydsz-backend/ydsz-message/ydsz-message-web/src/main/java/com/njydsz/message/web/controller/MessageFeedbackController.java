@@ -51,7 +51,7 @@ public class MessageFeedbackController {
     @Idempotent(key = "messageFeedback:submitFeedback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
-        return BaseResponse.ok(messageFeedbackService.submitFeedback(dto));
+        return BaseResponse.success(messageFeedbackService.submitFeedback(dto));
     }
 
     /**
@@ -69,7 +69,7 @@ public class MessageFeedbackController {
         double userRating = messageFeedbackService.getAverageRating(userId);
         double channelRating = channel != null
                 ? messageFeedbackService.getAverageRatingByChannel(channel) : 0;
-        return BaseResponse.ok(Map.of(
+        return BaseResponse.success(Map.of(
                 "userRating", userRating,
                 "channelRating", channelRating));
     }
@@ -90,7 +90,7 @@ public class MessageFeedbackController {
                                                       @RequestParam(defaultValue = "20") int size,
                                                       @RequestParam(required = false) String channel,
                                                       @RequestParam(required = false) String userId) {
-        return BaseResponse.ok(messageFeedbackService.pageFeedback(page, size, channel, userId));
+        return BaseResponse.success(messageFeedbackService.pageFeedback(page, size, channel, userId));
     }
 
     /**
@@ -103,6 +103,6 @@ public class MessageFeedbackController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/shouldReduceFreq")
     public BaseResponse<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
-        return BaseResponse.ok(Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));
+        return BaseResponse.success(Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));
     }
 }

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -56,11 +55,10 @@ public class EmployeeController {
      */
     @Operation(summary = "创建员工")
     @AuthApiPermission(apiCodes = "org:employee:create")
-    @OperationLog(module = "员工管理", action = "创建员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody EmployeeCreateDTO dto) {
-        return BaseResponse.ok(employeeService.create(dto));
+        return BaseResponse.success(employeeService.create(dto));
     }
 
     /**
@@ -72,13 +70,12 @@ public class EmployeeController {
      */
     @Operation(summary = "更新员工")
     @AuthApiPermission(apiCodes = "org:employee:update")
-    @OperationLog(module = "员工管理", action = "更新员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@Parameter(description = "员工 ID") @PathVariable String id,
                                @Valid @RequestBody EmployeeUpdateDTO dto) {
         employeeService.update(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -89,12 +86,11 @@ public class EmployeeController {
      */
     @Operation(summary = "删除员工")
     @AuthApiPermission(apiCodes = "org:employee:delete")
-    @OperationLog(module = "员工管理", action = "删除员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "员工 ID") @PathVariable String id) {
         employeeService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -106,7 +102,7 @@ public class EmployeeController {
     @Operation(summary = "员工详情")
     @GetMapping("/{id}")
     public BaseResponse<EmployeeVO> get(@Parameter(description = "员工 ID") @PathVariable String id) {
-        return BaseResponse.ok(employeeService.assemble(employeeService.getById(id)));
+        return BaseResponse.success(employeeService.assemble(employeeService.getById(id)));
     }
 
     /**
@@ -127,7 +123,7 @@ public class EmployeeController {
                 query.getWorkStatus());
         Page<EmployeeVO> voPage = new Page<>(doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
         voPage.setRecords(doPage.getRecords().stream().map(employeeService::assemble).toList());
-        return BaseResponse.ok(voPage);
+        return BaseResponse.success(voPage);
     }
 
     /**
@@ -140,6 +136,6 @@ public class EmployeeController {
     @GetMapping("/byDepartment/{departmentId}")
     public BaseResponse<List<EmployeeDO>> listByDepartment(
             @Parameter(description = "部门 ID") @PathVariable String departmentId) {
-        return BaseResponse.ok(employeeService.listByDepartment(departmentId));
+        return BaseResponse.success(employeeService.listByDepartment(departmentId));
     }
 }

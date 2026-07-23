@@ -46,7 +46,7 @@ public class ScheduleCalendarController {
             @RequestParam String jobKey,
             @RequestParam(defaultValue = "24") int hours,
             @RequestParam(defaultValue = "100") int maxCount) {
-        return BaseResponse.ok(scheduleCalendarService.getUpcomingFireTimes(
+        return BaseResponse.success(scheduleCalendarService.getUpcomingFireTimes(
                 jobKey, LocalDateTime.now(), maxCount));
     }
 
@@ -62,7 +62,7 @@ public class ScheduleCalendarController {
     public BaseResponse<List<ScheduleCalendarService.ScheduleItem>> getScheduleCalendar(
             @RequestParam(defaultValue = "24") int hours,
             @RequestParam(defaultValue = "50") int maxPerJob) {
-        return BaseResponse.ok(scheduleCalendarService.getScheduleCalendar(
+        return BaseResponse.success(scheduleCalendarService.getScheduleCalendar(
                 LocalDateTime.now(), hours, maxPerJob));
     }
 }

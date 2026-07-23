@@ -49,7 +49,7 @@ public class ReportController {
     @GetMapping("/profit")
     public BaseResponse<Map<String, Object>> profit(@RequestParam String initiationId,
                                          @RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.projectProfitReport(initiationId, period));
+        return BaseResponse.success(service.projectProfitReport(initiationId, period));
     }
 
     /**
@@ -65,7 +65,7 @@ public class ReportController {
     @GetMapping("/cost")
     public BaseResponse<Map<String, Object>> cost(@RequestParam String initiationId,
                                        @RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.costDetailReport(initiationId, period));
+        return BaseResponse.success(service.costDetailReport(initiationId, period));
     }
 
     /**
@@ -79,7 +79,7 @@ public class ReportController {
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/paymentLedger")
     public BaseResponse<Map<String, Object>> paymentLedger(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.paymentLedgerReport(initiationId));
+        return BaseResponse.success(service.paymentLedgerReport(initiationId));
     }
 
     /**
@@ -93,7 +93,7 @@ public class ReportController {
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/lifecycle")
     public BaseResponse<Map<String, Object>> lifecycle(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.projectLifecycleReport(initiationId));
+        return BaseResponse.success(service.projectLifecycleReport(initiationId));
     }
 
     /**
@@ -106,7 +106,7 @@ public class ReportController {
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profitSummary")
     public BaseResponse<List<Map<String, Object>>> profitSummary() {
-        return BaseResponse.ok(service.profitSummaryAll());
+        return BaseResponse.success(service.profitSummaryAll());
     }
 
     /**
@@ -125,6 +125,6 @@ public class ReportController {
             @RequestParam(defaultValue = "10") int top,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String period) {
-        return BaseResponse.ok(service.profitRank(top, sortBy, period));
+        return BaseResponse.success(service.profitRank(top, sortBy, period));
     }
 }

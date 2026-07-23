@@ -59,7 +59,7 @@ public class ProjectClosureController {
     @Idempotent(key = "projectClosure:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ProjectClosureCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -74,7 +74,7 @@ public class ProjectClosureController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ProjectClosureStatusDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -89,7 +89,7 @@ public class ProjectClosureController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -102,7 +102,7 @@ public class ProjectClosureController {
     @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/{id}")
     public BaseResponse<ProjectClosureDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -115,7 +115,7 @@ public class ProjectClosureController {
     @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/byInitiation/{initiationId}")
     public BaseResponse<ProjectClosureDO> getByInitiation(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.getByInitiation(initiationId));
+        return BaseResponse.success(service.getByInitiation(initiationId));
     }
 
     /**
@@ -137,7 +137,7 @@ public class ProjectClosureController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String closureType,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.page(page, size, keyword, closureType, status));
+        return BaseResponse.success(service.page(page, size, keyword, closureType, status));
     }
 
     /**
@@ -150,7 +150,7 @@ public class ProjectClosureController {
     @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/listByType")
     public BaseResponse<List<ProjectClosureDO>> listByType(@RequestParam(required = false) String closureType) {
-        return BaseResponse.ok(service.listByType(closureType));
+        return BaseResponse.success(service.listByType(closureType));
     }
 
     /**
@@ -163,7 +163,7 @@ public class ProjectClosureController {
     @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/aggregate/type")
     public BaseResponse<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(service.aggregateByType(tenantId));
+        return BaseResponse.success(service.aggregateByType(tenantId));
     }
 
     /**
@@ -176,6 +176,6 @@ public class ProjectClosureController {
     @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/{id}/admissionCheck")
     public BaseResponse<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable String id) {
-        return BaseResponse.ok(service.checkAdmission(id));
+        return BaseResponse.success(service.checkAdmission(id));
     }
 }

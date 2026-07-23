@@ -42,21 +42,21 @@ public class UserChannelBindingController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping
     public BaseResponse<MsgUserChannelDO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
-        return BaseResponse.ok(userChannelBindingService.upsert(dto));
+        return BaseResponse.success(userChannelBindingService.upsert(dto));
     }
 
     @Operation(summary = "查询当前用户所有通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/mine")
     public BaseResponse<List<MsgUserChannelDO>> listMine() {
-        return BaseResponse.ok(userChannelBindingService.listByUser(AuthContext.getUserId()));
+        return BaseResponse.success(userChannelBindingService.listByUser(AuthContext.getUserId()));
     }
 
     @Operation(summary = "按用户ID查询通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/user/{userId}")
     public BaseResponse<List<MsgUserChannelDO>> listByUser(@PathVariable String userId) {
-        return BaseResponse.ok(userChannelBindingService.listByUser(userId));
+        return BaseResponse.success(userChannelBindingService.listByUser(userId));
     }
 
     @Operation(summary = "删除通道绑定")
@@ -64,6 +64,6 @@ public class UserChannelBindingController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         userChannelBindingService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

@@ -46,7 +46,7 @@ public class FlowCategoryController {
     @GetMapping
     @Operation(summary = "查询全部分类")
     public BaseResponse<List<FlowCategoryDO>> list() {
-        return BaseResponse.ok(categoryService.listAll(TenantContext.getTenantId()));
+        return BaseResponse.success(categoryService.listAll(TenantContext.getTenantId()));
     }
 
     /**
@@ -59,7 +59,7 @@ public class FlowCategoryController {
     @PostMapping
     @Operation(summary = "新增分类")
     public BaseResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
-        return BaseResponse.ok(categoryService.create(dto, TenantContext.getTenantId()));
+        return BaseResponse.success(categoryService.create(dto, TenantContext.getTenantId()));
     }
 
     /**
@@ -73,7 +73,7 @@ public class FlowCategoryController {
     @Operation(summary = "编辑分类")
     public BaseResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
         categoryService.update(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -87,6 +87,6 @@ public class FlowCategoryController {
     @Operation(summary = "删除分类")
     public BaseResponse<Void> delete(@PathVariable String id) {
         categoryService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

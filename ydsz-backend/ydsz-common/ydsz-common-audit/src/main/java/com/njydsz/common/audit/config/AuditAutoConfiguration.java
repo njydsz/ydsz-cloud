@@ -164,7 +164,7 @@ public class AuditAutoConfiguration {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(properties.getCorePoolSize());
         executor.setMaxPoolSize(properties.getMaxPoolSize());
-        executor.setQueueCapacity(properties.getExecutorQueueCapacity());
+        executor.setExecutorQueueCapacity(properties.getExecutorQueueCapacity());
         executor.setThreadNamePrefix("audit-async-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
@@ -208,7 +208,7 @@ public class AuditAutoConfiguration {
         // 优先使用 Disruptor（如果 classpath 中存在）
         if (isDisruptorAvailable()) {
             log.info("初始化 Disruptor 审计记录器: DisruptorAuditRecorder, RingBuffer容量={}, 批量阈值={}, 分表策略={}",
-                    asyncProps.getQueueCapacity(), asyncProps.getBatchSize(),
+                    asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(),
                     shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
             DisruptorAuditRecorder recorder = new DisruptorAuditRecorder(dataSource, properties, shardingStrategy, baseTableName, properties.getAsync().getWaitStrategy());
             this.asyncAuditRecorder = null; // Disruptor 自己管理停机
@@ -217,7 +217,7 @@ public class AuditAutoConfiguration {
 
         // 降级使用 LinkedBlockingQueue 实现
         log.info("初始化异步审计记录器: AsyncAuditRecorder, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 分表策略={}",
-                asyncProps.getQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
+                asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
         AsyncAuditRecorder recorder = new AsyncAuditRecorder(dataSource, properties, shardingStrategy, baseTableName);
         this.asyncAuditRecorder = recorder;

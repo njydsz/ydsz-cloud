@@ -72,7 +72,7 @@ public class FlowDelegateController {
             auth.setOwnerUserId(AuthContext.getUserId());
         }
         String id = delegateAuthService.create(auth);
-        return BaseResponse.ok(id);
+        return BaseResponse.success(id);
     }
 
     /**
@@ -87,7 +87,7 @@ public class FlowDelegateController {
     public BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
         String ownerId = AuthContext.getUserId();
         delegateAuthService.revoke(id, ownerId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -104,7 +104,7 @@ public class FlowDelegateController {
                                                  @RequestParam String status) {
         String operatorId = AuthContext.getUserId();
         delegateAuthService.updateStatus(id, status, operatorId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -118,7 +118,7 @@ public class FlowDelegateController {
             @RequestParam(required = false) String status) {
         String ownerId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(delegateAuthService.listMine(ownerId, tenantId, status));
+        return BaseResponse.success(delegateAuthService.listMine(ownerId, tenantId, status));
     }
 
     /**
@@ -132,7 +132,7 @@ public class FlowDelegateController {
             @RequestParam(required = false) String status) {
         String delegateUserId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
+        return BaseResponse.success(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
     }
 
     /**
@@ -147,7 +147,7 @@ public class FlowDelegateController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         String delegateUserId = AuthContext.getUserId();
-        return BaseResponse.ok(delegateAuthService.listDelegateLog(delegateUserId, page, size));
+        return BaseResponse.success(delegateAuthService.listDelegateLog(delegateUserId, page, size));
     }
 
     /**
@@ -162,6 +162,6 @@ public class FlowDelegateController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         String ownerUserId = AuthContext.getUserId();
-        return BaseResponse.ok(delegateAuthService.listOwnerLog(ownerUserId, page, size));
+        return BaseResponse.success(delegateAuthService.listOwnerLog(ownerUserId, page, size));
     }
 }

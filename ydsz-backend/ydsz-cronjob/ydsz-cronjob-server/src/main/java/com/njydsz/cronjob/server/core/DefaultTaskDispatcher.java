@@ -50,7 +50,6 @@ import com.njydsz.common.core.job.ProcessResult;
 import com.njydsz.common.core.job.ShardingContext;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.util.TraceIdUtil;
 import com.njydsz.cronjob.domain.entity.job.JobDO;
 import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
 import com.njydsz.cronjob.domain.entity.log.JobLogDO;
@@ -508,7 +507,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
         }
         RemoteTaskRequest request = new RemoteTaskRequest(
-                job, triggerType, assignment.shardIndex(), shardTotal, TraceIdUtil.get());
+                job, triggerType, assignment.shardIndex(), shardTotal, TracerUtils.get());
         String logId = client.dispatch(node, request);
         if (logId == null && remoteConfig.isFallbackToLocal()) {
             log.info("[Dispatcher] 远程派发失败, 降级本地执行: key={} shard={} nodeId={}",
@@ -555,7 +554,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         log0.setStartTime(LocalDateTime.now());
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
-        log0.setTraceId(TraceIdUtil.get());
+        log0.setTraceId(TracerUtils.get());
         log0.setTriggerType(triggerType);
         // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
         if (lockKey != null) {
@@ -759,7 +758,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (client == null) {
             return null;
         }
-        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraceIdUtil.get());
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.get());
         String logId = client.dispatch(worker, request);
         if (logId != null) {
             log.debug("[Dispatcher] 调度器-执行器分离: 任务已派发到 Worker: key={} worker={} logId={}",
@@ -870,7 +869,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         log0.setStartTime(LocalDateTime.now());
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
-        log0.setTraceId(TraceIdUtil.get());
+        log0.setTraceId(TracerUtils.get());
         log0.setTriggerType(triggerType);
         // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
         if (lockKey != null) {
@@ -1020,7 +1019,7 @@ try {
                     job.getJobKey(), job.getCluster());
             return dispatchLocalFallback(job, triggerType);
         }
-        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraceIdUtil.get());
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.get());
         String logId = clusterDispatcher.dispatchToCluster(job.getCluster(), request);
         if (logId == null) {
             log.warn("[Dispatcher] 跨集群派发失败, 降级本地执行: key={} cluster={}",
@@ -1534,7 +1533,7 @@ try {
         CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
         int corePoolSize = Math.max(1, execConfig.getMaxConcurrent());
         int maxPoolSize = Math.max(corePoolSize, execConfig.getMaxConcurrent());
-        int queueCapacity = Math.max(0, execConfig.getQueueCapacity());
+        int queueCapacity = Math.max(0, execConfig.getExecutorQueueCapacity());
         BlockingQueue<Runnable> workQueue =
                 queueCapacity == 0
                         ? new SynchronousQueue<>()

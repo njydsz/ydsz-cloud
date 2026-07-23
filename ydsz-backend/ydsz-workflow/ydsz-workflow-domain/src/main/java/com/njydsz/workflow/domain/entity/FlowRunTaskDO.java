@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.VersionableDO;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,7 +26,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_run_task")
-public class FlowRunTaskDO extends VersionableDO {
+public class FlowRunTaskDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -131,7 +130,7 @@ public class FlowRunTaskDO extends VersionableDO {
     /** P1-6: 是否已升级（0 否 / 1 是，避免重复升级） */
     private Integer slaEscalated;
 
-    /** 乐观锁版本号由 VersionableDO 继承，无需在此声明 */
+    /** 乐观锁版本号由 BaseDO 继承，无需在此声明 */
 
     /**
      * GAP-P2-10: FOREACH 当前迭代元素值

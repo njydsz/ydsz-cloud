@@ -10,7 +10,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -52,7 +51,7 @@ public class ConfigController {
     @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping
     public BaseResponse<Page<ConfigDO>> page(@Valid ConfigQueryDTO query) {
-        return BaseResponse.ok(configService.page(query));
+        return BaseResponse.success(configService.page(query));
     }
 
     @Operation(summary = "按 group+key 查配置")
@@ -68,7 +67,7 @@ public class ConfigController {
     public BaseResponse<ConfigDO> getByKey(
             @Parameter(description = "配置分组") @RequestParam String group,
             @Parameter(description = "配置键") @RequestParam String key) {
-        return BaseResponse.ok(configService.getByKey(group, key));
+        return BaseResponse.success(configService.getByKey(group, key));
     }
 
     @Operation(summary = "按 group 查全部配置（key-value 形式）")
@@ -82,7 +81,7 @@ public class ConfigController {
      */
     public BaseResponse<Map<String, String>> getGroup(
             @Parameter(description = "配置分组") @PathVariable String group) {
-        return BaseResponse.ok(configService.getGroupAsMap(group));
+        return BaseResponse.success(configService.getGroupAsMap(group));
     }
 
     @Operation(summary = "公开配置（前端可见）")
@@ -94,12 +93,11 @@ public class ConfigController {
      * @return 统一响应结果，包含公开配置列表
      */
     public BaseResponse<List<ConfigDO>> publicConfigs() {
-        return BaseResponse.ok(configService.listPublic());
+        return BaseResponse.success(configService.listPublic());
     }
 
     @Operation(summary = "创建配置")
     @AuthApiPermission(apiCodes = "sys:config:create")
-    @OperationLog(module = "系统配置", action = "创建配置", bizType = "CONFIG")
     @Idempotent(key = "config:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     /**
@@ -109,12 +107,11 @@ public class ConfigController {
      * @return 统一响应结果，包含新增配置 ID
      */
     public BaseResponse<String> create(@Valid @RequestBody ConfigFormDTO dto) {
-        return BaseResponse.ok(configService.create(dto));
+        return BaseResponse.success(configService.create(dto));
     }
 
     @Operation(summary = "更新配置")
     @AuthApiPermission(apiCodes = "sys:config:update")
-    @OperationLog(module = "系统配置", action = "更新配置", bizType = "CONFIG")
     @Idempotent(key = "config:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     /**
@@ -125,12 +122,11 @@ public class ConfigController {
      */
     public BaseResponse<Void> update(@Valid @RequestBody ConfigFormDTO dto) {
         configService.update(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "删除配置")
     @AuthApiPermission(apiCodes = "sys:config:delete")
-    @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
     @Idempotent(key = "config:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     /**
@@ -142,12 +138,11 @@ public class ConfigController {
     public BaseResponse<Void> delete(
             @Parameter(description = "配置ID") @PathVariable @NotBlank String id) {
         configService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "按分组批量删除")
     @AuthApiPermission(apiCodes = "sys:config:delete")
-    @OperationLog(module = "系统配置", action = "按分组删除", bizType = "CONFIG")
     @Idempotent(key = "config:deleteByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/group/{group}")
     /**
@@ -158,12 +153,11 @@ public class ConfigController {
      */
     public BaseResponse<Integer> deleteByGroup(
             @Parameter(description = "配置分组") @PathVariable String group) {
-        return BaseResponse.ok(configService.deleteByGroup(group));
+        return BaseResponse.success(configService.deleteByGroup(group));
     }
 
     @Operation(summary = "按分组批量启停")
     @AuthApiPermission(apiCodes = "sys:config:update")
-    @OperationLog(module = "系统配置", action = "按分组启停", bizType = "CONFIG")
     @Idempotent(key = "config:updateStatusByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/group/{group}/status/{status}")
     /**
@@ -176,12 +170,11 @@ public class ConfigController {
     public BaseResponse<Integer> updateStatusByGroup(
             @Parameter(description = "配置分组") @PathVariable String group,
             @Parameter(description = "状态") @PathVariable String status) {
-        return BaseResponse.ok(configService.updateStatusByGroup(group, status));
+        return BaseResponse.success(configService.updateStatusByGroup(group, status));
     }
 
     @Operation(summary = "刷新缓存")
     @AuthApiPermission(apiCodes = "sys:config:refresh")
-    @OperationLog(module = "系统配置", action = "刷新缓存", bizType = "CONFIG")
     @Idempotent(key = "config:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
     /**
@@ -191,6 +184,6 @@ public class ConfigController {
      */
     public BaseResponse<Void> refresh() {
         configService.refreshCache();
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

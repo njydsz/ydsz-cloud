@@ -56,7 +56,7 @@ public class RuleDashboardController {
     @GetMapping("/overview")
     @Operation(summary = "概览指标", description = "规则数量、触发率、P99 耗时、错误率等首屏卡片指标")
     public BaseResponse<RuleDashboardOverviewVO> overview() {
-        return BaseResponse.ok(dashboardService.getOverview());
+        return BaseResponse.success(dashboardService.getOverview());
     }
 
     /**
@@ -69,7 +69,7 @@ public class RuleDashboardController {
     @Operation(summary = "趋势指标", description = "按时间维度（小时/天）展示触发次数、P99 耗时、错误率趋势")
     public BaseResponse<RuleDashboardTrendVO> trends(
             @RequestParam(value = "timeRange", defaultValue = "24h") String timeRange) {
-        return BaseResponse.ok(dashboardService.getTrends(timeRange));
+        return BaseResponse.success(dashboardService.getTrends(timeRange));
     }
 
     /**
@@ -80,7 +80,7 @@ public class RuleDashboardController {
     @GetMapping("/distribution")
     @Operation(summary = "分布指标", description = "按状态/类别/严重度/场景/租户/责任人分组的规则分布")
     public BaseResponse<RuleDashboardDistributionVO> distribution() {
-        return BaseResponse.ok(dashboardService.getDistribution());
+        return BaseResponse.success(dashboardService.getDistribution());
     }
 
     /**
@@ -95,7 +95,7 @@ public class RuleDashboardController {
     public BaseResponse<List<RuleDashboardTopRuleVO>> topRules(
             @RequestParam(value = "type", defaultValue = "triggered") String type,
             @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
-        return BaseResponse.ok(dashboardService.getTopRules(type, limit));
+        return BaseResponse.success(dashboardService.getTopRules(type, limit));
     }
 
     /**
@@ -106,6 +106,6 @@ public class RuleDashboardController {
     @GetMapping("/realtime")
     @Operation(summary = "实时指标", description = "当前 QPS、活跃规则数、注册规则数等秒级实时指标")
     public BaseResponse<RuleDashboardRealtimeVO> realtime() {
-        return BaseResponse.ok(dashboardService.getRealtime());
+        return BaseResponse.success(dashboardService.getRealtime());
     }
 }

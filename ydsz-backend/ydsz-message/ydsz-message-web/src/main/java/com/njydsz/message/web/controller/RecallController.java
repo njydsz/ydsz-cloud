@@ -48,7 +48,7 @@ public class RecallController {
     @PostMapping("/notification")
     public BaseResponse<Boolean> recallNotification(@RequestParam String userId,
                                               @Valid @RequestBody RecallRequestDTO dto) {
-        return BaseResponse.ok(recallService.recallNotification(userId, dto.getId()));
+        return BaseResponse.success(recallService.recallNotification(userId, dto.getId()));
     }
 
     /**
@@ -62,7 +62,7 @@ public class RecallController {
     @Idempotent(key = "recall:recallMessage", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/message/{logId}")
     public BaseResponse<Boolean> recallMessage(@PathVariable String logId) {
-        return BaseResponse.ok(recallService.recallMessage(logId));
+        return BaseResponse.success(recallService.recallMessage(logId));
     }
 
     /**
@@ -78,7 +78,7 @@ public class RecallController {
     @Idempotent(key = "recall:recallByMsgId", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/msg/{msgId}")
     public BaseResponse<Boolean> recallByMsgId(@PathVariable String msgId) {
-        return BaseResponse.ok(recallService.recallByMsgId(msgId));
+        return BaseResponse.success(recallService.recallByMsgId(msgId));
     }
 
     /**
@@ -92,6 +92,6 @@ public class RecallController {
     @Idempotent(key = "recall:recallBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch")
     public BaseResponse<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
-        return BaseResponse.ok(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
+        return BaseResponse.success(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
     }
 }

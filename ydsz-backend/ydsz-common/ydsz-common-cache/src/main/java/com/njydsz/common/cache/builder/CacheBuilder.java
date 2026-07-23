@@ -19,9 +19,7 @@ import com.njydsz.common.cache.internal.lru.LRUCache;
 import com.njydsz.common.cache.internal.reference.SoftValueCache;
 import com.njydsz.common.cache.internal.reference.WeakKeyCache;
 import com.njydsz.common.cache.internal.reference.WeakValueCache;
-import com.njydsz.common.cache.internal.tinylfu.WTinyLFUCache;
 import com.njydsz.common.cache.internal.tinylfu.WindowTinyLFUCache;
-import com.njydsz.common.cache.internal.ttl.TTLCache;
 import com.njydsz.common.cache.internal.weighted.WeightedCache;
 import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.support.CacheLoader;
@@ -589,7 +587,7 @@ public final class CacheBuilder<K, V> {
     // 过期策略装饰器叠加（与淘汰策略正交）
     boolean hasExpiration =
         expireAfterWriteDuration > 0 || expireAfterAccessDuration > 0 || expiry != null;
-    if (hasExpiration && !(cache instanceof TTLCache) && !(cache instanceof EnhancedLoadingCache)) {
+    if (hasExpiration && !(cache instanceof EnhancedLoadingCache)) {
       long writeNanos =
           expireAfterWriteDuration > 0 && expireAfterWriteUnit != null
               ? expireAfterWriteUnit.toNanos(expireAfterWriteDuration)
@@ -651,24 +649,6 @@ public final class CacheBuilder<K, V> {
 
     return cache;
   }
-
-  /**
-   * 构建 WTinyLFU 缓存实例
-   *
-   * @deprecated 使用 {@link #build()} 配合默认的 TINYLFU 类型替代。此方法不应用装饰器、不校验参数，
-   *     建议使用 {@code YdszCache.newBuilder().type(CacheType.TINYLFU).maximumSize(n).build()}。
-   * @return WTinyLFU 缓存实例
-   */
-  @Deprecated
-  public WTinyLFUCache<K, V> buildWTinyLFU() {
-    int effectiveSize = maximumSize > 0 ? (int) maximumSize : 1000;
-    WTinyLFUCache<K, V> cache = new WTinyLFUCache<>(effectiveSize);
-    if (removalListener != null) {
-      cache.addListener(removalListener);
-    }
-    return cache;
-  }
-
   /**
    * 验证构建参数合法性
    *
@@ -802,16 +782,6 @@ public final class CacheBuilder<K, V> {
           return new WindowTinyLFUCache<K, V>(initialCapacity, stripes);
         }
 
-      case TTL:
-        // Deprecated: 重定向到 CONCURRENT + ExpirableCache 装饰器
-        // TTLCache 已废弃，使用 ExpirableCache 装饰器替代
-        // 如果未设置过期时间，默认 5 分钟 expireAfterWrite
-        if (expireAfterWriteDuration <= 0 && expireAfterAccessDuration <= 0) {
-          expireAfterWriteDuration = 5;
-          expireAfterWriteUnit = TimeUnit.MINUTES;
-        }
-        return new ConcurrentCache<>(initialCapacity);
-
       case WEIGHTED:
         if (weigher == null) {
           throw new IllegalStateException("weigher must be set for weighted cache");
@@ -820,15 +790,6 @@ public final class CacheBuilder<K, V> {
           throw new IllegalStateException("maximumWeight must be set for weighted cache");
         }
         return new WeightedCache<>(maximumWeight, initialCapacity, weigher);
-
-      case WEAK_KEY:
-        return new WeakKeyCache<>();
-
-      case WEAK_VALUE:
-        return new WeakValueCache<>();
-
-      case SOFT_VALUE:
-        return new SoftValueCache<>();
 
       case CONCURRENT:
         return new ConcurrentCache<>(initialCapacity);

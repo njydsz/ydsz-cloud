@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -62,7 +61,7 @@ public class WbsTaskController {
     @Idempotent(key = "wbsTask:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -77,7 +76,7 @@ public class WbsTaskController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -96,7 +95,7 @@ public class WbsTaskController {
                                    @RequestParam BigDecimal progressPct,
                                    @RequestParam(required = false) BigDecimal actualEffort) {
         service.updateProgress(id, progressPct, actualEffort);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -108,11 +107,10 @@ public class WbsTaskController {
     @Operation(summary = "删除任务")
     @AuthApiPermission(apiCodes = "execution:wbs:delete")
     @Idempotent(key = "wbsTask:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @OperationLog(module = "WBS任务", action = "删除任务", bizType = "WBS_TASK")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -125,7 +123,7 @@ public class WbsTaskController {
     @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/{id}")
     public BaseResponse<WbsTaskDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -151,7 +149,7 @@ public class WbsTaskController {
             @RequestParam(required = false) String taskType,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String ownerId) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
+        return BaseResponse.success(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
     }
 
     /**
@@ -164,7 +162,7 @@ public class WbsTaskController {
     @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
     public BaseResponse<List<WbsTaskDO>> listByInitiation(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.listByInitiation(initiationId));
+        return BaseResponse.success(service.listByInitiation(initiationId));
     }
 
     /**
@@ -177,7 +175,7 @@ public class WbsTaskController {
     @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
     public BaseResponse<List<WbsTaskDO>> listMilestones(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.listMilestones(initiationId));
+        return BaseResponse.success(service.listMilestones(initiationId));
     }
 
     /**
@@ -190,7 +188,7 @@ public class WbsTaskController {
     @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overallProgress")
     public BaseResponse<BigDecimal> overallProgress(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.calcOverallProgress(initiationId));
+        return BaseResponse.success(service.calcOverallProgress(initiationId));
     }
 
     /**
@@ -203,7 +201,7 @@ public class WbsTaskController {
     @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.aggregateByStatus(initiationId));
+        return BaseResponse.success(service.aggregateByStatus(initiationId));
     }
 
     /**
@@ -226,6 +224,6 @@ public class WbsTaskController {
     @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/gantt/{initiationId}")
     public BaseResponse<List<Map<String, Object>>> ganttData(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.getGanttData(initiationId));
+        return BaseResponse.success(service.getGanttData(initiationId));
     }
 }

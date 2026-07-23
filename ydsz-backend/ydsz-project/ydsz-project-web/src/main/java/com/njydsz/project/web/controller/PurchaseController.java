@@ -57,7 +57,7 @@ public class PurchaseController {
     @Idempotent(key = "purchase:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody PurchaseCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -72,7 +72,7 @@ public class PurchaseController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -87,7 +87,7 @@ public class PurchaseController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -100,7 +100,7 @@ public class PurchaseController {
     @AuthApiPermission(apiCodes = "execution:purchase:list")
     @GetMapping("/{id}")
     public BaseResponse<PurchaseDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -122,6 +122,6 @@ public class PurchaseController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, initiationId));
+        return BaseResponse.success(service.page(page, size, keyword, status, initiationId));
     }
 }

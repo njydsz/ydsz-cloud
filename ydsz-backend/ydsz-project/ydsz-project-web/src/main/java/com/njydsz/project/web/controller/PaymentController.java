@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -60,11 +59,10 @@ public class PaymentController {
      */
     @Operation(summary = "录入回款")
     @AuthApiPermission(apiCodes = "finance:payment:create")
-    @OperationLog(module = "回款管理", action = "录入回款", bizType = "PAYMENT", saveResult = true)
     @Idempotent(key = "payment:record", ttlSeconds = 10, message = "请勿重复录入回款")
     @PostMapping
     public BaseResponse<String> record(@Valid @RequestBody PaymentCreateDTO dto) {
-        return BaseResponse.ok(service.record(dto));
+        return BaseResponse.success(service.record(dto));
     }
 
     /**
@@ -76,13 +74,12 @@ public class PaymentController {
      */
     @Operation(summary = "确认到账")
     @AuthApiPermission(apiCodes = "finance:payment:status")
-    @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
     @YdszDistributedLock(key = "payment:confirm:#{#id}", waitTime = 3, leaseTime = 15, message = "正在确认回款，请稍后")
     @Idempotent(key = "payment:confirm", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
     public BaseResponse<Void> confirm(@PathVariable String id, @RequestParam String operatorId) {
         service.confirm(id, operatorId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -95,14 +92,13 @@ public class PaymentController {
      */
     @Operation(summary = "取消")
     @AuthApiPermission(apiCodes = "finance:payment:status")
-    @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
     @Idempotent(key = "payment:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
     public BaseResponse<Void> cancel(@PathVariable String id,
                           @RequestParam String operatorId,
                           @RequestParam(required = false) String reason) {
         service.cancel(id, operatorId, reason);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -113,12 +109,11 @@ public class PaymentController {
      */
     @Operation(summary = "删除")
     @AuthApiPermission(apiCodes = "finance:payment:delete")
-    @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
     @Idempotent(key = "payment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -129,13 +124,12 @@ public class PaymentController {
      */
     @Operation(summary = "核销到发票")
     @AuthApiPermission(apiCodes = "finance:payment:allocate")
-    @OperationLog(module = "回款管理", action = "核销到发票", bizType = "PAYMENT")
     @YdszDistributedLock(key = "payment:allocate:#{#dto.paymentId}", waitTime = 3, leaseTime = 20, message = "正在核销回款，请稍后")
     @Idempotent(key = "payment:allocate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/allocate")
     public BaseResponse<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
         service.allocate(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -147,12 +141,11 @@ public class PaymentController {
      */
     @Operation(summary = "自动核销（按客户）")
     @AuthApiPermission(apiCodes = "finance:payment:allocate")
-    @OperationLog(module = "回款管理", action = "自动核销（按客户）", bizType = "PAYMENT", saveResult = true)
     @Idempotent(key = "payment:autoAllocate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/autoAllocate")
     public BaseResponse<Integer> autoAllocate(@RequestParam String customerId,
                                    @RequestParam String operatorId) {
-        return BaseResponse.ok(service.autoAllocate(customerId, operatorId));
+        return BaseResponse.success(service.autoAllocate(customerId, operatorId));
     }
 
     /**
@@ -167,7 +160,7 @@ public class PaymentController {
     @GetMapping("/forecast")
     public BaseResponse<List<Map<String, Object>>> forecast(@RequestParam String initiationId,
                                                  @RequestParam(defaultValue = "3") int months) {
-        return BaseResponse.ok(service.forecastCashFlow(initiationId, months));
+        return BaseResponse.success(service.forecastCashFlow(initiationId, months));
     }
 
     /**
@@ -180,7 +173,7 @@ public class PaymentController {
     @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/{id}")
     public BaseResponse<PaymentDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -206,7 +199,7 @@ public class PaymentController {
             @RequestParam(required = false) String contractId,
             @RequestParam(required = false) String customerId,
             @RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, contractId, customerId, initiationId));
+        return BaseResponse.success(service.page(page, size, keyword, status, contractId, customerId, initiationId));
     }
 
     /**
@@ -219,7 +212,7 @@ public class PaymentController {
     @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/sum/byContract")
     public BaseResponse<BigDecimal> sumByContract(@RequestParam String contractId) {
-        return BaseResponse.ok(service.sumReceivedByContract(contractId));
+        return BaseResponse.success(service.sumReceivedByContract(contractId));
     }
 
     /**
@@ -232,6 +225,6 @@ public class PaymentController {
     @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/aggregate/byMonth")
     public BaseResponse<List<Map<String, Object>>> aggregateByMonth(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.aggregateByMonth(initiationId));
+        return BaseResponse.success(service.aggregateByMonth(initiationId));
     }
 }

@@ -11,7 +11,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -54,13 +53,12 @@ public class JobController {
      */
     @Operation(summary = "新增任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_CREATE)
-    @OperationLog(module = "任务调度", action = "新增任务", bizType = "CRONJOB_JOB", saveResult = true)
     @Idempotent(key = "job:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
         BeanUtils.copyProperties(dto, job);
-        return BaseResponse.ok(jobService.create(job));
+        return BaseResponse.success(jobService.create(job));
     }
 
     /**
@@ -71,14 +69,13 @@ public class JobController {
      */
     @Operation(summary = "更新任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @OperationLog(module = "任务调度", action = "更新任务", bizType = "CRONJOB_JOB", saveDiff = true)
     @Idempotent(key = "job:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
         BeanUtils.copyProperties(dto, job);
         jobService.update(job);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -89,12 +86,11 @@ public class JobController {
      */
     @Operation(summary = "删除任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
-    @OperationLog(module = "任务调度", action = "删除任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         jobService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -105,12 +101,11 @@ public class JobController {
      */
     @Operation(summary = "暂停任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_PAUSE)
-    @OperationLog(module = "任务调度", action = "暂停任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/pause")
     public BaseResponse<Void> pause(@PathVariable String id) {
         jobService.pause(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -121,12 +116,11 @@ public class JobController {
      */
     @Operation(summary = "恢复任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_PAUSE)
-    @OperationLog(module = "任务调度", action = "恢复任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/resume")
     public BaseResponse<Void> resume(@PathVariable String id) {
         jobService.resume(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -139,13 +133,12 @@ public class JobController {
      */
     @Operation(summary = "立即执行一次")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_TRIGGER)
-    @OperationLog(module = "任务调度", action = "手动触发任务", bizType = "CRONJOB_JOB", saveParams = false)
     @RateLimit(key = "job:trigger", qps = 3, windowSeconds = 60, message = "手动触发过于频繁，请稍后重试")
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/{id}/trigger")
     public BaseResponse<String> trigger(@PathVariable String id,
                                    @RequestParam(defaultValue = "false") boolean holdLock) {
-        return BaseResponse.ok(jobService.trigger(id, holdLock));
+        return BaseResponse.success(jobService.trigger(id, holdLock));
     }
 
     /**
@@ -159,7 +152,7 @@ public class JobController {
     @Idempotent(key = "job:batchPause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/pause")
     public BaseResponse<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
-        return BaseResponse.ok(jobService.batchPause(dto.getJobIds()));
+        return BaseResponse.success(jobService.batchPause(dto.getJobIds()));
     }
 
     /**
@@ -173,7 +166,7 @@ public class JobController {
     @Idempotent(key = "job:batchResume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/resume")
     public BaseResponse<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
-        return BaseResponse.ok(jobService.batchResume(dto.getJobIds()));
+        return BaseResponse.success(jobService.batchResume(dto.getJobIds()));
     }
 
     /**
@@ -187,7 +180,7 @@ public class JobController {
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/batch/trigger")
     public BaseResponse<Integer> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
-        return BaseResponse.ok(jobService.batchTrigger(dto.getJobIds()));
+        return BaseResponse.success(jobService.batchTrigger(dto.getJobIds()));
     }
 
     /**
@@ -198,11 +191,10 @@ public class JobController {
      */
     @Operation(summary = "批量删除任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
-    @OperationLog(module = "任务调度", action = "批量删除任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:batchDelete", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/delete")
     public BaseResponse<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
-        return BaseResponse.ok(jobService.batchDelete(dto.getJobIds()));
+        return BaseResponse.success(jobService.batchDelete(dto.getJobIds()));
     }
 
     /**
@@ -214,7 +206,7 @@ public class JobController {
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
     public BaseResponse<JobDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(jobService.getById(id));
+        return BaseResponse.success(jobService.getById(id));
     }
 
     /**
@@ -235,7 +227,7 @@ public class JobController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
-        return BaseResponse.ok(jobService.page(page, size, keyword, status, group));
+        return BaseResponse.success(jobService.page(page, size, keyword, status, group));
     }
 
     /**
@@ -254,7 +246,7 @@ public class JobController {
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(jobService.pageLog(page, size, jobKey, status));
+        return BaseResponse.success(jobService.pageLog(page, size, jobKey, status));
     }
 
     /**
@@ -268,6 +260,6 @@ public class JobController {
     @PostMapping("/reload")
     public BaseResponse<Map<String, Object>> reload() {
         jobService.loadOnStartup();
-        return BaseResponse.ok(Map.of("message", "ok"));
+        return BaseResponse.success(Map.of("message", "ok"));
     }
 }

@@ -53,7 +53,7 @@ public class AlertDispatchController {
     @Idempotent(key = "alertDispatch:submit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> submit(@Valid @RequestBody AlertDispatchDTO dto) {
-        return BaseResponse.ok(service.submit(dto));
+        return BaseResponse.success(service.submit(dto));
     }
 
     /**
@@ -66,7 +66,7 @@ public class AlertDispatchController {
     @Idempotent(key = "alertDispatch:dispatchNow", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/dispatch")
     public BaseResponse<Boolean> dispatchNow(@PathVariable String id) {
-        return BaseResponse.ok(service.dispatchNow(id));
+        return BaseResponse.success(service.dispatchNow(id));
     }
 
     /**
@@ -79,7 +79,7 @@ public class AlertDispatchController {
     @Idempotent(key = "alertDispatch:retryFailed", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/retry")
     public BaseResponse<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
-        return BaseResponse.ok(service.retryFailed(maxRetry));
+        return BaseResponse.success(service.retryFailed(maxRetry));
     }
 
     /**
@@ -94,7 +94,7 @@ public class AlertDispatchController {
     @PutMapping("/{id}/cancel")
     public BaseResponse<Void> cancel(@PathVariable String id, @RequestParam(required = false) String reason) {
         service.cancel(id, reason);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -108,7 +108,7 @@ public class AlertDispatchController {
     @GetMapping("/list")
     public BaseResponse<List<AlertDispatchDO>> list(@RequestParam(required = false) String level,
                                          @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.listByLevelAndStatus(level, status));
+        return BaseResponse.success(service.listByLevelAndStatus(level, status));
     }
 
     /**
@@ -120,7 +120,7 @@ public class AlertDispatchController {
     @Operation(summary = "按类型 × 等级 聚合统计")
     @GetMapping("/aggregate")
     public BaseResponse<List<Map<String, Object>>> aggregate(@RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(service.aggregateByTypeAndLevel(tenantId));
+        return BaseResponse.success(service.aggregateByTypeAndLevel(tenantId));
     }
 
     /**
@@ -132,6 +132,6 @@ public class AlertDispatchController {
     @Operation(summary = "解析等级对应目标角色（黄 → PM/PMO；红 → PMO/GM/CFO）")
     @GetMapping("/resolveRoles")
     public BaseResponse<List<String>> resolveRoles(@RequestParam String level) {
-        return BaseResponse.ok(service.resolveTargetRoles(level));
+        return BaseResponse.success(service.resolveTargetRoles(level));
     }
 }

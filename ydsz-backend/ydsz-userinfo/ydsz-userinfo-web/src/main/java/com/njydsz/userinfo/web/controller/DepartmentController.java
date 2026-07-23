@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -47,7 +46,7 @@ public class DepartmentController {
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/tree")
     public BaseResponse<List<DepartmentTreeVO>> tree() {
-        return BaseResponse.ok(departmentService.tree());
+        return BaseResponse.success(departmentService.tree());
     }
 
     /**
@@ -59,7 +58,7 @@ public class DepartmentController {
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping
     public BaseResponse<List<DepartmentDO>> list() {
-        return BaseResponse.ok(departmentService.listAllEnabled());
+        return BaseResponse.success(departmentService.listAllEnabled());
     }
 
     /**
@@ -72,7 +71,7 @@ public class DepartmentController {
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
     public BaseResponse<DepartmentDO> get(@Parameter(description = "部门ID") @PathVariable String id) {
-        return BaseResponse.ok(departmentService.getById(id));
+        return BaseResponse.success(departmentService.getById(id));
     }
 
     /**
@@ -83,11 +82,10 @@ public class DepartmentController {
      */
     @Operation(summary = "创建部门")
     @AuthApiPermission(apiCodes = "org:dept:create")
-    @OperationLog(module = "组织架构", action = "创建部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody DepartmentFormDTO dto) {
-        return BaseResponse.ok(departmentService.create(dto));
+        return BaseResponse.success(departmentService.create(dto));
     }
 
     /**
@@ -98,12 +96,11 @@ public class DepartmentController {
      */
     @Operation(summary = "更新部门")
     @AuthApiPermission(apiCodes = "org:dept:update")
-    @OperationLog(module = "组织架构", action = "更新部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody DepartmentFormDTO dto) {
         departmentService.update(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -114,11 +111,10 @@ public class DepartmentController {
      */
     @Operation(summary = "删除部门")
     @AuthApiPermission(apiCodes = "org:dept:delete")
-    @OperationLog(module = "组织架构", action = "删除部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "部门ID") @PathVariable String id) {
         departmentService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

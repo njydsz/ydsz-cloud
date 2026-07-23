@@ -59,9 +59,9 @@ public class BatchController {
     @PostMapping("/send")
     public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {
-            return BaseResponse.failed(BaseResultCode.BAD_REQUEST, "批量发送参数为空");
+            return BaseResponse.error(BaseResultCode.BAD_REQUEST, "批量发送参数为空");
         }
-        return BaseResponse.ok(batchService.submitBatch(dto));
+        return BaseResponse.success(batchService.submitBatch(dto));
     }
 
     /**
@@ -74,6 +74,6 @@ public class BatchController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/progress/{batchId}")
     public BaseResponse<BatchProgressVO> getProgress(@PathVariable String batchId) {
-        return BaseResponse.ok(batchService.getProgress(batchId));
+        return BaseResponse.success(batchService.getProgress(batchId));
     }
 }

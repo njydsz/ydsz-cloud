@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -52,11 +51,10 @@ public class JobSlaController {
      */
     @Operation(summary = "创建 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_CREATE)
-    @OperationLog(module = "任务调度", action = "创建 SLA 规则", bizType = "CRONJOB_SLA")
     @Idempotent(key = "jobSla:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSlaSaveDTO dto) {
-        return BaseResponse.ok(jobSlaService.createSla(dto));
+        return BaseResponse.success(jobSlaService.createSla(dto));
     }
 
     /**
@@ -68,12 +66,11 @@ public class JobSlaController {
      */
     @Operation(summary = "更新 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
-    @OperationLog(module = "任务调度", action = "更新 SLA 规则", bizType = "CRONJOB_SLA")
     @Idempotent(key = "jobSla:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
         jobSlaService.updateSla(id, dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -84,12 +81,11 @@ public class JobSlaController {
      */
     @Operation(summary = "删除 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_DELETE)
-    @OperationLog(module = "任务调度", action = "删除 SLA 规则", bizType = "CRONJOB_SLA")
     @Idempotent(key = "jobSla:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         jobSlaService.deleteSla(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -102,7 +98,7 @@ public class JobSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/{id}")
     public BaseResponse<JobSlaDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(jobSlaService.getSlaById(id));
+        return BaseResponse.success(jobSlaService.getSlaById(id));
     }
 
     /**
@@ -114,7 +110,7 @@ public class JobSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/list")
     public BaseResponse<List<JobSlaDO>> list() {
-        return BaseResponse.ok(jobSlaService.listSla());
+        return BaseResponse.success(jobSlaService.listSla());
     }
 
     /**
@@ -126,12 +122,11 @@ public class JobSlaController {
      */
     @Operation(summary = "启用/禁用 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
-    @OperationLog(module = "任务调度", action = "切换 SLA 启用状态", bizType = "CRONJOB_SLA")
     @Idempotent(key = "jobSla:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
     public BaseResponse<Void> toggle(@PathVariable String id, @RequestParam Integer enabled) {
         jobSlaService.toggleSla(id, enabled);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -144,6 +139,6 @@ public class JobSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/check")
     public BaseResponse<List<JobSlaService.SlaViolation>> checkViolation(@RequestParam String jobId) {
-        return BaseResponse.ok(jobSlaService.checkViolation(jobId));
+        return BaseResponse.success(jobSlaService.checkViolation(jobId));
     }
 }

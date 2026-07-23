@@ -51,7 +51,7 @@ public class WarrantyController {
     @Idempotent(key = "warranty:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody WarrantyCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     @Operation(summary = "手动提前终止质保期")
@@ -60,7 +60,7 @@ public class WarrantyController {
     @PostMapping("/terminate")
     public BaseResponse<Void> terminate(@Valid @RequestBody WarrantyTerminateDTO dto) {
         service.terminate(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     @Operation(summary = "扫描即将到期（≤ today + noticeDays 天）")
@@ -70,7 +70,7 @@ public class WarrantyController {
     public BaseResponse<Integer> scanExpiring(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today,
             @RequestParam(defaultValue = "30") int noticeDays) {
-        return BaseResponse.ok(service.scanExpiring(today, noticeDays));
+        return BaseResponse.success(service.scanExpiring(today, noticeDays));
     }
 
     @Operation(summary = "扫描已过期")
@@ -79,7 +79,7 @@ public class WarrantyController {
     @PostMapping("/scan/overdue")
     public BaseResponse<Integer> scanOverdue(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today) {
-        return BaseResponse.ok(service.scanOverdue(today));
+        return BaseResponse.success(service.scanOverdue(today));
     }
 
     @Operation(summary = "即将到期列表")
@@ -87,7 +87,7 @@ public class WarrantyController {
     @GetMapping("/expiring")
     public BaseResponse<List<WarrantyDO>> listExpiring(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) {
-        return BaseResponse.ok(service.listExpiring(until));
+        return BaseResponse.success(service.listExpiring(until));
     }
 
     @Operation(summary = "质保期分页")
@@ -99,13 +99,13 @@ public class WarrantyController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String keyword) {
-        return BaseResponse.ok(PageResponse.ofPage(service.page(page, size, status, initiationId, keyword)));
+        return BaseResponse.success(PageResponse.ofPage(service.page(page, size, status, initiationId, keyword)));
     }
 
     @Operation(summary = "质保期详情")
     @AuthApiPermission(apiCodes = "aftersales:warranty:list")
     @GetMapping("/{id}")
     public BaseResponse<WarrantyDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 }

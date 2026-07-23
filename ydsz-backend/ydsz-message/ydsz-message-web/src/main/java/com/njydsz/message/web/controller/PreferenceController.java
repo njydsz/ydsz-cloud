@@ -50,7 +50,7 @@ public class PreferenceController {
     @Idempotent(key = "preference:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
-        return BaseResponse.ok(preferenceService.upsert(dto));
+        return BaseResponse.success(preferenceService.upsert(dto));
     }
 
     /**
@@ -63,7 +63,7 @@ public class PreferenceController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}")
     public BaseResponse<List<MsgPreferenceDO>> listByUser(@PathVariable String userId) {
-        return BaseResponse.ok(preferenceService.listByUser(userId));
+        return BaseResponse.success(preferenceService.listByUser(userId));
     }
 
     /**
@@ -80,7 +80,7 @@ public class PreferenceController {
     public BaseResponse<MsgPreferenceDO> getByUser(@PathVariable String userId,
                                              @PathVariable String channel,
                                              @PathVariable String bizType) {
-        return BaseResponse.ok(preferenceService.getByUser(userId, channel, bizType));
+        return BaseResponse.success(preferenceService.getByUser(userId, channel, bizType));
     }
 
     /**
@@ -95,6 +95,6 @@ public class PreferenceController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         preferenceService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
@@ -48,7 +47,7 @@ public class FlowAutoTriggerController {
     @Operation(summary = "列出所有触发规则")
     @GetMapping("/list")
     public BaseResponse<List<FlowAutoTriggerDO>> list() {
-        return BaseResponse.ok(autoTriggerService.listAll());
+        return BaseResponse.success(autoTriggerService.listAll());
     }
 
     /**
@@ -65,7 +64,7 @@ public class FlowAutoTriggerController {
         String targetFlowCode = dto.getTargetFlowCode();
         String conditionExpression = dto.getConditionExpression();
         autoTriggerService.registerTrigger(sourceFlowCode, targetFlowCode, conditionExpression);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -75,12 +74,11 @@ public class FlowAutoTriggerController {
      * @return 删除结果
      */
     @Operation(summary = "删除触发规则")
-    @OperationLog(module = "工作流", action = "删除触发规则", bizType = "FLOW_AUTO_TRIGGER")
     @Idempotent(key = "flowAutoTrigger:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         autoTriggerService.deleteById(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -94,6 +92,6 @@ public class FlowAutoTriggerController {
     @PutMapping("/{id}/toggle")
     public BaseResponse<Map<String, Object>> toggle(@PathVariable String id) {
         boolean enabled = autoTriggerService.toggleEnabled(id);
-        return BaseResponse.ok(Map.of("id", id, "enabled", enabled));
+        return BaseResponse.success(Map.of("id", id, "enabled", enabled));
     }
 }

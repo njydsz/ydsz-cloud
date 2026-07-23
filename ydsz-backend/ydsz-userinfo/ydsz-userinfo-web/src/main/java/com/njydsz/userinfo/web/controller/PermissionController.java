@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.common.audit.annotation.OperationLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -46,7 +45,7 @@ public class PermissionController {
     @Operation(summary = "查询所有权限")
     @GetMapping
     public BaseResponse<List<PermissionDO>> list() {
-        return BaseResponse.ok(permissionService.listAllEnabled());
+        return BaseResponse.success(permissionService.listAllEnabled());
     }
 
     /**
@@ -58,7 +57,7 @@ public class PermissionController {
     @Operation(summary = "查询当前用户权限编码")
     @GetMapping("/mine")
     public BaseResponse<List<String>> mine(@RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(permissionService.listPermCodesByUserId(userId));
+        return BaseResponse.success(permissionService.listPermCodesByUserId(userId));
     }
 
     /**
@@ -70,7 +69,7 @@ public class PermissionController {
     @Operation(summary = "查询当前用户菜单树")
     @GetMapping("/menuTree")
     public BaseResponse<List<MenuTreeVO>> menuTree(@RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(permissionService.listMenuTreeByUserId(userId));
+        return BaseResponse.success(permissionService.listMenuTreeByUserId(userId));
     }
 
     /**
@@ -81,7 +80,7 @@ public class PermissionController {
     @Operation(summary = "查询所有权限(构建树)")
     @GetMapping("/tree")
     public BaseResponse<List<MenuTreeVO>> tree() {
-        return BaseResponse.ok(permissionService.listAllMenuTree());
+        return BaseResponse.success(permissionService.listAllMenuTree());
     }
 
     /**
@@ -93,7 +92,7 @@ public class PermissionController {
     @Operation(summary = "查询角色的权限")
     @GetMapping("/byRole/{roleId}")
     public BaseResponse<List<PermissionDO>> listByRole(@Parameter(description = "角色ID") @PathVariable String roleId) {
-        return BaseResponse.ok(permissionService.listByRoleId(roleId));
+        return BaseResponse.success(permissionService.listByRoleId(roleId));
     }
 
     /**
@@ -105,7 +104,7 @@ public class PermissionController {
     @Operation(summary = "权限详情")
     @GetMapping("/{id}")
     public BaseResponse<PermissionDO> get(@Parameter(description = "权限ID") @PathVariable String id) {
-        return BaseResponse.ok(permissionService.getById(id));
+        return BaseResponse.success(permissionService.getById(id));
     }
 
     /**
@@ -116,12 +115,11 @@ public class PermissionController {
      */
     @Operation(summary = "创建权限")
     @AuthApiPermission(apiCodes = "auth:perm:create")
-    @OperationLog(module = "权限管理", action = "创建权限", bizType = "PERM")
     @YdszDistributedLock(key = "permission:create:#{#dto.permCode}", waitTime = 3, leaseTime = 10, message = "正在创建权限，请稍后")
     @Idempotent(key = "permission:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody PermissionFormDTO dto) {
-        return BaseResponse.ok(permissionService.create(dto));
+        return BaseResponse.success(permissionService.create(dto));
     }
 
     /**
@@ -132,13 +130,12 @@ public class PermissionController {
      */
     @Operation(summary = "更新权限")
     @AuthApiPermission(apiCodes = "auth:perm:update")
-    @OperationLog(module = "权限管理", action = "更新权限", bizType = "PERM")
     @YdszDistributedLock(key = "permission:update:#{#dto.id}", waitTime = 3, leaseTime = 10, message = "正在更新权限，请稍后")
     @Idempotent(key = "permission:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody PermissionFormDTO dto) {
         permissionService.update(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -149,12 +146,11 @@ public class PermissionController {
      */
     @Operation(summary = "删除权限")
     @AuthApiPermission(apiCodes = "auth:perm:delete")
-    @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
     @YdszDistributedLock(key = "permission:delete:#{#id}", waitTime = 3, leaseTime = 10, message = "正在删除权限，请稍后")
     @Idempotent(key = "permission:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "权限ID") @PathVariable String id) {
         permissionService.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

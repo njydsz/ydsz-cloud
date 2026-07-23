@@ -49,7 +49,7 @@ public class FlowQuickCommentController {
     public BaseResponse<List<FlowQuickCommentDO>> list() {
         String userId = AuthContext.getUserId();
         String tenantId = TenantContext.getTenantId();
-        return BaseResponse.ok(quickCommentService.listByUser(userId, tenantId));
+        return BaseResponse.success(quickCommentService.listByUser(userId, tenantId));
     }
 
     /**
@@ -64,7 +64,7 @@ public class FlowQuickCommentController {
     public BaseResponse<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
         String userId = AuthContext.getUserId();
         String tenantId = TenantContext.getTenantId();
-        return BaseResponse.ok(quickCommentService.create(dto, userId, tenantId));
+        return BaseResponse.success(quickCommentService.create(dto, userId, tenantId));
     }
 
     /**
@@ -79,7 +79,7 @@ public class FlowQuickCommentController {
     public BaseResponse<Void> update(@Valid @RequestBody FlowQuickCommentDTO dto) {
         String userId = AuthContext.getUserId();
         quickCommentService.update(dto, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -94,7 +94,7 @@ public class FlowQuickCommentController {
     public BaseResponse<Void> delete(@PathVariable String id) {
         String userId = AuthContext.getUserId();
         quickCommentService.delete(id, userId);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -108,6 +108,6 @@ public class FlowQuickCommentController {
     @Operation(summary = "增加使用次数（审批时调用）")
     public BaseResponse<Void> incrementUseCount(@PathVariable String id) {
         quickCommentService.incrementUseCount(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 }

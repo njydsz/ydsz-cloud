@@ -143,22 +143,6 @@ public final class ContextPropagationUtils {
         }
         CONTEXT_ENTRIES.put(name, new ContextEntry(getter, setter));
     }
-
-    /**
-     * 注册上下文提供者（仅 getter，setter 为空操作）
-     *
-     * <p>此重载仅用于只读场景，不实际传播上下文值。
-     * 推荐使用 {@link #registerContextProvider(String, Supplier, BiConsumer)} 注册完整条目。
-     *
-     * @param name     上下文名称
-     * @param getter   上下文值读取器
-     * @deprecated 使用 {@link #registerContextProvider(String, Supplier, BiConsumer)} 替代
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static void registerContextProvider(String name, Supplier<String> getter) {
-        registerContextProvider(name, getter, (n, v) -> { });
-    }
-
     /**
      * 移除上下文提供者
      *

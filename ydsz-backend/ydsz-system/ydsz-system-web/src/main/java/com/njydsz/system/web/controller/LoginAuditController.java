@@ -66,7 +66,7 @@ public class LoginAuditController {
         if (StringUtils.hasText(status)) w.eq(LoginAuditDO::getStatus, status);
         if (StringUtils.hasText(loginIp)) w.like(LoginAuditDO::getLoginIp, loginIp);
         w.orderByDesc(LoginAuditDO::getLoginAt);
-        return BaseResponse.ok(PageResponse.ofPage(loginAuditMapper.selectPage(p, w)));
+        return BaseResponse.success(PageResponse.ofPage(loginAuditMapper.selectPage(p, w)));
     }
 
     @Operation(summary = "按用户名查询登录历史")
@@ -82,7 +82,7 @@ public class LoginAuditController {
     public BaseResponse<List<LoginAuditDO>> byUsername(
             @Parameter(description = "用户名") @RequestParam String username,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return BaseResponse.ok(loginAuditMapper.selectByUsername(username, Math.min(limit, 200)));
+        return BaseResponse.success(loginAuditMapper.selectByUsername(username, Math.min(limit, 200)));
     }
 
     @Operation(summary = "统计某 IP 短期登录失败次数")
@@ -100,6 +100,6 @@ public class LoginAuditController {
             @Parameter(description = "IP地址") @RequestParam String ip,
             @Parameter(description = "状态") @RequestParam String status,
             @Parameter(description = "统计时间窗口（分钟）") @RequestParam(defaultValue = "10") int sinceMinutes) {
-        return BaseResponse.ok(loginAuditMapper.countByIpSince(ip, status, sinceMinutes));
+        return BaseResponse.success(loginAuditMapper.countByIpSince(ip, status, sinceMinutes));
     }
 }

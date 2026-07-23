@@ -62,7 +62,7 @@ public class ProjectChangeController {
     @Idempotent(key = "projectChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+        return BaseResponse.success(service.create(dto));
     }
 
     /**
@@ -77,7 +77,7 @@ public class ProjectChangeController {
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
         service.changeStatus(dto);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -92,7 +92,7 @@ public class ProjectChangeController {
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return BaseResponse.ok();
+        return BaseResponse.success();
     }
 
     /**
@@ -105,7 +105,7 @@ public class ProjectChangeController {
     @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/{id}")
     public BaseResponse<ProjectChangeDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+        return BaseResponse.success(service.getById(id));
     }
 
     /**
@@ -129,7 +129,7 @@ public class ProjectChangeController {
             @RequestParam(required = false) String changeType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(service.page(page, size, keyword, changeType, status, initiationId));
+        return BaseResponse.success(service.page(page, size, keyword, changeType, status, initiationId));
     }
 
     /**
@@ -142,7 +142,7 @@ public class ProjectChangeController {
     @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/listByInitiation/{initiationId}")
     public BaseResponse<List<ProjectChangeDO>> listByInitiation(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.listByInitiation(initiationId));
+        return BaseResponse.success(service.listByInitiation(initiationId));
     }
 
     /**
@@ -155,7 +155,7 @@ public class ProjectChangeController {
     @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/aggregate/type")
     public BaseResponse<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(service.aggregateByType(tenantId));
+        return BaseResponse.success(service.aggregateByType(tenantId));
     }
 
     /**
@@ -168,7 +168,7 @@ public class ProjectChangeController {
     @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(service.aggregateByStatus(tenantId));
+        return BaseResponse.success(service.aggregateByStatus(tenantId));
     }
 
     /**
@@ -181,7 +181,7 @@ public class ProjectChangeController {
     @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/majorCount/{initiationId}")
     public BaseResponse<Integer> countMajor(@PathVariable String initiationId) {
-        return BaseResponse.ok(service.countMajorByInitiation(initiationId));
+        return BaseResponse.success(service.countMajorByInitiation(initiationId));
     }
 
     /**
@@ -200,17 +200,17 @@ public class ProjectChangeController {
     public BaseResponse<List<String>> getAllowedTransitions(@PathVariable String id) {
         ProjectChangeDO change = service.getById(id);
         if (change == null) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         ChangeStatus current = ChangeStatus.fromCode(change.getStatus());
         if (current == null || current.isTerminal()) {
-            return BaseResponse.ok(List.of());
+            return BaseResponse.success(List.of());
         }
         List<String> allowed = Arrays.stream(ChangeStatus.values())
                 .filter(s -> current.canTransitTo(s))
                 .map(ChangeStatus::getCode)
                 .collect(Collectors.toList());
-        return BaseResponse.ok(allowed);
+        return BaseResponse.success(allowed);
     }
 
     /**
@@ -229,6 +229,6 @@ public class ProjectChangeController {
                 "terminal", String.valueOf(s.isTerminal())
             ));
         }
-        return BaseResponse.ok(list);
+        return BaseResponse.success(list);
     }
 }
