@@ -28,8 +28,6 @@ import com.njydsz.common.util.auth.YdszAuthInfo;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  * @see YdszAuthInfo
  */
 public abstract class BaseAuthInfo extends YdszAuthInfo {

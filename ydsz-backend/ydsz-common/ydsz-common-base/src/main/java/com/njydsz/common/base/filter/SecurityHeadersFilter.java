@@ -37,8 +37,6 @@ import com.njydsz.common.util.url.UrlPathUtils;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
 public class SecurityHeadersFilter extends OncePerRequestFilter {
 

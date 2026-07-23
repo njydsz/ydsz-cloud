@@ -36,8 +36,6 @@ import lombok.Data;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
 @Data
 @ConfigurationProperties

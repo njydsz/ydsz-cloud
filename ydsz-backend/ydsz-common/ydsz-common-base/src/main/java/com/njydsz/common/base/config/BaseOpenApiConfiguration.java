@@ -35,8 +35,6 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
 public abstract class BaseOpenApiConfiguration {
 

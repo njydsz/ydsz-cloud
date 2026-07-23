@@ -32,8 +32,6 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
 public abstract class BaseI18nConfiguration {
 
