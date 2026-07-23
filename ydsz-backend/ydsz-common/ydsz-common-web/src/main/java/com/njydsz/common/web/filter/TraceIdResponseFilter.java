@@ -21,8 +21,7 @@ import com.njydsz.common.web.config.WebTraceProperties;
  * </ol>
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
+* 
  * @see BaseRequestIdResponseFilter
  * @see TracerUtils
  */

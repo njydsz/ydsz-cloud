@@ -1,6 +1,7 @@
 package com.njydsz.common.base.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -13,6 +14,7 @@ import com.njydsz.common.base.constant.BaseFilterOrders;
 import com.njydsz.common.base.filter.RequestContextCleanupFilter;
 import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
+import com.njydsz.common.base.health.BaseHealthIndicator;
 
 /**
  * Base 模块自动配置
@@ -22,8 +24,8 @@ import com.njydsz.common.base.filter.TraceFilter;
  *   <li>RequestContext 清理过滤器</li>
  *   <li>链路追踪过滤器（TraceFilter）</li>
  *   <li>安全响应头过滤器（SecurityHeadersFilter）</li>
- *   <li>CORS 跨域配置属性绑定</li>
- *   <li>Trace 追踪配置属性绑定</li>
+ *   <li>安全响应头配置属性绑定</li>
+ *   <li>健康指标（BaseHealthIndicator，需 actuator 依赖）</li>
  * </ul>
  *
  * <p>注意：BaseCorsProperties 和 BaseTraceProperties 为抽象基类，
@@ -34,8 +36,6 @@ import com.njydsz.common.base.filter.TraceFilter;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
 @AutoConfiguration
 @ConditionalOnWebApplication
@@ -105,5 +105,23 @@ public class BaseAutoConfiguration {
         registration.addUrlPatterns("/*");
         registration.setName("requestContextCleanupFilter");
         return registration;
+    }
+
+    /**
+     * Base 模块健康指标
+     *
+     * <p>报告时区、安全响应头、文档功能等基础配置的运行状态。
+     * 仅在 classpath 中存在 {@code HealthIndicator} 类时激活。
+     *
+     * @param securityHeadersProperties 安全响应头配置
+     * @param docProperties 文档配置
+     * @return BaseHealthIndicator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
+    public BaseHealthIndicator baseHealthIndicator(BaseSecurityHeadersProperties securityHeadersProperties,
+                                                    DocProperties docProperties) {
+        return new BaseHealthIndicator(securityHeadersProperties, docProperties);
     }
 }

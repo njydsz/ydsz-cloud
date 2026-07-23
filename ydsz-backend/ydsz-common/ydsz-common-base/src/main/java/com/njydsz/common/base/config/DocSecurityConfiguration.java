@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 
 /**
  * 文档安全自动配置类
@@ -59,15 +60,20 @@ public class DocSecurityConfiguration {
     /** 文档模块配置属性，由 Spring 注入 */
     private final DocProperties docProperties;
 
+    /** Spring 环境对象，用于获取激活的 Profile */
+    private final Environment environment;
+
     /**
      * 构造方法
      *
      * <p>在构造阶段即对生产环境安全配置进行校验与告警，避免运行期才暴露安全风险。
      *
      * @param docProperties 文档模块配置属性
+     * @param environment Spring 环境对象
      */
-    public DocSecurityConfiguration(DocProperties docProperties) {
+    public DocSecurityConfiguration(DocProperties docProperties, Environment environment) {
         this.docProperties = docProperties;
+        this.environment = environment;
         // 生产环境安全警告：文档功能启用时应确保有安全保护
         checkProductionSecurity(docProperties);
     }
@@ -75,15 +81,21 @@ public class DocSecurityConfiguration {
     /**
      * 检查生产环境文档安全配置
      *
-     * <p>若检测到当前激活的 Profile 包含 {@code prod} 或 {@code production}，
+     * <p>通过 Spring {@link Environment} 获取当前激活的 Profile，
+     * 若包含 {@code prod} 或 {@code production}，
      * 会根据当前配置组合输出不同级别的安全告警日志。
      *
      * @param props 文档配置属性
      */
     private void checkProductionSecurity(DocProperties props) {
-        String activeProfile = System.getProperty("spring.profiles.active",
-                System.getenv("SPRING_PROFILES_ACTIVE"));
-        if (activeProfile != null && (activeProfile.contains("prod") || activeProfile.contains("production"))) {
+        boolean isProduction = false;
+        for (String profile : environment.getActiveProfiles()) {
+            if (profile.contains("prod") || profile.contains("production")) {
+                isProduction = true;
+                break;
+            }
+        }
+        if (isProduction) {
             if (!props.isProductionEnabled()) {
                 logger.warn("【文档安全】生产环境检测到 ydsz.doc.enabled=true 但 production-enabled=false，"
                         + "文档功能已启用但生产环境访问控制未开启，请确认是否符合安全要求");

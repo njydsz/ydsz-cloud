@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.base.interceptor.BaseRequestLogInterceptor;
 import com.njydsz.common.util.id.TracerUtils;
@@ -26,12 +25,9 @@ import lombok.extern.slf4j.Slf4j;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
  * @see BaseRequestLogInterceptor
  */
 @Slf4j
-@Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestLogInterceptor extends BaseRequestLogInterceptor {
 
@@ -39,22 +35,11 @@ public class RequestLogInterceptor extends BaseRequestLogInterceptor {
         super(traceProperties);
     }
 
-    /**
-     * 解析请求 ID（TraceId）
-     *
-     * @param request HTTP 请求
-     * @return TraceId 字符串
-     */
     @Override
     protected String resolveRequestId(HttpServletRequest request) {
         return TracerUtils.getTraceId();
     }
 
-    /**
-     * 获取日志记录器
-     *
-     * @return Logger 实例
-     */
     @Override
     protected Logger getLogger() {
         return log;

@@ -18,12 +18,11 @@ import lombok.Data;
  *       log-level: INFO
  *       sampling-rate: 1.0
  *       log-request-body: false
+ *       slow-request-threshold: 3000
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
 @Data
 public abstract class BaseTraceProperties {
@@ -98,8 +97,32 @@ public abstract class BaseTraceProperties {
     /**
      * 日志采样率
      *
-     * <p>取值范围 [0, 1]，1.0 表示全量记录，0.0 表示不记录。
+     * <p>取值范围 [0.0, 1.0]，1.0 表示全量记录，0.0 表示不记录。
      * 用于在高并发场景下减少日志输出量。
+     * 超出范围的值会被自动修正：&lt;0 取 0，&gt;1 取 1。
      */
     private double samplingRate = 1.0;
+
+    /**
+     * 慢请求阈值（毫秒）
+     *
+     * <p>请求耗时超过此阈值时，日志级别升级为 WARN，便于性能监控。
+     * 默认 3000ms（3 秒）。
+     */
+    private long slowRequestThreshold = 3000L;
+
+    /**
+     * 获取采样率，自动修正到 [0.0, 1.0] 范围
+     *
+     * @return 采样率，范围 [0.0, 1.0]
+     */
+    public double getSamplingRate() {
+        if (samplingRate < 0.0) {
+            return 0.0;
+        }
+        if (samplingRate > 1.0) {
+            return 1.0;
+        }
+        return samplingRate;
+    }
 }

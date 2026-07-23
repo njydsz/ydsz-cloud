@@ -11,6 +11,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
+import com.njydsz.common.base.interceptor.RequestIdResolver;
 import com.njydsz.common.core.constant.HeaderConstants;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +23,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @Slf4j
-public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter {
+public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter implements RequestIdResolver {
 
     protected static final String HEADER_REQUEST_ID = HeaderConstants.X_REQUEST_ID;
 
@@ -55,8 +55,12 @@ public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter {
 
     /**
      * 子类覆盖此方法提供具体的请求 ID 解析逻辑
+     *
+     * @param request HTTP 请求
+     * @return 请求 ID
      */
-    protected abstract String resolveRequestId(HttpServletRequest request);
+    @Override
+    public abstract String resolveRequestId(HttpServletRequest request);
 
     /**
      * 请求结束后清理（默认空实现，子类可覆盖）

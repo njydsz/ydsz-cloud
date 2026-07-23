@@ -1,7 +1,5 @@
 package com.njydsz.common.app.auth;
 
-import org.springframework.stereotype.Component;
-
 import com.njydsz.common.auth.handler.AbstractAuthHandler;
 import com.njydsz.common.util.auth.YdszAuthInfo;
 
@@ -15,15 +13,14 @@ import com.njydsz.common.util.auth.YdszAuthInfo;
  * 通常基于 {@code X-App-Token} 等自定义请求头进行认证，
  * 业务方可注入自定义 {@code AbstractAuthHandler} 子类以适配不同客户端协议。
  *
- * <p><b>线程安全性：</b>无状态 Bean，线程安全。
+ * <p><b>注册方式：</b>由 {@code AppMvcConfiguration} 通过 {@code @Bean} +
+ * {@code @ConditionalOnMissingBean} 注册，业务方可覆盖。
  *
  * @author ydsz-team
- * @since 1.0.0
  * @since 1.0.0
  * @see AbstractAuthHandler
  * @see AppAuthInfo
  */
-@Component("appAuthHandler")
 public class AppAuthHandler extends AbstractAuthHandler {
 
     /**

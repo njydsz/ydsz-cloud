@@ -5,3 +5,4 @@ com.njydsz.common.web.config.WebOpenApiConfiguration
 com.njydsz.common.web.config.WebTimezoneConfiguration
 com.njydsz.common.web.config.WebI18nConfiguration
 com.njydsz.common.web.config.WebSessionAutoConfiguration
+com.njydsz.common.web.exception.WebExceptionAutoConfiguration

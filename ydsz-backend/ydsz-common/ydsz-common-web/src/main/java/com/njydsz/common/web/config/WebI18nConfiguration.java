@@ -11,8 +11,7 @@ import com.njydsz.common.base.config.BaseI18nConfiguration;
  * 默认加载 {@code i18n.messages} 基础消息文件。
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
+* 
  * @see BaseI18nConfiguration
  */
 @AutoConfiguration

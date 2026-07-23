@@ -43,8 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * 确保跨域预检请求可以正常通过，而认证逻辑在跨域处理之后执行。
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
+* 
  * @see AuthHandlerFactory
  * @see AuthenticationProvider
  * @see RequestHolder

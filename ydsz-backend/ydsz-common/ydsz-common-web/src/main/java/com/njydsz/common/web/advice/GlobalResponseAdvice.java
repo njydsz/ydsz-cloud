@@ -23,8 +23,7 @@ import com.njydsz.common.core.response.BaseResponse;
  * 保证在所有异常处理 Advice 之前包装响应体。
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
+* 
  * @see BaseGlobalResponseAdvice
  * @see BaseResponse
  */

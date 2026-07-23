@@ -38,7 +38,25 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
 
-        <!-- Jackson 由 spring-boot-starter-web 传递依赖引入，无需显式声明 -->
+        <!-- 公共 JSON 模块（直接使用 YdszJson，显式声明） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Actuator（可选，用于 HealthIndicator） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- spring-boot-health (Spring Boot 4.x: health classes moved from actuator to health module) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- springdoc-openapi（可选，业务项目可选择是否使用 OpenAPI 文档） -->
         <dependency>

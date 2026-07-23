@@ -25,24 +25,14 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>默认使用注入的 AuthHandler 进行认证</li>
  *   <li>业务方可注入自定义 {@link AuthenticationProvider} 覆盖默认策略</li>
- *   <li>通过 Spring {@code @ConditionalOnBean} 或 SPI 实现可插拔认证</li>
  * </ul>
  *
- * <p>请求追踪：
- * <ul>
- *   <li>自动生成请求追踪 ID（Request ID）</li>
- *   <li>将请求 ID 写入 MDC 日志上下文，便于日志聚合分析</li>
- *   <li>将请求 ID 注入响应头 {@code X-Request-Id}</li>
- * </ul>
- *
+ * @author ydsz-team
+ * @since 1.0.0
  * @see AuthHandler
  * @see AuthInfo
  * @see AuthenticationProvider
  * @see RequestHolder
- *
- * @author ydsz-team
- * @since 1.0.0
- * @since 1.0.0
  */
 @Slf4j
 public class AppAuthFilter extends BaseAuthFilter {
@@ -59,18 +49,7 @@ public class AppAuthFilter extends BaseAuthFilter {
     private final AuthenticationProvider authenticationProvider;
 
     /**
-     * 构造方法（兼容版本：仅注入 AuthHandler）
-     *
-     * @param applicationName        应用名称
-     * @param authFilterConfiguration 通用鉴权过滤器配置
-     * @param authHandler            认证处理器
-     */
-    public AppAuthFilter(String applicationName, AuthFilterConfiguration authFilterConfiguration, AuthHandler authHandler) {
-        this(applicationName, authFilterConfiguration, authHandler, null);
-    }
-
-    /**
-     * 构造方法（完整版本）
+     * 构造方法
      *
      * @param applicationName        应用名称
      * @param authFilterConfiguration 通用鉴权过滤器配置
@@ -89,8 +68,7 @@ public class AppAuthFilter extends BaseAuthFilter {
     /**
      * 鉴权前的预处理
      *
-     * <p>生成或复用当前请求的 RequestId，并写入 {@link RequestHolder} 上下文，
-     * 供后续过滤器（如 {@link AppRequestLogInterceptor}）使用。
+     * <p>生成或复用当前请求的 RequestId，并写入 {@link RequestHolder} 上下文。
      *
      * @param request  当前 HTTP 请求
      * @param response 当前 HTTP 响应
@@ -105,7 +83,6 @@ public class AppAuthFilter extends BaseAuthFilter {
      * 解析当前请求的认证信息
      *
      * <p>优先使用 {@link AuthenticationProvider}，为空时降级到 {@link AuthHandler}。
-     * 若两者均为空则抛出 {@link NullPointerException}。
      *
      * @param request  当前 HTTP 请求
      * @param response 当前 HTTP 响应

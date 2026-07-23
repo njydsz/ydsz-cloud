@@ -39,7 +39,7 @@ public abstract class AbstractContentCachingFilter extends OncePerRequestFilter 
     /**
      * 缓存容量（字节）
      */
-    private int cacheCapacity;
+    private final int cacheCapacity;
 
     /**
      * 使用默认缓存容量构造
