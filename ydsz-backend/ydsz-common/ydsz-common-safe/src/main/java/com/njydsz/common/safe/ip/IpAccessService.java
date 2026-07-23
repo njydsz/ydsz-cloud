@@ -55,7 +55,7 @@ public class IpAccessService {
         this.redisService = redisService;
 
         this.blacklistCache = YdszCache.<String, Boolean>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(properties.getLocalCacheTtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(properties.getLocalCacheSize())
                 .build();

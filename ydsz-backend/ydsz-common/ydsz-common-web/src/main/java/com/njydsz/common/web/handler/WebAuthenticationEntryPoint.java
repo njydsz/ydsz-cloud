@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-team
-* 
  */
 @Slf4j
 public class WebAuthenticationEntryPoint implements AuthenticationEntryPoint {

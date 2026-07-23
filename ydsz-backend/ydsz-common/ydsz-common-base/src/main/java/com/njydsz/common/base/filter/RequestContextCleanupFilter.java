@@ -19,7 +19,6 @@ import com.njydsz.common.core.context.RequestContext;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class RequestContextCleanupFilter implements Filter {
 

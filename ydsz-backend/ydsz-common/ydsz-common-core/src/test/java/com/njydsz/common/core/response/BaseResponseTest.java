@@ -98,17 +98,17 @@ class BaseResponseTest {
     class FailedThrowable {
 
         @Test
-        @DisplayName("保留异常类名和消息")
-        void failed_preservesExceptionType() {
-            BaseResponse<String> resp = BaseResponse.error(new NullPointerException("null ref"));
+        @DisplayName("error(String) 包含异常类名和消息")
+        void error_withExceptionMessage() {
+            BaseResponse<String> resp = BaseResponse.error("NullPointerException: null ref");
             assertThat(resp.getMsg()).contains("NullPointerException");
             assertThat(resp.getMsg()).contains("null ref");
         }
 
         @Test
-        @DisplayName("异常无消息时仅显示类名")
-        void failed_noMessage() {
-            BaseResponse<String> resp = BaseResponse.error(new IllegalStateException());
+        @DisplayName("error(String) 仅类名")
+        void error_classNameOnly() {
+            BaseResponse<String> resp = BaseResponse.error("IllegalStateException");
             assertThat(resp.getMsg()).contains("IllegalStateException");
         }
     }
@@ -192,17 +192,17 @@ class BaseResponseTest {
         }
 
         @Test
-        @DisplayName("getList 从 data 中提取列表（向后兼容模式：T 为元素类型）")
-        void getList() {
-            PageResponse<String> resp = PageResponse.of(List.of("a", "b"), 10L, 1L, 10L);
-            assertThat(resp.getList()).containsExactly("a", "b");
+        @DisplayName("success 构建分页响应并获取数据")
+        void success_withData() {
+            PageResponse<List<String>> resp = PageResponse.success(10L, 1L, 10L, List.of("a", "b"));
+            assertThat(resp.getData()).containsExactly("a", "b");
         }
 
         @Test
-        @DisplayName("getList data 非 List 时返回空列表")
-        void getList_notList() {
-            PageResponse<String> resp = PageResponse.success("not a list");
-            assertThat(resp.getList()).isEmpty();
+        @DisplayName("data 为 null 时返回 null")
+        void data_null() {
+            PageResponse<List<String>> resp = PageResponse.success(10L, 1L, 10L, null);
+            assertThat(resp.getData()).isNull();
         }
     }
 

@@ -72,7 +72,7 @@ public class CachedJwtValidator {
         this.tokenService = tokenService;
         this.gatewayMetrics = gatewayMetrics;
         this.claimsCache = YdszCache.<String, Optional<UserInfo>>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(CACHE_TTL_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAX_SIZE)
                 .recordStats()

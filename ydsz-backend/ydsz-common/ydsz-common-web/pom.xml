@@ -38,7 +38,12 @@
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
 
-        <!-- Jackson 由 spring-boot-starter-web 传递依赖引入，无需显式声明 -->
+        <!-- JSON 序列化统一使用 ydsz-common-json 的 YdszJson 引擎 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
         <!-- Doc 模块能力已合并到 common-base（OpenApiConfig / Knife4jConfig / Excel 工具等） -->
 
         <!-- 异常模块（用于 BizErrorCode） -->

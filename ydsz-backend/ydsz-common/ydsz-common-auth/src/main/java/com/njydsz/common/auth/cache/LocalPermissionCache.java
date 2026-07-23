@@ -46,7 +46,7 @@ public class LocalPermissionCache<V> {
      */
     public LocalPermissionCache(String cacheName, long expireMinutes) {
         this.cache = YdszCache.<String, V>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(expireMinutes, TimeUnit.MINUTES)
                 .removalListener((String key, V value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {

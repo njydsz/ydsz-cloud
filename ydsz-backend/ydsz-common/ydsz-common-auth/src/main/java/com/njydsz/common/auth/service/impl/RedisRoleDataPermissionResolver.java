@@ -81,7 +81,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             return YdszCache.<String, DataScopeInfo>newBuilder().build();
         }
         return YdszCache.<String, DataScopeInfo>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, DataScopeInfo value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {

@@ -7,57 +7,6 @@
       "defaultValue": true
     },
     {
-      "name": "ydsz.app.signature.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用 API 签名验证。启用时必须配置至少一个密钥。",
-      "defaultValue": false
-    },
-    {
-      "name": "ydsz.app.signature.algorithm",
-      "type": "java.lang.String",
-      "description": "签名算法，目前仅支持 HMAC-SHA256。",
-      "defaultValue": "HMAC-SHA256"
-    },
-    {
-      "name": "ydsz.app.signature.app-secret",
-      "type": "java.lang.String",
-      "description": "默认签名密钥（单 App 场景），与 app-secrets 二选一。"
-    },
-    {
-      "name": "ydsz.app.signature.app-secrets",
-      "type": "java.util.Map<java.lang.String,java.lang.String>",
-      "description": "多 App 密钥映射，Key 为 App ID，Value 为签名密钥。"
-    },
-    {
-      "name": "ydsz.app.signature.timestamp-tolerance",
-      "type": "java.lang.Long",
-      "description": "时间戳容差（毫秒），客户端时间戳与服务端时间差超过此值则拒绝。",
-      "defaultValue": 300000
-    },
-    {
-      "name": "ydsz.app.signature.nonce-cache-ttl",
-      "type": "java.lang.Long",
-      "description": "Nonce 缓存 TTL（秒），用于 Redis SETNX 防重放。",
-      "defaultValue": 300
-    },
-    {
-      "name": "ydsz.app.signature.app-id-header",
-      "type": "java.lang.String",
-      "description": "App ID 请求头名称，用于多 App 密钥查找。",
-      "defaultValue": "X-App-Id"
-    },
-    {
-      "name": "ydsz.app.signature.ignore-urls",
-      "type": "java.util.List<java.lang.String>",
-      "description": "签名验证白名单路径列表，支持 Ant 风格路径匹配。"
-    },
-    {
-      "name": "ydsz.app.signature.order",
-      "type": "java.lang.Integer",
-      "description": "签名过滤器执行顺序。",
-      "defaultValue": -2147483623
-    },
-    {
       "name": "ydsz.app.content-cache.max-size",
       "type": "java.lang.Integer",
       "description": "请求体最大缓存字节数，超过此值的内容将被截断。",

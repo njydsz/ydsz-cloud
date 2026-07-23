@@ -10,7 +10,6 @@ import com.njydsz.common.base.config.BaseTimezoneConfiguration;
  * <p>继承 {@link BaseTimezoneConfiguration}，强制 JVM 默认时区为 Asia/Shanghai。
  *
  * @author ydsz-team
-* 
  * @see BaseTimezoneConfiguration
  */
 @AutoConfiguration

@@ -82,7 +82,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * 彻底避免线程池复用场景下的内存泄漏。
      */
     private final Cache<String, String> readLockValueCache = YdszCache.<String, String>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
@@ -92,7 +92,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * <p>使用 ydsz-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理。
      */
     private final Cache<String, Integer> readLockCountCache = YdszCache.<String, Integer>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
@@ -102,7 +102,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * <p>使用 ydsz-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理。
      */
     private final Cache<String, String> writeLockValueCache = YdszCache.<String, String>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();

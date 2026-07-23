@@ -50,48 +50,6 @@
     },
     {
       "name": "ydsz.base.security-headers.referrer-policy",
-      "type": "java.lang.String",
-      "description": "Referrer-Policy 响应头值。",
-      "defaultValue": "strict-origin-when-cross-origin"
-    },
-    {
-      "name": "ydsz.base.trace.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用链路追踪过滤器。",
-      "defaultValue": true
-    },
-    {
-      "name": "ydsz.base.trace.response-header-enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否在响应头中输出请求 ID。",
-      "defaultValue": true
-    },
-    {
-      "name": "ydsz.base.trace.request-id-header-name",
-      "type": "java.lang.String",
-      "description": "请求 ID 响应头名称。",
-      "defaultValue": "X-Request-Id"
-    },
-    {
-      "name": "ydsz.base.trace.request-log-enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用请求日志记录。",
-      "defaultValue": true
-    },
-    {
-      "name": "ydsz.base.trace.log-level",
-      "type": "java.lang.String",
-      "description": "请求日志级别（INFO / DEBUG）。",
-      "defaultValue": "INFO"
-    },
-    {
-      "name": "ydsz.base.trace.sampling-rate",
-      "type": "java.lang.Double",
-      "description": "日志采样率 [0.0, 1.0]，1.0 表示全量记录。",
-      "defaultValue": 1.0
-    },
-    {
-      "name": "ydsz.base.trace.slow-request-threshold",
       "type": "java.lang.Long",
       "description": "慢请求阈值（毫秒），超过此值日志升级为 WARN。",
       "defaultValue": 3000

@@ -53,6 +53,8 @@ public abstract class BaseRequestLogInterceptor implements HandlerInterceptor, R
         }
 
         if (ThreadLocalRandom.current().nextDouble() > traceProperties.getSamplingRate()) {
+            // 采样跳过：标记请求不输出日志，afterCompletion 中检查此标记跳过
+            request.setAttribute("_skipLog", Boolean.TRUE);
             return true;
         }
 
@@ -89,6 +91,11 @@ public abstract class BaseRequestLogInterceptor implements HandlerInterceptor, R
     public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                 @NonNull Object handler, @Nullable Exception ex) {
         if (!traceProperties.isRequestLogEnabled()) {
+            return;
+        }
+
+        // 采样跳过的请求不输出完成日志
+        if (request.getAttribute("_skipLog") != null) {
             return;
         }
 

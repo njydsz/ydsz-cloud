@@ -63,7 +63,7 @@ public class ColumnDesensitizationService {
         this.properties = properties;
         this.userInfoService = userInfoService;
         this.cache = YdszCache.<String, ColumnDesensitizationContext>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .maximumSize(properties.getDesensitizeCacheMaxSize())
                 .expireAfterWrite(properties.getDesensitizeCacheTtlSeconds(), TimeUnit.SECONDS)
                 .build();

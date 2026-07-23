@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import com.njydsz.common.base.constant.DocConstants;
+
 import lombok.Data;
 
 /**
@@ -73,12 +75,12 @@ public class DocProperties {
     /**
      * 文档基础路径，默认为 {@code /v3/api-docs}
      */
-    private String apiDocsPath = "/v3/api-docs";
+    private String apiDocsPath = DocConstants.DEFAULT_API_DOCS_PATH;
 
     /**
      * Knife4j 文档访问路径，默认为 {@code /doc.html}
      */
-    private String knife4jPath = "/doc.html";
+    private String knife4jPath = DocConstants.DEFAULT_KNIFE4J_PATH;
 
     /**
      * 文档版本号
@@ -128,7 +130,7 @@ public class DocProperties {
         /**
          * 文档版本
          */
-        private String version = "1.0.0";
+        private String version = DocConstants.DEFAULT_API_VERSION;
 
         /**
          * 服务条款 URL
@@ -215,7 +217,7 @@ public class DocProperties {
         /**
          * 分组版本
          */
-        private String version = "1.0.0";
+        private String version = DocConstants.DEFAULT_API_VERSION;
 
         /**
          * 分组描述
@@ -259,17 +261,12 @@ public class DocProperties {
         /**
          * 默认导出格式 (json, yaml, html, markdown)
          */
-        private String format = "json";
+        private String format = DocConstants.FORMAT_JSON;
 
         /**
          * 导出目录
          */
         private String outputDir = "./api-docs";
-
-        /**
-         * 支持的导出格式
-         */
-        private List<String> formats = List.of("json", "yaml", "html", "markdown");
     }
 
     /**

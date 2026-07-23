@@ -3,8 +3,6 @@ package com.njydsz.common.base.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -18,6 +16,7 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OpenAPI 多分组自动配置类
@@ -40,13 +39,12 @@ import lombok.RequiredArgsConstructor;
  * @since 1.0.0
  */
 @AutoConfiguration
+@Slf4j
 @RequiredArgsConstructor
 @EnableConfigurationProperties(DocProperties.class)
 @ConditionalOnClass(name = "org.springdoc.core.configuration.SpringDocConfiguration")
 @ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class OpenApiAutoConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenApiAutoConfiguration.class);
 
     /** 文档模块配置属性，由 Spring 注入 */
     private final DocProperties docProperties;
@@ -102,6 +100,7 @@ public class OpenApiAutoConfiguration {
      * @return GroupedOpenApi 列表，包含所有创建的分组 API
      */
     @Bean
+    @ConditionalOnMissingBean(name = "groupedOpenApis")
     public List<GroupedOpenApi> groupedOpenApis() {
         List<GroupedOpenApi> apis = new ArrayList<>();
         List<DocProperties.GroupConfig> groups = docProperties.getGroups();
@@ -161,10 +160,6 @@ public class OpenApiAutoConfiguration {
         if (group.getPackages() != null && !group.getPackages().isEmpty()) {
             builder.packagesToScan(group.getPackages().toArray(new String[0]));
         }
-        // 兼容旧版 basePackage
-        else if (group.getBasePackage() != null && !group.getBasePackage().isEmpty()) {
-            builder.packagesToScan(group.getBasePackage());
-        }
         // 使用 paths 列表
         else if (group.getPaths() != null && !group.getPaths().isEmpty()) {
             builder.pathsToMatch(group.getPaths().toArray(new String[0]));
@@ -188,16 +183,16 @@ public class OpenApiAutoConfiguration {
      * @param apis 已创建的 GroupedOpenApi 列表
      */
     private void logGroupConfigInfo(List<GroupedOpenApi> apis) {
-        logger.info("========================================");
-        logger.info("OpenAPI 文档已启用");
+        log.info("========================================");
+        log.info("OpenAPI 文档已启用");
         DocProperties.OpenApiInfo info = docProperties.getInfo();
-        logger.info("  - 文档标题: {}", info.getTitle());
-        logger.info("  - 文档描述: {}", info.getDescription());
-        logger.info("  - API 路径: {}", docProperties.getApiDocsPath());
-        logger.info("  - 分组数量: {}", apis.size());
+        log.info("  - 文档标题: {}", info.getTitle());
+        log.info("  - 文档描述: {}", info.getDescription());
+        log.info("  - API 路径: {}", docProperties.getApiDocsPath());
+        log.info("  - 分组数量: {}", apis.size());
         for (GroupedOpenApi api : apis) {
-            logger.info("  - 分组 [{}] - {}", api.getGroup(), api.getDisplayName());
+            log.info("  - 分组 [{}] - {}", api.getGroup(), api.getDisplayName());
         }
-        logger.info("========================================");
+        log.info("========================================");
     }
 }

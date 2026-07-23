@@ -208,7 +208,7 @@ public class DingTalkChannel implements MessageChannel {
      * <p>签名算法：HMAC-SHA256(timestamp + "\n" + secret, secret) → Base64 → URLEncode。
      * timestamp 为毫秒。
      *
-     * <p>P1-1: 委托到 CryptoSignUtil 统一实现。
+     * <p>P1-1: 委托到 DigestUtils 统一实现。
      *
      * @param url    原始 Webhook URL
      * @param secret 加签密钥

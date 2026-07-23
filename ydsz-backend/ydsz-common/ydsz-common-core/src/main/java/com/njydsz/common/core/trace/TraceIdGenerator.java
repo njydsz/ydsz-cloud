@@ -15,7 +15,7 @@ import java.util.UUID;
  *       根据 {@code ydsz.core.trace.id-type} 注册对应的 {@link TraceIdSupplier} Bean</li>
  *   <li>{@code TraceAutoConfiguration} 同时调用 {@link #setSupplier(TraceIdSupplier)}
  *       将 Bean 注入到本类的静态 holder</li>
- *   <li>所有调用 {@link #generate()} 的模块（Gateway、TraceFilter、TraceIdUtil 等）
+ *   <li>所有调用 {@link #generate()} 的模块（Gateway、TraceFilter、TracerUtils 等）
  *       自动使用配置的策略，无需感知 SPI 细节</li>
  * </ol>
  *

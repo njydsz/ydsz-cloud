@@ -1,6 +1,7 @@
 package com.njydsz.common.base.filter;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,6 +31,11 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
  * 对请求头中的 traceId 进行长度限制（最大 64 字符）和字符集校验
  * （仅允许 {@code [a-zA-Z0-9_-]}），防止日志注入和日志膨胀。
  *
+ * <p><b>MDC 清理策略：</b>
+ * 本 Filter 不在 finally 中清理 MDC，统一由 {@link RequestContextCleanupFilter}
+ * （LOWEST_PRECEDENCE，最外层 Filter）在请求结束时调用 {@code MDC.clear()} 清理，
+ * 确保后续 Filter 的后处理日志仍能使用 traceId。
+ *
  * <p>执行顺序：HIGH_PRECEDENCE + 10，确保在业务逻辑之前执行
  *
  * @author ydsz-team
@@ -43,32 +49,27 @@ public class TraceFilter extends OncePerRequestFilter {
     /** traceId 最大长度 */
     private static final int MAX_TRACE_ID_LENGTH = 64;
 
-    /** traceId 合法字符正则（仅允许字母、数字、连字符、下划线） */
-    private static final String TRACE_ID_PATTERN = "^[a-zA-Z0-9_-]+$";
+    /** traceId 合法字符正则（仅允许字母、数字、连字符、下划线），预编译避免每次请求重复编译 */
+    private static final Pattern TRACE_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        try {
-            // 提取或生成 traceId
-            String traceId = extractOrGenerateTraceId(request);
+        // 提取或生成 traceId
+        String traceId = extractOrGenerateTraceId(request);
 
-            // 注入 MDC
-            MDC.put(TRACE_ID_MDC_KEY, traceId);
+        // 注入 MDC（由 RequestContextCleanupFilter 统一清理，此处不在 finally 中 remove）
+        MDC.put(TRACE_ID_MDC_KEY, traceId);
 
-            // 存入 RequestContext
-            RequestContext.setTraceId(traceId);
+        // 存入 RequestContext
+        RequestContext.setTraceId(traceId);
 
-            // 设置响应头
-            response.setHeader(TRACE_ID_HEADER, traceId);
+        // 设置响应头
+        response.setHeader(TRACE_ID_HEADER, traceId);
 
-            // 继续处理
-            filterChain.doFilter(request, response);
-        } finally {
-            // 清理 MDC（由 RequestContextCleanupFilter 统一清理）
-            MDC.remove(TRACE_ID_MDC_KEY);
-        }
+        // 继续处理
+        filterChain.doFilter(request, response);
     }
 
     /**
@@ -92,7 +93,7 @@ public class TraceFilter extends OncePerRequestFilter {
         if (traceId == null
                 || traceId.isEmpty()
                 || traceId.length() > MAX_TRACE_ID_LENGTH
-                || !traceId.matches(TRACE_ID_PATTERN)) {
+                || !TRACE_ID_PATTERN.matcher(traceId).matches()) {
             traceId = TraceIdGenerator.generate();
         }
 

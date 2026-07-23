@@ -100,7 +100,7 @@ public class RbacPermissionEvaluator {
         this.userInfoService = userInfoService;
         this.rolePermissionLoader = rolePermissionLoader;
         this.rolePermissionsCache = YdszCache.<String, RolePermissions>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .maximumSize(1000)
                 .expireAfterWrite(resolvePermissionCacheTtlSeconds(), TimeUnit.SECONDS)
                 .build();

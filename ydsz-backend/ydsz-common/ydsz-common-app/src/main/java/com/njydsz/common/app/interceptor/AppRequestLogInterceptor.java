@@ -3,8 +3,6 @@ package com.njydsz.common.app.interceptor;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.app.config.AppTraceProperties;
@@ -22,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
  * 与管理端 / Web 端共享拦截器逻辑，差异在于 RequestId 的获取来源（优先从
  * {@link RequestHolder} 中复用上游写入的 RequestId）。
  *
+ * <p><b>注册方式：</b>由 {@code AppMvcConfiguration.addInterceptors()} 显式注册，
+ * 执行顺序由 {@code .order(BaseFilterOrders.INTERCEPTOR_REQUEST_LOG)} 控制。
+ * 不使用 {@code @Order} 注解，因为该注解对 HandlerInterceptor 的排序无效。
+ *
  * <p><b>线程安全性：</b>无状态拦截器，线程安全。
  *
  * @author ydsz-team
@@ -29,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AppRequestLogInterceptor extends BaseRequestLogInterceptor {
 
     /** 请求追踪 ID 请求头名称 */

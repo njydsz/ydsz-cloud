@@ -65,7 +65,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
             return YdszCache.<String, ColumnScopeInfo>newBuilder().build();
         }
         return YdszCache.<String, ColumnScopeInfo>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, ColumnScopeInfo value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {

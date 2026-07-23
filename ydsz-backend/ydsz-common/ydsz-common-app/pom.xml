@@ -38,7 +38,7 @@
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
 
-        <!-- Redis 模块（用于防重放攻击的 nonce 缓存） -->
+        <!-- Redis 模块（auth Token 存储 / safe 限流 CSRF 等依赖） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>

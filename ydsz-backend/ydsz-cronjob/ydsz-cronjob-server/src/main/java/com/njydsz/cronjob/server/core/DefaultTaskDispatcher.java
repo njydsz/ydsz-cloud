@@ -981,7 +981,7 @@ try {
         }
         // P6-2: 记录任务执行指标
         recordJobMetrics(job, triggerType, success, log0);
-        // P4: 发布任务完成事件，触发后继依赖任务（DagExecutor 异步监听）
+        // P4: 发布任务完成事件，触发后继依赖任务（DagInstanceExecutor 异步监听）
         publishTaskCompleted(job, success, log0.getId());
         // P5: 触发告警（失败告警 + 慢任务告警）
         triggerAlerts(job, success, log0);

@@ -74,12 +74,12 @@ public class FlowDefinitionCacheService {
         this.flowSkipMapper = flowSkipMapper;
         this.broadcaster = broadcaster;
         this.nodeCache = YdszCache.<String, List<FlowNodeDO>>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
                 .build();
         this.skipCache = YdszCache.<String, List<FlowSkipDO>>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
                 .build();

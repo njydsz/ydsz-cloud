@@ -89,7 +89,7 @@ public class NonceCache {
     public NonceCache(long expireSeconds, long maxSize) {
         this.expireSeconds = expireSeconds;
         this.cache = YdszCache.<String, Long>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
                 .maximumSize(maxSize)
                 .removalListener((String key, Long value, RemovalCause cause) -> {

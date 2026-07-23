@@ -9,28 +9,36 @@ package com.njydsz.common.cache.builder;
  *   <li>LRU：最近最少使用淘汰策略
  *   <li>LFU：最不经常使用淘汰策略
  *   <li>TinyLFU：Window-TinyLFU 算法（参考 Caffeine）
- *   <li>TTL：基于过期时间的缓存
  *   <li>Weighted：基于权重的缓存
- *   <li>WeakKey：弱引用键缓存
- *   <li>WeakValue：弱引用值缓存
- *   <li>SoftValue：软引用值缓存
  *   <li>Concurrent：并发安全的 ConcurrentHashMap 缓存
  *   <li>Striped：高性能分段锁并发缓存（默认）
  *   <li>EnhancedLoading：增强版自动加载缓存
  * </ul>
  *
+ * <p><b>引用缓存</b>（通过 CacheBuilder 的 weakKeys/weakValues/softValues 配置，不再作为独立 CacheType）：
+ * <ul>
+ *   <li>WeakKey：弱引用键缓存 → 使用 {@code builder.weakKeys()}</li>
+ *   <li>WeakValue：弱引用值缓存 → 使用 {@code builder.weakValues()}</li>
+ *   <li>SoftValue：软引用值缓存 → 使用 {@code builder.softValues()}</li>
+ * </ul>
+ *
+ * <p><b>TTL 缓存</b>：通过 {@code builder.expireAfterWrite()} 或 {@code builder.expireAfterAccess()} 配置，
+ * 不再作为独立 CacheType。
+ *
  * @since 1.0.0
- * 
  */
 public enum CacheType {
+  /** LRU 最近最少使用淘汰策略 适用场景：热点数据缓存 */
+  LRU,
+
+  /** LFU 最不经常使用淘汰策略 适用场景：访问频率差异大的场景 */
+  LFU,
+
+  /** Window-TinyLFU 算法（参考 Caffeine） 适用场景：通用场景，命中率最优（默认） */
+  TINYLFU,
+
   /** 基于权重的缓存 适用场景：内存敏感场景，按对象大小淘汰 */
-  WEIGHTED,  /**
-   * 软引用值缓存
-   *
-   * @deprecated 使用 {@code builder.softValues()} 替代。
-   */
-  @Deprecated
-  SOFT_VALUE,
+  WEIGHTED,
 
   /** 并发安全的 ConcurrentHashMap 缓存 适用场景：中等并发场景 */
   CONCURRENT,

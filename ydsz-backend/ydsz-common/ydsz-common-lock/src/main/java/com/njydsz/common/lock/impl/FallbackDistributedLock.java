@@ -67,7 +67,7 @@ public class FallbackDistributedLock implements DistributedLocker {
      * 本地锁映射表（使用 ydsz-common-cache，自动过期清理，防止内存泄漏）
      */
     private final Cache<String, ReentrantLock> localLocks = YdszCache.<String, ReentrantLock>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10000)
             .build();

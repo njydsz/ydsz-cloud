@@ -4,7 +4,7 @@ package com.njydsz.cronjob.server.core;
  * 任务完成事件。
  *
  * <p>当定时任务执行完成时由 {@code DefaultTaskDispatcher} 发布，
- * 各监听器（{@code DagExecutor}、{@code DagInstanceExecutor}、
+ * 各监听器（{@code DagInstanceExecutor}、
  * {@code JobResultQueuePublisher}）异步消费此事件。
  *
  * @param jobId   任务 ID

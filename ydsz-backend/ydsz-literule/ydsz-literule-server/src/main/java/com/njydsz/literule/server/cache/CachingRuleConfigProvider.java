@@ -124,12 +124,12 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
         this.redissonClient = (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
         this.cacheConfig = cacheConfig;
         this.listCache = YdszCache.<String, List<RuleDefinition>>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
                 .build();
         this.singleCache = YdszCache.<String, RuleDefinition>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
                 .build();

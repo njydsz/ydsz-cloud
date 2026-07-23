@@ -14,7 +14,7 @@ import com.njydsz.common.cache.builder.CacheBuilder;
  *   <li><b>零依赖</b>：纯 JDK 实现，无需任何第三方库
  *   <li><b>Builder 模式</b>：参考 Caffeine/Guava 的流畅 API 设计
  *   <li><b>11
- *       种缓存类型</b>：TINYLFU、LRU、LFU、TTL、WEIGHTED、WEAK_KEY、WEAK_VALUE、SOFT_VALUE、CONCURRENT、STRIPED、ENHANCED_LOADING
+ *       种缓存类型</b>：TINYLFU、LRU、LFU、WEIGHTED、CONCURRENT、STRIPED、ENHANCED_LOADING
  *   <li><b>自动加载</b>：支持 CacheLoader 自动加载和自动刷新
  *   <li><b>写穿透</b>：支持 CacheWriter 同步写入后端存储
  *   <li><b>高性能统计</b>：使用 PaddedStatsCounter 缓存行填充优化

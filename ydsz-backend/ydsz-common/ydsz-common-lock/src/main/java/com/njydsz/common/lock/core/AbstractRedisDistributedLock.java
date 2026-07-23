@@ -102,7 +102,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * <p>缓存键格式：{@code threadId:lockKey}，确保不同线程的 clientId 互不干扰。
      */
     private final Cache<String, String> clientIdCache = YdszCache.<String, String>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
@@ -112,7 +112,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * <p>使用 ydsz-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理。
      */
     private final Cache<String, Long> leaseTimeCache = YdszCache.<String, Long>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();

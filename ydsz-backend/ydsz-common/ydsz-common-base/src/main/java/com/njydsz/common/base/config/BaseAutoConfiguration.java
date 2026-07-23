@@ -121,7 +121,9 @@ public class BaseAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public BaseHealthIndicator baseHealthIndicator(BaseSecurityHeadersProperties securityHeadersProperties,
-                                                    DocProperties docProperties) {
-        return new BaseHealthIndicator(securityHeadersProperties, docProperties);
+                                                    DocProperties docProperties,
+                                                    org.springframework.core.env.Environment environment) {
+        String timezone = environment.getProperty("ydsz.base.timezone", "Asia/Shanghai");
+        return new BaseHealthIndicator(securityHeadersProperties, docProperties, timezone);
     }
 }

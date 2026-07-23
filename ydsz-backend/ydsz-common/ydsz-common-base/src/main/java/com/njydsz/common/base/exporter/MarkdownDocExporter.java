@@ -6,7 +6,6 @@ import java.util.Map;
 import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.base.config.DocProperties;
 import com.njydsz.common.json.YdszJson;
@@ -30,7 +29,6 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Component
 @Conditional(MarkdownDocExporter.MarkdownDocExporterCondition.class)
 public class MarkdownDocExporter extends AbstractDocExporter {
 

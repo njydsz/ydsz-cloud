@@ -15,15 +15,14 @@ import com.njydsz.common.core.response.BaseResponse;
  *
  * <p><b>触发条件：</b>返回类型为 {@code String} 且未被 {@code @ResponseBody} 注解处理的情况。
  *
- * <p><b>装配：</b>由 {@code com.njydsz.common.web.config.WebMvcConfiguration} 显式
- * 通过 {@code @Import} 加载，{@code @RestControllerAdvice} 会被 Spring MVC 自动发现为控制器增强。
- * 不要在此类上同时标注 {@code @AutoConfiguration}，避免与 Spring MVC 生命周期冲突。
+ * <p><b>装配：</b>由 {@code WebMvcConfiguration} 通过 {@code @Bean} +
+ * {@code @ConditionalOnMissingBean} 注册，{@code @RestControllerAdvice} 会被
+ * Spring MVC 自动发现为控制器增强。
  *
  * <p><b>执行顺序：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 10，
  * 保证在所有异常处理 Advice 之前包装响应体。
  *
  * @author ydsz-team
-* 
  * @see BaseGlobalResponseAdvice
  * @see BaseResponse
  */
@@ -31,12 +30,6 @@ import com.njydsz.common.core.response.BaseResponse;
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class GlobalResponseAdvice extends BaseGlobalResponseAdvice {
 
-    /**
-     * 包装字符串类型响应体为 BaseResponse
-     *
-     * @param body 原始字符串内容
-     * @return 包装后的 BaseResponse
-     */
     @Override
     protected BaseResponse<String> wrapStringBody(String body) {
         return BaseResponse.success(body);

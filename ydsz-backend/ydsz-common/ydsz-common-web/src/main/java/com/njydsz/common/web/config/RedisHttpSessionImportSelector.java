@@ -11,7 +11,6 @@ import org.springframework.core.type.AnnotationMetadata;
  * 仅在运行时 classpath 中存在对应类时生效。
  *
  * @author ydsz-team
-* 
  */
 class RedisHttpSessionImportSelector implements ImportSelector {
 

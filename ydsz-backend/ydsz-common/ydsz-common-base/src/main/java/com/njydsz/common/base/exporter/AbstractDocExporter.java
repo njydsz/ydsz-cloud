@@ -13,14 +13,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.base.config.DocProperties;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.YdszJsonType;
 import com.njydsz.common.util.yaml.YamlUtils;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 文档导出器抽象基类
@@ -29,14 +26,15 @@ import lombok.RequiredArgsConstructor;
  * 子类只需覆盖 {@link #generateHtmlContent(ApiDocInfo, String)} 和
  * {@link #generateMarkdownContent(String)} 方法提供差异化内容生成。
  *
+ * <p><b>注册方式：</b>本类为抽象类，不标注 {@code @Component}，
+ * 由 {@code DocAutoConfiguration} 通过 {@code @Import} 注册具体子类。
+ *
  * <p><b>线程安全性：</b>无状态 Bean，{@link DocProperties} 与 {@code applicationVersion}
  * 在初始化后即视为只读，线程安全。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Component
-@RequiredArgsConstructor
 public abstract class AbstractDocExporter implements DocExporter {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractDocExporter.class);
@@ -56,6 +54,15 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /** 文档配置属性 */
     protected final DocProperties docProperties;
+
+    /**
+     * 构造文档导出器
+     *
+     * @param docProperties 文档配置属性
+     */
+    protected AbstractDocExporter(DocProperties docProperties) {
+        this.docProperties = docProperties;
+    }
 
     // ==================== 抽象方法 ====================
 

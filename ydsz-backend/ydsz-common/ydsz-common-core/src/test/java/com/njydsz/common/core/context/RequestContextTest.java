@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -183,44 +182,8 @@ class RequestContextTest {
     }
 
     @Nested
-    @DisplayName("异步上下文传播（已废弃 API 的向后兼容测试）")
-    class AsyncPropagation {
-
-        @Test
-        @DisplayName("capture + wrapCallable 传播上下文到子线程")
-        void captureAndWrapCallable() throws Exception {
-            RequestContext.setUserId("user-001");
-            RequestContext.setTenantId("tenant-001");
-
-            Map<String, Object> captured = RequestContext.snapshot();
-            RequestContext.clear();
-
-            java.util.concurrent.Callable<String> task = RequestContext.wrapCallable(
-                    () -> RequestContext.getUserId() + "|" + RequestContext.getTenantId(),
-                    captured);
-
-            CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-                try {
-                    return task.call();
-                } catch (Exception e) {
-                    return "error";
-                }
-            });
-
-            assertThat(future.get()).isEqualTo("user-001|tenant-001");
-        }
-
-        @Test
-        @DisplayName("runWithContext 在指定上下文中执行后清理")
-        void runWithContext() {
-            RequestContext.setUserId("user-001");
-            Map<String, Object> captured = RequestContext.snapshot();
-            RequestContext.clear();
-
-            String result = RequestContext.runWithContext(captured, () -> RequestContext.getUserId());
-            assertThat(result).isEqualTo("user-001");
-            assertThat(RequestContext.getUserId()).isNull();
-        }
+    @DisplayName("上下文快照")
+    class Snapshot {
 
         @Test
         @DisplayName("snapshot 返回当前上下文副本")

@@ -48,7 +48,7 @@ public class LiteExprCompiler {
      * </ul>
      */
     private final Cache<String, ExprNode> cache = YdszCache.<String, ExprNode>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .maximumSize(MAX_CACHE_SIZE)
             .expireAfterAccess(CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
             .build();

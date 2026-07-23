@@ -18,7 +18,6 @@ import com.njydsz.common.safe.filter.BaseSecurityHeaderFilter;
  * </ul>
  *
  * @author ydsz-team
-* 
  * @see BaseSecurityHeaderFilter
  * @see SecurityHeaderProperties
  */

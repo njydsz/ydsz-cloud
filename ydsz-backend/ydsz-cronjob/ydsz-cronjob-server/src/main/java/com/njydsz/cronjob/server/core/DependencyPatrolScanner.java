@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,10 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * P2-10: 依赖巡检与自愈机制。
  *
- * <p>定期扫描 DAG 定义和任务依赖关系，发现断裂依赖时自动修复：
+ * <p>定期扫描 DAG 定义，发现断裂依赖时自动修复：
  * <ul>
  *   <li>DAG 定义引用了已删除/已禁用的任务 → 自动禁用 DAG 并告警</li>
- *   <li>任务依赖（JobRelation）的前置任务已删除/已禁用 → 自动删除依赖关系并告警</li>
  *   <li>NORMAL 状态的任务引用了不存在的 handler → 自动暂停并告警</li>
  * </ul>
  *
@@ -41,9 +39,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>对标 Airflow 的 DAG 解析校验和 PowerJob 的任务健康检查。
  *
- * <p>P3-2-merge: JobRelation（ydsz_job_relation）已标记为 @Deprecated，
- * 本扫描器对 JobRelation 的巡检逻辑保留向后兼容，后续版本将完全迁移到 DAG 体系。
- *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -55,7 +50,6 @@ public class DependencyPatrolScanner {
 
     private final JobMapper jobMapper;
     private final JobDagMapper jobDagMapper;
-    private final JobRelationMapper jobRelationMapper;
     private final DagDefinitionCodec dagDefinitionCodec;
     private final LeaderElector leaderElector;
 
@@ -74,11 +68,10 @@ public class DependencyPatrolScanner {
         }
         try {
             int dagIssues = patrolDagDependencies();
-            int relationIssues = patrolJobRelations();
             int handlerIssues = patrolJobHandlers();
-            if (dagIssues + relationIssues + handlerIssues > 0) {
-                log.warn("[DependencyPatrol] 巡检完成, 发现问题: dagIssues={} relationIssues={} handlerIssues={}",
-                        dagIssues, relationIssues, handlerIssues);
+            if (dagIssues + handlerIssues > 0) {
+                log.warn("[DependencyPatrol] 巡检完成, 发现问题: dagIssues={} handlerIssues={}",
+                        dagIssues, handlerIssues);
             } else {
                 log.debug("[DependencyPatrol] 巡检完成, 无异常");
             }
@@ -133,47 +126,6 @@ public class DependencyPatrolScanner {
                 log.warn("[DependencyPatrol] DAG 解析异常, 跳过: dagKey={} reason={}",
                         dag.getDagKey(), e.getMessage());
             }
-        }
-        return issues;
-    }
-
-    /**
-     * 巡检任务依赖关系（JobRelation）的完整性。
-     *
-     * <p>检查每条依赖关系的前置任务和后继任务是否仍存在且为 NORMAL 状态。
-     * 发现断裂依赖时自动删除依赖关系并记录告警日志。
-     *
-     * @return 发现的问题数
-     */
-    private int patrolJobRelations() {
-        int issues = 0;
-        try {
-            List<JobRelationDO> relations = jobRelationMapper.selectAllRelations();
-            if (relations == null || relations.isEmpty()) {
-                return 0;
-            }
-            // 批量查询所有相关任务
-            Set<String> allJobIds = new HashSet<>();
-            for (JobRelationDO rel : relations) {
-                allJobIds.add(rel.getParentJobId());
-                allJobIds.add(rel.getChildJobId());
-            }
-            List<JobDO> jobs = jobMapper.selectByIds(allJobIds);
-            Set<String> existingJobIds = jobs.stream()
-                    .map(JobDO::getId)
-                    .collect(Collectors.toSet());
-            for (JobRelationDO rel : relations) {
-                if (!existingJobIds.contains(rel.getParentJobId()) || !existingJobIds.contains(rel.getChildJobId())) {
-                    log.warn("[DependencyPatrol] 依赖关系断裂, 自动删除: parentId={} childId={} parentExists={} childExists={}",
-                            rel.getParentJobId(), rel.getChildJobId(),
-                            existingJobIds.contains(rel.getParentJobId()),
-                            existingJobIds.contains(rel.getChildJobId()));
-                    jobRelationMapper.deleteById(rel.getId());
-                    issues++;
-                }
-            }
-        } catch (Exception e) {
-            log.warn("[DependencyPatrol] 依赖关系巡检异常: reason={}", e.getMessage());
         }
         return issues;
     }

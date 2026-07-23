@@ -1,5 +1,6 @@
 package com.njydsz.common.app.metrics;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -20,8 +21,10 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code app.signature.verify.total} - 签名验证总次数（tag: result）</li>
  *   <li>{@code app.signature.verify.duration} - 签名验证耗时分布（tag: result）</li>
  *   <li>{@code app.auth.total} - 认证总次数（tag: result）</li>
- *   <li>{@code app.request.duration} - 请求处理耗时分布（tag: uri）</li>
  * </ul>
+ *
+ * <p><b>注意：</b>请求处理耗时由 Spring MVC 内置的 {@code http.server.requests} 指标覆盖，
+ * 本类不再重复采集，避免 URI 标签基数爆炸问题。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -29,6 +32,11 @@ import io.micrometer.core.instrument.Timer;
 public class AppMetrics {
 
     private static final Logger log = LoggerFactory.getLogger(AppMetrics.class);
+
+    /** Counter 缓存，避免每次调用重复创建 Builder 对象 */
+    private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+    /** Timer 缓存，避免每次调用重复创建 Builder 对象 */
+    private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
     private final MeterRegistry meterRegistry;
 
@@ -49,21 +57,25 @@ public class AppMetrics {
     /**
      * 记录签名验证结果和耗时
      *
-     * @param result       验证结果标签（success/missing_headers/invalid_timestamp/timestamp_expired/nonce_replay/no_secret/signature_mismatch）
+     * @param result        验证结果标签（success/missing_headers/invalid_timestamp/timestamp_expired/nonce_replay/no_secret/signature_mismatch）
      * @param durationNanos 验证耗时（纳秒）
      */
     public void recordSignatureVerify(String result, long durationNanos) {
         if (meterRegistry == null) {
             return;
         }
-        Counter.builder("app.signature.verify.total")
-                .tag("result", result)
-                .register(meterRegistry)
+        counterCache.computeIfAbsent(
+                metricKey("app.signature.verify.total", "result", result),
+                k -> Counter.builder("app.signature.verify.total")
+                        .tag("result", result)
+                        .register(meterRegistry))
                 .increment();
 
-        Timer.builder("app.signature.verify.duration")
-                .tag("result", result)
-                .register(meterRegistry)
+        timerCache.computeIfAbsent(
+                metricKey("app.signature.verify.duration", "result", result),
+                k -> Timer.builder("app.signature.verify.duration")
+                        .tag("result", result)
+                        .register(meterRegistry))
                 .record(durationNanos, TimeUnit.NANOSECONDS);
     }
 
@@ -76,25 +88,26 @@ public class AppMetrics {
         if (meterRegistry == null) {
             return;
         }
-        Counter.builder("app.auth.total")
-                .tag("result", result)
-                .register(meterRegistry)
+        counterCache.computeIfAbsent(
+                metricKey("app.auth.total", "result", result),
+                k -> Counter.builder("app.auth.total")
+                        .tag("result", result)
+                        .register(meterRegistry))
                 .increment();
     }
 
     /**
-     * 记录请求处理耗时
+     * 构建 Meter 缓存键
      *
-     * @param uri          请求 URI
-     * @param durationNanos 处理耗时（纳秒）
+     * @param name Meter 名称
+     * @param tags 标签键值对（交替排列：key1, val1, key2, val2, ...）
+     * @return 复合缓存键字符串
      */
-    public void recordRequestDuration(String uri, long durationNanos) {
-        if (meterRegistry == null) {
-            return;
+    private static String metricKey(String name, String... tags) {
+        StringBuilder sb = new StringBuilder(name);
+        for (int i = 0; i < tags.length; i += 2) {
+            sb.append(':').append(tags[i]).append('=').append(tags[i + 1]);
         }
-        Timer.builder("app.request.duration")
-                .tag("uri", uri)
-                .register(meterRegistry)
-                .record(durationNanos, TimeUnit.NANOSECONDS);
+        return sb.toString();
     }
 }

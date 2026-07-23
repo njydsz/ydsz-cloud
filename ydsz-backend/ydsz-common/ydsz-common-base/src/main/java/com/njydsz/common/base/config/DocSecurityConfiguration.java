@@ -3,7 +3,9 @@ package com.njydsz.common.base.config;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -13,8 +15,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -22,6 +22,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档安全自动配置类
@@ -47,12 +49,11 @@ import org.springframework.core.env.Environment;
  * @since 1.0.0
  */
 @AutoConfiguration
+@Slf4j
 @EnableConfigurationProperties(DocProperties.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class DocSecurityConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(DocSecurityConfiguration.class);
 
     /** HTTP Basic 认证头前缀 */
     private static final String BASIC_PREFIX = "Basic ";
@@ -97,13 +98,13 @@ public class DocSecurityConfiguration {
         }
         if (isProduction) {
             if (!props.isProductionEnabled()) {
-                logger.warn("【文档安全】生产环境检测到 ydsz.doc.enabled=true 但 production-enabled=false，"
+                log.warn("【文档安全】生产环境检测到 ydsz.doc.enabled=true 但 production-enabled=false，"
                         + "文档功能已启用但生产环境访问控制未开启，请确认是否符合安全要求");
             } else if (!props.getBasicAuth().isEnabled()) {
-                logger.warn("【文档安全】生产环境文档访问控制已开启，但 Basic 认证已关闭，"
+                log.warn("【文档安全】生产环境文档访问控制已开启，但 Basic 认证已关闭，"
                         + "存在安全风险！建议设置 ydsz.doc.basic-auth.enabled=true");
             } else {
-                logger.warn("【文档安全】生产环境文档功能已启用，请确保仅在必要时开启并配置强密码保护");
+                log.warn("【文档安全】生产环境文档功能已启用，请确保仅在必要时开启并配置强密码保护");
             }
         }
     }
@@ -112,6 +113,7 @@ public class DocSecurityConfiguration {
      * 注册文档 Basic 认证过滤器
      *
      * <p>拦截所有文档相关路径，验证 Basic 认证凭证。
+     * URL 拦截路径从 {@link DocProperties} 动态构建，跟随配置变化。
      *
      * @return FilterRegistrationBean 实例
      */
@@ -120,28 +122,51 @@ public class DocSecurityConfiguration {
     public FilterRegistrationBean<Filter> docBasicAuthFilter() {
         DocProperties.BasicAuth basicAuth = docProperties.getBasicAuth();
 
-        logger.info("========================================");
-        logger.info("文档安全访问控制已启用");
-        logger.info("  - 生产环境: 已开启");
+        log.info("========================================");
+        log.info("文档安全访问控制已启用");
+        log.info("  - 生产环境: 已开启");
         if (basicAuth.isEnabled()) {
-            logger.info("  - Basic 认证: 已启用 [user: {}]", basicAuth.getUsername());
+            log.info("  - Basic 认证: 已启用 [user: {}]", basicAuth.getUsername());
         } else {
-            logger.warn("  - Basic 认证: 已关闭（生产环境不推荐）");
+            log.warn("  - Basic 认证: 已关闭（生产环境不推荐）");
         }
-        logger.info("========================================");
+        log.info("========================================");
 
         FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new DocBasicAuthFilter(basicAuth));
-        registration.addUrlPatterns(
-                "/doc.html",
-                "/swagger-ui/*",
-                "/v3/api-docs/*",
-                "/v2/api-docs/*",
-                "/webjars/*"
-        );
+        registration.addUrlPatterns(buildDocUrlPatterns().toArray(new String[0]));
         registration.setName("docBasicAuthFilter");
         registration.setOrder(1);
         return registration;
+    }
+
+    /**
+     * 从 DocProperties 动态构建文档 URL 拦截路径
+     *
+     * <p>包含以下路径：
+     * <ul>
+     *   <li>Knife4j 文档入口（{@code ydsz.doc.knife4j-path}）</li>
+     *   <li>OpenAPI 文档 JSON（{@code ydsz.doc.api-docs-path} 及其子路径）</li>
+     *   <li>Swagger UI 静态资源</li>
+     *   <li>WebJars 静态资源</li>
+     * </ul>
+     *
+     * @return URL 拦截路径列表
+     */
+    private List<String> buildDocUrlPatterns() {
+        List<String> patterns = new ArrayList<>();
+        // Knife4j 入口
+        patterns.add(docProperties.getKnife4jPath());
+        // OpenAPI JSON 入口及子路径
+        String apiDocsPath = docProperties.getApiDocsPath();
+        patterns.add(apiDocsPath);
+        patterns.add(apiDocsPath + "/*");
+        // Swagger UI（兼容 springdoc）
+        patterns.add("/swagger-ui/*");
+        patterns.add("/swagger-ui.html");
+        // WebJars 静态资源
+        patterns.add("/webjars/*");
+        return patterns;
     }
 
     /**

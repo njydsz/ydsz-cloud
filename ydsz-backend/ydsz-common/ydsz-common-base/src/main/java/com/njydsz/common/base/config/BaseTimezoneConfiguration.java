@@ -46,4 +46,13 @@ public abstract class BaseTimezoneConfiguration {
         String tz = timezone != null && !timezone.isBlank() ? timezone : DEFAULT_TIMEZONE;
         TimeZone.setDefault(TimeZone.getTimeZone(tz));
     }
+
+    /**
+     * 获取配置的时区 ID
+     *
+     * @return 时区 ID（如 {@code Asia/Shanghai}），未配置时返回默认值
+     */
+    public String getTimezone() {
+        return timezone != null && !timezone.isBlank() ? timezone : DEFAULT_TIMEZONE;
+    }
 }

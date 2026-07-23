@@ -33,6 +33,8 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 @ConditionalOnProperty(prefix = "ydsz.web.health-indicator", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebHealthIndicator implements HealthIndicator {
 
+    private static final int USER_AGENT_CACHE_SIZE = 10000;
+
     private final WebCorsProperties corsProperties;
     private final WebTraceProperties traceProperties;
     private final ObjectProvider<UserAgentAnalyzer> userAgentAnalyzerProvider;
@@ -72,7 +74,7 @@ public class WebHealthIndicator implements HealthIndicator {
         UserAgentAnalyzer analyzer = userAgentAnalyzerProvider.getIfAvailable();
         details.put("userAgentAnalyzerEnabled", analyzer != null);
         if (analyzer != null) {
-            details.put("userAgentCacheSize", 10000);
+            details.put("userAgentCacheSize", USER_AGENT_CACHE_SIZE);
         }
 
         return Health.up().withDetails(details).build();

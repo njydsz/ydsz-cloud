@@ -259,25 +259,8 @@ public final class RequestContext {
         } finally {
             clear();
         }
-    }    /**
-     * 在指定上下文中执行 Runnable，执行完毕后自动清除上下文
-     *
-     * <p>用于异步场景：先在父线程通过 {@link #capture()} 捕获上下文，
-     * 再在子线程中调用此方法恢复上下文执行逻辑。</p>
-     *
-     * @param context  通过 {@link #capture()} 捕获的上下文
-     * @param runnable 要执行的逻辑
-     * @deprecated 使用 TransmittableThreadLocal + TtlExecutors 自动传播替代
-     */
-    @Deprecated
-    public static void runWithContext(Map<String, Object> context, Runnable runnable) {
-        try {
-            restore(context);
-            runnable.run();
-        } finally {
-            clear();
-        }
     }
+
     /**
      * 获取当前上下文快照
      *
@@ -285,21 +268,6 @@ public final class RequestContext {
      */
     public static Map<String, Object> snapshot() {
         return new HashMap<>(CONTEXT_HOLDER.get());
-    }
-
-    /**
-     * 恢复上下文到当前线程
-     *
-     * <p>先清除当前线程已有的上下文，再将指定的上下文快照恢复到当前线程。
-     * 用于异步场景中子线程恢复父线程捕获的上下文。</p>
-     *
-     * @param context 通过 {@link #capture()} 捕获的上下文快照
-     */
-    private static void restore(Map<String, Object> context) {
-        CONTEXT_HOLDER.remove();
-        if (context != null && !context.isEmpty()) {
-            CONTEXT_HOLDER.set(new HashMap<>(context));
-        }
     }
 
     /**

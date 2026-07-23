@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
@@ -27,6 +28,9 @@ import com.njydsz.common.base.config.DocProperties;
  */
 public class BaseHealthIndicator implements HealthIndicator {
 
+    /** 期望的时区 ID，从配置 {@code ydsz.base.timezone} 读取，默认 {@code Asia/Shanghai} */
+    private final String expectedTimezone;
+
     private final BaseSecurityHeadersProperties securityHeadersProperties;
     private final DocProperties docProperties;
 
@@ -35,11 +39,14 @@ public class BaseHealthIndicator implements HealthIndicator {
      *
      * @param securityHeadersProperties 安全响应头配置
      * @param docProperties 文档配置
+     * @param expectedTimezone 期望的时区 ID（从 {@code ydsz.base.timezone} 配置读取）
      */
     public BaseHealthIndicator(BaseSecurityHeadersProperties securityHeadersProperties,
-                               DocProperties docProperties) {
+                               DocProperties docProperties,
+                               @Value("${ydsz.base.timezone:Asia/Shanghai}") String expectedTimezone) {
         this.securityHeadersProperties = securityHeadersProperties;
         this.docProperties = docProperties;
+        this.expectedTimezone = expectedTimezone;
     }
 
     @Override
@@ -49,7 +56,10 @@ public class BaseHealthIndicator implements HealthIndicator {
         // 时区状态
         String currentTimezone = TimeZone.getDefault().getID();
         details.put("timezone", currentTimezone);
-        details.put("timezone.expected", "Asia/Shanghai");
+        details.put("timezone.expected", expectedTimezone);
+        if (!expectedTimezone.equals(currentTimezone)) {
+            details.put("timezone.warning", "期望时区 " + expectedTimezone + " 与实际时区 " + currentTimezone + " 不一致");
+        }
 
         // 安全响应头状态
         details.put("securityHeaders.enabled", securityHeadersProperties.isEnabled());

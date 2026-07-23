@@ -1,6 +1,6 @@
 # ydsz-common-web
 
-YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成、WebAuthFilter 认证过滤器、Session 管理、异常处理、OpenAPI 配置、健康检查与指标采集。
+YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成、WebAuthFilter 认证过滤器、Session 管理、OpenAPI 配置、健康检查与指标采集。
 
 ## 模块定位
 
@@ -16,9 +16,9 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 
 | 类 | 说明 |
 |---|---|
-| `WebSecurityConfiguration` | Spring Security 配置（SecurityFilterChain + 异常处理接入） |
-| `WebAuthFilter` | Web 认证过滤器（Token 解析 → SecurityContext 设置） |
-| `WebAuthHandler` / `AuthHandlerFactory` | 认证处理器 / 工厂（按 ServiceType 路由） |
+| `WebSecurityConfiguration` | Spring Security 配置（SecurityFilterChain + 401/403 异常处理接入 + Session 伪造防护） |
+| `WebAuthFilter` | Web 认证过滤器（Token 解析 → SecurityContext 设置 + 认证指标埋点） |
+| `WebAuthHandler` / `AuthHandlerFactory` | 认证处理器 / 工厂（按 ServiceType 路由，Bean 名称常量化） |
 | `WebAuthInfo` | Web 认证信息 |
 | `WebAuthenticationEntryPoint` | 未认证入口（401 JSON 响应） |
 | `WebAccessDeniedHandler` | 权限不足处理器（403 JSON 响应） |
@@ -28,7 +28,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | 类 | 说明 |
 |---|---|
 | `WebHealthIndicator` | Actuator 健康检查（CORS/Trace/Session/Security/UserAgent 状态报告） |
-| `WebMetrics` | Micrometer 指标采集（认证/请求/限流/安全头计数+耗时） |
+| `WebMetrics` | Micrometer 指标采集（认证/请求计数+耗时，接入 WebAuthFilter + RequestLogInterceptor 调用链） |
 
 ### Session 管理
 
@@ -42,41 +42,32 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | 类 | 说明 |
 |---|---|
 | `TraceIdResponseFilter` | TraceId 响应过滤器 |
-| `SecurityHeaderFilter` | 安全头过滤器 |
+| `SecurityHeaderFilter` | 安全头过滤器（@ConditionalOnBean 守卫） |
 | `ContentCachingFilter` | 内容缓存过滤器（基于 WebContentCacheProperties 配置） |
 
 ### MVC 配置
 
 | 类 | 说明 |
 |---|---|
-| `WebMvcConfiguration` | MVC 配置（继承 base，追加 Web 特有配置 + 所有过滤器 @ConditionalOnMissingBean） |
+| `WebMvcConfiguration` | MVC 配置（@ConditionalOnWebApplication SERVLET，继承 base，所有 Bean @ConditionalOnMissingBean，构造器注入 RequestLogInterceptor） |
 | `WebTimezoneConfiguration` | 时区配置 |
 | `WebI18nConfiguration` | 国际化配置 |
-| `WebOpenApiConfiguration` | OpenAPI 配置 |
+| `WebOpenApiConfiguration` | OpenAPI 配置（YDSZ 品牌） |
 | `WebCorsProperties` | CORS 配置（@Validated） |
 | `WebTraceProperties` | Trace 配置（@Validated） |
 | `WebContentCacheProperties` | 请求体缓存配置 |
 | `UserAgentConfiguration` | UserAgent 解析配置（@ConditionalOnProperty 门控） |
 
-### 拦截器与异常
+### 拦截器
 
 | 类 | 说明 |
 |---|---|
-| `RequestLogInterceptor` | 请求日志拦截器（由 WebMvcConfiguration @Bean 注册） |
-| `WebExceptionHandler` | Web 异常处理器（由 WebExceptionAutoConfiguration 装配依赖） |
-| `WebExceptionAutoConfiguration` | 异常处理器自动配置（注入 ExceptionMetrics/Properties/AlertPublisher） |
-| `GlobalResponseAdvice` | 全局响应包装 |
+| `RequestLogInterceptor` | 请求日志拦截器 + HTTP 请求指标埋点（由 WebMvcConfiguration @Bean 注册，可选注入 WebMetrics） |
+| `GlobalResponseAdvice` | 全局响应包装（由 WebMvcConfiguration @Bean + @ConditionalOnMissingBean 注册） |
 
-## 与 `common-base` 的关系
+### 异常处理
 
-`common-web` 继承 `common-base` 的所有能力（CORS / 时区 / I18n / 安全头 / TraceId / 请求日志），额外增加：
-
-1. **Spring Security** — 完整的 SecurityFilterChain 配置（401/403 异常处理接入 + Session 伪造防护）
-2. **Web 认证** — `WebAuthFilter` 替代 `BaseAuthFilter`，集成 Spring Security
-3. **Session** — Redis 分布式 Session 支持（@ConditionalOnWebApplication 门控）
-4. **异常处理** — `WebExceptionHandler` + `WebAuthenticationEntryPoint` + `WebAccessDeniedHandler`（依赖注入完整）
-5. **健康检查** — `WebHealthIndicator` 报告 CORS/Trace/Session/Security/UserAgent 状态
-6. **指标采集** — `WebMetrics` 采集认证/请求/限流/安全头 Micrometer 指标
+异常处理由 `common-exception` 模块的 `MvcExceptionHandler` 统一负责（15+ 个 `@ExceptionHandler` 方法，i18n + 动态 HTTP 状态码 + ProblemDetail 格式切换），本模块不再注册独立的异常处理器，避免重复设计。
 
 ## 配置项
 
@@ -118,10 +109,9 @@ ydsz:
 
 | 配置类 | 激活条件 |
 |---|---|
-| `WebMvcConfiguration` | 总是激活 |
+| `WebMvcConfiguration` | Servlet Web 应用 |
 | `WebSecurityConfiguration` | Spring Security 可用时激活 |
 | `WebSessionAutoConfiguration` | Servlet Web 应用 + spring-session-data-redis 时激活 |
-| `WebExceptionAutoConfiguration` | Servlet Web 应用时激活 |
 | `UserAgentConfiguration` | yauaa 在 classpath 时激活 |
 
 ## 依赖

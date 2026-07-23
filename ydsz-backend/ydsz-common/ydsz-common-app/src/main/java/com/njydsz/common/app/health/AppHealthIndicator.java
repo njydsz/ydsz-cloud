@@ -4,16 +4,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.common.app.config.AppSignatureProperties;
 import com.njydsz.common.app.metrics.AppMetrics;
+import com.njydsz.common.safe.config.ApiSignatureProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,35 +19,31 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>检测项：</b>
  * <ul>
- *   <li>签名验证：启用状态、密钥配置、路径白名单数量</li>
- *   <li>Nonce 防重放：Redis 连通性、响应时间</li>
+ *   <li>API 签名验证：启用状态、密钥配置、排除路径数量、时间戳容差</li>
  *   <li>指标采集：Micrometer 是否可用</li>
  * </ul>
+ *
+ * <p><b>注意：</b>Redis 连通性和安全能力清单由 {@code SafeHealthIndicator} 统一报告，
+ * 本指示器仅关注 App 模块特有状态，避免重复检测。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-@ConditionalOnClass(HealthIndicator.class)
-@ConditionalOnProperty(prefix = "ydsz.app", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AppHealthIndicator implements HealthIndicator {
 
-    private final AppSignatureProperties signatureProperties;
-    private final ObjectProvider<StringRedisTemplate> redisTemplateProvider;
+    private final ApiSignatureProperties signatureProperties;
     private final ObjectProvider<AppMetrics> appMetricsProvider;
 
     /**
      * 构造方法
      *
-     * @param signatureProperties 签名配置属性
-     * @param redisTemplateProvider Redis 模板（可选依赖，用于 Nonce 防重放）
+     * @param signatureProperties safe 模块的 API 签名配置属性
      * @param appMetricsProvider    App 指标采集器（可选依赖）
      */
-    public AppHealthIndicator(AppSignatureProperties signatureProperties,
-                               ObjectProvider<StringRedisTemplate> redisTemplateProvider,
+    public AppHealthIndicator(ApiSignatureProperties signatureProperties,
                                ObjectProvider<AppMetrics> appMetricsProvider) {
         this.signatureProperties = signatureProperties;
-        this.redisTemplateProvider = redisTemplateProvider;
         this.appMetricsProvider = appMetricsProvider;
     }
 
@@ -61,51 +52,27 @@ public class AppHealthIndicator implements HealthIndicator {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("module", "app");
 
-        // 签名验证状态
+        // API 签名验证状态（由 safe 模块提供，app 模块报告配置摘要）
         Map<String, Object> signatureStatus = new LinkedHashMap<>();
         signatureStatus.put("enabled", signatureProperties.isEnabled());
-        signatureStatus.put("algorithm", signatureProperties.getAlgorithm());
-        signatureStatus.put("hasSecret", signatureProperties.hasAnySecretConfigured());
-        signatureStatus.put("appSecretsCount", signatureProperties.getAppSecrets().size());
-        signatureStatus.put("ignoreUrlsCount", signatureProperties.getIgnoreUrls().size());
-        signatureStatus.put("timestampToleranceMs", signatureProperties.getTimestampTolerance());
-        signatureStatus.put("nonceCacheTtlSec", signatureProperties.getNonceCacheTtl());
+        signatureStatus.put("hasSecret", signatureProperties.getAppSecret() != null
+                && !signatureProperties.getAppSecret().isBlank());
+        signatureStatus.put("timestampToleranceSeconds", signatureProperties.getTimestampToleranceSeconds());
+        signatureStatus.put("nonceExpireSeconds", signatureProperties.getNonceExpireSeconds());
+        signatureStatus.put("excludesCount", signatureProperties.getExcludes().size());
         details.put("signature", signatureStatus);
-
-        // Redis 连通性（Nonce 防重放依赖）
-        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
-        if (redisTemplate != null) {
-            try {
-                long startTime = System.currentTimeMillis();
-                RedisConnectionFactory factory = redisTemplate.getConnectionFactory();
-                if (factory != null) {
-                    RedisConnection connection = factory.getConnection();
-                    try {
-                        String pong = connection.ping();
-                        long responseTime = System.currentTimeMillis() - startTime;
-                        signatureStatus.put("redis", "PONG".equalsIgnoreCase(pong) ? "connected" : "unexpected: " + pong);
-                        signatureStatus.put("redisResponseTimeMs", responseTime);
-                    } finally {
-                        connection.close();
-                    }
-                }
-            } catch (Exception e) {
-                signatureStatus.put("redis", "disconnected: " + e.getMessage());
-                log.warn("App 模块 Redis 健康检查失败: {}", e.getMessage());
-            }
-        } else {
-            signatureStatus.put("redis", "not configured (nonce anti-replay degraded)");
-        }
 
         // 指标采集状态
         AppMetrics metrics = appMetricsProvider.getIfAvailable();
         details.put("metrics", metrics != null ? "enabled" : "disabled");
 
         // 如果签名验证启用但密钥未配置，标记为 DOWN
-        if (signatureProperties.isEnabled() && !signatureProperties.hasAnySecretConfigured()) {
+        if (signatureProperties.isEnabled()
+                && (signatureProperties.getAppSecret() == null
+                        || signatureProperties.getAppSecret().isBlank())) {
             return Health.down()
                     .withDetail("module", "app")
-                    .withDetail("error", "签名验证已启用但未配置任何密钥")
+                    .withDetail("error", "API 签名验证已启用但未配置密钥")
                     .withDetails(details)
                     .build();
         }

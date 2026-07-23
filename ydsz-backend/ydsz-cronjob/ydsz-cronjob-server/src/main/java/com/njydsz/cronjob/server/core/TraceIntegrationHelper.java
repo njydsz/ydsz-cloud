@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>SkyWalking：通过 agent 自动注入 TraceId，本组件补充业务标签</li>
  *   <li>OpenTelemetry：通过 OTel SDK 手动创建 Span，本组件提供 Span 创建辅助方法</li>
- *   <li>兼容模式：无 agent 时使用 MDC + TraceIdUtil 实现简易追踪</li>
+ *   <li>兼容模式：无 agent 时使用 MDC + TracerUtils 实现简易追踪</li>
  * </ul>
  *
  * <h3>业务标签（Tags）</h3>

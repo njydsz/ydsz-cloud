@@ -201,7 +201,7 @@ class CacheBuilderTest {
   void shouldRedirectTtlTypeToExpirableCache() {
     Cache<String, String> cache =
         CacheBuilder.<String, String>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .maximumSize(100)
             .expireAfterWrite(1, TimeUnit.HOURS)
             .build();
@@ -217,7 +217,7 @@ class CacheBuilderTest {
   void shouldDefaultTtlExpirationTo5Minutes() {
     Cache<String, String> cache =
         CacheBuilder.<String, String>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .maximumSize(100)
             .build();
 

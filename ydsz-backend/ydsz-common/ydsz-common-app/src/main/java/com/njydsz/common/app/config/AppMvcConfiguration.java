@@ -13,7 +13,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import com.njydsz.common.app.advice.AppGlobalResponseAdvice;
@@ -22,8 +21,6 @@ import com.njydsz.common.app.exception.AppExceptionHandler;
 import com.njydsz.common.app.filter.AppAuthFilter;
 import com.njydsz.common.app.filter.AppContentCachingFilter;
 import com.njydsz.common.app.filter.AppRequestIdResponseFilter;
-import com.njydsz.common.app.filter.AppSecurityHeaderFilter;
-import com.njydsz.common.app.filter.AppSignatureFilter;
 import com.njydsz.common.app.health.AppHealthIndicator;
 import com.njydsz.common.app.interceptor.AppRequestLogInterceptor;
 import com.njydsz.common.app.metrics.AppMetrics;
@@ -35,8 +32,8 @@ import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.constant.BaseFilterOrders;
 import com.njydsz.common.base.interceptor.BaseHttpInterceptor;
+import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.config.SafeConfiguration;
-import com.njydsz.common.safe.config.SecurityHeaderProperties;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -47,9 +44,13 @@ import io.micrometer.core.instrument.MeterRegistry;
  *
  * <p><b>Filter 链顺序（Order 由小到大）：</b>
  * <pre>
- * AppContentCachingFilter → AppSignatureFilter → AppSecurityHeaderFilter
+ * AppContentCachingFilter → [SafeApiSignatureFilter] → [SafeSecurityHeaderFilter]
  *                         → AppRequestIdResponseFilter → AppAuthFilter
  * </pre>
+ *
+ * <p><b>注意：</b>API 签名验证和安全响应头由 {@code ydsz-common-safe} 模块统一提供，
+ * 通过 {@code ydsz.safe.api-signature.enabled} 和 {@code ydsz.safe.security-headers.enabled}
+ * 控制启用，本模块不再重复注册。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -57,38 +58,38 @@ import io.micrometer.core.instrument.MeterRegistry;
 @AutoConfiguration
 @AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})
 @EnableConfigurationProperties({AppCorsProperties.class, AppTraceProperties.class,
-        AppSignatureProperties.class, AppContentCacheProperties.class})
+        AppContentCacheProperties.class})
 @Import({AppGlobalResponseAdvice.class, AppExceptionHandler.class})
 public class AppMvcConfiguration extends BaseMvcConfiguration {
 
     private final BaseHttpInterceptor baseHttpInterceptor;
     private final AppRequestLogInterceptor appRequestLogInterceptor;
     private final AppTraceProperties appTraceProperties;
-    private final AppSignatureProperties appSignatureProperties;
     private final AppContentCacheProperties appContentCacheProperties;
+    private final ApiSignatureProperties apiSignatureProperties;
 
     /**
      * 构造方法
      *
-     * @param appCorsProperties        App 端 CORS 配置属性
-     * @param baseHttpInterceptor      基础 HTTP 拦截器（请求上下文清理）
-     * @param appRequestLogInterceptor App 端请求日志拦截器
-     * @param appTraceProperties       App 端 Trace / 请求追踪配置
-     * @param appSignatureProperties   App 端请求签名配置
+     * @param appCorsProperties         App 端 CORS 配置属性
+     * @param baseHttpInterceptor       基础 HTTP 拦截器（请求上下文清理）
+     * @param appRequestLogInterceptor  App 端请求日志拦截器
+     * @param appTraceProperties        App 端 Trace / 请求追踪配置
      * @param appContentCacheProperties App 端请求体缓存配置
+     * @param apiSignatureProperties    safe 模块的 API 签名配置（用于健康检查报告）
      */
     public AppMvcConfiguration(AppCorsProperties appCorsProperties,
                                BaseHttpInterceptor baseHttpInterceptor,
                                AppRequestLogInterceptor appRequestLogInterceptor,
                                AppTraceProperties appTraceProperties,
-                               AppSignatureProperties appSignatureProperties,
-                               AppContentCacheProperties appContentCacheProperties) {
+                               AppContentCacheProperties appContentCacheProperties,
+                               ApiSignatureProperties apiSignatureProperties) {
         super(appCorsProperties);
         this.baseHttpInterceptor = baseHttpInterceptor;
         this.appRequestLogInterceptor = appRequestLogInterceptor;
         this.appTraceProperties = appTraceProperties;
-        this.appSignatureProperties = appSignatureProperties;
         this.appContentCacheProperties = appContentCacheProperties;
+        this.apiSignatureProperties = apiSignatureProperties;
     }
 
     /**
@@ -119,37 +120,6 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
         bean.addUrlPatterns("/*");
         bean.setName("appContentCachingFilter");
         bean.setOrder(BaseFilterOrders.CONTENT_CACHING_FILTER);
-        return bean;
-    }
-
-    /**
-     * 注册 App 端请求签名校验过滤器
-     *
-     * <p>仅在 {@code ydsz.app.signature.enabled=true} 时激活。
-     * 启用时必须配置至少一个密钥，否则启动失败。
-     *
-     * @param redisTemplateProvider Redis 模板（可选，用于 Nonce 防重放）
-     * @param appMetricsProvider    App 指标采集器（可选）
-     * @return FilterRegistrationBean 实例
-     * @throws IllegalStateException 当启用签名校验但未配置任何密钥时抛出
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "ydsz.app.signature", name = "enabled", havingValue = "true")
-    public FilterRegistrationBean<AppSignatureFilter> appSignatureFilter(
-            ObjectProvider<StringRedisTemplate> redisTemplateProvider,
-            ObjectProvider<AppMetrics> appMetricsProvider) {
-        if (!appSignatureProperties.hasAnySecretConfigured()) {
-            throw new IllegalStateException(
-                    "启用签名验证时必须配置 ydsz.app.signature.app-secret 或 ydsz.app.signature.app-secrets");
-        }
-        AppSignatureFilter filter = new AppSignatureFilter(
-                appSignatureProperties,
-                redisTemplateProvider.getIfAvailable(),
-                appMetricsProvider.getIfAvailable());
-        FilterRegistrationBean<AppSignatureFilter> bean = new FilterRegistrationBean<>(filter);
-        bean.addUrlPatterns("/*");
-        bean.setName("appSignatureFilter");
-        bean.setOrder(appSignatureProperties.getOrder());
         return bean;
     }
 
@@ -201,23 +171,6 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     }
 
     /**
-     * 注册安全响应头过滤器
-     *
-     * @param securityHeaderProperties 安全响应头配置
-     * @return FilterRegistrationBean 实例
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "ydsz.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public FilterRegistrationBean<AppSecurityHeaderFilter> securityHeaderFilter(SecurityHeaderProperties securityHeaderProperties) {
-        AppSecurityHeaderFilter securityHeaderFilter = new AppSecurityHeaderFilter(securityHeaderProperties);
-        FilterRegistrationBean<AppSecurityHeaderFilter> bean = new FilterRegistrationBean<>(securityHeaderFilter);
-        bean.addUrlPatterns("/*");
-        bean.setName("securityHeaderFilter");
-        bean.setOrder(BaseFilterOrders.SECURITY_HEADER_FILTER);
-        return bean;
-    }
-
-    /**
      * 注册请求 ID 响应过滤器
      *
      * @return FilterRegistrationBean 实例
@@ -248,15 +201,13 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     /**
      * 注册 App 健康检查指示器 Bean
      *
-     * @param redisTemplateProvider Redis 模板（可选）
-     * @param appMetricsProvider    App 指标采集器（可选）
+     * @param appMetricsProvider App 指标采集器（可选）
      * @return AppHealthIndicator 实例
      */
     @Bean
     @ConditionalOnClass(HealthIndicator.class)
     @ConditionalOnProperty(prefix = "ydsz.app", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public AppHealthIndicator appHealthIndicator(ObjectProvider<StringRedisTemplate> redisTemplateProvider,
-                                                   ObjectProvider<AppMetrics> appMetricsProvider) {
-        return new AppHealthIndicator(appSignatureProperties, redisTemplateProvider, appMetricsProvider);
+    public AppHealthIndicator appHealthIndicator(ObjectProvider<AppMetrics> appMetricsProvider) {
+        return new AppHealthIndicator(apiSignatureProperties, appMetricsProvider);
     }
 }

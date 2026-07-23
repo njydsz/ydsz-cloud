@@ -73,7 +73,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
 
     /** L1 本地缓存：IP → 是否在黑名单中 */
     private final Cache<String, Boolean> localCache = YdszCache.<String, Boolean>newBuilder()
-            .type(CacheType.TTL)
+            .type(CacheType.STRIPED)
             .expireAfterWrite(LOCAL_CACHE_TTL_SECONDS, TimeUnit.SECONDS)
             .maximumSize(LOCAL_CACHE_MAX_SIZE)
             .build();

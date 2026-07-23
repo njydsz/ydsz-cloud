@@ -29,7 +29,8 @@ import com.njydsz.common.core.enums.ServiceType;
 @Component
 public class AuthHandlerFactory {
 
-    private static final String DEFAULT_HANDLER_BEAN_NAME = "webAuthHandler";
+    private static final String WEB_HANDLER_BEAN_NAME = "webAuthHandler";
+    private static final String APP_HANDLER_BEAN_NAME = "appAuthHandler";
 
     private final Map<String, AuthHandler> authHandlerMap;
 
@@ -46,7 +47,7 @@ public class AuthHandlerFactory {
 
         AuthHandler handler = authHandlerMap.get(beanName);
         if (handler == null) {
-            handler = authHandlerMap.get(DEFAULT_HANDLER_BEAN_NAME);
+            handler = authHandlerMap.get(WEB_HANDLER_BEAN_NAME);
         }
         if (handler == null) {
             handler = authHandlerMap.values().iterator().next();
@@ -60,8 +61,8 @@ public class AuthHandlerFactory {
 
     private String resolveBeanName(ServiceType serviceType) {
         if (serviceType == ServiceType.APP_SERVICE) {
-            return "appAuthHandler";
+            return APP_HANDLER_BEAN_NAME;
         }
-        return DEFAULT_HANDLER_BEAN_NAME;
+        return WEB_HANDLER_BEAN_NAME;
     }
 }

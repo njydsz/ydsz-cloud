@@ -15,7 +15,6 @@ import com.njydsz.common.util.auth.YdszAuthInfo;
  * @see WebAuthInfo
  *
  * @author ydsz-team
-* 
  */
 @Component("webAuthHandler")
 public class WebAuthHandler extends AbstractAuthHandler {

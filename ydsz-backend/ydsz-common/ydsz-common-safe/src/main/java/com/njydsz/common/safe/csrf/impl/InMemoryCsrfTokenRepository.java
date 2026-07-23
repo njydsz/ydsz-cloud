@@ -40,7 +40,7 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
     public InMemoryCsrfTokenRepository(long expirationSeconds) {
         this.expirationSeconds = expirationSeconds;
         this.tokenCache = YdszCache.<String, CsrfToken>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(expirationSeconds * 2L, TimeUnit.SECONDS)
                 .build();
         this.sessionTokenMap = new ConcurrentHashMap<>();

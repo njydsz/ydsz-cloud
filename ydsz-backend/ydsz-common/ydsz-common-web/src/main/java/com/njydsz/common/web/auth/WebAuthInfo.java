@@ -10,7 +10,6 @@ import com.njydsz.common.core.enums.ServiceType;
  * 解析逻辑由基类 {@link BaseAuthInfo} 统一处理。
  *
  * @author ydsz-team
-* 
  * @see BaseAuthInfo
  * @see ServiceType#WEB_SERVICE
  */

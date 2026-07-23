@@ -19,11 +19,11 @@ import com.njydsz.common.util.id.TracerUtils;
  * // 退出后 MDC 自动恢复/清除
  * }</pre>
  *
- * <p>traceId 为 null / 空白时自动生成新 traceId（{@link TraceIdUtil#getOrCreate()}），
+ * <p>traceId 为 null / 空白时自动生成新 traceId（{@link TracerUtils#getOrCreate()}），
  * 保证下游日志可追溯。
  *
  * <p>注意：本类仅管理 MDC 中的 traceId，不干预 Brave / Micrometer Tracing 的 span 上下文。
- * previousTraceId 读取自 {@link MDC#get} 而非 {@link TraceIdUtil#get()}，避免 Brave
+ * previousTraceId 读取自 {@link MDC#get} 而非 {@link TracerUtils#get()}，避免 Brave
  * fallback traceId 干扰恢复逻辑。
  *
  * @author ydsz-team

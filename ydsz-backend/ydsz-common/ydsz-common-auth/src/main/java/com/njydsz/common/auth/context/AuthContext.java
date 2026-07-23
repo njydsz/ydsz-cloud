@@ -12,7 +12,7 @@ import com.njydsz.common.security.LoginUser;
 /**
  * 统一认证与权限上下文持有者
  *
- * <p>合并原 SecurityContext 和 PermissionContextHolder/ColumnPermissionContext，
+ * <p>合并原 SecurityContext 和 ColumnPermissionContext，
  * 提供统一的线程级用户身份与权限上下文管理。
  * 使用 TransmittableThreadLocal 保证在线程池场景下的正确传递。
  *

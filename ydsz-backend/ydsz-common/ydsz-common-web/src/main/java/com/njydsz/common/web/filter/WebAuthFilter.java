@@ -19,6 +19,7 @@ import com.njydsz.common.util.auth.RequestHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.common.web.auth.AuthHandlerFactory;
+import com.njydsz.common.web.metrics.WebMetrics;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>解析请求头中的认证信息（Token、用户ID、租户ID、数据权限维度等）</li>
  *   <li>将认证上下文写入 {@link RequestHolder}，供下游链路使用</li>
  *   <li>支持请求路径白名单过滤，无需认证即可访问</li>
+ *   <li>认证成功/失败埋点到 {@link WebMetrics}（可选依赖）</li>
  * </ul>
  *
  * <p>认证策略解耦：
@@ -43,10 +45,10 @@ import lombok.extern.slf4j.Slf4j;
  * 确保跨域预检请求可以正常通过，而认证逻辑在跨域处理之后执行。
  *
  * @author ydsz-team
-* 
  * @see AuthHandlerFactory
  * @see AuthenticationProvider
  * @see RequestHolder
+ * @see WebMetrics
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE + 3)
@@ -54,26 +56,17 @@ public class WebAuthFilter extends BaseAuthFilter {
 
     private final AuthHandlerFactory authHandlerFactory;
     private final AuthenticationProvider authenticationProvider;
+    private final WebMetrics webMetrics;
 
-    /**
-     * 使用默认认证处理器工厂构造
-     */
-    public WebAuthFilter(String applicationName,
-                         AuthFilterConfiguration authFilterConfiguration,
-                         AuthHandlerFactory authHandlerFactory) {
-        this(applicationName, authFilterConfiguration, authHandlerFactory, null);
-    }
-
-    /**
-     * 使用自定义认证提供者构造（策略模式）
-     */
     public WebAuthFilter(String applicationName,
                          AuthFilterConfiguration authFilterConfiguration,
                          AuthHandlerFactory authHandlerFactory,
-                         AuthenticationProvider authenticationProvider) {
+                         AuthenticationProvider authenticationProvider,
+                         WebMetrics webMetrics) {
         super(applicationName, authFilterConfiguration);
         this.authHandlerFactory = authHandlerFactory;
         this.authenticationProvider = authenticationProvider;
+        this.webMetrics = webMetrics;
     }
 
     @Override
@@ -83,6 +76,22 @@ public class WebAuthFilter extends BaseAuthFilter {
 
     @Override
     protected AuthInfo resolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
+        long startNanos = System.nanoTime();
+        try {
+            AuthInfo authInfo = doResolveAuthInfo(request, response);
+            if (webMetrics != null) {
+                webMetrics.recordAuthSuccess(System.nanoTime() - startNanos);
+            }
+            return authInfo;
+        } catch (RuntimeException e) {
+            if (webMetrics != null) {
+                webMetrics.recordAuthFailure(System.nanoTime() - startNanos);
+            }
+            throw e;
+        }
+    }
+
+    private AuthInfo doResolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
         if (authenticationProvider != null) {
             return authenticationProvider.authenticate(request, response);
         }
@@ -98,6 +107,11 @@ public class WebAuthFilter extends BaseAuthFilter {
     @Override
     protected boolean shouldSkipService() {
         return isServiceIgnored(applicationName);
+    }
+
+    @Override
+    protected void doPostAuth(HttpServletRequest request, HttpServletResponse response, long duration) {
+        log.debug("{}认证耗时: {}ms", getLogPrefix(), duration);
     }
 
     @Override

@@ -4,9 +4,11 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
@@ -49,9 +51,12 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
  *
  * <p><b>拦截器链：</b>
  * <ul>
- *   <li>{@link RequestLogInterceptor}（order=MIN_VALUE）- 请求日志记录</li>
+ *   <li>{@link RequestLogInterceptor}（order=MIN_VALUE）- 请求日志记录 + HTTP 请求指标埋点</li>
  *   <li>{@link BaseHttpInterceptor}（order=MAX_VALUE）- 请求结束清理（RequestContext）</li>
  * </ul>
+ *
+ * <p><b>异常处理：</b>由 {@code common-exception} 模块的 {@code MvcExceptionHandler} 统一处理，
+ * 本模块不再注册独立的异常处理器，避免重复设计。
  *
  * @author ydsz-team
  * @see BaseMvcConfiguration
@@ -61,6 +66,7 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
  * @see WebHealthIndicator
  */
 @AutoConfiguration
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})
 @EnableConfigurationProperties({
         WebCorsProperties.class, WebTraceProperties.class, WebContentCacheProperties.class
@@ -74,7 +80,10 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     private final AuthHandlerFactory authHandlerFactory;
     private final WebTraceProperties webTraceProperties;
     private final WebContentCacheProperties contentCacheProperties;
+    private final WebCorsProperties webCorsProperties;
     private final String applicationName;
+
+    private final RequestLogInterceptor requestLogInterceptor;
 
     public WebMvcConfiguration(WebCorsProperties webCorsProperties,
                                BaseHttpInterceptor baseHttpInterceptor,
@@ -82,21 +91,24 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
                                AuthHandlerFactory authHandlerFactory,
                                WebTraceProperties webTraceProperties,
                                WebContentCacheProperties contentCacheProperties,
+                               RequestLogInterceptor requestLogInterceptor,
                                @Nullable AuthenticationProvider authenticationProvider,
                                ApplicationContext applicationContext) {
         super(webCorsProperties);
+        this.webCorsProperties = webCorsProperties;
         this.baseHttpInterceptor = baseHttpInterceptor;
         this.authFilterConfiguration = authFilterConfiguration;
         this.authHandlerFactory = authHandlerFactory;
         this.webTraceProperties = webTraceProperties;
         this.contentCacheProperties = contentCacheProperties;
+        this.requestLogInterceptor = requestLogInterceptor;
         this.authenticationProvider = authenticationProvider;
         this.applicationName = applicationContext.getApplicationName();
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(requestLogInterceptor())
+        registry.addInterceptor(requestLogInterceptor)
                 .addPathPatterns("/**")
                 .order(BaseFilterOrders.INTERCEPTOR_REQUEST_LOG);
 
@@ -107,8 +119,8 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(RequestLogInterceptor.class)
-    public RequestLogInterceptor requestLogInterceptor() {
-        return new RequestLogInterceptor(webTraceProperties);
+    public RequestLogInterceptor requestLogInterceptor(ObjectProvider<WebMetrics> webMetricsProvider) {
+        return new RequestLogInterceptor(webTraceProperties, webMetricsProvider.getIfAvailable());
     }
 
     @Bean
@@ -130,12 +142,13 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "webAuthFilter")
-    public FilterRegistrationBean<WebAuthFilter> authFilter() {
+    public FilterRegistrationBean<WebAuthFilter> authFilter(ObjectProvider<WebMetrics> webMetricsProvider) {
         WebAuthFilter authFilter = new WebAuthFilter(
                 applicationName,
                 authFilterConfiguration,
                 authHandlerFactory,
-                authenticationProvider
+                authenticationProvider,
+                webMetricsProvider.getIfAvailable()
         );
         FilterRegistrationBean<WebAuthFilter> authFilterBean = new FilterRegistrationBean<>(authFilter);
         authFilterBean.addUrlPatterns("/*");
@@ -146,6 +159,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "securityHeaderFilter")
+    @ConditionalOnBean(SecurityHeaderProperties.class)
     @ConditionalOnProperty(prefix = "ydsz.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<SecurityHeaderFilter> securityHeaderFilter(SecurityHeaderProperties securityHeaderProperties) {
         SecurityHeaderFilter securityHeaderFilter = new SecurityHeaderFilter(securityHeaderProperties);
@@ -179,29 +193,31 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     @ConditionalOnMissingBean(name = "webHealthIndicator")
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     @ConditionalOnProperty(prefix = "ydsz.web.health-indicator", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public WebHealthIndicator webHealthIndicator(WebCorsProperties corsProperties,
-                                                 WebTraceProperties traceProperties,
-                                                 ObjectProvider<UserAgentAnalyzer> userAgentAnalyzerProvider,
-                                                 ApplicationContext applicationContext) {
+    public WebHealthIndicator webHealthIndicator(
+            ObjectProvider<UserAgentAnalyzer> userAgentAnalyzerProvider,
+            ApplicationContext applicationContext) {
         boolean sessionRedisEnabled = isSessionRedisEnabled(applicationContext);
         boolean securityEnabled = isSecurityEnabled(applicationContext);
-        return new WebHealthIndicator(corsProperties, traceProperties, userAgentAnalyzerProvider,
+        return new WebHealthIndicator(webCorsProperties, webTraceProperties, userAgentAnalyzerProvider,
                 sessionRedisEnabled, securityEnabled);
     }
 
     private boolean isSessionRedisEnabled(ApplicationContext context) {
         try {
-            return context.containsBean("sessionRepositoryFilter")
-                    || context.containsBean("redisHttpSessionConfiguration");
-        } catch (Exception e) {
+            Class<?> repoClass = Class.forName("org.springframework.session.SessionRepository");
+            String[] names = context.getBeanNamesForType(repoClass, false, false);
+            return names.length > 0;
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }
 
     private boolean isSecurityEnabled(ApplicationContext context) {
         try {
-            return context.containsBean("securityFilterChain");
-        } catch (Exception e) {
+            Class<?> chainClass = Class.forName("org.springframework.security.web.SecurityFilterChain");
+            String[] names = context.getBeanNamesForType(chainClass, false, false);
+            return names.length > 0;
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }

@@ -62,6 +62,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <optional>true</optional>
             <exclusions>
                 <!-- 排除 swagger-core-jakarta 传递的 snakeyaml，统一使用 Spring Boot BOM 管理的 2.4 版本 -->
                 <exclusion>

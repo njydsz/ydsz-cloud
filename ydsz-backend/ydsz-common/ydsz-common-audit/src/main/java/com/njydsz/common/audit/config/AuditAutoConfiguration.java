@@ -15,12 +15,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.audit.aspect.AuditAspect;
 import com.njydsz.common.audit.core.AsyncAuditRecorder;
+import com.njydsz.common.audit.core.AuditMetricsBinder;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.core.AuditStorage;
@@ -164,7 +166,7 @@ public class AuditAutoConfiguration {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(properties.getCorePoolSize());
         executor.setMaxPoolSize(properties.getMaxPoolSize());
-        executor.setExecutorQueueCapacity(properties.getExecutorQueueCapacity());
+        executor.setQueueCapacity(properties.getExecutorQueueCapacity());
         executor.setThreadNamePrefix("audit-async-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
@@ -270,6 +272,33 @@ public class AuditAutoConfiguration {
         log.info("初始化默认审计查询服务: DefaultAuditQueryService, 分表策略={}",
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
         return new DefaultAuditQueryService(dataSource, shardingStrategy, baseTableName);
+    }
+
+    /**
+     * 创建审计模块 Micrometer 指标绑定器 Bean
+     * <p>
+     * 当存在 AuditRecorder 和 MeterRegistry 时自动注册，
+     * 将审计队列大小、使用率、成功/失败计数、写入延迟等指标暴露到 Prometheus。
+     *
+     * @param auditRecorder 审计记录器
+     * @param meterRegistry Micrometer 指标注册中心
+     * @return 审计指标绑定器实例
+     */
+    @Bean
+    @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+    @ConditionalOnBean(AuditRecorder.class)
+    @ConditionalOnMissingBean(AuditMetricsBinder.class)
+    public AuditMetricsBinder auditMetricsBinder(AuditRecorder auditRecorder,
+                                                   ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
+        AuditMetricsBinder binder = new AuditMetricsBinder(auditRecorder);
+        io.micrometer.core.instrument.MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
+        if (meterRegistry != null) {
+            binder.bindTo(meterRegistry);
+            log.info("初始化审计指标绑定器: AuditMetricsBinder, 已绑定到 MeterRegistry");
+        } else {
+            log.info("初始化审计指标绑定器: AuditMetricsBinder, MeterRegistry 不可用，指标未绑定");
+        }
+        return binder;
     }
 
     /**

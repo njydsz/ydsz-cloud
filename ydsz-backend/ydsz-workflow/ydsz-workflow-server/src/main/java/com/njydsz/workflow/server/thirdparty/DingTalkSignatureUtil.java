@@ -9,7 +9,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>算法：HmacSHA256，密钥为 appSecret，签名内容为 timestamp + nonce + encrypt，
  * 计算结果经 Base64 编码后与回调签名比对。
  *
- * <p><b>P1-1 架构优化</b>：签名计算和常量时间比较委托到 {@link CryptoSignUtil}，
+ * <p><b>P1-1 架构优化</b>：签名计算和常量时间比较委托到 DigestUtils，
  * 消除重复的 HmacSHA256 实现。
  *
  * @since 1.0.0

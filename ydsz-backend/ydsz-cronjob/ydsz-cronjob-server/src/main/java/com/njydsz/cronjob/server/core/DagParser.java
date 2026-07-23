@@ -1,30 +1,28 @@
 package com.njydsz.cronjob.server.core.dag;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.dag.DagGraph;
-
 /**
- * DAG 解析器（P0-1 架构优化：委托到 common.DagGraph）。
+ * DAG 解析器。
  *
- * <p>本类保留 cronjob 模块特有的 {@link JobRelationDO} 适配逻辑，
- * 纯拓扑算法委托到 {@link DagGraph} 统一实现。
+ * <p>提供 DAG 拓扑算法：拓扑排序、环检测、后代/祖先节点查询。
  *
  * <h3>核心能力</h3>
  * <ul>
- *   <li>{@link #buildAdjacencyList(List)}：从 JobRelationDO 构建邻接表</li>
- *   <li>{@link #topologicalSort(Map)}：委托 {@link DagGraph#topologicalSort}</li>
- *   <li>{@link #hasCycle(Map)}：委托 {@link DagGraph#hasCycle}</li>
- *   <li>{@link #wouldCreateCycle(String, String, List)}：委托 {@link DagGraph#wouldCreateCycle}</li>
- *   <li>{@link #getDescendants(String, Map)}：委托 {@link DagGraph#getDescendants}</li>
- *   <li>{@link #getAncestors(String, Map)}：委托 {@link DagGraph#getAncestors}</li>
+ *   <li>{@link #topologicalSort(Map)}：Kahn 算法拓扑排序</li>
+ *   <li>{@link #hasCycle(Map)}：基于入度的环检测</li>
+ *   <li>{@link #getDescendants(String, Map)}：BFS 遍历后代节点</li>
+ *   <li>{@link #getAncestors(String, Map)}：BFS 遍历祖先节点</li>
  * </ul>
  *
  * @author ydsz-team
@@ -34,63 +32,156 @@ import com.njydsz.common.core.dag.DagGraph;
 public class DagParser {
 
     /**
-     * 从依赖边列表构建邻接表（parent → children list）。
+     * 拓扑排序（Kahn 算法）。
      *
-     * @param edges 依赖边列表
-     * @return 邻接表；空列表返回空 Map
-     */
-    public Map<String, List<String>> buildAdjacencyList(List<JobRelationDO> edges) {
-        if (edges == null || edges.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        Map<String, List<String>> adj = new HashMap<>();
-        for (JobRelationDO edge : edges) {
-            adj.computeIfAbsent(edge.getParentJobId(), k -> new ArrayList<>())
-                    .add(edge.getChildJobId());
-            adj.computeIfAbsent(edge.getChildJobId(), k -> new ArrayList<>());
-        }
-        return adj;
-    }
-
-    /**
-     * 拓扑排序（委托 DagGraph）。
+     * @param adj 邻接表
+     * @return 拓扑排序结果；存在环时返回空列表
      */
     public List<String> topologicalSort(Map<String, List<String>> adj) {
-        return DagGraph.topologicalSort(adj);
+        if (adj == null || adj.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<String, Integer> inDegree = new HashMap<>();
+        for (String node : adj.keySet()) {
+            inDegree.putIfAbsent(node, 0);
+        }
+        for (List<String> children : adj.values()) {
+            if (children != null) {
+                for (String child : children) {
+                    inDegree.merge(child, 1, Integer::sum);
+                }
+            }
+        }
+        Deque<String> queue = new ArrayDeque<>();
+        for (Map.Entry<String, Integer> entry : inDegree.entrySet()) {
+            if (entry.getValue() == 0) {
+                queue.add(entry.getKey());
+            }
+        }
+        List<String> result = new ArrayList<>();
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            result.add(node);
+            List<String> children = adj.get(node);
+            if (children != null) {
+                for (String child : children) {
+                    int newDeg = inDegree.merge(child, -1, Integer::sum);
+                    if (newDeg == 0) {
+                        queue.add(child);
+                    }
+                }
+            }
+        }
+        if (result.size() != inDegree.size()) {
+            return Collections.emptyList();
+        }
+        return result;
     }
 
     /**
-     * 检测环（委托 DagGraph）。
+     * 检测邻接表中是否存在环。
+     *
+     * @param adj 邻接表
+     * @return true 表示存在环
      */
     public boolean hasCycle(Map<String, List<String>> adj) {
-        return DagGraph.hasCycle(adj);
-    }
-
-    /**
-     * 检测新增边是否形成环（委托 DagGraph）。
-     */
-    public boolean wouldCreateCycle(String parent, String child, List<JobRelationDO> existingEdges) {
-        if (parent == null || child == null) {
+        if (adj == null || adj.isEmpty()) {
             return false;
         }
-        if (parent.equals(child)) {
+        Set<String> visited = new HashSet<>();
+        Set<String> inStack = new HashSet<>();
+        for (String node : adj.keySet()) {
+            if (dfsHasCycle(node, adj, visited, inStack)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean dfsHasCycle(String node, Map<String, List<String>> adj,
+                                 Set<String> visited, Set<String> inStack) {
+        if (inStack.contains(node)) {
             return true;
         }
-        Map<String, List<String>> adj = buildAdjacencyList(existingEdges);
-        return DagGraph.wouldCreateCycle(parent, child, adj);
+        if (visited.contains(node)) {
+            return false;
+        }
+        visited.add(node);
+        inStack.add(node);
+        List<String> children = adj.get(node);
+        if (children != null) {
+            for (String child : children) {
+                if (dfsHasCycle(child, adj, visited, inStack)) {
+                    return true;
+                }
+            }
+        }
+        inStack.remove(node);
+        return false;
     }
 
     /**
-     * 获取所有后代节点（委托 DagGraph）。
+     * 获取起始节点的所有后代节点（BFS）。
+     *
+     * @param start 起始节点
+     * @param adj   邻接表
+     * @return 后代节点集合
      */
     public Set<String> getDescendants(String start, Map<String, List<String>> adj) {
-        return DagGraph.getDescendants(start, adj);
+        if (start == null || adj == null) {
+            return Collections.emptySet();
+        }
+        Set<String> result = new HashSet<>();
+        Deque<String> queue = new ArrayDeque<>();
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            List<String> children = adj.get(node);
+            if (children != null) {
+                for (String child : children) {
+                    if (result.add(child)) {
+                        queue.add(child);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
-     * 获取所有祖先节点（委托 DagGraph）。
+     * 获取目标节点的所有祖先节点（BFS，需构建反向邻接表）。
+     *
+     * @param target 目标节点
+     * @param adj    邻接表
+     * @return 祖先节点集合
      */
     public Set<String> getAncestors(String target, Map<String, List<String>> adj) {
-        return DagGraph.getAncestors(target, adj);
+        if (target == null || adj == null) {
+            return Collections.emptySet();
+        }
+        Map<String, List<String>> reverse = new HashMap<>();
+        for (Map.Entry<String, List<String>> entry : adj.entrySet()) {
+            String parent = entry.getKey();
+            if (entry.getValue() != null) {
+                for (String child : entry.getValue()) {
+                    reverse.computeIfAbsent(child, k -> new ArrayList<>()).add(parent);
+                }
+            }
+        }
+        Set<String> result = new HashSet<>();
+        Deque<String> queue = new ArrayDeque<>();
+        queue.add(target);
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            List<String> parents = reverse.get(node);
+            if (parents != null) {
+                for (String parent : parents) {
+                    if (result.add(parent)) {
+                        queue.add(parent);
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

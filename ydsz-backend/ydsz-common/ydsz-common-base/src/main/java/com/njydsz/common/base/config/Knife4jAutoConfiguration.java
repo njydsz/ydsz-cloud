@@ -2,8 +2,6 @@ package com.njydsz.common.base.config;
 
 import jakarta.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Knife4j 增强自动配置类
@@ -29,14 +28,13 @@ import lombok.RequiredArgsConstructor;
  * @since 1.0.0
  */
 @AutoConfiguration
+@Slf4j
 @RequiredArgsConstructor
 @EnableConfigurationProperties(DocProperties.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(name = "com.github.xiaoymin.knife4j.spring.extension.Knife4jOpenApiCustomizer")
 @ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class Knife4jAutoConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(Knife4jAutoConfiguration.class);
 
     /** 文档模块配置属性，由 Spring 注入 */
     private final DocProperties docProperties;
@@ -57,14 +55,14 @@ public class Knife4jAutoConfiguration {
      * <p>在应用启动时输出文档增强相关配置（访问路径、导出开关、导出目录、支持格式等）。
      */
     private void logKnife4jConfig() {
-        logger.info("========================================");
-        logger.info("Knife4j 文档增强已启用");
-        logger.info("  - 访问路径: {}", docProperties.getKnife4jPath());
-        logger.info("  - 导出功能: {}", docProperties.getExport().isEnabled() ? "启用" : "禁用");
+        log.info("========================================");
+        log.info("Knife4j 文档增强已启用");
+        log.info("  - 访问路径: {}", docProperties.getKnife4jPath());
+        log.info("  - 导出功能: {}", docProperties.getExport().isEnabled() ? "启用" : "禁用");
         if (docProperties.getExport().isEnabled()) {
-            logger.info("  - 导出目录: {}", docProperties.getExport().getOutputDir());
-            logger.info("  - 支持格式: {}", String.join(", ", docProperties.getExport().getFormats()));
+            log.info("  - 导出目录: {}", docProperties.getExport().getOutputDir());
+            log.info("  - 支持格式: json, yaml, html, markdown");
         }
-        logger.info("========================================");
+        log.info("========================================");
     }
 }

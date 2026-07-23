@@ -3,7 +3,6 @@ package com.njydsz.common.base.exporter;
 import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.base.config.DocProperties;
 
@@ -23,45 +22,8 @@ import com.njydsz.common.base.config.DocProperties;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Component
 @Conditional(DefaultDocExporter.DefaultDocExporterCondition.class)
 public class DefaultDocExporter extends AbstractDocExporter {
-
-    /** HTML 文档模板，使用 String.format 占位符：标题、标题、版本、描述、内容 */
-    private static final String HTML_TEMPLATE = """
-            <!DOCTYPE html>
-            <html lang="zh-CN">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>%s</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
-                    .container { max-width: 1200px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-                    h2 { color: #555; margin-top: 30px; }
-                    pre { background-color: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
-                    code { font-family: 'Courier New', monospace; }
-                    .endpoint { background-color: #e7f3ff; padding: 10px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #007bff; }
-                    .method { font-weight: bold; color: #007bff; }
-                    .path { font-family: monospace; color: #333; }
-                    .description { color: #666; margin-top: 5px; }
-                    table { border-collapse: collapse; width: 100%%; margin: 15px 0; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background-color: #007bff; color: white; }
-                    tr:nth-child(even) { background-color: #f2f2f2; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>%s</h1>
-                    <p><strong>版本:</strong> %s</p>
-                    <p><strong>描述:</strong> %s</p>
-                    %s
-                </div>
-            </body>
-            </html>
-            """;
 
     /**
      * 构造默认文档导出器
@@ -74,9 +36,41 @@ public class DefaultDocExporter extends AbstractDocExporter {
 
     @Override
     protected String generateHtmlContent(ApiDocInfo docInfo, String apiDocs) {
-        String content = "<pre><code>" + escapeHtml(apiDocs) + "</code></pre>";
-        return String.format(HTML_TEMPLATE, docInfo.title(), docInfo.title(),
-                docInfo.version(), docInfo.description(), content);
+        // 使用 StringBuilder 拼接，避免 String.format 遇到 JSON 中的 % 字符抛出 IllegalFormatException
+        String escapedTitle = escapeHtml(docInfo.title());
+        String escapedVersion = escapeHtml(docInfo.version());
+        String escapedDescription = escapeHtml(docInfo.description());
+        String escapedApiDocs = escapeHtml(apiDocs);
+
+        StringBuilder html = new StringBuilder(4096);
+        html.append("<!DOCTYPE html>\n");
+        html.append("<html lang=\"zh-CN\">\n");
+        html.append("<head>\n");
+        html.append("    <meta charset=\"UTF-8\">\n");
+        html.append("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.append("    <title>").append(escapedTitle).append("</title>\n");
+        html.append("    <style>\n");
+        html.append("        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }\n");
+        html.append("        .container { max-width: 1200px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n");
+        html.append("        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }\n");
+        html.append("        pre { background-color: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }\n");
+        html.append("        code { font-family: 'Courier New', monospace; }\n");
+        html.append("        table { border-collapse: collapse; width: 100%; margin: 15px 0; }\n");
+        html.append("        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }\n");
+        html.append("        th { background-color: #007bff; color: white; }\n");
+        html.append("        tr:nth-child(even) { background-color: #f2f2f2; }\n");
+        html.append("    </style>\n");
+        html.append("</head>\n");
+        html.append("<body>\n");
+        html.append("    <div class=\"container\">\n");
+        html.append("        <h1>").append(escapedTitle).append("</h1>\n");
+        html.append("        <p><strong>版本:</strong> ").append(escapedVersion).append("</p>\n");
+        html.append("        <p><strong>描述:</strong> ").append(escapedDescription).append("</p>\n");
+        html.append("        <pre><code>").append(escapedApiDocs).append("</code></pre>\n");
+        html.append("    </div>\n");
+        html.append("</body>\n");
+        html.append("</html>");
+        return html.toString();
     }
 
     @Override

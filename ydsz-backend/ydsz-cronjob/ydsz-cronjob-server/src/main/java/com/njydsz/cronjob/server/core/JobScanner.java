@@ -162,7 +162,7 @@ public class JobScanner {
      *   <li>{@link MisfirePolicy#COALESCE} 执行一次，日志 triggerType 标记 MISFIRED</li>
      * </ul>
      *
-     * <p>P6-1: 在派发前通过 {@link TraceIdUtil#getOrCreate()} 初始化 traceId 到 MDC，
+     * <p>P6-1: 在派发前通过 {@link TracerUtils#getOrCreate()} 初始化 traceId 到 MDC，
      * 使 DefaultTaskDispatcher 写入 job_log.trace_id 时能取到非空值，
      * 实现"扫描 → 派发 → 执行 → 日志"全链路 traceId 串联。
      * 单个任务派发完成后立即清理 MDC，避免 traceId 串任务。

@@ -3,7 +3,7 @@ package com.njydsz.common.util.array;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -359,22 +359,7 @@ public class ArrayUtils {
         return new ArrayList<>(Arrays.asList(array));
     }
 
-    /**
-     * 将 Collection 转换为数组
-     *
-     * @deprecated 请使用 {@link com.njydsz.common.util.collection.CollectionUtils#listToArray(Collection, Class)} 替代，
-     *             CollectionUtils 更专注于集合操作且类型安全签名更明确
-     */
-    @Deprecated(since = "1.0.0", forRemoval = true)
-    public static <T> T[] toArray(Collection<T> collection, Class<?> clazz) {
-        Objects.requireNonNull(clazz, "clazz must not be null");
-        if (collection == null || collection.isEmpty()) {
-            return newArray(clazz, 0);
-        }
-        return collection.toArray(newArray(clazz, collection.size()));
-    }
-
-    /**
+/**
      * 创建指定类型的数组
      */
     
@@ -729,7 +714,8 @@ public class ArrayUtils {
         }
 
         Class<?> componentType = array.getClass().getComponentType();
-        return toArray(set, componentType);
+        T[] result = newArray(componentType, set.size());
+        return set.toArray(result);
     }
 
     /**

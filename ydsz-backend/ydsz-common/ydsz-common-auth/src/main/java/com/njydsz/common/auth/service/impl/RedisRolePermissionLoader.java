@@ -117,7 +117,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             return YdszCache.<String, RolePermissions>newBuilder().build();
         }
         return YdszCache.<String, RolePermissions>newBuilder()
-                .type(CacheType.TTL)
+                .type(CacheType.STRIPED)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, RolePermissions value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {

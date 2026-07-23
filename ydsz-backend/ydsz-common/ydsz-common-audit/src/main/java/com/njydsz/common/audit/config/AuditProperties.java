@@ -280,23 +280,7 @@ public class AuditProperties {
         this.maxPoolSize = maxPoolSize;
     }
 
-    /**
-     * @deprecated 使用 {@link #getExecutorQueueCapacity()} 替代
-     */
-    @Deprecated
-    public int getExecutorQueueCapacity() {
-        return executorQueueCapacity;
-    }
-
-    /**
-     * @deprecated 使用 {@link #setExecutorQueueCapacity(int)} 替代
-     */
-    @Deprecated
-    public void setExecutorQueueCapacity(int queueCapacity) {
-        this.executorQueueCapacity = queueCapacity;
-    }
-
-    public int getExecutorQueueCapacity() {
+public int getExecutorQueueCapacity() {
         return executorQueueCapacity;
     }
 
