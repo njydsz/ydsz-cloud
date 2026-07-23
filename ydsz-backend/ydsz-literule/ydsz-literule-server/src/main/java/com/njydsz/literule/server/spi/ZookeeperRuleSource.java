@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import com.njydsz.literule.api.RuleDefinition;
 
@@ -192,7 +192,7 @@ public class ZookeeperRuleSource implements RuleSource {
             return List.of();
         }
         try {
-            return Json.parseArray(json, RuleDefinition.class);
+            return YdszJson.parseArray(json, RuleDefinition.class);
         } catch (Exception e) {
             log.error("[ZookeeperRuleSource] JSON 解析失败: {}", e.getMessage());
             return List.of();

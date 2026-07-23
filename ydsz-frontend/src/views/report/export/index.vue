@@ -45,7 +45,7 @@ const reportTypeOptions = [
   { label: '立项信息', value: 'PROJECT' },
 ]
 
-// 状态映射（与后端 pmis_export_record.status 对齐）
+// 状态映射（与后端 ydsz_export_record.status 对齐）
 const statusMap: Record<ExportStatus, { label: string; type: 'info' | 'warning' | 'success' | 'danger' | '' }> = {
   PENDING: { label: '排队中', type: 'info' },
   GENERATING: { label: '生成中', type: 'warning' },

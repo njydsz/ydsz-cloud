@@ -2,12 +2,17 @@ package com.njydsz.common.excel.core;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,7 +27,12 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
+import com.njydsz.common.excel.annotation.ExcelSheet;
 import com.njydsz.common.excel.core.config.ExcelConfig;
+import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
+import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.asm.ASMFieldAccessor.FieldGetter;
+import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
  * 并发 Excel 写入器 — 多线程分片预序列化 + 顺序写入
@@ -47,99 +57,90 @@ public class ConcurrentExcelWriter {
     private static final Logger log = LoggerFactory.getLogger(ConcurrentExcelWriter.class);
 
     private static final int ZIP_BUFFER_SIZE = 1024 * 1024;
+    private static final DateTimeFormatter DEFAULT_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final String filePath;
     private final Class<?> clazz;
     private final List<?> data;
     private int parallelism = Runtime.getRuntime().availableProcessors();
     private int chunkSize = 10000;
+    private Set<String> excludeColumnFiledNames;
+    private Set<String> includeColumnFiledNames;
+
+    private FieldAccessorInfo[] fieldInfos;
+    private int fieldInfoSize;
 
     private ConcurrentExcelWriter(String filePath, Class<?> clazz, List<?> data) {
         this.filePath = filePath;
         this.clazz = clazz;
         this.data = data;
+        if (clazz != null) {
+            analyzeClass();
+        }
     }
 
-    /**
-     * 创建并发写入器
-     *
-     * @param filePath 输出文件路径
-     * @param clazz    数据类型
-     * @param data     数据列表
-     * @return 写入器实例
-     */
     public static ConcurrentExcelWriter write(String filePath, Class<?> clazz, List<?> data) {
         return new ConcurrentExcelWriter(filePath, clazz, data);
     }
 
-    /**
-     * 设置并行度
-     *
-     * @param parallelism 线程数
-     * @return this
-     */
     public ConcurrentExcelWriter parallelism(int parallelism) {
         this.parallelism = Math.max(1, parallelism);
         return this;
     }
 
-    /**
-     * 设置分片大小
-     *
-     * @param chunkSize 每片数据行数
-     * @return this
-     */
     public ConcurrentExcelWriter chunkSize(int chunkSize) {
         this.chunkSize = Math.max(100, chunkSize);
         return this;
     }
 
-    /**
-     * 执行并发写入
-     *
-     * <p>将数据分片后并行预序列化为字节数组，然后顺序写入 ZIP 文件。
-     * 适用于 10 万行以上的大数据量场景。</p>
-     */
+    public ConcurrentExcelWriter excludeColumnFiledNames(Set<String> excludeColumnFiledNames) {
+        this.excludeColumnFiledNames = excludeColumnFiledNames;
+        if (clazz != null) {
+            analyzeClass();
+        }
+        return this;
+    }
+
+    public ConcurrentExcelWriter includeColumnFiledNames(Set<String> includeColumnFiledNames) {
+        this.includeColumnFiledNames = includeColumnFiledNames;
+        if (clazz != null) {
+            analyzeClass();
+        }
+        return this;
+    }
+
     public void doWrite() {
         int totalSize = data.size();
         if (totalSize <= chunkSize) {
-            // 小数据集直接使用单线程快速写入
-            ExcelFacade.write(filePath, clazz, data, "Sheet1");
+            String sheetName = resolveSheetName();
+            ExcelFacade.write(filePath, clazz, data, sheetName);
             return;
         }
 
-        // 计算分片数
         int chunkCount = (totalSize + chunkSize - 1) / chunkSize;
         log.info("并发写入: 总行数={}, 分片数={}, 并行度={}, 分片大小={}",
                 totalSize, chunkCount, parallelism, chunkSize);
 
-        // 创建线程池
         ExecutorService executor = Executors.newFixedThreadPool(parallelism, new NamedThreadFactory("excel-writer"));
 
         try {
-            // 并行预序列化每个分片
             List<CompletableFuture<ChunkResult>> futures = new ArrayList<>(chunkCount);
             for (int i = 0; i < chunkCount; i++) {
                 final int chunkIndex = i;
                 final int start = i * chunkSize;
                 final int end = Math.min(start + chunkSize, totalSize);
                 final List<?> chunk = data.subList(start, end);
-
                 futures.add(CompletableFuture.supplyAsync(() -> serializeChunk(chunkIndex, chunk), executor));
             }
 
-            // 等待所有分片完成并收集结果
             List<ChunkResult> results = new ArrayList<>(chunkCount);
             for (CompletableFuture<ChunkResult> future : futures) {
                 results.add(future.join());
             }
 
-            // 按分片顺序排序
-            results.sort(Comparator.comparingInt(r -> r.getChunkIndex()));
-
-            // 顺序写入最终文件
+            results.sort(Comparator.comparingInt(ChunkResult::getChunkIndex));
             writeMergedFile(results);
-
             log.info("并发写入完成: 输出文件={}", filePath);
         } finally {
             executor.shutdown();
@@ -154,39 +155,92 @@ public class ConcurrentExcelWriter {
         }
     }
 
-    /**
-     * 序列化单个分片为 XML 字节
-     */
+    private String resolveSheetName() {
+        if (clazz != null) {
+            ExcelSheet sheetAnnotation = clazz.getAnnotation(ExcelSheet.class);
+            if (sheetAnnotation != null && !sheetAnnotation.name().isEmpty()) {
+                return sheetAnnotation.name();
+            }
+        }
+        return "Sheet1";
+    }
+
+    private void analyzeClass() {
+        Field[] fields = ReflectCache.getCachedFields(clazz);
+        List<Field> annotatedFields = new ArrayList<>();
+
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(ExcelIgnore.class)) {
+                continue;
+            }
+            ExcelProperty prop = field.getAnnotation(ExcelProperty.class);
+            if (prop == null || prop.ignore()) {
+                continue;
+            }
+
+            String fieldName = field.getName();
+            if (excludeColumnFiledNames != null && excludeColumnFiledNames.contains(fieldName)) {
+                continue;
+            }
+            if (includeColumnFiledNames != null && !includeColumnFiledNames.isEmpty()
+                    && !includeColumnFiledNames.contains(fieldName)) {
+                continue;
+            }
+            annotatedFields.add(field);
+        }
+
+        annotatedFields.sort(Comparator.comparingInt(f -> {
+            ExcelProperty ann = f.getAnnotation(ExcelProperty.class);
+            return ann.order();
+        }));
+
+        fieldInfoSize = annotatedFields.size();
+        fieldInfos = new FieldAccessorInfo[fieldInfoSize];
+
+        for (int i = 0; i < fieldInfoSize; i++) {
+            Field field = annotatedFields.get(i);
+            ExcelProperty prop = field.getAnnotation(ExcelProperty.class);
+
+            FieldAccessorInfo info = new FieldAccessorInfo();
+            info.fieldName = field.getName();
+            info.headerName = (prop.value() != null && !prop.value().isEmpty())
+                    ? prop.value() : field.getName();
+            info.getter = ASMFieldAccessor.getGetter(clazz, field);
+            info.fieldType = field.getType();
+
+            String dateFormat = prop.dateFormat();
+            info.dateFormat = (dateFormat != null && !dateFormat.isEmpty())
+                    ? DateTimeFormatter.ofPattern(dateFormat)
+                    : null;
+            fieldInfos[i] = info;
+        }
+    }
+
     private ChunkResult serializeChunk(int chunkIndex, List<?> chunk) {
         try {
             StringBuilder sb = new StringBuilder(chunk.size() * 256);
-            int rowNum = chunkIndex * chunkSize + 1; // +1 for header row
+            int rowNum = chunkIndex * chunkSize + 1;
 
             for (Object item : chunk) {
                 rowNum++;
                 sb.append("<row r=\"").append(rowNum).append("\">");
 
-                // 使用反射获取字段值并序列化
                 if (item != null) {
-                    var fields = clazz.getDeclaredFields();
-                    int col = 0;
-                    for (var field : fields) {
-                        field.setAccessible(true);
-                        var ignore = field.getAnnotation(ExcelIgnore.class);
-                        if (ignore != null) continue;
+                    for (int col = 0; col < fieldInfoSize; col++) {
+                        FieldAccessorInfo info = fieldInfos[col];
+                        if (info == null) continue;
 
-                        var prop = field.getAnnotation(ExcelProperty.class);
-                        if (prop == null) continue;
-
-                        Object value = field.get(item);
-                        if (value != null) {
-                            String cellRef = toCellRef(col) + rowNum;
-                            String escapedValue = escapeXml(value.toString());
-                            sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
-                              .append("<is><t>").append(escapedValue).append("</t></is>")
-                              .append("</c>");
+                        Object value;
+                        try {
+                            value = info.getter.get(item);
+                        } catch (Exception e) {
+                            log.warn("获取字段值异常: field={}", info.fieldName, e);
+                            continue;
                         }
-                        col++;
+
+                        if (value != null) {
+                            appendCellXml(sb, col, rowNum, value, info);
+                        }
                     }
                 }
                 sb.append("</row>");
@@ -199,106 +253,130 @@ public class ConcurrentExcelWriter {
         }
     }
 
-    /**
-     * 将合并后的分片写入最终 xlsx 文件
-     */
-    private void writeMergedFile(List<ChunkResult> results) {
-        try {
-            // 构建 SharedStrings
-            // 这里简化处理，使用 inlineStr 方式避免 SST 构建
+    private void appendCellXml(StringBuilder sb, int col, int rowNum, Object value, FieldAccessorInfo info) {
+        String cellRef = toCellRef(col) + rowNum;
+        boolean formulaProtection = ExcelConfig.getInstance().isFormulaInjectionProtection();
 
-            try (FileOutputStream fos = new FileOutputStream(filePath);
-                 BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
-                 ZipOutputStream zipOut = new ZipOutputStream(bos)) {
-
-                zipOut.setLevel(ExcelConfig.getInstance().getCompressionLevel());
-
-                // [Content_Types].xml
-                zipOut.putNextEntry(new ZipEntry("[Content_Types].xml"));
-                zipOut.write(CONTENT_TYPES);
-                zipOut.closeEntry();
-
-                // _rels/.rels
-                zipOut.putNextEntry(new ZipEntry("_rels/.rels"));
-                zipOut.write(RELS);
-                zipOut.closeEntry();
-
-                // xl/_rels/workbook.xml.rels
-                zipOut.putNextEntry(new ZipEntry("xl/_rels/workbook.xml.rels"));
-                zipOut.write(WORKBOOK_RELS);
-                zipOut.closeEntry();
-
-                // xl/workbook.xml
-                zipOut.putNextEntry(new ZipEntry("xl/workbook.xml"));
-                zipOut.write(WORKBOOK);
-                zipOut.closeEntry();
-
-                // xl/worksheets/sheet1.xml — 写入表头 + 分片数据
-                zipOut.putNextEntry(new ZipEntry("xl/worksheets/sheet1.xml"));
-                zipOut.write(SHEET_HEADER);
-
-                // 写入表头行
-                byte[] headerBytes = buildHeaderRow();
-                if (headerBytes != null) {
-                    zipOut.write(headerBytes);
-                }
-
-                // 顺序写入各分片
-                for (ChunkResult result : results) {
-                    zipOut.write(result.getBytes());
-                }
-
-                zipOut.write(SHEET_FOOTER);
-                zipOut.closeEntry();
-
-                // xl/sharedStrings.xml (空 SST，因为使用 inlineStr)
-                zipOut.putNextEntry(new ZipEntry("xl/sharedStrings.xml"));
-                zipOut.write(EMPTY_SST);
-                zipOut.closeEntry();
-
-                zipOut.finish();
+        if (value instanceof String s) {
+            String processed = formulaProtection ? FormulaInjectionGuard.sanitizeFormulaInjection(s) : s;
+            sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
+              .append("<is><t>").append(escapeXml(processed)).append("</t></is>")
+              .append("</c>");
+        } else if (value instanceof Number n) {
+            sb.append("<c r=\"").append(cellRef).append("\"><v>")
+              .append(n.toString())
+              .append("</v></c>");
+        } else if (value instanceof Boolean b) {
+            sb.append("<c r=\"").append(cellRef).append("\" t=\"b\"><v>")
+              .append(b ? "1" : "0")
+              .append("</v></c>");
+        } else if (value instanceof LocalDateTime ldt) {
+            DateTimeFormatter fmt = info.dateFormat != null ? info.dateFormat : DEFAULT_DATE_FORMATTER;
+            sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
+              .append("<is><t>").append(escapeXml(ldt.format(fmt))).append("</t></is>")
+              .append("</c>");
+        } else if (value instanceof LocalDate ld) {
+            DateTimeFormatter fmt = info.dateFormat != null ? info.dateFormat : DEFAULT_DATE_FORMATTER;
+            sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
+              .append("<is><t>").append(escapeXml(ld.format(fmt))).append("</t></is>")
+              .append("</c>");
+        } else if (value instanceof Date d) {
+            DateTimeFormatter fmt = info.dateFormat != null ? info.dateFormat : DEFAULT_DATE_FORMATTER;
+            String dateStr = d.toInstant().atZone(ZoneId.systemDefault()).format(fmt);
+            sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
+              .append("<is><t>").append(escapeXml(dateStr)).append("</t></is>")
+              .append("</c>");
+        } else {
+            String strValue = value.toString();
+            if (formulaProtection) {
+                strValue = FormulaInjectionGuard.sanitizeFormulaInjection(strValue);
             }
+            sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
+              .append("<is><t>").append(escapeXml(strValue)).append("</t></is>")
+              .append("</c>");
+        }
+    }
+
+    private void writeMergedFile(List<ChunkResult> results) {
+        String sheetName = resolveSheetName();
+        byte[] workbookBytes = buildWorkbookXml(sheetName);
+
+        try (FileOutputStream fos = new FileOutputStream(filePath);
+             BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
+             ZipOutputStream zipOut = new ZipOutputStream(bos)) {
+
+            zipOut.setLevel(ExcelConfig.getInstance().getCompressionLevel());
+
+            zipOut.putNextEntry(new ZipEntry("[Content_Types].xml"));
+            zipOut.write(CONTENT_TYPES);
+            zipOut.closeEntry();
+
+            zipOut.putNextEntry(new ZipEntry("_rels/.rels"));
+            zipOut.write(RELS);
+            zipOut.closeEntry();
+
+            zipOut.putNextEntry(new ZipEntry("xl/_rels/workbook.xml.rels"));
+            zipOut.write(WORKBOOK_RELS);
+            zipOut.closeEntry();
+
+            zipOut.putNextEntry(new ZipEntry("xl/workbook.xml"));
+            zipOut.write(workbookBytes);
+            zipOut.closeEntry();
+
+            zipOut.putNextEntry(new ZipEntry("xl/worksheets/sheet1.xml"));
+            zipOut.write(SHEET_HEADER);
+
+            byte[] headerBytes = buildHeaderRow();
+            if (headerBytes != null) {
+                zipOut.write(headerBytes);
+            }
+
+            for (ChunkResult result : results) {
+                zipOut.write(result.getBytes());
+            }
+
+            zipOut.write(SHEET_FOOTER);
+            zipOut.closeEntry();
+
+            zipOut.putNextEntry(new ZipEntry("xl/sharedStrings.xml"));
+            zipOut.write(EMPTY_SST);
+            zipOut.closeEntry();
+
+            zipOut.finish();
         } catch (Exception e) {
             throw new RuntimeException("并发写入文件失败: " + filePath, e);
         }
     }
 
-    /**
-     * 构建表头行 XML
-     */
-    private byte[] buildHeaderRow() {
-        try {
-            var fields = clazz.getDeclaredFields();
-            StringBuilder sb = new StringBuilder(256);
-            sb.append("<row r=\"1\">");
-
-            int col = 0;
-            for (var field : fields) {
-                var ignore = field.getAnnotation(ExcelIgnore.class);
-                if (ignore != null) continue;
-
-                var prop = field.getAnnotation(ExcelProperty.class);
-                if (prop == null) continue;
-
-                String headerName = (prop.value() != null && !prop.value().isEmpty())
-                        ? prop.value() : field.getName();
-                String cellRef = toCellRef(col) + "1";
-                sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
-                  .append("<is><t>").append(escapeXml(headerName)).append("</t></is>")
-                  .append("</c>");
-                col++;
-            }
-            sb.append("</row>");
-            return sb.toString().getBytes(StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            log.warn("构建表头行失败", e);
-            return null;
-        }
+    private byte[] buildWorkbookXml(String sheetName) {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+             "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" " +
+             "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
+             "<sheets><sheet name=\"" + escapeXml(sheetName) + "\" sheetId=\"1\" r:id=\"rId1\"/></sheets>" +
+             "</workbook>";
+        return xml.getBytes(StandardCharsets.UTF_8);
     }
 
-    /**
-     * 列号转字母引用（A, B, ..., Z, AA, AB, ...）
-     */
+    private byte[] buildHeaderRow() {
+        if (fieldInfos == null || fieldInfoSize == 0) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder(256);
+        sb.append("<row r=\"1\">");
+
+        for (int col = 0; col < fieldInfoSize; col++) {
+            FieldAccessorInfo info = fieldInfos[col];
+            if (info == null) continue;
+
+            String cellRef = toCellRef(col) + "1";
+            sb.append("<c r=\"").append(cellRef).append("\" t=\"inlineStr\">")
+              .append("<is><t>").append(escapeXml(info.headerName)).append("</t></is>")
+              .append("</c>");
+        }
+        sb.append("</row>");
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
     private static String toCellRef(int col) {
         StringBuilder sb = new StringBuilder();
         int c = col;
@@ -309,9 +387,6 @@ public class ConcurrentExcelWriter {
         return sb.toString();
     }
 
-    /**
-     * XML 转义
-     */
     private static String escapeXml(String str) {
         if (str == null) return "";
         return str.replace("&", "&amp;")
@@ -346,12 +421,6 @@ public class ConcurrentExcelWriter {
              "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>" +
              "</Relationships>").getBytes(StandardCharsets.UTF_8);
 
-    private static final byte[] WORKBOOK =
-            ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-             "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
-             "<sheets><sheet name=\"Sheet1\" sheetId=\"1\" r:id=\"rId1\"/></sheets>" +
-             "</workbook>").getBytes(StandardCharsets.UTF_8);
-
     private static final byte[] SHEET_HEADER =
             ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
              "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
@@ -366,9 +435,6 @@ public class ConcurrentExcelWriter {
 
     // ==================== 内部类 ====================
 
-    /**
-     * 分片序列化结果
-     */
     private static class ChunkResult {
         private final int chunkIndex;
         private final byte[] bytes;
@@ -387,9 +453,6 @@ public class ConcurrentExcelWriter {
         }
     }
 
-    /**
-     * 命名线程工厂
-     */
     private static class NamedThreadFactory implements ThreadFactory {
         private final AtomicInteger counter = new AtomicInteger(0);
         private final String prefix;
@@ -404,5 +467,13 @@ public class ConcurrentExcelWriter {
             t.setDaemon(true);
             return t;
         }
+    }
+
+    private static class FieldAccessorInfo {
+        String fieldName;
+        String headerName;
+        FieldGetter getter;
+        Class<?> fieldType;
+        DateTimeFormatter dateFormat;
     }
 }

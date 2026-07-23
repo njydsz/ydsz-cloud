@@ -4,14 +4,14 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 分布式锁指标导出器
  *
  * <p>将锁指标导出为 JSON 格式，供外部系统（如监控面板、日志聚合系统）使用。
  *
- * <p>使用项目统一的 {@link Json} 引擎序列化，替代手写 JSON 序列化逻辑，
+ * <p>使用项目统一的 {@link YdszJson} 引擎序列化，替代手写 JSON 序列化逻辑，
  * 确保与全项目 JSON 处理保持一致。
  *
  * <p>导出的 JSON 包含：
@@ -70,6 +70,6 @@ public class LockMetricsExporter {
         statistics.put("averageHoldTimeMillis", String.format("%.2f", lockMetrics.getAverageHoldTimeMillis()));
         root.put("statistics", statistics);
 
-        return Json.toJson(root);
+        return YdszJson.toJson(root);
     }
 }

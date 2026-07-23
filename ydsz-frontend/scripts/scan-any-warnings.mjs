@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * PMIS 前端 any 警告扫描脚本（批次 19 P2-4）
+ * YDSZ 前端 any 警告扫描脚本（批次 19 P2-4）
  *
  * 扫描 src/ 下所有 .ts/.vue 文件，统计 @typescript-eslint/no-explicit-any 规则违规
  * 按文件 + 目录分组输出，便于团队分批收口
@@ -85,7 +85,7 @@ if (JSON_MODE) {
 }
 
 console.log('='.repeat(70))
-console.log(`PMIS 前端 any 警告扫描报告`)
+console.log(`YDSZ 前端 any 警告扫描报告`)
 console.log(`扫描时间: ${new Date().toLocaleString('zh-CN')}`)
 console.log(`扫描范围: ${SRC_DIR}`)
 console.log(`扫描文件: ${files.length}`)

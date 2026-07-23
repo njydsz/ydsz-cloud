@@ -1,8 +1,8 @@
 # =============================================================================
-# YDSZ PMIS · 仓库根目录 .gitignore
+# YDSZ · 仓库根目录 .gitignore
 # -----------------------------------------------------------------------------
 # 作用:    集中管理本仓库所有需要忽略的临时文件、构建产物、IDE 缓存、敏感凭据
-# 维护:    PMIS 研发部  ·  与代码同步更新
+# 维护:    YDSZ 研发部  ·  与代码同步更新
 # 规范:    见 docs/standards/git-workflow.md（提交前自检）
 #
 # 忽略分组（按文件类别从重到轻）:
@@ -179,5 +179,5 @@ nacos-logs/
 .run-logs/
 # 部署环境变量（deploy/.env 是真实密码，deploy/.env.example 提交）
 deploy/.env
-# PMIS 公共配置 Nacos 导入失败时的临时输出
+# YDSZ 公共配置 Nacos 导入失败时的临时输出
 deploy/common/nacos/.imported

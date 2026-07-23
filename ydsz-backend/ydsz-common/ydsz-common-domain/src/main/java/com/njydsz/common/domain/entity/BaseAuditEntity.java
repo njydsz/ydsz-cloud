@@ -3,7 +3,7 @@ package com.njydsz.common.domain.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.json.annotation.JsonFormat;
+import com.njydsz.common.json.annotation.YdszJsonFormat;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
  * <ul>
  *   <li>审计字段对业务代码透明，由框架自动维护</li>
  *   <li>采用 LocalDateTime 作为时间类型，支持时区转换</li>
- *   <li>使用 {@code @JsonFormat} 注解支持 JSON 序列化时的格式控制</li>
+ *   <li>使用 {@code @YdszJsonFormat} 注解支持 JSON 序列化时的格式控制</li>
  * </ul>
  *
  * <p><b>审计字段说明：</b>
@@ -101,7 +101,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      *
      * <p><b>字段映射：</b> created_at -> createdAt
      */
-    @JsonFormat("yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -123,7 +123,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      *
      * <p><b>字段映射：</b> updated_at -> updatedAt
      */
-    @JsonFormat("yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**

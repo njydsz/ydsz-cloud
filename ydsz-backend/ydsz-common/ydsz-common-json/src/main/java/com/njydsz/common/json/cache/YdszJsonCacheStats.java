@@ -4,9 +4,9 @@ import com.njydsz.common.json.asm.AsmBeanCodecGenerator;
 import com.njydsz.common.json.provider.SerializationContext;
 
 /**
- * Json 缓存统计信息。
+ * YdszJson 缓存统计信息。
  *
- * <p>统一暴露 Json 内部各缓存的运行时统计信息，
+ * <p>统一暴露 YdszJson 内部各缓存的运行时统计信息，
  * 供 Actuator HealthIndicator / Metrics / 日志诊断使用。
  *
  * <p><b>统计范围：</b>
@@ -20,10 +20,10 @@ import com.njydsz.common.json.provider.SerializationContext;
  *
  * @since 1.0.0
  */
-public final class JsonCacheStats {
+public final class YdszJsonCacheStats {
 
-    private JsonCacheStats() {
-        throw new UnsupportedOperationException("JsonCacheStats is a utility class");
+    private YdszJsonCacheStats() {
+        throw new UnsupportedOperationException("YdszJsonCacheStats is a utility class");
     }
 
     /**
@@ -33,7 +33,7 @@ public final class JsonCacheStats {
      */
     public static String getStats() {
         StringBuilder sb = new StringBuilder(512);
-        sb.append("=== Json Cache Stats ===\n");
+        sb.append("=== YdszJson Cache Stats ===\n");
         sb.append("  ASM: ").append(AsmBeanCodecGenerator.getAsmStats()).append('\n');
         sb.append("  ASM Codec Cache: ").append(AsmCodecCache.getCacheSize()).append('\n');
         sb.append("  BeanSerializer Cache: ").append(BeanSerializerCache.size()).append('\n');

@@ -3,7 +3,7 @@ package com.njydsz.common.json.annotation;
 import java.lang.annotation.*;
 
 /**
- * Json 字段注解（参考 fastjson2 的@JSONField 和 Jackson 的@JsonProperty）
+ * YdszJson 字段注解（参考 fastjson2 的@JSONField 和 Jackson 的@JsonProperty）
  *
  * <p>用于标注 Java 字段，控制序列化和反序列化行为。</p>
  *
@@ -21,19 +21,19 @@ import java.lang.annotation.*;
  * <p><b>使用示例：</b></p>
  * <pre>
  * public class User {
- *     {@literal @}JsonField("user_id")
+ *     {@literal @}YdszJsonField("user_id")
  *     private Long id;
  *
- *     {@literal @}JsonField(value = "user_name", required = true)
+ *     {@literal @}YdszJsonField(value = "user_name", required = true)
  *     private String name;
  *
- *     {@literal @}JsonField(ignore = true)
+ *     {@literal @}YdszJsonField(ignore = true)
  *     private String password;
  *
- *     {@literal @}JsonField(format = "yyyy-MM-dd")
+ *     {@literal @}YdszJsonField(format = "yyyy-MM-dd")
  *     private Date birthday;
  *
- *     {@literal @}JsonField(ordinal = 1)
+ *     {@literal @}YdszJsonField(ordinal = 1)
  *     private Integer priority;
  * }
  * </pre>
@@ -43,7 +43,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
-public @interface JsonField {
+public @interface YdszJsonField {
 
     /**
      * JSON 字段名称

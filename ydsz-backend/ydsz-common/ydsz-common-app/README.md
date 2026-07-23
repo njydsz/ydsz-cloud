@@ -1,6 +1,6 @@
 # ydsz-common-app
 
-PMIS 移动端 App 基座 — 继承 `common-base`，叠加 API 签名验证（防重放攻击）、App 认证、安全头增强、请求上下文管理。
+YDSZ 移动端 App 基座 — 继承 `common-base`，叠加 API 签名验证（防重放攻击）、App 认证、安全头增强、请求上下文管理。
 
 ## 模块定位
 
@@ -83,7 +83,7 @@ PMIS 移动端 App 基座 — 继承 `common-base`，叠加 API 签名验证（�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   app:
     signature:
       enabled: true                 # 签名验证开关

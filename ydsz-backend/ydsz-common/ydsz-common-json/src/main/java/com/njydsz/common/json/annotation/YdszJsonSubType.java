@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 /**
  * 多态子类型注解
  *
- * <p>定义单个子类型的映射关系，与 {@link JsonSubTypes} 配合使用。</p>
+ * <p>定义单个子类型的映射关系，与 {@link YdszJsonSubTypes} 配合使用。</p>
  *
  * <p><b>参数说明：</b></p>
  * <ul>
@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({})
-public @interface JsonSubType {
+public @interface YdszJsonSubType {
 
     /**
      * 子类型类

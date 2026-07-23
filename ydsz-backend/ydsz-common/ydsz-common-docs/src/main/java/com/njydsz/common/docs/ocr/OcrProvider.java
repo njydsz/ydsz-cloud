@@ -72,7 +72,7 @@ public class OcrProvider {
         List<byte[]> images = new ArrayList<>();
 
         try {
-            tempFile = Files.createTempFile("pmis-docs-ocr-", ".pdf");
+            tempFile = Files.createTempFile("ydsz-docs-ocr-", ".pdf");
             inputStream.transferTo(Files.newOutputStream(tempFile));
 
             try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {

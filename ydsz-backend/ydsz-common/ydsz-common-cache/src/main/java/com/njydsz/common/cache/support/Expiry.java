@@ -13,7 +13,7 @@ package com.njydsz.common.cache.support;
  *     return value.isHot() ? TimeUnit.MINUTES.toNanos(5) : TimeUnit.HOURS.toNanos(1);
  * };
  *
- * Cache<String, Data> cache = LocalCache.newBuilder()
+ * Cache<String, Data> cache = YdszCache.newBuilder()
  *     .expireAfter(expiry)
  *     .maximumSize(10000)
  *     .build();

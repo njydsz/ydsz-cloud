@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * JSON 视图注解
  *
- * <p>用于按场景过滤字段，对标 Jackson @JsonView。</p>
+ * <p>用于按场景过滤字段，对标 Jackson @YdszJsonView。</p>
  *
  * <p><b>使用场景：</b></p>
  * <ul>
@@ -27,25 +27,25 @@ import java.lang.annotation.Target;
  *
  * // 使用注解
  * public class User {
- *     &#064;JsonView(UserViews.List.class)
+ *     &#064;YdszJsonView(UserViews.List.class)
  *     private Long id;
  *
- *     &#064;JsonView(UserViews.List.class)
+ *     &#064;YdszJsonView(UserViews.List.class)
  *     private String name;
  *
- *     &#064;JsonView(UserViews.Detail.class)
+ *     &#064;YdszJsonView(UserViews.Detail.class)
  *     private String email;
  *
- *     &#064;JsonView(UserViews.Detail.class)
+ *     &#064;YdszJsonView(UserViews.Detail.class)
  *     private String phone;
  * }
  *
  * // 序列化 - 列表视图
- * String json = Json.toJson(user, UserViews.List.class);
+ * String json = YdszJson.toJson(user, UserViews.List.class);
  * // 输出：{"id":1,"name":"John"}
  *
  * // 序列化 - 详情视图
- * String json = Json.toJson(user, UserViews.Detail.class);
+ * String json = YdszJson.toJson(user, UserViews.Detail.class);
  * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}
  * </pre>
  *
@@ -53,7 +53,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
-public @interface JsonView {
+public @interface YdszJsonView {
 
     /**
      * 视图类

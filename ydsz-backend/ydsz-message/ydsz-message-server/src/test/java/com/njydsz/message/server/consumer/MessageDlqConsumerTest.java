@@ -23,7 +23,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.entity.core.MsgLogDO;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -72,7 +72,7 @@ class MessageDlqConsumerTest {
             when(valueOps.setIfAbsent(eq("ydsz:msg:dlq:idempotent:mq-1"), eq("1"),
                     any(Duration.class))).thenReturn(true);
             when(msgLogMapper.update(eq(null), any(LambdaUpdateWrapper.class))).thenReturn(0);
-            MessageExt msg = buildMessage("mq-1", 3, Json.toJson(new MessageRequest()));
+            MessageExt msg = buildMessage("mq-1", 3, YdszJson.toJson(new MessageRequest()));
 
             consumer.onMessage(msg);
 
@@ -118,7 +118,7 @@ class MessageDlqConsumerTest {
             MessageRequest req = new MessageRequest();
             req.setMessageId("biz-msg-001");
             req.setChannel("SMS");
-            MessageExt msg = buildMessage("mq-1", 3, Json.toJson(req));
+            MessageExt msg = buildMessage("mq-1", 3, YdszJson.toJson(req));
 
             consumer.onMessage(msg);
 
@@ -136,7 +136,7 @@ class MessageDlqConsumerTest {
             MessageRequest req = new MessageRequest();
             req.setMessageId("biz-msg-002");
             req.setChannel("EMAIL");
-            MessageExt msg = buildMessage("mq-2", 5, Json.toJson(req));
+            MessageExt msg = buildMessage("mq-2", 5, YdszJson.toJson(req));
 
             consumer.onMessage(msg);
 

@@ -1,6 +1,6 @@
 # ydsz-common-web
 
-PMIS PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成、WebAuthFilter 认证过滤器、Session 管理、异常处理、OpenAPI 配置。
+YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成、WebAuthFilter 认证过滤器、Session 管理、异常处理、OpenAPI 配置。
 
 ## 模块定位
 
@@ -71,7 +71,7 @@ PMIS PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   web:
     security:
       enabled: true
@@ -85,7 +85,7 @@ pmis:
     session:
       redis:
         enabled: true            # Redis Session 开关
-        namespace: pmis:session  # Redis Key 前缀
+        namespace: ydsz:session  # Redis Key 前缀
         timeout: 30m             # Session 超时
 ```
 

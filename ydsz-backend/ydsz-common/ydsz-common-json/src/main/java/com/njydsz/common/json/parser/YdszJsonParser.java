@@ -6,9 +6,9 @@ import java.util.*;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 
 /**
- * Json 底层 JSON 解析器（零依赖，JIT + SIMD 优化版）
+ * YdszJson 底层 JSON 解析器（零依赖，JIT + SIMD 优化版）
  * 
- * <p>直接解析 JSON 字符串为 Map/List 结构，不依赖 Json。</p>
+ * <p>直接解析 JSON 字符串为 Map/List 结构，不依赖 YdszJson。</p>
  * 
  * <p><b>JIT 优化：</b></p>
  * <ul>
@@ -28,18 +28,18 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 解析 JSON 对象
- * Map&lt;String, Object&gt; map = JsonParser.parseObject(json);
+ * Map&lt;String, Object&gt; map = YdszJsonParser.parseObject(json);
  * 
  * // 解析 JSON 数组
- * List&lt;Object&gt; list = JsonParser.parseArray(json);
+ * List&lt;Object&gt; list = YdszJsonParser.parseArray(json);
  * 
  * // 解析为 Object（自动识别）
- * Object obj = JsonParser.parse(json);
+ * Object obj = YdszJsonParser.parse(json);
  * </pre>
  * 
  * @since 1.0.0
  */
-public final class JsonParser {
+public final class YdszJsonParser {
     
     /** 字符数组缓存（ThreadLocal 复用） */
     private static final ThreadLocal<char[]> CHAR_BUFFER = ThreadLocal.withInitial(() -> new char[8192]);
@@ -51,8 +51,8 @@ public final class JsonParser {
     /** 是否使用 BigDecimal 解析浮点数（避免精度丢失），默认 false */
     private static volatile boolean useBigDecimal = false;
 
-    private JsonParser() {
-        throw new UnsupportedOperationException("JsonParser is a utility class");
+    private YdszJsonParser() {
+        throw new UnsupportedOperationException("YdszJsonParser is a utility class");
     }
 
     /**

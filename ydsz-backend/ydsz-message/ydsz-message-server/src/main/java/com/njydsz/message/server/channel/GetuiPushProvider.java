@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.entity.template.MsgTemplateDO;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -102,7 +102,7 @@ public class GetuiPushProvider implements PushProvider {
                     "body", request.getContent() == null ? "" : request.getContent())));
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
             ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
-            Map<String, Object> json = Json.parseMap(resp.getBody());
+            Map<String, Object> json = YdszJson.parseMap(resp.getBody());
             String code = json.getString("code");
             if ("10000".equals(code)) {
                 String taskId = json.getString("data");
@@ -152,7 +152,7 @@ public class GetuiPushProvider implements PushProvider {
             body.put("timestamp", timestamp);
             body.put("appkey", config.getAppKey());
             ResponseEntity<String> resp = restTemplate.postForEntity(url, body, String.class);
-            Map<String, Object> json = Json.parseMap(resp.getBody());
+            Map<String, Object> json = YdszJson.parseMap(resp.getBody());
             if ("10000".equals(json.getString("code"))) {
                 Map<String, Object> data = json.getJSONObject("data");
                 cachedToken = data.getString("token");

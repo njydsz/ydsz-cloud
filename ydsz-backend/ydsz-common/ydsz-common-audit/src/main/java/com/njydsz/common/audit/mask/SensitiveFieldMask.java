@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -134,15 +134,15 @@ public final class SensitiveFieldMask {
             return obj;
         }
         try {
-            String json = Json.toJson(obj);
+            String json = YdszJson.toJson(obj);
             Class<?> clazz = obj.getClass();
             // Collection/Map 类型使用 parseArray/parseObject 保持泛型兼容
             if (Collection.class.isAssignableFrom(clazz)) {
-                return Json.parseArray(json, Object.class);
+                return YdszJson.parseArray(json, Object.class);
             } else if (Map.class.isAssignableFrom(clazz)) {
-                return Json.toObject(json, HashMap.class);
+                return YdszJson.toObject(json, HashMap.class);
             }
-            return Json.toObject(json, (Class) clazz);
+            return YdszJson.toObject(json, (Class) clazz);
         } catch (Exception e) {
             // 深拷贝失败时降级返回原对象
             log.debug("[SensitiveFieldMask] 深拷贝失败，降级返回原对象: {}", e.getMessage());
@@ -162,10 +162,10 @@ public final class SensitiveFieldMask {
             return json;
         }
         try {
-            // Use Json static methods (Json engine)
-            JsonNode parsed = Json.readTree(json);
+            // Use YdszJson static methods (YdszJson engine)
+            JsonNode parsed = YdszJson.readTree(json);
             maskJsonObject(parsed, patterns, new HashSet<>());
-            return Json.toJson(parsed);
+            return YdszJson.toJson(parsed);
         } catch (Exception e) {
             // 解析失败时降级返回原始 JSON
             log.debug("[SensitiveFieldMask] JSON解析失败，降级返回原始JSON: {}", e.getMessage());

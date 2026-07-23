@@ -2,7 +2,7 @@
  * @fileoverview Pinia 持久化插件配置
  * @description 基于 pinia-plugin-persistedstate v4 的统一持久化方案：
  * - 默认存储: localStorage
- * - Key 格式: `pmis:${storeName}:v1`（含版本号，便于后续 schema 迁移）
+ * - Key 格式: `ydsz:${storeName}:v1`（含版本号，便于后续 schema 迁移）
  * - 默认不持久化：仅当 store 在选项中显式声明 `persist` 时才开启
  * - 敏感数据混淆：序列化后整体 Base64 编码（轻量混淆，非加密）
  * @module plugins/pinia-persist
@@ -14,8 +14,8 @@ import { createPersistedState } from 'pinia-plugin-persistedstate'
 
 /** 持久化 schema 版本号（升级时递增，配合 key 后缀做版本迁移） */
 const PERSIST_VERSION = 'v1'
-/** 持久化 key 前缀，统一标识 PMIS 持久化数据 */
-const PERSIST_PREFIX = 'pmis'
+/** 持久化 key 前缀，统一标识 YDSZ 持久化数据 */
+const PERSIST_PREFIX = 'ydsz'
 
 /**
  * 将字符串编码为 Base64（兼容 Unicode，避免 btoa 在遇到中文等字符时报 "Invalid character"）

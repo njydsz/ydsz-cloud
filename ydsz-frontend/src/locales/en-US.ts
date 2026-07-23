@@ -7,7 +7,7 @@
  *  - 与 zh-CN.ts 保持键路径一一对应；新增 / 修改必须两套语言包同步提交。
  *  - 文案采用美式英语（en-US），日期 / 数字格式遵循前端 format 工具（@/utils/format）。
  *  - 涉及参数化占位符（如 {n} / {level}）必须保留且顺序、命名与中文版一致。
- *  - 专有名词保持品牌原写法（PMIS / ECharts / Element Plus / ...），不要本地化。
+ *  - 专有名词保持品牌原写法（YDSZ / ECharts / Element Plus / ...），不要本地化。
  *
  * Key 命名规范：
  *  - 与 zh-CN.ts 完全一致：顶层 = 业务模块，二级 = 页面 / 子模块，三级及更深 = 具体文案。
@@ -146,7 +146,7 @@ dashboardExitCustomize: 'Exit drag mode',
     confirmLogout: 'Are you sure to logout?',
     tip: 'Tip',
     noPermission: 'No permission to access: {title}',
-    appTitle: 'PMIS Operations Management',
+    appTitle: 'YDSZ Operations Management',
     ok: 'OK',
     home: 'Home',
     query: 'Query',
@@ -820,7 +820,7 @@ dashboardExitCustomize: 'Exit drag mode',
   login: {
     slogan: 'Project Operations Management System',
     subtitle: 'Welcome back, please sign in to continue',
-    copyright: '© 2024 Nanjing Yuandong Digital Intelligence · PMIS Team',
+    copyright: '© 2024 Nanjing Yuandong Digital Intelligence · YDSZ Team',
     features: {
       integration: 'Business-Finance Integration · Full Lifecycle Control',
       rate: 'L1-L18 Job Level Rates · EVM Earned Value Management',
@@ -1056,7 +1056,7 @@ resourcePool: 'Resource Pool',
       greetingMorning: 'Good morning',
       greetingAfternoon: 'Good afternoon',
       greetingEvening: 'Good evening',
-      text: 'Welcome to PMIS Operations Management System · Current time: {time}',
+      text: 'Welcome to YDSZ Operations Management System · Current time: {time}',
     },
     unit: {
       tenThousand: '10K',
@@ -2251,7 +2251,7 @@ resourcePool: 'Resource Pool',
         purgeEnabled: 'Auto Purge',
         purgeDays: 'Purge Retention Days',
         configTipTitle: 'Configuration Notes',
-        configTipDesc: 'The archive strategy is configured via application.yml under pmis.flow.history.*, with Nacos dynamic refresh support. This page only provides viewing and manual trigger capabilities, not configuration editing.',
+        configTipDesc: 'The archive strategy is configured via application.yml under ydsz.flow.history.*, with Nacos dynamic refresh support. This page only provides viewing and manual trigger capabilities, not configuration editing.',
       },
       status: {
         enabled: 'Enabled',
@@ -3339,7 +3339,7 @@ resourcePool: 'Resource Pool',
     },
     importExport: {
       title: 'Unified Data Import/Export',
-      description: 'Supports batch import of 3 core PMIS business data types: Rate Card / Internal Rate / Time Entry. Download template → Fill data → Upload → Validate → Feedback.',
+      description: 'Supports batch import of 3 core YDSZ business data types: Rate Card / Internal Rate / Time Entry. Download template → Fill data → Upload → Validate → Feedback.',
       bizTypes: {
         rateCard: {
           name: 'Rate Card',
@@ -5555,7 +5555,7 @@ resourcePool: 'Resource Pool',
   },
   chaos: {
     title: 'Chaos Engineering Console',
-    desc: 'Verify system fault tolerance by simulating production failures. Only enabled in dev / staging. Production must have pmis.featureflag.CANARY_DEPLOY=false.',
+    desc: 'Verify system fault tolerance by simulating production failures. Only enabled in dev / staging. Production must have ydsz.featureflag.CANARY_DEPLOY=false.',
     kpi: {
       registered: 'Registered Experiments',
       enabled: 'Enabled',

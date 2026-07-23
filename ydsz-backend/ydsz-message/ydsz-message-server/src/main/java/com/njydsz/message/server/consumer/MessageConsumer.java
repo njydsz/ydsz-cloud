@@ -22,7 +22,7 @@ import com.njydsz.common.constant.YdszMessageTopics;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.security.TenantContext;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.core.MsgLogDO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -107,7 +107,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         body = MessageCompressor.decompressIfNeeded(body);
         MessageRequest request;
         try {
-            request = Json.toObject(body, MessageRequest.class);
+            request = YdszJson.toObject(body, MessageRequest.class);
         } catch (Exception e) {
             log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage(), e);
             return;

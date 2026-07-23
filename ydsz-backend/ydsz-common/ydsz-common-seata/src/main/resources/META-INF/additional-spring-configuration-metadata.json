@@ -1,145 +1,145 @@
 {
   "properties": [
     {
-      "name": "pmis.seata.enabled",
+      "name": "ydsz.seata.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用分布式事务模块。",
       "defaultValue": true
     },
     {
-      "name": "pmis.seata.default-type",
+      "name": "ydsz.seata.default-type",
       "type": "com.njydsz.common.seata.api.TransactionType",
       "description": "默认事务类型：LOCAL / TCC / SEATA_AT / SAGA。",
       "defaultValue": "LOCAL"
     },
     {
-      "name": "pmis.seata.seata-application-id",
+      "name": "ydsz.seata.seata-application-id",
       "type": "java.lang.String",
       "description": "Seata 应用 ID。",
-      "defaultValue": "pmis-app"
+      "defaultValue": "ydsz-app"
     },
     {
-      "name": "pmis.seata.seata-tx-service-group",
+      "name": "ydsz.seata.seata-tx-service-group",
       "type": "java.lang.String",
       "description": "Seata 事务组名称。",
-      "defaultValue": "pmis-tx-group"
+      "defaultValue": "ydsz-tx-group"
     },
     {
-      "name": "pmis.seata.tcc-enabled",
+      "name": "ydsz.seata.tcc-enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 TCC 模式。",
       "defaultValue": true
     },
     {
-      "name": "pmis.seata.saga-enabled",
+      "name": "ydsz.seata.saga-enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 SAGA 模式。",
       "defaultValue": true
     },
     {
-      "name": "pmis.seata.seata-at-enabled",
+      "name": "ydsz.seata.seata-at-enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 Seata AT 模式。",
       "defaultValue": true
     },
     {
-      "name": "pmis.seata.tcc-retry-count",
+      "name": "ydsz.seata.tcc-retry-count",
       "type": "java.lang.Integer",
       "description": "TCC Confirm/Cancel 补偿重试次数。",
       "defaultValue": 3
     },
     {
-      "name": "pmis.seata.tcc-retry-interval-ms",
+      "name": "ydsz.seata.tcc-retry-interval-ms",
       "type": "java.lang.Long",
       "description": "TCC 补偿重试间隔（毫秒）。",
       "defaultValue": 1000
     },
     {
-      "name": "pmis.seata.tcc-try-timeout-ms",
+      "name": "ydsz.seata.tcc-try-timeout-ms",
       "type": "java.lang.Long",
       "description": "TCC Try 阶段超时时间（毫秒），0 表示不限制。",
       "defaultValue": 60000
     },
     {
-      "name": "pmis.seata.saga-max-retries",
+      "name": "ydsz.seata.saga-max-retries",
       "type": "java.lang.Integer",
       "description": "SAGA 补偿最大重试次数。",
       "defaultValue": 5
     },
     {
-      "name": "pmis.seata.saga-retry-interval-ms",
+      "name": "ydsz.seata.saga-retry-interval-ms",
       "type": "java.lang.Long",
       "description": "SAGA 重试间隔（毫秒）。",
       "defaultValue": 2000
     },
     {
-      "name": "pmis.seata.saga-timeout-ms",
+      "name": "ydsz.seata.saga-timeout-ms",
       "type": "java.lang.Long",
       "description": "SAGA 事务超时时间（毫秒），0 表示不限制。",
       "defaultValue": 300000
     },
     {
-      "name": "pmis.seata.recovery-scan-interval-ms",
+      "name": "ydsz.seata.recovery-scan-interval-ms",
       "type": "java.lang.Long",
       "description": "事务恢复扫描间隔（毫秒）。",
       "defaultValue": 10000
     },
     {
-      "name": "pmis.seata.recovery-timeout-threshold-ms",
+      "name": "ydsz.seata.recovery-timeout-threshold-ms",
       "type": "java.lang.Long",
       "description": "事务超时判定阈值（毫秒），超过此时间未 Confirm/Cancel 的事务将被恢复处理。",
       "defaultValue": 60000
     },
     {
-      "name": "pmis.seata.tm-commit-retry-count",
+      "name": "ydsz.seata.tm-commit-retry-count",
       "type": "java.lang.Integer",
       "description": "Seata TM 全局提交重试次数。",
       "defaultValue": 3
     },
     {
-      "name": "pmis.seata.tm-rollback-retry-count",
+      "name": "ydsz.seata.tm-rollback-retry-count",
       "type": "java.lang.Integer",
       "description": "Seata TM 全局回滚重试次数。",
       "defaultValue": 3
     },
     {
-      "name": "pmis.seata.rm-report-success-enable",
+      "name": "ydsz.seata.rm-report-success-enable",
       "type": "java.lang.Boolean",
       "description": "Seata RM 是否上报成功结果。",
       "defaultValue": false
     },
     {
-      "name": "pmis.seata.rm-lock-retry-interval-ms",
+      "name": "ydsz.seata.rm-lock-retry-interval-ms",
       "type": "java.lang.Integer",
       "description": "Seata RM 全局锁重试间隔（毫秒）。",
       "defaultValue": 10
     },
     {
-      "name": "pmis.seata.rm-lock-retry-times",
+      "name": "ydsz.seata.rm-lock-retry-times",
       "type": "java.lang.Integer",
       "description": "Seata RM 全局锁重试次数。",
       "defaultValue": 30
     },
     {
-      "name": "pmis.seata.undo-data-validation",
+      "name": "ydsz.seata.undo-data-validation",
       "type": "java.lang.Boolean",
       "description": "Seata undo_log 数据校验。",
       "defaultValue": true
     },
     {
-      "name": "pmis.seata.undo-log-serialization",
+      "name": "ydsz.seata.undo-log-serialization",
       "type": "java.lang.String",
       "description": "Seata undo_log 序列化方式。",
       "defaultValue": "jackson"
     },
     {
-      "name": "pmis.seata.undo-compress-data",
+      "name": "ydsz.seata.undo-compress-data",
       "type": "java.lang.Boolean",
       "description": "Seata undo_log 是否压缩。",
       "defaultValue": true
     },
     {
-      "name": "pmis.seata.undo-compress-type",
+      "name": "ydsz.seata.undo-compress-type",
       "type": "java.lang.String",
       "description": "Seata undo_log 压缩类型。",
       "defaultValue": "zip"

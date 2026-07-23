@@ -169,6 +169,18 @@ public class IndexRebuildService {
     }
 
     /**
+     * P2-8: 获取重建进度百分比
+     *
+     * @return 进度百分比（0-100），未在重建中返回 -1
+     */
+    public int getProgressPercent() {
+        if (!rebuilding || total == 0) {
+            return rebuilding ? 0 : -1;
+        }
+        return Math.min(100, (progress * 100) / total);
+    }
+
+    /**
      * 获取已注册的实体类型列表
      */
     public List<String> getRegisteredTypes() {

@@ -1,189 +1,189 @@
 {
   "properties": [
     {
-      "name": "pmis.netty.enabled",
+      "name": "ydsz.netty.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 Netty 自动配置。",
       "defaultValue": true
     },
     {
-      "name": "pmis.netty.boss-threads",
+      "name": "ydsz.netty.boss-threads",
       "type": "java.lang.Integer",
       "description": "Boss 线程数（接受连接）。",
       "defaultValue": 1
     },
     {
-      "name": "pmis.netty.worker-threads",
+      "name": "ydsz.netty.worker-threads",
       "type": "java.lang.Integer",
       "description": "Worker 线程数（0 = CPU 核数 × 2）。",
       "defaultValue": 0
     },
     {
-      "name": "pmis.netty.so-keep-alive",
+      "name": "ydsz.netty.so-keep-alive",
       "type": "java.lang.Boolean",
       "description": "TCP SO_KEEPALIVE 选项。",
       "defaultValue": true
     },
     {
-      "name": "pmis.netty.so-backlog",
+      "name": "ydsz.netty.so-backlog",
       "type": "java.lang.Integer",
       "description": "TCP SO_BACKLOG 连接队列大小。",
       "defaultValue": 128
     },
     {
-      "name": "pmis.netty.tcp-no-delay",
+      "name": "ydsz.netty.tcp-no-delay",
       "type": "java.lang.Boolean",
       "description": "TCP_NODELAY 选项（禁用 Nagle 算法）。",
       "defaultValue": true
     },
     {
-      "name": "pmis.netty.connect-timeout-millis",
+      "name": "ydsz.netty.connect-timeout-millis",
       "type": "java.lang.Integer",
       "description": "连接超时时间（毫秒）。",
       "defaultValue": 5000
     },
     {
-      "name": "pmis.netty.shared-event-loop",
+      "name": "ydsz.netty.shared-event-loop",
       "type": "java.lang.Boolean",
       "description": "是否共享 EventLoopGroup（true=全局复用，false=每 Server/Client 独立）。",
       "defaultValue": true
     },
     {
-      "name": "pmis.netty.shutdown-quiet-period-seconds",
+      "name": "ydsz.netty.shutdown-quiet-period-seconds",
       "type": "java.lang.Long",
       "description": "优雅关闭静默期（秒）。",
       "defaultValue": 2
     },
     {
-      "name": "pmis.netty.shutdown-timeout-seconds",
+      "name": "ydsz.netty.shutdown-timeout-seconds",
       "type": "java.lang.Long",
       "description": "优雅关闭超时（秒）。",
       "defaultValue": 15
     },
     {
-      "name": "pmis.netty.fail-fast",
+      "name": "ydsz.netty.fail-fast",
       "type": "java.lang.Boolean",
       "description": "Server 启动失败时是否终止应用（fail-fast）。",
       "defaultValue": true
     },
     {
-      "name": "pmis.netty.native-transport",
+      "name": "ydsz.netty.native-transport",
       "type": "java.lang.String",
       "description": "原生传输模式（auto=自动检测, enabled=强制启用, disabled=禁用）。",
       "defaultValue": "AUTO"
     },
     {
-      "name": "pmis.netty.idle.reader-idle-seconds",
+      "name": "ydsz.netty.idle.reader-idle-seconds",
       "type": "java.lang.Long",
       "description": "读空闲超时（秒），0 表示不检测。",
       "defaultValue": 60
     },
     {
-      "name": "pmis.netty.idle.writer-idle-seconds",
+      "name": "ydsz.netty.idle.writer-idle-seconds",
       "type": "java.lang.Long",
       "description": "写空闲超时（秒），0 表示不检测。",
       "defaultValue": 30
     },
     {
-      "name": "pmis.netty.idle.all-idle-seconds",
+      "name": "ydsz.netty.idle.all-idle-seconds",
       "type": "java.lang.Long",
       "description": "全双工空闲超时（秒），0 表示不检测。",
       "defaultValue": 0
     },
     {
-      "name": "pmis.netty.ssl.enabled",
+      "name": "ydsz.netty.ssl.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 SSL/TLS。",
       "defaultValue": false
     },
     {
-      "name": "pmis.netty.ssl.key-store",
+      "name": "ydsz.netty.ssl.key-store",
       "type": "java.lang.String",
       "description": "密钥库路径（支持 classpath: 前缀）。"
     },
     {
-      "name": "pmis.netty.ssl.key-store-password",
+      "name": "ydsz.netty.ssl.key-store-password",
       "type": "java.lang.String",
       "description": "密钥库密码。"
     },
     {
-      "name": "pmis.netty.ssl.key-store-type",
+      "name": "ydsz.netty.ssl.key-store-type",
       "type": "java.lang.String",
       "description": "密钥库类型（PKCS12 / JKS）。",
       "defaultValue": "PKCS12"
     },
     {
-      "name": "pmis.netty.ssl.trust-store",
+      "name": "ydsz.netty.ssl.trust-store",
       "type": "java.lang.String",
       "description": "信任库路径（双向认证时使用）。"
     },
     {
-      "name": "pmis.netty.ssl.trust-store-password",
+      "name": "ydsz.netty.ssl.trust-store-password",
       "type": "java.lang.String",
       "description": "信任库密码。"
     },
     {
-      "name": "pmis.netty.ssl.trust-store-type",
+      "name": "ydsz.netty.ssl.trust-store-type",
       "type": "java.lang.String",
       "description": "信任库类型。",
       "defaultValue": "PKCS12"
     },
     {
-      "name": "pmis.netty.ssl.need-client-auth",
+      "name": "ydsz.netty.ssl.need-client-auth",
       "type": "java.lang.Boolean",
       "description": "是否要求客户端认证（双向认证）。",
       "defaultValue": false
     },
     {
-      "name": "pmis.netty.traffic-shaping.enabled",
+      "name": "ydsz.netty.traffic-shaping.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用流量整形。",
       "defaultValue": false
     },
     {
-      "name": "pmis.netty.traffic-shaping.write-limit",
+      "name": "ydsz.netty.traffic-shaping.write-limit",
       "type": "java.lang.Long",
       "description": "写限速（bytes/s），0 表示不限。",
       "defaultValue": 0
     },
     {
-      "name": "pmis.netty.traffic-shaping.read-limit",
+      "name": "ydsz.netty.traffic-shaping.read-limit",
       "type": "java.lang.Long",
       "description": "读限速（bytes/s），0 表示不限。",
       "defaultValue": 0
     },
     {
-      "name": "pmis.netty.traffic-shaping.check-interval-ms",
+      "name": "ydsz.netty.traffic-shaping.check-interval-ms",
       "type": "java.lang.Long",
       "description": "流量整形检查间隔（毫秒）。",
       "defaultValue": 1000
     },
     {
-      "name": "pmis.netty.traffic-shaping.global",
+      "name": "ydsz.netty.traffic-shaping.global",
       "type": "java.lang.Boolean",
       "description": "是否使用全局流量整形（true=限制整个 Server 总带宽）。",
       "defaultValue": false
     },
     {
-      "name": "pmis.netty.reconnect.enabled",
+      "name": "ydsz.netty.reconnect.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用断线重连。",
       "defaultValue": true
     },
     {
-      "name": "pmis.netty.reconnect.initial-delay-ms",
+      "name": "ydsz.netty.reconnect.initial-delay-ms",
       "type": "java.lang.Long",
       "description": "初始重连延迟（毫秒）。",
       "defaultValue": 1000
     },
     {
-      "name": "pmis.netty.reconnect.max-delay-ms",
+      "name": "ydsz.netty.reconnect.max-delay-ms",
       "type": "java.lang.Long",
       "description": "最大重连延迟（毫秒）。",
       "defaultValue": 60000
     },
     {
-      "name": "pmis.netty.reconnect.max-retries",
+      "name": "ydsz.netty.reconnect.max-retries",
       "type": "java.lang.Integer",
       "description": "最大重试次数（-1 = 无限重试）。",
       "defaultValue": -1

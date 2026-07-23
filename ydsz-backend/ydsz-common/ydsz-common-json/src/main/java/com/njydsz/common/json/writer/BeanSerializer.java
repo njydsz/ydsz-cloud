@@ -11,7 +11,7 @@ import java.lang.invoke.MethodHandle;
  * 
  * <p>为每个 Bean 类预计算字段元数据，使用 char[] 直接写入，消除运行时类型检查</p>
  * 
- * @author Json Team
+ * @author YdszJson Team
  */
 public final class BeanSerializer {
     

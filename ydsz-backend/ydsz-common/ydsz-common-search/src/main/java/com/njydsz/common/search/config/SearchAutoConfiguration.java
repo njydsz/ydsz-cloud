@@ -6,6 +6,7 @@ import javax.sql.DataSource;
 
 import jakarta.annotation.PreDestroy;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -17,6 +18,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.core.SearchEngine;
+import com.njydsz.common.search.indexer.ContentExtractor;
+import com.njydsz.common.search.indexer.ContentIndexer;
 import com.njydsz.common.search.engine.memory.InMemorySearchEngine;
 import com.njydsz.common.search.engine.pg.PgSearchEngine;
 import com.njydsz.common.search.health.SearchHealthIndicator;
@@ -189,6 +192,16 @@ public class SearchAutoConfiguration {
     @ConditionalOnClass(MeterRegistry.class)
     public SearchMetrics searchMetrics(MeterRegistry meterRegistry) {
         return new SearchMetrics(meterRegistry);
+    }
+
+    /**
+     * P1-6: 内容索引器（ContentExtractor 可用时自动注册）
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ContentIndexer contentIndexer(
+            ObjectProvider<ContentExtractor> extractorProvider) {
+        return new ContentIndexer(extractorProvider.getIfAvailable());
     }
 
     /**

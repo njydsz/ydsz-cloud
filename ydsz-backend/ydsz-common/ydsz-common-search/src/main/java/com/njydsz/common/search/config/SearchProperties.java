@@ -174,7 +174,7 @@ public class SearchProperties {
 
     @Data
     public static class SynonymConfig {
-        /** 是否启同义词 */
+        /** 是否启用同义词 */
         private boolean enabled = false;
         /** 同义词词典文件路径 */
         private String file = "classpath:synonyms.txt";

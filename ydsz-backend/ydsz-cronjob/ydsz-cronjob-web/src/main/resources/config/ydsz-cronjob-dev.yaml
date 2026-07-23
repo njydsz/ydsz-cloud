@@ -1,5 +1,5 @@
 # =====================================================================
-#  YDSZ PMIS · CronJob · DEV 环境配置（Nacos DataId）
+#  YDSZ · CronJob · DEV 环境配置（Nacos DataId）
 #  DataId:    ydsz-cronjob-dev.yaml
 #  Group:     dev
 #  端口:      9005
@@ -10,7 +10,7 @@ minio:
   endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
-  default-bucket: ${MINIO_BUCKET:pmis}
+  default-bucket: ${MINIO_BUCKET:ydsz}
   url-expire-seconds: 3600
 
 mybatis-plus:
@@ -34,7 +34,7 @@ ydsz:
     scheduler-await-termination-seconds: 30
     leader:
       enabled: true
-      role: pmis-job-scheduler
+      role: ydsz-job-scheduler
       lease-seconds: 30
       renew-interval-seconds: 10
     scanner:

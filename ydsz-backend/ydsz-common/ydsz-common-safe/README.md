@@ -1,6 +1,6 @@
 # ydsz-common-safe
 
-PMIS 统一安全框架 — XSS 防护、SQL 注入防护、CSRF Token（Synchronizer + Double Submit）、敏感数据脱敏（18 种类型）、验证码（图形/算术/滑块）、限流（@RateLimit AOP + Filter + 多维度）、AES-256-GCM 加密、API 签名验证、IP 黑白名单、密码强度校验、安全事件自动响应、Micrometer 指标、安全审计日志。
+YDSZ 统一安全框架 — XSS 防护、SQL 注入防护、CSRF Token（Synchronizer + Double Submit）、敏感数据脱敏（18 种类型）、验证码（图形/算术/滑块）、限流（@RateLimit AOP + Filter + 多维度）、AES-256-GCM 加密、API 签名验证、IP 黑白名单、密码强度校验、安全事件自动响应、Micrometer 指标、安全审计日志。
 
 ## 模块定位
 
@@ -147,7 +147,7 @@ ydsz:
       default-block-seconds: 3600
     api-signature:
       enabled: false
-      app-id: "pmis-web"
+      app-id: "ydsz-web"
       app-secret: "Base64Secret"
       timestamp-tolerance-seconds: 300
     auto-block:

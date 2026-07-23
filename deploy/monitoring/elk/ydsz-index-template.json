@@ -1,18 +1,18 @@
 # =============================================================================
-# Elasticsearch 索引模板 - PMIS 日志
+# Elasticsearch 索引模板 - YDSZ 日志
 # -----------------------------------------------------------------------------
 # 部署:
 #   通过 Logstash manage_template 自动加载
-#   或手动: curl -X PUT "http://elasticsearch:9200/_index_template/pmis-logs" -H 'Content-Type: application/json' -d @pmis-index-template.json
+#   或手动: curl -X PUT "http://elasticsearch:9200/_index_template/ydsz-logs" -H 'Content-Type: application/json' -d @ydsz-index-template.json
 # =============================================================================
 {
-  "index_patterns": ["pmis-logs-*"],
+  "index_patterns": ["ydsz-logs-*"],
   "template": {
     "settings": {
       "number_of_shards": 1,
       "number_of_replicas": 0,
       "index.refresh_interval": "5s",
-      "index.lifecycle.name": "pmis-logs-policy"
+      "index.lifecycle.name": "ydsz-logs-policy"
     },
     "mappings": {
       "properties": {

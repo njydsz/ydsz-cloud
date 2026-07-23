@@ -1,6 +1,6 @@
-# PMIS · 部署与运维目录
+# YDSZ · 部署与运维目录
 
-> YDSZ PMIS 项目的全链路部署资源入口
+> YDSZ 项目的全链路部署资源入口
 > 覆盖:Docker / Ubuntu / Windows / K8S 四种部署形态,以及 8 大中间件配置模板
 > 文档版本:v2.0 · 2026-07-04(按环境拆分重组)
 
@@ -31,7 +31,7 @@ deploy/
 │
 ├── common/                         # 跨环境共享资源
 │   ├── conf/                       # 7 中间件原生部署的配置模板
-│   ├── nacos/                      # PMIS 业务 Nacos 共享配置
+│   ├── nacos/                      # YDSZ 业务 Nacos 共享配置
 │   ├── sql/                        # 通用 SQL(XXL-Job PG 表)
 │   └── README.md
 │
@@ -52,13 +52,13 @@ deploy/
 │   └── smoke-test.sh/.ps1          # 部署后冒烟测试(9 项关键检查)
 │
 ├── ubuntu/                         # Ubuntu 原生部署 + systemd
-│   ├── install-pmis-infra.sh
+│   ├── install-ydsz-infra.sh
 │   ├── infra-manager.sh
 │   ├── scripts/                    # start-all / stop-all / import-nacos
 │   └── README.md
 │
 ├── windows/                        # Windows 原生部署 + NSSM
-│   ├── install-pmis-infra.ps1
+│   ├── install-ydsz-infra.ps1
 │   ├── infra-manager.ps1
 │   ├── scripts/                    # start-all / stop-all / import-nacos
 │   └── README.md
@@ -113,7 +113,7 @@ docker compose -f deploy/docker/docker-compose.dev.yml up -d
 PGPASSWORD=<your-pg-password-here> psql -h 127.0.0.1 -U postgres -d ydsz \
   -f deploy/sql/V1.0.0.sql
 
-# 3. 启动 PMIS 7 个后端 + 前端
+# 3. 启动 YDSZ 7 个后端 + 前端
 ./deploy/ubuntu/scripts/start-all.sh    # Ubuntu
 # 或 .\deploy\windows\scripts\start-all.bat   # Windows
 ```
@@ -121,14 +121,14 @@ PGPASSWORD=<your-pg-password-here> psql -h 127.0.0.1 -U postgres -d ydsz \
 ### 3.2 Ubuntu 原生(准生产)
 
 ```bash
-sudo ./deploy/ubuntu/install-pmis-infra.sh   # 安装 8 中间件
+sudo ./deploy/ubuntu/install-ydsz-infra.sh   # 安装 8 中间件
 ./deploy/ubuntu/scripts/start-all.sh         # 启动应用
 ```
 
 ### 3.3 Windows 原生
 
 ```powershell
-.\deploy\windows\install-pmis-infra.ps1      # 安装 8 中间件
+.\deploy\windows\install-ydsz-infra.ps1      # 安装 8 中间件
 .\deploy\windows\scripts\start-all.bat       # 启动应用
 ```
 
@@ -173,13 +173,13 @@ kubectl apply -k deploy/k8s/overlays/dev
 
 ### 5.3 [ubuntu/](ubuntu/README.md) · Linux 原生 + systemd
 
-- `install-pmis-infra.sh` — 一键安装 7 中间件
+- `install-ydsz-infra.sh` — 一键安装 7 中间件
 - `infra-manager.sh` — 中间件启停/状态管理
 - 适合:准生产(单机) / 小规模生产
 
 ### 5.4 [windows/](windows/README.md) · Windows 原生 + NSSM
 
-- `install-pmis-infra.ps1` — 一键安装 7 中间件
+- `install-ydsz-infra.ps1` — 一键安装 7 中间件
 - `infra-manager.ps1` — 中间件启停/状态管理
 - 适合:Windows 内网测试 / 演示
 
@@ -224,7 +224,7 @@ cp deploy/.env.example deploy/.env
 | `POSTGRES_PASSWORD` / `DB_PASSWORD` | `<your-pg-password-here>` | PG 密码(**生产必须改**) |
 | `REDIS_PASSWORD` | `<your-redis-password-here>` | Redis 密码(**生产必须改**) |
 | `NACOS_SERVER_ADDR` | 127.0.0.1:8848 | Nacos 地址 |
-| `NACOS_NAMESPACE` | pmis | 命名空间 |
+| `NACOS_NAMESPACE` | ydsz | 命名空间 |
 | `NACOS_PROFILE` | dev | dev / sit / uat / prod |
 | `MINIO_ENDPOINT` | http://127.0.0.1:9100 | MinIO API |
 | `XXL_JOB_ADMIN_ADDRESSES` | http://127.0.0.1:9100/xxl-job-admin | 调度中心 |
@@ -244,10 +244,10 @@ cp deploy/.env.example deploy/.env
 
 | 占位符 | 含义 | Ubuntu 实际值 | Windows 实际值 |
 |---|---|---|---|
-| `__PMIS_DATA_HOME__` | 数据根目录 | `/opt/pmis/data/` | `C:\pmis\data\` |
-| `__PMIS_LOG_HOME__` | 日志根目录 | `/var/log/pmis/` | `C:\pmis\logs\` |
+| `__YDSZ_DATA_HOME__` | 数据根目录 | `/opt/ydsz/data/` | `C:\ydsz\data\` |
+| `__YDSZ_LOG_HOME__` | 日志根目录 | `/var/log/ydsz/` | `C:\ydsz\logs\` |
 | `__PG_DATA__` | PG 数据目录 | `/var/lib/postgresql/18/main/` | `C:\Program Files\PostgreSQL\18\data\` |
-| `__NACOS_DATA__` | Nacos 数据目录 | `/opt/nacos/data/` | `C:\pmis\nacos\data\` |
+| `__NACOS_DATA__` | Nacos 数据目录 | `/opt/nacos/data/` | `C:\ydsz\nacos\data\` |
 
 > **修改流程**:改 `common/conf/{middleware}/*` → 重跑对应环境的 install 脚本。
 
@@ -293,7 +293,7 @@ spring:
 ```
 
 > 当前 `deploy/common/nacos/ydsz-common.yaml` 中已用注释标注需加密的字段
->（`spring.datasource.password`、`spring.data.redis.password`、`pmis.jwt.secret`）。
+>（`spring.datasource.password`、`spring.data.redis.password`、`ydsz.jwt.secret`）。
 
 ### 9.4 生产环境注入主密码
 
@@ -301,7 +301,7 @@ spring:
 
 ```bash
 # 方式 A：kubectl 命令行创建（不入仓）
-kubectl create secret generic pmis-jasypt-secret \
+kubectl create secret generic ydsz-jasypt-secret \
   --from-literal=jasypt-encryptor-password='your-strong-master-password'
 
 # 方式 B：Sealed Secrets / External Secrets Operator（加密后可入仓）
@@ -315,10 +315,10 @@ spec:
   template:
     spec:
       containers:
-        - name: pmis-service
+        - name: ydsz-service
           envFrom:
             - secretRef:
-                name: pmis-jasypt-secret   # 注入 JASYPT_ENCRYPTOR_PASSWORD
+                name: ydsz-jasypt-secret   # 注入 JASYPT_ENCRYPTOR_PASSWORD
 ```
 
 ### 9.5 注意事项

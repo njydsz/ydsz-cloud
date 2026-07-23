@@ -5,12 +5,12 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.cache.spring.LocalCacheManager;
+import com.njydsz.common.cache.spring.YdszCacheManager;
 
 /**
  * Spring Boot Actuator HealthIndicator 适配器 — 对接 {@link CacheHealthIndicator}
  *
- * <p>自动注册 {@link LocalCacheManager} 中的所有缓存到 {@link CacheHealthIndicator}，
+ * <p>自动注册 {@link YdszCacheManager} 中的所有缓存到 {@link CacheHealthIndicator}，
  * 并通过 Spring Boot Actuator 暴露缓存健康状态。
  *
  * <p>状态映射：
@@ -26,14 +26,14 @@ import com.njydsz.common.cache.spring.LocalCacheManager;
 public class SpringCacheHealthIndicator implements HealthIndicator {
 
   private final CacheHealthIndicator delegate;
-  private final LocalCacheManager cacheManager;
+  private final YdszCacheManager cacheManager;
 
   /**
    * 创建 Spring Boot HealthIndicator 适配器
    *
-   * @param cacheManager LocalCacheManager（用于自动注册缓存）
+   * @param cacheManager YdszCacheManager（用于自动注册缓存）
    */
-  public SpringCacheHealthIndicator(LocalCacheManager cacheManager) {
+  public SpringCacheHealthIndicator(YdszCacheManager cacheManager) {
     this.cacheManager = cacheManager;
     this.delegate = new CacheHealthIndicator();
     // 自动注册所有已知缓存

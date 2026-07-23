@@ -44,37 +44,6 @@ public class ExcelConfig {
     /** 最大读取缓存大小 */
     private int maxReadCacheSize = 1024;
 
-    /** 写入缓存大小(SXSSFWorkbook行数) - 参考EasyExcel默认值 */
-    private int writeCacheSize = 100;
-
-    /** 默认表头行号 */
-    private int headRowNumber = 1;
-
-    /** 是否使用1904日期窗口 */
-    private boolean use1904Windowing = false;
-
-    /** 是否保留富文本格式 */
-    private boolean keepRichTextFormat = true;
-
-    /** 最大Sheet缓存数量 */
-    private int maxSheetCacheSize = 10;
-
-    /** 强制使用输入流模式 */
-    private boolean mandatoryUseInputStream = false;
-
-    /** 是否写入隐藏Sheet */
-    private boolean writeHiddenSheet = false;
-
-    /** 保护密码 */
-    private String password;
-
-    /** 是否使用快速解析器（默认开启） */
-    private boolean useFastReader = true;
-
-    /** 是否使用快速写入器（默认开启，直接生成XML，性能远超POI方式） */
-    private boolean useFastWriter = true;
-
-
     /** 启用流式解析的文件大小阈值(MB)，默认10MB */
     private int streamingParseThresholdMB = 10;
 
@@ -89,6 +58,12 @@ public class ExcelConfig {
 
     /** 是否启用公式注入防护，默认true */
     private boolean formulaInjectionProtection = true;
+
+    /** 是否启用快速读取引擎（SuperFastExcelReader），默认true */
+    private boolean useFastReader = true;
+
+    /** 是否启用快速写入引擎（SuperFastExcelWriter），默认true */
+    private boolean useFastWriter = true;
 
     /** ZIP压缩级别，默认BEST_SPEED(1)，范围-1~9 */
     private int compressionLevel = Deflater.BEST_SPEED;
@@ -191,95 +166,6 @@ public class ExcelConfig {
         this.maxReadCacheSize = maxReadCacheSize;
     }
 
-    public int getWriteCacheSize() {
-        return writeCacheSize;
-    }
-
-    public void setWriteCacheSize(int writeCacheSize) {
-        if (writeCacheSize <= 0) {
-            throw new IllegalArgumentException("writeCacheSize must be positive, got: " + writeCacheSize);
-        }
-        this.writeCacheSize = writeCacheSize;
-    }
-
-    public int getHeadRowNumber() {
-        return headRowNumber;
-    }
-
-    public void setHeadRowNumber(int headRowNumber) {
-        if (headRowNumber < 0) {
-            throw new IllegalArgumentException("headRowNumber cannot be negative, got: " + headRowNumber);
-        }
-        this.headRowNumber = headRowNumber;
-    }
-
-    public boolean isUse1904Windowing() {
-        return use1904Windowing;
-    }
-
-    public void setUse1904Windowing(boolean use1904Windowing) {
-        this.use1904Windowing = use1904Windowing;
-    }
-
-    public boolean isKeepRichTextFormat() {
-        return keepRichTextFormat;
-    }
-
-    public void setKeepRichTextFormat(boolean keepRichTextFormat) {
-        this.keepRichTextFormat = keepRichTextFormat;
-    }
-
-    public int getMaxSheetCacheSize() {
-        return maxSheetCacheSize;
-    }
-
-    public void setMaxSheetCacheSize(int maxSheetCacheSize) {
-        if (maxSheetCacheSize <= 0) {
-            throw new IllegalArgumentException("maxSheetCacheSize must be positive, got: " + maxSheetCacheSize);
-        }
-        this.maxSheetCacheSize = maxSheetCacheSize;
-    }
-
-    public boolean isMandatoryUseInputStream() {
-        return mandatoryUseInputStream;
-    }
-
-    public void setMandatoryUseInputStream(boolean mandatoryUseInputStream) {
-        this.mandatoryUseInputStream = mandatoryUseInputStream;
-    }
-
-    public boolean isWriteHiddenSheet() {
-        return writeHiddenSheet;
-    }
-
-    public void setWriteHiddenSheet(boolean writeHiddenSheet) {
-        this.writeHiddenSheet = writeHiddenSheet;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public boolean isUseFastReader() {
-        return useFastReader;
-    }
-
-    public void setUseFastReader(boolean useFastReader) {
-        this.useFastReader = useFastReader;
-    }
-
-    public boolean isUseFastWriter() {
-        return useFastWriter;
-    }
-
-    public void setUseFastWriter(boolean useFastWriter) {
-        this.useFastWriter = useFastWriter;
-    }
-
     public int getStreamingParseThresholdMB() {
         return streamingParseThresholdMB;
     }
@@ -327,6 +213,22 @@ public class ExcelConfig {
 
     public void setFormulaInjectionProtection(boolean formulaInjectionProtection) {
         this.formulaInjectionProtection = formulaInjectionProtection;
+    }
+
+    public boolean isUseFastReader() {
+        return useFastReader;
+    }
+
+    public void setUseFastReader(boolean useFastReader) {
+        this.useFastReader = useFastReader;
+    }
+
+    public boolean isUseFastWriter() {
+        return useFastWriter;
+    }
+
+    public void setUseFastWriter(boolean useFastWriter) {
+        this.useFastWriter = useFastWriter;
     }
 
     public static String[] getFormulaInjectionPrefixes() {

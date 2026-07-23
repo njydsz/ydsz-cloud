@@ -1,6 +1,6 @@
 # ydsz-common-netty
 
-PMIS Netty 网络通信框架 — TCP Server/Client 抽象、断线重连、心跳空闲检测、SSL/TLS、LengthField 编解码、EventLoop 池管理、Channel 组管理、Epoll/KQueue 原生传输、Micrometer 指标监控、健康检查。
+YDSZ Netty 网络通信框架 — TCP Server/Client 抽象、断线重连、心跳空闲检测、SSL/TLS、LengthField 编解码、EventLoop 池管理、Channel 组管理、Epoll/KQueue 原生传输、Micrometer 指标监控、健康检查。
 
 ## 模块定位
 
@@ -71,7 +71,7 @@ PMIS Netty 网络通信框架 — TCP Server/Client 抽象、断线重连、心�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   netty:
     boss-threads: 1                 # Boss 线程数
     worker-threads: 0               # Worker 线程数（0 = CPU 核数 × 2）

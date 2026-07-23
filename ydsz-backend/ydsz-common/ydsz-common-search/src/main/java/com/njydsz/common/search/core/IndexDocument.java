@@ -44,7 +44,7 @@ public class IndexDocument implements Serializable {
 
     /** 标签列表 */
     @Builder.Default
-    private java.util.List<String> tags = Collections.emptyList();
+    private List<String> tags = Collections.emptyList();
 
     /** 状态 */
     private String status;

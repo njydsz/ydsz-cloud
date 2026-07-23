@@ -10,12 +10,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.config.DeserializationConfig;
 import com.njydsz.common.json.exception.JsonDeserializationException;
-import com.njydsz.common.json.parser.JsonParser;
+import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.reader.JSONReader;
 /**
- * Json 反序列化提供者（零拷贝优化版。
+ * YdszJson 反序列化提供者（零拷贝优化版。
  *
- * <p>架构层级：Json => Engine => Provider => Parser</p>
+ * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *
  * <p><b>核心优化：</b></p>
  * <ul>
@@ -23,17 +23,17 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li>Constructor 缓存 - 避免每次反射获取</li>
  *   <li>HashMap 字段查找 - O(1) 替代 O(n)</li>
  *   <li>快速路。- 简单对象（。 字段）直接内联解。</li>
- *   <li>JsonType 支持 - 泛型类型推断</li>
+ *   <li>YdszJsonType 支持 - 泛型类型推断</li>
  *   <li>Builder 模式支持 - 链式构建对象</li>
  *   <li>Creator 模式支持 - 自定义构造函数反序列。</li>
- *   <li>多态类型支。- @JsonTypeInfo 自动识别子类型</li>
+ *   <li>多态类型支。- @YdszJsonTypeInfo 自动识别子类型</li>
  * </ul>
  *
  * <p><b>反序列化流程：</b></p>
  * <ol>
  *   <li>检查缓存- 查找已编译的反序列化。</li>
  *   <li>选择策略 - 根据类型选择合适的反序列化方式</li>
- *   <li>执行解析 - 调用 ZeroCopyDeserializer 。JsonParser</li>
+ *   <li>执行解析 - 调用 ZeroCopyDeserializer 。YdszJsonParser</li>
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
  * </ol>
  *
@@ -103,7 +103,7 @@ public final class DeserializationProvider {
         if (type == Float.class || type == float.class) return TypeConverter.parseFloatValue(json);
         if (type == Boolean.class || type == boolean.class) return TypeConverter.parseBooleanValue(json);
         if (type == Object.class) return parseValue(json);
-        if (type == Map.class) return JsonParser.parseObject(json);
+        if (type == Map.class) return YdszJsonParser.parseObject(json);
         if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
 
         // 缓存路径：使用策略缓存避免每次反序列化都重新判断类型
@@ -164,7 +164,7 @@ public final class DeserializationProvider {
     /**
      * 解析多态类型
      *
-     * <p>如果目标类有 @JsonTypeInfo 注解，则根据 JSON 中的类型属性。
+     * <p>如果目标类有 @YdszJsonTypeInfo 注解，则根据 JSON 中的类型属性。
      * 识别具体子类型并返回。/p>
      *
      * @param json JSON 字符。
@@ -182,10 +182,10 @@ public final class DeserializationProvider {
             return null;
         }
         if (json.startsWith("{")) {
-            return JsonParser.parseObject(json);
+            return YdszJsonParser.parseObject(json);
         }
         if (json.startsWith("[")) {
-            return JsonParser.parseArray(json);
+            return YdszJsonParser.parseArray(json);
         }
         if (json.equals("true")) {
             return Boolean.TRUE;
@@ -237,10 +237,10 @@ public final class DeserializationProvider {
         }
 
         if (json.trim().startsWith("[")) {
-            return captureType(JsonParser.parseArray(json));
+            return captureType(YdszJsonParser.parseArray(json));
         }
 
-        return captureType(JsonParser.parseObject(json));
+        return captureType(YdszJsonParser.parseObject(json));
     }
 
     private static <T> T captureType(Object value) {

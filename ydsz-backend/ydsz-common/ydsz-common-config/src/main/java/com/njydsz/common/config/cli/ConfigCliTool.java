@@ -134,7 +134,7 @@ public class ConfigCliTool {
     }
 
     private static void printUsage() {
-        System.out.println("PMIS Config Encrypt CLI Tool");
+        System.out.println("YDSZ Config Encrypt CLI Tool");
         System.out.println();
         System.out.println("Usage:");
         System.out.println("  encrypt <plaintext> [masterPassword]   - Encrypt a value, output ENC(ciphertext)");

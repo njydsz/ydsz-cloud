@@ -126,11 +126,10 @@ public class FileConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(IFileStorageProvider.class)
-    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties, FileUploadProperties fileUploadProperties, MultipartContextStore multipartContextStore, CheckpointStore checkpointStore, CheckpointService checkpointService, ObjectProvider<StringRedisTemplate> redisProvider, ObjectProvider<FileDedupService> dedupProvider, ObjectProvider<VirusScanner> virusScannerProvider, ObjectProvider<FileMetrics> metricsProvider, ObjectProvider<StorageRetryHelper> retryHelperProvider) {
+    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties, FileUploadProperties fileUploadProperties, MultipartContextStore multipartContextStore, CheckpointService checkpointService, ObjectProvider<StringRedisTemplate> redisProvider, ObjectProvider<FileDedupService> dedupProvider, ObjectProvider<VirusScanner> virusScannerProvider, ObjectProvider<FileMetrics> metricsProvider, ObjectProvider<StorageRetryHelper> retryHelperProvider) {
         FileTypeValidator.init(fileProperties.isCheckMagicNumber());
         DefaultStorageFactory factory = new DefaultStorageFactory(fileProperties, fileUploadProperties);
         factory.setMultipartContextStore(multipartContextStore);
-        factory.setCheckpointStore(checkpointStore);
         factory.setCheckpointService(checkpointService);
         UploadConcurrencyGuard guard = buildConcurrencyGuardIfEnabled(fileProperties, redisProvider.getIfAvailable());
         if (guard != null) factory.setConcurrencyGuard(guard);
@@ -155,8 +154,12 @@ public class FileConfiguration {
     @Bean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     @ConditionalOnMissingBean(FileHealthIndicator.class)
-    public FileHealthIndicator storageHealthIndicator(IFileStorageProvider provider, FileProperties props) {
-        return new FileHealthIndicator(provider, props);
+    public FileHealthIndicator storageHealthIndicator(IFileStorageProvider provider, FileProperties props,
+                                                       ObjectProvider<FileDedupService> dedupProvider,
+                                                       ObjectProvider<VirusScanner> virusScannerProvider,
+                                                       ObjectProvider<StorageRetryHelper> retryHelperProvider,
+                                                       ObjectProvider<FileMetrics> metricsProvider) {
+        return new FileHealthIndicator(provider, props, dedupProvider, virusScannerProvider, retryHelperProvider, metricsProvider);
     }
 
     @Scheduled(fixedRate = 3_600_000)

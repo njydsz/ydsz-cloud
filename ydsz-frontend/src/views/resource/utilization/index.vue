@@ -14,8 +14,8 @@
  *  4) 预警员工列表
  *  5) 触发快照重算（运维 / 手动补算）
  *
- *  数据源：pmis_execution_time_entry（status=APPROVED）
- *  快照：  pmis_billable_utilization_snapshot（cronjob 每日 02:30 计算）
+ *  数据源：ydsz_execution_time_entry（status=APPROVED）
+ *  快照：  ydsz_billable_utilization_snapshot（cronjob 每日 02:30 计算）
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'

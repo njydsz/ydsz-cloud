@@ -1,6 +1,6 @@
 # ydsz-common-event
 
-PMIS 公共事件模块 — 事务性 Outbox 模式，保障领域事件可靠投递。
+YDSZ 公共事件模块 — 事务性 Outbox 模式，保障领域事件可靠投递。
 
 ## 核心能力
 
@@ -76,7 +76,7 @@ public class OrderService {
 ### 4. RocketMQ 自动装配
 
 当 classpath 存在 `rocketmq-spring-boot-starter` 时，`RocketMqEventPublishGateway` 自动注册：
-- Topic: `pmis-outbox-events`
+- Topic: `ydsz-outbox-events`
 - Tag: `eventType`（消费端可按事件类型订阅）
 - Body: `payload`
 
@@ -99,11 +99,11 @@ outboxService.appendToOutbox(
 ### 6. 配置
 
 ```yaml
-pmis:
+ydsz:
   event:
     outbox:
       enabled: true
-      table-name: pmis_outbox
+      table-name: ydsz_outbox
       poll-interval-seconds: 5
       batch-size: 100
       max-retries: 5
@@ -129,12 +129,12 @@ pmis:
 
 | 指标 | 类型 | 说明 |
 |---|---|---|
-| `pmis.outbox.publish.success` | Counter | 成功投递消息数 |
-| `pmis.outbox.publish.failure` | Counter | 投递失败消息数 |
-| `pmis.outbox.dead_letter` | Counter | 死信消息数 |
-| `pmis.outbox.publish.single.duration` | Timer | 单条投递耗时（P50/P90/P99） |
-| `pmis.outbox.publish.batch.duration` | Timer | 批量投递耗时（P50/P90/P99） |
-| `pmis.outbox.queue.size` | Gauge | 队列深度（按状态标签） |
+| `ydsz.outbox.publish.success` | Counter | 成功投递消息数 |
+| `ydsz.outbox.publish.failure` | Counter | 投递失败消息数 |
+| `ydsz.outbox.dead_letter` | Counter | 死信消息数 |
+| `ydsz.outbox.publish.single.duration` | Timer | 单条投递耗时（P50/P90/P99） |
+| `ydsz.outbox.publish.batch.duration` | Timer | 批量投递耗时（P50/P90/P99） |
+| `ydsz.outbox.queue.size` | Gauge | 队列深度（按状态标签） |
 
 ## 消息状态流转
 

@@ -2,16 +2,16 @@ groups:
   - name: pg-backup
     rules:
       - alert: PgBackupFailed
-        expr: pmis_pg_backup_status{job="pg-backup-exporter"} == 0
+        expr: ydsz_pg_backup_status{job="pg-backup-exporter"} == 0
         for: 5m
         labels:
           severity: critical
         annotations:
           summary: "PostgreSQL 备份失败 ({{ $labels.instance }})"
-          description: "PG 备份任务连续失败超过 5 分钟，请检查 /var/log/pmis/backup.log"
+          description: "PG 备份任务连续失败超过 5 分钟，请检查 /var/log/ydsz/backup.log"
 
       - alert: PgWalArchiveLag
-        expr: time() - pmis_pg_wal_archive_last_success_timestamp > 900
+        expr: time() - ydsz_pg_wal_archive_last_success_timestamp > 900
         for: 5m
         labels:
           severity: critical
@@ -20,7 +20,7 @@ groups:
           description: "WAL 归档异常可能导致 RPO 超标，请立即检查"
 
       - alert: PgBackupSizeAnomaly
-        expr: pmis_pg_backup_size_bytes / pmis_pg_backup_size_bytes offset 1d < 0.8
+        expr: ydsz_pg_backup_size_bytes / ydsz_pg_backup_size_bytes offset 1d < 0.8
         for: 10m
         labels:
           severity: warning

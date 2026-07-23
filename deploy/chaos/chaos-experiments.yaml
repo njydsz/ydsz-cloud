@@ -1,5 +1,5 @@
 # ============================================================
-# PMIS 混沌工程 — 独立实验集（P2-2 / P2-13）
+# YDSZ 混沌工程 — 独立实验集（P2-2 / P2-13）
 # ------------------------------------------------------------
 # 使用 Chaos Mesh 进行自动化混沌实验,验证系统韧性。
 # 本文件包含 5 个独立实验,各自按 @every Xh 周期调度,用于
@@ -43,7 +43,7 @@ spec:
   mode: all
   selector:
     namespaces:
-      - pmis
+      - ydsz
     labelSelectors:
       app: ydsz-userinfo
   delay:
@@ -72,7 +72,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - pmis
+      - ydsz
     labelSelectors:
       app: ydsz-userinfo
   scheduler:
@@ -96,14 +96,14 @@ spec:
   mode: all
   selector:
     namespaces:
-      - pmis
+      - ydsz
     labelSelectors:
       app: ydsz-workflow
   direction: to
   target:
     selector:
       namespaces:
-        - pmis
+        - ydsz
       labelSelectors:
         app: ydsz-project
     mode: all
@@ -128,7 +128,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - pmis
+      - ydsz
     labelSelectors:
       app: ydsz-project
   stressors:
@@ -157,7 +157,7 @@ spec:
   mode: all
   selector:
     namespaces:
-      - pmis
+      - ydsz
     labelSelectors:
       app: ydsz-gateway
   duration: "2m"

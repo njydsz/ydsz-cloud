@@ -4,11 +4,11 @@ kind: Kustomization
 # PROD 环境:多副本 + HPA + 严格资源限制 + PDB + Sentry 监控
 # 用法:kubectl apply -k deploy/k8s/overlays/prod
 
-namespace: pmis
+namespace: ydsz
 
 # P0-3 修复：原文件存在重复 resources 键（第 9 行 + 第 40 行），YAML 重复键会导致
 # kustomize 行为不可预期。修复：合并为单个 resources 列表。
-# P2-9 修复：原 patch-sentry.yaml 同时包含 ConfigMap（与 base pmis-common-config 重名）
+# P2-9 修复：原 patch-sentry.yaml 同时包含 ConfigMap（与 base ydsz-common-config 重名）
 #   和 Secret，放在 resources 导致 ConfigMap ID 冲突构建失败。
 #   拆分为：patch-sentry.yaml（ConfigMap strategic merge patch → patches）
 #          sentry-secret.yaml（Secret 独立资源 → resources）
@@ -50,7 +50,7 @@ patches:
   - path: patch-affinity.yaml
   - path: patch-hpa.yaml
   - path: patch-pdb.yaml
-  # P2-9: Sentry ConfigMap strategic merge patch（向 pmis-common-config 追加 PMIS_SENTRY_* 键）
+  # P2-9: Sentry ConfigMap strategic merge patch（向 ydsz-common-config 追加 YDSZ_SENTRY_* 键）
   - path: patch-sentry.yaml
   # SkyWalking Java Agent 注入 (链路追踪，strategic merge patch 修改 base 中的 Deployment)
   - path: patch-skywalking.yaml

@@ -4,13 +4,13 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.json.autotype.AutoTypeChecker;
-import com.njydsz.common.json.cache.JsonCacheStats;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.cache.YdszJsonCacheStats;
+import com.njydsz.common.json.config.YdszJsonConfig;
 
 /**
- * Json 健康检查指标。
+ * YdszJson 健康检查指标。
  *
- * <p>检查 Json 引擎的运行状态：
+ * <p>检查 YdszJson 引擎的运行状态：
  * <ul>
  *   <li>AutoType SafeMode 是否开启</li>
  *   <li>ASM 类阈值配置</li>
@@ -24,7 +24,7 @@ public class JsonHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         boolean safeMode = AutoTypeChecker.isSafeMode();
 
         Health.Builder builder = safeMode ? Health.up() : Health.down();
@@ -35,8 +35,8 @@ public class JsonHealthIndicator implements HealthIndicator {
         builder.withDetail("namingStrategy", config.getNamingStrategy());
         builder.withDetail("circularReferenceStrategy", config.getCircularReferenceStrategy());
 
-        builder.withDetail("asmLevel", JsonCacheStats.getAsmLevel());
-        builder.withDetail("asmGeneratedCount", JsonCacheStats.getAsmGeneratedCount());
+        builder.withDetail("asmLevel", YdszJsonCacheStats.getAsmLevel());
+        builder.withDetail("asmGeneratedCount", YdszJsonCacheStats.getAsmGeneratedCount());
 
         if (!safeMode) {
             builder.withDetail("warning", "AutoType SafeMode is disabled, RCE risk exists");

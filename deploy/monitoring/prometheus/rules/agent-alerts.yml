@@ -5,7 +5,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: pmis-agent-alerts
+  name: ydsz-agent-alerts
   namespace: monitoring
   labels:
     app: prometheus
@@ -15,12 +15,12 @@ spec:
     # ====================================================================
     # LLM 可用性告警
     # ====================================================================
-    - name: pmis-agent-llm
+    - name: ydsz-agent-llm
       interval: 30s
       rules:
         # P0: LLM 无可用 Provider — 所有 AI 能力瘫痪
-        - alert: PmisAgentNoLlmProvider
-          expr: agent_llm_calls_total{status="failure",error_type="MODEL_NOT_FOUND"} == 0 and on() time() - process_start_time_seconds{job="pmis-agent"} > 120
+        - alert: YdszAgentNoLlmProvider
+          expr: agent_llm_calls_total{status="failure",error_type="MODEL_NOT_FOUND"} == 0 and on() time() - process_start_time_seconds{job="ydsz-agent"} > 120
           for: 2m
           labels:
             severity: P0
@@ -28,15 +28,15 @@ spec:
             team: agent
           annotations:
             summary: "Agent 服务无 LLM 调用记录"
-            description: "pmis-agent 启动超过 2 分钟仍无任何 LLM 调用，可能未配置 Provider 或健康检查未通过。"
+            description: "ydsz-agent 启动超过 2 分钟仍无任何 LLM 调用，可能未配置 Provider 或健康检查未通过。"
             runbook_url: "https://wiki.example.com/runbooks/agent/no-llm-provider"
 
         # P1: LLM 错误率 > 10% — 影响用户体验
-        - alert: PmisAgentLlmErrorRateHigh
+        - alert: YdszAgentLlmErrorRateHigh
           expr: |
-            sum(rate(agent_llm_calls_total{job="pmis-agent",status="failure"}[5m]))
+            sum(rate(agent_llm_calls_total{job="ydsz-agent",status="failure"}[5m]))
             /
-            clamp_min(sum(rate(agent_llm_calls_total{job="pmis-agent"}[5m])), 1)
+            clamp_min(sum(rate(agent_llm_calls_total{job="ydsz-agent"}[5m])), 1)
             > 0.10
           for: 5m
           labels:
@@ -49,8 +49,8 @@ spec:
             runbook_url: "https://wiki.example.com/runbooks/agent/llm-error-rate"
 
         # P1: LLM 认证失败 — API Key 可能过期或错误
-        - alert: PmisAgentLlmAuthFailed
-          expr: rate(agent_llm_calls_total{job="pmis-agent",error_type="AUTH_FAILED"}[5m]) > 0
+        - alert: YdszAgentLlmAuthFailed
+          expr: rate(agent_llm_calls_total{job="ydsz-agent",error_type="AUTH_FAILED"}[5m]) > 0
           for: 2m
           labels:
             severity: P1
@@ -62,8 +62,8 @@ spec:
             runbook_url: "https://wiki.example.com/runbooks/agent/llm-auth-failed"
 
         # P2: LLM 限流频繁 — 需要调整配额或增加 Fallback
-        - alert: PmisAgentLlmRateLimited
-          expr: rate(agent_llm_calls_total{job="pmis-agent",error_type="RATE_LIMITED"}[5m]) > 1
+        - alert: YdszAgentLlmRateLimited
+          expr: rate(agent_llm_calls_total{job="ydsz-agent",error_type="RATE_LIMITED"}[5m]) > 1
           for: 5m
           labels:
             severity: P2
@@ -76,14 +76,14 @@ spec:
     # ====================================================================
     # LLM 性能告警
     # ====================================================================
-    - name: pmis-agent-performance
+    - name: ydsz-agent-performance
       interval: 30s
       rules:
         # P2: LLM P99 延迟 > 10s — 用户等待过久
-        - alert: PmisAgentLlmLatencyHigh
+        - alert: YdszAgentLlmLatencyHigh
           expr: |
             histogram_quantile(0.99,
-              sum(rate(agent_llm_call_duration_seconds_bucket{job="pmis-agent"}[5m])) by (le, model)
+              sum(rate(agent_llm_call_duration_seconds_bucket{job="ydsz-agent"}[5m])) by (le, model)
             ) > 10
           for: 5m
           labels:
@@ -95,9 +95,9 @@ spec:
             description: "模型 {{ $labels.model }} 的 P99 延迟超过 10 秒，影响用户体验。"
 
         # P2: Token 消耗异常 — 可能存在滥用或死循环
-        - alert: PmisAgentTokenUsageSpike
+        - alert: YdszAgentTokenUsageSpike
           expr: |
-            sum(rate(agent_llm_tokens_total{job="pmis-agent"}[1h])) by (type) > 1000000
+            sum(rate(agent_llm_tokens_total{job="ydsz-agent"}[1h])) by (type) > 1000000
           for: 10m
           labels:
             severity: P2
@@ -110,13 +110,13 @@ spec:
     # ====================================================================
     # 安全护栏告警
     # ====================================================================
-    - name: pmis-agent-guardrail
+    - name: ydsz-agent-guardrail
       interval: 30s
       rules:
         # P1: 护栏拒绝次数突增 — 可能遭受 Prompt 注入攻击
-        - alert: PmisAgentGuardrailRejectionSpike
+        - alert: YdszAgentGuardrailRejectionSpike
           expr: |
-            sum(rate(agent_guardrail_rejections_total{job="pmis-agent"}[5m])) > 0.5
+            sum(rate(agent_guardrail_rejections_total{job="ydsz-agent"}[5m])) > 0.5
           for: 5m
           labels:
             severity: P1
@@ -130,12 +130,12 @@ spec:
     # ====================================================================
     # 基础设施告警
     # ====================================================================
-    - name: pmis-agent-infra
+    - name: ydsz-agent-infra
       interval: 30s
       rules:
         # P1: Agent 服务下线
-        - alert: PmisAgentDown
-          expr: up{job="pmis-agent"} == 0
+        - alert: YdszAgentDown
+          expr: up{job="ydsz-agent"} == 0
           for: 1m
           labels:
             severity: P1
@@ -143,14 +143,14 @@ spec:
             team: agent
           annotations:
             summary: "Agent 服务不可用"
-            description: "pmis-agent 实例 {{ $labels.instance }} 已下线超过 1 分钟。"
+            description: "ydsz-agent 实例 {{ $labels.instance }} 已下线超过 1 分钟。"
 
         # P1: Redis 记忆不可用 — 对话历史无法持久化
-        - alert: PmisAgentRedisMemoryDown
+        - alert: YdszAgentRedisMemoryDown
           expr: |
-            health_status{job="pmis-agent",name="agentHealth"} == 0
+            health_status{job="ydsz-agent",name="agentHealth"} == 0
             or
-            health_details{job="pmis-agent",component="memoryStatus",value="REDIS_UNREACHABLE"} == 1
+            health_details{job="ydsz-agent",component="memoryStatus",value="REDIS_UNREACHABLE"} == 1
           for: 1m
           labels:
             severity: P1

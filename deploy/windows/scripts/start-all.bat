@@ -1,6 +1,6 @@
 @echo off
 REM =============================================================================
-REM  YDSZ PMIS - 一键启动脚本 (Windows PowerShell)
+REM  YDSZ - 一键启动脚本 (Windows PowerShell)
 REM -----------------------------------------------------------------------------
 REM  启动顺序：
 REM    1. 环境检查（docker / java / maven / node）
@@ -143,13 +143,13 @@ if /I not "%1"=="backend" if /I not "%1"=="infra" (
     echo [%TIMESTAMP%] [INFO] 首次安装依赖（1-2 分钟）...
     call pnpm install
   )
-  start "pmis-frontend" /B cmd /c "pnpm dev > %LOG_DIR%\frontend.log 2>&1"
+  start "ydsz-frontend" /B cmd /c "pnpm dev > %LOG_DIR%\frontend.log 2>&1"
   echo [%TIMESTAMP%] [OK] 前端已启动
 )
 
 echo.
 echo ============================================================
-echo  PMIS 启动完成！
+echo  YDSZ 启动完成！
 echo.
 echo   前端地址:        http://localhost:5173
 echo   API 网关:        http://localhost:9000

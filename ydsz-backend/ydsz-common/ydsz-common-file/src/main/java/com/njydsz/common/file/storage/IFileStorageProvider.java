@@ -2,12 +2,10 @@ package com.njydsz.common.file.storage;
 
 /**
  * 文件存储提供者接口
+ * <p>用于获取具体的文件存储实现（Local/MinIO/S3/OSS/COS/OBS/Qiniu）。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @date 2024/1/25 14:23
- * @desc 文件存储工厂接口，用于获取具体的文件存储实现
  */
 public interface IFileStorageProvider {
     /**

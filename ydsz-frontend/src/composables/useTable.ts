@@ -43,7 +43,7 @@ export interface UseTableOptions<Q extends UseTableQuery> {
 }
 
 /** localStorage 中 pageSize 持久化的统一前缀，便于清理与避免冲突 */
-const PAGE_SIZE_KEY_PREFIX = 'pmis-pageSize-'
+const PAGE_SIZE_KEY_PREFIX = 'ydsz-pageSize-'
 
 /** 读取持久化的每页条数 */
 function loadPersistedSize(key?: string): number | null {

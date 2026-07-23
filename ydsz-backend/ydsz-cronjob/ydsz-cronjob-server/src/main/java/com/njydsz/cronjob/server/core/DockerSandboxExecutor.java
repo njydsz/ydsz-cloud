@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * <h3>执行命令</h3>
  * <pre>
  * docker run --rm \
- *   --name pmis-sandbox-{jobKey}-{timestamp} \
+ *   --name ydsz-sandbox-{jobKey}-{timestamp} \
  *   --network={dockerNetwork} \
  *   --memory={dockerMemory} \
  *   --cpus={dockerCpus} \
@@ -103,7 +103,7 @@ public class DockerSandboxExecutor {
 
         String image = resolveImage(language, sandboxConfig);
         String interpreter = resolveInterpreter(language);
-        String containerName = "pmis-sandbox-" + System.currentTimeMillis();
+        String containerName = "ydsz-sandbox-" + System.currentTimeMillis();
 
         // P2-11: 构造可配置的 Docker 命令
         List<String> command = buildDockerCommand(sandboxConfig, image, interpreter, containerName, envVars);

@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
-import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.json.asm.AsmSerializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.BeanSerializerCache;
@@ -18,9 +18,9 @@ import com.njydsz.common.json.writer.BeanSerializer;
 import com.njydsz.common.json.writer.JSONWriter;
 
 /**
- * Json 序列化提供者（架构层）
+ * YdszJson 序列化提供者（架构层）
  *
- * <p>架构层级：Json => Engine => Provider => Parser</p>
+ * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *
  * <p><b>ThreadLocal 清理机制：</b></p>
  * <ul>
@@ -550,7 +550,7 @@ public final class SerializationProvider {
         }
 
         // 检查是否可以使用快速路径
-        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
+        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
         if (classAnnotation != null) {
             return false;
         }

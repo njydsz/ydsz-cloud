@@ -1,12 +1,12 @@
 <!--
 ================================================================================
-YDSZ PMIS · 项目运营管理系统 · README
+YDSZ · 项目运营管理系统 · README
 --------------------------------------------------------------------------------
-项目代号:   YDSZ PMIS
+项目代号:   YDSZ
 所属公司:   南京云顶数字科技有限公司
 版本:       v1.0.0-SNAPSHOT
 最近更新:   2026-07-08
-维护团队:   PMIS 研发部
+维护团队:   YDSZ 研发部
 文档密级:   内部受控 · 禁止外传
 
 本文件是仓库的入口文档，向新成员/合作方/审核方解释：
@@ -20,7 +20,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 ================================================================================
 -->
 
-# YDSZ PMIS · 项目运营管理系统
+# YDSZ · 项目运营管理系统
 
 > 南京云顶数字科技有限公司 · 软件定制 + 人力外包 双业态 · 业财一体化精细化运营平台
 >
@@ -86,7 +86,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | **经营驾驶舱** | 6 大 KPI + 3 维下钻（部门/项目类型/客户） + 高管看板 + KPI 趋势 + 预警 banner + 60s 实时刷新 + BFF 聚合 |
 | **AI 多智能体编排** | Blackboard 共享上下文 + 4 编排策略（串行/并行/投票/级联） + 5 内置 Agent + 5 LLM Provider 路由 + provider_trace_id 追踪 |
 | **轻量规则引擎 (literule)** | Aviator 表达式驱动 + 动态配置 + 热加载 + 版本管理 + dry-run 仿真 + 规则链编排 + 阈值动态注入 |
-| **自研工作流 v2** | `pmis_flow_*` 表 + BPMN 2.0 解析 + 设计器（数据 API）+ 表单设计器 + 流程模板 + 通知渠道 + 审批人自动去重 + 流程导入导出 + 50 步模拟运行 + 流程监控仪表盘 ⚠️ **仅适配 PC Web 端，不支持移动端/独立 H5**（见 7.4） |
+| **自研工作流 v2** | `ydsz_flow_*` 表 + BPMN 2.0 解析 + 设计器（数据 API）+ 表单设计器 + 流程模板 + 通知渠道 + 审批人自动去重 + 流程导入导出 + 50 步模拟运行 + 流程监控仪表盘 ⚠️ **仅适配 PC Web 端，不支持移动端/独立 H5**（见 7.4） |
 | **混沌工程** | ChaosService 实验注册 + FeatureFlag 双保险 + 注入统计 + chaos-dashboard 实时监控 |
 | **变更-交付-结项闭环** | 5 类变更（范围/成本/合同/人员/进度） + 8 类项目交付物标准化（CD1-CD5 门径） + 3 类结项（正式/预/强制）准入 |
 | **国际化（i18n）** | vue-i18n 10 + 中/英文语言包 + 6 个核心页面覆盖 + 语言切换组件 + 集中化文案管理（部分业务页面 i18n 迁移待完成） |
@@ -137,7 +137,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 4 | 项目 | ydsz-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润 |
 | 5 | 消息中心 | ydsz-message | **9004** | 多渠道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）+ 模板 + 偏好 + 订阅 + 限流 + 撤回 + 聚合 + 回执 |
 | 6 | 调度 | ydsz-cronjob | **9005** | Leader 选举 + DB 行锁 + Redis 分布式锁 + 故障转移 + 租户隔离 + 告警通道 |
-| 7 | 工作流 | ydsz-workflow | **9006** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 ⚠️ **仅 PC 端** |
+| 7 | 工作流 | ydsz-workflow | **9006** | 自研 `ydsz_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 ⚠️ **仅 PC 端** |
 | 8 | AI Agent | ydsz-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
 | — | 公共（库） | ydsz-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
 | — | 轻量规则引擎（库） | ydsz-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（不独立部署） |
@@ -167,7 +167,7 @@ literule  → common
 | pnpm | ≥ 9 | 强制 lockfile 统一 |
 | PostgreSQL | 18 | 主库 |
 | Redis | 8 | 缓存 / 会话 / 分布式锁 |
-| Nacos | 2.3.2 | namespace `pmis` / group `PMIS_GROUP_{DEV/SIT/UAT/PROD}` |
+| Nacos | 2.3.2 | namespace `ydsz` / group `YDSZ_GROUP_{DEV/SIT/UAT/PROD}` |
 | Docker | 24+ | Compose 编排基础设施 |
 
 ### 5.2 本地启动
@@ -254,16 +254,16 @@ ydsz/
 ├── deploy/                     # 部署全套(按环境分子目录)
 │   ├── common/                 # 跨环境共享资源(中间件配置模板 + Nacos 共享配置 + SQL)
 │   │   ├── conf/               # 7 中间件原生部署配置(postgres/redis/nacos/minio/seata/rocketmq/xxl-job)
-│   │   ├── nacos/              # PMIS 共享 Nacos 配置 ydsz-common.yaml
+│   │   ├── nacos/              # YDSZ 共享 Nacos 配置 ydsz-common.yaml
 │   │   └── sql/                # 通用 SQL(XXL-Job PG 表等)
 │   ├── docker/                 # Docker 容器化(7 中间件 + docker-compose.dev.yml)
 │   ├── k8s/                    # K8S 部署(Kustomize:base + overlays/dev|sit|uat|prod)
 │   ├── ubuntu/                 # Ubuntu 原生部署(中间件安装 + systemd)
-│   │   ├── install-pmis-infra.sh
+│   │   ├── install-ydsz-infra.sh
 │   │   ├── infra-manager.sh
 │   │   └── scripts/            # 应用层启停(start-all/stop-all/check-env/import-nacos-config)
 │   ├── windows/                # Windows 原生部署(中间件安装 + NSSM)
-│   │   ├── install-pmis-infra.ps1
+│   │   ├── install-ydsz-infra.ps1
 │   │   ├── infra-manager.ps1
 │   │   └── scripts/            # 应用层启停(start-all/stop-all/check-env/import-nacos-config)
 │   └── .env.example            # 环境变量模板
@@ -362,7 +362,7 @@ ydsz/
 - `ydsz-workflow/pom.xml` 不得引入任何电子签章相关依赖（如 `esign-sdk` / `fadada-sdk` / `bouncycastle` 签章扩展 / `itextpdf` 签章模块等）；
 - 前端工作流相关页面 / 组件不得引入签章相关组件库（如 `vue-esign` / `pdf-lib` 签章插件 / `signature_pad` 在工作流场景的复用等）；
 - 权限码（`PermissionCodes`）不得增加 `esign:*` / `contract.sign:*` / `workflow:esign:*` 等命名空间；
-- SQL 脚本（`deploy/sql/V*.sql`）不得新增 `pmis_sign_*` / `pmis_cert_*` / `pmis_contract_sign_*` 表；
+- SQL 脚本（`deploy/sql/V*.sql`）不得新增 `ydsz_sign_*` / `ydsz_cert_*` / `ydsz_contract_sign_*` 表；
 - 如业务侧确有签署需求，须在 `ydsz-project` 的合同服务通过「外部跳转 / Webhook 回调」方式对接独立电子签章服务，工作流引擎仅传递 `contractId` + `signStatus` 等轻量状态字段，不持有签署原文或证书数据。
 
 **未来扩展点（不包含在本约束内）**：合同服务（`ydsz-project`）可按需集成电子签章能力，但必须走独立 RFC + 法务/合规评审，不允许直接绕过本约束。
@@ -455,5 +455,5 @@ ydsz/
 
 ---
 
-> 本 README 由 PMIS 团队维护，与代码同步更新（v1.0.0_2026-07-06）。
+> 本 README 由 YDSZ 团队维护，与代码同步更新（v1.0.0_2026-07-06）。
 > 任何变更请走 PR + Code Review 流程。

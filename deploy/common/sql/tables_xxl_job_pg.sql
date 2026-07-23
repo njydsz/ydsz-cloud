@@ -1,8 +1,8 @@
 # =============================================================================
 #  XXL-Job 2.4 数据库初始化脚本
 # -----------------------------------------------------------------------------
-#  PostgreSQL 兼容版本（已适配 PMIS 主库 PostgreSQL 18）
-#  使用:    psql -U pmis -d ydsz_pmis -f tables_xxl_job_pg.sql
+#  PostgreSQL 兼容版本（已适配 YDSZ 主库 PostgreSQL 18）
+#  使用:    psql -U ydsz -d ydsz -f tables_xxl_job_pg.sql
 # =============================================================================
 
 CREATE TABLE xxl_job_info (

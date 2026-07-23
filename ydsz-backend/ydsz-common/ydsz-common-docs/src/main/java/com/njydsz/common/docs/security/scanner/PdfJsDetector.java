@@ -58,7 +58,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
         Path tempFile = null;
 
         try {
-            tempFile = Files.createTempFile("pmis-docs-pdfscan-", ".pdf");
+            tempFile = Files.createTempFile("ydsz-docs-pdfscan-", ".pdf");
             inputStream.transferTo(Files.newOutputStream(tempFile));
 
             try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {

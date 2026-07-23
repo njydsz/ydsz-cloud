@@ -1,8 +1,8 @@
 # ydsz-common-json
 
-PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、SIMD 向量化解析、Schema 校验、JsonPath 查询、JsonNode 树模型、Optional/UUID 支持、BigDecimal 精度模式、GraalVM 兼容、Spring MVC 集成、单元测试全覆盖。
+YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、SIMD 向量化解析、Schema 校验、YdszJsonPath 查询、JsonNode 树模型、Optional/UUID 支持、BigDecimal 精度模式、GraalVM 兼容、Spring MVC 集成、单元测试全覆盖。
 
-> **注**：本模块 Maven artifactId 仍为 `ydsz-common-json`（项目命名空间前缀），但**模块内所有公开 API 均已去 Ydsz 品牌化**——主入口类为 [`Json`](file:///d:/Code/ydsz/ydsz/ydsz-backend/ydsz-common/ydsz-common-json/src/main/java/com/njydsz/common/json/Json.java)，所有注解使用 `@Json*` 前缀。详见下方"模块定位"和"核心能力"章节。
+> **注**：本模块 Maven artifactId 仍为 `ydsz-common-json`（项目命名空间前缀），但**模块内所有公开 API 均已去 Ydsz 品牌化**——主入口类为 [`YdszJson`](file:///d:/Code/ydsz/ydsz/ydsz-backend/ydsz-common/ydsz-common-json/src/main/java/com/njydsz/common/json/YdszJson.java)，所有注解使用 `@YdszJson*` 前缀。详见下方"模块定位"和"核心能力"章节。
 
 ## 模块定位
 
@@ -13,7 +13,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | **源文件数** | 100 |
 | **测试文件数** | 16 |
 | **测试方法数** | 199 |
-| **主入口类** | `com.njydsz.common.json.Json` |
+| **主入口类** | `com.njydsz.common.json.YdszJson` |
 | **配置文件** | `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` → `JsonAutoConfiguration` |
 
 ## 核心能力
@@ -22,8 +22,8 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 类 | 说明 |
 |---|---|
-| `Json` | JSON 统一入口（序列化 / 反序列化 / 树操作 / 流式 API / ASM 预热 / 单次配置序列化） |
-| `JsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 最大 JSON 大小 / 最大深度） |
+| `YdszJson` | JSON 统一入口（序列化 / 反序列化 / 树操作 / 流式 API / ASM 预热 / 单次配置序列化） |
+| `YdszJsonConfig` | 全局配置（日期格式 / 空值处理 / 命名策略 / BigDecimal 精度模式 / 最大 JSON 大小 / 最大深度） |
 | `DeserializationConfig` | 反序列化配置（AutoType 安全检查委托） |
 
 ### ASM 字节码加速
@@ -38,7 +38,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 类 | 说明 |
 |---|---|
-| `JSONReader` / `JsonParser` (stream) / `JsonParser` (parser) | JSON 解析器（流式 / 事件驱动 / 递归下降） |
+| `JSONReader` / `YdszJsonParser` (stream) / `YdszJsonParser` (parser) | JSON 解析器（流式 / 事件驱动 / 递归下降） |
 | `JSONWriter` / `JsonGenerator` | JSON 生成器（流式写入） |
 | `BeanSerializer` / `BeanRead` / `ObjectReader` | Bean 序列化 / 反序列化 |
 | `SerializerEngine` / `DeserializerEngine` | 序列化/反序列化引擎（Facade + 缓存管理） |
@@ -53,7 +53,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | `SerializerCache` / `SerializerRegistry` | 序列化器注册表 |
 | `FieldMeta` | 字段元数据（统一类型代码 + `@JsonInclude` 过滤逻辑） |
 | `SerializationContext` | 序列化上下文（合并 5+ ThreadLocal 为单一实例，降低内存开销） |
-| `JsonCacheStats` | 缓存统计 |
+| `YdszJsonCacheStats` | 缓存统计 |
 
 ### 字节码优化
 
@@ -75,7 +75,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 类 | 说明 |
 |---|---|
-| `JsonType` / `TypeFactory` / `JsonTypeCode` | 类型系统 |
+| `YdszJsonType` / `TypeFactory` / `JsonTypeCode` | 类型系统 |
 | `PropertyNamingStrategy` | 命名策略（camelCase / snake_case / kebab-case） |
 | `NumberUtils` | 数字解析工具 |
 
@@ -83,30 +83,30 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 注解 | 说明 |
 |---|---|
-| `@JsonField` | 字段映射（名称 / 格式 / 序列化控制） |
+| `@YdszJsonField` | 字段映射（名称 / 格式 / 序列化控制） |
 | `@JsonAlias` | 反序列化别名 |
-| `@JsonFormat` | 格式化（日期 / 数字） |
+| `@YdszJsonFormat` | 格式化（日期 / 数字） |
 | `@JsonInclude` | 属性包含策略（ALWAYS / NON_NULL / NON_EMPTY / NON_DEFAULT） |
 | `@JsonIgnoreProperties` | 忽略指定属性（类级别，支持 ignoreUnknown） |
 | `@JsonValue` | 枚举值序列化方式（方法级别） |
 | `@JsonAnyGetter` / `@JsonAnySetter` | 动态属性 Getter / Setter |
 | `@JsonUnwrapped` | 嵌套属性展开（支持 prefix / suffix） |
-| `@JsonView` | 视图过滤 |
-| `@JsonPropertyOrder` | 字段排序 |
-| `@JsonCreator` / `@JsonBuilder` | 构造器 / Builder |
-| `@JsonTypeInfo` / `@JsonSubTypes` / `@JsonSubType` | 多态序列化 |
-| `@JsonVisibility` | 可见性控制 |
-| `@JsonClass` | 类型标记 |
+| `@YdszJsonView` | 视图过滤 |
+| `@YdszJsonPropertyOrder` | 字段排序 |
+| `@YdszJsonCreator` / `@YdszJsonBuilder` | 构造器 / Builder |
+| `@YdszJsonTypeInfo` / `@YdszJsonSubTypes` / `@YdszJsonSubType` | 多态序列化 |
+| `@YdszJsonVisibility` | 可见性控制 |
+| `@YdszJsonClass` | 类型标记 |
 
 ### 高级功能
 
 | 类 | 说明 |
 |---|---|
 | `JsonPointer` | JSON Pointer（RFC 6901） |
-| `JsonPath` | JSONPath 查询（递归下降 / 数组过滤 / 切片 / 通配符） |
+| `YdszJsonPath` | JSONPath 查询（递归下降 / 数组过滤 / 切片 / 通配符） |
 | `JsonMergePatch` | JSON Merge Patch（RFC 7396） |
 | `JsonPatch` | JSON Patch（RFC 6902，支持 add/remove/replace/move/copy/test + Builder） |
-| `JsonSchema` / `SchemaValidator` / `ValidationResult` | JSON Schema 校验 |
+| `YdszJsonSchema` / `SchemaValidator` / `ValidationResult` | JSON Schema 校验 |
 | `AutoTypeChecker` | AutoType 安全检查（防反序列化漏洞） |
 
 ### Provider 与 Module
@@ -118,62 +118,62 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | `FieldMetadataLoader` / `CreatorResolver` / `BuilderResolver` | 字段加载 / 构造器解析 / Builder 解析 |
 | `PolymorphicTypeResolver` | 多态类型解析 |
 | `ValueWriter` / `ValueFormatter` / `TypeConverter` | 值写入（含 Optional / UUID 支持） / 格式化 / 转换 |
-| `JsonModule` / `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块系统 |
+| `YdszJsonModule` / `JsonModuleRegistry` / `ModuleSerializerRegistry` / `ModuleDeserializerRegistry` | 模块系统 |
 | `StringInterner` | 字符串驻留池 |
 
 ### Spring 集成
 
 | 类 | 说明 |
 |---|---|
-| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（支持 @JsonView / MappingJacksonValue 集成） |
+| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（支持 @YdszJsonView / MappingJacksonValue 集成） |
 | `JsonReactiveUtils` | WebFlux 响应式编码工具 |
 | `JsonAutoConfiguration` | 自动配置 |
-| `JsonProperties` / `JsonModuleRegistrar` | 配置属性（useBigDecimal / monitoringEnabled 等） / 模块注册器 |
+| `YdszJsonProperties` / `JsonModuleRegistrar` | 配置属性（useBigDecimal / monitoringEnabled 等） / 模块注册器 |
 
 ### 可观测性
 
 | 类 | 说明 |
 |---|---|
-| `JsonMetrics` / `JsonMetricsCallback` / `JsonCacheMetrics` / `JsonHealthIndicator` | 指标回调（null 短路优化） / 缓存指标 / 健康检查 |
+| `YdszJsonMetrics` / `JsonMetricsCallback` / `JsonCacheMetrics` / `JsonHealthIndicator` | 指标回调（null 短路优化） / 缓存指标 / 健康检查 |
 
 ### 异常体系
 
 | 类 | 说明 |
 |---|---|
-| `JsonException` | 顶层异常 |
-| `JsonSerializationException` | 序列化异常（继承自 `JsonException`） |
-| `JsonDeserializationException` | 反序列化异常（继承自 `JsonException`，含行列号 / 上下文片段） |
+| `YdszJsonException` | 顶层异常 |
+| `JsonSerializationException` | 序列化异常（继承自 `YdszJsonException`） |
+| `JsonDeserializationException` | 反序列化异常（继承自 `YdszJsonException`，含行列号 / 上下文片段） |
 
 ## 使用示例
 
 ### 基本用法
 
 ```java
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.common.json.jsonpath.JsonPath;
+import com.njydsz.common.json.jsonpath.YdszJsonPath;
 
 // 序列化
-String json = Json.toJson(obj);
+String json = YdszJson.toJson(obj);
 
 // 反序列化
-User user = Json.toObject(json, User.class);
+User user = YdszJson.toObject(json, User.class);
 
 // 树操作
-Map<String, Object> root = Json.parseMap(json);
+Map<String, Object> root = YdszJson.parseMap(json);
 String name = (String) root.get("name");
 
 // JSONPath 查询
-List<String> emails = JsonPath.get(json, "$.users[*].email");
+List<String> emails = YdszJsonPath.get(json, "$.users[*].email");
 
 // 流式序列化（写入 Writer，避免中间 String）
-Json.toJson(obj, new StringWriter());
+YdszJson.toJson(obj, new StringWriter());
 
 // 从 InputStream 反序列化
-User user2 = Json.toObject(inputStream, User.class);
+User user2 = YdszJson.toObject(inputStream, User.class);
 
 // fromJson 别名（与 toJson 对称）
-User user3 = Json.fromJson(json, User.class);
+User user3 = YdszJson.fromJson(json, User.class);
 ```
 
 ### Optional 与 UUID 支持
@@ -195,9 +195,9 @@ data2.put("id", UUID.randomUUID());
 
 ```java
 // 启用 BigDecimal 解析（金融场景精度保护）
-JsonConfig.getInstance().setUseBigDecimal(true).apply();
+YdszJsonConfig.getInstance().setUseBigDecimal(true).apply();
 
-Map<String, Object> result = Json.parseMap("{\"price\":123.456}");
+Map<String, Object> result = YdszJson.parseMap("{\"price\":123.456}");
 // result.get("price") 返回 BigDecimal(123.456)，而非 Double
 ```
 
@@ -205,9 +205,9 @@ Map<String, Object> result = Json.parseMap("{\"price\":123.456}");
 
 ```java
 // 使用临时配置序列化，不影响全局配置
-JsonConfig tempConfig = JsonConfig.copyOf(JsonConfig.getInstance());
+YdszJsonConfig tempConfig = YdszJsonConfig.copyOf(YdszJsonConfig.getInstance());
 tempConfig.setWriteNulls(true);
-String json = Json.toJson(obj, tempConfig);
+String json = YdszJson.toJson(obj, tempConfig);
 // 全局配置不受影响
 ```
 
@@ -215,7 +215,7 @@ String json = Json.toJson(obj, tempConfig);
 
 ```java
 // 应用启动时预生成 ASM 字节码，避免首次请求延迟尖峰
-Json.warmup(User.class, Order.class, Product.class);
+YdszJson.warmup(User.class, Order.class, Product.class);
 ```
 
 ### JSON Patch (RFC 6902)
@@ -233,7 +233,7 @@ String result = JsonPatch.builder()
 
 ```java
 // 合并两个 JSON
-String merged = Json.merge(
+String merged = YdszJson.merge(
     "{\"a\":1,\"b\":2}",
     "{\"b\":3,\"c\":4}");
 // {"a":1,"b":3,"c":4}
@@ -243,7 +243,7 @@ String merged = Json.merge(
 
 ```java
 // 解析为 JsonNode 树
-JsonNode tree = Json.readTree("{\"name\":\"John\",\"age\":30}");
+JsonNode tree = YdszJson.readTree("{\"name\":\"John\",\"age\":30}");
 if (tree.isObject()) {
     ObjectNode obj = (ObjectNode) tree;
     String name = obj.get("name").asText();
@@ -268,7 +268,7 @@ public class UserController {
 }
 ```
 
-可自定义配置项见 `JsonProperties`（位于 `com.njydsz.common.json.spring.JsonProperties`）。
+可自定义配置项见 `YdszJsonProperties`（位于 `com.njydsz.common.json.spring.YdszJsonProperties`）。
 
 ## 依赖
 
@@ -282,7 +282,7 @@ public class UserController {
 ## 架构层级
 
 ```
-Json (Facade, 用户接口)
+YdszJson (Facade, 用户接口)
   ├─ 序列化入口: toJson / toJsonBytes / format / toJson(Writer) / toJson(OutputStream)
   ├─ 反序列化入口: toObject / parseMap / parseArray / fromJson / toObject(InputStream)
   ├─ 树操作: readTree / valueToTree
@@ -292,7 +292,7 @@ Json (Facade, 用户接口)
        └─ 性能监控（serializeCount、serializeTotalNanos、metricsCallback null 短路）
             └─ Provider 层（SerializationProvider / DeserializationProvider）
                  ├─ ASM 字节码生成（AsmBeanCodecGenerator + GraalVmDetector 降级检测）
-                 ├─ 零拷贝反序列化（ZeroCopyDeserializer + JsonParser）
+                 ├─ 零拷贝反序列化（ZeroCopyDeserializer + YdszJsonParser）
                  ├─ 字段元数据加载（FieldMetadataLoader）
                  ├─ 多态类型解析（PolymorphicTypeResolver）
                  ├─ AutoType 安全检查（AutoTypeChecker）

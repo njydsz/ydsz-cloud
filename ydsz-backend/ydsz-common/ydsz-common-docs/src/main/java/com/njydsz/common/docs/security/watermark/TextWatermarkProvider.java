@@ -65,7 +65,7 @@ public class TextWatermarkProvider implements WatermarkProvider {
 
         Path tempFile = null;
         try {
-            tempFile = Files.createTempFile("pmis-docs-watermark-", ".pdf");
+            tempFile = Files.createTempFile("ydsz-docs-watermark-", ".pdf");
             inputStream.transferTo(Files.newOutputStream(tempFile));
 
             try (PDDocument document = Loader.loadPDF(tempFile.toFile());

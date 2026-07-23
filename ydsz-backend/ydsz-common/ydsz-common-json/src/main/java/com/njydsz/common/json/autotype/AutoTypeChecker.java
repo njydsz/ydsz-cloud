@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 
 /**
@@ -16,9 +16,9 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  * <ul>
  *   <li>黑名单检查（始终生效）：拒绝已知的危险类，即使 SafeMode=false 也生效</li>
  *   <li>内置基础类型白名单（Java 基础类型、集合、日期等）</li>
- *   <li>标注了 @JsonClass 注解的类自动允许反序列化</li>
+ *   <li>标注了 @YdszJsonClass 注解的类自动允许反序列化</li>
  *   <li>通过 addToWhitelist() 显式加入白名单的类</li>
- *   <li>标注了 @JsonClass(autoType=true) 的类及其 seeAlso 子类型</li>
+ *   <li>标注了 @YdszJsonClass(autoType=true) 的类及其 seeAlso 子类型</li>
  * </ul>
  *
  * <p><b>安全模式：</b></p>
@@ -176,7 +176,7 @@ public final class AutoTypeChecker {
                 JsonDeserializationException.PARSE_ERROR,
                 "AutoType check failed: " + clazz.getName()
                     + " is not in the whitelist. "
-                    + "Please add @JsonClass annotation or use AutoTypeChecker.addToWhitelist()"
+                    + "Please add @YdszJsonClass annotation or use AutoTypeChecker.addToWhitelist()"
             );
         }
     }
@@ -196,7 +196,7 @@ public final class AutoTypeChecker {
                 JsonDeserializationException.PARSE_ERROR,
                 "AutoType check failed: " + className
                     + " is not in the whitelist. "
-                    + "Please add @JsonClass annotation or use AutoTypeChecker.addToWhitelist()"
+                    + "Please add @YdszJsonClass annotation or use AutoTypeChecker.addToWhitelist()"
             );
         }
     }
@@ -286,7 +286,7 @@ public final class AutoTypeChecker {
     private static boolean isAutoTypeClass(String className) {
         try {
             Class<?> clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-            JsonClass annotation = clazz.getAnnotation(JsonClass.class);
+            YdszJsonClass annotation = clazz.getAnnotation(YdszJsonClass.class);
             if (annotation != null) {
                 ANNOTATION_WHITELIST.add(className);
                 Class<?>[] seeAlso = annotation.seeAlso();

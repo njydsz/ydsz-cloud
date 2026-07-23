@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
 /**
- * JsonConfig 全局配置测试。
+ * YdszJsonConfig 全局配置测试。
  *
  * @since 1.4.0
  */
@@ -18,19 +18,19 @@ class JsonConfigTest {
     @AfterEach
     void resetConfig() {
         // 每个测试后重置全局配置
-        JsonConfig.getInstance().reset().apply();
+        YdszJsonConfig.getInstance().reset().apply();
     }
 
     @Test
     void testGetInstance() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         assertNotNull(config);
-        assertSame(config, JsonConfig.getInstance());
+        assertSame(config, YdszJsonConfig.getInstance());
     }
 
     @Test
     void testDefaultValues() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         assertEquals(PropertyNamingStrategy.LOWER_CAMEL_CASE, config.getNamingStrategy());
         assertFalse(config.isWriteNulls());
         assertFalse(config.isPrettyPrint());
@@ -41,7 +41,7 @@ class JsonConfigTest {
 
     @Test
     void testSetWriteNulls() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setWriteNulls(true);
         assertTrue(config.isWriteNulls());
         config.setWriteNulls(false);
@@ -50,42 +50,42 @@ class JsonConfigTest {
 
     @Test
     void testSetNamingStrategy() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         assertEquals(PropertyNamingStrategy.SNAKE_CASE, config.getNamingStrategy());
     }
 
     @Test
     void testSetDateFormat() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setDateFormat("yyyy-MM-dd");
         assertEquals("yyyy-MM-dd", config.getDateFormat());
     }
 
     @Test
     void testSetUseBigDecimal() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setUseBigDecimal(true);
         assertTrue(config.isUseBigDecimal());
     }
 
     @Test
     void testSetMaxJsonSize() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setMaxJsonSize(1024);
         assertEquals(1024, config.getMaxJsonSize());
     }
 
     @Test
     void testSetMaxDepth() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setMaxDepth(512);
         assertEquals(512, config.getMaxDepth());
     }
 
     @Test
     void testReset() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setWriteNulls(true)
               .setPrettyPrint(true)
               .setSerializeEnumUsingOrdinal(true)
@@ -103,12 +103,12 @@ class JsonConfigTest {
 
     @Test
     void testCopyOf() {
-        JsonConfig original = JsonConfig.getInstance();
+        YdszJsonConfig original = YdszJsonConfig.getInstance();
         original.setWriteNulls(true)
                .setDateFormat("yyyy-MM-dd")
                .setUseBigDecimal(true);
 
-        JsonConfig copy = JsonConfig.copyOf(original);
+        YdszJsonConfig copy = YdszJsonConfig.copyOf(original);
         assertTrue(copy.isWriteNulls());
         assertEquals("yyyy-MM-dd", copy.getDateFormat());
         assertTrue(copy.isUseBigDecimal());
@@ -120,18 +120,18 @@ class JsonConfigTest {
 
     @Test
     void testCopyOfNull() {
-        JsonConfig copy = JsonConfig.copyOf(null);
+        YdszJsonConfig copy = YdszJsonConfig.copyOf(null);
         assertNotNull(copy);
     }
 
     @Test
     void testCopyFrom() {
-        JsonConfig source = JsonConfig.copyOf(JsonConfig.getInstance());
+        YdszJsonConfig source = YdszJsonConfig.copyOf(YdszJsonConfig.getInstance());
         source.setWriteNulls(true)
               .setDateFormat("yyyy-MM-dd HH:mm:ss")
               .setUseBigDecimal(true);
 
-        JsonConfig target = JsonConfig.getInstance();
+        YdszJsonConfig target = YdszJsonConfig.getInstance();
         target.copyFrom(source);
 
         assertTrue(target.isWriteNulls());
@@ -141,27 +141,27 @@ class JsonConfigTest {
 
     @Test
     void testToString() {
-        String str = JsonConfig.getInstance().toString();
+        String str = YdszJsonConfig.getInstance().toString();
         assertNotNull(str);
-        assertTrue(str.contains("JsonConfig"));
+        assertTrue(str.contains("YdszJsonConfig"));
     }
 
     @Test
     void testCircularReferenceStrategy() {
-        JsonConfig config = JsonConfig.getInstance();
-        config.setCircularReferenceStrategy(JsonConfig.CircularReferenceStrategy.IGNORE);
-        assertEquals(JsonConfig.CircularReferenceStrategy.IGNORE, config.getCircularReferenceStrategy());
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
+        config.setCircularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy.IGNORE);
+        assertEquals(YdszJsonConfig.CircularReferenceStrategy.IGNORE, config.getCircularReferenceStrategy());
 
-        config.setCircularReferenceStrategy(JsonConfig.CircularReferenceStrategy.ERROR);
-        assertEquals(JsonConfig.CircularReferenceStrategy.ERROR, config.getCircularReferenceStrategy());
+        config.setCircularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy.ERROR);
+        assertEquals(YdszJsonConfig.CircularReferenceStrategy.ERROR, config.getCircularReferenceStrategy());
 
-        config.setCircularReferenceStrategy(JsonConfig.CircularReferenceStrategy.REF);
-        assertEquals(JsonConfig.CircularReferenceStrategy.REF, config.getCircularReferenceStrategy());
+        config.setCircularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy.REF);
+        assertEquals(YdszJsonConfig.CircularReferenceStrategy.REF, config.getCircularReferenceStrategy());
     }
 
     @Test
     void testApplyDoesNotThrow() {
-        JsonConfig config = JsonConfig.getInstance();
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setWriteNulls(true)
               .setPrettyPrint(true)
               .setUseBigDecimal(true)

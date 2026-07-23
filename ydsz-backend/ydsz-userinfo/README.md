@@ -52,34 +52,34 @@
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
-| **登录认证** | `pmis_user_account` | 用户账号（密码哈希、状态、最后登录时间） |
-| | `pmis_user_session` | 在线会话（token、IP、UA、过期时间） |
-| | `pmis_user_2fa` | TOTP 2FA 密钥 |
-| | `pmis_login_audit` | 登录审计（成功/失败/锁定/异地） |
-| **RBAC** | `pmis_role` | 角色 |
-| | `pmis_permission` | 权限码（`pmis:user:add` 等） |
-| | `pmis_user_role` | 用户-角色关联 |
-| | `pmis_role_permission` | 角色-权限关联 |
-| **组织架构** | `pmis_department` | 部门（树形结构） |
-| | `pmis_position` | 岗位 |
-| | `pmis_employee` | 员工档案 |
-| | `pmis_employee_tag` | 员工标签（多对多） |
-| | `pmis_rank` | 职级（L1-L18） |
-| | `pmis_rank_rate` | 职级-费率映射 |
-| **数据字典** | `pmis_dict_type` | 字典类型 |
-| | `pmis_dict_item` | 字典项 |
-| **考勤** | `pmis_attendance` | 考勤记录 |
-| | `pmis_overtime` | 加班申请 |
-| | `pmis_leave` | 请假申请 |
-| **资源池** | `pmis_resource_pool` | 资源池（总部/事业部/备用） |
-| | `pmis_resource_assignment` | 资源分配记录 |
-| | `pmis_bench_record` | Bench 闲置记录（含闲置成本） |
+| **登录认证** | `ydsz_user_account` | 用户账号（密码哈希、状态、最后登录时间） |
+| | `ydsz_user_session` | 在线会话（token、IP、UA、过期时间） |
+| | `ydsz_user_2fa` | TOTP 2FA 密钥 |
+| | `ydsz_login_audit` | 登录审计（成功/失败/锁定/异地） |
+| **RBAC** | `ydsz_role` | 角色 |
+| | `ydsz_permission` | 权限码（`ydsz:user:add` 等） |
+| | `ydsz_user_role` | 用户-角色关联 |
+| | `ydsz_role_permission` | 角色-权限关联 |
+| **组织架构** | `ydsz_department` | 部门（树形结构） |
+| | `ydsz_position` | 岗位 |
+| | `ydsz_employee` | 员工档案 |
+| | `ydsz_employee_tag` | 员工标签（多对多） |
+| | `ydsz_rank` | 职级（L1-L18） |
+| | `ydsz_rank_rate` | 职级-费率映射 |
+| **数据字典** | `ydsz_dict_type` | 字典类型 |
+| | `ydsz_dict_item` | 字典项 |
+| **考勤** | `ydsz_attendance` | 考勤记录 |
+| | `ydsz_overtime` | 加班申请 |
+| | `ydsz_leave` | 请假申请 |
+| **资源池** | `ydsz_resource_pool` | 资源池（总部/事业部/备用） |
+| | `ydsz_resource_assignment` | 资源分配记录 |
+| | `ydsz_bench_record` | Bench 闲置记录（含闲置成本） |
 
 > **索引关键点**：
-> - `pmis_user_account.username` 唯一索引
-> - `pmis_user_session.token` 唯一索引
-> - `pmis_department.parent_id` 树查询索引
-> - `pmis_bench_record(employee_id, status)` 复合索引
+> - `ydsz_user_account.username` 唯一索引
+> - `ydsz_user_session.token` 唯一索引
+> - `ydsz_department.parent_id` 树查询索引
+> - `ydsz_bench_record(employee_id, status)` 复合索引
 
 ## 启动顺序
 
@@ -172,11 +172,11 @@ mvn -pl ydsz-userinfo -am verify
 
 ### Q1：登录报 "账号已锁定"
 
-5 次密码错误自动锁定 30 分钟。可通过 `pmis:auth:max-fail-count` 和 `lock-duration-minutes` 配置。
+5 次密码错误自动锁定 30 分钟。可通过 `ydsz:auth:max-fail-count` 和 `lock-duration-minutes` 配置。
 
 ### Q2：JWT 过期
 
-默认 2 小时。生产环境可对接 Nacos 动态调整 `pmis:jwt:expire-minutes`。
+默认 2 小时。生产环境可对接 Nacos 动态调整 `ydsz:jwt:expire-minutes`。
 
 ### Q3：资源池 Bench 自动入出池
 

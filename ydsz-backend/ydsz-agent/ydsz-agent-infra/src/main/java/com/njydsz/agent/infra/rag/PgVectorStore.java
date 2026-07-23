@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +68,7 @@ public class PgVectorStore implements com.njydsz.agent.domain.rag.VectorStore {
                     metadata = EXCLUDED.metadata
                 """;
         String embeddingStr = chunk.hasEmbedding() ? vectorToString(chunk.getEmbedding()) : null;
-        String metadataJson = Json.toJson(chunk.getMetadata());
+        String metadataJson = YdszJson.toJson(chunk.getMetadata());
         jdbcTemplate.update(sql,
                 chunk.getId(),
                 chunk.getDocumentId(),
@@ -121,7 +121,7 @@ public class PgVectorStore implements com.njydsz.agent.domain.rag.VectorStore {
                         Map<String, Object> metadata = new HashMap<>();
                         String metadataJson = rs.getString("metadata");
                         if (metadataJson != null && !metadataJson.isBlank()) {
-                            metadata = Json.toObject(metadataJson, Map.class);
+                            metadata = YdszJson.toObject(metadataJson, Map.class);
                         }
                         return new TextChunk(
                                 rs.getString("id"),

@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 审计日志磁盘兜底写入器
@@ -76,7 +76,7 @@ public class AuditFallbackWriter {
             String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             Path logFile = dir.resolve("audit_fallback_" + dateStr + ".json");
 
-            String jsonLine = Json.toJson(auditLog) + "\n";
+            String jsonLine = YdszJson.toJson(auditLog) + "\n";
 
             Files.write(logFile, jsonLine.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
@@ -142,7 +142,7 @@ public class AuditFallbackWriter {
                     .filter(line -> line != null && !line.trim().isEmpty())
                     .map(line -> {
                         try {
-                            return Json.toObject(line.trim(), AuditLog.class);
+                            return YdszJson.toObject(line.trim(), AuditLog.class);
                         } catch (Exception e) {
                             log.warn("【审计兜底】恢复日志行失败, file={}, error={}", file, e.getMessage());
                             return null;

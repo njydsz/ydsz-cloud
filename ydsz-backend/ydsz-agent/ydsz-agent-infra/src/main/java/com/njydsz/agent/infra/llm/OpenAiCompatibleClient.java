@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import com.njydsz.common.json.Json;
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonArray;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,7 +101,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         try {
             String responseJson = restClient.post()
                     .uri("/chat/completions")
-                    .body(Json.toJson(requestBody))
+                    .body(YdszJson.toJson(requestBody))
                     .retrieve()
                     .body(String.class);
             return parseResponse(responseJson);
@@ -129,7 +129,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         try {
             webClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(Json.toJson(requestBody))
+                    .bodyValue(YdszJson.toJson(requestBody))
                     .retrieve()
                     .bodyToFlux(String.class)
                     .doOnNext(line -> {
@@ -201,7 +201,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     call.put("id", tc.getId());
                     Map<String, Object> function = new HashMap<>();
                     function.put("name", tc.getName());
-                    function.put("arguments", Json.toJson(tc.getArguments()));
+                    function.put("arguments", YdszJson.toJson(tc.getArguments()));
                     call.put("type", "function");
                     call.put("function", function);
                     calls.add(call);
@@ -235,35 +235,35 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private ChatResponse parseResponse(String json) {
-        JsonObject obj = Json.parseObjectToJsonObject(json);
+        YdszJsonObject obj = YdszJson.parseObjectToJsonObject(json);
         String id = obj.getString("id");
         String model = obj.getString("model");
-        JsonArray choices = obj.getJSONArray("choices");
+        YdszJsonArray choices = obj.getJSONArray("choices");
         if (choices == null || choices.isEmpty()) {
             throw new LlmException("LLM 响应无 choices", LlmException.ErrorType.INVALID_RESPONSE);
         }
-        JsonObject choice = choices.getJSONObject(0);
-        JsonObject message = choice.getJSONObject("message");
+        YdszJsonObject choice = choices.getJSONObject(0);
+        YdszJsonObject message = choice.getJSONObject("message");
         String finishReason = choice.getString("finish_reason");
         String content = message != null ? message.getString("content") : null;
 
         List<ToolCall> toolCalls = new ArrayList<>();
         if (message != null && message.containsKey("tool_calls")) {
-            JsonArray calls = message.getJSONArray("tool_calls");
+            YdszJsonArray calls = message.getJSONArray("tool_calls");
             for (int i = 0; i < calls.size(); i++) {
-                JsonObject call = calls.getJSONObject(i);
+                YdszJsonObject call = calls.getJSONObject(i);
                 String callId = call.getString("id");
-                JsonObject function = call.getJSONObject("function");
+                YdszJsonObject function = call.getJSONObject("function");
                 String name = function.getString("name");
                 String argsStr = function.getString("arguments");
-                Map<String, Object> args = Json.toObject(argsStr, Map.class);
+                Map<String, Object> args = YdszJson.toObject(argsStr, Map.class);
                 toolCalls.add(new ToolCall(callId, name, args));
             }
         }
 
         TokenUsage usage = TokenUsage.zero();
         if (obj.containsKey("usage")) {
-            JsonObject usageObj = obj.getJSONObject("usage");
+            YdszJsonObject usageObj = obj.getJSONObject("usage");
             usage = new TokenUsage(
                     usageObj.getIntValue("prompt_tokens"),
                     usageObj.getIntValue("completion_tokens"));
@@ -278,21 +278,21 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     private ChatChunk parseChunk(String data) {
         try {
-            JsonObject obj = Json.parseObjectToJsonObject(data);
+            YdszJsonObject obj = YdszJson.parseObjectToJsonObject(data);
             String id = obj.getString("id");
             String model = obj.getString("model");
-            JsonArray choices = obj.getJSONArray("choices");
+            YdszJsonArray choices = obj.getJSONArray("choices");
             if (choices == null || choices.isEmpty()) {
                 return null;
             }
-            JsonObject choice = choices.getJSONObject(0);
-            JsonObject delta = choice.getJSONObject("delta");
+            YdszJsonObject choice = choices.getJSONObject(0);
+            YdszJsonObject delta = choice.getJSONObject("delta");
             String finishReason = choice.getString("finish_reason");
             String content = delta != null ? delta.getString("content") : null;
 
             TokenUsage usage = null;
             if (obj.containsKey("usage") && obj.get("usage") != null) {
-                JsonObject usageObj = obj.getJSONObject("usage");
+                YdszJsonObject usageObj = obj.getJSONObject("usage");
                 usage = new TokenUsage(
                         usageObj.getIntValue("prompt_tokens"),
                         usageObj.getIntValue("completion_tokens"));

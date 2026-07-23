@@ -24,7 +24,7 @@ public interface LeaderElector {
     /**
      * 尝试获取指定 role 的 Leader 身份。
      *
-     * @param role  角色（如 "pmis-job-scheduler"）
+     * @param role  角色（如 "ydsz-job-scheduler"）
      * @param lease 租约时长（到期后自动释放，需在到期前 {@link #renew(String)} 续期）
      * @return true 获取成功；false 已被其他节点持有
      */

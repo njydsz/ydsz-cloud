@@ -11,12 +11,12 @@ import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.DataScopeInfo;
 import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RbacUserInfoService;
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.core.enums.DataScopeType;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -57,7 +57,7 @@ import com.njydsz.common.util.string.StringUtils;
  * 
  * @see DataPermissionResolver
  * @see DataScopeInfo
- * @see LocalCache
+ * @see YdszCache
  */
 public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
 
@@ -78,9 +78,9 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
     private Cache<String, DataScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleDataCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return LocalCache.<String, DataScopeInfo>newBuilder().build();
+            return YdszCache.<String, DataScopeInfo>newBuilder().build();
         }
-        return LocalCache.<String, DataScopeInfo>newBuilder()
+        return YdszCache.<String, DataScopeInfo>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, DataScopeInfo value, RemovalCause cause) -> {
@@ -224,7 +224,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             return null;
         }
         try {
-            JsonNode node = Json.readTree(json);
+            JsonNode node = YdszJson.readTree(json);
             if (node == null || node.isNull()) {
                 return null;
             }

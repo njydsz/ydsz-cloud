@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * String otp = TotpUtil.currentOtp(secret);
  * boolean ok = TotpUtil.verify(secret, otp);
  * String[] backups = TotpUtil.generateBackupCodes(8);
- * String uri = TotpUtil.otpAuthUri("alice@ydsz.io", "PMIS", secret);
+ * String uri = TotpUtil.otpAuthUri("alice@ydsz.io", "YDSZ", secret);
  * }</pre>
  *
  * <p>依赖：{@code commons-codec}（用于 Base32 编码）。

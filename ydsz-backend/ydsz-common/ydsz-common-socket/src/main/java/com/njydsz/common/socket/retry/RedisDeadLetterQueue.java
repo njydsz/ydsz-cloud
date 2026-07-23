@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class RedisDeadLetterQueue implements DeadLetterQueue {
             return;
         }
         try {
-            String json = Json.toJson(message);
+            String json = YdszJson.toJson(message);
             redisTemplate.opsForList().leftPush(DEAD_LETTER_KEY, json);
             redisTemplate.opsForList().trim(DEAD_LETTER_KEY, 0, MAX_SIZE - 1);
             log.warn("[WS-DeadLetter] 消息移入死信队列: messageId={}, retryCount={}",
@@ -55,7 +55,7 @@ public class RedisDeadLetterQueue implements DeadLetterQueue {
             List<RetryableMessage> result = new ArrayList<>(raw.size());
             for (String json : raw) {
                 try {
-                    result.add(Json.toObject(json, RetryableMessage.class));
+                    result.add(YdszJson.toObject(json, RetryableMessage.class));
                 } catch (Exception e) {
                     log.warn("[WS-DeadLetter] 死信解析失败: err={}", e.getMessage());
                 }

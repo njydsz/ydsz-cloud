@@ -48,7 +48,7 @@ import com.njydsz.common.cache.support.Weigher;
  * <pre>{@code
  * // 按字符串长度作为权重
  * Weigher<String, String> weigher = (key, value) -> value.length();
- * Cache<String, String> cache = LocalCache.createWeightedCache(10000, weigher);
+ * Cache<String, String> cache = YdszCache.createWeightedCache(10000, weigher);
  * }</pre>
  *
  * @param <K> 键类型

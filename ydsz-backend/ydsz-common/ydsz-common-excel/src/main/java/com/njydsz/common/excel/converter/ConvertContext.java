@@ -7,7 +7,7 @@ package com.njydsz.common.excel.converter;
  * 日期格式、自动修剪、严格数字转换、1904日期窗口等配置。</p>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class ConvertContext {

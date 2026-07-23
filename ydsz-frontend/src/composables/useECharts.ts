@@ -62,7 +62,7 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
  * useECharts - 在指定容器上初始化 ECharts 实例
  *
  * @param elRef HTML 容器 ref
- * @param theme 主题（'pmis-light' | 'pmis-dark' | undefined，默认自动检测当前主题）
+ * @param theme 主题（'ydsz-light' | 'ydsz-dark' | undefined，默认自动检测当前主题）
  * @param initOption 初始化配置
  *
  * 主题切换处理：
@@ -72,7 +72,7 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
  */
 export function useECharts(
   elRef: Ref<HTMLDivElement | null>,
-  theme?: 'pmis-light' | 'pmis-dark' | string,
+  theme?: 'ydsz-light' | 'ydsz-dark' | string,
   initOption?: EChartsOption,
 ): UseEChartsReturn {
   // 确保主题已注册（幂等操作）
@@ -89,7 +89,7 @@ export function useECharts(
   function bindInstance() {
     if (!elRef.value) return
     // echarts.init 在 5.5.x 中返回带 setOption/resize/dispose/getOption 方法的实例
-    // 传入主题名以应用 pmis-light / pmis-dark 主题配置
+    // 传入主题名以应用 ydsz-light / ydsz-dark 主题配置
     const inst = echarts.init(
       elRef.value,
       resolvedTheme,

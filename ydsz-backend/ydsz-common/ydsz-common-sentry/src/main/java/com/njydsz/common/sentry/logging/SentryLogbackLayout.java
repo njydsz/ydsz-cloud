@@ -24,7 +24,7 @@ import ch.qos.logback.core.LayoutBase;
  * <pre>
  * &lt;appender name="SENTRY_JSON" class="ch.qos.logback.core.ConsoleAppender"&gt;
  *   &lt;layout class="com.njydsz.common.sentry.logging.SentryLogbackLayout"&gt;
- *     &lt;appName&gt;pmis-service&lt;/appName&gt;
+ *     &lt;appName&gt;ydsz-service&lt;/appName&gt;
  *     &lt;profile&gt;${spring.profiles.active:-dev}&lt;/profile&gt;
  *   &lt;/layout&gt;
  * &lt;/appender&gt;
@@ -35,7 +35,7 @@ import ch.qos.logback.core.LayoutBase;
  */
 public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
 
-    private String appName = "pmis";
+    private String appName = "ydsz";
     private String hostname;
     private String profile = "dev";
     private String mdcFields = "traceId,userId,username";
@@ -43,7 +43,7 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
     @Override
     public void start() {
         if (appName == null || appName.isBlank()) {
-            appName = "pmis";
+            appName = "ydsz";
         }
         if (hostname == null || hostname.isBlank()) {
             hostname = detectHostname();

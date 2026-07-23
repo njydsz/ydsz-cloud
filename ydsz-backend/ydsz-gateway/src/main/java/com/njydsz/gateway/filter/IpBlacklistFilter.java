@@ -15,12 +15,12 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 
@@ -72,7 +72,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
     private static final long LOCAL_CACHE_MAX_SIZE = 50_000;
 
     /** L1 本地缓存：IP → 是否在黑名单中 */
-    private final Cache<String, Boolean> localCache = LocalCache.<String, Boolean>newBuilder()
+    private final Cache<String, Boolean> localCache = YdszCache.<String, Boolean>newBuilder()
             .type(CacheType.TTL)
             .expireAfterWrite(LOCAL_CACHE_TTL_SECONDS, TimeUnit.SECONDS)
             .maximumSize(LOCAL_CACHE_MAX_SIZE)
@@ -137,7 +137,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_BLACKLISTED");
         body.setTraceId(traceId);
-        byte[] bytes = Json.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }

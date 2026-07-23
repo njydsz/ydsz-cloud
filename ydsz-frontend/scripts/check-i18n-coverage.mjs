@@ -12,7 +12,7 @@
  *   0 — 硬编码中文占比低于阈值（通过）
  *   1 — 硬编码中文占比超过阈值（失败）
  *
- * @author ydsz-pmis-team
+ * @author ydsz-team
  * @since 1.3.1 (P3-11)
  */
 import { readFileSync, readdirSync, statSync } from 'fs'

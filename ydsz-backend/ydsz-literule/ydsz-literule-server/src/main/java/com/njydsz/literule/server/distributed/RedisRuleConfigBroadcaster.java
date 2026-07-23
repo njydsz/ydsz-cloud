@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
@@ -64,7 +64,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
         if (event == null) return;
         try {
             BroadcastMessage message = new BroadcastMessage(sourceId, event);
-            String json = Json.toJson(message);
+            String json = YdszJson.toJson(message);
             RTopic topic = redissonClient.getTopic(TOPIC_NAME);
             topic.publish(json);
             log.info("[Distributed-Redis] 规则变更事件已广播: ruleCode={}, changeType={}, source={}",
@@ -120,7 +120,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
     private void handleReceivedMessage(String msg) {
         if (msg == null || msg.isEmpty()) return;
         try {
-            BroadcastMessage message = Json.toObject(msg, BroadcastMessage.class);
+            BroadcastMessage message = YdszJson.toObject(msg, BroadcastMessage.class);
             if (message == null || message.getEvent() == null) {
                 return;
             }

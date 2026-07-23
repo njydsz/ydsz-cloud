@@ -11,7 +11,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -168,7 +168,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public void initScheduler() {
         ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
         s.setPoolSize(cronjobProperties.getSchedulerPoolSize());
-        s.setThreadNamePrefix("pmis-job-");
+        s.setThreadNamePrefix("ydsz-job-");
         s.setWaitForTasksToCompleteOnShutdown(true);
         s.setAwaitTerminationSeconds(cronjobProperties.getSchedulerAwaitTerminationSeconds());
         s.initialize();
@@ -880,7 +880,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             JobHandler handler = applicationContext.getBean(job.getHandler(), JobHandler.class);
             result = handler.execute(job.getParamsJson());
             success = true;
-            log0.setResultJson(result == null ? null : Json.toJson(result));
+            log0.setResultJson(result == null ? null : YdszJson.toJson(result));
         } catch (Exception e) {
             log.error("[Cronjob] 任务执行失败: key={} handler={} reason={}",
                     job.getJobKey(), job.getHandler(), e.getMessage(), e);

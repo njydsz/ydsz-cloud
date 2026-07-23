@@ -107,6 +107,6 @@ public class ChangelogController {
 
         // v1.0.0
         new ChangelogEntry("1.0.0", LocalDate.of(2026, 3, 1), "FEATURE",
-                "PMIS 系统初始版本", "项目管理信息系统 v1.0 上线，涵盖立项、商机、合同、执行、财务、报表核心模块。", "backend")
+                "YDSZ 系统初始版本", "项目管理信息系统 v1.0 上线，涵盖立项、商机、合同、执行、财务、报表核心模块。", "backend")
     );
 }

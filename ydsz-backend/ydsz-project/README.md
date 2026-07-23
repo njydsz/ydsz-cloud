@@ -14,9 +14,9 @@
 
 ## 核心职责
 
-PMIS 项目管理服务，覆盖**立项 → 执行 → 交付 → 收尾 → 售后**全链路，同时承载**商务销售**（商机/合同/变更/模板）与**财务会计**（发票/回款/费用/收入/利润/对账/信用）能力。
+YDSZ 项目管理服务，覆盖**立项 → 执行 → 交付 → 收尾 → 售后**全链路，同时承载**商务销售**（商机/合同/变更/模板）与**财务会计**（发票/回款/费用/收入/利润/对账/信用）能力。
 
-> **2026-07-16 合并**：原 `ydsz-sales`（端口 9010）和 `ydsz-finance`（端口 9011）已合并到本服务，跨域 Feign 契约全部下线，财务/销售数据通过同进程 Mapper 直接查询。API 路径统一为 `/api/project/**`，数据库表前缀统一为 `pmis_project_*`。
+> **2026-07-16 合并**：原 `ydsz-sales`（端口 9010）和 `ydsz-finance`（端口 9011）已合并到本服务，跨域 Feign 契约全部下线，财务/销售数据通过同进程 Mapper 直接查询。API 路径统一为 `/api/project/**`，数据库表前缀统一为 `ydsz_project_*`。
 
 ### 1. 业务链路
 
@@ -94,33 +94,33 @@ PMIS 项目管理服务，覆盖**立项 → 执行 → 交付 → 收尾 → �
 
 | 表名 | 说明 | Mapper |
 |---|---|---|
-| `pmis_project_initiation` | 立项主表（含 WBS 预算快照） | InitiationMapper |
-| `pmis_project_budget_item` | 立项预算项 | BudgetItemMapper |
-| `pmis_project_gate_review` | 门径评审（CD1-CD5） | GateReviewMapper |
-| `pmis_execution_wbs_task` | WBS 任务（树形） | WbsTaskMapper |
-| `pmis_execution_time_entry` | 工时归集 | TimeEntryMapper |
-| `pmis_cost_allocation` | 成本归集 | CostAllocationMapper |
-| `pmis_cost_purchase` | 采购成本 | PurchaseMapper |
-| `pmis_execution_risk` | 项目风险登记 | RiskMapper |
-| `pmis_project_change` | 项目变更（5 类） | ProjectChangeMapper |
-| `pmis_execution_delivery_standard` | 交付物标准 | DeliveryStandardMapper |
-| `pmis_execution_delivery_item` | 交付物实例 | DeliveryItemMapper |
-| `pmis_execution_closure` | 项目结项 | ProjectClosureMapper |
-| `pmis_evm_measure` | EVM 挣值测量（PV/EV/AC） | EvmMeasureMapper |
-| `pmis_rate_card` | 对外报价费率 | RateCardMapper |
-| `pmis_rate_internal` | 对内成本费率 | RateInternalMapper |
-| `pmis_warranty` | 质保期 | WarrantyMapper |
-| `pmis_ops_ticket` | 运维工单（P1-P4） | OpsTicketMapper |
-| `pmis_satisfaction` | 客户满意度 | SatisfactionMapper |
-| `pmis_billable_utilization_snapshot` | 可计费利用率快照 | BillableUtilizationSnapshotMapper |
-| `pmis_alert_dispatch` | 预警派发记录 | AlertDispatchMapper |
+| `ydsz_project_initiation` | 立项主表（含 WBS 预算快照） | InitiationMapper |
+| `ydsz_project_budget_item` | 立项预算项 | BudgetItemMapper |
+| `ydsz_project_gate_review` | 门径评审（CD1-CD5） | GateReviewMapper |
+| `ydsz_execution_wbs_task` | WBS 任务（树形） | WbsTaskMapper |
+| `ydsz_execution_time_entry` | 工时归集 | TimeEntryMapper |
+| `ydsz_cost_allocation` | 成本归集 | CostAllocationMapper |
+| `ydsz_cost_purchase` | 采购成本 | PurchaseMapper |
+| `ydsz_execution_risk` | 项目风险登记 | RiskMapper |
+| `ydsz_project_change` | 项目变更（5 类） | ProjectChangeMapper |
+| `ydsz_execution_delivery_standard` | 交付物标准 | DeliveryStandardMapper |
+| `ydsz_execution_delivery_item` | 交付物实例 | DeliveryItemMapper |
+| `ydsz_execution_closure` | 项目结项 | ProjectClosureMapper |
+| `ydsz_evm_measure` | EVM 挣值测量（PV/EV/AC） | EvmMeasureMapper |
+| `ydsz_rate_card` | 对外报价费率 | RateCardMapper |
+| `ydsz_rate_internal` | 对内成本费率 | RateInternalMapper |
+| `ydsz_warranty` | 质保期 | WarrantyMapper |
+| `ydsz_ops_ticket` | 运维工单（P1-P4） | OpsTicketMapper |
+| `ydsz_satisfaction` | 客户满意度 | SatisfactionMapper |
+| `ydsz_billable_utilization_snapshot` | 可计费利用率快照 | BillableUtilizationSnapshotMapper |
+| `ydsz_alert_dispatch` | 预警派发记录 | AlertDispatchMapper |
 
 > **索引关键点**：
-> - `pmis_execution_wbs_task(project_id, parent_id)` 树形查询
-> - `pmis_execution_time_entry(project_id, task_id, work_date)` 工时查询
-> - `pmis_project_gate_review(initiation_id, gate_number)` 门径评审
-> - `pmis_evm_measure(project_id, measure_date)` EVM 快照
-> - `pmis_billable_utilization_snapshot(employee_id, snapshot_date)` 利用率快照
+> - `ydsz_execution_wbs_task(project_id, parent_id)` 树形查询
+> - `ydsz_execution_time_entry(project_id, task_id, work_date)` 工时查询
+> - `ydsz_project_gate_review(initiation_id, gate_number)` 门径评审
+> - `ydsz_evm_measure(project_id, measure_date)` EVM 快照
+> - `ydsz_billable_utilization_snapshot(employee_id, snapshot_date)` 利用率快照
 
 ## DDD 架构
 
@@ -183,7 +183,7 @@ ProfitSnapshotDTO profit = financeDataClient.getProfitSnapshot(projectId, date);
 | `MINIO_*` | MinIO 配置 |
 | `DB_*` / `REDIS_*` | 数据库与缓存 |
 
-`seata.tx-service-group = pmis-tx-group`（与 deploy/seata 部署的分组对应）。
+`seata.tx-service-group = ydsz-tx-group`（与 deploy/seata 部署的分组对应）。
 
 ## 启动
 
@@ -219,7 +219,7 @@ mvn -pl ydsz-project -am test
 
 A：检查：
 1. Seata Server 是否启动（`http://127.0.0.1:7091`）
-2. Nacos 中 `seata-client.properties` 配置的 `vgroup-mapping.pmis-tx-group` 是否映射到 `default`
+2. Nacos 中 `seata-client.properties` 配置的 `vgroup-mapping.ydsz-tx-group` 是否映射到 `default`
 3. 数据源是否被 Seata 代理（`enable-auto-data-source-proxy: true`）
 
 ### Q2：EVM 看板数据延迟

@@ -1,2 +1,2 @@
-com.njydsz.pmis.common.socket.config.WebSocketAutoConfiguration
-com.njydsz.pmis.common.socket.config.WebSocketClusterAutoConfiguration
+com.njydsz.common.socket.config.WebSocketAutoConfiguration
+com.njydsz.common.socket.config.WebSocketClusterAutoConfiguration

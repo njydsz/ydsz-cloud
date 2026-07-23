@@ -1,10 +1,10 @@
 # =============================================================================
-#  YDSZ PMIS · 前端 Dockerfile（多阶段构建：Node 构建 + Nginx 运行）
+#  YDSZ · 前端 Dockerfile（多阶段构建：Node 构建 + Nginx 运行）
 # -----------------------------------------------------------------------------
 #  构建示例:
-#    docker build -t ydsz-pmis/frontend:v1.0.0 \
+#    docker build -t ydsz/frontend:v1.0.0 \
 #      --build-arg API_BASE=/api \
-#      -f ydsz-pmis-frontend/Dockerfile ydsz-pmis-frontend/
+#      -f ydsz-frontend/Dockerfile ydsz-frontend/
 #
 #  设计要点（对齐阿里/字节前端容器化规范）:
 #    1. 多阶段构建，构建期 Node + 源码，运行期仅 Nginx + 静态资源
@@ -23,7 +23,7 @@
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS builder
 
-ARG API_BASE=http://ydsz-pmis-gateway:9000
+ARG API_BASE=http://ydsz-gateway:9000
 ARG NODE_ENV=production
 
 ENV NODE_ENV=${NODE_ENV} \
@@ -56,10 +56,10 @@ RUN pnpm run build:prod
 # -----------------------------------------------------------------------------
 FROM nginx:1.27-alpine AS runtime
 
-LABEL org.opencontainers.image.title="ydsz-pmis-frontend" \
+LABEL org.opencontainers.image.title="ydsz-frontend" \
       org.opencontainers.image.source="https://github.com/njydsz/ydsz-pmis" \
       org.opencontainers.image.licenses="UNLICENSED" \
-      org.opencontainers.image.description="南京云顶 PMIS · 前端 Nginx 静态服务"
+      org.opencontainers.image.description="南京云顶 YDSZ · 前端 Nginx 静态服务"
 
 # 安装 curl（健康检查）+ tzdata
 RUN apk add --no-cache curl tzdata && \
@@ -110,7 +110,7 @@ server {
 
     # 反向代理 API → 网关（K8s Service DNS）
     location /api/ {
-        proxy_pass http://ydsz-pmis-gateway:9000/;
+        proxy_pass http://ydsz-gateway:9000/;
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;

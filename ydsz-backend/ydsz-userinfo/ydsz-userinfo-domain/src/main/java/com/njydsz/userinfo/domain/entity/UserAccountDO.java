@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.domain.entity.BaseDO;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
@@ -36,11 +36,11 @@ public class UserAccountDO extends BaseDO {
     private String username;
 
     /** 密码密文（加盐哈希） */
-    @JsonField(ignore = true)
+    @YdszJsonField(ignore = true)
     private String password;
 
     /** 密码盐值 */
-    @JsonField(ignore = true)
+    @YdszJsonField(ignore = true)
     private String salt;
 
     /** 关联员工 ID */

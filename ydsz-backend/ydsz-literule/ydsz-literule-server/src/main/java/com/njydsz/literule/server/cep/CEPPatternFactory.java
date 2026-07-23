@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,7 +19,7 @@ public class CEPPatternFactory implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    // Json as JSON engine
+    // YdszJson as JSON engine
 
     /**
      * 时间窗口计数模式（如"3 分钟内 5 次登录失败"）
@@ -99,7 +99,7 @@ public class CEPPatternFactory implements Serializable {
      */
     public static CEPPattern fromJson(String json) {
         try {
-            return Json.toObject(json, CEPPattern.class);
+            return YdszJson.toObject(json, CEPPattern.class);
         } catch (Exception e) {
             log.warn("[CEP] JSON 反序列化失败: {}", e.getMessage());
             return null;
@@ -111,7 +111,7 @@ public class CEPPatternFactory implements Serializable {
      */
     public static String toJson(CEPPattern pattern) {
         try {
-            return Json.toJson(pattern);
+            return YdszJson.toJson(pattern);
         } catch (Exception e) {
             log.warn("[CEP] JSON 序列化失败: {}", e.getMessage());
             return "{}";

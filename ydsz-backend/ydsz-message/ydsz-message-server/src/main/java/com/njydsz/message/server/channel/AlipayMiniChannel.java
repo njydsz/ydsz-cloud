@@ -18,9 +18,9 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.type.YdszJsonType;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -86,7 +86,7 @@ public class AlipayMiniChannel implements MessageChannel {
                     data.put(entry.getKey(),
                             entry.getValue() == null ? "" : String.valueOf(entry.getValue()));
                 }
-                bizContent.put("data", Json.toJson(data));
+                bizContent.put("data", YdszJson.toJson(data));
             }
 
             Map<String, Object> params = new HashMap<>();
@@ -97,7 +97,7 @@ public class AlipayMiniChannel implements MessageChannel {
             params.put("timestamp", LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             params.put("version", "1.0");
-            params.put("biz_content", Json.toJson(bizContent));
+            params.put("biz_content", YdszJson.toJson(bizContent));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -119,7 +119,7 @@ public class AlipayMiniChannel implements MessageChannel {
             String respBody = resp.getBody();
 
             // 解析响应（支付宝返回 JSON）
-            Map<String, Object> result = Json.toObject(respBody, new JsonType<Map<String, Object>>() {});
+            Map<String, Object> result = YdszJson.toObject(respBody, new YdszJsonType<Map<String, Object>>() {});
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {

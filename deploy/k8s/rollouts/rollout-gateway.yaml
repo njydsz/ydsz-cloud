@@ -1,5 +1,5 @@
 # ============================================================
-# PMIS Argo Rollouts — 金丝雀发布策略
+# YDSZ Argo Rollouts — 金丝雀发布策略
 #
 # 本文件将标准 Deployment 替换为 Argo Rollouts，支持：
 #   1. 金丝雀渐进式发布（5% → 25% → 50% → 100%）
@@ -8,9 +8,9 @@
 #
 # 使用方式：
 #   kubectl apply -f deploy/k8s/rollouts/rollout-gateway.yaml
-#   kubectl argo rollouts get rollout ydsz-gateway -n pmis --watch
-#   kubectl argo rollouts promote ydsz-gateway -n pmis
-#   kubectl argo rollouts abort ydsz-gateway -n pmis
+#   kubectl argo rollouts get rollout ydsz-gateway -n ydsz --watch
+#   kubectl argo rollouts promote ydsz-gateway -n ydsz
+#   kubectl argo rollouts abort ydsz-gateway -n ydsz
 #
 # 前提条件：
 #   - 集群已安装 Argo Rollouts controller
@@ -21,7 +21,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: ydsz-gateway
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-gateway
     tier: gateway
@@ -34,7 +34,7 @@ spec:
       stableService: ydsz-gateway-stable
       trafficRouting:
         nginx:
-          stableIngress: pmis-gateway-ingress
+          stableIngress: ydsz-gateway-ingress
       steps:
         # 第 1 步：5% 流量到新版本，观察 2 分钟
         - setWeight: 5
@@ -80,7 +80,7 @@ spec:
               containerPort: 9000
           envFrom:
             - configMapRef:
-                name: pmis-common-config
+                name: ydsz-common-config
           env:
             - name: JAVA_TOOL_OPTIONS
               value: >-
@@ -121,7 +121,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-gateway-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-gateway
 spec:
@@ -141,7 +141,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-gateway-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-gateway
 spec:

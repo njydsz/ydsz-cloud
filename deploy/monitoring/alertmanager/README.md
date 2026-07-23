@@ -1,6 +1,6 @@
-# PMIS Alertmanager 告警通知中枢
+# YDSZ Alertmanager 告警通知中枢
 
-PMIS 监控告警的通知路由中枢,接收 Prometheus 触发的告警,按严重级别路由到不同通知渠道(电话语音 / 钉钉 / 邮件),并通过抑制规则避免告警风暴。
+YDSZ 监控告警的通知路由中枢,接收 Prometheus 触发的告警,按严重级别路由到不同通知渠道(电话语音 / 钉钉 / 邮件),并通过抑制规则避免告警风暴。
 
 ## 文件说明
 
@@ -8,11 +8,11 @@ PMIS 监控告警的通知路由中枢,接收 Prometheus 触发的告警,按严�
 |------|------|
 | `alertmanager.yml` | 主配置:路由树、抑制规则、接收器定义 |
 | `dingtalk-template.tmpl` | 钉钉通知消息模板(markdown 格式) |
-| `../prometheus/rules/pmis-alerts.yml` | 告警规则(PrometheusRule CRD,12 条规则) |
+| `../prometheus/rules/ydsz-alerts.yml` | 告警规则(PrometheusRule CRD,12 条规则) |
 
 ## 告警分级路由
 
-对应 `pmis-alerts.yml` 中 `labels.severity`(值为大写 `P0`/`P1`/`P2`):
+对应 `ydsz-alerts.yml` 中 `labels.severity`(值为大写 `P0`/`P1`/`P2`):
 
 | 级别 | 通知渠道 | 聚合窗口 | 重复间隔 | 典型告警 |
 |------|----------|----------|----------|----------|
@@ -24,8 +24,8 @@ PMIS 监控告警的通知路由中枢,接收 Prometheus 触发的告警,按严�
 
 避免连锁告警刷屏:
 
-1. **服务下线抑制 5xx 告警**:`PmisServiceDown` 触发时,抑制同一 `job` 的 `PmisHighErrorRate`(实例不可达必然导致请求失败)
-2. **DB 连接失败抑制依赖告警**:`PmisDbConnectionFailed` 触发时,抑制同一 `job` 的 `PmisDbPoolExhausted`/`PmisBusinessMetricsStale`/`PmisHighErrorRate`
+1. **服务下线抑制 5xx 告警**:`YdszServiceDown` 触发时,抑制同一 `job` 的 `YdszHighErrorRate`(实例不可达必然导致请求失败)
+2. **DB 连接失败抑制依赖告警**:`YdszDbConnectionFailed` 触发时,抑制同一 `job` 的 `YdszDbPoolExhausted`/`YdszBusinessMetricsStale`/`YdszHighErrorRate`
 3. **高级别抑制低级别**:P0/P1 触发时抑制同一 `alertname`+`job` 的 P2 告警
 
 ## 分组策略
@@ -42,10 +42,10 @@ PMIS 监控告警的通知路由中枢,接收 Prometheus 触发的告警,按严�
 | `DINGTALK_WEBHOOK_URL` | 钉钉自定义机器人 webhook | `http://dingtalk-webhook:8060/dingtalk/webhook1/send` |
 | `VOICE_WEBHOOK_URL` | 电话语音通知服务 webhook(阿里云语音/容联云) | `http://voice-alert:8060/api/call` |
 | `SMTP_SMARTHOST` | SMTP 服务器地址 | `smtp.qiye.aliyun.com:465` |
-| `SMTP_FROM` | 发件人邮箱 | `pmis-alert@ydsz.cn` |
-| `SMTP_USER` | SMTP 账号 | `pmis-alert@ydsz.cn` |
+| `SMTP_FROM` | 发件人邮箱 | `ydsz-alert@ydsz.cn` |
+| `SMTP_USER` | SMTP 账号 | `ydsz-alert@ydsz.cn` |
 | `SMTP_PASSWORD` | SMTP 密码 | `CHANGE_ME` |
-| `ALERT_EMAIL_TO` | 告警收件人邮箱 | `pmis-sre@ydsz.cn` |
+| `ALERT_EMAIL_TO` | 告警收件人邮箱 | `ydsz-sre@ydsz.cn` |
 
 ## 部署方式
 
@@ -113,6 +113,6 @@ P0 告警通过 webhook 调用电话语音通知服务,推荐方案:
 
 ## 相关文件
 
-- 告警规则: [`../prometheus/rules/pmis-alerts.yml`](../prometheus/rules/pmis-alerts.yml)
+- 告警规则: [`../prometheus/rules/ydsz-alerts.yml`](../prometheus/rules/ydsz-alerts.yml)
 - Prometheus 配置: [`../prometheus/prometheus.yml`](../prometheus/prometheus.yml)
 - ServiceMonitor(抓取配置): [`../../k8s/base/servicemonitor.yaml`](../../k8s/base/servicemonitor.yaml)

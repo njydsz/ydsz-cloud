@@ -12,7 +12,7 @@ import com.njydsz.common.excel.converter.ConvertContext;
  * 当automaticTrim为true时，自动去除字符串首尾空格。</p>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class StringConverter implements CellValueConverter {

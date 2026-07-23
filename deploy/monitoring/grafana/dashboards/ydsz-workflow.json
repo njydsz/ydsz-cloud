@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "PMIS 工作流引擎仪表盘 - 流程实例 / 任务待办 / 审批耗时 / 异常 / DMN",
+  "description": "YDSZ 工作流引擎仪表盘 - 流程实例 / 任务待办 / 审批耗时 / 异常 / DMN",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -22,7 +22,7 @@
   "panels": [
     {
       "title": "流程实例趋势(创建 / 完成 / 终止)",
-      "description": "rate(pmis_workflow_instance_total) by operation 每分钟速率",
+      "description": "rate(ydsz_workflow_instance_total) by operation 每分钟速率",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -37,19 +37,19 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(rate(pmis_workflow_instance_total{operation=\"created\"}[5m])) by (process_key)",
+          "expr": "sum(rate(ydsz_workflow_instance_total{operation=\"created\"}[5m])) by (process_key)",
           "legendFormat": "创建 {{process_key}}",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(rate(pmis_workflow_instance_total{operation=\"completed\"}[5m])) by (process_key)",
+          "expr": "sum(rate(ydsz_workflow_instance_total{operation=\"completed\"}[5m])) by (process_key)",
           "legendFormat": "完成 {{process_key}}",
           "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(rate(pmis_workflow_instance_total{operation=\"terminated\"}[5m])) by (process_key)",
+          "expr": "sum(rate(ydsz_workflow_instance_total{operation=\"terminated\"}[5m])) by (process_key)",
           "legendFormat": "终止 {{process_key}}",
           "refId": "C"
         }
@@ -57,7 +57,7 @@
     },
     {
       "title": "任务待办数(按节点)",
-      "description": "pmis_workflow_task_pending_count by node_key 当前各节点积压待办数",
+      "description": "ydsz_workflow_task_pending_count by node_key 当前各节点积压待办数",
       "type": "bargauge",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -82,7 +82,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(pmis_workflow_task_pending_count) by (node_key)",
+          "expr": "sum(ydsz_workflow_task_pending_count) by (node_key)",
           "legendFormat": "{{node_key}}",
           "refId": "A",
           "instant": true
@@ -91,7 +91,7 @@
     },
     {
       "title": "审批耗时分布",
-      "description": "histogram_quantile P50/P95/P99 of pmis_workflow_approval_duration_seconds_bucket",
+      "description": "histogram_quantile P50/P95/P99 of ydsz_workflow_approval_duration_seconds_bucket",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -106,19 +106,19 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "histogram_quantile(0.50, sum(rate(pmis_workflow_approval_duration_seconds_bucket[5m])) by (le, process_key))",
+          "expr": "histogram_quantile(0.50, sum(rate(ydsz_workflow_approval_duration_seconds_bucket[5m])) by (le, process_key))",
           "legendFormat": "P50 {{process_key}}",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "histogram_quantile(0.95, sum(rate(pmis_workflow_approval_duration_seconds_bucket[5m])) by (le, process_key))",
+          "expr": "histogram_quantile(0.95, sum(rate(ydsz_workflow_approval_duration_seconds_bucket[5m])) by (le, process_key))",
           "legendFormat": "P95 {{process_key}}",
           "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "histogram_quantile(0.99, sum(rate(pmis_workflow_approval_duration_seconds_bucket[5m])) by (le, process_key))",
+          "expr": "histogram_quantile(0.99, sum(rate(ydsz_workflow_approval_duration_seconds_bucket[5m])) by (le, process_key))",
           "legendFormat": "P99 {{process_key}}",
           "refId": "C"
         }
@@ -126,7 +126,7 @@
     },
     {
       "title": "流程异常数",
-      "description": "increase(pmis_workflow_error_total[1h]) 近 1 小时流程异常(执行异常 / 超时 / 死信)累计",
+      "description": "increase(ydsz_workflow_error_total[1h]) 近 1 小时流程异常(执行异常 / 超时 / 死信)累计",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -141,7 +141,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(increase(pmis_workflow_error_total[1h])) by (error_type)",
+          "expr": "sum(increase(ydsz_workflow_error_total[1h])) by (error_type)",
           "legendFormat": "{{error_type}}",
           "refId": "A"
         }
@@ -149,7 +149,7 @@
     },
     {
       "title": "DMN 决策表执行次数",
-      "description": "increase(pmis_workflow_dmn_execution_total[1h]) 各决策表近 1 小时执行次数",
+      "description": "increase(ydsz_workflow_dmn_execution_total[1h]) 各决策表近 1 小时执行次数",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -164,7 +164,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(increase(pmis_workflow_dmn_execution_total[1h])) by (decision_key)",
+          "expr": "sum(increase(ydsz_workflow_dmn_execution_total[1h])) by (decision_key)",
           "legendFormat": "{{decision_key}}",
           "refId": "A"
         }
@@ -174,14 +174,14 @@
   "refresh": "1m",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pmis", "workflow"],
+  "tags": ["ydsz", "workflow"],
   "templating": {
     "list": [
       {
         "name": "process_key",
         "type": "query",
         "datasource": {"type": "prometheus", "uid": "prometheus"},
-        "query": "label_values(pmis_workflow_instance_total, process_key)",
+        "query": "label_values(ydsz_workflow_instance_total, process_key)",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -192,8 +192,8 @@
   "time": {"from": "now-24h", "to": "now"},
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS 工作流引擎",
-  "uid": "pmis-workflow",
+  "title": "YDSZ 工作流引擎",
+  "uid": "ydsz-workflow",
   "version": 1,
   "weekStart": ""
 }

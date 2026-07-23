@@ -26,7 +26,7 @@ import org.springframework.util.StringUtils;
  *     "<h2>#{projectName} 立项审批</h2><p>申请人：#{applicant}</p>"
  * );
  * registry.register(template);
- * String html = registry.renderHtml("project-approval", Map.of("projectName", "PMIS", "applicant", "张三"));
+ * String html = registry.renderHtml("project-approval", Map.of("projectName", "YDSZ", "applicant", "张三"));
  * }</pre>
  *
  * @author ydsz-team

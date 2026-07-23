@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  YDSZ PMIS · Ubuntu 一键安装脚本（8 个中间件）
+#  YDSZ · Ubuntu 一键安装脚本（8 个中间件）
 # -----------------------------------------------------------------------------
 #  适用:    Ubuntu 20.04 / 22.04 / 24.04 (x86_64 / arm64)
 #  权限:    需要 root 权限（脚本内自动 sudo）
-#  用法:    sudo ./install-pmis-infra.sh [--no-start] [--skip postgres,redis,...]
+#  用法:    sudo ./install-ydsz-infra.sh [--no-start] [--skip postgres,redis,...]
 #           --no-start  : 只安装不启动
 #           --skip      : 跳过指定中间件（逗号分隔）
 #           --uninstall : 卸载全部（保留数据卷）
-#  说明:    默认安装到 /opt，安装包下载到 /tmp/pmis-install
+#  说明:    默认安装到 /opt，安装包下载到 /tmp/ydsz-install
 # =============================================================================
 set -e
 
 # ---------- 默认配置 ----------
-INSTALL_HOME=${PMIS_INFRA_HOME:-/opt}
-DOWNLOAD_DIR=/tmp/pmis-install
-DATA_DIR=/var/lib/pmis
-LOG_DIR=/var/log/pmis
-SERVICE_USER=${SERVICE_USER:-pmis}
+INSTALL_HOME=${YDSZ_INFRA_HOME:-/opt}
+DOWNLOAD_DIR=/tmp/ydsz-install
+DATA_DIR=/var/lib/ydsz
+LOG_DIR=/var/log/ydsz
+SERVICE_USER=${SERVICE_USER:-ydsz}
 JAVA_HOME=${JAVA_HOME:-/opt/jdk-21}
 
 # ---------- 版本 ----------
@@ -118,18 +118,18 @@ install_postgres() {
   systemctl start postgresql
   sleep 2
 
-  # 创建数据库与用户（密码可通过 PG_PASSWORD 环境变量覆盖，默认 pmis123 仅供开发）
+  # 创建数据库与用户（密码可通过 PG_PASSWORD 环境变量覆盖，默认 ydsz123 仅供开发）
   sudo -u postgres psql <<EOF
-CREATE USER pmis WITH PASSWORD '${PG_PASSWORD:-pmis123}';
-CREATE DATABASE ydsz_pmis OWNER pmis ENCODING 'UTF8';
-GRANT ALL PRIVILEGES ON DATABASE ydsz_pmis TO pmis;
+CREATE USER ydsz WITH PASSWORD '${PG_PASSWORD:-ydsz123}';
+CREATE DATABASE ydsz OWNER ydsz ENCODING 'UTF8';
+GRANT ALL PRIVILEGES ON DATABASE ydsz TO ydsz;
 EOF
 
   # 导入初始化数据
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -f "$SCRIPT_DIR/../../../docs/V1.0.0.sql" ]]; then
     log "导入初始化 SQL（约 1-2 分钟）..."
-    PGPASSWORD=${PG_PASSWORD:-pmis123} psql -h 127.0.0.1 -U pmis -d ydsz_pmis -f "$SCRIPT_DIR/../../../docs/V1.0.0.sql" 2>&1 | tail -3
+    PGPASSWORD=${PG_PASSWORD:-ydsz123} psql -h 127.0.0.1 -U ydsz -d ydsz -f "$SCRIPT_DIR/../../../docs/V1.0.0.sql" 2>&1 | tail -3
   fi
 
   ok "PostgreSQL 18 安装完成"
@@ -394,7 +394,7 @@ install_xxl_job() {
   cp "$(dirname "$0")/../infra/xxl-job/application.properties" $INSTALL_HOME/xxl-job/
 
   # 初始化数据库
-  PGPASSWORD=${PG_PASSWORD:-pmis123} psql -h 127.0.0.1 -U pmis -d ydsz_pmis -f "$(dirname "$0")/../infra/xxl-job/tables_xxl_job_pg.sql" 2>&1 | tail -5
+  PGPASSWORD=${PG_PASSWORD:-ydsz123} psql -h 127.0.0.1 -U ydsz -d ydsz -f "$(dirname "$0")/../infra/xxl-job/tables_xxl_job_pg.sql" 2>&1 | tail -5
 
   cat > /etc/systemd/system/xxl-job.service <<EOF
 [Unit]
@@ -453,7 +453,7 @@ uninstall_all() {
 #  主流程
 # =============================================================================
 echo "============================================================"
-echo "  YDSZ PMIS · Ubuntu 中间件一键安装"
+echo "  YDSZ · Ubuntu 中间件一键安装"
 echo "  安装位置: $INSTALL_HOME"
 echo "  数据目录: $DATA_DIR"
 echo "  日志目录: $LOG_DIR"

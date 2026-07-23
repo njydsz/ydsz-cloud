@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pmis-common-config
-  namespace: pmis
+  name: ydsz-common-config
+  namespace: ydsz
   labels:
     app.kubernetes.io/part-of: ydsz
 data:
@@ -10,12 +10,12 @@ data:
   # 集群内部访问请把 host 替换为 Service DNS: nacos-server.ydsz.svc.cluster.local
   SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: "nacos-server.ydsz.svc.cluster.local:8848"
   SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR: "nacos-server.ydsz.svc.cluster.local:8848"
-  SPRING_CLOUD_NACOS_NAMESPACE: "pmis"
+  SPRING_CLOUD_NACOS_NAMESPACE: "ydsz"
 
   # 公共日志/编码
   SERVER_TOMCAT_URI_ENCODING: "UTF-8"
   LOGGING_LEVEL_ROOT: "INFO"
-  LOGGING_LEVEL_COM_NJYDSZ_PMIS: "INFO"
+  LOGGING_LEVEL_COM_NJYDSZ_YDSZ: "INFO"
 
   # P1-4: 全链路追踪上报配置（K8s 环境默认开启，对接 SkyWalking OAP）
   # TRACING_ENDPOINT 必须与 skywalking-oap.yaml Service 暴露的 zipkin 端口(9412)一致

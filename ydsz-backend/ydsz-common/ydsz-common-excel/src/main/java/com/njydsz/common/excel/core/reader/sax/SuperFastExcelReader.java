@@ -74,6 +74,9 @@ public class SuperFastExcelReader {
     /** 最大读取行数限制，0 表示不限。*/
     int maxRows = 0;
 
+    /** 是否跳过空行，默认true */
+    boolean skipEmptyRows = true;
+
     /**
      * 读取 XLSX 文件
      *
@@ -217,5 +220,12 @@ public class SuperFastExcelReader {
      */
     public void setMaxRows(int maxRows) {
         this.maxRows = maxRows;
+    }
+
+    /**
+     * 设置是否跳过空行
+     */
+    public void setSkipEmptyRows(boolean skipEmptyRows) {
+        this.skipEmptyRows = skipEmptyRows;
     }
 }

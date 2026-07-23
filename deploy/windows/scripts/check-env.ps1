@@ -1,5 +1,5 @@
 ﻿# =============================================================================
-#  YDSZ PMIS - 环境检查脚本 (Windows PowerShell)
+#  YDSZ - 环境检查脚本 (Windows PowerShell)
 # =============================================================================
 $ErrorActionPreference = 'Continue'
 
@@ -10,7 +10,7 @@ function Check-Warn { param($m) Write-Host "  [WARN] $m" -ForegroundColor Yellow
 $Pass = 0; $Fail = 0
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  YDSZ PMIS · 环境检查 (Windows)" -ForegroundColor Cyan
+Write-Host "  YDSZ · 环境检查 (Windows)" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
 # 1. OS

@@ -101,13 +101,13 @@ class ChatServiceTest {
         @DisplayName("正常流程：用户消息先持久化 → LLM 调用 → 助手消息持久化 → 指标记录")
         void shouldPersistUserBeforeLlmAndAssistantAfter() {
             ChatService service = buildService(null, null);
-            ChatResponse resp = mockResponse("你好，我是PMIS助手", 10, 20);
+            ChatResponse resp = mockResponse("你好，我是YDSZ助手", 10, 20);
             when(llmClient.chat(any(ChatRequest.class))).thenReturn(resp);
             when(memory.load(anyString(), anyInt())).thenReturn(List.of());
 
             ChatResponse result = service.chat("conv-1", "你好", null);
 
-            assertThat(result.getContent()).isEqualTo("你好，我是PMIS助手");
+            assertThat(result.getContent()).isEqualTo("你好，我是YDSZ助手");
 
             ArgumentCaptor<ChatMessage> msgCaptor = ArgumentCaptor.forClass(ChatMessage.class);
             verify(memory, times(2)).save(eq("conv-1"), msgCaptor.capture());
@@ -115,7 +115,7 @@ class ChatServiceTest {
             assertThat(saved.get(0).getRole()).isEqualTo(MessageRole.USER);
             assertThat(saved.get(0).getContent()).isEqualTo("你好");
             assertThat(saved.get(1).getRole()).isEqualTo(MessageRole.ASSISTANT);
-            assertThat(saved.get(1).getContent()).isEqualTo("你好，我是PMIS助手");
+            assertThat(saved.get(1).getContent()).isEqualTo("你好，我是YDSZ助手");
 
             verify(llmClient, times(1)).chat(any(ChatRequest.class));
             verify(metrics, times(1)).recordLlmCall(eq("openai"), eq("gpt-4o-mini"),

@@ -1,13 +1,13 @@
 package com.njydsz.common.json.exception;
 
 /**
- * Json 异常基类（参考 Jackson 的 JsonProcessingException）
+ * YdszJson 异常基类（参考 Jackson 的 JsonProcessingException）
  * 
- * <p>所有 Json 相关异常的基类。</p>
+ * <p>所有 YdszJson 相关异常的基类。</p>
  * 
  * @since 1.0.0
  */
-public class JsonException extends RuntimeException {
+public class YdszJsonException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
     
@@ -17,31 +17,31 @@ public class JsonException extends RuntimeException {
     /** JSON 字符串位置 */
     private final int position;
     
-    public JsonException(String message) {
+    public YdszJsonException(String message) {
         super(message);
         this.errorCode = 0;
         this.position = -1;
     }
     
-    public JsonException(String message, Throwable cause) {
+    public YdszJsonException(String message, Throwable cause) {
         super(message, cause);
         this.errorCode = 0;
         this.position = -1;
     }
     
-    public JsonException(int errorCode, String message) {
+    public YdszJsonException(int errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
         this.position = -1;
     }
     
-    public JsonException(int errorCode, String message, int position) {
+    public YdszJsonException(int errorCode, String message, int position) {
         super(message + " at position " + position);
         this.errorCode = errorCode;
         this.position = position;
     }
     
-    public JsonException(int errorCode, String message, Throwable cause) {
+    public YdszJsonException(int errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
         this.position = -1;

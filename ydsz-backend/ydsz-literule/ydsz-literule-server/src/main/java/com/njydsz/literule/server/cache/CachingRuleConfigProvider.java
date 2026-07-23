@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import com.njydsz.common.json.Json;
-import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.YdszJsonType;
 
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RBucket;
@@ -15,7 +15,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.literule.api.RuleDefinition;
@@ -123,12 +123,12 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
         // L2 启用条件：RedissonClient 非空 且 配置启用 L2
         this.redissonClient = (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
         this.cacheConfig = cacheConfig;
-        this.listCache = LocalCache.<String, List<RuleDefinition>>newBuilder()
+        this.listCache = YdszCache.<String, List<RuleDefinition>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
                 .build();
-        this.singleCache = LocalCache.<String, RuleDefinition>newBuilder()
+        this.singleCache = YdszCache.<String, RuleDefinition>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(cacheConfig.getL1TtlSeconds(), TimeUnit.SECONDS)
                 .maximumSize(cacheConfig.getL1MaxSize())
@@ -247,7 +247,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
                 RBucket<String> bucket = redissonClient.getBucket(l2Key);
                 String json = bucket.get();
                 if (json != null) {
-                    List<RuleDefinition> l2Value = Json.fromJson(json, new JsonType<List<RuleDefinition>>() {});
+                    List<RuleDefinition> l2Value = YdszJson.fromJson(json, new YdszJsonType<List<RuleDefinition>>() {});
                     if (l2Value != null) {
                         log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;
@@ -288,7 +288,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
                         log.debug("[LiteRule-Cache] L2 命中 NULL 标记: {}", l2Key);
                         return L1_NULL_MARKER;
                     }
-                    RuleDefinition l2Value = Json.toObject(json, RuleDefinition.class);
+                    RuleDefinition l2Value = YdszJson.toObject(json, RuleDefinition.class);
                     if (l2Value != null) {
                         log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;
@@ -325,7 +325,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
             if (value instanceof String) {
                 json = (String) value;
             } else {
-                json = Json.toJson(value);
+                json = YdszJson.toJson(value);
             }
             RBucket<String> bucket = redissonClient.getBucket(key);
             bucket.set(json, Duration.ofSeconds(cacheConfig.getL2TtlSeconds()));

@@ -20,7 +20,7 @@ interface FilterPresetData {
 export function useFilterPresets(pageKey: string) {
   const userStore = useUserStore()
   const userId = userStore.userInfo?.id || 'guest'
-  const storageKey = `pmis:filter-presets:${pageKey}:${userId}`
+  const storageKey = `ydsz:filter-presets:${pageKey}:${userId}`
 
   const presetNames = ref<string[]>([])
   const currentPresetName = ref<string | null>(null)

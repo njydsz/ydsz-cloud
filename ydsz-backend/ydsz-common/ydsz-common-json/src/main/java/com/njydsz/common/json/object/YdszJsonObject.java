@@ -12,22 +12,22 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
- * Json 对象实现
+ * YdszJson 对象实现
  * 对应 fastjson2 的 JSONObject，提供动态 JSON 对象操作
  *
  * @since 1.0.0
  */
-public class JsonObject extends LinkedHashMap<String, Object> {
+public class YdszJsonObject extends LinkedHashMap<String, Object> {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 默认构造函数
      */
-    public JsonObject() {
+    public YdszJsonObject() {
         super();
     }
 
@@ -36,16 +36,16 @@ public class JsonObject extends LinkedHashMap<String, Object> {
      *
      * @param initialCapacity 初始容量
      */
-    public JsonObject(int initialCapacity) {
+    public YdszJsonObject(int initialCapacity) {
         super(initialCapacity);
     }
 
     /**
-     * 从 Map 创建 JsonObject
+     * 从 Map 创建 YdszJsonObject
      *
      * @param map 源 Map
      */
-        public JsonObject(Map<?, ?> map) {
+        public YdszJsonObject(Map<?, ?> map) {
         super();
         if (map != null) {
             LinkedHashMap<String, Object> filtered = new LinkedHashMap<>(map.size());
@@ -530,35 +530,35 @@ public class JsonObject extends LinkedHashMap<String, Object> {
     // ==================== 嵌套对象 getter ====================
 
     /**
-     * 获取 JsonObject
+     * 获取 YdszJsonObject
      *
      * @param key 键
-     * @return JsonObject
+     * @return YdszJsonObject
      */
-    public JsonObject getJSONObject(String key) {
+    public YdszJsonObject getJSONObject(String key) {
         Object value = get(key);
-        if (value instanceof JsonObject) {
-            return (JsonObject) value;
+        if (value instanceof YdszJsonObject) {
+            return (YdszJsonObject) value;
         }
         if (value instanceof Map) {
-            return new JsonObject((Map<?, ?>) value);
+            return new YdszJsonObject((Map<?, ?>) value);
         }
         return null;
     }
 
     /**
-     * 获取 JsonArray
+     * 获取 YdszJsonArray
      *
      * @param key 键
-     * @return JsonArray
+     * @return YdszJsonArray
      */
-    public JsonArray getJSONArray(String key) {
+    public YdszJsonArray getJSONArray(String key) {
         Object value = get(key);
-        if (value instanceof JsonArray) {
-            return (JsonArray) value;
+        if (value instanceof YdszJsonArray) {
+            return (YdszJsonArray) value;
         }
         if (value instanceof List) {
-            return new JsonArray((List<?>) value);
+            return new YdszJsonArray((List<?>) value);
         }
         return null;
     }
@@ -579,9 +579,9 @@ public class JsonObject extends LinkedHashMap<String, Object> {
         if (clazz.isInstance(value)) {
             return clazz.cast(value);
         }
-        // 使用 Json 进行转换
-        String json = Json.toJson(value);
-        return Json.toObject(json, clazz);
+        // 使用 YdszJson 进行转换
+        String json = YdszJson.toJson(value);
+        return YdszJson.toObject(json, clazz);
     }
 
     // ==================== 便捷方法 ====================
@@ -724,7 +724,7 @@ public class JsonObject extends LinkedHashMap<String, Object> {
      * @param value 值
      * @return 当前对象，支持链式调用
      */
-    public JsonObject put(String key, Object value) {
+    public YdszJsonObject put(String key, Object value) {
         super.put(key, value);
         return this;
     }
@@ -822,39 +822,39 @@ public class JsonObject extends LinkedHashMap<String, Object> {
      * @return JSON 字符串
      */
     public String toJsonString() {
-        return Json.toJson(this);
+        return YdszJson.toJson(this);
     }
 
     /**
      * 从 JSON 字符串解析
      *
      * @param json JSON 字符串
-     * @return JsonObject
+     * @return YdszJsonObject
      */
-    public static JsonObject parse(String json) {
-        return Json.toObject(json, JsonObject.class);
+    public static YdszJsonObject parse(String json) {
+        return YdszJson.toObject(json, YdszJsonObject.class);
     }
 
     /**
      * 从 Map 创建
      *
      * @param map Map 对象
-     * @return JsonObject
+     * @return YdszJsonObject
      */
-    public static JsonObject of(Map<?, ?> map) {
+    public static YdszJsonObject of(Map<?, ?> map) {
         if (map == null) {
-            return new JsonObject();
+            return new YdszJsonObject();
         }
-        return new JsonObject(map);
+        return new YdszJsonObject(map);
     }
 
     /**
-     * 创建空的 JsonObject
+     * 创建空的 YdszJsonObject
      *
-     * @return JsonObject
+     * @return YdszJsonObject
      */
-    public static JsonObject create() {
-        return new JsonObject();
+    public static YdszJsonObject create() {
+        return new YdszJsonObject();
     }
 
     @Override

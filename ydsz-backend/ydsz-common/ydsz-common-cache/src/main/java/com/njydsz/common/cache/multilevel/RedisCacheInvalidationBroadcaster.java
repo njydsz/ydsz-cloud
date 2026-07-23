@@ -16,7 +16,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 基于 Redis Pub/Sub 的缓存失效广播器
@@ -91,7 +91,7 @@ public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroad
       String cacheName = channel.substring(channelPrefix.length());
 
       // 使用 JSON 解析消息体
-      Map<String, Object> msg = Json.parseMap(body);
+      Map<String, Object> msg = YdszJson.parseMap(body);
       if (msg == null) {
         log.warn("收到空缓存失效消息: channel={}", channel);
         return;
@@ -144,7 +144,7 @@ public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroad
     msg.put(FIELD_KEY, key.toString());
     msg.put(FIELD_CLEAR_ALL, false);
     try {
-      String json = Json.toJson(msg);
+      String json = YdszJson.toJson(msg);
       redisTemplate.convertAndSend(channelPrefix + cacheName, json);
     } catch (Exception e) {
       log.warn("广播缓存失效消息失败: cache={}, key={}", cacheName, key, e);
@@ -168,7 +168,7 @@ public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroad
     msg.put(FIELD_KEY, CLEAR_ALL_MARKER);
     msg.put(FIELD_CLEAR_ALL, true);
     try {
-      String json = Json.toJson(msg);
+      String json = YdszJson.toJson(msg);
       redisTemplate.convertAndSend(channelPrefix + cacheName, json);
     } catch (Exception e) {
       log.warn("广播全量清除缓存消息失败: cache={}", cacheName, e);

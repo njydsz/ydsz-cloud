@@ -75,7 +75,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
             ChatRequest stepRequest = ChatRequest.builder()
                     .model(properties.getLlm().getDefaultModel())
                     .messages(List.of(
-                            ChatMessage.system("你是 PMIS 智能助手，正在执行一个多步任务的某一步。请简洁回答。"),
+                            ChatMessage.system("你是 YDSZ 智能助手，正在执行一个多步任务的某一步。请简洁回答。"),
                             ChatMessage.user("任务目标: " + plan.getGoal() +
                                     "\n当前步骤: " + step.getDescription() +
                                     "\n已完成的步骤结果: " + String.join("; ", stepResults), null)))
@@ -128,7 +128,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
 
     private ExecutionPlan generatePlan(String userInput, String convId) {
         String planPrompt = """
-                你是 PMIS 项目管理系统的任务规划器。
+                你是 YDSZ 项目管理系统的任务规划器。
                 请将以下用户需求分解为 2-5 个可执行的步骤。
 
                 用户需求: %s
@@ -181,7 +181,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         ChatRequest synReq = ChatRequest.builder()
                 .model(properties.getLlm().getDefaultModel())
                 .messages(List.of(
-                        ChatMessage.system("你是 PMIS 智能助手，请汇总任务执行结果。"),
+                        ChatMessage.system("你是 YDSZ 智能助手，请汇总任务执行结果。"),
                         ChatMessage.user(prompt.toString(), null)))
                 .temperature(properties.getLlm().getTemperature())
                 .maxTokens(properties.getLlm().getMaxTokens())

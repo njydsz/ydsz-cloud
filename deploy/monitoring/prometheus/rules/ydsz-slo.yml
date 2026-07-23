@@ -1,7 +1,7 @@
 # =============================================================================
-# PMIS SLO 定义与 Error Budget 告警规则（PrometheusRule CRD）
+# YDSZ SLO 定义与 Error Budget 告警规则（PrometheusRule CRD）
 # -----------------------------------------------------------------------------
-# 定义 PMIS 平台的 SLO 目标与 Error Budget 燃烧率告警，对齐 Google SRE 标准。
+# 定义 YDSZ 平台的 SLO 目标与 Error Budget 燃烧率告警，对齐 Google SRE 标准。
 #
 # SLO 定义:
 #   1. 可用性 SLO: 99.9% (每月停机 ≤ 43.8 分钟)
@@ -13,40 +13,40 @@
 #   - 慢速燃烧: 0.1% budget/hour → 3 天 burn → P2 告警 (6x burn rate)
 #
 # 部署:
-#   kubectl apply -f deploy/monitoring/prometheus/rules/pmis-slo.yml -n monitoring
+#   kubectl apply -f deploy/monitoring/prometheus/rules/ydsz-slo.yml -n monitoring
 # =============================================================================
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: pmis-slo
+  name: ydsz-slo
   namespace: monitoring
   labels:
     prometheus: k8s
-    app.kubernetes.io/name: pmis
+    app.kubernetes.io/name: ydsz
 spec:
   groups:
     # =========================================================================
     #  1. 可用性 SLO (99.9%)
     # =========================================================================
-    - name: pmis-slo-availability
+    - name: ydsz-slo-availability
       interval: 30s
       rules:
         # SLO: 30 天窗口可用性 < 99.9%
         - record: ydsz:slo_availability:ratio_30d
           expr: |
             1 - (
-              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*",status=~"5.."}[30d]))
+              sum(rate(http_server_requests_seconds_count{job=~"ydsz-.*",status=~"5.."}[30d]))
               /
-              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*"}[30d]))
+              sum(rate(http_server_requests_seconds_count{job=~"ydsz-.*"}[30d]))
             )
 
         # Error Budget 燃烧率 - 快速 (1h 窗口, 14.4x burn)
-        - alert: PmisSloErrorBudgetFastBurn
+        - alert: YdszSloErrorBudgetFastBurn
           expr: |
             (
-              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*",status=~"5.."}[1h]))
+              sum(rate(http_server_requests_seconds_count{job=~"ydsz-.*",status=~"5.."}[1h]))
               /
-              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*"}[1h]))
+              sum(rate(http_server_requests_seconds_count{job=~"ydsz-.*"}[1h]))
             ) > 14.4 * 0.001
           for: 2m
           labels:
@@ -58,12 +58,12 @@ spec:
             description: "1 小时窗口内 5xx 错误率超过 SLO 阈值的 14.4 倍，如持续 2 分钟将触发告警。当前 Error Budget 正在快速消耗。"
 
         # Error Budget 燃烧率 - 慢速 (6h 窗口, 6x burn)
-        - alert: PmisSloErrorBudgetSlowBurn
+        - alert: YdszSloErrorBudgetSlowBurn
           expr: |
             (
-              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*",status=~"5.."}[6h]))
+              sum(rate(http_server_requests_seconds_count{job=~"ydsz-.*",status=~"5.."}[6h]))
               /
-              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*"}[6h]))
+              sum(rate(http_server_requests_seconds_count{job=~"ydsz-.*"}[6h]))
             ) > 6 * 0.001
           for: 15m
           labels:
@@ -77,18 +77,18 @@ spec:
     # =========================================================================
     #  2. 延迟 SLO (P99 < 1s, 90% 的请求)
     # =========================================================================
-    - name: pmis-slo-latency
+    - name: ydsz-slo-latency
       interval: 30s
       rules:
         # SLO: P99 延迟记录 (5m 窗口)
         - record: ydsz:slo_latency_p99:seconds_5m
           expr: |
             histogram_quantile(0.99,
-              sum(rate(http_server_requests_seconds_bucket{job=~"pmis-.*"}[5m])) by (le, job)
+              sum(rate(http_server_requests_seconds_bucket{job=~"ydsz-.*"}[5m])) by (le, job)
             )
 
         # SLO 违规: P99 > 1s 持续 5 分钟
-        - alert: PmisSloLatencyViolation
+        - alert: YdszSloLatencyViolation
           expr: ydsz:slo_latency_p99:seconds_5m > 1
           for: 5m
           labels:
@@ -102,7 +102,7 @@ spec:
     # =========================================================================
     #  3. 30 天可用性 SLO 达成率
     # =========================================================================
-    - name: pmis-slo-monthly
+    - name: ydsz-slo-monthly
       interval: 5m
       rules:
         # 30 天 SLO 达成状态
@@ -111,7 +111,7 @@ spec:
             (ydsz:slo_availability:ratio_30d >= 0.999)
 
         # 月度 SLO 即将突破 (可用性 < 99.95%, 剩余 budget < 50%)
-        - alert: PmisSloBudgetExhausted
+        - alert: YdszSloBudgetExhausted
           expr: ydsz:slo_availability:ratio_30d < 0.9995
           for: 30m
           labels:

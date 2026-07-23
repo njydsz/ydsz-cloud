@@ -4,7 +4,7 @@
  *
  * 设计目标：
  *  1. 提供 chartColors 对象，业务代码通过 chartColors.primary / chartColors.success 引用
- *  2. 注册 'pmis-light' / 'pmis-dark' 两套 ECharts 主题，暗黑模式切换时自动重建实例
+ *  2. 注册 'ydsz-light' / 'ydsz-dark' 两套 ECharts 主题，暗黑模式切换时自动重建实例
  *  3. 提供 getChartTheme() 根据 appStore.theme 返回当前主题名
  *  4. 监听主题变化时自动重建已注册的图表实例（通过全局事件总线）
  *
@@ -128,13 +128,13 @@ export const chartColors: ChartColors = {
 }
 
 /** ECharts 主题名 */
-export type ChartThemeName = 'pmis-light' | 'pmis-dark'
+export type ChartThemeName = 'ydsz-light' | 'ydsz-dark'
 
 /** 已注册主题标记（避免重复注册） */
 let themesRegistered = false
 
 /**
- * 注册 ECharts 主题（pmis-light / pmis-dark）
+ * 注册 ECharts 主题（ydsz-light / ydsz-dark）
  *
  * 主题定义包含：色板、坐标轴样式、图例样式、tooltip 样式、文字色、网格线色。
  * 暗黑模式切换时无需重新注册，只需在 init 时传入对应主题名。
@@ -146,7 +146,7 @@ export function registerChartThemes(): void {
 
   // 浅色主题
   const lightColors = getChartColors()
-  echarts.registerTheme('pmis-light', {
+  echarts.registerTheme('ydsz-light', {
     color: [
       lightColors.primary,
       lightColors.success,
@@ -190,7 +190,7 @@ export function registerChartThemes(): void {
 
   // 暗黑主题（色板已通过 CSS 变量切换为高对比度版本）
   const darkColors = getChartColors()
-  echarts.registerTheme('pmis-dark', {
+  echarts.registerTheme('ydsz-dark', {
     color: [
       darkColors.primary,
       darkColors.success,
@@ -242,15 +242,15 @@ export function registerChartThemes(): void {
  * 在 useECharts 初始化时传入此返回值。
  */
 export function getChartTheme(): ChartThemeName {
-  if (typeof document === 'undefined') return 'pmis-light'
-  return document.documentElement.classList.contains('dark') ? 'pmis-dark' : 'pmis-light'
+  if (typeof document === 'undefined') return 'ydsz-light'
+  return document.documentElement.classList.contains('dark') ? 'ydsz-dark' : 'ydsz-light'
 }
 
 /**
  * 初始化图表主题系统
  *
  * 应在应用启动时（main.ts）调用一次：
- *  1. 注册 pmis-light / pmis-dark 主题
+ *  1. 注册 ydsz-light / ydsz-dark 主题
  *  2. 监听主题变化，主题切换后需重建图表实例（由 useECharts 的 watch theme 处理）
  */
 export function initChartThemes(): void {

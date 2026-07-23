@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * String refresh = jwtTokenProvider.generateRefreshToken(userId, 7 * 24 * 3600L);
  * }</pre>
  *
- * <p>密钥配置：通过环境变量 {@code PMIS_USERINFO_JWT_SECRET} 或 application.yml
+ * <p>密钥配置：通过环境变量 {@code YDSZ_USERINFO_JWT_SECRET} 或 application.yml
  * {@code ydsz.userinfo.jwt.secret} 注入，未配置时使用默认演示密钥（仅供本地开发）。
  *
  * @since 1.0.0
@@ -41,9 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtTokenProvider {
 
     /** 演示密钥（生产必须通过配置覆盖，≥ 32 字节以满足 HS256 要求） */
-    private static final String DEFAULT_SECRET = "pmis-userinfo-jwt-secret-key-2026-must-be-long-enough";
+    private static final String DEFAULT_SECRET = "ydsz-userinfo-jwt-secret-key-2026-must-be-long-enough";
     /** Token 签发者 */
-    private static final String ISSUER = "pmis-userinfo";
+    private static final String ISSUER = "ydsz-userinfo";
 
     // ============================== Claims 常量 ==============================
 

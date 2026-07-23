@@ -1,6 +1,6 @@
 # ydsz-common-file
 
-PMIS 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 / COS / OBS / Qiniu）、分片上传、断点续传、文件去重（秒传）、文件类型安全检测、生命周期管理。
+YDSZ 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 / COS / OBS / Qiniu）、分片上传、断点续传、文件去重（秒传）、文件类型安全检测、生命周期管理。
 
 ## 模块定位
 
@@ -40,7 +40,6 @@ PMIS 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 
 | 类 | 说明 |
 |---|---|
-| `AbstractChunkedUploadTemplate` | 分片上传模板 |
 | `CheckpointService` / `DefaultCheckpointService` | 断点续传检查点服务 |
 | `CheckpointStore` | 检查点存储接口 |
 | `RedisCheckpointStore` / `LocalCheckpointStore` | Redis / 本地实现 |
@@ -56,7 +55,6 @@ PMIS 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 | 类 | 说明 |
 |---|---|
 | `FileDedupService` | 文件去重服务（SHA-256 哈希 → 引用创建） |
-| `DedupCleanupScheduler` | 去重清理调度器 |
 
 ### 文件类型安全
 
@@ -65,7 +63,6 @@ PMIS 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 | `FileTypeDetector` | 文件类型检测器 |
 | `FileTypeValidator` | 文件类型校验器 |
 | `MagicNumberRegistry` | Magic Number 注册表 |
-| `FileUploadValidator` | 上传校验器（大小限制 + 扩展名黑白名单） |
 | `FileValidationException` / `FileExceptionCode` | 校验异常 |
 
 ### 生命周期管理
@@ -95,7 +92,7 @@ PMIS 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   file:
     storage-type: minio            # local / oss / minio / s3 / cos / obs / qiniu
     upload:
@@ -115,8 +112,6 @@ pmis:
 | 配置类 | 激活条件 |
 |---|---|
 | `FileConfiguration` | 总是激活 |
-| `MinioConfig` | MinIO 可用时激活 |
-
 ## 依赖
 
 ```xml

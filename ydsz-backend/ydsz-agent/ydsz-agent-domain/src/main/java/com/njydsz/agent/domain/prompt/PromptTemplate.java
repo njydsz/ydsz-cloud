@@ -10,10 +10,10 @@ import java.util.Objects;
  * <p>支持 SpEL 变量替换的 Prompt 模板，如：
  * <pre>{@code
  * PromptTemplate t = new PromptTemplate("RT001", "你是项目管理助手。当前项目：#{projectName}", "v1");
- * String rendered = t.render(Map.of("projectName", "南京云顶 PMIS"));
+ * String rendered = t.render(Map.of("projectName", "南京云顶 YDSZ"));
  * }</pre>
  *
- * @author ydsy-pmis-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class PromptTemplate implements Serializable {

@@ -10,7 +10,7 @@ import com.njydsz.common.json.writer.BeanSerializer;
  * 
  * <p>为每个 Bean 类缓存预计算的序列化器，避免重复创建</p>
  * 
- * @author Json Team
+ * @author YdszJson Team
  */
 public final class BeanSerializerCache {
     

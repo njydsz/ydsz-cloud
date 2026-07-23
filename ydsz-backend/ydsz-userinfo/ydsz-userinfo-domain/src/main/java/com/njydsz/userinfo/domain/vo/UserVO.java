@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 
@@ -21,7 +21,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@JsonField(notWriteNullValue = true)
+@YdszJsonField(notWriteNullValue = true)
 public class UserVO implements Serializable {
 
     @Serial

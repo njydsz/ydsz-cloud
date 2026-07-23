@@ -1,5 +1,5 @@
 # =============================================================================
-#  YDSZ PMIS - Windows 中间件统一管理脚本
+#  YDSZ - Windows 中间件统一管理脚本
 # -----------------------------------------------------------------------------
 #  用法:   .\infra-manager.ps1 {start|stop|status|restart} [middleware]
 #  示例:   .\infra-manager.ps1 start all

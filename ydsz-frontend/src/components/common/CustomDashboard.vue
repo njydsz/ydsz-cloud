@@ -36,7 +36,7 @@ const emit = defineEmits<{
 
 const widgets = ref<DashboardWidget[]>([])
 const editing = ref(false)
-const STORAGE_KEY = 'pmis-dashboard-layout'
+const STORAGE_KEY = 'ydsz-dashboard-layout'
 
 const loadLayout = () => {
   if (props.preset && WIDGET_PRESETS[props.preset]) {

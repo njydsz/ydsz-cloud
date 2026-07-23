@@ -7,8 +7,8 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.njydsz.common.json.annotation.JsonFormat;
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonFormat;
+import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.domain.entity.BaseEntity;
 
 import lombok.*;
@@ -71,7 +71,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      * <p>框架在 INSERT 操作时自动填充。
      */
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    @JsonFormat("yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -86,7 +86,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      * <p>框架在 INSERT/UPDATE 操作时自动填充。
      */
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    @JsonFormat("yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**
@@ -108,7 +108,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      * 可在业务实体上单独添加 {@code @TableLogic} 注解使用 MP 内置能力。
      */
     @TableField("deleted")
-    @JsonField(ignore = true)
+    @YdszJsonField(ignore = true)
     private Integer deleted;
 
     /**

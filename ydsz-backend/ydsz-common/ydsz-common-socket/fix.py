@@ -1,6 +1,6 @@
 import pathlib
 
-p = pathlib.Path(r'd:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-common\ydsz-pmis-common-socket\src\main\java\com\njydsz\pmis\common\socket\config\WebSocketAutoConfiguration.java')
+p = pathlib.Path(r'd:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-common\ydsz-common-socket\src\main\java\com\njydsz\common\socket\config\WebSocketAutoConfiguration.java')
 t = p.read_text(encoding='utf-8')
 
 # Remove OnlineUserService from heartbeat handler method

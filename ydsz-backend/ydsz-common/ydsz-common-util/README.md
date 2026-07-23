@@ -1,6 +1,6 @@
 # ydsz-common-util
 
-PMIS 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTTP、字符串、日期、文件、集合、Bean 拷贝、JSON、Spring 等领域。
+YDSZ 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTTP、字符串、日期、文件、集合、Bean 拷贝、JSON、Spring 等领域。
 
 ## 模块定位
 

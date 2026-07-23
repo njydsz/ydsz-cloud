@@ -4,11 +4,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-import com.njydsz.common.json.annotation.JsonClass;
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonClass;
+import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
-import com.njydsz.common.json.annotation.JsonPropertyOrder;
-import com.njydsz.common.json.annotation.JsonVisibility;
+import com.njydsz.common.json.annotation.YdszJsonPropertyOrder;
+import com.njydsz.common.json.annotation.YdszJsonVisibility;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
@@ -40,7 +40,7 @@ public final class FieldMetadataLoader {
      * 加载字段元数据
      */
     public static FieldMeta[] loadFields(Class<?> clazz) {
-        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
+        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
 
         int annotationFieldCount = classAnnotation != null
             ? classAnnotation.ignores().length + classAnnotation.includes().length + classAnnotation.ordering().length
@@ -64,7 +64,7 @@ public final class FieldMetadataLoader {
                     ordering.put(classAnnotation.ordering()[i], i);
                 }
             }
-            if (classAnnotation.naming() != JsonClass.NamingStrategy.CAMEL_CASE) {
+            if (classAnnotation.naming() != YdszJsonClass.NamingStrategy.CAMEL_CASE) {
                 switch (classAnnotation.naming()) {
                     case SNAKE_CASE:
                         classNaming = PropertyNamingStrategy.SNAKE_CASE;
@@ -82,7 +82,7 @@ public final class FieldMetadataLoader {
             }
         }
 
-        JsonPropertyOrder propertyOrder = clazz.getAnnotation(JsonPropertyOrder.class);
+        YdszJsonPropertyOrder propertyOrder = clazz.getAnnotation(YdszJsonPropertyOrder.class);
         Map<String, Integer> propertyOrderMapping = new HashMap<>();
         boolean alphabeticSort = false;
         if (propertyOrder != null) {
@@ -102,8 +102,8 @@ public final class FieldMetadataLoader {
             }
         }
 
-        JsonVisibility visibilityAnnotation = clazz.getAnnotation(JsonVisibility.class);
-        JsonVisibility.Visibility fieldVisibility = JsonVisibility.Visibility.ANY;
+        YdszJsonVisibility visibilityAnnotation = clazz.getAnnotation(YdszJsonVisibility.class);
+        YdszJsonVisibility.Visibility fieldVisibility = YdszJsonVisibility.Visibility.ANY;
         if (visibilityAnnotation != null) {
             fieldVisibility = visibilityAnnotation.fields();
         }
@@ -127,7 +127,7 @@ public final class FieldMetadataLoader {
                 continue;
             }
 
-            JsonField jsonField = field.getAnnotation(JsonField.class);
+            YdszJsonField jsonField = field.getAnnotation(YdszJsonField.class);
             if (jsonField != null && jsonField.ignore()) {
                 continue;
             }
@@ -213,7 +213,7 @@ public final class FieldMetadataLoader {
      * @param field 字段对象
      * @return 是否可见
      */
-    public static boolean isFieldVisible(int modifiers, JsonVisibility.Visibility visibility, Field field) {
+    public static boolean isFieldVisible(int modifiers, YdszJsonVisibility.Visibility visibility, Field field) {
         switch (visibility) {
             case NONE:
                 return false;

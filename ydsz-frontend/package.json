@@ -3,19 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "南京云顶 PMIS 运营管理系统 - 前端（Vue 3 + Vite + TypeScript）",
-  "author": "PMIS Team <frontend@pmis.example.com>",
+  "description": "南京云顶 YDSZ 运营管理系统 - 前端（Vue 3 + Vite + TypeScript）",
+  "author": "YDSZ Team <frontend@ydsz.example.com>",
   "license": "UNLICENSED",
-  "homepage": "https://pmis.example.com",
+  "homepage": "https://ydsz.example.com",
   "repository": {
     "type": "git",
-    "url": "https://git.pmis.example.com/ydsz/ydsz-frontend.git"
+    "url": "https://git.ydsz.example.com/ydsz/ydsz-frontend.git"
   },
   "bugs": {
-    "url": "https://jira.pmis.example.com"
+    "url": "https://jira.ydsz.example.com"
   },
   "keywords": [
-    "pmis",
+    "ydsz",
     "vue3",
     "vite",
     "typescript",

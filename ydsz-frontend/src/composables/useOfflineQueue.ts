@@ -49,7 +49,7 @@ interface QueuedOperation {
   retryCount: number
 }
 
-const STORAGE_KEY = 'pmis_offline_queue'
+const STORAGE_KEY = 'ydsz_offline_queue'
 const MAX_RETRIES = 3
 
 const isOnline = ref(navigator.onLine)

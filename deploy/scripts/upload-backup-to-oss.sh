@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# PMIS 备份文件上传 OSS 脚本
+# YDSZ 备份文件上传 OSS 脚本
 #
 # 功能:
 #   1. 将本地备份文件（pg dump / pg_basebackup / redis rdb / nacos zip）上传到阿里云 OSS
@@ -14,14 +14,14 @@
 #
 # 定时调度（crontab）:
 #   # 每日凌晨 2:30 上传备份到 OSS
-#   30 2 * * * /opt/pmis/scripts/upload-backup-to-oss.sh >> /var/log/pmis/oss-upload.log 2>&1
+#   30 2 * * * /opt/ydsz/scripts/upload-backup-to-oss.sh >> /var/log/ydsz/oss-upload.log 2>&1
 #
 # 环境变量（必须）:
 #   OSS_ENDPOINT        OSS 端点,如 https://oss-cn-hangzhou.aliyuncs.com
 #   OSS_BUCKET          Bucket 名称
 #   OSS_ACCESS_KEY_ID   AccessKey ID
 #   OSS_ACCESS_KEY_SECRET  AccessKey Secret
-#   OSS_PREFIX          OSS 对象前缀,默认 pmis-backup/
+#   OSS_PREFIX          OSS 对象前缀,默认 ydsz-backup/
 #
 # 与 DISASTER_RECOVERY_RUNBOOK.md §3.2 配套使用
 # ============================================================
@@ -31,9 +31,9 @@ set -euo pipefail
 # 配置
 # ============================================================
 OSS_ENDPOINT="${OSS_ENDPOINT:-https://oss-cn-hangzhou.aliyuncs.com}"
-OSS_BUCKET="${OSS_BUCKET:-pmis-backup}"
+OSS_BUCKET="${OSS_BUCKET:-ydsz-backup}"
 # OSS_ACCESS_KEY_ID / OSS_ACCESS_KEY_SECRET 通过环境变量注入
-OSS_PREFIX="${OSS_PREFIX:-pmis-backup}"
+OSS_PREFIX="${OSS_PREFIX:-ydsz-backup}"
 BACKUP_DIR="${BACKUP_DIR:-/data/backups}"
 OSS_RETENTION_DAYS="${OSS_RETENTION_DAYS:-30}"
 
@@ -60,10 +60,10 @@ notify() {
     local payload
     case "$WEBHOOK_TYPE" in
         feishu)
-            payload="{\"msg_type\":\"text\",\"content\":{\"text\":\"[PMIS OSS Upload] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
+            payload="{\"msg_type\":\"text\",\"content\":{\"text\":\"[YDSZ OSS Upload] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
             ;;
         dingtalk)
-            payload="{\"msgtype\":\"text\",\"text\":{\"content\":\"[PMIS OSS Upload] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
+            payload="{\"msgtype\":\"text\",\"text\":{\"content\":\"[YDSZ OSS Upload] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
             ;;
         *)
             payload="{\"status\":\"${status}\",\"message\":\"${message}\",\"host\":\"${HOSTNAME}\",\"time\":\"${TIMESTAMP}\"}"
@@ -197,7 +197,7 @@ cleanup_oss() {
 # 主流程
 # ============================================================
 main() {
-    log "========== PMIS 备份上传 OSS 开始 =========="
+    log "========== YDSZ 备份上传 OSS 开始 =========="
     log "Host: $HOSTNAME | Date: $DATE | Timestamp: $TIMESTAMP"
     check_env
 
@@ -220,7 +220,7 @@ main() {
             ;;
     esac
 
-    log "========== PMIS 备份上传 OSS 结束 =========="
+    log "========== YDSZ 备份上传 OSS 结束 =========="
 }
 
 main "$@"

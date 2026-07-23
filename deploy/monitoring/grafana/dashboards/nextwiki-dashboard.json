@@ -267,7 +267,7 @@
   "refresh": "1m",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pmis", "nextwiki"],
+  "tags": ["ydsz", "nextwiki"],
   "templating": {
     "list": [
       {
@@ -286,7 +286,7 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "NextWiki 知识文库",
-  "uid": "pmis-nextwiki",
+  "uid": "ydsz-nextwiki",
   "version": 1,
   "weekStart": ""
 }

@@ -12,7 +12,7 @@ import java.util.Base64;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -143,7 +143,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
         String uploadId = SnowflakeUtils.nextIdStr();
         ChunkMeta meta = new ChunkMeta(filename, totalSize, totalChunks);
         try {
-            stringRedisTemplate.opsForValue().set(metaKey(uploadId), Json.toJson(meta));
+            stringRedisTemplate.opsForValue().set(metaKey(uploadId), YdszJson.toJson(meta));
         } catch (Exception e) {
             log.warn("[MultipartUpload] 写入分片元数据到 Redis 失败, uploadId={}: {}", uploadId, e.getMessage());
         }
@@ -377,7 +377,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
             if (!StringUtils.hasText(json)) {
                 return null;
             }
-            return Json.toObject(json, ChunkMeta.class);
+            return YdszJson.toObject(json, ChunkMeta.class);
         } catch (Exception e) {
             log.warn("[MultipartUpload] 读取分片元数据失败: uploadId={}: {}", uploadId, e.getMessage());
             return null;

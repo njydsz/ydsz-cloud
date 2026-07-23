@@ -11,7 +11,7 @@ import java.util.OptionalLong;
  * <p>使用示例：
  *
  * <pre>{@code
- * Cache<String, User> cache = LocalCache.newBuilder()
+ * Cache<String, User> cache = YdszCache.newBuilder()
  *     .maximumSize(1000)
  *     .build();
  *

@@ -1,5 +1,5 @@
 # =====================================================================
-#  PMIS 规则引擎服务 bootstrap 配置（自研 LiteExpr 规则引擎）
+#  YDSZ 规则引擎服务 bootstrap 配置（自研 LiteExpr 规则引擎）
 #  --------------------------------------------------------------------
 #  端口：9008
 #  职责：规则定义 / 编排 / 评估 / 灰度 / 回放 / 审批 / CEP
@@ -37,7 +37,7 @@ spring:
         enabled: true
         register-enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
+        namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
@@ -49,7 +49,7 @@ spring:
       config:
         enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
+        namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:${spring.profiles.active}}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}

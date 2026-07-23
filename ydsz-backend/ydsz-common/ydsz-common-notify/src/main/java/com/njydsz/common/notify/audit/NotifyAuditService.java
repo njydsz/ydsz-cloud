@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.core.NotifyTraceContext;
 import com.njydsz.common.notify.enums.NotifyChannel;
@@ -73,7 +73,7 @@ public class NotifyAuditService {
         }
         auditEntry.put("title_hash", hashTitle(title));
 
-        AUDIT_LOG.info(Json.toJson(auditEntry));
+        AUDIT_LOG.info(YdszJson.toJson(auditEntry));
     }
 
     /**

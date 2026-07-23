@@ -46,7 +46,7 @@ public class UnsubscribeTokenUtil {
     private static final String SEP = "|";
 
     /** 开发环境默认密钥（生产必须通过 ydsz.message.unsubscribe.secret 覆盖） */
-    private static final String DEFAULT_SECRET = "pmis-default-unsubscribe-secret-DO-NOT-USE-IN-PROD-CHANGE-IT";
+    private static final String DEFAULT_SECRET = "ydsz-default-unsubscribe-secret-DO-NOT-USE-IN-PROD-CHANGE-IT";
 
     private final MessageProperties messageProperties;
 

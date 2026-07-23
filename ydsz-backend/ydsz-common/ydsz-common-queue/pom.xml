@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-queue</artifactId>
     <name>ydsz-common-queue</name>
-    <description>PMIS公共依赖 - 消息队列模块</description>
+    <description>YDSZ公共依赖 - 消息队列模块</description>
 
     <parent>
         <groupId>com.njydsz</groupId>

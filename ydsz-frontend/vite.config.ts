@@ -106,8 +106,8 @@ export default defineConfig(({ mode }) => {
         registerType: 'auto-update',
         includeAssets: ['favicon.ico', 'robots.txt'],
         manifest: {
-          name: 'YDSZ PMIS 项目管理系统',
-          short_name: 'PMIS',
+          name: 'YDSZ 项目管理系统',
+          short_name: 'YDSZ',
           description: '企业级项目管理系统',
           theme_color: '#409eff',
           background_color: '#ffffff',

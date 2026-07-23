@@ -1,6 +1,6 @@
 # ydsz-common-queue
 
-PMIS 统一消息队列框架 — 7 种 MQ 引擎（Redis Stream / Redis Pub-Sub / Redis List / RocketMQ / Kafka / RabbitMQ / ActiveMQ）、死信队列、消息轨迹追踪、消费者限流、消息去重、批量操作、熔断降级、消息压缩、顺序消息。
+YDSZ 统一消息队列框架 — 7 种 MQ 引擎（Redis Stream / Redis Pub-Sub / Redis List / RocketMQ / Kafka / RabbitMQ / ActiveMQ）、死信队列、消息轨迹追踪、消费者限流、消息去重、批量操作、熔断降级、消息压缩、顺序消息。
 
 ## 模块定位
 
@@ -289,7 +289,7 @@ cbPublisher.publish(message);
 | `ydsz_queue_dead_letter_count` | Gauge | 死信队列消息数 |
 | `ydsz_queue_retry_count` | Gauge | 重试消息数 |
 
-Grafana 仪表盘：`deploy/monitoring/grafana/dashboards/pmis-queue-dashboard.json`
+Grafana 仪表盘：`deploy/monitoring/grafana/dashboards/ydsz-queue-dashboard.json`
 
 ### 4. 故障排查
 

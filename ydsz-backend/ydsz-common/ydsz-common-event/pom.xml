@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-event</artifactId>
     <name>ydsz-common-event</name>
-    <description>PMIS Common Event - 事务性 Outbox 模式，保障领域事件可靠投递</description>
+    <description>YDSZ Common Event - 事务性 Outbox 模式，保障领域事件可靠投递</description>
 
     <parent>
         <groupId>com.njydsz</groupId>

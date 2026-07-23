@@ -97,7 +97,7 @@ public class RouterAgentExecutor implements AgentExecutor {
 
     private String routeIntent(String userInput) {
         String routingPrompt = """
-                你是 PMIS 智能助手的路由器。请分析用户意图，选择最合适的 Agent 类型。
+                你是 YDSZ 智能助手的路由器。请分析用户意图，选择最合适的 Agent 类型。
 
                 可选类型：
                 - CHAT: 简单问答（如问候、常识问题）

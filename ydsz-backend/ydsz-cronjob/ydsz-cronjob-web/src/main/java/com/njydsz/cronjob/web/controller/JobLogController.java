@@ -78,7 +78,7 @@ public class JobLogController {
     @GetMapping("/content/stream")
     public SseEmitter streamContent(@RequestParam String logId) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
-        Thread worker = new Thread(() -> streamLoop(logId, emitter), "pmis-job-log-sse-" + logId);
+        Thread worker = new Thread(() -> streamLoop(logId, emitter), "ydsz-job-log-sse-" + logId);
         worker.setDaemon(true);
         worker.start();
         return emitter;

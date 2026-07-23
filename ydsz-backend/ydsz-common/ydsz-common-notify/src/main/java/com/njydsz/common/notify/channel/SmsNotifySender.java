@@ -19,7 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifySendResult;
@@ -175,7 +175,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			body.put("templateCode", templateCode);
 			body.put("templateParam", templateParam);
 
-			String json = Json.toJson(body);
+			String json = YdszJson.toJson(body);
 			HttpHeaders headers = NotifyChannelStrategy.jsonHeaders();
 			headers.set("Authorization", buildAuthorization(json));
 
@@ -247,7 +247,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			return NotifySendResult.success("sent", getChannel().getName());
 		}
 		try {
-			JsonNode json = Json.readTree(response);
+			JsonNode json = YdszJson.readTree(response);
 			String code = json.has("code") ? json.get("code").asText() : null;
 			if ("0".equals(code) || "OK".equals(code) || "SUCCESS".equals(code)) {
 				String messageId = json.has("messageId") ? json.get("messageId").asText() : null;

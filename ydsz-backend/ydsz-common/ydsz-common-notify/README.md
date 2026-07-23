@@ -1,6 +1,6 @@
 # ydsz-common-notify
 
-PMIS 统一通知服务 — 5 种通知渠道（邮件 / 短信 / 企微 / 钉钉 / 飞书）、SpEL 模板引擎、重试队列、去重、滑动窗口限流、DKIM 签名、邮件追踪、健康检查。
+YDSZ 统一通知服务 — 5 种通知渠道（邮件 / 短信 / 企微 / 钉钉 / 飞书）、SpEL 模板引擎、重试队列、去重、滑动窗口限流、DKIM 签名、邮件追踪、健康检查。
 
 ## 模块定位
 
@@ -94,7 +94,7 @@ PMIS 统一通知服务 — 5 种通知渠道（邮件 / 短信 / 企微 / 钉�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   notify:
     channels:
       email:
@@ -105,7 +105,7 @@ pmis:
         dkim:
           enabled: true
           domain: example.com
-          selector: pmis
+          selector: ydsz
       sms:
         enabled: true
         provider: aliyun

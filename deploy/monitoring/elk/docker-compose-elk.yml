@@ -1,5 +1,5 @@
 # =============================================================================
-# ELK Stack docker-compose 配置 - PMIS 日志方案一
+# ELK Stack docker-compose 配置 - YDSZ 日志方案一
 # -----------------------------------------------------------------------------
 # 启动:
 #   docker-compose -f deploy/monitoring/elk/docker-compose-elk.yml up -d
@@ -18,18 +18,18 @@ version: "3.8"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
-    container_name: pmis-elasticsearch
+    container_name: ydsz-elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - cluster.name=pmis-elk
+      - cluster.name=ydsz-elk
     volumes:
       - es-data:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
     networks:
-      - pmis-monitoring
+      - ydsz-monitoring
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
@@ -38,10 +38,10 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.17.0
-    container_name: pmis-logstash
+    container_name: ydsz-logstash
     volumes:
       - ./logstash-pipeline.conf:/usr/share/logstash/pipeline/ydsz.conf:ro
-      - ./pmis-index-template.json:/usr/share/logstash/config/pmis-index-template.json:ro
+      - ./ydsz-index-template.json:/usr/share/logstash/config/ydsz-index-template.json:ro
     ports:
       - "5044:5044"
     environment:
@@ -50,11 +50,11 @@ services:
       elasticsearch:
         condition: service_healthy
     networks:
-      - pmis-monitoring
+      - ydsz-monitoring
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.17.0
-    container_name: pmis-kibana
+    container_name: ydsz-kibana
     ports:
       - "5601:5601"
     environment:
@@ -64,12 +64,12 @@ services:
       elasticsearch:
         condition: service_healthy
     networks:
-      - pmis-monitoring
+      - ydsz-monitoring
 
 volumes:
   es-data:
 
 networks:
-  pmis-monitoring:
+  ydsz-monitoring:
     external: true
-    name: pmis-monitoring
+    name: ydsz-monitoring

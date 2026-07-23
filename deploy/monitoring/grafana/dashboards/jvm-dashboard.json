@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "PMIS JVM 监控仪表盘 - 堆/非堆内存、GC 次数/耗时、线程数、CPU 使用率",
+  "description": "YDSZ JVM 监控仪表盘 - 堆/非堆内存、GC 次数/耗时、线程数、CPU 使用率",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -42,13 +42,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(jvm_memory_used_bytes{job=~\"pmis-.*\",area=\"heap\"}) by (job)",
+          "expr": "sum(jvm_memory_used_bytes{job=~\"ydsz-.*\",area=\"heap\"}) by (job)",
           "legendFormat": "used {{job}}",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(jvm_memory_max_bytes{job=~\"pmis-.*\",area=\"heap\"}) by (job)",
+          "expr": "sum(jvm_memory_max_bytes{job=~\"ydsz-.*\",area=\"heap\"}) by (job)",
           "legendFormat": "max {{job}}",
           "refId": "B"
         }
@@ -71,7 +71,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(jvm_memory_used_bytes{job=~\"pmis-.*\",area=\"nonheap\"}) by (job) / 1024 / 1024",
+          "expr": "sum(jvm_memory_used_bytes{job=~\"ydsz-.*\",area=\"nonheap\"}) by (job) / 1024 / 1024",
           "legendFormat": "non-heap {{job}}",
           "refId": "A"
         }
@@ -94,7 +94,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(increase(jvm_gc_pause_seconds_count{job=~\"pmis-.*\"}[5m])) by (job, action)",
+          "expr": "sum(increase(jvm_gc_pause_seconds_count{job=~\"ydsz-.*\"}[5m])) by (job, action)",
           "legendFormat": "{{job}} {{action}}",
           "refId": "A"
         }
@@ -117,7 +117,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=~\"pmis-.*\"}[5m])) by (job)",
+          "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=~\"ydsz-.*\"}[5m])) by (job)",
           "legendFormat": "{{job}} GC 耗时",
           "refId": "A"
         }
@@ -140,7 +140,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(jvm_threads_states_threads{job=~\"pmis-.*\"}) by (job, state)",
+          "expr": "sum(jvm_threads_states_threads{job=~\"ydsz-.*\"}) by (job, state)",
           "legendFormat": "{{job}} {{state}}",
           "refId": "A"
         }
@@ -170,13 +170,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(process_cpu_usage{job=~\"pmis-.*\"}) by (job)",
+          "expr": "sum(process_cpu_usage{job=~\"ydsz-.*\"}) by (job)",
           "legendFormat": "process {{job}}",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "avg(system_cpu_usage{job=~\"pmis-.*\"}) by (job)",
+          "expr": "avg(system_cpu_usage{job=~\"ydsz-.*\"}) by (job)",
           "legendFormat": "system {{job}}",
           "refId": "B"
         }
@@ -186,14 +186,14 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pmis", "jvm"],
+  "tags": ["ydsz", "jvm"],
   "templating": {
     "list": [
       {
         "name": "service",
         "type": "query",
         "datasource": {"type": "prometheus", "uid": "prometheus"},
-        "query": "label_values(up{job=~\"pmis-.*\"}, job)",
+        "query": "label_values(up{job=~\"ydsz-.*\"}, job)",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -204,8 +204,8 @@
   "time": {"from": "now-6h", "to": "now"},
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS JVM 监控",
-  "uid": "pmis-jvm",
+  "title": "YDSZ JVM 监控",
+  "uid": "ydsz-jvm",
   "version": 1,
   "weekStart": ""
 }

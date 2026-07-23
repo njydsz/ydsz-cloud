@@ -5,13 +5,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.json.module.JsonModule;
+import com.njydsz.common.json.module.YdszJsonModule;
 import com.njydsz.common.json.module.JsonModuleRegistry;
 
 /**
- * Json 模块注册器。
+ * YdszJson 模块注册器。
  *
- * <p>自动发现所有实现 {@link JsonModule.SpringFactory} 接口的 Bean 并注册到
+ * <p>自动发现所有实现 {@link YdszJsonModule.SpringFactory} 接口的 Bean 并注册到
  * {@link JsonModuleRegistry}。
  *
  * @since 1.0.0
@@ -20,9 +20,9 @@ public class JsonModuleRegistrar {
 
     private static final Logger log = LoggerFactory.getLogger(JsonModuleRegistrar.class);
 
-    private final List<JsonModule> springModules;
+    private final List<YdszJsonModule> springModules;
 
-    public JsonModuleRegistrar(List<JsonModule> springModules) {
+    public JsonModuleRegistrar(List<YdszJsonModule> springModules) {
         this.springModules = springModules;
     }
 
@@ -31,16 +31,16 @@ public class JsonModuleRegistrar {
      */
     public void register() {
         if (springModules != null && !springModules.isEmpty()) {
-            log.info("发现 {} 个 Json Spring Factory 模块", springModules.size());
+            log.info("发现 {} 个 YdszJson Spring Factory 模块", springModules.size());
             JsonModuleRegistry registry = JsonModuleRegistry.getInstance();
             registry.registerSpringFactories(springModules);
             registry.initialize();
-            log.info("Json 模块注册完成 | 模块数量={} | 序列化器={} | 反序列化器={}",
+            log.info("YdszJson 模块注册完成 | 模块数量={} | 序列化器={} | 反序列化器={}",
                     registry.getModuleCount(),
                     registry.getSerializerCount(),
                     registry.getDeserializerCount());
         } else {
-            log.debug("未发现 Json Spring Factory 模块");
+            log.debug("未发现 YdszJson Spring Factory 模块");
         }
     }
 }

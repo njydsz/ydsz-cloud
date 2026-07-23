@@ -23,7 +23,7 @@ import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.enums.RedisKeysEnum;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 import com.njydsz.common.util.collection.CollectionUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -416,8 +416,8 @@ public class RedisStringOps {
             return clazz.cast(value);
         }
         try {
-            String json = Json.toJson(value);
-            return Json.toObject(json, clazz);
+            String json = YdszJson.toJson(value);
+            return YdszJson.toObject(json, clazz);
         } catch (Exception e) {
             log.error("【Redis】类型转换失败 | key={} | targetClass={} | error={}", key, clazz.getName(), e);
             return null;

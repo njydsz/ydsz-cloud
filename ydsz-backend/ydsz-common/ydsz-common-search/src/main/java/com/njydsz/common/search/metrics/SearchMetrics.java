@@ -2,8 +2,10 @@ package com.njydsz.common.search.metrics;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
@@ -57,6 +59,35 @@ public class SearchMetrics {
         indexFailedCounter = Counter.builder("ydsz.search.index_failed")
                 .description("Failed index operations")
                 .register(meterRegistry);
+    }
+
+    /**
+     * P2-6: 注册 Gauge 指标 — 缓存大小、熔断器状态、零结果率、索引失败率
+     */
+    public void bindGauges(Supplier<Integer> cacheSizeSupplier, Supplier<Boolean> circuitOpenSupplier) {
+        if (meterRegistry == null) {
+            return;
+        }
+        // 零结果率 Gauge
+        Gauge.builder("ydsz.search.zero_result_rate", this, SearchMetrics::getZeroResultRate)
+                .description("Search zero result rate")
+                .register(meterRegistry);
+        // 索引失败率 Gauge
+        Gauge.builder("ydsz.search.index_failure_rate", this, SearchMetrics::getIndexFailureRate)
+                .description("Index operation failure rate")
+                .register(meterRegistry);
+        // 缓存大小 Gauge
+        if (cacheSizeSupplier != null) {
+            Gauge.builder("ydsz.search.cache.size", cacheSizeSupplier, Supplier::get)
+                    .description("Search cache entry count")
+                    .register(meterRegistry);
+        }
+        // 熔断器状态 Gauge (1=open, 0=closed)
+        if (circuitOpenSupplier != null) {
+            Gauge.builder("ydsz.search.circuit_breaker.open", () -> circuitOpenSupplier.get() ? 1.0 : 0.0)
+                    .description("Search circuit breaker open status (1=open)")
+                    .register(meterRegistry);
+        }
     }
 
     /**

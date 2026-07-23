@@ -1,6 +1,6 @@
 # ydsz-common-config
 
-PMIS 公共配置模块 — Jasypt 加密增强层与动态配置变更监听。
+YDSZ 公共配置模块 — Jasypt 加密增强层与动态配置变更监听。
 
 ## 模块定位
 
@@ -108,7 +108,7 @@ java -cp ydsz-common-config.jar \
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   config:
     change-monitor:
       enabled: true                    # 是否启用配置变更监听桥接（默认 true）

@@ -16,7 +16,7 @@ import { listDictItems } from '@/api/system/dict'
 import type { DictItemVO } from '@/api/system/dict/types'
 
 /** localStorage 缓存前缀 */
-const STORAGE_PREFIX = 'pmis_dict_'
+const STORAGE_PREFIX = 'ydsz_dict_'
 /** localStorage 缓存 TTL: 30 分钟（P2-12 提升，字典数据变更频率极低） */
 const STORAGE_TTL = 30 * 60 * 1000
 
@@ -129,7 +129,7 @@ export const useDictStore = defineStore('dict', () => {
       localStorage.removeItem(STORAGE_PREFIX + typeCode)
     } else {
       dictMap.value.clear()
-      // 清除所有 pmis_dict_ 前缀的 localStorage
+      // 清除所有 ydsz_dict_ 前缀的 localStorage
       Object.keys(localStorage)
         .filter((key) => key.startsWith(STORAGE_PREFIX))
         .forEach((key) => localStorage.removeItem(key))

@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: pmis
+  name: ydsz
   labels:
-    name: pmis
+    name: ydsz
     app.kubernetes.io/part-of: ydsz
     app.kubernetes.io/managed-by: kustomize

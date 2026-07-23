@@ -5,7 +5,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-gateway
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -23,7 +23,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-system
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -41,7 +41,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-userinfo
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -59,7 +59,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-project
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -77,7 +77,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-cronjob
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -95,7 +95,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-workflow
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -113,7 +113,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-agent
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -131,7 +131,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-message
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -150,7 +150,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-sales
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:
@@ -168,7 +168,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-finance
-  namespace: pmis
+  namespace: ydsz
 spec:
   template:
     spec:

@@ -22,7 +22,7 @@ class TreeModelTest {
 
     @Test
     void testReadTree() {
-        JsonNode tree = Json.readTree("{\"name\":\"Alice\",\"age\":30}");
+        JsonNode tree = YdszJson.readTree("{\"name\":\"Alice\",\"age\":30}");
         assertNotNull(tree);
         assertTrue(tree.isObject());
     }
@@ -133,7 +133,7 @@ class TreeModelTest {
         java.util.Map<String, Object> data = new java.util.HashMap<>();
         data.put("name", "Bob");
         data.put("age", 25);
-        JsonNode tree = Json.valueToTree(data);
+        JsonNode tree = YdszJson.valueToTree(data);
         assertNotNull(tree);
         assertTrue(tree.isObject());
         assertEquals("Bob", tree.get("name").asText());

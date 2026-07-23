@@ -1,11 +1,11 @@
 # =============================================================================
-# Alertmanager 主配置 - PMIS 告警通知中枢
+# Alertmanager 主配置 - YDSZ 告警通知中枢
 # -----------------------------------------------------------------------------
 # 部署:
 #   挂载至容器 /etc/alertmanager/alertmanager.yml
 #   docker-compose 已通过 volume 挂载本文件,无需手动操作
 #
-# 告警分级路由(对应 pmis-alerts.yml 中 labels.severity,值为大写 P0/P1/P2):
+# 告警分级路由(对应 ydsz-alerts.yml 中 labels.severity,值为大写 P0/P1/P2):
 #   P0 - 电话语音 + 钉钉: 服务下线 / DB 连接池耗尽 / DB 连接失败
 #   P1 - 钉钉: 业务指标严重异常 / 5xx 错误率激增 / JVM OOM / Full GC 频繁
 #   P2 - 邮件: 性能劣化 / 资源水位 / RocketMQ 堆积
@@ -22,8 +22,8 @@
 global:
   # SMTP 邮件发送配置(默认值,生产通过 envsubst 或 Secret 覆盖)
   smtp_smarthost: "smtp.qiye.aliyun.com:465"
-  smtp_from: "pmis-alert@ydsz.cn"
-  smtp_auth_username: "pmis-alert@ydsz.cn"
+  smtp_from: "ydsz-alert@ydsz.cn"
+  smtp_auth_username: "ydsz-alert@ydsz.cn"
   smtp_auth_password: "CHANGE_ME"
   smtp_require_tls: false
   resolve_timeout: 5m
@@ -91,9 +91,9 @@ inhibit_rules:
   # 服务都下线了,5xx 错误率告警已无意义(实例不可达必然导致请求失败)
   # ----------------------------------------------------------------------
   - source_matchers:
-      - alertname = "PmisServiceDown"
+      - alertname = "YdszServiceDown"
     target_matchers:
-      - alertname = "PmisHighErrorRate"
+      - alertname = "YdszHighErrorRate"
     # 同一 job 才抑制,避免误抑制其他服务的告警
     equal: ["job"]
 
@@ -102,9 +102,9 @@ inhibit_rules:
   # DB 连接失败会连锁导致连接池耗尽、业务指标采集停滞等,抑制避免重复通知
   # ----------------------------------------------------------------------
   - source_matchers:
-      - alertname = "PmisDbConnectionFailed"
+      - alertname = "YdszDbConnectionFailed"
     target_matchers:
-      - alertname =~ "PmisDbPoolExhausted|PmisBusinessMetricsStale|PmisHighErrorRate"
+      - alertname =~ "YdszDbPoolExhausted|YdszBusinessMetricsStale|YdszHighErrorRate"
     # 同一 job 才抑制,仅抑制该服务自身的连锁告警
     equal: ["job"]
 
@@ -151,9 +151,9 @@ receivers:
   # ----------------------------------------------------------------------
   - name: email
     email_configs:
-      - to: "pmis-sre@ydsz.cn"
+      - to: "ydsz-sre@ydsz.cn"
         headers:
-          Subject: '[PMIS 告警] {{ .CommonLabels.alertname }}'
+          Subject: '[YDSZ 告警] {{ .CommonLabels.alertname }}'
         html: |
           <h3>{{ .CommonLabels.alertname }}</h3>
           <p><strong>级别:</strong> {{ .CommonLabels.severity }}</p>

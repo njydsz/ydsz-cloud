@@ -51,7 +51,7 @@ public class DocumentSecurityScannerComposite implements DocumentSecurityScanner
         // 写入临时文件，因为多个扫描器需要重复读取
         Path tempFile = null;
         try {
-            tempFile = Files.createTempFile("pmis-docs-scan-", ".tmp");
+            tempFile = Files.createTempFile("ydsz-docs-scan-", ".tmp");
             inputStream.transferTo(Files.newOutputStream(tempFile));
 
             List<SecurityScanResult.SecurityFinding> allFindings = new ArrayList<>();

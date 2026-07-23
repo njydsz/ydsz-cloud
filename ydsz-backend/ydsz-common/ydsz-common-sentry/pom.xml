@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-common-sentry</artifactId>
     <name>ydsz-common-sentry</name>
-    <description>YDSZ PMIS Common Sentry - 统一系统指标监控服务（双方案上报 ELK+Logstash / Loki+Alloy + Micrometer 指标 + SLA 框架 + 链路追踪增强 + 告警收敛降噪 + 降级保护）</description>
+    <description>YDSZ Common Sentry - 统一系统指标监控服务（双方案上报 ELK+Logstash / Loki+Alloy + Micrometer 指标 + SLA 框架 + 链路追踪增强 + 告警收敛降噪 + 降级保护）</description>
 
     <dependencies>
         <!--common-core-->

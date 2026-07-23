@@ -1,6 +1,7 @@
 package com.njydsz.common.search.service;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -183,7 +184,7 @@ public class SearchTextProcessor {
             }
             return is;
         }
-        return new java.io.FileInputStream(filePath);
+        return new FileInputStream(filePath);
     }
 
     private String filterStopWords(String text) {

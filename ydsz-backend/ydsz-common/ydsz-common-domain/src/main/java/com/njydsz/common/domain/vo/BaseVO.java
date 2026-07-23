@@ -3,8 +3,8 @@ package com.njydsz.common.domain.vo;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.json.annotation.JsonField;
-import com.njydsz.common.json.annotation.JsonFormat;
+import com.njydsz.common.json.annotation.YdszJsonField;
+import com.njydsz.common.json.annotation.YdszJsonFormat;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * 视图对象基类
  *
  * <p>用于前端展示的数据对象基类，包含通用的审计字段和状态信息。
- * 逻辑删除标识通过 {@code @JsonField(ignore = true)} 对前端透明。
+ * 逻辑删除标识通过 {@code @YdszJsonField(ignore = true)} 对前端透明。
  *
  * <p><b>通用字段说明：</b>
  * <table>
@@ -55,7 +55,7 @@ public class BaseVO implements Serializable {
      *
      * <p>JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      */
-    @JsonFormat("yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -63,7 +63,7 @@ public class BaseVO implements Serializable {
      *
      * <p>JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      */
-    @JsonFormat("yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**
@@ -123,7 +123,7 @@ public class BaseVO implements Serializable {
      *
      * <p>JSON 序列化时忽略此字段，不返回给前端。
      */
-    @JsonField(ignore = true)
+    @YdszJsonField(ignore = true)
     private Integer deleted;
 
 }

@@ -3,7 +3,7 @@
   @description
     面向运维/管理员的灰度发布控制台：流程定义列表、启动灰度（百分比/白名单）、
     调整比例、全量发布、回滚、灰度日志全流程。
-    配套自研工作流 v2 引擎（pmis_flow_*）使用，PC 端专用。
+    配套自研工作流 v2 引擎（ydsz_flow_*）使用，PC 端专用。
   @module views/workflow/canary
   @author ydsz-team
   @since 1.0.0

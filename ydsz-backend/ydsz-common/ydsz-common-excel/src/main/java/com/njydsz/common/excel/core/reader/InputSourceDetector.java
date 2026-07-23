@@ -14,7 +14,7 @@ import com.njydsz.common.excel.core.metadata.ReadMetadata;
  * </ul>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  * @see ExcelReader
  */

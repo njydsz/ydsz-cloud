@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-workflow
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-workflow
     tier: backend
@@ -26,7 +26,7 @@ spec:
               containerPort: 9006
           envFrom:
             - configMapRef:
-                name: pmis-common-config
+                name: ydsz-common-config
           # P2-7: JVM 容器感知调优
           env:
             - name: JAVA_TOOL_OPTIONS
@@ -65,7 +65,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-workflow
-  namespace: pmis
+  namespace: ydsz
 spec:
   type: ClusterIP
   selector:

@@ -7,7 +7,7 @@
  * 维护规范：
  *  - 新增 / 修改文案应同时在 zh-CN.ts 与 en-US.ts 中按相同 key 路径补齐；任一语言缺失会触发 fallbackLocale 兜底。
  *  - 涉及参数化插值（如 {n}、{level}）时必须保证两套语言包占位符一致。
- *  - Locale 持久化键 STORAGE_KEY = 'pmis-locale'，值仅允许 'zh-CN' | 'en-US'。
+ *  - Locale 持久化键 STORAGE_KEY = 'ydsz-locale'，值仅允许 'zh-CN' | 'en-US'。
  *
  * Key 命名规范：
  *  - 顶层 key = 业务模块名（common / workflow / project / system / execution ...）。
@@ -30,7 +30,7 @@ import enUS from './en-US'
 
 export type LocaleType = 'zh-CN' | 'en-US'
 
-const STORAGE_KEY = 'pmis-locale'
+const STORAGE_KEY = 'ydsz-locale'
 
 /** 探测浏览器首选语言 */
 function detectLocale(): LocaleType {

@@ -3,7 +3,7 @@ package com.njydsz.common.cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
 
 /**
- * LocalCache - 高性能缓存框架（零依赖、企业级）
+ * YdszCache - 高性能缓存框架（零依赖、企业级）
  *
  * <p>提供多种缓存实现，包括 LRU 缓存、TTL 缓存、并发缓存、权重缓存、异步加载缓存等， 完全基于 JDK 原生 API，无需任何第三方依赖。功能对标并超越 Guava Cache 和
  * Caffeine。
@@ -26,18 +26,18 @@ import com.njydsz.common.cache.builder.CacheBuilder;
  *
  * <pre>{@code
  * // 简单缓存（默认 TINYLFU）
- * Cache<String, User> cache = LocalCache.newBuilder()
+ * Cache<String, User> cache = YdszCache.newBuilder()
  *     .maximumSize(1000)
  *     .build();
  *
  * // LRU 缓存
- * Cache<String, User> lruCache = LocalCache.newBuilder()
+ * Cache<String, User> lruCache = YdszCache.newBuilder()
  *     .type(CacheType.LRU)
  *     .maximumSize(1000)
  *     .build();
  *
  * // 高性能并发缓存
- * Cache<String, User> stripedCache = LocalCache.newBuilder()
+ * Cache<String, User> stripedCache = YdszCache.newBuilder()
  *     .type(CacheType.STRIPED)
  *     .maximumSize(10000)
  *     .recordStats()
@@ -45,7 +45,7 @@ import com.njydsz.common.cache.builder.CacheBuilder;
  *     .build();
  *
  * // 自动加载缓存
- * LoadingCache<String, User> loadingCache = LocalCache.newBuilder()
+ * LoadingCache<String, User> loadingCache = YdszCache.newBuilder()
  *     .type(CacheType.ENHANCED_LOADING)
  *     .maximumSize(10000)
  *     .refreshAfterWrite(5, TimeUnit.MINUTES)
@@ -53,7 +53,7 @@ import com.njydsz.common.cache.builder.CacheBuilder;
  *     .buildLoadingCache();
  *
  * // 写穿透缓存
- * Cache<String, User> writeCache = LocalCache.newBuilder()
+ * Cache<String, User> writeCache = YdszCache.newBuilder()
  *     .type(CacheType.STRIPED)
  *     .maximumSize(10000)
  *     .writer(userCacheWriter)
@@ -63,11 +63,11 @@ import com.njydsz.common.cache.builder.CacheBuilder;
  * @since 1.0.0
  * 
  */
-public final class LocalCache {
+public final class YdszCache {
 
-  private LocalCache() {
+  private YdszCache() {
     throw new UnsupportedOperationException(
-        "LocalCache is a utility class and cannot be instantiated");
+        "YdszCache is a utility class and cannot be instantiated");
   }
 
   /**
@@ -77,12 +77,12 @@ public final class LocalCache {
    *
    * <pre>{@code
    * // 简单缓存（默认 TINYLFU）
-   * Cache<String, User> cache = LocalCache.newBuilder()
+   * Cache<String, User> cache = YdszCache.newBuilder()
    *     .maximumSize(1000)
    *     .build();
    *
    * // 高性能并发缓存
-   * Cache<String, User> stripedCache = LocalCache.newBuilder()
+   * Cache<String, User> stripedCache = YdszCache.newBuilder()
    *     .type(CacheType.STRIPED)
    *     .maximumSize(10000)
    *     .recordStats()
@@ -90,7 +90,7 @@ public final class LocalCache {
    *     .build();
    *
    * // 自动加载缓存
-   * LoadingCache<String, User> loadingCache = LocalCache.newBuilder()
+   * LoadingCache<String, User> loadingCache = YdszCache.newBuilder()
    *     .type(CacheType.ENHANCED_LOADING)
    *     .maximumSize(10000)
    *     .refreshAfterWrite(5, TimeUnit.MINUTES)

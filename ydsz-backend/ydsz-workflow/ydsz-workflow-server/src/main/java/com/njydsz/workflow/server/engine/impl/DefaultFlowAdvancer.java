@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.domain.entity.FlowNodeDO;
@@ -438,7 +438,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return null;
         }
         try {
-            Map<String, Object> nodeExt = Json.parseMap(gatewayNode.getExt());
+            Map<String, Object> nodeExt = YdszJson.parseMap(gatewayNode.getExt());
             if (nodeExt == null) {
                 return null;
             }
@@ -471,7 +471,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return null;
         }
         try {
-            Map<String, Object> ext = Json.parseMap(skip.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
             if (ext == null) {
                 return null;
             }
@@ -493,7 +493,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return null;
         }
         try {
-            Map<String, Object> ext = Json.parseMap(skip.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
             if (ext == null) {
                 return null;
             }
@@ -555,7 +555,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return incomingCount;
         }
         try {
-            Map<String, Object> ext = Json.parseMap(node.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
             if (ext == null) {
                 return incomingCount;
             }
@@ -598,7 +598,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return Collections.emptyMap();
         }
         try {
-            return Json.parseMap(json);
+            return YdszJson.parseMap(json);
         } catch (Exception e) {
             log.warn("[Flow] 变量解析失败: {}", e.getMessage());
             return Collections.emptyMap();

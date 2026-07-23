@@ -3,9 +3,11 @@ package com.njydsz.common.docs.preprocess.pipeline;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.DocumentContent;
+import com.njydsz.common.docs.metrics.DocsMetrics;
 import com.njydsz.common.docs.preprocess.DocumentPreprocessor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +32,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PreprocessPipeline {
 
     private final List<DocumentPreprocessor> preprocessors;
+    private final ObjectProvider<DocsMetrics> metricsProvider;
 
-    public PreprocessPipeline(List<DocumentPreprocessor> preprocessors) {
+    public PreprocessPipeline(List<DocumentPreprocessor> preprocessors,
+                              ObjectProvider<DocsMetrics> metricsProvider) {
+        this.metricsProvider = metricsProvider;
         this.preprocessors = preprocessors.stream()
                 .sorted(Comparator.comparingInt(DocumentPreprocessor::getOrder))
                 .toList();
@@ -60,6 +65,10 @@ public class PreprocessPipeline {
             }
             long elapsed = System.currentTimeMillis() - start;
             log.debug("[PreprocessPipeline] {} 耗时 {}ms", preprocessor.getName(), elapsed);
+            DocsMetrics metrics = metricsProvider.getIfAvailable();
+            if (metrics != null) {
+                metrics.recordPreprocess(preprocessor.getName(), elapsed);
+            }
         }
 
         return content;

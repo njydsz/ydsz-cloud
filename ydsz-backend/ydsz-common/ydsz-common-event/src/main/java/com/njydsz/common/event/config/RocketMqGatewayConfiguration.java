@@ -38,7 +38,7 @@ public class RocketMqGatewayConfiguration {
     @ConditionalOnMissingBean(EventPublishGateway.class)
     public EventPublishGateway rocketMqEventPublishGateway(
             RocketMQTemplate rocketMQTemplate) {
-        log.info("RocketMqEventPublishGateway registered: topic=pmis-outbox-events");
+        log.info("RocketMqEventPublishGateway registered: topic=ydsz-outbox-events");
         return new RocketMqEventPublishGateway(rocketMQTemplate, null);
     }
 }

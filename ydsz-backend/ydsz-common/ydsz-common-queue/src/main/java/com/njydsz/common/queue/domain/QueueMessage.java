@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.string.StringUtils;
 
 import lombok.AllArgsConstructor;
@@ -226,7 +226,7 @@ public class QueueMessage implements Serializable {
         if (message.getExpireMillis() == null) {
             message.setExpireMillis(0L);
         }
-        return MessageCompressor.compressIfNeeded(Json.toJson(message), COMPRESS_THRESHOLD);
+        return MessageCompressor.compressIfNeeded(YdszJson.toJson(message), COMPRESS_THRESHOLD);
     }
 
     /**
@@ -248,7 +248,7 @@ public class QueueMessage implements Serializable {
                     "消息 payload 超过最大长度限制: " + payload.length() + " > " + MAX_PAYLOAD_LENGTH);
         }
         try {
-            QueueMessage message = Json.toObject(payload, QueueMessage.class);
+            QueueMessage message = YdszJson.toObject(payload, QueueMessage.class);
             if (message == null) {
                 return QueueMessage.of(payload);
             }

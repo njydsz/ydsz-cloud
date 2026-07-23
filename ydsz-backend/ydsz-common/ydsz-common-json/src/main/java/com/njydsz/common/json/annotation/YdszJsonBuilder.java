@@ -3,7 +3,7 @@ package com.njydsz.common.json.annotation;
 import java.lang.annotation.*;
 
 /**
- * Json Builder 模式注解（参考 fastjson2 的@JSONPOJOBuilder）
+ * YdszJson Builder 模式注解（参考 fastjson2 的@JSONPOJOBuilder）
  *
  * <p>用于标注 Builder 类，支持使用 Builder 模式进行反序列化。</p>
  *
@@ -17,7 +17,7 @@ import java.lang.annotation.*;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * {@literal @}JsonBuilder
+ * {@literal @}YdszJsonBuilder
  * public class User {
  *     private Long id;
  *     private String name;
@@ -33,7 +33,7 @@ import java.lang.annotation.*;
  *         return new Builder();
  *     }
  *
- *     {@literal @}JsonBuilder(builderClass = Builder.class)
+ *     {@literal @}YdszJsonBuilder(builderClass = Builder.class)
  *     public static class Builder {
  *         private Long id;
  *         private String name;
@@ -55,25 +55,25 @@ import java.lang.annotation.*;
  * }
  *
  * // 自定义构建方法名
- * {@literal @}JsonBuilder(buildMethod = "create")
+ * {@literal @}YdszJsonBuilder(buildMethod = "create")
  * public class Product {
  *     // ...
  * }
  *
  * // 自定义 with 前缀
- * {@literal @}JsonBuilder(withPrefix = "set")
+ * {@literal @}YdszJsonBuilder(withPrefix = "set")
  * public class Order {
  *     // ...
  * }
  * </pre>
  *
  * @since 1.0.0
- * @see JsonCreator
+ * @see YdszJsonCreator
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface JsonBuilder {
+public @interface YdszJsonBuilder {
 
     /**
      * Builder 类

@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "PMIS 业务指标仪表盘 - EVM / Bench / 人效 / 流程 / SLA",
+  "description": "YDSZ 业务指标仪表盘 - EVM / Bench / 人效 / 流程 / SLA",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -21,8 +21,8 @@
   "liveNow": false,
   "panels": [
     {
-      "title": "EVM 红项目数(pmis_evm_red_projects_count)",
-      "description": "SPI/CPI < 0.9 的项目数,阈值见 PmisEvmRedProjectsHigh 告警(>3 触发 P1)",
+      "title": "EVM 红项目数(ydsz_evm_red_projects_count)",
+      "description": "SPI/CPI < 0.9 的项目数,阈值见 YdszEvmRedProjectsHigh 告警(>3 触发 P1)",
       "type": "stat",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -50,15 +50,15 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_evm_red_projects_count",
+          "expr": "ydsz_evm_red_projects_count",
           "legendFormat": "EVM 红项目数",
           "refId": "A"
         }
       ]
     },
     {
-      "title": "Bench 总成本(pmis_bench_total_cost)",
-      "description": "Bench 员工月度成本合计(元),阈值见 PmisBenchCostHigh 告警(>50万 触发 P2)",
+      "title": "Bench 总成本(ydsz_bench_total_cost)",
+      "description": "Bench 员工月度成本合计(元),阈值见 YdszBenchCostHigh 告警(>50万 触发 P2)",
       "type": "stat",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -86,15 +86,15 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_bench_total_cost",
+          "expr": "ydsz_bench_total_cost",
           "legendFormat": "Bench 总成本",
           "refId": "A"
         }
       ]
     },
     {
-      "title": "人效利用率(pmis_billable_utilization_avg)",
-      "description": "近 30 天可计费利用率均值(%),阈值见 PmisBillableUtilizationLow 告警(<60% 触发 P2)",
+      "title": "人效利用率(ydsz_billable_utilization_avg)",
+      "description": "近 30 天可计费利用率均值(%),阈值见 YdszBillableUtilizationLow 告警(<60% 触发 P2)",
       "type": "gauge",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -121,7 +121,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_billable_utilization_avg",
+          "expr": "ydsz_billable_utilization_avg",
           "legendFormat": "可计费利用率",
           "refId": "A"
         }
@@ -129,7 +129,7 @@
     },
     {
       "title": "EVM 红项目数趋势(24h)",
-      "description": "pmis_evm_red_projects_count 历史趋势,辅助判断交付风险变化",
+      "description": "ydsz_evm_red_projects_count 历史趋势,辅助判断交付风险变化",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -144,7 +144,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_evm_red_projects_count",
+          "expr": "ydsz_evm_red_projects_count",
           "legendFormat": "EVM 红项目数",
           "refId": "A"
         }
@@ -176,13 +176,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_bench_total_cost",
+          "expr": "ydsz_bench_total_cost",
           "legendFormat": "Bench 总成本",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_billable_utilization_avg",
+          "expr": "ydsz_billable_utilization_avg",
           "legendFormat": "可计费利用率",
           "refId": "B"
         }
@@ -190,7 +190,7 @@
     },
     {
       "title": "流程实例数(按状态分组)",
-      "description": "pmis_workflow_instance_count by state(running / completed / terminated / suspended)",
+      "description": "ydsz_workflow_instance_count by state(running / completed / terminated / suspended)",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -205,7 +205,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_workflow_instance_count",
+          "expr": "ydsz_workflow_instance_count",
           "legendFormat": "{{state}}",
           "refId": "A"
         }
@@ -213,7 +213,7 @@
     },
     {
       "title": "流程审批效率(平均耗时)",
-      "description": "pmis_workflow_approval_duration_seconds_avg 各流程平均审批耗时(秒)",
+      "description": "ydsz_workflow_approval_duration_seconds_avg 各流程平均审批耗时(秒)",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -228,7 +228,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_workflow_approval_duration_seconds_avg",
+          "expr": "ydsz_workflow_approval_duration_seconds_avg",
           "legendFormat": "{{process_key}} 平均审批耗时",
           "refId": "A"
         }
@@ -236,7 +236,7 @@
     },
     {
       "title": "SLA 超时数",
-      "description": "increase(pmis_workflow_sla_timeout_total[1h]) 近 1 小时 SLA 超时累计数",
+      "description": "increase(ydsz_workflow_sla_timeout_total[1h]) 近 1 小时 SLA 超时累计数",
       "type": "stat",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -264,7 +264,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(increase(pmis_workflow_sla_timeout_total[1h]))",
+          "expr": "sum(increase(ydsz_workflow_sla_timeout_total[1h]))",
           "legendFormat": "近 1 小时 SLA 超时数",
           "refId": "A"
         }
@@ -274,13 +274,13 @@
   "refresh": "1m",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pmis", "business"],
+  "tags": ["ydsz", "business"],
   "templating": {"list": []},
   "time": {"from": "now-24h", "to": "now"},
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS 业务指标",
-  "uid": "pmis-business",
+  "title": "YDSZ 业务指标",
+  "uid": "ydsz-business",
   "version": 1,
   "weekStart": ""
 }

@@ -1,4 +1,4 @@
-# YDSZ PMIS 后端 .dockerignore
+# YDSZ 后端 .dockerignore
 # 减少构建上下文体积，加速 docker build
 
 # Maven 构建产物

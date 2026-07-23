@@ -15,7 +15,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.entity.core.MsgLogDO;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -210,7 +210,7 @@ public class ChannelRouter {
         String templateParams = logDO.getTemplateParams();
         if (templateParams != null && !templateParams.isBlank()) {
             try {
-                request.setParams(Json.fromJsonToMap(templateParams, String.class, Object.class));
+                request.setParams(YdszJson.fromJsonToMap(templateParams, String.class, Object.class));
             } catch (Exception e) {
                 log.warn("[ChannelRouter] templateParams 解析失败,忽略: msgId={}, err={}",
                         logDO.getMsgId(), e.getMessage());

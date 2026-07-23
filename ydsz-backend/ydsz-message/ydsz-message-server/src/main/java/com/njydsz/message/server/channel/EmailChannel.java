@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.service.receipt.ReadReceiptService;
 
@@ -95,7 +95,7 @@ public class EmailChannel implements MessageChannel {
             return MessageResult.fail(CHANNEL_TYPE, "收件人邮箱不能为空");
         }
         try {
-            String subject = request.getSubject() == null ? "PMIS 通知" : request.getSubject();
+            String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
             String content = request.getContent();
             boolean isHtml = content != null && content.contains("<");
             // P2-14: HTML 邮件注入追踪像素
@@ -151,7 +151,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addAttachments(MimeMessageHelper helper, String attachmentsJson) {
         try {
-            var attachments = Json.parseArray(attachmentsJson);
+            var attachments = YdszJson.parseArray(attachmentsJson);
             for (int i = 0; i < attachments.size(); i++) {
                 var item = attachments.getJSONObject(i);
                 String name = item.getString("name");
@@ -176,7 +176,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addInlineImages(MimeMessageHelper helper, String inlineJson) {
         try {
-            var images = Json.parseArray(inlineJson);
+            var images = YdszJson.parseArray(inlineJson);
             for (int i = 0; i < images.size(); i++) {
                 var item = images.getJSONObject(i);
                 String cid = item.getString("cid");

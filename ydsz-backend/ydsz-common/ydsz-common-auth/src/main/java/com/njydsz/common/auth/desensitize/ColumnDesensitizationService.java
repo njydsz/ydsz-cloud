@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.RbacUserInfoService;
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationRule;
@@ -62,7 +62,7 @@ public class ColumnDesensitizationService {
         this.redisService = redisService;
         this.properties = properties;
         this.userInfoService = userInfoService;
-        this.cache = LocalCache.<String, ColumnDesensitizationContext>newBuilder()
+        this.cache = YdszCache.<String, ColumnDesensitizationContext>newBuilder()
                 .type(CacheType.TTL)
                 .maximumSize(properties.getDesensitizeCacheMaxSize())
                 .expireAfterWrite(properties.getDesensitizeCacheTtlSeconds(), TimeUnit.SECONDS)
@@ -164,8 +164,8 @@ public class ColumnDesensitizationService {
 
     private void parseAndMergeRules(String json, ColumnDesensitizationContext context) {
         try {
-            // Use Json static methods (Json engine)
-            JsonNode root = Json.readTree(json);
+            // Use YdszJson static methods (YdszJson engine)
+            JsonNode root = YdszJson.readTree(json);
             if (root == null || root.isMissing()) {
                 return;
             }

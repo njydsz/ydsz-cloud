@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.object.YdszJsonArray;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.junit.jupiter.api.Test;
 
 /**
- * 高级功能测试：Optional / UUID / JsonObject / JsonArray / isValid / fromJson / streaming。
+ * 高级功能测试：Optional / UUID / YdszJsonObject / YdszJsonArray / isValid / fromJson / streaming。
  *
  * @since 1.4.0
  */
@@ -26,7 +26,7 @@ class JsonAdvancedTest {
     void testOptionalPresent() {
         Map<String, Object> data = new HashMap<>();
         data.put("name", Optional.of("Alice"));
-        String json = Json.toJson(data);
+        String json = YdszJson.toJson(data);
         assertNotNull(json);
         assertTrue(json.contains("\"name\":\"Alice\""));
     }
@@ -35,7 +35,7 @@ class JsonAdvancedTest {
     void testOptionalEmpty() {
         Map<String, Object> data = new HashMap<>();
         data.put("name", Optional.empty());
-        String json = Json.toJson(data);
+        String json = YdszJson.toJson(data);
         assertNotNull(json);
         assertTrue(json.contains("\"name\":null"));
     }
@@ -44,7 +44,7 @@ class JsonAdvancedTest {
     void testOptionalNestedInList() {
         Map<String, Object> data = new HashMap<>();
         data.put("items", List.of(Optional.of("a"), Optional.empty(), Optional.of("c")));
-        String json = Json.toJson(data);
+        String json = YdszJson.toJson(data);
         assertNotNull(json);
         assertTrue(json.contains("\"a\""));
         assertTrue(json.contains("null"));
@@ -56,7 +56,7 @@ class JsonAdvancedTest {
     @Test
     void testUuidSerialization() {
         UUID uuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
-        String json = Json.toJson(uuid);
+        String json = YdszJson.toJson(uuid);
         assertNotNull(json);
         assertTrue(json.contains("550e8400-e29b-41d4-a716-446655440000"));
     }
@@ -65,7 +65,7 @@ class JsonAdvancedTest {
     void testUuidInMap() {
         Map<String, Object> data = new HashMap<>();
         data.put("id", UUID.fromString("12345678-1234-1234-1234-123456789012"));
-        String json = Json.toJson(data);
+        String json = YdszJson.toJson(data);
         assertNotNull(json);
         assertTrue(json.contains("12345678-1234-1234-1234-123456789012"));
     }
@@ -74,28 +74,28 @@ class JsonAdvancedTest {
 
     @Test
     void testIsValidTrue() {
-        assertTrue(Json.isValid("{\"a\":1}"));
-        assertTrue(Json.isValid("[1,2,3]"));
-        assertTrue(Json.isValid("\"hello\""));
-        assertTrue(Json.isValid("42"));
-        assertTrue(Json.isValid("true"));
-        assertTrue(Json.isValid("null"));
+        assertTrue(YdszJson.isValid("{\"a\":1}"));
+        assertTrue(YdszJson.isValid("[1,2,3]"));
+        assertTrue(YdszJson.isValid("\"hello\""));
+        assertTrue(YdszJson.isValid("42"));
+        assertTrue(YdszJson.isValid("true"));
+        assertTrue(YdszJson.isValid("null"));
     }
 
     @Test
     void testIsValidFalse() {
-        assertFalse(Json.isValid(null));
-        assertFalse(Json.isValid(""));
-        assertFalse(Json.isValid("   "));
-        assertFalse(Json.isValid("{invalid}"));
-        assertFalse(Json.isValid("{\"a\":}"));
+        assertFalse(YdszJson.isValid(null));
+        assertFalse(YdszJson.isValid(""));
+        assertFalse(YdszJson.isValid("   "));
+        assertFalse(YdszJson.isValid("{invalid}"));
+        assertFalse(YdszJson.isValid("{\"a\":}"));
     }
 
     // ==================== fromJson 别名 ====================
 
     @Test
     void testFromJsonAlias() {
-        User user = Json.fromJson("{\"name\":\"Alice\",\"age\":30}", User.class);
+        User user = YdszJson.fromJson("{\"name\":\"Alice\",\"age\":30}", User.class);
         assertNotNull(user);
         assertEquals("Alice", user.name);
         assertEquals(30, user.age);
@@ -107,7 +107,7 @@ class JsonAdvancedTest {
     void testToObjectWithDefaultValue() {
         User defaultUser = new User();
         defaultUser.name = "default";
-        User user = Json.toObject("{invalid}", User.class, defaultUser);
+        User user = YdszJson.toObject("{invalid}", User.class, defaultUser);
         assertEquals("default", user.name);
     }
 
@@ -115,15 +115,15 @@ class JsonAdvancedTest {
     void testToObjectWithDefaultValueOnNull() {
         User defaultUser = new User();
         defaultUser.name = "default";
-        User user = Json.toObject(null, User.class, defaultUser);
+        User user = YdszJson.toObject(null, User.class, defaultUser);
         assertEquals("default", user.name);
     }
 
-    // ==================== JsonObject ====================
+    // ==================== YdszJsonObject ====================
 
     @Test
     void testJsonObjectCreation() {
-        JsonObject obj = Json.object();
+        YdszJsonObject obj = YdszJson.object();
         assertNotNull(obj);
         obj.put("name", "Alice");
         obj.put("age", 30);
@@ -133,14 +133,14 @@ class JsonAdvancedTest {
 
     @Test
     void testJsonObjectFromJson() {
-        JsonObject obj = Json.parseObjectToJsonObject("{\"name\":\"Bob\",\"age\":25}");
+        YdszJsonObject obj = YdszJson.parseObjectToJsonObject("{\"name\":\"Bob\",\"age\":25}");
         assertNotNull(obj);
         assertEquals("Bob", obj.getString("name"));
     }
 
     @Test
     void testJsonObjectFluentChain() {
-        JsonObject obj = Json.object()
+        YdszJsonObject obj = YdszJson.object()
                 .put("a", 1)
                 .put("b", "hello")
                 .put("c", true);
@@ -149,11 +149,11 @@ class JsonAdvancedTest {
         assertEquals(true, obj.get("c"));
     }
 
-    // ==================== JsonArray ====================
+    // ==================== YdszJsonArray ====================
 
     @Test
     void testJsonArrayCreation() {
-        JsonArray arr = Json.array();
+        YdszJsonArray arr = YdszJson.array();
         assertNotNull(arr);
         arr.add("first");
         arr.add(42);
@@ -164,7 +164,7 @@ class JsonAdvancedTest {
 
     @Test
     void testJsonArrayFromJson() {
-        JsonArray arr = Json.parseArrayToJsonArray("[1,2,3]");
+        YdszJsonArray arr = YdszJson.parseArrayToJsonArray("[1,2,3]");
         assertNotNull(arr);
         assertEquals(3, arr.size());
     }
@@ -174,7 +174,7 @@ class JsonAdvancedTest {
     @Test
     void testStreamingOutput() throws Exception {
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        Json.toJson(Map.of("key", "value"), out);
+        YdszJson.toJson(Map.of("key", "value"), out);
         String json = out.toString(java.nio.charset.StandardCharsets.UTF_8);
         assertNotNull(json);
         assertTrue(json.contains("\"key\":\"value\""));
@@ -184,7 +184,7 @@ class JsonAdvancedTest {
     void testStreamingInput() throws Exception {
         byte[] bytes = "{\"name\":\"Alice\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
         java.io.ByteArrayInputStream in = new java.io.ByteArrayInputStream(bytes);
-        User user = Json.toObject(in, User.class);
+        User user = YdszJson.toObject(in, User.class);
         assertNotNull(user);
         assertEquals("Alice", user.name);
     }
@@ -192,7 +192,7 @@ class JsonAdvancedTest {
     @Test
     void testFromJsonBytes() {
         byte[] bytes = "{\"name\":\"Bob\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        User user = Json.fromJsonBytes(bytes, User.class);
+        User user = YdszJson.fromJsonBytes(bytes, User.class);
         assertNotNull(user);
         assertEquals("Bob", user.name);
     }
@@ -201,7 +201,7 @@ class JsonAdvancedTest {
 
     @Test
     void testFromJsonToMap() {
-        Map<String, String> result = Json.fromJsonToMap(
+        Map<String, String> result = YdszJson.fromJsonToMap(
                 "{\"a\":\"1\",\"b\":\"2\"}", String.class, String.class);
         assertNotNull(result);
         assertEquals("1", result.get("a"));
@@ -212,7 +212,7 @@ class JsonAdvancedTest {
 
     @Test
     void testParseArrayWithType() {
-        List<Integer> result = Json.parseArray("[1,2,3]", Integer.class);
+        List<Integer> result = YdszJson.parseArray("[1,2,3]", Integer.class);
         assertNotNull(result);
         assertEquals(3, result.size());
         assertEquals(1, result.get(0));
@@ -224,7 +224,7 @@ class JsonAdvancedTest {
     @Test
     void testCreateGenerator() throws Exception {
         java.io.StringWriter sw = new java.io.StringWriter();
-        try (var gen = Json.createGenerator(sw)) {
+        try (var gen = YdszJson.createGenerator(sw)) {
             gen.writeStartObject();
             gen.writeName("key");
             gen.writeString("value");

@@ -4,7 +4,7 @@ kind: Kustomization
 # UAT 环境:用户验收测试,2-3 副本 + INFO 日志
 # 用法:kubectl apply -k deploy/k8s/overlays/uat
 
-namespace: pmis-uat
+namespace: ydsz-uat
 
 resources:
   - ../../base
@@ -27,7 +27,7 @@ images:
 
 # P2-12: UAT 环境 30% 采样
 configMapGenerator:
-  - name: pmis-common-config
+  - name: ydsz-common-config
     behavior: merge
     literals:
       - TRACING_SAMPLING_PROBABILITY=0.3

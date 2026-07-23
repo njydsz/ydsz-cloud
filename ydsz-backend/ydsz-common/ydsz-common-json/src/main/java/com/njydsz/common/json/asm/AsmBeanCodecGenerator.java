@@ -23,7 +23,7 @@ import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.reader.JSONReader;
@@ -53,7 +53,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *   <li>15: 嵌套 Bean</li>
  * </ul>
  * 
- * @author Json Team
+ * @author YdszJson Team
  */
 public final class AsmBeanCodecGenerator {
 
@@ -110,7 +110,7 @@ public final class AsmBeanCodecGenerator {
             if (asmSerializer != null) {
                 AsmCodecCache.trySerialize(obj, writer);
             } else {
-                String json = Json.toJson(obj);
+                String json = YdszJson.toJson(obj);
                 writer.write(json);
             }
         } catch (Exception e) {

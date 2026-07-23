@@ -26,7 +26,7 @@
 k8s/
 ├── base/                          # 公共 base(7 微服务 + namespace + configmap + secret)
 │   ├── kustomization.yaml         # 镜像版本在这里集中维护
-│   ├── namespace.yaml             # pmis 命名空间
+│   ├── namespace.yaml             # ydsz 命名空间
 │   ├── configmap-common.yaml      # 公共环境变量(Spring Cloud Nacos 等)
 │   ├── secret-db.yaml             # 数据库密码(明文,生产请换 Sealed Secrets)
 │   ├── gateway.yaml               # 9000  + Service
@@ -67,9 +67,9 @@ kubectl apply -k deploy/k8s/overlays/dev
 kubectl apply -k deploy/k8s/overlays/prod
 
 # 验证
-kubectl -n pmis get pods
-kubectl -n pmis get svc
-kubectl -n pmis get hpa        # 仅 prod 有
+kubectl -n ydsz get pods
+kubectl -n ydsz get svc
+kubectl -n ydsz get hpa        # 仅 prod 有
 
 # 卸载
 kubectl delete -k deploy/k8s/overlays/prod
@@ -93,7 +93,7 @@ kubectl delete -k deploy/k8s/overlays/prod
 
 ## 3. 中间件策略
 
-当前 K8S 模板**只包含 PMIS 7 个微服务**的部署,**不含 8 大中间件**。中间件需另行处理:
+当前 K8S 模板**只包含 YDSZ 7 个微服务**的部署,**不含 8 大中间件**。中间件需另行处理:
 
 | 方案 | 适用 | 说明 |
 |---|---|---|
@@ -107,7 +107,7 @@ kubectl delete -k deploy/k8s/overlays/prod
 
 | 维度 | dev | sit | uat | prod |
 |---|---|---|---|---|
-| 命名空间 | pmis-dev | pmis-sit | pmis-uat | pmis |
+| 命名空间 | ydsz-dev | ydsz-sit | ydsz-uat | ydsz |
 | 名称前缀 | dev- | sit- | uat- | — |
 | gateway 副本 | 1 | 2 | 2 | **3 (HPA 3-10)** |
 | project 副本 | 1 | 2 | 3 | **4 (HPA 4-12)** |
@@ -166,7 +166,7 @@ docker build -t ydsz/gateway:v1.0.0 \
 
 **镜像构建特性**（对齐阿里/字节容器化规范）:
 - 多阶段构建（Maven builder → JRE alpine runtime）
-- 非 root 用户（pmis:65532）
+- 非 root 用户（ydsz:65532）
 - tini 作为 PID 1，正确处理 SIGTERM
 - JVM 容器化参数（-XX:+UseContainerSupport + MaxRAMPercentage）
 - BuildKit 缓存挂载加速构建

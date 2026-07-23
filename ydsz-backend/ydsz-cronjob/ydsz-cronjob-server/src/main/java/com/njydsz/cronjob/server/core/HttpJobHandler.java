@@ -7,7 +7,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
@@ -81,7 +81,7 @@ public class HttpJobHandler implements JobHandler {
             throw new IllegalArgumentException("HTTP 任务参数(paramsJson)为空");
         }
 
-        Map<String, Object> params = Json.parseMap(paramsJson);
+        Map<String, Object> params = YdszJson.parseMap(paramsJson);
         String url = params.getString("url");
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("HTTP 任务参数缺少 url");

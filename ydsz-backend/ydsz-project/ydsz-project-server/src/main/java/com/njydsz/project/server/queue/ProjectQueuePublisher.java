@@ -12,7 +12,7 @@ import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessagePublisher;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.project.server.engine.BudgetAlertEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -68,7 +68,7 @@ public class ProjectQueuePublisher {
             return;
         }
         try {
-            String json = Json.toJson(event);
+            String json = YdszJson.toJson(event);
             QueueMessage message = QueueMessage.of(json);
             message.addHeader("alertLevel", event.getLevel() == null ? "UNKNOWN" : event.getLevel().name());
             message.addHeader("initiationId", event.getInitiationId());

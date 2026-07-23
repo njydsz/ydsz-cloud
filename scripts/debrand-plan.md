@@ -2,7 +2,7 @@
 
 > **状态**：执行中（2026-07-16 启动，用户决策：立即全量重构）
 > **品牌定位**：项目品牌标识是 **ydsz**（不是 pmis）。pmis 是遗留产品代号，须从全仓库移除。
-> **方向反转**：2026-07-15 的「去 Ydsz 化」（`YdszJson*` → `Json*`、`YdszCache*` → `LocalCache*`）方向错误，本次回退为 `Ydsz` 前缀。
+> **方向反转**：2026-07-15 的「去 Ydsz 化」（`YdszJson*` → `YdszJson*`、`YdszCache*` → `YdszCache*`）方向错误，本次回退为 `Ydsz` 前缀。
 > **范围**：ydsz 整个仓库（后端 Maven 模块 + 前端 + 部署 + 脚本 + 规则 + 文档）
 
 ---
@@ -15,7 +15,7 @@
 | Maven 模块名/目录 | `ydsz-*` | `ydsz-*` | `ydsz-backend` → `ydsz-backend` |
 | SQL 表前缀 | `pmis_*` | `ydsz_*` | `pmis_job` → `ydsz_job` |
 | Java 类名 | `PmisXxx` | `YdszXxx` | `PmisWorkflowFacade` → `YdszWorkflowFacade` |
-| json/cache 模块类名（回退） | `Json*` / `LocalCache*` | `YdszJson*` / `YdszCache*` | `Json` → `YdszJson`、`LocalCache` → `YdszCache` |
+| json/cache 模块类名（回退） | `YdszJson*` / `YdszCache*` | `YdszJson*` / `YdszCache*` | `YdszJson` → `YdszJson`、`YdszCache` → `YdszCache` |
 | 配置键 | `pmis.*` | `ydsz.*` | `pmis.message.receipt-timeout-minutes` → `ydsz.message.receipt-timeout-minutes` |
 | 分布式锁 key / 权限码 | `pmis:*` | `ydsz:*` | `pmis:msg:receipt:pull:lock` → `ydsz:msg:receipt:pull:lock` |
 | Helm / K8s 资源 | `ydsz` | `ydsz` | `deploy/helm/ydsz/` → `deploy/helm/ydsz/` |
@@ -52,9 +52,9 @@
 
 | 模块 | 当前类名（2026-07-15 重命名后） | 回退为 |
 |---|---|---|
-| common-json | `Json`（24 个公开类） | `YdszJson*` |
+| common-json | `YdszJson`（24 个公开类） | `YdszJson*` |
 | common-json | `SerializerEngine` / `DeserializerEngine` / `SerializationProvider` / `DeserializationProvider` | `YdszSerializerEngine` 等 |
-| common-cache | `LocalCache` / `LocalCacheManager` / `LocalCacheProperties` / `LocalCacheAutoConfiguration` / `SpringLocalCache` | `YdszCache` / `YdszCacheManager` / `YdszCacheProperties` / `YdszCacheAutoConfiguration` / `SpringYdszCache` |
+| common-cache | `YdszCache` / `YdszCacheManager` / `YdszCacheProperties` / `YdszCacheAutoConfiguration` / `SpringYdszCache` | `YdszCache` / `YdszCacheManager` / `YdszCacheProperties` / `YdszCacheAutoConfiguration` / `SpringYdszCache` |
 
 ---
 
@@ -86,8 +86,8 @@
 
 1. `PmisWorkflowFacade.java` → `YdszWorkflowFacade.java`
 2. `PmisBusinessMetricsJob.java` → `YdszBusinessMetricsJob.java`
-3. json 模块：`Json*.java` → `YdszJson*.java`（回退）
-4. cache 模块：`LocalCache*.java` → `YdszCache*.java`（回退）
+3. json 模块：`YdszJson*.java` → `YdszJson*.java`（回退）
+4. cache 模块：`YdszCache*.java` → `YdszCache*.java`（回退）
 5. 同步更新 `AutoConfiguration.imports`、`native-image.json`、`spring-configuration-metadata.json`
 
 ### 步骤 4：验证

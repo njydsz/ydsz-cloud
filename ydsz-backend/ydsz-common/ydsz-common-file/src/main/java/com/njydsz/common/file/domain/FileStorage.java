@@ -3,13 +3,6 @@ package com.njydsz.common.file.domain;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import org.springframework.web.multipart.MultipartFile;
-
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.constant.FileConstant;
-import com.njydsz.common.file.exception.FileExceptionCode;
-import com.njydsz.common.util.file.FileTypeUtils;
-
 import lombok.Data;
 
 /**
@@ -105,51 +98,4 @@ public class FileStorage implements Serializable {
 
     /** 文件来源（系统名 / 业务模块） */
     private String source;
-
-    /**
-     * 从 MultipartFile 构建 FileStorage 实体
-     * <p>自动提取文件名、扩展名、大小、类型等信息，并校验文件合法性和扩展名白名单。
-     *
-     * @param file 上传的文件
-     * @return 填充了基本信息的 FileStorage 实体
-     * @throws BusinessException 文件为空、文件名无效或扩展名不允许时抛出
-     */
-    @Deprecated
-    public static FileStorage build(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_EMPTY);
-        }
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_NAME_INVALID);
-        }
-        int dotPos = originalFilename.lastIndexOf(FileConstant.SUFFIX_SPLIT);
-        if (dotPos < 0) {
-            throw new BusinessException(FileExceptionCode.FILE_NAME_INVALID);
-        }
-        Long size = file.getSize();
-        String orgName = file.getOriginalFilename();
-        String fileExt = FileTypeUtils.getFileType(orgName);
-        if (!FileTypeUtils.isAllowedExtension(fileExt)) {
-            throw new BusinessException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
-        }
-        String type;
-        if (FileTypeUtils.isCodeExtension(fileExt)) {
-            type = "code";
-        } else {
-            type = fileExt;
-        }
-        FileStorage fileStorage = new FileStorage();
-        fileStorage.setSuffix(fileExt);
-        fileStorage.setSize(size);
-        fileStorage.setFileName(orgName);
-        fileStorage.setIsImage(FileTypeUtils.isImageExtension(fileExt) ? 1 : 0);
-        fileStorage.setIsVideo(FileTypeUtils.isVideoExtension(fileExt) ? 1 : 0);
-        fileStorage.setIsAudio(FileTypeUtils.isAudioExtension(fileExt) ? 1 : 0);
-        fileStorage.setIsOffice(FileTypeUtils.isOfficeExtension(fileExt) ? 1 : 0);
-        fileStorage.setIsDir(0);
-        fileStorage.setUploadAt(LocalDateTime.now());
-        fileStorage.setType(type);
-        return fileStorage;
-    }
 }

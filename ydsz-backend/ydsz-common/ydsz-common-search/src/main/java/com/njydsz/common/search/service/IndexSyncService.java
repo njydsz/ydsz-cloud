@@ -3,6 +3,7 @@ package com.njydsz.common.search.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +41,8 @@ public class IndexSyncService {
     /** P2-15: 死信队列 — 存储重试失败的索引操作 */
     // P1-6: bounded dead letter queue (max 10000 entries)
     private static final int MAX_DLQ_SIZE = 10000;
-    private final List<IndexOperation> deadLetterQueue = Collections.synchronizedList(new ArrayList<>(MAX_DLQ_SIZE));
+    // P2-10: 使用 ConcurrentLinkedQueue 替代 synchronizedList 修复 check-then-act 竞态
+    private final ConcurrentLinkedQueue<IndexOperation> deadLetterQueue = new ConcurrentLinkedQueue<>();
 
     public IndexSyncService(SearchEngine searchEngine,
                             SearchProviderRegistry providerRegistry,
@@ -177,14 +179,18 @@ public class IndexSyncService {
      * P2-15: 重试死信队列中的操作
      */
     public void retryDeadLetterQueue() {
-        if (deadLetterQueue.isEmpty()) {
+        // P2-10: 使用 poll() 原子操作替代 snapshot + clear，避免竞态条件
+        List<IndexOperation> snapshot = new ArrayList<>();
+        IndexOperation op;
+        while ((op = deadLetterQueue.poll()) != null) {
+            snapshot.add(op);
+        }
+        if (snapshot.isEmpty()) {
             return;
         }
-        List<IndexOperation> snapshot = new ArrayList<>(deadLetterQueue);
-        deadLetterQueue.clear();
         log.info("[IndexSync] 重试死信队列: size={}", snapshot.size());
-        for (IndexOperation op : snapshot) {
-            handleOperation(op);
+        for (IndexOperation operation : snapshot) {
+            handleOperation(operation);
         }
     }
 

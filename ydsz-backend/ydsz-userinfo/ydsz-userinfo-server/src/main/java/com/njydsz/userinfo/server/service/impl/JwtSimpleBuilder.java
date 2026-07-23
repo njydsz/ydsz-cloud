@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -25,7 +25,7 @@ public final class JwtSimpleBuilder {
     private static final Logger log = LoggerFactory.getLogger(JwtSimpleBuilder.class);
 
     private static final String HEADER = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
-    private static final String SECRET = "pmis-user-module-jwt-secret-2026";
+    private static final String SECRET = "ydsz-user-module-jwt-secret-2026";
 
     private JwtSimpleBuilder() {
     }
@@ -42,7 +42,7 @@ public final class JwtSimpleBuilder {
         claims.putIfAbsent("iat", now);
         claims.put("exp", now + expireSeconds);
         String headerB64 = b64(HEADER);
-        String payloadB64 = b64(Json.toJson(claims));
+        String payloadB64 = b64(YdszJson.toJson(claims));
         String signature = hmac(headerB64 + "." + payloadB64);
         return headerB64 + "." + payloadB64 + "." + signature;
     }

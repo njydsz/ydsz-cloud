@@ -16,7 +16,7 @@
       "gridPos": { "h": 6, "w": 4, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(pmis_flow_instance_created_total[5m]))",
+          "expr": "sum(rate(ydsz_flow_instance_created_total[5m]))",
           "legendFormat": "创建 QPS"
         }
       ],
@@ -30,7 +30,7 @@
       "gridPos": { "h": 6, "w": 4, "x": 4, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(pmis_flow_instance_finished_total[5m]))",
+          "expr": "sum(rate(ydsz_flow_instance_finished_total[5m]))",
           "legendFormat": "完成 QPS"
         }
       ],
@@ -44,7 +44,7 @@
       "gridPos": { "h": 6, "w": 4, "x": 8, "y": 0 },
       "targets": [
         {
-          "expr": "pmis_flow_pending_tasks",
+          "expr": "ydsz_flow_pending_tasks",
           "legendFormat": "待办数"
         }
       ],
@@ -62,7 +62,7 @@
       "gridPos": { "h": 6, "w": 4, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "pmis_flow_running_instances",
+          "expr": "ydsz_flow_running_instances",
           "legendFormat": "运行中"
         }
       ],
@@ -76,7 +76,7 @@
       "gridPos": { "h": 6, "w": 4, "x": 16, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(pmis_flow_task_timeout_total[5m])) / sum(rate(pmis_flow_task_created_total[5m])) * 100",
+          "expr": "sum(rate(ydsz_flow_task_timeout_total[5m])) / sum(rate(ydsz_flow_task_created_total[5m])) * 100",
           "legendFormat": "超时率%"
         }
       ],
@@ -94,7 +94,7 @@
       "gridPos": { "h": 6, "w": 4, "x": 20, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(pmis_flow_task_rejected_total[5m])) / sum(rate(pmis_flow_task_created_total[5m])) * 100",
+          "expr": "sum(rate(ydsz_flow_task_rejected_total[5m])) / sum(rate(ydsz_flow_task_created_total[5m])) * 100",
           "legendFormat": "驳回率%"
         }
       ],
@@ -108,7 +108,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "targets": [
         {
-          "expr": "sum by (flow_code) (rate(pmis_flow_instance_created_total[5m]))",
+          "expr": "sum by (flow_code) (rate(ydsz_flow_instance_created_total[5m]))",
           "legendFormat": "{{flow_code}}"
         }
       ],
@@ -122,7 +122,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "targets": [
         {
-          "expr": "sum by (result) (rate(pmis_flow_instance_finished_total[5m]))",
+          "expr": "sum by (result) (rate(ydsz_flow_instance_finished_total[5m]))",
           "legendFormat": "{{result}}"
         }
       ],
@@ -136,15 +136,15 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.5, sum(rate(pmis_flow_task_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.5, sum(rate(ydsz_flow_task_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "P50"
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(pmis_flow_task_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(ydsz_flow_task_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "P95"
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(pmis_flow_task_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(ydsz_flow_task_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "P99"
         }
       ],
@@ -158,15 +158,15 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.5, sum(rate(pmis_flow_instance_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.5, sum(rate(ydsz_flow_instance_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "P50"
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(pmis_flow_instance_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(ydsz_flow_instance_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "P95"
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(pmis_flow_instance_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(ydsz_flow_instance_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "P99"
         }
       ],
@@ -180,7 +180,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
       "targets": [
         {
-          "expr": "sum by (action) (rate(pmis_flow_sla_timeout_total[5m]))",
+          "expr": "sum by (action) (rate(ydsz_flow_sla_timeout_total[5m]))",
           "legendFormat": "{{action}}"
         }
       ],
@@ -193,11 +193,11 @@
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
       "targets": [
-        { "expr": "sum(rate(pmis_flow_task_passed_total[5m]))", "legendFormat": "通过" },
-        { "expr": "sum(rate(pmis_flow_task_rejected_total[5m]))", "legendFormat": "驳回" },
-        { "expr": "sum(rate(pmis_flow_task_transferred_total[5m]))", "legendFormat": "转办" },
-        { "expr": "sum(rate(pmis_flow_task_delegated_total[5m]))", "legendFormat": "委派" },
-        { "expr": "sum(rate(pmis_flow_task_urged_total[5m]))", "legendFormat": "催办" }
+        { "expr": "sum(rate(ydsz_flow_task_passed_total[5m]))", "legendFormat": "通过" },
+        { "expr": "sum(rate(ydsz_flow_task_rejected_total[5m]))", "legendFormat": "驳回" },
+        { "expr": "sum(rate(ydsz_flow_task_transferred_total[5m]))", "legendFormat": "转办" },
+        { "expr": "sum(rate(ydsz_flow_task_delegated_total[5m]))", "legendFormat": "委派" },
+        { "expr": "sum(rate(ydsz_flow_task_urged_total[5m]))", "legendFormat": "催办" }
       ],
       "fieldConfig": {
         "defaults": { "unit": "ops" }
@@ -209,7 +209,7 @@
       "gridPos": { "h": 6, "w": 6, "x": 0, "y": 30 },
       "targets": [
         {
-          "expr": "pmis_flow_cc_unread",
+          "expr": "ydsz_flow_cc_unread",
           "legendFormat": "未读抄送"
         }
       ],
@@ -223,7 +223,7 @@
       "gridPos": { "h": 6, "w": 6, "x": 6, "y": 30 },
       "targets": [
         {
-          "expr": "sum(rate(pmis_flow_start_error_total[5m]))",
+          "expr": "sum(rate(ydsz_flow_start_error_total[5m]))",
           "legendFormat": "启动异常"
         }
       ],
@@ -240,7 +240,7 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 36 },
       "targets": [
         {
-          "expr": "topk(10, avg by (flow_code, node_code) (pmis_flow_task_duration_seconds_sum / pmis_flow_task_duration_seconds_count))",
+          "expr": "topk(10, avg by (flow_code, node_code) (ydsz_flow_task_duration_seconds_sum / ydsz_flow_task_duration_seconds_count))",
           "legendFormat": "{{flow_code}} / {{node_code}}",
           "format": "table",
           "instant": true
@@ -254,7 +254,7 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pmis", "workflow", "bpmn"],
+  "tags": ["ydsz", "workflow", "bpmn"],
   "templating": {
     "list": [
       {
@@ -268,8 +268,8 @@
   "time": { "from": "now-6h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS 工作流引擎监控",
-  "uid": "pmis-flow-dashboard",
+  "title": "YDSZ 工作流引擎监控",
+  "uid": "ydsz-flow-dashboard",
   "version": 1,
   "weekStart": ""
 }

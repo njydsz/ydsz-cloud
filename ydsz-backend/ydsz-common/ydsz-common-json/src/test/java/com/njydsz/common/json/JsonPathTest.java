@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.njydsz.common.json.jsonpath.JsonPath;
+import com.njydsz.common.json.jsonpath.YdszJsonPath;
 
 /**
  * JSONPath 查询测试。
@@ -20,31 +20,31 @@ class JsonPathTest {
 
     @Test
     void testSimpleProperty() {
-        Object result = JsonPath.get(JSON, "$.user.name");
+        Object result = YdszJsonPath.get(JSON, "$.user.name");
         assertEquals("Alice", result);
     }
 
     @Test
     void testNestedProperty() {
-        Object result = JsonPath.get(JSON, "$.user.age");
+        Object result = YdszJsonPath.get(JSON, "$.user.age");
         assertEquals(30, result);
     }
 
     @Test
     void testArrayIndex() {
-        Object result = JsonPath.get(JSON, "$.items[0].id");
+        Object result = YdszJsonPath.get(JSON, "$.items[0].id");
         assertEquals(1, result);
     }
 
     @Test
     void testArrayLastIndex() {
-        Object result = JsonPath.get(JSON, "$.items[2].price");
+        Object result = YdszJsonPath.get(JSON, "$.items[2].price");
         assertEquals(50, result);
     }
 
     @Test
     void testArraySlice() {
-        JsonPath path = JsonPath.compile("$.items[0:2]");
+        YdszJsonPath path = YdszJsonPath.compile("$.items[0:2]");
         List<Object> results = path.getAllValues(JSON);
         assertNotNull(results);
         assertEquals(2, results.size());
@@ -52,7 +52,7 @@ class JsonPathTest {
 
     @Test
     void testWildcard() {
-        JsonPath path = JsonPath.compile("$.items[*].id");
+        YdszJsonPath path = YdszJsonPath.compile("$.items[*].id");
         List<Object> results = path.getAllValues(JSON);
         assertNotNull(results);
         assertEquals(3, results.size());
@@ -60,7 +60,7 @@ class JsonPathTest {
 
     @Test
     void testArrayFilter() {
-        JsonPath path = JsonPath.compile("$.items[?(@.price > 100)]");
+        YdszJsonPath path = YdszJsonPath.compile("$.items[?(@.price > 100)]");
         List<Object> results = path.getAllValues(JSON);
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -68,7 +68,7 @@ class JsonPathTest {
 
     @Test
     void testRecursiveDescent() {
-        JsonPath path = JsonPath.compile("$..id");
+        YdszJsonPath path = YdszJsonPath.compile("$..id");
         List<Object> results = path.getAllValues(JSON);
         assertNotNull(results);
         assertTrue(results.size() >= 3);
@@ -76,14 +76,14 @@ class JsonPathTest {
 
     @Test
     void testCompileInvalidPath() {
-        assertThrows(IllegalArgumentException.class, () -> JsonPath.compile(""));
-        assertThrows(IllegalArgumentException.class, () -> JsonPath.compile(null));
-        assertThrows(IllegalArgumentException.class, () -> JsonPath.compile("user.name"));
+        assertThrows(IllegalArgumentException.class, () -> YdszJsonPath.compile(""));
+        assertThrows(IllegalArgumentException.class, () -> YdszJsonPath.compile(null));
+        assertThrows(IllegalArgumentException.class, () -> YdszJsonPath.compile("user.name"));
     }
 
     @Test
     void testNonExistentPath() {
-        Object result = JsonPath.get(JSON, "$.user.nonexistent");
+        Object result = YdszJsonPath.get(JSON, "$.user.nonexistent");
         assertNull(result);
     }
 
@@ -92,7 +92,7 @@ class JsonPathTest {
         String json = "{\"items\":[{\"id\":1,\"status\":\"active\",\"age\":25},"
                 + "{\"id\":2,\"status\":\"inactive\",\"age\":30},"
                 + "{\"id\":3,\"status\":\"active\",\"age\":35}]}";
-        JsonPath path = JsonPath.compile("$.items[?(@.status == 'active' && @.age >= 30)]");
+        YdszJsonPath path = YdszJsonPath.compile("$.items[?(@.status == 'active' && @.age >= 30)]");
         List<Object> results = path.getAllValues(json);
         assertNotNull(results);
         assertEquals(1, results.size());

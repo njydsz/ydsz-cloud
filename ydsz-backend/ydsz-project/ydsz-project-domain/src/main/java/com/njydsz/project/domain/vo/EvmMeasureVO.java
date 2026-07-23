@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonField;
 
 import lombok.Data;
 
@@ -22,7 +22,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@JsonField(notWriteNullValue = true)
+@YdszJsonField(notWriteNullValue = true)
 public class EvmMeasureVO implements Serializable {
 
     @Serial

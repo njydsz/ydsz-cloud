@@ -41,7 +41,7 @@ export interface WatermarkOptions {
 type ResolvedWatermarkOptions = Required<WatermarkOptions>
 
 /** 水印 DOM 元素 ID */
-const WATERMARK_ID = '__pmis_watermark__'
+const WATERMARK_ID = '__ydsz_watermark__'
 
 /** 默认配置 */
 const DEFAULT_OPTIONS: ResolvedWatermarkOptions = {

@@ -107,33 +107,6 @@ public class ValueFormatter {
     }
 
     /**
-     * 超高性能单元格值设置（避免所有不必要的对象创建和方法调用）
-     *
-     * @param cell 单元格
-     * @param value 值
-     * @param dateFormat 日期格式
-     */
-    public void setCellValueUltraFast(Cell cell, Object value, String dateFormat) {
-        if (value == null) {
-            cell.setBlank();
-            return;
-        }
-
-        if (value instanceof String s) {
-            cell.setCellValue(automaticTrim ? s.trim() : s);
-        } else if (value instanceof Number n) {
-            cell.setCellValue(n.doubleValue());
-        } else if (value instanceof Boolean b) {
-            cell.setCellValue(b);
-        } else if (value instanceof Date d) {
-            DateTimeFormatter formatter = getDateTimeFormatter(dateFormat != null ? dateFormat : DEFAULT_DATE_FORMAT);
-            cell.setCellValue(d.toInstant().atZone(ZoneId.systemDefault()).format(formatter));
-        } else {
-            cell.setCellValue(value.toString());
-        }
-    }
-
-    /**
      * 格式化Date
      *
      * @param date 要格式化的日期

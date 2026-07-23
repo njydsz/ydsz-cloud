@@ -22,7 +22,7 @@ import java.util.Map;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * ObjectNode node = Json.tree("{\"name\":\"John\",\"age\":30}");
+ * ObjectNode node = YdszJson.tree("{\"name\":\"John\",\"age\":30}");
  * String name = node.get("name").asText();
  * int age = node.get("age").asInt();
  * </pre>

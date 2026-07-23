@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 
@@ -47,7 +47,7 @@ public class LiteExprCompiler {
      *   <li>线程安全，{@code get(key, mapper)} 原子加载，避免 {@code computeIfAbsent} 的重入陷阱</li>
      * </ul>
      */
-    private final Cache<String, ExprNode> cache = LocalCache.<String, ExprNode>newBuilder()
+    private final Cache<String, ExprNode> cache = YdszCache.<String, ExprNode>newBuilder()
             .type(CacheType.TTL)
             .maximumSize(MAX_CACHE_SIZE)
             .expireAfterAccess(CACHE_EXPIRE_HOURS, TimeUnit.HOURS)

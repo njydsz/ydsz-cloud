@@ -7,12 +7,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.security.TenantContext;
@@ -73,12 +73,12 @@ public class FlowDefinitionCacheService {
         this.flowNodeMapper = flowNodeMapper;
         this.flowSkipMapper = flowSkipMapper;
         this.broadcaster = broadcaster;
-        this.nodeCache = LocalCache.<String, List<FlowNodeDO>>newBuilder()
+        this.nodeCache = YdszCache.<String, List<FlowNodeDO>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
                 .build();
-        this.skipCache = LocalCache.<String, List<FlowSkipDO>>newBuilder()
+        this.skipCache = YdszCache.<String, List<FlowSkipDO>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .maximumSize(MAX_SIZE)
@@ -258,7 +258,7 @@ public class FlowDefinitionCacheService {
             return null;
         }
         try {
-            Map<String, Object> extJson = Json.parseMap(skip.getExt());
+            Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
             return extJson == null ? null : extJson.getString("sourceRef");
         } catch (Exception e) {
             log.warn("[FlowCache] 解析 skip.ext 失败: skipId={} err={}",

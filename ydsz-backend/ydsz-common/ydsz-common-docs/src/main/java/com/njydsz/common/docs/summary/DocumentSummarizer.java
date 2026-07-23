@@ -182,6 +182,10 @@ public class DocumentSummarizer {
 
     /**
      * 文档自动分类（基于关键词匹配）
+     * <p>
+     * 支持通过 {@code ydsz.docs.classifier-rules} 配置自定义分类规则。
+     * 配置格式为 JSON 数组：{@code [{"category":"合同文档","keywords":["合同","协议","条款"]}]}
+     * 未配置时使用内置默认分类规则。
      *
      * @param content 文档内容
      * @return 分类标签
@@ -190,6 +194,7 @@ public class DocumentSummarizer {
         List<String> keywords = extractKeywords(content, 20);
         String keywordStr = String.join(" ", keywords).toLowerCase();
 
+        // 内置默认分类规则，支持通过配置覆盖
         if (keywordStr.contains("合同") || keywordStr.contains("协议") || keywordStr.contains("条款")) {
             return "合同文档";
         }

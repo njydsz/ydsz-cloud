@@ -68,8 +68,8 @@ public class AlertProperties {
         /** 邮件服务转发 URL（NULL 时尝试本地 SMTP） */
         private String serviceUrl;
 
-        /** 邮件主题前缀（如 [PMIS 告警]） */
-        private String subjectPrefix = "[PMIS 告警]";
+        /** 邮件主题前缀（如 [YDSZ 告警]） */
+        private String subjectPrefix = "[YDSZ 告警]";
     }
 
     /**

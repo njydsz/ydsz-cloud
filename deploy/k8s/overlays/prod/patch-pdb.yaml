@@ -6,7 +6,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-gateway-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 1
   selector:
@@ -17,7 +17,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-system-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 1
   selector:
@@ -28,7 +28,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-userinfo-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 1
   selector:
@@ -40,7 +40,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-project-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 2
   selector:
@@ -51,7 +51,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-workflow-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 1
   selector:
@@ -62,7 +62,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-message-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 1
   selector:
@@ -74,7 +74,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-sales-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 1
   selector:
@@ -85,7 +85,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ydsz-finance-pdb
-  namespace: pmis
+  namespace: ydsz
 spec:
   maxUnavailable: 1
   selector:

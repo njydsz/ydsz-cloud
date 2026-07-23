@@ -18,7 +18,7 @@ import com.googlecode.aviator.AviatorEvaluatorInstance;
 import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowNodeDO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -250,7 +250,7 @@ public class FlowServiceNodeExecutor {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = Json.parseMap(ext);
+            Map<String, Object> map = YdszJson.parseMap(ext);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow-Service] 解析 ext JSON 失败: {} err={}", ext, e.getMessage());

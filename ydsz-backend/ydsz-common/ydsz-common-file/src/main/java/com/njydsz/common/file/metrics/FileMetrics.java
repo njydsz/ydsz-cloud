@@ -1,5 +1,7 @@
 package com.njydsz.common.file.metrics;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import io.micrometer.core.instrument.Counter;
@@ -24,6 +26,9 @@ public class FileMetrics {
     private final Counter virusDetectedCounter;
     private final Timer uploadTimer;
     private final Timer downloadTimer;
+
+    private final ConcurrentMap<String, Counter> uploadErrorCounters = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Counter> downloadErrorCounters = new ConcurrentHashMap<>();
 
     public FileMetrics(MeterRegistry registry) {
         this.registry = registry;
@@ -76,13 +81,19 @@ public class FileMetrics {
 
     public void recordUploadError(String errorCode) {
         if (registry != null) {
-            Counter.builder(PREFIX + "upload.errors").tag("code", errorCode != null ? errorCode : "unknown").description("File upload error count").register(registry).increment();
+            String code = errorCode != null ? errorCode : "unknown";
+            uploadErrorCounters.computeIfAbsent(code, c ->
+                    Counter.builder(PREFIX + "upload.errors").tag("code", c)
+                            .description("File upload error count").register(registry)).increment();
         }
     }
 
     public void recordDownloadError(String errorCode) {
         if (registry != null) {
-            Counter.builder(PREFIX + "download.errors").tag("code", errorCode != null ? errorCode : "unknown").description("File download error count").register(registry).increment();
+            String code = errorCode != null ? errorCode : "unknown";
+            downloadErrorCounters.computeIfAbsent(code, c ->
+                    Counter.builder(PREFIX + "download.errors").tag("code", c)
+                            .description("File download error count").register(registry)).increment();
         }
     }
 

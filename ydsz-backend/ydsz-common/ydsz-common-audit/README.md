@@ -1,6 +1,6 @@
 # ydsz-common-audit
 
-PMIS 操作审计框架 — @Audit + @OperationLog 声明式审计、AOP 切面、事件驱动异步落库、Disruptor 高性能批写、4 种分表策略、敏感字段脱敏、审计查询服务。
+YDSZ 操作审计框架 — @Audit + @OperationLog 声明式审计、AOP 切面、事件驱动异步落库、Disruptor 高性能批写、4 种分表策略、敏感字段脱敏、审计查询服务。
 
 ## 模块定位
 
@@ -91,7 +91,7 @@ public Project updateProject(Project project) {
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   audit:
     enabled: true
     mode: disruptor                # default / async / disruptor

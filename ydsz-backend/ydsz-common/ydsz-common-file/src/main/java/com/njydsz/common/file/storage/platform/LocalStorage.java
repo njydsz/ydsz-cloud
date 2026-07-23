@@ -14,8 +14,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -158,7 +157,40 @@ public class LocalStorage extends AbstractFileStorage {
             if (!Files.exists(file)) {
                 throw new BusinessException(FileExceptionCode.FILE_NOT_FOUND);
             }
-            return Files.newInputStream(file);
+            InputStream rawStream = Files.newInputStream(file);
+            if (offset != null && offset >= 0) {
+                long skipped = rawStream.skip(offset);
+                if (skipped < offset) {
+                    rawStream.close();
+                    throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+                }
+            }
+            if (length != null && length > 0) {
+                final InputStream delegate = rawStream;
+                return new InputStream() {
+                    private long remaining = length;
+                    @Override
+                    public int read() throws IOException {
+                        if (remaining <= 0) return -1;
+                        int b = delegate.read();
+                        if (b != -1) remaining--;
+                        return b;
+                    }
+                    @Override
+                    public int read(byte[] b, int off, int len) throws IOException {
+                        if (remaining <= 0) return -1;
+                        int toRead = (int) Math.min(len, remaining);
+                        int read = delegate.read(b, off, toRead);
+                        if (read > 0) remaining -= read;
+                        return read;
+                    }
+                    @Override
+                    public void close() throws IOException {
+                        delegate.close();
+                    }
+                };
+            }
+            return rawStream;
         } catch (BusinessException e) {
             throw e;
         } catch (IOException e) {
@@ -338,43 +370,54 @@ public class LocalStorage extends AbstractFileStorage {
             }
 
             try (Stream<Path> stream = Files.walk(searchPath, 1)) {
-                final AtomicInteger count = new AtomicInteger(0);
-                final AtomicReference<String> nextCursor = new AtomicReference<>(null);
+                List<Path> sortedFiles = stream.filter(Files::isRegularFile)
+                        .sorted((p1, p2) -> {
+                            String k1 = bucketPath.relativize(p1).toString().replace("\\", "/");
+                            String k2 = bucketPath.relativize(p2).toString().replace("\\", "/");
+                            return k1.compareTo(k2);
+                        })
+                        .collect(Collectors.toList());
 
-                stream.filter(Files::isRegularFile)
-                      .filter(p -> {
-                          if (cursor != null && !cursor.isEmpty()) {
-                              return count.get() > 0;
-                          }
-                          return true;
-                      })
-                      .limit(maxKeys + 1)
-                      .forEach(path -> {
-                          int idx = count.getAndIncrement();
-                          if (idx < maxKeys) {
-                              try {
-                                  ObjectMetadata om = new ObjectMetadata();
-                                  om.setObjectName(bucketPath.relativize(path).toString().replace("\\", "/"));
-                                  om.setBucketName(bucketName);
-                                  om.setSize(Files.size(path));
-                                  om.setLastModified(LocalDateTime.ofInstant(
-                                           Instant.ofEpochMilli(Files.getLastModifiedTime(path).toMillis()),
-                                           ZoneId.systemDefault()));
-                                  om.setContentType(Files.probeContentType(path));
-                                  om.setIsDirectory(false);
-                                  objects.add(om);
-                              } catch (IOException e) {
-                                log.warn("[Local] 读取文件元数据失败，跳过该文件 | path={} | error={}", path, e.getMessage());
-                            }
-                          } else if (nextCursor.get() == null) {
-                              nextCursor.set(bucketPath.relativize(path).toString());
-                          }
-                      });
+                int startIndex = 0;
+                if (cursor != null && !cursor.isEmpty()) {
+                    String normalizedCursor = cursor.startsWith("/") ? cursor.substring(1) : cursor;
+                    for (int i = 0; i < sortedFiles.size(); i++) {
+                        String key = bucketPath.relativize(sortedFiles.get(i)).toString().replace("\\", "/");
+                        if (key.compareTo(normalizedCursor) > 0) {
+                            startIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                String nextCursor = null;
+                int endIndex = Math.min(startIndex + maxKeys, sortedFiles.size());
+                for (int i = startIndex; i < endIndex; i++) {
+                    Path path = sortedFiles.get(i);
+                    try {
+                        ObjectMetadata om = new ObjectMetadata();
+                        om.setObjectName(bucketPath.relativize(path).toString().replace("\\", "/"));
+                        om.setBucketName(bucketName);
+                        om.setSize(Files.size(path));
+                        om.setLastModified(LocalDateTime.ofInstant(
+                                 Instant.ofEpochMilli(Files.getLastModifiedTime(path).toMillis()),
+                                 ZoneId.systemDefault()));
+                        om.setContentType(Files.probeContentType(path));
+                        om.setIsDirectory(false);
+                        objects.add(om);
+                    } catch (IOException e) {
+                        log.warn("[Local] 读取文件元数据失败，跳过该文件 | path={} | error={}", path, e.getMessage());
+                    }
+                }
+
+                if (endIndex < sortedFiles.size()) {
+                    nextCursor = bucketPath.relativize(sortedFiles.get(endIndex)).toString().replace("\\", "/");
+                }
 
                 ListObjectsResult result = new ListObjectsResult();
                 result.setObjects(objects);
-                result.setHasMore(nextCursor.get() != null);
-                result.setNextCursor(nextCursor.get());
+                result.setHasMore(nextCursor != null);
+                result.setNextCursor(nextCursor);
                 result.setObjectCount(objects.size());
                 return result;
             }

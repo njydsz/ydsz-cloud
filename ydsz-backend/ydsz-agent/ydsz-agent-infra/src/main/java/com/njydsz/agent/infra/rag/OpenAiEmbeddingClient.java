@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonArray;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
         try {
             String responseJson = restClient.post()
                     .uri("/embeddings")
-                    .body(Json.toJson(body))
+                    .body(YdszJson.toJson(body))
                     .retrieve()
                     .body(String.class);
             return parseEmbeddings(responseJson);
@@ -83,15 +83,15 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
     }
 
     private List<List<Float>> parseEmbeddings(String json) {
-        JsonObject obj = Json.parseObjectToJsonObject(json);
-        JsonArray data = obj.getJSONArray("data");
+        YdszJsonObject obj = YdszJson.parseObjectToJsonObject(json);
+        YdszJsonArray data = obj.getJSONArray("data");
         if (data == null || data.isEmpty()) {
             throw new LlmException("Embedding 响应无 data", LlmException.ErrorType.INVALID_RESPONSE);
         }
         List<List<Float>> result = new ArrayList<>(data.size());
         for (int i = 0; i < data.size(); i++) {
-            JsonObject item = data.getJSONObject(i);
-            JsonArray embedding = item.getJSONArray("embedding");
+            YdszJsonObject item = data.getJSONObject(i);
+            YdszJsonArray embedding = item.getJSONArray("embedding");
             List<Float> vector = new ArrayList<>(embedding.size());
             for (int j = 0; j < embedding.size(); j++) {
                 vector.add(embedding.getFloatValue(j));

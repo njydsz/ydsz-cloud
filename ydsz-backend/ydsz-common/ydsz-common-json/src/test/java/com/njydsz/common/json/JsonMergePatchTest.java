@@ -83,7 +83,7 @@ class JsonMergePatchTest {
 
     @Test
     void testViaJsonFacade() {
-        String result = Json.merge(
+        String result = YdszJson.merge(
                 "{\"a\":1,\"b\":2}",
                 "{\"b\":3,\"c\":4}");
         assertNotNull(result);

@@ -4,9 +4,9 @@ import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.provider.SerializationProvider;
 
 /**
- * Json 序列化引擎（Facade + 缓存管理）
+ * YdszJson 序列化引擎（Facade + 缓存管理）
  *
- * <p>架构层级：Json => Engine => Provider => Parser</p>
+ * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *
  * <p><b>Engine 层职责：</b></p>
  * <ul>

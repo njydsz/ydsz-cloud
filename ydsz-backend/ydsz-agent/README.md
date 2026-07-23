@@ -10,7 +10,7 @@
 | **端口** | **9010** |
 | **服务名** | `ydsz-agent` |
 | **构建顺序** | 13/13 |
-| **数据库** | PostgreSQL（`pmis_agent_*` 表） |
+| **数据库** | PostgreSQL（`ydsz_agent_*` 表） |
 | **依赖** | Nacos、PostgreSQL、Redis |
 
 ## 核心职责
@@ -32,7 +32,7 @@
 
 | 阶段 | 能力 |
 |---|---|
-| **P1** | ReAct Agent + Tool Calling + PMIS 工具集 + Memory 策略 + 安全护栏 |
+| **P1** | ReAct Agent + Tool Calling + YDSZ 工具集 + Memory 策略 + 安全护栏 |
 | **P2** | RAG 知识增强 + pgvector + 文档摄入 Pipeline + nextwiki 集成 |
 | **P3** | Plan-Execute + Router Agent + 多 Agent 协作 + DSL 编排 |
 | **P4** | 调试器 + Prompt 平台 + 成本分析 + Marketplace |
@@ -42,7 +42,7 @@
 ### 1. 配置
 
 ```yaml
-pmis:
+ydsz:
   agent:
     enabled: true
     llm:
@@ -63,7 +63,7 @@ pmis:
 ```bash
 curl -X POST http://localhost:9010/agent/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "你好，请介绍一下PMIS系统"}'
+  -d '{"message": "你好，请介绍一下YDSZ系统"}'
 ```
 
 ### 3. 流式对话（SSE）
@@ -107,4 +107,4 @@ ydsz-agent/
 
 ---
 
-> 本模块是 PMIS AI 能力的核心入口，与 literule（规则引擎）、workflow（工作流）、message（消息引擎）三引擎深度融合。
+> 本模块是 YDSZ AI 能力的核心入口，与 literule（规则引擎）、workflow（工作流）、message（消息引擎）三引擎深度融合。

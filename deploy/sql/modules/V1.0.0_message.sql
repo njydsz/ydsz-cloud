@@ -1,5 +1,5 @@
 -- ============================================================
--- PMIS message module SQL
+-- YDSZ message module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
 -- 本脚本 DDL 对应后端 message 服务 (ydsz-message) 的 Mapper / DO,
@@ -244,7 +244,7 @@ CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON ydsz_msg_subscription(status,
 --   6) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
 --   7) 内联 provider_trace_id 索引(按服务商回执 ID 反查发送记录)
 -- =====================================================
--- PMIS 消息通道模块 DDL
+-- YDSZ 消息通道模块 DDL
 -- 版本: V1.0.0_007 (merged into V1.0.0.sql)
 -- 描述: 短信/邮件/推送/站内信/Webhook 发送日志 + 模板
 -- =====================================================
@@ -662,7 +662,7 @@ CREATE INDEX IF NOT EXISTS idx_pmc_key ON ydsz_msg_canary(canary_key) WHERE dele
 
 -- --------------------------------------------------------------------
 
--- ============================ [022] init pmis alert templates ============================
+-- ============================ [022] init ydsz alert templates ============================
 
 -- ============================================================
 -- V1.0.0_022  智能化升级 P5  消息模板（预警中心）
@@ -677,14 +677,14 @@ INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provide
 SELECT 'ALERT_BUDGET_YELLOW', 'INAPP',
        '【预算黄色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%',
-       'INAPP', 'PMIS', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'INAPP', 'YDSZ', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
 
 INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'EMAIL',
        '【预算黄色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及黄色阈值(80%)。</p>',
-       'EMAIL', 'PMIS', 'ENABLED', '预算黄色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'EMAIL', 'YDSZ', 'ENABLED', '预算黄色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
 
 -- 预算红色预警
@@ -692,14 +692,14 @@ INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provide
 SELECT 'ALERT_BUDGET_RED', 'INAPP',
        '【预算红色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%，已触及红色阈值(95%)，请立即关注',
-       'INAPP', 'PMIS', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'INAPP', 'YDSZ', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
 
 INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'EMAIL',
        '【预算红色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及红色阈值(95%)，请立即关注。</p>',
-       'EMAIL', 'PMIS', 'ENABLED', '预算红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'EMAIL', 'YDSZ', 'ENABLED', '预算红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
 
 -- EVM 红色预警
@@ -707,14 +707,14 @@ INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provide
 SELECT 'ALERT_EVM_RED', 'INAPP',
        '【EVM 红色预警】${title}',
        '${content}',
-       'INAPP', 'PMIS', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'INAPP', 'YDSZ', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
 
 INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'EMAIL',
        '【EVM 红色预警】${title}',
        '<p>${content}</p>',
-       'EMAIL', 'PMIS', 'ENABLED', 'EVM 红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'EMAIL', 'YDSZ', 'ENABLED', 'EVM 红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
 
 -- SLA 红色预警（工单超时）
@@ -722,7 +722,7 @@ INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provide
 SELECT 'ALERT_SLA_RED', 'INAPP',
        '【SLA 红色预警】工单 ${alertCode} 超时',
        '${content}',
-       'INAPP', 'PMIS', 'ENABLED', '运维工单 SLA 超时红色预警', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'INAPP', 'YDSZ', 'ENABLED', '运维工单 SLA 超时红色预警', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
 
 -- 通用黄色预警兜底
@@ -730,7 +730,7 @@ INSERT INTO ydsz_msg_template (template_code, channel, subject, content, provide
 SELECT 'ALERT_OTHER_YELLOW', 'INAPP',
        '【黄色预警】${title}',
        '${content}',
-       'INAPP', 'PMIS', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+       'INAPP', 'YDSZ', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM ydsz_msg_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
 
 -- 注：ydsz_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用

@@ -1,6 +1,6 @@
 {
   "name": "ydsz-common-json",
-  "description": "Json - High-performance JSON engine with ASM bytecode generation",
+  "description": "YdszJson - High-performance JSON engine with ASM bytecode generation",
   "reflection": [
     {
       "name": "com.njydsz.common.json.cache.AsmCodecCache",
@@ -11,7 +11,7 @@
       "methods": [{"name": "<init>"}]
     },
     {
-      "name": "com.njydsz.common.json.config.JsonConfig",
+      "name": "com.njydsz.common.json.config.YdszJsonConfig",
       "methods": [{"name": "<init>"}]
     }
   ],

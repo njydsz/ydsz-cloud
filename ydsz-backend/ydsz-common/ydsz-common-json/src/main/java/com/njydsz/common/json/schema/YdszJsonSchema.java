@@ -20,8 +20,8 @@ import java.util.*;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * JsonSchema schema = new JsonSchema("object");
- * schema.addProperty("name", JsonSchema.string());
+ * YdszJsonSchema schema = new YdszJsonSchema("object");
+ * schema.addProperty("name", YdszJsonSchema.string());
  * schema.addRequired("name");
  *
  * ValidationResult result = schema.validate(json);
@@ -32,7 +32,7 @@ import java.util.*;
  *
  * @since 1.0.0
  */
-public final class JsonSchema {
+public final class YdszJsonSchema {
 
     /** Schema 类型 */
     private final String type;
@@ -62,19 +62,19 @@ public final class JsonSchema {
     private Double multipleOf;
 
     /** 数组约束 */
-    private JsonSchema items;
+    private YdszJsonSchema items;
     private Integer minItems;
     private Integer maxItems;
 
     /** 对象约束 */
-    private Map<String, JsonSchema> properties;
+    private Map<String, YdszJsonSchema> properties;
     private List<String> requiredProperties;
-    private JsonSchema additionalProperties;
+    private YdszJsonSchema additionalProperties;
 
     /**
      * 构造函数
      */
-    public JsonSchema(String type) {
+    public YdszJsonSchema(String type) {
         this.type = type;
         this.properties = new LinkedHashMap<>();
         this.requiredProperties = new ArrayList<>();
@@ -85,50 +85,50 @@ public final class JsonSchema {
     /**
      * 字符串类型
      */
-    public static JsonSchema string() {
-        return new JsonSchema("string");
+    public static YdszJsonSchema string() {
+        return new YdszJsonSchema("string");
     }
 
     /**
      * 数字类型
      */
-    public static JsonSchema number() {
-        return new JsonSchema("number");
+    public static YdszJsonSchema number() {
+        return new YdszJsonSchema("number");
     }
 
     /**
      * 整数类型
      */
-    public static JsonSchema integer() {
-        return new JsonSchema("integer");
+    public static YdszJsonSchema integer() {
+        return new YdszJsonSchema("integer");
     }
 
     /**
      * 布尔类型
      */
-    public static JsonSchema booleanType() {
-        return new JsonSchema("boolean");
+    public static YdszJsonSchema booleanType() {
+        return new YdszJsonSchema("boolean");
     }
 
     /**
      * 布尔类型（简化方法名）
      */
-    public static JsonSchema boolean_() {
-        return new JsonSchema("boolean");
+    public static YdszJsonSchema boolean_() {
+        return new YdszJsonSchema("boolean");
     }
 
     /**
      * 数组类型
      */
-    public static JsonSchema array() {
-        return new JsonSchema("array");
+    public static YdszJsonSchema array() {
+        return new YdszJsonSchema("array");
     }
 
     /**
      * 对象类型
      */
-    public static JsonSchema object() {
-        return new JsonSchema("object");
+    public static YdszJsonSchema object() {
+        return new YdszJsonSchema("object");
     }
 
     // ========== 链式配置方法 ==========
@@ -136,7 +136,7 @@ public final class JsonSchema {
     /**
      * 设置描述
      */
-    public JsonSchema description(String description) {
+    public YdszJsonSchema description(String description) {
         this.description = description;
         return this;
     }
@@ -144,7 +144,7 @@ public final class JsonSchema {
     /**
      * 设置为必填
      */
-    public JsonSchema required() {
+    public YdszJsonSchema required() {
         this.required = true;
         return this;
     }
@@ -152,7 +152,7 @@ public final class JsonSchema {
     /**
      * 设置枚举值
      */
-    public JsonSchema enumValues(Object... values) {
+    public YdszJsonSchema enumValues(Object... values) {
         this.enumValues = Arrays.asList(values);
         return this;
     }
@@ -160,7 +160,7 @@ public final class JsonSchema {
     /**
      * 添加单个枚举值
      */
-    public JsonSchema addEnum(Object value) {
+    public YdszJsonSchema addEnum(Object value) {
         if (this.enumValues == null) {
             this.enumValues = new ArrayList<>();
         }
@@ -171,7 +171,7 @@ public final class JsonSchema {
     /**
      * 设置默认值
      */
-    public JsonSchema defaultValue(Object defaultValue) {
+    public YdszJsonSchema defaultValue(Object defaultValue) {
         this.defaultValue = defaultValue;
         return this;
     }
@@ -179,7 +179,7 @@ public final class JsonSchema {
     /**
      * 设置字符串最小长度
      */
-    public JsonSchema minLength(int minLength) {
+    public YdszJsonSchema minLength(int minLength) {
         this.minLength = minLength;
         return this;
     }
@@ -187,7 +187,7 @@ public final class JsonSchema {
     /**
      * 设置字符串最大长度
      */
-    public JsonSchema maxLength(int maxLength) {
+    public YdszJsonSchema maxLength(int maxLength) {
         this.maxLength = maxLength;
         return this;
     }
@@ -195,7 +195,7 @@ public final class JsonSchema {
     /**
      * 设置字符串正则表达式
      */
-    public JsonSchema pattern(String pattern) {
+    public YdszJsonSchema pattern(String pattern) {
         this.pattern = pattern;
         return this;
     }
@@ -203,7 +203,7 @@ public final class JsonSchema {
     /**
      * 设置数字最小值
      */
-    public JsonSchema minimum(double minimum) {
+    public YdszJsonSchema minimum(double minimum) {
         this.minimum = minimum;
         return this;
     }
@@ -211,7 +211,7 @@ public final class JsonSchema {
     /**
      * 设置数字最大值
      */
-    public JsonSchema maximum(double maximum) {
+    public YdszJsonSchema maximum(double maximum) {
         this.maximum = maximum;
         return this;
     }
@@ -219,7 +219,7 @@ public final class JsonSchema {
     /**
      * 添加属性（对象类型）
      */
-    public JsonSchema addProperty(String name, JsonSchema schema) {
+    public YdszJsonSchema addProperty(String name, YdszJsonSchema schema) {
         this.properties.put(name, schema);
         return this;
     }
@@ -227,7 +227,7 @@ public final class JsonSchema {
     /**
      * 添加必填属性
      */
-    public JsonSchema addRequired(String name) {
+    public YdszJsonSchema addRequired(String name) {
         this.requiredProperties.add(name);
         return this;
     }
@@ -235,7 +235,7 @@ public final class JsonSchema {
     /**
      * 设置数组项类型
      */
-    public JsonSchema items(JsonSchema items) {
+    public YdszJsonSchema items(YdszJsonSchema items) {
         this.items = items;
         return this;
     }
@@ -243,7 +243,7 @@ public final class JsonSchema {
     /**
      * 设置数组项数最小值
      */
-    public JsonSchema minItems(int minItems) {
+    public YdszJsonSchema minItems(int minItems) {
         this.minItems = minItems;
         return this;
     }
@@ -251,7 +251,7 @@ public final class JsonSchema {
     /**
      * 设置数组项数最大值
      */
-    public JsonSchema maxItems(int maxItems) {
+    public YdszJsonSchema maxItems(int maxItems) {
         this.maxItems = maxItems;
         return this;
     }
@@ -259,7 +259,7 @@ public final class JsonSchema {
     /**
      * 设置倍数约束
      */
-    public JsonSchema multipleOf(double multipleOf) {
+    public YdszJsonSchema multipleOf(double multipleOf) {
         this.multipleOf = multipleOf;
         return this;
     }
@@ -267,7 +267,7 @@ public final class JsonSchema {
     /**
      * 设置排除性最小值
      */
-    public JsonSchema exclusiveMinimum(double exclusiveMinimum) {
+    public YdszJsonSchema exclusiveMinimum(double exclusiveMinimum) {
         this.exclusiveMinimum = exclusiveMinimum;
         return this;
     }
@@ -275,7 +275,7 @@ public final class JsonSchema {
     /**
      * 设置排除性最大值
      */
-    public JsonSchema exclusiveMaximum(double exclusiveMaximum) {
+    public YdszJsonSchema exclusiveMaximum(double exclusiveMaximum) {
         this.exclusiveMaximum = exclusiveMaximum;
         return this;
     }
@@ -283,7 +283,7 @@ public final class JsonSchema {
     /**
      * 设置额外属性 Schema
      */
-    public JsonSchema additionalProperties(JsonSchema additionalProperties) {
+    public YdszJsonSchema additionalProperties(YdszJsonSchema additionalProperties) {
         this.additionalProperties = additionalProperties;
         return this;
     }
@@ -291,14 +291,14 @@ public final class JsonSchema {
     /**
      * Null 类型
      */
-    public static JsonSchema nullType() {
-        return new JsonSchema("null");
+    public static YdszJsonSchema nullType() {
+        return new YdszJsonSchema("null");
     }
 
     /**
      * 添加多个必填属性
      */
-    public JsonSchema addRequired(String... names) {
+    public YdszJsonSchema addRequired(String... names) {
         for (String name : names) {
             this.requiredProperties.add(name);
         }
@@ -347,7 +347,7 @@ public final class JsonSchema {
         return maximum;
     }
 
-    public Map<String, JsonSchema> getProperties() {
+    public Map<String, YdszJsonSchema> getProperties() {
         return properties;
     }
 
@@ -355,7 +355,7 @@ public final class JsonSchema {
         return requiredProperties;
     }
 
-    public JsonSchema getItems() {
+    public YdszJsonSchema getItems() {
         return items;
     }
 
@@ -379,12 +379,12 @@ public final class JsonSchema {
         return exclusiveMaximum;
     }
 
-    public JsonSchema getAdditionalProperties() {
+    public YdszJsonSchema getAdditionalProperties() {
         return additionalProperties;
     }
 
     @Override
     public String toString() {
-        return "JsonSchema{type='" + type + "', required=" + required + "}";
+        return "YdszJsonSchema{type='" + type + "', required=" + required + "}";
     }
 }

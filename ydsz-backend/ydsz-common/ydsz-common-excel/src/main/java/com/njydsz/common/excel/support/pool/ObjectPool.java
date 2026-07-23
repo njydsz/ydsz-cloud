@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T> 池化对象类型
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class ObjectPool<T> {

@@ -1,6 +1,6 @@
 package com.njydsz.common.notify.channel;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
@@ -61,13 +61,13 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 							"content", "### " + title + "\n" + content
 					)
 			);
-			String json = Json.toJson(body);
+			String json = YdszJson.toJson(body);
 			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
 
 			// 校验企业微信响应 errcode
 			if (response != null && !response.isEmpty()) {
 				try {
-					JsonNode respJson = Json.readTree(response);
+					JsonNode respJson = YdszJson.readTree(response);
 					int errcode = respJson.has("errcode") ? respJson.get("errcode").asInt(-1) : -1;
 					if (errcode != 0) {
 						String errmsg = respJson.has("errmsg") ? respJson.get("errmsg").asText() : "";

@@ -1,6 +1,6 @@
 # ydsz-common-feign
 
-PMIS OpenFeign 增强框架 — 统一编解码、ResponseUnwrapDecoder 自动解包、DefaultFallbackFactory 降级工厂、Resilience4j 熔断器集成、链路追踪传播、动态客户端工厂、Gzip 压缩、Micrometer 监控。
+YDSZ OpenFeign 增强框架 — 统一编解码、ResponseUnwrapDecoder 自动解包、DefaultFallbackFactory 降级工厂、Resilience4j 熔断器集成、链路追踪传播、动态客户端工厂、Gzip 压缩、Micrometer 监控。
 
 ## 模块定位
 
@@ -90,7 +90,7 @@ PMIS OpenFeign 增强框架 — 统一编解码、ResponseUnwrapDecoder 自动�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   feign:
     compression:
       enabled: true

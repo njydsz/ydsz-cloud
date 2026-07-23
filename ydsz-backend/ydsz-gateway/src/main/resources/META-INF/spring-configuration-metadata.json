@@ -6,32 +6,32 @@
       "sourceType": "org.springframework.cloud.gateway.config.GatewayProperties"
     },
     {
-      "name": "pmis.gateway.security-headers",
+      "name": "ydsz.gateway.security-headers",
       "type": "com.njydsz.gateway.config.SecurityHeadersProperties",
       "sourceType": "com.njydsz.gateway.config.SecurityHeadersProperties"
     },
     {
-      "name": "pmis.gateway.security-headers.csp",
+      "name": "ydsz.gateway.security-headers.csp",
       "type": "com.njydsz.gateway.config.SecurityHeadersProperties$CspConfig",
       "sourceType": "com.njydsz.gateway.config.SecurityHeadersProperties$CspConfig"
     },
     {
-      "name": "pmis.gateway.security-headers.hsts",
+      "name": "ydsz.gateway.security-headers.hsts",
       "type": "com.njydsz.gateway.config.SecurityHeadersProperties$HstsConfig",
       "sourceType": "com.njydsz.gateway.config.SecurityHeadersProperties$HstsConfig"
     },
     {
-      "name": "pmis.gateway.security-headers.coop",
+      "name": "ydsz.gateway.security-headers.coop",
       "type": "com.njydsz.gateway.config.SecurityHeadersProperties$CoopConfig",
       "sourceType": "com.njydsz.gateway.config.SecurityHeadersProperties$CoopConfig"
     },
     {
-      "name": "pmis.gateway.security-headers.coep",
+      "name": "ydsz.gateway.security-headers.coep",
       "type": "com.njydsz.gateway.config.SecurityHeadersProperties$CoepConfig",
       "sourceType": "com.njydsz.gateway.config.SecurityHeadersProperties$CoepConfig"
     },
     {
-      "name": "pmis.gateway.security-headers.corp",
+      "name": "ydsz.gateway.security-headers.corp",
       "type": "com.njydsz.gateway.config.SecurityHeadersProperties$CorpConfig",
       "sourceType": "com.njydsz.gateway.config.SecurityHeadersProperties$CorpConfig"
     }
@@ -63,67 +63,67 @@
       "description": "WebSocket max frame payload length"
     },
     {
-      "name": "pmis.gateway.security-headers.enabled",
+      "name": "ydsz.gateway.security-headers.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable security response headers (global switch)."
     },
     {
-      "name": "pmis.gateway.security-headers.csp.enabled",
+      "name": "ydsz.gateway.security-headers.csp.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Content-Security-Policy header."
     },
     {
-      "name": "pmis.gateway.security-headers.csp.unsafe-eval",
+      "name": "ydsz.gateway.security-headers.csp.unsafe-eval",
       "type": "java.lang.Boolean",
       "description": "Allow unsafe-eval in CSP (development only, must be false in production)."
     },
     {
-      "name": "pmis.gateway.security-headers.hsts.enabled",
+      "name": "ydsz.gateway.security-headers.hsts.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Strict-Transport-Security header."
     },
     {
-      "name": "pmis.gateway.security-headers.hsts.max-age",
+      "name": "ydsz.gateway.security-headers.hsts.max-age",
       "type": "java.lang.Long",
       "description": "HSTS max-age in seconds (default: 31536000 = 1 year)."
     },
     {
-      "name": "pmis.gateway.security-headers.hsts.include-subdomains",
+      "name": "ydsz.gateway.security-headers.hsts.include-subdomains",
       "type": "java.lang.Boolean",
       "description": "Include subdomains in HSTS."
     },
     {
-      "name": "pmis.gateway.security-headers.hsts.preload",
+      "name": "ydsz.gateway.security-headers.hsts.preload",
       "type": "java.lang.Boolean",
       "description": "Enable HSTS preload."
     },
     {
-      "name": "pmis.gateway.security-headers.coop.enabled",
+      "name": "ydsz.gateway.security-headers.coop.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Cross-Origin-Opener-Policy header."
     },
     {
-      "name": "pmis.gateway.security-headers.coop.policy",
+      "name": "ydsz.gateway.security-headers.coop.policy",
       "type": "java.lang.String",
       "description": "COOP policy: same-origin | same-origin-allow-popups | unsafe-none."
     },
     {
-      "name": "pmis.gateway.security-headers.coep.enabled",
+      "name": "ydsz.gateway.security-headers.coep.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Cross-Origin-Embedder-Policy header."
     },
     {
-      "name": "pmis.gateway.security-headers.coep.policy",
+      "name": "ydsz.gateway.security-headers.coep.policy",
       "type": "java.lang.String",
       "description": "COEP policy: require-corp | credentialless | unsafe-none."
     },
     {
-      "name": "pmis.gateway.security-headers.corp.enabled",
+      "name": "ydsz.gateway.security-headers.corp.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Cross-Origin-Resource-Policy header."
     },
     {
-      "name": "pmis.gateway.security-headers.corp.policy",
+      "name": "ydsz.gateway.security-headers.corp.policy",
       "type": "java.lang.String",
       "description": "CORP policy: same-origin | same-site | cross-origin."
     }

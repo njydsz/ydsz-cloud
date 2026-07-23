@@ -148,7 +148,7 @@ public interface WorkflowFacade {
     List<Map<String, Object>> listAuditTrail(String processInstanceId);
 
     /**
-     * 引擎类型：PMIS（自研）
+     * 引擎类型：YDSZ（自研）
      */
     String engineType();
 

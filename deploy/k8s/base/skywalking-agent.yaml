@@ -9,7 +9,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: skywalking-agent-config
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: skywalking-agent
 data:
@@ -61,7 +61,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: skywalking-agent-template
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: skywalking-agent
 data:

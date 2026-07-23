@@ -1,5 +1,5 @@
-com.njydsz.pmis.common.base.config.BaseAutoConfiguration
-com.njydsz.pmis.common.base.config.DocAutoConfiguration
-com.njydsz.pmis.common.base.config.DocSecurityConfiguration
-com.njydsz.pmis.common.base.config.OpenApiAutoConfiguration
-com.njydsz.pmis.common.base.config.Knife4jAutoConfiguration
+com.njydsz.common.base.config.BaseAutoConfiguration
+com.njydsz.common.base.config.DocAutoConfiguration
+com.njydsz.common.base.config.DocSecurityConfiguration
+com.njydsz.common.base.config.OpenApiAutoConfiguration
+com.njydsz.common.base.config.Knife4jAutoConfiguration

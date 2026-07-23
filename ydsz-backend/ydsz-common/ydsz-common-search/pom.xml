@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-common-search</artifactId>
     <name>ydsz-common-search</name>
-    <description>YDSZ PMIS Common Search - 统一搜索服务框架（PG tsvector + zhparser 中文分词 + SPI 多引擎抽象 + 索引同步 + 搜索建议 + 聚合分面）</description>
+    <description>YDSZ Common Search - 统一搜索服务框架（PG tsvector + zhparser 中文分词 + SPI 多引擎抽象 + 索引同步 + 搜索建议 + 聚合分面）</description>
 
     <dependencies>
         <!--common-core-->
@@ -115,6 +115,13 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- P2-11: Jakarta Validation API（可选，Controller 请求校验） -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

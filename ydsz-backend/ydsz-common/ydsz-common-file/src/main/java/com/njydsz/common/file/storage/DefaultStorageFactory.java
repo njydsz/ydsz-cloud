@@ -29,7 +29,6 @@ public class DefaultStorageFactory implements IFileStorageProvider {
     private final ConcurrentMap<String, IFileStorage> storageCache = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Function<DefaultStorageFactory, IFileStorage>> customProviders = new ConcurrentHashMap<>();
     private MultipartContextStore multipartContextStore;
-    private CheckpointStore checkpointStore; // retained for future use
     private UploadConcurrencyGuard concurrencyGuard;
     private CheckpointService checkpointService;
     private FileDedupService fileDedupService;
@@ -46,8 +45,6 @@ public class DefaultStorageFactory implements IFileStorageProvider {
         this.multipartContextStore = store;
         storageCache.values().forEach(s -> { if (s instanceof AbstractFileStorage afs && store != null) afs.setMultipartContextStore(store); });
     }
-
-    public void setCheckpointStore(CheckpointStore store) { this.checkpointStore = store; }
 
     public void setConcurrencyGuard(UploadConcurrencyGuard guard) {
         this.concurrencyGuard = guard;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# PMIS PostgreSQL 物理全量备份脚本（pg_basebackup）
+# YDSZ PostgreSQL 物理全量备份脚本（pg_basebackup）
 #
 # 功能:
 #   1. 使用 pg_basebackup 创建物理全量备份（含 WAL）
@@ -12,7 +12,7 @@
 #
 # 定时调度（crontab）:
 #   # 每周日凌晨 3:00 物理全量备份
-#   0 3 * * 0 /opt/pmis/scripts/pg-basebackup.sh >> /var/log/pmis/basebackup.log 2>&1
+#   0 3 * * 0 /opt/ydsz/scripts/pg-basebackup.sh >> /var/log/ydsz/basebackup.log 2>&1
 #
 # 退出码:
 #   0 — 备份成功
@@ -69,7 +69,7 @@ notify() {
 {
   "msg_type": "text",
   "content": {
-    "text": "[PMIS Backup] pg_basebackup ${status}\nHost: ${HOSTNAME}\nTime: ${TIMESTAMP}\n${message}"
+    "text": "[YDSZ Backup] pg_basebackup ${status}\nHost: ${HOSTNAME}\nTime: ${TIMESTAMP}\n${message}"
   }
 }
 EOF
@@ -80,7 +80,7 @@ EOF
 {
   "msgtype": "text",
   "text": {
-    "content": "[PMIS Backup] pg_basebackup ${status}\nHost: ${HOSTNAME}\nTime: ${TIMESTAMP}\n${message}"
+    "content": "[YDSZ Backup] pg_basebackup ${status}\nHost: ${HOSTNAME}\nTime: ${TIMESTAMP}\n${message}"
   }
 }
 EOF
@@ -150,12 +150,12 @@ cleanup() {
 # 主流程
 # ============================================================
 main() {
-    log "========== PMIS pg_basebackup 开始 =========="
+    log "========== YDSZ pg_basebackup 开始 =========="
     log "Host: $HOSTNAME | Date: $DATE | Timestamp: $TIMESTAMP"
     check_env
     do_basebackup
     cleanup
-    log "========== PMIS pg_basebackup 结束 =========="
+    log "========== YDSZ pg_basebackup 结束 =========="
 }
 
 main "$@"

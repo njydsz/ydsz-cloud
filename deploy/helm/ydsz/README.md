@@ -1,4 +1,4 @@
-# Helm Chart · YDSZ PMIS
+# Helm Chart · YDSZ
 
 > Helm Chart 形态的 K8s 部署资产，作为 `deploy/k8s/`（Kustomize）的替代方案
 > 适用：参数化发布、多环境快速切换、CI/CD 流水线集成
@@ -45,35 +45,35 @@ helm/ydsz/
 
 ```bash
 # 创建命名空间
-kubectl create namespace pmis-dev --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace ydsz-dev --dry-run=client -o yaml | kubectl apply -f -
 
 # 部署
-helm install pmis deploy/helm/ydsz -n pmis-dev \
+helm install ydsz deploy/helm/ydsz -n ydsz-dev \
   -f deploy/helm/ydsz/values-dev.yaml
 
 # 验证
-kubectl -n pmis-dev get pods
-kubectl -n pmis-dev get svc
-helm -n pmis-dev status pmis
+kubectl -n ydsz-dev get pods
+kubectl -n ydsz-dev get svc
+helm -n ydsz-dev status ydsz
 ```
 
 ### 2.3 部署到生产环境
 
 ```bash
 # 部署（生产配置含 HPA + PDB + Ingress + TLS）
-helm install pmis deploy/helm/ydsz -n pmis \
+helm install ydsz deploy/helm/ydsz -n ydsz \
   -f deploy/helm/ydsz/values-prod.yaml
 
 # 升级
-helm upgrade pmis deploy/helm/ydsz -n pmis \
+helm upgrade ydsz deploy/helm/ydsz -n ydsz \
   -f deploy/helm/ydsz/values-prod.yaml \
   --set global.imageTag=v1.3.1
 
 # 回滚
-helm rollback pmis 1 -n pmis
+helm rollback ydsz 1 -n ydsz
 
 # 卸载
-helm uninstall pmis -n pmis
+helm uninstall ydsz -n ydsz
 ```
 
 ---
@@ -100,7 +100,7 @@ helm uninstall pmis -n pmis
 ### 4.1 覆盖镜像仓库
 
 ```bash
-helm install pmis deploy/helm/ydsz -n pmis \
+helm install ydsz deploy/helm/ydsz -n ydsz \
   -f deploy/helm/ydsz/values-prod.yaml \
   --set global.imageRegistry=registry.cn-hangzhou.aliyuncs.com/your-org \
   --set global.imageTag=v1.0.0
@@ -109,7 +109,7 @@ helm install pmis deploy/helm/ydsz -n pmis \
 ### 4.2 覆盖单个服务副本数
 
 ```bash
-helm upgrade pmis deploy/helm/ydsz -n pmis \
+helm upgrade ydsz deploy/helm/ydsz -n ydsz \
   -f deploy/helm/ydsz/values-prod.yaml \
   --set services.project.replicas=6
 ```
@@ -117,7 +117,7 @@ helm upgrade pmis deploy/helm/ydsz -n pmis \
 ### 4.3 禁用某个服务
 
 ```bash
-helm install pmis deploy/helm/ydsz -n pmis \
+helm install ydsz deploy/helm/ydsz -n ydsz \
   -f deploy/helm/ydsz/values-dev.yaml \
   --set services.agent.enabled=false
 ```
@@ -125,7 +125,7 @@ helm install pmis deploy/helm/ydsz -n pmis \
 ### 4.4 启用前端
 
 ```bash
-helm upgrade pmis deploy/helm/ydsz -n pmis \
+helm upgrade ydsz deploy/helm/ydsz -n ydsz \
   -f deploy/helm/ydsz/values-prod.yaml \
   --set frontend.enabled=true
 ```
@@ -152,8 +152,8 @@ helm upgrade pmis deploy/helm/ydsz -n pmis \
 
 ```bash
 # 渲染但不部署
-helm template pmis deploy/helm/ydsz -n pmis \
-  -f deploy/helm/ydsz/values-prod.yaml > /tmp/pmis-rendered.yaml
+helm template ydsz deploy/helm/ydsz -n ydsz \
+  -f deploy/helm/ydsz/values-prod.yaml > /tmp/ydsz-rendered.yaml
 
 # Lint 检查
 helm lint deploy/helm/ydsz -f deploy/helm/ydsz/values-prod.yaml

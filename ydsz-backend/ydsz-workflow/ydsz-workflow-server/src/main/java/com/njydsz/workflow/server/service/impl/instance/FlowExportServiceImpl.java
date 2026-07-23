@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -177,7 +177,7 @@ public class FlowExportServiceImpl implements FlowExportService {
             return new LinkedHashMap<>();
         }
         try {
-            Map<String, Object> map = Json.parseMap(json);
+            Map<String, Object> map = YdszJson.parseMap(json);
             return map != null ? map : new LinkedHashMap<>();
         } catch (Exception e) {
             log.warn("[Export] 变量解析失败: {}", e.getMessage());

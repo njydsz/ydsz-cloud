@@ -1,5 +1,5 @@
 # ============================================================
-# PMIS Chaos Mesh Schedule — Chaos Night 定期触发（P2-13）
+# YDSZ Chaos Mesh Schedule — Chaos Night 定期触发（P2-13）
 # ------------------------------------------------------------
 # 每周六 02:00 (Asia/Shanghai) 自动触发 chaos-night Workflow,
 # 业务低峰期执行约 30 分钟,验证系统韧性。
@@ -82,7 +82,7 @@ spec:
           action: delay
           mode: all
           selector:
-            namespaces: [pmis]
+            namespaces: [ydsz]
             labelSelectors:
               app: ydsz-userinfo
           delay:
@@ -97,7 +97,7 @@ spec:
           action: pod-kill
           mode: one
           selector:
-            namespaces: [pmis]
+            namespaces: [ydsz]
             labelSelectors:
               app: ydsz-gateway
           duration: "30s"
@@ -109,12 +109,12 @@ spec:
           mode: all
           direction: to
           selector:
-            namespaces: [pmis]
+            namespaces: [ydsz]
             labelSelectors:
               app: ydsz-workflow
           target:
             selector:
-              namespaces: [pmis]
+              namespaces: [ydsz]
               labelSelectors:
                 app: ydsz-project
             mode: all
@@ -125,7 +125,7 @@ spec:
         stressChaos:
           mode: one
           selector:
-            namespaces: [pmis]
+            namespaces: [ydsz]
             labelSelectors:
               app: ydsz-project
           stressors:
@@ -140,7 +140,7 @@ spec:
           action: error
           mode: all
           selector:
-            namespaces: [pmis]
+            namespaces: [ydsz]
             labelSelectors:
               app: ydsz-message
           duration: "90s"
@@ -197,7 +197,7 @@ spec:
     action: pod-kill
     mode: one
     selector:
-      namespaces: [pmis]
+      namespaces: [ydsz]
       labelSelectors:
         app: ydsz-userinfo
     duration: "10s"
@@ -221,7 +221,7 @@ spec:
     action: delay
     mode: all
     selector:
-      namespaces: [pmis]
+      namespaces: [ydsz]
       labelSelectors:
         app: ydsz-finance
     delay:
@@ -249,7 +249,7 @@ spec:
     action: pod-kill
     mode: one
     selector:
-      namespaces: [pmis]
+      namespaces: [ydsz]
       labelSelectors:
         app: ydsz-system
     duration: "10s"

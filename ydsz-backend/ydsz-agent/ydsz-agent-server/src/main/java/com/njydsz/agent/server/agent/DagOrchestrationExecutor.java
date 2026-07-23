@@ -147,7 +147,7 @@ public class DagOrchestrationExecutor {
                     .model(properties.getLlm().getDefaultModel())
                     .messages(List.of(
                             ChatMessage.system(node.getPrompt().isBlank()
-                                    ? "你是 PMIS 智能助手。" : node.getPrompt()),
+                                    ? "你是 YDSZ 智能助手。" : node.getPrompt()),
                             ChatMessage.user(input, null)))
                     .temperature(properties.getLlm().getTemperature())
                     .maxTokens(properties.getLlm().getMaxTokens())

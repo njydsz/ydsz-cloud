@@ -1,6 +1,6 @@
 # ydsz-workflow
 
-> 自研工作流引擎（PMIS-Flow v2 + BPMN 2.0）
+> 自研工作流引擎（YDSZ-Flow v2 + BPMN 2.0）
 
 ## 模块定位
 
@@ -10,19 +10,19 @@
 | **端口** | **9006**（按构建顺序 7/8） |
 | **服务名** | `ydsz-workflow` |
 | **构建顺序** | 7/8 |
-| **数据库** | PostgreSQL（`pmis_flow_*` 表） |
+| **数据库** | PostgreSQL（`ydsz_flow_*` 表） |
 | **依赖** | Nacos、PostgreSQL、Redis |
 | **平台** | ⚠️ **仅 PC Web 端**（不支持移动端 / 独立 H5） |
 
 ## 核心职责
 
-本模块是 PMIS 的**自研工作流引擎**，提供流程定义、审批、监控完整链路。
+本模块是 YDSZ 的**自研工作流引擎**，提供流程定义、审批、监控完整链路。
 
 ### 1. 核心能力
 
 | 能力 | 说明 |
 |---|---|
-| **流程定义** | PMIS-Flow XML / JSON / BPMN 2.0 解析 |
+| **流程定义** | YDSZ-Flow XML / JSON / BPMN 2.0 解析 |
 | **节点类型** | 开始 / 审批 / 加签 / 减签 / 转交 / 抄送 / 委派 / 代理 |
 | **分支规则** | 条件分支 / 默认分支 / 跳过规则 |
 | **定时器** | 节点超时 / 流程超时（cron 表达式） |
@@ -59,46 +59,46 @@
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
-| **流程定义** | `pmis_flow_definition` | 流程定义主表（PMIS-Flow XML/JSON/BPMN 2.0） |
-| | `pmis_flow_template` | 流程模板（版本管理 + 复制/导入/导出） |
-| | `pmis_flow_category` | 流程分类（树形） |
-| | `pmis_flow_node` | 流程节点（审批/加签/转交/抄送） |
-| | `pmis_flow_skip` | 跳过规则 |
-| | `pmis_flow_timer` | 节点/流程超时定时器（cron） |
-| | `pmis_flow_dmn_table` | DMN 决策表 |
-| **实例** | `pmis_flow_instance` | 流程实例（运行中） |
-| | `pmis_flow_his_instance` | 历史实例（已结束） |
-| **任务** | `pmis_flow_run_task` | 待办/运行任务 |
-| | `pmis_flow_his_task` | 已办/历史任务 |
-| | `pmis_flow_his_variable` | 历史变量快照 |
-| **审批/评论** | `pmis_flow_comment` | 审批意见 |
-| | `pmis_flow_task_comment` | 任务评论 |
-| | `pmis_flow_quick_comment` | 常用意见 |
-| **抄送/委派** | `pmis_flow_cc` | 抄送记录 |
-| | `pmis_flow_cc_rule` | 抄送规则 |
-| | `pmis_flow_delegate_auth` | 委托授权（代理人/时间窗） |
-| | `pmis_flow_delegate_log` | 委托日志 |
-| | `pmis_flow_delegate_message` | 委托消息（IM 通知） |
-| **附件** | `pmis_flow_attachment` | 流程附件 |
-| **审计日志** | `pmis_flow_audit_log` | 流程审计（按月分区） |
-| | `pmis_flow_audit_log_default` | 审计默认分区 |
-| **事件/触发** | `pmis_flow_event_subscription` | 事件订阅（开始/结束/节点进出） |
-| | `pmis_flow_auto_trigger` | 自动触发器（业务事件→发起流程） |
+| **流程定义** | `ydsz_flow_definition` | 流程定义主表（YDSZ-Flow XML/JSON/BPMN 2.0） |
+| | `ydsz_flow_template` | 流程模板（版本管理 + 复制/导入/导出） |
+| | `ydsz_flow_category` | 流程分类（树形） |
+| | `ydsz_flow_node` | 流程节点（审批/加签/转交/抄送） |
+| | `ydsz_flow_skip` | 跳过规则 |
+| | `ydsz_flow_timer` | 节点/流程超时定时器（cron） |
+| | `ydsz_flow_dmn_table` | DMN 决策表 |
+| **实例** | `ydsz_flow_instance` | 流程实例（运行中） |
+| | `ydsz_flow_his_instance` | 历史实例（已结束） |
+| **任务** | `ydsz_flow_run_task` | 待办/运行任务 |
+| | `ydsz_flow_his_task` | 已办/历史任务 |
+| | `ydsz_flow_his_variable` | 历史变量快照 |
+| **审批/评论** | `ydsz_flow_comment` | 审批意见 |
+| | `ydsz_flow_task_comment` | 任务评论 |
+| | `ydsz_flow_quick_comment` | 常用意见 |
+| **抄送/委派** | `ydsz_flow_cc` | 抄送记录 |
+| | `ydsz_flow_cc_rule` | 抄送规则 |
+| | `ydsz_flow_delegate_auth` | 委托授权（代理人/时间窗） |
+| | `ydsz_flow_delegate_log` | 委托日志 |
+| | `ydsz_flow_delegate_message` | 委托消息（IM 通知） |
+| **附件** | `ydsz_flow_attachment` | 流程附件 |
+| **审计日志** | `ydsz_flow_audit_log` | 流程审计（按月分区） |
+| | `ydsz_flow_audit_log_default` | 审计默认分区 |
+| **事件/触发** | `ydsz_flow_event_subscription` | 事件订阅（开始/结束/节点进出） |
+| | `ydsz_flow_auto_trigger` | 自动触发器（业务事件→发起流程） |
 | **通知** | _(已收敛至 ydsz-message 模块)_ | 通知渠道/模板/外发箱/偏好均已移除 |
-| **第三方** | `pmis_flow_third_party_account` | 第三方账号（企业微信/钉钉/飞书） |
-| | `pmis_flow_third_party_log` | 第三方交互日志 |
-| **AI 增强** | `pmis_flow_ai_feedback` | AI 辅助审批反馈（用于学习） |
-| **用户** | `pmis_flow_user` | 流程用户（含离职/兼职） |
+| **第三方** | `ydsz_flow_third_party_account` | 第三方账号（企业微信/钉钉/飞书） |
+| | `ydsz_flow_third_party_log` | 第三方交互日志 |
+| **AI 增强** | `ydsz_flow_ai_feedback` | AI 辅助审批反馈（用于学习） |
+| **用户** | `ydsz_flow_user` | 流程用户（含离职/兼职） |
 
 > **索引关键点**：
-> - `pmis_flow_definition(template_key, version)` 唯一（最新版查找）
-> - `pmis_flow_instance(definition_id, status)` 监控
-> - `pmis_flow_run_task(assignee, status, due_date)` 待办列表 + SLA
-> - `pmis_flow_his_instance(definition_id, end_time)` 历史归档
-> - `pmis_flow_cc(recipient_id, read_flag)` 抄送分页
-> - `pmis_flow_event_subscription(event_type, listener)` 事件分发
+> - `ydsz_flow_definition(template_key, version)` 唯一（最新版查找）
+> - `ydsz_flow_instance(definition_id, status)` 监控
+> - `ydsz_flow_run_task(assignee, status, due_date)` 待办列表 + SLA
+> - `ydsz_flow_his_instance(definition_id, end_time)` 历史归档
+> - `ydsz_flow_cc(recipient_id, read_flag)` 抄送分页
+> - `ydsz_flow_event_subscription(event_type, listener)` 事件分发
 >
-> **分区说明**：`pmis_flow_audit_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 归档。
+> **分区说明**：`ydsz_flow_audit_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 归档。
 
 ## ⚠️ 平台适配硬约束
 
@@ -212,7 +212,7 @@ mvn -pl ydsz-workflow -am test
 
 ### Q3：流程超时未触发
 
-- 检查 `pmis.cronjob.sla.enabled`（实际在 cronjob 模块执行）
+- 检查 `ydsz.cronjob.sla.enabled`（实际在 cronjob 模块执行）
 - 流程引擎只负责标记 `dueDate`，超时扫描由 cronjob 模块承担
 
 ---

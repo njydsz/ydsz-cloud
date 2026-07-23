@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * </ol>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class ConverterChain {

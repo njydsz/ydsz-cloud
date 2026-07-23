@@ -19,7 +19,7 @@ metadata:
   namespace: monitoring
   labels:
     prometheus: k8s
-    app.kubernetes.io/name: pmis
+    app.kubernetes.io/name: ydsz
 spec:
   groups:
     # =========================================================================
@@ -31,7 +31,7 @@ spec:
         # 指标采集器不可用（P1）
         - alert: SentryMetricsCollectorDown
           expr: |
-            ydsz_sentry_metrics_available{job=~"pmis-.*"} == 0
+            ydsz_sentry_metrics_available{job=~"ydsz-.*"} == 0
           for: 2m
           labels:
             severity: P1
@@ -43,7 +43,7 @@ spec:
         # 日志发布器不可用（P1）
         - alert: SentryLogPublisherDown
           expr: |
-            ydsz_sentry_logging_available{job=~"pmis-.*"} == 0
+            ydsz_sentry_logging_available{job=~"ydsz-.*"} == 0
           for: 2m
           labels:
             severity: P1
@@ -55,7 +55,7 @@ spec:
         # 告警发布器不可用（P2）
         - alert: SentryAlertPublisherDown
           expr: |
-            ydsz_sentry_alerting_available{job=~"pmis-.*"} == 0
+            ydsz_sentry_alerting_available{job=~"ydsz-.*"} == 0
           for: 5m
           labels:
             severity: P2
@@ -65,7 +65,7 @@ spec:
             description: "AlertPublisher 不可用超过 5 分钟，告警可能丢失。"
 
     # =========================================================================
-    #  2. 系统资源告警（补充现有 pmis-alerts.yml）
+    #  2. 系统资源告警（补充现有 ydsz-alerts.yml）
     # =========================================================================
     - name: sentry-system
       interval: 30s
@@ -73,7 +73,7 @@ spec:
         # CPU 使用率过高（P1）
         - alert: SentryCpuUsageHigh
           expr: |
-            ydsz_system_cpu_usage{job=~"pmis-.*"} > 0.8
+            ydsz_system_cpu_usage{job=~"ydsz-.*"} > 0.8
           for: 5m
           labels:
             severity: P1
@@ -85,8 +85,8 @@ spec:
         # 堆内存使用率过高（P1，补充 jvm_memory 指标）
         - alert: SentryHeapMemoryHigh
           expr: |
-            (ydsz_system_memory_heap_used{job=~"pmis-.*"}
-             / ydsz_system_memory_heap_max{job=~"pmis-.*"}) > 0.85
+            (ydsz_system_memory_heap_used{job=~"ydsz-.*"}
+             / ydsz_system_memory_heap_max{job=~"ydsz-.*"}) > 0.85
           for: 5m
           labels:
             severity: P1
@@ -98,8 +98,8 @@ spec:
         # 磁盘空间不足（P0）
         - alert: SentryDiskSpaceLow
           expr: |
-            (ydsz_system_disk_free{job=~"pmis-.*"}
-             / ydsz_system_disk_total{job=~"pmis-.*"}) < 0.1
+            (ydsz_system_disk_free{job=~"ydsz-.*"}
+             / ydsz_system_disk_total{job=~"ydsz-.*"}) < 0.1
           for: 1m
           labels:
             severity: P0
@@ -111,7 +111,7 @@ spec:
         # 线程数过多（P2）
         - alert: SentryThreadCountHigh
           expr: |
-            ydsz_system_process_thread_count{job=~"pmis-.*"} > 800
+            ydsz_system_process_thread_count{job=~"ydsz-.*"} > 800
           for: 5m
           labels:
             severity: P2
@@ -123,7 +123,7 @@ spec:
         # GC 耗时占比过高（P1）
         - alert: SentryGcTimeRatioHigh
           expr: |
-            rate(ydsz_system_process_gc_time_delta{job=~"pmis-.*"}[5m]) > 1000
+            rate(ydsz_system_process_gc_time_delta{job=~"ydsz-.*"}[5m]) > 1000
           for: 5m
           labels:
             severity: P1
@@ -141,10 +141,10 @@ spec:
         # SLA 违反率 > 5%（P1）
         - alert: SentrySlaViolationRateHigh
           expr: |
-            sum(rate(ydsz_sla_violation_total{job=~"pmis-.*"}[5m]))
+            sum(rate(ydsz_sla_violation_total{job=~"ydsz-.*"}[5m]))
             by (sla, job)
             /
-            sum(rate(ydsz_sla_total_count_total{job=~"pmis-.*"}[5m]))
+            sum(rate(ydsz_sla_total_count_total{job=~"ydsz-.*"}[5m]))
             by (sla, job)
             > 0.05
           for: 5m
@@ -159,7 +159,7 @@ spec:
         - alert: SentrySlaLatencyHigh
           expr: |
             histogram_quantile(0.99,
-              sum(rate(ydsz_sla_total_duration_seconds_bucket{job=~"pmis-.*"}[5m]))
+              sum(rate(ydsz_sla_total_duration_seconds_bucket{job=~"ydsz-.*"}[5m]))
               by (le, sla, job)
             ) > 0.5
           for: 5m
@@ -179,7 +179,7 @@ spec:
         # 慢追踪次数激增（P2）
         - alert: SentrySlowTraceSpike
           expr: |
-            increase(ydsz_trace_slow_total{job=~"pmis-.*"}[5m]) > 10
+            increase(ydsz_trace_slow_total{job=~"ydsz-.*"}[5m]) > 10
           for: 5m
           labels:
             severity: P2

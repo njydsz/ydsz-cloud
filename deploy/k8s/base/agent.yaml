@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-agent
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-agent
     tier: backend
@@ -34,11 +34,11 @@ spec:
               containerPort: 9007
           envFrom:
             - configMapRef:
-                name: pmis-common-config
+                name: ydsz-common-config
             - secretRef:
-                name: pmis-db-secret
+                name: ydsz-db-secret
             - secretRef:
-                name: pmis-jasypt-secret
+                name: ydsz-jasypt-secret
           # P2-7: JVM 容器感知调优（Agent 服务内存需求较大，MaxRAMPercentage=75%）
           env:
             - name: JAVA_TOOL_OPTIONS
@@ -110,7 +110,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-agent
-  namespace: pmis
+  namespace: ydsz
 spec:
   type: ClusterIP
   selector:

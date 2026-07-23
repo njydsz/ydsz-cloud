@@ -2,10 +2,10 @@ package com.njydsz.workflow.server.engine;
 
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
- * 工作流引擎 JSON 工具（基于 Json 引擎，统一使用 Json）
+ * 工作流引擎 JSON 工具（基于 YdszJson 引擎，统一使用 YdszJson）
  *
  * @since 1.0.0
  */
@@ -21,7 +21,7 @@ public final class JsonHelper {
         if (obj == null) {
             return null;
         }
-        return Json.toJson(obj);
+        return YdszJson.toJson(obj);
     }
 
     /**
@@ -34,6 +34,6 @@ public final class JsonHelper {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return Json.parseMap(json);
+        return YdszJson.parseMap(json);
     }
 }

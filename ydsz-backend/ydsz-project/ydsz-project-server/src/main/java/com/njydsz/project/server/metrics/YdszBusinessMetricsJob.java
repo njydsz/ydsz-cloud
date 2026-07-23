@@ -14,9 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * PMIS 核心业务指标采集（H5.2/H5.3 修复）
+ * YDSZ 核心业务指标采集（H5.2/H5.3 修复）
  *
- * <p>配套告警规则文件：deploy/monitoring/prometheus/rules/pmis-alerts.yml
+ * <p>配套告警规则文件：deploy/monitoring/prometheus/rules/ydsz-alerts.yml
  * 该文件已包含 ydsz_evm_red_projects_count / ydsz_bench_total_cost /
  * ydsz_billable_utilization_avg 三个指标的告警规则（P1/P2 级别）。
  *

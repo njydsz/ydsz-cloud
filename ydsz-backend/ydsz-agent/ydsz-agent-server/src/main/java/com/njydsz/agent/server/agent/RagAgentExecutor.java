@@ -133,7 +133,7 @@ public class RagAgentExecutor implements AgentExecutor {
         if (request.getSystemPrompt() != null) {
             sb.append(request.getSystemPrompt());
         } else {
-            sb.append("你是 PMIS 项目管理信息系统的智能助手。请基于知识库内容回答用户问题。");
+            sb.append("你是 YDSZ 项目管理信息系统的智能助手。请基于知识库内容回答用户问题。");
         }
         if (ragContext != null && !ragContext.isBlank()) {
             sb.append("\n\n").append(ragContext);

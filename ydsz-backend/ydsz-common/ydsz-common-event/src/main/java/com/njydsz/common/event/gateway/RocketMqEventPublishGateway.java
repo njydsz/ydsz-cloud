@@ -20,7 +20,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  *
  * <p>投递策略：
  * <ul>
- *   <li>Topic：固定为 {@code pmis-outbox-events}（可通过配置覆盖）</li>
+ *   <li>Topic：固定为 {@code ydsz-outbox-events}（可通过配置覆盖）</li>
  *   <li>Tag：使用 {@code eventType} 作为 Tag，消费端可按事件类型订阅</li>
  *   <li>Body：使用 {@code payload} 作为消息体</li>
  *   <li>headers：作为 RocketMQ 用户自定义属性传递</li>
@@ -35,7 +35,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
 
     private static final Logger log = LoggerFactory.getLogger(RocketMqEventPublishGateway.class);
 
-    private static final String DEFAULT_TOPIC = "pmis-outbox-events";
+    private static final String DEFAULT_TOPIC = "ydsz-outbox-events";
 
     private final RocketMQTemplate rocketMQTemplate;
     private final String topic;

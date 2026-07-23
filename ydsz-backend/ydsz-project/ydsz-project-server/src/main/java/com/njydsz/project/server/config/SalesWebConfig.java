@@ -34,7 +34,7 @@ public class SalesWebConfig {
     public OpenAPI salesOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("PMIS 商务销售服务 API")
+                        .title("YDSZ 商务销售服务 API")
                         .description("商机管理 / 合同管理 / 变更管理 / 补充协议 / 模板管理")
                         .version("1.0.0")
                         .contact(new Contact().name("ydsz-team"))

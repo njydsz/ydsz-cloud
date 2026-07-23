@@ -16,7 +16,7 @@ import com.njydsz.common.excel.converter.ConvertContext;
  * <p>处理目标类型为LocalDate的转换。支持从String、Date等原始值转换。</p>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class LocalDateConverter implements CellValueConverter {

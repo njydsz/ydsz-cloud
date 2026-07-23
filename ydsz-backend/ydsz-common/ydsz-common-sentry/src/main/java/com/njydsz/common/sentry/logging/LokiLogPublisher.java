@@ -11,7 +11,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.domain.LogEvent;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.LogPublisher;
@@ -100,7 +100,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
      * <pre>
      * {
      *   "streams": [{
-     *     "stream": { "app": "pmis", "level": "INFO" },
+     *     "stream": { "app": "ydsz", "level": "INFO" },
      *     "values": [[ "1620000000000000000", "{ \"message\": \"...\" }" ]]
      *   }]
      * }
@@ -111,7 +111,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
         String logLine = LogEventSerializer.toJson(event);
 
         Map<String, String> streamLabels = new LinkedHashMap<>();
-        streamLabels.put("app", event.getAppName() != null ? event.getAppName() : "pmis");
+        streamLabels.put("app", event.getAppName() != null ? event.getAppName() : "ydsz");
         streamLabels.put("level", event.getLevel() != null ? event.getLevel().name() : "INFO");
         if (event.getProfile() != null) {
             streamLabels.put("env", event.getProfile());
@@ -127,7 +127,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
                         "values", new Object[][]{{timestampNs, logLine}}
                 )
         });
-        return Json.toJson(payload);
+        return YdszJson.toJson(payload);
     }
 
     @Override
@@ -166,7 +166,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
     }
 
     private String buildLokiBatchPayload(List<LogEvent> events) {
-        String appName = events.get(0).getAppName() != null ? events.get(0).getAppName() : "pmis";
+        String appName = events.get(0).getAppName() != null ? events.get(0).getAppName() : "ydsz";
         List<Object[]> values = new ArrayList<>(events.size());
         for (LogEvent event : events) {
             String ts = String.valueOf(event.getTimestamp().toEpochMilli() * 1_000_000);
@@ -178,7 +178,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
         labels.put("level", events.get(0).getLevel() != null ? events.get(0).getLevel().name() : "INFO");
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("streams", new Object[]{ Map.of("stream", labels, "values", values) });
-        return Json.toJson(payload);
+        return YdszJson.toJson(payload);
     }
 
         @Override

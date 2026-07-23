@@ -1,7 +1,7 @@
 package com.njydsz.common.json.patch;
 
-import com.njydsz.common.json.Json;
-import com.njydsz.common.json.parser.JsonParser;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.parser.YdszJsonParser;
 
 import java.util.*;
 
@@ -26,7 +26,7 @@ import java.util.*;
  * // result: {"name":"Alice","age":30}
  * </pre>
  *
- * <p>所有 JSON 对象/数组都通过 {@link JsonParser} 解析为
+ * <p>所有 JSON 对象/数组都通过 {@link YdszJsonParser} 解析为
  * {@code LinkedHashMap<String, Object>} / {@code ArrayList<Object>}，
  * 因此路径遍历中的强制类型转换在运行时是安全的。</p>
  *
@@ -46,8 +46,8 @@ public final class JsonPatch {
      * @return 应用 Patch 后的 JSON 字符串
      */
     public static String apply(String patchJson, String targetJson) {
-        List<Object> operations = JsonParser.parseArray(patchJson);
-        Map<String, Object> target = JsonParser.parseObject(targetJson);
+        List<Object> operations = YdszJsonParser.parseArray(patchJson);
+        Map<String, Object> target = YdszJsonParser.parseObject(targetJson);
 
         for (Object opObj : operations) {
             if (!(opObj instanceof Map<?, ?> rawOp)) {
@@ -87,8 +87,8 @@ public final class JsonPatch {
                     if (!Objects.equals(currentValue, value)) {
                         throw new IllegalStateException(
                             "Test failed at path '" + path + "': expected "
-                                + Json.toJson(value) + " but got "
-                                + Json.toJson(currentValue));
+                                + YdszJson.toJson(value) + " but got "
+                                + YdszJson.toJson(currentValue));
                     }
                     break;
                 default:
@@ -96,13 +96,13 @@ public final class JsonPatch {
             }
         }
 
-        return Json.toJson(target);
+        return YdszJson.toJson(target);
     }
 
     /**
      * 根据 JSON Pointer 路径获取值。
      *
-     * <p>由于经过 {@link JsonParser} 解析后，所有 Map 节点的实际类型为
+     * <p>由于经过 {@link YdszJsonParser} 解析后，所有 Map 节点的实际类型为
      * {@code LinkedHashMap<String, Object>}、List 节点为 {@code ArrayList<Object>}，
      * 故此处强制类型转换为运行时安全的。</p>
      */
@@ -261,7 +261,7 @@ public final class JsonPatch {
          * @return 应用后的 JSON 字符串
          */
         public String applyTo(String targetJson) {
-            String patchJson = Json.toJson(operations);
+            String patchJson = YdszJson.toJson(operations);
             return JsonPatch.apply(patchJson, targetJson);
         }
     }

@@ -1,5 +1,5 @@
 # =====================================================================
-#  YDSZ PMIS · Message · DEV 环境配置（Nacos DataId）
+#  YDSZ · Message · DEV 环境配置（Nacos DataId）
 #  DataId:    ydsz-message-dev.yaml
 #  Group:     dev
 #  端口:      9004
@@ -34,7 +34,7 @@ spring:
           timeout: 10000
           writetimeout: 10000
 
-# PMIS 消息引擎配置
+# YDSZ 消息引擎配置
 ydsz:
   message:
     channel-enabled:
@@ -57,47 +57,47 @@ ydsz:
     global-daily-limit: 0
     global-hourly-limit: 0
     sms:
-      provider: ${PMIS_SMS_PROVIDER:mock}
+      provider: ${YDSZ_SMS_PROVIDER:mock}
       aliyun:
-        access-key-id: ${PMIS_SMS_ALIYUN_AK:}
-        access-key-secret: ${PMIS_SMS_ALIYUN_SK:}
-        sign-name: ${PMIS_SMS_ALIYUN_SIGN:}
+        access-key-id: ${YDSZ_SMS_ALIYUN_AK:}
+        access-key-secret: ${YDSZ_SMS_ALIYUN_SK:}
+        sign-name: ${YDSZ_SMS_ALIYUN_SIGN:}
         endpoint: dysmsapi.aliyuncs.com
         connect-timeout: 5000
         read-timeout: 10000
     push:
-      provider: ${PMIS_PUSH_PROVIDER:mock}
+      provider: ${YDSZ_PUSH_PROVIDER:mock}
       getui:
-        app-id: ${PMIS_PUSH_GETUI_APPID:}
-        app-key: ${PMIS_PUSH_GETUI_APPKEY:}
-        master-secret: ${PMIS_PUSH_GETUI_MASTER:}
+        app-id: ${YDSZ_PUSH_GETUI_APPID:}
+        app-key: ${YDSZ_PUSH_GETUI_APPKEY:}
+        master-secret: ${YDSZ_PUSH_GETUI_MASTER:}
         base-url: https://restapi.getui.com
         connect-timeout: 5000
         read-timeout: 10000
   webhook:
-    default-url: ${PMIS_WEBHOOK_DEFAULT_URL:}
+    default-url: ${YDSZ_WEBHOOK_DEFAULT_URL:}
     connect-timeout: 5000
     read-timeout: 10000
   channel:
     dingtalk:
-      default-token: ${PMIS_DINGTALK_TOKEN:}
-      secret: ${PMIS_DINGTALK_SECRET:}
+      default-token: ${YDSZ_DINGTALK_TOKEN:}
+      secret: ${YDSZ_DINGTALK_SECRET:}
       connect-timeout: 5000
       read-timeout: 10000
     wechat-work:
-      default-key: ${PMIS_WECOM_KEY:}
+      default-key: ${YDSZ_WECOM_KEY:}
       connect-timeout: 5000
       read-timeout: 10000
     feishu:
-      default-hook: ${PMIS_FEISHU_HOOK:}
-      secret: ${PMIS_FEISHU_SECRET:}
+      default-hook: ${YDSZ_FEISHU_HOOK:}
+      secret: ${YDSZ_FEISHU_SECRET:}
       connect-timeout: 5000
       read-timeout: 10000
     wecom-app:
-      enabled: ${PMIS_WECOM_APP_ENABLED:false}
-      corp-id: ${PMIS_WECOM_APP_CORPID:}
-      corp-secret: ${PMIS_WECOM_APP_CORPSECRET:}
-      agent-id: ${PMIS_WECOM_APP_AGENTID:0}
+      enabled: ${YDSZ_WECOM_APP_ENABLED:false}
+      corp-id: ${YDSZ_WECOM_APP_CORPID:}
+      corp-secret: ${YDSZ_WECOM_APP_CORPSECRET:}
+      agent-id: ${YDSZ_WECOM_APP_AGENTID:0}
       base-url: https://qyapi.weixin.qq.com
       connect-timeout: 5000
       read-timeout: 10000
@@ -106,7 +106,7 @@ ydsz:
 rocketmq:
   name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
   producer:
-    group: ${ROCKETMQ_PRODUCER_GROUP:pmis-message-producer-group}
+    group: ${ROCKETMQ_PRODUCER_GROUP:ydsz-message-producer-group}
     send-message-timeout: 5000
   consumer:
     enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}

@@ -1,6 +1,6 @@
 package com.njydsz.common.safe.xss;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * XSS 防护配置工具类（基于 YdszJson 引擎）
@@ -27,6 +27,6 @@ public class XssJsonConfig {
      * 所有通过 YdszJson 解析的 JSON 字符串字段都会自动进行 XSS 清洗。
      */
     public static void registerXssProtection() {
-        Json.register(String.class, new XssStringDeserializer());
+        YdszJson.register(String.class, new XssStringDeserializer());
     }
 }

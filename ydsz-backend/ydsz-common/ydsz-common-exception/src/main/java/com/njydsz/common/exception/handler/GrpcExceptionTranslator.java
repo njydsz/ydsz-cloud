@@ -13,7 +13,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
 /**
  * gRPC 异常转换器
  *
- * <p>将 PMIS 业务异常转换为 gRPC {@link Status}，供 gRPC 服务端拦截器使用。
+ * <p>将 YDSZ 业务异常转换为 gRPC {@link Status}，供 gRPC 服务端拦截器使用。
  *
  * <p><b>映射规则：</b>
  * <ul>
@@ -49,7 +49,7 @@ public final class GrpcExceptionTranslator {
     }
 
     /**
-     * 将 PMIS 异常转换为 gRPC Status
+     * 将 YDSZ 异常转换为 gRPC Status
      *
      * @param throwable 异常对象
      * @return gRPC Status

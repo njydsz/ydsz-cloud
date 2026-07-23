@@ -15,7 +15,7 @@ import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.DeadLetterQueueService;
 import com.njydsz.common.queue.service.IMessagePublisher;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,7 +57,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
         dlqMessage.setEnterTime(LocalDateTime.now().format(FORMATTER));
         dlqMessage.setRetryCount(0);
 
-        String dlqMessageJson = Json.toJson(dlqMessage);
+        String dlqMessageJson = YdszJson.toJson(dlqMessage);
         redisTemplate.opsForHash().put(dlqKey, messageId, dlqMessageJson);
         redisTemplate.opsForHash().put(retryKey, messageId, "0");
 
@@ -102,7 +102,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
             return false;
         }
 
-        DeadLetterMessage dlqMessage = Json.toObject(dlqMessageObj.toString(), DeadLetterMessage.class);
+        DeadLetterMessage dlqMessage = YdszJson.toObject(dlqMessageObj.toString(), DeadLetterMessage.class);
         QueueMessage queueMessage = QueueMessage.fromPayload(dlqMessage.getMessageBody());
         if (queueMessage != null) {
             queueMessage.setRetryCount(currentRetryCount + 1);
@@ -160,7 +160,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
                 for (Map.Entry<Object, Object> entry : entries.entrySet()) {
                     String messageId = entry.getKey().toString();
                     try {
-                        DeadLetterMessage msg = Json.toObject(entry.getValue().toString(), DeadLetterMessage.class);
+                        DeadLetterMessage msg = YdszJson.toObject(entry.getValue().toString(), DeadLetterMessage.class);
                         if (msg != null && msg.getEnterTime() != null) {
                             LocalDateTime enterTime = LocalDateTime.parse(msg.getEnterTime(), formatter);
                             long ageMillis = now - enterTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();

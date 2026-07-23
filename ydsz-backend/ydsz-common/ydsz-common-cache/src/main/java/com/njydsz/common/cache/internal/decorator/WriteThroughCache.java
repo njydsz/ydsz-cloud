@@ -49,9 +49,9 @@ import com.njydsz.common.cache.support.CacheWriter;
  * <p>使用示例：
  *
  * <pre>{@code
- * Cache<String, User> cache = LocalCache.createLRUCache(1000);
+ * Cache<String, User> cache = YdszCache.createLRUCache(1000);
  * CacheWriter<String, User> writer = new UserCacheWriter(userDao);
- * Cache<String, User> writeThrough = LocalCache.createWriteThroughCache(cache, writer);
+ * Cache<String, User> writeThrough = YdszCache.createWriteThroughCache(cache, writer);
  *
  * writeThrough.put("user:1", newUser); // 同步写入数据库
  * }</pre>

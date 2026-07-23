@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import com.njydsz.common.json.annotation.JsonAlias;
 
 /**
- * Json 序列化/反序列化核心功能测试。
+ * YdszJson 序列化/反序列化核心功能测试。
  *
  * @since 1.4.0
  */
@@ -29,10 +29,10 @@ class JsonCoreTest {
 
     @Test
     void testToJsonBasic() {
-        assertEquals("null", Json.toJson(null));
-        assertEquals("\"hello\"", Json.toJson("hello"));
-        assertEquals("42", Json.toJson(42));
-        assertEquals("true", Json.toJson(true));
+        assertEquals("null", YdszJson.toJson(null));
+        assertEquals("\"hello\"", YdszJson.toJson("hello"));
+        assertEquals("42", YdszJson.toJson(42));
+        assertEquals("true", YdszJson.toJson(true));
     }
 
     @Test
@@ -40,7 +40,7 @@ class JsonCoreTest {
         Map<String, Object> map = new HashMap<>();
         map.put("name", "John");
         map.put("age", 30);
-        String json = Json.toJson(map);
+        String json = YdszJson.toJson(map);
         assertNotNull(json);
         assertTrue(json.contains("\"name\":\"John\""));
         assertTrue(json.contains("\"age\":30"));
@@ -48,7 +48,7 @@ class JsonCoreTest {
 
     @Test
     void testToObjectBasic() {
-        User user = Json.toObject("{\"name\":\"John\",\"age\":30}", User.class);
+        User user = YdszJson.toObject("{\"name\":\"John\",\"age\":30}", User.class);
         assertNotNull(user);
         assertEquals("John", user.name);
         assertEquals(30, user.age);
@@ -56,14 +56,14 @@ class JsonCoreTest {
 
     @Test
     void testToObjectWithAlias() {
-        AliasedUser user = Json.toObject("{\"userName\":\"John\"}", AliasedUser.class);
+        AliasedUser user = YdszJson.toObject("{\"userName\":\"John\"}", AliasedUser.class);
         assertNotNull(user);
         assertEquals("John", user.username);
     }
 
     @Test
     void testToObjectWithAlias2() {
-        AliasedUser user = Json.toObject("{\"loginName\":\"Jane\"}", AliasedUser.class);
+        AliasedUser user = YdszJson.toObject("{\"loginName\":\"Jane\"}", AliasedUser.class);
         assertNotNull(user);
         assertEquals("Jane", user.username);
     }
@@ -71,7 +71,7 @@ class JsonCoreTest {
     @Test
     void testToJsonWithWriter() throws IOException {
         StringWriter writer = new StringWriter();
-        Json.toJson(Map.of("key", "value"), writer);
+        YdszJson.toJson(Map.of("key", "value"), writer);
         String result = writer.toString();
         assertNotNull(result);
         assertTrue(result.contains("\"key\":\"value\""));
@@ -79,41 +79,41 @@ class JsonCoreTest {
 
     @Test
     void testSerializeDateTypes() {
-        String json = Json.toJson(LocalDate.of(2026, 7, 15));
+        String json = YdszJson.toJson(LocalDate.of(2026, 7, 15));
         assertNotNull(json);
         assertTrue(json.contains("2026-07-15"));
 
-        json = Json.toJson(LocalDateTime.of(2026, 7, 15, 10, 30, 0));
+        json = YdszJson.toJson(LocalDateTime.of(2026, 7, 15, 10, 30, 0));
         assertNotNull(json);
         assertTrue(json.contains("2026-07-15"));
         assertTrue(json.contains("10:30:00"));
 
-        json = Json.toJson(LocalTime.of(10, 30, 0));
+        json = YdszJson.toJson(LocalTime.of(10, 30, 0));
         assertNotNull(json);
         assertTrue(json.contains("10:30:00"));
 
-        json = Json.toJson(Year.of(2026));
+        json = YdszJson.toJson(Year.of(2026));
         assertNotNull(json);
         assertTrue(json.contains("2026"));
 
-        json = Json.toJson(YearMonth.of(2026, 7));
+        json = YdszJson.toJson(YearMonth.of(2026, 7));
         assertNotNull(json);
         assertTrue(json.contains("2026-07"));
 
-        json = Json.toJson(ZonedDateTime.parse("2026-07-15T10:30:00+08:00"));
+        json = YdszJson.toJson(ZonedDateTime.parse("2026-07-15T10:30:00+08:00"));
         assertNotNull(json);
 
-        json = Json.toJson(OffsetDateTime.parse("2026-07-15T10:30:00+08:00"));
+        json = YdszJson.toJson(OffsetDateTime.parse("2026-07-15T10:30:00+08:00"));
         assertNotNull(json);
 
-        json = Json.toJson(new Date());
+        json = YdszJson.toJson(new Date());
         assertNotNull(json);
     }
 
     @Test
     void testSerializeBigDecimal() {
         BigDecimal bd = new BigDecimal("123.456");
-        String json = Json.toJson(bd);
+        String json = YdszJson.toJson(bd);
         assertNotNull(json);
         assertEquals("123.456", json);
     }
@@ -121,14 +121,14 @@ class JsonCoreTest {
     @Test
     void testSerializeBigDecimalHighPrecision() {
         BigDecimal bd = new BigDecimal("999999999999999999999999.999999999999");
-        String json = Json.toJson(bd);
+        String json = YdszJson.toJson(bd);
         assertNotNull(json);
         assertTrue(json.contains("999999999999999999999999"));
     }
 
     @Test
     void testParseMap() {
-        Map<String, Object> map = Json.parseMap("{\"a\":1,\"b\":\"hello\",\"c\":true}");
+        Map<String, Object> map = YdszJson.parseMap("{\"a\":1,\"b\":\"hello\",\"c\":true}");
         assertNotNull(map);
         assertEquals(1, map.get("a"));
         assertEquals("hello", map.get("b"));
@@ -137,7 +137,7 @@ class JsonCoreTest {
 
     @Test
     void testToJsonBytes() {
-        byte[] bytes = Json.toJsonBytes(Map.of("key", "value"));
+        byte[] bytes = YdszJson.toJsonBytes(Map.of("key", "value"));
         assertNotNull(bytes);
         String json = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(json.contains("\"key\":\"value\""));

@@ -173,7 +173,7 @@
             <artifactId>openpdf</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- mybatis-plus-core（PmisSnowflakeIdentifierGenerator） -->
+        <!-- mybatis-plus-core（YdszSnowflakeIdentifierGenerator） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-core</artifactId>

@@ -5,11 +5,11 @@
  *
  * 使用场景：
  *  - 业务代码需要读写 localStorage 但不希望因存储不可用而崩溃
- *  - 清除 PMIS 持久化数据（仅清除 `pmis:` 前缀的 key）
+ *  - 清除 YDSZ 持久化数据（仅清除 `ydsz:` 前缀的 key）
  */
 
-/** PMIS 持久化数据 key 前缀，与 plugins/pinia-persist 保持一致（注意含冒号） */
-const PERSIST_PREFIX = 'pmis:'
+/** YDSZ 持久化数据 key 前缀，与 plugins/pinia-persist 保持一致（注意含冒号） */
+const PERSIST_PREFIX = 'ydsz:'
 
 /**
  * 安全读取 localStorage
@@ -52,10 +52,10 @@ export function safeRemove(key: string): void {
 }
 
 /**
- * 清除所有 PMIS 持久化数据
+ * 清除所有 YDSZ 持久化数据
  *
- * 仅清除以 `pmis:` 为前缀的 key（由 pinia-persist 插件写入的 store 数据），
- * 不影响其他业务 key（如 `pmis_token`、`userInfo` 等历史 / 下划线 key）。
+ * 仅清除以 `ydsz:` 为前缀的 key（由 pinia-persist 插件写入的 store 数据），
+ * 不影响其他业务 key（如 `ydsz_token`、`userInfo` 等历史 / 下划线 key）。
  */
 export function clearAllPersisted(): void {
   try {

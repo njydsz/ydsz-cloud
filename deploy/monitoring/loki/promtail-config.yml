@@ -6,7 +6,7 @@
 #   启动: promtail -config.file=/etc/promtail/promtail-config.yml
 #
 # 采集目标:
-#   /var/log/pmis/*.log (PMIS 后端服务日志,由 logback-spring.xml 输出)
+#   /var/log/ydsz/*.log (YDSZ 后端服务日志,由 logback-spring.xml 输出)
 #
 # 采集流程:
 #   1. tail 抓取日志文件
@@ -47,17 +47,17 @@ clients:
 # =============================================================================
 scrape_configs:
   # ----------------------------------------------------------------------
-  # 1. PMIS 后端应用日志(结构化 JSON,由 logback LOGSTASH_JSON appender 输出)
+  # 1. YDSZ 后端应用日志(结构化 JSON,由 logback LOGSTASH_JSON appender 输出)
   # ----------------------------------------------------------------------
-  - job_name: pmis-app
+  - job_name: ydsz-app
     static_configs:
       - targets:
           - localhost
         labels:
-          job: pmis
+          job: ydsz
           source: app
-          # 采集容器内 /var/log/pmis/*.log
-          __path__: /var/log/pmis/*.log
+          # 采集容器内 /var/log/ydsz/*.log
+          __path__: /var/log/ydsz/*.log
     pipeline_stages:
       # ---- 1.1 解析 JSON 结构化日志(LogstashEncoder 输出) ----
       - json:
@@ -97,16 +97,16 @@ scrape_configs:
           source: message
 
   # ----------------------------------------------------------------------
-  # 2. PMIS 审计日志回灌文件(audit-fallback.log)
+  # 2. YDSZ 审计日志回灌文件(audit-fallback.log)
   # ----------------------------------------------------------------------
-  - job_name: pmis-audit
+  - job_name: ydsz-audit
     static_configs:
       - targets:
           - localhost
         labels:
-          job: pmis
+          job: ydsz
           source: audit
-          __path__: /var/log/pmis/audit-fallback.log
+          __path__: /var/log/ydsz/audit-fallback.log
     pipeline_stages:
       # 审计日志本身就是 JSON 行格式,直接解析
       - json:
@@ -124,10 +124,10 @@ scrape_configs:
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
-        # 仅采集 pmis-* 容器
+        # 仅采集 ydsz-* 容器
         filters:
           - name: name
-            values: ["pmis-"]
+            values: ["ydsz-"]
     relabel_configs:
       # 提取容器名作为 label
       - source_labels: ["__meta_docker_container_name"]
@@ -136,9 +136,9 @@ scrape_configs:
       # 提取镜像名
       - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
         target_label: service
-      # 仅保留 pmis 相关容器
+      # 仅保留 ydsz 相关容器
       - source_labels: ["container"]
-        regex: "pmis-.*"
+        regex: "ydsz-.*"
         action: keep
     pipeline_stages:
       # Docker 日志默认是 JSON {"log":"...","stream":"stdout"}

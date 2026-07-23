@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "YDSZ PMIS Cache - 多策略缓存框架监控仪表盘",
+  "description": "YDSZ Cache - 多策略缓存框架监控仪表盘",
   "editable": true,
   "graphTooltip": 1,
   "panels": [
@@ -165,7 +165,7 @@
   ],
   "schemaVersion": 27,
   "style": "dark",
-  "tags": ["pmis", "cache"],
+  "tags": ["ydsz", "cache"],
   "templating": {
     "list": [
       {
@@ -180,7 +180,7 @@
   },
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
-  "title": "PMIS Cache Dashboard",
-  "uid": "pmis-cache",
+  "title": "YDSZ Cache Dashboard",
+  "uid": "ydsz-cache",
   "version": 1
 }

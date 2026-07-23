@@ -12,10 +12,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  * XSS JSON 自动配置
  *
  * <p>当 {@code ydsz.safe.xss.json-enabled=true} 时，自动注册 {@link XssStringDeserializer}
- * 到全局 Json 引擎。这使得 JSON 反序列化时自动对 String 字段进行 XSS 清洗。
+ * 到全局 YdszJson 引擎。这使得 JSON 反序列化时自动对 String 字段进行 XSS 清洗。
  *
  * <p>此方式与 XssFilter、XssJsonMessageConverter 互补，
- * 在 Json 反序列化层面提供 XSS 防护。
+ * 在 YdszJson 反序列化层面提供 XSS 防护。
  *
  * @since 1.0.0
  * 

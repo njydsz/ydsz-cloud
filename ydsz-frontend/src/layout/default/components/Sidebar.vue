@@ -66,7 +66,7 @@ const activeMenu = computed<string>(() => {
 <template>
   <nav class="sidebar-wrap" role="navigation" :aria-label="t('common.aria.mainNav')">
     <div class="sidebar-logo">
-      <span v-if="!appStore.sidebarCollapsed">PMIS</span>
+      <span v-if="!appStore.sidebarCollapsed">YDSZ</span>
       <span v-else>P</span>
     </div>
     <el-scrollbar>

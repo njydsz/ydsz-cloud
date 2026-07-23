@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "PMIS 日志搜索与分析面板 — 基于 Loki 的结构化日志查询，支持按服务/级别/TraceId 过滤",
+  "description": "YDSZ 日志搜索与分析面板 — 基于 Loki 的结构化日志查询，支持按服务/级别/TraceId 过滤",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -66,7 +66,7 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "builder",
-          "expr": "{namespace=\"pmis\", level=~\"$level\", appName=~\"$service\"} |= \"$keyword\"",
+          "expr": "{namespace=\"ydsz\", level=~\"$level\", appName=~\"$service\"} |= \"$keyword\"",
           "queryType": "instant",
           "refId": "A"
         }
@@ -121,7 +121,7 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
-          "expr": "sum by (appName, level) (count_over_time({namespace=\"pmis\", level=~\"ERROR|WARN\"}[$__interval]))",
+          "expr": "sum by (appName, level) (count_over_time({namespace=\"ydsz\", level=~\"ERROR|WARN\"}[$__interval]))",
           "legendFormat": "{{appName}} - {{level}}",
           "queryType": "range",
           "refId": "A"
@@ -163,7 +163,7 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
-          "expr": "sum by (appName) (count_over_time({namespace=\"pmis\", level=\"ERROR\"}[$__range]))",
+          "expr": "sum by (appName) (count_over_time({namespace=\"ydsz\", level=\"ERROR\"}[$__range]))",
           "legendFormat": "{{appName}}",
           "queryType": "instant",
           "refId": "A"
@@ -205,7 +205,7 @@
         {
           "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
-          "expr": "sum by (appName) (count_over_time({namespace=\"pmis\", level=\"WARN\"}[$__range]))",
+          "expr": "sum by (appName) (count_over_time({namespace=\"ydsz\", level=\"WARN\"}[$__range]))",
           "legendFormat": "{{appName}}",
           "queryType": "instant",
           "refId": "A"
@@ -217,21 +217,21 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["pmis", "logs", "loki"],
+  "tags": ["ydsz", "logs", "loki"],
   "templating": {
     "list": [
       {
         "allValue": ".*",
         "current": { "selected": true, "text": "All", "value": "$__all" },
         "datasource": { "type": "loki", "uid": "loki" },
-        "definition": "label_values({namespace=\"pmis\"}, appName)",
+        "definition": "label_values({namespace=\"ydsz\"}, appName)",
         "hide": 0,
         "includeAll": true,
         "label": "服务",
         "multi": true,
         "name": "service",
         "options": [],
-        "query": { "label": "appName", "refId": "LokiVariableQueryEditor-VariableQuery", "stream": "{namespace=\"pmis\"}", "type": 1 },
+        "query": { "label": "appName", "refId": "LokiVariableQueryEditor-VariableQuery", "stream": "{namespace=\"ydsz\"}", "type": 1 },
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -242,14 +242,14 @@
         "allValue": ".*",
         "current": { "selected": true, "text": "All", "value": "$__all" },
         "datasource": { "type": "loki", "uid": "loki" },
-        "definition": "label_values({namespace=\"pmis\"}, level)",
+        "definition": "label_values({namespace=\"ydsz\"}, level)",
         "hide": 0,
         "includeAll": true,
         "label": "级别",
         "multi": true,
         "name": "level",
         "options": [],
-        "query": { "label": "level", "refId": "LokiVariableQueryEditor-VariableQuery", "stream": "{namespace=\"pmis\"}", "type": 1 },
+        "query": { "label": "level", "refId": "LokiVariableQueryEditor-VariableQuery", "stream": "{namespace=\"ydsz\"}", "type": 1 },
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -271,8 +271,8 @@
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS 日志搜索与分析",
-  "uid": "pmis-logs",
+  "title": "YDSZ 日志搜索与分析",
+  "uid": "ydsz-logs",
   "version": 1,
   "weekStart": ""
 }

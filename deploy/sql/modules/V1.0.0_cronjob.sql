@@ -1,5 +1,5 @@
 -- ============================================================
--- PMIS cronjob module SQL
+-- YDSZ cronjob module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
 -- 本脚本 DDL 对应后端 cronjob 服务 (ydsz-cronjob) 的 Mapper / DO,
@@ -7,7 +7,7 @@
 --   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
 -- --------------------------------------------------------------------
 
--- ============================ [006] init pmis job schema ============================
+-- ============================ [006] init ydsz job schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
@@ -16,7 +16,7 @@
 --   5) 内联复合部分索引 (tenant_id, created_at DESC) WHERE deleted = 0
 --   6) 计数器类字段 (fire_count/success_count/fail_count/login_fail_count 等) 添加非负 CHECK
 -- =====================================================
--- PMIS 任务调度模块 DDL
+-- YDSZ 任务调度模块 DDL
 -- 版本: V1.0.0_006 (merged into V1.0.0.sql)
 -- 描述: 动态定时任务定义 + 执行日志(自研调度引擎)
 -- =====================================================
@@ -141,7 +141,7 @@ COMMENT ON COLUMN ydsz_job.success_count IS '成功执行次数';
 
 COMMENT ON COLUMN ydsz_job.fail_count IS '失败次数(超过阈值告警)';
 
-COMMENT ON COLUMN ydsz_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 pmis.cronjob.job-lock-ttl)';
+COMMENT ON COLUMN ydsz_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 ydsz.cronjob.job-lock-ttl)';
 
 COMMENT ON COLUMN ydsz_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
 
@@ -276,7 +276,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log(
     -- [P0-2] 执行线程 ID: 用于超时强制中断时定位执行线程
     exec_thread_id  BIGINT,
     -- [P1-4] 分片索引: 非分片任务为 NULL; 分片任务为 0-based 索引
-    --        供 JobNodeReaper 故障转移时重建分片锁 key (pmis:job:lock:{jobKey}:shard:{shardIndex})
+    --        供 JobNodeReaper 故障转移时重建分片锁 key (ydsz:job:lock:{jobKey}:shard:{shardIndex})
     shard_index     INTEGER,
     -- [P1-4] 分片总数: 非分片任务为 NULL; 分片任务为 shardTotal 值
     shard_total     INTEGER,
@@ -1536,7 +1536,7 @@ CREATE INDEX IF NOT EXISTS idx_pjw_status
 
 -- --------------------------------------------------------------------
 
--- ============================ [021] register pmis smart jobs ============================
+-- ============================ [021] register ydsz smart jobs ============================
 
 -- ============================================================
 -- V1.0.0_021  智能化升级 P5/P6/P7  定时任务注册
@@ -1606,7 +1606,7 @@ VALUES (
 -- 本 SQL 不增加新列，复用 ext JSON。
 
 -- -------------------------------------------
--- 3. 注册定时器扫描器调度任务（PMIS Cronjob）
+-- 3. 注册定时器扫描器调度任务（YDSZ Cronjob）
 -- -------------------------------------------
 INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (
@@ -1645,7 +1645,7 @@ VALUES (
 INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     '日报表生成与分发任务',
-    'PMIS_REPORT',
+    'YDSZ_REPORT',
     'reportDailyJob',
     'reportScheduleJobHandler',
     '0 0 8 * * ?',
@@ -1659,7 +1659,7 @@ VALUES (
 INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     '周报表生成与分发任务',
-    'PMIS_REPORT',
+    'YDSZ_REPORT',
     'reportWeeklyJob',
     'reportScheduleJobHandler',
     '0 0 8 ? * MON',
@@ -1673,7 +1673,7 @@ VALUES (
 INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     '月报表生成与分发任务',
-    'PMIS_REPORT',
+    'YDSZ_REPORT',
     'reportMonthlyJob',
     'reportScheduleJobHandler',
     '0 0 8 1 * ?',
@@ -1720,7 +1720,7 @@ VALUES (
 INSERT INTO ydsz_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     'data-consistency-check',
-    'PMIS_CRONJOB',
+    'YDSZ_CRONJOB',
     'data-consistency-check',
     'dataConsistencyJobHandler',
     '0 30 2 * * ?',

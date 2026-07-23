@@ -15,7 +15,7 @@
 
 ## 核心职责
 
-本模块是 PMIS 的**统一通知中心**，从 `ydsz-system` 拆分出来作为独立大厂级通知引擎。
+本模块是 YDSZ 的**统一通知中心**，从 `ydsz-system` 拆分出来作为独立大厂级通知引擎。
 
 ### 1. 8 大渠道
 
@@ -65,28 +65,28 @@
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
-| **消息日志** | `pmis_msg_log` | 消息发送主日志（按月分区） |
-| | `pmis_msg_log_default` | 消息日志默认分区 |
-| | `pmis_msg_log_yYYYYmMM` | 消息日志月度分区模板 |
-| **批量发送** | `pmis_msg_batch` | 批量发送批次（聚合任务） |
-| **聚合** | `pmis_msg_aggregate` | 站内通知聚合（同类合并） |
-| **站内通知** | `pmis_msg_notification` | 站内收件箱（前端通知中心） |
-| **回执** | `pmis_msg_receipt` | 消息回执（送达/已读/点击/失败/超时） |
-| **模板** | `pmis_msg_template` | 消息模板（含 i18n/场景/审核） |
-| | `pmis_msg_template_version` | 模板版本历史 |
-| **用户偏好** | `pmis_msg_preference` | 用户偏好（免打扰/频率/语言） |
-| **订阅** | `pmis_msg_subscription` | 主题订阅（用户×主题×渠道） |
-| **路由规则** | `pmis_msg_route_rule` | 条件路由 + 通道降级 |
-| **灰度** | `pmis_msg_canary` | 灰度发布策略（按用户标签/比例） |
+| **消息日志** | `ydsz_msg_log` | 消息发送主日志（按月分区） |
+| | `ydsz_msg_log_default` | 消息日志默认分区 |
+| | `ydsz_msg_log_yYYYYmMM` | 消息日志月度分区模板 |
+| **批量发送** | `ydsz_msg_batch` | 批量发送批次（聚合任务） |
+| **聚合** | `ydsz_msg_aggregate` | 站内通知聚合（同类合并） |
+| **站内通知** | `ydsz_msg_notification` | 站内收件箱（前端通知中心） |
+| **回执** | `ydsz_msg_receipt` | 消息回执（送达/已读/点击/失败/超时） |
+| **模板** | `ydsz_msg_template` | 消息模板（含 i18n/场景/审核） |
+| | `ydsz_msg_template_version` | 模板版本历史 |
+| **用户偏好** | `ydsz_msg_preference` | 用户偏好（免打扰/频率/语言） |
+| **订阅** | `ydsz_msg_subscription` | 主题订阅（用户×主题×渠道） |
+| **路由规则** | `ydsz_msg_route_rule` | 条件路由 + 通道降级 |
+| **灰度** | `ydsz_msg_canary` | 灰度发布策略（按用户标签/比例） |
 
 > **索引关键点**：
-> - `pmis_msg_log(trace_id)` 链路追踪
-> - `pmis_msg_log(recipient_id, send_time)` 收件箱查询
-> - `pmis_msg_notification(user_id, read_flag, created_at)` 未读/已读分页
-> - `pmis_msg_template(template_code, version)` 唯一
-> - `pmis_msg_receipt(msg_log_id)` 唯一
+> - `ydsz_msg_log(trace_id)` 链路追踪
+> - `ydsz_msg_log(recipient_id, send_time)` 收件箱查询
+> - `ydsz_msg_notification(user_id, read_flag, created_at)` 未读/已读分页
+> - `ydsz_msg_template(template_code, version)` 唯一
+> - `ydsz_msg_receipt(msg_log_id)` 唯一
 >
-> **分区说明**：`pmis_msg_log` 为 PostgreSQL 范围分区表（按月分区），与 `pmis_operation_log` 同样可走 `pg_partman` 归档历史月份。
+> **分区说明**：`ydsz_msg_log` 为 PostgreSQL 范围分区表（按月分区），与 `ydsz_operation_log` 同样可走 `pg_partman` 归档历史月份。
 
 ## 启动顺序
 
@@ -132,7 +132,7 @@ ydsz-message/
 | 变量 | 默认值 | 说明 |
 |---|---|---|
 | `ROCKETMQ_NAME_SERVER` | `127.0.0.1:9876` | NameServer |
-| `ROCKETMQ_PRODUCER_GROUP` | `pmis-message-producer-group` | 生产者组 |
+| `ROCKETMQ_PRODUCER_GROUP` | `ydsz-message-producer-group` | 生产者组 |
 | `ROCKETMQ_CONSUMER_ENABLED` | `true` | 是否启动消费者 |
 
 **邮件 SMTP**（EMAIL 渠道必需）：
@@ -148,16 +148,16 @@ ydsz-message/
 
 | 变量 | 说明 |
 |---|---|
-| `PMIS_SMS_PROVIDER` | `mock`（默认） / `aliyun` |
-| `PMIS_SMS_ALIYUN_AK` / `PMIS_SMS_ALIYUN_SK` / `PMIS_SMS_ALIYUN_SIGN` | 阿里云短信 AK / SK / 签名 |
-| `PMIS_PUSH_PROVIDER` | `mock`（默认） / `getui` |
-| `PMIS_PUSH_GETUI_APPID` / `PMIS_PUSH_GETUI_APPKEY` / `PMIS_PUSH_GETUI_MASTER` | 个推配置 |
+| `YDSZ_SMS_PROVIDER` | `mock`（默认） / `aliyun` |
+| `YDSZ_SMS_ALIYUN_AK` / `YDSZ_SMS_ALIYUN_SK` / `YDSZ_SMS_ALIYUN_SIGN` | 阿里云短信 AK / SK / 签名 |
+| `YDSZ_PUSH_PROVIDER` | `mock`（默认） / `getui` |
+| `YDSZ_PUSH_GETUI_APPID` / `YDSZ_PUSH_GETUI_APPKEY` / `YDSZ_PUSH_GETUI_MASTER` | 个推配置 |
 
 ## 启动
 
 ```bash
 # 1. 启动 RocketMQ
-docker run -d --name pmis-rocketmq \
+docker run -d --name ydsz-rocketmq \
   -p 9876:9876 -p 8080:8080 \
   -e "JAVA_OPT_EXT=-Xms512m -Xmx512m" \
   apache/rocketmq:5.1.0 sh mqbroker -n namesrv:9876
@@ -203,7 +203,7 @@ mvn -pl ydsz-message -am test
 ### Q3：回执一直 TIMEOUT
 
 渠道不支持主动拉取时，回执状态保持 `NONE`。`ReceiptPuller` 调度器默认 5min 主动拉取，30min 超时补偿。
-配置项：`pmis.message.receipt-pull-delay-minutes` / `receipt-timeout-minutes`。
+配置项：`ydsz.message.receipt-pull-delay-minutes` / `receipt-timeout-minutes`。
 
 ---
 

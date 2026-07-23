@@ -48,7 +48,7 @@ ydsz-common-sentry/
 ydsz:
   sentry:
     enabled: true
-    app-name: pmis-project
+    app-name: ydsz-project
     profile: ${spring.profiles.active:dev}
 
     # 指标采集
@@ -120,7 +120,7 @@ public void doSearch(String keyword) {
 ```xml
 <appender name="SENTRY_JSON" class="ch.qos.logback.core.ConsoleAppender">
     <layout class="com.njydsz.common.sentry.logging.SentryLogbackLayout">
-        <appName>pmis-service</appName>
+        <appName>ydsz-service</appName>
         <profile>${spring.profiles.active:-dev}</profile>
     </layout>
 </appender>

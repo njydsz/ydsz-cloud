@@ -1,6 +1,6 @@
 # ydsz-common-seata
 
-PMIS 公共事务模块 — 分布式事务抽象（Seata AT / TCC / SAGA / Local 统一接口）。
+YDSZ 公共事务模块 — 分布式事务抽象（Seata AT / TCC / SAGA / Local 统一接口）。
 
 ## 核心能力
 
@@ -107,7 +107,7 @@ txManager.execute("localOp", TransactionType.LOCAL, () -> {
 ### Seata AT 模式
 
 ```java
-// 配置 pmis.seata.default-type=SEATA_AT
+// 配置 ydsz.seata.default-type=SEATA_AT
 // Seata 在类路径时自动注册 SeataTransactionManager
 // 业务代码也可直接使用 Seata 原生 @GlobalTransactional
 ```
@@ -115,7 +115,7 @@ txManager.execute("localOp", TransactionType.LOCAL, () -> {
 ## 配置
 
 ```yaml
-pmis:
+ydsz:
   seata:
     enabled: true
     default-type: LOCAL  # LOCAL / TCC / SEATA_AT / SAGA
@@ -124,8 +124,8 @@ pmis:
     saga-enabled: true
     seata-at-enabled: true
     # Seata 配置
-    seata-application-id: pmis-app
-    seata-tx-service-group: pmis-tx-group
+    seata-application-id: ydsz-app
+    seata-tx-service-group: ydsz-tx-group
     # TCC 配置
     tcc-retry-count: 3
     tcc-retry-interval-ms: 1000

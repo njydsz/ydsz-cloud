@@ -1,6 +1,6 @@
 {{- /*
 =============================================================================
- PMIS Alertmanager 钉钉通知模板
+ YDSZ Alertmanager 钉钉通知模板
 -----------------------------------------------------------------------------
  挂载路径: /etc/alertmanager/templates/dingtalk-template.tmpl
  配套 alertmanager.yml 中 dingtalk-webhook receiver 使用
@@ -11,10 +11,10 @@
 
 {{- /* =====================================================================
      模板: dingtalk.title
-     标题格式: [PMIS-P{severity}] {alertname}
+     标题格式: [YDSZ-P{severity}] {alertname}
      ===================================================================== */ -}}
 {{ define "dingtalk.title" -}}
-[PMIS-{{ .Status | toUpper | replace "firing" "告警" | replace "resolved" "恢复" }}]
+[YDSZ-{{ .Status | toUpper | replace "firing" "告警" | replace "resolved" "恢复" }}]
 {{- if .CommonLabels.severity }}-P{{ .CommonLabels.severity }}{{- end }}
 {{- if .CommonLabels.alertname }} {{ .CommonLabels.alertname }}{{- end }}
 {{- end }}

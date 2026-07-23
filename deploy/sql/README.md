@@ -1,6 +1,6 @@
-# PMIS · 数据库 Schema 管理
+# YDSZ · 数据库 Schema 管理
 
-> 本目录是 PMIS 主库 schema 的**唯一事实源(Single Source of Truth)**。
+> 本目录是 YDSZ 主库 schema 的**唯一事实源(Single Source of Truth)**。
 > 本文回答三个问题:用什么管 schema、怎么改 schema、怎么在新环境初始化。
 > 文档版本:v3.0 · 2026-07-12(DDD 拆分:project → sales/finance/project + literule 迁移)
 
@@ -20,7 +20,7 @@
 
 ## 1. 核心决策:单文件 V1.0.0.sql,无增量脚本
 
-**PMIS 项目当前未上线,仍处于开发阶段,`deploy/sql/` 下只允许存在一个 SQL 文件 —— `V1.0.0.sql`**。
+**YDSZ 项目当前未上线,仍处于开发阶段,`deploy/sql/` 下只允许存在一个 SQL 文件 —— `V1.0.0.sql`**。
 
 - 所有建表 / 字段变更 / 索引 / 约束 / 视图 / 种子数据,**一律直接编辑 `V1.0.0.sql`**;
 - 禁止新增 `V1.0.1.sql` / `V1.1.0.sql` / `patch_*.sql` / `migration_*.sql` / `*__*.sql` 等任何「增量脚本」;
@@ -67,7 +67,7 @@ deploy/sql/
     ├── V1.0.0_workflow.sql     # 工作流引擎 (定义/实例/委派/通知/DMN/集成/AI辅助)
     ├── V1.0.0_agent.sql        # AI Agent (Agent/编排/知识库/工具/人机协同)
     ├── V1.0.0_literule.sql     # 规则引擎 (规则/决策表/评分卡/AB测试/变量 + 8 张业务表)
-    └── V1.0.0_local_message.sql # 本地消息表 (分布式事务, pmis_local_message)
+    └── V1.0.0_local_message.sql # 本地消息表 (分布式事务, ydsz_local_message)
 ```
 
 ### 3.1 汇总文件 vs 模块文件
@@ -84,15 +84,15 @@ deploy/sql/
 | 模块 | 端口 | 表数量 | 主要表归属说明 |
 |---|---|---|---|
 | common | - | 0(存根) | **已合并至 system**。`ydsz-common` 是公共依赖库(lib),非独立后端服务,无 Mapper/Service,不持有独立 DDL |
-| system | - | 11 | `pmis_config` / `pmis_tenant_quota` / `pmis_file` / `pmis_operation_log`(+ DEFAULT 分区) / `pmis_login_audit` / `pmis_data_export_audit` / `pmis_dict_version` / `pmis_report_subscription` / `pmis_export_record` / `pmis_meta_schema_version` + 全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log |
-| userinfo | - | 22 | RBAC(`pmis_role` / `pmis_permission` / `pmis_user_*`)+ 用户/部门/岗位/字典主表(`pmis_dict_type` / `pmis_dict_item` / `pmis_department` / `pmis_employee` / `pmis_position`)+ 职级系列(**`pmis_rank` / `pmis_rank_rate`**,RankMapper 在 userinfo)+ 资源/考勤(`pmis_resource_assignment` / `pmis_bench_record` / `pmis_attendance` / `pmis_overtime` / `pmis_leave`)+ 兼职/外包费率 |
-| **project** | **9003** | **34** | 立项/预算/门审(`pmis_project_initiation` / `pmis_project_budget_item` / `pmis_project_gate_review`)+ 执行-WBS/工时(`pmis_execution_wbs_task` / `pmis_execution_time_entry`)+ 执行-成本/采购(`pmis_cost_allocation` / `pmis_cost_purchase`)+ EVM/费率(`pmis_evm_measure` / `pmis_rate_card` / `pmis_rate_internal`)+ 风险/变更(`pmis_execution_risk` / `pmis_project_change`)+ 交付/结项(`pmis_execution_delivery_standard` / `pmis_execution_delivery_item` / `pmis_execution_closure`)+ 售后/工单/满意度(`pmis_warranty` / `pmis_ops_ticket` / `pmis_satisfaction`)+ 资源利用/预警(`pmis_billable_utilization_snapshot` / `pmis_alert_dispatch`)+ **原 sales 6 张**(商机/合同)+ **原 finance 8 张**(`pmis_project_expense` / `pmis_project_revenue` / `pmis_project_profit_snapshot` / `pmis_project_profit_simulation` / `pmis_project_invoice` / `pmis_project_payment` / `pmis_project_customer_credit` / `pmis_project_reconcile_daily`) |
-| cronjob | - | 20 | `pmis_job`(任务定义主表)+ 18 张 `pmis_job_*` 子表(节点/日志/DAG/告警/历史/慢日志/产物/WebHook) |
-| message | - | 24 | `pmis_msg_*` (含 7 张月度分区表) + `pmis_notification_*` + 模板/回执/统计 |
-| workflow | - | 34 | `pmis_flow_*` + 流程审计日志 `pmis_flow_audit_log` + 视图 |
-| agent | - | 12 | `pmis_agent_*` / `pmis_knowledge_*` / `pmis_token_*` / `pmis_tool_*` / `pmis_hitl_*` / `pmis_mcp_*` |
-| literule | - | 17 | 规则引擎主表 9 张(`pmis_rule_def` / `pmis_rule_version` / 规则模板/测试/变量/链/依赖/包/安装)+ **业务表 8 张**(`pmis_rule_execution_trace` / `pmis_rule_decision_table` / `pmis_rule_canary_bucket` / `pmis_rule_scorecard` / `pmis_rule_decision_tree` / `pmis_rule_script` / `pmis_rule_ab_policy` / `pmis_rule_ab_rollback`, 2026-07-12 从 project 迁移) |
-| local_message | - | 1 | 本地消息表(`pmis_local_message`, 分布式事务) |
+| system | - | 11 | `ydsz_config` / `ydsz_tenant_quota` / `ydsz_file` / `ydsz_operation_log`(+ DEFAULT 分区) / `ydsz_login_audit` / `ydsz_data_export_audit` / `ydsz_dict_version` / `ydsz_report_subscription` / `ydsz_export_record` / `ydsz_meta_schema_version` + 全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log |
+| userinfo | - | 22 | RBAC(`ydsz_role` / `ydsz_permission` / `ydsz_user_*`)+ 用户/部门/岗位/字典主表(`ydsz_dict_type` / `ydsz_dict_item` / `ydsz_department` / `ydsz_employee` / `ydsz_position`)+ 职级系列(**`ydsz_rank` / `ydsz_rank_rate`**,RankMapper 在 userinfo)+ 资源/考勤(`ydsz_resource_assignment` / `ydsz_bench_record` / `ydsz_attendance` / `ydsz_overtime` / `ydsz_leave`)+ 兼职/外包费率 |
+| **project** | **9003** | **34** | 立项/预算/门审(`ydsz_project_initiation` / `ydsz_project_budget_item` / `ydsz_project_gate_review`)+ 执行-WBS/工时(`ydsz_execution_wbs_task` / `ydsz_execution_time_entry`)+ 执行-成本/采购(`ydsz_cost_allocation` / `ydsz_cost_purchase`)+ EVM/费率(`ydsz_evm_measure` / `ydsz_rate_card` / `ydsz_rate_internal`)+ 风险/变更(`ydsz_execution_risk` / `ydsz_project_change`)+ 交付/结项(`ydsz_execution_delivery_standard` / `ydsz_execution_delivery_item` / `ydsz_execution_closure`)+ 售后/工单/满意度(`ydsz_warranty` / `ydsz_ops_ticket` / `ydsz_satisfaction`)+ 资源利用/预警(`ydsz_billable_utilization_snapshot` / `ydsz_alert_dispatch`)+ **原 sales 6 张**(商机/合同)+ **原 finance 8 张**(`ydsz_project_expense` / `ydsz_project_revenue` / `ydsz_project_profit_snapshot` / `ydsz_project_profit_simulation` / `ydsz_project_invoice` / `ydsz_project_payment` / `ydsz_project_customer_credit` / `ydsz_project_reconcile_daily`) |
+| cronjob | - | 20 | `ydsz_job`(任务定义主表)+ 18 张 `ydsz_job_*` 子表(节点/日志/DAG/告警/历史/慢日志/产物/WebHook) |
+| message | - | 24 | `ydsz_msg_*` (含 7 张月度分区表) + `ydsz_notification_*` + 模板/回执/统计 |
+| workflow | - | 34 | `ydsz_flow_*` + 流程审计日志 `ydsz_flow_audit_log` + 视图 |
+| agent | - | 12 | `ydsz_agent_*` / `ydsz_knowledge_*` / `ydsz_token_*` / `ydsz_tool_*` / `ydsz_hitl_*` / `ydsz_mcp_*` |
+| literule | - | 17 | 规则引擎主表 9 张(`ydsz_rule_def` / `ydsz_rule_version` / 规则模板/测试/变量/链/依赖/包/安装)+ **业务表 8 张**(`ydsz_rule_execution_trace` / `ydsz_rule_decision_table` / `ydsz_rule_canary_bucket` / `ydsz_rule_scorecard` / `ydsz_rule_decision_tree` / `ydsz_rule_script` / `ydsz_rule_ab_policy` / `ydsz_rule_ab_rollback`, 2026-07-12 从 project 迁移) |
+| local_message | - | 1 | 本地消息表(`ydsz_local_message`, 分布式事务) |
 | **合计** | - | **167** | |
 
 ### 3.3 模块拆分规则(2026-07-12 DDD 拆分后)
@@ -107,44 +107,44 @@ deploy/sql/
 
 | 源表 | 迁移至 | 理由 |
 |---|---|---|
-| `pmis_project_opportunity` / `pmis_project_opportunity_follow` | `V1.0.0_sales.sql` | Mapper 在 `sales/infra/mapper/` |
-| `pmis_project_contract` / `pmis_project_contract_supplement` / `pmis_project_contract_change` / `pmis_project_contract_template` | `V1.0.0_sales.sql` | Mapper 在 `sales/infra/mapper/` |
-| `pmis_cost_expense` / `pmis_profit_revenue` / `pmis_profit_snapshot` / `pmis_profit_simulation` | `V1.0.0_finance.sql` | Mapper 在 `finance/infra/mapper/` |
-| `pmis_finance_invoice` / `pmis_finance_payment` / `pmis_finance_customer_credit` / `pmis_reconcile_daily` | `V1.0.0_finance.sql` | Mapper 在 `finance/infra/mapper/` |
-| `pmis_rule_execution_trace` / `pmis_rule_decision_table` / `pmis_rule_canary_bucket` / `pmis_rule_scorecard` / `pmis_rule_decision_tree` / `pmis_rule_script` / `pmis_rule_ab_policy` / `pmis_rule_ab_rollback` | `V1.0.0_literule.sql` (追加) | Mapper 已从 `project` 迁移至 `literule/infra/mapper/` |
+| `ydsz_project_opportunity` / `ydsz_project_opportunity_follow` | `V1.0.0_sales.sql` | Mapper 在 `sales/infra/mapper/` |
+| `ydsz_project_contract` / `ydsz_project_contract_supplement` / `ydsz_project_contract_change` / `ydsz_project_contract_template` | `V1.0.0_sales.sql` | Mapper 在 `sales/infra/mapper/` |
+| `ydsz_cost_expense` / `ydsz_profit_revenue` / `ydsz_profit_snapshot` / `ydsz_profit_simulation` | `V1.0.0_finance.sql` | Mapper 在 `finance/infra/mapper/` |
+| `ydsz_finance_invoice` / `ydsz_finance_payment` / `ydsz_finance_customer_credit` / `ydsz_reconcile_daily` | `V1.0.0_finance.sql` | Mapper 在 `finance/infra/mapper/` |
+| `ydsz_rule_execution_trace` / `ydsz_rule_decision_table` / `ydsz_rule_canary_bucket` / `ydsz_rule_scorecard` / `ydsz_rule_decision_tree` / `ydsz_rule_script` / `ydsz_rule_ab_policy` / `ydsz_rule_ab_rollback` | `V1.0.0_literule.sql` (追加) | Mapper 已从 `project` 迁移至 `literule/infra/mapper/` |
 
 剩余 20 张表保留在 `V1.0.0_project.sql`:
-- 立项/预算/门审: `pmis_project_initiation` / `pmis_project_budget_item` / `pmis_project_gate_review`
-- 执行-WBS/工时: `pmis_execution_wbs_task` / `pmis_execution_time_entry`
-- 执行-成本/采购: `pmis_cost_allocation` / `pmis_cost_purchase`
-- EVM/费率: `pmis_evm_measure` / `pmis_rate_card` / `pmis_rate_internal`
-- 风险/变更: `pmis_execution_risk` / `pmis_project_change`
-- 交付/结项: `pmis_execution_delivery_standard` / `pmis_execution_delivery_item` / `pmis_execution_closure`
-- 售后/工单/满意度: `pmis_warranty` / `pmis_ops_ticket` / `pmis_satisfaction`
-- 资源利用/预警: `pmis_billable_utilization_snapshot` / `pmis_alert_dispatch`
+- 立项/预算/门审: `ydsz_project_initiation` / `ydsz_project_budget_item` / `ydsz_project_gate_review`
+- 执行-WBS/工时: `ydsz_execution_wbs_task` / `ydsz_execution_time_entry`
+- 执行-成本/采购: `ydsz_cost_allocation` / `ydsz_cost_purchase`
+- EVM/费率: `ydsz_evm_measure` / `ydsz_rate_card` / `ydsz_rate_internal`
+- 风险/变更: `ydsz_execution_risk` / `ydsz_project_change`
+- 交付/结项: `ydsz_execution_delivery_standard` / `ydsz_execution_delivery_item` / `ydsz_execution_closure`
+- 售后/工单/满意度: `ydsz_warranty` / `ydsz_ops_ticket` / `ydsz_satisfaction`
+- 资源利用/预警: `ydsz_billable_utilization_snapshot` / `ydsz_alert_dispatch`
 
 #### 2026-07-16 合并（sales/finance → project，表前缀统一）
 
-sales 和 finance 模块已合并回 project 模块，`V1.0.0_sales.sql` 和 `V1.0.0_finance.sql` 已删除，内容合并至 `V1.0.0_project.sql`（34 张表）。finance 的 8 张表已重命名为 `pmis_project_*` 前缀:
+sales 和 finance 模块已合并回 project 模块，`V1.0.0_sales.sql` 和 `V1.0.0_finance.sql` 已删除，内容合并至 `V1.0.0_project.sql`（34 张表）。finance 的 8 张表已重命名为 `ydsz_project_*` 前缀:
 
 | 旧表名 | 新表名 |
 |---|---|
-| `pmis_cost_expense` | `pmis_project_expense` |
-| `pmis_profit_revenue` | `pmis_project_revenue` |
-| `pmis_profit_snapshot` | `pmis_project_profit_snapshot` |
-| `pmis_finance_invoice` | `pmis_project_invoice` |
-| `pmis_finance_payment` | `pmis_project_payment` |
-| `pmis_finance_customer_credit` | `pmis_project_customer_credit` |
-| `pmis_profit_simulation` | `pmis_project_profit_simulation` |
-| `pmis_reconcile_daily` | `pmis_project_reconcile_daily` |
+| `ydsz_cost_expense` | `ydsz_project_expense` |
+| `ydsz_profit_revenue` | `ydsz_project_revenue` |
+| `ydsz_profit_snapshot` | `ydsz_project_profit_snapshot` |
+| `ydsz_finance_invoice` | `ydsz_project_invoice` |
+| `ydsz_finance_payment` | `ydsz_project_payment` |
+| `ydsz_finance_customer_credit` | `ydsz_project_customer_credit` |
+| `ydsz_profit_simulation` | `ydsz_project_profit_simulation` |
+| `ydsz_reconcile_daily` | `ydsz_project_reconcile_daily` |
 
-> 索引名（如 `idx_pmis_finance_invoice_trace`）保持不变，仅表名引用已更新。
+> 索引名（如 `idx_ydsz_finance_invoice_trace`）保持不变，仅表名引用已更新。
 
 #### 历史拆分规则(2026-07-10 重构)
 
-- 职级表原命名 `pmis_job_level` 带 `job_` 易与 cronjob 任务引擎混淆,已重命名为 `pmis_rank` / `pmis_rank_rate`,`RankMapper` 在 `userinfo` 模块 → 归 `V1.0.0_userinfo.sql`,**不归 cronjob**
-- `pmis_dict_type` / `pmis_dict_item` 主表 Mapper 在 userinfo → 归 userinfo;`pmis_dict_version` 字典版本 Mapper 在 system → 归 system
-- 通用预警派发表 `pmis_alert_dispatch` 由 project + cronjob + agent 共用 → 归 `V1.0.0_project.sql`(物理 Mapper 在 project)
+- 职级表原命名 `ydsz_job_level` 带 `job_` 易与 cronjob 任务引擎混淆,已重命名为 `ydsz_rank` / `ydsz_rank_rate`,`RankMapper` 在 `userinfo` 模块 → 归 `V1.0.0_userinfo.sql`,**不归 cronjob**
+- `ydsz_dict_type` / `ydsz_dict_item` 主表 Mapper 在 userinfo → 归 userinfo;`ydsz_dict_version` 字典版本 Mapper 在 system → 归 system
+- 通用预警派发表 `ydsz_alert_dispatch` 由 project + cronjob + agent 共用 → 归 `V1.0.0_project.sql`(物理 Mapper 在 project)
 - `common` 脚本**已合并至 system**。`ydsz-common` 不是独立后端服务,是公共依赖库(lib),无 Mapper/Service,不持有独立 DDL。全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log 统一由 `V1.0.0_system.sql` 承载
 
 文件顶部使用清晰的 `=====` 注释块对每张表/视图进行分段,便于 PR Review 与 diff 阅读。
@@ -159,7 +159,7 @@ sales 和 finance 模块已合并回 project 模块，`V1.0.0_sales.sql` 和 `V1
    - **不要**新建任何 `V*.sql` 增量文件
    - 字段新增请紧跟原表 `CREATE TABLE` 块,并在文件顶部的目录注释里登记
 2. **本地验证**:`psql -f deploy/sql/V1.0.0.sql` 跑一次,确认 DDL 全部通过(`-v ON_ERROR_STOP=1`)
-3. **提交 PR**:标题格式 `schema: <表名> <变更摘要>`,例如 `schema: pmis_flow_run_task add iter_var`
+3. **提交 PR**:标题格式 `schema: <表名> <变更摘要>`,例如 `schema: ydsz_flow_run_task add iter_var`
 4. **PR 必含内容**:
    - `V1.0.0.sql` 的 diff
    - 字段/表/索引含义说明(写到 PR 描述,而不是文件头)
@@ -207,9 +207,9 @@ PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz \
 #   -f deploy/sql/modules/V1.0.0_all.sql
 
 # 3. 导入 Nacos 配置
-./deploy/ubuntu/scripts/import-nacos-config.sh pmis dev
+./deploy/ubuntu/scripts/import-nacos-config.sh ydsz dev
 
-# 4. 启动 PMIS 7 个服务
+# 4. 启动 YDSZ 7 个服务
 ./deploy/ubuntu/scripts/start-all.sh
 ```
 
@@ -265,13 +265,13 @@ A:**项目正式上线后**,且同时满足以下条件**之一**时:
 
 A:把里面的 `ALTER TABLE` / `COMMENT` 等 DDL **直接复制粘贴到 `V1.0.0.sql` 对应表附近**,然后**删除 V1.0.1 / V1.0.2 文件**。`V1.0.0.sql` 在新环境一次性跑时,所有列/索引/约束自然就位。
 
-### Q4.`pmis_migration_log` 表是什么?
+### Q4.`ydsz_migration_log` 表是什么?
 
 A:**和 DB schema migration 无关**。它是 `ydsz-common::EncryptedFieldMigrationService` 用来跟踪「敏感字段从明文 → 密文」灰度切换的审计表,业务向的、一次性的、可清空。
 
-### Q5.`pmis_database_change_log` 表为什么在 `PmisTenantLineHandler` 的忽略列表里?
+### Q5.`ydsz_database_change_log` 表为什么在 `YdszTenantLineHandler` 的忽略列表里?
 
-A:**历史占位**。该类提到 `pmis_database_change_log*` 是 Liquibase 默认的 changelog 表名,代码里「兼容预留」以防万一。但 PMIS **从未启用 Liquibase**,该表在生产环境中**不存在**,此忽略项实际是 no-op。**未来若引入 Liquibase,该忽略项即可激活;不引入则保持原样。**
+A:**历史占位**。该类提到 `ydsz_database_change_log*` 是 Liquibase 默认的 changelog 表名,代码里「兼容预留」以防万一。但 YDSZ **从未启用 Liquibase**,该表在生产环境中**不存在**,此忽略项实际是 no-op。**未来若引入 Liquibase,该忽略项即可激活;不引入则保持原样。**
 
 ### Q6.回滚怎么办?
 
@@ -319,22 +319,22 @@ A:项目未上线,**没有生产数据** → 直接 `dropdb` + 重新 `psql -f V
 
 | 任务 ID | 类别 | 章节 | 内容概述 | 状态 |
 |---|---|---|---|---|
-| H2.7 / P1-1 | 字段类型统一 | [060] | `pmis_flow_run_task.assignor_id` 等 7 处字段类型从 BIGINT → VARCHAR(64) | DONE |
-| P0-3 | 表合并 | [061] | `pmis_export_record` + `pmis_report_export_record` 合并为单表(source / subscription_id / report_type) | DONE |
-| P1-4 | 分区 | [062] | `pmis_operation_log` / `pmis_flow_audit_log` 月度 RANGE 分区(24 个月 + DEFAULT 兜底) | DONE |
-| P1-5 | 触发器 | [063] | 通用 `pmis_set_updated_at()` 函数 + 15 张核心业务表挂载 | DONE |
+| H2.7 / P1-1 | 字段类型统一 | [060] | `ydsz_flow_run_task.assignor_id` 等 7 处字段类型从 BIGINT → VARCHAR(64) | DONE |
+| P0-3 | 表合并 | [061] | `ydsz_export_record` + `ydsz_report_export_record` 合并为单表(source / subscription_id / report_type) | DONE |
+| P1-4 | 分区 | [062] | `ydsz_operation_log` / `ydsz_flow_audit_log` 月度 RANGE 分区(24 个月 + DEFAULT 兜底) | DONE |
+| P1-5 | 触发器 | [063] | 通用 `ydsz_set_updated_at()` 函数 + 15 张核心业务表挂载 | DONE |
 | P1-6 | 清理 | 文件头 + 全文 | 移除所有 `[SKIPPED-CLEANUP]` / `[SKIPPED-FWD-REF]` 残留注释 | DONE |
 | P1-7 | 索引 | [064] | `provider_trace_id` 索引全量补齐: 75/75 张表已覆盖 (0 缺失) | DONE |
 | P2-8 | 注释 | [062] DEFAULT 兜底 | 2 张 DEFAULT 分区表补齐 `COMMENT ON TABLE`,覆盖率 100% (112/112) | DONE |
-| P2-9 | 元数据 | [065] | 新增 `pmis_meta_schema_version` 表 + `pmis_view_current_schema_version` 视图 | DONE |
-| P2-10 | 视图安全 | [015] / [037] / [065] | 7 个 `pmis_view_*` 全部加 `WITH (security_invoker = true)` | DONE |
+| P2-9 | 元数据 | [065] | 新增 `ydsz_meta_schema_version` 表 + `ydsz_view_current_schema_version` 视图 | DONE |
+| P2-10 | 视图安全 | [015] / [037] / [065] | 7 个 `ydsz_view_*` 全部加 `WITH (security_invoker = true)` | DONE |
 | P2-11 | 文档 | 本节 | 在 `deploy/sql/README.md` 引入 §9 CHANGELOG 章节,记录任务 ID 映射 | DONE |
 
 ### 9.3 任务 ID 反查
 
 任何 PR 描述中只要写明 `Task: P1-7`,即代表:
 - 改动了 `deploy/sql/V1.0.0.sql` 的 [064] 章节
-- 涉及 63 张 `pmis_*` 表的 `provider_trace_id` 索引
+- 涉及 63 张 `ydsz_*` 表的 `provider_trace_id` 索引
 - 通过 `check-provider-trace-index.ps1` 校验为 75/75 覆盖
 
 CI 静态扫描会在 PR 标题包含 `Task: <ID>` 时,自动跑对应的检查脚本。
@@ -345,6 +345,6 @@ CI 静态扫描会在 PR 标题包含 `Task: <ID>` 时,自动跑对应的检查�
 |---|---|---|---|---|
 | P3-13 | 性能 | TBD | 大表冷热数据分层(`pg_partman` / 冷分区归档到 OSS) | LOW |
 | P3-14 | 安全 | TBD | 敏感字段加密落盘(手机号/身份证/银行卡 SM4 加密列) | LOW |
-| P3-15 | 审计 | TBD | `pmis_data_export_audit` 接入 OPLOG,支持 UDF 检索 | LOW |
+| P3-15 | 审计 | TBD | `ydsz_data_export_audit` 接入 OPLOG,支持 UDF 检索 | LOW |
 
 > **注**:P3 任务非阻塞,可由后续迭代按业务节奏逐步落地。

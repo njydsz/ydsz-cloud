@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonAlias;
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.util.StringInterner;
@@ -121,13 +121,13 @@ return STRING_INTERNER.intern(str);
 }
 
 /**
- * 获取字段的 JSON 名称（优先从 @JsonField 注解获取，回退到 Java 字段名）。
+ * 获取字段的 JSON 名称（优先从 @YdszJsonField 注解获取，回退到 Java 字段名）。
  *
  * @param field Java 字段
  * @return JSON 名称
  */
 private static String getJsonName(Field field) {
-JsonField jsonField = field.getAnnotation(JsonField.class);
+YdszJsonField jsonField = field.getAnnotation(YdszJsonField.class);
 if (jsonField != null && !jsonField.value().isEmpty()) {
     return jsonField.value();
 }

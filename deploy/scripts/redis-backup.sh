@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# PMIS Redis 备份脚本
+# YDSZ Redis 备份脚本
 #
 # 功能:
 #   1. 触发 Redis BGSAVE 并等待完成
@@ -13,7 +13,7 @@
 #
 # 定时调度（crontab）:
 #   # 每日凌晨 1:00 Redis 备份
-#   0 1 * * * /opt/pmis/scripts/redis-backup.sh >> /var/log/pmis/redis-backup.log 2>&1
+#   0 1 * * * /opt/ydsz/scripts/redis-backup.sh >> /var/log/ydsz/redis-backup.log 2>&1
 #
 # 环境变量:
 #   REDIS_HOST        Redis 主机,默认 127.0.0.1
@@ -57,10 +57,10 @@ notify() {
     local payload
     case "$WEBHOOK_TYPE" in
         feishu)
-            payload="{\"msg_type\":\"text\",\"content\":{\"text\":\"[PMIS Redis Backup] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
+            payload="{\"msg_type\":\"text\",\"content\":{\"text\":\"[YDSZ Redis Backup] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
             ;;
         dingtalk)
-            payload="{\"msgtype\":\"text\",\"text\":{\"content\":\"[PMIS Redis Backup] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
+            payload="{\"msgtype\":\"text\",\"text\":{\"content\":\"[YDSZ Redis Backup] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
             ;;
         *)
             payload="{\"status\":\"${status}\",\"message\":\"${message}\",\"host\":\"${HOSTNAME}\",\"time\":\"${TIMESTAMP}\"}"
@@ -160,13 +160,13 @@ cleanup() {
 # 主流程
 # ============================================================
 main() {
-    log "========== PMIS Redis 备份开始 =========="
+    log "========== YDSZ Redis 备份开始 =========="
     log "Host: $HOSTNAME | Date: $DATE | Timestamp: $TIMESTAMP"
     check_env
     do_bgsave
     copy_rdb
     cleanup
-    log "========== PMIS Redis 备份结束 =========="
+    log "========== YDSZ Redis 备份结束 =========="
 }
 
 main "$@"

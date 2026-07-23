@@ -45,8 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProjectInitiationFlowListener implements FlowEventListener {
 
-    /** 立项业务键前缀（见 InitiationServiceImpl#startProcess: PMIS_INIT_ + id） */
-    private static final String INIT_BIZ_KEY_PREFIX = "PMIS_INIT_";
+    /** 立项业务键前缀（见 InitiationServiceImpl#startProcess: YDSZ_INIT_ + id） */
+    private static final String INIT_BIZ_KEY_PREFIX = "YDSZ_INIT_";
 
     private final FlowNotificationHelper notificationHelper;
     private final FlowInstanceMapper instanceMapper;
@@ -333,7 +333,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     /**
      * 从流程实例的业务键解析立项 ID。
      *
-     * <p>业务键格式为 {@code PMIS_INIT_<initiationId>}（见 InitiationServiceImpl#startProcess），
+     * <p>业务键格式为 {@code YDSZ_INIT_<initiationId>}（见 InitiationServiceImpl#startProcess），
      * 兼容直接以数字存储的业务键。
      *
      * @param instance 流程实例（可空）

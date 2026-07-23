@@ -1,7 +1,7 @@
 {
-  "title": "PMIS Sentry 自监控",
-  "uid": "pmis-sentry",
-  "tags": ["pmis", "sentry", "monitoring"],
+  "title": "YDSZ Sentry 自监控",
+  "uid": "ydsz-sentry",
+  "tags": ["ydsz", "sentry", "monitoring"],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -54,12 +54,12 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "ydsz_system_cpu_usage{job=~\"pmis-.*\"} * 100",
+          "expr": "ydsz_system_cpu_usage{job=~\"ydsz-.*\"} * 100",
           "legendFormat": "{{job}} 进程CPU",
           "refId": "A"
         },
         {
-          "expr": "ydsz_system_cpu_system_usage{job=~\"pmis-.*\"} * 100",
+          "expr": "ydsz_system_cpu_system_usage{job=~\"ydsz-.*\"} * 100",
           "legendFormat": "{{job}} 系统CPU",
           "refId": "B"
         }
@@ -86,12 +86,12 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "ydsz_system_memory_heap_used{job=~\"pmis-.*\"}",
+          "expr": "ydsz_system_memory_heap_used{job=~\"ydsz-.*\"}",
           "legendFormat": "{{job}} 已用",
           "refId": "A"
         },
         {
-          "expr": "ydsz_system_memory_heap_max{job=~\"pmis-.*\"}",
+          "expr": "ydsz_system_memory_heap_max{job=~\"ydsz-.*\"}",
           "legendFormat": "{{job}} 最大",
           "refId": "B"
         }
@@ -110,12 +110,12 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "ydsz_system_process_thread_count{job=~\"pmis-.*\"}",
+          "expr": "ydsz_system_process_thread_count{job=~\"ydsz-.*\"}",
           "legendFormat": "{{job}} 线程",
           "refId": "A"
         },
         {
-          "expr": "ydsz_system_process_daemon_thread_count{job=~\"pmis-.*\"}",
+          "expr": "ydsz_system_process_daemon_thread_count{job=~\"ydsz-.*\"}",
           "legendFormat": "{{job}} 守护线程",
           "refId": "B"
         }
@@ -129,7 +129,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "rate(ydsz_system_process_gc_time_delta{job=~\"pmis-.*\"}[5m])",
+          "expr": "rate(ydsz_system_process_gc_time_delta{job=~\"ydsz-.*\"}[5m])",
           "legendFormat": "{{job}} GC增量",
           "refId": "A"
         }
@@ -148,7 +148,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "(ydsz_system_disk_free{job=~\"pmis-.*\"} / ydsz_system_disk_total{job=~\"pmis-.*\"}) * 100",
+          "expr": "(ydsz_system_disk_free{job=~\"ydsz-.*\"} / ydsz_system_disk_total{job=~\"ydsz-.*\"}) * 100",
           "legendFormat": "{{job}} {{mount}}",
           "refId": "A"
         }
@@ -175,7 +175,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "increase(ydsz_sla_violation_total{job=~\"pmis-.*\"}[5m])",
+          "expr": "increase(ydsz_sla_violation_total{job=~\"ydsz-.*\"}[5m])",
           "legendFormat": "{{job}} {{sla}}",
           "refId": "A"
         }
@@ -194,7 +194,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "increase(ydsz_trace_slow_total{job=~\"pmis-.*\"}[5m])",
+          "expr": "increase(ydsz_trace_slow_total{job=~\"ydsz-.*\"}[5m])",
           "legendFormat": "{{job}} {{operation}}",
           "refId": "A"
         }
@@ -240,7 +240,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "ydsz_system_process_uptime{job=~\"pmis-.*\"}",
+          "expr": "ydsz_system_process_uptime{job=~\"ydsz-.*\"}",
           "legendFormat": "{{job}}",
           "refId": "A"
         }
@@ -259,7 +259,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum(rate(ydsz_sla_total_duration_seconds_bucket{job=~\"pmis-.*\"}[5m])) by (le, sla, job))",
+          "expr": "histogram_quantile(0.99, sum(rate(ydsz_sla_total_duration_seconds_bucket{job=~\"ydsz-.*\"}[5m])) by (le, sla, job))",
           "legendFormat": "{{job}} {{sla}} P99",
           "refId": "A"
         }

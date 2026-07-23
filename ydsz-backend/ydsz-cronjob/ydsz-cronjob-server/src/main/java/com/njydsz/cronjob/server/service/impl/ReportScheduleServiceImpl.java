@@ -304,7 +304,7 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
             MessageRequest request = new MessageRequest();
             request.setChannel("EMAIL");
             request.setReceiver(recipients);
-            request.setSubject("【PMIS报表】" + (reportType == null ? "" : reportType) + " 报表已生成");
+            request.setSubject("【YDSZ报表】" + (reportType == null ? "" : reportType) + " 报表已生成");
             request.setContent("您好，您订阅的 " + reportType + " 报表已生成，下载链接：" + fileKey);
             request.setBizType("REPORT");
             request.setBizId(String.valueOf(subId));

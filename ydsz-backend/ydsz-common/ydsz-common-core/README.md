@@ -1,6 +1,6 @@
 # ydsz-common-core
 
-PMIS 公共底座核心模块 — 统一响应模型、请求上下文、TraceId、常量与枚举。
+YDSZ 公共底座核心模块 — 统一响应模型、请求上下文、TraceId、常量与枚举。
 
 ## 模块定位
 

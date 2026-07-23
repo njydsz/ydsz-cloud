@@ -136,7 +136,7 @@ public class CronjobProperties {
         private boolean enabled = true;
 
         /** 角色（多套调度集群隔离时使用） */
-        private String role = "pmis-job-scheduler";
+        private String role = "ydsz-job-scheduler";
 
         /** 租约时长（秒，到期后自动释放，需在到期前续期） */
         private long leaseSeconds = 30;

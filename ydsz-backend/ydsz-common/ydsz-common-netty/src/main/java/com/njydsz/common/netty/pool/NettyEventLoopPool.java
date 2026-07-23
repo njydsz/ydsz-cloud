@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  *       避免高吞吐服务饿死低频服务</li>
  * </ul>
  *
- * <p>使用自定义线程命名（{@code pmis-netty-boss-N} / {@code pmis-netty-worker-N}），
+ * <p>使用自定义线程命名（{@code ydsz-netty-boss-N} / {@code ydsz-netty-worker-N}），
  * 便于在线程 dump 中定位问题。
  *
  * <p>优雅关闭时等待 {@code shutdownGracefully()} 完成，避免在途消息丢失。
@@ -79,7 +79,7 @@ public class NettyEventLoopPool {
     public synchronized EventLoopGroup acquireBossGroup(int threads) {
         if (bossGroup == null) {
             int n = threads <= 0 ? 1 : threads;
-            bossGroup = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-boss");
+            bossGroup = NativeTransportDetector.createEventLoopGroup(transportType, n, "ydsz-netty-boss");
             log.info("[Netty-Pool] 创建 boss EventLoopGroup, threads={}, transport={}", n, transportType);
         }
         bossRefCount.incrementAndGet();
@@ -95,7 +95,7 @@ public class NettyEventLoopPool {
     public synchronized EventLoopGroup acquireWorkerGroup(int threads) {
         if (workerGroup == null) {
             int n = threads <= 0 ? Runtime.getRuntime().availableProcessors() * 2 : threads;
-            workerGroup = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-worker");
+            workerGroup = NativeTransportDetector.createEventLoopGroup(transportType, n, "ydsz-netty-worker");
             log.info("[Netty-Pool] 创建 worker EventLoopGroup, threads={}, transport={}", n, transportType);
         }
         workerRefCount.incrementAndGet();
@@ -110,7 +110,7 @@ public class NettyEventLoopPool {
      */
     public EventLoopGroup createIsolatedBossGroup(int threads) {
         int n = threads <= 0 ? 1 : threads;
-        EventLoopGroup group = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-boss-iso");
+        EventLoopGroup group = NativeTransportDetector.createEventLoopGroup(transportType, n, "ydsz-netty-boss-iso");
         log.info("[Netty-Pool] 创建隔离 boss EventLoopGroup, threads={}, transport={}", n, transportType);
         return group;
     }
@@ -123,7 +123,7 @@ public class NettyEventLoopPool {
      */
     public EventLoopGroup createIsolatedWorkerGroup(int threads) {
         int n = threads <= 0 ? Runtime.getRuntime().availableProcessors() * 2 : threads;
-        EventLoopGroup group = NativeTransportDetector.createEventLoopGroup(transportType, n, "pmis-netty-worker-iso");
+        EventLoopGroup group = NativeTransportDetector.createEventLoopGroup(transportType, n, "ydsz-netty-worker-iso");
         log.info("[Netty-Pool] 创建隔离 worker EventLoopGroup, threads={}, transport={}", n, transportType);
         return group;
     }

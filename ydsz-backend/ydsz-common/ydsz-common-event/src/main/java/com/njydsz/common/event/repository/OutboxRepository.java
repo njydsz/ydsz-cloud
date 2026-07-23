@@ -14,9 +14,9 @@ import java.util.Set;
 import com.njydsz.common.event.model.DatabaseDialect;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
-import com.njydsz.common.json.Json;
-import com.njydsz.common.json.exception.JsonException;
-import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.exception.YdszJsonException;
+import com.njydsz.common.json.type.YdszJsonType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class OutboxRepository {
 
     private static final Logger log = LoggerFactory.getLogger(OutboxRepository.class);
 
-    private static final JsonType<Map<String, String>> MAP_TYPE = new JsonType<>() {};
+    private static final YdszJsonType<Map<String, String>> MAP_TYPE = new YdszJsonType<>() {};
 
     /** 表名合法字符校验正则（防 SQL 注入） */
     private static final String TABLE_NAME_PATTERN = "^[a-zA-Z_][a-zA-Z0-9_]*$";
@@ -280,8 +280,8 @@ public class OutboxRepository {
             return null;
         }
         try {
-            return Json.toJson(headers);
-        } catch (JsonException e) {
+            return YdszJson.toJson(headers);
+        } catch (YdszJsonException e) {
             log.warn("Failed to serialize headers", e);
             return null;
         }
@@ -292,8 +292,8 @@ public class OutboxRepository {
             return Map.of();
         }
         try {
-            return Json.fromJson(json, MAP_TYPE);
-        } catch (JsonException e) {
+            return YdszJson.fromJson(json, MAP_TYPE);
+        } catch (YdszJsonException e) {
             log.warn("Failed to deserialize headers: {}", json, e);
             return Map.of();
         }

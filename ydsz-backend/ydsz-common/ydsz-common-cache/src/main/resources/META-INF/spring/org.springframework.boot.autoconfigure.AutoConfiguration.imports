@@ -1,2 +1,2 @@
-com.njydsz.pmis.common.cache.spring.LocalCacheAutoConfiguration
-com.njydsz.pmis.common.cache.metrics.CacheMetricsAutoConfiguration
+com.njydsz.common.cache.spring.YdszCacheAutoConfiguration
+com.njydsz.common.cache.metrics.CacheMetricsAutoConfiguration

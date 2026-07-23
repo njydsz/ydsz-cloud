@@ -1,11 +1,11 @@
 # =============================================================================
-# SkyWalking OAP + UI 部署 - PMIS 分布式链路追踪
+# SkyWalking OAP + UI 部署 - YDSZ 分布式链路追踪
 # -----------------------------------------------------------------------------
 # 部署:
 #   kubectl apply -f deploy/monitoring/skywalking/skywalking-oap.yaml -n observability
 #
 # 架构:
-#   PMIS 微服务(Brave/Zipkin exporter) → SkyWalking OAP(11800 gRPC / 12800 HTTP)
+#   YDSZ 微服务(Brave/Zipkin exporter) → SkyWalking OAP(11800 gRPC / 12800 HTTP)
 #   SkyWalking UI(8080) → OAP(12800) 查询链路数据
 #
 # 存储:

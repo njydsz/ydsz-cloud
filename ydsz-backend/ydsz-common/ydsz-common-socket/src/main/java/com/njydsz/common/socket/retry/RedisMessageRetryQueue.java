@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.socket.config.WebSocketProperties;
 
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class RedisMessageRetryQueue implements MessageRetryQueue {
             return;
         }
         try {
-            String json = Json.toJson(message);
+            String json = YdszJson.toJson(message);
             redisTemplate.opsForZSet().add(RETRY_QUEUE_KEY, json, message.getNextRetryAt());
             log.debug("[WS-Retry] 消息入队: messageId={}, retryCount={}, nextRetryAt={}",
                     message.getMessageId(), message.getRetryCount(), message.getNextRetryAt());
@@ -62,7 +62,7 @@ public class RedisMessageRetryQueue implements MessageRetryQueue {
                 }
                 String json = tuple.getValue();
                 try {
-                    RetryableMessage msg = Json.toObject(json, RetryableMessage.class);
+                    RetryableMessage msg = YdszJson.toObject(json, RetryableMessage.class);
                     if (msg != null) {
                         expired.add(msg);
                         redisTemplate.opsForZSet().remove(RETRY_QUEUE_KEY, json);

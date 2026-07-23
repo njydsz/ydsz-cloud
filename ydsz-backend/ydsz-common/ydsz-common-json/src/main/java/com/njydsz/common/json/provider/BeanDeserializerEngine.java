@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.annotation.JsonBuilder;
+import com.njydsz.common.json.annotation.YdszJsonBuilder;
 import com.njydsz.common.json.asm.AsmDeserializer;
 import com.njydsz.common.json.bytecode.ZeroCopyDeserializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
-import com.njydsz.common.json.parser.JsonParser;
+import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.reader.JSONReader;
 
@@ -70,21 +70,21 @@ final class BeanDeserializerEngine {
             }
         }
 
-        // 原有逻辑：@JsonCreator、Builder 模式支持
+        // 原有逻辑：@YdszJsonCreator、Builder 模式支持
         Constructor<?> creatorConstructor = CreatorResolver.findCreatorConstructor(clazz);
 
         if (creatorConstructor != null) {
             return clazz.cast(CreatorResolver.deserializeWithCreator(json, creatorConstructor));
         }
 
-        JsonBuilder builderAnnotation = clazz.getAnnotation(JsonBuilder.class);
+        YdszJsonBuilder builderAnnotation = clazz.getAnnotation(YdszJsonBuilder.class);
         if (builderAnnotation != null && builderAnnotation.enable()) {
             return BuilderResolver.deserializeWithBuilder(json, clazz, builderAnnotation);
         }
 
         Class<?> innerBuilderClass = BuilderResolver.findInnerBuilderClass(clazz);
         if (innerBuilderClass != null) {
-            JsonBuilder innerAnnotation = innerBuilderClass.getAnnotation(JsonBuilder.class);
+            YdszJsonBuilder innerAnnotation = innerBuilderClass.getAnnotation(YdszJsonBuilder.class);
             if (innerAnnotation == null) {
                 innerAnnotation = BuilderResolver.createDefaultBuilderAnnotation();
             }
@@ -98,9 +98,9 @@ final class BeanDeserializerEngine {
         } catch (Exception e) {
             json = json.trim();
             if (json.startsWith("[")) {
-                return clazz.cast(JsonParser.parseArray(json));
+                return clazz.cast(YdszJsonParser.parseArray(json));
             } else {
-                return clazz.cast(JsonParser.parseObject(json));
+                return clazz.cast(YdszJsonParser.parseObject(json));
             }
         }
     }
@@ -255,7 +255,7 @@ final class BeanDeserializerEngine {
             char[] chars = json.toCharArray();
             return ZeroCopyDeserializer.parseArrayChars(chars, 0, chars.length, elementClass);
         } catch (Exception e) {
-            return JsonParser.parseArray(json);
+            return YdszJsonParser.parseArray(json);
         }
     }
 

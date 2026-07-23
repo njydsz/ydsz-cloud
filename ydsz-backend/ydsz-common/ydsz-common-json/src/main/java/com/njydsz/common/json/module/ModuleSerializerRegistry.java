@@ -15,7 +15,7 @@ public final class ModuleSerializerRegistry {
 
     private final Map<Class<?>, JsonSerializer<?>> serializers = new LinkedHashMap<>();
 
-    private final List<JsonModule> orderedModules = new ArrayList<>();
+    private final List<YdszJsonModule> orderedModules = new ArrayList<>();
 
     ModuleSerializerRegistry() {
     }
@@ -45,7 +45,7 @@ public final class ModuleSerializerRegistry {
      * @param module 来源模块
      * @param <T> 类型参数
      */
-    <T> void register(Class<T> type, JsonSerializer<T> serializer, JsonModule module) {
+    <T> void register(Class<T> type, JsonSerializer<T> serializer, YdszJsonModule module) {
         register(type, serializer);
         if (!orderedModules.contains(module)) {
             orderedModules.add(module);
@@ -66,7 +66,7 @@ public final class ModuleSerializerRegistry {
      *
      * @return 只读列表
      */
-    List<JsonModule> getOrderedModules() {
+    List<YdszJsonModule> getOrderedModules() {
         return Collections.unmodifiableList(orderedModules);
     }
 

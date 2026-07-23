@@ -9,7 +9,7 @@ import { request } from '@/utils/request'
 /** 导出记录状态（与后端 AsyncExportServiceImpl 对齐） */
 export type ExportStatus = 'PENDING' | 'GENERATING' | 'COMPLETED' | 'FAILED'
 
-/** 导出记录（映射后端 pmis_export_record 表字段） */
+/** 导出记录（映射后端 ydsz_export_record 表字段） */
 export interface ExportRecord {
   /** 记录 ID */
   id: string

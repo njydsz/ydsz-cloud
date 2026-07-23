@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.alert.SecurityEvent;
 
 /**
@@ -63,7 +63,7 @@ public class SecurityAuditLogger {
                 "payload", event.getAttackPayload() != null ? event.getAttackPayload() : ""
         );
 
-        auditLog.warn(Json.toJson(logEntry));
+        auditLog.warn(YdszJson.toJson(logEntry));
     }
 
     /**
@@ -87,6 +87,6 @@ public class SecurityAuditLogger {
             logEntry.put("details", details);
         }
 
-        auditLog.info(Json.toJson(logEntry));
+        auditLog.info(YdszJson.toJson(logEntry));
     }
 }

@@ -111,7 +111,7 @@ public class MetadataCache {
     /**
      * 清空所有缓存
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
      */
     public static void clear() {

@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.socket.trace.WebSocketTraceContext;
 
 /**
@@ -56,7 +56,7 @@ public class WebSocketAuditService {
         entry.put("userId_mask", maskUserId(userId));
         entry.put("sessionId", sessionId);
         entry.put("remoteIp", remoteIp);
-        AUDIT_LOG.info(Json.toJson(entry));
+        AUDIT_LOG.info(YdszJson.toJson(entry));
     }
 
     /**
@@ -74,7 +74,7 @@ public class WebSocketAuditService {
         entry.put("userId_mask", maskUserId(userId));
         entry.put("sessionId", sessionId);
         entry.put("durationMs", durationMs);
-        AUDIT_LOG.info(Json.toJson(entry));
+        AUDIT_LOG.info(YdszJson.toJson(entry));
     }
 
     /**
@@ -105,7 +105,7 @@ public class WebSocketAuditService {
         if (error != null) {
             entry.put("error", truncate(error, 500));
         }
-        AUDIT_LOG.info(Json.toJson(entry));
+        AUDIT_LOG.info(YdszJson.toJson(entry));
     }
 
     /**

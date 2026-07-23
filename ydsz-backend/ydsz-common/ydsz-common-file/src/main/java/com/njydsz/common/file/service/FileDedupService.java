@@ -5,12 +5,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件去重服务（秒传）
@@ -23,9 +22,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * @since 1.0.0
  * 
  */
+@Slf4j
 public class FileDedupService {
-
-    private static final Logger log = LoggerFactory.getLogger(FileDedupService.class);
     private static final String DEDUP_KEY_PREFIX = "file:dedup:hash:";
 
     private final RedisStringOps redisStringOps;

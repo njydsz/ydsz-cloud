@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.listener.RemovalCause;
@@ -88,7 +88,7 @@ public class NonceCache {
      */
     public NonceCache(long expireSeconds, long maxSize) {
         this.expireSeconds = expireSeconds;
-        this.cache = LocalCache.<String, Long>newBuilder()
+        this.cache = YdszCache.<String, Long>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
                 .maximumSize(maxSize)

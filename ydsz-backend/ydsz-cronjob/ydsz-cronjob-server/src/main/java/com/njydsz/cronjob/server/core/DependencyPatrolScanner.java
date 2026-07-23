@@ -62,7 +62,7 @@ public class DependencyPatrolScanner {
     private final LeaderElector leaderElector;
 
     /** Leader 角色 */
-    private String leaderRole = "pmis-job-scheduler";
+    private String leaderRole = "ydsz-job-scheduler";
 
     /**
      * 定时巡检依赖完整性。

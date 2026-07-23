@@ -1119,11 +1119,11 @@
                         <rules>
                             <requireJavaVersion>
                                 <version>[21,)</version>
-                                <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
+                                <message>YDSZ 要求 JDK 21+，当前环境不满足。</message>
                             </requireJavaVersion>
                             <requireMavenVersion>
                                 <version>[3.9,)</version>
-                                <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
+                                <message>YDSZ 要求 Maven 3.9+，当前环境不满足。</message>
                             </requireMavenVersion>
                             <requireUpperBoundDeps>
                                 <excludes combine.children="append">

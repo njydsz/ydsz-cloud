@@ -23,7 +23,7 @@
 import { ref, watch, onMounted, getCurrentInstance } from 'vue'
 
 interface DraftOptions {
-  /** 草稿唯一标识, 最终存储 key 为 `pmis-draft-${userId}-${key}` (无 userId 时退化为 `pmis-draft-${key}`) */
+  /** 草稿唯一标识, 最终存储 key 为 `ydsz-draft-${userId}-${key}` (无 userId 时退化为 `ydsz-draft-${key}`) */
   key: string
   /** 防抖延迟(ms), 默认 2000 */
   debounce?: number
@@ -34,12 +34,12 @@ interface DraftOptions {
 }
 
 /** 草稿存储 key 前缀, 登出时按此前缀批量清理 */
-export const DRAFT_KEY_PREFIX = 'pmis-draft-'
+export const DRAFT_KEY_PREFIX = 'ydsz-draft-'
 
 /**
  * 清理当前用户的所有草稿 (登出/切换账号时调用).
- * 仅清理匹配 `pmis-draft-${userId}-` 前缀的 key, 不影响其他用户.
- * @param userId 当前用户 ID; 不传则清理所有 `pmis-draft-` 前缀的草稿
+ * 仅清理匹配 `ydsz-draft-${userId}-` 前缀的 key, 不影响其他用户.
+ * @param userId 当前用户 ID; 不传则清理所有 `ydsz-draft-` 前缀的草稿
  */
 export function clearAllDrafts(userId?: string | number | null): void {
   try {
@@ -71,7 +71,7 @@ export function useFormDraft<T extends Record<string, unknown>>(
   const lastSavedAt = ref<Date | null>(null)
   let timer: ReturnType<typeof setTimeout> | null = null
 
-  // 按用户隔离: 有 userId 时 key 形如 `pmis-draft-1001-project-init`, 防止跨用户泄漏
+  // 按用户隔离: 有 userId 时 key 形如 `ydsz-draft-1001-project-init`, 防止跨用户泄漏
   const storageKey = userId
     ? `${DRAFT_KEY_PREFIX}${userId}-${key}`
     : `${DRAFT_KEY_PREFIX}${key}`

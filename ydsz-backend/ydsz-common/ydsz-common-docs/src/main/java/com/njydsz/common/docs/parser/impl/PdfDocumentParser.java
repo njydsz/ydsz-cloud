@@ -54,7 +54,7 @@ public class PdfDocumentParser implements DocumentParser {
 
         try {
             // 写入临时文件，PDFBox 3.x 优先从文件加载以减少内存占用
-            tempFile = Files.createTempFile("pmis-docs-pdf-", ".pdf");
+            tempFile = Files.createTempFile("ydsz-docs-pdf-", ".pdf");
             inputStream.transferTo(Files.newOutputStream(tempFile));
 
             PDDocument document = Loader.loadPDF(tempFile.toFile());

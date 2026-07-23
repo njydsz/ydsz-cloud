@@ -6,7 +6,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
 
 /**
- * Json 全局配置类
+ * YdszJson 全局配置类
  *
  * <p>参考大厂架构设计，提供统一的 JSON 处理配置中心。</p>
  *
@@ -22,7 +22,7 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 获取配置实例
- * JsonConfig config = JsonConfig.getInstance();
+ * YdszJsonConfig config = YdszJsonConfig.getInstance();
  *
  * // 设置全局命名策略
  * config.setNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
@@ -39,11 +39,11 @@ import com.njydsz.common.json.provider.SerializationProvider;
  *
  * @since 1.0.0
  */
-public final class JsonConfig implements Serializable {
+public final class YdszJsonConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static volatile JsonConfig instance;
+    private static volatile YdszJsonConfig instance;
 
     private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
 
@@ -69,7 +69,7 @@ public final class JsonConfig implements Serializable {
 
     private volatile boolean useBigDecimal = false;
 
-    private JsonConfig() {
+    private YdszJsonConfig() {
     }
 
     /**
@@ -81,8 +81,8 @@ public final class JsonConfig implements Serializable {
      * @return 新的配置实例，包含与源配置相同的值
      * @since 1.4.0
      */
-    public static JsonConfig copyOf(JsonConfig other) {
-        JsonConfig copy = new JsonConfig();
+    public static YdszJsonConfig copyOf(YdszJsonConfig other) {
+        YdszJsonConfig copy = new YdszJsonConfig();
         if (other != null) {
             copy.copyFrom(other);
         }
@@ -92,13 +92,13 @@ public final class JsonConfig implements Serializable {
     /**
      * 获取配置实例（单例）
      *
-     * @return JsonConfig 实例
+     * @return YdszJsonConfig 实例
      */
-    public static JsonConfig getInstance() {
+    public static YdszJsonConfig getInstance() {
         if (instance == null) {
-            synchronized (JsonConfig.class) {
+            synchronized (YdszJsonConfig.class) {
                 if (instance == null) {
-                    instance = new JsonConfig();
+                    instance = new YdszJsonConfig();
                 }
             }
         }
@@ -120,7 +120,7 @@ public final class JsonConfig implements Serializable {
      * @param namingStrategy 命名策略
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig setNamingStrategy(PropertyNamingStrategy namingStrategy) {
+    public YdszJsonConfig setNamingStrategy(PropertyNamingStrategy namingStrategy) {
         this.namingStrategy = namingStrategy;
         return this;
     }
@@ -140,7 +140,7 @@ public final class JsonConfig implements Serializable {
      * @param circularReferenceStrategy 循环引用处理策略
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig setCircularReferenceStrategy(CircularReferenceStrategy circularReferenceStrategy) {
+    public YdszJsonConfig setCircularReferenceStrategy(CircularReferenceStrategy circularReferenceStrategy) {
         this.circularReferenceStrategy = circularReferenceStrategy;
         return this;
     }
@@ -160,7 +160,7 @@ public final class JsonConfig implements Serializable {
      * @param writeNulls 是否输出空值
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig setWriteNulls(boolean writeNulls) {
+    public YdszJsonConfig setWriteNulls(boolean writeNulls) {
         this.writeNulls = writeNulls;
         return this;
     }
@@ -180,7 +180,7 @@ public final class JsonConfig implements Serializable {
      * @param dateFormat 日期格式字符串
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig setDateFormat(String dateFormat) {
+    public YdszJsonConfig setDateFormat(String dateFormat) {
         this.dateFormat = dateFormat;
         return this;
     }
@@ -200,7 +200,7 @@ public final class JsonConfig implements Serializable {
      * @param serializeEnumUsingOrdinal 是否使用枚举序号序列化
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig setSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
+    public YdszJsonConfig setSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
         this.serializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
         return this;
     }
@@ -220,7 +220,7 @@ public final class JsonConfig implements Serializable {
      * @param prettyPrint 是否格式化输出
      * @return 当前配置实例（支持链式调用）
      */
-   public JsonConfig setPrettyPrint(boolean prettyPrint) {
+   public YdszJsonConfig setPrettyPrint(boolean prettyPrint) {
         this.prettyPrint = prettyPrint;
         return this;
     }
@@ -229,7 +229,7 @@ public final class JsonConfig implements Serializable {
         return failOnError;
     }
 
-    public JsonConfig setFailOnError(boolean failOnError) {
+    public YdszJsonConfig setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
         return this;
     }
@@ -238,7 +238,7 @@ public final class JsonConfig implements Serializable {
         return asmThreshold;
     }
 
-    public JsonConfig setAsmThreshold(int asmThreshold) {
+    public YdszJsonConfig setAsmThreshold(int asmThreshold) {
         this.asmThreshold = asmThreshold;
         return this;
     }
@@ -247,7 +247,7 @@ public final class JsonConfig implements Serializable {
         return defaultDateFormat;
     }
 
-    public JsonConfig setDefaultDateFormat(String defaultDateFormat) {
+    public YdszJsonConfig setDefaultDateFormat(String defaultDateFormat) {
         this.defaultDateFormat = defaultDateFormat;
         return this;
     }
@@ -262,7 +262,7 @@ public final class JsonConfig implements Serializable {
     /**
      * 设置最大 JSON 大小限制（字节）
      */
-    public JsonConfig setMaxJsonSize(long maxJsonSize) {
+    public YdszJsonConfig setMaxJsonSize(long maxJsonSize) {
         this.maxJsonSize = maxJsonSize;
         return this;
     }
@@ -277,7 +277,7 @@ public final class JsonConfig implements Serializable {
     /**
      * 设置最大序列化深度
      */
-    public JsonConfig setMaxDepth(int maxDepth) {
+    public YdszJsonConfig setMaxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
         return this;
     }
@@ -300,7 +300,7 @@ public final class JsonConfig implements Serializable {
      * @param useBigDecimal 是否使用 BigDecimal
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig setUseBigDecimal(boolean useBigDecimal) {
+    public YdszJsonConfig setUseBigDecimal(boolean useBigDecimal) {
         this.useBigDecimal = useBigDecimal;
         return this;
     }
@@ -316,7 +316,7 @@ public final class JsonConfig implements Serializable {
         SerializationProvider.setPrettyPrint(prettyPrint);
         SerializationProvider.setCircularReferenceStrategy(circularReferenceStrategy.name());
         SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
-        com.njydsz.common.json.parser.JsonParser.setUseBigDecimal(useBigDecimal);
+        com.njydsz.common.json.parser.YdszJsonParser.setUseBigDecimal(useBigDecimal);
     }
 
     /**
@@ -324,7 +324,7 @@ public final class JsonConfig implements Serializable {
      *
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig reset() {
+    public YdszJsonConfig reset() {
         this.namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
         this.circularReferenceStrategy = CircularReferenceStrategy.REF;
         this.writeNulls = false;
@@ -346,7 +346,7 @@ public final class JsonConfig implements Serializable {
      * @param other 另一个配置
      * @return 当前配置实例（支持链式调用）
      */
-    public JsonConfig copyFrom(JsonConfig other) {
+    public YdszJsonConfig copyFrom(YdszJsonConfig other) {
         if (other != null) {
             this.namingStrategy = other.namingStrategy;
             this.circularReferenceStrategy = other.circularReferenceStrategy;
@@ -366,7 +366,7 @@ public final class JsonConfig implements Serializable {
 
     @Override
     public String toString() {
-        return "JsonConfig{" +
+        return "YdszJsonConfig{" +
                 "namingStrategy=" + namingStrategy +
                 ", circularReferenceStrategy=" + circularReferenceStrategy +
                 ", writeNulls=" + writeNulls +

@@ -7,7 +7,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-gateway-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 3
   maxReplicas: 10
@@ -16,7 +16,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-system-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 3
   maxReplicas: 8
@@ -25,7 +25,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-userinfo-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 3
   maxReplicas: 8
@@ -34,7 +34,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-project-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 4
   maxReplicas: 12
@@ -43,7 +43,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-message-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 2
   maxReplicas: 8
@@ -52,7 +52,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-workflow-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 3
   maxReplicas: 8
@@ -61,7 +61,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-agent-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 2
   maxReplicas: 6
@@ -71,7 +71,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-sales-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 2
   maxReplicas: 8
@@ -80,7 +80,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ydsz-finance-hpa
-  namespace: pmis
+  namespace: ydsz
 spec:
   minReplicas: 2
   maxReplicas: 8

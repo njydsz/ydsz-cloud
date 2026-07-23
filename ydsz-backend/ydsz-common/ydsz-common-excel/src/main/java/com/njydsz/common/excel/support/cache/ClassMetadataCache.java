@@ -147,7 +147,7 @@ public class ClassMetadataCache {
     /**
      * 类元数据 - 存储类的字段映射信息
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
      */
     public static class ClassMetadata {

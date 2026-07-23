@@ -28,7 +28,7 @@ common/
 │   ├── rocketmq/                    #  RocketMQ(broker.conf)
 │   ├── seata/                       #  Seata(application.yml + file.conf + registry.conf)
 │   └── xxl-job/                     #  XXL-Job(application.properties)
-├── nacos/                           # PMIS 业务 Nacos 配置
+├── nacos/                           # YDSZ 业务 Nacos 配置
 │   └── ydsz-common.yaml        #  7 微服务共享的 spring.* / nacos / redis / feign 配置
 └── sql/                             # 通用 SQL(非主库初始化)
     └── tables_xxl_job_pg.sql        #  XXL-Job 的 PG 表
@@ -46,8 +46,8 @@ common/
 
 | 环境 | 读取方式 |
 |---|---|
-| [ubuntu/](../ubuntu/README.md) | `install-pmis-infra.sh` 复制到目标位置并做占位符替换 |
-| [windows/](../windows/README.md) | `install-pmis-infra.ps1` 复制并做 Windows 路径占位符替换 |
+| [ubuntu/](../ubuntu/README.md) | `install-ydsz-infra.sh` 复制到目标位置并做占位符替换 |
+| [windows/](../windows/README.md) | `install-ydsz-infra.ps1` 复制并做 Windows 路径占位符替换 |
 | [docker/](../docker/README.md) | **不读**;docker 用 `docker-compose.dev.yml` 内嵌配置 |
 | [k8s/](../k8s/README.md) | **不直接读**;中间件 K8S 化走 Helm chart 或云厂商 |
 
@@ -57,8 +57,8 @@ common/
 
 | 占位符 | 含义 |
 |---|---|
-| `__PMIS_DATA_HOME__` | 数据根目录 |
-| `__PMIS_LOG_HOME__` | 日志根目录 |
+| `__YDSZ_DATA_HOME__` | 数据根目录 |
+| `__YDSZ_LOG_HOME__` | 日志根目录 |
 | `__PG_DATA__` | PG 数据目录 |
 | `__ES_DATA__` | ES 数据目录 |
 | `__NACOS_DATA__` | Nacos 数据目录 |
@@ -67,7 +67,7 @@ common/
 
 ## 3. Nacos 共享配置 nacos/
 
-`ydsz-common.yaml` 是 PMIS 7 个微服务启动时从 Nacos 拉取的**共享配置**。内容覆盖:
+`ydsz-common.yaml` 是 YDSZ 7 个微服务启动时从 Nacos 拉取的**共享配置**。内容覆盖:
 
 | 分类 | 配置项 |
 |---|---|
@@ -85,13 +85,13 @@ common/
 
 ```bash
 # Ubuntu / Docker
-./deploy/ubuntu/scripts/import-nacos-config.sh pmis dev
+./deploy/ubuntu/scripts/import-nacos-config.sh ydsz dev
 
 # Windows
-.\deploy\windows\scripts\import-nacos-config.bat pmis dev
+.\deploy\windows\scripts\import-nacos-config.bat ydsz dev
 ```
 
-参数:`namespace`(默认 `pmis`)、`group`(默认 `dev`,可改 `sit`/`uat`/`prod`)。
+参数:`namespace`(默认 `ydsz`)、`group`(默认 `dev`,可改 `sit`/`uat`/`prod`)。
 
 ### 3.2 修改生效
 
@@ -99,9 +99,9 @@ common/
 
 ```bash
 # 1. 重新导入
-./deploy/ubuntu/scripts/import-nacos-config.sh pmis dev
+./deploy/ubuntu/scripts/import-nacos-config.sh ydsz dev
 
-# 2. 重启 PMIS 7 个服务(因为 Nacos 配置默认不自动刷新)
+# 2. 重启 YDSZ 7 个服务(因为 Nacos 配置默认不自动刷新)
 ./deploy/ubuntu/scripts/start-all.sh
 ```
 
@@ -121,11 +121,11 @@ common/
 
 ```bash
 # 通过 PGPASSWORD 环境变量传入数据库密码（请替换为你的实际密码）
-PGPASSWORD=<your-pgis-password> psql -h 127.0.0.1 -U pmis -d ydsz_pmis \
+PGPASSWORD=<your-pgis-password> psql -h 127.0.0.1 -U ydsz -d ydsz \
   -f deploy/common/sql/tables_xxl_job_pg.sql
 ```
 
-> 说明:XXL-Job 复用主库 `ydsz_pmis`,沿用其账号(`pmis` / `<your-pgis-password>`)。如主库改了密码,同步修改 [`../conf/xxl-job/application.properties`](../conf/xxl-job/application.properties) 中的 `spring.datasource.password`。
+> 说明:XXL-Job 复用主库 `ydsz`,沿用其账号(`ydsz` / `<your-pgis-password>`)。如主库改了密码,同步修改 [`../conf/xxl-job/application.properties`](../conf/xxl-job/application.properties) 中的 `spring.datasource.password`。
 
 ---
 

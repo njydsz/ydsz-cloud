@@ -4,30 +4,30 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.json.annotation.JsonSubType;
-import com.njydsz.common.json.annotation.JsonSubTypes;
-import com.njydsz.common.json.annotation.JsonTypeInfo;
+import com.njydsz.common.json.annotation.YdszJsonSubType;
+import com.njydsz.common.json.annotation.YdszJsonSubTypes;
+import com.njydsz.common.json.annotation.YdszJsonTypeInfo;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
 
 /**
  * 多态类型解析器
  *
- * <p>处理带 @JsonTypeInfo 注解的基类的反序列化，
+ * <p>处理带 @YdszJsonTypeInfo 注解的基类的反序列化，
  * 根据 JSON 中的类型属性值识别具体子类型。</p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 基类定义
- * &#064;JsonTypeInfo(property = "type")
- * &#064;JsonSubTypes({
- *     &#064;JsonSubType(value = Dog.class, name = "dog"),
- *     &#064;JsonSubType(value = Cat.class, name = "cat")
+ * &#064;YdszJsonTypeInfo(property = "type")
+ * &#064;YdszJsonSubTypes({
+ *     &#064;YdszJsonSubType(value = Dog.class, name = "dog"),
+ *     &#064;YdszJsonSubType(value = Cat.class, name = "cat")
  * })
  * public abstract class Animal { }
  *
  * // 反序列化
  * String json = "{\"type\":\"dog\",\"name\":\"Buddy\"}";
- * Animal animal = Json.toObject(json, Animal.class);
+ * Animal animal = YdszJson.toObject(json, Animal.class);
  * // animal 是 Dog 实例
  * </pre>
  *
@@ -80,18 +80,18 @@ public final class PolymorphicTypeResolver {
             return cached;
         }
 
-        JsonTypeInfo typeInfo = clazz.getAnnotation(JsonTypeInfo.class);
+        YdszJsonTypeInfo typeInfo = clazz.getAnnotation(YdszJsonTypeInfo.class);
         if (typeInfo == null) {
             return null;
         }
 
-        JsonSubTypes subTypes = clazz.getAnnotation(JsonSubTypes.class);
+        YdszJsonSubTypes subTypes = clazz.getAnnotation(YdszJsonSubTypes.class);
         if (subTypes == null) {
             return null;
         }
 
         Map<String, Class<?>> nameToType = new HashMap<>(subTypes.value().length * 2);
-        for (JsonSubType subType : subTypes.value()) {
+        for (YdszJsonSubType subType : subTypes.value()) {
             nameToType.put(subType.name(), subType.value());
         }
 

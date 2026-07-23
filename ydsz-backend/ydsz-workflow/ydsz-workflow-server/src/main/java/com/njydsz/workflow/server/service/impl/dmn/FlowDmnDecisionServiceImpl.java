@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowDmnDecisionDO;
 import com.njydsz.workflow.domain.entity.FlowDmnRuleDO;
 import com.njydsz.workflow.infra.mapper.FlowDmnDecisionMapper;
@@ -381,7 +381,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             return Collections.emptyList();
         }
         try {
-            List<?> list = Json.parseArray(json);
+            List<?> list = YdszJson.parseArray(json);
             if (list == null) {
                 return Collections.emptyList();
             }
@@ -404,7 +404,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             return Collections.emptyList();
         }
         try {
-            List<?> list = Json.parseArray(json);
+            List<?> list = YdszJson.parseArray(json);
             if (list == null) {
                 return Collections.emptyList();
             }

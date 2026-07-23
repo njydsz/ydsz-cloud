@@ -1,5 +1,5 @@
 # =============================================================================
-#  YDSZ PMIS · 部署后冒烟测试（Windows PowerShell）
+#  YDSZ · 部署后冒烟测试（Windows PowerShell）
 # -----------------------------------------------------------------------------
 #  用法:
 #    powershell -ExecutionPolicy Bypass -File deploy\scripts\smoke-test.ps1 [-GatewayUrl URL]
@@ -26,7 +26,7 @@ function Fail($msg) { Write-Host "[FAIL] $msg" -ForegroundColor Red;   $script:F
 function Skip($msg) { Write-Host "[SKIP] $msg" -ForegroundColor Yellow; $script:Skip++ }
 
 Write-Host "================================================================"
-Write-Host "  YDSZ PMIS · Smoke Test"
+Write-Host "  YDSZ · Smoke Test"
 Write-Host "  Gateway: $GatewayUrl"
 Write-Host "================================================================"
 Write-Host ""

@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
  *     .constructMapType(Map.class, String.class, User.class);
  * 
  * // 反序列化
- * List&lt;User&gt; users = Json.toObject(json, listType);
+ * List&lt;User&gt; users = YdszJson.toObject(json, listType);
  * </pre>
  * 
  * @since 1.0.0

@@ -44,17 +44,17 @@
       "description": "Enable RocketMQ consumer"
     },
     {
-      "name": "pmis.webhook.default-url",
+      "name": "ydsz.webhook.default-url",
       "type": "java.lang.String",
       "description": "Default webhook URL fallback"
     },
     {
-      "name": "pmis.webhook.connect-timeout",
+      "name": "ydsz.webhook.connect-timeout",
       "type": "java.lang.Integer",
       "description": "Webhook connect timeout in milliseconds"
     },
     {
-      "name": "pmis.webhook.read-timeout",
+      "name": "ydsz.webhook.read-timeout",
       "type": "java.lang.Integer",
       "description": "Webhook read timeout in milliseconds"
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  YDSZ PMIS · 部署后冒烟测试（Linux/macOS）
+#  YDSZ · 部署后冒烟测试（Linux/macOS）
 # -----------------------------------------------------------------------------
 #  用法:
 #    bash deploy/scripts/smoke-test.sh [GATEWAY_URL]
@@ -42,7 +42,7 @@ fail() { echo "${RED}[FAIL]${NC} $1"; FAIL=$((FAIL+1)); }
 skip() { echo "${YELLOW}[SKIP]${NC} $1"; SKIP=$((SKIP+1)); }
 
 echo "================================================================"
-echo "  YDSZ PMIS · Smoke Test"
+echo "  YDSZ · Smoke Test"
 echo "  Gateway: ${GATEWAY_URL}"
 echo "================================================================"
 echo ""

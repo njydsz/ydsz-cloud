@@ -198,7 +198,7 @@ function handleDensityChange(d: TableDensity) {
 // ===== 列设置（批次 29-2） =====
 /** 列设置持久化存储 key */
 const columnSettingStorageKey = computed(
-  () => props.columnSettingKey ? `pmis:pro-table:columns:${props.columnSettingKey}` : '',
+  () => props.columnSettingKey ? `ydsz:pro-table:columns:${props.columnSettingKey}` : '',
 )
 
 /** 从 localStorage 读取持久化的列设置 */

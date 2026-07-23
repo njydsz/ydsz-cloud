@@ -15,7 +15,7 @@ import org.springframework.web.client.RestClient;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
 
@@ -100,13 +100,13 @@ public class WechatWorkChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Json.toJson(payload))
+                    .body(YdszJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = Json.parseMap(response.getBody());
+                Map<String, Object> body = YdszJson.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     log.info("[WECOM] 发送成功");

@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.listener.RemovalCause;
@@ -45,7 +45,7 @@ public class LocalPermissionCache<V> {
      * @param expireMinutes  过期时间（分钟）
      */
     public LocalPermissionCache(String cacheName, long expireMinutes) {
-        this.cache = LocalCache.<String, V>newBuilder()
+        this.cache = YdszCache.<String, V>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(expireMinutes, TimeUnit.MINUTES)
                 .removalListener((String key, V value, RemovalCause cause) -> {

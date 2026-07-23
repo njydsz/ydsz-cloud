@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-seata</artifactId>
     <name>ydsz-common-seata</name>
-    <description>PMIS Common Seata - 分布式事务抽象（Seata/SAGA/TCC 统一接口）</description>
+    <description>YDSZ Common Seata - 分布式事务抽象（Seata/SAGA/TCC 统一接口）</description>
 
     <parent>
         <groupId>com.njydsz</groupId>

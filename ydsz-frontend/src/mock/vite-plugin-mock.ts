@@ -35,7 +35,7 @@ export interface MockPluginOptions {
 }
 
 /**
- * Vite 插件工厂: 注册 PMIS 本地 Mock 中间件
+ * Vite 插件工厂: 注册 YDSZ 本地 Mock 中间件
  *
  * 在 dev server 中拦截 /* 请求, 按方法+路径匹配 mockHandlers,
  * 命中则注入延迟并返回统一响应结构, 未命中则透传给 proxy。
@@ -52,7 +52,7 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
   } = options
 
   return {
-    name: 'vite-plugin-pmis-mock',
+    name: 'vite-plugin-ydsz-mock',
     apply: 'serve',
     configureServer(server) {
       if (!enabled) {
@@ -125,7 +125,7 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
           const result = await handler.handler({ query, body })
           res.statusCode = 200
           res.setHeader('Content-Type', 'application/json;charset=UTF-8')
-          res.setHeader('X-Mock-Source', 'vite-plugin-pmis-mock')
+          res.setHeader('X-Mock-Source', 'vite-plugin-ydsz-mock')
           res.end(
             JSON.stringify({
               code: 0,

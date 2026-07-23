@@ -3,7 +3,7 @@ package com.njydsz.common.netty.codec;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -13,7 +13,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * JSON 消息编解码器 — 基于 {@link Json} 引擎实现消息序列化/反序列化。
+ * JSON 消息编解码器 — 基于 {@link YdszJson} 引擎实现消息序列化/反序列化。
  *
  * <p>组合 {@link MessageEncoder} 和 {@link MessageDecoder} 接口，
  * 将业务对象与 ByteBuf 之间进行 JSON 转换。
@@ -51,7 +51,7 @@ public class JsonMessageCodec<T> extends MessageToByteEncoder<T> {
      */
     @Override
     protected void encode(ChannelHandlerContext ctx, T msg, ByteBuf out) throws Exception {
-        String json = Json.toJson(msg);
+        String json = YdszJson.toJson(msg);
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         out.writeBytes(bytes);
     }
@@ -66,7 +66,7 @@ public class JsonMessageCodec<T> extends MessageToByteEncoder<T> {
      */
     public T decode(ByteBuf buf) {
         String json = buf.toString(StandardCharsets.UTF_8);
-        return Json.fromJson(json, messageClass);
+        return YdszJson.fromJson(json, messageClass);
     }
 
     /**
@@ -76,7 +76,7 @@ public class JsonMessageCodec<T> extends MessageToByteEncoder<T> {
      * @return 业务对象
      */
     public T decode(byte[] bytes) {
-        return Json.fromJsonBytes(bytes, messageClass);
+        return YdszJson.fromJsonBytes(bytes, messageClass);
     }
 
     /**

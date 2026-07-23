@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.spring.web;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -88,7 +89,9 @@ public class ExcelWebSupport {
                 DownloadContext.setSheetName(sheetName);
             }
 
-            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            // 先写入 ByteArrayOutputStream 获取 Content-Length，再写入 response
+            // 对于大文件场景（>10MB），建议使用 ExcelFacade.write(OutputStream) 直接流式写入
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ExcelFacade.write(baos, clazz)
                     .sheet(sheetName != null ? sheetName : "Sheet1")
                     .doWrite(data);

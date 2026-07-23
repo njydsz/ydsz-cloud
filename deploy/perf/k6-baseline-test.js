@@ -1,5 +1,5 @@
 /**
- * PMIS 性能基线测试 — k6 脚本
+ * YDSZ 性能基线测试 — k6 脚本
  *
  * 测试场景:
  *   1. 用户登录 → 获取 JWT Token
@@ -9,7 +9,7 @@
  *
  * 运行方式:
  *   k6 run --env BASE_URL=http://localhost:8080 deploy/perf/k6-baseline-test.js
- *   k6 run --env BASE_URL=https://pmis.example.com --env STRESS=true deploy/perf/k6-baseline-test.js
+ *   k6 run --env BASE_URL=https://ydsz.example.com --env STRESS=true deploy/perf/k6-baseline-test.js
  *
  * 指标基线（SIT 环境）:
  *   - p95 < 500ms（登录）

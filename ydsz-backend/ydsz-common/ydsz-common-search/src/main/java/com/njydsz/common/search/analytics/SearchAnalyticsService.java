@@ -14,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
  * 搜索分析服务
  * <p>
  * 记录搜索日志、热门搜索词、零结果关键词，为搜索体验优化提供数据支撑。
+ * <p>
+ * P1-7: 当前为内存存储，多实例生产环境建议实现 Redis 持久化
+ * （Sorted Set 存热门词、Hash 存每日量、Set+TTL 存零结果词）。
  *
  * @author ydsz-team
  * @since 1.4.0

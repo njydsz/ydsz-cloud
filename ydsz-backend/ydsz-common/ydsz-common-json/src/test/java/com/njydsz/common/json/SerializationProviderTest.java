@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.provider.SerializationProvider;
 
 /**
@@ -48,9 +48,9 @@ class SerializationProviderTest {
         SerializationProvider.setWriteNulls(false);
 
         // 使用单次配置序列化（不影响全局配置）
-        JsonConfig tempConfig = JsonConfig.copyOf(JsonConfig.getInstance());
+        YdszJsonConfig tempConfig = YdszJsonConfig.copyOf(YdszJsonConfig.getInstance());
         tempConfig.setWriteNulls(true);
-        String json = Json.toJson(Map.of("a", "b"), tempConfig);
+        String json = YdszJson.toJson(Map.of("a", "b"), tempConfig);
         assertNotNull(json);
 
         // 全局配置不应被修改
@@ -76,8 +76,8 @@ class SerializationProviderTest {
                                 "thread", threadId,
                                 "iter", j,
                                 "data", "test" + threadId + "_" + j);
-                        String json = Json.toJson(data);
-                        Map<String, Object> parsed = Json.parseMap(json);
+                        String json = YdszJson.toJson(data);
+                        Map<String, Object> parsed = YdszJson.parseMap(json);
                         if (!Integer.valueOf(threadId).equals(parsed.get("thread"))) {
                             errors.incrementAndGet();
                         }
@@ -99,7 +99,7 @@ class SerializationProviderTest {
         long initialCount = SerializationProvider.getAsmDowngradeCount();
 
         // 序列化一个简单对象，不应导致降级
-        Json.toJson(Map.of("key", "value"));
+        YdszJson.toJson(Map.of("key", "value"));
 
         // 降级次数不应增加（正常路径不触发降级）
         long currentCount = SerializationProvider.getAsmDowngradeCount();

@@ -184,7 +184,7 @@ public class PartitionLeaderManager {
      * 构造分区角色名。
      *
      * @param partition 分区索引
-     * @return 角色名（如 {@code pmis-job-scheduler-0}）
+     * @return 角色名（如 {@code ydsz-job-scheduler-0}）
      */
     private String partitionRole(int partition) {
         return baseRole + "-" + partition;

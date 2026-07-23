@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.cache.CacheManager;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
 
 /**
- * LocalCache 的 Spring CacheManager 实现
+ * YdszCache 的 Spring CacheManager 实现
  *
  * <p>支持 per-cache 独立配置，每个缓存可以使用不同的类型、容量和过期策略。
  *
@@ -40,7 +40,7 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
  * public class CacheConfig {
  *     @Bean
  *     public CacheManager cacheManager() {
- *         LocalCacheManager cacheManager = new LocalCacheManager();
+ *         YdszCacheManager cacheManager = new YdszCacheManager();
  *         cacheManager.setCacheType(CacheType.TINYLFU);
  *         cacheManager.setMaximumSize(1000);
  *         cacheManager.setExpireAfterWrite(30, TimeUnit.MINUTES);
@@ -51,11 +51,11 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
  *
  * 
  */
-public class LocalCacheManager implements CacheManager, DisposableBean {
+public class YdszCacheManager implements CacheManager, DisposableBean {
 
-  private static final Logger log = LoggerFactory.getLogger(LocalCacheManager.class);
+  private static final Logger log = LoggerFactory.getLogger(YdszCacheManager.class);
 
-  private final Map<String, SpringLocalCache> cacheMap = new ConcurrentHashMap<>();
+  private final Map<String, SpringYdszCache> cacheMap = new ConcurrentHashMap<>();
 
   /** 已创建的底层 Cache 实例（用于生命周期管理） */
   private final List<Cache<?, ?>> createdCaches = Collections.synchronizedList(new ArrayList<>());
@@ -93,7 +93,7 @@ public class LocalCacheManager implements CacheManager, DisposableBean {
   private Function<String, Cache<Object, Object>> cacheBuilder;
 
   /** per-cache 配置映射 */
-  private Map<String, LocalCacheProperties.CacheConfig> perCacheConfigs = Collections.emptyMap();
+  private Map<String, YdszCacheProperties.CacheConfig> perCacheConfigs = Collections.emptyMap();
 
   /** 设置缓存类型 */
   public void setCacheType(CacheType cacheType) {
@@ -168,13 +168,13 @@ public class LocalCacheManager implements CacheManager, DisposableBean {
    *
    * @param perCacheConfigs per-cache 配置
    */
-  public void setPerCacheConfigs(Map<String, LocalCacheProperties.CacheConfig> perCacheConfigs) {
+  public void setPerCacheConfigs(Map<String, YdszCacheProperties.CacheConfig> perCacheConfigs) {
     this.perCacheConfigs = perCacheConfigs != null ? perCacheConfigs : Collections.emptyMap();
   }
 
   @Override
-  public SpringLocalCache getCache(String name) {
-    SpringLocalCache cache = this.cacheMap.get(name);
+  public SpringYdszCache getCache(String name) {
+    SpringYdszCache cache = this.cacheMap.get(name);
     if (cache != null) {
       return cache;
     }
@@ -185,9 +185,9 @@ public class LocalCacheManager implements CacheManager, DisposableBean {
 
     Cache<Object, Object> delegate = buildCache(name);
     createdCaches.add(delegate);
-        SpringLocalCache newCache = new SpringLocalCache(name, delegate, this.allowNullValues);
+        SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
 
-    SpringLocalCache existing = this.cacheMap.putIfAbsent(name, newCache);
+    SpringYdszCache existing = this.cacheMap.putIfAbsent(name, newCache);
     return existing != null ? existing : newCache;
   }
 
@@ -196,14 +196,14 @@ public class LocalCacheManager implements CacheManager, DisposableBean {
     return Collections.unmodifiableSet(this.cacheMap.keySet());
   }
 
-  /** 构建底层 LocalCache 实例（支持 per-cache 配置覆盖） */
+  /** 构建底层 YdszCache 实例（支持 per-cache 配置覆盖） */
   private Cache<Object, Object> buildCache(String name) {
     if (this.cacheBuilder != null) {
       return this.cacheBuilder.apply(name);
     }
 
     // 获取 per-cache 配置（如有）
-    LocalCacheProperties.CacheConfig perCache = perCacheConfigs.get(name);
+    YdszCacheProperties.CacheConfig perCache = perCacheConfigs.get(name);
 
     // 解析有效配置值（per-cache 优先，回退到全局默认）
     CacheType effectiveType =
@@ -256,7 +256,7 @@ public class LocalCacheManager implements CacheManager, DisposableBean {
             : this.softValues;
 
     CacheBuilder<Object, Object> builder =
-        LocalCache.newBuilder()
+        YdszCache.newBuilder()
             .type(effectiveType)
             .initialCapacity(effectiveInitCapacity)
             .maximumSize(effectiveMaxSize)
@@ -296,7 +296,7 @@ public class LocalCacheManager implements CacheManager, DisposableBean {
   /** Spring 容器关闭时清理资源 */
   @Override
   public void destroy() {
-    log.info("LocalCacheManager 正在关闭...");
+    log.info("YdszCacheManager 正在关闭...");
 
     // 关闭所有可关闭的缓存实例
     synchronized (createdCaches) {
@@ -317,6 +317,6 @@ public class LocalCacheManager implements CacheManager, DisposableBean {
     // 关闭 EnhancedLoadingCache 共享资源
     EnhancedLoadingCache.shutdownSharedResources();
 
-    log.info("LocalCacheManager 已关闭");
+    log.info("YdszCacheManager 已关闭");
   }
 }

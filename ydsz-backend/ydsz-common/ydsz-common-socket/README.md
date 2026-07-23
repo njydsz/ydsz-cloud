@@ -1,6 +1,6 @@
 # ydsz-common-socket
 
-PMIS WebSocket 实时推送框架 — 集群广播、离线消息存储、在线用户管理、认证拦截、消息限流、实时推送模板、熔断降级、心跳保活、消息重试、ACK 确认、消息压缩、慢连接检测、审计日志、分布式追踪、Micrometer 指标。
+YDSZ WebSocket 实时推送框架 — 集群广播、离线消息存储、在线用户管理、认证拦截、消息限流、实时推送模板、熔断降级、心跳保活、消息重试、ACK 确认、消息压缩、慢连接检测、审计日志、分布式追踪、Micrometer 指标。
 
 ## 模块定位
 
@@ -108,7 +108,7 @@ PMIS WebSocket 实时推送框架 — 集群广播、离线消息存储、在线
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   websocket:
     enabled: true
     endpoint: /ws
@@ -123,7 +123,7 @@ pmis:
     session-ttl-seconds: 3600
     cluster:
       enabled: true
-      channel: pmis:ws:cluster:push
+      channel: ydsz:ws:cluster:push
     offline:
       enabled: true
       max-cache: 100
@@ -163,8 +163,8 @@ pmis:
 
 | 配置类 | 激活条件 |
 |---|---|
-| `WebSocketAutoConfiguration` | `SimpMessagingTemplate` 在 classpath 且 `pmis.websocket.enabled=true` |
-| `WebSocketClusterAutoConfiguration` | `StringRedisTemplate` 在 classpath 且 `pmis.websocket.cluster.enabled=true` |
+| `WebSocketAutoConfiguration` | `SimpMessagingTemplate` 在 classpath 且 `ydsz.websocket.enabled=true` |
+| `WebSocketClusterAutoConfiguration` | `StringRedisTemplate` 在 classpath 且 `ydsz.websocket.cluster.enabled=true` |
 
 ## 依赖
 
@@ -177,7 +177,7 @@ pmis:
 
 ## P2-4 消息体大小限制使用说明
 
-`pmis.websocket.message-size-limit` 配置项定义了最大消息大小（字节）。
+`ydsz.websocket.message-size-limit` 配置项定义了最大消息大小（字节）。
 业务应用在配置 `WebSocketMessageBrokerConfigurer` 时，应调用
 `registration.setMessageSizeLimit(properties.getMessageSizeLimit())` 使其生效。
 

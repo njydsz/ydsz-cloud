@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,12 +124,12 @@ public class RedisConversationMemory implements ConversationMemory {
             sm.promptTokens = message.getTokenUsage().getPromptTokens();
             sm.completionTokens = message.getTokenUsage().getCompletionTokens();
         }
-        return Json.toJson(sm);
+        return YdszJson.toJson(sm);
     }
 
     private ChatMessage deserializeMessage(String json) {
         try {
-            SerializedMessage sm = Json.toObject(json, SerializedMessage.class);
+            SerializedMessage sm = YdszJson.toObject(json, SerializedMessage.class);
             MessageRole role = MessageRole.valueOf(sm.role);
             TokenUsage usage = null;
             if (sm.promptTokens > 0 || sm.completionTokens > 0) {

@@ -156,7 +156,7 @@ export const useUserStore = defineStore('user', () => {
 }, {
   // P2-4: 持久化配置 - 仅持久化必要字段（token、userInfo、permissions），
   // 不持久化临时状态（refreshToken、roles 等可重新拉取的数据）
-  // 持久化数据写入 key 为 `pmis:user:v1`，整体 Base64 混淆（见 plugins/pinia-persist）
+  // 持久化数据写入 key 为 `ydsz:user:v1`，整体 Base64 混淆（见 plugins/pinia-persist）
   persist: {
     pick: ['token', 'userInfo', 'permissions'],
   },

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-cronjob
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-cronjob
     tier: backend
@@ -28,7 +28,7 @@ spec:
               containerPort: 9005
           envFrom:
             - configMapRef:
-                name: pmis-common-config
+                name: ydsz-common-config
           resources:
             requests:
               cpu: 250m
@@ -59,7 +59,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-cronjob
-  namespace: pmis
+  namespace: ydsz
 spec:
   type: ClusterIP
   selector:

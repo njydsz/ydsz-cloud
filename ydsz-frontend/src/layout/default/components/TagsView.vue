@@ -2,7 +2,7 @@
   @fileoverview 标签页视图（批次 30-1 增强）
   @description 类 Chrome Tab 的多标签页导航：
   - 进入路由自动添加标签，关闭标签自动切换至相邻标签
-  - 标签状态持久化到 localStorage（STORAGE_KEY = 'pmis_tags_view'）
+  - 标签状态持久化到 localStorage（STORAGE_KEY = 'ydsz_tags_view'）
   - 支持 affix 固定标签（首页不可关闭）
   - 批次 30-1：右键菜单（关闭其他/关闭全部/刷新当前）+ 最大标签数限制
   @module layout/default/components/TagsView
@@ -36,7 +36,7 @@ const router = useRouter()
 const tags = ref<TagItem[]>([])
 
 /** localStorage 存储键 */
-const STORAGE_KEY = 'pmis_tags_view'
+const STORAGE_KEY = 'ydsz_tags_view'
 
 /** 最大标签数（超出时自动关闭最早的非 affix 标签） */
 const MAX_TAGS = 15

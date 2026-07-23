@@ -18,7 +18,7 @@ import java.util.Date;
 import java.util.Map;
 
 import com.njydsz.common.json.annotation.JsonAlias;
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonInclude;
 
 /**
@@ -154,7 +154,7 @@ public final class FieldMeta {
     /**
      * 构造函数（带注解版本）
      */
-    public FieldMeta(Field field, String jsonName, int ordinal, JsonField annotation) {
+    public FieldMeta(Field field, String jsonName, int ordinal, YdszJsonField annotation) {
         this.field = field;
         this.name = field.getName();
         this.type = field.getType();

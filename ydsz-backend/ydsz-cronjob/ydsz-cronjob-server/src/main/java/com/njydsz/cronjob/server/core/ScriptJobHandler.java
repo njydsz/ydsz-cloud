@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -109,7 +109,7 @@ public class ScriptJobHandler implements JobHandler {
             throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
         }
 
-        Map<String, Object> params = Json.parseMap(paramsJson);
+        Map<String, Object> params = YdszJson.parseMap(paramsJson);
         String language = params.getString("language");
         if (!StringUtils.hasText(language)) {
             throw new IllegalArgumentException("SHELL 任务参数缺少 language（shell/python）");
@@ -309,7 +309,7 @@ public class ScriptJobHandler implements JobHandler {
         } else {
             suffix = ".sh";
         }
-        Path tempFile = Files.createTempFile("pmis-script-", suffix);
+        Path tempFile = Files.createTempFile("ydsz-script-", suffix);
         Files.writeString(tempFile, script, StandardCharsets.UTF_8);
         if (!"python".equals(language) && !isWindows) {
             // Shell 脚本需要可执行权限（非 Windows）

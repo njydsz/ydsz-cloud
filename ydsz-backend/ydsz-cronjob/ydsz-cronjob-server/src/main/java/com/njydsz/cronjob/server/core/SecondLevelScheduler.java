@@ -293,13 +293,13 @@ public class SecondLevelScheduler {
     }
 
     /**
-     * 构造调度线程池的线程工厂（守护线程，命名前缀 pmis-job-fixed-）。
+     * 构造调度线程池的线程工厂（守护线程，命名前缀 ydsz-job-fixed-）。
      *
      * @return ThreadFactory 实例
      */
     private ThreadFactory buildThreadFactory() {
         return r -> {
-            Thread t = new Thread(r, "pmis-job-fixed-" + System.nanoTime());
+            Thread t = new Thread(r, "ydsz-job-fixed-" + System.nanoTime());
             t.setDaemon(true);
             return t;
         };

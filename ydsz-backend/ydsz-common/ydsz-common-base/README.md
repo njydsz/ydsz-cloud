@@ -1,6 +1,6 @@
 # ydsz-common-base
 
-PMIS HTTP 公共基座 — CORS、时区、I18n、安全头、TraceId、请求日志、全局响应包装、OpenAPI/Knife4j 文档、内容缓存过滤器。
+YDSZ HTTP 公共基座 — CORS、时区、I18n、安全头、TraceId、请求日志、全局响应包装、OpenAPI/Knife4j 文档、内容缓存过滤器。
 
 ## 模块定位
 
@@ -75,11 +75,11 @@ PMIS HTTP 公共基座 — CORS、时区、I18n、安全头、TraceId、请求�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   base:
     cors:
       enabled: true
-      allowed-origins: ["https://pmis.njydsz.com"]
+      allowed-origins: ["https://ydsz.njydsz.com"]
       allowed-methods: [GET, POST, PUT, DELETE, OPTIONS]
       allowed-headers: ["*"]
       allow-credentials: true
@@ -97,7 +97,7 @@ pmis:
       default-locale: zh_CN
     doc:
       enabled: true
-      title: "PMIS API"
+      title: "YDSZ API"
       version: "1.0.0"
       knife4j:
         enabled: true

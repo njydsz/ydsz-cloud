@@ -27,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  * <h3>使用方式</h3>
  * <pre>{@code
  * // Leader 切换时获取新 Token
- * long token = fencingTokenManager.acquireNewToken("pmis-job-scheduler");
+ * long token = fencingTokenManager.acquireNewToken("ydsz-job-scheduler");
  *
  * // 写操作前校验 Token
- * if (!fencingTokenManager.validateToken("pmis-job-scheduler", currentToken)) {
+ * if (!fencingTokenManager.validateToken("ydsz-job-scheduler", currentToken)) {
  *     log.warn("Fencing Token 过期，当前节点可能已不是 Leader");
  *     return;
  * }

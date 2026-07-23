@@ -23,7 +23,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(agent_llm_calls_total{job=\"pmis-agent\"}[5m])) by (provider)",
+          "expr": "sum(rate(agent_llm_calls_total{job=\"ydsz-agent\"}[5m])) by (provider)",
           "legendFormat": "{{provider}}",
           "refId": "A"
         }
@@ -50,7 +50,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "1 - sum(rate(agent_llm_calls_total{job=\"pmis-agent\",status=\"failure\"}[5m])) / clamp_min(sum(rate(agent_llm_calls_total{job=\"pmis-agent\"}[5m])), 1)",
+          "expr": "1 - sum(rate(agent_llm_calls_total{job=\"ydsz-agent\",status=\"failure\"}[5m])) / clamp_min(sum(rate(agent_llm_calls_total{job=\"ydsz-agent\"}[5m])), 1)",
           "refId": "A"
         }
       ]
@@ -76,7 +76,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "sum(increase(agent_guardrail_rejections_total{job=\"pmis-agent\"}[5m]))",
+          "expr": "sum(increase(agent_guardrail_rejections_total{job=\"ydsz-agent\"}[5m]))",
           "refId": "A"
         }
       ]
@@ -88,17 +88,17 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum(rate(agent_llm_call_duration_seconds_bucket{job=\"pmis-agent\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(agent_llm_call_duration_seconds_bucket{job=\"ydsz-agent\"}[5m])) by (le))",
           "legendFormat": "P99",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(agent_llm_call_duration_seconds_bucket{job=\"pmis-agent\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(agent_llm_call_duration_seconds_bucket{job=\"ydsz-agent\"}[5m])) by (le))",
           "legendFormat": "P95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.50, sum(rate(agent_llm_call_duration_seconds_bucket{job=\"pmis-agent\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(agent_llm_call_duration_seconds_bucket{job=\"ydsz-agent\"}[5m])) by (le))",
           "legendFormat": "P50",
           "refId": "C"
         }
@@ -111,7 +111,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "targets": [
         {
-          "expr": "sum(rate(agent_llm_tokens_total{job=\"pmis-agent\"}[5m])) by (type)",
+          "expr": "sum(rate(agent_llm_tokens_total{job=\"ydsz-agent\"}[5m])) by (type)",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
@@ -124,7 +124,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "sum(rate(agent_llm_tokens_total{job=\"pmis-agent\"}[5m])) by (model)",
+          "expr": "sum(rate(agent_llm_tokens_total{job=\"ydsz-agent\"}[5m])) by (model)",
           "legendFormat": "{{model}}",
           "refId": "A"
         }
@@ -137,7 +137,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "targets": [
         {
-          "expr": "sum(rate(agent_llm_calls_total{job=\"pmis-agent\",status=\"failure\"}[5m])) by (error_type)",
+          "expr": "sum(rate(agent_llm_calls_total{job=\"ydsz-agent\",status=\"failure\"}[5m])) by (error_type)",
           "legendFormat": "{{error_type}}",
           "refId": "A"
         }
@@ -150,7 +150,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "targets": [
         {
-          "expr": "sum(rate(agent_guardrail_rejections_total{job=\"pmis-agent\"}[5m])) by (guard, direction)",
+          "expr": "sum(rate(agent_guardrail_rejections_total{job=\"ydsz-agent\"}[5m])) by (guard, direction)",
           "legendFormat": "{{guard}} / {{direction}}",
           "refId": "A"
         }
@@ -171,7 +171,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "up{job=\"pmis-agent\"}",
+          "expr": "up{job=\"ydsz-agent\"}",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
@@ -185,7 +185,7 @@
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS AI Agent 监控",
+  "title": "YDSZ AI Agent 监控",
   "uid": "agent-dashboard",
   "version": 1
 }

@@ -40,7 +40,7 @@ export const userHandlers: MockHandler[] = [
       id: 1,
       username: 'admin',
       realName: '系统管理员',
-      email: 'admin@pmis.local',
+      email: 'admin@ydsz.local',
       phone: '13800000000',
       avatar: '',
       department: '技术中心',
@@ -72,7 +72,7 @@ export const userHandlers: MockHandler[] = [
       id: 1,
       username: 'admin',
       realName: '系统管理员',
-      email: 'admin@pmis.local',
+      email: 'admin@ydsz.local',
       phone: '13800000000',
       avatar: '',
       department: '技术中心',
@@ -100,7 +100,7 @@ export const userHandlers: MockHandler[] = [
     path: '/user/2fa/bind',
     handler: () => ({
       secret: 'JBSWY3DPEHPK3PXP',
-      otpauthUri: 'otpauth://totp/PMIS:admin?secret=JBSWY3DPEHPK3PXP&issuer=PMIS',
+      otpauthUri: 'otpauth://totp/YDSZ:admin?secret=JBSWY3DPEHPK3PXP&issuer=YDSZ',
     }),
   },
   {

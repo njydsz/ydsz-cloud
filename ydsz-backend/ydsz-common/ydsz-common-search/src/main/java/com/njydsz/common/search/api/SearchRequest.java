@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import lombok.Builder;
 import lombok.Data;
 
@@ -35,11 +36,13 @@ public class SearchRequest implements Serializable {
 
     /** 页码（从 1 开始） */
     @Schema(description = "页码，从1开始")
+    @Min(1)
     @Builder.Default
     private int page = 1;
 
     /** 每页大小 */
     @Schema(description = "每页大小")
+    @Min(1)
     @Builder.Default
     private int pageSize = 20;
 

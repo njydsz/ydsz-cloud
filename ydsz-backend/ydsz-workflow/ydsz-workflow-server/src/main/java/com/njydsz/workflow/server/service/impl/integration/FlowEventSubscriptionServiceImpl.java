@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowEventSubscriptionDO;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.domain.entity.FlowNodeDO;
@@ -246,10 +246,10 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         Map<String, Object> variables = parseVariables(instance.getVariable());
         if (StringUtils.hasText(payload)) {
             try {
-                Map<String, Object> payloadMap = Json.parseMap(payload);
+                Map<String, Object> payloadMap = YdszJson.parseMap(payload);
                 if (payloadMap != null) {
                     variables.putAll(payloadMap);
-                    instanceMapper.updateVariable(instance.getId(), Json.toJson(variables));
+                    instanceMapper.updateVariable(instance.getId(), YdszJson.toJson(variables));
                 }
             } catch (Exception e) {
                 log.warn("[Flow] payload 解析失败，忽略: subId={} err={}", sub.getId(), e.getMessage());
@@ -305,7 +305,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             return Collections.emptyMap();
         }
         try {
-            return Json.parseMap(node.getExt());
+            return YdszJson.parseMap(node.getExt());
         } catch (Exception e) {
             return Collections.emptyMap();
         }
@@ -330,7 +330,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             return new HashMap<>();
         }
         try {
-            Map<String, Object> m = Json.parseMap(variableJson);
+            Map<String, Object> m = YdszJson.parseMap(variableJson);
             return m != null ? m : new HashMap<>();
         } catch (Exception e) {
             return new HashMap<>();

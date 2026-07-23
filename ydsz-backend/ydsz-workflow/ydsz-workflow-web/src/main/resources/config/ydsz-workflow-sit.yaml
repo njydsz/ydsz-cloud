@@ -1,5 +1,5 @@
 # =====================================================================
-#  YDSZ PMIS · Workflow · SIT 环境配置（Nacos DataId）
+#  YDSZ · Workflow · SIT 环境配置（Nacos DataId）
 #  DataId:    ydsz-workflow-sit.yaml
 #  Group:     sit
 #  端口:      9006
@@ -24,7 +24,7 @@ springdoc:
 knife4j:
   production: true
 
-# SIT 环境 PMIS 业务日志降为 INFO
+# SIT 环境 YDSZ 业务日志降为 INFO
 logging:
   level:
     "[com.njydsz]": INFO

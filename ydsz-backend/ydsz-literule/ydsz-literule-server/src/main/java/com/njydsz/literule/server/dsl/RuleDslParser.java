@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -94,7 +94,7 @@ public final class RuleDslParser {
         if (jsonContent == null || jsonContent.isBlank()) {
             return emptyDsl();
         }
-        Map<String, Object> raw = Json.parseMap(jsonContent);
+        Map<String, Object> raw = YdszJson.parseMap(jsonContent);
         if (raw == null || raw.isEmpty()) {
             return emptyDsl();
         }

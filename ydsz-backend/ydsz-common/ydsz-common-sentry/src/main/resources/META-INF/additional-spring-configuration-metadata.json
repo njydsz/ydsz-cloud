@@ -10,7 +10,7 @@
       "name": "ydsz.sentry.app-name",
       "type": "java.lang.String",
       "description": "应用名称，用于日志和指标标识。",
-      "defaultValue": "pmis"
+      "defaultValue": "ydsz"
     },
     {
       "name": "ydsz.sentry.hostname",

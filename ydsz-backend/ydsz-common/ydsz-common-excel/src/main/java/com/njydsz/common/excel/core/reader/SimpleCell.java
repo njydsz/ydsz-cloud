@@ -20,7 +20,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
  * 只实现了类型转换相关的方法，其他方法返回 null 或默认值。</p>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public final class SimpleCell implements Cell {

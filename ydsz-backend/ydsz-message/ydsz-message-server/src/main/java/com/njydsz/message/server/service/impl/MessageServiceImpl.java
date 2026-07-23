@@ -26,7 +26,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.util.id.SnowflakeUtils;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
@@ -459,7 +459,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setBizId(request.getBizId());
         logDO.setReceiver(ctx.receiver);
         logDO.setTemplateCode(ctx.templateCode);
-        logDO.setTemplateParams(Json.toJson(request.getParams()));
+        logDO.setTemplateParams(YdszJson.toJson(request.getParams()));
         logDO.setContent(rendered.content);
         logDO.setStatus(MessageStatusEnum.PENDING.name());
         logDO.setPriority(resolvePriority(request));

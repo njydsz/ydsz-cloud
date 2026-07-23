@@ -1,25 +1,25 @@
 {
   "groups": [
     {
-      "name": "pmis.jwt"
+      "name": "ydsz.jwt"
     },
     {
-      "name": "pmis.auth"
+      "name": "ydsz.auth"
     }
   ],
   "properties": [
     {
-      "name": "pmis.jwt.secret",
+      "name": "ydsz.jwt.secret",
       "type": "java.lang.String",
       "description": "JWT signing secret (>= 32 bytes in production)"
     },
     {
-      "name": "pmis.jwt.issuer",
+      "name": "ydsz.jwt.issuer",
       "type": "java.lang.String",
       "description": "JWT issuer"
     },
     {
-      "name": "pmis.auth.captcha-required",
+      "name": "ydsz.auth.captcha-required",
       "type": "java.lang.Boolean",
       "description": "Require captcha for login"
     }

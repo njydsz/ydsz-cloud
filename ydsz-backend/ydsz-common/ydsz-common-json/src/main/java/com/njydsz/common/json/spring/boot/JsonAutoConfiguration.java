@@ -10,75 +10,75 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.autotype.AutoTypeChecker;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.health.JsonHealthIndicator;
 import com.njydsz.common.json.metric.JsonCacheMetrics;
-import com.njydsz.common.json.metric.JsonMetrics;
-import com.njydsz.common.json.module.JsonModule;
+import com.njydsz.common.json.metric.YdszJsonMetrics;
+import com.njydsz.common.json.module.YdszJsonModule;
 import com.njydsz.common.json.spring.JsonHttpMessageConverter;
 import com.njydsz.common.json.spring.JsonModuleRegistrar;
-import com.njydsz.common.json.spring.JsonProperties;
+import com.njydsz.common.json.spring.YdszJsonProperties;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
- * Json Spring Boot 自动配置入口。
+ * YdszJson Spring Boot 自动配置入口。
  *
- * <p>当 classpath 存在 {@link JsonConfig} 且 {@code ydsz.json.enabled=true} 时自动生效。
+ * <p>当 classpath 存在 {@link YdszJsonConfig} 且 {@code ydsz.json.enabled=true} 时自动生效。
  * 自动注册以下组件：
  * <ul>
  *   <li>{@link JsonHttpMessageConverter} — HTTP 消息转换器</li>
- *   <li>{@link JsonModuleRegistrar} — 模块注册器（自动发现 JsonModule Bean）</li>
+ *   <li>{@link JsonModuleRegistrar} — 模块注册器（自动发现 YdszJsonModule Bean）</li>
  * </ul>
  *
  * @since 1.0.0
  */
 @AutoConfiguration
-@EnableConfigurationProperties(JsonProperties.class)
-@ConditionalOnClass(JsonConfig.class)
+@EnableConfigurationProperties(YdszJsonProperties.class)
+@ConditionalOnClass(YdszJsonConfig.class)
 @ConditionalOnProperty(prefix = "ydsz.json", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class JsonAutoConfiguration {
 
     /**
-     * Json 核心配置（初始化全局配置 + 模块注册）。
+     * YdszJson 核心配置（初始化全局配置 + 模块注册）。
      *
-     * @param properties Json 配置属性
-     * @param springModules 所有实现 SpringFactory 接口的 JsonModule（可为空）
-     * @return Json 配置 Bean
+     * @param properties YdszJson 配置属性
+     * @param springModules 所有实现 SpringFactory 接口的 YdszJsonModule（可为空）
+     * @return YdszJson 配置 Bean
      */
     @Bean
     @ConditionalOnMissingBean
-    public JsonConfigBean ydszJsonConfigBean(JsonProperties properties,
-                                                  List<JsonModule> springModules) {
+    public JsonConfigBean ydszJsonConfigBean(YdszJsonProperties properties,
+                                                  List<YdszJsonModule> springModules) {
         return new JsonConfigBean(properties, springModules);
     }
 
     /**
      * HTTP 消息转换器（注册到 Spring MVC）。
      *
-     * @return Json HTTP 消息转换器
+     * @return YdszJson HTTP 消息转换器
      */
 @Bean
 @ConditionalOnMissingBean(JsonHttpMessageConverter.class)
 @ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
-public JsonHttpMessageConverter ydszJsonHttpMessageConverter(JsonProperties properties) {
+public JsonHttpMessageConverter ydszJsonHttpMessageConverter(YdszJsonProperties properties) {
 JsonHttpMessageConverter converter = new JsonHttpMessageConverter();
 converter.setMaxRequestBodySize(properties.getMaxJsonSize());
 return converter;
 }
 
     /**
-     * Json 指标监控（Micrometer），并绑定到 Json 引擎。
+     * YdszJson 指标监控（Micrometer），并绑定到 YdszJson 引擎。
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
-    public JsonMetrics ydszJsonMetrics(
+    public YdszJsonMetrics ydszJsonMetrics(
             ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        JsonMetrics metrics = new JsonMetrics(meterRegistryProvider.getIfAvailable());
-        Json.setMetricsCallback(metrics);
+        YdszJsonMetrics metrics = new YdszJsonMetrics(meterRegistryProvider.getIfAvailable());
+        YdszJson.setMetricsCallback(metrics);
 
         // 绑定缓存统计指标到 MeterRegistry
         MeterRegistry registry = meterRegistryProvider.getIfAvailable();
@@ -90,7 +90,7 @@ return converter;
     }
 
     /**
-     * Json 健康检查指标。
+     * YdszJson 健康检查指标。
      */
     @Bean
     @ConditionalOnMissingBean
@@ -100,22 +100,22 @@ return converter;
     }
 
     /**
-     * Json 配置 Bean（替代 @PostConstruct 初始化逻辑）。
+     * YdszJson 配置 Bean（替代 @PostConstruct 初始化逻辑）。
      */
     public static class JsonConfigBean {
 
-        private final JsonProperties properties;
-        private final List<JsonModule> springModules;
+        private final YdszJsonProperties properties;
+        private final List<YdszJsonModule> springModules;
 
-        public JsonConfigBean(JsonProperties properties,
-                                   List<JsonModule> springModules) {
+        public JsonConfigBean(YdszJsonProperties properties,
+                                   List<YdszJsonModule> springModules) {
             this.properties = properties;
             this.springModules = springModules;
             init();
         }
 
         private void init() {
-            JsonConfig config = JsonConfig.getInstance();
+            YdszJsonConfig config = YdszJsonConfig.getInstance();
             config.setDateFormat(properties.getDateFormat());
             config.setNamingStrategy(properties.getNamingStrategy());
             config.setWriteNulls(properties.isWriteNulls());
@@ -123,10 +123,10 @@ return converter;
             config.setSerializeEnumUsingOrdinal(properties.isSerializeEnumUsingOrdinal());
             try {
                 config.setCircularReferenceStrategy(
-                        JsonConfig.CircularReferenceStrategy.valueOf(
+                        YdszJsonConfig.CircularReferenceStrategy.valueOf(
                                 properties.getCircularReferenceStrategy()));
             } catch (IllegalArgumentException e) {
-                config.setCircularReferenceStrategy(JsonConfig.CircularReferenceStrategy.REF);
+                config.setCircularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy.REF);
             }
             config.setMaxJsonSize(properties.getMaxJsonSize());
             config.setMaxDepth(properties.getMaxDepth());

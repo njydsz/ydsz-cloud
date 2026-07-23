@@ -69,7 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_outbox_created_at
     ON ydsz_outbox (created_at);
 
 -- 注释（PostgreSQL 语法）
-COMMENT ON TABLE  ydsz_outbox IS 'PMIS Outbox 事件表 - 事务性 Outbox 模式';
+COMMENT ON TABLE  ydsz_outbox IS 'YDSZ Outbox 事件表 - 事务性 Outbox 模式';
 COMMENT ON COLUMN ydsz_outbox.id IS '主键 UUID';
 COMMENT ON COLUMN ydsz_outbox.aggregate_id IS '聚合根 ID';
 COMMENT ON COLUMN ydsz_outbox.aggregate_type IS '聚合根类型';

@@ -36,7 +36,7 @@ import com.njydsz.common.auth.util.AuthColPermissionSigner;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationExecutor;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 import com.njydsz.common.util.auth.RequestHolder;
 import com.njydsz.common.util.string.StringUtils;
@@ -227,8 +227,8 @@ public class AuthColPermissionAspect {
         }
         // 使用 YdszJson 序列化时排除字段 + 反序列化回原始类型
         try {
-            String json = Json.toJsonExcludeFields(returnValue, excludedFields);
-            return Json.toObject(json, returnValue.getClass());
+            String json = YdszJson.toJsonExcludeFields(returnValue, excludedFields);
+            return YdszJson.toObject(json, returnValue.getClass());
         } catch (Exception e) {
             log.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());
             // 降级：仍然使用反射方式过滤

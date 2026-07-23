@@ -1,5 +1,5 @@
 -- ============================================================
--- PMIS Full Database Initialization Script (V1.0.0 版本)
+-- YDSZ Full Database Initialization Script (V1.0.0 版本)
 -- Executes all module scripts in dependency order
 -- ============================================================
 

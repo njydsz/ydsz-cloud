@@ -301,7 +301,7 @@ public class DocumentService {
     public DocumentParseResult parseWithSecurityCheck(InputStream inputStream, String fileName, ParseOptions options) {
         Path tempFile = null;
         try {
-            tempFile = Files.createTempFile("pmis-docs-sec-", ".tmp");
+            tempFile = Files.createTempFile("ydsz-docs-sec-", ".tmp");
             inputStream.transferTo(Files.newOutputStream(tempFile));
 
             SecurityScanResult scanResult = scanSecurity(Files.newInputStream(tempFile), fileName);
@@ -339,7 +339,7 @@ public class DocumentService {
     public byte[] parseAndRedact(InputStream inputStream, String fileName, ParseOptions options) {
         Path tempFile = null;
         try {
-            tempFile = Files.createTempFile("pmis-docs-redact-", ".tmp");
+            tempFile = Files.createTempFile("ydsz-docs-redact-", ".tmp");
             inputStream.transferTo(Files.newOutputStream(tempFile));
 
             DocumentParseResult parseResult = parse(Files.newInputStream(tempFile), fileName, options);

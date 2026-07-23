@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "PMIS 业务指标仪表盘 - EVM 红项目数 / Bench 成本 / 可计费利用率 / 合同签订数 / 流程审批数",
+  "description": "YDSZ 业务指标仪表盘 - EVM 红项目数 / Bench 成本 / 可计费利用率 / 合同签订数 / 流程审批数",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -22,7 +22,7 @@
   "panels": [
     {
       "title": "EVM 红项目数",
-      "description": "pmis_evm_red_projects_count(SPI/CPI < 0.9),阈值 >3 触发 P1 告警",
+      "description": "ydsz_evm_red_projects_count(SPI/CPI < 0.9),阈值 >3 触发 P1 告警",
       "type": "stat",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -50,7 +50,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_evm_red_projects_count",
+          "expr": "ydsz_evm_red_projects_count",
           "legendFormat": "EVM 红项目数",
           "refId": "A"
         }
@@ -58,7 +58,7 @@
     },
     {
       "title": "Bench 闲置成本(元)",
-      "description": "pmis_bench_total_cost,阈值 >50万 触发 P2 告警",
+      "description": "ydsz_bench_total_cost,阈值 >50万 触发 P2 告警",
       "type": "stat",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -86,7 +86,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_bench_total_cost",
+          "expr": "ydsz_bench_total_cost",
           "legendFormat": "Bench 成本",
           "refId": "A"
         }
@@ -94,7 +94,7 @@
     },
     {
       "title": "可计费利用率(%)",
-      "description": "pmis_billable_utilization_avg,阈值 <60% 触发 P2 告警",
+      "description": "ydsz_billable_utilization_avg,阈值 <60% 触发 P2 告警",
       "type": "gauge",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -121,7 +121,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_billable_utilization_avg",
+          "expr": "ydsz_billable_utilization_avg",
           "legendFormat": "可计费利用率",
           "refId": "A"
         }
@@ -129,7 +129,7 @@
     },
     {
       "title": "流程审批数(近 1h 通过任务数)",
-      "description": "increase(pmis_flow_task_passed_total[1h]) - FlowMetrics 统计的任务通过数",
+      "description": "increase(ydsz_flow_task_passed_total[1h]) - FlowMetrics 统计的任务通过数",
       "type": "stat",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -152,7 +152,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(increase(pmis_flow_task_passed_total{job=~\"pmis-.*\"}[1h]))",
+          "expr": "sum(increase(ydsz_flow_task_passed_total{job=~\"ydsz-.*\"}[1h]))",
           "legendFormat": "审批通过数(1h)",
           "refId": "A"
         }
@@ -160,7 +160,7 @@
     },
     {
       "title": "合同签订数(近 24h)",
-      "description": "increase(pmis_contract_signed_count[24h]) - 需后端注册该 Gauge/Counter 后生效(指标待实现)",
+      "description": "increase(ydsz_contract_signed_count[24h]) - 需后端注册该 Gauge/Counter 后生效(指标待实现)",
       "type": "stat",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -186,7 +186,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(increase(pmis_contract_signed_count[24h]))",
+          "expr": "sum(increase(ydsz_contract_signed_count[24h]))",
           "legendFormat": "合同签订数(24h)",
           "refId": "A"
         }
@@ -194,7 +194,7 @@
     },
     {
       "title": "运行中流程实例 / 待办任务数",
-      "description": "pmis_flow_instance_running / pmis_flow_task_pending(FlowMetrics Gauge)",
+      "description": "ydsz_flow_instance_running / ydsz_flow_task_pending(FlowMetrics Gauge)",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -209,13 +209,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_flow_instance_running{job=~\"pmis-.*\"}",
+          "expr": "ydsz_flow_instance_running{job=~\"ydsz-.*\"}",
           "legendFormat": "运行中实例",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_flow_task_pending{job=~\"pmis-.*\"}",
+          "expr": "ydsz_flow_task_pending{job=~\"ydsz-.*\"}",
           "legendFormat": "待办任务",
           "refId": "B"
         }
@@ -223,7 +223,7 @@
     },
     {
       "title": "EVM 红项目数趋势(24h)",
-      "description": "pmis_evm_red_projects_count 历史趋势",
+      "description": "ydsz_evm_red_projects_count 历史趋势",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -238,7 +238,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_evm_red_projects_count",
+          "expr": "ydsz_evm_red_projects_count",
           "legendFormat": "EVM 红项目数",
           "refId": "A"
         }
@@ -270,13 +270,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_bench_total_cost",
+          "expr": "ydsz_bench_total_cost",
           "legendFormat": "Bench 总成本",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "pmis_billable_utilization_avg",
+          "expr": "ydsz_billable_utilization_avg",
           "legendFormat": "可计费利用率",
           "refId": "B"
         }
@@ -286,14 +286,14 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pmis", "business"],
+  "tags": ["ydsz", "business"],
   "templating": {
     "list": [
       {
         "name": "service",
         "type": "query",
         "datasource": {"type": "prometheus", "uid": "prometheus"},
-        "query": "label_values(up{job=~\"pmis-.*\"}, job)",
+        "query": "label_values(up{job=~\"ydsz-.*\"}, job)",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -304,8 +304,8 @@
   "time": {"from": "now-6h", "to": "now"},
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS 业务指标",
-  "uid": "pmis-business-metrics",
+  "title": "YDSZ 业务指标",
+  "uid": "ydsz-business-metrics",
   "version": 1,
   "weekStart": ""
 }

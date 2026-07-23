@@ -12,7 +12,7 @@
 interface ImportMetaEnv {
   /** 应用标题（展示在浏览器标签页） */
   readonly VITE_APP_TITLE: string
-  /** 后端 API 基础地址（如 https://api.pmis.example.com） */
+  /** 后端 API 基础地址（如 https://api.ydsz.example.com） */
   readonly VITE_API_BASE_URL: string
   /** 文件上传地址 */
   readonly VITE_UPLOAD_URL: string

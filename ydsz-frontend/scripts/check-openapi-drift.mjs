@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const ROOT = join(__dirname, '..')
 
-const BACKEND_DIR = resolve(ROOT, '../ydsz-pmis-backend')
+const BACKEND_DIR = resolve(ROOT, '../ydsz-backend')
 const SCHEMA_FILE = join(ROOT, 'src/api/openapi/schema.d.ts')
 const SIGNATURE_MARKER = '@openapi-signature'
 

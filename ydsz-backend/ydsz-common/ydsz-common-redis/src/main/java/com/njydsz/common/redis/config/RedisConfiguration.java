@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p><b>主要功能：</b>
  * <ul>
- *   <li>使用 Json 作为高性能序列化器</li>
+ *   <li>使用 YdszJson 作为高性能序列化器</li>
  *   <li>支持连接池配置（commons-pool2）</li>
  *   <li>支持 SSL 配置</li>
  *   <li>客户端自动选择（通过 ydsz.redis.client.type 配置）</li>

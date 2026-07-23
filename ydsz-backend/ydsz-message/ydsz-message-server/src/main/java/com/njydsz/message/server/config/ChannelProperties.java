@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import lombok.Data;
 
 /**
- * 通道相关配置（prefix = {@code pmis}）。
+ * 通道相关配置（prefix = {@code ydsz}）。
  *
  * <p>绑定 {@code application.yml} 中 {@code ydsz.webhook.*} 与 {@code ydsz.channel.*} 配置项，
  * 覆盖 Webhook / 钉钉 / 企业微信 / 飞书群机器人的默认地址、密钥与超时。
@@ -17,7 +17,7 @@ import lombok.Data;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "pmis")
+@ConfigurationProperties(prefix = "ydsz")
 public class ChannelProperties {
 
     /** Webhook 通道兜底配置 */

@@ -7,7 +7,7 @@
 | 属性 | 值 |
 |---|---|
 | **类型** | 独立微服务（**独立部署、独立 JVM 进程**） |
-| **作用** | PMIS 的规则引擎中心服务，提供规则定义、编排、评估、灰度、回放、审批全生命周期能力；通过 REST API 对内对外提供规则决策服务 |
+| **作用** | YDSZ 的规则引擎中心服务，提供规则定义、编排、评估、灰度、回放、审批全生命周期能力；通过 REST API 对内对外提供规则决策服务 |
 | **构建顺序** | 3/10（Maven 构建第 3 个） |
 | **JVM 进程** | 独立 JVM 进程，独立端口，注册到 Nacos |
 | **服务注册** | Nacos Discovery（服务名 `ydsz-literule`） |
@@ -30,7 +30,7 @@ ydsz-literule/
 
 ## 核心职责
 
-本模块是 PMIS 的**轻量级规则引擎**，覆盖规则定义、编排、评估、灰度、回放、审批全生命周期。
+本模块是 YDSZ 的**轻量级规则引擎**，覆盖规则定义、编排、评估、灰度、回放、审批全生命周期。
 
 ### 1. 7 种规则类型
 
@@ -237,7 +237,7 @@ chain:
 启用后规则表达式可引用 `model.xxx`：
 
 ```yaml
-pmis:
+ydsz:
   literule:
     model:
       enabled: true
@@ -251,124 +251,124 @@ pmis:
 
 ## 配置
 
-所有配置通过 `LiteRuleProperties` 定义，前缀 `pmis.literule`。配置文件位于 `ydsz-literule-web/src/main/resources/`（`application.yml` + `bootstrap.yml`，待补齐）。
+所有配置通过 `LiteRuleProperties` 定义，前缀 `ydsz.literule`。配置文件位于 `ydsz-literule-web/src/main/resources/`（`application.yml` + `bootstrap.yml`，待补齐）。
 
 ### 核心开关
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.auto-register-builtin-rules` | `true` | 自动注册内置规则 |
-| `pmis.literule.hot-reload-enabled` | `true` | 规则热加载（监听 `RuleConfigRefreshEvent`） |
-| `pmis.literule.stats-enabled` | `true` | 执行统计 |
-| `pmis.literule.dry-run-enabled` | `true` | dry-run 仿真 |
-| `pmis.literule.sandbox-enabled` | `true` | LiteExpr AST 级安全沙箱 |
-| `pmis.literule.trace-enabled` | `true` | 执行轨迹记录 |
-| `pmis.literule.trace-queue-capacity` | `5000` | 异步 Trace 队列容量 |
-| `pmis.literule.trace-batch-size` | `100` | 异步 Trace 批量写入大小 |
-| `pmis.literule.trace-flush-interval-ms` | `2000` | 异步 Trace 刷新间隔 |
-| `pmis.literule.rule-timeout-ms` | `0` | 单规则超时（0=不限制） |
-| `pmis.literule.canary-enabled` | `true` | 灰度路由 |
-| `pmis.literule.conflict-detection-enabled` | `true` | 规则冲突检测 |
-| `pmis.literule.conflict-detection-block-on-error` | `true` | ERROR 级冲突阻塞保存 |
-| `pmis.literule.environment` | `default` | 多环境隔离（default/dev/staging/prod） |
-| `pmis.literule.annotation-scan-base-packages` | 空 | `@LiteRule` / `@RuleDefinitionMeta` 扫描基包 |
+| `ydsz.literule.auto-register-builtin-rules` | `true` | 自动注册内置规则 |
+| `ydsz.literule.hot-reload-enabled` | `true` | 规则热加载（监听 `RuleConfigRefreshEvent`） |
+| `ydsz.literule.stats-enabled` | `true` | 执行统计 |
+| `ydsz.literule.dry-run-enabled` | `true` | dry-run 仿真 |
+| `ydsz.literule.sandbox-enabled` | `true` | LiteExpr AST 级安全沙箱 |
+| `ydsz.literule.trace-enabled` | `true` | 执行轨迹记录 |
+| `ydsz.literule.trace-queue-capacity` | `5000` | 异步 Trace 队列容量 |
+| `ydsz.literule.trace-batch-size` | `100` | 异步 Trace 批量写入大小 |
+| `ydsz.literule.trace-flush-interval-ms` | `2000` | 异步 Trace 刷新间隔 |
+| `ydsz.literule.rule-timeout-ms` | `0` | 单规则超时（0=不限制） |
+| `ydsz.literule.canary-enabled` | `true` | 灰度路由 |
+| `ydsz.literule.conflict-detection-enabled` | `true` | 规则冲突检测 |
+| `ydsz.literule.conflict-detection-block-on-error` | `true` | ERROR 级冲突阻塞保存 |
+| `ydsz.literule.environment` | `default` | 多环境隔离（default/dev/staging/prod） |
+| `ydsz.literule.annotation-scan-base-packages` | 空 | `@LiteRule` / `@RuleDefinitionMeta` 扫描基包 |
 
 ### 熔断器
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.circuit-breaker-error-rate` | `0.5` | 熔断错误率阈值（0~1.0） |
-| `pmis.literule.circuit-breaker-min-evaluations` | `100` | 熔断最小评估次数 |
-| `pmis.literule.circuit-breaker-open-state-ms` | `30000` | OPEN 状态持续时间（对齐 Resilience4j） |
+| `ydsz.literule.circuit-breaker-error-rate` | `0.5` | 熔断错误率阈值（0~1.0） |
+| `ydsz.literule.circuit-breaker-min-evaluations` | `100` | 熔断最小评估次数 |
+| `ydsz.literule.circuit-breaker-open-state-ms` | `30000` | OPEN 状态持续时间（对齐 Resilience4j） |
 
 ### 多级缓存
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.cache.enabled` | `true` | 启用多级缓存 |
-| `pmis.literule.cache.l1-ttl-seconds` | `60` | Caffeine L1 TTL |
-| `pmis.literule.cache.l1-max-size` | `1000` | L1 最大条数 |
-| `pmis.literule.cache.l2-enabled` | `true` | 启用 Redis L2（需 Redisson） |
-| `pmis.literule.cache.l2-ttl-seconds` | `300` | Redis L2 TTL |
+| `ydsz.literule.cache.enabled` | `true` | 启用多级缓存 |
+| `ydsz.literule.cache.l1-ttl-seconds` | `60` | Caffeine L1 TTL |
+| `ydsz.literule.cache.l1-max-size` | `1000` | L1 最大条数 |
+| `ydsz.literule.cache.l2-enabled` | `true` | 启用 Redis L2（需 Redisson） |
+| `ydsz.literule.cache.l2-ttl-seconds` | `300` | Redis L2 TTL |
 
 ### 数据源
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.rule-source.type` | `db` | `db` / `nacos` / `apollo` / `zookeeper` / `redis` / `file` |
-| `pmis.literule.rule-source.watch-enabled` | `true` | 启用 Watch 监听 |
-| `pmis.literule.rule-source.nacos.server-addr` | `127.0.0.1:8848` | Nacos 地址 |
-| `pmis.literule.rule-source.nacos.data-id` | `rule-definitions` | Data ID |
-| `pmis.literule.rule-source.nacos.group` | `DEFAULT_GROUP` | Group |
-| `pmis.literule.rule-source.apollo.namespace` | `rule-engine` | Apollo Namespace |
-| `pmis.literule.rule-source.zookeeper.connect-string` | `127.0.0.1:2181` | ZK 地址 |
-| `pmis.literule.rule-source.zookeeper.path` | `/literule/definitions` | ZK 节点路径 |
+| `ydsz.literule.rule-source.type` | `db` | `db` / `nacos` / `apollo` / `zookeeper` / `redis` / `file` |
+| `ydsz.literule.rule-source.watch-enabled` | `true` | 启用 Watch 监听 |
+| `ydsz.literule.rule-source.nacos.server-addr` | `127.0.0.1:8848` | Nacos 地址 |
+| `ydsz.literule.rule-source.nacos.data-id` | `rule-definitions` | Data ID |
+| `ydsz.literule.rule-source.nacos.group` | `DEFAULT_GROUP` | Group |
+| `ydsz.literule.rule-source.apollo.namespace` | `rule-engine` | Apollo Namespace |
+| `ydsz.literule.rule-source.zookeeper.connect-string` | `127.0.0.1:2181` | ZK 地址 |
+| `ydsz.literule.rule-source.zookeeper.path` | `/literule/definitions` | ZK 节点路径 |
 
 ### 文件规则源（GitOps）
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.file-source.enabled` | `false` | 启用 YAML/JSON 文件加载 |
-| `pmis.literule.file-source.location` | `classpath:rules/` | 文件位置 |
-| `pmis.literule.file-source.watch` | `true` | WatchService 监听变更 |
+| `ydsz.literule.file-source.enabled` | `false` | 启用 YAML/JSON 文件加载 |
+| `ydsz.literule.file-source.location` | `classpath:rules/` | 文件位置 |
+| `ydsz.literule.file-source.watch` | `true` | WatchService 监听变更 |
 
 ### 分布式执行
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.distributed.enabled` | `false` | 启用一致性哈希分片 |
-| `pmis.literule.distributed.virtual-nodes` | `150` | 虚拟节点数 |
-| `pmis.literule.distributed.refresh-interval-ms` | `10000` | 节点列表刷新间隔 |
-| `pmis.literule.distributed.heartbeat-timeout-ms` | `30000` | 心跳超时 |
-| `pmis.literule.distributed.heartbeat-interval-ms` | `5000` | 心跳间隔 |
+| `ydsz.literule.distributed.enabled` | `false` | 启用一致性哈希分片 |
+| `ydsz.literule.distributed.virtual-nodes` | `150` | 虚拟节点数 |
+| `ydsz.literule.distributed.refresh-interval-ms` | `10000` | 节点列表刷新间隔 |
+| `ydsz.literule.distributed.heartbeat-timeout-ms` | `30000` | 心跳超时 |
+| `ydsz.literule.distributed.heartbeat-interval-ms` | `5000` | 心跳间隔 |
 
 ### 规则 + 模型融合
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.model.enabled` | `false` | 启用模型融合 |
-| `pmis.literule.model.timeout-ms` | `100` | 单模型调用超时 |
-| `pmis.literule.model.fallback-on-error` | `true` | 模型异常降级为纯规则 |
-| `pmis.literule.model.mock-enabled` | `false` | Mock 模型 |
-| `pmis.literule.model.mock-outputs` | 空 | Mock 输出 Map |
+| `ydsz.literule.model.enabled` | `false` | 启用模型融合 |
+| `ydsz.literule.model.timeout-ms` | `100` | 单模型调用超时 |
+| `ydsz.literule.model.fallback-on-error` | `true` | 模型异常降级为纯规则 |
+| `ydsz.literule.model.mock-enabled` | `false` | Mock 模型 |
+| `ydsz.literule.model.mock-outputs` | 空 | Mock 输出 Map |
 
 ### 动态事实采集
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.fact.enabled` | `false` | 启用动态事实采集 |
-| `pmis.literule.fact.timeout-ms` | `200` | 单 provider 超时 |
-| `pmis.literule.fact.fallback-on-error` | `true` | provider 异常降级 |
+| `ydsz.literule.fact.enabled` | `false` | 启用动态事实采集 |
+| `ydsz.literule.fact.timeout-ms` | `200` | 单 provider 超时 |
+| `ydsz.literule.fact.fallback-on-error` | `true` | provider 异常降级 |
 
 ### 高性能优化
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.performance.cache-enabled` | `false` | 评估结果缓存 |
-| `pmis.literule.performance.cache-ttl-seconds` | `300` | 缓存 TTL |
-| `pmis.literule.performance.cache-max-size` | `10000` | 缓存最大条目 |
-| `pmis.literule.performance.parallel-enabled` | `false` | 规则分组并行评估 |
-| `pmis.literule.performance.parallel-pool-size` | CPU 核数 | 并行池大小 |
+| `ydsz.literule.performance.cache-enabled` | `false` | 评估结果缓存 |
+| `ydsz.literule.performance.cache-ttl-seconds` | `300` | 缓存 TTL |
+| `ydsz.literule.performance.cache-max-size` | `10000` | 缓存最大条目 |
+| `ydsz.literule.performance.parallel-enabled` | `false` | 规则分组并行评估 |
+| `ydsz.literule.performance.parallel-pool-size` | CPU 核数 | 并行池大小 |
 
 ### 生命周期管理
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.literule.lifecycle.enabled` | `true` | 启用退役检测 |
-| `pmis.literule.lifecycle.dormant-min-evaluations` | `1000` | 休眠规则最小评估次数 |
-| `pmis.literule.lifecycle.high-error-rate-threshold` | `0.30` | 高错误率阈值 |
-| `pmis.literule.lifecycle.stale-disabled-days` | `90` | 长期停用天数 |
-| `pmis.literule.lifecycle.low-impact-trigger-rate` | `0.001` | 低影响触发率 |
-| `pmis.literule.lifecycle.min-sample-size` | `500` | 最小样本量 |
+| `ydsz.literule.lifecycle.enabled` | `true` | 启用退役检测 |
+| `ydsz.literule.lifecycle.dormant-min-evaluations` | `1000` | 休眠规则最小评估次数 |
+| `ydsz.literule.lifecycle.high-error-rate-threshold` | `0.30` | 高错误率阈值 |
+| `ydsz.literule.lifecycle.stale-disabled-days` | `90` | 长期停用天数 |
+| `ydsz.literule.lifecycle.low-impact-trigger-rate` | `0.001` | 低影响触发率 |
+| `ydsz.literule.lifecycle.min-sample-size` | `500` | 最小样本量 |
 
-> **废弃配置**：`pmis.literule.evaluator`（2.1.0 起 `@Deprecated`，仅保留 LiteExpr，不再支持引擎切换）
+> **废弃配置**：`ydsz.literule.evaluator`（2.1.0 起 `@Deprecated`，仅保留 LiteExpr，不再支持引擎切换）
 
 ## 数据库
 
 SQL 归属见项目级硬约束。本模块相关表分布在两个文件：
 
-- [V1.0.0_literule.sql](../../deploy/sql/modules/V1.0.0_literule.sql) — `pmis_rule_def` / `pmis_rule_version_history` / `pmis_rule_template` / `pmis_rule_test_case` / `pmis_rule_chain_graph` / `pmis_rule_dependency` / `pmis_rule_pack` / `pmis_rule_pack_install` / `pmis_rule_variable_def`
-- [V1.0.0_project.sql](../../deploy/sql/modules/V1.0.0_project.sql) — `pmis_rule_execution_trace` / `pmis_rule_decision_table` / `pmis_rule_canary_bucket` / `pmis_rule_scorecard` / `pmis_rule_decision_tree` / `pmis_rule_script` / `pmis_rule_ab_policy` / `pmis_rule_ab_rollback`（物理 Mapper 在 project 模块，DDL 按硬约束归 literule.sql）
+- [V1.0.0_literule.sql](../../deploy/sql/modules/V1.0.0_literule.sql) — `ydsz_rule_def` / `ydsz_rule_version_history` / `ydsz_rule_template` / `ydsz_rule_test_case` / `ydsz_rule_chain_graph` / `ydsz_rule_dependency` / `ydsz_rule_pack` / `ydsz_rule_pack_install` / `ydsz_rule_variable_def`
+- [V1.0.0_project.sql](../../deploy/sql/modules/V1.0.0_project.sql) — `ydsz_rule_execution_trace` / `ydsz_rule_decision_table` / `ydsz_rule_canary_bucket` / `ydsz_rule_scorecard` / `ydsz_rule_decision_tree` / `ydsz_rule_script` / `ydsz_rule_ab_policy` / `ydsz_rule_ab_rollback`（物理 Mapper 在 project 模块，DDL 按硬约束归 literule.sql）
 
 ## 前端集成
 

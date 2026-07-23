@@ -6,6 +6,9 @@ import java.util.regex.Pattern;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.exception.ExcelReadException;
+import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.asm.ASMFieldAccessor.FieldGetter;
+import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
  * 数据验证器 — 读取数据时进行字段验证
@@ -53,7 +56,7 @@ public class DataValidator {
         }
 
         Class<?> clazz = obj.getClass();
-        Field[] fields = clazz.getDeclaredFields();
+        Field[] fields = ReflectCache.getCachedFields(clazz);
 
         for (Field field : fields) {
             ExcelProperty annotation = field.getAnnotation(ExcelProperty.class);
@@ -62,10 +65,10 @@ public class DataValidator {
             }
 
             String fieldName = annotation.value().isEmpty() ? field.getName() : annotation.value();
-            field.setAccessible(true);
+            FieldGetter getter = ASMFieldAccessor.getGetter(clazz, field);
 
             try {
-                Object value = field.get(obj);
+                Object value = getter.get(obj);
 
                 // 1. 必填验证
                 if (annotation.required() && value == null) {
@@ -99,7 +102,9 @@ public class DataValidator {
                     validateNumberRange(annotation, fieldName, numVal, rowNum);
                 }
 
-            } catch (IllegalAccessException e) {
+            } catch (ExcelReadException e) {
+                throw e;
+            } catch (Exception e) {
                 throw ExcelReadException.validationFailed(rowNum, fieldName, null,
                         "字段访问失败: " + e.getMessage());
             }

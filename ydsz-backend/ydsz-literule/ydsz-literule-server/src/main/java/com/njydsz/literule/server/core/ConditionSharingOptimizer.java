@@ -15,9 +15,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>背景与 RETE 算法评估结论：
  * <ul>
- *   <li>PMIS 规则引擎采用"每请求一次评估"模式（facts 在单次评估中不变），
+ *   <li>YDSZ 规则引擎采用"每请求一次评估"模式（facts 在单次评估中不变），
  *       不具备 RETE 的增量更新优势（RETE 适用于 facts 频繁增删的工作内存场景）</li>
- *   <li>PMIS 规则量级在百级（非千级），现有索引 + 缓存已能覆盖性能需求</li>
+ *   <li>YDSZ 规则量级在百级（非千级），现有索引 + 缓存已能覆盖性能需求</li>
  *   <li>完整 RETE 网络（Alpha + Beta + Production）实现复杂度高，
  *       维护成本远超性能收益</li>
  * </ul>

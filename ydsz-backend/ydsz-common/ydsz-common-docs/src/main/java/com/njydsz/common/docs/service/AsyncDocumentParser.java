@@ -37,7 +37,7 @@ public class AsyncDocumentParser {
         this.documentService = documentService;
         this.properties = properties;
         this.timeoutMs = properties.getParseTimeoutSeconds() * 1000L;
-        this.executor = new ThreadPoolExecutor(properties.getAsyncPoolSize(), properties.getAsyncPoolSize(), 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(properties.getAsyncQueueCapacity()), r -> { Thread t = new Thread(r, "pmis-docs-async-parser"); t.setDaemon(true); return t; }, new ThreadPoolExecutor.CallerRunsPolicy());
+        this.executor = new ThreadPoolExecutor(properties.getAsyncPoolSize(), properties.getAsyncPoolSize(), 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(properties.getAsyncQueueCapacity()), r -> { Thread t = new Thread(r, "ydsz-docs-async-parser"); t.setDaemon(true); return t; }, new ThreadPoolExecutor.CallerRunsPolicy());
         log.info("[AsyncDocumentParser] poolSize={} queueCapacity={} timeoutMs={}", properties.getAsyncPoolSize(), properties.getAsyncQueueCapacity(), timeoutMs);
     }
 
@@ -56,7 +56,7 @@ public class AsyncDocumentParser {
         return CompletableFuture.supplyAsync(() -> {
             Path tempFile = null;
             try {
-                tempFile = Files.createTempFile("pmis-docs-async-", ".tmp");
+                tempFile = Files.createTempFile("ydsz-docs-async-", ".tmp");
                 inputStream.transferTo(Files.newOutputStream(tempFile));
                 try (InputStream fis = Files.newInputStream(tempFile)) { return documentService.parse(fis, fileName, options); }
             } catch (IOException e) {

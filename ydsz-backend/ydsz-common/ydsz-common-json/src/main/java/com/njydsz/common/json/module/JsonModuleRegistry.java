@@ -11,7 +11,7 @@ import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.serializer.JsonSerializer;
 
 /**
- * Json 模块注册中心
+ * YdszJson 模块注册中心
  *
  * <p>核心模块管理类，负责模块的注册、排序和查询。
  *
@@ -31,7 +31,7 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  * registry.registerModule(new OrderModule());
  *
  * // 2. Spring Boot 环境自动注册
- * // 只需实现 JsonModule.SpringFactory 接口并添。@Component 注解
+ * // 只需实现 YdszJsonModule.SpringFactory 接口并添。@Component 注解
  * // JsonSpringConfig 会自动发现并注册所有模。
  *
  * // 3. 获取序列化器
@@ -50,7 +50,7 @@ public final class JsonModuleRegistry {
 
     private final Map<Class<?>, JsonDeserializer<?>> deserializers = new ConcurrentHashMap<>();
 
-    private final List<JsonModule> modules = Collections.synchronizedList(new ArrayList<>());
+    private final List<YdszJsonModule> modules = Collections.synchronizedList(new ArrayList<>());
 
     private volatile boolean initialized = false;
 
@@ -78,7 +78,7 @@ public final class JsonModuleRegistry {
      *
      * @param module 要注册的模块
      */
-    public void registerModule(JsonModule module) {
+    public void registerModule(YdszJsonModule module) {
         if (module == null) {
             throw new IllegalArgumentException("Module cannot be null");
         }
@@ -89,7 +89,7 @@ public final class JsonModuleRegistry {
             }
             modules.add(module);
             sortModulesByPriority();
-            log.info("Registered Json module: {} (priority={})", module.getModuleName(), module.getPriority());
+            log.info("Registered YdszJson module: {} (priority={})", module.getModuleName(), module.getPriority());
         }
     }
 
@@ -98,11 +98,11 @@ public final class JsonModuleRegistry {
      *
      * @param modules 要注册的模块列表
      */
-    public void registerModules(Collection<JsonModule> modules) {
+    public void registerModules(Collection<YdszJsonModule> modules) {
         if (modules == null || modules.isEmpty()) {
             return;
         }
-        for (JsonModule module : modules) {
+        for (YdszJsonModule module : modules) {
             registerModule(module);
         }
     }
@@ -110,15 +110,15 @@ public final class JsonModuleRegistry {
     /**
      * 注册 Spring 工厂模块（自动发现）
      *
-     * <p>Spring Boot 环境下，自动发现所有实与 {@link JsonModule.SpringFactory} 。Bean</p>
+     * <p>Spring Boot 环境下，自动发现所有实与 {@link YdszJsonModule.SpringFactory} 。Bean</p>
      *
      * @param springFactories Spring 工厂模块实例
      */
-    public void registerSpringFactories(Collection<JsonModule> springFactories) {
+    public void registerSpringFactories(Collection<YdszJsonModule> springFactories) {
         if (springFactories == null || springFactories.isEmpty()) {
             return;
         }
-        log.info("Discovering {} Json Spring Factory modules", springFactories.size());
+        log.info("Discovering {} YdszJson Spring Factory modules", springFactories.size());
         registerModules(springFactories);
     }
 
@@ -137,7 +137,7 @@ public final class JsonModuleRegistry {
                 return;
             }
             log.info("Initializing JsonModuleRegistry with {} modules", modules.size());
-            for (JsonModule module : modules) {
+            for (YdszJsonModule module : modules) {
                 try {
                     registerModuleSerializers(module);
                     registerModuleDeserializers(module);
@@ -145,7 +145,7 @@ public final class JsonModuleRegistry {
                     log.error("Failed to initialize module: {}", module.getModuleName(), e);
                 }
             }
-            for (JsonModule module : modules) {
+            for (YdszJsonModule module : modules) {
                 if (module.needsCompleteRegistration()) {
                     try {
                         module.onRegisterComplete();
@@ -160,7 +160,7 @@ public final class JsonModuleRegistry {
         }
     }
 
-    private void registerModuleSerializers(JsonModule module) {
+    private void registerModuleSerializers(YdszJsonModule module) {
         ModuleSerializerRegistry registry = new ModuleSerializerRegistry();
         module.setSerializers(registry);
         Map<Class<?>, JsonSerializer<?>> moduleSerializers = registry.getSerializers();
@@ -178,7 +178,7 @@ public final class JsonModuleRegistry {
         }
     }
 
-    private void registerModuleDeserializers(JsonModule module) {
+    private void registerModuleDeserializers(YdszJsonModule module) {
         ModuleDeserializerRegistry registry = new ModuleDeserializerRegistry();
         module.setDeserializers(registry);
         Map<Class<?>, JsonDeserializer<?>> moduleDeserializers = registry.getDeserializers();
@@ -260,7 +260,7 @@ public final class JsonModuleRegistry {
      * @param module 要移除的模块
      * @return 如果成功移除返回 true
      */
-    public boolean removeModule(JsonModule module) {
+    public boolean removeModule(YdszJsonModule module) {
         if (module == null) {
             return false;
         }
@@ -332,7 +332,7 @@ public final class JsonModuleRegistry {
      *
      * @return 只读模块列表
      */
-    public List<JsonModule> getModules() {
+    public List<YdszJsonModule> getModules() {
         return Collections.unmodifiableList(new ArrayList<>(modules));
     }
 

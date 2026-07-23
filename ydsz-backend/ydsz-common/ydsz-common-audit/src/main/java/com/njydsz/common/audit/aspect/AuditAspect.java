@@ -36,7 +36,7 @@ import com.njydsz.common.audit.mask.SensitiveFieldMask;
 import com.njydsz.common.audit.template.AuditTemplateProcessor;
 import com.njydsz.common.util.id.SnowflakeUtils;
 import com.njydsz.common.util.ip.IpAddrUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.string.StringUtils;
 /**
  * 审计日志切面
@@ -316,7 +316,7 @@ public class AuditAspect {
 
         if (audit.recordResponse() && properties.isRecordResponse() && result != null) {
             try {
-                String responseJson = Json.toJson(result);
+                String responseJson = YdszJson.toJson(result);
                 responseJson = truncateWithWarning(responseJson, DEFAULT_MAX_SERIALIZE_LENGTH, "响应结果");
                 String maskedResponse = maskSensitiveJson(responseJson, sensitiveParams);
                 auditLog.setResponseResult(maskedResponse);
@@ -438,7 +438,7 @@ public class AuditAspect {
      */
     private String serializeWithDepthLimit(Object obj) {
         try {
-            return Json.toJson(obj);
+            return YdszJson.toJson(obj);
         } catch (StackOverflowError e) {
             log.warn("【审计切面】参数序列化深度超过限制（{}层），已截断", DEFAULT_MAX_SERIALIZE_DEPTH);
             return "{\"_truncated\": true, \"_reason\": \"depth limit exceeded (" + DEFAULT_MAX_SERIALIZE_DEPTH + " levels)\"}";

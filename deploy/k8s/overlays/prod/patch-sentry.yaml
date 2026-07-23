@@ -1,8 +1,8 @@
 # =============================================================================
 # 生产环境 Sentry 错误监控配置（P0-5 生产环境启用）
 # -----------------------------------------------------------------------------
-# Strategic merge patch：向 base 中已有的 pmis-common-config ConfigMap 追加
-# Sentry 相关环境变量（PMIS_SENTRY_*）。data 字段为 strategic merge map，
+# Strategic merge patch：向 base 中已有的 ydsz-common-config ConfigMap 追加
+# Sentry 相关环境变量（YDSZ_SENTRY_*）。data 字段为 strategic merge map，
 # 不会覆盖 base 中已有的 NACOS / LOGGING / TRACING 等键。
 #
 # 采样策略（对齐大厂标准）：
@@ -11,22 +11,22 @@
 #   前端错误采样率：100%
 #   前端性能采样率：20%
 #
-# 后端：环境变量 PMIS_SENTRY_* → Spring Boot relaxed binding → ydsz.sentry.*
+# 后端：环境变量 YDSZ_SENTRY_* → Spring Boot relaxed binding → ydsz.sentry.*
 # 前端：通过 Ingress 注入 <meta name="sentry-dsn"> 或 CI/CD 构建时注入 .env
 # =============================================================================
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pmis-common-config
-  namespace: pmis
+  name: ydsz-common-config
+  namespace: ydsz
 data:
   # 启用 Sentry
-  PMIS_SENTRY_ENABLED: "true"
+  YDSZ_SENTRY_ENABLED: "true"
   # 环境标识
-  PMIS_SENTRY_ENVIRONMENT: "prod"
+  YDSZ_SENTRY_ENVIRONMENT: "prod"
   # 性能采样率（生产环境 10%，平衡可见度与成本）
-  PMIS_SENTRY_TRACES_SAMPLE_RATE: "0.1"
+  YDSZ_SENTRY_TRACES_SAMPLE_RATE: "0.1"
   # 错误采样率（生产环境 100%，所有异常均上报）
-  PMIS_SENTRY_SAMPLE_RATE: "1.0"
+  YDSZ_SENTRY_SAMPLE_RATE: "1.0"
   # 发布版本（由 CD 流水线通过 IMAGE_TAG 覆盖）
-  PMIS_SENTRY_RELEASE: "pmis-1.0.0"
+  YDSZ_SENTRY_RELEASE: "ydsz-1.0.0"

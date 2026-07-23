@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -587,7 +587,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     Collections.emptyList(), job.getJobKey(), log0.getId());
             result = handler.execute(job.getParamsJson(), ctx);
             success = true;
-            log0.setResultJson(result == null ? null : Json.toJson(result));
+            log0.setResultJson(result == null ? null : YdszJson.toJson(result));
         } catch (Exception e) {
             log.error("[Dispatcher] 分片任务执行失败: key={} shard={} reason={}",
                     job.getJobKey(), shardIndex, e.getMessage(), e);
@@ -908,7 +908,7 @@ try {
                     ProcessResult mapResult = mapExecutor.executeMapJob(job, log0, triggerType);
                     success = mapResult.isSuccess();
                     result = mapResult.isSuccess() ? mapResult.getResult() : null;
-                    log0.setResultJson(result == null ? null : Json.toJson(result));
+                    log0.setResultJson(result == null ? null : YdszJson.toJson(result));
                     if (!success) {
                         log0.setErrorMessage(mapResult.getErrorMessage());
                     }
@@ -918,13 +918,13 @@ try {
                     JobHandler handler = resolveHandler(job);
                     result = handler.execute(job.getParamsJson());
                     success = true;
-                    log0.setResultJson(result == null ? null : Json.toJson(result));
+                    log0.setResultJson(result == null ? null : YdszJson.toJson(result));
                 }
             } else {
                 JobHandler handler = resolveHandler(job);
                 result = handler.execute(job.getParamsJson());
                 success = true;
-                log0.setResultJson(result == null ? null : Json.toJson(result));
+                log0.setResultJson(result == null ? null : YdszJson.toJson(result));
             }
         } catch (Exception e) {
             log.error("[Dispatcher] 任务执行失败: key={} handler={} reason={}",
@@ -1525,7 +1525,7 @@ try {
         // P1-1: 初始化重试调度线程池
         this.retryScheduler = Executors.newScheduledThreadPool(
                 2, r -> {
-                    Thread t = new Thread(r, "pmis-job-retry");
+                    Thread t = new Thread(r, "ydsz-job-retry");
                     t.setDaemon(true);
                     return t;
                 });

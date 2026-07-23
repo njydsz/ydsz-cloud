@@ -12,7 +12,7 @@ import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessageSubscriber;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.project.server.service.InitiationService;
 
 import lombok.RequiredArgsConstructor;
@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorkflowEventQueueSubscriber {
 
-    private static final String INIT_BIZ_KEY_PREFIX = "PMIS_INIT_";
+    private static final String INIT_BIZ_KEY_PREFIX = "YDSZ_INIT_";
 
     private final IMessageQueueProvider messageQueueProvider;
     private final InitiationService initiationService;
@@ -87,7 +87,7 @@ public class WorkflowEventQueueSubscriber {
             return;
         }
         try {
-            Map<String, Object> payload = Json.fromJsonToMap(message.getBody(), String.class, Object.class);
+            Map<String, Object> payload = YdszJson.fromJsonToMap(message.getBody(), String.class, Object.class);
             String eventType = payload.get("eventType") == null ? null : String.valueOf(payload.get("eventType"));
             String instanceId = payload.get("instanceId") == null ? null : String.valueOf(payload.get("instanceId"));
 
@@ -150,7 +150,7 @@ public class WorkflowEventQueueSubscriber {
     /**
      * 从事件数据中提取立项 ID
      *
-     * <p>业务键格式为 {@code PMIS_INIT_<initiationId>}，兼容直接以数字存储的业务键。
+     * <p>业务键格式为 {@code YDSZ_INIT_<initiationId>}，兼容直接以数字存储的业务键。
      *
      * @param data 事件附加数据
      * @return 立项 ID，解析失败返回 null

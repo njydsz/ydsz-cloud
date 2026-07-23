@@ -15,15 +15,15 @@
 
 ## 核心职责
 
-本模块是 PMIS 的**系统级基础服务**，承担**横切关注点**。
+本模块是 YDSZ 的**系统级基础服务**，承担**横切关注点**。
 
 | 业务域 | 说明 |
 |---|---|
 | **文件管理** | MinIO 对象存储、文件上传/下载/预览、分片上传、秒传 |
-| **系统配置** | 参数配置（`pmis_config`）、数据字典（`pmis_dict`） |
-| **登录审计** | 接收 `LoginAuditEvent`，异步落库 `pmis_login_audit` |
-| **操作审计** | 接收 `OperationLogEvent`，异步落库 `pmis_operation_log` |
-| **数据导出审计** | `DataExportAuditEvent` → `pmis_data_export_audit` |
+| **系统配置** | 参数配置（`ydsz_config`）、数据字典（`ydsz_dict`） |
+| **登录审计** | 接收 `LoginAuditEvent`，异步落库 `ydsz_login_audit` |
+| **操作审计** | 接收 `OperationLogEvent`，异步落库 `ydsz_operation_log` |
+| **数据导出审计** | `DataExportAuditEvent` → `ydsz_data_export_audit` |
 
 > ⚠️ **重要**：消息通知 / 模板 / 渠道已迁移到 [ydsz-message](ydsz-message/README.md)（端口 9004）。
 > 本服务**不再**提供消息发送能力。
@@ -47,20 +47,20 @@
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
-| **文件管理** | `pmis_file` | 文件元信息（bucket、key、大小、MIME、上传者、md5） |
-| **系统配置** | `pmis_config` | 系统参数（key-value，支持租户维度） |
-| | `pmis_dict_version` | 字典版本（多环境字典版本控制） |
-| **审计日志** | `pmis_login_audit` | 登录审计（与 userinfo 共享物理表） |
-| | `pmis_operation_log` | 操作审计（DDL+CRUD 统一审计，支持按月分区） |
-| | `pmis_operation_log_default` | 操作审计默认分区 |
-| | `pmis_operation_log_yYYYYmMM` | 操作审计月度分区模板（按需创建） |
-| | `pmis_data_export_audit` | 数据导出审计（导出人、表、行数、用途） |
-| **跨服务公共** | `pmis_report_subscription` | 报表订阅（用户×报表×频率） |
-| | `pmis_export_record` | 异步导出记录（异步导出到 MinIO） |
-| | `pmis_meta_schema_version` | DB Schema 版本号（启动校验） |
+| **文件管理** | `ydsz_file` | 文件元信息（bucket、key、大小、MIME、上传者、md5） |
+| **系统配置** | `ydsz_config` | 系统参数（key-value，支持租户维度） |
+| | `ydsz_dict_version` | 字典版本（多环境字典版本控制） |
+| **审计日志** | `ydsz_login_audit` | 登录审计（与 userinfo 共享物理表） |
+| | `ydsz_operation_log` | 操作审计（DDL+CRUD 统一审计，支持按月分区） |
+| | `ydsz_operation_log_default` | 操作审计默认分区 |
+| | `ydsz_operation_log_yYYYYmMM` | 操作审计月度分区模板（按需创建） |
+| | `ydsz_data_export_audit` | 数据导出审计（导出人、表、行数、用途） |
+| **跨服务公共** | `ydsz_report_subscription` | 报表订阅（用户×报表×频率） |
+| | `ydsz_export_record` | 异步导出记录（异步导出到 MinIO） |
+| | `ydsz_meta_schema_version` | DB Schema 版本号（启动校验） |
 
-> **分区说明**：`pmis_operation_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 或手动 `DETACH` 归档。
-> **脱敏约束**：`pmis_data_export_audit` 写入时自动 `SensitiveSerializer` 脱敏。
+> **分区说明**：`ydsz_operation_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 或手动 `DETACH` 归档。
+> **脱敏约束**：`ydsz_data_export_audit` 写入时自动 `SensitiveSerializer` 脱敏。
 
 ## 启动顺序
 
@@ -110,7 +110,7 @@ ydsz-system/
 | `MINIO_ENDPOINT` | `http://127.0.0.1:9100` | MinIO API 地址 |
 | `MINIO_ACCESS_KEY` | `minioadmin` | 访问 Key |
 | `MINIO_SECRET_KEY` | `minioadmin` | 密钥 |
-| `MINIO_BUCKET` | `pmis` | 默认 Bucket |
+| `MINIO_BUCKET` | `ydsz` | 默认 Bucket |
 
 **其他环境变量**：与 common 共享配置一致（DB / Redis）。
 
@@ -118,7 +118,7 @@ ydsz-system/
 
 ```bash
 # 1. 启动 MinIO（推荐 Docker）
-docker run -d --name pmis-minio \
+docker run -d --name ydsz-minio \
   -p 9100:9000 -p 9101:9001 \
   -e MINIO_ROOT_USER=minioadmin \
   -e MINIO_ROOT_PASSWORD=minioadmin \
@@ -146,7 +146,7 @@ mvn -pl ydsz-system -am test
 
 ### Q1：文件上传报 "bucket does not exist"
 
-需要先在 MinIO 控制台（`http://127.0.0.1:9101`）创建 Bucket `pmis`，
+需要先在 MinIO 控制台（`http://127.0.0.1:9101`）创建 Bucket `ydsz`，
 或在 `MinioStorageService.init()` 中添加自动创建逻辑。
 
 ### Q2：审计日志延迟

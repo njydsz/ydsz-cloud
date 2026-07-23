@@ -13,14 +13,14 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 类级别：仅序列化公开字段
- * &#064;JsonVisibility(fields = Visibility.PUBLIC_ONLY)
+ * &#064;YdszJsonVisibility(fields = Visibility.PUBLIC_ONLY)
  * public class User {
  *     private String name;        // 不可见（私有）
  *     public int age;             // 可见（公开）
  * }
  *
  * // 字段级别：强制可见
- * &#064;JsonField(visible = true)
+ * &#064;YdszJsonField(visible = true)
  * private String secretKey;       // 强制可见
  * </pre>
  *
@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
-public @interface JsonVisibility {
+public @interface YdszJsonVisibility {
 
     /**
      * 字段可见性级别

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-socket</artifactId>
     <name>ydsz-common-socket</name>
-    <description>PMIS 公共依赖 - WebSocket 实时通信模块（STOMP + 集群广播 + 在线状态 + 离线补偿 + 指标监控）</description>
+    <description>YDSZ 公共依赖 - WebSocket 实时通信模块（STOMP + 集群广播 + 在线状态 + 离线补偿 + 指标监控）</description>
 
     <parent>
         <groupId>com.njydsz</groupId>

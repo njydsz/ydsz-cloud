@@ -68,7 +68,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
         List<ChatMessage> messages = new ArrayList<>();
         String systemPrompt = request.getSystemPrompt() != null
                 ? request.getSystemPrompt()
-                : "你是 PMIS 项目管理信息系统的智能助手。请用中文回答。";
+                : "你是 YDSZ 项目管理信息系统的智能助手。请用中文回答。";
         messages.add(ChatMessage.system(systemPrompt));
         messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
         messages.add(ChatMessage.user(userInput, convId));

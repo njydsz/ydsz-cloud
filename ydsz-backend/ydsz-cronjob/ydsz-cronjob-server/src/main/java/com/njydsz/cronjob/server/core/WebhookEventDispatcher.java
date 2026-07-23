@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -106,7 +106,7 @@ public class WebhookEventDispatcher {
 
             // 添加自定义请求头
             if (webhook.getHeaders() != null && !webhook.getHeaders().isBlank()) {
-                Map<String, Object> headers = Json.parseMap(webhook.getHeaders());
+                Map<String, Object> headers = YdszJson.parseMap(webhook.getHeaders());
                 for (String key : headers.keySet()) {
                     builder.header(key, headers.getString(key));
                 }

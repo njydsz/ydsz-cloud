@@ -3,12 +3,12 @@ package com.njydsz.common.json.engine;
 import java.lang.reflect.Type;
 
 import com.njydsz.common.json.provider.DeserializationProvider;
-import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.type.YdszJsonType;
 
 /**
- * Json 反序列化引擎（Facade 模式）
+ * YdszJson 反序列化引擎（Facade 模式）
  *
- * <p>架构层级：Json => Engine => Provider => Parser</p>
+ * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *
  * @since 1.0.0
  */
@@ -47,10 +47,10 @@ public final class DeserializerEngine {
     }
 
     /**
-     * 反序列化 JSON 字符串（支持 JsonType）
+     * 反序列化 JSON 字符串（支持 YdszJsonType）
      */
     
-    public static <T> T deserialize(String json, JsonType<T> typeRef) {
+    public static <T> T deserialize(String json, YdszJsonType<T> typeRef) {
         return DeserializationProvider.deserialize(json, typeRef.getType());
     }
 

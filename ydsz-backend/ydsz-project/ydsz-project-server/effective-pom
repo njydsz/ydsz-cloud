@@ -8,22 +8,22 @@
 <!-- ====================================================================== -->
 <!--                                                                        -->
 <!-- Effective POM for project                                              -->
-<!-- 'com.njydsz.pmis:ydsz-pmis-project-server:jar:1.0.0-SNAPSHOT'          -->
+<!-- 'com.njydsz:ydsz-project-server:jar:1.0.0-SNAPSHOT'          -->
 <!--                                                                        -->
 <!-- ====================================================================== -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.njydsz.pmis</groupId>
-    <artifactId>ydsz-pmis-project</artifactId>
+    <groupId>com.njydsz</groupId>
+    <artifactId>ydsz-project</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
-  <groupId>com.njydsz.pmis</groupId>
-  <artifactId>ydsz-pmis-project-server</artifactId>
+  <groupId>com.njydsz</groupId>
+  <artifactId>ydsz-project-server</artifactId>
   <version>1.0.0-SNAPSHOT</version>
-  <name>ydsz-pmis-project-server</name>
+  <name>ydsz-project-server</name>
   <description>Application Layer</description>
-  <url>https://spring.io/projects/spring-boot/ydsz-pmis-parent/ydsz-pmis-project/ydsz-pmis-project-server</url>
+  <url>https://spring.io/projects/spring-boot/ydsz-parent/ydsz-project/ydsz-project-server</url>
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -39,7 +39,7 @@
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/spring-projects/spring-boot/ydsz-pmis-parent/ydsz-pmis-project/ydsz-pmis-project-server</url>
+    <url>https://github.com/spring-projects/spring-boot/ydsz-parent/ydsz-project/ydsz-project-server</url>
   </scm>
   <issueManagement />
   <properties>
@@ -302,464 +302,464 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <type>pom</type>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-core</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-core</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-util</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-util</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-exception</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-exception</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-jdbc</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-jdbc</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-redis</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-redis</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-lock</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-lock</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-auth</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-auth</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-safe</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-safe</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-audit</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-audit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-file</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-file</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-notify</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-notify</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-queue</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-queue</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-base</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-base</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-app</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-app</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-feign</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-feign</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-socket</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-socket</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-netty</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-netty</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-cache</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-cache</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-json</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-json</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-websocket</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-websocket</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-docs</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-docs</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-excel</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-excel</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-common-search</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-search</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-userinfo</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-userinfo</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-project</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-project</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-cronjob</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-cronjob</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-system</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-system</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-literule</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-literule</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-sales</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-sales</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-finance</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-finance</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-message</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-message</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-workflow</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-workflow</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-nextwiki</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-nextwiki</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-agent</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-agent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-sales-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-sales-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-finance-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-finance-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-system-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-system-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-userinfo-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-userinfo-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-cronjob-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-cronjob-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-message-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-message-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-project-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-project-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-literule-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-literule-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-workflow-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-workflow-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-nextwiki-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-nextwiki-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-agent-api</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-agent-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-sales-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-sales-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-finance-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-finance-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-system-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-system-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-userinfo-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-userinfo-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-cronjob-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-cronjob-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-message-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-message-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-project-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-project-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-literule-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-literule-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-workflow-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-workflow-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-nextwiki-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-nextwiki-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-agent-domain</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-agent-domain</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-sales-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-sales-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-finance-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-finance-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-system-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-system-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-userinfo-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-userinfo-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-cronjob-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-cronjob-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-message-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-message-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-project-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-project-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-literule-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-literule-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-workflow-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-workflow-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-nextwiki-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-nextwiki-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-agent-infra</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-agent-infra</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-sales-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-sales-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-finance-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-finance-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-system-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-system-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-userinfo-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-userinfo-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-cronjob-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-cronjob-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-message-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-message-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-project-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-project-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-literule-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-literule-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-workflow-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-workflow-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-nextwiki-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-nextwiki-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-agent-server</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-agent-server</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-sales-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-sales-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-finance-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-finance-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-system-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-system-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-userinfo-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-userinfo-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-cronjob-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-cronjob-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-message-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-message-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-project-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-project-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-literule-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-literule-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-workflow-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-workflow-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-nextwiki-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-nextwiki-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.njydsz.pmis</groupId>
-        <artifactId>ydsz-pmis-agent-web</artifactId>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-agent-web</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -12588,86 +12588,86 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-project-infra</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-project-infra</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-jdbc</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-jdbc</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-lock</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-lock</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-feign</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-feign</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-audit</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-audit</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-file</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-file</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-notify</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-notify</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-queue</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-queue</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-web</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-web</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-common-search</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-search</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-literule-server</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-literule-server</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-finance-api</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-finance-api</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-userinfo-api</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-userinfo-api</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.njydsz.pmis</groupId>
-      <artifactId>ydsz-pmis-workflow-api</artifactId>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-workflow-api</artifactId>
       <version>1.0.0-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
@@ -12799,15 +12799,15 @@
     </pluginRepository>
   </pluginRepositories>
   <build>
-    <sourceDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\src\main\java</sourceDirectory>
-    <scriptSourceDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\src\main\scripts</scriptSourceDirectory>
-    <testSourceDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\src\test\java</testSourceDirectory>
-    <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\classes</outputDirectory>
-    <testOutputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\test-classes</testOutputDirectory>
+    <sourceDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\src\main\java</sourceDirectory>
+    <scriptSourceDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\src\main\scripts</scriptSourceDirectory>
+    <testSourceDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\src\test\java</testSourceDirectory>
+    <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\classes</outputDirectory>
+    <testOutputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\test-classes</testOutputDirectory>
     <resources>
       <resource>
         <filtering>true</filtering>
-        <directory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\src\main\resources</directory>
+        <directory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\src\main\resources</directory>
         <includes>
           <include>**/application*.yml</include>
           <include>**/application*.yaml</include>
@@ -12815,7 +12815,7 @@
         </includes>
       </resource>
       <resource>
-        <directory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\src\main\resources</directory>
+        <directory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\src\main\resources</directory>
         <excludes>
           <exclude>**/application*.yml</exclude>
           <exclude>**/application*.yaml</exclude>
@@ -12825,11 +12825,11 @@
     </resources>
     <testResources>
       <testResource>
-        <directory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\src\test\resources</directory>
+        <directory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\src\test\resources</directory>
       </testResource>
     </testResources>
-    <directory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target</directory>
-    <finalName>ydsz-pmis-project-server-1.0.0-SNAPSHOT</finalName>
+    <directory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target</directory>
+    <finalName>ydsz-project-server-1.0.0-SNAPSHOT</finalName>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -12849,7 +12849,7 @@
               </goals>
               <configuration>
                 <projectType>application</projectType>
-                <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\classes/META-INF/sbom</outputDirectory>
+                <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\classes/META-INF/sbom</outputDirectory>
                 <outputFormat>json</outputFormat>
                 <outputName>application.cdx</outputName>
               </configuration>
@@ -12873,14 +12873,14 @@
               <configuration>
                 <verbose>true</verbose>
                 <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                <generateGitPropertiesFilename>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\classes/git.properties</generateGitPropertiesFilename>
+                <generateGitPropertiesFilename>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\classes/git.properties</generateGitPropertiesFilename>
               </configuration>
             </execution>
           </executions>
           <configuration>
             <verbose>true</verbose>
             <generateGitPropertiesFile>true</generateGitPropertiesFile>
-            <generateGitPropertiesFilename>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\classes/git.properties</generateGitPropertiesFilename>
+            <generateGitPropertiesFilename>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\classes/git.properties</generateGitPropertiesFilename>
           </configuration>
         </plugin>
         <plugin>
@@ -13037,11 +13037,11 @@
                 <rules>
                   <requireJavaVersion>
                     <version>[21,)</version>
-                    <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
+                    <message>YDSZ 要求 JDK 21+，当前环境不满足。</message>
                   </requireJavaVersion>
                   <requireMavenVersion>
                     <version>[3.9,)</version>
-                    <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
+                    <message>YDSZ 要求 Maven 3.9+，当前环境不满足。</message>
                   </requireMavenVersion>
                   <requireUpperBoundDeps>
                     <excludes combine.children="append">
@@ -13151,11 +13151,11 @@
             <rules>
               <requireJavaVersion>
                 <version>[21,)</version>
-                <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
+                <message>YDSZ 要求 JDK 21+，当前环境不满足。</message>
               </requireJavaVersion>
               <requireMavenVersion>
                 <version>[3.9,)</version>
-                <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
+                <message>YDSZ 要求 Maven 3.9+，当前环境不满足。</message>
               </requireMavenVersion>
               <requireUpperBoundDeps>
                 <excludes combine.children="append">
@@ -13269,12 +13269,12 @@
                 <goal>verify</goal>
               </goals>
               <configuration>
-                <classesDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\classes</classesDirectory>
+                <classesDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\classes</classesDirectory>
               </configuration>
             </execution>
           </executions>
           <configuration>
-            <classesDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\classes</classesDirectory>
+            <classesDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\classes</classesDirectory>
           </configuration>
         </plugin>
         <plugin>
@@ -13502,7 +13502,7 @@
                 <effort>Max</effort>
                 <threshold>Low</threshold>
                 <failOnError>true</failOnError>
-                <excludeFilterFile>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server/spotbugs-exclude.xml</excludeFilterFile>
+                <excludeFilterFile>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server/spotbugs-exclude.xml</excludeFilterFile>
               </configuration>
             </execution>
           </executions>
@@ -13517,7 +13517,7 @@
             <effort>Max</effort>
             <threshold>Low</threshold>
             <failOnError>true</failOnError>
-            <excludeFilterFile>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server/spotbugs-exclude.xml</excludeFilterFile>
+            <excludeFilterFile>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server/spotbugs-exclude.xml</excludeFilterFile>
           </configuration>
         </plugin>
         <plugin>
@@ -13665,11 +13665,11 @@
               <rules>
                 <requireJavaVersion>
                   <version>[21,)</version>
-                  <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
+                  <message>YDSZ 要求 JDK 21+，当前环境不满足。</message>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.9,)</version>
-                  <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
+                  <message>YDSZ 要求 Maven 3.9+，当前环境不满足。</message>
                 </requireMavenVersion>
                 <requireUpperBoundDeps>
                   <excludes combine.children="append">
@@ -13779,11 +13779,11 @@
           <rules>
             <requireJavaVersion>
               <version>[21,)</version>
-              <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
+              <message>YDSZ 要求 JDK 21+，当前环境不满足。</message>
             </requireJavaVersion>
             <requireMavenVersion>
               <version>[3.9,)</version>
-              <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
+              <message>YDSZ 要求 Maven 3.9+，当前环境不满足。</message>
             </requireMavenVersion>
             <requireUpperBoundDeps>
               <excludes combine.children="append">
@@ -14124,7 +14124,7 @@
               <goal>site</goal>
             </goals>
             <configuration>
-              <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\site</outputDirectory>
+              <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\site</outputDirectory>
               <reportPlugins>
                 <reportPlugin>
                   <groupId>org.apache.maven.plugins</groupId>
@@ -14140,7 +14140,7 @@
               <goal>deploy</goal>
             </goals>
             <configuration>
-              <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\site</outputDirectory>
+              <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\site</outputDirectory>
               <reportPlugins>
                 <reportPlugin>
                   <groupId>org.apache.maven.plugins</groupId>
@@ -14151,7 +14151,7 @@
           </execution>
         </executions>
         <configuration>
-          <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\site</outputDirectory>
+          <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\site</outputDirectory>
           <reportPlugins>
             <reportPlugin>
               <groupId>org.apache.maven.plugins</groupId>
@@ -14163,6 +14163,6 @@
     </plugins>
   </build>
   <reporting>
-    <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-project\ydsz-pmis-project-server\target\site</outputDirectory>
+    <outputDirectory>D:\Code\ydsz\ydsz-pmis\ydsz-backend\ydsz-project\ydsz-project-server\target\site</outputDirectory>
   </reporting>
 </project>

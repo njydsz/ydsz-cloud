@@ -120,7 +120,7 @@ public class LRUCache<K, V> {
     /**
      * 清空缓存
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
      */
     public synchronized void clear() {

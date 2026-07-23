@@ -5,7 +5,7 @@
 #   - K8s: 已封装为 ConfigMap 挂载到 Loki Pod /loki/rules/（见 loki-stack.yaml
 #     第 8 节 loki-rules ConfigMap）。修改本文件后需同步至 ConfigMap 并
 #     kubectl rollout restart statefulset loki -n observability。
-#   - Docker Compose: 直接挂载本文件至 Loki 容器 /loki/rules/pmis-log-alerts.yaml
+#   - Docker Compose: 直接挂载本文件至 Loki 容器 /loki/rules/ydsz-log-alerts.yaml
 #
 # 告警策略:
 #   1. ERROR 日志突增:5 分钟内 ERROR 级别日志 > 10 条 → 告警
@@ -18,18 +18,18 @@
 #   Loki Ruler → Alertmanager → 企业微信/钉钉/飞书 Webhook
 # =============================================================================
 groups:
-  - name: pmis-log-alerts
+  - name: ydsz-log-alerts
     interval: 1m
     rules:
       # ----------------------------------------------------------------------
       # 1. ERROR 日志突增告警（全集群维度）
       # 5 分钟内 ERROR 级别日志超过 10 条，触发告警
       # ----------------------------------------------------------------------
-      - alert: PmisErrorLogSpike
+      - alert: YdszErrorLogSpike
         expr: |
           sum by (appName) (
             count_over_time(
-              {namespace="pmis", level="ERROR"}[5m]
+              {namespace="ydsz", level="ERROR"}[5m]
             )
           ) > 10
         for: 2m
@@ -44,11 +44,11 @@ groups:
       # 2. 单服务 ERROR 日告警（严重级别）
       # 5 分钟内某服务 ERROR 日志超过 50 条 → critical
       # ----------------------------------------------------------------------
-      - alert: PmisErrorLogCritical
+      - alert: YdszErrorLogCritical
         expr: |
           sum by (appName) (
             count_over_time(
-              {namespace="pmis", level="ERROR"}[5m]
+              {namespace="ydsz", level="ERROR"}[5m]
             )
           ) > 50
         for: 1m
@@ -63,11 +63,11 @@ groups:
       # 3. OOM / StackOverflow 关键字检测
       # 匹配 OutOfMemoryError / StackOverflowError 关键字 → 立即告警
       # ----------------------------------------------------------------------
-      - alert: PmisJvmCriticalError
+      - alert: YdszJvmCriticalError
         expr: |
           sum by (appName) (
             count_over_time(
-              {namespace="pmis"} |~ "(?i)(OutOfMemoryError|StackOverflowError|GC overhead limit exceeded)"
+              {namespace="ydsz"} |~ "(?i)(OutOfMemoryError|StackOverflowError|GC overhead limit exceeded)"
               [1m]
             )
           ) > 0
@@ -83,11 +83,11 @@ groups:
       # 4. 数据库连接池耗尽告警
       # 匹配 connection refused / connection timeout / pool exhausted
       # ----------------------------------------------------------------------
-      - alert: PmisDatabaseConnectionIssue
+      - alert: YdszDatabaseConnectionIssue
         expr: |
           sum by (appName) (
             count_over_time(
-              {namespace="pmis"} |~ "(?i)(connection refused|connection timeout|pool exhausted|cannot get a connection)"
+              {namespace="ydsz"} |~ "(?i)(connection refused|connection timeout|pool exhausted|cannot get a connection)"
               [3m]
             )
           ) > 5
@@ -103,11 +103,11 @@ groups:
       # 5. P2-12 新增:服务无日志输出(可能 Pod 假死)
       # 10 分钟内某服务无任何日志 → warning
       # ----------------------------------------------------------------------
-      - alert: PmisNoLogOutput
+      - alert: YdszNoLogOutput
         expr: |
           sum by (appName) (
             count_over_time(
-              {namespace="pmis"}[10m]
+              {namespace="ydsz"}[10m]
             )
           ) == 0
         for: 5m

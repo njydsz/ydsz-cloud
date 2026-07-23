@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,7 +63,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         }
         // 读取现有 ext JSON
         Map<String, Object> extJson = StringUtils.hasText(node.getExt())
-                ? Json.parseMap(node.getExt()) : new JSONObject();
+                ? YdszJson.parseMap(node.getExt()) : new JSONObject();
         // 写入 customButtons
         if (buttons == null || buttons.isEmpty()) {
             extJson.remove("customButtons");
@@ -183,7 +183,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             return List.of();
         }
         try {
-            Map<String, Object> ext = Json.parseMap(extJson);
+            Map<String, Object> ext = YdszJson.parseMap(extJson);
             Object buttons = ext.get("customButtons");
             if (buttons == null) {
                 return List.of();

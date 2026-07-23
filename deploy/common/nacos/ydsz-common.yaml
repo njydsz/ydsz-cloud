@@ -1,5 +1,5 @@
 # =====================================================================
-#  YDSZ PMIS · Nacos 共享配置 (ydsz-common.yaml)
+#  YDSZ · Nacos 共享配置 (ydsz-common.yaml)
 #  --------------------------------------------------------------------
 #  作用:   所有 10 个微服务都通过 spring.cloud.nacos.config.shared-configs
 #          引用此 dataId,实现"一处修改全集群生效"
@@ -43,7 +43,7 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
-    username: ${DB_USER:pmis}
+    username: ${DB_USER:ydsz}
     # ⚠️ 生产环境必须使用 Jasypt 加密：password: ENC(加密后的密码串)
     # 开发环境可使用明文/环境变量，生产通过 JASYPT_ENCRYPTOR_PASSWORD 环境变量注入主密码后自动解密
     password: ${DB_PASSWORD}
@@ -86,14 +86,14 @@ spring:
     datasource:
       master:
         url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
-        username: ${DB_USER:pmis}
+        username: ${DB_USER:ydsz}
         password: ${DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
       # 从库：当前指向同一数据库 URL，生产环境分离后修改为从库地址
       # HA：生产环境可设置 DB_SLAVE_HOST 指向流复制从库
       slave:
         url: jdbc:postgresql://${DB_SLAVE_HOST:${DB_HOST:127.0.0.1}}:${DB_PORT:5432}/${DB_NAME:ydsz}?currentSchema=public&useUnicode=true&characterEncoding=utf8
-        username: ${DB_USER:pmis}
+        username: ${DB_USER:ydsz}
         password: ${DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
     # Druid 全局配置（所有数据源共用，复用现有连接池参数）
@@ -137,7 +137,7 @@ spring:
           max-wait: 5s
 
   # ---------- Spring Cache（统一使用 Redis） ----------
-  # P1-10: TTL/序列化/前缀由 PmisCacheConfig 统一接管，按 cacheName 差异化配置（防雪崩）
+  # P1-10: TTL/序列化/前缀由 YdszCacheConfig 统一接管，按 cacheName 差异化配置（防雪崩）
   # 此处仅保留 type=redis 触发 Spring Boot 自动装配 RedisConnectionFactory
   cache:
     type: redis
@@ -252,20 +252,20 @@ knife4j:
 logging:
   level:
     root: ${LOG_ROOT_LEVEL:INFO}
-    "[com.njydsz]": ${LOG_PMIS_LEVEL:DEBUG}
+    "[com.njydsz]": ${LOG_YDSZ_LEVEL:DEBUG}
     "[org.springframework.cloud.gateway]": INFO
     "[com.alibaba.nacos]": WARN
     "[com.baomidou.mybatisplus]": INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
 
-# ---------- PMIS 业务密钥 ----------
+# ---------- YDSZ 业务密钥 ----------
 # ⚠️ 生产环境必须使用 Jasypt 加密：secret: ENC(加密后的密钥串)
 # 开发环境可通过 JWT_SECRET 环境变量注入明文，生产通过 JASYPT_ENCRYPTOR_PASSWORD 自动解密 ENC()
 ydsz:
   jwt:
     secret: ${JWT_SECRET:}
-    issuer: pmis
+    issuer: ydsz
   # ---------- IP 白名单（P2-8 安全加固） ----------
   # 网关层全局 IP 白名单，非白名单 IP 返回 403
   # 动态生效：修改后通过 Nacos @RefreshScope 自动刷新，无需重启
@@ -292,12 +292,12 @@ ydsz:
     #   vault       - 从 HashiCorp Vault 读取（未来扩展，预留）
     provider: environment
     # 密钥配置（开发环境直接配置明文，生产环境用 ENC() 加密或环境变量注入）
-    # 这些值可以通过环境变量覆盖：PMIS_SECRETS_DB_PASSWORD 等
-    # 环境变量名转换规则：db.password → PMIS_SECRETS_DB_PASSWORD
+    # 这些值可以通过环境变量覆盖：YDSZ_SECRETS_DB_PASSWORD 等
+    # 环境变量名转换规则：db.password → YDSZ_SECRETS_DB_PASSWORD
     secrets:
       db.password: ${DB_PASSWORD:}
       redis.password: ${REDIS_PASSWORD:}
-      jwt.secret: ${PMIS_JWT_SECRET:}
+      jwt.secret: ${YDSZ_JWT_SECRET:}
     # Vault 配置（未来扩展，当前预留不启用）
     vault:
       enabled: false
@@ -309,16 +309,16 @@ ydsz:
   # ---------- Sentry 错误监控（P0-5：生产环境启用） ----------
   # 生产环境通过 K8s ConfigMap/Secret 或环境变量注入 DSN，此处提供默认结构
   # 开发环境默认关闭（enabled=false），生产环境设为 true 并注入 DSN
-  # 环境变量映射：PMIS_SENTRY_ENABLED → ydsz.sentry.enabled（Spring Boot relaxed binding）
+  # 环境变量映射：YDSZ_SENTRY_ENABLED → ydsz.sentry.enabled（Spring Boot relaxed binding）
   sentry:
-    enabled: ${PMIS_SENTRY_ENABLED:false}
-    dsn: ${PMIS_SENTRY_DSN:}
-    environment: ${PMIS_SENTRY_ENVIRONMENT:dev}
-    release: ${PMIS_SENTRY_RELEASE:pmis-1.0.0}
+    enabled: ${YDSZ_SENTRY_ENABLED:false}
+    dsn: ${YDSZ_SENTRY_DSN:}
+    environment: ${YDSZ_SENTRY_ENVIRONMENT:dev}
+    release: ${YDSZ_SENTRY_RELEASE:ydsz-1.0.0}
     # 后端性能采样率：生产环境 10%（避免高吞吐下 Sentry 压力过大），dev 环境 100%
-    traces-sample-rate: ${PMIS_SENTRY_TRACES_SAMPLE_RATE:0.1}
+    traces-sample-rate: ${YDSZ_SENTRY_TRACES_SAMPLE_RATE:0.1}
     # 错误采样率：100%（所有异常均上报）
-    sample-rate: ${PMIS_SENTRY_SAMPLE_RATE:1.0}
+    sample-rate: ${YDSZ_SENTRY_SAMPLE_RATE:1.0}
 
 # ---------- Jasypt 配置加密（P0-4：敏感配置加密） ----------
 # starter 自动配置：启动时解密 ENC(xxx) 格式的配置，无需额外配置类

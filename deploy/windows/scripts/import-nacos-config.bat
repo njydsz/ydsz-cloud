@@ -1,6 +1,6 @@
 @echo off
 REM =============================================================================
-REM  YDSZ PMIS - Nacos 共享配置导入脚本 (Windows)
+REM  YDSZ - Nacos 共享配置导入脚本 (Windows)
 REM =============================================================================
 chcp 65001 >nul
 set SCRIPT_DIR=%~dp0
@@ -10,7 +10,7 @@ set CONFIG_FILE=%ROOT_DIR%\deploy\common\nacos\ydsz-common.yaml
 set NACOS_ADDR=%NACOS_SERVER_ADDR%
 if "%NACOS_ADDR%"=="" set NACOS_ADDR=127.0.0.1:8848
 set NAMESPACE=%~1
-if "%NAMESPACE%"=="" set NAMESPACE=pmis
+if "%NAMESPACE%"=="" set NAMESPACE=ydsz
 set GROUP=%~2
 if "%GROUP%"=="" set GROUP=dev
 

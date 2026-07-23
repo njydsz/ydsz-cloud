@@ -221,7 +221,7 @@ onMounted(() => {
               <path d="M14 16h20M14 24h14M14 32h8" stroke="white" stroke-width="3" stroke-linecap="round" />
               <circle cx="36" cy="32" r="5" fill="white" opacity="0.9" />
             </svg>
-            <span class="brand-name">PMIS</span>
+            <span class="brand-name">YDSZ</span>
           </div>
 
           <h1 class="login-slogan">{{ t('login.slogan') }}</h1>

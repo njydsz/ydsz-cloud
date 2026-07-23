@@ -18,7 +18,7 @@ import lombok.Data;
  *   safe:
  *     api-signature:
  *       enabled: true
- *       app-id: "pmis-web"
+ *       app-id: "ydsz-web"
  *       app-secret: "Base64EncodedSecretKey"
  *       timestamp-tolerance-seconds: 300
  *       nonce-expire-seconds: 600

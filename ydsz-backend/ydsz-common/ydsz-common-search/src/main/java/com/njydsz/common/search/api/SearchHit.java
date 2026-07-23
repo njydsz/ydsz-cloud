@@ -61,7 +61,7 @@ public class SearchHit implements Serializable {
     /** 标签列表 */
     @Schema(description = "标签列表")
     @Builder.Default
-    private java.util.List<String> tags = Collections.emptyList();
+    private List<String> tags = Collections.emptyList();
 
     /** 扩展字段 */
     @Schema(description = "扩展字段")

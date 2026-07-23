@@ -16,9 +16,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.type.YdszJsonType;
 import com.njydsz.common.base.config.DocProperties;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.yaml.YamlUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -288,7 +288,7 @@ public class DefaultDocExporter implements DocExporter {
         String description = docProperties.getInfo().getDescription();
 
         try {
-            Map<String, Object> root = Json.toObject(apiDocs, new JsonType<Map<String, Object>>() {});
+            Map<String, Object> root = YdszJson.toObject(apiDocs, new YdszJsonType<Map<String, Object>>() {});
             Map<String, Object> info = (Map<String, Object>) root.get("info");
             if (info != null) {
                 if (info.containsKey("title")) {

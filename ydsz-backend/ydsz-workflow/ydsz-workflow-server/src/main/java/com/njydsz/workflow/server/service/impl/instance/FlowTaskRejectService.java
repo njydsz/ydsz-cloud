@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.domain.entity.FlowNodeDO;
@@ -248,7 +248,7 @@ public class FlowTaskRejectService {
             return extra == null ? Collections.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = Json.parseMap(instance.getVariable());
+            Map<String, Object> base = YdszJson.parseMap(instance.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }

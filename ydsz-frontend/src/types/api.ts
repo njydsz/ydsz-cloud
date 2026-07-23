@@ -1,5 +1,5 @@
 /**
- * @fileoverview PMIS 通用 API 类型（批次 19 P2-4 落地）
+ * @fileoverview YDSZ 通用 API 类型（批次 19 P2-4 落地）
  * @description 收口 any 警告的核心：
  * - ApiResponse<T> 统一后端 R<T> 包装
  * - PageData<T> 统一分页响应
@@ -76,7 +76,7 @@ export type SafeApiData<T> = Exclude<ApiData<T>, null | undefined>
 export type PagedApiResponse<T> = ApiResponse<PageData<T>>
 
 /** 请求来源标识（与后端 X-Request-Source 对应） */
-export const PMIS_REQUEST_SOURCE = 'PMIS-FRONTEND'
+export const YDSZ_REQUEST_SOURCE = 'YDSZ-FRONTEND'
 
 /**
  * HTTP 业务错误码（与后端 ResultCode 对应）

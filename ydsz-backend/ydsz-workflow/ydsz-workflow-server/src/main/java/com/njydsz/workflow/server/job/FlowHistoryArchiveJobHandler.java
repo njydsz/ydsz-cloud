@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.job;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
@@ -87,7 +87,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Integer parseInteger(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            Map<String, Object> obj = Json.parseMap(json);
+            Map<String, Object> obj = YdszJson.parseMap(json);
             if (obj == null) return null;
             Integer v = obj.getInteger(key);
             return v == null || v <= 0 ? null : v;
@@ -100,7 +100,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Long parseLong(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            Map<String, Object> obj = Json.parseMap(json);
+            Map<String, Object> obj = YdszJson.parseMap(json);
             if (obj == null) return null;
             Long v = obj.getLong(key);
             return v == null || v <= 0 ? null : v;

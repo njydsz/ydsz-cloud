@@ -13,7 +13,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.dto.canary.CanaryUpsertDTO;
 import com.njydsz.message.domain.entity.canary.MsgCanaryDO;
 import com.njydsz.message.infra.mapper.canary.MsgCanaryMapper;
@@ -137,6 +137,6 @@ public class CanaryServiceImpl implements CanaryService {
         for (int i = 0; i < count; i++) {
             buckets.add(i);
         }
-        return Json.toJson(buckets);
+        return YdszJson.toJson(buckets);
     }
 }

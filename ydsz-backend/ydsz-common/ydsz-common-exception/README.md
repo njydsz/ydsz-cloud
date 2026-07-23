@@ -1,6 +1,6 @@
 # ydsz-common-exception
 
-PMIS 统一异常处理框架 — 异常层级体系、错误码管理、RFC 7807 ProblemDetail、国际化 i18n、全局异常处理器、异常构建器、异常指标监控。
+YDSZ 统一异常处理框架 — 异常层级体系、错误码管理、RFC 7807 ProblemDetail、国际化 i18n、全局异常处理器、异常构建器、异常指标监控。
 
 ## 模块定位
 
@@ -16,7 +16,7 @@ PMIS 统一异常处理框架 — 异常层级体系、错误码管理、RFC 780
 
 ```
 RuntimeException
-  └─ AbstractYdszException            ← PMIS 异常抽象基类
+  └─ AbstractYdszException            ← YDSZ 异常抽象基类
        ├─ BusinessException             ← 业务异常（HTTP 4xx，可预期）
        ├─ SysException                  ← 系统异常（HTTP 5xx，不可预期）
        ├─ ValidationException           ← 参数校验异常（HTTP 400）
@@ -95,7 +95,7 @@ ydsz:
 
 ```json
 {
-  "type": "https://pmis.njydsz.com/errors/business",
+  "type": "https://ydsz.njydsz.com/errors/business",
   "title": "BusinessException",
   "status": 400,
   "detail": "用户不存在",

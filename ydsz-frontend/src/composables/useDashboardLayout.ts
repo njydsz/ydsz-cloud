@@ -101,7 +101,7 @@ export function useDashboardLayout(
 } {
   const userStore = useUserStore()
   const userId = userStore.userInfo?.id || 'guest'
-  const fullKey = `pmis:dashboard-layout:${storageKey}:${userId}`
+  const fullKey = `ydsz:dashboard-layout:${storageKey}:${userId}`
 
   /** 从 localStorage 加载持久化布局 */
   function loadPersisted(): PersistedLayout | null {

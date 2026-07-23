@@ -1,7 +1,7 @@
 # =============================================================================
-#  YDSZ PMIS · 开发/测试环境基础设施编排
+#  YDSZ · 开发/测试环境基础设施编排
 # -----------------------------------------------------------------------------
-# 用途:    一键拉起 PMIS 后端所需的全部基础设施（7 个容器，约 3.5GB 内存）
+# 用途:    一键拉起 YDSZ 后端所需的全部基础设施（7 个容器，约 3.5GB 内存）
 # 依赖:    Docker 24+ / Docker Compose v2+
 # 启动:    docker compose -f deploy/docker/docker-compose.dev.yml up -d
 # 停止:    docker compose -f deploy/docker/docker-compose.dev.yml down
@@ -16,10 +16,10 @@
 #    6. RocketMQ 5.x        - 消息中间件（NameServer + Broker + Console）
 #    7. XXL-Job 2.4         - 分布式任务调度（Admin）
 #    8. Prometheus          - 指标采集（端口 9090）
-#    9. Grafana             - 可视化面板（端口 3000,内置 PMIS 仪表盘）
+#    9. Grafana             - 可视化面板（端口 3000,内置 YDSZ 仪表盘）
 #   10. Alertmanager        - 告警中枢（端口 9093,钉钉/邮件）
 #   11. Loki                - 日志聚合（端口 3100,30 天保留）
-#   12. Promtail            - 日志采集（抓取 /var/log/pmis/*.log）
+#   12. Promtail            - 日志采集（抓取 /var/log/ydsz/*.log）
 # 全文检索：PostgreSQL tsvector（已移除 Elasticsearch，P2-19）
 #
 # 端口速查:
@@ -32,7 +32,7 @@
 #  原生（无 Docker）部署: 参考 docs/INFRASTRUCTURE.md
 # =============================================================================
 
-name: pmis-dev
+name: ydsz-dev
 
 # =============================================================================
 #  通用配置：Compose v2 的 --compatibility 行为
@@ -47,13 +47,13 @@ services:
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
-    container_name: pmis-postgres
+    container_name: ydsz-postgres
     restart: unless-stopped
     environment:
       <<: *common-env
-      POSTGRES_DB: ${POSTGRES_DB:-ydsz_pmis}
-      POSTGRES_USER: ${POSTGRES_USER:-pmis}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pmis123}
+      POSTGRES_DB: ${POSTGRES_DB:-ydsz}
+      POSTGRES_USER: ${POSTGRES_USER:-ydsz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ydsz123}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -63,9 +63,9 @@ services:
       # docker-compose 文件位于 deploy/docker/，SQL 脚本位于 deploy/sql/
       - ../sql/V1.0.0.sql:/docker-entrypoint-initdb.d/V1.0.0.sql:ro
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pmis} -d ${POSTGRES_DB:-ydsz_pmis}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ydsz} -d ${POSTGRES_DB:-ydsz}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -81,7 +81,7 @@ services:
   # ---------------------------------------------------------------------------
   redis:
     image: redis:8-alpine
-    container_name: pmis-redis
+    container_name: ydsz-redis
     restart: unless-stopped
     command:
       - redis-server
@@ -92,15 +92,15 @@ services:
       - --maxmemory-policy
       - "allkeys-lru"
       - --requirepass
-      - ${REDIS_PASSWORD:-pmis123}
+      - ${REDIS_PASSWORD:-ydsz123}
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-pmis123}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-ydsz123}", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -118,7 +118,7 @@ services:
   # ---------------------------------------------------------------------------
   nacos:
     image: nacos/nacos-server:v2.3.2
-    container_name: pmis-nacos
+    container_name: ydsz-nacos
     restart: unless-stopped
     environment:
       MODE: standalone
@@ -133,7 +133,7 @@ services:
       - nacos_data:/home/nacos/data
       - nacos_logs:/home/nacos/logs
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/actuator/health"]
       interval: 15s
@@ -151,7 +151,7 @@ services:
   # ---------------------------------------------------------------------------
   minio:
     image: minio/minio:latest
-    container_name: pmis-minio
+    container_name: ydsz-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -164,7 +164,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 15s
@@ -178,23 +178,23 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  #  4.1 MinIO 初始化 - 自动创建 pmis 桶
+  #  4.1 MinIO 初始化 - 自动创建 ydsz 桶
   # ---------------------------------------------------------------------------
   minio-init:
     image: minio/mc:latest
-    container_name: pmis-minio-init
+    container_name: ydsz-minio-init
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin} &&
-      (mc mb --ignore-existing local/${MINIO_BUCKET:-pmis}) &&
-      mc anonymous set download local/${MINIO_BUCKET:-pmis} || true &&
-      echo 'MinIO bucket [${MINIO_BUCKET:-pmis}] initialized.'
+      (mc mb --ignore-existing local/${MINIO_BUCKET:-ydsz}) &&
+      mc anonymous set download local/${MINIO_BUCKET:-ydsz} || true &&
+      echo 'MinIO bucket [${MINIO_BUCKET:-ydsz}] initialized.'
       "
     networks:
-      - pmis-net
+      - ydsz-net
     restart: "no"
 
   # ---------------------------------------------------------------------------
@@ -205,7 +205,7 @@ services:
   # ---------------------------------------------------------------------------
   seata:
     image: apache/seata-server:2.5.0
-    container_name: pmis-seata
+    container_name: ydsz-seata
     restart: unless-stopped
     hostname: seata
     environment:
@@ -223,7 +223,7 @@ services:
     volumes:
       - seata_logs:/root/logs
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:7091/auth/login -X POST -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' || exit 1"]
       interval: 15s
@@ -244,7 +244,7 @@ services:
   # ---------------------------------------------------------------------------
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.2
-    container_name: pmis-rocketmq-namesrv
+    container_name: ydsz-rocketmq-namesrv
     restart: unless-stopped
     command: sh mqnamesrv
     environment:
@@ -255,7 +255,7 @@ services:
       - rocketmq_logs:/home/rocketmq/logs
       - rocketmq_store:/home/rocketmq/store
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 9876 || exit 1"]
       interval: 15s
@@ -270,7 +270,7 @@ services:
 
   rocketmq-broker:
     image: apache/rocketmq:5.3.2
-    container_name: pmis-rocketmq-broker
+    container_name: ydsz-rocketmq-broker
     restart: unless-stopped
     depends_on:
       rocketmq-namesrv:
@@ -286,7 +286,7 @@ services:
       - rocketmq_logs:/home/rocketmq/logs
       - rocketmq_store:/home/rocketmq/store
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 10911 || exit 1"]
       interval: 15s
@@ -301,7 +301,7 @@ services:
 
   rocketmq-console:
     image: apacherocketmq/rocketmq-console-ng:2.0.1
-    container_name: pmis-rocketmq-console
+    container_name: ydsz-rocketmq-console
     restart: unless-stopped
     depends_on:
       rocketmq-namesrv:
@@ -312,7 +312,7 @@ services:
     ports:
       - "${ROCKETMQ_CONSOLE_PORT:-8080}:8080"
     networks:
-      - pmis-net
+      - ydsz-net
     logging:
       driver: json-file
       options:
@@ -328,23 +328,23 @@ services:
   # ---------------------------------------------------------------------------
   xxl-job:
     image: xuxueli/xxl-job-admin:2.4.2
-    container_name: pmis-xxl-job
+    container_name: ydsz-xxl-job
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       PARAMS: >-
-        --spring.datasource.url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ydsz_pmis}
-        --spring.datasource.username=${POSTGRES_USER:-pmis}
-        --spring.datasource.password=${POSTGRES_PASSWORD:-pmis123}
+        --spring.datasource.url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ydsz}
+        --spring.datasource.username=${POSTGRES_USER:-ydsz}
+        --spring.datasource.password=${POSTGRES_PASSWORD:-ydsz123}
         --xxl.job.accessToken=${XXL_JOB_ACCESS_TOKEN:-default-token}
     ports:
       - "${XXL_JOB_PORT:-9100}:8080"
     volumes:
       - xxl_job_logs:/data/applogs/admin/jobLog
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/xxl-job-admin/actuator/health || exit 1"]
       interval: 15s
@@ -370,12 +370,12 @@ services:
   # ---------------------------------------------------------------------------
   #  端口: 9090 (Web UI)
   #  配置: deploy/monitoring/prometheus/prometheus.yml
-  #  规则: deploy/monitoring/prometheus/rules/pmis-alerts.yml
-  #  抓取目标: PMIS 微服务 /actuator/prometheus (host.docker.internal)
+  #  规则: deploy/monitoring/prometheus/rules/ydsz-alerts.yml
+  #  抓取目标: YDSZ 微服务 /actuator/prometheus (host.docker.internal)
   # ---------------------------------------------------------------------------
   prometheus:
     image: prom/prometheus:latest
-    container_name: pmis-prometheus
+    container_name: ydsz-prometheus
     restart: unless-stopped
     extra_hosts:
       # Linux 下需启用 host.docker.internal 解析(Windows/Mac 内置)
@@ -399,7 +399,7 @@ services:
       - --web.enable-lifecycle
       - --web.enable-admin-api
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
       interval: 15s
@@ -418,11 +418,11 @@ services:
   #  端口: 3000 (Web UI)
   #  默认账号: admin / admin(首次登录强制改密)
   #  数据源: Prometheus(http://prometheus:9090) + Loki(http://loki:3100)
-  #  仪表盘: provisioning 自动加载 PMIS 总览/业务/工作流三个面板
+  #  仪表盘: provisioning 自动加载 YDSZ 总览/业务/工作流三个面板
   # ---------------------------------------------------------------------------
   grafana:
     image: grafana/grafana:latest
-    container_name: pmis-grafana
+    container_name: ydsz-grafana
     restart: unless-stopped
     depends_on:
       prometheus:
@@ -439,14 +439,14 @@ services:
     volumes:
       # 仪表盘 provisioning 配置
       - ../monitoring/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
-      # 仪表盘 JSON(自动加载至 PMIS folder)
+      # 仪表盘 JSON(自动加载至 YDSZ folder)
       - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
       # 数据源 provisioning(Prometheus + Loki)
       - ../monitoring/grafana/provisioning/datasources/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       # 持久化(用户/面板修改)
       - grafana_data:/var/lib/grafana
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/api/health || exit 1"]
       interval: 15s
@@ -470,7 +470,7 @@ services:
   # ---------------------------------------------------------------------------
   alertmanager:
     image: prom/alertmanager:latest
-    container_name: pmis-alertmanager
+    container_name: ydsz-alertmanager
     restart: unless-stopped
     environment:
       <<: *common-env
@@ -489,7 +489,7 @@ services:
       - --web.external-url=http://localhost:9093
       - --web.listen-address=:9093
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
       interval: 15s
@@ -512,7 +512,7 @@ services:
   # ---------------------------------------------------------------------------
   loki:
     image: grafana/loki:latest
-    container_name: pmis-loki
+    container_name: ydsz-loki
     restart: unless-stopped
     environment:
       <<: *common-env
@@ -524,7 +524,7 @@ services:
     command:
       - -config.file=/etc/loki/loki-config.yml
     networks:
-      - pmis-net
+      - ydsz-net
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:3100/ready || exit 1"]
       interval: 15s
@@ -540,15 +540,15 @@ services:
   # ---------------------------------------------------------------------------
   #  12. Promtail - 日志采集客户端
   # ---------------------------------------------------------------------------
-  #  采集: /var/log/pmis/*.log (PMIS 后端 logback LOGSTASH_JSON appender 输出)
+  #  采集: /var/log/ydsz/*.log (YDSZ 后端 logback LOGSTASH_JSON appender 输出)
   #  推送: http://loki:3100/loki/push
   #  解析: json pipeline 提取 service / level / traceId 标签
   #  说明: 挂载宿主机日志目录(Windows: D:\Code\ydsz\ydsz\logs,Mac/Linux: ./logs)
-  #        通过 PMIS_LOG_DIR 环境变量配置实际路径
+  #        通过 YDSZ_LOG_DIR 环境变量配置实际路径
   # ---------------------------------------------------------------------------
   promtail:
     image: grafana/promtail:latest
-    container_name: pmis-promtail
+    container_name: ydsz-promtail
     restart: unless-stopped
     depends_on:
       loki:
@@ -557,15 +557,15 @@ services:
       <<: *common-env
     volumes:
       - ../monitoring/loki/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
-      # 挂载宿主机日志目录(需配置 PMIS_LOG_DIR 指向实际日志路径)
-      - ${PMIS_LOG_DIR:-./pmis-logs}:/var/log/ydsz:ro
+      # 挂载宿主机日志目录(需配置 YDSZ_LOG_DIR 指向实际日志路径)
+      - ${YDSZ_LOG_DIR:-./ydsz-logs}:/var/log/ydsz:ro
       # 采集 docker 容器日志(可选)
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - promtail_data:/tmp
     command:
       - -config.file=/etc/promtail/promtail-config.yml
     networks:
-      - pmis-net
+      - ydsz-net
     logging:
       driver: json-file
       options:
@@ -576,37 +576,37 @@ services:
 #  网络与数据卷
 # =============================================================================
 networks:
-  pmis-net:
+  ydsz-net:
     driver: bridge
-    name: pmis-net
+    name: ydsz-net
 
 volumes:
   postgres_data:
-    name: pmis-postgres-data
+    name: ydsz-postgres-data
   redis_data:
-    name: pmis-redis-data
+    name: ydsz-redis-data
   nacos_data:
-    name: pmis-nacos-data
+    name: ydsz-nacos-data
   nacos_logs:
-    name: pmis-nacos-logs
+    name: ydsz-nacos-logs
   minio_data:
-    name: pmis-minio-data
+    name: ydsz-minio-data
   seata_logs:
-    name: pmis-seata-logs
+    name: ydsz-seata-logs
   rocketmq_logs:
-    name: pmis-rocketmq-logs
+    name: ydsz-rocketmq-logs
   rocketmq_store:
-    name: pmis-rocketmq-store
+    name: ydsz-rocketmq-store
   xxl_job_logs:
-    name: pmis-xxl-job-logs
+    name: ydsz-xxl-job-logs
   # 监控可观测性栈数据卷
   prometheus_data:
-    name: pmis-prometheus-data
+    name: ydsz-prometheus-data
   grafana_data:
-    name: pmis-grafana-data
+    name: ydsz-grafana-data
   alertmanager_data:
-    name: pmis-alertmanager-data
+    name: ydsz-alertmanager-data
   loki_data:
-    name: pmis-loki-data
+    name: ydsz-loki-data
   promtail_data:
-    name: pmis-promtail-data
+    name: ydsz-promtail-data

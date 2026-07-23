@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# PMIS Schema 漂移检测脚本
+# YDSZ Schema 漂移检测脚本
 #
 # 功能:
 #   1. 在临时 PostgreSQL 容器中执行 V1.0.0.sql
@@ -27,11 +27,11 @@ SQL_FILE="$PROJECT_ROOT/deploy/sql/V1.0.0.sql"
 BASELINE_FILE="$PROJECT_ROOT/deploy/sql/.schema-baseline.sql"
 DIFF_OUTPUT="$PROJECT_ROOT/deploy/sql/.schema-drift.diff"
 
-PG_CONTAINER="pmis-schema-check"
+PG_CONTAINER="ydsz-schema-check"
 PG_IMAGE="postgres:18-alpine"
 PG_USER="postgres"
 PG_PASS="schema-check-pass"
-PG_DB="pmis_schema_check"
+PG_DB="ydsz_schema_check"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -116,8 +116,8 @@ dump_schema() {
         --no-comments \
         | sed 's/^--.*$/--/' \
         | grep -v '^$' \
-        > /tmp/pmis-schema-current.sql
-    log_info "Schema 快照已导出（$(wc -l < /tmp/pmis-schema-current.sql) 行）"
+        > /tmp/ydsz-schema-current.sql
+    log_info "Schema 快照已导出（$(wc -l < /tmp/ydsz-schema-current.sql) 行）"
 }
 
 # ============================================================
@@ -126,13 +126,13 @@ dump_schema() {
 compare_baseline() {
     if [[ ! -f "$BASELINE_FILE" ]]; then
         log_warn "基线快照不存在，首次运行将创建基线"
-        cp /tmp/pmis-schema-current.sql "$BASELINE_FILE"
+        cp /tmp/ydsz-schema-current.sql "$BASELINE_FILE"
         log_info "基线快照已创建: $BASELINE_FILE"
         return 0
     fi
 
     log_info "与基线快照对比..."
-    diff -u "$BASELINE_FILE" /tmp/pmis-schema-current.sql > "$DIFF_OUTPUT" 2>&1 || true
+    diff -u "$BASELINE_FILE" /tmp/ydsz-schema-current.sql > "$DIFF_OUTPUT" 2>&1 || true
 
     if [[ -s "$DIFF_OUTPUT" ]]; then
         log_warn "检测到 Schema 漂移！Diff 报告: $DIFF_OUTPUT"
@@ -154,7 +154,7 @@ compare_baseline() {
 # 更新基线
 # ============================================================
 update_baseline() {
-    cp /tmp/pmis-schema-current.sql "$BASELINE_FILE"
+    cp /tmp/ydsz-schema-current.sql "$BASELINE_FILE"
     log_info "基线快照已更新: $BASELINE_FILE"
 }
 
@@ -164,7 +164,7 @@ update_baseline() {
 cleanup() {
     log_info "清理临时容器..."
     docker rm -f "$PG_CONTAINER" >/dev/null 2>&1 || true
-    rm -f /tmp/pmis-schema-current.sql
+    rm -f /tmp/ydsz-schema-current.sql
 }
 
 # ============================================================

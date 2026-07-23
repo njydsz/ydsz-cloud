@@ -14,7 +14,7 @@
 3. [11 个容器清单](#3-11-个容器清单)
 4. [访问入口](#4-访问入口)
 5. [数据持久化](#5-数据持久化)
-6. [与 PMIS 应用联用](#6-与-pmis-应用联用)
+6. [与 YDSZ 应用联用](#6-与-ydsz-应用联用)
 7. [常见问题](#7-常见问题)
 8. [相关链接](#8-相关链接)
 
@@ -62,21 +62,21 @@ docker compose -f deploy/docker/docker-compose.dev.yml down -v
 
 | 容器名 | 镜像 | 容器内端口 | 宿主机端口 | 用途 |
 |---|---|---|---|---|
-| `pmis-postgres` | `postgres:18-alpine` | 5432 | 5432 | 主数据库(全文检索) |
-| `pmis-redis` | `redis:8-alpine` | 6379 | 6379 | 缓存/分布式锁 |
-| `pmis-nacos` | `nacos/nacos-server:v2.3.2` | 8848 / 9848 / 7848 | 8848 / 9848 | 注册/配置中心 |
-| `pmis-minio` | `minio/minio:latest` | 9000 / 9001 | **9100 / 9101** | 对象存储 |
-| `pmis-seata` | `seataio/seata-server:2.5` | 8091 / 7091 | 8091 / 7091 | 分布式事务 |
-| `pmis-rocketmq-namesrv` | `apache/rocketmq:5.3` | 9876 | 9876 | NameServer |
-| `pmis-rocketmq-broker` | `apache/rocketmq:5.3` | 10911 / 10909 | 10911 / 10909 | Broker |
-| `pmis-xxl-job` | `xuxueli/xxl-job-admin:2.4` | 8080 | **9100** | 任务调度 |
+| `ydsz-postgres` | `postgres:18-alpine` | 5432 | 5432 | 主数据库(全文检索) |
+| `ydsz-redis` | `redis:8-alpine` | 6379 | 6379 | 缓存/分布式锁 |
+| `ydsz-nacos` | `nacos/nacos-server:v2.3.2` | 8848 / 9848 / 7848 | 8848 / 9848 | 注册/配置中心 |
+| `ydsz-minio` | `minio/minio:latest` | 9000 / 9001 | **9100 / 9101** | 对象存储 |
+| `ydsz-seata` | `seataio/seata-server:2.5` | 8091 / 7091 | 8091 / 7091 | 分布式事务 |
+| `ydsz-rocketmq-namesrv` | `apache/rocketmq:5.3` | 9876 | 9876 | NameServer |
+| `ydsz-rocketmq-broker` | `apache/rocketmq:5.3` | 10911 / 10909 | 10911 / 10909 | Broker |
+| `ydsz-xxl-job` | `xuxueli/xxl-job-admin:2.4` | 8080 | **9100** | 任务调度 |
 
 ### 3.2 3 个辅助容器
 
 | 容器名 | 作用 |
 |---|---|
-| `pmis-minio-init` | 首次启动自动创建 MinIO bucket |
-| `pmis-rocketmq-console` | RocketMQ Web 控制台(8080 端口) |
+| `ydsz-minio-init` | 首次启动自动创建 MinIO bucket |
+| `ydsz-rocketmq-console` | RocketMQ Web 控制台(8080 端口) |
 | (内置) | 同一镜像内的 namesrv + broker 角色分离 |
 
 > ⚠️ **端口冲突提示**:XXL-Job 宿主机端口 **9100** 与 MinIO API 端口 **9100** 是不同容器,通过 Docker 端口映射隔离(XXL-Job 用 9100,MinIO 用 9100+9101);原生部署需调整其中之一。
@@ -108,34 +108,34 @@ docker compose -f deploy/docker/docker-compose.dev.yml down -v
 容器数据通过 Docker Volume 保留(`docker-compose.dev.yml` 中定义):
 
 ```bash
-# 列出 PMIS 相关的卷
-docker volume ls | grep pmis
+# 列出 YDSZ 相关的卷
+docker volume ls | grep ydsz
 
 # 备份 PG(示例)
 docker run --rm \
-  -v pmis-postgres-data:/data \
+  -v ydsz-postgres-data:/data \
   -v ${PWD}:/backup \
   alpine tar czf /backup/pg-backup-$(date +%F).tar.gz /data
 
 # 恢复
-docker run --rm -v pmis-postgres-data:/data -v ${PWD}:/backup \
+docker run --rm -v ydsz-postgres-data:/data -v ${PWD}:/backup \
   alpine tar xzf /backup/pg-backup-2026-07-04.tar.gz -C /
 ```
 
-> 默认数据卷名:`pmis-{postgres,redis,nacos,minio,seata,rocketmq,xxl-job}-data`
+> 默认数据卷名:`ydsz-{postgres,redis,nacos,minio,seata,rocketmq,xxl-job}-data`
 
 ---
 
-## 6. 与 PMIS 应用联用
+## 6. 与 YDSZ 应用联用
 
 ```bash
 # 1. 启动中间件(本目录)
 docker compose -f deploy/docker/docker-compose.dev.yml up -d
 
 # 2. 导入 Nacos 共享配置(Ubuntu 命令,Docker 容器内同样适用)
-./deploy/ubuntu/scripts/import-nacos-config.sh pmis dev
+./deploy/ubuntu/scripts/import-nacos-config.sh ydsz dev
 
-# 3. 启动 7 个 PMIS 后端 + 前端
+# 3. 启动 7 个 YDSZ 后端 + 前端
 ./deploy/ubuntu/scripts/start-all.sh
 ```
 
@@ -143,7 +143,7 @@ Windows 上:
 
 ```powershell
 docker compose -f deploy/docker/docker-compose.dev.yml up -d
-.\deploy\windows\scripts\import-nacos-config.bat pmis dev
+.\deploy\windows\scripts\import-nacos-config.bat ydsz dev
 .\deploy\windows\scripts\start-all.bat
 ```
 
@@ -154,10 +154,10 @@ docker compose -f deploy/docker/docker-compose.dev.yml up -d
 | 现象 | 原因 | 解决 |
 |---|---|---|
 | 启动报 `port is already allocated` | 宿主机端口被占用 | `netstat -ano` 找占用进程,杀掉或改 docker-compose 端口 |
-| 容器一直 `Restarting` | 健康检查失败 | `docker logs pmis-nacos` 看具体报错 |
+| 容器一直 `Restarting` | 健康检查失败 | `docker logs ydsz-nacos` 看具体报错 |
 | ES 启动报 `max virtual memory areas vm.max_map_count` | 宿主机 mmap 上限太低 | Linux:`sudo sysctl -w vm.max_map_count=262144` |
 | Nacos 启动报 `Unable to start embedded Tomcat` | JVM 内存不足 | 至少分配 1G 给 Nacos |
-| MinIO Console 报 `AccessDenied` | 未创建 bucket | 等待 `pmis-minio-init` 跑完(约 30s) |
+| MinIO Console 报 `AccessDenied` | 未创建 bucket | 等待 `ydsz-minio-init` 跑完(约 30s) |
 
 ---
 

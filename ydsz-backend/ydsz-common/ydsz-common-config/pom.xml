@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-config</artifactId>
     <name>ydsz-common-config</name>
-    <description>PMIS Common Config - Jasypt 加密增强层与动态配置变更监听</description>
+    <description>YDSZ Common Config - Jasypt 加密增强层与动态配置变更监听</description>
 
     <parent>
         <groupId>com.njydsz</groupId>

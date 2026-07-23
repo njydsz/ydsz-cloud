@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-import com.njydsz.common.json.annotation.JsonField;
+import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.core.constant.PageConstants;
 
 import lombok.Builder;
@@ -406,7 +406,7 @@ public class PageQuery extends BaseQuery {
      *
      * @return 实际页码
      */
-    @JsonField(ignore = true)
+    @YdszJsonField(ignore = true)
     public int getEffectivePageNum() {
         return Math.max(this.pageNum != null ? this.pageNum : 1, 1);
     }
@@ -460,7 +460,7 @@ public class PageQuery extends BaseQuery {
      *
      * @return ORDER BY 子句，如 "ORDER BY created_at DESC"
      */
-    @JsonField(ignore = true)
+    @YdszJsonField(ignore = true)
     public String getOrderSql() {
         if (orderItems == null || orderItems.isEmpty()) {
             return "";
@@ -496,7 +496,7 @@ public class PageQuery extends BaseQuery {
      *
      * @return 排序项数量
      */
-    @JsonField(ignore = true)
+    @YdszJsonField(ignore = true)
     public int getOrderCount() {
         return orderItems != null ? orderItems.size() : 0;
     }

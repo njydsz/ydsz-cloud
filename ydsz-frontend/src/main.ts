@@ -1,6 +1,6 @@
 /**
  * @file 应用全局入口
- * @description PMIS 运营管理系统前端启动文件
+ * @description YDSZ 运营管理系统前端启动文件
  * @module main
  *
  * 启动流程：

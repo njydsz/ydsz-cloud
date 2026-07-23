@@ -4,7 +4,7 @@ kind: Kustomization
 # DEV 环境:单实例 + DEBUG 日志 + 关闭资源限制
 # 用法:kubectl apply -k deploy/k8s/overlays/dev
 
-namespace: pmis-dev
+namespace: ydsz-dev
 
 resources:
   - ../../base

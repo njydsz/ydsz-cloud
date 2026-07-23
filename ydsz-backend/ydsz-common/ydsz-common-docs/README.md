@@ -1,6 +1,6 @@
 # ydsz-common-docs
 
-PMIS 文档智能处理框架 — 8 种格式解析（PDF / Word / Excel / PPT / HTML / Markdown / TXT / CSV）、预处理 Pipeline、安全扫描（宏 / PDF JS / 嵌入对象）、PII 检测（5 种）、文本水印、PDF 脱敏、异步解析、OCR 集成。
+YDSZ 文档智能处理框架 — 8 种格式解析（PDF / Word / Excel / PPT / HTML / Markdown / TXT / CSV）、预处理 Pipeline、安全扫描（宏 / PDF JS / 嵌入对象）、PII 检测（5 种）、文本水印、PDF 脱敏、异步解析、OCR 集成。
 
 ## 模块定位
 

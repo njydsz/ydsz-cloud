@@ -1,6 +1,6 @@
 # ydsz-common-lock
 
-PMIS 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量、看门狗自动续期、@Idempotent 幂等、@YdszDistributedLock 声明式锁、降级策略。
+YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量、看门狗自动续期、@Idempotent 幂等、@YdszDistributedLock 声明式锁、降级策略。
 
 ## 模块定位
 
@@ -73,7 +73,7 @@ public PayResponse pay(PayRequest request) { ... }
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   lock:
     watchdog:
       enabled: true               # 看门狗开关

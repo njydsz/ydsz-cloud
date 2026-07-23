@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchAggregation;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchHit;
@@ -30,7 +30,7 @@ import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchEngine;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,6 +81,7 @@ public class PgSearchEngine implements SearchEngine {
     }
 
     private PgSearchEngine(JdbcTemplate jdbcTemplate, SearchProperties properties) {
+        this.jdbcTemplate = jdbcTemplate;
         this.properties = properties;
         this.searchConfig = detectSearchConfig();
         this.available = initIndexTable();
@@ -280,8 +281,8 @@ public class PgSearchEngine implements SearchEngine {
                     """.formatted(INDEX_TABLE);
 
             String searchableText = document.getSearchableText();
-            String tagsJson = Json.toJson(document.getTags() != null ? document.getTags() : Collections.emptyList());
-            String metadataJson = Json.toJson(document.getMetadata() != null ? document.getMetadata() : Collections.emptyMap());
+            String tagsJson = YdszJson.toJson(document.getTags() != null ? document.getTags() : Collections.emptyList());
+            String metadataJson = YdszJson.toJson(document.getMetadata() != null ? document.getMetadata() : Collections.emptyMap());
 
             jdbcTemplate.update(sql,
                     document.getId(),
@@ -331,8 +332,8 @@ public class PgSearchEngine implements SearchEngine {
             List<IndexDocument> batch = documents.subList(i, end);
             try {
                 jdbcTemplate.batchUpdate(sql, batch, batch.size(), (ps, doc) -> {
-                    String tagsJson = Json.toJson(doc.getTags() != null ? doc.getTags() : Collections.emptyList());
-                    String metadataJson = Json.toJson(doc.getMetadata() != null ? doc.getMetadata() : Collections.emptyMap());
+                    String tagsJson = YdszJson.toJson(doc.getTags() != null ? doc.getTags() : Collections.emptyList());
+                    String metadataJson = YdszJson.toJson(doc.getMetadata() != null ? doc.getMetadata() : Collections.emptyMap());
                     ps.setString(1, doc.getId());
                     ps.setString(2, doc.getType());
                     ps.setString(3, doc.getTitle());
@@ -837,7 +838,7 @@ public class PgSearchEngine implements SearchEngine {
             try {
                 String tagsJson = rs.getString("tags");
                 if (tagsJson != null && !tagsJson.isBlank() && !tagsJson.equals("[]")) {
-                    List<String> tags = Json.parseArray(tagsJson, String.class);
+                    List<String> tags = YdszJson.parseArray(tagsJson, String.class);
                     if (tags != null && !tags.isEmpty()) {
                         hit.setTags(tags);
                     }

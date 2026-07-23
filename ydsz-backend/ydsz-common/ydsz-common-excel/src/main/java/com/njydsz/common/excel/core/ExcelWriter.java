@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.Duration;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -22,7 +23,6 @@ import com.njydsz.common.excel.annotation.ExcelSheet;
 import com.njydsz.common.excel.annotation.ExcelStyle;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.context.WriteContext;
-import com.njydsz.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.common.excel.core.metadata.MetadataCache;
 import com.njydsz.common.excel.core.metadata.MetadataCache.CachedProperty;
@@ -501,7 +501,7 @@ public class ExcelWriter {
                 useFastPath = true;
                 SuperFastExcelWriter fastWriter = new SuperFastExcelWriter(metadata);
                 fastWriter.doWrite(data);
-                ExcelMetrics.recordWrite(java.time.Duration.ofNanos(System.nanoTime() - startTime), rowCount, "fast", true);
+                ExcelMetrics.recordWrite(Duration.ofNanos(System.nanoTime() - startTime), rowCount, "fast", true);
                 return;
             }
 
@@ -539,11 +539,11 @@ public class ExcelWriter {
                 markWriteCompleted();
             }
 
-            ExcelMetrics.recordWrite(java.time.Duration.ofNanos(System.nanoTime() - startTime), rowCount, useFastPath ? "fast" : "poi", true);
+            ExcelMetrics.recordWrite(Duration.ofNanos(System.nanoTime() - startTime), rowCount, useFastPath ? "fast" : "poi", true);
 
         } catch (Exception e) {
             log.error("Excel写入异常", e);
-            ExcelMetrics.recordWrite(java.time.Duration.ofNanos(System.nanoTime() - startTime), rowCount, useFastPath ? "fast" : "poi", false);
+            ExcelMetrics.recordWrite(Duration.ofNanos(System.nanoTime() - startTime), rowCount, useFastPath ? "fast" : "poi", false);
             throw ExcelWriteException.dataWriteFailed(
                 currentRowIndex, null, null, e);
         }
@@ -581,7 +581,7 @@ public class ExcelWriter {
     /**
      * 标记写入完成
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
      */
     private void markWriteCompleted() {

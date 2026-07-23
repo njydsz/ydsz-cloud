@@ -1,4 +1,4 @@
-# PMIS 灾备方案与恢复 Runbook
+# YDSZ 灾备方案与恢复 Runbook
 
 > **版本**: v1.0 · 2026-07-11
 > **适用环境**: 生产环境（prod）
@@ -32,7 +32,7 @@
 
 ```
                     ┌─────────────────┐
-                    │  PMIS PG Primary │
+                    │  YDSZ PG Primary │
                     └────────┬────────┘
                              │
                     ┌────────▼────────┐
@@ -48,7 +48,7 @@
                              │
                     ┌────────▼────────┐
                     │  OSS (异地容灾)  │
-                    │  oss://pmis-bk/  │
+                    │  oss://ydsz-bk/  │
                     └─────────────────┘
 ```
 
@@ -76,18 +76,18 @@ min_wal_size = 256MB
 ### 3.2 Crontab 调度
 
 ```bash
-# PMIS 数据库备份 crontab
+# YDSZ 数据库备份 crontab
 # 每日凌晨 2:00 全量逻辑备份
-0 2 * * * /opt/pmis/scripts/pg-backup.sh >> /var/log/pmis/backup.log 2>&1
+0 2 * * * /opt/ydsz/scripts/pg-backup.sh >> /var/log/ydsz/backup.log 2>&1
 
 # 每 15 分钟 WAL 归档检查
-*/15 * * * * /opt/pmis/scripts/pg-backup.sh --wal-archive >> /var/log/pmis/wal-archive.log 2>&1
+*/15 * * * * /opt/ydsz/scripts/pg-backup.sh --wal-archive >> /var/log/ydsz/wal-archive.log 2>&1
 
 # 每周日凌晨 3:00 物理全量备份
-0 3 * * 0 /opt/pmis/scripts/pg-basebackup.sh >> /var/log/pmis/basebackup.log 2>&1
+0 3 * * 0 /opt/ydsz/scripts/pg-basebackup.sh >> /var/log/ydsz/basebackup.log 2>&1
 
 # 每日凌晨 2:30 上传备份到 OSS
-30 2 * * * /opt/pmis/scripts/upload-backup-to-oss.sh >> /var/log/pmis/oss-upload.log 2>&1
+30 2 * * * /opt/ydsz/scripts/upload-backup-to-oss.sh >> /var/log/ydsz/oss-upload.log 2>&1
 
 # Redis RDB 每日 1:00
 0 1 * * * redis-cli -a $REDIS_PASS BGSAVE && sleep 10 && cp /var/lib/redis/dump.rdb /data/backups/redis/dump_$(date +\%Y\%m\%d).rdb
@@ -115,7 +115,7 @@ $PSQL_CMD -c "SELECT now();"  # 记录当前时间
 ls -lt /data/backups/postgres/ydsz_full_*.dump | head -3
 
 # 3. 预检查备份文件
-/opt/pmis/scripts/pg-backup.sh --verify /data/backups/postgres/ydsz_full_20260710_020000.dump
+/opt/ydsz/scripts/pg-backup.sh --verify /data/backups/postgres/ydsz_full_20260710_020000.dump
 
 # 4. 创建临时恢复数据库
 createdb -h 127.0.0.1 -U postgres ydsz-restore
@@ -126,22 +126,22 @@ pg_restore -h 127.0.0.1 -U postgres -d ydsz-restore -j 4 \
 
 # 6. 从临时库导出误操作的表
 pg_dump -h 127.0.0.1 -U postgres -d ydsz-restore \
-  --table=pmis_project \
+  --table=ydsz_project \
   --data-only \
   --format=plain \
-  -f /tmp/pmis_project_restore.sql
+  -f /tmp/ydsz_project_restore.sql
 
 # 7. 在生产库中恢复该表（先备份当前数据）
-$PSQL_CMD -c "CREATE TABLE pmis_project_bak_$(date +%s) AS SELECT * FROM pmis_project;"
-$PSQL_CMD -c "TRUNCATE TABLE pmis_project;"
-$PSQL_CMD -f /tmp/pmis_project_restore.sql
+$PSQL_CMD -c "CREATE TABLE ydsz_project_bak_$(date +%s) AS SELECT * FROM ydsz_project;"
+$PSQL_CMD -c "TRUNCATE TABLE ydsz_project;"
+$PSQL_CMD -f /tmp/ydsz_project_restore.sql
 
 # 8. 验证数据
-$PSQL_CMD -c "SELECT count(*) FROM pmis_project;"
+$PSQL_CMD -c "SELECT count(*) FROM ydsz_project;"
 
 # 9. 清理临时资源
 dropdb -h 127.0.0.1 -U postgres ydsz-restore
-rm /tmp/pmis_project_restore.sql
+rm /tmp/ydsz_project_restore.sql
 ```
 
 ### 4.2 场景 B：库级故障恢复（PITR）
@@ -151,8 +151,8 @@ rm /tmp/pmis_project_restore.sql
 **步骤**:
 
 ```bash
-# 1. 停止所有 PMIS 应用服务
-kubectl scale deploy -n pmis-prod --replicas=0 deployment/pmis-gateway deployment/pmis-userinfo deployment/pmis-system
+# 1. 停止所有 YDSZ 应用服务
+kubectl scale deploy -n ydsz-prod --replicas=0 deployment/ydsz-gateway deployment/ydsz-userinfo deployment/ydsz-system
 
 # 2. 停止 PostgreSQL
 systemctl stop postgresql
@@ -187,11 +187,11 @@ tail -f /var/log/postgresql/postgresql-*.log | grep -E "recovery|restore|consist
 
 # 9. 等待恢复完成（日志出现 "database system is ready to accept connections"）
 # 10. 验证数据
-psql -U postgres -d ydsz -c "SELECT count(*) FROM pmis_user;"
-psql -U postgres -d ydsz -c "SELECT count(*) FROM pmis_project;"
+psql -U postgres -d ydsz -c "SELECT count(*) FROM ydsz_user;"
+psql -U postgres -d ydsz -c "SELECT count(*) FROM ydsz_project;"
 
 # 11. 恢复应用服务
-kubectl scale deploy -n pmis-prod --replicas=3 deployment/pmis-gateway deployment/pmis-userinfo deployment/pmis-system
+kubectl scale deploy -n ydsz-prod --replicas=3 deployment/ydsz-gateway deployment/ydsz-userinfo deployment/ydsz-system
 ```
 
 ### 4.3 场景 C：整机房故障 — 异地重建
@@ -205,8 +205,8 @@ kubectl scale deploy -n pmis-prod --replicas=3 deployment/pmis-gateway deploymen
 # (假设新 PG 已安装并初始化)
 
 # 2. 从 OSS 下载最近的备份
-ossutil cp oss://pmis-backup/postgres/ydsz_full_latest.dump /tmp/
-ossutil cp -r oss://pmis-backup/wal-archive/ /data/backups/wal-archive/
+ossutil cp oss://ydsz-backup/postgres/ydsz_full_latest.dump /tmp/
+ossutil cp -r oss://ydsz-backup/wal-archive/ /data/backups/wal-archive/
 
 # 3. 恢复全量逻辑备份
 createdb -U postgres ydsz
@@ -249,7 +249,7 @@ kubectl apply -f deploy/k8s/overlays/prod/
 
 ```bash
 # 每日备份后自动验证（crontab）
-30 2 * * * /opt/pmis/scripts/pg-backup.sh --verify $(ls -t /data/backups/postgres/*.dump | head -1) >> /var/log/pmis/backup-verify.log 2>&1
+30 2 * * * /opt/ydsz/scripts/pg-backup.sh --verify $(ls -t /data/backups/postgres/*.dump | head -1) >> /var/log/ydsz/backup-verify.log 2>&1
 ```
 
 ---
@@ -274,16 +274,16 @@ groups:
   - name: pg-backup
     rules:
       - alert: PgBackupFailed
-        expr: pmis_pg_backup_status{job="pg-backup-exporter"} == 0
+        expr: ydsz_pg_backup_status{job="pg-backup-exporter"} == 0
         for: 5m
         labels:
           severity: critical
         annotations:
           summary: "PostgreSQL 备份失败 ({{ $labels.instance }})"
-          description: "PG 备份任务连续失败超过 5 分钟，请检查 /var/log/pmis/backup.log"
+          description: "PG 备份任务连续失败超过 5 分钟，请检查 /var/log/ydsz/backup.log"
 
       - alert: PgWalArchiveLag
-        expr: time() - pmis_pg_wal_archive_last_success_timestamp > 900
+        expr: time() - ydsz_pg_wal_archive_last_success_timestamp > 900
         for: 5m
         labels:
           severity: critical
@@ -292,7 +292,7 @@ groups:
           description: "WAL 归档异常可能导致 RPO 超标，请立即检查"
 
       - alert: PgBackupSizeAnomaly
-        expr: pmis_pg_backup_size_bytes / pmis_pg_backup_size_bytes offset 1d < 0.8
+        expr: ydsz_pg_backup_size_bytes / ydsz_pg_backup_size_bytes offset 1d < 0.8
         for: 10m
         labels:
           severity: warning
@@ -318,4 +318,4 @@ groups:
 
 | 日期 | 版本 | 变更内容 | 作者 |
 |------|------|---------|------|
-| 2026-07-11 | v1.0 | 初始版本 | PMIS Team |
+| 2026-07-11 | v1.0 | 初始版本 | YDSZ Team |

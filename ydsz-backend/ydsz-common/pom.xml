@@ -216,7 +216,7 @@
                 <artifactId>ydsz-common-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- L6 基础设施层（PMIS 特有） -->
+            <!-- L6 基础设施层（YDSZ 特有） -->
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-base</artifactId>

@@ -70,7 +70,7 @@ public class CacheAnnotationAspect {
   /**
    * 创建缓存注解切面
    *
-   * @param cacheManager Spring CacheManager（通常为 LocalCacheManager）
+   * @param cacheManager Spring CacheManager（通常为 YdszCacheManager）
    */
   public CacheAnnotationAspect(CacheManager cacheManager) {
     this.cacheManager = cacheManager;

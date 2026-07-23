@@ -181,7 +181,7 @@ public class ReActAgentExecutor implements AgentExecutor {
         if (request.getSystemPrompt() != null) {
             sb.append(request.getSystemPrompt());
         } else {
-            sb.append("你是 PMIS 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。");
+            sb.append("你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。");
         }
         if (toolRegistry.size() > 0) {
             sb.append("\n\n你可以使用以下工具：\n");

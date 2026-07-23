@@ -14,7 +14,7 @@ import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/store/modules/user'
 
 /** localStorage key 前缀 */
-const ONBOARDING_KEY_PREFIX = 'pmis-onboarding-'
+const ONBOARDING_KEY_PREFIX = 'ydsz-onboarding-'
 
 /** 引导步骤定义 */
 export interface OnboardingStep {

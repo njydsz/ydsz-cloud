@@ -1,5 +1,5 @@
 # ============================================================
-# PMIS Argo Rollouts — AnalysisTemplate 定义（P2-11）
+# YDSZ Argo Rollouts — AnalysisTemplate 定义（P2-11）
 #
 # 基于 Prometheus 指标的自动化发布分析模板。
 # 金丝雀发布期间持续评估以下维度，任一指标超阈值 → 自动回滚：
@@ -24,7 +24,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: success-rate
-  namespace: pmis
+  namespace: ydsz
 spec:
   args:
     - name: service-name
@@ -51,7 +51,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: latency-p99
-  namespace: pmis
+  namespace: ydsz
 spec:
   args:
     - name: service-name
@@ -76,7 +76,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: db-pool-health
-  namespace: pmis
+  namespace: ydsz
 spec:
   args:
     - name: service-name
@@ -103,7 +103,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: jvm-memory
-  namespace: pmis
+  namespace: ydsz
 spec:
   args:
     - name: service-name

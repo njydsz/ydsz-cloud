@@ -3,8 +3,8 @@ package com.njydsz.common.json.merge;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
-import com.njydsz.common.json.parser.JsonParser;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.parser.YdszJsonParser;
 
 /**
  * JSON Merge Patch 实现（RFC 7396）
@@ -53,11 +53,11 @@ public final class JsonMergePatch {
             return target;
         }
 
-        Object targetObj = JsonParser.parse(target);
-        Object patchObj = JsonParser.parse(patch);
+        Object targetObj = YdszJsonParser.parse(target);
+        Object patchObj = YdszJsonParser.parse(patch);
 
         Object result = merge(targetObj, patchObj);
-        return Json.toJson(result);
+        return YdszJson.toJson(result);
     }
 
     /**
@@ -118,11 +118,11 @@ public final class JsonMergePatch {
             return "{}";
         }
 
-        Object sourceObj = JsonParser.parse(source);
-        Object targetObj = JsonParser.parse(target);
+        Object sourceObj = YdszJsonParser.parse(source);
+        Object targetObj = YdszJsonParser.parse(target);
 
         Object diffObj = diffInternal(sourceObj, targetObj);
-        return Json.toJson(diffObj);
+        return YdszJson.toJson(diffObj);
     }
 
     

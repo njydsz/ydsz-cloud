@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.core.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
@@ -50,12 +50,12 @@ public class ThreadPoolHotUpdateListener {
     /**
      * Nacos 配置变更监听。
      *
-     * <p>监听 {@code pmis-cronjob.yml}（或对应的 dataId），当检测到 executor 相关配置变更时，
+     * <p>监听 {@code ydsz-cronjob.yml}（或对应的 dataId），当检测到 executor 相关配置变更时，
      * 解析新配置并应用到运行中的线程池。
      *
      * @param configInfo Nacos 下发的配置内容（YAML 或 JSON）
      */
-    @NacosConfigListener(dataId = "${ydsz.cronjob.config-data-id:pmis-cronjob.yml}", timeout = 5000)
+    @NacosConfigListener(dataId = "${ydsz.cronjob.config-data-id:ydsz-cronjob.yml}", timeout = 5000)
     public void onConfigChange(String configInfo) {
         if (configInfo == null || configInfo.isBlank()) {
             return;
@@ -83,10 +83,10 @@ public class ThreadPoolHotUpdateListener {
      */
     private JSONObject parseConfig(String configInfo) {
         try {
-            JSONObject root = JSONObject.from(Json.parseMap(configInfo));
+            JSONObject root = JSONObject.from(YdszJson.parseMap(configInfo));
             // 尝试 ydsz.cronjob.executor 路径
-            JSONObject pmis = root.getJSONObject("pmis");
-            if (pmis != null) {
+            JSONObject ydsz = root.getJSONObject("ydsz");
+            if (ydsz != null) {
                 JSONObject cronjob = ydsz.getJSONObject("cronjob");
                 if (cronjob != null) {
                     JSONObject executor = cronjob.getJSONObject("executor");

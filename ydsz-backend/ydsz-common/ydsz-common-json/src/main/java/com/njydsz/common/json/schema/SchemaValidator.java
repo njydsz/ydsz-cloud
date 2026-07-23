@@ -12,9 +12,9 @@ import java.util.regex.Pattern;
  * 
  * <p><b>使用示例：</b></p>
  * <pre>
- * JsonSchema schema = JsonSchema.object()
- *     .addProperty("name", JsonSchema.string().required())
- *     .addProperty("age", JsonSchema.integer().minimum(0).maximum(150));
+ * YdszJsonSchema schema = YdszJsonSchema.object()
+ *     .addProperty("name", YdszJsonSchema.string().required())
+ *     .addProperty("age", YdszJsonSchema.integer().minimum(0).maximum(150));
  * 
  * ValidationResult result = SchemaValidator.validate(schema, jsonObject);
  * if (!result.isValid()) {
@@ -35,7 +35,7 @@ public final class SchemaValidator {
     /**
      * 验证 JSON 数据
      */
-    public static ValidationResult validate(JsonSchema schema, Object data) {
+    public static ValidationResult validate(YdszJsonSchema schema, Object data) {
         if (schema == null) {
             return new ValidationResult(true);
         }
@@ -63,7 +63,7 @@ public final class SchemaValidator {
     /**
      * 验证类型
      */
-    private static void validateType(JsonSchema schema, Object data, ValidationResult result, String path) {
+    private static void validateType(YdszJsonSchema schema, Object data, ValidationResult result, String path) {
         String type = schema.getType();
         
         // 类型检查
@@ -100,7 +100,7 @@ public final class SchemaValidator {
     /**
      * 验证字符串
      */
-    private static void validateString(JsonSchema schema, String str, ValidationResult result, String path) {
+    private static void validateString(YdszJsonSchema schema, String str, ValidationResult result, String path) {
         // 最小长度
         if (schema.getMinLength() != null && str.length() < schema.getMinLength()) {
             result.addError(path + ": String length " + str.length() + " is less than minimum " + schema.getMinLength());
@@ -124,7 +124,7 @@ public final class SchemaValidator {
     /**
      * 验证数字
      */
-    private static void validateNumber(JsonSchema schema, Number num, ValidationResult result, String path) {
+    private static void validateNumber(YdszJsonSchema schema, Number num, ValidationResult result, String path) {
         double value = num.doubleValue();
         
         // 最小值
@@ -159,7 +159,7 @@ public final class SchemaValidator {
     /**
      * 验证数组
      */
-    private static void validateArray(JsonSchema schema, List<?> array, ValidationResult result, String path) {
+    private static void validateArray(YdszJsonSchema schema, List<?> array, ValidationResult result, String path) {
         // 最小项数
         if (schema.getMinItems() != null && array.size() < schema.getMinItems()) {
             result.addError(path + ": Array size " + array.size() + " is less than minimum " + schema.getMinItems());
@@ -172,7 +172,7 @@ public final class SchemaValidator {
 
         // 验证数组项
         if (schema.getItems() != null) {
-            JsonSchema itemSchema = schema.getItems();
+            YdszJsonSchema itemSchema = schema.getItems();
             for (int i = 0; i < array.size(); i++) {
                 validateType(itemSchema, array.get(i), result, path + "[" + i + "]");
             }
@@ -182,10 +182,10 @@ public final class SchemaValidator {
     /**
      * 验证对象
      */
-    private static void validateObject(JsonSchema schema, Map<?, ?> obj, ValidationResult result, String path) {
-        Map<String, JsonSchema> properties = schema.getProperties();
+    private static void validateObject(YdszJsonSchema schema, Map<?, ?> obj, ValidationResult result, String path) {
+        Map<String, YdszJsonSchema> properties = schema.getProperties();
         List<String> required = schema.getRequiredProperties();
-        JsonSchema additionalProperties = schema.getAdditionalProperties();
+        YdszJsonSchema additionalProperties = schema.getAdditionalProperties();
         
         // 检查必填字段
         for (String requiredProp : required) {

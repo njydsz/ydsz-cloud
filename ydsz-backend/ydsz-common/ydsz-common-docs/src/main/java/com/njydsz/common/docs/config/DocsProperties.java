@@ -61,4 +61,7 @@ public class DocsProperties {
 
     /** 水印自定义字体路径（配置后优先使用） */
     private String watermarkFontPath;
+
+    /** 文档分类规则（JSON 格式：[{"category":"合同文档","keywords":["合同","协议","条款"]}]） */
+    private String classifierRules;
 }

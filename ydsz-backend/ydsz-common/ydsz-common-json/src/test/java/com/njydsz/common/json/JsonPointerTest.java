@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import com.njydsz.common.json.exception.JsonException;
+import com.njydsz.common.json.exception.YdszJsonException;
 import com.njydsz.common.json.pointer.JsonPointer;
 
 /**
@@ -68,19 +68,19 @@ class JsonPointerTest {
     @Test
     void testPathNotFound() {
         JsonPointer pointer = new JsonPointer("/missing");
-        assertThrows(JsonException.class, () -> pointer.evaluate("{\"a\":1}"));
+        assertThrows(YdszJsonException.class, () -> pointer.evaluate("{\"a\":1}"));
     }
 
     @Test
     void testArrayOutOfBounds() {
         JsonPointer pointer = new JsonPointer("/items/10");
-        assertThrows(JsonException.class, () -> pointer.evaluate("{\"items\":[1,2,3]}"));
+        assertThrows(YdszJsonException.class, () -> pointer.evaluate("{\"items\":[1,2,3]}"));
     }
 
     @Test
     void testInvalidPointerFormat() {
-        assertThrows(JsonException.class, () -> new JsonPointer("foo"));
-        assertThrows(JsonException.class, () -> new JsonPointer(null));
+        assertThrows(YdszJsonException.class, () -> new JsonPointer("foo"));
+        assertThrows(YdszJsonException.class, () -> new JsonPointer(null));
     }
 
     @Test
@@ -99,7 +99,7 @@ class JsonPointerTest {
 
     @Test
     void testViaJsonFacade() {
-        Object result = Json.getByPointer("{\"user\":{\"name\":\"Alice\"}}", "/user/name");
+        Object result = YdszJson.getByPointer("{\"user\":{\"name\":\"Alice\"}}", "/user/name");
         assertEquals("Alice", result);
     }
 }

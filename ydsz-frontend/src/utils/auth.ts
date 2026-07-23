@@ -7,9 +7,9 @@
  * 选择 localStorage 而非 cookie：避免 CSRF，但需配合后端 CORS 白名单
  */
 /** Access Token 在 localStorage 中的 key */
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || 'pmis_token'
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || 'ydsz_token'
 /** Refresh Token 在 localStorage 中的 key */
-const REFRESH_TOKEN_KEY = import.meta.env.VITE_REFRESH_TOKEN_KEY || 'pmis_refresh_token'
+const REFRESH_TOKEN_KEY = import.meta.env.VITE_REFRESH_TOKEN_KEY || 'ydsz_refresh_token'
 
 /** 读取 Access Token */
 export function getToken(): string | null {

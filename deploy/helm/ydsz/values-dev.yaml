@@ -1,22 +1,22 @@
 # =============================================================================
-#  YDSZ PMIS · Helm Chart DEV 环境覆盖值
+#  YDSZ · Helm Chart DEV 环境覆盖值
 # -----------------------------------------------------------------------------
 #  用法:
-#    helm install pmis deploy/helm/ydsz -n pmis-dev \
+#    helm install ydsz deploy/helm/ydsz -n ydsz-dev \
 #      -f deploy/helm/ydsz/values-dev.yaml
 # =============================================================================
 
 global:
   imageTag: v1.0.0-SNAPSHOT
   nacos:
-    serverAddr: nacos-server.pmis-dev.svc.cluster.local:8848
-    namespace: pmis-dev
+    serverAddr: nacos-server.ydsz-dev.svc.cluster.local:8848
+    namespace: ydsz-dev
 
 backend:
   springProfile: dev
   env:
     LOGGING_LEVEL_ROOT: DEBUG
-    LOGGING_LEVEL_COM_NJYDSZ_PMIS: DEBUG
+    LOGGING_LEVEL_COM_NJYDSZ_YDSZ: DEBUG
     SERVER_TOMCAT_URI_ENCODING: UTF-8
 
 services:

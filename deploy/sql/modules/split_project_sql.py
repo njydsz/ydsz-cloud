@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PMIS SQL Split Script: V1.0.0_project.sql -> sales / finance / project + literule migration
+YDSZ SQL Split Script: V1.0.0_project.sql -> sales / finance / project + literule migration
 Based on physical Mapper location after DDD refactor (2026-07-12)
 """
 import re
@@ -11,58 +11,58 @@ LITERULE_FILE = os.path.join(os.path.dirname(__file__), "V1.0.0_literule.sql")
 
 # --- Table -> Module mapping ---
 SALES_TABLES = {
-    'pmis_project_opportunity',
-    'pmis_project_opportunity_follow',
-    'pmis_project_contract',
-    'pmis_project_contract_supplement',
-    'pmis_project_contract_change',
-    'pmis_project_contract_template',
+    'ydsz_project_opportunity',
+    'ydsz_project_opportunity_follow',
+    'ydsz_project_contract',
+    'ydsz_project_contract_supplement',
+    'ydsz_project_contract_change',
+    'ydsz_project_contract_template',
 }
 
 FINANCE_TABLES = {
-    'pmis_project_invoice',
-    'pmis_project_payment',
-    'pmis_project_customer_credit',
-    'pmis_project_expense',
-    'pmis_project_revenue',
-    'pmis_project_profit_snapshot',
-    'pmis_project_profit_simulation',
-    'pmis_project_reconcile_daily',
+    'ydsz_project_invoice',
+    'ydsz_project_payment',
+    'ydsz_project_customer_credit',
+    'ydsz_project_expense',
+    'ydsz_project_revenue',
+    'ydsz_project_profit_snapshot',
+    'ydsz_project_profit_simulation',
+    'ydsz_project_reconcile_daily',
 }
 
 LITERULE_TABLES = {
-    'pmis_rule_execution_trace',
-    'pmis_rule_decision_table',
-    'pmis_rule_canary_bucket',
-    'pmis_rule_scorecard',
-    'pmis_rule_decision_tree',
-    'pmis_rule_script',
-    'pmis_rule_ab_policy',
-    'pmis_rule_ab_rollback',
+    'ydsz_rule_execution_trace',
+    'ydsz_rule_decision_table',
+    'ydsz_rule_canary_bucket',
+    'ydsz_rule_scorecard',
+    'ydsz_rule_decision_tree',
+    'ydsz_rule_script',
+    'ydsz_rule_ab_policy',
+    'ydsz_rule_ab_rollback',
 }
 
 # Project tables = all others with CREATE TABLE
 PROJECT_TABLES = {
-    'pmis_project_initiation',
-    'pmis_project_budget_item',
-    'pmis_project_gate_review',
-    'pmis_project_change',
-    'pmis_execution_wbs_task',
-    'pmis_execution_time_entry',
-    'pmis_execution_risk',
-    'pmis_execution_delivery_standard',
-    'pmis_execution_delivery_item',
-    'pmis_execution_closure',
-    'pmis_cost_allocation',
-    'pmis_cost_purchase',
-    'pmis_evm_measure',
-    'pmis_rate_card',
-    'pmis_rate_internal',
-    'pmis_warranty',
-    'pmis_ops_ticket',
-    'pmis_satisfaction',
-    'pmis_billable_utilization_snapshot',
-    'pmis_alert_dispatch',
+    'ydsz_project_initiation',
+    'ydsz_project_budget_item',
+    'ydsz_project_gate_review',
+    'ydsz_project_change',
+    'ydsz_execution_wbs_task',
+    'ydsz_execution_time_entry',
+    'ydsz_execution_risk',
+    'ydsz_execution_delivery_standard',
+    'ydsz_execution_delivery_item',
+    'ydsz_execution_closure',
+    'ydsz_cost_allocation',
+    'ydsz_cost_purchase',
+    'ydsz_evm_measure',
+    'ydsz_rate_card',
+    'ydsz_rate_internal',
+    'ydsz_warranty',
+    'ydsz_ops_ticket',
+    'ydsz_satisfaction',
+    'ydsz_billable_utilization_snapshot',
+    'ydsz_alert_dispatch',
 }
 
 # Read source file
@@ -153,14 +153,14 @@ literule_count = sum(1 for name, _, _, _ in table_blocks if name in LITERULE_TAB
 
 # --- Write Sales SQL ---
 sales_header = f"""-- ============================================================
--- PMIS sales module SQL
--- 商务销售服务 (ydsz-pmis-sales, port 9010)
+-- YDSZ sales module SQL
+-- 商务销售服务 (ydsz-sales, port 9010)
 -- ============================================================
 -- 本脚本 DDL 对应后端 sales 服务的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign Client (SalesDataClient / FinanceDataClient)。
 --
--- 表归属依据: ydsz-pmis-sales/src/main/java/.../infra/mapper/
+-- 表归属依据: ydsz-sales/src/main/java/.../infra/mapper/
 -- 表数量: {sales_count} 张
 -- --------------------------------------------------------------------
 
@@ -175,14 +175,14 @@ print(f"\nWrote {sales_file} ({sales_count} tables)")
 
 # --- Write Finance SQL ---
 finance_header = f"""-- ============================================================
--- PMIS finance module SQL
--- 财务会计服务 (ydsz-pmis-finance, port 9011)
+-- YDSZ finance module SQL
+-- 财务会计服务 (ydsz-finance, port 9011)
 -- ============================================================
 -- 本脚本 DDL 对应后端 finance 服务的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign Client (FinanceDataClient / SalesDataClient)。
 --
--- 表归属依据: ydsz-pmis-finance/src/main/java/.../infra/mapper/
+-- 表归属依据: ydsz-finance/src/main/java/.../infra/mapper/
 -- 表数量: {finance_count} 张
 -- --------------------------------------------------------------------
 
@@ -197,18 +197,18 @@ print(f"Wrote {finance_file} ({finance_count} tables)")
 
 # --- Write Project SQL (remaining) ---
 project_header = f"""-- ============================================================
--- PMIS project module SQL
--- 项目执行服务 (ydsz-pmis-project, port 9003)
+-- YDSZ project module SQL
+-- 项目执行服务 (ydsz-project, port 9003)
 -- ============================================================
 -- 本脚本 DDL 对应后端 project 服务的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign Client (FinanceDataClient / SalesDataClient)。
 --
--- 表归属依据: ydsz-pmis-project/src/main/java/.../infra/mapper/
+-- 表归属依据: ydsz-project/src/main/java/.../infra/mapper/
 -- 表数量: {project_count} 张 (原 42 张表拆分后剩余)
 -- --------------------------------------------------------------------
--- [P4 架构优化提示] 跨模块冗余字段：pmis_cost_allocation.employee_name、
---   pmis_cost_purchase.applicant_name / approver_name 等 *_name 字段为历史
+-- [P4 架构优化提示] 跨模块冗余字段：ydsz_cost_allocation.employee_name、
+--   ydsz_cost_purchase.applicant_name / approver_name 等 *_name 字段为历史
 --   冗余存储，原则上应通过 NameAssembler 实时解析，禁止在写入时同步冗余。
 --   现有数据保留（兼容历史查询），新写入由 Java 端 NameAssembler 自动注入。
 -- --------------------------------------------------------------------
@@ -227,7 +227,7 @@ literule_append = """
 -- ============================================================
 -- 以下表从 V1.0.0_project.sql 迁移 (2026-07-12 DDD 拆分)
 -- 原 Mapper 在 project 模块, 现已迁移至 literule 模块
--- 表归属依据: ydsz-pmis-literule/src/main/java/.../mapper/
+-- 表归属依据: ydsz-literule/src/main/java/.../mapper/
 -- ============================================================
 
 """

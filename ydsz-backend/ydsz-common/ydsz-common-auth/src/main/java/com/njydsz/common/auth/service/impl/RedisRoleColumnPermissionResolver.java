@@ -4,11 +4,11 @@ import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.ColumnScopeInfo;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.common.auth.service.RbacUserInfoService;
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  * @since 1.0.0
  * 
  * @see ColumnPermissionResolver
- * @see LocalCache
+ * @see YdszCache
  */
 public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolver {
 
@@ -62,9 +62,9 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     private Cache<String, ColumnScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleColumnCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return LocalCache.<String, ColumnScopeInfo>newBuilder().build();
+            return YdszCache.<String, ColumnScopeInfo>newBuilder().build();
         }
-        return LocalCache.<String, ColumnScopeInfo>newBuilder()
+        return YdszCache.<String, ColumnScopeInfo>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, ColumnScopeInfo value, RemovalCause cause) -> {
@@ -145,7 +145,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
             return ColumnScopeInfo.empty();
         }
         try {
-            JsonNode node = Json.readTree(json);
+            JsonNode node = YdszJson.readTree(json);
             if (node == null || node.isNull() || node.isMissing()) {
                 return ColumnScopeInfo.empty();
             }

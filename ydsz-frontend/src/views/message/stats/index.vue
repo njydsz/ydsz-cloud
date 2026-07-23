@@ -7,7 +7,7 @@
   - 回执统计区块：总数/送达/已读/已点击/失败/超时/无回执 + 送达率/已读率
   - 使用 el-card 与 el-statistic 展示
   @module views/message/stats
-  @author ydsy-pmis-team
+  @author ydsz-team
   @since 1.0.0
 -->
 <script setup lang="ts">

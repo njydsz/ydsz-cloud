@@ -1,9 +1,9 @@
-# PMIS Gitleaks 配置（P1-8）
+# YDSZ Gitleaks 配置（P1-8）
 # -----------------------------------------------------------------------------
 # 作用: 自定义 gitleaks 扫描规则，在默认规则基础上增加项目特定的白名单
 # 文档: https://github.com/gitleaks/gitleaks#configuration
 
-title = "PMIS Gitleaks Config"
+title = "YDSZ Gitleaks Config"
 
 [extend]
 # 继承 gitleaks 内置默认规则（100+ 规则覆盖常见密钥类型）
@@ -66,32 +66,32 @@ regexes = [
 ]
 
 # =========================================================================
-# 自定义规则：PMIS 项目特定密钥模式
+# 自定义规则：YDSZ 项目特定密钥模式
 # =========================================================================
 [[rules]]
-id = "pmis-jasypt-password"
+id = "ydsz-jasypt-password"
 description = "Jasypt 配置加密主密码"
 regex = '''jasypt\.password\s*[=:]\s*['"]?[A-Za-z0-9]{16,}['"]?'''
-tags = ["pmis", "config-encryption"]
+tags = ["ydsz", "config-encryption"]
 
 [[rules]]
-id = "pmis-aliyun-oss-key"
+id = "ydsz-aliyun-oss-key"
 description = "阿里云 OSS AccessKey Secret"
 regex = '''aliyun\.oss\.access-key-secret\s*[=:]\s*['"]?[A-Za-z0-9+/=]{30,}['"]?'''
-tags = ["pmis", "cloud"]
+tags = ["ydsz", "cloud"]
 
 [[rules]]
-id = "pmis-dingtalk-secret"
+id = "ydsz-dingtalk-secret"
 description = "钉钉机器人 Secret"
 regex = '''dingtalk\.secret\s*[=:]\s*['"]?SEC[A-Za-z0-9]{60,}['"]?'''
-tags = ["pmis", "notification"]
+tags = ["ydsz", "notification"]
 
 [[rules]]
-id = "pmis-weak-password"
-description = "弱密码检测（字母+数字组合，如 pmis123 / Limw1020）"
+id = "ydsz-weak-password"
+description = "弱密码检测（字母+数字组合，如 ydsz123 / Limw1020）"
 regex = '''(?i)password\s*[=:]\s*['"]?[A-Za-z]{3,}[0-9]+[A-Za-z0-9]*'''
 keywords = ["password", "passwd", "pwd"]
-tags = ["pmis", "weak-password", "security"]
+tags = ["ydsz", "weak-password", "security"]
 [rules.allowlist]
 description = "排除环境变量引用 ${VAR:-default}、占位符和 SQL 种子数据行"
 regexes = [

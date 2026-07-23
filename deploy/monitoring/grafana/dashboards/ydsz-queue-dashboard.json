@@ -1,7 +1,7 @@
 {
-  "title": "PMIS 消息队列监控",
-  "uid": "pmis-queue-dashboard",
-  "tags": ["PMIS", "Queue", "MQ"],
+  "title": "YDSZ 消息队列监控",
+  "uid": "ydsz-queue-dashboard",
+  "tags": ["YDSZ", "Queue", "MQ"],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,

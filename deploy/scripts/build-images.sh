@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  YDSZ PMIS · 批量构建 Docker 镜像（Linux/macOS）
+#  YDSZ · 批量构建 Docker 镜像（Linux/macOS）
 # -----------------------------------------------------------------------------
 #  用法:
 #    bash deploy/scripts/build-images.sh [TAG] [REGISTRY]
@@ -50,7 +50,7 @@ YELLOW=$'\033[1;33m'
 NC=$'\033[0m'
 
 echo "================================================================"
-echo "  YDSZ PMIS · 批量构建 Docker 镜像"
+echo "  YDSZ · 批量构建 Docker 镜像"
 echo "  TAG:       ${TAG}"
 echo "  REGISTRY:  ${REGISTRY}"
 echo "  PUSH:      ${PUSH}"
@@ -112,5 +112,5 @@ echo ""
 echo "下一步:"
 echo "  1. 推送镜像:    PUSH=true bash $0 ${TAG} ${REGISTRY}"
 echo "  2. K8s 部署:    kubectl apply -k deploy/k8s/overlays/dev"
-echo "  3. Helm 部署:   helm install pmis deploy/helm/ydsz -n pmis -f deploy/helm/ydsz/values-dev.yaml"
+echo "  3. Helm 部署:   helm install ydsz deploy/helm/ydsz -n ydsz -f deploy/helm/ydsz/values-dev.yaml"
 echo "  4. 冒烟测试:    bash deploy/scripts/smoke-test.sh http://<gateway-ip>:9000"

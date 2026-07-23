@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
 /**
- * Json 配置属性。
+ * YdszJson 配置属性。
  *
  * <p>支持通过 YAML 配置文件控制 JSON 序列化/反序列化的全局参数。
  *
@@ -30,9 +30,9 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.json")
-public class JsonProperties {
+public class YdszJsonProperties {
 
-    /** 是否启用 Json */
+    /** 是否启用 YdszJson */
     private boolean enabled = true;
 
     /** 全局日期格式 */

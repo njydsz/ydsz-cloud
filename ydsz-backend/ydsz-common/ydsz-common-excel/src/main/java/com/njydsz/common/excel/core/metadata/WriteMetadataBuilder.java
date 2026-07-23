@@ -38,7 +38,7 @@ import com.njydsz.common.excel.annotation.ExcelSheet;
  *
  * @see WriteMetadata
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class WriteMetadataBuilder {

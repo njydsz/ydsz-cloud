@@ -1,6 +1,6 @@
 # ydsz-common-jdbc
 
-PMIS 数据库访问层增强 — MyBatis-Plus 扩展、动态数据源、行/列权限拦截器、逻辑删除、乐观锁、租户隔离、字段自动填充、SQL 追踪。
+YDSZ 数据库访问层增强 — MyBatis-Plus 扩展、动态数据源、行/列权限拦截器、逻辑删除、乐观锁、租户隔离、字段自动填充、SQL 追踪。
 
 ## 模块定位
 
@@ -82,7 +82,7 @@ PMIS 数据库访问层增强 — MyBatis-Plus 扩展、动态数据源、行/�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   jdbc:
     hikari:
       leak-detection-threshold: 30000  # 连接泄漏检测（ms）

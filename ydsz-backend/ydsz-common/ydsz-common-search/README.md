@@ -1,6 +1,6 @@
 # ydsz-common-search
 
-> YDSZ PMIS 统一搜索服务框架 — PG tsvector + zhparser 中文分词 + SPI 多引擎抽象 + 索引同步 + 搜索建议 + 聚合分面
+> YDSZ 统一搜索服务框架 — PG tsvector + zhparser 中文分词 + SPI 多引擎抽象 + 索引同步 + 搜索建议 + 聚合分面
 
 ## 核心特性
 

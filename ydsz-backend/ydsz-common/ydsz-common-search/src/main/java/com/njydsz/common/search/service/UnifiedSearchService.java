@@ -195,6 +195,13 @@ public class UnifiedSearchService {
     }
 
     /**
+     * P2-7: 获取缓存大小（健康检查用）
+     */
+    public int getCacheSize() {
+        return cacheService.size();
+    }
+
+    /**
      * 关闭线程池（Spring 生命周期回调）
      */
     public void shutdown() {

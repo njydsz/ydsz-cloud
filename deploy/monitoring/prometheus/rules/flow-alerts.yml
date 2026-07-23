@@ -1,75 +1,75 @@
-# PMIS 工作流引擎 Prometheus 告警规则
+# YDSZ 工作流引擎 Prometheus 告警规则
 # 对标 GAP-33: 工作流监控告警
 groups:
-  - name: pmis-flow-alerts
+  - name: ydsz-flow-alerts
     rules:
       # P0: 待办积压超过 1000
-      - alert: PmisFlowPendingTaskBacklog
-        expr: pmis_flow_pending_tasks > 1000
+      - alert: YdszFlowPendingTaskBacklog
+        expr: ydsz_flow_pending_tasks > 1000
         for: 5m
         labels:
           severity: warning
-          team: pmis-workflow
+          team: ydsz-workflow
         annotations:
           summary: "工作流待办积压超过 1000"
           description: "当前待办数 {{ $value }}，可能存在审批瓶颈，请检查瓶颈节点和办理人。"
 
       # P0: 超时率超过 10%
-      - alert: PmisFlowHighTimeoutRate
+      - alert: YdszFlowHighTimeoutRate
         expr: |
-          sum(rate(pmis_flow_task_timeout_total[10m]))
-          / sum(rate(pmis_flow_task_created_total[10m])) * 100 > 10
+          sum(rate(ydsz_flow_task_timeout_total[10m]))
+          / sum(rate(ydsz_flow_task_created_total[10m])) * 100 > 10
         for: 10m
         labels:
           severity: critical
-          team: pmis-workflow
+          team: ydsz-workflow
         annotations:
           summary: "工作流任务超时率超过 10%"
           description: "近 10 分钟超时率 {{ $value }}%，请检查 SLA 配置和办理人响应。"
 
       # P1: SLA 自动驳回触发频繁
-      - alert: PmisFlowSlaAutoRejectSpike
-        expr: sum(rate(pmis_flow_sla_timeout_total{action="AUTO_REJECT"}[1h])) > 5
+      - alert: YdszFlowSlaAutoRejectSpike
+        expr: sum(rate(ydsz_flow_sla_timeout_total{action="AUTO_REJECT"}[1h])) > 5
         for: 5m
         labels:
           severity: warning
-          team: pmis-workflow
+          team: ydsz-workflow
         annotations:
           summary: "SLA 自动驳回触发频繁"
           description: "近 1 小时内 SLA 自动驳回 {{ $value }} 次，可能存在审批人长期不响应。"
 
       # P1: 流程启动异常
-      - alert: PmisFlowStartErrorSpike
-        expr: sum(rate(pmis_flow_start_error_total[5m])) > 0.1
+      - alert: YdszFlowStartErrorSpike
+        expr: sum(rate(ydsz_flow_start_error_total[5m])) > 0.1
         for: 2m
         labels:
           severity: critical
-          team: pmis-workflow
+          team: ydsz-workflow
         annotations:
           summary: "流程启动异常"
           description: "近 5 分钟启动异常 {{ $value }} 次/秒，请检查流程定义和引擎状态。"
 
       # P2: 实例驳回率高
-      - alert: PmisFlowHighRejectRate
+      - alert: YdszFlowHighRejectRate
         expr: |
-          sum(rate(pmis_flow_task_rejected_total[30m]))
-          / sum(rate(pmis_flow_task_created_total[30m])) * 100 > 30
+          sum(rate(ydsz_flow_task_rejected_total[30m]))
+          / sum(rate(ydsz_flow_task_created_total[30m])) * 100 > 30
         for: 15m
         labels:
           severity: info
-          team: pmis-workflow
+          team: ydsz-workflow
         annotations:
           summary: "流程驳回率偏高"
           description: "近 30 分钟驳回率 {{ $value }}%，建议分析驳回原因。"
 
       # P2: 任务处理 P95 耗时过长
-      - alert: PmisFlowSlowTaskProcessing
+      - alert: YdszFlowSlowTaskProcessing
         expr: |
-          histogram_quantile(0.95, sum(rate(pmis_flow_task_duration_seconds_bucket[10m])) by (le)) > 86400
+          histogram_quantile(0.95, sum(rate(ydsz_flow_task_duration_seconds_bucket[10m])) by (le)) > 86400
         for: 10m
         labels:
           severity: warning
-          team: pmis-workflow
+          team: ydsz-workflow
         annotations:
           summary: "任务处理 P95 耗时超过 24 小时"
           description: "当前 P95 耗时 {{ $value }} 秒，存在审批卡顿风险。"

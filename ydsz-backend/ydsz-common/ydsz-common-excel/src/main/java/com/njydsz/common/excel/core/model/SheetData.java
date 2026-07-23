@@ -6,7 +6,7 @@ package com.njydsz.common.excel.core.model;
  * <p>封装一个Sheet所需的完整数据信息</p>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class SheetData {

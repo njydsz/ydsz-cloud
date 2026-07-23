@@ -32,11 +32,13 @@ public class DocsMetrics {
 
     private final ObjectProvider<MeterRegistry> registryProvider;
     private final AtomicLong asyncQueueSize = new AtomicLong(0);
+    private MeterRegistry cachedRegistry;
 
     public DocsMetrics(ObjectProvider<MeterRegistry> registryProvider) {
         this.registryProvider = registryProvider;
         MeterRegistry registry = registryProvider.getIfAvailable();
         if (registry != null) {
+            this.cachedRegistry = registry;
             registry.gauge("docs.async.queue.size", asyncQueueSize);
             log.info("[DocsMetrics] Micrometer enabled");
         } else {
@@ -44,29 +46,48 @@ public class DocsMetrics {
         }
     }
 
+    private MeterRegistry registry() {
+        if (cachedRegistry != null) {
+            return cachedRegistry;
+        }
+        cachedRegistry = registryProvider.getIfAvailable();
+        return cachedRegistry;
+    }
+
     public void recordParse(DocumentFormat format, boolean success, long durationMs) {
-        MeterRegistry r = registryProvider.getIfAvailable();
+        MeterRegistry r = registry();
         if (r == null) return;
-        Counter.builder("docs.parse.total").tags(Tags.of(Tag.of("format", format.name()), Tag.of("result", success ? "success" : "failure"))).register(r).increment();
-        Timer.builder("docs.parse.duration").tags(Tags.of(Tag.of("format", format.name()))).register(r).record(durationMs, TimeUnit.MILLISECONDS);
+        Counter.builder("docs.parse.total")
+                .tags(Tags.of(Tag.of("format", format.name()),
+                        Tag.of("result", success ? "success" : "failure")))
+                .register(r).increment();
+        Timer.builder("docs.parse.duration")
+                .tags(Tags.of(Tag.of("format", format.name())))
+                .register(r).record(durationMs, TimeUnit.MILLISECONDS);
     }
 
     public void recordPiiDetected(PiiType type, int count) {
-        MeterRegistry r = registryProvider.getIfAvailable();
+        MeterRegistry r = registry();
         if (r == null) return;
-        Counter.builder("docs.pii.detected").tags(Tags.of(Tag.of("type", type.name()))).register(r).increment(count);
+        Counter.builder("docs.pii.detected")
+                .tags(Tags.of(Tag.of("type", type.name())))
+                .register(r).increment(count);
     }
 
     public void recordSecurityScan(SecurityLevel level) {
-        MeterRegistry r = registryProvider.getIfAvailable();
+        MeterRegistry r = registry();
         if (r == null) return;
-        Counter.builder("docs.security.scan").tags(Tags.of(Tag.of("level", level.name()))).register(r).increment();
+        Counter.builder("docs.security.scan")
+                .tags(Tags.of(Tag.of("level", level.name())))
+                .register(r).increment();
     }
 
     public void recordPreprocess(String processorName, long durationMs) {
-        MeterRegistry r = registryProvider.getIfAvailable();
+        MeterRegistry r = registry();
         if (r == null) return;
-        Timer.builder("docs.preprocess.duration").tags(Tags.of(Tag.of("processor", processorName))).register(r).record(durationMs, TimeUnit.MILLISECONDS);
+        Timer.builder("docs.preprocess.duration")
+                .tags(Tags.of(Tag.of("processor", processorName)))
+                .register(r).record(durationMs, TimeUnit.MILLISECONDS);
     }
 
     public void updateAsyncQueueSize(int size) {

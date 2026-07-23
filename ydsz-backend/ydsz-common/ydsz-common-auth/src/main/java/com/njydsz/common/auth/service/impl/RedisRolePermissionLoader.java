@@ -21,12 +21,12 @@ import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.auth.hierarchy.PermissionHierarchy;
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.RolePermissionLoader;
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -54,7 +54,7 @@ import com.njydsz.common.util.string.StringUtils;
  * @since 1.0.0
  * 
  * @see RolePermissionLoader
- * @see LocalCache
+ * @see YdszCache
  */
 public class RedisRolePermissionLoader implements RolePermissionLoader {
 
@@ -114,9 +114,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     private Cache<String, RolePermissions> buildCache() {
         Integer ttlSeconds = properties.getRolePermissionCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return LocalCache.<String, RolePermissions>newBuilder().build();
+            return YdszCache.<String, RolePermissions>newBuilder().build();
         }
-        return LocalCache.<String, RolePermissions>newBuilder()
+        return YdszCache.<String, RolePermissions>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, RolePermissions value, RemovalCause cause) -> {
@@ -330,7 +330,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             return null;
         }
         try {
-            return Json.readTree(jsonData);
+            return YdszJson.readTree(jsonData);
         } catch (Exception e) {
             log.warn("【权限模块】解析角色权限 JSON 失败: roleCode={}, error={}", roleCode, e.getMessage());
             return null;
@@ -342,7 +342,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
      */
     private void readApiPermissionsSafe(String apiData, Set<String> apiPerms) {
         try {
-            JsonNode parsed = Json.readTree(apiData);
+            JsonNode parsed = YdszJson.readTree(apiData);
             if (parsed != null && parsed.isObject()) {
                 if (!parsed.isMissing()) {
                     readStringArray(parsed.get("apis"), apiPerms);
@@ -365,7 +365,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             if (StringUtils.isBlank(menuData)) {
                 return;
             }
-            JsonNode obj = Json.readTree(menuData);
+            JsonNode obj = YdszJson.readTree(menuData);
             if (obj != null && !obj.isMissing()) {
                 readStringArray(obj.get("menus"), menuPerms);
                 readStringArray(obj.get("buttons"), buttonPerms);
@@ -417,7 +417,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             if (StringUtils.isBlank(menuData)) {
                 return;
             }
-            JsonNode obj = Json.readTree(menuData);
+            JsonNode obj = YdszJson.readTree(menuData);
             if (obj != null && !obj.isMissing()) {
                 readStringArray(obj.get("apis"), apiPerms);
             }
@@ -431,7 +431,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
 
     private void readApiPermissions(String apiData, Set<String> apiPerms, String errorMessage) {
         try {
-            JsonNode parsed = Json.readTree(apiData);
+            JsonNode parsed = YdszJson.readTree(apiData);
             if (parsed != null && parsed.isObject()) {
                 if (!parsed.isMissing()) {
                     readStringArray(parsed.get("apis"), apiPerms);

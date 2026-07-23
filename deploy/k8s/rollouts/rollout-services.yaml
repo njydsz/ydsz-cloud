@@ -1,5 +1,5 @@
 # ============================================================
-# PMIS Argo Rollouts — Canary / Stable Service 资源（P2-11 配套）
+# YDSZ Argo Rollouts — Canary / Stable Service 资源（P2-11 配套）
 #
 # Argo Rollouts 控制器要求每个 Rollout 的 canaryService / stableService
 # 指向已存在的 Service。本文件为 rollout-all-services.yaml 中 9 个服务
@@ -26,7 +26,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-userinfo-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-userinfo
     tier: service
@@ -43,7 +43,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-userinfo-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-userinfo
     tier: service
@@ -64,7 +64,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-system-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-system
     tier: service
@@ -81,7 +81,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-system-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-system
     tier: service
@@ -102,7 +102,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-project-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-project
     tier: service
@@ -119,7 +119,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-project-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-project
     tier: service
@@ -140,7 +140,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-message-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-message
     tier: service
@@ -157,7 +157,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-message-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-message
     tier: service
@@ -178,7 +178,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-cronjob-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-cronjob
     tier: service
@@ -195,7 +195,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-cronjob-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-cronjob
     tier: service
@@ -216,7 +216,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-workflow-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-workflow
     tier: service
@@ -233,7 +233,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-workflow-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-workflow
     tier: service
@@ -254,7 +254,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-agent-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-agent
     tier: service
@@ -271,7 +271,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-agent-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-agent
     tier: service
@@ -292,7 +292,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-sales-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-sales
     tier: service
@@ -309,7 +309,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-sales-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-sales
     tier: service
@@ -330,7 +330,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-finance-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-finance
     tier: service
@@ -347,7 +347,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-finance-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-finance
     tier: service
@@ -368,7 +368,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-nextwiki-canary
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-nextwiki
     tier: service
@@ -385,7 +385,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ydsz-nextwiki-stable
-  namespace: pmis
+  namespace: ydsz
   labels:
     app: ydsz-nextwiki
     tier: service

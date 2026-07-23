@@ -12,7 +12,7 @@
 2. [前置](#2-前置)
 3. [一键安装 8 中间件](#3-一键安装-8-中间件)
 4. [中间件管理](#4-中间件管理)
-5. [启动 PMIS 应用](#5-启动-pmis-应用)
+5. [启动 YDSZ 应用](#5-启动-ydsz-应用)
 6. [数据/日志目录](#6-数据日志目录)
 7. [systemd 单元](#7-systemd-单元)
 8. [故障排查](#8-故障排查)
@@ -24,7 +24,7 @@
 
 ```
 ubuntu/
-├── install-pmis-infra.sh        # 一键安装 7 中间件
+├── install-ydsz-infra.sh        # 一键安装 7 中间件
 ├── infra-manager.sh              # 中间件启停/状态管理
 └── scripts/                      # 应用层启停脚本(.sh)
     ├── start-all.sh              # 一键启动 7 后端 + 前端
@@ -50,12 +50,12 @@ ubuntu/
 ## 3. 一键安装 7 中间件
 
 ```bash
-sudo ./deploy/ubuntu/install-pmis-infra.sh
+sudo ./deploy/ubuntu/install-ydsz-infra.sh
 ```
 
 脚本会自动完成:
 
-1. 创建 `pmis` 系统用户
+1. 创建 `ydsz` 系统用户
 2. 安装 PostgreSQL 18 / Redis 8(apt)
 3. 安装 JDK 21(apt)
 4. 部署 Nacos / XXL-Job / Seata(Java 中间件,下载 release 包)
@@ -69,8 +69,8 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh
 可选参数:
 
 ```bash
-sudo ./deploy/ubuntu/install-pmis-infra.sh --no-start       # 只安装不启动
-sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=minio     # 跳过指定中间件
+sudo ./deploy/ubuntu/install-ydsz-infra.sh --no-start       # 只安装不启动
+sudo ./deploy/ubuntu/install-ydsz-infra.sh --skip=minio     # 跳过指定中间件
 ```
 
 ---
@@ -95,13 +95,13 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=minio     # 跳过指定中间
 
 ---
 
-## 5. 启动 PMIS 应用
+## 5. 启动 YDSZ 应用
 
 中间件就绪后:
 
 ```bash
 # 1. 导入 Nacos 共享配置
-./deploy/ubuntu/scripts/import-nacos-config.sh pmis dev
+./deploy/ubuntu/scripts/import-nacos-config.sh ydsz dev
 
 # 2. 一键启动 7 个后端 + 前端(后台)
 ./deploy/ubuntu/scripts/start-all.sh
@@ -125,41 +125,41 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=minio     # 跳过指定中间
 
 | 用途 | 路径 |
 |---|---|
-| PMIS 数据 | `/opt/pmis/data/` |
-| PMIS 日志 | `/var/log/pmis/` |
+| YDSZ 数据 | `/opt/ydsz/data/` |
+| YDSZ 日志 | `/var/log/ydsz/` |
 | 启动脚本输出 | `$ROOT/.run-logs/{service}.log` |
 | PostgreSQL data | `/var/lib/postgresql/18/main/` |
 | Nacos data | `/opt/nacos/data/` |
 | Redis data | `/var/lib/redis/` |
-| MinIO data | `/opt/pmis/data/minio/` |
-| RocketMQ data | `/opt/pmis/data/rocketmq/` |
-| XXL-Job 日志 | `/var/log/pmis/xxl-job.log` |
-| ES data | `/opt/pmis/data/elasticsearch/` |
+| MinIO data | `/opt/ydsz/data/minio/` |
+| RocketMQ data | `/opt/ydsz/data/rocketmq/` |
+| XXL-Job 日志 | `/var/log/ydsz/xxl-job.log` |
+| ES data | `/opt/ydsz/data/elasticsearch/` |
 
 ---
 
 ## 7. systemd 单元
 
-`install-pmis-infra.sh` 会在 `/etc/systemd/system/` 注册 8 个服务(7 中间件 + rocketmq 拆为 2 个):
+`install-ydsz-infra.sh` 会在 `/etc/systemd/system/` 注册 8 个服务(7 中间件 + rocketmq 拆为 2 个):
 
 ```
 /etc/systemd/system/
-├── pmis-postgres.service
-├── pmis-redis.service
-├── pmis-nacos.service
-├── pmis-minio.service
-├── pmis-seata.service
-├── pmis-rocketmq-namesrv.service
-├── pmis-rocketmq-broker.service
-└── pmis-xxl-job.service
+├── ydsz-postgres.service
+├── ydsz-redis.service
+├── ydsz-nacos.service
+├── ydsz-minio.service
+├── ydsz-seata.service
+├── ydsz-rocketmq-namesrv.service
+├── ydsz-rocketmq-broker.service
+└── ydsz-xxl-job.service
 ```
 
 也可以直接用 systemd 命令:
 
 ```bash
-sudo systemctl status pmis-nacos
-sudo systemctl restart pmis-redis
-sudo journalctl -u pmis-nacos -f       # 实时日志
+sudo systemctl status ydsz-nacos
+sudo systemctl restart ydsz-redis
+sudo journalctl -u ydsz-nacos -f       # 实时日志
 ```
 
 ---
@@ -168,12 +168,12 @@ sudo journalctl -u pmis-nacos -f       # 实时日志
 
 | 现象 | 排查命令 |
 |---|---|
-| 服务起不来 | `sudo systemctl status pmis-{name}` |
-| 启动失败 | `sudo journalctl -u pmis-{name} -n 100` |
+| 服务起不来 | `sudo systemctl status ydsz-{name}` |
+| 启动失败 | `sudo journalctl -u ydsz-{name} -n 100` |
 | 端口未监听 | `ss -tlnp \| grep 8848` |
 | PG 连不上 | `sudo -u postgres psql -c "SELECT version();"` |
-| Nacos 502 | `tail -f /var/log/pmis/nacos.log` |
-| 磁盘满 | `du -sh /opt/pmis/* \| sort -h` |
+| Nacos 502 | `tail -f /var/log/ydsz/nacos.log` |
+| 磁盘满 | `du -sh /opt/ydsz/* \| sort -h` |
 
 详细排查见 [`../README.md`](../README.md#8-占位符约定commonconf) 占位符约定 + [`../README.md §4`](../README.md#4-8-大中间件)。
 

@@ -217,7 +217,7 @@ const dialogPage = ref(1)
 const dialogTotal = ref(0)
 const dialogPageSize = ref(20)
 /** 最近选择（localStorage） */
-const RECENT_KEY = 'pmis:user-picker:recent'
+const RECENT_KEY = 'ydsz:user-picker:recent'
 const recent = ref<UserVO[]>([])
 
 function loadRecent() {

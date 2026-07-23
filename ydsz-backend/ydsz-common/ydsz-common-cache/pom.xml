@@ -9,7 +9,7 @@
   </parent>
   <artifactId>ydsz-common-cache</artifactId>
   <name>ydsz-common-cache</name>
-  <description>PMIS Common Cache - 多策略本地缓存框架（零第三方依赖核心，可选 Spring/Micrometer 集成）</description>
+  <description>YDSZ Common Cache - 多策略本地缓存框架（零第三方依赖核心，可选 Spring/Micrometer 集成）</description>
 
   <properties>
     <jmh.version>1.37</jmh.version>

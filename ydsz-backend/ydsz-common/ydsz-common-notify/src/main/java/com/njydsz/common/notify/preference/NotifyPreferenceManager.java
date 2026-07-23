@@ -1,6 +1,6 @@
 package com.njydsz.common.notify.preference;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.enums.NotifyType;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class NotifyPreferenceManager {
 			try {
 				String json = redisTemplate.opsForValue().get(REDIS_KEY_PREFIX + userId);
 				if (json != null) {
-					NotifyPreference pref = Json.toObject(json, NotifyPreference.class);
+					NotifyPreference pref = YdszJson.toObject(json, NotifyPreference.class);
 					localCache.put(userId, pref);
 					return pref;
 				}
@@ -80,7 +80,7 @@ public class NotifyPreferenceManager {
 		localCache.put(preference.getUserId(), preference);
 		if (redisTemplate != null) {
 			try {
-				String json = Json.toJson(preference);
+				String json = YdszJson.toJson(preference);
 				redisTemplate.opsForValue().set(REDIS_KEY_PREFIX + preference.getUserId(), json, CACHE_TTL);
 			} catch (Exception e) {
 				log.warn("[NotifyPreferenceManager] Redis 保存偏好失败: {}", e.getMessage());

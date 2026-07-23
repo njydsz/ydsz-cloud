@@ -4,7 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 流式 JSON 生成器
@@ -279,10 +279,10 @@ public final class JsonGenerator implements Closeable {
     }
 
     /**
-     * 写入一个完整的 Java 对象（使用 Json 引擎序列化）。
+     * 写入一个完整的 Java 对象（使用 YdszJson 引擎序列化）。
      *
      * <p>适用于在流式生成过程中嵌入复杂对象的场景，
-     * 内部使用 {@link Json#toJson(Object)} 序列化。</p>
+     * 内部使用 {@link YdszJson#toJson(Object)} 序列化。</p>
      *
      * @param obj 要写入的对象
      * @return 本生成器（链式调用）
@@ -295,7 +295,7 @@ public final class JsonGenerator implements Closeable {
         if (obj == null) {
             writer.write("null");
         } else {
-            String json = Json.toJson(obj);
+            String json = YdszJson.toJson(obj);
             writer.write(json);
         }
         firstElement = false;

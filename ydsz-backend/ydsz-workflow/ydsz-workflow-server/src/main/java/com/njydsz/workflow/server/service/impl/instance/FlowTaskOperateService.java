@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
@@ -334,7 +334,7 @@ public class FlowTaskOperateService {
             return extra == null ? Collections.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = Json.parseMap(instance.getVariable());
+            Map<String, Object> base = YdszJson.parseMap(instance.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }
@@ -352,7 +352,7 @@ public class FlowTaskOperateService {
             return Collections.emptyMap();
         }
         try {
-            return Json.parseMap(ext);
+            return YdszJson.parseMap(ext);
         } catch (Exception e) {
             log.warn("[Flow] 解析节点 ext 配置失败: err={}", e.getMessage());
             return Collections.emptyMap();

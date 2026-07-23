@@ -2,7 +2,7 @@ package com.njydsz.common.safe.core;
 
 import java.util.Iterator;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * JSON Body XSS 清理器
  *
  * <p>递归遍历 JSON 对象的所有字符串值，使用 EscapeUtils 清理潜在的 XSS 脚本。
- * 基于 Json {@link JsonNode} 实现，与 Json 引擎保持一致。
+ * 基于 YdszJson {@link JsonNode} 实现，与 YdszJson 引擎保持一致。
  *
  * @since 5.0.0
  */
@@ -33,9 +33,9 @@ public class JsonBodyXssCleaner {
             return json;
         }
         try {
-            JsonNode parsed = Json.readTree(json);
+            JsonNode parsed = YdszJson.readTree(json);
             JsonNode cleaned = cleanNode(parsed);
-            return Json.toJson(cleaned);
+            return YdszJson.toJson(cleaned);
         } catch (Exception e) {
             log.debug("[JsonBodyXssCleaner] JSON解析失败，返回原始字符串: {}", e.getMessage());
             return json;

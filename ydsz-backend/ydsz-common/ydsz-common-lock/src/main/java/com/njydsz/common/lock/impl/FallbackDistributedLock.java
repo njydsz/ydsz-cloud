@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.lock.core.DistributedLocker;
@@ -66,7 +66,7 @@ public class FallbackDistributedLock implements DistributedLocker {
     /**
      * 本地锁映射表（使用 ydsz-common-cache，自动过期清理，防止内存泄漏）
      */
-    private final Cache<String, ReentrantLock> localLocks = LocalCache.<String, ReentrantLock>newBuilder()
+    private final Cache<String, ReentrantLock> localLocks = YdszCache.<String, ReentrantLock>newBuilder()
             .type(CacheType.TTL)
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10000)

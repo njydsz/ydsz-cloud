@@ -66,7 +66,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
         } else {
             user2FAMapper.updateById(entity);
         }
-        String issuer = "PMIS";
+        String issuer = "YDSZ";
         String uri = TotpUtil.otpAuthUri(account, issuer, secret);
         return TwoFactorBindResult.builder()
                 .secret(secret)

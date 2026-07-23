@@ -1,5 +1,5 @@
 # =============================================================================
-# PMIS 持续部署 (CD) 流水线
+# YDSZ 持续部署 (CD) 流水线
 # -----------------------------------------------------------------------------
 # 作用:  构建并推送 8 个后端 + 1 个前端镜像到阿里云 ACR，再通过 kubectl 部署到 K8s
 # 触发:  push 到 main (自动部署 staging)  /  workflow_dispatch (手动选择 staging|production)
@@ -42,7 +42,7 @@ env:
   NAMESPACE: ydsz
   IMAGE_TAG: ${{ github.sha }}
   # K8s 部署命名空间（与 deploy/k8s/base/namespace.yaml 保持一致）
-  K8S_NAMESPACE: pmis
+  K8S_NAMESPACE: ydsz
 
 jobs:
   # ==================== 构建后端镜像（Dockerfile 多阶段构建，内含 Maven 编译） ====================
@@ -88,13 +88,13 @@ jobs:
           file: ydsz-backend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:latest
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${{ matrix.service.name }}:latest
           build-args: |
             MODULE_NAME=${{ matrix.service.module }}
             APP_PORT=${{ matrix.service.port }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:cache,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${{ matrix.service.name }}:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${{ matrix.service.name }}:cache,mode=max
 
   # ==================== 构建前端镜像（Dockerfile 多阶段构建，内含 pnpm build） ====================
   build-frontend:
@@ -120,10 +120,10 @@ jobs:
           file: ydsz-frontend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:latest
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache,mode=max
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-frontend:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-frontend:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-frontend:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-frontend:cache,mode=max
 
   # ==================== 镜像安全扫描 + SBOM + 签名 ====================
   # 阻断策略: HIGH+CRITICAL 漏洞阻断部署（可通过 .trivyignore 临时豁免）
@@ -141,7 +141,7 @@ jobs:
       - name: Trivy 镜像漏洞扫描
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service }}:${{ env.IMAGE_TAG }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${{ matrix.service }}:${{ env.IMAGE_TAG }}
           format: 'sarif'
           output: 'trivy-${{ matrix.service }}.sarif'
           exit-code: '1'
@@ -152,7 +152,7 @@ jobs:
       - name: Syft 生成 SBOM（CycloneDX）
         uses: anchore/sbom-action@v0
         with:
-          image: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service }}:${{ env.IMAGE_TAG }}
+          image: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${{ matrix.service }}:${{ env.IMAGE_TAG }}
           format: cyclonedx-json
           output-file: sbom-${{ matrix.service }}.cyclonedx.json
 
@@ -171,7 +171,7 @@ jobs:
         run: |
           echo "${COSIGN_KEY}" > /tmp/cosign.key
           cosign sign --yes --key /tmp/cosign.key \
-            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${{ matrix.service }}:${{ env.IMAGE_TAG }}
           rm -f /tmp/cosign.key
 
       - name: 上传 Trivy 扫描报告
@@ -193,7 +193,7 @@ jobs:
       - name: 安全扫描摘要
         if: always()
         run: |
-          echo "## 镜像安全扫描摘要 - pmis-${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "## 镜像安全扫描摘要 - ydsz-${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 状态 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|------|" >> $GITHUB_STEP_SUMMARY
@@ -217,17 +217,17 @@ jobs:
 
       - name: Deploy to Staging
         run: |
-          # 更新所有微服务镜像（命名空间统一为 pmis，与 deploy/k8s/base/namespace.yaml 一致）
+          # 更新所有微服务镜像（命名空间统一为 ydsz，与 deploy/k8s/base/namespace.yaml 一致）
           # Deployment 命名遵循 deploy/k8s/base/*.yaml 的 ydsz- 前缀（P0-2 修复命名一致性）
           # Container 命名遵循 deploy/k8s/base/*.yaml 的容器名（与 service 同名，无 ydsz- 前缀）
           for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki; do
             kubectl set image deployment/ydsz-${svc} \
-              ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
+              ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
           done
           # 更新前端镜像（前端容器名为 frontend，与后端服务命名规则一致）
           kubectl set image deployment/ydsz-frontend \
-            frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }} \
+            frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-frontend:${{ env.IMAGE_TAG }} \
             -n ${{ env.K8S_NAMESPACE }}
 
       - name: Wait for Rollout
@@ -267,7 +267,7 @@ jobs:
 
             # 更新镜像触发滚动更新（P0-2 修复：Deployment 名为 ydsz-${svc}，容器名为 ${svc}）
             kubectl set image deployment/ydsz-${svc} \
-              ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
+              ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/ydsz-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
 
             # 等待滚动更新完成（超时 10 分钟）

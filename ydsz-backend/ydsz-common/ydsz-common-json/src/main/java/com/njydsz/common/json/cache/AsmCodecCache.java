@@ -22,7 +22,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *   <li>后续使用直接从缓存获取，零开销</li>
  * </ul>
  * 
- * @author Json Team
+ * @author YdszJson Team
  */
 public final class AsmCodecCache {
 

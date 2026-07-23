@@ -12,7 +12,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
 /**
  * 规则引擎服务启动类
  *
- * <p>承载 PMIS 规则引擎核心能力：规则定义/编排/评估/灰度/回放/审批/CEP。
+ * <p>承载 YDSZ 规则引擎核心能力：规则定义/编排/评估/灰度/回放/审批/CEP。
  * <p>独立部署、独立 JVM 进程，注册到 Nacos，对外提供 REST API（{@code /ruleEngine/**}）。
  *
  * <h3>端口与构建顺序</h3>

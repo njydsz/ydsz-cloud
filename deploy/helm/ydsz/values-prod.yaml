@@ -1,5 +1,5 @@
 # =============================================================================
-#  YDSZ PMIS · Helm Chart PROD 环境覆盖值
+#  YDSZ · Helm Chart PROD 环境覆盖值
 # -----------------------------------------------------------------------------
 #  生产环境关键差异:
 #    1. 镜像 tag 固定为正式版本（非 SNAPSHOT/RC）
@@ -13,13 +13,13 @@ global:
   imageTag: v1.0.0
   nacos:
     serverAddr: nacos-server.ydsz.svc.cluster.local:8848
-    namespace: pmis
+    namespace: ydsz
 
 backend:
   springProfile: prod
   env:
     LOGGING_LEVEL_ROOT: INFO
-    LOGGING_LEVEL_COM_NJYDSZ_PMIS: INFO
+    LOGGING_LEVEL_COM_NJYDSZ_YDSZ: INFO
 
   # 生产环境 HA：Pod 反亲和 + 跨可用区拓扑分布
   affinity:
@@ -71,7 +71,7 @@ services:
       host: ydsz.example.com
       tls:
         enabled: true
-        secretName: pmis-tls
+        secretName: ydsz-tls
 
   system:
     replicas: 3
@@ -158,4 +158,4 @@ frontend:
     host: app.ydsz.example.com
     tls:
       enabled: true
-      secretName: pmis-frontend-tls
+      secretName: ydsz-frontend-tls

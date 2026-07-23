@@ -456,8 +456,8 @@ public class InitiationServiceImpl implements InitiationService {
             return o.getWorkflowId();
         }
         Map<String, Object> body = new HashMap<>();
-        body.put("businessKey", "PMIS_INIT_" + o.getId());
-        body.put("processDefinitionKey", "pmis-initiation");
+        body.put("businessKey", "YDSZ_INIT_" + o.getId());
+        body.put("processDefinitionKey", "ydsz-initiation");
         body.put("initiator", initiatorId);
         Map<String, Object> vars = new HashMap<>();
         vars.put("initiationId", o.getId());

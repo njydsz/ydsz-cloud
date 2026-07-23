@@ -69,7 +69,7 @@ public class NotifyAlertHandler implements DefaultAlertPublisher.AlertHandler {
     }
 
     private String buildTitle(AlertEvent event) {
-        return String.format("[PMIS-P%s] %s",
+        return String.format("[YDSZ-P%s] %s",
                 event.getSeverity() != null ? event.getSeverity().name() : "UNKNOWN",
                 event.getName() != null ? event.getName() : "Unknown Alert");
     }

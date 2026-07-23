@@ -2,6 +2,7 @@ package com.njydsz.common.excel.core;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.*;
 
 import org.apache.poi.hssf.usermodel.*;
@@ -74,7 +75,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  * }</pre>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  * @see ExcelFacade
  * @see ReadListener
@@ -466,7 +467,7 @@ public class ExcelReader {
                         superFastReader.read(fis);
                     }
                     notifyEnd();
-                    ExcelMetrics.recordRead(java.time.Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", true);
+                    ExcelMetrics.recordRead(Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", true);
                     return;
                 }
             }
@@ -476,10 +477,10 @@ public class ExcelReader {
             } else {
                 readXls();
             }
-            ExcelMetrics.recordRead(java.time.Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", true);
+            ExcelMetrics.recordRead(Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", true);
         } catch (Exception e) {
             log.error("Excel 读取异常", e);
-            ExcelMetrics.recordRead(java.time.Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", false);
+            ExcelMetrics.recordRead(Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", false);
             throw new RuntimeException("Excel 读取异常: " + e.getMessage(), e);
         }
     }

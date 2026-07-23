@@ -23,7 +23,7 @@ import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.common.auth.util.PermissionUtils;
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -99,7 +99,7 @@ public class RbacPermissionEvaluator {
         this.properties = properties;
         this.userInfoService = userInfoService;
         this.rolePermissionLoader = rolePermissionLoader;
-        this.rolePermissionsCache = LocalCache.<String, RolePermissions>newBuilder()
+        this.rolePermissionsCache = YdszCache.<String, RolePermissions>newBuilder()
                 .type(CacheType.TTL)
                 .maximumSize(1000)
                 .expireAfterWrite(resolvePermissionCacheTtlSeconds(), TimeUnit.SECONDS)

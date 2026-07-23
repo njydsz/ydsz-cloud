@@ -5,7 +5,7 @@
       1. 分页展示所有决策表（tableKey / tableName / hitPolicy / version / status）；
       2. 关键词搜索 + 新建；
       3. 操作：编辑、发布、执行测试。
-    与流程引擎配合实现规则路由（自研工作流 v2 引擎 pmis_flow_*），PC 端专用。
+    与流程引擎配合实现规则路由（自研工作流 v2 引擎 ydsz_flow_*），PC 端专用。
   @module views/workflow/dmn
   @author ydsz-team
   @since 1.0.0

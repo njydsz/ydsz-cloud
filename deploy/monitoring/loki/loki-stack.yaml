@@ -185,7 +185,7 @@ spec:
             name: loki-rules
             items:
               - key: loki-rules.yaml
-                path: pmis-log-alerts.yaml
+                path: ydsz-log-alerts.yaml
   # PVC 模板:StatefulSet 自动创建 loki-storage-0(单节点)
   # 生产环境建议指定 StorageClass 并换 S3/OSS 存储
   volumeClaimTemplates:
@@ -228,7 +228,7 @@ spec:
 # =============================================================================
 # 4. Promtail 配置 ConfigMap
 #    采集 /var/log/pods/* 日志,通过 kubernetes_sd_configs 自动发现 pod
-#    按 namespace=pmis 过滤,仅采集 PMIS 服务日志
+#    按 namespace=ydsz 过滤,仅采集 YDSZ 服务日志
 # =============================================================================
 ---
 apiVersion: v1
@@ -261,21 +261,21 @@ data:
     scrape_configs:
       # ------------------------------------------------------------------
       # 采集 K8s pod 日志(/var/log/pods/*,kubelet 标准输出)
-      # kubernetes_sd_configs 自动发现所有 pod,按 namespace=pmis 过滤
+      # kubernetes_sd_configs 自动发现所有 pod,按 namespace=ydsz 过滤
       #
       # P2-12 修复:K8s pod 日志路径格式为
       #   /var/log/pods/<namespace>_<pod-name>_<pod-uid>/<container-name>/<restart>.log
       # 原 __path__ 只用 pod_uid + container_name,缺失 namespace 与 pod-name
       # 拼接前缀,导致 Promtail 找不到日志文件、Loki 收不到任何 K8s 日志,
-      # 进而 loki-rules.yaml 中所有基于 {namespace="pmis"} 的告警全部失效。
+      # 进而 loki-rules.yaml 中所有基于 {namespace="ydsz"} 的告警全部失效。
       # ------------------------------------------------------------------
       - job_name: kubernetes-pods
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
-          # 仅采集 pmis 命名空间的 pod 日志
+          # 仅采集 ydsz 命名空间的 pod 日志
           - source_labels: [__meta_kubernetes_namespace]
-            regex: pmis
+            regex: ydsz
             action: keep
           # 提取 namespace 作为 label(Loki 检索 / 告警核心维度)
           - source_labels: [__meta_kubernetes_namespace]
@@ -308,7 +308,7 @@ data:
               format: RFC3339Nano
           # 若 content 是 JSON(LogstashEncoder 输出),解析提取 traceId/level
           - match:
-              selector: '{namespace="pmis"}'
+              selector: '{namespace="ydsz"}'
               stages:
                 - json:
                     expressions:
@@ -464,7 +464,7 @@ spec:
 # 8. Loki Ruler 告警规则 ConfigMap（P2-12）
 # -----------------------------------------------------------------------------
 # 内容来源: deploy/monitoring/loki/loki-rules.yaml
-# 此处以 ConfigMap 形式挂载到 Loki Pod 的 /loki/rules/pmis-log-alerts.yaml,
+# 此处以 ConfigMap 形式挂载到 Loki Pod 的 /loki/rules/ydsz-log-alerts.yaml,
 # 由 Ruler 周期性评估,触发后推送告警至 Alertmanager。
 # 规则更新流程:
 #   1. 修改 deploy/monitoring/loki/loki-rules.yaml(权威源)
@@ -483,15 +483,15 @@ metadata:
 data:
   loki-rules.yaml: |
     groups:
-      - name: pmis-log-alerts
+      - name: ydsz-log-alerts
         interval: 1m
         rules:
           # 1. ERROR 日志突增告警(5 分钟内 > 10 条)
-          - alert: PmisErrorLogSpike
+          - alert: YdszErrorLogSpike
             expr: |
               sum by (appName) (
                 count_over_time(
-                  {namespace="pmis", level="ERROR"}[5m]
+                  {namespace="ydsz", level="ERROR"}[5m]
                 )
               ) > 10
             for: 2m
@@ -503,11 +503,11 @@ data:
               description: "服务 {{ $labels.appName }} 在过去 5 分钟内产生了超过 10 条 ERROR 日志,请检查日志排查问题。"
 
           # 2. 单服务 ERROR 严重告警(5 分钟内 > 50 条)
-          - alert: PmisErrorLogCritical
+          - alert: YdszErrorLogCritical
             expr: |
               sum by (appName) (
                 count_over_time(
-                  {namespace="pmis", level="ERROR"}[5m]
+                  {namespace="ydsz", level="ERROR"}[5m]
                 )
               ) > 50
             for: 1m
@@ -519,11 +519,11 @@ data:
               description: "服务 {{ $labels.appName }} 在过去 5 分钟内产生了超过 50 条 ERROR 日志,可能存在严重故障,请立即排查。"
 
           # 3. JVM 严重错误(OOM / StackOverflow)
-          - alert: PmisJvmCriticalError
+          - alert: YdszJvmCriticalError
             expr: |
               sum by (appName) (
                 count_over_time(
-                  {namespace="pmis"} |~ "(?i)(OutOfMemoryError|StackOverflowError|GC overhead limit exceeded)"
+                  {namespace="ydsz"} |~ "(?i)(OutOfMemoryError|StackOverflowError|GC overhead limit exceeded)"
                   [1m]
                 )
               ) > 0
@@ -536,11 +536,11 @@ data:
               description: "服务 {{ $labels.appName }} 检测到 JVM 严重错误(OOM/StackOverflow),可能需要立即重启或扩容。"
 
           # 4. 数据库连接异常
-          - alert: PmisDatabaseConnectionIssue
+          - alert: YdszDatabaseConnectionIssue
             expr: |
               sum by (appName) (
                 count_over_time(
-                  {namespace="pmis"} |~ "(?i)(connection refused|connection timeout|pool exhausted|cannot get a connection)"
+                  {namespace="ydsz"} |~ "(?i)(connection refused|connection timeout|pool exhausted|cannot get a connection)"
                   [3m]
                 )
               ) > 5
@@ -554,11 +554,11 @@ data:
 
           # 5. P2-12 新增: 服务无日志输出(可能 Pod 假死)
           # 10 分钟内某服务无任何日志 → warning
-          - alert: PmisNoLogOutput
+          - alert: YdszNoLogOutput
             expr: |
               sum by (appName) (
                 count_over_time(
-                  {namespace="pmis"}[10m]
+                  {namespace="ydsz"}[10m]
                 )
               ) == 0
             for: 5m

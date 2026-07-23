@@ -12,7 +12,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 全局响应包装基类（Web/App 共享）
@@ -45,7 +45,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
         if (body instanceof String) {
             BaseResponse<String> result = wrapStringBody((String) body);
             try {
-                return Json.toJson(result);
+                return YdszJson.toJson(result);
             } catch (Exception e) {
                 return result;
             }

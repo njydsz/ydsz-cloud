@@ -4,7 +4,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.file.domain.ListObjectsResult;
@@ -49,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "ydsz.file.lifecycle", name = "enabled", havingValue = "true")
 public class FileLifecycleManager {
 
 	private final FileLifecycleProperties lifecycleProperties;
@@ -86,7 +84,7 @@ public class FileLifecycleManager {
 
 		for (FileLifecycleProperties.LifecycleRule rule : rules) {
 			try {
-				processRule(storage, bucketName, rule, dryRun);
+				processRule(storage, bucketName, rule, dryRun, new CleanupResult());
 			} catch (Exception e) {
 				log.error("文件生命周期清理规则执行失败, prefix={}: {}",
 						rule.getPrefix(), e.getMessage(), e);
@@ -122,7 +120,7 @@ public class FileLifecycleManager {
 
 		for (FileLifecycleProperties.LifecycleRule rule : rules) {
 			try {
-				processRuleWithStats(storage, bucketName, rule, dryRun, result);
+				processRule(storage, bucketName, rule, dryRun, result);
 			} catch (Exception e) {
 				log.error("文件生命周期清理规则执行失败, prefix={}: {}",
 						rule.getPrefix(), e.getMessage(), e);
@@ -142,18 +140,14 @@ public class FileLifecycleManager {
 	 * @param dryRun     是否仅模拟执行
 	 */
 	private void processRule(IFileStorage storage, String bucketName,
-			FileLifecycleProperties.LifecycleRule rule, boolean dryRun) {
+			FileLifecycleProperties.LifecycleRule rule, boolean dryRun, CleanupResult result) {
 		String prefix = rule.getPrefix();
 		long maxAgeMillis = rule.getMaxAgeDays() * 24L * 60L * 60L * 1000L;
 		long cutoffTime = System.currentTimeMillis() - maxAgeMillis;
 
 		log.info("处理生命周期规则: prefix={}, maxAgeDays={}", prefix, rule.getMaxAgeDays());
 
-		// 列出指定前缀下的所有对象
 		String cursor = null;
-		int scannedCount = 0;
-		int deletedCount = 0;
-		int skippedCount = 0;
 
 		while (true) {
 			ListObjectsResult listResult =
@@ -164,7 +158,7 @@ public class FileLifecycleManager {
 			}
 
 			for (ObjectMetadata obj : listResult.getObjects()) {
-				scannedCount++;
+				result.incrementScanned();
 				long lastModified = obj.getLastModified() != null
 						? obj.getLastModified().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 						: 0;
@@ -173,18 +167,19 @@ public class FileLifecycleManager {
 					if (dryRun) {
 						log.info("[DryRun] 跳过删除过期文件: objectName={}, lastModified={}",
 								obj.getObjectName(), obj.getLastModified());
-						skippedCount++;
+						result.incrementSkipped();
 					} else {
 						try {
 							storage.delete(bucketName, obj.getObjectName());
-							deletedCount++;
+							result.incrementDeleted();
 							log.debug("删除过期文件: objectName={}", obj.getObjectName());
 						} catch (Exception e) {
+							result.addError(obj.getObjectName(), e.getMessage());
 							log.error("删除过期文件失败: objectName={}, error={}", obj.getObjectName(), e.getMessage());
 						}
 					}
 				} else {
-					skippedCount++;
+					result.incrementSkipped();
 				}
 			}
 
@@ -195,53 +190,7 @@ public class FileLifecycleManager {
 		}
 
 		log.info("生命周期规则执行完成: prefix={}, scanned={}, deleted={}, skipped={}",
-				prefix, scannedCount, deletedCount, skippedCount);
-	}
-
-	/**
-	 * 处理单条规则并统计结果
-	 */
-	private void processRuleWithStats(IFileStorage storage, String bucketName,
-			FileLifecycleProperties.LifecycleRule rule, boolean dryRun, CleanupResult result) {
-		String prefix = rule.getPrefix();
-		long maxAgeMillis = rule.getMaxAgeDays() * 24L * 60L * 60L * 1000L;
-		long cutoffTime = System.currentTimeMillis() - maxAgeMillis;
-
-		String cursor = null;
-
-		while (true) {
-			ListObjectsResult listResult =
-					storage.listObjects(bucketName, prefix, cursor, 1000);
-
-			if (listResult == null || listResult.getObjects() == null || listResult.getObjects().isEmpty()) {
-				break;
-			}
-
-			for (ObjectMetadata obj : listResult.getObjects()) {
-				long lastModified = obj.getLastModified() != null
-						? obj.getLastModified().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-						: 0;
-
-				if (lastModified > 0 && lastModified < cutoffTime) {
-					if (dryRun) {
-						result.incrementSkipped();
-					} else {
-						try {
-							storage.delete(bucketName, obj.getObjectName());
-							result.incrementDeleted();
-						} catch (Exception e) {
-							result.addError(obj.getObjectName(), e.getMessage());
-						}
-					}
-				}
-				result.incrementScanned();
-			}
-
-			cursor = listResult.getNextCursor();
-			if (cursor == null || cursor.isEmpty()) {
-				break;
-			}
-		}
+				prefix, result.getScannedCount(), result.getDeletedCount(), result.getSkippedCount());
 	}
 
 	/**

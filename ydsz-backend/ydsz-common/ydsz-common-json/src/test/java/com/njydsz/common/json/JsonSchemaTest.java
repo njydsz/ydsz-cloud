@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.njydsz.common.json.schema.JsonSchema;
+import com.njydsz.common.json.schema.YdszJsonSchema;
 import com.njydsz.common.json.schema.SchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
 
@@ -21,64 +21,64 @@ class JsonSchemaTest {
 
     @Test
     void testStringSchemaValid() {
-        JsonSchema schema = JsonSchema.string().minLength(1).maxLength(10);
+        YdszJsonSchema schema = YdszJsonSchema.string().minLength(1).maxLength(10);
         ValidationResult result = SchemaValidator.validate(schema, "hello");
         assertTrue(result.isValid());
     }
 
     @Test
     void testStringSchemaTooShort() {
-        JsonSchema schema = JsonSchema.string().minLength(5);
+        YdszJsonSchema schema = YdszJsonSchema.string().minLength(5);
         ValidationResult result = SchemaValidator.validate(schema, "hi");
         assertFalse(result.isValid());
     }
 
     @Test
     void testStringSchemaTooLong() {
-        JsonSchema schema = JsonSchema.string().maxLength(3);
+        YdszJsonSchema schema = YdszJsonSchema.string().maxLength(3);
         ValidationResult result = SchemaValidator.validate(schema, "hello");
         assertFalse(result.isValid());
     }
 
     @Test
     void testIntegerSchemaValid() {
-        JsonSchema schema = JsonSchema.integer().minimum(0).maximum(100);
+        YdszJsonSchema schema = YdszJsonSchema.integer().minimum(0).maximum(100);
         ValidationResult result = SchemaValidator.validate(schema, 50);
         assertTrue(result.isValid());
     }
 
     @Test
     void testIntegerSchemaBelowMinimum() {
-        JsonSchema schema = JsonSchema.integer().minimum(10);
+        YdszJsonSchema schema = YdszJsonSchema.integer().minimum(10);
         ValidationResult result = SchemaValidator.validate(schema, 5);
         assertFalse(result.isValid());
     }
 
     @Test
     void testIntegerSchemaAboveMaximum() {
-        JsonSchema schema = JsonSchema.integer().maximum(100);
+        YdszJsonSchema schema = YdszJsonSchema.integer().maximum(100);
         ValidationResult result = SchemaValidator.validate(schema, 150);
         assertFalse(result.isValid());
     }
 
     @Test
     void testNumberSchemaValid() {
-        JsonSchema schema = JsonSchema.number();
+        YdszJsonSchema schema = YdszJsonSchema.number();
         ValidationResult result = SchemaValidator.validate(schema, 3.14);
         assertTrue(result.isValid());
     }
 
     @Test
     void testBooleanSchemaValid() {
-        JsonSchema schema = JsonSchema.booleanType();
+        YdszJsonSchema schema = YdszJsonSchema.booleanType();
         ValidationResult result = SchemaValidator.validate(schema, true);
         assertTrue(result.isValid());
     }
 
     @Test
     void testObjectSchemaWithRequiredProperty() {
-        JsonSchema schema = JsonSchema.object()
-                .addProperty("name", JsonSchema.string().required())
+        YdszJsonSchema schema = YdszJsonSchema.object()
+                .addProperty("name", YdszJsonSchema.string().required())
                 .addRequired("name");
 
         Map<String, Object> data = new HashMap<>();
@@ -89,8 +89,8 @@ class JsonSchemaTest {
 
     @Test
     void testObjectSchemaMissingRequired() {
-        JsonSchema schema = JsonSchema.object()
-                .addProperty("name", JsonSchema.string().required())
+        YdszJsonSchema schema = YdszJsonSchema.object()
+                .addProperty("name", YdszJsonSchema.string().required())
                 .addRequired("name");
 
         Map<String, Object> data = new HashMap<>();
@@ -101,8 +101,8 @@ class JsonSchemaTest {
 
     @Test
     void testArraySchemaValid() {
-        JsonSchema schema = JsonSchema.array()
-                .items(JsonSchema.integer())
+        YdszJsonSchema schema = YdszJsonSchema.array()
+                .items(YdszJsonSchema.integer())
                 .minItems(1)
                 .maxItems(5);
 
@@ -112,21 +112,21 @@ class JsonSchemaTest {
 
     @Test
     void testArraySchemaTooFewItems() {
-        JsonSchema schema = JsonSchema.array().minItems(3);
+        YdszJsonSchema schema = YdszJsonSchema.array().minItems(3);
         ValidationResult result = SchemaValidator.validate(schema, List.of(1));
         assertFalse(result.isValid());
     }
 
     @Test
     void testNullSchemaValid() {
-        JsonSchema schema = JsonSchema.nullType();
+        YdszJsonSchema schema = YdszJsonSchema.nullType();
         ValidationResult result = SchemaValidator.validate(schema, null);
         assertTrue(result.isValid());
     }
 
     @Test
     void testRequiredNullValue() {
-        JsonSchema schema = JsonSchema.string().required();
+        YdszJsonSchema schema = YdszJsonSchema.string().required();
         ValidationResult result = SchemaValidator.validate(schema, null);
         assertFalse(result.isValid());
     }
@@ -160,25 +160,25 @@ class JsonSchemaTest {
 
     @Test
     void testEnumValues() {
-        JsonSchema schema = JsonSchema.string().enumValues("red", "green", "blue");
+        YdszJsonSchema schema = YdszJsonSchema.string().enumValues("red", "green", "blue");
         assertTrue(SchemaValidator.validate(schema, "red").isValid());
         assertFalse(SchemaValidator.validate(schema, "yellow").isValid());
     }
 
     @Test
     void testViaJsonFacade() {
-        JsonSchema schema = JsonSchema.object()
-                .addProperty("name", JsonSchema.string())
+        YdszJsonSchema schema = YdszJsonSchema.object()
+                .addProperty("name", YdszJsonSchema.string())
                 .addRequired("name");
 
         String json = "{\"name\":\"Alice\"}";
-        ValidationResult result = Json.validate(json, schema);
+        ValidationResult result = YdszJson.validate(json, schema);
         assertNotNull(result);
     }
 
     @Test
     void testPatternValidation() {
-        JsonSchema schema = JsonSchema.string().pattern("^[A-Z][a-z]+$");
+        YdszJsonSchema schema = YdszJsonSchema.string().pattern("^[A-Z][a-z]+$");
         assertTrue(SchemaValidator.validate(schema, "Alice").isValid());
         assertFalse(SchemaValidator.validate(schema, "alice").isValid());
     }
@@ -186,10 +186,10 @@ class JsonSchemaTest {
     @Test
     void testEnsureValid() {
         ValidationResult valid = new ValidationResult(true);
-        assertDoesNotThrow(() -> Json.ensureValid(valid));
+        assertDoesNotThrow(() -> YdszJson.ensureValid(valid));
 
         ValidationResult invalid = new ValidationResult(false);
         invalid.addError("test");
-        assertThrows(IllegalArgumentException.class, () -> Json.ensureValid(invalid));
+        assertThrows(IllegalArgumentException.class, () -> YdszJson.ensureValid(invalid));
     }
 }

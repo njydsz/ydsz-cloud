@@ -1,24 +1,24 @@
 # =============================================================================
-# Prometheus 抓取配置 - PMIS 监控
+# Prometheus 抓取配置 - YDSZ 监控
 # -----------------------------------------------------------------------------
 # 部署:
 #   挂载至容器 /etc/prometheus/prometheus.yml
 #   docker-compose 中通过 volumes 挂载
 #
 # 抓取目标:
-#   - PMIS 微服务(通过 host.docker.internal 访问宿主机上的应用)
+#   - YDSZ 微服务(通过 host.docker.internal 访问宿主机上的应用)
 #   - Prometheus 自身
 #   - Alertmanager / Loki(可选)
 #
 # 告警规则:
-#   - rules/pmis-alerts.yml(业务 + 系统 + JVM + 依赖告警)
+#   - rules/ydsz-alerts.yml(业务 + 系统 + JVM + 依赖告警)
 # =============================================================================
 global:
   scrape_interval: 15s          # 默认抓取间隔
   evaluation_interval: 15s      # 规则评估间隔
   scrape_timeout: 10s           # 单次抓取超时
   external_labels:
-    cluster: pmis-dev
+    cluster: ydsz-dev
     environment: dev
 
 # =============================================================================
@@ -51,66 +51,66 @@ scrape_configs:
           service: prometheus
 
   # ----------------------------------------------------------------------
-  # 2. PMIS 微服务(通过 host.docker.internal 访问宿主机应用)
+  # 2. YDSZ 微服务(通过 host.docker.internal 访问宿主机应用)
   #    Linux 部署需在 docker-compose 中配置 extra_hosts: host-gateway
   #    端口分配: 9000 gateway / 9001 userinfo / 9002 system / 9003 project
   #             9004 message / 9005 cronjob / 9006 workflow / 9007 agent
   # ----------------------------------------------------------------------
-  - job_name: pmis-gateway
+  - job_name: ydsz-gateway
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9000']
         labels:
-          service: pmis-gateway
+          service: ydsz-gateway
 
-  - job_name: pmis-userinfo
+  - job_name: ydsz-userinfo
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9001']
         labels:
-          service: pmis-userinfo
+          service: ydsz-userinfo
 
-  - job_name: pmis-system
+  - job_name: ydsz-system
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9002']
         labels:
-          service: pmis-system
+          service: ydsz-system
 
-  - job_name: pmis-project
+  - job_name: ydsz-project
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9003']
         labels:
-          service: pmis-project
+          service: ydsz-project
 
-  - job_name: pmis-message
+  - job_name: ydsz-message
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9004']
         labels:
-          service: pmis-message
+          service: ydsz-message
 
-  - job_name: pmis-cronjob
+  - job_name: ydsz-cronjob
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9005']
         labels:
-          service: pmis-cronjob
+          service: ydsz-cronjob
 
-  - job_name: pmis-workflow
+  - job_name: ydsz-workflow
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9006']
         labels:
-          service: pmis-workflow
+          service: ydsz-workflow
 
-  - job_name: pmis-agent
+  - job_name: ydsz-agent
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9007']
         labels:
-          service: pmis-agent
+          service: ydsz-agent
 
   # ----------------------------------------------------------------------
   # 3. 基础设施组件(可选,需组件自身开启 metrics 端点)

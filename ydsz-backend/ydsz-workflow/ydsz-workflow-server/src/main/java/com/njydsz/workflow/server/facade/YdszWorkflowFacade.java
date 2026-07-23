@@ -192,7 +192,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
     @Override
     public String engineType() {
-        return "PMIS";
+        return "YDSZ";
     }
 
     // ============================== P2-20: 任务详情查询 ==============================

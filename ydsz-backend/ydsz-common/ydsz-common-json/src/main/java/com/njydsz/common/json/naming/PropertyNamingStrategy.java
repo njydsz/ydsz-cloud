@@ -19,14 +19,14 @@ import java.io.Serializable;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 使用下划线命名策略
- * JsonConfig.getInstance().setNamingStrategy(
+ * YdszJsonConfig.getInstance().setNamingStrategy(
  *     PropertyNamingStrategy.SNAKE_CASE
  * );
  * 
  * // 序列化结果：{"user_name":"John"}
  * User user = new User();
  * user.setUserName("John");
- * String json = Json.toJson(user);
+ * String json = YdszJson.toJson(user);
  * </pre>
  * 
  * @since 1.0.0

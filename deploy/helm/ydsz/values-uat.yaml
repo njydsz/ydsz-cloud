@@ -1,18 +1,18 @@
 # =============================================================================
-#  YDSZ PMIS · Helm Chart UAT 环境覆盖值
+#  YDSZ · Helm Chart UAT 环境覆盖值
 # =============================================================================
 
 global:
   imageTag: v1.0.0-rc.2
   nacos:
-    serverAddr: nacos-server.pmis-uat.svc.cluster.local:8848
-    namespace: pmis-uat
+    serverAddr: nacos-server.ydsz-uat.svc.cluster.local:8848
+    namespace: ydsz-uat
 
 backend:
   springProfile: uat
   env:
     LOGGING_LEVEL_ROOT: INFO
-    LOGGING_LEVEL_COM_NJYDSZ_PMIS: INFO
+    LOGGING_LEVEL_COM_NJYDSZ_YDSZ: INFO
 
 services:
   gateway:    { replicas: 2 }

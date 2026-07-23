@@ -20,7 +20,7 @@ import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.cache.builder.CacheType;
 
 /**
- * LocalCache JMH 性能基准测试套件
+ * YdszCache JMH 性能基准测试套件
  *
  * <p>覆盖场景：
  *

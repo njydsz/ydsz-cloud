@@ -94,9 +94,9 @@ public class PreciseSchedulingManager {
         this.leaderRole = cronjobProperties.getLeader().getRole();
         CronjobProperties.PreciseScheduling config = cronjobProperties.getPreciseScheduling();
         this.preciseScheduler = Executors.newScheduledThreadPool(
-                config.getPoolSize(), buildThreadFactory("pmis-precise-dispatch"));
+                config.getPoolSize(), buildThreadFactory("ydsz-precise-dispatch"));
         this.fastScanner = Executors.newSingleThreadScheduledExecutor(
-                buildThreadFactory("pmis-precise-scan"));
+                buildThreadFactory("ydsz-precise-scan"));
         // 启动快速扫描线程
         fastScanner.scheduleWithFixedDelay(
                 this::fastScan,

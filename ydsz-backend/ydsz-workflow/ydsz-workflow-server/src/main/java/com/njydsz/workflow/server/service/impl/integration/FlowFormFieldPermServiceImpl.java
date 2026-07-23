@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.server.service.FlowFormFieldPermService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> raw = Json.parseMap(formFieldsConfig);
+            Map<String, Object> raw = YdszJson.parseMap(formFieldsConfig);
             if (raw == null || raw.isEmpty()) {
                 return Collections.emptyMap();
             }

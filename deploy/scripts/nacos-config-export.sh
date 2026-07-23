@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# PMIS Nacos 配置导出备份脚本
+# YDSZ Nacos 配置导出备份脚本
 #
 # 功能:
 #   1. 调用 Nacos OpenAPI 导出全部配置为 zip
@@ -12,7 +12,7 @@
 #
 # 定时调度（crontab）:
 #   # 每日凌晨 0:30 Nacos 配置导出
-#   30 0 * * * /opt/pmis/scripts/nacos-config-export.sh >> /var/log/pmis/nacos-export.log 2>&1
+#   30 0 * * * /opt/ydsz/scripts/nacos-config-export.sh >> /var/log/ydsz/nacos-export.log 2>&1
 #
 # 环境变量:
 #   NACOS_HOST        Nacos 主机,默认 127.0.0.1
@@ -56,10 +56,10 @@ notify() {
     local payload
     case "$WEBHOOK_TYPE" in
         feishu)
-            payload="{\"msg_type\":\"text\",\"content\":{\"text\":\"[PMIS Nacos Export] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
+            payload="{\"msg_type\":\"text\",\"content\":{\"text\":\"[YDSZ Nacos Export] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
             ;;
         dingtalk)
-            payload="{\"msgtype\":\"text\",\"text\":{\"content\":\"[PMIS Nacos Export] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
+            payload="{\"msgtype\":\"text\",\"text\":{\"content\":\"[YDSZ Nacos Export] ${status}\\nHost: ${HOSTNAME}\\nTime: ${TIMESTAMP}\\n${message}\"}}"
             ;;
         *)
             payload="{\"status\":\"${status}\",\"message\":\"${message}\",\"host\":\"${HOSTNAME}\",\"time\":\"${TIMESTAMP}\"}"
@@ -148,12 +148,12 @@ cleanup() {
 # 主流程
 # ============================================================
 main() {
-    log "========== PMIS Nacos 配置导出开始 =========="
+    log "========== YDSZ Nacos 配置导出开始 =========="
     log "Host: $HOSTNAME | Date: $DATE | Timestamp: $TIMESTAMP"
     check_env
     do_export
     cleanup
-    log "========== PMIS Nacos 配置导出结束 =========="
+    log "========== YDSZ Nacos 配置导出结束 =========="
 }
 
 main "$@"

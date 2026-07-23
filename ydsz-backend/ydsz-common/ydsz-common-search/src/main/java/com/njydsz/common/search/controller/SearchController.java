@@ -1,5 +1,6 @@
 package com.njydsz.common.search.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,7 @@ import com.njydsz.common.search.service.UnifiedSearchService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +57,7 @@ public class SearchController {
     @PostMapping("/query")
     @Operation(summary = "统一搜索", description = "支持跨实体类型搜索、高亮、模糊匹配、聚合分面")
     @Trace(operationName = "search_query")
-    public SearchResponse search(@RequestBody SearchRequest request) {
+    public SearchResponse search(@Valid @RequestBody SearchRequest request) {
         return searchService.search(request);
     }
 
@@ -135,7 +137,7 @@ public class SearchController {
      */
     @GetMapping("/analytics/daily")
     @Operation(summary = "每日搜索量", description = "获取每日搜索量统计")
-    public Map<java.time.LocalDate, Long> dailySearches(
+    public Map<LocalDate, Long> dailySearches(
             @RequestParam(defaultValue = "7") int days) {
         return analyticsService.getDailySearches(days);
     }

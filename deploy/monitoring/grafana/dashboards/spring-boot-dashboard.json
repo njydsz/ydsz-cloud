@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "PMIS Spring Boot 监控仪表盘 - HTTP QPS / P99 延迟 / 5xx 错误率 / HikariCP 连接池",
+  "description": "YDSZ Spring Boot 监控仪表盘 - HTTP QPS / P99 延迟 / 5xx 错误率 / HikariCP 连接池",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -37,7 +37,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"pmis-.*\"}[1m])) by (job)",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"ydsz-.*\"}[1m])) by (job)",
           "legendFormat": "{{job}}",
           "refId": "A"
         }
@@ -65,7 +65,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=~\"pmis-.*\"}[5m])) by (le, job))",
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=~\"ydsz-.*\"}[5m])) by (le, job))",
           "legendFormat": "P99 {{job}}",
           "refId": "A"
         }
@@ -73,7 +73,7 @@
     },
     {
       "title": "5xx 错误率(按服务)",
-      "description": "5xx 请求 / 总请求,阈值 1%(对应 PmisHighErrorRate 告警)",
+      "description": "5xx 请求 / 总请求,阈值 1%(对应 YdszHighErrorRate 告警)",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -93,7 +93,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"pmis-.*\",status=~\"5..\"}[2m])) by (job) / sum(rate(http_server_requests_seconds_count{job=~\"pmis-.*\"}[2m])) by (job)",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"ydsz-.*\",status=~\"5..\"}[2m])) by (job) / sum(rate(http_server_requests_seconds_count{job=~\"ydsz-.*\"}[2m])) by (job)",
           "legendFormat": "{{job}} 5xx%",
           "refId": "A"
         }
@@ -101,7 +101,7 @@
     },
     {
       "title": "HikariCP 连接池(活跃 / 空闲 / 最大)",
-      "description": "hikaricp_connections_active / idle / max,对应 PmisDbPoolExhausted 告警",
+      "description": "hikaricp_connections_active / idle / max,对应 YdszDbPoolExhausted 告警",
       "type": "timeseries",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
@@ -129,19 +129,19 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(hikaricp_connections_active{job=~\"pmis-.*\"}) by (job)",
+          "expr": "sum(hikaricp_connections_active{job=~\"ydsz-.*\"}) by (job)",
           "legendFormat": "active",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(hikaricp_connections_idle{job=~\"pmis-.*\"}) by (job)",
+          "expr": "sum(hikaricp_connections_idle{job=~\"ydsz-.*\"}) by (job)",
           "legendFormat": "idle",
           "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "sum(hikaricp_connections_max{job=~\"pmis-.*\"}) by (job)",
+          "expr": "sum(hikaricp_connections_max{job=~\"ydsz-.*\"}) by (job)",
           "legendFormat": "max",
           "refId": "C"
         }
@@ -151,14 +151,14 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pmis", "spring-boot"],
+  "tags": ["ydsz", "spring-boot"],
   "templating": {
     "list": [
       {
         "name": "service",
         "type": "query",
         "datasource": {"type": "prometheus", "uid": "prometheus"},
-        "query": "label_values(up{job=~\"pmis-.*\"}, job)",
+        "query": "label_values(up{job=~\"ydsz-.*\"}, job)",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -169,8 +169,8 @@
   "time": {"from": "now-6h", "to": "now"},
   "timepicker": {},
   "timezone": "browser",
-  "title": "PMIS Spring Boot 监控",
-  "uid": "pmis-spring-boot",
+  "title": "YDSZ Spring Boot 监控",
+  "uid": "ydsz-spring-boot",
   "version": 1,
   "weekStart": ""
 }

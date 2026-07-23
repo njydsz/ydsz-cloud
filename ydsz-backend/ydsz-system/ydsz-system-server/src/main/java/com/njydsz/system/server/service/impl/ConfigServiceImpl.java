@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.common.json.Json;
-import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.YdszJsonType;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
@@ -120,11 +120,11 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_PREFIX + group + ":" + key;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return Json.toObject(cached, ConfigDO.class);
+            return YdszJson.toObject(cached, ConfigDO.class);
         }
         ConfigDO c = configMapper.selectByGroupAndKey(group, key);
         if (c != null) {
-            redisTemplate.opsForValue().set(cacheKey, Json.toJson(c), CACHE_TTL);
+            redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(c), CACHE_TTL);
         }
         return c;
     }
@@ -141,14 +141,14 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_GROUP_PREFIX + group;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return Json.toObject(cached, new JsonType<Map<String, String>>() {});
+            return YdszJson.toObject(cached, new YdszJsonType<Map<String, String>>() {});
         }
         List<ConfigDO> list = configMapper.selectByGroup(group);
         Map<String, String> map = new HashMap<>();
         for (ConfigDO c : list) {
             map.put(c.getConfigKey(), c.getConfigValue());
         }
-        redisTemplate.opsForValue().set(cacheKey, Json.toJson(map), CACHE_TTL);
+        redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(map), CACHE_TTL);
         return map;
     }
 
@@ -252,7 +252,7 @@ public class ConfigServiceImpl implements ConfigService {
             }
             case "JSON" -> {
                 try {
-                    Json.toObject(v, Object.class);
+                    YdszJson.toObject(v, Object.class);
                 } catch (Exception e) {
                     throw new SysException(BaseResultCode.BAD_REQUEST,
                             "JSON 类型配置值格式不合法: " + v);
@@ -377,7 +377,7 @@ public class ConfigServiceImpl implements ConfigService {
         switch (vt) {
             case "NUMBER" -> parsed = Long.parseLong(value);
             case "BOOLEAN" -> parsed = Boolean.parseBoolean(value);
-            case "JSON" -> parsed = Json.toObject(value, type);
+            case "JSON" -> parsed = YdszJson.toObject(value, type);
             default -> parsed = value;
         }
         if (type == String.class) {

@@ -1,7 +1,7 @@
 package com.njydsz.common.json.module;
 
 /**
- * Json 模块接口
+ * YdszJson 模块接口
  *
  * <p>参考 Jackson Module 设计，提供可插拔的序列化/反序列化扩展机制。
  *
@@ -16,7 +16,7 @@ package com.njydsz.common.json.module;
  * <p><b>使用示例：</b>
  * <pre>
  * // 1. 创建自定义模块
- * public class UserModule implements JsonModule {
+ * public class UserModule implements YdszJsonModule {
  *     {@code @Override}
  *     public String getModuleName() {
  *         return "userModule";
@@ -35,14 +35,14 @@ package com.njydsz.common.json.module;
  *
  * // 2. Spring Boot 自动注册（实现 SpringFactory 接口）
  * {@code @Component}
- * public class UserModule implements JsonModule, JsonModule.SpringFactory {
+ * public class UserModule implements YdszJsonModule, YdszJsonModule.SpringFactory {
  *     // ...
  * }
  * </pre>
  *
  * @since 1.0.0
  */
-public interface JsonModule {
+public interface YdszJsonModule {
 
     /**
      * 获取模块名称

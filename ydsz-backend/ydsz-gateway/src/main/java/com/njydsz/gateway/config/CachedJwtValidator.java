@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.cache.LocalCache;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 
@@ -71,7 +71,7 @@ public class CachedJwtValidator {
     public CachedJwtValidator(TokenService tokenService, GatewayMetrics gatewayMetrics) {
         this.tokenService = tokenService;
         this.gatewayMetrics = gatewayMetrics;
-        this.claimsCache = LocalCache.<String, Optional<UserInfo>>newBuilder()
+        this.claimsCache = YdszCache.<String, Optional<UserInfo>>newBuilder()
                 .type(CacheType.TTL)
                 .expireAfterWrite(CACHE_TTL_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAX_SIZE)

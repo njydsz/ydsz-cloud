@@ -20,7 +20,7 @@ import * as echarts from 'echarts'
 
 // 导出 use / connect / disconnect / getInstanceByDom / registerTheme 等核心方法
 // 完整包已内置全部图表与组件注册，无需再调用 echarts.use([...])
-// registerTheme 用于注册自定义主题（pmis-light / pmis-dark），支持暗黑模式切换
+// registerTheme 用于注册自定义主题（ydsz-light / ydsz-dark），支持暗黑模式切换
 export const { use, connect, disconnect, getInstanceByDom, registerTheme } = echarts
 
 // init 直接导出（完整包场景下不再需要包装函数阻止 Rollup 扁平化）

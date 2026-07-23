@@ -1,19 +1,19 @@
 # =============================================================================
-#  YDSZ PMIS · 后端微服务统一 Dockerfile（多阶段构建）
+#  YDSZ · 后端微服务统一 Dockerfile（多阶段构建）
 # -----------------------------------------------------------------------------
 #  适用模块: gateway / system / userinfo / project / workflow / agent / cronjob
 #            finance / sales / message / nextwiki
 #  构建示例:
-#    docker build -t ydsz-pmis/gateway:v1.3.0 \
-#      --build-arg MODULE_NAME=ydsz-pmis-gateway \
+#    docker build -t ydsz/gateway:v1.3.0 \
+#      --build-arg MODULE_NAME=ydsz-gateway \
 #      --build-arg APP_PORT=9000 \
-#      -f ydsz-pmis-backend/Dockerfile ydsz-pmis-backend/
+#      -f ydsz-backend/Dockerfile ydsz-backend/
 #
 #  批量构建: 参见 deploy/scripts/build-images.sh / build-images.ps1
 #
 #  设计要点（对齐阿里/字节容器化规范）:
 #    1. 多阶段构建，构建期与运行期镜像分离，运行期镜像 ≤ 200MB
-#    2. 显式非 root 用户（pmis:65532），只读根文件系统友好
+#    2. 显式非 root 用户（ydsz:65532），只读根文件系统友好
 #    3. tini 作为 PID 1，正确处理 SIGTERM 优雅停机
 #    4. JVM 容器化参数：-XX:+UseContainerSupport + MaxRAMPercentage
 #    5. BuildKit 缓存挂载加速 Maven 构建（.m2 / target）
@@ -27,7 +27,7 @@
 # -----------------------------------------------------------------------------
 FROM maven:3.9-eclipse-temurin-21 AS builder
 
-ARG MODULE_NAME=ydsz-pmis-gateway
+ARG MODULE_NAME=ydsz-gateway
 ARG APP_PORT=9000
 
 # 时区
@@ -39,34 +39,34 @@ WORKDIR /build
 
 # 先拷贝父 POM 与所有模块的 pom.xml，利用 Docker 层缓存加速依赖解析
 COPY pom.xml ./
-COPY ydsz-pmis-common/pom.xml        ydsz-pmis-common/
-COPY ydsz-pmis-gateway/pom.xml       ydsz-pmis-gateway/
-COPY ydsz-pmis-system/pom.xml        ydsz-pmis-system/
-COPY ydsz-pmis-userinfo/pom.xml      ydsz-pmis-userinfo/
-COPY ydsz-pmis-literule/pom.xml      ydsz-pmis-literule/
-COPY ydsz-pmis-project/pom.xml       ydsz-pmis-project/
-COPY ydsz-pmis-cronjob/pom.xml       ydsz-pmis-cronjob/
-COPY ydsz-pmis-workflow/pom.xml      ydsz-pmis-workflow/
-COPY ydsz-pmis-agent/pom.xml         ydsz-pmis-agent/
-COPY ydsz-pmis-message/pom.xml      ydsz-pmis-message/
-COPY ydsz-pmis-nextwiki/pom.xml      ydsz-pmis-nextwiki/
+COPY ydsz-common/pom.xml        ydsz-common/
+COPY ydsz-gateway/pom.xml       ydsz-gateway/
+COPY ydsz-system/pom.xml        ydsz-system/
+COPY ydsz-userinfo/pom.xml      ydsz-userinfo/
+COPY ydsz-literule/pom.xml      ydsz-literule/
+COPY ydsz-project/pom.xml       ydsz-project/
+COPY ydsz-cronjob/pom.xml       ydsz-cronjob/
+COPY ydsz-workflow/pom.xml      ydsz-workflow/
+COPY ydsz-agent/pom.xml         ydsz-agent/
+COPY ydsz-message/pom.xml      ydsz-message/
+COPY ydsz-nextwiki/pom.xml      ydsz-nextwiki/
 
 # 预下载依赖（仅当 pom 变化时重新执行，利用 BuildKit 缓存）
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -q -pl ${MODULE_NAME} -am dependency:go-offline -DskipTests || true
 
 # 拷贝源码（增量构建）
-COPY ydsz-pmis-common/        ydsz-pmis-common/
-COPY ydsz-pmis-gateway/       ydsz-pmis-gateway/
-COPY ydsz-pmis-system/        ydsz-pmis-system/
-COPY ydsz-pmis-userinfo/      ydsz-pmis-userinfo/
-COPY ydsz-pmis-literule/      ydsz-pmis-literule/
-COPY ydsz-pmis-project/       ydsz-pmis-project/
-COPY ydsz-pmis-cronjob/       ydsz-pmis-cronjob/
-COPY ydsz-pmis-workflow/      ydsz-pmis-workflow/
-COPY ydsz-pmis-agent/         ydsz-pmis-agent/
-COPY ydsz-pmis-message/       ydsz-pmis-message/
-COPY ydsz-pmis-nextwiki/      ydsz-pmis-nextwiki/
+COPY ydsz-common/        ydsz-common/
+COPY ydsz-gateway/       ydsz-gateway/
+COPY ydsz-system/        ydsz-system/
+COPY ydsz-userinfo/      ydsz-userinfo/
+COPY ydsz-literule/      ydsz-literule/
+COPY ydsz-project/       ydsz-project/
+COPY ydsz-cronjob/       ydsz-cronjob/
+COPY ydsz-workflow/      ydsz-workflow/
+COPY ydsz-agent/         ydsz-agent/
+COPY ydsz-message/       ydsz-message/
+COPY ydsz-nextwiki/      ydsz-nextwiki/
 COPY checkstyle.xml spotbugs-exclude.xml ./
 
 # 构建指定模块及其依赖模块，跳过测试（CI 流水线已单独跑测试）
@@ -83,21 +83,21 @@ RUN mkdir -p /artifacts && \
 # -----------------------------------------------------------------------------
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
-ARG MODULE_NAME=ydsz-pmis-gateway
+ARG MODULE_NAME=ydsz-gateway
 ARG APP_PORT=9000
 
-LABEL org.opencontainers.image.title="ydsz-pmis-${MODULE_NAME}" \
+LABEL org.opencontainers.image.title="ydsz-${MODULE_NAME}" \
       org.opencontainers.image.source="https://github.com/njydsz/ydsz-pmis" \
       org.opencontainers.image.licenses="UNLICENSED" \
-      org.opencontainers.image.description="南京云顶 PMIS · ${MODULE_NAME} 微服务"
+      org.opencontainers.image.description="南京云顶 YDSZ · ${MODULE_NAME} 微服务"
 
 # 安装 tini（PID 1，处理信号）+ curl（健康检查）+ tzdata（时区）+ ca-certificates
 RUN apk add --no-cache tini curl tzdata ca-certificates && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     # 创建非 root 用户
-    addgroup -g 65532 -S pmis && \
-    adduser -u 65532 -S pmis -G pmis -h /app && \
+    addgroup -g 65532 -S ydsz && \
+    adduser -u 65532 -S ydsz -G ydsz -h /app && \
     # 清理 apk 缓存
     rm -rf /var/cache/apk/*
 
@@ -115,9 +115,9 @@ WORKDIR /app
 COPY --from=builder /artifacts/app.jar /app/app.jar
 
 # 创建日志目录并授权
-RUN mkdir -p /app/logs && chown -R pmis:pmis /app
+RUN mkdir -p /app/logs && chown -R ydsz:ydsz /app
 
-USER pmis:pmis
+USER ydsz:ydsz
 
 EXPOSE ${APP_PORT}
 

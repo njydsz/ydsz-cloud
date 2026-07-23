@@ -3,14 +3,14 @@ package com.njydsz.common.sentry.logging;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.domain.LogEvent;
 
 /**
  * LogEvent JSON 序列化器
  *
  * <p>将 LogEvent 序列化为结构化 JSON 字符串，兼容 LogstashEncoder 格式。
- * 底层委托 {@link Json} 统一 JSON 引擎。
+ * 底层委托 {@link YdszJson} 统一 JSON 引擎。
  *
  * @author ydsz-team
  * @since 1.5.0
@@ -48,7 +48,7 @@ public final class LogEventSerializer {
             }
         }
 
-        return Json.toJson(map);
+        return YdszJson.toJson(map);
     }
 
     private static void putIfNotNull(Map<String, Object> map, String key, String value) {

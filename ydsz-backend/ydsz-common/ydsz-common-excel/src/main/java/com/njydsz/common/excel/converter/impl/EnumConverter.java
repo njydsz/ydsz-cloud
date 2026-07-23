@@ -13,7 +13,7 @@ import com.njydsz.common.excel.converter.ConvertContext;
  * 支持通过{@link #registerMapping}注册自定义枚举映射。</p>
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 public class EnumConverter implements CellValueConverter {

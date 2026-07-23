@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -284,7 +284,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         }
 
         BaseResponse<Void> body = BaseResponse.failed("429", "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
-        byte[] bytes = Json.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
         log.info("[RateLimit] 限流触发: dimension={} identity={} path={}",

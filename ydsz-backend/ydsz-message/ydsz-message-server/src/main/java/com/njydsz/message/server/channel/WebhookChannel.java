@@ -15,7 +15,7 @@ import org.springframework.web.client.RestClient;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
 
@@ -92,13 +92,13 @@ public class WebhookChannel implements MessageChannel {
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("text", request.getContent() == null ? "" : request.getContent());
-        payload.put("title", request.getSubject() == null ? "PMIS 通知" : request.getSubject());
+        payload.put("title", request.getSubject() == null ? "YDSZ 通知" : request.getSubject());
 
         try {
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Json.toJson(payload))
+                    .body(YdszJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             int statusCode = response.getStatusCode().value();

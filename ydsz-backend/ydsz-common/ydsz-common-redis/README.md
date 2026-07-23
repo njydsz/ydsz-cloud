@@ -1,6 +1,6 @@
 # ydsz-common-redis
 
-PMIS Redis 服务增强 — 6 种基础 ops + 9 种高级 ops、布隆过滤器、延迟队列、滑动窗口限流、雪花 ID、缓存击穿防护、Pipeline 批处理、集群工具。
+YDSZ Redis 服务增强 — 6 种基础 ops + 9 种高级 ops、布隆过滤器、延迟队列、滑动窗口限流、雪花 ID、缓存击穿防护、Pipeline 批处理、集群工具。
 
 ## 模块定位
 
@@ -84,10 +84,10 @@ PMIS Redis 服务增强 — 6 种基础 ops + 9 种高级 ops、布隆过滤器�
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   redis:
     client-type: lettuce           # lettuce / jedis
-    key-prefix: pmis               # 全局 Key 前缀
+    key-prefix: ydsz               # 全局 Key 前缀
     rate-limiter:
       enabled: true
       default-limit: 100           # 默认限流次数

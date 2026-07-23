@@ -19,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.file.config.FileUploadProperties;
 import com.njydsz.common.file.constant.FileConstant;
 import com.njydsz.common.file.domain.ChunkedUploadResult;
@@ -531,7 +531,7 @@ public class S3Storage extends AbstractFileStorage {
                     "conditions", List.of(
                             List.of("starts-with", "$key", resolvedPrefix),
                             List.of("eq", "$bucket", resolvedBucket)));
-            String policyJson = Json.toJson(policyMap);
+            String policyJson = YdszJson.toJson(policyMap);
 
             String policyBase64 = Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
 

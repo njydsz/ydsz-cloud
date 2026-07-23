@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
@@ -54,7 +54,7 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
                 "type", type == null ? "UNKNOWN" : type,
                 "payload", payload,
                 "timestamp", System.currentTimeMillis());
-        String json = Json.toJson(envelope);
+        String json = YdszJson.toJson(envelope);
         redisTemplate.opsForList().leftPush(key, json);
         redisTemplate.opsForList().trim(key, 0, properties.getOffline().getMaxCache() - 1);
         redisTemplate.expire(key, properties.getOffline().getTtl());

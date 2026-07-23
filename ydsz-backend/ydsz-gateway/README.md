@@ -20,7 +20,7 @@
 2. **鉴权拦截**：解析 JWT、转发 `X-User-Id` / `X-Tenant-Id` / `X-Trace-Id` 内部头
 3. **限流/熔断**：Sentinel Dashboard 对接（端口 8719）
 4. **CORS**：按环境白名单放行（生产必须显式域名）
-5. **IP 白名单**：`pmis.security.ip-whitelist` 可配置
+5. **IP 白名单**：`ydsz.security.ip-whitelist` 可配置
 6. **灰度路由**：基于 `X-Gray-Tag` 头 + Nacos `metadata.version` 元数据
 7. **WebSocket**：转发到 `message` 服务的通知推送通道
 
@@ -30,13 +30,13 @@
 
 - ✅ 注册中心：Nacos（仅做服务发现 + 配置中心）
 - ✅ 缓存：Redis（限流计数 / IP 白名单缓存）
-- ❌ 业务 DB：**不持有任何 `pmis_*` 表**
+- ❌ 业务 DB：**不持有任何 `ydsz_*` 表**
 - ❌ 业务实体：模块内**不定义 `*DO.java`**，所有业务数据均通过路由转发到下游服务（userinfo / system / project / message / workflow / cronjob / agent）
 
 > **设计原则**：
 > - 网关注入业务表会带来分布式事务与数据一致性风险，违反"网关无状态"约束；
-> - 所有审计 / 操作日志下沉到 `ydsz-system` 的 `pmis_operation_log`（由下游业务服务经 Feign 写入）；
-> - 限流统计写入 Redis（`pmis:gateway:ratelimit:*`），不落库；
+> - 所有审计 / 操作日志下沉到 `ydsz-system` 的 `ydsz_operation_log`（由下游业务服务经 Feign 写入）；
+> - 限流统计写入 Redis（`ydsz:gateway:ratelimit:*`），不落库；
 > - 灰度标签仅作为请求头/Metadata 透传，不持久化。
 
 ## 启动顺序
@@ -95,7 +95,7 @@ ydsz-gateway/
 | 变量 | 默认值 | 说明 |
 |---|---|---|
 | `NACOS_SERVER_ADDR` | `127.0.0.1:8848` | Nacos 地址 |
-| `NACOS_NAMESPACE` | `pmis` | 命名空间 |
+| `NACOS_NAMESPACE` | `ydsz` | 命名空间 |
 | `NACOS_USERNAME` | `nacos` | 鉴权用户名 |
 | `NACOS_PASSWORD` | （空） | 鉴权密码 |
 | `CORS_ALLOWED_ORIGINS` | `*`（dev）/ 显式域名（prod） | CORS 白名单 |

@@ -1,9 +1,9 @@
 # =====================================================================
-#  PMIS 工作流服务 bootstrap 配置
+#  YDSZ 工作流服务 bootstrap 配置
 #  --------------------------------------------------------------------
 #  端口：9006
 #  职责：自研轻量流程引擎
-#    - 流程定义（PMIS-Flow XML / JSON）
+#    - 流程定义（YDSZ-Flow XML / JSON）
 #    - 流程发起 / 审批 / 驳回 / 加签 / 减签 / 转交
 #    - 抄送 / 委托 / 代理 / 跳过规则
 #    - 定时器 / 事件订阅 / SLA 提醒
@@ -36,7 +36,7 @@ spring:
         enabled: true
         register-enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
+        namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
@@ -48,7 +48,7 @@ spring:
       config:
         enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
+        namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:${spring.profiles.active}}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}

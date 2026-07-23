@@ -1,13 +1,13 @@
 # =============================================================================
-#  YDSZ PMIS - Windows 中间件一键安装脚本
+#  YDSZ - Windows 中间件一键安装脚本
 # -----------------------------------------------------------------------------
 #  适用:    Windows Server 2019+ / Windows 10+ (x64)
 #  权限:    需要管理员 PowerShell
-#  用法:    .\install-pmis-infra.ps1 [-NoStart] [-Skip postgres,redis,...] [-Uninstall]
+#  用法:    .\install-ydsz-infra.ps1 [-NoStart] [-Skip postgres,redis,...] [-Uninstall]
 #           -NoStart   : 只安装不启动
 #           -Skip      : 跳过中间件（逗号分隔）
 #           -Uninstall : 卸载
-#  说明:    默认安装到 C:\pmis，数据 C:\pmis-data，日志 C:\pmis-logs
+#  说明:    默认安装到 C:\ydsz，数据 C:\ydsz-data，日志 C:\ydsz-logs
 #           需要 nssm（https://nssm.cc）用于注册 Windows 服务
 #           配置文件来源: ..\common\conf\  (与 Ubuntu 共享同一份配置模板)
 # =============================================================================
@@ -16,9 +16,9 @@ param(
     [switch]$NoStart,
     [switch]$Uninstall,
     [string]$Skip = '',
-    [string]$InstallHome = 'C:\pmis',
-    [string]$DataHome = 'C:\pmis-data',
-    [string]$LogHome = 'C:\pmis-logs'
+    [string]$InstallHome = 'C:\ydsz',
+    [string]$DataHome = 'C:\ydsz-data',
+    [string]$LogHome = 'C:\ydsz-logs'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,10 +34,10 @@ $XXL_JOB_VERSION = '2.4.2'
 
 # ---------- 凭据（可通过环境变量覆盖，默认值仅用于开发） ----------
 # PG 数据库密码
-$PgPassword        = if ($env:PMIS_PG_PASSWORD)        { $env:PMIS_PG_PASSWORD }        else { 'pmis123' }
+$PgPassword        = if ($env:YDSZ_PG_PASSWORD)        { $env:YDSZ_PG_PASSWORD }        else { 'ydsz123' }
 # MinIO 控制台/Root 账号
-$MinioRootUser     = if ($env:PMIS_MINIO_ROOT_USER)    { $env:PMIS_MINIO_ROOT_USER }    else { 'minioadmin' }
-$MinioRootPassword = if ($env:PMIS_MINIO_ROOT_PASSWORD) { $env:PMIS_MINIO_ROOT_PASSWORD } else { 'minioadmin' }
+$MinioRootUser     = if ($env:YDSZ_MINIO_ROOT_USER)    { $env:YDSZ_MINIO_ROOT_USER }    else { 'minioadmin' }
+$MinioRootPassword = if ($env:YDSZ_MINIO_ROOT_PASSWORD) { $env:YDSZ_MINIO_ROOT_PASSWORD } else { 'minioadmin' }
 
 # ---------- 公共配置目录（相对当前脚本） ----------
 $SCRIPT_DIR = $PSScriptRoot
@@ -80,8 +80,8 @@ function Copy-With-Replace {
 
 # ---------- 占位符映射（Windows 路径） ----------
 $REPLACEMENTS = @{
-    '__PMIS_DATA_HOME__' = $DataHome
-    '__PMIS_LOG_HOME__'  = $LogHome
+    '__YDSZ_DATA_HOME__' = $DataHome
+    '__YDSZ_LOG_HOME__'  = $LogHome
     '__PG_DATA__'        = "C:\Program Files\PostgreSQL\$PG_VERSION\data"
     '__NACOS_HOME__'     = "$InstallHome\nacos\data"
     '__SEATA_HOME__'     = "$InstallHome\seata"
@@ -90,7 +90,7 @@ $REPLACEMENTS = @{
 }
 
 # ---------- 下载目录 ----------
-$DownloadDir = Join-Path $env:TEMP "pmis-install"
+$DownloadDir = Join-Path $env:TEMP "ydsz-install"
 New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null
 
 # ---------- nssm 检测/安装 ----------
@@ -143,21 +143,21 @@ function Install-Postgres {
     }
     if (-not $NoStart) { Start-Service postgresql-x64-18 }
 
-    # 创建用户与数据库（密码可通过 PMIS_PG_PASSWORD 环境变量覆盖）
-    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "CREATE USER pmis WITH PASSWORD '$PgPassword';" 2>$null
-    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "CREATE DATABASE ydsz_pmis OWNER pmis ENCODING 'UTF8';" 2>$null
-    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ydsz_pmis TO pmis;" 2>$null
+    # 创建用户与数据库（密码可通过 YDSZ_PG_PASSWORD 环境变量覆盖）
+    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "CREATE USER ydsz WITH PASSWORD '$PgPassword';" 2>$null
+    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "CREATE DATABASE ydsz OWNER ydsz ENCODING 'UTF8';" 2>$null
+    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ydsz TO ydsz;" 2>$null
 
     # 导入 SQL（从 common/sql 取）
     $sql = Join-Path $COMMON_SQL 'tables_xxl_job_pg.sql'
     if (Test-Path $sql) {
         Write-Step "导入 XXL-Job 表结构..."
-        & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -h 127.0.0.1 -U pmis -d ydsz_pmis -f $sql 2>&1 | Select-Object -Last 5
+        & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -h 127.0.0.1 -U ydsz -d ydsz -f $sql 2>&1 | Select-Object -Last 5
     }
     $rootSql = Join-Path (Split-Path -Parent (Split-Path -Parent $SCRIPT_DIR)) 'docs\V1.0.0.sql'
     if (Test-Path $rootSql) {
         Write-Step "导入主库 V1.0.0.sql（126 张表）..."
-        & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -h 127.0.0.1 -U pmis -d ydsz_pmis -f $rootSql 2>&1 | Select-Object -Last 3
+        & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -h 127.0.0.1 -U ydsz -d ydsz -f $rootSql 2>&1 | Select-Object -Last 3
     }
     Write-OK "PostgreSQL 安装完成"
 }
@@ -342,7 +342,7 @@ function Install-XXLJob {
     $sql = Join-Path $COMMON_SQL 'tables_xxl_job_pg.sql'
     $pgBin = "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe"
     if ((Test-Path $pgBin) -and (Test-Path $sql)) {
-        & $pgBin -h 127.0.0.1 -U pmis -d ydsz_pmis -f $sql 2>&1 | Select-Object -Last 5
+        & $pgBin -h 127.0.0.1 -U ydsz -d ydsz -f $sql 2>&1 | Select-Object -Last 5
     }
 
     $svc = Get-Service -Name 'xxl-job' -ErrorAction SilentlyContinue
@@ -383,7 +383,7 @@ function Uninstall-All {
 #  主流程
 # =============================================================================
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  YDSZ PMIS · Windows 中间件一键安装" -ForegroundColor Cyan
+Write-Host "  YDSZ · Windows 中间件一键安装" -ForegroundColor Cyan
 Write-Host "  安装目录: $InstallHome" -ForegroundColor Cyan
 Write-Host "  数据目录: $DataHome" -ForegroundColor Cyan
 Write-Host "  配置模板: $COMMON_CONF" -ForegroundColor Cyan

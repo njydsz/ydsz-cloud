@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  YDSZ PMIS · Nacos 共享配置导入脚本
+#  YDSZ · Nacos 共享配置导入脚本
 # -----------------------------------------------------------------------------
 #  用途:    将 deploy/common/nacos/ydsz-common.yaml 导入到 Nacos
 #  依赖:    curl / nacos 已启动 (http://127.0.0.1:8848)
 #  用法:    ./deploy/ubuntu/scripts/import-nacos-config.sh [namespace] [group]
-#           默认: namespace=pmis, group=dev
+#           默认: namespace=ydsz, group=dev
 # =============================================================================
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-NAMESPACE=${1:-pmis}
+NAMESPACE=${1:-ydsz}
 GROUP=${2:-dev}
 NACOS_ADDR=${NACOS_SERVER_ADDR:-127.0.0.1:8848}
 USERNAME=${NACOS_USERNAME:-nacos}
@@ -60,7 +60,7 @@ fi
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
   "http://$NACOS_ADDR/v1/cs/configs" \
   ${AUTH_HEADER:+-d "$AUTH_HEADER"} \
-  -d "dataId=$DATA_ID&group=$GROUP&namespaceId=$NAMESPACE&content=$(cat "$CONFIG_FILE" | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.stdin.read()))")&type=yaml&desc=PMIS+shared+config+(auto+imported)")
+  -d "dataId=$DATA_ID&group=$GROUP&namespaceId=$NAMESPACE&content=$(cat "$CONFIG_FILE" | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.stdin.read()))")&type=yaml&desc=YDSZ+shared+config+(auto+imported)")
 
 if [[ "$HTTP_CODE" == "200" ]]; then
   echo "[OK] 导入成功: $DATA_ID"
@@ -77,5 +77,5 @@ echo "  共享配置导入完成"
 echo
 echo "  后续: 7 个后端服务启动时会自动从 Nacos 拉取此配置"
 echo "  验证: 访问 http://$NACOS_ADDR/nacos (nacos/nacos)"
-echo "        → 配置管理 → 命名空间 pmis → 应能看到 $DATA_ID"
+echo "        → 配置管理 → 命名空间 ydsz → 应能看到 $DATA_ID"
 echo "============================================================"

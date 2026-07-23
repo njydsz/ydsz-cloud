@@ -15,13 +15,13 @@
 
 ## 核心职责
 
-本模块是 PMIS 的**自研分布式任务调度引擎**，对标 XXL-JOB + 自研特性。
+本模块是 YDSZ 的**自研分布式任务调度引擎**，对标 XXL-JOB + 自研特性。
 
 ### 1. 核心能力
 
 | 能力 | 说明 |
 |---|---|
-| **Leader 选举** | 基于 DB 行锁（`pmis_job_lock`）+ Redis 分布式锁，多实例下保证任务不重复执行 |
+| **Leader 选举** | 基于 DB 行锁（`ydsz_job_lock`）+ Redis 分布式锁，多实例下保证任务不重复执行 |
 | **节点发现** | Nacos 服务发现（推荐）/ DB 心跳表（向后兼容） |
 | **任务调度** | Cron 表达式 + 固定频率 + 固定延迟 |
 | **分片广播** | 单机串行 / 广播并行 / 分片 MapReduce |
@@ -63,34 +63,34 @@
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
-| **任务定义** | `pmis_job` | 任务主表（cron/频率/分片/隔离策略） |
-| | `pmis_job_glue` | 胶水代码（Groovy/Java/Python/Shell） |
-| | `pmis_job_relation` | 父子任务依赖 |
-| | `pmis_job_version_history` | 任务版本历史（回滚） |
-| **调度** | `pmis_job_task` | 调度任务（待派发/运行中） |
-| | `pmis_job_history` | 历史任务（已完成） |
-| **DAG** | `pmis_job_dag` | DAG 定义 |
-| | `pmis_job_dag_instance` | DAG 实例 |
-| | `pmis_job_dag_node_instance` | DAG 节点实例 |
-| **执行日志** | `pmis_job_log` | 执行日志（分页） |
-| | `pmis_job_log_content` | 日志详情（TOAST 大字段） |
-| | `pmis_job_slow_log` | 慢执行记录 |
-| **告警** | `pmis_job_alert_log` | 告警日志 |
-| | `pmis_job_alert_rule` | 告警规则（失败/超时/阻塞） |
-| **SLA** | `pmis_job_sla` | SLA 规则（P1-P4 + 飞书/钉钉/邮件） |
-| **执行器** | `pmis_job_node` | 执行器节点（注册/心跳） |
-| **Webhook** | `pmis_job_webhook` | 任务完成回调 |
-| **产物** | `pmis_job_artifact` | 任务产物（报表/MinIO） |
-| **统计** | `pmis_job_daily_stats` | 每日统计（成功率/平均耗时） |
-| **配额** | `pmis_tenant_quota` | 租户级任务数/并发/日执行量 |
+| **任务定义** | `ydsz_job` | 任务主表（cron/频率/分片/隔离策略） |
+| | `ydsz_job_glue` | 胶水代码（Groovy/Java/Python/Shell） |
+| | `ydsz_job_relation` | 父子任务依赖 |
+| | `ydsz_job_version_history` | 任务版本历史（回滚） |
+| **调度** | `ydsz_job_task` | 调度任务（待派发/运行中） |
+| | `ydsz_job_history` | 历史任务（已完成） |
+| **DAG** | `ydsz_job_dag` | DAG 定义 |
+| | `ydsz_job_dag_instance` | DAG 实例 |
+| | `ydsz_job_dag_node_instance` | DAG 节点实例 |
+| **执行日志** | `ydsz_job_log` | 执行日志（分页） |
+| | `ydsz_job_log_content` | 日志详情（TOAST 大字段） |
+| | `ydsz_job_slow_log` | 慢执行记录 |
+| **告警** | `ydsz_job_alert_log` | 告警日志 |
+| | `ydsz_job_alert_rule` | 告警规则（失败/超时/阻塞） |
+| **SLA** | `ydsz_job_sla` | SLA 规则（P1-P4 + 飞书/钉钉/邮件） |
+| **执行器** | `ydsz_job_node` | 执行器节点（注册/心跳） |
+| **Webhook** | `ydsz_job_webhook` | 任务完成回调 |
+| **产物** | `ydsz_job_artifact` | 任务产物（报表/MinIO） |
+| **统计** | `ydsz_job_daily_stats` | 每日统计（成功率/平均耗时） |
+| **配额** | `ydsz_tenant_quota` | 租户级任务数/并发/日执行量 |
 
 > **索引关键点**：
-> - `pmis_job(job_group, trigger_type, status)` 调度扫描
-> - `pmis_job_task(job_id, status, trigger_time)` 待执行/运行中
-> - `pmis_job_log(job_id, trigger_time)` 日志分页
-> - `pmis_job_dag_instance(dag_id, status)` DAG 监控
-> - `pmis_job_dag_node_instance(instance_id, status)` 节点依赖检查
-> - `pmis_tenant_quota(tenant_id, quota_type)` 配额检查
+> - `ydsz_job(job_group, trigger_type, status)` 调度扫描
+> - `ydsz_job_task(job_id, status, trigger_time)` 待执行/运行中
+> - `ydsz_job_log(job_id, trigger_time)` 日志分页
+> - `ydsz_job_dag_instance(dag_id, status)` DAG 监控
+> - `ydsz_job_dag_node_instance(instance_id, status)` 节点依赖检查
+> - `ydsz_tenant_quota(tenant_id, quota_type)` 配额检查
 
 ## 启动顺序
 
@@ -137,18 +137,18 @@ ydsz-cronjob/
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
-| `pmis.cronjob.node-discovery.type` | `nacos` | `nacos` / `db` |
-| `pmis.cronjob.leader.enabled` | `true` | 启用 Leader 选举 |
-| `pmis.cronjob.leader.role` | `pmis-job-scheduler` | 角色标识 |
-| `pmis.cronjob.failover.enabled` | `true` | 启用故障转移 |
-| `pmis.cronjob.failover.scan-interval-seconds` | `30` | 扫描间隔 |
-| `pmis.cronjob.scanner.interval-ms` | `5000` | 任务扫描间隔 |
-| `pmis.cronjob.executor.max-concurrent` | `16` | 最大并发 |
-| `pmis.cronjob.executor.isolation-strategy` | `none` | `none` / `tenant` / `job_group` |
-| `pmis.cronjob.quota.enabled` | `false` | 启用租户配额 |
-| `pmis.cronjob.log-retention.retention-days` | `30` | 日志保留天数 |
-| `pmis.cronjob.alert.feishu.enabled` | `false` | 飞书告警 |
-| `pmis.cronjob.alert.sms.enabled` | `false` | 短信告警 |
+| `ydsz.cronjob.node-discovery.type` | `nacos` | `nacos` / `db` |
+| `ydsz.cronjob.leader.enabled` | `true` | 启用 Leader 选举 |
+| `ydsz.cronjob.leader.role` | `ydsz-job-scheduler` | 角色标识 |
+| `ydsz.cronjob.failover.enabled` | `true` | 启用故障转移 |
+| `ydsz.cronjob.failover.scan-interval-seconds` | `30` | 扫描间隔 |
+| `ydsz.cronjob.scanner.interval-ms` | `5000` | 任务扫描间隔 |
+| `ydsz.cronjob.executor.max-concurrent` | `16` | 最大并发 |
+| `ydsz.cronjob.executor.isolation-strategy` | `none` | `none` / `tenant` / `job_group` |
+| `ydsz.cronjob.quota.enabled` | `false` | 启用租户配额 |
+| `ydsz.cronjob.log-retention.retention-days` | `30` | 日志保留天数 |
+| `ydsz.cronjob.alert.feishu.enabled` | `false` | 飞书告警 |
+| `ydsz.cronjob.alert.sms.enabled` | `false` | 短信告警 |
 
 ## 启动
 
@@ -180,13 +180,13 @@ mvn -pl ydsz-cronjob -am test
 
 ### Q1：任务重复执行
 
-- 检查 `pmis.cronjob.leader.enabled=true`
+- 检查 `ydsz.cronjob.leader.enabled=true`
 - 同一 Nacos namespace 下只允许一个 Leader
-- 检查 `pmis_job_lock` 表的锁是否被异常持有
+- 检查 `ydsz_job_lock` 表的锁是否被异常持有
 
 ### Q2：故障转移不生效
 
-- 检查 `pmis.cronjob.failover.enabled=true`
+- 检查 `ydsz.cronjob.failover.enabled=true`
 - `JobNodeHeartbeat` 是否在执行器节点正常上报
 - 离线阈值（`offline-threshold-seconds`）是否合理
 

@@ -33,10 +33,10 @@ public class SeataProperties {
     private TransactionType defaultType = TransactionType.LOCAL;
 
     /** Seata 应用 ID */
-    private String seataApplicationId = "pmis-app";
+    private String seataApplicationId = "ydsz-app";
 
     /** Seata 事务组 */
-    private String seataTxServiceGroup = "pmis-tx-group";
+    private String seataTxServiceGroup = "ydsz-tx-group";
 
     // ============= 分模式开关（P2-6） =============
 

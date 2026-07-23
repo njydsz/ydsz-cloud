@@ -1,5 +1,5 @@
 -- =====================================================
--- PMIS Search Index - PostgreSQL 全文检索基础设施
+-- YDSZ Search Index - PostgreSQL 全文检索基础设施
 -- =====================================================
 -- 前置条件：PostgreSQL 14+
 -- 使用方式：在目标数据库执行此脚本
@@ -102,7 +102,7 @@ CREATE TRIGGER trg_ydsz_search_index_update
     EXECUTE FUNCTION update_ydsz_search_index_timestamp();
 
 -- 7. 验证
-SELECT 'PMIS Search Index 初始化完成' AS message;
+SELECT 'YDSZ Search Index 初始化完成' AS message;
 SELECT
     (SELECT COUNT(1) FROM pg_ts_config WHERE cfgname = 'search_zh') AS has_zhparser,
     (SELECT COUNT(1) FROM pg_extension WHERE extname = 'pg_trgm') AS has_pg_trgm,

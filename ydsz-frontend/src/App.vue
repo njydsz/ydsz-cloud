@@ -1,6 +1,6 @@
 <!--
   @file 应用根组件
-  @description PMIS 前端根组件，承担 RouterView 容器职责；
+  @description YDSZ 前端根组件，承担 RouterView 容器职责；
                集成 Element Plus 全局配置（国际化 locale）、全局错误边界（ErrorBoundary）、
                以及应用启动时的主题初始化（从 localStorage 恢复暗黑模式）。
   @module App

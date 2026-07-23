@@ -5,7 +5,7 @@ package com.njydsz.common.json.number;
  * 
  * <p>使用两位数查找表和除法优化算法，比 StringBuilder.append() 快 3-5 倍</p>
  * 
- * @author Json Team
+ * @author YdszJson Team
  */
 public final class NumberUtils {
     

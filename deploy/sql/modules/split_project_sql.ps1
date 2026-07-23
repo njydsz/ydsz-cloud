@@ -1,5 +1,5 @@
 # ============================================================
-# PMIS SQL Split Script: V1.0.0_project.sql -> sales / finance / project + literule migration
+# YDSZ SQL Split Script: V1.0.0_project.sql -> sales / finance / project + literule migration
 # Based on physical Mapper location after DDD refactor
 # ============================================================
 
@@ -14,34 +14,34 @@ Write-Host "Source file: $totalLines lines"
 
 # --- Table -> Module mapping ---
 $salesTables = @(
-    'pmis_project_opportunity',
-    'pmis_project_opportunity_follow',
-    'pmis_project_contract',
-    'pmis_project_contract_supplement',
-    'pmis_project_contract_change',
-    'pmis_project_contract_template'
+    'ydsz_project_opportunity',
+    'ydsz_project_opportunity_follow',
+    'ydsz_project_contract',
+    'ydsz_project_contract_supplement',
+    'ydsz_project_contract_change',
+    'ydsz_project_contract_template'
 )
 
 $financeTables = @(
-    'pmis_project_invoice',
-    'pmis_project_payment',
-    'pmis_project_customer_credit',
-    'pmis_project_expense',
-    'pmis_project_revenue',
-    'pmis_project_profit_snapshot',
-    'pmis_project_profit_simulation',
-    'pmis_project_reconcile_daily'
+    'ydsz_project_invoice',
+    'ydsz_project_payment',
+    'ydsz_project_customer_credit',
+    'ydsz_project_expense',
+    'ydsz_project_revenue',
+    'ydsz_project_profit_snapshot',
+    'ydsz_project_profit_simulation',
+    'ydsz_project_reconcile_daily'
 )
 
 $literuleTables = @(
-    'pmis_rule_execution_trace',
-    'pmis_rule_decision_table',
-    'pmis_rule_canary_bucket',
-    'pmis_rule_scorecard',
-    'pmis_rule_decision_tree',
-    'pmis_rule_script',
-    'pmis_rule_ab_policy',
-    'pmis_rule_ab_rollback'
+    'ydsz_rule_execution_trace',
+    'ydsz_rule_decision_table',
+    'ydsz_rule_canary_bucket',
+    'ydsz_rule_scorecard',
+    'ydsz_rule_decision_tree',
+    'ydsz_rule_script',
+    'ydsz_rule_ab_policy',
+    'ydsz_rule_ab_rollback'
 )
 
 # --- Find all CREATE TABLE positions ---
@@ -120,7 +120,7 @@ foreach ($ct in $createTableLines) {
 # --- Write Sales SQL ---
 $salesHeader = @"
 -- ============================================================
--- PMIS sales module SQL
+-- YDSZ sales module SQL
 -- 商务销售服务 (ydsz-sales, port 9010)
 -- ============================================================
 -- 本脚本 DDL 对应后端 sales 服务的 Mapper / DO,
@@ -140,7 +140,7 @@ Write-Host "`nWrote $salesFile ($($salesContent.Count) lines)"
 # --- Write Finance SQL ---
 $financeHeader = @"
 -- ============================================================
--- PMIS finance module SQL
+-- YDSZ finance module SQL
 -- 财务会计服务 (ydsz-finance, port 9011)
 -- ============================================================
 -- 本脚本 DDL 对应后端 finance 服务的 Mapper / DO,
@@ -160,7 +160,7 @@ Write-Host "Wrote $financeFile ($($financeContent.Count) lines)"
 # --- Write Project SQL (remaining) ---
 $projectHeader = @"
 -- ============================================================
--- PMIS project module SQL
+-- YDSZ project module SQL
 -- 项目执行服务 (ydsz-project, port 9003)
 -- ============================================================
 -- 本脚本 DDL 对应后端 project 服务的 Mapper / DO,
@@ -170,8 +170,8 @@ $projectHeader = @"
 -- 表归属依据: ydsz-project/src/main/java/.../infra/mapper/
 -- 表数量: $($projectTables.Count) 张 (原 42 张表拆分后剩余)
 -- --------------------------------------------------------------------
--- [P4 架构优化提示] 跨模块冗余字段：pmis_cost_allocation.employee_name、
---   pmis_cost_purchase.applicant_name / approver_name 等 *_name 字段为历史
+-- [P4 架构优化提示] 跨模块冗余字段：ydsz_cost_allocation.employee_name、
+--   ydsz_cost_purchase.applicant_name / approver_name 等 *_name 字段为历史
 --   冗余存储，原则上应通过 NameAssembler 实时解析，禁止在写入时同步冗余。
 --   现有数据保留（兼容历史查询），新写入由 Java 端 NameAssembler 自动注入。
 -- --------------------------------------------------------------------

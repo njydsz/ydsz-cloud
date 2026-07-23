@@ -7,7 +7,7 @@ package com.njydsz.common.json.exception;
  *
  * @since 1.0.0
  */
-public class JsonDeserializationException extends JsonException {
+public class JsonDeserializationException extends YdszJsonException {
 
     private static final long serialVersionUID = 1L;
 

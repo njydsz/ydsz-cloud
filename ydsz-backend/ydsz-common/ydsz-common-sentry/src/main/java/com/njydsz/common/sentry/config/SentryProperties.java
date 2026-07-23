@@ -20,7 +20,7 @@ public class SentryProperties {
     private boolean enabled = true;
 
     /** 应用名 */
-    private String appName = "pmis";
+    private String appName = "ydsz";
 
     /** 主机名（auto 自动探测） */
     private String hostname = "auto";

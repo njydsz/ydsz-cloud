@@ -3,7 +3,7 @@ package com.njydsz.common.json.annotation;
 import java.lang.annotation.*;
 
 /**
- * Json 构造函数注解（参考 fastjson2 的@JSONCreator）
+ * YdszJson 构造函数注解（参考 fastjson2 的@JSONCreator）
  *
  * <p>用于标注构造函数或静态工厂方法，指定反序列化时使用的构造器。</p>
  *
@@ -20,7 +20,7 @@ import java.lang.annotation.*;
  *     private Long id;
  *     private String name;
  *
- *     {@literal @}JsonCreator
+ *     {@literal @}YdszJsonCreator
  *     public User(Long id, String name) {
  *         this.id = id;
  *         this.name = name;
@@ -32,7 +32,7 @@ import java.lang.annotation.*;
  *     private Long id;
  *     private String name;
  *
- *     {@literal @}JsonCreator
+ *     {@literal @}YdszJsonCreator
  *     public static User create(Long id, String name) {
  *         User user = new User();
  *         user.setId(id);
@@ -46,13 +46,13 @@ import java.lang.annotation.*;
  *     private Long id;
  *     private String name;
  *
- *     {@literal @}JsonCreator(defaultCreator = true)
+ *     {@literal @}YdszJsonCreator(defaultCreator = true)
  *     public User(Long id, String name) {
  *         this.id = id;
  *         this.name = name;
  *     }
  *
- *     {@literal @}JsonCreator
+ *     {@literal @}YdszJsonCreator
  *     public User(Long id) {
  *         this.id = id;
  *     }
@@ -60,12 +60,12 @@ import java.lang.annotation.*;
  * </pre>
  *
  * @since 1.0.0
- * @see JsonField
+ * @see YdszJsonField
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
-public @interface JsonCreator {
+public @interface YdszJsonCreator {
 
     /**
      * 是否为默认构造函数

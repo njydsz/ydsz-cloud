@@ -1,5 +1,5 @@
 # =====================================================================
-#  PMIS API 网关服务 bootstrap 配置
+#  YDSZ API 网关服务 bootstrap 配置
 #  --------------------------------------------------------------------
 #  端口：9000
 #  职责：统一入口、路由分发、限流/熔断、CORS、认证、日志、Sentinel
@@ -28,7 +28,7 @@ spring:
         enabled: true
         register-enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
+        namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
@@ -42,7 +42,7 @@ spring:
       config:
         enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
+        namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:${spring.profiles.active}}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}

@@ -1,6 +1,6 @@
 # ydsz-common-excel
 
-PMIS high-performance Excel read/write framework - SAX streaming read (memory-friendly), SXSSF large file write, concurrent write, template fill, ASM field acceleration, formula injection protection, type converter chain, Spring Web integration.
+YDSZ high-performance Excel read/write framework - SAX streaming read (memory-friendly), SXSSF large file write, concurrent write, template fill, ASM field acceleration, formula injection protection, type converter chain, Spring Web integration.
 
 ## Module
 

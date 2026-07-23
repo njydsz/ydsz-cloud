@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# PMIS PostgreSQL 自动备份脚本
+# YDSZ PostgreSQL 自动备份脚本
 #
 # 功能:
 #   1. pg_basebackup 全量物理备份（WAL 归档模式）
@@ -16,9 +16,9 @@
 #
 # 定时调度（crontab）:
 #   # 每日凌晨 2:00 全量备份
-#   0 2 * * * /opt/pmis/scripts/pg-backup.sh >> /var/log/pmis/backup.log 2>&1
+#   0 2 * * * /opt/ydsz/scripts/pg-backup.sh >> /var/log/ydsz/backup.log 2>&1
 #   # 每 15 分钟 WAL 归档检查
-#   */15 * * * * /opt/pmis/scripts/pg-backup.sh --wal-archive >> /var/log/pmis/wal-archive.log 2>&1
+#   */15 * * * * /opt/ydsz/scripts/pg-backup.sh --wal-archive >> /var/log/ydsz/wal-archive.log 2>&1
 #
 # 退出码:
 #   0 — 备份成功
@@ -102,7 +102,7 @@ send_notification() {
   "msg_type": "interactive",
   "card": {
     "header": {
-      "title": {"tag": "plain_text", "content": "${icon} PMIS 数据库备份${status}"},
+      "title": {"tag": "plain_text", "content": "${icon} YDSZ 数据库备份${status}"},
       "template": "${color}"
     },
     "elements": [
@@ -118,8 +118,8 @@ EOF
 {
   "msgtype": "markdown",
   "markdown": {
-    "title": "PMIS 数据库备份${status}",
-    "text": "## ${icon} PMIS 数据库备份${status}\n\n- **主机**: ${HOSTNAME}\n- **数据库**: ${PG_DB}\n- **时间**: ${DATE}\n- **详情**: ${message}"
+    "title": "YDSZ 数据库备份${status}",
+    "text": "## ${icon} YDSZ 数据库备份${status}\n\n- **主机**: ${HOSTNAME}\n- **数据库**: ${PG_DB}\n- **时间**: ${DATE}\n- **详情**: ${message}"
   }
 }
 EOF
@@ -279,20 +279,20 @@ verify_backup() {
 restore_guide() {
     local file="$1"
     echo "============================================================"
-    echo "PMIS 数据库恢复指南"
+    echo "YDSZ 数据库恢复指南"
     echo "============================================================"
     echo ""
     echo "备份文件: $file"
     echo ""
     echo "恢复步骤:"
-    echo "  1. 停止应用服务（所有 PMIS 微服务）"
+    echo "  1. 停止应用服务（所有 YDSZ 微服务）"
     echo "  2. 停止 PostgreSQL: systemctl stop postgresql"
     echo "  3. 备份当前数据目录: mv /var/lib/postgresql/data /var/lib/postgresql/data.bak.$(date +%s)"
     echo "  4. 初始化新数据目录: pg_ctl initdb -D /var/lib/postgresql/data"
     echo "  5. 启动 PostgreSQL: systemctl start postgresql"
     echo "  6. 创建数据库: createdb -U postgres ${PG_DB}"
     echo "  7. 恢复备份: pg_restore -U postgres -d ${PG_DB} -j 4 -v $file"
-    echo "  8. 验证数据: psql -U postgres -d ${PG_DB} -c 'SELECT count(*) FROM pmis_user;'"
+    echo "  8. 验证数据: psql -U postgres -d ${PG_DB} -c 'SELECT count(*) FROM ydsz_user;'"
     echo "  9. 启动应用服务"
     echo ""
     echo "⚠️  注意:"

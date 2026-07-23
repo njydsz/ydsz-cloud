@@ -1,5 +1,5 @@
 # =====================================================================
-#  YDSZ PMIS · NextWiki 网盘知识库服务专属配置 (ydsz-nextwiki.yml)
+#  YDSZ · NextWiki 网盘知识库服务专属配置 (ydsz-nextwiki.yml)
 #  --------------------------------------------------------------------
 #  作用:   NextWiki 服务通过 spring.cloud.nacos.config.shared-configs
 #          引用此 dataId,实现配置外部化与动态刷新

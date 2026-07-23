@@ -11,12 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.UUID;
 
-import com.njydsz.common.json.annotation.JsonClass;
-import com.njydsz.common.json.annotation.JsonView;
+import com.njydsz.common.json.annotation.YdszJsonClass;
+import com.njydsz.common.json.annotation.YdszJsonView;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.writer.JSONWriter;
 
 /**
@@ -461,7 +461,7 @@ public final class ValueWriter {
      */
     public static void writeBean(Object obj, StringBuilder sb) {
         Class<?> clazz = obj.getClass();
-        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
+        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
 
         FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
         if (fields == null) {
@@ -503,7 +503,7 @@ public final class ValueWriter {
 
             Class<?> currentView = SerializationProvider.CURRENT_VIEW_CLASS.get();
             if (currentView != null) {
-                JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);
+                YdszJsonView viewAnnotation = field.field.getAnnotation(YdszJsonView.class);
                 if (viewAnnotation == null) {
                     continue;
                 }
@@ -818,7 +818,7 @@ public final class ValueWriter {
      *
      * <p>格式化优先级：
      * <ol>
-     *   <li>{@link JsonConfig#getDateFormat()} 全局日期格式（非空时优先）</li>
+     *   <li>{@link YdszJsonConfig#getDateFormat()} 全局日期格式（非空时优先）</li>
      *   <li>ISO 默认格式（toString）</li>
      * </ol>
      * 支持所有 java.time.* 和 java.util.Date 类型。</p>
@@ -830,7 +830,7 @@ public final class ValueWriter {
     public static String formatDateValue(Object value) {
         if (value == null) return null;
 
-        String globalFormat = JsonConfig.getInstance().getDateFormat();
+        String globalFormat = YdszJsonConfig.getInstance().getDateFormat();
         if (globalFormat != null && !globalFormat.isEmpty()) {
             DateTimeFormatter formatter = getCachedFormatter(globalFormat);
             if (formatter != null) {

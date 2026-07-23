@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  YDSZ PMIS · Ubuntu 中间件统一管理脚本
+#  YDSZ · Ubuntu 中间件统一管理脚本
 # -----------------------------------------------------------------------------
 #  用法:   ./infra-manager.sh {start|stop|status|restart} [middleware]
 #          middleware: postgres | redis | nacos | minio | seata |
@@ -9,16 +9,16 @@
 #          ./infra-manager.sh stop postgres     # 只停 postgres
 #          ./infra-manager.sh status            # 看全部状态
 # 路径:   默认从 /opt/<middleware> 读取
-# 自定义: export PMIS_INFRA_HOME=/your/path    # 改安装位置
+# 自定义: export YDSZ_INFRA_HOME=/your/path    # 改安装位置
 # 注:    Elasticsearch 已移除（P2-19 起改用 PostgreSQL tsvector）
 # =============================================================================
 set -e
 
 # ---------- 默认配置 ----------
-export PMIS_INFRA_HOME=${PMIS_INFRA_HOME:-/opt}
-PMIS_DATA_HOME=${PMIS_DATA_HOME:-/var/lib}
-PMIS_LOG_HOME=${PMIS_LOG_HOME:-/var/log/pmis}
-mkdir -p "$PMIS_LOG_HOME"
+export YDSZ_INFRA_HOME=${YDSZ_INFRA_HOME:-/opt}
+YDSZ_DATA_HOME=${YDSZ_DATA_HOME:-/var/lib}
+YDSZ_LOG_HOME=${YDSZ_LOG_HOME:-/var/log/ydsz}
+mkdir -p "$YDSZ_LOG_HOME"
 
 # ---------- 颜色 ----------
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
@@ -76,7 +76,7 @@ redis_stop() {
 redis_status() {
   if systemctl is-active --quiet redis; then
     ok "Redis: 运行中"
-    redis-cli -a ${REDIS_PASSWORD:-pmis123} ping 2>/dev/null
+    redis-cli -a ${REDIS_PASSWORD:-ydsz123} ping 2>/dev/null
   else
     err "Redis: 未运行"
   fi
@@ -99,7 +99,7 @@ nacos_start() {
     fi
     sleep 2
   done
-  warn "Nacos 启动超时，请查看日志：$PMIS_LOG_HOME/nacos/"
+  warn "Nacos 启动超时，请查看日志：$YDSZ_LOG_HOME/nacos/"
 }
 nacos_stop() {
   log "停止 Nacos..."

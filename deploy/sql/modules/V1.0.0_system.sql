@@ -1,5 +1,5 @@
 -- ============================================================
--- PMIS system module SQL
+-- YDSZ system module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
 -- 本脚本 DDL 对应后端 system 服务 (ydsz-system) 的 Mapper / DO,
@@ -227,13 +227,13 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_operation_log_brin
 
 -- 初始化系统配置
 INSERT INTO ydsz_config (config_group, config_key, config_value, value_type, description, created_by) VALUES
-    ('system', 'system.name', 'PMIS 项目运营管理系统', 'STRING', '系统名称', 0),
+    ('system', 'system.name', 'YDSZ 项目运营管理系统', 'STRING', '系统名称', 0),
     ('system', 'system.version', '1.0.0', 'STRING', '系统版本', 0),
     ('rate', 'rate.social.company.rate', '0.245', 'NUMBER', '公司社保比例', 0),
     ('rate', 'rate.fund.company.rate', '0.05', 'NUMBER', '公司公积金比例', 0),
     ('rate', 'rate.workdays.per.month', '21.75', 'NUMBER', '月计薪天数', 0),
     ('rate', 'rate.hours.per.day', '8', 'NUMBER', '日标准工时', 0),
-    ('workflow', 'workflow.engine', 'pmis', 'STRING', '工作流引擎（自研 ydsz_flow_*）', 0),
+    ('workflow', 'workflow.engine', 'ydsz', 'STRING', '工作流引擎（自研 ydsz_flow_*）', 0),
     ('alert', 'alert.cpi.yellow', '0.95', 'NUMBER', 'CPI 黄色预警阈值', 0),
     ('alert', 'alert.cpi.red', '0.85', 'NUMBER', 'CPI 红色预警阈值', 0),
     ('alert', 'alert.spi.yellow', '0.90', 'NUMBER', 'SPI 黄色预警阈值', 0),
@@ -244,10 +244,10 @@ ON CONFLICT DO NOTHING;
 
 -- --------------------------------------------------------------------
 
--- ============================ [004] init pmis workflow schema ============================
+-- ============================ [004] init ydsz workflow schema ============================
 
 -- =====================================================
--- PMIS 工作流基础模块清理 DDL（Flowable 表已下线）
+-- YDSZ 工作流基础模块清理 DDL（Flowable 表已下线）
 -- 版本: V1.0.0_004
 -- 描述: 完全移除 Flowable 引擎相关的业务关联表 / 表单定义表 / 节点配置表
 --       业务流程关联信息已统一收敛到自研 ydsz_flow_instance / ydsz_flow_run_task
@@ -267,7 +267,7 @@ ON CONFLICT DO NOTHING;
 
 -- --------------------------------------------------------------------
 
--- ============================ [005] init pmis file schema ============================
+-- ============================ [005] init ydsz file schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
@@ -275,7 +275,7 @@ ON CONFLICT DO NOTHING;
 --   4) 内联 status/deleted CHECK 约束
 --   5) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
 -- =====================================================
--- PMIS 文件存储模块 DDL
+-- YDSZ 文件存储模块 DDL
 -- 版本: V1.0.0_005 (merged into V1.0.0.sql)
 -- 描述: 文件元信息表(MinIO/OSS 对象存储统一管理)
 -- =====================================================
@@ -439,7 +439,7 @@ ON CONFLICT (tenant_id) DO NOTHING;
 
 -- --------------------------------------------------------------------
 
--- ============================ [016] init pmis security ============================
+-- ============================ [016] init ydsz security ============================
 
 -- ============================================================
 -- V1.0.0_016  权限安全体系  脚本
@@ -594,7 +594,7 @@ CREATE INDEX IF NOT EXISTS idx_dea_tenant_module_at
 
 -- --------------------------------------------------------------------
 
--- ============================ [019] init pmis alert thresholds ============================
+-- ============================ [019] init ydsz alert thresholds ============================
 
 -- ====================================================================
 -- 预警阈值配置（ydsz_config，group=alert）
@@ -1190,7 +1190,7 @@ END $$;
 
 -- --------------------------------------------------------------------
 
--- ============================ [014] init pmis admin full perm ============================
+-- ============================ [014] init ydsz admin full perm ============================
 
 -- ====================================================================
 -- 9. 初始化菜单权限 + 角色授权 (admin 拥有全部权限)
@@ -1254,7 +1254,7 @@ COMMENT ON VIEW ydsz_view_employee_utilization IS '人效排行视图: 按 tenan
 --  --------------------------------------------------------------------
 --  说明：
 --    1) AT 模式依赖此表保存 before/after 镜像，用于分支事务回滚
---    2) 必须在每个业务库（pmis / ydsz_bill / ydsz_archive ...）都建
+--    2) 必须在每个业务库（ydsz / ydsz_bill / ydsz_archive ...）都建
 --    3) 配套 Nacos 配置：data-id = seata-client.properties
 --    4) 配套脚本：deploy/seata/verify-seata.sh 会自动检查本表存在
 --  --------------------------------------------------------------------
@@ -1459,7 +1459,7 @@ BEGIN
         WHERE c.table_schema = 'public'
           AND c.column_name = 'updated_at'
           AND t.table_type = 'BASE TABLE'
-          AND c.table_name LIKE 'pmis\_%' ESCAPE '\'
+          AND c.table_name LIKE 'ydsz\_%' ESCAPE '\'
           -- 排除分区子表(由父表继承,无需单独挂载)
           AND c.table_name NOT LIKE '%_default'
     LOOP

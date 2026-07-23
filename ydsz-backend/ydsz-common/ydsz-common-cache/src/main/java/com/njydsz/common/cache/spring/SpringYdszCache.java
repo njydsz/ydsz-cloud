@@ -9,27 +9,27 @@ import org.springframework.cache.support.AbstractValueAdaptingCache;
 import com.njydsz.common.cache.api.Cache;
 
 /**
- * LocalCache 的 Spring Cache 适配器（Spring 6.x）。
+ * YdszCache 的 Spring Cache 适配器（Spring 6.x）。
  *
- * <p>将 LocalCache 的 Cache 接口适配为 Spring Cache 的标准接口，
+ * <p>将 YdszCache 的 Cache 接口适配为 Spring Cache 的标准接口，
  * 支持 @Cacheable、@CachePut、@CacheEvict 等 Spring Cache 注解。
  *
  * @since 1.0.0
  * 
  */
-public class SpringLocalCache extends AbstractValueAdaptingCache {
+public class SpringYdszCache extends AbstractValueAdaptingCache {
 
   private final String name;
   private final Cache<Object, Object> delegate;
 
   /**
-   * 创建 Spring LocalCache 适配器。
+   * 创建 Spring YdszCache 适配器。
    *
    * @param name 缓存名称
-   * @param delegate LocalCache 实例
+   * @param delegate YdszCache 实例
    * @param allowNullValues 是否允许 null 值
    */
-  public SpringLocalCache(String name, Cache<Object, Object> delegate, boolean allowNullValues) {
+  public SpringYdszCache(String name, Cache<Object, Object> delegate, boolean allowNullValues) {
     super(allowNullValues);
     this.name = name;
     this.delegate = delegate;

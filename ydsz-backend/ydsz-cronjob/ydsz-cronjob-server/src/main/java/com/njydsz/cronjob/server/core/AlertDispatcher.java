@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
@@ -259,7 +259,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            List<Object> array = Json.parseArray(channelsJson);
+            List<Object> array = YdszJson.parseArray(channelsJson);
             List<AlertChannel> channels = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 AlertChannel channel = AlertChannel.parse(array.getString(i));
@@ -286,7 +286,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            List<Object> array = Json.parseArray(receiversJson);
+            List<Object> array = YdszJson.parseArray(receiversJson);
             List<String> receivers = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 String receiver = array.getString(i);
@@ -489,7 +489,7 @@ public class AlertDispatcher {
             return "INAPP";
         }
         try {
-            List<Object> array = Json.parseArray(channelsJson);
+            List<Object> array = YdszJson.parseArray(channelsJson);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < array.size(); i++) {
                 if (i > 0) {

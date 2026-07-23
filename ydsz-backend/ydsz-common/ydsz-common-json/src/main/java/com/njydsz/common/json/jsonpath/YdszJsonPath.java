@@ -3,10 +3,10 @@ package com.njydsz.common.json.jsonpath;
 import java.util.*;
 import java.util.regex.*;
 
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
- * 增强的 JsonPath 解析器
+ * 增强的 YdszJsonPath 解析器
  *
  * 支持：
  * 1. 基础路径：$.user.name
@@ -19,18 +19,18 @@ import com.njydsz.common.json.Json;
  *
  * @since 1.0.0
  */
-public class JsonPath {
+public class YdszJsonPath {
 
     private final List<PathSegment> segments;
 
-    private JsonPath(String path, List<PathSegment> segments) {
+    private YdszJsonPath(String path, List<PathSegment> segments) {
         this.segments = segments;
     }
 
     /**
-     * 编译 JsonPath
+     * 编译 YdszJsonPath
      */
-    public static JsonPath compile(String path) {
+    public static YdszJsonPath compile(String path) {
         if (path == null || path.trim().isEmpty()) {
             throw new IllegalArgumentException("Path cannot be null or empty");
         }
@@ -40,7 +40,7 @@ public class JsonPath {
         }
         
         List<PathSegment> segments = parse(path);
-        return new JsonPath(path, segments);
+        return new YdszJsonPath(path, segments);
     }
 
     /**
@@ -69,7 +69,7 @@ public class JsonPath {
      * 从 JSON 字符串中获取值
      */
     public Object getValue(String json) {
-        Object obj = Json.parseObjectToJsonObject(json);
+        Object obj = YdszJson.parseObjectToJsonObject(json);
         return getValue(obj);
     }
 
@@ -86,7 +86,7 @@ public class JsonPath {
      * 获取所有匹配的值（从 JSON 字符串）
      */
     public List<Object> getAllValues(String json) {
-        Object obj = Json.parseObjectToJsonObject(json);
+        Object obj = YdszJson.parseObjectToJsonObject(json);
         return getAllValues(obj);
     }
 
@@ -512,7 +512,7 @@ public class JsonPath {
      * @return 提取的值
      */
     public static Object get(String json, String path) {
-        JsonPath jsonPath = compile(path);
+        YdszJsonPath jsonPath = compile(path);
         return jsonPath.getValue(json);
     }
     
@@ -524,7 +524,7 @@ public class JsonPath {
      * @return 提取的值
      */
     public static Object get(Object obj, String path) {
-        JsonPath jsonPath = compile(path);
+        YdszJsonPath jsonPath = compile(path);
         return jsonPath.getValue(obj);
     }
 }

@@ -1,2 +1,2 @@
-com.njydsz.pmis.common.lock.config.DistributedLockAutoConfiguration
-com.njydsz.pmis.common.lock.metrics.LockMetricsConfiguration
+com.njydsz.common.lock.config.DistributedLockAutoConfiguration
+com.njydsz.common.lock.metrics.LockMetricsConfiguration

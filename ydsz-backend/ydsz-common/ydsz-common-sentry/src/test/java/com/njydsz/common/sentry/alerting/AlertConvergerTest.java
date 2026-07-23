@@ -24,7 +24,7 @@ class AlertConvergerTest {
                 .name(name)
                 .severity(severity)
                 .summary("test alert")
-                .labels(Map.of("job", "pmis-service"))
+                .labels(Map.of("job", "ydsz-service"))
                 .build();
     }
 

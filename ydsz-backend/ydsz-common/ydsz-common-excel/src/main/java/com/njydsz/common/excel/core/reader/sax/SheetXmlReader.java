@@ -26,6 +26,7 @@ public class SheetXmlReader {
     private int currentRow = -1;
     private int currentCol = -1;
     private String cellType;
+    private boolean rowHasData;
 
     SheetXmlReader(SuperFastExcelReader reader, SharedStringsReader ssReader) {
         this.reader = reader;
@@ -48,6 +49,7 @@ public class SheetXmlReader {
             }
 
             parseRowAttributes(data, rowStart, rowAttrEnd);
+            rowHasData = false;
 
             if (currentRow > reader.headRowNumber && rowData == null && reader.instantiator != null) {
                 try {
@@ -67,6 +69,13 @@ public class SheetXmlReader {
             parseRowContent(data, rowContentStart, rowEnd);
 
             if (rowData != null && reader.context != null && reader.listeners != null) {
+                // skipEmptyRows: skip rows with no cell data
+                if (reader.skipEmptyRows && !rowHasData) {
+                    rowData = null;
+                    pos = rowEnd + 6;
+                    continue;
+                }
+
                 reader.context.incrementRow();
 
                 // P0-3: DataValidator integration in SuperFast read path
@@ -301,6 +310,7 @@ public class SheetXmlReader {
         }
 
         if (currentRow > reader.headRowNumber && rowData != null) {
+            rowHasData = true;
             parseDataCell(currentCol, value);
         }
     }

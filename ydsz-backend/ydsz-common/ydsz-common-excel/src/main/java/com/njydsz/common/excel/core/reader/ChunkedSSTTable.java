@@ -4,7 +4,7 @@ package com.njydsz.common.excel.core.reader;
  * ChunkedSSTTable 类
  *
  * @author ydsz-team
- * @email pmis-dev@njydsz.com
+ * @email ydsz-dev@njydsz.com
  * @version 1.0.0
  */
 import java.io.*;

@@ -1,6 +1,6 @@
 # ydsz-common-auth
 
-PMIS 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/API/行/列四级权限）、数据权限 @DataScope、多租户隔离、TOTP 双因子认证、密码策略、权限缓存与热更新。
+YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/API/行/列四级权限）、数据权限 @DataScope、多租户隔离、TOTP 双因子认证、密码策略、权限缓存与热更新。
 
 ## 模块定位
 
@@ -87,12 +87,12 @@ PMIS 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/API
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   jwt:
     secret: ${JWT_SECRET}          # JWT 密钥
     access-token-expire: 7200      # AccessToken 过期（秒）
     refresh-token-expire: 604800   # RefreshToken 过期（秒）
-    issuer: pmis
+    issuer: ydsz
   auth:
     filter:
       enabled: true

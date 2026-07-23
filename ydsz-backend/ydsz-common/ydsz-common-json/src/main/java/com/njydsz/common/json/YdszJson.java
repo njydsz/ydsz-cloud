@@ -9,33 +9,33 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import com.njydsz.common.json.cache.AsmCodecCache;
-import com.njydsz.common.json.config.JsonConfig;
+import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.engine.DeserializerEngine;
 import com.njydsz.common.json.engine.SerializerEngine;
-import com.njydsz.common.json.exception.JsonException;
-import com.njydsz.common.json.jsonpath.JsonPath;
+import com.njydsz.common.json.exception.YdszJsonException;
+import com.njydsz.common.json.jsonpath.YdszJsonPath;
 import com.njydsz.common.json.merge.JsonMergePatch;
 import com.njydsz.common.json.metric.JsonMetricsCallback;
 import com.njydsz.common.json.module.JsonModuleRegistry;
-import com.njydsz.common.json.object.JsonArray;
-import com.njydsz.common.json.object.JsonObject;
-import com.njydsz.common.json.parser.JsonParser;
+import com.njydsz.common.json.object.YdszJsonArray;
+import com.njydsz.common.json.object.YdszJsonObject;
+import com.njydsz.common.json.parser.YdszJsonParser;
 import com.njydsz.common.json.pointer.JsonPointer;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.reader.JSONReader;
 import com.njydsz.common.json.schema.SchemaValidator;
 import com.njydsz.common.json.schema.ValidationResult;
-import com.njydsz.common.json.schema.JsonSchema;
+import com.njydsz.common.json.schema.YdszJsonSchema;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.stream.JsonGenerator;
 import com.njydsz.common.json.tree.*;
-import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.json.type.YdszJsonType;
 import com.njydsz.common.json.writer.JSONWriter;
 
 /**
- * Json v3.5.0 - 超高性能 JSON 工具类（深度优化版）
+ * YdszJson v3.5.0 - 超高性能 JSON 工具类（深度优化版）
  *
  * <p>提供高性能、功能丰富的 JSON 序列化和反序列化功能，纯 Java 实现，无需额外依赖。</p>
  * 
@@ -50,7 +50,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *   <li><b>Java 8+ 日期时间</b>：完美支持 LocalDateTime 等新 API</li>
  *   <li><b>JSONPath</b>：支持嵌套字段提取</li>
  *   <li><b>Builder 模式</b>：链式调用，代码更优雅</li>
- *   <li><b>注解支持</b>：支持@JsonField、@JsonProperty 等注解</li>
+ *   <li><b>注解支持</b>：支持@YdszJsonField、@JsonProperty 等注解</li>
  *   <li><b>自定义序列化器</b>：支持注册自定义序列化/反序列化器</li>
  *   <li><b>命名策略</b>：支持 SNAKE_CASE、KEBAB_CASE 等多种命名策略</li>
  * </ul>
@@ -66,10 +66,10 @@ import com.njydsz.common.json.writer.JSONWriter;
  * 
  * @since 1.0.0
  */
-public class Json {
+public class YdszJson {
 
-    private Json() {
-        throw new UnsupportedOperationException("Json is a utility class and cannot be instantiated");
+    private YdszJson() {
+        throw new UnsupportedOperationException("YdszJson is a utility class and cannot be instantiated");
     }
 
     // ==================== 指标监控钩子 ====================
@@ -85,7 +85,7 @@ public class Json {
      * @param callback 指标回调实例，null 表示关闭监控
      */
     public static void setMetricsCallback(JsonMetricsCallback callback) {
-        Json.metricsCallback = callback;
+        YdszJson.metricsCallback = callback;
     }
 
     /**
@@ -109,10 +109,10 @@ public class Json {
             try {
                 return supplier.get();
             } catch (Exception e) {
-                if (e instanceof JsonException) {
-                    throw (JsonException) e;
+                if (e instanceof YdszJsonException) {
+                    throw (YdszJsonException) e;
                 }
-                throw new JsonException("JSON serialize failed: " + e.getMessage(), e);
+                throw new YdszJsonException("JSON serialize failed: " + e.getMessage(), e);
             }
         }
         long start = System.nanoTime();
@@ -122,10 +122,10 @@ public class Json {
             return result;
         } catch (Exception e) {
             cb.onSerializeFailure();
-            if (e instanceof JsonException) {
-                throw (JsonException) e;
+            if (e instanceof YdszJsonException) {
+                throw (YdszJsonException) e;
             }
-            throw new JsonException("JSON serialize failed: " + e.getMessage(), e);
+            throw new YdszJsonException("JSON serialize failed: " + e.getMessage(), e);
         }
     }
 
@@ -136,10 +136,10 @@ public class Json {
             try {
                 return supplier.get();
             } catch (Exception e) {
-                if (e instanceof JsonException) {
-                    throw (JsonException) e;
+                if (e instanceof YdszJsonException) {
+                    throw (YdszJsonException) e;
                 }
-                throw new JsonException("JSON deserialize failed: " + e.getMessage(), e);
+                throw new YdszJsonException("JSON deserialize failed: " + e.getMessage(), e);
             }
         }
         long start = System.nanoTime();
@@ -149,10 +149,10 @@ public class Json {
             return result;
         } catch (Exception e) {
             cb.onDeserializeFailure();
-            if (e instanceof JsonException) {
-                throw (JsonException) e;
+            if (e instanceof YdszJsonException) {
+                throw (YdszJsonException) e;
             }
-            throw new JsonException("JSON deserialize failed: " + e.getMessage(), e);
+            throw new YdszJsonException("JSON deserialize failed: " + e.getMessage(), e);
         }
     }
     
@@ -191,7 +191,7 @@ public class Json {
     /**
      * 对象转 JSON 字符串（带视图过滤）
      * 
-     * <p>根据 @JsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
+     * <p>根据 @YdszJsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
      * 
      * @param obj 要序列化的对象
      * @param viewClass 视图类
@@ -285,14 +285,14 @@ public class Json {
     }
     
     /**
-     * JSON 字符串转对象（支持 JsonType）
+     * JSON 字符串转对象（支持 YdszJsonType）
      *
      * @param json JSON 字符串
      * @param typeRef 类型引用
      * @param <T> 类型参数
      * @return 反序列化后的对象
      */
-    public static <T> T toObject(String json, JsonType<T> typeRef) {
+    public static <T> T toObject(String json, YdszJsonType<T> typeRef) {
         if (json == null || json.isBlank()) {
             return null;
         }
@@ -361,7 +361,7 @@ public class Json {
      * @return 反序列化后的对象
      * @since 1.4.0
      */
-    public static <T> T fromJson(String json, JsonType<T> typeRef) {
+    public static <T> T fromJson(String json, YdszJsonType<T> typeRef) {
         return toObject(json, typeRef);
     }
     
@@ -427,33 +427,33 @@ public class Json {
     }
     
     /**
-     * JSON 字符串转 JsonObject
+     * JSON 字符串转 YdszJsonObject
      * 
      * @param json JSON 字符串
-     * @return JsonObject 对象
+     * @return YdszJsonObject 对象
      */
     
-    public static JsonObject parseObjectToJsonObject(String json) {
+    public static YdszJsonObject parseObjectToJsonObject(String json) {
         Object result = DeserializerEngine.deserialize(json, Map.class);
         if (result instanceof Map<?, ?> map) {
-            return new JsonObject(map);
+            return new YdszJsonObject(map);
         }
-        return new JsonObject();
+        return new YdszJsonObject();
     }
     
     /**
-     * JSON 字符串转 JsonArray
+     * JSON 字符串转 YdszJsonArray
      * 
      * @param json JSON 字符串
-     * @return JsonArray 对象
+     * @return YdszJsonArray 对象
      */
     
-    public static JsonArray parseArrayToJsonArray(String json) {
+    public static YdszJsonArray parseArrayToJsonArray(String json) {
         Object result = DeserializerEngine.deserialize(json, List.class);
         if (result instanceof List<?> list) {
-            return new JsonArray(list);
+            return new YdszJsonArray(list);
         }
-        return new JsonArray();
+        return new YdszJsonArray();
     }
     
     // ==================== JSONPath 入口方法 ====================
@@ -466,7 +466,7 @@ public class Json {
      * @return 匹配的值
      */
     public static Object getByPath(String json, String path) {
-        return JsonPath.get(json, path);
+        return YdszJsonPath.get(json, path);
     }
     
     /**
@@ -482,7 +482,7 @@ public class Json {
      * @return 反序列化后的对象，路径不存在时返回 null
      */
     public static <T> T parseObject(String json, String path, Class<T> clazz) {
-        Object value = JsonPath.get(json, path);
+        Object value = YdszJsonPath.get(json, path);
         if (value == null) {
             return null;
         }
@@ -499,8 +499,8 @@ public class Json {
      * 
      * @return JSON 对象
      */
-    public static JsonObject object() {
-        return new JsonObject();
+    public static YdszJsonObject object() {
+        return new YdszJsonObject();
     }
     
     /**
@@ -508,8 +508,8 @@ public class Json {
      * 
      * @return JSON 数组
      */
-    public static JsonArray array() {
-        return new JsonArray();
+    public static YdszJsonArray array() {
+        return new YdszJsonArray();
     }
     
     // ==================== 自定义序列化器注册 ====================
@@ -650,7 +650,7 @@ public class Json {
      * @return JsonNode 树
      */
     public static JsonNode readTree(String json) {
-        Object parsed = JsonParser.parse(json);
+        Object parsed = YdszJsonParser.parse(json);
         return TreeConverter.convertToJsonNode(parsed);
     }
 
@@ -728,7 +728,7 @@ public class Json {
             return false;
         }
         try {
-            JsonParser.parse(json);
+            YdszJsonParser.parse(json);
             return true;
         } catch (Exception e) {
             return false;
@@ -742,7 +742,7 @@ public class Json {
      * @param schema Schema 定义
      * @return 验证结果
      */
-    public static ValidationResult validate(Object data, JsonSchema schema) {
+    public static ValidationResult validate(Object data, YdszJsonSchema schema) {
         return SchemaValidator.validate(schema, data);
     }
     
@@ -753,7 +753,7 @@ public class Json {
      * @param schema Schema 定义
      * @return 验证结果
      */
-    public static ValidationResult validate(String json, JsonSchema schema) {
+    public static ValidationResult validate(String json, YdszJsonSchema schema) {
         try {
             Object data = DeserializerEngine.deserialize(json, Map.class);
             return SchemaValidator.validate(schema, data);
@@ -772,7 +772,7 @@ public class Json {
      * @param <T> 类型参数
      * @return 验证结果
      */
-    public static <T> ValidationResult validate(T data, JsonSchema schema, Class<T> clazz) {
+    public static <T> ValidationResult validate(T data, YdszJsonSchema schema, Class<T> clazz) {
         return SchemaValidator.validate(schema, data);
     }
     
@@ -814,7 +814,7 @@ public class Json {
      * @param <T>     目标类型泛型
      * @return 反序列化对象，bytes 为空时返回 null
      */
-    public static <T> T fromJsonBytes(byte[] bytes, JsonType<T> typeRef) {
+    public static <T> T fromJsonBytes(byte[] bytes, YdszJsonType<T> typeRef) {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
@@ -882,7 +882,7 @@ public class Json {
             try {
                 out.write("null".getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
-                throw new JsonException("Failed to write to OutputStream", e);
+                throw new YdszJsonException("Failed to write to OutputStream", e);
             }
             return;
         }
@@ -890,7 +890,7 @@ public class Json {
         try {
             out.write(bytes);
         } catch (IOException e) {
-            throw new JsonException("Failed to write to OutputStream", e);
+            throw new YdszJsonException("Failed to write to OutputStream", e);
         }
     }
 
@@ -903,7 +903,7 @@ public class Json {
      *
      * @param obj 要序列化的对象
      * @param writer 字符输出流
-     * @throws JsonException 如果写入失败
+     * @throws YdszJsonException 如果写入失败
      * @since 1.4.0
      */
     public static void toJson(Object obj, Writer writer) {
@@ -911,7 +911,7 @@ public class Json {
         try {
             writer.write(json);
         } catch (IOException e) {
-            throw new JsonException("Failed to write to Writer", e);
+            throw new YdszJsonException("Failed to write to Writer", e);
         }
     }
 
@@ -938,7 +938,7 @@ public class Json {
             String json = new String(bytes, StandardCharsets.UTF_8);
             return toObject(json, clazz);
         } catch (IOException e) {
-            throw new JsonException("Failed to read from InputStream", e);
+            throw new YdszJsonException("Failed to read from InputStream", e);
         }
     }
 
@@ -951,7 +951,7 @@ public class Json {
      * @return 反序列化后的对象
      * @since 1.4.0
      */
-    public static <T> T toObject(InputStream in, JsonType<T> typeRef) {
+    public static <T> T toObject(InputStream in, YdszJsonType<T> typeRef) {
         if (in == null) {
             return null;
         }
@@ -963,7 +963,7 @@ public class Json {
             String json = new String(bytes, StandardCharsets.UTF_8);
             return toObject(json, typeRef);
         } catch (IOException e) {
-            throw new JsonException("Failed to read from InputStream", e);
+            throw new YdszJsonException("Failed to read from InputStream", e);
         }
     }
 
@@ -1000,7 +1000,7 @@ public class Json {
      * 使用指定配置序列化对象（不影响全局配置）。
      *
      * <p>通过保存/恢复当前线程的 ThreadLocal 序列化参数来实现单次配置，
-     * 不修改全局 {@link JsonConfig} 单例，保证线程安全。
+     * 不修改全局 {@link YdszJsonConfig} 单例，保证线程安全。
      * 适用于需要为单次序列化指定不同配置的场景。</p>
      *
      * @param obj 要序列化的对象
@@ -1008,7 +1008,7 @@ public class Json {
      * @return JSON 字符串
      * @since 1.4.0
      */
-    public static String toJson(Object obj, JsonConfig config) {
+    public static String toJson(Object obj, YdszJsonConfig config) {
         if (obj == null) {
             return null;
         }
@@ -1078,15 +1078,15 @@ public class Json {
      * 校验 JSON 字符串大小是否超过全局限制。
      *
      * @param json JSON 字符串
-     * @throws JsonException 如果超过最大 JSON 大小限制
+     * @throws YdszJsonException 如果超过最大 JSON 大小限制
      */
     static void validateJsonSize(String json) {
         if (json == null) {
             return;
         }
-        long maxSize = JsonConfig.getInstance().getMaxJsonSize();
+        long maxSize = YdszJsonConfig.getInstance().getMaxJsonSize();
         if (json.length() > maxSize) {
-            throw new JsonException(
+            throw new YdszJsonException(
                     "JSON size exceeds limit: " + json.length() + " > " + maxSize);
         }
     }

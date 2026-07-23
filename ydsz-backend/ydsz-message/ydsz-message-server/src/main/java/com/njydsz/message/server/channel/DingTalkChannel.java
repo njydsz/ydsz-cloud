@@ -18,7 +18,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
 
@@ -113,13 +113,13 @@ public class DingTalkChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Json.toJson(payload))
+                    .body(YdszJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = Json.parseMap(response.getBody());
+                Map<String, Object> body = YdszJson.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     log.info("[DINGTALK] 发送成功");
@@ -149,7 +149,7 @@ public class DingTalkChannel implements MessageChannel {
      */
     Map<String, Object> buildPayload(MessageRequest request) {
         String content = request.getContent() == null ? "" : request.getContent();
-        String subject = request.getSubject() == null ? "PMIS 通知" : request.getSubject();
+        String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
         String msgType = "text";
         if (request.getParams() != null) {
             Object mt = request.getParams().get("msgType");

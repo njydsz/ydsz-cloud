@@ -1,5 +1,5 @@
 # =============================================================================
-#  YDSZ PMIS · 批量构建 Docker 镜像（Windows PowerShell）
+#  YDSZ · 批量构建 Docker 镜像（Windows PowerShell）
 # -----------------------------------------------------------------------------
 #  用法:
 #    powershell -ExecutionPolicy Bypass -File deploy\scripts\build-images.ps1 [-Tag TAG] [-Registry REG] [-Push]
@@ -39,7 +39,7 @@ $backendDir   = Join-Path $repoRoot "ydsz-backend"
 $frontendDir = Join-Path $repoRoot "ydsz-frontend"
 
 Write-Host "================================================================"
-Write-Host "  YDSZ PMIS · 批量构建 Docker 镜像"
+Write-Host "  YDSZ · 批量构建 Docker 镜像"
 Write-Host "  TAG:       $Tag"
 Write-Host "  REGISTRY:  $Registry"
 Write-Host "  PUSH:      $Push"
@@ -103,5 +103,5 @@ Write-Host ""
 Write-Host "下一步:"
 Write-Host "  1. 推送镜像:    .\deploy\scripts\build-images.ps1 -Tag $Tag -Registry $Registry -Push"
 Write-Host "  2. K8s 部署:    kubectl apply -k deploy/k8s/overlays/dev"
-Write-Host "  3. Helm 部署:   helm install pmis deploy/helm/ydsz -n pmis -f deploy/helm/ydsz/values-dev.yaml"
+Write-Host "  3. Helm 部署:   helm install ydsz deploy/helm/ydsz -n ydsz -f deploy/helm/ydsz/values-dev.yaml"
 Write-Host "  4. 冒烟测试:    .\deploy\scripts\smoke-test.ps1 -GatewayUrl http://<gateway-ip>:9000"

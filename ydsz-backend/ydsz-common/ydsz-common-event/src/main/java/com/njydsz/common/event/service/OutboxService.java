@@ -23,7 +23,7 @@ import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.event.repository.OutboxRepository;
-import com.njydsz.common.json.Json;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * Outbox 写入服务
@@ -121,7 +121,7 @@ public class OutboxService {
                 .aggregateType(event.getAggregateType())
                 .aggregateId(event.getAggregateId())
                 .eventType(event.getEventType())
-                .payload(Json.toJson(event))
+                .payload(YdszJson.toJson(event))
                 .headers(headers)
                 .deduplicationId(event.getEventId())
                 .tenantId(event.getTenantId())

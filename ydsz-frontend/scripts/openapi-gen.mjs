@@ -80,7 +80,7 @@ function genHeader(spec) {
  * 计算后端 Controller 签名(与 check-openapi-drift.mjs 保持一致)
  */
 function computeControllerSignature() {
-  const BACKEND_DIR = resolve(ROOT, '../ydsz-pmis-backend')
+  const BACKEND_DIR = resolve(ROOT, '../ydsz-backend')
   if (!existsSync(BACKEND_DIR)) return 'unknown'
 
   const controllers = []
