@@ -1,12 +1,20 @@
 package com.njydsz.common.web.exception;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.alert.ExceptionAlertPublisher;
+import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,21 +25,6 @@ import lombok.extern.slf4j.Slf4j;
  * 核心职责：将各类异常统一映射为 {@link com.njydsz.common.core.response.BaseResponse} 标准响应格式，
  * 屏蔽内部实现细节，向上游返回友好的错误信息。
  *
- * <p><b>支持的异常类型：</b>
- * <ul>
- *   <li>BusinessException：业务异常</li>
- *   <li>MaxUploadSizeExceededException：文件上传大小超限</li>
- *   <li>IllegalArgumentException：非法参数异常</li>
- *   <li>BindException：参数绑定异常</li>
- *   <li>ConstraintViolationException：约束违反异常</li>
- *   <li>MethodArgumentNotValidException：方法参数校验异常</li>
- *   <li>HttpMessageNotReadableException：请求体解析异常</li>
- *   <li>MissingRequestHeaderException：缺少请求头异常</li>
- *   <li>HttpRequestMethodNotSupportedException：不支持的请求方法</li>
- *   <li>MissingServletRequestParameterException：缺少请求参数</li>
- *   <li>Exception：系统异常（兜底处理）</li>
- * </ul>
- *
  * <p><b>设计说明：</b>
  * <ul>
  *   <li>统一返回 200 HTTP 状态码，业务错误码在响应体中标识</li>
@@ -39,24 +32,33 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>参数异常合并多条错误信息为逗号分隔字符串</li>
  * </ul>
  *
- * <p><b>装配：</b>由 {@code com.njydsz.common.web.config.WebMvcConfiguration} 显式
- * 通过 {@code @Import} 加载，{@code @RestControllerAdvice} 会被 Spring MVC 自动发现为控制器增强。
- * 不要在此类上同时标注 {@code @AutoConfiguration}，避免与 Spring MVC 生命周期冲突。
+ * <p><b>装配：</b>由 {@link WebExceptionAutoConfiguration} 通过 {@code @Bean} 方法创建，
+ * 注入 {@link ExceptionMetrics}、{@link ExceptionProperties}、{@link ExceptionAlertPublisher} 等可选依赖。
+ * {@code @RestControllerAdvice} 会被 Spring MVC 自动发现为控制器增强。
  *
  * <p><b>执行顺序：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 20，
  * 在 {@code GlobalResponseAdvice} 之后、参数校验 Advice 之前执行。
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
  * @see BaseExceptionHandler
- * @see BusinessException
- * @see BaseResponse
+ * @see WebExceptionAutoConfiguration
  */
 @Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class WebExceptionHandler extends BaseExceptionHandler {
+
+    private final MessageSource messageSource;
+
+    public WebExceptionHandler(MessageSource messageSource,
+                                ExceptionMetrics exceptionMetrics,
+                                ExceptionProperties properties,
+                                ExceptionAlertPublisher alertPublisher) {
+        this.messageSource = messageSource;
+        setExceptionMetrics(exceptionMetrics);
+        setExceptionProperties(properties);
+        setAlertPublisher(alertPublisher);
+    }
 
     @Override
     protected String getLogPrefix() {

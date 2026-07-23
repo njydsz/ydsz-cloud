@@ -23,35 +23,22 @@ import com.njydsz.common.core.enums.ServiceType;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
  * @see AuthHandler
  * @see ServiceType
  */
 @Component
 public class AuthHandlerFactory {
 
-    /** 所有已注册的 AuthHandler 实现，key 为 Bean 名称 */
+    private static final String DEFAULT_HANDLER_BEAN_NAME = "webAuthHandler";
+
     private final Map<String, AuthHandler> authHandlerMap;
 
-    /**
-     * 构造认证处理器工厂
-     *
-     * @param authHandlerMap Spring 注入的 AuthHandler Bean 映射
-     */
     public AuthHandlerFactory(Map<String, AuthHandler> authHandlerMap) {
         this.authHandlerMap = authHandlerMap == null ? Collections.emptyMap() : authHandlerMap;
     }
 
-    /**
-     * 根据服务类型获取对应的 AuthHandler
-     *
-     * @param serviceType 服务类型枚举
-     * @return 对应的 AuthHandler 实例
-     * @throws IllegalStateException 未找到可用的 AuthHandler 时抛出
-     */
     public AuthHandler getAuthHandler(ServiceType serviceType) {
-        if (authHandlerMap == null || authHandlerMap.isEmpty()) {
+        if (authHandlerMap.isEmpty()) {
             throw new IllegalStateException("未找到 AuthHandler 实现类");
         }
 
@@ -59,9 +46,9 @@ public class AuthHandlerFactory {
 
         AuthHandler handler = authHandlerMap.get(beanName);
         if (handler == null) {
-            handler = authHandlerMap.get("webAuthHandler");
+            handler = authHandlerMap.get(DEFAULT_HANDLER_BEAN_NAME);
         }
-        if (handler == null && !authHandlerMap.isEmpty()) {
+        if (handler == null) {
             handler = authHandlerMap.values().iterator().next();
         }
         if (handler == null) {
@@ -71,19 +58,10 @@ public class AuthHandlerFactory {
         return handler;
     }
 
-    /**
-     * 根据服务类型解析对应的 Bean 名称
-     *
-     * @param serviceType 服务类型
-     * @return Bean 名称
-     */
     private String resolveBeanName(ServiceType serviceType) {
-        if (serviceType == ServiceType.WEB_SERVICE) {
-            return "webAuthHandler";
-        }
         if (serviceType == ServiceType.APP_SERVICE) {
             return "appAuthHandler";
         }
-        return "webAuthHandler";
+        return DEFAULT_HANDLER_BEAN_NAME;
     }
 }

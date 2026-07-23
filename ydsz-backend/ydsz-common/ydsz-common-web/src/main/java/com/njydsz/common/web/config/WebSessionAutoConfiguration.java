@@ -3,13 +3,14 @@ package com.njydsz.common.web.config;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Import;
 
 /**
  * Web 端 Session 共享自动配置
  *
  * <p>基于 Spring Session + Redis 实现分布式 Session 共享。
- * 仅在 classpath 中存在 spring-session-data-redis 且配置启用时生效。
+ * 仅在 Servlet Web 应用且 classpath 中存在 spring-session-data-redis 且配置启用时生效。
  *
  * <p><b>前置条件：</b>
  * <ol>
@@ -36,10 +37,9 @@ import org.springframework.context.annotation.Import;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
  */
 @AutoConfiguration
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(name = "org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession")
 @ConditionalOnProperty(prefix = "ydsz.web.session", name = "enabled", havingValue = "true")
 @Import(RedisHttpSessionImportSelector.class)

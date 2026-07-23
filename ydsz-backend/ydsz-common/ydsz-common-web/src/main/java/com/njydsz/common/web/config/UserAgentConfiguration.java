@@ -2,6 +2,7 @@ package com.njydsz.common.web.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
@@ -40,26 +41,17 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
  *   <li>增量加载规则文件，避免启动时全量加载</li>
  * </ul>
  *
+ * <p><b>配置开关：</b>{@code ydsz.web.user-agent.enabled=false} 可禁用，
+ * 节省非 Web 服务的内存占用。
+ *
  * @author ydsz-team
- * @since 1.0.0
- * 
- * @see <a href="https://github.com/nickbe/NickBot">UserAgentAnalyzer 项目</a>
+ * @see <a href="https://github.com/nielsbasjes/yauaa">Yauaa User-Agent Analyzer</a>
  */
 @AutoConfiguration
 @ConditionalOnClass(name = "nl.basjes.parse.useragent.UserAgentAnalyzer")
+@ConditionalOnProperty(prefix = "ydsz.web.user-agent", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class UserAgentConfiguration {
 
-    /**
-     * 创建 User-Agent 解析器实例
-     *
-     * <p>配置说明：
-     * <ul>
-     *   <li>隐藏匹配器加载统计信息，减少日志输出</li>
-     *   <li>启用缓存，容量 10000 条，提升重复解析性能</li>
-     * </ul>
-     *
-     * @return UserAgentAnalyzer 解析器实例
-     */
     @Bean
     public UserAgentAnalyzer userAgentAnalyzer() {
         return UserAgentAnalyzer

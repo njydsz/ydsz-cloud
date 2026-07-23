@@ -4,7 +4,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
 
 import com.njydsz.common.base.exporter.DefaultDocExporter;
 import com.njydsz.common.base.exporter.MarkdownDocExporter;
@@ -21,18 +20,16 @@ import com.njydsz.common.base.exporter.MarkdownDocExporter;
  * </ul>
  *
  * <p><b>环境控制：</b>
- * 默认仅在 {@code dev} / {@code test} Profile 下自动激活；
- * 生产环境应避免暴露 API 文档，业务方可通过显式配置
- * {@code ydsz.doc.enabled=true} 配合 Profile 强制开启。
+ * 文档功能默认关闭（{@code ydsz.doc.enabled=false}），需显式配置开启。
+ * 生产环境通过 {@link DocSecurityConfiguration} 的 {@code ydsz.doc.production-enabled}
+ * 和 {@code ydsz.doc.basic-auth} 控制访问安全。
  *
  * <p><b>线程安全性：</b>本类仅包含 Spring 注解与导入语句，无可变状态，线程安全。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @AutoConfiguration
-@Profile({"dev", "test"})
 @ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 @EnableConfigurationProperties(DocProperties.class)
 @Import({

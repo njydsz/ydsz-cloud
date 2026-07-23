@@ -2,14 +2,14 @@ package com.njydsz.common.base.config;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * MVC 基础配置（Web/App 共享）
@@ -21,12 +21,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
+@Slf4j
 public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
-
-    private static final Logger log = LoggerFactory.getLogger(BaseMvcConfiguration.class);
 
     /**
      * CORS 跨域配置属性
@@ -56,18 +53,21 @@ public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
      *
      * <p>通过 {@link BaseCorsProperties#isEnabled()} 控制是否生效，
      * 配置由子类通过 {@code @ConfigurationProperties} 绑定具体前缀。
+     * 禁用时返回禁用状态的 FilterRegistrationBean，避免 @Bean 返回 null。
      *
-     * @return CORS 过滤器注册器，禁用时返回 null
+     * @return CORS 过滤器注册器（禁用时 setEnabled(false)）
      */
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilter() {
-        // 通过子类绑定的配置属性（ydsz.web.cors / ydsz.app.cors）的 enabled 字段控制，
-        // 不再使用 @ConditionalOnProperty(prefix = "ydsz.cors")，避免前缀与子类配置不匹配
+        FilterRegistrationBean<CorsFilter> registration = new FilterRegistrationBean<>();
+        registration.setName("corsFilter");
+
         if (!corsProperties.isEnabled()) {
-            return null;
+            registration.setEnabled(false);
+            return registration;
         }
 
-        // P1-6: CORS 安全加固 — 启动时校验配置安全性，输出警告日志
+        // CORS 安全加固 — 启动时校验配置安全性，输出警告日志
         List<String> securityWarnings = corsProperties.validateSecurity();
         for (String warning : securityWarnings) {
             log.warn("[CORS Security] {}", warning);
@@ -78,7 +78,7 @@ public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
         corsProperties.getAllowedOriginPatterns().forEach(corsConfig::addAllowedOriginPattern);
         corsProperties.getAllowedHeaders().forEach(corsConfig::addAllowedHeader);
         corsProperties.getAllowedMethods().forEach(corsConfig::addAllowedMethod);
-        // 暴露响应头配置（原代码遗漏了此项）
+        // 暴露响应头配置
         corsProperties.getExposedHeaders().forEach(corsConfig::addExposedHeader);
         corsConfig.setMaxAge(corsProperties.getMaxAge());
 
@@ -86,9 +86,8 @@ public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
         String pathPattern = corsProperties.getPathPattern();
         configSource.registerCorsConfiguration(pathPattern != null ? pathPattern : "/**", corsConfig);
 
-        FilterRegistrationBean<CorsFilter> corsBean = new FilterRegistrationBean<>(new CorsFilter(configSource));
-        corsBean.setName("corsFilter");
-        corsBean.setOrder(corsProperties.getOrder());
-        return corsBean;
+        registration.setFilter(new CorsFilter(configSource));
+        registration.setOrder(corsProperties.getOrder());
+        return registration;
     }
 }

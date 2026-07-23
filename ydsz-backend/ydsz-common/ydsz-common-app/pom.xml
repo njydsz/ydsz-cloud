@@ -44,7 +44,39 @@
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
 
-        <!-- Jackson 由 spring-boot-starter-web 传递依赖引入，无需显式声明 -->
+        <!-- JSON 引擎模块（用于签名验证错误响应序列化） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
+        <!-- spring-boot-actuator (optional for HealthIndicator) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- spring-boot-health (Spring Boot 4.x: health classes moved to health module) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Micrometer (optional for AppMetrics) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jakarta Validation API (optional for @Validated) -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- Lombok 简化代码 -->
         <dependency>

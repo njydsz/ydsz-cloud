@@ -1,6 +1,7 @@
 package com.njydsz.common.web.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.base.config.BaseCorsProperties;
 
@@ -22,10 +23,9 @@ import com.njydsz.common.base.config.BaseCorsProperties;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
  * @see BaseCorsProperties
  */
+@Validated
 @ConfigurationProperties(prefix = "ydsz.web.cors")
 public class WebCorsProperties extends BaseCorsProperties {
 }

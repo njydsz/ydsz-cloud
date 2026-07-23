@@ -1,0 +1,128 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.web.security.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Security integration (401/403 JSON response handlers).",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.session.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Redis distributed session sharing. Requires spring-session-data-redis dependency.",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.web.cors.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable CORS cross-origin support.",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.cors.allow-credentials",
+      "type": "java.lang.Boolean",
+      "description": "Allow sending cookies and credentials. When true, allowedOriginPatterns cannot contain \"*\".",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.web.cors.allowed-origin-patterns",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of allowed origin patterns. Supports wildcards like \"https://*.example.com\"."
+    },
+    {
+      "name": "ydsz.web.cors.allowed-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of allowed HTTP request headers. Default is [\"*\"].",
+      "defaultValue": ["*"]
+    },
+    {
+      "name": "ydsz.web.cors.allowed-methods",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of allowed HTTP methods. Default is [\"*\"].",
+      "defaultValue": ["*"]
+    },
+    {
+      "name": "ydsz.web.cors.exposed-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of response headers exposed to the client. Default is empty."
+    },
+    {
+      "name": "ydsz.web.cors.max-age",
+      "type": "java.lang.Long",
+      "description": "Pre-flight request cache duration in seconds.",
+      "defaultValue": 3600
+    },
+    {
+      "name": "ydsz.web.cors.path-pattern",
+      "type": "java.lang.String",
+      "description": "URL path pattern for CORS configuration.",
+      "defaultValue": "/**"
+    },
+    {
+      "name": "ydsz.web.cors.order",
+      "type": "java.lang.Integer",
+      "description": "Filter registration order. Lower value = higher priority.",
+      "defaultValue": 0
+    },
+    {
+      "name": "ydsz.web.trace.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable request tracing and TraceId response header.",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.trace.response-header-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Output trace/request ID in response header.",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.trace.request-log-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable request/response logging.",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.trace.log-level",
+      "type": "java.lang.String",
+      "description": "Request log level. Supports \"INFO\" or \"DEBUG\".",
+      "defaultValue": "INFO"
+    },
+    {
+      "name": "ydsz.web.trace.sampling-rate",
+      "type": "java.lang.Double",
+      "description": "Request log sampling rate, range [0, 1]. 1.0 = full logging.",
+      "defaultValue": 1.0
+    },
+    {
+      "name": "ydsz.web.trace.log-request-body",
+      "type": "java.lang.Boolean",
+      "description": "Log full request body. May impact performance and leak sensitive data.",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.web.trace.log-response-body",
+      "type": "java.lang.Boolean",
+      "description": "Log full response body. May produce large logs.",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.web.content-cache.max-size",
+      "type": "java.lang.Integer",
+      "description": "Max request body cache size in bytes for ContentCachingFilter. Default 2MB.",
+      "defaultValue": 2097152
+    },
+    {
+      "name": "ydsz.web.user-agent.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable User-Agent analyzer bean. Disable to save memory on non-web services.",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.health-indicator.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Web health indicator for Actuator health check.",
+      "defaultValue": true
+    }
+  ]
+}

@@ -44,7 +44,6 @@ import org.springframework.context.annotation.Bean;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @AutoConfiguration
 @EnableConfigurationProperties(DocProperties.class)

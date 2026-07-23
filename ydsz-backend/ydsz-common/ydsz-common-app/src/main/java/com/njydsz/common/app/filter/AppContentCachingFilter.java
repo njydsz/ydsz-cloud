@@ -1,29 +1,33 @@
 package com.njydsz.common.app.filter;
 
-import org.springframework.beans.factory.annotation.Value;
-
+import com.njydsz.common.app.config.AppContentCacheProperties;
 import com.njydsz.common.base.filter.AbstractContentCachingFilter;
 
 /**
  * App 端请求体缓存过滤器
  *
- * <p>通过配置 {@code ydsz.app.content-cache.max-size} 控制最大缓存大小（字节），
+ * <p>通过 {@link AppContentCacheProperties} 注入最大缓存大小（字节），
  * 默认 2MB，防止大文件上传场景下的 OOM。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  * @see AbstractContentCachingFilter
+ * @see AppContentCacheProperties
  */
 public class AppContentCachingFilter extends AbstractContentCachingFilter {
 
+    /** 最大缓存字节数，由 {@link AppContentCacheProperties} 注入 */
+    private final int maxCacheSize;
+
     /**
-     * 最大缓存字节数，默认 2MB
+     * 构造方法
      *
-     * <p>防止大文件上传场景下的 OOM 风险；超过此值的内容将被截断丢弃。
+     * @param properties App 端内容缓存配置属性
      */
-    @Value("${ydsz.app.content-cache.max-size:2097152}")
-    private int maxCacheSize;
+    public AppContentCachingFilter(AppContentCacheProperties properties) {
+        super(properties.getMaxSize() > 0 ? properties.getMaxSize() : DEFAULT_CACHE_CAPACITY);
+        this.maxCacheSize = properties.getMaxSize();
+    }
 
     /**
      * 返回当前过滤器应使用的缓存容量

@@ -38,7 +38,6 @@ import lombok.RequiredArgsConstructor;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @AutoConfiguration
 @RequiredArgsConstructor
@@ -144,7 +143,7 @@ public class OpenApiAutoConfiguration {
      *
      * <p>支持两种分组方式，按以下优先级选择：
      * <ol>
-     *   <li>按包扫描：{@code ppackages}（列表） &gt; {@code basePpackage}（兼容旧版）</li>
+     *   <li>按包扫描：{@code packages}（列表） &gt; {@code basePackage}（兼容旧版）</li>
      *   <li>按路径模式匹配：{@code paths}（列表） &gt; {@code basePath}（兼容旧版）</li>
      * </ol>
      *
@@ -158,13 +157,13 @@ public class OpenApiAutoConfiguration {
                 .group(group.getName())
                 .displayName(group.getTitle() != null ? group.getTitle() : group.getName());
 
-        // 优先使用 ppackages 列表
-        if (group.getPpackages() != null && !group.getPpackages().isEmpty()) {
-            builder.packagesToScan(group.getPpackages().toArray(new String[0]));
+        // 优先使用 packages 列表
+        if (group.getPackages() != null && !group.getPackages().isEmpty()) {
+            builder.packagesToScan(group.getPackages().toArray(new String[0]));
         }
-        // 兼容旧版 basePpackage
-        else if (group.getBasePpackage() != null && !group.getBasePpackage().isEmpty()) {
-            builder.packagesToScan(group.getBasePpackage());
+        // 兼容旧版 basePackage
+        else if (group.getBasePackage() != null && !group.getBasePackage().isEmpty()) {
+            builder.packagesToScan(group.getBasePackage());
         }
         // 使用 paths 列表
         else if (group.getPaths() != null && !group.getPaths().isEmpty()) {

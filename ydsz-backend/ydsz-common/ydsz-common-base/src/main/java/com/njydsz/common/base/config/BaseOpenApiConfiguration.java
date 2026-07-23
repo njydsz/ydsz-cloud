@@ -43,7 +43,7 @@ public abstract class BaseOpenApiConfiguration {
     /**
      * API 文档标题
      *
-     * <p>子类必须覆盖以提供具体业务系统的名称，例如 "REMI 管理系统 API"。
+     * <p>子类必须覆盖以提供具体业务系统的名称，例如 "YDSZ 管理系统 API"。
      *
      * @return API 文档标题
      */
@@ -84,7 +84,7 @@ public abstract class BaseOpenApiConfiguration {
                 .description(getDescription())
                 .version("1.0.0")
                 .contact(new Contact()
-                        .name("Marvin Lee")
+                        .name("ydsz-team")
                         .email("devops@ydsz.example.com")
                         .url("https://njydsz.ydsz.com.cn"));
     }
@@ -148,7 +148,7 @@ public abstract class BaseOpenApiConfiguration {
      */
     private ExternalDocumentation createExternalDocs() {
         return new ExternalDocumentation()
-                .description("REMI 公共框架文档")
+                .description("YDSZ 公共框架文档")
                 .url("https://njydsz.ydsz.com.cn");
     }
 

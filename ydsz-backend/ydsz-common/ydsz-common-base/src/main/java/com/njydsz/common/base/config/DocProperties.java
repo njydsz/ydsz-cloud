@@ -31,7 +31,7 @@ import lombok.Data;
  *       version: 1.0.0
  *     groups:
  *       - name: default
- *         base-ppackage: com.example.controller
+ *         base-package: com.example.controller
  *     basic-auth:
  *       enabled: true
  *       username: admin
@@ -42,7 +42,6 @@ import lombok.Data;
  * 绑定完成后通常视为只读；若业务方在运行时修改属性需自行保证线程安全。
  *
  * @author ydsz-team
- * @since 1.0.0
  * @since 1.0.0
  */
 @Data
@@ -159,7 +158,7 @@ public class DocProperties {
         /**
          * 联系人姓名
          */
-        private String name = "Marvin Lee";
+        private String name = "ydsz-team";
 
         /**
          * 联系人邮箱
@@ -225,8 +224,11 @@ public class DocProperties {
 
         /**
          * 基础包路径，用于扫描 Controller
+         *
+         * @deprecated 使用 {@link #packages} 替代，字段名将从 base-package 统一
          */
-        private String basePpackage = "";
+        @Deprecated
+        private String basePackage = "";
 
         /**
          * 基础路径匹配规则
@@ -241,7 +243,7 @@ public class DocProperties {
         /**
          * 扫描的包路径列表（支持多包扫描）
          */
-        private List<String> ppackages = new ArrayList<>();
+        private List<String> packages = new ArrayList<>();
 
         /**
          * 匹配的路径模式列表（支持多路径匹配）
@@ -302,6 +304,9 @@ public class DocProperties {
 
         /**
          * API 文档访问密码（必须配置，否则文档端点不可访问）
+         *
+         * <p><b>安全建议：</b>生产环境请勿在配置文件中明文存储密码，
+         * 推荐使用环境变量引用（如 {@code ${DOC_PASSWORD}}）或 Jasypt 加密。
          */
         private String password;
     }

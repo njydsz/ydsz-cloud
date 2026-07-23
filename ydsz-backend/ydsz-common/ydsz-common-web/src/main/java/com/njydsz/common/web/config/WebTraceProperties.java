@@ -1,6 +1,7 @@
 package com.njydsz.common.web.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
 import com.njydsz.common.web.filter.TraceIdResponseFilter;
@@ -19,23 +20,18 @@ import lombok.EqualsAndHashCode;
  *   web:
  *     trace:
  *       enabled: true
- *       trace-id-header-name: X-Trace-Id
+ *       request-log-enabled: true
+ *       log-level: INFO
+ *       sampling-rate: 1.0
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.0.0
- * 
  * @see BaseTraceProperties
  * @see TraceIdResponseFilter
  */
 @Data
+@Validated
 @EqualsAndHashCode(callSuper = true)
 @ConfigurationProperties(prefix = "ydsz.web.trace")
 public class WebTraceProperties extends BaseTraceProperties {
-
-    /**
-     * TraceId 响应头名称
-     * <p>默认值：{@code X-Trace-Id}
-     */
-    private String traceIdHeaderName = "X-Trace-Id";
 }
