@@ -4,6 +4,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.njydsz.common.app.annotation.AppApi;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
 
@@ -15,8 +16,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>继承 {@link BaseExceptionHandler}，提供 App 端的异常处理逻辑。
  * 统一处理移动端请求过程中出现的各类异常，将异常信息转换为标准响应格式。
  *
- * <p>该处理器使用 Spring MVC 的 {@link RestControllerAdvice} 注解，
- * 会对整个应用中所有标注了 {@code @RestControllerAdvice} 的控制器方法生效。
+ * <p><b>作用范围限定：</b>本处理器仅对标注了 {@link AppApi} 的控制器生效
+ * （通过 {@code @RestControllerAdvice(annotations = AppApi.class)} 限定），
+ * 避免与 {@code common-web} 模块的异常处理器在同一 Spring 上下文中产生冲突。
  *
  * <p><b>支持的异常类型：</b>
  * <ul>
@@ -44,9 +46,10 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  * @see BaseExceptionHandler
  * @see BusinessException
+ * @see AppApi
  */
 @Slf4j
-@RestControllerAdvice
+@RestControllerAdvice(annotations = AppApi.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class AppExceptionHandler extends BaseExceptionHandler {
 

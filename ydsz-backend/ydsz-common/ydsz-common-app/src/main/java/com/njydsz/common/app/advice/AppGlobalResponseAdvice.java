@@ -4,6 +4,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.njydsz.common.app.annotation.AppApi;
 import com.njydsz.common.base.advice.BaseGlobalResponseAdvice;
 import com.njydsz.common.core.response.BaseResponse;
 
@@ -17,6 +18,10 @@ import com.njydsz.common.core.response.BaseResponse;
  *   <li>包装后的消息体直接使用原始字符串作为业务消息</li>
  * </ul>
  *
+ * <p><b>作用范围限定：</b>本 Advice 仅对标注了 {@link AppApi} 的控制器生效
+ * （通过 {@code @RestControllerAdvice(annotations = AppApi.class)} 限定），
+ * 避免与 {@code common-web} 模块的响应包装 Advice 在同一 Spring 上下文中产生冲突。
+ *
  * <p><b>装配：</b>由 {@code com.njydsz.common.app.config.AppMvcConfiguration} 显式
  * 通过 {@code @Import} 加载，{@code @RestControllerAdvice} 会被 Spring MVC 自动发现为控制器增强。
  * 不要在此类上同时标注 {@code @AutoConfiguration}，避免与 Spring MVC 生命周期冲突。
@@ -28,8 +33,9 @@ import com.njydsz.common.core.response.BaseResponse;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see AppApi
  */
-@RestControllerAdvice
+@RestControllerAdvice(annotations = AppApi.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class AppGlobalResponseAdvice extends BaseGlobalResponseAdvice {
 

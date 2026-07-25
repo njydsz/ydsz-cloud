@@ -26,6 +26,7 @@ import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.cronjob.server.notify.CronjobNotifyHelper;
 import com.njydsz.cronjob.server.core.AlertSendException;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
@@ -78,6 +79,8 @@ public class AlertDispatcher {
     private final NotificationClient notificationClient;
     /** P0-9: 告警智能降噪管理器（可选注入，仅 ydsz.cronjob.alert-dedup.enabled=true 时启用） */
     private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
+    /** P2-10: common-notify 通知助手（可选注入，IM 渠道直推） */
+    private final ObjectProvider<CronjobNotifyHelper> cronjobNotifyHelperProvider;
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -349,9 +352,37 @@ public class AlertDispatcher {
                          msgResult.getErrorMessage() != null ? msgResult.getErrorMessage() : "send failed");
             }
         } catch (AlertSendException e) {
+            // P2-10: 主渠道失败时，尝试通过 common-notify IM 渠道直推
+            tryNotifyViaHelper(context, channels, receivers);
             throw e;
         } catch (Exception e) {
             throw new AlertSendException("Feign call error: " + e.getMessage(), e);
+        }
+        // P2-10: 主渠道成功后，补充发送 IM 通知（非阻塞，失败不影响主流程）
+        tryNotifyViaHelper(context, channels, receivers);
+    }
+
+    /**
+     * P2-10: 通过 CronjobNotifyHelper 发送 IM 通知（非阻塞，失败静默跳过）。
+     */
+    private void tryNotifyViaHelper(AlertContext context, List<AlertChannel> channels, List<String> receivers) {
+        try {
+            CronjobNotifyHelper helper = cronjobNotifyHelperProvider.getIfAvailable();
+            if (helper == null) {
+                return;
+            }
+            if (context.recovery()) {
+                helper.notifyJobRecovery(
+                        context.jobKey(), context.jobName(), context.logId(),
+                        context.errorMessage(), receivers);
+            } else {
+                helper.notifyJobFailure(
+                        context.jobKey(), context.jobName(), context.logId(),
+                        context.errorMessage(), receivers);
+            }
+        } catch (Exception e) {
+            log.debug("[AlertDispatcher] IM 通知发送失败(非阻塞): jobKey={} reason={}",
+                    context.jobKey(), e.getMessage());
         }
     }
     private String buildTitle(AlertContext context, JobAlertRuleDO rule) {

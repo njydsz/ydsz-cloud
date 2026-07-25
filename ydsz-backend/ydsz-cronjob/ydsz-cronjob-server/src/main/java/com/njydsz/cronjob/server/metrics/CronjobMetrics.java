@@ -52,6 +52,11 @@ import lombok.extern.slf4j.Slf4j;
 @Component("cronjobMetrics")
 public class CronjobMetrics extends AbstractModuleMetrics {
 
+    /** 上次查询运行中任务数的缓存值（30s TTL，避免高频 Gauge 回调压垮 DB） */
+    private volatile Long cachedRunningCount = null;
+    private volatile long cachedRunningCountExpireAt = 0L;
+    private static final long RUNNING_COUNT_CACHE_TTL_MS = 30_000L;
+
     // ============================== Gauge 状态字段（由 Scanner 更新，Gauge 回调读取） ==============================
     /** 上次扫描到的待触发任务数 */
     private final AtomicLong lastScanDueJobs = new AtomicLong(0);
@@ -233,12 +238,19 @@ public class CronjobMetrics extends AbstractModuleMetrics {
     }
 
     /**
-     * 查询运行中任务数（status=RUNNING）。
+     * 查询运行中任务数（status=RUNNING），30s 缓存避免高频 Gauge 回调压垮 DB。
      */
     private Long queryRunningJobCount() {
-        return jobLogMapper.selectCount(
+        long now = System.currentTimeMillis();
+        if (cachedRunningCount != null && now < cachedRunningCountExpireAt) {
+            return cachedRunningCount;
+        }
+        Long count = jobLogMapper.selectCount(
                 new LambdaQueryWrapper<JobLogDO>()
                         .eq(JobLogDO::getStatus, "RUNNING")
                         .eq(JobLogDO::getDeleted, 0));
+        cachedRunningCount = count;
+        cachedRunningCountExpireAt = now + RUNNING_COUNT_CACHE_TTL_MS;
+        return count;
     }
 }

@@ -51,10 +51,6 @@ import com.njydsz.common.safe.filter.SecurityHeaderFilter;
 import com.njydsz.common.safe.filter.SqlInjectionFilter;
 import com.njydsz.common.safe.filter.XssFilter;
 import com.njydsz.common.safe.ip.IpAccessService;
-import com.njydsz.common.safe.ratelimit.RateLimitAspect;
-import com.njydsz.common.safe.ratelimit.RateLimitFilter;
-import com.njydsz.common.safe.ratelimit.RateLimitProperties;
-import com.njydsz.common.safe.ratelimit.MultiDimensionRateLimiter;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
 
 /**
@@ -88,7 +84,6 @@ import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
         CsrfProperties.class,
         SensitiveDataProperties.class,
         SafeAlertProperties.class,
-        RateLimitProperties.class,
         ApiSignatureProperties.class,
         IpAccessProperties.class,
         AutoBlockProperties.class,
@@ -392,73 +387,13 @@ public class SafeConfiguration {
     }
 
     /**
-     * 注册限流过滤器
+     * P2-3: 限流相关 Bean（限流过滤器、方法级限流 AOP、多维度限流器）已迁移至
+     * {@code com.njydsz.common.safe.ratelimit.config.RateLimitAutoConfiguration}，
+     * 由其统一管理。本配置类不再持有旧版限流 Bean，避免与新版自动配置产生 Bean 冲突。
      *
-     * <p>基于 Redis 令牌桶的全局限流 Filter，支持按 IP/用户/全局维度。
-     * 仅在 {@code ydsz.safe.ratelimit.enabled=true} 时注册。
-     *
-     * @param properties      限流配置属性
-     * @param redisService    Redis 服务
-     * @param eventPublisher  安全事件发布器
-     * @param alertProperties 安全告警配置属性
-     * @return 限流过滤器注册 bean
+     * <p>启用方式：通过 {@code ydsz.ratelimit.enabled=true}（默认 true）开启
+     * 新版限流自动配置；旧版配置 {@code ydsz.safe.ratelimit.enabled} 已被废弃。
      */
-    @Bean
-    @ConditionalOnMissingBean(name = "rateLimitFilterRegistration")
-    @ConditionalOnBean(RedisService.class)
-    @ConditionalOnProperty(prefix = "ydsz.safe.ratelimit", name = "enabled", havingValue = "true")
-    public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(
-            RateLimitProperties properties,
-            RedisService redisService,
-            SecurityEventPublisher eventPublisher,
-            SafeAlertProperties alertProperties) {
-        FilterRegistrationBean<RateLimitFilter> registrationBean = new FilterRegistrationBean<>(
-                new RateLimitFilter(properties, redisService, eventPublisher, alertProperties));
-        registrationBean.setName("rateLimitFilter");
-        registrationBean.addUrlPatterns("/*");
-        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
-        return registrationBean;
-    }
-
-    /**
-     * 注册方法级限流 AOP 切面
-     *
-     * <p>拦截标注了 {@code @RateLimit} 注解的 Controller 方法，基于 Redis 滑动窗口
-     * 实现方法级限流。支持 SPEL 表达式解析 key，实现按用户 ID、按 IP 等维度的精细限流。
-     *
-     * <p>仅在 RedisService 可用时注册，与 {@link RateLimitFilter} 互不冲突——
-     * Filter 负责全局限流，Aspect 负责方法级限流。
-     *
-     * @param properties   限流配置属性
-     * @param redisService Redis 服务
-     * @return 方法级限流切面实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(RateLimitAspect.class)
-    @ConditionalOnBean(RedisService.class)
-    public RateLimitAspect rateLimitAspect(RateLimitProperties properties, RedisService redisService) {
-        log.info("注册方法级限流 AOP 切面");
-        return new RateLimitAspect(redisService, properties);
-    }
-
-    /**
-     * P3-21: 注册多维度限流器
-     *
-     * <p>支持按 IP+USER+API 等多维度组合进行限流，使用 Redis Lua 脚本保证原子性。
-     * 仅在 RedisService 和 StringRedisTemplate 可用时注册。
-     *
-     * @param stringRedisTemplate Spring Data Redis StringRedisTemplate
-     * @return 多维度限流器实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(MultiDimensionRateLimiter.class)
-    @ConditionalOnBean(RedisService.class)
-    @ConditionalOnProperty(prefix = "ydsz.safe.ratelimit", name = "enabled", havingValue = "true")
-    public MultiDimensionRateLimiter multiDimensionRateLimiter(
-            StringRedisTemplate stringRedisTemplate) {
-        log.info("注册多维度限流器");
-        return new MultiDimensionRateLimiter(stringRedisTemplate);
-    }
 
     /**
      * 注册 IP 访问控制服务

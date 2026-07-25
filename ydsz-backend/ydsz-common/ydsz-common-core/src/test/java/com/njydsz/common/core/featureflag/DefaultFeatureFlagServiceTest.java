@@ -202,14 +202,14 @@ class DefaultFeatureFlagServiceTest {
                     .filter(s -> s.getKey().equals(FeatureFlag.SENSITIVE_DATA_MASK.name()))
                     .findFirst().orElseThrow();
             assertThat(mandatorySnap.isMandatory()).isTrue();
-            assertThat(mandatorySnap.getEffectiveValue()).isTrue();
+            assertThat(mandatorySnap.isEffectiveValue()).isTrue();
 
             FeatureFlagSnapshot dashboardSnap = snaps.stream()
                     .filter(s -> s.getKey().equals(FeatureFlag.NEW_DASHBOARD.name()))
                     .findFirst().orElseThrow();
             assertThat(dashboardSnap.isMandatory()).isFalse();
             assertThat(dashboardSnap.getConfiguredValue()).isTrue();
-            assertThat(dashboardSnap.getEffectiveValue()).isTrue();
+            assertThat(dashboardSnap.isEffectiveValue()).isTrue();
         }
 
         @Test

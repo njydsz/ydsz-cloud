@@ -59,8 +59,29 @@ YDSZ 移动端 App 基座 — 继承 `common-base`，叠加 App 认证、请求�
 | 类 | 说明 |
 |---|---|
 | `AppRequestLogInterceptor` | 请求日志拦截器 |
-| `AppExceptionHandler` | App 异常处理器 |
-| `AppGlobalResponseAdvice` | 全局响应包装 |
+| `AppExceptionHandler` | App 异常处理器（仅处理 `@AppApi` 控制器） |
+| `AppGlobalResponseAdvice` | 全局响应包装（仅包装 `@AppApi` 控制器响应） |
+
+### 标记注解
+
+| 类 | 说明 |
+|---|---|
+| `@AppApi` | App 端 REST 控制器标记注解（组合 `@RestController`） |
+
+> **作用范围限定**：`AppExceptionHandler` 与 `AppGlobalResponseAdvice` 通过
+> `@RestControllerAdvice(annotations = AppApi.class)` 限定作用范围，仅对标注
+> `@AppApi` 的控制器生效。这是为了避免与 `common-web` 模块的 Advice 在同一 Spring
+> 上下文中产生冲突（响应被重复包装、异常被重复处理）。
+>
+> **使用方式**：App 端控制器必须显式标注 `@AppApi`，无需再标 `@RestController`：
+> ```java
+> @AppApi
+> @RequestMapping("/app/users")
+> public class AppUserController {
+>     @GetMapping("/{id}")
+>     public User getById(@PathVariable Long id) { ... }
+> }
+> ```
 
 ### 工具
 
@@ -76,8 +97,9 @@ YDSZ 移动端 App 基座 — 继承 `common-base`，叠加 App 认证、请求�
 2. **请求体缓存** — 可配置大小的 `AppContentCachingFilter`
 3. **健康检查** — `AppHealthIndicator` 报告签名配置和指标状态
 4. **指标采集** — `AppMetrics` Micrometer 指标暴露到 Prometheus
+5. **作用域隔离** — `@AppApi` 注解 + `@RestControllerAdvice(annotations=AppApi.class)` 限定 Advice 作用范围
 
-> **注意**：`common-web` 与 `common-app` 是两个**平行**的应用层入口。后端微服务统一使用 `common-web`，`common-app` 仅用于未来移动端项目。
+> **注意**：`common-web` 与 `common-app` 是两个**平行**的应用层入口。后端微服务统一使用 `common-web`，`common-app` 仅用于未来移动端项目。若两者同时引入同一 Spring 上下文，`@AppApi` 标注的控制器走 `common-app` 链路，未标注的走 `common-web` 链路，互不冲突。
 
 ## 配置项
 

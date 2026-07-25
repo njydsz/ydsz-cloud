@@ -459,6 +459,29 @@ public final class SnowflakeUtils {
     }
 
     /**
+     * 获取最近一次生成 ID 时的时间戳（基于 shard 0 的状态估算）。
+     *
+     * <p>该方法用于健康检查等场景快速获取「最后一次 ID 生成时间」的近似值，
+     * 不会触发 ID 生成。返回的时间戳为毫秒（相对 epoch 起点）。
+     *
+     * @return 最近一次 ID 生成时间戳（毫秒），未初始化时返回 epoch 起点
+     * @since 1.0.0
+     */
+    public long getLastTimestamp() {
+        if (shardStates == null || shardStates.length == 0) {
+            return EPOCH;
+        }
+        long maxTimestamp = 0L;
+        for (AtomicLong state : shardStates) {
+            long t = extractTimestamp(state.get());
+            if (t > maxTimestamp) {
+                maxTimestamp = t;
+            }
+        }
+        return maxTimestamp == 0L ? EPOCH : maxTimestamp;
+    }
+
+    /**
      * 重置单例实例（仅供测试使用）
      *
      * <p>清除已初始化的单例实例，使后续调用 {@link #getInstance()} 或 {@link #init(long, long)}

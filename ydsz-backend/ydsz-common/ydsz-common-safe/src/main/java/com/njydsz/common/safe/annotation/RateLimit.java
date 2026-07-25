@@ -6,13 +6,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.njydsz.common.safe.ratelimit.RateLimitProperties.Dimension;
-
 /**
  * 接口限流注解（兼容旧 com.njydsz.common.annotation.RateLimit）。
  *
  * <p>标注在 Controller 方法上，基于 Redis 滑动窗口实现方法级限流。
- * 超出 QPS 阈值时返回 429 Too Many Requests。
+ * 超出 QPS 阈值时返回 429 Too Many Requests。</p>
  *
  * <p><b>支持 SPEL 表达式：</b>key 属性支持 SPEL 表达式，可引用方法参数，
  * 实现按用户 ID、按 IP 等维度的精细限流。</p>
@@ -25,7 +23,7 @@ import com.njydsz.common.safe.ratelimit.RateLimitProperties.Dimension;
  * public Result login(@RequestBody LoginDTO dto) { ... }
  *
  * // SPEL 表达式按用户 ID 限流
- * @RateLimit(key = "#userId", dimension = Dimension.USER, qps = 3)
+ * @RateLimit(key = "#userId", qps = 3)
  * @GetMapping("/users/{userId}/orders")
  * public Result orders(@PathVariable Long userId) { ... }
  *
@@ -41,6 +39,18 @@ import com.njydsz.common.safe.ratelimit.RateLimitProperties.Dimension;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RateLimit {
+
+    /**
+     * 限流维度，决定限流 key 的组合方式。
+     */
+    enum Dimension {
+        /** IP 维度：按客户端 IP 限流 */
+        IP,
+        /** 用户维度：按用户 ID 限流 */
+        USER,
+        /** 全局维度：所有请求共享一个限流桶 */
+        GLOBAL
+    }
 
     /**
      * 限流键，用于区分不同接口的限流桶。
