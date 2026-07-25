@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: ydsz-userinfo
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+      config:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        file-extension: yml
+        shared-configs:
+          - data-id: ydsz-common.yml
+            refresh: true
+          - data-id: ydsz-userinfo.yml
+            refresh: true
+server:
+  port: 9001

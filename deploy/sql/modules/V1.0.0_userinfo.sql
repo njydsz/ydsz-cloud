@@ -389,7 +389,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_dept_leader
     ON ydsz_department(leader_id) WHERE deleted = 0;
 
 -- 岗位表
-CREATE TABLE IF NOT EXISTS ydsz_position(
+CREATE TABLE IF NOT EXISTS ydsz_post(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     position_code   VARCHAR(64)    NOT NULL,
     position_name   VARCHAR(128)   NOT NULL,
@@ -403,45 +403,45 @@ CREATE TABLE IF NOT EXISTS ydsz_position(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_ydsz_position_code UNIQUE (position_code, deleted),
+    CONSTRAINT uk_ydsz_post_code UNIQUE (position_code, deleted),
     CONSTRAINT ck_pp_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pp_deleted_enum CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE ydsz_position IS '岗位表: 部门下的具体岗位定义(如开发工程师/PM/HRBP)';
+COMMENT ON TABLE ydsz_post IS '岗位表: 部门下的具体岗位定义(如开发工程师/PM/HRBP)';
 
-COMMENT ON COLUMN ydsz_position.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_post.id IS '主键 ID';
 
-COMMENT ON COLUMN ydsz_position.position_code IS '岗位编码(全局唯一)';
+COMMENT ON COLUMN ydsz_post.position_code IS '岗位编码(全局唯一)';
 
-COMMENT ON COLUMN ydsz_position.position_name IS '岗位名称';
+COMMENT ON COLUMN ydsz_post.position_name IS '岗位名称';
 
-COMMENT ON COLUMN ydsz_position.department_id IS '所属部门 ID(关联 ydsz_department.id)';
+COMMENT ON COLUMN ydsz_post.department_id IS '所属部门 ID(关联 ydsz_department.id)';
 
-COMMENT ON COLUMN ydsz_position.level_code IS '岗位职级(关联 ydsz_rank.level_code)';
+COMMENT ON COLUMN ydsz_post.level_code IS '岗位职级(关联 ydsz_rank.level_code)';
 
-COMMENT ON COLUMN ydsz_position.description IS '岗位职责说明';
+COMMENT ON COLUMN ydsz_post.description IS '岗位职责说明';
 
-COMMENT ON COLUMN ydsz_position.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN ydsz_post.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
 
-COMMENT ON COLUMN ydsz_position.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_post.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN ydsz_position.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_post.created_at IS '创建时间';
 
-COMMENT ON COLUMN ydsz_position.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_post.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN ydsz_position.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_post.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN ydsz_position.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_post.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN ydsz_position.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN ydsz_post.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_position_dept ON ydsz_position (department_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_post_dept ON ydsz_post (department_id) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_position_tenant ON ydsz_position(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_position_tenant ON ydsz_post(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_position_tenant_created
-    ON ydsz_position(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_post(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 职级表 (L1-L18)
 CREATE TABLE IF NOT EXISTS ydsz_rank(
@@ -657,7 +657,7 @@ COMMENT ON COLUMN ydsz_employee.email IS '企业邮箱';
 
 COMMENT ON COLUMN ydsz_employee.department_id IS '所属部门 ID(关联 ydsz_department.id)';
 
-COMMENT ON COLUMN ydsz_employee.position_id IS '岗位 ID(关联 ydsz_position.id)';
+COMMENT ON COLUMN ydsz_employee.position_id IS '岗位 ID(关联 ydsz_post.id)';
 
 COMMENT ON COLUMN ydsz_employee.level_code IS '职级编码(全职 L1-L18 / 兼职 P1-P18,关联 ydsz_rank 或 ydsz_part_time_rate)';
 
@@ -1988,9 +1988,9 @@ ALTER TABLE ydsz_department ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT N
 CREATE INDEX IF NOT EXISTS idx_department_tenant ON ydsz_department(tenant_id);
 
 -- 9. 岗位
-ALTER TABLE ydsz_position ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+ALTER TABLE ydsz_post ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 
-CREATE INDEX IF NOT EXISTS idx_position_tenant ON ydsz_position(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_position_tenant ON ydsz_post(tenant_id);
 
 -- 10. 职级
 ALTER TABLE ydsz_rank ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
@@ -2034,7 +2034,7 @@ CREATE INDEX IF NOT EXISTS idx_department_tenant_created
     ON ydsz_department(tenant_id, created_at DESC) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_position_tenant_created
-    ON ydsz_position(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON ydsz_post(tenant_id, created_at DESC) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_rank_tenant_created
     ON ydsz_rank(tenant_id, sort_order) WHERE deleted = 0;
@@ -2083,7 +2083,7 @@ ANALYZE ydsz_role_permission;
 
 ANALYZE ydsz_department;
 
-ANALYZE ydsz_position;
+ANALYZE ydsz_post;
 
 ANALYZE ydsz_rank;
 ANALYZE ydsz_rank_rate;
@@ -2201,3 +2201,224 @@ VALUES
 CREATE INDEX IF NOT EXISTS idx_ydsz_resource_pool_trace
     ON ydsz_resource_pool (provider_trace_id)
     WHERE provider_trace_id <> '';
+
+
+-- ============================================================
+-- 7. 菜单与权限（sdt-ids + sdt-mps 合并）
+-- ============================================================
+
+-- 菜单表（sdt-ids.Menu + sdt-mps.Menu 合并）
+CREATE TABLE IF NOT EXISTS ydsz_menu(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    parent_id       VARCHAR(20)    NOT NULL DEFAULT '0',
+    menu_name       VARCHAR(128)   NOT NULL,
+    menu_code       VARCHAR(64)    NOT NULL,
+    menu_type       VARCHAR(16)    NOT NULL DEFAULT 'MENU',
+    path            VARCHAR(256),
+    component       VARCHAR(256),
+    icon             VARCHAR(64),
+    sort_order      INTEGER        NOT NULL DEFAULT 0,
+    permission_code VARCHAR(128),
+    visible         SMALLINT       NOT NULL DEFAULT 1,
+    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_menu_code UNIQUE (menu_code, deleted),
+    CONSTRAINT ck_menu_type_enum  CHECK (menu_type IN ('MENU', 'BUTTON', 'API')),
+    CONSTRAINT ck_menu_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_menu_visible_enum CHECK (visible IN (0, 1)),
+    CONSTRAINT ck_menu_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_menu IS '菜单表: 菜单/按钮/API 三级权限(sdt-ids + sdt-mps 合并),对接 common-auth @AuthMenuPermission';
+COMMENT ON COLUMN ydsz_menu.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_menu.parent_id IS '父菜单 ID(根菜单为 0)';
+COMMENT ON COLUMN ydsz_menu.menu_name IS '菜单名称';
+COMMENT ON COLUMN ydsz_menu.menu_code IS '菜单编码(全局唯一)';
+COMMENT ON COLUMN ydsz_menu.menu_type IS '菜单类型: MENU 目录/菜单 / BUTTON 按钮 / API 接口';
+COMMENT ON COLUMN ydsz_menu.path IS '前端路由路径';
+COMMENT ON COLUMN ydsz_menu.component IS '前端组件路径';
+COMMENT ON COLUMN ydsz_menu.icon IS '菜单图标';
+COMMENT ON COLUMN ydsz_menu.sort_order IS '排序号';
+COMMENT ON COLUMN ydsz_menu.permission_code IS '权限码(如 system:user:add)';
+COMMENT ON COLUMN ydsz_menu.visible IS '是否可见: 1 可见 / 0 隐藏';
+COMMENT ON COLUMN ydsz_menu.status IS '启用状态: ENABLED / DISABLED';
+COMMENT ON COLUMN ydsz_menu.deleted IS '逻辑删除: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_menu.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_menu_parent ON ydsz_menu(parent_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_menu_tenant ON ydsz_menu(tenant_id) WHERE deleted = 0;
+
+-- ============================================================
+-- 8. 公司与组织架构（sdt-ids.Company/CompanyDept/UserDept/UserPost/UserField 迁移）
+-- ============================================================
+
+-- 公司表
+CREATE TABLE IF NOT EXISTS ydsz_company(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    company_name    VARCHAR(128)   NOT NULL,
+    company_code    VARCHAR(64)    NOT NULL,
+    parent_id       VARCHAR(20)    NOT NULL DEFAULT '0',
+    contact_person  VARCHAR(64),
+    contact_phone   VARCHAR(32),
+    address         VARCHAR(512),
+    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_company_code UNIQUE (company_code, deleted),
+    CONSTRAINT ck_company_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_company_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_company IS '公司表: 公司体系映射为租户上下文(TenantContext)';
+COMMENT ON COLUMN ydsz_company.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_company.company_name IS '公司名称';
+COMMENT ON COLUMN ydsz_company.company_code IS '公司编码(全局唯一)';
+COMMENT ON COLUMN ydsz_company.parent_id IS '父公司 ID(根公司为 0)';
+COMMENT ON COLUMN ydsz_company.contact_person IS '联系人';
+COMMENT ON COLUMN ydsz_company.contact_phone IS '联系电话';
+COMMENT ON COLUMN ydsz_company.address IS '公司地址';
+COMMENT ON COLUMN ydsz_company.status IS '启用状态';
+COMMENT ON COLUMN ydsz_company.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_company.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_company_parent ON ydsz_company(parent_id) WHERE deleted = 0;
+
+-- 公司-部门关联表
+CREATE TABLE IF NOT EXISTS ydsz_company_dept(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    company_id      VARCHAR(20)    NOT NULL,
+    dept_id         VARCHAR(20)    NOT NULL,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_company_dept UNIQUE (company_id, dept_id, deleted),
+    CONSTRAINT ck_cd_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_company_dept IS '公司-部门关联表: 公司与部门的多对多关联';
+COMMENT ON COLUMN ydsz_company_dept.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_company_dept.company_id IS '公司 ID';
+COMMENT ON COLUMN ydsz_company_dept.dept_id IS '部门 ID';
+COMMENT ON COLUMN ydsz_company_dept.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_company_dept.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_cd_company ON ydsz_company_dept(company_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_cd_dept ON ydsz_company_dept(dept_id) WHERE deleted = 0;
+
+-- 用户-部门关联表
+CREATE TABLE IF NOT EXISTS ydsz_user_dept(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    user_id         VARCHAR(20)    NOT NULL,
+    dept_id         VARCHAR(20)    NOT NULL,
+    is_primary      SMALLINT       NOT NULL DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_user_dept UNIQUE (user_id, dept_id, deleted),
+    CONSTRAINT ck_ud_is_primary CHECK (is_primary IN (0, 1)),
+    CONSTRAINT ck_ud_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_user_dept IS '用户-部门关联表: 用户可归属多个部门,is_primary=1 为主部门';
+COMMENT ON COLUMN ydsz_user_dept.user_id IS '用户 ID';
+COMMENT ON COLUMN ydsz_user_dept.dept_id IS '部门 ID';
+COMMENT ON COLUMN ydsz_user_dept.is_primary IS '是否主部门: 1 是 / 0 否';
+COMMENT ON COLUMN ydsz_user_dept.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_user_dept.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_ud_user ON ydsz_user_dept(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_ud_dept ON ydsz_user_dept(dept_id) WHERE deleted = 0;
+
+-- 用户-岗位关联表
+CREATE TABLE IF NOT EXISTS ydsz_user_post(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    user_id         VARCHAR(20)    NOT NULL,
+    post_id         VARCHAR(20)    NOT NULL,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_user_post UNIQUE (user_id, post_id, deleted),
+    CONSTRAINT ck_up_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_user_post IS '用户-岗位关联表: 用户可担任多个岗位';
+COMMENT ON COLUMN ydsz_user_post.user_id IS '用户 ID';
+COMMENT ON COLUMN ydsz_user_post.post_id IS '岗位 ID(ydsz_post)';
+COMMENT ON COLUMN ydsz_user_post.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_user_post.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_up_user ON ydsz_user_post(user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ydsz_up_post ON ydsz_user_post(post_id) WHERE deleted = 0;
+
+-- 用户自定义字段表
+CREATE TABLE IF NOT EXISTS ydsz_user_field(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    user_id         VARCHAR(20)    NOT NULL,
+    field_key       VARCHAR(64)    NOT NULL,
+    field_value     TEXT,
+    field_type      VARCHAR(16)    NOT NULL DEFAULT 'STRING',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_user_field UNIQUE (user_id, field_key, deleted),
+    CONSTRAINT ck_uf_field_type CHECK (field_type IN ('STRING', 'NUMBER', 'BOOLEAN', 'JSON', 'DATE')),
+    CONSTRAINT ck_uf_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_user_field IS '用户自定义字段表: 用户扩展属性(来自 sdt-ids.UserField)';
+COMMENT ON COLUMN ydsz_user_field.user_id IS '用户 ID';
+COMMENT ON COLUMN ydsz_user_field.field_key IS '字段键名';
+COMMENT ON COLUMN ydsz_user_field.field_value IS '字段值';
+COMMENT ON COLUMN ydsz_user_field.field_type IS '值类型: STRING/NUMBER/BOOLEAN/JSON/DATE';
+COMMENT ON COLUMN ydsz_user_field.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_user_field.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_uf_user ON ydsz_user_field(user_id) WHERE deleted = 0;
+
+-- ============================================================
+-- 9. 国际化（sdt-ids.Language 迁移）
+-- ============================================================
+
+-- 语言偏好表
+CREATE TABLE IF NOT EXISTS ydsz_language(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    language_code   VARCHAR(16)    NOT NULL,
+    language_name   VARCHAR(64)    NOT NULL,
+    is_default      SMALLINT       NOT NULL DEFAULT 0,
+    sort_order      INTEGER        NOT NULL DEFAULT 0,
+    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_lang_code UNIQUE (language_code, deleted),
+    CONSTRAINT ck_lang_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_lang_default_enum CHECK (is_default IN (0, 1)),
+    CONSTRAINT ck_lang_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_language IS '语言偏好表: 支持的语言列表(对接 common-base i18n)';
+COMMENT ON COLUMN ydsz_language.language_code IS '语言编码(如 ZH/EN)';
+COMMENT ON COLUMN ydsz_language.language_name IS '语言名称';
+COMMENT ON COLUMN ydsz_language.is_default IS '是否默认语言: 1 是 / 0 否';
+COMMENT ON COLUMN ydsz_language.sort_order IS '排序号';
+COMMENT ON COLUMN ydsz_language.status IS '启用状态';
+COMMENT ON COLUMN ydsz_language.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_language.tenant_id IS '租户 ID';

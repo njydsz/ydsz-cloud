@@ -1647,3 +1647,80 @@ UPDATE ydsz_meta_schema_version
         E'\n  - 影响: 导出服务实现需在写导出审计时填这两个字段'
    WHERE version = 'V1.0.0' AND deleted = 0;
 
+
+
+-- ============================================================
+-- 10. 应用注册（sdt-app.AppInfo 迁移，OAuth2 client_id 校验）
+-- ============================================================
+
+-- 应用注册表
+CREATE TABLE IF NOT EXISTS ydsz_app_info(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    app_code        VARCHAR(64)    NOT NULL,
+    app_name        VARCHAR(128)   NOT NULL,
+    app_key         VARCHAR(128)   NOT NULL,
+    app_secret      VARCHAR(256)   NOT NULL,
+    redirect_url    VARCHAR(512),
+    description     TEXT,
+    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_app_code UNIQUE (app_code, deleted),
+    CONSTRAINT uk_ydsz_app_key UNIQUE (app_key, deleted),
+    CONSTRAINT ck_app_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_app_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_app_info IS '应用注册表: OAuth2 client_id/client_secret 校验数据源(来自 sdt-app.AppInfo)';
+COMMENT ON COLUMN ydsz_app_info.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_app_info.app_code IS '应用编码(全局唯一)';
+COMMENT ON COLUMN ydsz_app_info.app_name IS '应用名称';
+COMMENT ON COLUMN ydsz_app_info.app_key IS '应用 Key(client_id)';
+COMMENT ON COLUMN ydsz_app_info.app_secret IS '应用密钥(client_secret,BCrypt 加密存储)';
+COMMENT ON COLUMN ydsz_app_info.redirect_url IS '授权回调地址';
+COMMENT ON COLUMN ydsz_app_info.description IS '应用描述';
+COMMENT ON COLUMN ydsz_app_info.status IS '启用状态: ENABLED / DISABLED';
+COMMENT ON COLUMN ydsz_app_info.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_app_info.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_app_status ON ydsz_app_info(status) WHERE deleted = 0;
+
+-- ============================================================
+-- 11. 系统变量（sdt-ids.Variable 迁移，业务级变量管理）
+-- ============================================================
+
+-- 系统变量表
+CREATE TABLE IF NOT EXISTS ydsz_variable(
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    variable_key    VARCHAR(128)   NOT NULL,
+    variable_value  TEXT,
+    value_type      VARCHAR(16)    NOT NULL DEFAULT 'STRING',
+    description     TEXT,
+    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_ydsz_var_key UNIQUE (variable_key, deleted),
+    CONSTRAINT ck_var_value_type CHECK (value_type IN ('STRING', 'NUMBER', 'BOOLEAN', 'JSON')),
+    CONSTRAINT ck_var_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_var_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_variable IS '系统变量表: 业务级变量管理(来自 sdt-ids.Variable,可对接 common-config 热加载)';
+COMMENT ON COLUMN ydsz_variable.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_variable.variable_key IS '变量键(全局唯一)';
+COMMENT ON COLUMN ydsz_variable.variable_value IS '变量值';
+COMMENT ON COLUMN ydsz_variable.value_type IS '值类型: STRING/NUMBER/BOOLEAN/JSON';
+COMMENT ON COLUMN ydsz_variable.description IS '变量说明';
+COMMENT ON COLUMN ydsz_variable.status IS '启用状态';
+COMMENT ON COLUMN ydsz_variable.deleted IS '逻辑删除';
+COMMENT ON COLUMN ydsz_variable.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_var_status ON ydsz_variable(status) WHERE deleted = 0;
