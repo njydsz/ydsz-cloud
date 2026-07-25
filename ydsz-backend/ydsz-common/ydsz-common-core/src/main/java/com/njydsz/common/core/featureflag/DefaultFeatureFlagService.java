@@ -234,7 +234,7 @@ public class DefaultFeatureFlagService implements FeatureFlagService {
             if (oldRollout != null && oldRollout == percentage) {
                 return 0;
             }
-            next = new FlagState(old.enabled, percentage, LocalDateTime.now());
+            next = new FlagState(old.configuredValue, percentage, LocalDateTime.now());
             changed = ref.compareAndSet(old, next);
         } while (!changed);
         log.info("[FeatureFlag] {} rollout: {} -> {}", flag.name(), old.rolloutPercentage, percentage);

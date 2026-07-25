@@ -17,171 +17,98 @@
 
 | 业务域 | 说明 |
 |---|---|
-| **登录认证** | 账号密码 + 图形验证码 + TOTP 2FA |
-| **Token 管理** | JWT 签发 / 刷新 / 失效 |
-| **会话管理** | 在线用户、强制下线、会话审计 |
-| **登录审计** | 登录成功/失败/锁定/异地登录记录 |
-| **RBAC** | 用户 / 角色 / 权限 6 要素 |
-| **部门 / 人员** | 组织架构树 + 人员档案 + 职级 |
-| **资源池** | 总部池 / 事业部池 / 备用池 + Bench 自动入出池 |
-| **员工标签** | 自定义标签（用于资源调度） |
-| **考勤** | 请假 / 加班 / 调休 |
-| **外包台账** | 外包人员合同 + 成本归集 |
+| **登录认证** | 账号密码 + 图形验证码 + LDAP/ADFS 域认证 |
+| **Token 管理** | JWT 签发 / 刷新 / 失效（common-auth TokenService） |
+| **账号安全** | 登录失败计数 + 自动锁定（5 次失败锁 30 分钟） + 密码策略校验 |
+| **RBAC** | 用户 / 角色 / 权限 6 要素（用户-角色-权限关联表精确查询） |
+| **组织架构** | 部门树形结构 + 公司 + 岗位 |
+| **菜单权限** | 菜单树 + 按钮/API 权限码分类 |
+| **OAuth2** | 授权码模式（authorize + token 端点） |
 
 ## 关键 Controller
 
 | 路径前缀 | 作用 |
 |---|---|
-| `/auth/login` | 登录（密码 + 验证码 + 2FA 校验） |
-| `/auth/2fa` | TOTP 2FA 二次认证 |
-| `/user` | 用户 CRUD |
-| `/role` / `/permission` | RBAC |
-| `/dept` | 部门 |
-| `/position` | 职级 |
-| `/dict` | 数据字典 |
-| `/resource/pool` | 资源池 |
-| `/resource/bench` | Bench 管理 |
-| `/employee-tag` | 员工标签 |
-| `/leave` | 请假 |
-| `/overtime` | 加班 |
-| `/attendance` | 考勤 |
+| `/api/v1/auth/login` `/logout` `/refresh` | 登录/登出/Token 刷新 |
+| `/api/v1/user` | 用户 CRUD + 分页 + 密码管理 + 角色分配 |
+| `/api/v1/role` | 角色 CRUD + 权限分配 |
+| `/api/v1/dept` | 部门 CRUD + 树形结构 |
+| `/api/v1/menu` | 菜单 CRUD + 树形结构 |
+| `/api/v1/company` | 公司 CRUD |
+| `/api/v1/post` | 岗位 CRUD |
+| `/api/v1/language` | 语言 CRUD |
+| `/api/v1/captcha` | 图形验证码生成/校验 |
+| `/api/v1/oauth2/authorize` `/token` | OAuth2 授权码模式 |
+| `/api/internal/user/query` `/dept/tree` | 内部 Feign 调用接口 |
 
 ## 数据库表设计
 
-本模块在 `deploy/sql/V1.0.0.sql` 中持有 **22 张表**，覆盖登录认证、RBAC、组织架构、考勤、资源池 5 大域。
+| 表名 | 说明 |
+|---|---|
+| `ydsz_user_account` | 用户账号（含登录失败计数/锁定时间/最后登录信息） |
+| `ydsz_role` | 角色定义 |
+| `ydsz_menu` | 菜单/按钮/API 权限定义 |
+| `ydsz_user_role` | 用户-角色关联 |
+| `ydsz_role_permission` | 角色-权限关联 |
+| `ydsz_department` | 部门（树形结构） |
+| `ydsz_company` | 公司 |
+| `ydsz_company_dept` | 公司-部门关联 |
+| `ydsz_post` | 岗位 |
+| `ydsz_user_dept` | 用户-部门关联 |
+| `ydsz_user_post` | 用户-岗位关联 |
+| `ydsz_user_field` | 用户自定义字段 |
+| `ydsz_language` | 语言 |
+| `ydsz_login_audit` | 登录审计（物理表在 ydsz-system） |
+| `ydsz_user_session` | 用户会话（Redis 存储） |
+| `ydsz_user_2fa` | 双因子认证密钥 |
 
-| 业务域 | 表名 | 说明 |
+## 安全特性
+
+| 特性 | 说明 |
+|---|---|
+| **密码加密** | BCrypt（PasswordEncoder） |
+| **密码策略** | 最少 8 位 + 大小写/数字/特殊字符 3 选 4 + 禁止连续重复 + 禁止包含用户名 |
+| **账号锁定** | 5 次密码错误自动锁定 30 分钟，登录成功自动解锁 |
+| **JWT 黑名单** | 登出后 Token 加入 Redis 黑名单（Bloom Filter 前置过滤） |
+| **OAuth2** | 标准授权码模式，授权码 5 分钟有效，一次性使用 |
+| **验证码** | 4 位字母数字混合，Base64 PNG 图片，5 分钟有效 |
+| **LDAP** | 可选 LDAP/ADFS 域认证（@ConfigurationProperties 配置注入） |
+| **指标埋点** | Micrometer 计数器/计时器（登录成功/失败/认证耗时） |
+| **健康检查** | Redis + JWT + 数据库连通性 + 用户/角色计数 |
+
+## Feign 接口
+
+| 客户端 | 方法 | 返回类型 |
 |---|---|---|
-| **登录认证** | `ydsz_user_account` | 用户账号（密码哈希、状态、最后登录时间） |
-| | `ydsz_user_session` | 在线会话（token、IP、UA、过期时间） |
-| | `ydsz_user_2fa` | TOTP 2FA 密钥 |
-| | `ydsz_login_audit` | 登录审计（成功/失败/锁定/异地） |
-| **RBAC** | `ydsz_role` | 角色 |
-| | `ydsz_permission` | 权限码（`ydsz:user:add` 等） |
-| | `ydsz_user_role` | 用户-角色关联 |
-| | `ydsz_role_permission` | 角色-权限关联 |
-| **组织架构** | `ydsz_department` | 部门（树形结构） |
-| | `ydsz_position` | 岗位 |
-| | `ydsz_employee` | 员工档案 |
-| | `ydsz_employee_tag` | 员工标签（多对多） |
-| | `ydsz_rank` | 职级（L1-L18） |
-| | `ydsz_rank_rate` | 职级-费率映射 |
-| **数据字典** | `ydsz_dict_type` | 字典类型 |
-| | `ydsz_dict_item` | 字典项 |
-| **考勤** | `ydsz_attendance` | 考勤记录 |
-| | `ydsz_overtime` | 加班申请 |
-| | `ydsz_leave` | 请假申请 |
-| **资源池** | `ydsz_resource_pool` | 资源池（总部/事业部/备用） |
-| | `ydsz_resource_assignment` | 资源分配记录 |
-| | `ydsz_bench_record` | Bench 闲置记录（含闲置成本） |
-
-> **索引关键点**：
-> - `ydsz_user_account.username` 唯一索引
-> - `ydsz_user_session.token` 唯一索引
-> - `ydsz_department.parent_id` 树查询索引
-> - `ydsz_bench_record(employee_id, status)` 复合索引
+| `UserServiceClient` | `getUserInfo(userId)` | `BaseResponse<UserAccountVO>` |
+| `OrgQueryClient` | `queryUserById(userId)` | `BaseResponse<UserAccountVO>` |
+| `OrgQueryClient` | `getDeptTree()` | `BaseResponse<List<DepartmentTreeVO>>` |
+| `OrgQueryClient` | `getDeptList()` | `BaseResponse<List<DepartmentTreeVO>>` |
 
 ## 启动顺序
 
-依赖 `common` 库 + `nacos`，**应在 `gateway` 之后、`message` 之前**启动。
-
-## 目录结构
-
-```
-ydsz-userinfo/
-├── pom.xml
-└── src/main/
-    ├── java/com/njydsz/userinfo/
-    │   ├── UserInfoApplication.java
-    │   ├── controller/        # ~15 个 Controller
-    │   ├── service/           # 业务实现
-    │   ├── mapper/            # MyBatis-Plus Mapper
-    │   ├── entity/            # DO / DTO
-    │   ├── dto/ / vo/
-    │   ├── enums/
-    │   └── config/
-    ├── resources/
-    │   ├── bootstrap.yml
-    │   ├── mapper/            # XML 映射文件
-    │   └── config/            # 原 nacos-config（已重命名）
-    │       ├── ydsz-userinfo-dev.yaml
-    │       ├── ydsz-userinfo-sit.yaml
-    │       └── ydsz-userinfo-uat.yaml
-    └── test/
-        └── java/              # 单元测试
-```
-
-## 配置文件
-
-| 文件 | 用途 |
-|---|---|
-| `bootstrap.yml` | Nacos 连接 + 端口 9001 |
-| `config/ydsz-userinfo-dev.yaml` | dev（DEBUG / 文档 UI 开） |
-| `config/ydsz-userinfo-sit.yaml` | sit（INFO / 文档 UI 关） |
-| `config/ydsz-userinfo-uat.yaml` | uat |
-
-**环境变量**：
-
-| 变量 | 说明 |
-|---|---|
-| `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | 数据库连接 |
-| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | Redis 连接 |
-| `JWT_SECRET` | JWT 签名密钥（生产 ≥ 32 字节） |
-| `CAPTCHA_REQUIRED` | 登录是否强制图形验证码（默认 true） |
-
-## 启动
+依赖 `common` + `nacos`，**应在 `gateway` 之后**启动。
 
 ```bash
-# 1. 编译依赖
 cd ydsz-backend
-mvn -pl ydsz-common,ydsz-literule -am install -DskipTests
-
-# 2. 启动（需先启动 Nacos、PostgreSQL、Redis）
 mvn -pl ydsz-userinfo spring-boot:run
-
-# 3. 验证
-curl http://localhost:9001/actuator/health
 ```
 
-### 一键启动
+## 配置
 
-```bash
-./deploy/ubuntu/scripts/start-all.sh
+```yaml
+ydsz:
+  auth:
+    token:
+      enabled: true
+      secret-key: "your-jwt-secret-key-at-least-32-chars"
+      access-token-expire-seconds: 7200
+      refresh-token-expire-seconds: 604800
+    ldap:
+      enabled: false
+      host: 10.248.3.56
+      port: 389
+      domain: "@wuxibio"
+  userinfo:
+    health-enabled: true
 ```
-
-## 测试
-
-```bash
-# 仅测试 userinfo
-mvn -pl ydsz-userinfo -am test
-
-# 覆盖率报告
-mvn -pl ydsz-userinfo -am verify
-# 报告路径：target/site/jacoco/index.html
-```
-
-## Feign 接口（被其他服务调用）
-
-本服务**不**主动调用其他业务服务，但被以下 Feign 客户端调用：
-
-- `OrgQueryClient`（位于 `ydsz-common`）→ 跨服务查询人员/部门
-
-> 修改本服务 API 时，必须同步更新 `OrgQueryClient` 及其 Fallback。
-
-## 常见问题
-
-### Q1：登录报 "账号已锁定"
-
-5 次密码错误自动锁定 30 分钟。可通过 `ydsz:auth:max-fail-count` 和 `lock-duration-minutes` 配置。
-
-### Q2：JWT 过期
-
-默认 2 小时。生产环境可对接 Nacos 动态调整 `ydsz:jwt:expire-minutes`。
-
-### Q3：资源池 Bench 自动入出池
-
-定时任务每天凌晨 2 点扫描。手动触发：`POST /resource/bench/scan`。
-
----
-
-> 任何 RBAC 变更必须走审批流（数据权限 + 业务权限双重校验）。

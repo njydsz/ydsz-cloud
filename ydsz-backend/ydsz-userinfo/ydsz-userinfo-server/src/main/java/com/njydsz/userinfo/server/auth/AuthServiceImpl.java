@@ -1,10 +1,10 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -126,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
         userInfoMap.put("roleName", roleNames);
         userInfoMap.put("tenantId", user.getTenantId());
         redisHashOps.hMSet(accessToken, userInfoMap);
-        redisTemplate.expire(accessToken, TOKEN_TTL_SECONDS, TimeUnit.SECONDS);
+        redisTemplate.expire(accessToken, Duration.ofSeconds(TOKEN_TTL_SECONDS));
 
         updateLoginSuccess(user);
 

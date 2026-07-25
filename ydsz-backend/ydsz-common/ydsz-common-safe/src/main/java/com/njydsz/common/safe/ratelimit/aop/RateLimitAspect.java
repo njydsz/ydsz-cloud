@@ -10,7 +10,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.BusinessException;
 
 import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import com.njydsz.common.safe.ratelimit.core.RateLimitManager;
@@ -24,10 +23,15 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 /**
  * 限流 AOP 切面
  *
- * <p>拦截 {@link RateLimit} 注解，执行限流决策，失败时抛出 {@link RateLimitException}。
+ * <p>拦截 {@link SentinelRateLimit} 注解，执行限流决策，失败时抛出 {@link com.njydsz.common.exception.custom.BusinessException}。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,11 +46,11 @@ public class RateLimitAspect {
     /** 方法签名缓存：避免重复解析 */
     private final ConcurrentHashMap<Method, RateLimitRule> ruleCache = new ConcurrentHashMap<>();
 
-    @Around("@annotation(com.njydsz.common.safe.ratelimit.annotation.RateLimit)")
+    @Around("@annotation(com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit)")
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         MethodSignature signature = (MethodSignature) pjp.getSignature();
         Method method = signature.getMethod();
-        RateLimit annotation = method.getAnnotation(RateLimit.class);
+        SentinelRateLimit annotation = method.getAnnotation(SentinelRateLimit.class);
         if (annotation == null) {
             return pjp.proceed();
         }
@@ -77,7 +81,7 @@ public class RateLimitAspect {
         }
     }
 
-    private RateLimitRule buildRule(RateLimit annotation) {
+    private RateLimitRule buildRule(SentinelRateLimit annotation) {
         return RateLimitRule.builder()
                 .resource(annotation.resource())
                 .algorithm(annotation.algorithm())
@@ -94,7 +98,7 @@ public class RateLimitAspect {
                 .build();
     }
 
-    private RateLimitContext buildContext(ProceedingJoinPoint pjp, RateLimit annotation, RateLimitRule rule) {
+    private RateLimitContext buildContext(ProceedingJoinPoint pjp, SentinelRateLimit annotation, RateLimitRule rule) {
         Object[] args = pjp.getArgs();
         StringBuilder keyBuilder = new StringBuilder(rule.getResource());
 
@@ -156,7 +160,7 @@ public class RateLimitAspect {
 
     private String extractIp() {
         try {
-            jakarta.servlet.http.HttpServletRequest request = currentRequest();
+            HttpServletRequest request = currentRequest();
             if (request == null) return null;
             String ip = request.getHeader("X-Forwarded-For");
             if (ip != null && !ip.isEmpty()) {
@@ -168,11 +172,11 @@ public class RateLimitAspect {
         }
     }
 
-    private static jakarta.servlet.http.HttpServletRequest currentRequest() {
+    private static HttpServletRequest currentRequest() {
         try {
-            org.springframework.web.context.request.RequestAttributes attrs =
-                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-            if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes sra) {
+            RequestAttributes attrs =
+                    RequestContextHolder.getRequestAttributes();
+            if (attrs instanceof ServletRequestAttributes sra) {
                 return sra.getRequest();
             }
         } catch (Exception ignored) {

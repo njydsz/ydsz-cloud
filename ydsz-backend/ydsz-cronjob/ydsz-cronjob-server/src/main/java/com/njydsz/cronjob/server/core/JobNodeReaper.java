@@ -75,8 +75,7 @@ public class JobNodeReaper {
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT;
     static {
         RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>();
-        RELEASE_LOCK_SCRIPT.setScriptText(
-                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        RELEASE_LOCK_SCRIPT.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
         RELEASE_LOCK_SCRIPT.setResultType(Long.class);
     }
 

@@ -1,6 +1,5 @@
 package com.njydsz.userinfo.server.service.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

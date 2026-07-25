@@ -53,7 +53,7 @@ public class RateLimitService {
     /**
      * 检查限流（带注解 + 参数）
      */
-    public RateLimitDecision check(RateLimit annotation, Object... args) {
+    public RateLimitDecision check(SentinelRateLimit annotation, Object... args) {
         StringBuilder keyBuilder = new StringBuilder(annotation.resource());
         if (annotation.keyParam() >= 0 && annotation.keyParam() < args.length
                 && args[annotation.keyParam()] != null) {
