@@ -40,7 +40,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * {@code GrpcExceptionHandlerAutoConfiguration} 条件装配。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  * @see Status
  */
 public final class GrpcExceptionTranslator {

@@ -25,7 +25,7 @@ import java.lang.annotation.*;
  *
  * <p>序列化结果：{"orderId":"123","street":"...","city":"...","zipCode":"..."}</p>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

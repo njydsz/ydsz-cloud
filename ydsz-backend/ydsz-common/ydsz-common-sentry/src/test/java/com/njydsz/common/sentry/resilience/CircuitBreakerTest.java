@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
  * CircuitBreaker 单元测试
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @DisplayName("CircuitBreaker 状态流转测试")
 class CircuitBreakerTest {

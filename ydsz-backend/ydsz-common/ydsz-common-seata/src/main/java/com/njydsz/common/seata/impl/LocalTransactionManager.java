@@ -23,7 +23,7 @@ import com.njydsz.common.seata.api.TransactionType;
  * 编程式事务管理，确保事务行为可控。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class LocalTransactionManager extends AbstractTransactionManager {
 

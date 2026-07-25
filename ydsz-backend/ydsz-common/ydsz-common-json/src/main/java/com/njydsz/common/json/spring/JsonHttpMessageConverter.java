@@ -93,7 +93,7 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
      * 设置最大请求体大小。
      *
      * @param maxRequestBodySize 最大请求体大小（字节）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setMaxRequestBodySize(long maxRequestBodySize) {
         this.maxRequestBodySize = maxRequestBodySize;
@@ -156,7 +156,7 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
      *
      * @param obj 待序列化对象
      * @return 视图类，如果没有视图过滤则返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private Class<?> extractViewClass(Object obj) {
         if (MAPPING_JACKSON_VALUE_CLASS == null || GET_SERIALIZATION_VIEW_METHOD == null) {
@@ -177,7 +177,7 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
      *
      * @param obj 待序列化对象
      * @return 实际值
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private Object extractValue(Object obj) {
         if (MAPPING_JACKSON_VALUE_CLASS == null || GET_VALUE_METHOD == null) {

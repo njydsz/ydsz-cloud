@@ -47,7 +47,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * {@link TccTransactionRecoveryScanner}（定时恢复扫描）。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 @AutoConfiguration
 @EnableScheduling

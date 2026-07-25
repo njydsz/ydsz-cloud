@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
  * InMemoryMetricsCollector 单元测试
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @DisplayName("InMemoryMetricsCollector 指标读写测试")
 class InMemoryMetricsCollectorTest {

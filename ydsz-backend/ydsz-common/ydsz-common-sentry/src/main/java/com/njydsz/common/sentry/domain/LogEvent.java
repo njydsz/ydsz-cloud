@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>统一的结构化日志事件，可同时发布到 ELK（Logstash）和 Loki。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @Builder

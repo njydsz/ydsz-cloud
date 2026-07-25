@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持空结果缓存（防穿透），短 TTL 缓存（防雪崩）。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SearchCacheService {

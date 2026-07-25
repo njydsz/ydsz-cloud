@@ -16,7 +16,7 @@ package com.njydsz.common.seata.api;
  * </ul>
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public interface XidPropagator {
 

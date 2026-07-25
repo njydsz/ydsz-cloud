@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * 熔断保护由 {@link CircuitBreaker} 统一管理。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ElkLogPublisher implements LogPublisher, AutoCloseable {

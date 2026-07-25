@@ -37,7 +37,7 @@ import com.njydsz.common.seata.metrics.SeataMetrics;
  * 跨服务的 TCC 需要配合 Seata TCC 模式使用。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class TccTransactionManager extends AbstractTransactionManager
         implements TccTransactionRecoveryScanner.TccRecoveryHandler {

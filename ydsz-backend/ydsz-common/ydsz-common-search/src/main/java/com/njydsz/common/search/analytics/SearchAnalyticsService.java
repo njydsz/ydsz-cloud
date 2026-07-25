@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * （Sorted Set 存热门词、Hash 存每日量、Set+TTL 存零结果词）。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SearchAnalyticsService {

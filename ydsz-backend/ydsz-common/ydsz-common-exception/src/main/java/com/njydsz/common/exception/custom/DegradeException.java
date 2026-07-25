@@ -33,7 +33,7 @@ import lombok.ToString;
  * }</pre>
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  * @see UnifiedExceptionCode#SERVICE_DEGRADED
  * @see ExceptionCategory#INFRASTRUCTURE
  * @see ExceptionLevel#WARN

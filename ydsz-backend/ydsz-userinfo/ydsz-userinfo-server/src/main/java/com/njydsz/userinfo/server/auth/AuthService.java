@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
+import com.njydsz.userinfo.domain.vo.LoginVO;
+
 /**
  * 认证服务接口。
  *
@@ -8,7 +10,7 @@ package com.njydsz.userinfo.server.auth;
  */
 public interface AuthService {
 
-    LoginResult login(String username, String password);
+    LoginVO login(String username, String password);
     void logout(String accessToken);
-    LoginResult refresh(String refreshToken);
+    LoginVO refresh(String refreshToken);
 }

@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * SQL 指纹归一化工具测试
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("SqlFingerprint - SQL 指纹归一化测试")
 class SqlFingerprintTest {

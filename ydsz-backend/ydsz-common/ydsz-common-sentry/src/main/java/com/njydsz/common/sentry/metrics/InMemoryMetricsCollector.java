@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * 基于 LongAdder / DoubleAdder 实现，零依赖，始终可用。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class InMemoryMetricsCollector implements MetricsCollector {

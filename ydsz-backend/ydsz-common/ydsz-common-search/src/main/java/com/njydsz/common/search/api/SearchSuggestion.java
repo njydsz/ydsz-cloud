@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * 搜索建议（自动补全 / "您是不是要找"）
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * {@code RateLimitFilter} 和 {@code redis} 模块的 {@code RedisRateLimiter}
  * 互为补充，不构成重复设计。
  *
- * @since 1.1.0
+ * @since 1.0.0
 
  */
 public class RateLimiter {

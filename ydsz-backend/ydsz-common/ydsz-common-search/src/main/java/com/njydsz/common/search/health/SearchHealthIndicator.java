@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * P2-7: 增强健康检查 — 报告引擎状态、缓存大小、指标摘要
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SearchHealthIndicator implements HealthIndicator {

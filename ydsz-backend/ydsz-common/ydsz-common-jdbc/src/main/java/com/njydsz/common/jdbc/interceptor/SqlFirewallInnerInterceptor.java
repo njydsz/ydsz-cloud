@@ -52,7 +52,7 @@ import net.sf.jsqlparser.statement.update.Update;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  * @see InnerInterceptor
  */
 @Slf4j

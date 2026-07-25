@@ -1,12 +1,10 @@
 package com.njydsz.userinfo.server.metrics;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * Userinfo module Micrometer metrics.
  *
  * <p>Exposes login success/failure counters, auth duration timer.
+ * Integrated into AuthServiceImpl login chain.
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -39,6 +38,7 @@ public class UserInfoMetrics {
                 .register(meterRegistry);
         this.authDurationTimer = Timer.builder("userinfo.auth.duration")
                 .description("Authentication duration")
+                .publishPercentiles(0.5, 0.9, 0.99)
                 .register(meterRegistry);
     }
 

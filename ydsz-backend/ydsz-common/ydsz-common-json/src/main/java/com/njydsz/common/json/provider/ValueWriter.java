@@ -825,7 +825,7 @@ public final class ValueWriter {
      *
      * @param value 日期/时间值
      * @return 格式化后的字符串
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static String formatDateValue(Object value) {
         if (value == null) return null;

@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>拦截 {@link SlaMetric} 和 {@link SlaStep} 注解，自动采集执行耗时。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Aspect

@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * 声明式规则注册器（P2-10）
  *
  * <p>容器刷新完成后扫描 {@code @LiteRule}（标注在 {@link Rule} Spring Bean 上），
- * 将其注册到 {@link RuleEngine}；同时按 {@code ydsz.literule.annotation-scan-base-ppackages}
+ * 将其注册到 {@link RuleEngine}；同时按 {@code ydsz.literule.annotation-scan-base-packages}
  * 配置的基包扫描 {@link RuleDefinition} Bean（纯声明式表达式规则）并按需包装为
  * {@link ExpressionRule} 后注册。
  *
@@ -103,15 +103,15 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
     /**
      * 按配置的基包扫描 {@link RuleDefinition} Bean，包装为 {@link ExpressionRule} 后注册。
      *
-     * <p>未配置 {@code annotation-scan-base-ppackages} 时跳过本步骤。
+     * <p>未配置 {@code annotation-scan-base-packages} 时跳过本步骤。
      */
     private int scanRuleDefinitionBeans() {
-        String basePpackages = properties.getAnnotationScanBasePpackages();
-        if (basePpackages == null || basePpackages.isBlank()) {
+        String basePackages = properties.getAnnotationScanBasePackages();
+        if (basePackages == null || basePackages.isBlank()) {
             return 0;
         }
         int count = 0;
-        StringTokenizer st = new StringTokenizer(basePpackages, ",");
+        StringTokenizer st = new StringTokenizer(basePackages, ",");
         while (st.hasMoreTokens()) {
             String pkg = st.nextToken().trim();
             if (pkg.isEmpty()) {

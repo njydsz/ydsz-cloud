@@ -30,7 +30,7 @@ import com.njydsz.common.seata.metrics.SeataMetrics;
  * （通过 {@code SagaStateMachine} + 定时恢复）。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class SagaOrchestrator extends AbstractTransactionManager {
 

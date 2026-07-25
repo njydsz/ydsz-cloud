@@ -11,7 +11,7 @@ import lombok.Data;
  * File lifecycle configuration properties.
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.file.lifecycle")

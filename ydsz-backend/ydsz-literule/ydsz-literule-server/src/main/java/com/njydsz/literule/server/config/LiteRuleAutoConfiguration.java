@@ -48,6 +48,7 @@ import com.njydsz.literule.server.expr.ExpressionValidationService;
 import com.njydsz.literule.server.expr.VariableRegistry;
 import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
+import com.njydsz.literule.server.security.RulePermissionChecker;
 import com.njydsz.literule.server.spi.CronjobTriggerActionHandler;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
@@ -469,6 +470,28 @@ public class LiteRuleAutoConfiguration {
     }
 
     // ------------------------------------------------------------------
+    // P0-7 规则权限检查器
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则权限检查器 Bean（P0-7）
+     *
+     * <p>当存在 {@link RuleConfigProvider} 时自动装配，提供按规则分类路径的
+     * 细粒度权限校验能力。消费方（如 RuleAdminService）可选注入本接口。
+     *
+     * @param configProvider 规则配置提供者
+     * @return RulePermissionChecker 实例
+     * @since 2.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RuleConfigProvider.class)
+    public RulePermissionChecker rulePermissionChecker(RuleConfigProvider configProvider) {
+        log.info("[LiteRule-Permission] 规则权限检查器已初始化");
+        return new RulePermissionChecker(configProvider);
+    }
+
+    // ------------------------------------------------------------------
     // P1-1 多级缓存（Caffeine + Redis）
     // ------------------------------------------------------------------
 
@@ -536,8 +559,8 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
             prefix = "ydsz.literule.cep", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public CEPEngine cepEngine() {
-        CEPEngine engine = new CEPEngine();
+    public CEPEngine cepEngine(ExpressionEvaluator evaluator) {
+        CEPEngine engine = new CEPEngine(evaluator);
         log.info("[LiteRule-CEP] 复杂事件处理引擎已初始化");
         return engine;
     }
@@ -578,7 +601,7 @@ public class LiteRuleAutoConfiguration {
      *
      * <p>容器刷新完成后扫描 {@code @LiteRule}（标注在 Rule Bean 上）与
      * {@code @RuleDefinitionMeta}（纯声明式表达式规则）并自动注册到引擎。
-     * 通过 {@code ydsz.literule.annotation-scan-base-ppackages} 指定扫描基包（逗号分隔）。
+     * 通过 {@code ydsz.literule.annotation-scan-base-packages} 指定扫描基包（逗号分隔）。
      *
      * @return LiteRuleAnnotationRegistrar 实例
      * @since 1.5.2
@@ -591,8 +614,8 @@ public class LiteRuleAutoConfiguration {
                                                                    LiteRuleProperties properties) {
         LiteRuleAnnotationRegistrar registrar =
                 new LiteRuleAnnotationRegistrar(ruleEngine, evaluator, applicationContext, properties);
-        log.info("[LiteRule-Annotation] 声明式规则注册器已初始化（scanBasePpackages={}）",
-                properties.getAnnotationScanBasePpackages());
+        log.info("[LiteRule-Annotation] 声明式规则注册器已初始化（scanBasePackages={}）",
+                properties.getAnnotationScanBasePackages());
         return registrar;
     }
 

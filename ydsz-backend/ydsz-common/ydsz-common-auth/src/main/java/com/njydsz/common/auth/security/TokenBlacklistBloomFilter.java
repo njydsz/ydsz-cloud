@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * <p>使用 Java 内置的 BitSet 实现，无需引入 Guava 依赖。
  * 采用双哈希策略（Double Hashing）减少哈希函数数量。
  *
- * @since 1.1.0
+ * @since 1.0.0
 
  */
 public class TokenBlacklistBloomFilter {

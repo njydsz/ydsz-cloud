@@ -23,7 +23,7 @@ import org.apache.ibatis.plugin.Interceptor;
  * Spring Boot 会自动将其注入到所有 {@link org.apache.ibatis.session.SqlSessionFactory} 中。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  * @see DatabaseCircuitBreaker
  * @see CircuitBreakerInterceptor
  */

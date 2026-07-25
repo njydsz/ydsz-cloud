@@ -16,7 +16,7 @@ import io.micrometer.core.instrument.Timer;
  * 当 Micrometer 不可用时降级为内部计数器。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class SearchMetrics {
 

@@ -8,7 +8,7 @@ import com.njydsz.common.sentry.domain.SlaDefinition;
  * <p>业务模块实现此接口以接入 SLA 指标采集。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 public interface SlaCollector {
 

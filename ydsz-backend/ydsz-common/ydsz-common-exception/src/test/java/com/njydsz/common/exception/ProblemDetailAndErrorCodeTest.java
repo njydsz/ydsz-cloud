@@ -15,7 +15,7 @@ import java.net.URI;
  * {@link ProblemDetail} 和 {@link UnifiedExceptionCode} 单元测试
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @DisplayName("ProblemDetail 与 UnifiedExceptionCode 测试")
 class ProblemDetailAndErrorCodeTest {

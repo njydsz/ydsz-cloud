@@ -42,7 +42,7 @@ import lombok.Data;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Validated

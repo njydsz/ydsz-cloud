@@ -287,7 +287,7 @@ public final class JsonGenerator implements Closeable {
      * @param obj 要写入的对象
      * @return 本生成器（链式调用）
      * @throws IOException 如果写入失败
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonGenerator writeObject(Object obj) throws IOException {
         ensureOpen();

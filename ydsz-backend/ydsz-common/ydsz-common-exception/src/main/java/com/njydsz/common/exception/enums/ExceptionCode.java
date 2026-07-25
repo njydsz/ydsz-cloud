@@ -14,11 +14,18 @@ package com.njydsz.common.exception.enums;
  *   <li>key：国际化消息键，对应 messages.properties 中的键</li>
  * </ul>
  *
+ * <p><b>扩展能力（自 1.0.0 起）：</b>
+ * <ul>
+ *   <li>子错误码（subCode）：主错误码下细分的具体场景标识，4 位数字（如 0001 / 0002）</li>
+ *   <li>TraceId 嵌入：将 traceId 编码到错误码末尾，便于日志关联与人工排查</li>
+ *   <li>5 大分类（A/B/C/D/E）：业务、系统、安全、限流、外部</li>
+ * </ul>
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * public enum UserExceptionCode implements ExceptionCode {
- *     USER_NOT_FOUND("U10001", "user.not.found"),
- *     USER_ALREADY_EXISTS("U10002", "user.already.exists");
+ *     USER_NOT_FOUND("A01001", "user.not.found"),
+ *     USER_ALREADY_EXISTS("A01002", "user.already.exists");
  *
  *     private final String code;
  *     private final String key;
@@ -29,7 +36,7 @@ package com.njydsz.common.exception.enums;
  * }</pre>
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  * @see UnifiedExceptionCode
  */
 public interface ExceptionCode {
@@ -38,7 +45,7 @@ public interface ExceptionCode {
      * 获取异常码
      *
      * <p>返回业务错误码，用于标识具体的异常类型。
-     * 建议格式：模块前缀(2位) + 业务码(3位)，如 "A01001"
+     * 建议格式：分类(1位) + 模块(2位) + 业务码(3位)，如 "A01001"
      *
      * <p>JSON 序列化时输出 code 值而非枚举名称。
      *
@@ -69,6 +76,82 @@ public interface ExceptionCode {
     }
 
     /**
+     * 获取子错误码（Sub Error Code）
+     *
+     * <p>用于在主错误码下细分具体场景，4 位数字字符串（如 "0001"）。
+     * 默认返回 "0000"（无子错误码）。
+     *
+     * <p><b>使用场景：</b>
+     * <ul>
+     *   <li>同一主错误码下区分不同的失败原因（如 USER_NOT_FOUND 在不同子错误码下表示不同原因）</li>
+     *   <li>便于国际化文案精确化（messages_{subCode}.properties）</li>
+     *   <li>便于客户端按子错误码做差异化提示</li>
+     * </ul>
+     *
+     * @return 4 位数字子错误码字符串
+     */
+    default String getSubCode() {
+        return "0000";
+    }
+
+    /**
+     * 获取错误码分类
+     *
+     * <p>从主错误码首字母推断分类（A/B/C/D/E）。
+     * 默认返回 {@link ExceptionCategory#BUSINESS}。
+     *
+     * @return 错误码分类枚举
+     */
+    default ExceptionCategory getCategory() {
+        String code = getCode();
+        if (code == null || code.isEmpty()) {
+            return ExceptionCategory.BUSINESS;
+        }
+        char prefix = Character.toUpperCase(code.charAt(0));
+        switch (prefix) {
+            case 'A':
+                return ExceptionCategory.BUSINESS;
+            case 'B':
+                return ExceptionCategory.SYSTEM;
+            case 'C':
+                return ExceptionCategory.SECURITY;
+            case 'D':
+                return ExceptionCategory.RATE_LIMIT;
+            case 'E':
+                return ExceptionCategory.EXTERNAL;
+            case 'S':
+                return ExceptionCategory.SYSTEM;
+            case 'K':
+                return ExceptionCategory.SECURITY;
+            case 'V':
+                return ExceptionCategory.VALIDATION;
+            case 'I':
+                return ExceptionCategory.INFRASTRUCTURE;
+            case 'T':
+                return ExceptionCategory.TIMEOUT;
+            case 'R':
+                return ExceptionCategory.RATE_LIMIT;
+            default:
+                return ExceptionCategory.BUSINESS;
+        }
+    }
+
+    /**
+     * 组合完整错误码（主错误码 + 子错误码）
+     *
+     * <p>格式：{@code {主错误码}-{子错误码}}，如 "A01001-0001"。
+     *
+     * @return 完整错误码字符串
+     */
+    default String getFullCode() {
+        String sub = getSubCode();
+        if (sub == null || sub.isEmpty() || "0000".equals(sub)) {
+            return getCode();
+        }
+        return getCode() + "-" + sub;
+    }
+
+    /**
      * 根据 code 字符串查找已注册的 ExceptionCode
      *
      * <p>通过全局 {@link ExceptionCodeRegistry} 查找对应枚举实例。
@@ -83,9 +166,15 @@ public interface ExceptionCode {
         if (code == null || code.trim().isEmpty()) {
             throw new IllegalArgumentException("Exception code cannot be null or empty");
         }
-        ExceptionCode result = ExceptionCodeRegistry.lookup(code);
+        // 兼容带子错误码的格式：截取主错误码部分
+        String mainCode = code;
+        int dashIdx = code.indexOf('-');
+        if (dashIdx > 0) {
+            mainCode = code.substring(0, dashIdx);
+        }
+        ExceptionCode result = ExceptionCodeRegistry.lookup(mainCode);
         if (result == null) {
-            throw new IllegalStateException("No ExceptionCode registered for code: " + code);
+            throw new IllegalStateException("No ExceptionCode registered for code: " + mainCode);
         }
         return result;
     }

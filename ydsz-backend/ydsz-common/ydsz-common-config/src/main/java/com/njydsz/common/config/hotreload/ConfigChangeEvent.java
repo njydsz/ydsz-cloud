@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationEvent;
  * </ol>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class ConfigChangeEvent extends ApplicationEvent {
 

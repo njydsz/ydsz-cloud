@@ -14,7 +14,7 @@ import lombok.Data;
  * 避免 common 模块依赖 system 模块。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 public class NotificationFeignDTO implements Serializable {

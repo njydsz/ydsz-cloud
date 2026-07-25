@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 当项目引入 spring-boot-actuator 时，可包装此类实现 HealthIndicator。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class UtilHealthIndicator {

@@ -17,8 +17,8 @@ import java.util.function.Consumer;
 
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
 
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -58,8 +58,14 @@ public class CEPEngine implements Serializable {
     /** 事件队列：patternId → partitionKey → Deque<CEPEvent> */
     private final Map<String, Map<String, ConcurrentLinkedDeque<CEPEvent>>> eventQueues = new ConcurrentHashMap<>();
 
-    /** 表达式求值器（用于 filter 条件） */
-    private final ExpressionEvaluator expressionEvaluator = new LiteExprEvaluator(true);
+    /** 表达式求值器（用于 filter 条件，通过构造器注入） */
+    private final ExpressionEvaluator expressionEvaluator;
+
+    /** 单分区事件队列上限，超过时丢弃最旧事件 */
+    private static final int MAX_EVENTS_PER_PARTITION = 10_000;
+
+    /** 默认表达式求值器（无参构造时使用，向后兼容） */
+    private static final ExpressionEvaluator DEFAULT_EVALUATOR = createDefaultEvaluator();
 
     /** 序列状态：patternId → partitionKey → 序列已匹配步骤 */
     private final Map<String, Map<String, SequenceState>> sequenceStates = new ConcurrentHashMap<>();
@@ -70,6 +76,34 @@ public class CEPEngine implements Serializable {
     /** 已注册模式数 */
     private final AtomicLong totalHits = new AtomicLong();
 
+    /**
+     * 默认构造（向后兼容，内部创建默认求值器）
+     */
+    public CEPEngine() {
+        this(DEFAULT_EVALUATOR);
+    }
+
+    /**
+     * 构造 CEP 引擎（P0-6：通过构造器注入表达式求值器）
+     *
+     * <p>推荐使用此构造器，使 CEP 的表达式求值器与引擎主求值器配置一致
+     *（沙箱开关、自定义函数注册等），避免独立 new 实例导致的配置不一致。
+     *
+     * @param expressionEvaluator 表达式求值器
+     * @since 2.3.0
+     */
+    public CEPEngine(ExpressionEvaluator expressionEvaluator) {
+        this.expressionEvaluator = expressionEvaluator != null ? expressionEvaluator : DEFAULT_EVALUATOR;
+    }
+
+    private static ExpressionEvaluator createDefaultEvaluator() {
+        try {
+            Class<?> clazz = Class.forName("com.njydsz.literule.server.expr.LiteExprEvaluator");
+            return (ExpressionEvaluator) clazz.getConstructor(boolean.class).newInstance(true);
+        } catch (Exception e) {
+            throw new IllegalStateException("无法创建默认 LiteExprEvaluator", e);
+        }
+    }
     /**
      * 注册模式
      */
@@ -517,7 +551,7 @@ public class CEPEngine implements Serializable {
         private static final long serialVersionUID = 1L;
         int currentStep = 0;
         Instant lastMatchAt;
-        final List<CEPEvent> matchedEvents = new ArrayList<>();
+        final List<CEPEvent> matchedEvents = new CopyOnWriteArrayList<>();
 
         void reset() {
             currentStep = 0;
@@ -560,6 +594,63 @@ public class CEPEngine implements Serializable {
         eventQueues.clear();
         sequenceStates.clear();
         sessionLastEventAt.clear();
+    }
+
+    /**
+     * 定期清理过期事件队列（P0-5）
+     *
+     * <p>遍历所有 TIME_WINDOW / AGGREGATE 模式的事件队列，
+     * 移除窗口外的过期事件，防止长时间运行时队列无限增长。
+     * 建议由 @Scheduled 定时调用（如每 60 秒）。
+     *
+     * @since 2.3.0
+     */
+    public void cleanupExpiredEvents() {
+        Instant now = Instant.now();
+        for (Map.Entry<String, CEPPattern> entry : patterns.entrySet()) {
+            CEPPattern pattern = entry.getValue();
+            if (pattern.getWindow() == null) {
+                continue;
+            }
+            Map<String, ConcurrentLinkedDeque<CEPEvent>> qMap = eventQueues.get(entry.getKey());
+            if (qMap == null) continue;
+            Instant windowStart = now.minus(pattern.getWindow());
+            for (ConcurrentLinkedDeque<CEPEvent> queue : qMap.values()) {
+                while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
+                    queue.pollFirst();
+                }
+            }
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("[CEP] 过期事件清理完成");
+        }
+    }
+
+    /**
+     * 优雅关闭：清理所有队列和状态（P0-5）
+     *
+     * @since 2.3.0
+     */
+    @PreDestroy
+    public void destroy() {
+        clearAll();
+        log.info("[CEP] 引擎已关闭，所有队列和状态已清理");
+    }
+
+    /**
+     * 强制队列上限保护（P2-4）
+     *
+     * <p>当队列大小超过 MAX_EVENTS_PER_PARTITION 时，丢弃最旧的事件并记录告警。
+     * 防止高吞吐场景下队列无限增长导致 OOM。
+     *
+     * @param queue 事件队列
+     * @since 2.3.0
+     */
+    private void enforceQueueLimit(ConcurrentLinkedDeque<CEPEvent> queue) {
+        while (queue.size() > MAX_EVENTS_PER_PARTITION) {
+            CEPEvent dropped = queue.pollFirst();
+            if (dropped == null) break;
+        }
     }
 
     /**

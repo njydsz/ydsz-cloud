@@ -390,7 +390,7 @@ public final class JSONWriter {
      * BigDecimal 将作为 JSON 字符串（带引号）写入，避免 JavaScript 精度丢失。</p>
      *
      * @param value BigDecimal 值
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void writeBigDecimal(BigDecimal value) {
         if (value == null) {
@@ -719,7 +719,7 @@ public final class JSONWriter {
      * 跳过 String 中间层。</p>
      *
      * @return UTF-8 编码的字节数组
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public byte[] toUtf8Bytes() {
         if (externalSb != null) {

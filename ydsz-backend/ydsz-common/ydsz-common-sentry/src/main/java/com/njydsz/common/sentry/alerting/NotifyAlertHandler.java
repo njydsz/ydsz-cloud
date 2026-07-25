@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>当 {@code common-notify} 模块不可用时，此 Handler 不会被注册。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持自动发现：Spring 容器中所有 {@code SearchProvider} Bean 会在构造时自动注册。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SearchProviderRegistry {

@@ -12,7 +12,7 @@ import java.util.HexFormat;
  * {@code TokenBlacklistBloomFilter}、{@code DefaultCacheKeyStrategy} 等类中的重复实现。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
 
  */
 public final class AuthDigestUtils {

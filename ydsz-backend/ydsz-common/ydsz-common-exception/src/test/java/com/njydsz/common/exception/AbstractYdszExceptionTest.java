@@ -35,7 +35,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @DisplayName("AbstractYdszException 核心行为测试")
 class AbstractYdszExceptionTest {

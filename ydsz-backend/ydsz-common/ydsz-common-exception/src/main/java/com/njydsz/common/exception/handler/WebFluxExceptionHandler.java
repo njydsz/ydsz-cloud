@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  * @see MvcExceptionHandler
  */
 @Slf4j

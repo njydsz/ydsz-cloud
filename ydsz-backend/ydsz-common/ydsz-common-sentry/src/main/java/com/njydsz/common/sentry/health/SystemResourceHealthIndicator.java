@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * 系统资源健康检查
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor

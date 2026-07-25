@@ -25,7 +25,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
  *
  * <p>每个维度组合可以配置独立的限流规则（QPS、窗口、突发容量）。
  *
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class MultiDimensionRateLimiter {
 

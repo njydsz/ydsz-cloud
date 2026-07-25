@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * 各 {@code SearchProvider} 通过 {@link #builder()} 声明其可搜索字段。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

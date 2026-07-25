@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 逻辑删除拦截器测试
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("LogicalDeleteInterceptor - 逻辑删除拦截器测试")
 class LogicalDeleteInterceptorTest {

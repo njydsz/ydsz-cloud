@@ -41,7 +41,7 @@ import com.njydsz.common.config.ConfigProperties;
  * 由 {@code @ConditionalOnClass} 在 AutoConfiguration 层控制。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class ConfigChangeBridge
         implements ApplicationListener<ApplicationEvent> {

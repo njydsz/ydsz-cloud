@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonArray;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.springframework.stereotype.Component;
 
@@ -21,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>负责 {@link DagDefinition} 与 JSON 字符串之间的转换，
  * 存储/读取 {@code JobDagDO.dagDefinition} 字段。
  *
- * <p>使用 fastjson2 手动解析，避免 record 反序列化兼容性问题，
+ * <p>使用 YdszJson 手动解析，避免 record 反序列化兼容性问题，
  * 并提供校验（节点 jobKey 唯一、边的 from/to 必须存在于节点列表）。
  *
  * @author ydsz-team
@@ -41,10 +43,10 @@ public class DagDefinitionCodec {
         if (definition == null) {
             return null;
         }
-        Map<String, Object> root = new JSONObject();
-        List<Object> nodesArr = new JSONArray();
+        Map<String, Object> root = new YdszJsonObject();
+        List<Object> nodesArr = new YdszJsonArray();
         for (DagNode node : definition.nodes()) {
-            Map<String, Object> n = new JSONObject();
+            YdszJsonObject n = new YdszJsonObject();
             n.put("jobKey", node.jobKey());
             n.put("jobId", node.jobId());
             n.put("label", node.label());
@@ -62,9 +64,9 @@ public class DagDefinitionCodec {
             n.put("approvalTimeoutMinutes", node.approvalTimeoutMinutes());
             nodesArr.add(n);
         }
-        List<Object> edgesArr = new JSONArray();
+        List<Object> edgesArr = new YdszJsonArray();
         for (DagEdge edge : definition.edges()) {
-            Map<String, Object> e = new JSONObject();
+            YdszJsonObject e = new YdszJsonObject();
             e.put("from", edge.from());
             e.put("to", edge.to());
             e.put("failStrategy", edge.failStrategy());
@@ -73,7 +75,7 @@ public class DagDefinitionCodec {
         }
         root.put("nodes", nodesArr);
         root.put("edges", edgesArr);
-        return root.toJSONString();
+        return YdszJson.toJson(root);
     }
 
     /**
@@ -87,9 +89,9 @@ public class DagDefinitionCodec {
         if (json == null || json.isBlank()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
         }
-        JSONObject root;
+        YdszJsonObject root;
         try {
-            root = YdszJson.parseMap(json);
+            root = YdszJson.parseObjectToJsonObject(json);
         } catch (Exception e) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
         }
@@ -99,12 +101,12 @@ public class DagDefinitionCodec {
 
         // 解析 nodes
         List<DagNode> nodes = new ArrayList<>();
-        List<Object> nodesArr = root.getJSONArray("nodes");
+        YdszJsonArray nodesArr = root.getJSONArray("nodes");
         if (nodesArr == null || nodesArr.isEmpty()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
         }
         for (int i = 0; i < nodesArr.size(); i++) {
-            Map<String, Object> n = nodesArr.getJSONObject(i);
+            YdszJsonObject n = nodesArr.getJSONObject(i);
             String jobKey = n.getString("jobKey");
             if (jobKey == null || jobKey.isBlank()) {
                 throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
@@ -113,8 +115,8 @@ public class DagDefinitionCodec {
                     jobKey,
                     n.getString("jobId"),
                     n.getString("label"),
-                    n.getIntValue("x", 0),
-                    n.getIntValue("y", 0),
+                    n.getIntValue("x"),
+                    n.getIntValue("y"),
                     n.getString("paramsJson"),
                     // P2-1: 节点类型扩展字段（缺失时默认 TASK）
                     n.getString("nodeType"),
@@ -135,10 +137,10 @@ public class DagDefinitionCodec {
 
         // 解析 edges（可为空）
         List<DagEdge> edges = new ArrayList<>();
-        List<Object> edgesArr = root.getJSONArray("edges");
+        YdszJsonArray edgesArr = root.getJSONArray("edges");
         if (edgesArr != null) {
             for (int i = 0; i < edgesArr.size(); i++) {
-                Map<String, Object> e = edgesArr.getJSONObject(i);
+                YdszJsonObject e = edgesArr.getJSONObject(i);
                 String from = e.getString("from");
                 String to = e.getString("to");
                 if (from == null || to == null) {

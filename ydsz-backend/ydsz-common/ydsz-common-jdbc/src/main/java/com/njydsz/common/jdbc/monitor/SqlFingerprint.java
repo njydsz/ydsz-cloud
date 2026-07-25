@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class SqlFingerprint {
 

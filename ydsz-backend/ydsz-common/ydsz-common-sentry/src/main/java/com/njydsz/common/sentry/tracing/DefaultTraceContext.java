@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>当 SkyWalking 不可用时使用 UUID 生成 TraceId，通过 MDC 传递。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class DefaultTraceContext implements TraceContext {

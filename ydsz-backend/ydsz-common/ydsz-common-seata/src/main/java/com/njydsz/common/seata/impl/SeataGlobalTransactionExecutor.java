@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * 条件注册。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class SeataGlobalTransactionExecutor  {
 

@@ -4,6 +4,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -13,6 +19,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ydsz.literule")
 public class LiteRuleProperties {
 
@@ -34,21 +41,28 @@ public class LiteRuleProperties {
     private boolean traceEnabled = true;
 
     /** 异步 Trace 队列容量 */
+    @Min(1)
     private int traceQueueCapacity = 5000;
 
     /** 异步 Trace 批量写入大小 */
+    @Min(1)
     private int traceBatchSize = 100;
 
     /** 异步 Trace 刷新间隔（毫秒） */
+    @Min(1)
     private long traceFlushIntervalMs = 2000;
 
     /** 单规则执行超时（毫秒，0 表示不限制，1.4.0） */
+    @Min(0)
     private long ruleTimeoutMs = 0;
 
     /** 规则熔断错误率阈值（0~1.0，达到阈值时熔断该规则，1.4.0） */
+    @DecimalMin("0.0")
+    @DecimalMax("1.0")
     private double circuitBreakerErrorRate = 0.5;
 
     /** 规则熔断最小评估次数（达到该次数后才计算错误率，1.4.0） */
+    @Min(0)
     private int circuitBreakerMinEvaluations = 100;
 
     /**
@@ -146,7 +160,7 @@ public class LiteRuleProperties {
      *
      * @since 1.5.2
      */
-    private String annotationScanBasePpackages = "";
+    private String annotationScanBasePackages = "";
 
     /**
      * 当前运行环境（P1-5 多环境隔离）
@@ -344,12 +358,15 @@ public class LiteRuleProperties {
         private boolean enabled = true;
 
         /** L1（Caffeine 本地）TTL，单位秒 */
+        @Min(1)
         private int l1TtlSeconds = 60;
 
         /** L1 最大条数 */
+        @Min(1)
         private int l1MaxSize = 1000;
 
         /** L2（Redis 分布式）TTL，单位秒 */
+        @Min(1)
         private int l2TtlSeconds = 300;
 
         /**
@@ -537,6 +554,7 @@ public class LiteRuleProperties {
         private boolean parallelEnabled = false;
 
         /** 并行评估线程池大小，默认 CPU 核数 */
+        @Min(0)
         private int parallelPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
 
         /**
@@ -545,6 +563,7 @@ public class LiteRuleProperties {
          * <p>候选规则数 ≥ 此值时自动切换为并行评估。
          * 默认 50，适用于规则数较大的场景。
          */
+        @Min(1)
         private int parallelThreshold = 50;
 
         /**
@@ -595,6 +614,7 @@ public class LiteRuleProperties {
          * <p>当规则评估次数达到此值且触发次数为 0 时，判定为休眠规则。
          * 默认 1000 次。
          */
+        @Min(0)
         private long dormantMinEvaluations = 1000;
 
         /**
@@ -603,6 +623,8 @@ public class LiteRuleProperties {
          * <p>当规则错误率 ≥ 此值时，判定为高错误率规则。
          * 默认 0.30（30%）。
          */
+        @DecimalMin("0.0")
+        @DecimalMax("1.0")
         private double highErrorRateThreshold = 0.30;
 
         /**
@@ -619,6 +641,8 @@ public class LiteRuleProperties {
          * <p>当规则触发率 &lt; 此值且评估次数 ≥ minSampleSize 时，判定为低影响规则。
          * 默认 0.001（0.1%）。
          */
+        @DecimalMin("0.0")
+        @DecimalMax("1.0")
         private double lowImpactTriggerRate = 0.001;
 
         /**
@@ -628,6 +652,7 @@ public class LiteRuleProperties {
          * 长期停用检测不受此限制。
          * 默认 500 次。
          */
+        @Min(0)
         private long minSampleSize = 500;
     }
 }

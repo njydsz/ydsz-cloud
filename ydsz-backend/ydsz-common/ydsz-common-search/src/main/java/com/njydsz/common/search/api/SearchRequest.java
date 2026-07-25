@@ -16,7 +16,7 @@ import lombok.Data;
  * 各业务模块通过 {@code SearchProvider} 补充特定于实体的搜索逻辑。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -26,7 +26,7 @@ import com.njydsz.common.seata.api.TransactionType;
  * <p>当 MeterRegistry 不可用时降级为内存计数器。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class SeataMetrics {
 

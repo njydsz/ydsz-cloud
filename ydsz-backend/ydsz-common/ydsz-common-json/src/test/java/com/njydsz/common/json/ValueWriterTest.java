@@ -15,7 +15,7 @@ import com.njydsz.common.json.provider.ValueWriter;
 /**
  * ValueWriter 值写入器测试（类型代码 / 字符串转义 / 小整数缓存 / Optional / UUID）。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class ValueWriterTest {
 

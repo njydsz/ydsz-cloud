@@ -4,13 +4,18 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.userinfo.domain.entity.MenuDO;
+import com.njydsz.userinfo.domain.entity.RoleDO;
+import com.njydsz.userinfo.domain.entity.RolePermissionDO;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
+import com.njydsz.userinfo.infra.mapper.RoleMapper;
+import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 基于数据库的角色权限加载器。
  *
- * <p>从 ydsz_menu 表加载角色的菜单/按钮/API 权限集合，
+ * <p>从 ydsz_role_permission 关联表按 roleId 查询权限 ID，
+ * 再从 ydsz_menu（权限表）加载菜单/按钮/API 权限集合。
  * 实现 common-auth 的 RolePermissionLoader SPI。
+ *
+ * <p>修复 P0-2 Bug：原实现未按 roleCode 过滤，加载了全部菜单权限。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -31,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DbRolePermissionLoader implements RolePermissionLoader {
 
     private final MenuMapper menuMapper;
+    private final RoleMapper roleMapper;
+    private final RolePermissionMapper rolePermissionMapper;
 
     @Override
     public RolePermissions loadByRoleCode(String roleCode) {
@@ -38,14 +48,43 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
             return RolePermissions.empty();
         }
         try {
+            // 1. 按 roleCode 查询角色 ID
+            LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+            roleWrapper.eq(RoleDO::getRoleCode, roleCode);
+            roleWrapper.eq(RoleDO::getDeleted, 0);
+            RoleDO role = roleMapper.selectOne(roleWrapper);
+
+            if (role == null) {
+                log.debug("Role not found for roleCode: {}", roleCode);
+                return RolePermissions.empty();
+            }
+
+            // 2. 按 roleId 查询 role_permission 关联表
+            LambdaQueryWrapper<RolePermissionDO> rpWrapper = new LambdaQueryWrapper<>();
+            rpWrapper.eq(RolePermissionDO::getRoleId, role.getId());
+            rpWrapper.eq(RolePermissionDO::getDeleted, 0);
+            List<RolePermissionDO> rolePermissions = rolePermissionMapper.selectList(rpWrapper);
+
+            if (rolePermissions.isEmpty()) {
+                return RolePermissions.empty();
+            }
+
+            // 3. 提取 permissionId 列表（即 menuId）
+            List<String> permissionIds = rolePermissions.stream()
+                    .map(RolePermissionDO::getPermissionId)
+                    .collect(Collectors.toList());
+
+            // 4. 查询权限/菜单详情
+            LambdaQueryWrapper<MenuDO> menuWrapper = new LambdaQueryWrapper<>();
+            menuWrapper.in(MenuDO::getId, permissionIds);
+            menuWrapper.eq(MenuDO::getDeleted, 0);
+            menuWrapper.eq(MenuDO::getStatus, "ENABLED");
+            List<MenuDO> menus = menuMapper.selectList(menuWrapper);
+
+            // 5. 按类型分类权限码
             Set<String> menuPerms = new HashSet<>();
             Set<String> buttonPerms = new HashSet<>();
             Set<String> apiPerms = new HashSet<>();
-
-            LambdaQueryWrapper<MenuDO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(MenuDO::getDeleted, 0);
-            wrapper.eq(MenuDO::getStatus, "ENABLED");
-            List<MenuDO> menus = menuMapper.selectList(wrapper);
 
             for (MenuDO menu : menus) {
                 String permCode = menu.getPermissionCode();

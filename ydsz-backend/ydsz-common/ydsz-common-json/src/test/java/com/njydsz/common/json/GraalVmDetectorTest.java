@@ -9,7 +9,7 @@ import com.njydsz.common.json.asm.GraalVmDetector;
 /**
  * GraalVM Native Image 环境检测器测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class GraalVmDetectorTest {
 

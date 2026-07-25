@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
  * NoOp virus scanner (default fallback).
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class NoOpVirusScanner implements VirusScanner {

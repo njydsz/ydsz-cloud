@@ -16,7 +16,7 @@ import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
  * 通过 {@code /actuator/exception-codes} 暴露所有已注册的异常错误码。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  * @see ExceptionCodeDocEndpoint
  */
 @AutoConfiguration

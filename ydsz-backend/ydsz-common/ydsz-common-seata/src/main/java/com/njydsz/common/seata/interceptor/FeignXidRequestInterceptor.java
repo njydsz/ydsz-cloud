@@ -20,7 +20,7 @@ import feign.RequestTemplate;
  * {@link com.njydsz.common.seata.config.SeataAutoConfiguration} 条件注册。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class FeignXidRequestInterceptor implements RequestInterceptor {
 

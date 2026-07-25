@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 高级功能测试：Optional / UUID / YdszJsonObject / YdszJsonArray / isValid / fromJson / streaming。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class JsonAdvancedTest {
 

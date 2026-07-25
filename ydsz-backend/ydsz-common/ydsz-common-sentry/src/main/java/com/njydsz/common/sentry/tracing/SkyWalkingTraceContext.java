@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>基于 SkyWalking apm-toolkit-trace 实现，当 SkyWalking agent 存在时自动接入。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SkyWalkingTraceContext implements TraceContext {

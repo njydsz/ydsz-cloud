@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持按类型搜索、结果合并排序、权限过滤、结果缓存、超时保护。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class UnifiedSearchService {

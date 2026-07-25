@@ -34,7 +34,7 @@ import java.util.List;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @FunctionalInterface
 public interface ConfigChangeListener {

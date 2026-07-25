@@ -13,7 +13,7 @@ import com.njydsz.common.json.stream.JsonGenerator;
 /**
  * JsonGenerator 流式生成器测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class JsonGeneratorTest {
 

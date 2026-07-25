@@ -34,7 +34,7 @@ import lombok.NoArgsConstructor;
  * @see <a href="https://tools.ietf.org/html/rfc7807">RFC 7807</a>
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 @Data
 @Builder

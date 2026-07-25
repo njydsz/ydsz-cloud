@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>拼音：</b>将中文关键词转换为拼音，支持拼音搜索。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SearchTextProcessor {

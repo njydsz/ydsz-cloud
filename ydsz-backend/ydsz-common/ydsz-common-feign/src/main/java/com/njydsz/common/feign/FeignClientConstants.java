@@ -30,7 +30,7 @@ package com.njydsz.common.feign;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public final class FeignClientConstants {
 

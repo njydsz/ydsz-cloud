@@ -13,7 +13,7 @@ import lombok.ToString;
  * 包含异常的完整上下文信息，供告警监听器使用。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  * @see ExceptionAlertPublisher
  * @see ExceptionAlertListener
  */

@@ -121,7 +121,7 @@ public class Converters {
      *
      * @param pattern 日期格式
      * @return PropertyConverter
-     * @since 3.5.0
+     * @since 1.0.0
      */
     public static PropertyConverter<LocalDateTime, String> localDateTimeToString(String pattern) {
         return source -> {
@@ -138,7 +138,7 @@ public class Converters {
      *
      * @param pattern 日期格式
      * @return PropertyConverter
-     * @since 3.5.0
+     * @since 1.0.0
      */
     public static PropertyConverter<String, LocalDateTime> stringToLocalDateTime(String pattern) {
         return source -> {
@@ -157,7 +157,7 @@ public class Converters {
     /**
      * LocalDateTime 转 Long（毫秒时间戳，使用系统默认时区）
      *
-     * @since 3.5.0
+     * @since 1.0.0
      */
     public static final PropertyConverter<LocalDateTime, Long> LOCAL_DATE_TIME_TO_TIMESTAMP = source ->
             source == null ? null : source.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
@@ -165,7 +165,7 @@ public class Converters {
     /**
      * Long（毫秒时间戳）转 LocalDateTime（使用系统默认时区）
      *
-     * @since 3.5.0
+     * @since 1.0.0
      */
     public static final PropertyConverter<Long, LocalDateTime> TIMESTAMP_TO_LOCAL_DATE_TIME = source ->
             source == null ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(source), ZoneId.systemDefault());

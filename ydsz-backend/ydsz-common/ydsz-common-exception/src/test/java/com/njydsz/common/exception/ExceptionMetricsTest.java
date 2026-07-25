@@ -17,7 +17,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
  * {@link ExceptionMetrics} 单元测试
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @DisplayName("ExceptionMetrics 指标统计测试")
 class ExceptionMetricsTest {

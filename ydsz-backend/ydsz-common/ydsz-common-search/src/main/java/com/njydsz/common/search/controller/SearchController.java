@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * 提供搜索、搜索建议、搜索分析和索引管理的 RESTful API。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

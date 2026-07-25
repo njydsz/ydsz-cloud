@@ -16,7 +16,7 @@ import com.njydsz.common.json.tree.TextNode;
 /**
  * 树模型 (JsonNode / ObjectNode / ArrayNode) 测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class TreeModelTest {
 

@@ -17,7 +17,7 @@ import com.njydsz.common.json.provider.SerializationProvider;
 /**
  * SerializationProvider 线程安全和 ThreadLocal 快照测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class SerializationProviderTest {
 

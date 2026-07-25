@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * Storage operation retry helper with exponential backoff.
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class StorageRetryHelper {

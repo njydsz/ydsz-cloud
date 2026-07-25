@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * <p>对应数据库表 {@code tcc_transaction_log}（见 DDL）。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class TccTransactionLog {
 

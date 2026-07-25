@@ -28,7 +28,7 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p>同时负责权限拒绝事件的安全审计日志记录。
  *
- * @since 1.1.0
+ * @since 1.0.0
 
  */
 @ConditionalOnClass(MeterRegistry.class)

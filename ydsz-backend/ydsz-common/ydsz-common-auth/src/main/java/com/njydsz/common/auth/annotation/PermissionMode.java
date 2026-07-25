@@ -6,7 +6,7 @@ package com.njydsz.common.auth.annotation;
  * <p>统一用于 {@link AuthMenuPermission} 和 {@link AuthApiPermission} 注解的多权限码校验模式。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
 
  */
 public enum PermissionMode {

@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 当 MeterRegistry 不可用时自动降级为 {@link InMemoryMetricsCollector}。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class MicrometerMetricsCollector implements MetricsCollector {

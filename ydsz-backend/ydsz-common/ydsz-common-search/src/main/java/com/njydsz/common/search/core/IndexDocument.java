@@ -16,7 +16,7 @@ import lombok.Data;
  * 各业务模块通过 {@code SearchProvider.toIndexDocument()} 将实体转换为此模型。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -15,7 +15,7 @@ import org.slf4j.MDC;
  * <p>覆盖 traceId 生成、提取、设置、清理、sanitize 等行为。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @DisplayName("TraceContext 分布式追踪上下文测试")
 class TraceContextTest {

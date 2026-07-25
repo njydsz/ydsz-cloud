@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +17,13 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import io.micrometer.core.instrument.Timer;
 import com.njydsz.userinfo.domain.entity.RoleDO;
 import com.njydsz.userinfo.domain.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.exception.BusinessException;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
@@ -37,11 +40,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>核心能力：
  * <ul>
- *   <li>账号锁定（N 次密码错误后自动锁定）</li>
+ *   <li>账号锁定（N 次密码错误后自动锁定 30 分钟）</li>
  *   <li>登录失败计数 + 最后登录信息更新</li>
- *   <li>JWT Token 签发/刷新/吊销</li>
+ *   <li>JWT Token 签发/刷新/吊销（使用 common-auth TokenService）</li>
  *   <li>用户角色按 user_role 关联表精确查询</li>
- *   <li>Micrometer 指标埋点</li>
+ *   <li>Micrometer 指标埋点（登录成功/失败/耗时）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -58,19 +61,18 @@ public class AuthServiceImpl implements AuthService {
     private final TokenService tokenService;
     private final TokenBlacklistService tokenBlacklistService;
     private final RedisHashOps redisHashOps;
-    private final RedisStringOps redisStringOps;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final UserInfoMetrics userInfoMetrics;
 
     private static final long TOKEN_TTL_SECONDS = 7200;
     private static final int MAX_LOGIN_FAIL_COUNT = 5;
     private static final int LOCK_DURATION_MINUTES = 30;
-    private static final String LOGIN_FAIL_COUNT_KEY = "auth:login:fail:";
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public LoginVO login(String username, String password) {
-        var sample = userInfoMetrics.startTimer();
+        Timer.Sample sample = userInfoMetrics.startTimer();
 
         LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccountDO::getUsername, username);
@@ -123,7 +125,8 @@ public class AuthServiceImpl implements AuthService {
         userInfoMap.put("roleCode", roleCodes);
         userInfoMap.put("roleName", roleNames);
         userInfoMap.put("tenantId", user.getTenantId());
-        redisHashOps.hSetAll(accessToken, userInfoMap, TOKEN_TTL_SECONDS, TimeUnit.SECONDS);
+        redisHashOps.hMSet(accessToken, userInfoMap);
+        redisTemplate.expire(accessToken, TOKEN_TTL_SECONDS, TimeUnit.SECONDS);
 
         updateLoginSuccess(user);
 
@@ -156,7 +159,7 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
         tokenBlacklistService.addToBlacklist(accessToken);
-        redisHashOps.delete(accessToken);
+        redisTemplate.delete(accessToken);
         log.info("User logged out, token blacklisted");
     }
 
@@ -176,7 +179,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 按 user_role 关联表查询用户角色。
+     * 按 user_role 关联表查询用户角色（修复 P0-1 Bug）。
      */
     private List<RoleDO> loadUserRoles(String userId) {
         LambdaQueryWrapper<UserRoleDO> urWrapper = new LambdaQueryWrapper<>();
@@ -218,7 +221,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 更新登录成功信息：重置失败计数、记录最后登录时间和 IP。
+     * 更新登录成功信息：重置失败计数、记录最后登录时间。
      */
     private void updateLoginSuccess(UserAccountDO user) {
         LambdaUpdateWrapper<UserAccountDO> updateWrapper = new LambdaUpdateWrapper<>();

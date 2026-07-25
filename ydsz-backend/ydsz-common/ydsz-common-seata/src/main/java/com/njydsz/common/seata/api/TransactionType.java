@@ -4,7 +4,7 @@ package com.njydsz.common.seata.api;
  * 分布式事务类型枚举
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public enum TransactionType {
 

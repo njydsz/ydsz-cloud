@@ -35,7 +35,7 @@ import com.njydsz.common.seata.api.TransactionType;
  * </ul>
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class SeataTransactionManager extends AbstractTransactionManager {
 

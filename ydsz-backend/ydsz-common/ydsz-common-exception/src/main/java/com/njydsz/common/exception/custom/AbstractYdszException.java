@@ -19,7 +19,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * 子类只需通过构造函数传入各自的默认值即可。
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 public abstract class AbstractYdszException extends RuntimeException {
 

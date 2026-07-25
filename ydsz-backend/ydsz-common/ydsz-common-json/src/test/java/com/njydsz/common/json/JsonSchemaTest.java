@@ -15,7 +15,7 @@ import com.njydsz.common.json.schema.ValidationResult;
 /**
  * JSON Schema 校验测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class JsonSchemaTest {
 

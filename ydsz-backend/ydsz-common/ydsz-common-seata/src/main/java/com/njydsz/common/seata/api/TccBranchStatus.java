@@ -26,7 +26,7 @@ package com.njydsz.common.seata.api;
  * <p>幂等：Confirm/Cancel 前检查状态，若已为终态则跳过（幂等保护）。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public enum TccBranchStatus {
 

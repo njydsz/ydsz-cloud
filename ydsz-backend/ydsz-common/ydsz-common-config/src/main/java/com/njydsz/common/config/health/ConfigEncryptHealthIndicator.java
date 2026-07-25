@@ -39,7 +39,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class ConfigEncryptHealthIndicator implements HealthIndicator {
 

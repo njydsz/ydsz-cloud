@@ -10,7 +10,7 @@ import java.util.Map;
  * 业务模块通过此接口上报指标，无需关心底层监控方案。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 public interface MetricsCollector {
 

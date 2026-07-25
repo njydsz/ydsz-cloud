@@ -22,7 +22,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
  * 避免在 Advice 类上叠加 Spring Boot 自动配置语义，提升可测试性与可读性。</p>
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  * @see WebFluxExceptionHandler
  */
 @AutoConfiguration(after = I18nConfiguration.class)

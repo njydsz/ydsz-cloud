@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 数据库操作熔断器测试
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("DatabaseCircuitBreaker - 数据库熔断器测试")
 class DatabaseCircuitBreakerTest {

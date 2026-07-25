@@ -346,7 +346,7 @@ public class YdszJson {
      * @param clazz 目标类型
      * @param <T> 类型参数
      * @return 反序列化后的对象
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static <T> T fromJson(String json, Class<T> clazz) {
         return toObject(json, clazz);
@@ -359,7 +359,7 @@ public class YdszJson {
      * @param typeRef 类型引用
      * @param <T> 类型参数
      * @return 反序列化后的对象
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static <T> T fromJson(String json, YdszJsonType<T> typeRef) {
         return toObject(json, typeRef);
@@ -875,7 +875,7 @@ public class YdszJson {
      *
      * @param obj 要序列化的对象
      * @param out 输出流
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void toJson(Object obj, OutputStream out) {
         if (obj == null) {
@@ -904,7 +904,7 @@ public class YdszJson {
      * @param obj 要序列化的对象
      * @param writer 字符输出流
      * @throws YdszJsonException 如果写入失败
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void toJson(Object obj, Writer writer) {
         String json = toJson(obj);
@@ -924,7 +924,7 @@ public class YdszJson {
      * @param clazz 目标类型
      * @param <T> 类型参数
      * @return 反序列化后的对象
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static <T> T toObject(InputStream in, Class<T> clazz) {
         if (in == null) {
@@ -949,7 +949,7 @@ public class YdszJson {
      * @param typeRef 类型引用
      * @param <T> 类型参数
      * @return 反序列化后的对象
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static <T> T toObject(InputStream in, YdszJsonType<T> typeRef) {
         if (in == null) {
@@ -976,7 +976,7 @@ public class YdszJson {
      * 避免首次请求时的延迟尖峰。</p>
      *
      * @param classes 需要预热的类型列表
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void warmup(Class<?>... classes) {
         if (classes == null || classes.length == 0) {
@@ -1006,7 +1006,7 @@ public class YdszJson {
      * @param obj 要序列化的对象
      * @param config 单次配置
      * @return JSON 字符串
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static String toJson(Object obj, YdszJsonConfig config) {
         if (obj == null) {

@@ -58,7 +58,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持通过配置快速切换 ELK / Loki 双方案。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @AutoConfiguration

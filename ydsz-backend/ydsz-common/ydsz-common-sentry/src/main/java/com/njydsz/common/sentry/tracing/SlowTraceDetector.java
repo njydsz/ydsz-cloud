@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>记录业务关键路径的执行耗时，超过阈值时触发慢追踪告警。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SlowTraceDetector {

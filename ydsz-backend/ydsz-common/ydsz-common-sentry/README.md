@@ -190,5 +190,5 @@ alloy run deploy/monitoring/loki/alloy-config.alloy
 
 ## 版本
 
-- **since**: 1.5.0
+- **since**: 1.0.0
 - **author**: ydsz-team

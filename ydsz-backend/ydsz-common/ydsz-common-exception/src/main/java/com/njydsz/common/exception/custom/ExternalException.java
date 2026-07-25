@@ -25,7 +25,7 @@ import lombok.ToString;
  * }</pre>
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  * @see UnifiedExceptionCode
  * @see ExceptionCategory#EXTERNAL
  */

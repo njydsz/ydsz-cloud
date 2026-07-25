@@ -14,7 +14,7 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
 /**
  * AutoTypeChecker 安全检查测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class AutoTypeCheckerTest {
 

@@ -17,7 +17,7 @@ import com.njydsz.common.auth.util.PermissionUtils;
  * <p>使用 {@link Map} 而非字符串拼接，实现 O(1) 查找。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
 
  */
 public final class PermissionHierarchy {

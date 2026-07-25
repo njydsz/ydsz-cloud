@@ -22,7 +22,7 @@ import com.njydsz.common.json.cache.YdszJsonCacheStats;
  *   <li>{@code json.cache.asm.level} - ASM 降级级别（0=ASM, 1=REFLECTION）</li>
  * </ul>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class JsonCacheMetrics {
 

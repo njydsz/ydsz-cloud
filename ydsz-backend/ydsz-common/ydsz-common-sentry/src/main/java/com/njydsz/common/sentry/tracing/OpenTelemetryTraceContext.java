@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 作为 SkyWalking 之外的未来标准追踪方案。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class OpenTelemetryTraceContext implements TraceContext {

@@ -13,7 +13,7 @@ import com.njydsz.common.sentry.domain.LogEvent;
  * 底层委托 {@link YdszJson} 统一 JSON 引擎。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 public final class LogEventSerializer {
 

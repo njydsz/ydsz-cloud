@@ -36,7 +36,7 @@ import com.njydsz.common.search.core.SearchField;
  *
  * @param <T> 实体类型
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface SearchProvider<T> {
 

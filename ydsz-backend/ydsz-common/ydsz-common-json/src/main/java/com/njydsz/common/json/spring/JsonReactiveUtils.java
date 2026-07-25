@@ -22,7 +22,7 @@ import com.njydsz.common.json.YdszJson;
  * }
  * </code></pre>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class JsonReactiveUtils {
 
@@ -51,7 +51,7 @@ public final class JsonReactiveUtils {
      * @param bufferFactory DataBuffer 工厂
      * @param viewClass 视图类（用于 @YdszJsonView 过滤）
      * @return 包含 JSON UTF-8 字节的 DataBuffer
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static DataBuffer encodeWithView(Object obj, DataBufferFactory bufferFactory,
             Class<?> viewClass) {

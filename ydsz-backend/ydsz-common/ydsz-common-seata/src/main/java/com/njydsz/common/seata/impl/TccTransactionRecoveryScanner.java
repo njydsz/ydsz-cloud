@@ -28,7 +28,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  * </ol>
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class TccTransactionRecoveryScanner {
 

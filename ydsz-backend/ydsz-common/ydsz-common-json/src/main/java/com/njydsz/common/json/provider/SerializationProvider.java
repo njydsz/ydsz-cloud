@@ -232,7 +232,7 @@ public final class SerializationProvider {
      * 获取 ASM 降级总次数。
      *
      * @return ASM 序列化降级总次数
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static long getAsmDowngradeCount() {
         return ASM_DOWNGRADE_COUNT.get();
@@ -660,7 +660,7 @@ public final class SerializationProvider {
      * 构造时捕获当前线程的 SerializationContext 快照，
      * 调用 {@link #restore()} 恢复原始值。避免修改全局单例。</p>
      *
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static final class ThreadLocalSnapshot {
         private final SerializationContext snapshot;

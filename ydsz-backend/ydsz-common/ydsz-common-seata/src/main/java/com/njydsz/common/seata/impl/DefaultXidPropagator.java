@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  * <p>使用 ThreadLocal 存储 XID，支持 HTTP Header 和 MQ 属性的序列化/反序列化。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class DefaultXidPropagator implements XidPropagator {
 

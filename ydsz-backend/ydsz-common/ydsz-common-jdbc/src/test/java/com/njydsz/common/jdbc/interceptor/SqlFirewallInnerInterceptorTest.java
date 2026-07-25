@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * 这里主要测试防火墙的检测逻辑方法。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("SqlFirewallInnerInterceptor - SQL 防火墙测试")
 class SqlFirewallInnerInterceptorTest {

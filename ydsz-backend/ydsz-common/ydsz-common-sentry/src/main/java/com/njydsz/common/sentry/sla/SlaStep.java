@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * 需配合 {@link SlaMetric} 使用。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

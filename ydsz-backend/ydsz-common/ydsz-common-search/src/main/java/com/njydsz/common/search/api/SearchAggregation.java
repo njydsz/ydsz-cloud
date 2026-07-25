@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * 搜索聚合/分面结果
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -17,7 +17,7 @@ import lombok.Setter;
  * <p><b>P2-6 修复</b>：新增 per-mode 开关，可独立关闭 TCC 或 SAGA。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 @Getter
 @Setter

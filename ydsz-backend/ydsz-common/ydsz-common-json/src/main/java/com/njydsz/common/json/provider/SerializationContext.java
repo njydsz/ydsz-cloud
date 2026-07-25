@@ -17,7 +17,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * SerializationContext.CONTEXT.remove(); // 清理
  * </code></pre>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class SerializationContext {
 
@@ -91,7 +91,7 @@ public final class SerializationContext {
      * StringBuilder 池、JSONWriter 池、IdentityHashMap 等开销。</p>
      *
      * @return 估算内存占用
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static long estimateThreadLocalMemory() {
         long total = 0;

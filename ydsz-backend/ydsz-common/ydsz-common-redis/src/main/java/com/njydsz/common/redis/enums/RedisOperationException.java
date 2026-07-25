@@ -7,7 +7,7 @@ package com.njydsz.common.redis.enums;
  * 封装了操作的 key、操作名称和原始异常，便于上层统一处理。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class RedisOperationException extends RuntimeException {
 

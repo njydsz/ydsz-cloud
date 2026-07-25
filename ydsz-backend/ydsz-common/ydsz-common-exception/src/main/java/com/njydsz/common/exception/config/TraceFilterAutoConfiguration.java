@@ -16,7 +16,7 @@ import com.njydsz.common.exception.observability.TraceContextFilter;
  * 过滤器顺序设为最高优先级，确保 traceId 在所有业务过滤器之前注入。
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 @AutoConfiguration
 @ConditionalOnClass(name = "jakarta.servlet.Filter")

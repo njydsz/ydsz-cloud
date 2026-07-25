@@ -10,7 +10,7 @@ import com.njydsz.common.json.pointer.JsonPointer;
 /**
  * JSON Pointer (RFC 6901) 测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class JsonPointerTest {
 

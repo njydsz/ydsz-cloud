@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * }</pre>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class RateLimiterUtils {
 

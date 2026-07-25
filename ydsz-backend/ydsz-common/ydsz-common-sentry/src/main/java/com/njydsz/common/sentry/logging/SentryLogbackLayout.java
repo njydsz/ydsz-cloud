@@ -31,7 +31,7 @@ import ch.qos.logback.core.LayoutBase;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
 

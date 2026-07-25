@@ -54,7 +54,7 @@ public class JsonDeserializationException extends YdszJsonException {
      * @param message 错误消息
      * @param position 字符位置
      * @param json 原始 JSON 字符串（用于计算行列号和上下文）
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public JsonDeserializationException(int errorCode, String message, int position, String json) {
         super(errorCode, enrichMessage(message, position, json), position);

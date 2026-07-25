@@ -11,7 +11,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
 /**
  * YdszJsonConfig 全局配置测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class JsonConfigTest {
 

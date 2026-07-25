@@ -31,7 +31,7 @@ import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
  * JDK 8u161+ 已内置），与项目 Nacos 共享配置 {@code jasypt.encryptor.algorithm} 对齐。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class ConfigCliTool {
 

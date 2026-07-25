@@ -17,7 +17,7 @@ import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
  * <p>覆盖注册、查找、批量注册、重复注册忽略、线程安全等行为。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @DisplayName("ExceptionCodeRegistry 注册中心测试")
 class ExceptionCodeRegistryTest {

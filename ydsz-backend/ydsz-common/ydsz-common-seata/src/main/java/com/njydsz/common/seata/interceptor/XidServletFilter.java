@@ -23,7 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * <p><b>P0-6 修复</b>：此前 XID 仅 ThreadLocal 存储，跨服务 HTTP 调用时无法接收。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class XidServletFilter extends OncePerRequestFilter {
 

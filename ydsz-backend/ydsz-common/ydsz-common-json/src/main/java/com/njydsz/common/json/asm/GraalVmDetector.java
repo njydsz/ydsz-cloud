@@ -12,7 +12,7 @@ package com.njydsz.common.json.asm;
  *   <li>检查系统属性 {@code org.graalvm.nativeimage.imagecode} 是否设置</li>
  * </ul>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class GraalVmDetector {
 

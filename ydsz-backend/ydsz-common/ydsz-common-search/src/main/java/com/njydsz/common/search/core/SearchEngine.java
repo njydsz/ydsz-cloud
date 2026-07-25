@@ -22,7 +22,7 @@ import com.njydsz.common.search.api.SearchSuggestion;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface SearchEngine {
 

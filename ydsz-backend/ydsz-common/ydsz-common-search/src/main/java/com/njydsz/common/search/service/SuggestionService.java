@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 自动补全基于前缀匹配，纠错建议基于 Levenshtein 编辑距离算法。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class SuggestionService {

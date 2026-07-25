@@ -17,7 +17,7 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
  * 生产环境应使用 {@code JdbcTccTransactionLogStore} 配合数据库持久化。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
 

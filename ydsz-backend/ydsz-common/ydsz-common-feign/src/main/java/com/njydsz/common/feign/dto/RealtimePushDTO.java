@@ -13,7 +13,7 @@ import lombok.Data;
  * 替代原来的 Object 类型，提供类型安全。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 public class RealtimePushDTO implements Serializable {

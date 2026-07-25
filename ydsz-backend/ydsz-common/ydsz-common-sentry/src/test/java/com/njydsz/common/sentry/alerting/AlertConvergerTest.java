@@ -14,7 +14,7 @@ import com.njydsz.common.sentry.domain.AlertSeverity;
  * AlertConverger 单元测试
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @DisplayName("AlertConverger 告警收敛测试")
 class AlertConvergerTest {

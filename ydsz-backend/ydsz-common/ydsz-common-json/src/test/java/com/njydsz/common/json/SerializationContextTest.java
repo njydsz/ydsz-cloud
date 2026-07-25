@@ -9,7 +9,7 @@ import com.njydsz.common.json.provider.SerializationContext;
 /**
  * SerializationContext 上下文管理测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class SerializationContextTest {
 

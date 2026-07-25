@@ -19,7 +19,7 @@ import java.lang.annotation.*;
  * <p>上述示例中，JSON 中的 {@code "userName"}、{@code "loginName"}
  * 和 {@code "username"} 都能正确映射到 Java 字段 {@code username}。</p>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

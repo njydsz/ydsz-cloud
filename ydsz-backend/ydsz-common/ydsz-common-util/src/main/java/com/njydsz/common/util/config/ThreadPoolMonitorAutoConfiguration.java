@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * 当 Micrometer 不可用时，降级为日志输出。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @AutoConfiguration

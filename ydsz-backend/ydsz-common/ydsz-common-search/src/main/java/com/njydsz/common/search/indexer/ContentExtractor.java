@@ -9,7 +9,7 @@ import java.io.InputStream;
  * 各文档解析模块（如 common-docs）实现此接口并通过 Spring Bean 注入。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface ContentExtractor {
 

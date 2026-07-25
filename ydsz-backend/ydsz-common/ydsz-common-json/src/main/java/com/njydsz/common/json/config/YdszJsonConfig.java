@@ -79,7 +79,7 @@ public final class YdszJsonConfig implements Serializable {
      *
      * @param other 源配置
      * @return 新的配置实例，包含与源配置相同的值
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static YdszJsonConfig copyOf(YdszJsonConfig other) {
         YdszJsonConfig copy = new YdszJsonConfig();

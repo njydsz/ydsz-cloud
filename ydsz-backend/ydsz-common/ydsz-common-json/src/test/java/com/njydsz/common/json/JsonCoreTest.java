@@ -23,7 +23,7 @@ import com.njydsz.common.json.annotation.JsonAlias;
 /**
  * YdszJson 序列化/反序列化核心功能测试。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 class JsonCoreTest {
 

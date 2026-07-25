@@ -24,7 +24,7 @@ import java.lang.annotation.*;
  *
  * <p>序列化结果为数字 1/0，而非字符串 "ACTIVE"/"INACTIVE"。</p>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

@@ -2,19 +2,27 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.VariableDO;
+import com.njydsz.system.domain.vo.VariableVO;
 
 /**
- * Variable service interface.
+ * 系统变量 Service。
  *
  * @author ydsz-team
- * @since 1.0.0
  */
 public interface VariableService {
 
-    VariableDO getById(String id);
+    VariableVO getById(String id);
+
+    IPage<VariableDO> page(int pageNum, int pageSize);
+
     List<VariableDO> list();
-    String save(VariableDO entity);
-    boolean updateById(VariableDO entity);
+
+    String save(VariableDTO dto);
+
+    boolean updateById(VariableDTO dto);
+
     boolean removeById(String id);
 }

@@ -10,7 +10,7 @@ package com.njydsz.common.exception.alert;
  * 如果告警发送操作耗时较长，建议在实现内部使用异步线程池。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  * @see ExceptionAlertPublisher
  * @see ExceptionAlertEvent
  */

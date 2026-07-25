@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
  * <p>日志输出到独立的 audit logger，可由 Loki/ELK 采集。
  *
  * @author ydsz-team
- * @since 3.5.0
+ * @since 1.0.0
  */
 public class TransactionAuditLogger {
 

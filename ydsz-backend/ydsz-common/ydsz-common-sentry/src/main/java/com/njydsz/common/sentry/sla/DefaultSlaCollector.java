@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>基于 Micrometer 采集 SLA 指标，包括步骤耗时、总耗时、违反次数。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class DefaultSlaCollector implements SlaCollector {

@@ -10,7 +10,7 @@ import com.njydsz.common.sentry.domain.LogEvent;
  * <p>"统一日志发布抽象，底层可切换 ELK（Logstash） / Loki / 双发。"
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 public interface LogPublisher {
 

@@ -375,7 +375,7 @@ public final class YdszJsonParser {
      * 避免金融场景下的精度丢失。</p>
      *
      * @param enabled true 表示使用 BigDecimal
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static void setUseBigDecimal(boolean enabled) {
         useBigDecimal = enabled;

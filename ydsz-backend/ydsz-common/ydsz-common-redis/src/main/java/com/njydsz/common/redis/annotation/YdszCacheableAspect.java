@@ -39,7 +39,7 @@ import com.njydsz.common.redis.service.RedisService;
  * </ol>
  *
  * @author ydsz-team
- * @since 3.0.0
+ * @since 1.0.0
  */
 @Aspect
 public class YdszCacheableAspect {

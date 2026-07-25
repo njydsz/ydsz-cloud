@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持降级自动恢复探测、内存索引有界化。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class PgSearchEngine implements SearchEngine {
