@@ -66,6 +66,8 @@ public final class RequestContext {
     public static final String KEY_REQUEST_ID = "requestId";
     /** 上下文键名：语言区域 */
     public static final String KEY_LANGUAGE = "language";
+    /** 上下文键名：租户隔离跳过标记 */
+    public static final String KEY_TENANT_ISOLATION_SKIPPED = "tenantIsolationSkipped";
 
     private static final ThreadLocal<Map<String, Object>> CONTEXT_HOLDER =
             new TransmittableThreadLocal<Map<String, Object>>() {
@@ -131,6 +133,31 @@ public final class RequestContext {
      */
     public static String getTraceId() {
         return (String) get(KEY_TRACE_ID);
+    }
+
+    /**
+     * 设置租户隔离跳过标记。
+     *
+     * <p>当 Web 层拦截器判断当前请求 URL 在 anon-urls 白名单中时，
+     * 调用此方法标记跳过租户隔离，SQL 拦截器将不注入租户条件。
+     *
+     * @param skipped true=跳过租户隔离
+     */
+    public static void setTenantIsolationSkipped(boolean skipped) {
+        if (skipped) {
+            put(KEY_TENANT_ISOLATION_SKIPPED, Boolean.TRUE);
+        } else {
+            remove(KEY_TENANT_ISOLATION_SKIPPED);
+        }
+    }
+
+    /**
+     * 检查当前请求是否应跳过租户隔离。
+     *
+     * @return true=跳过租户隔离
+     */
+    public static boolean isTenantIsolationSkipped() {
+        return Boolean.TRUE.equals(get(KEY_TENANT_ISOLATION_SKIPPED));
     }
 
     /**

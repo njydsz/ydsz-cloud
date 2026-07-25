@@ -191,9 +191,11 @@ public class MybatisPlusConfiguration {
         // 4. 租户隔离拦截器（在数据权限之前，确保 tenant_id 条件优先注入）
         if (tenantIsolationProperties != null && tenantIsolationProperties.isEnabled()) {
             interceptor.addInnerInterceptor(new TenantIsolationInterceptor(tenantIsolationProperties));
-            log.debug("MyBatis Plus: TenantIsolation interceptor enabled (tenantColumn={}, ignoreTables={})",
-                    tenantIsolationProperties.getTenantColumn(),
-                    tenantIsolationProperties.getNormalizedIgnoreTables());
+            log.debug("MyBatis Plus: TenantIsolation interceptor enabled (mode={}, activeFields={}, ignoreTables={}, anonUrls={})",
+                    tenantIsolationProperties.getMode(),
+                    tenantIsolationProperties.getActiveTenantFields(),
+                    tenantIsolationProperties.getNormalizedIgnoreTables(),
+                    tenantIsolationProperties.getNormalizedAnonUrls());
         }
 
         // 5. 数据权限拦截器（行级+列级）
