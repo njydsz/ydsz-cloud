@@ -30,7 +30,11 @@ public enum TabularFormat {
     /** 逗号分隔值 (.csv) */
     CSV("csv", "text/csv"),
     /** 制表符分隔值 (.tsv) */
-    TSV("tsv", "text/tab-separated-values");
+    TSV("tsv", "text/tab-separated-values"),
+    /** Apache Parquet 列式存储格式 (.parquet) */
+    PARQUET("parquet", "application/vnd.apache.parquet"),
+    /** Apache ORC 列式存储格式 (.orc) */
+    ORC("orc", "application/vnd.apache.orc");
 
     private final String extension;
     private final String contentType;
@@ -104,5 +108,12 @@ public enum TabularFormat {
      */
     public boolean isDelimited() {
         return this == CSV || this == TSV;
+    }
+
+    /**
+     * 是否为列式存储格式（parquet/orc）。
+     */
+    public boolean isColumnar() {
+        return this == PARQUET || this == ORC;
     }
 }

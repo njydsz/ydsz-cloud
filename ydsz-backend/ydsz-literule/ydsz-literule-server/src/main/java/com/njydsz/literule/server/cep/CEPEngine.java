@@ -98,7 +98,7 @@ public class CEPEngine implements Serializable {
 
     private static ExpressionEvaluator createDefaultEvaluator() {
         try {
-            Class<?> clazz = Class.forName("com.njydsz.literule.server.expr.LiteExprEvaluator");
+            Class<?> clazz = Class.forName("com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator");
             return (ExpressionEvaluator) clazz.getConstructor(boolean.class).newInstance(true);
         } catch (Exception e) {
             throw new IllegalStateException("无法创建默认 LiteExprEvaluator", e);

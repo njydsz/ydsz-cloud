@@ -33,12 +33,6 @@
             <artifactId>poi-ooxml</artifactId>
         </dependency>
 
-        <!-- Apache Commons CSV（CSV/TSV 流式读写） -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-csv</artifactId>
-        </dependency>
-
         <!-- ASM 字节码库 -->
         <dependency>
             <groupId>org.ow2.asm</groupId>

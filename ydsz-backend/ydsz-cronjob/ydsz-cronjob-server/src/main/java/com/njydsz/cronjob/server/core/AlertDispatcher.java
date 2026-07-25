@@ -353,33 +353,31 @@ public class AlertDispatcher {
             }
         } catch (AlertSendException e) {
             // P2-10: 主渠道失败时，尝试通过 common-notify IM 渠道直推
-            tryNotifyViaHelper(context, channels, receivers);
+            tryNotifyViaHelper(context, receivers);
             throw e;
         } catch (Exception e) {
             throw new AlertSendException("Feign call error: " + e.getMessage(), e);
         }
         // P2-10: 主渠道成功后，补充发送 IM 通知（非阻塞，失败不影响主流程）
-        tryNotifyViaHelper(context, channels, receivers);
+        tryNotifyViaHelper(context, receivers);
     }
 
     /**
      * P2-10: 通过 CronjobNotifyHelper 发送 IM 通知（非阻塞，失败静默跳过）。
      */
-    private void tryNotifyViaHelper(AlertContext context, List<AlertChannel> channels, List<String> receivers) {
+    private void tryNotifyViaHelper(AlertContext context, List<String> receivers) {
         try {
             CronjobNotifyHelper helper = cronjobNotifyHelperProvider.getIfAvailable();
             if (helper == null) {
                 return;
             }
-            if (context.recovery()) {
-                helper.notifyJobRecovery(
-                        context.jobKey(), context.jobName(), context.logId(),
-                        context.errorMessage(), receivers);
-            } else {
-                helper.notifyJobFailure(
-                        context.jobKey(), context.jobName(), context.logId(),
-                        context.errorMessage(), receivers);
-            }
+            String title = context.recovery() ? "任务恢复通知" : "任务告警通知";
+            String content = String.format("任务: %s (%s)\n错误: %s\n日志ID: %s",
+                    context.jobName() != null ? context.jobName() : context.jobKey(),
+                    context.jobKey(),
+                    context.errorMessage(),
+                    context.triggerLogId());
+            helper.notifySystemAlert(receivers, title, content);
         } catch (Exception e) {
             log.debug("[AlertDispatcher] IM 通知发送失败(非阻塞): jobKey={} reason={}",
                     context.jobKey(), e.getMessage());

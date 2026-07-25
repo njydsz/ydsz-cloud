@@ -2,17 +2,20 @@ package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.entity.ConfigDO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.mapper.ConfigMapper;
+import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.ConfigService;
 
@@ -22,7 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 系统配置 Service 实现。
  *
- * <p>集成 Redis 缓存（TTL 5 分钟）、Micrometer 指标、值类型校验。
+ * <p>集成 Redis 缓存（TTL 可配置）、Micrometer 指标、值类型校验、缓存穿透防护。
+ * 支持按 key 查询、按 group 批量查询、公开配置查询。
  *
  * @author ydsz-team
  */
@@ -32,11 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfigServiceImpl implements ConfigService {
 
     private static final String CACHE_KEY_PREFIX = "system:config:value:";
-    private static final Duration CACHE_TTL = Duration.ofMinutes(5);
+    private static final String NULL_SENTINEL = "__NULL__";
+    private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
 
     private final ConfigMapper mapper;
     private final StringRedisTemplate redisTemplate;
     private final SystemMetrics metrics;
+    private final SystemProperties properties;
 
     @Override
     public ConfigVO getById(String id) {
@@ -51,15 +57,21 @@ public class ConfigServiceImpl implements ConfigService {
             String cacheKey = CACHE_KEY_PREFIX + configKey;
             String cached = redisTemplate.opsForValue().get(cacheKey);
             if (cached != null) {
+                if (NULL_SENTINEL.equals(cached)) {
+                    metrics.recordConfigCacheHit();
+                    return null;
+                }
                 metrics.recordConfigCacheHit();
                 return cached;
             }
             metrics.recordConfigCacheMiss();
             ConfigDO config = mapper.selectByConfigKey(configKey);
             if (config != null) {
-                redisTemplate.opsForValue().set(cacheKey, config.getConfigValue(), CACHE_TTL);
+                redisTemplate.opsForValue().set(cacheKey, config.getConfigValue(), getCacheTtl());
                 return config.getConfigValue();
             }
+            // 缓存空值防穿透
+            redisTemplate.opsForValue().set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
             return null;
         } finally {
             metrics.recordConfigRead(System.nanoTime() - start);
@@ -67,13 +79,42 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public IPage<ConfigDO> page(int pageNum, int pageSize) {
-        return mapper.selectPage(new Page<>(pageNum, pageSize), null);
+    public List<ConfigVO> getConfigsByGroup(String configGroup) {
+        QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
+        return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
     }
 
     @Override
-    public List<ConfigDO> list() {
-        return mapper.selectList(null);
+    public List<ConfigVO> listPublicConfigs() {
+        QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
+        return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
+    }
+
+    @Override
+    public IPage<ConfigVO> page(int pageNum, int pageSize, String configGroup, String configKey, String status) {
+        QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
+        if (configGroup != null && !configGroup.isBlank()) {
+            wrapper.eq("config_group", configGroup);
+        }
+        if (configKey != null && !configKey.isBlank()) {
+            wrapper.like("config_key", configKey);
+        }
+        if (status != null && !status.isBlank()) {
+            wrapper.eq("status", status);
+        }
+        wrapper.orderByDesc("created_at");
+        IPage<ConfigDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<ConfigVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        Page<ConfigVO> result = new Page<>(pageNum, pageSize, page.getTotal());
+        result.setRecords(vos);
+        return result;
+    }
+
+    @Override
+    public List<ConfigVO> list() {
+        return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }
 
     @Override
@@ -112,6 +153,11 @@ public class ConfigServiceImpl implements ConfigService {
         if (configKey != null) {
             redisTemplate.delete(CACHE_KEY_PREFIX + configKey);
         }
+    }
+
+    private Duration getCacheTtl() {
+        int minutes = properties.getConfig().getCacheTtlMinutes();
+        return Duration.ofMinutes(minutes > 0 ? minutes : 5);
     }
 
     private void validateValueType(String valueType) {
