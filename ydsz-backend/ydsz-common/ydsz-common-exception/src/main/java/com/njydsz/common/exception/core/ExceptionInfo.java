@@ -5,7 +5,10 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.njydsz.common.exception.code.ErrorCodeEncoder;
+import com.njydsz.common.exception.code.ErrorCodeFactory;
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.observability.TraceContext;
 
 import lombok.Getter;
 
@@ -17,7 +20,10 @@ import lombok.Getter;
  *
  * <p><b>主要字段：</b>
  * <ul>
- *   <li>code：业务错误码，如 "A01001"</li>
+ *   <li>code：业务错误码，如 "A01001"（主错误码）</li>
+ *   <li>subCode：子错误码，4 位数字（如 "0001"），用于细分场景</li>
+ *   <li>fullCode：完整错误码，格式 "{主错误码}-{子错误码}"，如 "A01001-0001"</li>
+ *   <li>encodedCode：编码后的错误码（含 traceId 短哈希），如 "A01001-0001#a3f9"</li>
  *   <li>key：国际化消息键，如 "user.not.found"</li>
  *   <li>message：已解析的本地化消息</li>
  *   <li>details：错误详情，结构化键值对</li>
@@ -32,10 +38,28 @@ import lombok.Getter;
 @Getter
 public class ExceptionInfo implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    /** 业务错误码，如 "A01001" */
+    /** 业务错误码（主错误码），如 "A01001" */
     private String code;
+
+    /**
+     * 子错误码（4 位数字），如 "0001"
+     * <p>默认 "0000"（无子错误码）
+     */
+    private String subCode;
+
+    /**
+     * 完整错误码（主错误码 + 子错误码），如 "A01001-0001"
+     * <p>如无子错误码则仅返回主错误码
+     */
+    private String fullCode;
+
+    /**
+     * 编码后的错误码（含 traceId 短哈希），如 "A01001-0001#a3f9"
+     * <p>用于人工排查时一眼看到错误码对应的 traceId
+     */
+    private String encodedCode;
 
     /** 国际化消息键，如 "user.not.found" */
     private String key;
@@ -58,6 +82,9 @@ public class ExceptionInfo implements Serializable {
     /** 分布式追踪 ID */
     private String traceId;
 
+    /** traceId 短哈希（4 字符） */
+    private String traceIdShort;
+
     /** HTTP 状态码 */
     private int httpStatus;
 
@@ -66,6 +93,7 @@ public class ExceptionInfo implements Serializable {
      */
     public ExceptionInfo() {
         this.timestamp = LocalDateTime.now();
+        this.subCode = "0000";
     }
 
     public ExceptionInfo(String code, String key, String message) {
@@ -73,6 +101,7 @@ public class ExceptionInfo implements Serializable {
         this.code = code;
         this.key = key;
         this.message = message;
+        this.fullCode = code;
     }
 
     public ExceptionInfo(String code, String key, String message, int httpStatus) {
@@ -90,6 +119,17 @@ public class ExceptionInfo implements Serializable {
      */
     public void setCode(String code) {
         this.code = code;
+        this.fullCode = composeFullCode(code, this.subCode);
+        this.encodedCode = composeEncodedCode(this.fullCode, this.traceId);
+    }
+
+    /**
+     * 供 Handler 层设置子错误码
+     */
+    public void setSubCode(String subCode) {
+        this.subCode = subCode == null || subCode.isEmpty() ? "0000" : subCode;
+        this.fullCode = composeFullCode(this.code, this.subCode);
+        this.encodedCode = composeEncodedCode(this.fullCode, this.traceId);
     }
 
     /**
@@ -118,6 +158,12 @@ public class ExceptionInfo implements Serializable {
      */
     public void setTraceId(String traceId) {
         this.traceId = traceId;
+        if (traceId != null && !traceId.isEmpty()) {
+            this.traceIdShort = ErrorCodeEncoder.shortHash(traceId);
+        } else {
+            this.traceIdShort = null;
+        }
+        this.encodedCode = composeEncodedCode(this.fullCode, traceId);
     }
 
     /**
@@ -142,6 +188,42 @@ public class ExceptionInfo implements Serializable {
     }
 
     /**
+     * 组合完整错误码
+     */
+    private static String composeFullCode(String code, String subCode) {
+        if (code == null) {
+            return null;
+        }
+        if (subCode == null || subCode.isEmpty() || "0000".equals(subCode)) {
+            return code;
+        }
+        return code + ErrorCodeEncoder.SEPARATOR_SUB + subCode;
+    }
+
+    /**
+     * 组合编码错误码
+     */
+    private static String composeEncodedCode(String fullCode, String traceId) {
+        if (fullCode == null) {
+            return null;
+        }
+        if (traceId == null || traceId.isEmpty()) {
+            return fullCode;
+        }
+        return fullCode + ErrorCodeEncoder.SEPARATOR_TRACE + ErrorCodeEncoder.shortHash(traceId);
+    }
+
+    /**
+     * 自动从 TraceContext 注入 traceId 与 traceIdShort
+     */
+    public void injectTraceContext() {
+        String traceId = TraceContext.getTraceId();
+        if (traceId != null) {
+            setTraceId(traceId);
+        }
+    }
+
+    /**
      * 根据异常码创建异常信息
      *
      * @param exceptionCode 异常码枚举
@@ -153,6 +235,24 @@ public class ExceptionInfo implements Serializable {
                 exceptionCode.getKey(),
                 null
         );
+    }
+
+    /**
+     * 根据异常码 + 子错误码创建异常信息
+     *
+     * @param exceptionCode 异常码枚举
+     * @param subCode       子错误码
+     * @return 异常信息对象
+     */
+    public static ExceptionInfo of(ExceptionCode exceptionCode, String subCode) {
+        ExceptionInfo info = of(exceptionCode);
+        info.setSubCode(subCode);
+        // 优先使用子错误码的 i18n key
+        String subI18nKey = ErrorCodeFactory.getSubCodeI18nKey(exceptionCode.getCode(), subCode);
+        if (subI18nKey != null) {
+            info.setKey(subI18nKey);
+        }
+        return info;
     }
 
     /**
@@ -180,6 +280,8 @@ public class ExceptionInfo implements Serializable {
     public static class Builder {
         /** 业务错误码 */
         private String code;
+        /** 子错误码 */
+        private String subCode = "0000";
         /** 国际化消息键 */
         private String key;
         /** 已解析的消息 */
@@ -197,6 +299,11 @@ public class ExceptionInfo implements Serializable {
 
         public Builder code(String code) {
             this.code = code;
+            return this;
+        }
+
+        public Builder subCode(String subCode) {
+            this.subCode = subCode == null || subCode.isEmpty() ? "0000" : subCode;
             return this;
         }
 
@@ -245,6 +352,7 @@ public class ExceptionInfo implements Serializable {
 
         public ExceptionInfo build() {
             ExceptionInfo info = new ExceptionInfo(code, key, message);
+            info.setSubCode(subCode);
             info.setDetails(details);
             if (timestamp != null) {
                 info.setTimestamp(timestamp);

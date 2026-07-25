@@ -6,8 +6,9 @@ import org.springframework.stereotype.Component;
 /**
  * ConfigClient fallback.
  *
+ * <p>Returns safe default values instead of null to prevent NPE in callers.
+ *
  * @author ydsz-team
- * @since 1.0.0
  */
 @Slf4j
 @Component
@@ -16,12 +17,12 @@ public class ConfigClientFallback implements ConfigClient {
     @Override
     public String getConfig(String key) {
         log.warn("ConfigClient fallback: getConfig={}", key);
-        return null;
+        return "";
     }
 
     @Override
-    public Object getDictItem(String typeCode, String itemCode) {
+    public String getDictItem(String typeCode, String itemCode) {
         log.warn("ConfigClient fallback: getDictItem={},{}", typeCode, itemCode);
-        return null;
+        return "{}";
     }
 }

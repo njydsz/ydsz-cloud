@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
  * AppInfoClient fallback.
  *
  * @author ydsz-team
- * @since 1.0.0
  */
 @Slf4j
 @Component

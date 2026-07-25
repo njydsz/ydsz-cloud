@@ -1,6 +1,6 @@
 # ydsz-common-util
 
-YDSZ 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTTP、字符串、日期、文件、集合、Bean 拷贝、JSON、Spring 等领域。
+YDSZ 通用工具类库 — 95 个 Java 源文件覆盖 ID 生成、加密、HTTP、字符串、日期、文件、集合、Bean 拷贝、Spring 等领域。
 
 ## 模块定位
 
@@ -8,7 +8,7 @@ YDSZ 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTT
 |---|---|
 | **层级** | L2 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **源文件数** | 99 |
+| **源文件数** | 95 |
 | **零依赖原则** | 核心工具不依赖 Spring（可选集成） |
 
 ## 核心能力
@@ -97,17 +97,16 @@ YDSZ 通用工具类库 — 99 个 Java 源文件覆盖 ID 生成、加密、HTT
 
 | 类 | 说明 |
 |---|---|
-| `JsonUtils` | JSON 序列化 / 反序列化（支持 Jackson / Gson / Fastjson 自动探测） |
 | `YamlUtils` | YAML 解析工具 |
-| `TraceIdUtil` | TraceId 生成 / 传递 / MDC 设置 |
+| `TracerUtils` | TraceId 生成 / 传递 / MDC 设置 |
 | `CursorHelper` | 游标分页编码 / 解码 |
 | `HashUtils` | 一致性哈希环 |
 | `ReflectUtils` | 反射工具（字段获取 / 方法调用 / 注解扫描） |
 | `ClassUtils` | 类加载器工具 |
 | `ValidateUtils` | 参数校验工具（非空 / 正则 / 范围） |
-| `AssertUtils` | 断言工具（非空 / 状态 / 表达式） |
 | `ExceptionUtils` | 异常堆栈转字符串 |
-| `CodeUtils` | 编码工具（Base32 / Hex / URL 编码） |
+| `EncodingUtils` | 编码工具（Base64 / Base32 / Base16 Hex / URL 编码） |
+| `CaptchaUtils` | 图形验证码生成（数字 / 字母 / 混合 / 算术 / 中文） |
 | `SystemUtils` | 系统信息（OS / JVM / CPU 核数） |
 | `IpAddrUtils` / `IpInfoUtils` / `MacAddressUtils` | IP / MAC 地址工具 |
 | `SAMLUtils` / `DOMUtils` | SAML / XML 工具 |

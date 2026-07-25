@@ -64,4 +64,27 @@ public interface LiteRuleClient {
     @PostMapping("/ruleEngine/rules/dryRun")
     BaseResponse<List<RuleResult>> dryRun(@RequestParam(value = "ruleCode", required = false) String ruleCode,
                                           @RequestBody Map<String, Object> facts);
+
+    /**
+     * 规则评估（正式模式，记录统计、发布事件、触发动作分发）
+     *
+     * <p>对应 literule 模块: POST /ruleEngine/rules/evaluate
+     *
+     * <p>与 {@link #dryRun} 的区别：
+     * <ul>
+     *   <li>正式评估会记录执行统计（评估次数/触发次数/耗时）</li>
+     *   <li>正式评估会发布规则触发事件（供消息中心等下游消费）</li>
+     *   <li>正式评估会触发动作分发（如发送通知、调用接口）</li>
+     * </ul>
+     *
+     * @param ruleCode 规则编码（可选，null 时评估全部规则）
+     * @param scenario 场景标识（可选，用于规则过滤和统计分组）
+     * @param facts    事实数据
+     * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
+     * @since 2.3.0
+     */
+    @PostMapping("/ruleEngine/rules/evaluate")
+    BaseResponse<List<RuleResult>> evaluate(@RequestParam(value = "ruleCode", required = false) String ruleCode,
+                                             @RequestParam(value = "scenario", required = false) String scenario,
+                                             @RequestBody Map<String, Object> facts);
 }

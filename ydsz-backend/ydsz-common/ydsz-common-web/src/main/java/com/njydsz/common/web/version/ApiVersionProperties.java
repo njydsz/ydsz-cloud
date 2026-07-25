@@ -1,7 +1,6 @@
 package com.njydsz.common.web.version;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import lombok.Data;
 
@@ -25,7 +24,6 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@Component
 @ConfigurationProperties(prefix = "ydsz.web.api-version")
 public class ApiVersionProperties {
 

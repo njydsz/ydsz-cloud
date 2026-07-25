@@ -1,46 +1,144 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.server.service.DepartmentService;
+import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
 import com.njydsz.userinfo.domain.entity.DepartmentDO;
+import com.njydsz.userinfo.domain.entity.UserDeptDO;
+import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
+import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
+import com.njydsz.userinfo.server.service.DepartmentService;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 部门 Service 实现。
+ *
+ * <p>核心能力：部门 CRUD、编码唯一性校验、子部门检查、人员检查、树形结构构建。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
-    private final DepartmentMapper mapper;
+    private final DepartmentMapper departmentMapper;
+    private final UserDeptMapper userDeptMapper;
 
     @Override
     public DepartmentDO getById(String id) {
-        return mapper.selectById(id);
+        DepartmentDO entity = departmentMapper.selectById(id);
+        if (entity == null || entity.getDeleted() == 1) {
+            throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
+        }
+        return entity;
     }
 
     @Override
     public List<DepartmentDO> list() {
-        return mapper.selectList(null);
+        LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DepartmentDO::getDeleted, 0);
+        wrapper.orderByAsc(DepartmentDO::getSortOrder);
+        return departmentMapper.selectList(wrapper);
     }
 
     @Override
-    public String save(DepartmentDO entity) {
-        mapper.insert(entity);
+    @Transactional(rollbackFor = Exception.class)
+    public String create(DepartmentSaveDTO dto) {
+        LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DepartmentDO::getDeptCode, dto.getDeptCode());
+        wrapper.eq(DepartmentDO::getDeleted, 0);
+        if (departmentMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException(UserInfoResultCode.DEPARTMENT_CODE_DUPLICATE);
+        }
+
+        DepartmentDO entity = new DepartmentDO();
+        BeanUtils.copyProperties(dto, entity);
+        if (entity.getStatus() == null) {
+            entity.setStatus("ENABLED");
+        }
+        if (entity.getParentId() == null || entity.getParentId().isBlank()) {
+            entity.setParentId("0");
+        }
+        departmentMapper.insert(entity);
+        log.info("Department created: code={}, id={}", entity.getDeptCode(), entity.getId());
         return entity.getId();
     }
 
     @Override
-    public boolean updateById(DepartmentDO entity) {
-        return mapper.updateById(entity) > 0;
+    @Transactional(rollbackFor = Exception.class)
+    public boolean update(DepartmentSaveDTO dto) {
+        DepartmentDO entity = departmentMapper.selectById(dto.getId());
+        if (entity == null || entity.getDeleted() == 1) {
+            throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
+        }
+        BeanUtils.copyProperties(dto, entity, "id");
+        return departmentMapper.updateById(entity) > 0;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        return mapper.deleteById(id) > 0;
+        DepartmentDO entity = departmentMapper.selectById(id);
+        if (entity == null || entity.getDeleted() == 1) {
+            throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
+        }
+
+        LambdaQueryWrapper<DepartmentDO> childWrapper = new LambdaQueryWrapper<>();
+        childWrapper.eq(DepartmentDO::getParentId, id);
+        childWrapper.eq(DepartmentDO::getDeleted, 0);
+        if (departmentMapper.selectCount(childWrapper) > 0) {
+            throw new BusinessException(UserInfoResultCode.DEPARTMENT_HAS_CHILDREN);
+        }
+
+        LambdaQueryWrapper<UserDeptDO> udWrapper = new LambdaQueryWrapper<>();
+        udWrapper.eq(UserDeptDO::getDeptId, id);
+        udWrapper.eq(UserDeptDO::getDeleted, 0);
+        if (userDeptMapper.selectCount(udWrapper) > 0) {
+            throw new BusinessException(UserInfoResultCode.DEPARTMENT_HAS_USERS);
+        }
+
+        return departmentMapper.deleteById(id) > 0;
+    }
+
+    @Override
+    public List<DepartmentTreeVO> tree() {
+        List<DepartmentDO> all = list();
+        if (all.isEmpty()) {
+            return List.of();
+        }
+
+        List<DepartmentTreeVO> voList = all.stream().map(dept -> {
+            DepartmentTreeVO vo = new DepartmentTreeVO();
+            BeanUtils.copyProperties(dept, vo);
+            return vo;
+        }).collect(Collectors.toList());
+
+        Map<String, List<DepartmentTreeVO>> parentIdMap = voList.stream()
+                .collect(Collectors.groupingBy(vo ->
+                        vo.getParentId() == null ? "0" : vo.getParentId()));
+
+        List<DepartmentTreeVO> roots = parentIdMap.getOrDefault("0", new ArrayList<>());
+        for (DepartmentTreeVO vo : voList) {
+            List<DepartmentTreeVO> children = parentIdMap.get(vo.getId());
+            if (children != null) {
+                vo.setChildren(children);
+            }
+        }
+        return roots;
     }
 }

@@ -52,6 +52,7 @@ public abstract class AbstractYdszException extends RuntimeException {
     }
 
     protected String code;
+    protected String subCode;
     protected String key;
     protected transient Object[] params;
     /** 懒加载消息缓存，首次调用 getMessage() 时解析 */
@@ -157,6 +158,7 @@ public abstract class AbstractYdszException extends RuntimeException {
     protected ExceptionInfo buildExceptionInfo() {
         ExceptionInfo info = new ExceptionInfo();
         info.setCode(this.code);
+        info.setSubCode(this.subCode);
         info.setKey(this.key);
         info.setMessage(getMessage());
         info.setHttpStatus(this.httpStatus);
@@ -191,6 +193,39 @@ public abstract class AbstractYdszException extends RuntimeException {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    /**
+     * 获取子错误码（4 位数字字符串）
+     *
+     * @return 子错误码，默认 "0000"
+     */
+    public String getSubCode() {
+        return subCode == null || subCode.isEmpty() ? "0000" : subCode;
+    }
+
+    /**
+     * 设置子错误码
+     *
+     * @param subCode 4 位数字字符串
+     */
+    public void setSubCode(String subCode) {
+        this.subCode = subCode;
+    }
+
+    /**
+     * 获取完整错误码（主错误码 + 子错误码）
+     *
+     * <p>如 "A01001-0001"；无子错误码时仅返回主错误码。
+     *
+     * @return 完整错误码
+     */
+    public String getFullCode() {
+        String effectiveSub = getSubCode();
+        if ("0000".equals(effectiveSub)) {
+            return code;
+        }
+        return code + "-" + effectiveSub;
     }
 
     public String getKey() {
