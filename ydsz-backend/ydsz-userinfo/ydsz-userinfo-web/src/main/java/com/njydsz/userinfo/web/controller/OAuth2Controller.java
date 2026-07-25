@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.web.controller;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -56,6 +57,6 @@ public class OAuth2Controller {
         }
         redisStringOps.delete(CODE_KEY_PREFIX + code);
         log.info("OAuth2 token: clientId={}, code={}", clientId, code);
-        return java.util.Map.of("message", "Token issued", "code", code);
+        return Map.of("message", "Token issued", "code", code);
     }
 }
