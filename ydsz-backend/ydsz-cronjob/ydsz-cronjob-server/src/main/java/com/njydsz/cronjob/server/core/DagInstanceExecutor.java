@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -453,10 +454,10 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             }
             // 若 contextJson 中已有该 jobKey 的结果，补充 status；否则添加完整对象
             Object existing = context.get(node.getJobKey());
-            if (existing instanceof JSONObject jo) {
+            if (existing instanceof YdszJsonObject jo) {
                 jo.put("status", node.getNodeStatus());
             } else {
-                Map<String, Object> jo = new JSONObject();
+                YdszJsonObject jo = new YdszJsonObject();
                 jo.put("status", node.getNodeStatus());
                 jo.put("result", node.getResultJson());
                 context.put(node.getJobKey(), jo);
@@ -1062,11 +1063,11 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             // 构造待合并的 JSON 片段: {"jobKey": <nodeResult>}
             Object parsed;
             try {
-                parsed = JSON.parse(nodeResultJson);
+                parsed = YdszJson.parseObjectToJsonObject(nodeResultJson);
             } catch (Exception parseEx) {
                 parsed = nodeResultJson;
             }
-            Map<String, Object> mergeFragment = new JSONObject();
+            YdszJsonObject mergeFragment = new YdszJsonObject();
             mergeFragment.put(jobKey, parsed);
             String mergeJson = YdszJson.toJson(mergeFragment);
 
@@ -1081,21 +1082,21 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     }
 
     /**
-     * 解析 contextJson，空值或异常时返回空 JSONObject。
+     * 解析 contextJson，空值或异常时返回空 YdszJsonObject。
      */
-    private Map<String, Object> parseContextJson(String contextJson) {
+    private YdszJsonObject parseContextJson(String contextJson) {
         if (contextJson == null || contextJson.isBlank()) {
-            return new JSONObject();
+            return new YdszJsonObject();
         }
         try {
-            Object parsed = JSON.parse(contextJson);
-            if (parsed instanceof JSONObject jo) {
-                return jo;
+            YdszJsonObject parsed = YdszJson.parseObjectToJsonObject(contextJson);
+            if (parsed != null) {
+                return parsed;
             }
         } catch (Exception ignored) {
             // contextJson 非法时返回空对象，避免覆盖
         }
-        return new JSONObject();
+        return new YdszJsonObject();
     }
 
     /**
