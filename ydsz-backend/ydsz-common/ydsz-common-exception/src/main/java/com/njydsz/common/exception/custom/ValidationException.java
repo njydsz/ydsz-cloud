@@ -137,7 +137,7 @@ public class ValidationException extends AbstractYdszException {
         }
 
         @Override
-        protected ValidationException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected ValidationException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                               ExceptionLevel level, ExceptionCategory category,
                                               Throwable cause, String path, Object extData, String message) {
             ValidationException exception;

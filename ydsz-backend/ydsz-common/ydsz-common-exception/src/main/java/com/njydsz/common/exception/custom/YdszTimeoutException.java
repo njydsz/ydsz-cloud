@@ -134,7 +134,7 @@ public class YdszTimeoutException extends AbstractYdszException {
         }
 
         @Override
-        protected YdszTimeoutException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected YdszTimeoutException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                                ExceptionLevel level, ExceptionCategory category,
                                                Throwable cause, String path, Object extData, String message) {
             YdszTimeoutException exception;

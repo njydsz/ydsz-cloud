@@ -21,6 +21,10 @@
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-userinfo-domain</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
         </dependency>

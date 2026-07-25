@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -54,6 +55,22 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class RuleChain {
+
+    /**
+     * WHEN 链专用守护线程池（P1-4）
+     *
+     * <p>当调用方未提供 parallelExecutor 时，使用此线程池替代 ForkJoinPool.commonPool()，
+     * 避免 WHEN 链并行任务污染公共线程池导致其他组件线程饥饿。
+     * 使用守护线程确保不阻止 JVM 退出。
+     */
+    private static final ExecutorService WHEN_FALLBACK_EXECUTOR =
+            Executors.newFixedThreadPool(
+                    Math.max(2, Runtime.getRuntime().availableProcessors()),
+                    r -> {
+                        Thread t = new Thread(r, "literule-when-fallback");
+                        t.setDaemon(true);
+                        return t;
+                    });
 
     /** 链类型（THEN/WHEN/IF/SWITCH） */
     private final RuleChainType chainType;
@@ -524,17 +541,13 @@ public class RuleChain {
             return results;
         }
         // 使用传入的并行参数（不再依赖 transient 实例字段）
-        ExecutorService executor = parallelExecutor;
+        // P1-4: 当调用方未提供 executor 时，使用专用守护线程池而非 ForkJoinPool.commonPool()
+        ExecutorService executor = parallelExecutor != null ? parallelExecutor : WHEN_FALLBACK_EXECUTOR;
         // 并行执行所有节点
         List<CompletableFuture<List<RuleResult>>> futures = new ArrayList<>();
         for (RuleNode node : nodes) {
-            if (executor != null) {
-                futures.add(CompletableFuture.supplyAsync(
-                        () -> evaluateNode(node, context, evaluator, statsRecorder), executor));
-            } else {
-                futures.add(CompletableFuture.supplyAsync(
-                        () -> evaluateNode(node, context, evaluator, statsRecorder)));
-            }
+            futures.add(CompletableFuture.supplyAsync(
+                    () -> evaluateNode(node, context, evaluator, statsRecorder), executor));
         }
         // 等待全部完成（带超时控制）
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
@@ -826,6 +839,8 @@ public class RuleChain {
                     log.warn("[LiteRule-Chain] RETRY 第 {}/{} 次尝试失败: {}，{}ms 后重试",
                             attempt, totalAttempts, e.getMessage(), retryIntervalMs);
                     if (retryIntervalMs > 0) {
+                        // 注意：Thread.sleep 会阻塞当前线程，在高吞吐场景下可能成为瓶颈。
+                        // 如需非阻塞重试，建议使用 ScheduledExecutorService 或延迟队列。
                         try {
                             Thread.sleep(retryIntervalMs);
                         } catch (InterruptedException ie) {

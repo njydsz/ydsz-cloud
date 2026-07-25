@@ -37,6 +37,9 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class DefaultBreakpointHook implements BreakpointHook {
 
+    /** 默认 SUSPEND 超时时间（秒） */
+    private static final long DEFAULT_SUSPEND_TIMEOUT_SECONDS = 60;
+
     /** 已设置断点的规则编码集合 */
     private final Set<String> breakpoints = ConcurrentHashMap.newKeySet();
 
@@ -44,7 +47,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
     private volatile boolean enabled = true;
 
     /** SUSPEND 最大等待时间（秒），超时自动放行，避免调试端断线死锁 */
-    private volatile long suspendTimeoutSeconds = 60;
+    private volatile long suspendTimeoutSeconds;
 
     /** 调试快照列表（评估前后上下文，最多 200 条） */
     private static final int MAX_SNAPSHOTS = 200;
@@ -58,6 +61,28 @@ public class DefaultBreakpointHook implements BreakpointHook {
 
     /** Watch 表达式列表（2.0.0）：在断点挂起时求值并返回给调试端 */
     private final List<String> watchExpressions = Collections.synchronizedList(new ArrayList<>());
+
+    /**
+     * 默认构造（SUSPEND 超时 60 秒）
+     */
+    public DefaultBreakpointHook() {
+        this(DEFAULT_SUSPEND_TIMEOUT_SECONDS);
+    }
+
+    /**
+     * 构造指定 SUSPEND 超时的断点钩子（P1-3 / P2-3）
+     *
+     * <p>由 {@code LiteRuleProperties.debug.suspend-timeout-seconds} 配置注入。
+     *
+     * @param suspendTimeoutSeconds SUSPEND 最大等待时间（秒），必须 > 0
+     * @since 2.3.0
+     */
+    public DefaultBreakpointHook(long suspendTimeoutSeconds) {
+        if (suspendTimeoutSeconds <= 0) {
+            throw new IllegalArgumentException("suspendTimeoutSeconds 必须 > 0");
+        }
+        this.suspendTimeoutSeconds = suspendTimeoutSeconds;
+    }
 
     /**
      * 添加断点

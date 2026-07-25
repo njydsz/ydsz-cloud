@@ -135,7 +135,7 @@ public class YdszSecurityException extends AbstractYdszException {
         }
 
         @Override
-        protected YdszSecurityException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected YdszSecurityException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                                 ExceptionLevel level, ExceptionCategory category,
                                                 Throwable cause, String path, Object extData, String message) {
             YdszSecurityException exception;

@@ -180,7 +180,7 @@ public class SysException extends AbstractYdszException {
         }
 
         @Override
-        protected SysException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected SysException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                        ExceptionLevel level, ExceptionCategory category,
                                        Throwable cause, String path, Object extData, String message) {
             SysException exception;

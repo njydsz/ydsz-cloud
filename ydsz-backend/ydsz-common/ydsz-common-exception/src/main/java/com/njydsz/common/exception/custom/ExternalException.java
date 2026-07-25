@@ -135,7 +135,7 @@ public class ExternalException extends AbstractYdszException {
         }
 
         @Override
-        protected ExternalException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected ExternalException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                             ExceptionLevel level, ExceptionCategory category,
                                             Throwable cause, String path, Object extData, String message) {
             ExternalException exception;

@@ -87,11 +87,12 @@ public class ConcurrencyException extends AbstractYdszException {
         }
 
         @Override
-        protected ConcurrencyException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected ConcurrencyException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                                 ExceptionLevel level, ExceptionCategory category,
                                                 Throwable cause, String path, Object extData, String message) {
             ConcurrencyException exception = new ConcurrencyException();
             exception.initFields(code, key, params);
+            exception.setSubCode(subCode);
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);
             exception.setCategory(category);

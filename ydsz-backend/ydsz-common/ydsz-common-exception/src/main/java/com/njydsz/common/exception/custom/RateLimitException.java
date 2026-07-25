@@ -87,11 +87,12 @@ public class RateLimitException extends AbstractYdszException {
         }
 
         @Override
-        protected RateLimitException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected RateLimitException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                               ExceptionLevel level, ExceptionCategory category,
                                               Throwable cause, String path, Object extData, String message) {
             RateLimitException exception = new RateLimitException();
             exception.initFields(code, key, params);
+            exception.setSubCode(subCode);
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);
             exception.setCategory(category);

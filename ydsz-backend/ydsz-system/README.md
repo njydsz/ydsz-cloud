@@ -11,7 +11,7 @@
 | **服务名** | `ydsz-system` |
 | **构建顺序** | 3/8 |
 | **数据库** | PostgreSQL（共享主库） |
-| **依赖** | Nacos、PostgreSQL、Redis、MinIO |
+| **依赖** | Nacos、PostgreSQL、Redis |
 
 ## 核心职责
 
@@ -19,142 +19,157 @@
 
 | 业务域 | 说明 |
 |---|---|
-| **文件管理** | MinIO 对象存储、文件上传/下载/预览、分片上传、秒传 |
-| **系统配置** | 参数配置（`ydsz_config`）、数据字典（`ydsz_dict`） |
-| **登录审计** | 接收 `LoginAuditEvent`，异步落库 `ydsz_login_audit` |
-| **操作审计** | 接收 `OperationLogEvent`，异步落库 `ydsz_operation_log` |
-| **数据导出审计** | `DataExportAuditEvent` → `ydsz_data_export_audit` |
+| **系统配置** | 参数配置（`ydsz_config`），支持按 key 查询、Redis 缓存、值类型校验 |
+| **数据字典** | 字典类型（`ydsz_dict_type`）+ 字典项（`ydsz_dict_item`），支持树形字典、缓存、版本管理 |
+| **应用注册** | OAuth2 应用注册（`ydsz_app_info`），支持 BCrypt 密钥校验 |
+| **系统变量** | 业务级变量管理（`ydsz_variable`），可对接 common-config 热加载 |
+| **字典版本** | 字典变更历史快照（`ydsz_dict_version`），支持回滚与变更审计 |
 
-> ⚠️ **重要**：消息通知 / 模板 / 渠道已迁移到 [ydsz-message](ydsz-message/README.md)（端口 9004）。
-> 本服务**不再**提供消息发送能力。
+## DDD 分层结构
+
+```
+ydsz-system/
+├── pom.xml
+├── ydsz-system-api/                    # API 层：Feign Client + Fallback
+│   └── src/main/java/com/njydsz/system/api/client/
+│       ├── AppInfoClient.java
+│       ├── AppInfoClientFallback.java
+│       ├── ConfigClient.java
+│       └── ConfigClientFallback.java
+├── ydsz-system-domain/                 # 领域层：Entity + DTO + VO
+│   └── src/main/java/com/njydsz/system/domain/
+│       ├── entity/                     # DO（ConfigDO, DictItemDO, DictTypeDO, AppInfoDO, VariableDO, DictVersionDO）
+│       ├── dto/                        # 创建/更新 DTO（含 JSR-303 校验）
+│       └── vo/                         # 视图对象（不含敏感字段如 appSecret）
+├── ydsz-system-infra/                  # 基础设施层：MyBatis Mapper
+│   └── src/main/java/com/njydsz/system/infra/mapper/
+│       ├── AppInfoMapper.java          # 含 selectEnabledByAppKey 自定义查询
+│       ├── ConfigMapper.java           # 含 selectByConfigKey 自定义查询
+│       ├── DictItemMapper.java         # 含 selectByTypeAndCode / listEnabledByTypeCode
+│       ├── DictTypeMapper.java
+│       ├── DictVersionMapper.java      # 含 listByTypeCode
+│       └── VariableMapper.java
+├── ydsz-system-server/                 # 应用层：Service + Health + Metrics
+│   └── src/main/java/com/njydsz/system/server/
+│       ├── service/                    # 接口 + impl（含缓存、事务、指标）
+│       │   ├── AppInfoService.java
+│       │   ├── ConfigService.java
+│       │   ├── DictService.java
+│       │   ├── DictItemService.java
+│       │   ├── DictVersionService.java
+│       │   ├── VariableService.java
+│       │   └── impl/
+│       ├── health/                     # SystemHealthIndicator
+│       └── metrics/                    # SystemMetrics（Micrometer）
+└── ydsz-system-web/                    # Web 层：Controller + Bootstrap
+    └── src/main/java/com/njydsz/system/web/
+        ├── SystemApplication.java
+        └── controller/
+            ├── AppInfoController.java      # /api/v1/app
+            ├── ConfigController.java        # /api/v1/config
+            ├── DictController.java          # /api/v1/dict/type
+            ├── DictItemController.java      # /api/v1/dict/item
+            ├── InternalApiController.java   # /api/internal（Feign 内部调用）
+            └── VariableController.java      # /api/v1/variable
+```
 
 ## 关键 Controller
 
 | 路径前缀 | 作用 |
 |---|---|
-| `/file/upload` / `/file/download` | 文件上传下载 |
-| `/file/multipart/init` / `/complete` | 分片上传 |
-| `/file/presign` | 预签名 URL（私有 Bucket） |
-| `/config` | 系统参数 |
-| `/dict` / `/dict/item` | 数据字典 |
-| `/audit/login` | 登录审计（查询接口） |
-| `/audit/operation` | 操作审计 |
-| `/audit/data-export` | 数据导出审计 |
+| `/api/v1/config` | 系统参数 CRUD + 按 key 查询 |
+| `/api/v1/dict/type` | 字典类型 CRUD |
+| `/api/v1/dict/item` | 字典项 CRUD + 按类型查询 |
+| `/api/v1/app` | 应用注册 CRUD |
+| `/api/v1/variable` | 系统变量 CRUD |
+| `/api/internal/config/get` | Feign 内部调用：按 key 查配置值 |
+| `/api/internal/dict/item` | Feign 内部调用：按类型+编码查字典项 |
+| `/api/internal/app/validate` | Feign 内部调用：校验应用密钥 |
 
-## 数据库表设计
+## 数据库表
 
-本模块在 `deploy/sql/V1.0.0.sql` 中持有 **12 张表**，聚焦"横切关注点"：文件、配置、审计、跨服务公共表。
+| 表名 | 说明 |
+|---|---|
+| `ydsz_config` | 系统参数（key-value，支持租户维度） |
+| `ydsz_dict_type` | 字典类型 |
+| `ydsz_dict_item` | 字典项（支持树形 parent_id、扩展 ext_json） |
+| `ydsz_dict_version` | 字典版本（变更历史快照） |
+| `ydsz_app_info` | 应用注册（OAuth2 client_id/client_secret） |
+| `ydsz_variable` | 系统变量 |
 
-| 业务域 | 表名 | 说明 |
-|---|---|---|
-| **文件管理** | `ydsz_file` | 文件元信息（bucket、key、大小、MIME、上传者、md5） |
-| **系统配置** | `ydsz_config` | 系统参数（key-value，支持租户维度） |
-| | `ydsz_dict_version` | 字典版本（多环境字典版本控制） |
-| **审计日志** | `ydsz_login_audit` | 登录审计（与 userinfo 共享物理表） |
-| | `ydsz_operation_log` | 操作审计（DDL+CRUD 统一审计，支持按月分区） |
-| | `ydsz_operation_log_default` | 操作审计默认分区 |
-| | `ydsz_operation_log_yYYYYmMM` | 操作审计月度分区模板（按需创建） |
-| | `ydsz_data_export_audit` | 数据导出审计（导出人、表、行数、用途） |
-| **跨服务公共** | `ydsz_report_subscription` | 报表订阅（用户×报表×频率） |
-| | `ydsz_export_record` | 异步导出记录（异步导出到 MinIO） |
-| | `ydsz_meta_schema_version` | DB Schema 版本号（启动校验） |
+## 核心能力
 
-> **分区说明**：`ydsz_operation_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 或手动 `DETACH` 归档。
-> **脱敏约束**：`ydsz_data_export_audit` 写入时自动 `SensitiveSerializer` 脱敏。
+### 配置缓存
+- 按 `config_key` 缓存配置值到 Redis，TTL 5 分钟
+- 写操作（save/update/delete）自动清除缓存
 
-## 启动顺序
+### 字典缓存
+- 按 `type_code:item_code` 缓存单个字典项，TTL 10 分钟
+- 按 `type_code` 缓存字典项列表，TTL 10 分钟
+- 写操作自动清除对应类型的缓存
 
-依赖 `common` + `nacos`，**应在 `gateway` 之后**启动，可与 `userinfo` / `project` 并行。
+### 应用密钥安全
+- `appSecret` 使用 BCrypt 加密存储
+- `validateClient` 使用 `BCryptPasswordEncoder.matches()` 校验
+- `AppInfoVO` 不包含 `appSecret` 字段，避免泄露
 
-## 目录结构
+### 可观测性
+- `SystemMetrics`：Micrometer 指标（配置读取次数/耗时、缓存命中/未命中、字典查询、应用校验）
+- `SystemHealthIndicator`：Redis 连通性 + 配置表/字典表可达性检查
+- `@Audit` 注解：所有写操作自动记录审计日志
 
-```
-ydsz-system/
-├── pom.xml
-└── src/main/
-    ├── java/com/njydsz/system/
-    │   ├── SystemApplication.java
-    │   ├── controller/
-    │   │   ├── FileController.java
-    │   │   ├── ConfigController.java
-    │   │   ├── DictController.java
-    │   │   └── AuditController.java
-    │   ├── service/
-    │   │   ├── FileService.java
-    │   │   ├── MinioStorageService.java
-    │   │   └── AuditQueryService.java
-    │   ├── listener/
-    │   │   ├── LoginAuditListener.java   # @Async
-    │   │   ├── OperationLogListener.java  # @Async
-    │   │   └── DataExportAuditListener.java
-    │   └── config/
-    ├── resources/
-    │   ├── bootstrap.yml
-    │   ├── mapper/
-    │   │   ├── ConfigMapper.xml
-    │   │   ├── FileMapper.xml
-    │   │   └── LoginAuditMapper.xml
-    │   └── config/            # 原 nacos-config（已重命名）
-    │       ├── ydsz-system-dev.yaml
-    │       ├── ydsz-system-sit.yaml
-    │       └── ydsz-system-uat.yaml
-    └── test/
-```
+## Feign 接口
 
-## 配置文件
+被以下 Feign 客户端调用（位于 `ydsz-system-api`）：
 
-**MinIO 配置**（必需）：
-
-| 变量 | 默认值 | 说明 |
-|---|---|---|
-| `MINIO_ENDPOINT` | `http://127.0.0.1:9100` | MinIO API 地址 |
-| `MINIO_ACCESS_KEY` | `minioadmin` | 访问 Key |
-| `MINIO_SECRET_KEY` | `minioadmin` | 密钥 |
-| `MINIO_BUCKET` | `ydsz` | 默认 Bucket |
-
-**其他环境变量**：与 common 共享配置一致（DB / Redis）。
+- `ConfigClient` → `/api/internal/config/get`、`/api/internal/dict/item`
+- `AppInfoClient` → `/api/internal/app/validate`
 
 ## 启动
 
 ```bash
-# 1. 启动 MinIO（推荐 Docker）
-docker run -d --name ydsz-minio \
-  -p 9100:9000 -p 9101:9001 \
-  -e MINIO_ROOT_USER=minioadmin \
-  -e MINIO_ROOT_PASSWORD=minioadmin \
-  -v minio-data:/data \
-  quay.io/minio/minio server /data --console-address ":9001"
-
-# 2. 启动 system
 cd ydsz-backend
 mvn -pl ydsz-system spring-boot:run
 ```
 
-## 测试
+## 配置
 
-```bash
-mvn -pl ydsz-system -am test
+**bootstrap.yml**：
+
+```yaml
+spring:
+  application:
+    name: ydsz-system
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        file-extension: yml
+        shared-configs:
+          - data-id: ydsz-common.yml
+            refresh: true
+          - data-id: ydsz-system.yml
+            refresh: true
+server:
+  port: 9002
 ```
-
-## Feign 接口
-
-被以下 Feign 客户端调用（位于 `ydsz-common`）：
-
-- `ConfigClient` → `/config` / `/dict`
 
 ## 常见问题
 
-### Q1：文件上传报 "bucket does not exist"
+### Q1：配置查询返回 null
 
-需要先在 MinIO 控制台（`http://127.0.0.1:9101`）创建 Bucket `ydsz`，
-或在 `MinioStorageService.init()` 中添加自动创建逻辑。
+检查 `ydsz_config` 表中是否存在对应的 `config_key` 且 `status = 'ENABLED'`、`deleted = 0`。
+配置查询走 Redis 缓存，如果 Redis 不可用会降级为直接查询数据库。
 
-### Q2：审计日志延迟
+### Q2：应用密钥校验失败
 
-通过 `@Async` + `OperationLogEvent` 异步落库。若发现日志丢失，检查：
-1. `application.yml` 中 `@EnableAsync` 是否开启
-2. `OperationLogListener` 是否在 `META-INF/spring.factories` 或 `@ComponentScan` 范围内
+1. 确认 `ydsz_app_info` 表中 `app_key` 存在且 `status = 'ENABLED'`
+2. 确认 `app_secret` 字段存储的是 BCrypt 加密后的哈希值（非明文）
+3. 创建应用时通过 API 传入明文密钥，Service 会自动 BCrypt 加密
 
----
+### Q3：字典项查询缓存不刷新
 
-> 任何新增审计类型请使用 `ApplicationEventPublisher` 发布事件，由对应 Listener 异步落库，**不要**在业务事务内同步写审计表。
+字典项写操作（save/update/delete）会自动清除对应 `type_code` 的缓存。
+如果缓存未清除，检查 Redis 连接是否正常。

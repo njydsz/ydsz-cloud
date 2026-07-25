@@ -145,6 +145,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     /** 按规则编码的统计明细 */
     private final ConcurrentHashMap<String, RuleEngineStats.RuleStat> perRuleStats = new ConcurrentHashMap<>();
 
+    /** 评估结果缓存（P1-7：可选，通过 setEvaluationResultCache 注入） */
+    private volatile EvaluationResultCache evaluationResultCache;
+
     /**
      * 注册规则到引擎
      *
@@ -174,6 +177,10 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         // 当规则数首次超过阈值时，重建索引启用索引模式
         if (!ruleIndexer.isIndexEnabled() && rules.size() >= 200) {
             ruleIndexer.rebuildIndex(rules);
+        }
+        // P1-7：规则变更时清除评估结果缓存
+        if (evaluationResultCache != null) {
+            evaluationResultCache.clear();
         }
         recordRegisteredRules();
         log.info("[LiteRule] 规则已注册: code={}, name={}, priority={}, total={}",
@@ -218,6 +225,16 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         if (ruleCode == null) return;
         rules.removeIf(r -> ruleCode.equals(r.getCode()));
         ruleIndexer.removeFromIndex(ruleCode);
+        // P1-6: 注销规则时同步清理该规则的统计数据，避免 perRuleStats Map 无限增长
+        perRuleStats.remove(ruleCode);
+        // 清理熔断器状态
+        if (circuitBreaker != null) {
+            circuitBreaker.reset(ruleCode);
+        }
+        // P1-7：规则变更时清除评估结果缓存
+        if (evaluationResultCache != null) {
+            evaluationResultCache.clear();
+        }
         recordRegisteredRules();
     }
 
@@ -265,6 +282,17 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     private List<RuleResult> doEvaluate(RuleContext context) {
+        // P1-7：评估结果缓存查询
+        if (evaluationResultCache != null) {
+            List<RuleResult> cached = evaluationResultCache.get(context);
+            if (cached != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("[LiteRule] 评估结果缓存命中: scenario={}", context.getScenario());
+                }
+                return cached;
+            }
+        }
+
         // P0-2 动态事实采集：评估前注入外部数据源事实
         context = injectFactsIfNeeded(context);
         // P3-1 规则+模型融合：评估前注入模型输出
@@ -473,6 +501,10 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         // P1-1 规则与消息通知联动：评估完成后分发动作
         if (actionDispatcher != null && !triggered.isEmpty()) {
             actionDispatcher.dispatchActions(triggered, context);
+        }
+        // P1-7：评估结果写入缓存
+        if (evaluationResultCache != null) {
+            evaluationResultCache.put(context, triggered);
         }
         return triggered;
     }
@@ -909,6 +941,29 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     public RuleIndexer getRuleIndexer() {
         return ruleIndexer;
+    }
+
+    /**
+     * 设置评估结果缓存（P1-7）
+     *
+     * <p>注入后，evaluate 方法会先查缓存，命中则直接返回；
+     * 未命中则执行评估后写入缓存。规则注册/注销/热加载时自动清除缓存。
+     *
+     * @param cache 评估结果缓存实例
+     * @since 2.3.0
+     */
+    public void setEvaluationResultCache(EvaluationResultCache cache) {
+        this.evaluationResultCache = cache;
+    }
+
+    /**
+     * 获取评估结果缓存
+     *
+     * @return 评估结果缓存实例；未配置返回 null
+     * @since 2.3.0
+     */
+    public EvaluationResultCache getEvaluationResultCache() {
+        return evaluationResultCache;
     }
 
     /**

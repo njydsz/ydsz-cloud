@@ -138,7 +138,7 @@ public class InfrastructureException extends AbstractYdszException {
         }
 
         @Override
-        protected InfrastructureException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected InfrastructureException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                                   ExceptionLevel level, ExceptionCategory category,
                                                   Throwable cause, String path, Object extData, String message) {
             InfrastructureException exception;

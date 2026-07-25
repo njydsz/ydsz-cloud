@@ -1,10 +1,18 @@
 package com.njydsz.userinfo.api.client;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
+
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * OrgQueryClient fallback.
+ * OrgQueryClient 降级处理。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -14,14 +22,20 @@ import org.springframework.stereotype.Component;
 public class OrgQueryClientFallback implements OrgQueryClient {
 
     @Override
-    public Object queryUserById(String userId) {
+    public BaseResponse<UserAccountVO> queryUserById(String userId) {
         log.warn("OrgQueryClient fallback: queryUserById={}", userId);
-        return null;
+        return BaseResponse.error("服务降级：用户查询不可用");
     }
 
     @Override
-    public Object getDeptTree() {
+    public BaseResponse<List<DepartmentTreeVO>> getDeptTree() {
         log.warn("OrgQueryClient fallback: getDeptTree");
-        return null;
+        return BaseResponse.success(Collections.emptyList());
+    }
+
+    @Override
+    public BaseResponse<List<DepartmentTreeVO>> getDeptList() {
+        log.warn("OrgQueryClient fallback: getDeptList");
+        return BaseResponse.success(Collections.emptyList());
     }
 }

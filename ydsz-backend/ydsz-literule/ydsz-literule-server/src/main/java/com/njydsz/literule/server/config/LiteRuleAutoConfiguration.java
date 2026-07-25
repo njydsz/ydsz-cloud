@@ -48,6 +48,9 @@ import com.njydsz.literule.server.expr.ExpressionValidationService;
 import com.njydsz.literule.server.expr.VariableRegistry;
 import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.njydsz.literule.server.security.RulePermissionChecker;
 import com.njydsz.literule.server.spi.CronjobTriggerActionHandler;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
@@ -80,6 +83,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 @EnableConfigurationProperties(LiteRuleProperties.class)
+@EnableScheduling
 @ConditionalOnProperty(prefix = "ydsz.literule", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class LiteRuleAutoConfiguration {
 
@@ -1095,5 +1099,55 @@ public class LiteRuleAutoConfiguration {
         log.info("[LiteRule-Audit] 规则审计日志服务已初始化（store={}）",
                 store != null ? store.getClass().getSimpleName() : "InMemory");
         return service;
+    }
+
+    // ------------------------------------------------------------------
+    // P1-2 定时维护任务
+    // ------------------------------------------------------------------
+
+    /**
+     * 定时维护任务（P1-2）
+     *
+     * <p>每 60 秒执行一次 CEP 过期事件清理，防止事件队列无限增长。
+     * 依赖 @EnableScheduling 注解（已在类级别添加）。
+     *
+     * @param cepEngine CEP 引擎（可选注入，未启用时跳过）
+     * @since 2.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(CEPEngine.class)
+    public LiteRuleMaintenanceTask liteRuleMaintenanceTask(CEPEngine cepEngine) {
+        log.info("[LiteRule-Maintenance] 定时维护任务已初始化");
+        return new LiteRuleMaintenanceTask(cepEngine);
+    }
+
+    /**
+     * 定时维护任务内部类
+     *
+     * <p>分离为独立类避免 AutoConfiguration 直接持有 @Scheduled 方法
+     * 导致的条件装配复杂化。
+     *
+     * @since 2.3.0
+     */
+    public static class LiteRuleMaintenanceTask {
+
+        private final CEPEngine cepEngine;
+
+        public LiteRuleMaintenanceTask(CEPEngine cepEngine) {
+            this.cepEngine = cepEngine;
+        }
+
+        /**
+         * CEP 过期事件清理（每 60 秒执行一次）
+         */
+        @Scheduled(fixedDelay = 60_000)
+        public void cleanupCepExpiredEvents() {
+            try {
+                cepEngine.cleanupExpiredEvents();
+            } catch (Exception e) {
+                log.warn("[LiteRule-Maintenance] CEP 过期事件清理失败: {}", e.getMessage());
+            }
+        }
     }
 }

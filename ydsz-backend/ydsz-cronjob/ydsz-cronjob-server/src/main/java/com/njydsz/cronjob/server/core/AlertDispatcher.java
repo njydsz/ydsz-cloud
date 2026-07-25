@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonArray;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
@@ -259,7 +260,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            List<Object> array = YdszJson.parseArray(channelsJson);
+            YdszJsonArray array = YdszJson.parseArrayToJsonArray(channelsJson);
             List<AlertChannel> channels = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 AlertChannel channel = AlertChannel.parse(array.getString(i));
@@ -286,7 +287,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            List<Object> array = YdszJson.parseArray(receiversJson);
+            YdszJsonArray array = YdszJson.parseArrayToJsonArray(receiversJson);
             List<String> receivers = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 String receiver = array.getString(i);
@@ -489,7 +490,7 @@ public class AlertDispatcher {
             return "INAPP";
         }
         try {
-            List<Object> array = YdszJson.parseArray(channelsJson);
+            YdszJsonArray array = YdszJson.parseArrayToJsonArray(channelsJson);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < array.size(); i++) {
                 if (i > 0) {
@@ -515,13 +516,13 @@ public class AlertDispatcher {
             return "[]";
         }
         String[] parts = channelsCsv.split(",");
-        List<Object> array = new JSONArray();
+        YdszJsonArray array = new YdszJsonArray();
         for (String part : parts) {
             String trimmed = part.trim();
             if (!trimmed.isEmpty()) {
                 array.add(trimmed);
             }
         }
-        return array.toJSONString();
+        return YdszJson.toJson(array);
     }
 }

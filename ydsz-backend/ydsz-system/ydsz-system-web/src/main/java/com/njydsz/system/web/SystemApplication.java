@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 
@@ -16,11 +17,11 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
  * 复用 common-config（热加载）、common-audit、common-cache 等公共模块。
  *
  * @author ydsz-team
- * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.system", "com.njydsz.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
+@EnableYdszAudit
 @EnableYdszFeign(basePackages = {"com.njydsz.system.api", "com.njydsz.common.feign"})
 @MapperScan("com.njydsz.system.infra.mapper")
 @EnableScheduling

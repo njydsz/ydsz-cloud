@@ -87,11 +87,12 @@ public class DuplicateException extends AbstractYdszException {
         }
 
         @Override
-        protected DuplicateException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected DuplicateException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                               ExceptionLevel level, ExceptionCategory category,
                                               Throwable cause, String path, Object extData, String message) {
             DuplicateException exception = new DuplicateException();
             exception.initFields(code, key, params);
+            exception.setSubCode(subCode);
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);
             exception.setCategory(category);

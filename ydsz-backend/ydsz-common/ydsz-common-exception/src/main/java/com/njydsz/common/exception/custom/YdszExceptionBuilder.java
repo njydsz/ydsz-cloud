@@ -29,7 +29,8 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *     @Override
  *     protected BusinessException doBuild(String code, String key, Object[] params, int httpStatus,
  *                                         ExceptionLevel level, ExceptionCategory category,
- *                                         Throwable cause, String path, Object extData, String message) {
+ *                                         Throwable cause, String path, Object extData, String message,
+ *                                         String subCode) {
  *         // 调用具体异常构造函数
  *     }
  * }
@@ -44,6 +45,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
 public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B extends YdszExceptionBuilder<T, B>> {
 
     protected String code;
+    protected String subCode = "0000";
     protected String key;
     protected Object[] params = new Object[]{};
     protected String message;
@@ -95,6 +97,19 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
 
     public B code(String code) {
         this.code = code;
+        return self();
+    }
+
+    /**
+     * 设置子错误码（4 位数字字符串，如 "0001"）
+     *
+     * @param subCode 子错误码
+     * @return 当前 Builder
+     */
+    public B subCode(String subCode) {
+        if (subCode != null && !subCode.isEmpty()) {
+            this.subCode = subCode;
+        }
         return self();
     }
 
@@ -165,6 +180,7 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
      * 子类实现具体的构建逻辑
      *
      * @param code       错误码
+     * @param subCode    子错误码
      * @param key        国际化消息键
      * @param params     消息参数
      * @param httpStatus HTTP 状态码
@@ -176,7 +192,7 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
      * @param message    覆盖消息
      * @return 构建的异常实例
      */
-    protected abstract T doBuild(String code, String key, Object[] params, int httpStatus,
+    protected abstract T doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                  ExceptionLevel level, ExceptionCategory category,
                                  Throwable cause, String path, Object extData, String message);
 
@@ -186,7 +202,7 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
      * @return 构建的异常实例
      */
     public T build() {
-        T exception = doBuild(code, key, params, httpStatus, level, category, cause, path, extData, message);
+        T exception = doBuild(code, subCode, key, params, httpStatus, level, category, cause, path, extData, message);
         if (message != null) {
             exception.setMessage(message);
         }

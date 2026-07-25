@@ -138,7 +138,7 @@ public class CircuitBreakerException extends AbstractYdszException {
         }
 
         @Override
-        protected CircuitBreakerException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected CircuitBreakerException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                                   ExceptionLevel level, ExceptionCategory category,
                                                   Throwable cause, String path, Object extData, String message) {
             CircuitBreakerException exception;

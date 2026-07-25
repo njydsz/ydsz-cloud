@@ -47,6 +47,26 @@ public class CoreProperties {
     /** 链路追踪配置 */
     private TraceConfig trace = new TraceConfig();
 
+    /** 优雅停机配置 */
+    private GracefulShutdownConfig gracefulShutdown = new GracefulShutdownConfig();
+
+    /**
+     * 优雅停机配置属性。
+     *
+     * <p>控制 {@link com.njydsz.common.core.lifecycle.GracefulShutdownCoordinator} 的行为。
+     */
+    @Data
+    public static class GracefulShutdownConfig {
+
+        /** 是否启用优雅停机协调器（默认 true） */
+        private boolean enabled = true;
+
+        /** 停机超时时间（秒），超时后强制退出 */
+        @Min(5)
+        @Max(300)
+        private int timeoutSeconds = 30;
+    }
+
     /**
      * 链路追踪配置属性。
      *

@@ -1114,7 +1114,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     public Map<String, Object> getDagContext(String dagInstanceId) {
         JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
-            return new JSONObject();
+            return new YdszJsonObject();
         }
         return parseContextJson(instance.getContextJson());
     }

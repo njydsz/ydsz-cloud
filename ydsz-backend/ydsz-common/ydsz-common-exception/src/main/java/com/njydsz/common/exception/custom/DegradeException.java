@@ -147,7 +147,7 @@ public class DegradeException extends AbstractYdszException {
         }
 
         @Override
-        protected DegradeException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected DegradeException doBuild(String code, String subCode, String key, Object[] params, int httpStatus,
                                           ExceptionLevel level, ExceptionCategory category,
                                           Throwable cause, String path, Object extData, String message) {
             DegradeException exception;

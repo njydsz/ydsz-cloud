@@ -101,6 +101,9 @@ public class RouteConfig {
                                 "/ws/**",
                                 "/configs/**",
                                 "/config/**",
+                                "/dict/**",
+                                "/app/**",
+                                "/variable/**",
                                 "/file/**",
                                 "/audit/**",
                                 "/operation-logs/**")
@@ -111,6 +114,9 @@ public class RouteConfig {
                                 "/api/v1/ws/**",
                                 "/api/v1/configs/**",
                                 "/api/v1/config/**",
+                                "/api/v1/dict/**",
+                                "/api/v1/app/**",
+                                "/api/v1/variable/**",
                                 "/api/v1/file/**",
                                 "/api/v1/audit/**",
                                 "/api/v1/operation-logs/**")

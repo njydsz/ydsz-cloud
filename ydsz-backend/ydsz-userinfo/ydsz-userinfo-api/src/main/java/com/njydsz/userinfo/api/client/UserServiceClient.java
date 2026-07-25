@@ -4,8 +4,11 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.userinfo.domain.vo.UserAccountVO;
+
 /**
- * User service Feign client.
+ * 用户服务 Feign 客户端。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -15,5 +18,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface UserServiceClient {
 
     @GetMapping("/api/internal/user/info")
-    Object getUserInfo(@RequestParam String userId);
+    BaseResponse<UserAccountVO> getUserInfo(@RequestParam String userId);
 }

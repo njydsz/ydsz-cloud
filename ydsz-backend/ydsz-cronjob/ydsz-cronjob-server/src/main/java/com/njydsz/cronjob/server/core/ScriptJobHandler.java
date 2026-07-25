@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonArray;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -109,7 +111,7 @@ public class ScriptJobHandler implements JobHandler {
             throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
         }
 
-        Map<String, Object> params = YdszJson.parseMap(paramsJson);
+        YdszJsonObject params = YdszJson.parseObjectToJsonObject(paramsJson);
         String language = params.getString("language");
         if (!StringUtils.hasText(language)) {
             throw new IllegalArgumentException("SHELL 任务参数缺少 language（shell/python）");
@@ -420,7 +422,7 @@ public class ScriptJobHandler implements JobHandler {
     /**
      * 解析参数列表。
      */
-    private List<String> parseArgs(JSONArray argsArray) {
+    private List<String> parseArgs(YdszJsonArray argsArray) {
         if (argsArray == null || argsArray.isEmpty()) {
             return new ArrayList<>();
         }
