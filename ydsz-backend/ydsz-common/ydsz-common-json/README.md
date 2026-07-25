@@ -1,6 +1,6 @@
 # ydsz-common-json
 
-YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、SIMD 向量化解析、Schema 校验、YdszJsonPath 查询、JsonNode 树模型、Optional/UUID 支持、BigDecimal 精度模式、GraalVM 兼容、Spring MVC 集成、单元测试全覆盖。
+YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷贝反序列化、JIT 自动向量化、Schema 校验、YdszJsonPath 查询、JsonNode 树模型、Optional/UUID 支持、BigDecimal 精度模式、GraalVM 兼容、Spring MVC 集成、单元测试全覆盖。
 
 > **注**：本模块 Maven artifactId 仍为 `ydsz-common-json`（项目命名空间前缀），但**模块内所有公开 API 均已去 Ydsz 品牌化**——主入口类为 [`YdszJson`](file:///d:/Code/ydsz/ydsz/ydsz-backend/ydsz-common/ydsz-common-json/src/main/java/com/njydsz/common/json/YdszJson.java)，所有注解使用 `@YdszJson*` 前缀。详见下方"模块定位"和"核心能力"章节。
 
@@ -60,7 +60,7 @@ YDSZ 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | 类 | 说明 |
 |---|---|
 | `ZeroCopyDeserializer` | 零拷贝反序列化器（避免不必要的字符串拷贝） |
-| `VectorSimdUtil` | SIMD 向量化解析（JDK 17+ Vector API） |
+| `VectorSimdUtil` | 字符数组批量操作（朴素循环 + JIT 自动向量化，不依赖反射） |
 | `BytesUtil` | 字节工具 |
 
 ### 树模型

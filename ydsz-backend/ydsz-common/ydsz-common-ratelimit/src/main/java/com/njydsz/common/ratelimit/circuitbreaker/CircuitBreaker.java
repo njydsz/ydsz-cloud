@@ -138,20 +138,28 @@ public class CircuitBreaker {
     @AllArgsConstructor
     public static class CircuitBreakerConfig {
         /** 失败率阈值（0-1） */
+        @Builder.Default
         private double failureRateThreshold = 0.5;
         /** 慢调用率阈值（0-1） */
+        @Builder.Default
         private double slowCallRateThreshold = 1.0;
         /** 慢调用阈值（毫秒） */
+        @Builder.Default
         private long slowCallDurationThresholdMillis = 1000;
         /** 最小调用数 */
+        @Builder.Default
         private int minimumNumberOfCalls = 10;
         /** 滑动窗口大小 */
+        @Builder.Default
         private int slidingWindowSize = 100;
         /** OPEN 状态等待时间 */
+        @Builder.Default
         private Duration waitDurationInOpenState = Duration.ofSeconds(10);
         /** HALF_OPEN 状态允许的探测数 */
+        @Builder.Default
         private int permittedNumberOfCallsInHalfOpenState = 10;
         /** 滑动窗口类型 */
+        @Builder.Default
         private SlidingWindowType slidingWindowType = SlidingWindowType.COUNT_BASED;
 
         public static CircuitBreakerConfig defaults() {

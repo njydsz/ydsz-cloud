@@ -46,33 +46,43 @@ public class RateLimitRule implements Serializable {
     private String resource;
 
     /** 限流维度 */
+    @Builder.Default
     private RateLimitDimension dimension = RateLimitDimension.API;
 
     /** 限流算法 */
+    @Builder.Default
     private RateLimitAlgorithm algorithm = RateLimitAlgorithm.TOKEN_BUCKET;
 
     /** 限流模式（本地 / 集群 / 自适应） */
+    @Builder.Default
     private RateLimitMode mode = RateLimitMode.LOCAL;
 
     /** 阈值（每秒请求数 / 并发数 / 令牌数） */
+    @Builder.Default
     private double threshold = 100.0;
 
     /** 限流统计窗口（默认 1 秒） */
+    @Builder.Default
     private Duration window = Duration.ofSeconds(1);
 
     /** 令牌桶容量（允许的最大突发流量） */
+    @Builder.Default
     private long burstCapacity = 200;
 
     /** 排队等待超时时间（仅 QUEUEING 模式） */
+    @Builder.Default
     private Duration queueTimeout = Duration.ZERO;
 
     /** 预热期（冷启动预热，单位秒） */
+    @Builder.Default
     private Duration warmupPeriod = Duration.ZERO;
 
     /** 是否启用 */
+    @Builder.Default
     private boolean enabled = true;
 
     /** 优先级（数值越小优先级越高，1-100） */
+    @Builder.Default
     private int priority = 50;
 
     /** 关联的限流错误码（默认 RateLimitExceptionCode.API_QPS_LIMIT） */

@@ -44,6 +44,9 @@ public class LogStreamManager {
     /** SSE 超时时间（毫秒，默认 30 分钟，覆盖长任务执行场景） */
     private static final long SSE_TIMEOUT = 30 * 60 * 1000L;
 
+    /** 每 logId 最大 SSE 订阅者数（防止连接耗尽） */
+    private static final int MAX_SUBSCRIBERS_PER_LOG = 10;
+
     /** logId → SSE emitters 映射 */
     private final Map<String, CopyOnWriteArrayList<SseEmitter>> emittersMap = new ConcurrentHashMap<>();
 
@@ -55,7 +58,13 @@ public class LogStreamManager {
      */
     public SseEmitter subscribe(String logId) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
-        emittersMap.computeIfAbsent(logId, k -> new CopyOnWriteArrayList<>()).add(emitter);
+        CopyOnWriteArrayList<SseEmitter> emitters = emittersMap.computeIfAbsent(logId, k -> new CopyOnWriteArrayList<>());
+        if (emitters.size() >= MAX_SUBSCRIBERS_PER_LOG) {
+            log.warn("[LogStream] SSE 订阅数超限, 拒绝连接: logId={} current={}", logId, emitters.size());
+            emitter.completeWithError(new IllegalStateException("Too many subscribers for logId: " + logId));
+            return emitter;
+        }
+        emitters.add(emitter);
 
         // 设置回调：超时/完成/错误时自动清理
         emitter.onCompletion(() -> removeEmitter(logId, emitter));

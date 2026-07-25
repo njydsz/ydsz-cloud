@@ -134,93 +134,27 @@ public class LiteRuleAutoConfiguration {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
 
-        // 断点调试 Hook（P2-3）：可选注入，仅当应用层提供实现时生效
-        BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
-        if (bpHook != null) {
-            engine.setBreakpointHook(bpHook);
-        }
-
-        // P0-2 动态事实采集：可选注入事实提供者注册表
-        FactProviderRegistry factRegistry = factRegistryProvider.getIfAvailable();
-        if (factRegistry != null) {
-            engine.setFactProviderRegistry(factRegistry);
-        }
-
-        // P1-1 规则与消息通知联动：可选注入动作分发器
-        // actionDispatcherProvider 通过下方 Bean 自动装配
-        RuleActionDispatcher actionDispatcher = actionDispatcherProvider.getIfAvailable();
-        if (actionDispatcher != null) {
-            engine.setActionDispatcher(actionDispatcher);
-        }
-
-        // P2-2 并行评估：可选注入并行评估器（ydsz.literule.performance.parallel-enabled=true 时生效）
-        ParallelRuleEvaluator parallelEvaluator = parallelEvaluatorProvider.getIfAvailable();
-        if (parallelEvaluator != null) {
-            engine.setParallelEvaluator(parallelEvaluator);
-            engine.setParallelThreshold(properties.getPerformance().getParallelThreshold());
-        }
-
-        // P2-4 慢规则告警：阈值 > 0 时启用
-        long slowRuleThresholdMs = properties.getPerformance().getSlowRuleThresholdMs();
-        if (slowRuleThresholdMs > 0) {
-            engine.setSlowRuleThresholdMs(slowRuleThresholdMs);
-        }
-
-        // P3-1 规则+模型融合：可选注入模型注册表
-        ModelInputRegistry modelRegistry = modelRegistryProvider.getIfAvailable();
-        if (modelRegistry != null) {
-            engine.setModelInputRegistry(modelRegistry);
-        }
-
-        if (properties.isTraceEnabled()) {
-            AsyncTraceRecorder asyncRecorder = new AsyncTraceRecorder(
-                    properties.getTraceQueueCapacity(),
-                    properties.getTraceBatchSize(),
-                    properties.getTraceFlushIntervalMs());
-            TraceRecorder delegate = traceDelegateProvider.getIfAvailable();
-            if (delegate != null && !(delegate instanceof AsyncTraceRecorder)) {
-                asyncRecorder.setDelegate(delegate);
-                log.info("[LiteRule] Trace 持久化委托已注入: {}", delegate.getClass().getSimpleName());
-            }
-            engine.setTraceRecorder(asyncRecorder);
-            log.info("[LiteRule] 异步 Trace 记录已启用 (queueCapacity={}, batchSize={}, flushMs={}, delegate={})",
-                    properties.getTraceQueueCapacity(), properties.getTraceBatchSize(),
-                    properties.getTraceFlushIntervalMs(), delegate != null);
-        }
-
-        if (properties.getRuleTimeoutMs() > 0) {
-            int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
-            RuleTimeoutExecutor timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(), poolSize);
-            engine.setTimeoutExecutor(timeoutExecutor);
-            log.info("[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={})",
-                    properties.getRuleTimeoutMs(), poolSize);
-        }
-
-        if (properties.getCircuitBreakerMinEvaluations() > 0) {
-            // P2-14: openStateMs 从 properties 读取，消除硬编码 30_000L
-            RuleCircuitBreaker breaker = new RuleCircuitBreaker(
-                    properties.getCircuitBreakerErrorRate(),
-                    properties.getCircuitBreakerMinEvaluations(),
-                    properties.getCircuitBreakerOpenStateMs());
-            engine.setCircuitBreaker(breaker);
-            log.info("[LiteRule] 规则熔断器已启用 (errorRateThreshold={}, minEvaluations={}, openStateMs={})",
-                    properties.getCircuitBreakerErrorRate(), properties.getCircuitBreakerMinEvaluations(),
-                    properties.getCircuitBreakerOpenStateMs());
-        }
-
-        if (properties.isCanaryEnabled()) {
-            ExpressionEvaluator evaluator = evaluatorProvider.getIfAvailable();
-            if (evaluator == null) {
-                evaluator = expressionEvaluator(properties);
-            }
-            RuleCanaryRouter canaryRouter = new RuleCanaryRouter(evaluator);
-            engine.setCanaryRouter(canaryRouter);
-            engine.setCanaryEnabled(true);
-            log.info("[LiteRule] 规则灰度路由已启用");
-        }
+        // P3-3: 拆分为独立配置方法，提升可读性
+        configureOptionalDependencies(engine, breakpointHookProvider, factRegistryProvider,
+                actionDispatcherProvider, parallelEvaluatorProvider, modelRegistryProvider, properties);
+        configureTraceRecorder(engine, properties, traceDelegateProvider);
+        configureTimeoutExecutor(engine, properties);
+        configureCircuitBreaker(engine, properties);
+        configureCanaryRouting(engine, properties, evaluatorProvider);
 
         // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
         bindMicrometerIfAvailable(engine, applicationContext);
+
+        // P1-7: 评估结果缓存
+        if (properties.getPerformance().isCacheEnabled()) {
+            EvaluationResultCache cache = new EvaluationResultCache(
+                    properties.getPerformance().getCacheTtlSeconds() * 1000L,
+                    properties.getPerformance().getCacheMaxSize());
+            engine.setEvaluationResultCache(cache);
+            log.info("[LiteRule] 评估结果缓存已启用 (ttl={}s, maxSize={})",
+                    properties.getPerformance().getCacheTtlSeconds(),
+                    properties.getPerformance().getCacheMaxSize());
+        }
 
         log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, breakpoint={}, model={}, slowRuleThreshold={}ms）",
                 properties.isStatsEnabled(), properties.isTraceEnabled(),
@@ -229,6 +163,112 @@ public class LiteRuleAutoConfiguration {
                 engine.getBreakpointHook() != null, engine.getModelInputRegistry() != null,
                 properties.getPerformance().getSlowRuleThresholdMs());
         return engine;
+    }
+
+    /**
+     * 配置可选依赖（P3-3 提取）
+     */
+    private void configureOptionalDependencies(DefaultRuleEngine engine,
+                                                ObjectProvider<BreakpointHook> breakpointHookProvider,
+                                                ObjectProvider<FactProviderRegistry> factRegistryProvider,
+                                                ObjectProvider<RuleActionDispatcher> actionDispatcherProvider,
+                                                ObjectProvider<ParallelRuleEvaluator> parallelEvaluatorProvider,
+                                                ObjectProvider<ModelInputRegistry> modelRegistryProvider,
+                                                LiteRuleProperties properties) {
+        BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
+        if (bpHook != null) {
+            engine.setBreakpointHook(bpHook);
+        }
+
+        FactProviderRegistry factRegistry = factRegistryProvider.getIfAvailable();
+        if (factRegistry != null) {
+            engine.setFactProviderRegistry(factRegistry);
+        }
+
+        RuleActionDispatcher actionDispatcher = actionDispatcherProvider.getIfAvailable();
+        if (actionDispatcher != null) {
+            engine.setActionDispatcher(actionDispatcher);
+        }
+
+        ParallelRuleEvaluator parallelEvaluator = parallelEvaluatorProvider.getIfAvailable();
+        if (parallelEvaluator != null) {
+            engine.setParallelEvaluator(parallelEvaluator);
+            engine.setParallelThreshold(properties.getPerformance().getParallelThreshold());
+        }
+
+        long slowRuleThresholdMs = properties.getPerformance().getSlowRuleThresholdMs();
+        if (slowRuleThresholdMs > 0) {
+            engine.setSlowRuleThresholdMs(slowRuleThresholdMs);
+        }
+
+        ModelInputRegistry modelRegistry = modelRegistryProvider.getIfAvailable();
+        if (modelRegistry != null) {
+            engine.setModelInputRegistry(modelRegistry);
+        }
+    }
+
+    /**
+     * 配置 Trace 记录器（P3-3 提取）
+     */
+    private void configureTraceRecorder(DefaultRuleEngine engine, LiteRuleProperties properties,
+                                         ObjectProvider<TraceRecorder> traceDelegateProvider) {
+        if (!properties.isTraceEnabled()) return;
+        AsyncTraceRecorder asyncRecorder = new AsyncTraceRecorder(
+                properties.getTraceQueueCapacity(),
+                properties.getTraceBatchSize(),
+                properties.getTraceFlushIntervalMs());
+        TraceRecorder delegate = traceDelegateProvider.getIfAvailable();
+        if (delegate != null && !(delegate instanceof AsyncTraceRecorder)) {
+            asyncRecorder.setDelegate(delegate);
+            log.info("[LiteRule] Trace 持久化委托已注入: {}", delegate.getClass().getSimpleName());
+        }
+        engine.setTraceRecorder(asyncRecorder);
+        log.info("[LiteRule] 异步 Trace 记录已启用 (queueCapacity={}, batchSize={}, flushMs={}, delegate={})",
+                properties.getTraceQueueCapacity(), properties.getTraceBatchSize(),
+                properties.getTraceFlushIntervalMs(), delegate != null);
+    }
+
+    /**
+     * 配置超时执行器（P3-3 提取）
+     */
+    private void configureTimeoutExecutor(DefaultRuleEngine engine, LiteRuleProperties properties) {
+        if (properties.getRuleTimeoutMs() <= 0) return;
+        int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
+        RuleTimeoutExecutor timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(), poolSize);
+        engine.setTimeoutExecutor(timeoutExecutor);
+        log.info("[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={})",
+                properties.getRuleTimeoutMs(), poolSize);
+    }
+
+    /**
+     * 配置熔断器（P3-3 提取）
+     */
+    private void configureCircuitBreaker(DefaultRuleEngine engine, LiteRuleProperties properties) {
+        if (properties.getCircuitBreakerMinEvaluations() <= 0) return;
+        RuleCircuitBreaker breaker = new RuleCircuitBreaker(
+                properties.getCircuitBreakerErrorRate(),
+                properties.getCircuitBreakerMinEvaluations(),
+                properties.getCircuitBreakerOpenStateMs());
+        engine.setCircuitBreaker(breaker);
+        log.info("[LiteRule] 规则熔断器已启用 (errorRateThreshold={}, minEvaluations={}, openStateMs={})",
+                properties.getCircuitBreakerErrorRate(), properties.getCircuitBreakerMinEvaluations(),
+                properties.getCircuitBreakerOpenStateMs());
+    }
+
+    /**
+     * 配置灰度路由（P3-3 提取）
+     */
+    private void configureCanaryRouting(DefaultRuleEngine engine, LiteRuleProperties properties,
+                                         ObjectProvider<ExpressionEvaluator> evaluatorProvider) {
+        if (!properties.isCanaryEnabled()) return;
+        ExpressionEvaluator evaluator = evaluatorProvider.getIfAvailable();
+        if (evaluator == null) {
+            evaluator = expressionEvaluator(properties);
+        }
+        RuleCanaryRouter canaryRouter = new RuleCanaryRouter(evaluator);
+        engine.setCanaryRouter(canaryRouter);
+        engine.setCanaryEnabled(true);
+        log.info("[LiteRule] 规则灰度路由已启用");
     }
 
     /**

@@ -1,60 +1,29 @@
 package com.njydsz.common.json.bytecode;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * 字节数组工具类
+ * 字节数组工具类（JSON 解析辅助）
  *
- * <p>提供高效的字符数组操作，在 JVM 启动时检测是否真正启用了 SIMD 向量化加速。</p>
+ * <p>提供高效的字符数组操作，作为 {@link VectorSimdUtil} 的薄包装层，
+ * 统一对外暴露字符数组/字符串批处理 API。</p>
  *
- * <p><b>SIMD 运行时检测：</b></p>
+ * <p><b>性能策略：</b></p>
  * <ul>
- *   <li>启动时检测 Vector API 是否可用（需要 --add-modules jdk.incubator.vector 且 JDK 版本支持）</li>
- *   <li>如果未启用 SIMD，在日志中记录 WARNING 提示</li>
- *   <li>无论是否启用 SIMD，均提供可用的回退实现</li>
+ *   <li>底层为朴素循环实现，依赖 Hotspot JIT 的 SuperWord 自动向量化</li>
+ *   <li>不再依赖 JDK Vector API（反射调用开销 &gt; SIMD 收益）</li>
+ *   <li>紧密循环可被 JIT 内联到调用方热点路径</li>
  * </ul>
- *
- * <p><b>命名说明：</b></p>
- * <p>原类名为 VectorSimdUtil，但实际依赖 JVM 自动向量化而非显式 SIMD 指令，存在命名误导。
- * 重命名为 BytesUtil 以准确反映功能定位。</p>
  *
  * @since 1.0.0
  */
 public final class BytesUtil {
 
-    private static final Logger log = LoggerFactory.getLogger(BytesUtil.class);
-
     /**
-     * SIMD 是否真正启用
+     * SIMD 是否真正启用 — 始终为 false
+     *
+     * <p>保留以兼容旧 API。当前实现依赖 JIT 自动向量化，
+     * 不再使用显式 Vector API 调用。</p>
      */
-    public static final boolean SIMD_ENABLED;
-
-    /**
-     * 底层委托（VectorSimdUtil）的向量化可用性
-     */
-    private static final boolean VECTOR_API_AVAILABLE;
-
-    static {
-        boolean vectorApiAvailable = false;
-        try {
-            Class.forName("jdk.incubator.vector.CharVector");
-            vectorApiAvailable = true;
-        } catch (Throwable e) {
-            // Vector API 不可用
-        }
-        VECTOR_API_AVAILABLE = vectorApiAvailable;
-
-        if (VECTOR_API_AVAILABLE) {
-            log.info("Vector API (SIMD) 已启用，批量字符操作将使用向量化加速");
-            SIMD_ENABLED = true;
-        } else {
-            log.warn("Vector API (SIMD) 未启用，批量字符操作将使用标准循环实现。" +
-                    "如需启用 SIMD 加速，请添加 JVM 参数: --add-modules jdk.incubator.vector " +
-                    "（仅适用于支持 Vector API 的 JDK 版本）");
-            SIMD_ENABLED = false;
-        }
-    }
+    public static final boolean SIMD_ENABLED = false;
 
     private BytesUtil() {
         throw new UnsupportedOperationException();
@@ -63,8 +32,10 @@ public final class BytesUtil {
     /**
      * 检测 SIMD 是否真正启用
      *
-     * @return true 如果 SIMD 向量化已启用
+     * @return 始终返回 false
+     * @deprecated 当前实现依赖 JIT 自动向量化，不再使用 Vector API
      */
+    @Deprecated(since = "1.0.0")
     public static boolean isSimdEnabled() {
         return SIMD_ENABLED;
     }

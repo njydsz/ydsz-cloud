@@ -26,37 +26,37 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.util.StringInterner;
 
 /**
- * 零拷贝反序列化生成器（深度优化版 v3.5.0。
+ * 零拷贝反序列化生成器（深度优化版 v3.5.0）
  *
- * <p>核心优化。/p>
+ * <p>核心优化：</p>
  * <ul>
  *   <li>char[] 数组访问 - 避免 String.charAt() 开销</li>
  *   <li>直接字段设置 - 避免 Map 中转</li>
- *   <li>hashCode 快速匹。- 先比哈希再比字符。</li>
+ *   <li>hashCode 快速匹配 - 先比哈希再比字符</li>
  *   <li>基本类型优化 - 避免装箱/拆箱</li>
- *   <li>零拷贝数字解。- SIMD 加。</li>
- *   <li>对象池复用- ThreadLocal 缓存 ArrayList/LinkedHashMap</li>
- *   <li>String 池化 - 复用常用字段名和短字符串。</li>
+ *   <li>零拷贝数字解析 - JIT 自动向量化加速</li>
+ *   <li>对象池复用 - ThreadLocal 缓存 ArrayList/LinkedHashMap</li>
+ *   <li>String 池化 - 复用常用字段名和短字符串</li>
  *   <li>Constructor 缓存 - 避免反射开销</li>
- *   <li>分级反序列化。- 根据字段数选择最优策。</li>
- *   <li>字段访问缓存 - 预计算类型码。setter 策略</li>
- *   <li>集合预分配优。- 基于字段数的容量估算</li>
+ *   <li>分级反序列化 - 根据字段数选择最优策略</li>
+ *   <li>字段访问缓存 - 预计算类型码与 setter 策略</li>
+ *   <li>集合预分配优化 - 基于字段数的容量估算</li>
  * </ul>
  *
  * <p><b>反序列化器分级：</b></p>
  * <ul>
- *   <li>SingleFieldDeserializer - 1 个简单字段，性能最。</li>
- *   <li>TwoFieldDeserializer - 2 个简单字。</li>
- *   <li>UltraFastDeserializer - 。 个简单字段，hashCode 优化</li>
- *   <li>FastDeserializer - 。 个字段，HashMap 查找</li>
+ *   <li>SingleFieldDeserializer - 1 个简单字段，性能最高</li>
+ *   <li>TwoFieldDeserializer - 2 个简单字段</li>
+ *   <li>UltraFastDeserializer - 3 个简单字段，hashCode 优化</li>
+ *   <li>FastDeserializer - 4+ 个字段，HashMap 查找</li>
  *   <li>StandardDeserializer - 任意字段数，完整功能</li>
  * </ul>
  *
  * <p><b>设计模式：</b></p>
  * <ul>
- *   <li>策略模式 - 根据字段数量选择最优反序列化策。</li>
+ *   <li>策略模式 - 根据字段数量选择最优反序列化策略</li>
  *   <li>享元模式 - 反序列化器缓存、字符串驻留</li>
- *   <li>对象。- ThreadLocal 复用集合对象</li>
+ *   <li>对象池 - ThreadLocal 复用集合对象</li>
  * </ul>
  *
  * @since 1.0.0

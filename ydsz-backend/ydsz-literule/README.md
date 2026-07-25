@@ -12,8 +12,8 @@
 | **JVM 进程** | 独立 JVM 进程，独立端口，注册到 Nacos |
 | **服务注册** | Nacos Discovery（服务名 `ydsz-literule`） |
 | **配置中心** | Nacos Config（`spring-cloud-starter-alibaba-nacos-config`） |
-| **当前版本** | `1.0.0-SNAPSHOT`（与 parent `ydsz-backend` 对齐） |
-| **脚手架状态** | ⚠️ 当前缺少 `@SpringBootApplication` 启动类与 `application.yml` / `bootstrap.yml`，`ydsz-literule-web` 的 `spring-boot-maven-plugin` 配置了 `<skip>true</skip>`。**补齐独立部署脚手架是 P0 优化项**（见文末优化建议） |
+| **当前版本** | `2.3.0-SNAPSHOT` |
+| **脚手架状态** | ✅ 已包含 `@SpringBootApplication` 启动类、`application.yml` / `bootstrap.yml`，可独立部署 |
 
 ## 分层结构（DDD 五层）
 
@@ -55,6 +55,7 @@ ydsz-literule/
 | **热加载** | DB / Nacos / Apollo / ZooKeeper / Redis / File 多源动态刷新 | `RuleHotReloader` / `RuleSourceManager` |
 | **版本管理** | 版本快照 + Diff + 一键回滚 | `RuleVersionRepository` / `RuleVersionDiffService` |
 | **dry-run 仿真** | 不实际执行，只评估结果（不发布事件、不记录统计） | `RuleEngine.dryRun` |
+| **正式评估** | 记录统计、发布事件、触发动作分发（P1-1 新增 evaluate 端点） | `RuleEngine.evaluate` |
 | **多级审批流** | 草稿 → 审核 → 上线，支持 SINGLE/COUNTERSIGN/SEQUENCE 三种审批类型 | `RuleApprovalService` / `ApprovalFlow` |
 | **灰度发布** | 按 `canaryRatio` 分流到候选版本，结果标记 `canary=true` | `RuleCanaryRouter` |
 | **A/B 测试** | 自动回滚策略 + 效果评估 + 回滚历史 | `ABTestService` / `ABTestAutoRollbackProvider` |
