@@ -157,6 +157,11 @@
                 <artifactId>ydsz-common-ratelimit</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-batch</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- L5 -->
             <dependency>
                 <groupId>com.njydsz</groupId>

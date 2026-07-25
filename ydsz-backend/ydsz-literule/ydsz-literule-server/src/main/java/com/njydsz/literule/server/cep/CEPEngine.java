@@ -238,6 +238,7 @@ public class CEPEngine implements Serializable {
         Instant now = event.getTimestamp();
         Instant windowStart = now.minus(pattern.getWindow());
         queue.addLast(event);
+            enforceQueueLimit(queue);
         // 裁剪窗口外
         while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
             queue.pollFirst();
@@ -261,6 +262,7 @@ public class CEPEngine implements Serializable {
         Instant now = event.getTimestamp();
         Instant windowStart = now.minus(pattern.getWindow());
         queue.addLast(event);
+            enforceQueueLimit(queue);
         // 裁剪窗口外
         while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
             queue.pollFirst();
@@ -308,6 +310,7 @@ public class CEPEngine implements Serializable {
         }
 
         queue.addLast(event);
+            enforceQueueLimit(queue);
         lastEventMap.put(partitionKey, now);
 
         // 实时检查阈值（会话窗口也可在事件到来时即时触发）
@@ -329,6 +332,7 @@ public class CEPEngine implements Serializable {
     private void handleCountWindow(CEPPattern pattern, CEPEvent event,
                                    ConcurrentLinkedDeque<CEPEvent> queue) {
         queue.addLast(event);
+            enforceQueueLimit(queue);
         int count = queue.size();
         int threshold = pattern.getCountWindow() > 0 ? pattern.getCountWindow() : (int) pattern.getThreshold();
         if (count >= threshold) {
@@ -408,6 +412,7 @@ public class CEPEngine implements Serializable {
         switch (wt) {
             case COUNT -> {
                 queue.addLast(event);
+            enforceQueueLimit(queue);
                 int count = queue.size();
                 int threshold = pattern.getCountWindow() > 0 ? pattern.getCountWindow() : (int) pattern.getThreshold();
                 if (count >= threshold) {
@@ -421,6 +426,7 @@ public class CEPEngine implements Serializable {
                 Instant now = event.getTimestamp();
                 Instant windowStart = now.minus(pattern.getWindow());
                 queue.addLast(event);
+            enforceQueueLimit(queue);
                 while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
                     queue.pollFirst();
                 }
@@ -447,6 +453,7 @@ public class CEPEngine implements Serializable {
             return;
         }
         queue.addLast(event);
+            enforceQueueLimit(queue);
         // 清理窗口外
         Instant windowStart = event.getTimestamp().minus(pattern.getWindow());
         while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {

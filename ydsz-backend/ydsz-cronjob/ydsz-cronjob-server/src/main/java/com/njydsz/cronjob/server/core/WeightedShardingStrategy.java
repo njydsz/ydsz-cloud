@@ -2,7 +2,9 @@ package com.njydsz.cronjob.server.core.sharding;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -45,11 +47,17 @@ public class WeightedShardingStrategy implements ShardingStrategy {
             throw new IllegalArgumentException("onlineNodes 不能为空");
         }
 
-        // 获取节点负载信息
+        // 获取节点负载信息（一次性查询，构建 Map 避免 N+1 查找）
+        Map<String, JobNodeDO> nodeMap = new HashMap<>();
         List<JobNodeDO> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
+        if (allNodes != null) {
+            for (JobNodeDO node : allNodes) {
+                nodeMap.put(node.getNodeId(), node);
+            }
+        }
         TreeMap<String, Double> nodeWeights = new TreeMap<>();
         for (String nodeId : onlineNodes) {
-            double weight = calculateNodeWeight(nodeId, allNodes);
+            double weight = calculateNodeWeight(nodeId, nodeMap);
             nodeWeights.put(nodeId, weight);
         }
 
@@ -80,17 +88,16 @@ public class WeightedShardingStrategy implements ShardingStrategy {
     /**
      * 计算节点权重（负载越低权重越高）。
      */
-    private double calculateNodeWeight(String nodeId, List<JobNodeDO> allNodes) {
-        for (JobNodeDO node : allNodes) {
-            if (nodeId.equals(node.getNodeId())) {
-                double cpuUsage = node.getCpuUsage() != null ? node.getCpuUsage().doubleValue() : 50.0;
-                int runningCount = node.getRunningCount() != null ? node.getRunningCount() : 0;
-                // 权重 = (100 - cpuUsage) * (1 + 1/(runningCount+1))
-                // CPU 低 + 运行少 = 高权重
-                double cpuFactor = Math.max(1.0, 100.0 - cpuUsage);
-                double loadFactor = 1.0 + 1.0 / (runningCount + 1);
-                return cpuFactor * loadFactor;
-            }
+    private double calculateNodeWeight(String nodeId, Map<String, JobNodeDO> nodeMap) {
+        JobNodeDO node = nodeMap.get(nodeId);
+        if (node != null) {
+            double cpuUsage = node.getCpuUsage() != null ? node.getCpuUsage().doubleValue() : 50.0;
+            int runningCount = node.getRunningCount() != null ? node.getRunningCount() : 0;
+            // 权重 = (100 - cpuUsage) * (1 + 1/(runningCount+1))
+            // CPU 低 + 运行少 = 高权重
+            double cpuFactor = Math.max(1.0, 100.0 - cpuUsage);
+            double loadFactor = 1.0 + 1.0 / (runningCount + 1);
+            return cpuFactor * loadFactor;
         }
         // 节点不在列表中，给默认权重
         return 1.0;

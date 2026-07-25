@@ -21,6 +21,7 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 import com.njydsz.common.exception.model.ProblemDetail;
+import com.njydsz.common.exception.sanitize.StackTraceSanitizer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,6 +60,7 @@ public abstract class BaseExceptionHandler {
     private ExceptionProperties properties;
     private ExceptionMetrics exceptionMetrics;
     private ExceptionAlertPublisher alertPublisher;
+    private StackTraceSanitizer stackTraceSanitizer;
 
     /**
      * 获取日志前缀，由子类实现以定制不同端的日志前缀
@@ -92,6 +94,15 @@ public abstract class BaseExceptionHandler {
      */
     protected void setAlertPublisher(ExceptionAlertPublisher alertPublisher) {
         this.alertPublisher = alertPublisher;
+    }
+
+    /**
+     * 设置堆栈脱敏器（由 AutoConfiguration 注入）
+     *
+     * @param stackTraceSanitizer 堆栈脱敏器
+     */
+    protected void setStackTraceSanitizer(StackTraceSanitizer stackTraceSanitizer) {
+        this.stackTraceSanitizer = stackTraceSanitizer;
     }
 
     /**
@@ -175,6 +186,42 @@ public abstract class BaseExceptionHandler {
     }
 
     /**
+     * 获取脱敏后的堆栈跟踪字符串
+     * <p>
+     * 在生产环境中，对堆栈进行脱敏处理：
+     * - 移除框架内部堆栈（Spring、MyBatis、Tomcat 等）
+     * - 隐藏敏感路径信息
+     * - 限制堆栈深度
+     * </p>
+     *
+     * @param throwable 异常对象
+     * @return 脱敏后的堆栈字符串；如果未启用脱敏则返回原始堆栈
+     */
+    protected String getSanitizedStackTraceString(Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        }
+
+        // 如果未配置脱敏器或不在生产环境，返回原始堆栈
+        if (stackTraceSanitizer == null || !isProductionEnvironment()) {
+            return getStackTraceString(throwable);
+        }
+
+        // 使用脱敏器处理堆栈
+        Throwable sanitized = stackTraceSanitizer.sanitize(throwable);
+        return getStackTraceString(sanitized);
+    }
+
+    /**
+     * 判断是否为生产环境
+     *
+     * @return true-生产环境，false-非生产环境
+     */
+    protected boolean isProductionEnvironment() {
+        return "prod".equalsIgnoreCase(activeProfile) || "production".equalsIgnoreCase(activeProfile);
+    }
+
+    /**
      * 构建异常信息对象
      *
      * @param throwable 异常对象
@@ -198,7 +245,7 @@ public abstract class BaseExceptionHandler {
             info.setHttpStatus(ex.getHttpStatus());
             if (includeExceptionInfo()) {
                 Map<String, Object> details = new LinkedHashMap<>();
-                details.put("stackTrace", getStackTraceString(throwable));
+                details.put("stackTrace", getSanitizedStackTraceString(throwable));
                 if (ex.getExtData() instanceof Map<?, ?> rawMap) {
                     rawMap.forEach((k, v) -> details.put(String.valueOf(k), v));
                 }
@@ -209,7 +256,7 @@ public abstract class BaseExceptionHandler {
             info.setMessage(getRootCauseMessage(throwable));
             info.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             if (includeExceptionInfo()) {
-                info.setDetails(Map.of("stackTrace", getStackTraceString(throwable)));
+                info.setDetails(Map.of("stackTrace", getSanitizedStackTraceString(throwable)));
             }
         }
 

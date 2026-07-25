@@ -27,10 +27,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-thread</artifactId>
-        </dependency>
 
         <!-- Spring（核心 + 调度） -->
         <dependency>

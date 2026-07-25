@@ -81,7 +81,7 @@ public class TimeoutMonitor {
 
     private static DefaultRedisScript<Long> initReleaseScript() {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-        script.setScriptText("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        script.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
         script.setResultType(Long.class);
         return script;
     }

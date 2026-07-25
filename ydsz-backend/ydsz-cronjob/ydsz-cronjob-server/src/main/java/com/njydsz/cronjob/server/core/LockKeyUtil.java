@@ -27,6 +27,19 @@ public final class LockKeyUtil {
     /** 分片锁后缀格式 */
     private static final String SHARD_SUFFIX_FORMAT = ":shard:%d";
 
+    /**
+     * 释放分布式锁的 Lua 脚本（CAS 删除，确保只有持有者能释放）。
+     *
+     * <p>所有需要释放任务锁的组件（DefaultTaskDispatcher / FailoverScanner /
+     * TimeoutMonitor / SelfHealingScanner）都应使用此常量，禁止各自定义重复脚本。
+     */
+    public static final String RELEASE_LOCK_SCRIPT =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+            "  return redis.call('del', KEYS[1]) " +
+            "else " +
+            "  return 0 " +
+            "end";
+
     private LockKeyUtil() {
         // 工具类禁止实例化
     }

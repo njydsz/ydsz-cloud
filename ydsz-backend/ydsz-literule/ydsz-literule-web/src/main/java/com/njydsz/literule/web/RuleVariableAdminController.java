@@ -1,5 +1,6 @@
 package com.njydsz.literule.web;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/ruleEngine/variables")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "规则变量管理", description = "变量注册表 CRUD、变量分类查询")
 public class RuleVariableAdminController {
 
     /** 变量注册表（由消费方提供数据库实现） */
