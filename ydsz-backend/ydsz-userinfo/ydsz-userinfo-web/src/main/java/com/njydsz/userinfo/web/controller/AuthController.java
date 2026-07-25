@@ -34,7 +34,7 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "账号密码登录，返回 access_token 和 refresh_token")
     public BaseResponse<LoginVO> login(@Valid @RequestBody LoginDTO request) {
-        LoginVO result = authService.login(request.getUsername(), request.getPassword());
+        LoginVO result = authService.login(request);
         return BaseResponse.success(result);
     }
 

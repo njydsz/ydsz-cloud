@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,8 +18,7 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
-
-import io.micrometer.core.instrument.Timer;
+import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.entity.RoleDO;
 import com.njydsz.userinfo.domain.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.entity.UserRoleDO;
@@ -28,10 +28,12 @@ import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +42,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>核心能力：
  * <ul>
+ *   <li>验证码校验（可配置开关）</li>
+ *   <li>LDAP 域认证（可选依赖，自动探测）</li>
  *   <li>账号锁定（N 次密码错误后自动锁定 30 分钟）</li>
  *   <li>登录失败计数 + 最后登录信息更新</li>
  *   <li>JWT Token 签发/刷新/吊销（使用 common-auth TokenService）</li>
@@ -52,7 +56,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final UserAccountMapper userAccountMapper;
@@ -64,15 +67,53 @@ public class AuthServiceImpl implements AuthService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final UserInfoMetrics userInfoMetrics;
+    private final UserInfoProperties properties;
+    private final CaptchaService captchaService;
+    private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
 
-    private static final long TOKEN_TTL_SECONDS = 7200;
-    private static final int MAX_LOGIN_FAIL_COUNT = 5;
-    private static final int LOCK_DURATION_MINUTES = 30;
+    public AuthServiceImpl(UserAccountMapper userAccountMapper,
+                           RoleMapper roleMapper,
+                           UserRoleMapper userRoleMapper,
+                           TokenService tokenService,
+                           TokenBlacklistService tokenBlacklistService,
+                           RedisHashOps redisHashOps,
+                           RedisTemplate<String, Object> redisTemplate,
+                           PasswordEncoder passwordEncoder,
+                           UserInfoMetrics userInfoMetrics,
+                           UserInfoProperties properties,
+                           CaptchaService captchaService,
+                           ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider) {
+        this.userAccountMapper = userAccountMapper;
+        this.roleMapper = roleMapper;
+        this.userRoleMapper = userRoleMapper;
+        this.tokenService = tokenService;
+        this.tokenBlacklistService = tokenBlacklistService;
+        this.redisHashOps = redisHashOps;
+        this.redisTemplate = redisTemplate;
+        this.passwordEncoder = passwordEncoder;
+        this.userInfoMetrics = userInfoMetrics;
+        this.properties = properties;
+        this.captchaService = captchaService;
+        this.ldapProviderProvider = ldapProviderProvider;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public LoginVO login(String username, String password) {
+    public LoginVO login(LoginDTO loginDTO) {
         Timer.Sample sample = userInfoMetrics.startTimer();
+
+        // 验证码校验（可配置开关）
+        if (properties.isCaptchaEnabled()) {
+            if (loginDTO.getCaptchaKey() == null || loginDTO.getCaptcha() == null) {
+                userInfoMetrics.recordLoginFail();
+                userInfoMetrics.stopTimer(sample);
+                throw new BusinessException(UserInfoResultCode.CAPTCHA_REQUIRED);
+            }
+            captchaService.validate(loginDTO.getCaptchaKey(), loginDTO.getCaptcha());
+        }
+
+        String username = loginDTO.getUsername();
+        String password = loginDTO.getPassword();
 
         LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccountDO::getUsername, username);
@@ -85,19 +126,33 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
 
-        if ("DISABLED".equals(user.getStatus()) || (user.getStatus() != null && user.getStatus() == 0)) {
+        // 账号状态检查（status 为 Integer: 0=禁用, 1=启用）
+        if (user.getStatus() != null && user.getStatus() == 0) {
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoResultCode.USER_DISABLED);
         }
 
+        // 账号锁定检查
         if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoResultCode.ACCOUNT_LOCKED);
         }
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        // 密码校验 — 先尝试本地密码，失败后尝试 LDAP
+        boolean passwordMatched = passwordEncoder.matches(password, user.getPassword());
+        if (!passwordMatched) {
+            LdapAuthenticationProvider ldapProvider = ldapProviderProvider.getIfAvailable();
+            if (ldapProvider != null && ldapProvider.isEnabled()) {
+                passwordMatched = ldapProvider.authenticateLdap(username, password);
+                if (passwordMatched) {
+                    log.info("LDAP authentication succeeded for user: {}", username);
+                }
+            }
+        }
+
+        if (!passwordMatched) {
             recordLoginFailure(user);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
@@ -119,14 +174,15 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = tokenService.issueAccessToken(userInfo);
         String refreshToken = tokenService.issueRefreshToken(userInfo);
 
-        Map<String, Object> userInfoMap = new HashMap<>();
-        userInfoMap.put("userId", user.getId());
-        userInfoMap.put("username", user.getUsername());
-        userInfoMap.put("roleCode", roleCodes);
-        userInfoMap.put("roleName", roleNames);
-        userInfoMap.put("tenantId", user.getTenantId());
-        redisHashOps.hMSet(accessToken, userInfoMap);
-        redisTemplate.expire(accessToken, Duration.ofSeconds(TOKEN_TTL_SECONDS));
+        // Redis 会话存储（用于登出时主动失效 + 在线会话管理）
+        Map<String, Object> sessionInfo = new HashMap<>();
+        sessionInfo.put("userId", user.getId());
+        sessionInfo.put("username", user.getUsername());
+        sessionInfo.put("roleCode", roleCodes);
+        sessionInfo.put("roleName", roleNames);
+        sessionInfo.put("tenantId", user.getTenantId());
+        redisHashOps.hMSet(accessToken, sessionInfo);
+        redisTemplate.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
         updateLoginSuccess(user);
 
@@ -137,7 +193,7 @@ public class AuthServiceImpl implements AuthService {
         result.setAccessToken(accessToken);
         result.setRefreshToken(refreshToken);
         result.setTokenType("Bearer");
-        result.setExpiresIn(TOKEN_TTL_SECONDS);
+        result.setExpiresIn(properties.getTokenTtlSeconds());
         result.setScope("read write");
 
         LoginVO.UserInfoVO userInfoVO = new LoginVO.UserInfoVO();
@@ -173,7 +229,7 @@ public class AuthServiceImpl implements AuthService {
         result.setAccessToken(newAccessToken);
         result.setRefreshToken(refreshToken);
         result.setTokenType("Bearer");
-        result.setExpiresIn(TOKEN_TTL_SECONDS);
+        result.setExpiresIn(properties.getTokenTtlSeconds());
         result.setScope("read write");
         return result;
     }
@@ -212,9 +268,9 @@ public class AuthServiceImpl implements AuthService {
         updateWrapper.eq(UserAccountDO::getId, user.getId());
         updateWrapper.set(UserAccountDO::getLoginFailCount, failCount);
 
-        if (failCount >= MAX_LOGIN_FAIL_COUNT) {
+        if (failCount >= properties.getMaxLoginFailCount()) {
             updateWrapper.set(UserAccountDO::getLockedUntil,
-                    LocalDateTime.now().plusMinutes(LOCK_DURATION_MINUTES));
+                    LocalDateTime.now().plusMinutes(properties.getLockDurationMinutes()));
             log.warn("User {} locked after {} failed attempts", user.getUsername(), failCount);
         }
         userAccountMapper.update(null, updateWrapper);

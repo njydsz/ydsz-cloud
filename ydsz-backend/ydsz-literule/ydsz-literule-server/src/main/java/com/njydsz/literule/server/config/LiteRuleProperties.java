@@ -232,6 +232,16 @@ public class LiteRuleProperties {
     private FactConfig fact = new FactConfig();
 
     /**
+     * 断点调试配置（P0-2）
+     *
+     * <p>控制 {@link com.njydsz.literule.server.core.DefaultBreakpointHook} 的 SUSPEND 超时时间。
+     * 默认启用（{@code enabled=true}），超时 60 秒。
+     *
+     * @since 2.3.0
+     */
+    private DebugConfig debug = new DebugConfig();
+
+    /**
      * 高性能优化配置（P2-3）
      *
      * <p>控制评估结果缓存与规则分组并行评估。
@@ -516,6 +526,35 @@ public class LiteRuleProperties {
          * 中断规则评估流程。适用于"事实必须可用"的强一致场景。
          */
         private boolean fallbackOnError = true;
+    }
+
+    /**
+     * 断点调试配置（P0-2）
+     *
+     * <p>控制断点调试器的行为，包括启用开关和 SUSPEND 超时时间。
+     *
+     * @since 2.3.0
+     */
+    @Data
+    public static class DebugConfig {
+
+        /**
+         * 是否启用断点调试
+         *
+         * <p>true（默认）：自动装配 {@link com.njydsz.literule.server.core.DefaultBreakpointHook}；
+         * false：不装配，断点调试功能不可用。
+         */
+        private boolean enabled = true;
+
+        /**
+         * SUSPEND 超时时间（秒）
+         *
+         * <p>断点命中后，规则评估线程最多阻塞该时长等待外部指令（resume/stepOver），
+         * 超时后自动放行，避免调试端断线导致规则评估永久挂起。
+         * 默认 60 秒。
+         */
+        @Min(1)
+        private long suspendTimeoutSeconds = 60;
     }
 
     /**

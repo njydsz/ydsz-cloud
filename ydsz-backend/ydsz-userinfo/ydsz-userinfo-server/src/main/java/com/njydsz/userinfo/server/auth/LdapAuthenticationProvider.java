@@ -61,18 +61,24 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
         if (username == null || password == null) {
             return null;
         }
-        boolean authenticated = authenticateLdap(username, password);
-        if (!authenticated) {
+        if (!authenticateLdap(username, password)) {
             return null;
         }
-        log.info("LDAP authentication success for user: {}, returning null AuthInfo (token issuance handled by AuthService)", username);
+        log.info("LDAP authentication success for user: {}", username);
+        // Token 签发由 AuthServiceImpl 统一处理，SPI 方法返回 null
         return null;
     }
 
     /**
      * LDAP 认证（JNDI 方式）。
+     *
+     * <p>供 AuthServiceImpl 直接调用，不依赖 HttpServletRequest。
+     *
+     * @param username 用户名
+     * @param password 密码
+     * @return true 认证成功
      */
-    private boolean authenticateLdap(String username, String password) {
+    public boolean authenticateLdap(String username, String password) {
         String url = "ldap://" + host + ":" + port;
         String user = username.indexOf(domain) > 0 ? username : username + domain;
 

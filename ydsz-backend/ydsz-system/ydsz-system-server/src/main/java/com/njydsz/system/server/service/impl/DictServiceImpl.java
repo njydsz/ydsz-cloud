@@ -1,10 +1,12 @@
 package com.njydsz.system.server.service.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.system.domain.dto.DictTypeDTO;
@@ -35,13 +37,25 @@ public class DictServiceImpl implements DictService {
     }
 
     @Override
-    public IPage<DictTypeDO> page(int pageNum, int pageSize) {
-        return mapper.selectPage(new Page<>(pageNum, pageSize), null);
+    public IPage<DictTypeVO> page(int pageNum, int pageSize, String typeName, String status) {
+        QueryWrapper<DictTypeDO> wrapper = new QueryWrapper<>();
+        if (typeName != null && !typeName.isBlank()) {
+            wrapper.like("type_name", typeName);
+        }
+        if (status != null && !status.isBlank()) {
+            wrapper.eq("status", status);
+        }
+        wrapper.orderByDesc("created_at");
+        IPage<DictTypeDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<DictTypeVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        Page<DictTypeVO> result = new Page<>(pageNum, pageSize, page.getTotal());
+        result.setRecords(vos);
+        return result;
     }
 
     @Override
-    public List<DictTypeDO> list() {
-        return mapper.selectList(null);
+    public List<DictTypeVO> list() {
+        return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -22,7 +21,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.entity.ConfigDO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.service.ConfigService;
 
@@ -36,7 +34,7 @@ import lombok.RequiredArgsConstructor;
  *
  * @author ydsz-team
  */
-@Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询")
+@Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询")
 @RestController
 @RequestMapping("/api/v1/config")
 @RequiredArgsConstructor
@@ -44,16 +42,16 @@ public class ConfigController {
 
     private final ConfigService service;
 
-    @Operation(summary = "分页查询配置列表")
+    @Operation(summary = "分页查询配置列表（支持搜索过滤）")
     @GetMapping("/page")
     public PageResponse<List<ConfigVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
-        IPage<ConfigDO> page = service.page(pageNum, pageSize);
-        List<ConfigVO> vos = page.getRecords().stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
+            @Parameter(description = "配置分组") @RequestParam(required = false) String configGroup,
+            @Parameter(description = "配置键模糊搜索") @RequestParam(required = false) String configKey,
+            @Parameter(description = "状态") @RequestParam(required = false) String status) {
+        IPage<ConfigVO> page = service.page(pageNum, pageSize, configGroup, configKey, status);
+        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
     }
 
     @Operation(summary = "按 ID 查询配置")
@@ -66,6 +64,18 @@ public class ConfigController {
     @GetMapping("/key/{configKey}")
     public BaseResponse<String> getByKey(@PathVariable String configKey) {
         return BaseResponse.success(service.getConfigValue(configKey));
+    }
+
+    @Operation(summary = "按配置分组批量查询启用的配置项")
+    @GetMapping("/group/{configGroup}")
+    public BaseResponse<List<ConfigVO>> getByGroup(@PathVariable String configGroup) {
+        return BaseResponse.success(service.getConfigsByGroup(configGroup));
+    }
+
+    @Operation(summary = "查询所有公开配置")
+    @GetMapping("/public")
+    public BaseResponse<List<ConfigVO>> listPublic() {
+        return BaseResponse.success(service.listPublicConfigs());
     }
 
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.CREATE,
@@ -90,23 +100,5 @@ public class ConfigController {
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
-    }
-
-    private ConfigVO toVO(ConfigDO entity) {
-        if (entity == null) {
-            return null;
-        }
-        ConfigVO vo = new ConfigVO();
-        vo.setId(entity.getId());
-        vo.setConfigGroup(entity.getConfigGroup());
-        vo.setConfigKey(entity.getConfigKey());
-        vo.setConfigValue(entity.getConfigValue());
-        vo.setValueType(entity.getValueType());
-        vo.setDefaultValue(entity.getDefaultValue());
-        vo.setDescription(entity.getDescription());
-        vo.setIsPublic(entity.getIsPublic());
-        vo.setSortOrder(entity.getSortOrder());
-        vo.setStatus(entity.getStatus());
-        return vo;
     }
 }

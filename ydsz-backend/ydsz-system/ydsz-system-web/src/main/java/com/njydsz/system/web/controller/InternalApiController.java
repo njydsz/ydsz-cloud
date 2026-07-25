@@ -1,8 +1,10 @@
 package com.njydsz.system.web.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.system.domain.vo.DictItemVO;
@@ -19,6 +21,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>These endpoints are intended for service-to-service communication only.
  * Gateway should restrict access to {@code /api/internal/**} paths.
  *
+ * <p>安全要求：
+ * <ul>
+ *   <li>appSecret 通过 POST body 传输，不暴露在 URL 中</li>
+ *   <li>Gateway 应限制 /api/internal/** 仅允许内部服务调用</li>
+ * </ul>
+ *
  * @author ydsz-team
  */
 @Slf4j
@@ -34,35 +42,33 @@ public class InternalApiController {
     /**
      * 按配置键查询配置值（走缓存）。
      *
-     * @param key 配置键
+     * @param request 包含 key 的请求体
      * @return 配置值，不存在返回 null
      */
-    @GetMapping("/config/get")
-    public String getConfig(@RequestParam String key) {
-        return configService.getConfigValue(key);
+    @PostMapping("/config/get")
+    public String getConfig(@RequestBody Map<String, String> request) {
+        return configService.getConfigValue(request.get("key"));
     }
 
     /**
      * 按类型编码和字典项编码查询字典项（走缓存）。
      *
-     * @param typeCode 字典类型编码
-     * @param itemCode 字典项编码
+     * @param request 包含 typeCode 和 itemCode 的请求体
      * @return 字典项 VO
      */
-    @GetMapping("/dict/item")
-    public DictItemVO getDictItem(@RequestParam String typeCode, @RequestParam String itemCode) {
-        return dictItemService.getByTypeAndCode(typeCode, itemCode);
+    @PostMapping("/dict/item")
+    public DictItemVO getDictItem(@RequestBody Map<String, String> request) {
+        return dictItemService.getByTypeAndCode(request.get("typeCode"), request.get("itemCode"));
     }
 
     /**
-     * 校验应用密钥（BCrypt）。
+     * 校验应用密钥（BCrypt）。密钥通过 POST body 传输，不暴露在 URL 中。
      *
-     * @param appKey    应用 Key
-     * @param appSecret 应用密钥明文
+     * @param request 包含 appKey 和 appSecret 的请求体
      * @return 校验通过返回 true
      */
-    @GetMapping("/app/validate")
-    public boolean validateClient(@RequestParam String appKey, @RequestParam String appSecret) {
-        return appInfoService.validateClient(appKey, appSecret);
+    @PostMapping("/app/validate")
+    public boolean validateClient(@RequestBody Map<String, String> request) {
+        return appInfoService.validateClient(request.get("appKey"), request.get("appSecret"));
     }
 }

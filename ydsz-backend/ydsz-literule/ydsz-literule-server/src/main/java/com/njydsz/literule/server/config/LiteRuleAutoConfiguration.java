@@ -47,6 +47,7 @@ import com.njydsz.literule.server.expr.ExpressionEvaluator;
 import com.njydsz.literule.server.expr.ExpressionValidationService;
 import com.njydsz.literule.server.expr.VariableRegistry;
 import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
+import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -629,11 +630,37 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnProperty(
             prefix = "ydsz.literule.debug", name = "enabled", havingValue = "true", matchIfMissing = true)
     public DefaultBreakpointHook defaultBreakpointHook(LiteRuleProperties properties) {
-        DefaultBreakpointHook hook =
-                new DefaultBreakpointHook();
+        long suspendTimeout = properties.getDebug().getSuspendTimeoutSeconds();
+        DefaultBreakpointHook hook = new DefaultBreakpointHook(suspendTimeout);
         log.info("[LiteRule-Debug] 断点调试器已初始化（suspendTimeout={}s）",
-                60);
+                suspendTimeout);
         return hook;
+    }
+
+    // ------------------------------------------------------------------
+    // P0-4 健康检查（@Bean 注册，替代 @Component）
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则引擎健康检查指标 Bean（P0-4）
+     *
+     * <p>从 @Component 改为 @Bean 注册，与项目其他模块规范一致。
+     *
+     * @param ruleEngine 规则引擎
+     * @param cepEngine CEP 引擎
+     * @return LiteRuleHealthIndicator 实例
+     * @since 2.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    @ConditionalOnProperty(prefix = "ydsz.literule", name = "health-enabled",
+            havingValue = "true", matchIfMissing = true)
+    public LiteRuleHealthIndicator liteRuleHealthIndicator(
+            DefaultRuleEngine ruleEngine,
+            ObjectProvider<CEPEngine> cepEngineProvider) {
+        log.info("[LiteRule-Health] 规则引擎健康检查已初始化");
+        return new LiteRuleHealthIndicator(ruleEngine, cepEngineProvider.getIfAvailable());
     }
 
     // ------------------------------------------------------------------
@@ -940,28 +967,6 @@ public class LiteRuleAutoConfiguration {
     // ------------------------------------------------------------------
     // P2-3 高性能优化（评估结果缓存 + 规则分组并行评估）
     // ------------------------------------------------------------------
-
-    /**
-     * 评估结果缓存（P2-3）
-     *
-     * <p>当 {@code ydsz.literule.performance.cache-enabled=true} 时装配，
-     * 缓存规则引擎评估结果，相同上下文在 TTL 内复用缓存结果。
-     *
-     * @param properties 配置属性
-     * @return EvaluationResultCache 实例
-     * @since 2.0.0
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "ydsz.literule.performance", name = "cache-enabled", havingValue = "true")
-    public EvaluationResultCache evaluationResultCache(LiteRuleProperties properties) {
-        LiteRuleProperties.PerformanceConfig cfg = properties.getPerformance();
-        EvaluationResultCache cache = new EvaluationResultCache(
-                cfg.getCacheTtlSeconds() * 1000L, cfg.getCacheMaxSize());
-        log.info("[LiteRule-Performance] 评估结果缓存已初始化（ttl={}s, maxSize={})",
-                cfg.getCacheTtlSeconds(), cfg.getCacheMaxSize());
-        return cache;
-    }
 
     /**
      * 规则分组并行评估器（P2-3）
