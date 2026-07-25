@@ -17,7 +17,6 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.enums.RedisKeysEnum;
@@ -47,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
  * 
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class RedisStringOps {
 

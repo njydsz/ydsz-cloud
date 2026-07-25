@@ -1,13 +1,16 @@
 package com.njydsz.common.audit.core;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -78,7 +81,7 @@ public class AuditFallbackWriter {
 
             String jsonLine = YdszJson.toJson(auditLog) + "\n";
 
-            Files.write(logFile, jsonLine.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            Files.write(logFile, jsonLine.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
             log.warn("【审计兜底】审计日志已写入磁盘兜底, file={}, id={}", logFile, auditLog.getId());
         } catch (IOException e) {
@@ -114,7 +117,7 @@ public class AuditFallbackWriter {
     public List<Path> listFallbackFiles() {
         Path dir = Paths.get(fallbackDir);
         if (!Files.exists(dir) || !Files.isDirectory(dir)) {
-            return java.util.Collections.emptyList();
+            return Collections.emptyList();
         }
 
         try (Stream<Path> stream = Files.list(dir)) {
@@ -125,7 +128,7 @@ public class AuditFallbackWriter {
                     .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("【审计兜底】扫描磁盘兜底目录失败, dir={}", fallbackDir, e);
-            return java.util.Collections.emptyList();
+            return Collections.emptyList();
         }
     }
 
@@ -148,11 +151,11 @@ public class AuditFallbackWriter {
                             return null;
                         }
                     })
-                    .filter(java.util.Objects::nonNull)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("【审计兜底】读取磁盘兜底文件失败, file={}", file, e);
-            return java.util.Collections.emptyList();
+            return Collections.emptyList();
         }
     }
 

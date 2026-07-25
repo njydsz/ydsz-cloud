@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.enums.FailOpenPolicy;
@@ -54,7 +53,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 public class RedisRateLimiter {
 
     /**

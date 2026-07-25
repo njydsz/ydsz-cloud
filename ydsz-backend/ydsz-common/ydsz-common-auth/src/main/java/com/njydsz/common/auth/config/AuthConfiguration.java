@@ -13,6 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -24,7 +26,10 @@ import com.njydsz.common.auth.aspect.AuthRowPermissionAspect;
 import com.njydsz.common.auth.cache.LocalPermissionCache;
 import com.njydsz.common.auth.desensitize.ColumnDesensitizationService;
 import com.njydsz.common.auth.event.PermissionCacheInvalidationListener;
+import com.njydsz.common.auth.event.PermissionChangeCacheInvalidator;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
+import com.njydsz.common.auth.event.PermissionChangePublisher;
+import com.njydsz.common.auth.health.AuthHealthIndicator;
 import com.njydsz.common.auth.listener.PermissionKeyspaceNotificationListener;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.model.RolePermissions;
@@ -36,6 +41,7 @@ import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.TokenBlacklistService;
+import com.njydsz.common.auth.warmup.PermissionWarmUpInitializer;
 import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
@@ -358,6 +364,86 @@ public class AuthConfiguration {
     public TokenService jwtTokenService(TokenProperties tokenProperties,
                                          ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider) {
         return new JwtTokenService(tokenProperties, tokenBlacklistServiceProvider.getIfAvailable());
+    }
+
+    /**
+     * 创建权限模块 Micrometer 指标采集器 Bean
+     *
+     * @param meterRegistry Micrometer 指标注册中心
+     * @return AuthMetricsCollector 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(AuthMetricsCollector.class)
+    @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+    @ConditionalOnBean(type = "io.micrometer.core.instrument.MeterRegistry")
+    public AuthMetricsCollector authMetricsCollector(ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
+        return new AuthMetricsCollector(meterRegistryProvider.getIfAvailable());
+    }
+
+    /**
+     * 创建权限模块健康检查指示器 Bean
+     *
+     * @param redisConnectionFactory Redis 连接工厂
+     * @return AuthHealthIndicator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(AuthHealthIndicator.class)
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    @ConditionalOnBean(RedisConnectionFactory.class)
+    public AuthHealthIndicator authHealthIndicator(RedisConnectionFactory redisConnectionFactory) {
+        return new AuthHealthIndicator(redisConnectionFactory);
+    }
+
+    /**
+     * 创建权限变更事件发布器 Bean（支持 Redis Pub/Sub 跨节点通知）
+     *
+     * @param applicationEventPublisher Spring 事件发布器
+     * @param redisTemplate Redis 模板
+     * @return PermissionChangePublisher 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(PermissionChangePublisher.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public PermissionChangePublisher permissionChangePublisher(
+            ApplicationEventPublisher applicationEventPublisher,
+            RedisTemplate<String, Object> redisTemplate) {
+        return new PermissionChangePublisher(applicationEventPublisher, redisTemplate);
+    }
+
+    /**
+     * 创建权限缓存失效监听器 Bean（监听 Redis Pub/Sub 和 Spring 事件）
+     *
+     * @param rolePermissionLoader 角色权限加载器
+     * @param dataPermissionResolver 数据权限解析器
+     * @param columnPermissionResolver 列权限解析器
+     * @param redisMessageListenerContainer Redis 消息监听容器
+     * @return PermissionChangeCacheInvalidator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(PermissionChangeCacheInvalidator.class)
+    @ConditionalOnBean(RedisMessageListenerContainer.class)
+    public PermissionChangeCacheInvalidator permissionChangeCacheInvalidator(
+            RolePermissionLoader rolePermissionLoader,
+            DataPermissionResolver dataPermissionResolver,
+            ColumnPermissionResolver columnPermissionResolver,
+            RedisMessageListenerContainer redisMessageListenerContainer) {
+        return new PermissionChangeCacheInvalidator(rolePermissionLoader, dataPermissionResolver,
+                columnPermissionResolver, redisMessageListenerContainer);
+    }
+
+    /**
+     * 创建权限预热初始化器 Bean
+     *
+     * @param properties 认证配置属性
+     * @param rolePermissionLoader 角色权限加载器
+     * @return PermissionWarmUpInitializer 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(PermissionWarmUpInitializer.class)
+    @ConditionalOnBean(RolePermissionLoader.class)
+    public PermissionWarmUpInitializer permissionWarmUpInitializer(
+            AuthProperties properties, RolePermissionLoader rolePermissionLoader) {
+        return new PermissionWarmUpInitializer(properties, rolePermissionLoader);
     }
 
     /**

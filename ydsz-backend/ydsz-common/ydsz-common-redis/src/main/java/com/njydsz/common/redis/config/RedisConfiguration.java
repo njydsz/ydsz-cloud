@@ -1,6 +1,7 @@
 package com.njydsz.common.redis.config;
 
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -16,17 +17,31 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import lombok.RequiredArgsConstructor;
 
 import com.njydsz.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
+import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
+import com.njydsz.common.redis.service.RedisBloomFilter;
 import com.njydsz.common.redis.service.RedisCacheGuard;
+import com.njydsz.common.redis.service.RedisDelayedQueue;
+import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.RedisService;
-
-import lombok.RequiredArgsConstructor;
+import com.njydsz.common.redis.service.RedisSnowflakeIdGenerator;
+import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisGeoOps;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisPubSubOps;
+import com.njydsz.common.redis.service.ops.RedisStreamOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisTransactionOps;
 
 /**
  * Redis 配置类
@@ -76,7 +91,6 @@ import lombok.RequiredArgsConstructor;
 @EnableConfigurationProperties({RedisProperties.class, RedisClientProperties.class})
 public class RedisConfiguration {
 
-    private final RedisConnectionFactoryConfigurer connectionFactoryConfigurer;
     private final RedisProperties redisProperties;
 
     /**
@@ -93,7 +107,8 @@ public class RedisConfiguration {
     @ConditionalOnMissingBean(RedisConnectionFactory.class)
     public RedisConnectionFactory redisConnectionFactory(RedisProperties properties,
                                                           RedisClientProperties clientProperties) {
-        return connectionFactoryConfigurer.createConnectionFactory(properties, clientProperties);
+        RedisConnectionFactoryConfigurer configurer = new RedisConnectionFactoryConfigurer();
+        return configurer.createConnectionFactory(properties, clientProperties);
     }
 
     /**
@@ -146,7 +161,7 @@ public class RedisConfiguration {
      * <p>配置序列化方式：
      * <ul>
      *   <li>Key：使用 StringRedisSerializer，确保可读性</li>
-     *   <li>Value：根据 {@code ydsz.redis.serializer} 配置选择序列化器（默认 jackson）</li>
+     * <li>Value：根据 {@code ydsz.redis.serializer} 配置选择序列化器（默认 YdszJson）</li>
      *   <li>Hash Key：使用 StringRedisSerializer</li>
      *   <li>Hash Value：使用与 Value 相同的序列化器</li>
      * </ul>
@@ -241,7 +256,7 @@ public class RedisConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public YdszCacheableAspect YdszCacheableAspect(RedisService redisService) {
+    public YdszCacheableAspect ydszCacheableAspect(RedisService redisService) {
         return new YdszCacheableAspect(redisService);
     }
 
@@ -278,6 +293,124 @@ public class RedisConfiguration {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         return container;
+    }
+
+    // ============================ Redis Ops Beans ============================
+
+    @Bean
+    @ConditionalOnMissingBean(RedisStringOps.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisStringOps redisStringOps(RedisTemplate<String, Object> redisTemplate,
+                                          RedisProperties redisProperties,
+                                          ObjectProvider<RedisMetricsCollector> metricsProvider) {
+        return new RedisStringOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisHashOps.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisHashOps redisHashOps(RedisTemplate<String, Object> redisTemplate,
+                                      RedisProperties redisProperties,
+                                      ObjectProvider<RedisMetricsCollector> metricsProvider) {
+        return new RedisHashOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisCollectionOps.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisCollectionOps redisCollectionOps(RedisTemplate<String, Object> redisTemplate,
+                                                   RedisProperties redisProperties,
+                                                   ObjectProvider<RedisMetricsCollector> metricsProvider) {
+        return new RedisCollectionOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisGeoOps.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisGeoOps redisGeoOps(RedisTemplate<String, Object> redisTemplate,
+                                    RedisProperties redisProperties,
+                                    ObjectProvider<RedisMetricsCollector> metricsProvider) {
+        return new RedisGeoOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisAdvancedOps.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisAdvancedOps redisAdvancedOps(RedisTemplate<String, Object> redisTemplate,
+                                              RedisProperties redisProperties) {
+        return new RedisAdvancedOps(redisTemplate, redisProperties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisPubSubOps.class)
+    @ConditionalOnBean({RedisTemplate.class, RedisMessageListenerContainer.class})
+    public RedisPubSubOps redisPubSubOps(RedisTemplate<String, Object> redisTemplate,
+                                          RedisMessageListenerContainer listenerContainer) {
+        return new RedisPubSubOps(redisTemplate, listenerContainer);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisStreamOps.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisStreamOps redisStreamOps(RedisTemplate<String, Object> redisTemplate,
+                                          RedisProperties redisProperties) {
+        return new RedisStreamOps(redisTemplate, redisProperties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisTransactionOps.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisTransactionOps redisTransactionOps(RedisTemplate<String, Object> redisTemplate) {
+        return new RedisTransactionOps(redisTemplate);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisBloomFilter.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisBloomFilter redisBloomFilter(RedisTemplate<String, Object> redisTemplate) {
+        return new RedisBloomFilter(redisTemplate);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisDelayedQueue.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisDelayedQueue redisDelayedQueue(RedisTemplate<String, Object> redisTemplate,
+                                                 RedisProperties redisProperties,
+                                                 ObjectProvider<RedisMetricsCollector> metricsProvider) {
+        return new RedisDelayedQueue(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisRateLimiter.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisRateLimiter redisRateLimiter(RedisTemplate<String, Object> redisTemplate,
+                                               RedisProperties redisProperties) {
+        return new RedisRateLimiter(redisTemplate, redisProperties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisSnowflakeIdGenerator.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisSnowflakeIdGenerator redisSnowflakeIdGenerator(RedisTemplate<String, Object> redisTemplate,
+                                                                  RedisProperties redisProperties) {
+        return new RedisSnowflakeIdGenerator(redisTemplate, redisProperties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RedisService.class)
+    @ConditionalOnBean(RedisTemplate.class)
+    public RedisService redisService(RedisTemplate<String, Object> redisTemplate,
+                                       RedisProperties redisProperties,
+                                       RedisStringOps stringOps,
+                                       RedisHashOps hashOps,
+                                       RedisCollectionOps collectionOps,
+                                       RedisGeoOps geoOps,
+                                       RedisAdvancedOps advancedOps,
+                                       RedisPubSubOps pubSubOps,
+                                       RedisStreamOps streamOps,
+                                       RedisTransactionOps transactionOps) {
+        return new RedisService(redisTemplate, redisProperties, stringOps, hashOps,
+                collectionOps, geoOps, advancedOps, pubSubOps, streamOps, transactionOps);
     }
 
 }

@@ -15,7 +15,13 @@ import org.slf4j.LoggerFactory;
  * <p><b>算法：</b>固定时间窗口计数器，每个窗口期内允许最多 maxRequests 次请求。
  *
  * <p><b>限制：</b>此实现为单机内存级别，不支持分布式限流。
- * 生产环境如需分布式限流，请集成 Redis + Lua 脚本方案。
+ * 生产环境如需分布式限流，请集成 Redis + Lua 脚本方案
+ * （参见 {@code com.njydsz.common.redis.service.RedisRateLimiter}）。
+ *
+ * <p><b>设计说明：</b>本类为 Auth 模块内部的轻量级限流器，
+ * 用于在 Redis 不可用时提供降级保护。与 {@code safe} 模块的
+ * {@code RateLimitFilter} 和 {@code redis} 模块的 {@code RedisRateLimiter}
+ * 互为补充，不构成重复设计。
  *
  * @since 1.1.0
 

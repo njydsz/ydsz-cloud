@@ -12,7 +12,6 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.common.auth.service.DataPermissionResolver;
@@ -49,9 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see PermissionChangePublisher
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
-@org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(PermissionChangeCacheInvalidator.class)
 public class PermissionChangeCacheInvalidator {
 
     private static final String PERMISSION_CHANGE_CHANNEL = "ydsz-auth:permission:changed";

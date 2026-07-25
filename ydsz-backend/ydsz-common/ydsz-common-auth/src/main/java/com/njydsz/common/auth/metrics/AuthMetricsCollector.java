@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -32,7 +31,6 @@ import io.micrometer.core.instrument.Timer;
  * @since 1.1.0
 
  */
-@Component
 @ConditionalOnClass(MeterRegistry.class)
 public class AuthMetricsCollector {
 

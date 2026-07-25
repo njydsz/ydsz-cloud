@@ -13,7 +13,6 @@ import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.domain.geo.Metrics;
 import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.enums.RedisKeysEnum;
@@ -51,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Service
 public class RedisService implements BatchRedisOperations {
 
     private final RedisTemplate<String, Object> redisTemplate;

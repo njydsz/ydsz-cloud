@@ -16,7 +16,6 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.cluster.ClusterSlotUtil;
 import com.njydsz.common.redis.config.RedisProperties;
@@ -33,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 public class RedisAdvancedOps {
 
     private final RedisTemplate<String, Object> redisTemplate;

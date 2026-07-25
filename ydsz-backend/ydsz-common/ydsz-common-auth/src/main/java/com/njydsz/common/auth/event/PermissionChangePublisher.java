@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.util.string.StringUtils;
 
@@ -42,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
  * @see PermissionChangeListener
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class PermissionChangePublisher {
 

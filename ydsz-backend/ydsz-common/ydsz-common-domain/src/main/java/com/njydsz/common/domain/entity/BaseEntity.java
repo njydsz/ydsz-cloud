@@ -54,15 +54,15 @@ import lombok.experimental.SuperBuilder;
  * <pre>{@code
  * CREATE TABLE sys_user (
  *     id BIGINT PRIMARY KEY COMMENT '主键ID',
- *     username VARCHAR(50) COMMENT '用户名,
+ *     username VARCHAR(50) COMMENT '用户名',
  *     email VARCHAR(100) COMMENT '邮箱',
- *     phone VARCHAR(20) COMMENT '手机号,
- *     status INT DEFAULT 0 COMMENT '状态
- *     created_by VARCHAR(64) COMMENT '创建人,
+ *     phone VARCHAR(20) COMMENT '手机号',
+ *     status INT DEFAULT 0 COMMENT '状态',
+ *     created_by VARCHAR(64) COMMENT '创建人',
  *     created_at DATETIME COMMENT '创建时间',
- *     updated_by VARCHAR(64) COMMENT '更新人,
+ *     updated_by VARCHAR(64) COMMENT '更新人',
  *     updated_at DATETIME COMMENT '更新时间',
- *     revision INT DEFAULT 0 COMMENT '乐观锁版本,
+ *     revision INT DEFAULT 0 COMMENT '乐观锁版本',
  *     deleted INT DEFAULT 0 COMMENT '逻辑删除'
  * );
  * }</pre>
@@ -76,7 +76,7 @@ import lombok.experimental.SuperBuilder;
  * @see BaseIdEntity
  * @see RootEntity
  *
- * <p><b>重构规划：</b>当前继承为 {@code RootEntity 。BaseIdEntity 。BaseAuditEntity 。BaseEntity} 。4 层，增加理解成本。
+ * <p><b>重构规划：</b>当前继承为 {@code RootEntity → BaseIdEntity → BaseAuditEntity → BaseEntity} 4 层，增加理解成本。
  * 长期建议：扁平化为 2-3 层，或用 {@code @Embedded AuditInfo} 组合替代继承。
  */
 @Data

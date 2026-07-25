@@ -9,7 +9,6 @@ import jakarta.annotation.PreDestroy;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.config.RedisProperties;
 
@@ -51,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 public class RedisSnowflakeIdGenerator {
 
     /** 起始时间戳（2024-01-01） */

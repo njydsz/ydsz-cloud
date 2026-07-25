@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.RolePermissions;
@@ -40,7 +39,6 @@ import com.njydsz.common.util.string.StringUtils;
  * @since 1.0.0
  * 
  */
-@Component
 public class PermissionWarmUpInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(PermissionWarmUpInitializer.class);

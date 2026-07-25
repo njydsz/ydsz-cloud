@@ -64,7 +64,6 @@ import com.njydsz.common.util.string.StringUtils;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 @Aspect
 public class AuditAspect {
@@ -360,7 +359,7 @@ public class AuditAspect {
             for (Object arg : args) {
                 if (arg != null && !isFilterObject(arg)) {
                     try {
-                        String json = serializeWithDepthLimit(arg);
+                        String json = serializeSafely(arg);
                         json = truncateWithWarning(json, DEFAULT_MAX_SERIALIZE_LENGTH, "请求参数");
                         if (StringUtils.isNotBlank(json)) {
                             String masked = maskSensitiveJson(json, excludes);
@@ -429,18 +428,18 @@ public class AuditAspect {
     }
 
     /**
-     * 带深度限制的 JSON 序列化
-     * <p>当对象嵌套层级超过 {@link #DEFAULT_MAX_SERIALIZE_DEPTH} 时，超出深度的子对象
-     * 将被替换为 {@code [max depth reached]} 占位符。
+     * 安全 JSON 序列化（防 StackOverflow）
+     * <p>使用 YdszJson 序列化对象，当对象存在循环引用或嵌套过深导致 StackOverflowError 时，
+     * 返回截断占位 JSON 而非抛出异常。
      *
      * @param obj 待序列化对象
-     * @return 限制深度后的 JSON 字符串
+     * @return JSON 字符串；序列化失败时返回错误占位 JSON
      */
-    private String serializeWithDepthLimit(Object obj) {
+    private String serializeSafely(Object obj) {
         try {
             return YdszJson.toJson(obj);
         } catch (StackOverflowError e) {
-            log.warn("【审计切面】参数序列化深度超过限制（{}层），已截断", DEFAULT_MAX_SERIALIZE_DEPTH);
+            log.warn("【审计切面】参数序列化发生 StackOverflow，已返回占位 JSON（建议检查对象循环引用）");
             return "{\"_truncated\": true, \"_reason\": \"depth limit exceeded (" + DEFAULT_MAX_SERIALIZE_DEPTH + " levels)\"}";
         } catch (Exception e) {
             log.warn("【审计切面】参数序列化失败: {}", e.getMessage());

@@ -13,7 +13,6 @@ import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.json.YdszJson;
@@ -37,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 public class RedisStreamOps {
 
     private static final String DEAD_LETTER_SUFFIX = ":deadletter";

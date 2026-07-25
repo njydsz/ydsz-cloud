@@ -6,7 +6,6 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,10 +22,8 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @since 1.0.0
- * 
  */
 @Slf4j
-@Component
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuthHealthIndicator implements HealthIndicator {
@@ -39,10 +36,8 @@ public class AuthHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        RedisConnection connection = null;
-        try {
+        try (RedisConnection connection = redisConnectionFactory.getConnection()) {
             long startTime = System.currentTimeMillis();
-            connection = redisConnectionFactory.getConnection();
             String pong = connection.ping();
             long responseTime = System.currentTimeMillis() - startTime;
 
@@ -64,14 +59,6 @@ public class AuthHealthIndicator implements HealthIndicator {
                     .withDetail("module", "auth")
                     .withDetail("error", e.getMessage())
                     .build();
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (Exception e) {
-                    log.debug("关闭 Redis 连接异常: {}", e.getMessage());
-                }
-            }
         }
     }
 }

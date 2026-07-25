@@ -22,6 +22,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.audit.aspect.AuditAspect;
 import com.njydsz.common.audit.core.AsyncAuditRecorder;
+import com.njydsz.common.audit.core.AuditFallbackWriter;
 import com.njydsz.common.audit.core.AuditMetricsBinder;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.core.AuditRecorder;
@@ -221,7 +222,7 @@ public class AuditAutoConfiguration {
         log.info("初始化异步审计记录器: AsyncAuditRecorder, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 分表策略={}",
                 asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
-        AsyncAuditRecorder recorder = new AsyncAuditRecorder(dataSource, properties, shardingStrategy, baseTableName);
+        AsyncAuditRecorder recorder = new AsyncAuditRecorder(dataSource, properties, shardingStrategy, baseTableName, auditFallbackWriter());
         this.asyncAuditRecorder = recorder;
         return recorder;
     }
@@ -272,6 +273,17 @@ public class AuditAutoConfiguration {
         log.info("初始化默认审计查询服务: DefaultAuditQueryService, 分表策略={}",
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
         return new DefaultAuditQueryService(dataSource, shardingStrategy, baseTableName);
+    }
+
+    /**
+     * 创建审计日志磁盘兜底写入器 Bean
+     *
+     * @return AuditFallbackWriter 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(AuditFallbackWriter.class)
+    public AuditFallbackWriter auditFallbackWriter() {
+        return new AuditFallbackWriter();
     }
 
     /**

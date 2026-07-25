@@ -1,15 +1,10 @@
 package com.njydsz.common.audit.core;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +13,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
@@ -32,7 +26,6 @@ import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.sharding.TableShardingStrategy;
 import com.njydsz.common.util.concurrent.ExecutorUtils;
-import com.njydsz.common.json.YdszJson;
 
 /**
  * 异步批量审计记录器
@@ -107,10 +100,8 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     /** 基础表名 */
     private final String baseTableName;
 
-    /** 磁盘兜底是否已失效标志 */
-    private volatile boolean diskFallbackFailed = false;
-    /** 磁盘兜底文件目录 */
-    private volatile String fallbackDir = System.getProperty("java.io.tmpdir") + "/audit-fallback";
+    /** 磁盘兜底写入器 */
+    private final AuditFallbackWriter fallbackWriter;
 
     /** 队列满告警计数 */
     private final AtomicLong queueFullWarnCount = new AtomicLong(0);
@@ -129,7 +120,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
      * @param properties 审计配置属性
      */
     public AsyncAuditRecorder(DataSource dataSource, AuditProperties properties) {
-        this(dataSource, properties, null, BASE_TABLE_NAME);
+        this(dataSource, properties, null, BASE_TABLE_NAME, new AuditFallbackWriter());
     }
 
     /**
@@ -142,6 +133,21 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
      */
     public AsyncAuditRecorder(DataSource dataSource, AuditProperties properties,
                               TableShardingStrategy shardingStrategy, String baseTableName) {
+        this(dataSource, properties, shardingStrategy, baseTableName, new AuditFallbackWriter());
+    }
+
+    /**
+     * 构造函数 - 支持分表策略 + 磁盘兜底写入器
+     *
+     * @param dataSource        数据源
+     * @param properties        审计配置属性
+     * @param shardingStrategy  分表策略（可为 null）
+     * @param baseTableName     基础表名
+     * @param fallbackWriter    磁盘兜底写入器
+     */
+    public AsyncAuditRecorder(DataSource dataSource, AuditProperties properties,
+                              TableShardingStrategy shardingStrategy, String baseTableName,
+                              AuditFallbackWriter fallbackWriter) {
         this.dataSource = Objects.requireNonNull(dataSource, "DataSource must not be null");
         this.properties = Objects.requireNonNull(properties, "AuditProperties must not be null");
         this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -150,6 +156,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         this.scheduler = ExecutorUtils.newScheduledThreadPool(1, "audit-scheduler");
         this.shardingStrategy = shardingStrategy;
         this.baseTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
+        this.fallbackWriter = fallbackWriter != null ? fallbackWriter : new AuditFallbackWriter();
 
         // 启动定时刷新任务
         scheduler.scheduleAtFixedRate(
@@ -300,103 +307,41 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     }
 
     /**
-     * 将审计日志序列化为 JSON 写入本地文件
+     * 将审计日志写入磁盘兜底（委托给 AuditFallbackWriter）
      *
      * @param auditLog 待写入的审计日志
      */
     private void writeToFallback(AuditLog auditLog) {
-        if (diskFallbackFailed) {
-            log.error("【异步审计记录器】磁盘兜底已失效, 审计日志将丢失, id={}", auditLog.getId());
-            return;
-        }
-
-        try {
-            Path dir = Paths.get(fallbackDir);
-            if (!Files.exists(dir)) {
-                Files.createDirectories(dir);
-            }
-
-            String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            Path logFile = dir.resolve("audit_fallback_" + dateStr + ".json");
-
-            String jsonLine = YdszJson.toJson(auditLog) + "\n";
-
-            Files.write(logFile, jsonLine.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-
-            log.warn("【异步审计记录器】队列已满, 审计日志已写入磁盘兜底, file={}, id={}", logFile, auditLog.getId());
-        } catch (IOException e) {
-            diskFallbackFailed = true;
-            log.error("【异步审计记录器】磁盘兜底写入失败, 审计日志将丢失, id={}, error={}", auditLog.getId(), e.getMessage(), e);
-        }
+        fallbackWriter.writeToFallback(auditLog);
     }
 
     /**
-     * 从磁盘恢复审计日志到队列
-     *
-     * <p>扫描 fallbackDir 下的 JSON 文件，逐行读取并反序列化为 AuditLog，
-     * 在队列有空间时将日志重新放入队列。已成功恢复的文件会被删除。
+     * 从磁盘恢复审计日志到队列（委托给 AuditFallbackWriter）
      */
     public void recoverFromFallback() {
-        Path dir = Paths.get(fallbackDir);
-        if (!Files.exists(dir) || !Files.isDirectory(dir)) {
+        List<Path> fallbackFiles = fallbackWriter.listFallbackFiles();
+        if (fallbackFiles.isEmpty()) {
             return;
         }
 
-        try {
-            List<Path> fallbackFiles;
-            try (Stream<Path> stream = Files.list(dir)) {
-                fallbackFiles = stream
-                        .filter(p -> p.getFileName().toString().startsWith("audit_fallback_") &&
-                                p.getFileName().toString().endsWith(".json"))
-                        .sorted()
-                        .collect(Collectors.toList());
-            }
+        log.info("【异步审计记录器】开始恢复磁盘兜底日志, 文件数={}", fallbackFiles.size());
 
-            if (fallbackFiles.isEmpty()) {
-                return;
-            }
+        for (Path file : fallbackFiles) {
+            List<AuditLog> logs = fallbackWriter.readFromFallbackFile(file);
+            int recovered = 0;
 
-            log.info("【异步审计记录器】开始恢复磁盘兜底日志, 文件数={}", fallbackFiles.size());
-
-            for (Path file : fallbackFiles) {
-                List<String> lines = Files.readAllLines(file);
-                int recovered = 0;
-                int failed = 0;
-
-                for (String line : lines) {
-                    if (line == null || line.trim().isEmpty()) {
-                        continue;
-                    }
-
-                    try {
-                        AuditLog auditLog = YdszJson.toObject(line.trim(), AuditLog.class);
-                        if (auditLog != null) {
-                            boolean offered = queue.offer(auditLog);
-                            if (offered) {
-                                recovered++;
-                            } else {
-                                log.warn("【异步审计记录器】恢复时队列已满, 停止恢复, file={}", file);
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        failed++;
-                        log.warn("【异步审计记录器】恢复日志行失败, file={}, error={}", file, e.getMessage());
-                    }
-                }
-
-                try {
-                    Files.delete(file);
-                    log.info("【异步审计记录器】磁盘兜底文件已恢复并删除, file={}, recovered={}, failed={}",
-                            file, recovered, failed);
-                } catch (IOException e) {
-                    log.warn("【异步审计记录器】删除磁盘兜底文件失败, file={}, error={}", file, e.getMessage(), e);
+            for (AuditLog auditLog : logs) {
+                boolean offered = queue.offer(auditLog);
+                if (offered) {
+                    recovered++;
+                } else {
+                    log.warn("【异步审计记录器】恢复时队列已满, 停止恢复, file={}", file);
+                    break;
                 }
             }
 
-            diskFallbackFailed = false;
-        } catch (IOException e) {
-            log.error("【异步审计记录器】扫描磁盘兜底目录失败, dir={}", fallbackDir, e);
+            fallbackWriter.deleteFallbackFile(file);
+            log.info("【异步审计记录器】磁盘兜底文件已恢复, file={}, recovered={}", file, recovered);
         }
     }
 
@@ -451,8 +396,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
      * @param path 磁盘文件路径
      */
     public void setDiskFallbackPath(String path) {
-        this.fallbackDir = path;
-        this.diskFallbackFailed = false;
+        fallbackWriter.setFallbackDir(path);
         log.info("【异步审计记录器】磁盘兜底路径已设置为: {}", path);
     }
 
@@ -516,19 +460,10 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
      * @param batch 写入失败的审计日志批次
      */
     private void writeBatchToFallback(List<AuditLog> batch) {
-        // 磁盘兜底未失效时，尝试逐条写入磁盘兜底文件
-        if (!diskFallbackFailed) {
-            for (AuditLog auditLog : batch) {
-                writeToFallback(auditLog);
-                // writeToFallback 内部写入失败时会将 diskFallbackFailed 置为 true
-                if (diskFallbackFailed) {
-                    break;
-                }
-            }
-        }
+        fallbackWriter.writeBatchToFallback(batch);
 
         // 磁盘兜底已失效，尝试将日志重新放回队列尾部，避免数据永久丢失
-        if (diskFallbackFailed) {
+        if (fallbackWriter.isDiskFallbackFailed()) {
             log.warn("【异步审计记录器】磁盘兜底已失效, 尝试将失败批次重新放回队列尾部, count={}", batch.size());
             for (AuditLog auditLog : batch) {
                 boolean offered = queue.offer(auditLog);

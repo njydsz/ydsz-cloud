@@ -13,7 +13,6 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.util.classloader.ClassUtils;
 
@@ -41,7 +40,6 @@ import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Component
 public class RedisConnectionFactoryConfigurer {
 
     private static final long DEFAULT_TOPOLOGY_REFRESH_SECONDS = 30;
