@@ -241,8 +241,4 @@ public class CronjobMetrics extends AbstractModuleMetrics {
                         .eq(JobLogDO::getStatus, "RUNNING")
                         .eq(JobLogDO::getDeleted, 0));
     }
-
-    // ===========================================
-    // Gauge 注册
-    // ===========================================
 }

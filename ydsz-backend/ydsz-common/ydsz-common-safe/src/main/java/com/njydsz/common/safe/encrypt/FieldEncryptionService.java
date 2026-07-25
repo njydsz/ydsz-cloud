@@ -130,4 +130,28 @@ public class FieldEncryptionService {
 
         try {
             byte[] decoded = Base64.getDecoder().decode(ciphertext);
-            ByteBuffer byteBuffer = ByteBuffer
+            ByteBuffer byteBuffer = ByteBuffer.wrap(decoded);
+
+            int keyVersion = byteBuffer.get();
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            byteBuffer.get(iv);
+            byte[] ciphertextBytes = new byte[byteBuffer.remaining()];
+            byteBuffer.get(ciphertextBytes);
+
+            SecretKey key = keyMap.get(keyVersion);
+            if (key == null) {
+                throw new IllegalArgumentException("未知的密钥版本: " + keyVersion);
+            }
+
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            cipher.init(Cipher.DECRYPT_MODE, key, parameterSpec);
+
+            byte[] plaintextBytes = cipher.doFinal(ciphertextBytes);
+            return new String(plaintextBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error("解密失败", e);
+            throw new RuntimeException("解密失败", e);
+        }
+    }
+}

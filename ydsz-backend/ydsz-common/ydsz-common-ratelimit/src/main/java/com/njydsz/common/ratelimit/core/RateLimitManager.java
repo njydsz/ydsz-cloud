@@ -1,0 +1,158 @@
+package com.njydsz.common.ratelimit.core;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import com.njydsz.common.ratelimit.algorithm.RateLimiter;
+import com.njydsz.common.ratelimit.cluster.ClusterRateLimiter;
+import com.njydsz.common.ratelimit.cluster.RedisClusterRateLimiter;
+import com.njydsz.common.ratelimit.enums.RateLimitMode;
+import com.njydsz.common.ratelimit.model.RateLimitContext;
+import com.njydsz.common.ratelimit.model.RateLimitDecision;
+import com.njydsz.common.ratelimit.model.RateLimitRule;
+import com.njydsz.common.ratelimit.properties.RateLimitProperties;
+import com.njydsz.common.ratelimit.spi.RateLimitRuleProvider;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 限流管理器
+ *
+ * <p>统一入口：根据规则模式（LOCAL / CLUSTER / ADAPTIVE）分发到不同的限流器。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Slf4j
+public class RateLimitManager {
+
+    private final RateLimitRuleProvider ruleProvider;
+    private final RateLimitRuleCache ruleCache;
+    private final RateLimitProperties properties;
+    private final ClusterRateLimiter clusterLimiter;
+
+    /** 决策监听器（用于埋点） */
+    private final List<DecisionListener> listeners = new CopyOnWriteArrayList<>();
+
+    public RateLimitManager(RateLimitRuleProvider ruleProvider,
+                            RateLimitProperties properties) {
+        this.ruleProvider = ruleProvider;
+        this.properties = properties;
+        this.ruleCache = new RateLimitRuleCache(ruleProvider);
+        this.clusterLimiter = new RedisClusterRateLimiter();
+    }
+
+    /**
+     * 核心限流决策入口
+     */
+    public RateLimitDecision decide(RateLimitContext context) {
+        if (!properties.isEnabled()) {
+            return passThrough(context, "ratelimit disabled");
+        }
+        Optional<RateLimiter> limiterOpt = ruleCache.getLimiter(context.getResource());
+        if (limiterOpt.isEmpty()) {
+            return passThrough(context, "no rule matched");
+        }
+        RateLimiter limiter = limiterOpt.get();
+        RateLimitRule rule = limiter.getRule();
+        if (!rule.isEnabled()) {
+            return passThrough(context, "rule disabled");
+        }
+
+        RateLimitDecision decision;
+        try {
+            if (rule.getMode() == RateLimitMode.LOCAL) {
+                decision = limiter.tryAcquire(context);
+            } else if (rule.getMode() == RateLimitMode.CLUSTER) {
+                decision = clusterLimiter.tryAcquire(rule, context);
+            } else {
+                // ADAPTIVE / HYBRID：简化处理，按 LOCAL 处理
+                decision = limiter.tryAcquire(context);
+            }
+        } catch (Exception ex) {
+            log.error("Rate limit decision failed for resource={}", context.getResource(), ex);
+            decision = handleFallback(context, rule, ex);
+        }
+        decision.setResource(context.getResource());
+        notifyListeners(decision);
+        return decision;
+    }
+
+    /**
+     * 放行
+     */
+    private RateLimitDecision passThrough(RateLimitContext context, String reason) {
+        return RateLimitDecision.builder()
+                .resource(context.getResource())
+                .result(com.njydsz.common.ratelimit.enums.RateLimitResult.PASS)
+                .remaining(Double.MAX_VALUE)
+                .threshold(-1)
+                .timestamp(java.time.Instant.now())
+                .reason(reason)
+                .build();
+    }
+
+    /**
+     * 失败降级
+     */
+    private RateLimitDecision handleFallback(RateLimitContext context, RateLimitRule rule, Throwable ex) {
+        if ("BLOCK".equalsIgnoreCase(properties.getFallbackOnError())) {
+            return RateLimitDecision.builder()
+                    .resource(context.getResource())
+                    .rule(rule)
+                    .result(com.njydsz.common.ratelimit.enums.RateLimitResult.BLOCKED)
+                    .remaining(0)
+                    .timestamp(java.time.Instant.now())
+                    .reason("error fallback: " + ex.getMessage())
+                    .build();
+        }
+        return passThrough(context, "error fallback: " + ex.getMessage());
+    }
+
+    /**
+     * 添加决策监听器
+     */
+    public void addListener(DecisionListener listener) {
+        listeners.add(listener);
+    }
+
+    private void notifyListeners(RateLimitDecision decision) {
+        for (DecisionListener listener : listeners) {
+            try {
+                listener.onDecision(decision);
+            } catch (Exception ex) {
+                log.warn("Decision listener failed", ex);
+            }
+        }
+    }
+
+    /**
+     * 重新加载规则
+     */
+    public void reload() {
+        ruleCache.reload();
+    }
+
+    /**
+     * 获取规则提供器
+     */
+    public RateLimitRuleProvider getRuleProvider() {
+        return ruleProvider;
+    }
+
+    /**
+     * 获取规则缓存
+     */
+    public RateLimitRuleCache getRuleCache() {
+        return ruleCache;
+    }
+
+    /**
+     * 决策监听器（用于指标埋点/告警）
+     */
+    @FunctionalInterface
+    public interface DecisionListener {
+        void onDecision(RateLimitDecision decision);
+    }
+}

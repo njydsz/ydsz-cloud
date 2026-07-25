@@ -5,13 +5,12 @@ import java.util.List;
 import com.njydsz.userinfo.domain.entity.PostDO;
 
 /**
- * 岗位 service interface.
+ * 岗位 Service 接口。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public interface PostService {
-
     PostDO getById(String id);
     List<PostDO> list();
     String save(PostDO entity);

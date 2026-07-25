@@ -4,14 +4,19 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.njydsz.userinfo.server.service.LanguageService;
 import com.njydsz.userinfo.domain.entity.LanguageDO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
+import com.njydsz.userinfo.server.service.LanguageService;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+/**
+ * 语言 Service 实现。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Service
 @RequiredArgsConstructor
 public class LanguageServiceImpl implements LanguageService {
@@ -25,7 +30,10 @@ public class LanguageServiceImpl implements LanguageService {
 
     @Override
     public List<LanguageDO> list() {
-        return mapper.selectList(null);
+        LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(LanguageDO::getDeleted, 0);
+        wrapper.orderByAsc(LanguageDO::getSortOrder);
+        return mapper.selectList(wrapper);
     }
 
     @Override

@@ -353,10 +353,17 @@ public class HashUtils {
             return new byte[0];
         }
 
+        // 1. 统计前导 '1'（对应前导 0 字节）
+        int leadingZeros = 0;
+        for (int i = 0; i < base58.length() && base58.charAt(i) == BASE58_ALPHABET.charAt(0); i++) {
+            leadingZeros++;
+        }
+
+        // 2. 解码数值（跳过前导 '1'，它们对数值贡献为 0）
         BigInteger decoded = BigInteger.ZERO;
         BigInteger base = BigInteger.valueOf(BASE58_SIZE);
-
-        for (char c : base58.toCharArray()) {
+        for (int i = leadingZeros; i < base58.length(); i++) {
+            char c = base58.charAt(i);
             int index = BASE58_ALPHABET.indexOf(c);
             if (index < 0) {
                 throw new IllegalArgumentException("Invalid Base58 character: " + c);
@@ -364,30 +371,14 @@ public class HashUtils {
             decoded = decoded.multiply(base).add(BigInteger.valueOf(index));
         }
 
-        byte[] bytes = decoded.toByteArray();
+        // 3. BigInteger → byte[]（去除 BigInteger 的符号位填充：仅当首字节为 0 且次字节高位为 1 时）
+        byte[] bigIntBytes = decoded.toByteArray();
+        int stripSign = (bigIntBytes.length > 1 && bigIntBytes[0] == 0 && (bigIntBytes[1] & 0x80) != 0) ? 1 : 0;
+        int valueLen = bigIntBytes.length - stripSign;
 
-        for (char c : base58.toCharArray()) {
-            if (c == BASE58_ALPHABET.charAt(0)) {
-                byte[] newBytes = new byte[bytes.length + 1];
-                System.arraycopy(bytes, 0, newBytes, 1, bytes.length);
-                bytes = newBytes;
-            } else {
-                break;
-            }
-        }
-
-        int firstNonZero = 0;
-        while (firstNonZero < bytes.length && bytes[firstNonZero] == 0) {
-            firstNonZero++;
-        }
-
-        if (firstNonZero == bytes.length) {
-            return new byte[0];
-        }
-
-        byte[] result = new byte[bytes.length - firstNonZero];
-        System.arraycopy(bytes, firstNonZero, result, 0, result.length);
-
+        // 4. 拼接：前导 0 字节 + 数值字节
+        byte[] result = new byte[leadingZeros + valueLen];
+        System.arraycopy(bigIntBytes, stripSign, result, leadingZeros, valueLen);
         return result;
     }
 

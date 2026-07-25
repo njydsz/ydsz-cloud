@@ -31,6 +31,10 @@ ydsz:
     conflict-detection-enabled: true
     conflict-detection-block-on-error: true
     environment: default
+    # ---------- 注解扫描基包（逗号分隔） ----------
+    annotation-scan-base-packages: ""
+    # ---------- 健康检查 ----------
+    health-enabled: true
     # ---------- 熔断器 ----------
     circuit-breaker-error-rate: 0.5
     circuit-breaker-min-evaluations: 100
@@ -71,6 +75,8 @@ ydsz:
       cache-max-size: 10000
       parallel-enabled: false
       parallel-pool-size: 0
+      parallel-threshold: 50
+      slow-rule-threshold-ms: 0
     # ---------- 生命周期管理 ----------
     lifecycle:
       enabled: true
@@ -79,6 +85,13 @@ ydsz:
       stale-disabled-days: 90
       low-impact-trigger-rate: 0.001
       min-sample-size: 500
+    # ---------- CEP 引擎 ----------
+    cep:
+      enabled: true
+    # ---------- 断点调试 ----------
+    debug:
+      enabled: true
+      suspend-timeout-seconds: 60
 
 # Actuator
 management:

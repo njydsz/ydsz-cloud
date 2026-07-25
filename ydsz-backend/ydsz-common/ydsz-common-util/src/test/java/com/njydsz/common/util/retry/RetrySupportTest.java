@@ -2,6 +2,7 @@ package com.njydsz.common.util.retry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -99,18 +100,21 @@ class RetrySupportTest {
 
     @Test
     @DisplayName("指数退避 — 实际延迟随次数翻倍")
-    void exponentialBackoffDelaysGrowExponentially() throws Exception {
+    void exponentialBackoffDelaysGrowExponentially() {
         AtomicInteger counter = new AtomicInteger();
         long start = System.nanoTime();
-        RetrySupport.withExponentialBackoff(3, 20L, 1000L)
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            RetrySupport.withExponentialBackoff(3, 20L, 1000L)
                 .retryOn(e -> true)
                 .execute(() -> {
                     counter.incrementAndGet();
                     throw new RuntimeException("force retry");
-                });
+                }));
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
-        // 3 次重试，延迟 = 20 + 40 + 80 = 140ms（误差容忍 ±80ms）
+        assertThat(ex.getMessage()).isEqualTo("force retry");
+        // 1 次首试 + 3 次重试 = 4 次
         assertThat(counter.get()).isEqualTo(4);
+        // 3 次重试延迟 = 20 + 40 + 80 = 140ms（误差容忍 ±80ms）
         assertThat(elapsedMs).isBetween(80L, 400L);
     }
 

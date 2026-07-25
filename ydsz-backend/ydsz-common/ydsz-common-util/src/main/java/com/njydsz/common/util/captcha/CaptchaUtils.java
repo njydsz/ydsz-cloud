@@ -333,10 +333,13 @@ public class CaptchaUtils {
         }
 
         /**
-         * 验证验证码是否正确
+         * 验证输入验证码是否匹配（大小写不敏感，自动去空格）
+         *
+         * @param inputCode 用户输入的验证码
+         * @return 匹配返回 true；inputCode 为 null/空或 code 为 null 时返回 false
          */
-        public boolean verify(String inputCode) {
-            if (inputCode == null || code == null) {
+        public boolean matches(String inputCode) {
+            if (inputCode == null || inputCode.isBlank() || code == null) {
                 return false;
             }
             return code.equalsIgnoreCase(inputCode.trim());

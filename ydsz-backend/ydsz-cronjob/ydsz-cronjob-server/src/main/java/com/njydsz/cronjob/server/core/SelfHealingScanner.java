@@ -106,7 +106,7 @@ public class SelfHealingScanner {
     /**
      * 定时扫描异常任务。
      */
-    @Scheduled(fixedDelayString = "#{${ydsz.cronjob.self-healing.scan-interval-seconds:60} * 1000}")
+    @Scheduled(fixedDelayString = "${ydsz.cronjob.self-healing.scan-interval-ms:60000}")
     public void scan() {
         if (!cronjobProperties.getLeader().isEnabled()) {
             return;

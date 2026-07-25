@@ -2,6 +2,7 @@ package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -774,7 +775,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     @Override
     public RuleEngineStats getStats() {
-        Map<String, RuleEngineStats.RuleStat> snapshot = new ConcurrentHashMap<>();
+        // P2-7: 使用 HashMap 替代 ConcurrentHashMap 构建快照
+        // （快照本身是一次性局部变量，无需线程安全容器，减少不必要的开销）
+        Map<String, RuleEngineStats.RuleStat> snapshot = new HashMap<>(perRuleStats.size());
         perRuleStats.forEach((k, v) -> snapshot.put(k, RuleEngineStats.RuleStat.builder()
                 .executions(v.getExecutions())
                 .triggered(v.getTriggered())
