@@ -113,6 +113,36 @@ public class AsyncTraceRecorder implements TraceRecorder {
     }
 
     /**
+     * 获取当前队列积压大小
+     *
+     * @return 队列中的待写入轨迹数
+     * @since 2.3.0
+     */
+    public int getQueueSize() {
+        return queue.size();
+    }
+
+    /**
+     * 获取队列总容量
+     *
+     * @return 队列容量
+     * @since 2.3.0
+     */
+    public int getQueueCapacity() {
+        return queueCapacity;
+    }
+
+    /**
+     * 检查后台线程是否仍在运行
+     *
+     * @return true 表示后台线程正在运行
+     * @since 2.3.0
+     */
+    public boolean isRunning() {
+        return running.get();
+    }
+
+    /**
      * 后台刷新循环
      */
     private void flushLoop() {

@@ -8,6 +8,15 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * 字典项 DO。
+ *
+ * <p>对应数据库表 {@code ydsz_dict_item}，字段与 DDL 完全对齐。
+ * 注意：数据库表中列名为 {@code item_value}（非 {@code item_name}），
+ * 且包含 {@code parent_id}（树形字典）和 {@code ext_json}（扩展属性 JSONB）。
+ *
+ * @author ydsz-team
+ */
 @Data
 @TableName("ydsz_dict_item")
 public class DictItemDO {
@@ -33,9 +42,10 @@ public class DictItemDO {
 
     private String typeCode;
     private String itemCode;
-    private String itemName;
     private String itemValue;
     private Integer sortOrder;
-    private String status;
+    private String parentId;
     private String description;
+    private String extJson;
+    private String status;
 }

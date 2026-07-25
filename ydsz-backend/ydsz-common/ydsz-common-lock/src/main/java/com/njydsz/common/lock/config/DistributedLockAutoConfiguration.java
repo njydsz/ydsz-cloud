@@ -21,10 +21,12 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.common.lock.aspect.IdempotentAspect;
+import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.common.lock.health.LockHealthIndicator;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RedisIdempotentStrategy;
+import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.scheduler.LockLeakDetector;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
@@ -178,6 +180,35 @@ public class DistributedLockAutoConfiguration {
     public LockLeakDetector lockLeakDetector(ObjectProvider<LockWatchDog> watchDogProvider,
                                                ObjectProvider<LockMetrics> lockMetricsProvider) {
         return new LockLeakDetector(watchDogProvider, lockMetricsProvider);
+    }
+
+    /**
+     * 创建表单重复提交 Token 服务 Bean
+     *
+     * <p>提供 Token 的生成、校验和删除功能，用于防止表单重复提交。
+     *
+     * @param stringRedisTemplate Redis 客户端
+     * @return RepeatSubmitTokenService 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RepeatSubmitTokenService repeatSubmitTokenService(StringRedisTemplate stringRedisTemplate) {
+        return new RepeatSubmitTokenService(stringRedisTemplate);
+    }
+
+    /**
+     * 创建表单重复提交 AOP 切面 Bean
+     *
+     * <p>拦截 {@link com.njydsz.common.lock.annotation.RepeatSubmit} 注解方法，
+     * 基于 Token 令牌模式防止表单重复提交。
+     *
+     * @param repeatSubmitTokenService Token 服务
+     * @return RepeatSubmitAspect 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RepeatSubmitAspect repeatSubmitAspect(RepeatSubmitTokenService repeatSubmitTokenService) {
+        return new RepeatSubmitAspect(repeatSubmitTokenService);
     }
 
     /**

@@ -902,6 +902,16 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
+     * 获取规则索引器
+     *
+     * @return 规则索引器实例
+     * @since 2.3.0
+     */
+    public RuleIndexer getRuleIndexer() {
+        return ruleIndexer;
+    }
+
+    /**
      * 设置是否启用灰度路由
      *
      * @param canaryEnabled 是否启用

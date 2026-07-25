@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,21 +9,40 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.auth.token.JwtTokenService;
-import com.njydsz.common.auth.token.TokenBlacklistService;
+import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.service.TokenBlacklistService;
+import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.entity.RoleDO;
 import com.njydsz.userinfo.domain.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.entity.UserRoleDO;
+import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 认证服务实现。使用 common-auth JwtTokenService 签发/验证/吊销 Token。
+ * 认证服务实现。
+ *
+ * <p>核心能力：
+ * <ul>
+ *   <li>账号锁定（N 次密码错误后自动锁定）</li>
+ *   <li>登录失败计数 + 最后登录信息更新</li>
+ *   <li>JWT Token 签发/刷新/吊销</li>
+ *   <li>用户角色按 user_role 关联表精确查询</li>
+ *   <li>Micrometer 指标埋点</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -34,28 +54,52 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserAccountMapper userAccountMapper;
     private final RoleMapper roleMapper;
-    private final JwtTokenService jwtTokenService;
+    private final UserRoleMapper userRoleMapper;
+    private final TokenService tokenService;
     private final TokenBlacklistService tokenBlacklistService;
     private final RedisHashOps redisHashOps;
+    private final RedisStringOps redisStringOps;
     private final PasswordEncoder passwordEncoder;
+    private final UserInfoMetrics userInfoMetrics;
 
     private static final long TOKEN_TTL_SECONDS = 7200;
+    private static final int MAX_LOGIN_FAIL_COUNT = 5;
+    private static final int LOCK_DURATION_MINUTES = 30;
+    private static final String LOGIN_FAIL_COUNT_KEY = "auth:login:fail:";
 
     @Override
-    public LoginResult login(String username, String password) {
+    @Transactional(rollbackFor = Exception.class)
+    public LoginVO login(String username, String password) {
+        var sample = userInfoMetrics.startTimer();
+
         LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccountDO::getUsername, username);
         wrapper.eq(UserAccountDO::getDeleted, 0);
         UserAccountDO user = userAccountMapper.selectOne(wrapper);
 
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            userInfoMetrics.recordLoginFail();
+            userInfoMetrics.stopTimer(sample);
+            throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
-        if (user.getStatus() != null && user.getStatus() == 0) {
-            throw new RuntimeException("账号已被禁用");
+
+        if ("DISABLED".equals(user.getStatus()) || (user.getStatus() != null && user.getStatus() == 0)) {
+            userInfoMetrics.recordLoginFail();
+            userInfoMetrics.stopTimer(sample);
+            throw new BusinessException(UserInfoResultCode.USER_DISABLED);
         }
+
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+            userInfoMetrics.recordLoginFail();
+            userInfoMetrics.stopTimer(sample);
+            throw new BusinessException(UserInfoResultCode.ACCOUNT_LOCKED);
+        }
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("密码错误");
+            recordLoginFailure(user);
+            userInfoMetrics.recordLoginFail();
+            userInfoMetrics.stopTimer(sample);
+            throw new BusinessException(UserInfoResultCode.PASSWORD_INCORRECT);
         }
 
         List<RoleDO> roles = loadUserRoles(user.getId());
@@ -64,53 +108,124 @@ public class AuthServiceImpl implements AuthService {
         String roleNames = roles.stream().map(RoleDO::getRoleName)
                 .collect(Collectors.joining(","));
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getId());
-        claims.put("username", user.getUsername());
-        claims.put("roleCode", roleCodes);
-        claims.put("tenantId", user.getTenantId());
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(user.getId());
+        userInfo.setUsername(user.getUsername());
+        userInfo.setRoleCode(roleCodes);
+        userInfo.setTenantId(user.getTenantId());
 
-        String accessToken = jwtTokenService.generateAccessToken(claims);
-        String refreshToken = jwtTokenService.generateRefreshToken(claims);
+        String accessToken = tokenService.issueAccessToken(userInfo);
+        String refreshToken = tokenService.issueRefreshToken(userInfo);
 
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("userId", user.getId());
-        userInfo.put("username", user.getUsername());
-        userInfo.put("roleCode", roleCodes);
-        userInfo.put("roleName", roleNames);
-        userInfo.put("tenantId", user.getTenantId());
-        redisHashOps.hSetAll(accessToken, userInfo, TOKEN_TTL_SECONDS, TimeUnit.SECONDS);
+        Map<String, Object> userInfoMap = new HashMap<>();
+        userInfoMap.put("userId", user.getId());
+        userInfoMap.put("username", user.getUsername());
+        userInfoMap.put("roleCode", roleCodes);
+        userInfoMap.put("roleName", roleNames);
+        userInfoMap.put("tenantId", user.getTenantId());
+        redisHashOps.hSetAll(accessToken, userInfoMap, TOKEN_TTL_SECONDS, TimeUnit.SECONDS);
 
-        LoginResult result = new LoginResult();
+        updateLoginSuccess(user);
+
+        userInfoMetrics.recordLoginSuccess();
+        userInfoMetrics.stopTimer(sample);
+
+        LoginVO result = new LoginVO();
         result.setAccessToken(accessToken);
         result.setRefreshToken(refreshToken);
+        result.setTokenType("Bearer");
         result.setExpiresIn(TOKEN_TTL_SECONDS);
-        result.setUserId(user.getId());
-        result.setUsername(user.getUsername());
-        result.setRealName(user.getRealName());
+        result.setScope("read write");
+
+        LoginVO.UserInfoVO userInfoVO = new LoginVO.UserInfoVO();
+        userInfoVO.setUserId(user.getId());
+        userInfoVO.setUsername(user.getUsername());
+        userInfoVO.setRealName(user.getRealName());
+        userInfoVO.setRoleCode(roleCodes);
+        userInfoVO.setRoleName(roleNames);
+        userInfoVO.setTenantId(user.getTenantId());
+        userInfoVO.setAvatar(user.getAvatar());
+        result.setUserInfo(userInfoVO);
+
         return result;
     }
 
     @Override
     public void logout(String accessToken) {
-        tokenBlacklistService.blacklist(accessToken);
+        if (accessToken == null || accessToken.isBlank()) {
+            return;
+        }
+        tokenBlacklistService.addToBlacklist(accessToken);
         redisHashOps.delete(accessToken);
+        log.info("User logged out, token blacklisted");
     }
 
     @Override
-    public LoginResult refresh(String refreshToken) {
-        String accessToken = jwtTokenService.refreshAccessToken(refreshToken);
-        LoginResult result = new LoginResult();
-        result.setAccessToken(accessToken);
+    public LoginVO refresh(String refreshToken) {
+        String newAccessToken = tokenService.refreshAccessToken(refreshToken);
+        if (newAccessToken == null) {
+            throw new BusinessException(BaseResultCode.TOKEN_INVALID);
+        }
+        LoginVO result = new LoginVO();
+        result.setAccessToken(newAccessToken);
         result.setRefreshToken(refreshToken);
+        result.setTokenType("Bearer");
         result.setExpiresIn(TOKEN_TTL_SECONDS);
+        result.setScope("read write");
         return result;
     }
 
+    /**
+     * 按 user_role 关联表查询用户角色。
+     */
     private List<RoleDO> loadUserRoles(String userId) {
-        LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RoleDO::getDeleted, 0);
-        wrapper.eq(RoleDO::getStatus, "ENABLED");
-        return roleMapper.selectList(wrapper);
+        LambdaQueryWrapper<UserRoleDO> urWrapper = new LambdaQueryWrapper<>();
+        urWrapper.eq(UserRoleDO::getUserId, userId);
+        urWrapper.eq(UserRoleDO::getDeleted, 0);
+        List<UserRoleDO> userRoles = userRoleMapper.selectList(urWrapper);
+
+        if (userRoles.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> roleIds = userRoles.stream()
+                .map(UserRoleDO::getRoleId)
+                .collect(Collectors.toList());
+
+        LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.in(RoleDO::getId, roleIds);
+        roleWrapper.eq(RoleDO::getDeleted, 0);
+        roleWrapper.eq(RoleDO::getStatus, "ENABLED");
+        return roleMapper.selectList(roleWrapper);
+    }
+
+    /**
+     * 记录登录失败：递增失败计数，达到阈值自动锁定。
+     */
+    private void recordLoginFailure(UserAccountDO user) {
+        int failCount = (user.getLoginFailCount() == null ? 0 : user.getLoginFailCount()) + 1;
+
+        LambdaUpdateWrapper<UserAccountDO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(UserAccountDO::getId, user.getId());
+        updateWrapper.set(UserAccountDO::getLoginFailCount, failCount);
+
+        if (failCount >= MAX_LOGIN_FAIL_COUNT) {
+            updateWrapper.set(UserAccountDO::getLockedUntil,
+                    LocalDateTime.now().plusMinutes(LOCK_DURATION_MINUTES));
+            log.warn("User {} locked after {} failed attempts", user.getUsername(), failCount);
+        }
+        userAccountMapper.update(null, updateWrapper);
+    }
+
+    /**
+     * 更新登录成功信息：重置失败计数、记录最后登录时间和 IP。
+     */
+    private void updateLoginSuccess(UserAccountDO user) {
+        LambdaUpdateWrapper<UserAccountDO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(UserAccountDO::getId, user.getId());
+        updateWrapper.set(UserAccountDO::getLoginFailCount, 0);
+        updateWrapper.set(UserAccountDO::getLockedUntil, null);
+        updateWrapper.set(UserAccountDO::getLastLoginAt, LocalDateTime.now());
+        userAccountMapper.update(null, updateWrapper);
     }
 }
