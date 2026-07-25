@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.config;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -66,7 +67,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ *
  * @see FeignProperties
  * @see FeignRequestInterceptor
  * @see YdszFeignErrorDecoder
@@ -451,6 +452,6 @@ public class FeignConfiguration {
             FeignProperties feignProperties,
             ObjectProvider<RedisService> redisServiceProvider) {
         int ttlSeconds = feignProperties.getCircuitBreaker().getStateTtlSeconds();
-        return new CircuitBreakerStatePersistence(redisServiceProvider, java.time.Duration.ofSeconds(ttlSeconds));
+        return new CircuitBreakerStatePersistence(redisServiceProvider, Duration.ofSeconds(ttlSeconds));
     }
 }

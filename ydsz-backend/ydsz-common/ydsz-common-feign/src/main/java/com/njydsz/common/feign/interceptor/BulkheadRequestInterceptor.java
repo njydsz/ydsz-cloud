@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.interceptor;
 
+import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +116,7 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
         try {
             String url = requestTemplate.url();
             if (url != null && url.startsWith("http")) {
-                String host = java.net.URI.create(url).getHost();
+                String host = URI.create(url).getHost();
                 if (host != null) {
                     return host;
                 }

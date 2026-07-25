@@ -27,7 +27,6 @@ import com.njydsz.common.audit.config.AuditAutoConfiguration;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  * @see AuditAutoConfiguration
  */
 @Inherited

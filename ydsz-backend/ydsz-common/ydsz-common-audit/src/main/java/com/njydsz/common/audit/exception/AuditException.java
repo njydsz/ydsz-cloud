@@ -16,7 +16,6 @@ package com.njydsz.common.audit.exception;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public class AuditException extends RuntimeException {
 

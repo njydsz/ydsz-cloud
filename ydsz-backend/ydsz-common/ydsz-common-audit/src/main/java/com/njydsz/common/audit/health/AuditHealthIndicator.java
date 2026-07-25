@@ -1,5 +1,8 @@
 package com.njydsz.common.audit.health;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
@@ -56,7 +59,7 @@ public class AuditHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         Health.Builder builder;
-        java.util.Map<String, Object> details = new java.util.LinkedHashMap<>();
+        Map<String, Object> details = new LinkedHashMap<>();
 
         details.put("module", "audit");
         details.put("recorder", auditRecorder.getName());

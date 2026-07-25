@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.aspect;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -113,7 +114,7 @@ public class YdszFeignLogger extends Logger {
     }
 
     @Override
-    protected Response logAndRebufferResponse(String configKey, Logger.Level logLevel, Response response, long elapsedTime) throws java.io.IOException {
+    protected Response logAndRebufferResponse(String configKey, Logger.Level logLevel, Response response, long elapsedTime) throws IOException {
         this.logLevel = logLevel;
         return super.logAndRebufferResponse(configKey, logLevel, response, elapsedTime);
     }

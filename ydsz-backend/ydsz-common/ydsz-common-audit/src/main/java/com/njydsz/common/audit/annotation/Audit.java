@@ -36,7 +36,6 @@ import com.njydsz.common.audit.enums.AuditType;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  * @see AuditAspect
  * @see AuditType
  * @see AuditAction

@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.monitor;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -83,7 +84,7 @@ public class FeignMicrometerCollector {
      * @param durationMs 耗时（毫秒）
      */
     public void recordLatency(String clientName, String method, long durationMs) {
-        getOrCreateTimer(clientName, method).record(java.time.Duration.ofMillis(durationMs));
+        getOrCreateTimer(clientName, method).record(Duration.ofMillis(durationMs));
     }
 
     /**

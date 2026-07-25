@@ -3,6 +3,7 @@ package com.njydsz.common.auth.security;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.BitSet;
 import java.util.HexFormat;
 
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ public class TokenBlacklistBloomFilter {
 
     private static final Logger log = LoggerFactory.getLogger(TokenBlacklistBloomFilter.class);
 
-    private final java.util.BitSet bitSet;
+    private final BitSet bitSet;
     private final int expectedInsertions;
     private final int hashFunctions;
     private final int bitArraySize;
@@ -49,7 +50,7 @@ public class TokenBlacklistBloomFilter {
         // 简化：m ≈ n * 10, k ≈ 7
         this.bitArraySize = this.expectedInsertions * 10;
         this.hashFunctions = 7;
-        this.bitSet = new java.util.BitSet(bitArraySize);
+        this.bitSet = new BitSet(bitArraySize);
         log.info("TokenBlacklistBloomFilter 初始化: expectedInsertions={}, bitArraySize={}, hashFunctions={}",
                 expectedInsertions, bitArraySize, hashFunctions);
     }

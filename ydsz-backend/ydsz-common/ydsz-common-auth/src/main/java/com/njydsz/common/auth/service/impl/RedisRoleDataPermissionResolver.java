@@ -159,7 +159,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
         // 使用 MGET 批量加载未命中的角色数据
         if (!uncachedRoles.isEmpty()) {
             try {
-                Map<String, DataScopeInfo> loaded = loadByRolesMget(new java.util.LinkedHashSet<>(uncachedRoles));
+                Map<String, DataScopeInfo> loaded = loadByRolesMget(new LinkedHashSet<>(uncachedRoles));
                 for (Map.Entry<String, DataScopeInfo> entry : loaded.entrySet()) {
                     if (entry.getValue() != null) {
                         cache.put(entry.getKey(), entry.getValue());

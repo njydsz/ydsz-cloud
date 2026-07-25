@@ -16,7 +16,6 @@ import com.njydsz.common.audit.domain.AuditLog;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public interface AuditStorage {
 
