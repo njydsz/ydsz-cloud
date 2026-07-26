@@ -6,64 +6,140 @@ import java.util.stream.Collectors;
 /**
  * JSON 对象节点
  *
- * <p>对标 Jackson ObjectNode，支持动态添加/删除字段。</p>
+ * <p>对标 Jackson ObjectNode，表示一个 JSON 对象（key-value 结构），
+ * 内部使用 LinkedHashMap 保持字段插入顺序。</p>
  *
+ * <p><b>主要功能：</b></p>
+ * <ul>
+ *   <li>支持动态添加/删除字段</li>
+ *   <li>支持链式调用（Builder 模式）</li>
+ *   <li>提供类型安全的字段访问</li>
+ *   <li>支持转换为 Map 和 JSON 字符串</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * ObjectNode node = new ObjectNode();
+ * node.put("name", "John")
+ *     .put("age", 30)
+ *     .put("active", true);
+ *
+ * // 获取字段
+ * JsonNode nameNode = node.get("name");
+ * String name = nameNode.asText();
+ * </pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class ObjectNode extends JsonNode {
 
     private final LinkedHashMap<String, JsonNode> fields;
 
+    /**
+     * 创建空的 JSON 对象节点
+     */
     public ObjectNode() {
         this.fields = new LinkedHashMap<>();
     }
 
+    /**
+     * 使用现有字段集合创建 JSON 对象节点
+     *
+     * @param fields 字段集合
+     */
     public ObjectNode(Map<String, JsonNode> fields) {
         this.fields = new LinkedHashMap<>(fields);
     }
 
     /**
-     * 添加字段
+     * 添加字符串字段
+     *
+     * @param name 字段名
+     * @param value 字段值，null 会被转换为 NullNode
+     * @return 当前对象节点（支持链式调用）
      */
     public ObjectNode put(String name, String value) {
         fields.put(name, value != null ? new TextNode(value) : NullNode.getInstance());
         return this;
     }
 
+    /**
+     * 添加整数字段
+     *
+     * @param name 字段名
+     * @param value 字段值
+     * @return 当前对象节点（支持链式调用）
+     */
     public ObjectNode put(String name, int value) {
         fields.put(name, new NumberNode(value));
         return this;
     }
 
+    /**
+     * 添加长整数字段
+     *
+     * @param name 字段名
+     * @param value 字段值
+     * @return 当前对象节点（支持链式调用）
+     */
     public ObjectNode put(String name, long value) {
         fields.put(name, new NumberNode(value));
         return this;
     }
 
+    /**
+     * 添加双精度浮点数字段
+     *
+     * @param name 字段名
+     * @param value 字段值
+     * @return 当前对象节点（支持链式调用）
+     */
     public ObjectNode put(String name, double value) {
         fields.put(name, new NumberNode(value));
         return this;
     }
 
+    /**
+     * 添加布尔字段
+     *
+     * @param name 字段名
+     * @param value 字段值
+     * @return 当前对象节点（支持链式调用）
+     */
     public ObjectNode put(String name, boolean value) {
         fields.put(name, BooleanNode.of(value));
         return this;
     }
 
+    /**
+     * 添加 JSON 节点字段
+     *
+     * @param name 字段名
+     * @param node 节点值，null 会被转换为 NullNode
+     * @return 当前对象节点（支持链式调用）
+     */
     public ObjectNode put(String name, JsonNode node) {
         fields.put(name, node != null ? node : NullNode.getInstance());
         return this;
     }
 
     /**
-     * 设置字段（如果存在则更新）
+     * 设置字段值（如果字段已存在则更新，不存在则添加）
+     *
+     * @param name 字段名
+     * @param node 节点值
+     * @return 当前对象节点（支持链式调用）
      */
     public ObjectNode set(String name, JsonNode node) {
         return put(name, node);
     }
 
     /**
-     * 移除字段
+     * 移除指定字段
+     *
+     * @param name 要移除的字段名
+     * @return 被移除的节点，如果字段不存在返回 null
      */
     public JsonNode remove(String name) {
         return fields.remove(name);
@@ -134,6 +210,14 @@ public final class ObjectNode extends JsonNode {
         return sb.toString();
     }
 
+    /**
+     * JSON 字符串转义处理
+     *
+     * <p>将特殊字符转换为转义序列，确保生成合法的 JSON 字符串。</p>
+     *
+     * @param sb 字符串构建器
+     * @param text 待转义的文本
+     */
     static void escapeJsonString(StringBuilder sb, String text) {
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);

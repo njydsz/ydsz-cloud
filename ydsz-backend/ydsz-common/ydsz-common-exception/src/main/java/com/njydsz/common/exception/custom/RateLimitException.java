@@ -30,26 +30,50 @@ public class RateLimitException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 默认构造函数，初始化为 429 Too Many Requests / WARN / RATE_LIMIT
+     */
     public RateLimitException() {
         super();
         initDefaults(HttpStatus.TOO_MANY_REQUESTS.value(), ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
+    /**
+     * 使用异常码枚举构造限流异常
+     *
+     * @param exceptionCode 异常码枚举
+     */
     public RateLimitException(ExceptionCode exceptionCode) {
         super();
         init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
+    /**
+     * 使用国际化消息键构造限流异常
+     *
+     * @param key 国际化消息键
+     */
     public RateLimitException(String key) {
         super();
         init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.TOO_MANY_REQUESTS.value(), ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
+    /**
+     * 使用异常码枚举和参数构造限流异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        消息参数
+     */
     public RateLimitException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
+    /**
+     * 使用原始异常构造限流异常
+     *
+     * @param cause 原始异常
+     */
     public RateLimitException(Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.TOO_MANY_REQUESTS.value(), ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);

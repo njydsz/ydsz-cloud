@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.agent;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,7 +25,7 @@ public final class ExecutionPlan implements Serializable {
     public ExecutionPlan(String id, String goal, List<PlanStep> steps) {
         this.id = Objects.requireNonNull(id, "id 不能为 null");
         this.goal = Objects.requireNonNull(goal, "goal 不能为 null");
-        this.steps = List.copyOf(Objects.requireNonNull(steps, "steps 不能为 null"));
+        this.steps = new ArrayList<>(Objects.requireNonNull(steps, "steps 不能为 null"));
         this.status = PlanStatus.PENDING;
     }
 
@@ -46,6 +47,23 @@ public final class ExecutionPlan implements Serializable {
                 .filter(s -> s.getStatus() == PlanStep.StepStatus.PENDING)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * 替换从指定索引开始的剩余步骤（用于动态重规划）
+     *
+     * @param fromIndex 起始索引（包含）
+     * @param newSteps  新的步骤列表
+     */
+    public void replaceRemainingSteps(int fromIndex, List<PlanStep> newSteps) {
+        while (steps.size() > fromIndex) {
+            steps.remove(fromIndex);
+        }
+        for (int i = 0; i < newSteps.size(); i++) {
+            steps.add(new PlanStep(fromIndex + i,
+                    newSteps.get(i).getDescription(),
+                    newSteps.get(i).getAction()));
+        }
     }
 
     public enum PlanStatus {

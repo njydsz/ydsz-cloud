@@ -61,46 +61,140 @@ ydsz-gateway/
 ├── pom.xml
 └── src/main/
     ├── java/com/njydsz/gateway/
-    │   ├── GatewayApplication.java       # 启动类
+    │   ├── GatewayApplication.java              # 启动类 + @EnableConfigurationProperties
     │   ├── config/
-    │   │   ├── GatewaySentinelConfig.java
-    │   │   ├── IpWhitelistProperties.java
-    │   │   └── RouteConfig.java
+    │   │   ├── GatewayConstants.java            # 内部头常量
+    │   │   ├── GatewayErrorConfig.java          # 错误响应配置
+    │   │   ├── GatewayHealthIndicator.java     # P3-1 网关健康指标
+    │   │   ├── GatewayHttpClientConfig.java     # HttpClient 连接池配置
+    │   │   ├── GatewayIpUtils.java              # IP 工具类（可信代理链）
+    │   │   ├── GatewayMetrics.java             # P2-3 Prometheus 指标
+    │   │   ├── GatewaySentinelConfig.java       # Sentinel 限流/熔断响应
+    │   │   ├── GatewaySentinelRulesConfig.java  # Sentinel 规则配置
+    │   │   ├── IpWhitelistProperties.java       # IP 白名单配置属性
+    │   │   ├── InternalHeaderSigner.java       # 内部头 HMAC 签名
+    │   │   ├── NacosRouteConfig.java           # Nacos 动态路由配置
+    │   │   ├── NacosRouteDefinitionRepository.java  # Nacos 路由仓库
+    │   │   ├── PathGuard.java                  # 路径安全防护
+    │   │   ├── RateLimitProperties.java         # 限流配置属性
+    │   │   ├── RouteConfig.java                # Java 路由配置
+    │   │   ├── SecurityHeadersProperties.java   # 安全响应头配置属性
+    │   │   └── SentinelApiLimitConfig.java      # API 级限流规则
     │   ├── filter/
-    │   │   ├── AuthGlobalFilter.java     # JWT 解析
-    │   │   ├── GrayLoadBalancerRequestFilter.java
-    │   │   └── IpWhitelistFilter.java
+    │   │   ├── AccessLogGlobalFilter.java       # 访问日志 + 结构化 JSON
+    │   │   ├── ApiKeyAuthFilter.java           # P1-3 API Key 认证
+    │   │   ├── AuthGlobalFilter.java           # JWT 解析 + 内部头注入
+    │   │   ├── GrayLoadBalancerRequestFilter.java  # 灰度路由请求过滤器
+    │   │   ├── IpBlacklistFilter.java          # IP 黑名单
+    │   │   ├── IpWhitelistFilter.java          # IP 白名单
+    │   │   ├── PayloadValidationFilter.java    # P1-8 请求体安全校验
+    │   │   ├── RateLimitFilter.java            # Redis 令牌桶多维度限流
+    │   │   ├── W3CTraceContextFilter.java      # W3C 链路追踪
+    │   │   └── WebSocketAuthFilter.java        # WebSocket 认证
     │   └── loadbalancer/
-    │       ├── GrayLoadBalancer.java
-    │       └── GrayLoadBalancerConfig.java
+    │       ├── GrayLoadBalancer.java           # P3-5 加权轮询灰度负载均衡器
+    │       └── GrayLoadBalancerConfig.java     # 负载均衡器配置
     └── resources/
-        ├── bootstrap.yml                 # Nacos 连接 + 端口（9000）
-        └── config/                       # 原 nacos-config（已重命名）
-            ├── ydsz-gateway-dev.yaml
-            ├── ydsz-gateway-sit.yaml
-            └── ydsz-gateway-uat.yaml
+        ├── bootstrap.yml                       # Nacos 连接 + 端口（9000）
+        ├── config/                             # 环境配置（Nacos DataId）
+        │   ├── ydsz-gateway-dev.yaml
+        │   ├── ydsz-gateway-sit.yaml
+        │   ├── ydsz-gateway-uat.yaml
+        │   └── ydsz-gateway-prod.yaml
+        └── META-INF/
+            ├── additional-spring-configuration-metadata.json  # IDE 配置补全
+            └── spring/
+                └── org.springframework.boot.autoconfigure.AutoConfiguration.imports
 ```
 
-## 配置文件
+## 配置项
 
-| 文件 | 用途 |
-|---|---|
-| `bootstrap.yml` | Nacos 连接 + 端口（9000）+ shared-configs 引用 |
-| `config/ydsz-gateway-dev.yaml` | dev 环境 Nacos 配置（DEBUG 日志 / 文档 UI 开） |
-| `config/ydsz-gateway-sit.yaml` | sit 环境（INFO 日志 / 文档 UI 关） |
-| `config/ydsz-gateway-uat.yaml` | uat 环境（INFO 日志 / 文档 UI 关） |
+### 核心配置
 
-**环境变量覆盖**：
-
-| 变量 | 默认值 | 说明 |
+| 配置项 | 默认值 | 说明 |
 |---|---|---|
-| `NACOS_SERVER_ADDR` | `127.0.0.1:8848` | Nacos 地址 |
-| `NACOS_NAMESPACE` | `ydsz` | 命名空间 |
-| `NACOS_USERNAME` | `nacos` | 鉴权用户名 |
-| `NACOS_PASSWORD` | （空） | 鉴权密码 |
-| `CORS_ALLOWED_ORIGINS` | `*`（dev）/ 显式域名（prod） | CORS 白名单 |
-| `SENTINEL_DASHBOARD` | `127.0.0.1:8858` | Sentinel 控制台 |
-| `SPRING_PROFILES_ACTIVE` | `dev` | 激活的 profile |
+| `server.port` | 9000 | 网关端口 |
+| `ydsz.gateway.internal-sign-secret` | （空） | 内部头签名密钥（HMAC-SHA256） |
+| `ydsz.gateway.websocket.allowed-origins` | （空） | WebSocket Origin 白名单 |
+| `ydsz.gateway.health-probe.paths` | /actuator/** | K8s 健康探针放行路径 |
+
+### HttpClient 连接池
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.httpclient.pool.max-connections` | 500 | 最大连接数 |
+| `ydsz.gateway.httpclient.pool.pending-acquire-timeout-ms` | 45000 | 获取连接超时（ms） |
+| `ydsz.gateway.httpclient.pool.max-idle-time-seconds` | 30 | 最大空闲时间（秒） |
+| `ydsz.gateway.httpclient.pool.max-life-time-seconds` | 60 | 最大生命周期（秒） |
+| `ydsz.gateway.httpclient.pool.eviction-interval-seconds` | 60 | 驱逐检查间隔（秒） |
+
+### 限流配置
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.ratelimit.enabled` | true | 限流总开关 |
+| `ydsz.gateway.ratelimit.per-user.enabled` | true | 用户级限流 |
+| `ydsz.gateway.ratelimit.per-user.default-qps` | 50 | 用户默认 QPS |
+| `ydsz.gateway.ratelimit.per-user.burst-capacity` | 100 | 用户突发容量 |
+| `ydsz.gateway.ratelimit.per-ip.enabled` | true | IP 级限流 |
+| `ydsz.gateway.ratelimit.per-ip.default-qps` | 30 | IP 默认 QPS |
+| `ydsz.gateway.ratelimit.per-ip.burst-capacity` | 60 | IP 突发容量 |
+| `ydsz.gateway.ratelimit.per-tenant.enabled` | false | 租户级限流 |
+| `ydsz.gateway.ratelimit.response-headers.enabled` | true | 限流响应头 |
+| `ydsz.gateway.ratelimit.response-headers.retry-after` | 5 | Retry-After 值 |
+
+### 安全响应头
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.security-headers.enabled` | true | 安全头总开关 |
+| `ydsz.gateway.security-headers.csp.enabled` | true | CSP 响应头 |
+| `ydsz.gateway.security-headers.hsts.enabled` | true | HSTS 响应头 |
+| `ydsz.gateway.security-headers.hsts.max-age` | 31536000 | HSTS max-age |
+| `ydsz.gateway.security-headers.coop.enabled` | true | COOP 响应头 |
+| `ydsz.gateway.security-headers.coep.enabled` | true | COEP 响应头 |
+| `ydsz.gateway.security-headers.corp.enabled` | true | CORP 响应头 |
+
+### IP 白名单
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.security.ip-whitelist` | （空） | IP 白名单（CIDR/单 IP） |
+| `ydsz.security.ip-whitelist-enabled` | false | 白名单开关 |
+| `ydsz.security.ip-whitelist-skip-paths` | （空） | 白名单跳过路径 |
+
+### 动态路由
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.dynamic-routes.enabled` | false | Nacos 动态路由开关 |
+| `ydsz.gateway.dynamic-routes.data-id` | gateway-routes.json | 路由配置 DataId |
+
+### Sentinel
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.sentinel.nacos-datasource-enabled` | false | Nacos 数据源 |
+| `ydsz.gateway.sentinel.degrade-rule-data-id` | ydsz-gateway-sentinel-degrade.json | 熔断规则 DataId |
+| `ydsz.gateway.sentinel.system-rule-data-id` | ydsz-gateway-sentinel-system.json | 系统规则 DataId |
+| `ydsz.gateway.sentinel.api-limits.enabled` | true | API 级限流规则 |
+
+### API Key 认证
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.api-key.enabled` | false | API Key 认证开关 |
+| `ydsz.gateway.api-key.keys` | （空） | 有效 API Key 列表 |
+| `ydsz.gateway.api-key.protected-paths` | /api/project/**,/api/workflow/** | 受保护路径 |
+
+### 请求体校验
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.payload-validation.enabled` | true | 请求体校验开关 |
+| `ydsz.gateway.payload-validation.max-body-size-mb` | 10 | 最大请求体大小（MB） |
+| `ydsz.gateway.payload-validation.max-json-depth` | 50 | JSON 最大嵌套深度 |
+| `ydsz.gateway.payload-validation.strict-content-type` | true | 强制校验 Content-Type |
 
 ## 启动
 

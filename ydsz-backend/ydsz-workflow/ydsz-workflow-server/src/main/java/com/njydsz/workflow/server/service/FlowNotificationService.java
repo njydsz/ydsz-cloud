@@ -86,4 +86,30 @@ public interface FlowNotificationService {
      * @param extra   扩展参数（如跳转链接、业务类型等）
      */
     void send(String channel, String userId, String title, String content, Map<String, Object> extra);
+
+    /**
+     * P1-5: 带自动脱敏的便捷通知方法（原 FlowNotificationHelper 功能合并）
+     *
+     * <p>自动构建 category=WORKFLOW 的 extra Map，并对 title/content 做敏感信息脱敏后发送。
+     *
+     * @param channel  通知通道：INAPP / EMAIL / WEBHOOK
+     * @param userId   接收人 ID
+     * @param title    通知标题（将自动脱敏）
+     * @param content  通知内容（将自动脱敏）
+     * @param bizType  业务类型（如 WORKFLOW_TASK / WORKFLOW_URGE / WORKFLOW_COMPLETED 等）
+     * @param level    级别 INFO / WARN / ERROR / URGENT
+     */
+    void notify(String channel, String userId, String title, String content, String bizType, String level);
+
+    /**
+     * P1-5: 带自动脱敏的批量通知方法
+     *
+     * @param channel    通知通道
+     * @param receiverIds 接收人 ID 列表
+     * @param title       通知标题（将自动脱敏）
+     * @param content     通知内容（将自动脱敏）
+     * @param bizType     业务类型
+     * @param level       级别
+     */
+    void notifyBatch(String channel, List<String> receiverIds, String title, String content, String bizType, String level);
 }

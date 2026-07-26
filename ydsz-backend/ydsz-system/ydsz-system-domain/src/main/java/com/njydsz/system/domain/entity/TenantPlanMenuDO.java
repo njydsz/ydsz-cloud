@@ -1,12 +1,12 @@
 package com.njydsz.system.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 租户套餐菜单关联实体
@@ -17,12 +17,11 @@ import java.time.LocalDateTime;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_tenant_plan_menu")
-public class TenantPlanMenuDO {
-
-    /** 主键 ID */
-    @TableId
-    private String id;
+public class TenantPlanMenuDO extends MpBaseEntity<String> {
 
     /** 套餐 ID */
     private String planId;
@@ -30,15 +29,6 @@ public class TenantPlanMenuDO {
     /** 菜单 ID */
     private String menuId;
 
-    /** 创建人 ID */
-    @TableField(fill = FieldFill.INSERT)
-    private String createdBy;
-
-    /** 创建时间 */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
-    /** 逻辑删除标记: 0 未删除 / 1 已删除 */
     @TableLogic
     private Integer deleted;
 }

@@ -29,6 +29,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>线程安全说明：本类使用 {@code Collections.synchronizedMap} 包装的 {@link LinkedHashMap}（LRU 淘汰策略）缓存编译后的正则模式，
  * 所有方法均为无状态方法，可安全在多线程环境下使用。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

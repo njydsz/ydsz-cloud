@@ -57,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>checkMode：校验模式（AND/OR）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see PermissionDeniedException

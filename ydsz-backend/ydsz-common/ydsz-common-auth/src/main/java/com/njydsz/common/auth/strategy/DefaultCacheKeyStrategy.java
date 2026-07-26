@@ -14,6 +14,7 @@ import com.njydsz.common.auth.util.AuthDigestUtils;
  *
  * <p>Key 格式：{@code auth:rp:<sha256(tenantId|sortedRole1,role2,...)>}
  *
+ * @author ydsz-team
  * @since 1.0.0
 
  */

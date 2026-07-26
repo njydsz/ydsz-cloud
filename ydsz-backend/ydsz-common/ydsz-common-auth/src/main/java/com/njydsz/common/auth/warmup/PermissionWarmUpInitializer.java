@@ -36,6 +36,7 @@ import com.njydsz.common.util.string.StringUtils;
  *   <li>{@code ydsz.auth.warmUpDelay}：预热延迟时间（毫秒，默认 3000）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

@@ -27,6 +27,7 @@ import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
  *   <li>解析失败时应返回空对象而非 null</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see DataScopeInfo

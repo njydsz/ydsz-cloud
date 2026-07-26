@@ -14,6 +14,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.MessageServiceClient;
 import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.NotificationFeignDTO;
+import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
 
     /** 消息中心客户端（WEBHOOK 通道），由 @RequiredArgsConstructor 注入 */
     private final MessageServiceClient messageServiceClient;
+
+    /** P1-5: 敏感字段脱敏器（原 FlowNotificationHelper 功能合并） */
+    private final FlowSensitiveMasker sensitiveMasker;
 
     @Override
     public void notifyTaskCreated(String instanceId, String taskId, String assigneeId, String assigneeName) {
@@ -291,6 +295,49 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                     userId, webhookUrl, e.getMessage());
         }
         log.debug("[FlowNotify][WEBHOOK] userId={} title={} url={}", userId, title, webhookUrl);
+    }
+
+    // ============================== P1-5: 带脱敏的便捷通知（原 FlowNotificationHelper 合并） ==============================
+
+    @Override
+    public void notify(String channel, String userId, String title, String content, String bizType, String level) {
+        if (userId == null) {
+            return;
+        }
+        try {
+            Map<String, Object> extra = new HashMap<>(4);
+            extra.put("category", "WORKFLOW");
+            extra.put("bizType", bizType);
+            extra.put("level", level);
+            send(channel, userId,
+                    sensitiveMasker.mask(title),
+                    sensitiveMasker.mask(content),
+                    extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] notify 异常: channel={} userId={} bizType={} err={}",
+                    channel, userId, bizType, e.getMessage());
+        }
+    }
+
+    @Override
+    public void notifyBatch(String channel, List<String> receiverIds, String title, String content, String bizType, String level) {
+        if (receiverIds == null || receiverIds.isEmpty()) {
+            return;
+        }
+        String maskedTitle = sensitiveMasker.mask(title);
+        String maskedContent = sensitiveMasker.mask(content);
+        for (String receiverId : receiverIds) {
+            try {
+                Map<String, Object> extra = new HashMap<>(4);
+                extra.put("category", "WORKFLOW");
+                extra.put("bizType", bizType);
+                extra.put("level", level);
+                send(channel, receiverId, maskedTitle, maskedContent, extra);
+            } catch (Exception e) {
+                log.warn("[FlowNotify] notifyBatch 异常: channel={} receiverId={} err={}",
+                        channel, receiverId, e.getMessage());
+            }
+        }
     }
 
     /**

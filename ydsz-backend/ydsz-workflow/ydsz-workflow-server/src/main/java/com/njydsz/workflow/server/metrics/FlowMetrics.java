@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.metrics.AbstractModuleMetrics;
@@ -37,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component("flowMetrics")
 public class FlowMetrics extends AbstractModuleMetrics {
 
     // ============================== Gauge 弱引用 mapper（避免循环依赖） ==============================

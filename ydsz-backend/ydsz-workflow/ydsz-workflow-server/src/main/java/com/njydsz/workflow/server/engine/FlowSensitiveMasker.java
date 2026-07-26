@@ -9,6 +9,9 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.safe.sensitive.SensitiveType;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,21 +22,16 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <h3>脱敏策略</h3>
  * <ul>
- *   <li><b>手机号</b> — 11 位数字，保留前 3 后 4：{@code 138****8888}</li>
- *   <li><b>身份证号</b> — 18 位（末位可为 X），保留前 4 后 4：{@code 3201**********1234}</li>
- *   <li><b>银行卡号</b> — 16-19 位数字，保留前 4 后 4：{@code 6228******5678}</li>
- *   <li><b>邮箱</b> — 保留首字符 + @后缀：{@code z***@example.com}</li>
+ *   <li><b>手机号</b> — 正则扫描文本中的手机号，委托 {@link SensitiveUtil#desensitize} 脱敏</li>
+ *   <li><b>身份证号</b> — 正则扫描文本中的身份证号，委托 {@link SensitiveUtil#desensitize} 脱敏</li>
+ *   <li><b>银行卡号</b> — 正则扫描文本中的银行卡号，委托 {@link SensitiveUtil#desensitize} 脱敏</li>
+ *   <li><b>邮箱</b> — 正则扫描文本中的邮箱地址，委托 {@link SensitiveUtil#desensitize} 脱敏</li>
  *   <li><b>自定义字段</b> — 通过 {@link #maskFields} 对 Map 中指定 key 的值整体脱敏</li>
  * </ul>
  *
- * <p>使用方式：
- * <pre>
- *   // 字符串自动脱敏
- *   String safe = masker.mask("联系电话 13812345678");
- *
- *   // Map 字段级脱敏
- *   Map&lt;String, Object&gt; vars = masker.maskFields(variables, List.of("phone", "idCard"));
- * </pre>
+ * <p>P1-4: 脱敏算法委托 {@link SensitiveUtil}（common-safe 模块），消除重复的正则替换逻辑。
+ * 本类仅保留文本扫描（find-and-replace）能力，因为通知内容/评论内容是自由文本，
+ * 需要从文本中自动发现 PII 并替换。
  *
  * <p>所有方法均为无状态纯函数，线程安全。
  *
@@ -43,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class FlowSensitiveMasker {
 
-    // ============================== 正则模式 ==============================
+    // ============================== 正则模式（仅用于文本扫描，脱敏算法委托 SensitiveUtil） ==============================
 
     /** 手机号：11 位数字，1 开头 */
     private static final Pattern PHONE =
@@ -61,15 +59,12 @@ public class FlowSensitiveMasker {
     private static final Pattern EMAIL =
             Pattern.compile("([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})");
 
-    /** 默认脱敏占位符 */
-    private static final String MASK = "*";
-
     // ============================== 公共 API ==============================
 
     /**
      * 对字符串进行自动脱敏（手机号 / 身份证 / 银行卡 / 邮箱）。
      *
-     * <p>依次应用所有正则规则，对匹配到的敏感信息做部分遮蔽。
+     * <p>依次扫描所有正则规则，对匹配到的敏感信息委托 {@link SensitiveUtil} 脱敏。
      * 不匹配任何规则的文本原样返回。
      *
      * @param text 原始文本（可为 null）
@@ -81,12 +76,11 @@ public class FlowSensitiveMasker {
         }
         String result = text;
         try {
-            result = maskPhone(result);
-            result = maskIdCard(result);
-            result = maskBankCard(result);
-            result = maskEmail(result);
+            result = maskPattern(result, PHONE, SensitiveType.PHONE);
+            result = maskPattern(result, ID_CARD, SensitiveType.ID_CARD);
+            result = maskPattern(result, BANK_CARD, SensitiveType.BANK_CARD);
+            result = maskEmailPattern(result);
         } catch (Exception e) {
-            // 脱敏异常时返回原文，绝不阻断主流程
             log.warn("[FlowMasker] 脱敏异常，返回原文: err={}", e.getMessage());
             return text;
         }
@@ -98,8 +92,6 @@ public class FlowSensitiveMasker {
      *
      * <p>用于流程变量、通知 payload 等结构化数据的字段级精确脱敏。
      * 仅对 {@code fieldKeys} 中列出的 key 做脱敏，其他字段不动。
-     * 值为 null 时跳过；值为字符串时调用 {@link #mask(String)}；
-     * 值为其他类型时转为字符串再脱敏。
      *
      * @param data      原始 Map（不会被修改，返回新 Map）
      * @param fieldKeys 需脱敏的字段名列表
@@ -109,7 +101,6 @@ public class FlowSensitiveMasker {
         if (data == null || data.isEmpty() || fieldKeys == null || fieldKeys.isEmpty()) {
             return data;
         }
-        // 浅拷贝，避免修改原始 Map
         Map<String, Object> copy = new LinkedHashMap<>(data);
         for (String key : fieldKeys) {
             if (key == null || !copy.containsKey(key)) {
@@ -157,19 +148,22 @@ public class FlowSensitiveMasker {
         return maskFields(data, sensitiveKeys);
     }
 
-    // ============================== 内部脱敏方法 ==============================
+    // ============================== 内部方法（委托 SensitiveUtil） ==============================
 
     /**
-     * 手机号脱敏：138****8888
+     * 通用正则匹配 + 委托 SensitiveUtil 脱敏
+     *
+     * @param text 原始文本
+     * @param pattern PII 正则模式
+     * @param type SensitiveUtil 脱敏类型
+     * @return 脱敏后文本
      */
-    private String maskPhone(String text) {
-        Matcher m = PHONE.matcher(text);
+    private String maskPattern(String text, Pattern pattern, SensitiveType type) {
+        Matcher m = pattern.matcher(text);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
-            String phone = m.group(1);
-            String masked = phone.substring(0, 3)
-                    + MASK.repeat(4)
-                    + phone.substring(7);
+            String raw = m.group(1);
+            String masked = SensitiveUtil.desensitize(raw, type);
             m.appendReplacement(sb, Matcher.quoteReplacement(masked));
         }
         m.appendTail(sb);
@@ -177,62 +171,14 @@ public class FlowSensitiveMasker {
     }
 
     /**
-     * 身份证号脱敏：3201**********1234
+     * 邮箱脱敏需特殊处理（正则捕获了 user + domain 两组）
      */
-    private String maskIdCard(String text) {
-        Matcher m = ID_CARD.matcher(text);
-        StringBuilder sb = new StringBuilder();
-        while (m.find()) {
-            String id = m.group(1);
-            String masked = id.substring(0, 4)
-                    + MASK.repeat(10)
-                    + id.substring(14);
-            m.appendReplacement(sb, Matcher.quoteReplacement(masked));
-        }
-        m.appendTail(sb);
-        return sb.toString();
-    }
-
-    /**
-     * 银行卡号脱敏：6228******5678
-     */
-    private String maskBankCard(String text) {
-        Matcher m = BANK_CARD.matcher(text);
-        StringBuilder sb = new StringBuilder();
-        while (m.find()) {
-            String card = m.group(1);
-            int len = card.length();
-            if (len <= 8) {
-                // 短号码不做脱敏（可能不是银行卡）
-                continue;
-            }
-            String masked = card.substring(0, 4)
-                    + MASK.repeat(len - 8)
-                    + card.substring(len - 4);
-            m.appendReplacement(sb, Matcher.quoteReplacement(masked));
-        }
-        m.appendTail(sb);
-        return sb.toString();
-    }
-
-    /**
-     * 邮箱脱敏：z***@example.com
-     */
-    private String maskEmail(String text) {
+    private String maskEmailPattern(String text) {
         Matcher m = EMAIL.matcher(text);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
-            String user = m.group(1);
-            String domain = m.group(2);
-            String maskedUser;
-            if (user.length() <= 1) {
-                maskedUser = MASK;
-            } else if (user.length() <= 3) {
-                maskedUser = user.charAt(0) + MASK.repeat(user.length() - 1);
-            } else {
-                maskedUser = user.charAt(0) + MASK.repeat(3);
-            }
-            String masked = maskedUser + "@" + domain;
+            String fullEmail = m.group(1) + "@" + m.group(2);
+            String masked = SensitiveUtil.desensitize(fullEmail, SensitiveType.EMAIL);
             m.appendReplacement(sb, Matcher.quoteReplacement(masked));
         }
         m.appendTail(sb);

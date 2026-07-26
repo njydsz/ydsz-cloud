@@ -1,0 +1,76 @@
+package com.njydsz.agent.web.controller;
+
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.agent.server.agent.HumanApprovalService;
+import com.njydsz.agent.server.agent.HumanApprovalService.ApprovalRequest;
+import com.njydsz.common.core.response.BaseResponse;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Human-in-the-Loop 审批 REST API
+ *
+ * <p>提供 Agent 执行过程中人工审批的管理接口：
+ * <ul>
+ *   <li>{@code GET /agent/approvals/pending} — 列出待审批请求</li>
+ *   <li>{@code GET /agent/approvals/{id}} — 获取审批请求详情</li>
+ *   <li>{@code POST /agent/approvals/{id}/approve} — 审批通过</li>
+ *   <li>{@code POST /agent/approvals/{id}/reject} — 审批拒绝</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.6.0
+ */
+@Slf4j
+@RestController
+@RequestMapping("/agent/approvals")
+@RequiredArgsConstructor
+public class HumanApprovalController {
+
+    private final HumanApprovalService approvalService;
+
+    @GetMapping("/pending")
+    public BaseResponse<List<ApprovalRequest>> listPending() {
+        return BaseResponse.success(approvalService.listPending());
+    }
+
+    @GetMapping("/{id}")
+    public BaseResponse<ApprovalRequest> getApproval(@PathVariable String id) {
+        ApprovalRequest request = approvalService.getApproval(id);
+        if (request == null) {
+            return BaseResponse.error("Approval not found: " + id);
+        }
+        return BaseResponse.success(request);
+    }
+
+    @PostMapping("/{id}/approve")
+    public BaseResponse<Boolean> approve(@PathVariable String id,
+                                          @RequestParam(required = false) String approver,
+                                          @RequestParam(required = false) String comment) {
+        boolean result = approvalService.approve(id, approver, comment);
+        if (!result) {
+            return BaseResponse.error("Approval not found or already resolved: " + id);
+        }
+        return BaseResponse.success(true);
+    }
+
+    @PostMapping("/{id}/reject")
+    public BaseResponse<Boolean> reject(@PathVariable String id,
+                                         @RequestParam(required = false) String approver,
+                                         @RequestParam(required = false) String comment) {
+        boolean result = approvalService.reject(id, approver, comment);
+        if (!result) {
+            return BaseResponse.error("Approval not found or already resolved: " + id);
+        }
+        return BaseResponse.success(true);
+    }
+}

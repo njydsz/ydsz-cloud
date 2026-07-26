@@ -229,6 +229,50 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         return parsePlan(userInput, planResponse.getContent());
     }
 
+    /**
+     * 动态重规划：根据已完成步骤和失败信息重新生成剩余步骤
+     */
+    private List<ExecutionPlan.PlanStep> regeneratePlan(String goal, List<String> completedResults,
+                                                         String failedStep, String errorMessage,
+                                                         String convId) {
+        String replanPrompt = """
+                你是 YDSZ 项目管理系统的任务规划器。
+                原计划在执行过程中某步骤失败，请根据已完成的结果和失败信息重新规划剩余步骤。
+
+                原始目标: %s
+
+                已完成的步骤结果:
+                %s
+
+                失败的步骤: %s
+                失败原因: %s
+
+                请按以下格式输出新的剩余步骤（每行一个步骤）：
+                1. 第一步描述
+                2. 第二步描述
+                3. ...
+                """.formatted(goal, String.join("\n", completedResults), failedStep, errorMessage);
+
+        ChatRequest replanRequest = ChatRequest.builder()
+                .model(properties.getLlm().getDefaultModel())
+                .messages(List.of(
+                        ChatMessage.system("你是任务规划器，只输出编号步骤列表，不加额外解释。"),
+                        ChatMessage.user(replanPrompt, null)))
+                .temperature(0.3)
+                .maxTokens(512)
+                .build();
+
+        try {
+            ChatResponse replanResponse = llmClient.chat(replanRequest);
+            ExecutionPlan newPlan = parsePlan(goal, replanResponse.getContent());
+            log.info("[Plan-Execute] 重规划成功: newSteps={}", newPlan.getSteps().size());
+            return newPlan.getSteps();
+        } catch (Exception e) {
+            log.warn("[Plan-Execute] 重规划失败: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
     private ExecutionPlan parsePlan(String goal, String planText) {
         List<ExecutionPlan.PlanStep> steps = new ArrayList<>();
         Matcher matcher = STEP_PATTERN.matcher(planText);

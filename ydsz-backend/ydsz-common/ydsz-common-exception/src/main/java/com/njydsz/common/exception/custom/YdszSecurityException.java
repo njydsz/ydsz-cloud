@@ -33,64 +33,133 @@ public class YdszSecurityException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
-    /** 默认构造函数，初始化为 403 Forbidden / WARN / SECURITY */
+    /**
+     * 默认构造函数，初始化为 403 Forbidden / WARN / SECURITY
+     */
     public YdszSecurityException() {
         super();
         initDefaults(HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用国际化消息键构造安全异常
+     *
+     * @param key 国际化消息键
+     */
     public YdszSecurityException(String key) {
         super();
         init(UnifiedExceptionCode.FORBIDDEN.getCode(), key, new Object[]{}, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用异常码枚举构造安全异常
+     *
+     * @param exceptionCode 异常码枚举
+     */
     public YdszSecurityException(ExceptionCode exceptionCode) {
         super();
         init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用国际化消息键和参数构造安全异常
+     *
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public YdszSecurityException(String key, Object[] params) {
         super();
         init(UnifiedExceptionCode.FORBIDDEN.getCode(), key, params, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用异常码枚举和参数构造安全异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        消息参数
+     */
     public YdszSecurityException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用自定义错误码和消息键构造安全异常
+     *
+     * @param code 错误码字符串
+     * @param key  国际化消息键
+     */
     public YdszSecurityException(String code, String key) {
         super();
         init(code, key, new Object[]{}, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用自定义错误码、消息键和参数构造安全异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public YdszSecurityException(String code, String key, Object[] params) {
         super();
         init(code, key, params, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用原始异常构造安全异常
+     *
+     * @param cause 原始异常
+     */
     public YdszSecurityException(Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
         this.code = UnifiedExceptionCode.FORBIDDEN.getCode();
     }
 
+    /**
+     * 使用自定义错误码和原始异常构造安全异常
+     *
+     * @param code  错误码字符串
+     * @param cause 原始异常
+     */
     public YdszSecurityException(String code, Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
         this.code = code;
     }
 
+    /**
+     * 使用异常码枚举和原始异常构造安全异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param cause         原始异常
+     */
     public YdszSecurityException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用自定义错误码、消息键和原始异常构造安全异常
+     *
+     * @param code  错误码字符串
+     * @param key   国际化消息键
+     * @param cause 原始异常
+     */
     public YdszSecurityException(String code, String key, Throwable cause) {
         super(null, cause);
         init(code, key, new Object[]{}, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
+    /**
+     * 使用自定义错误码、消息键、参数和原始异常构造安全异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     * @param cause  原始异常
+     */
     public YdszSecurityException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
         init(code, key, params, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);

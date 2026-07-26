@@ -343,6 +343,28 @@ public class RedisRateLimiter {
         }
     }
 
+    /**
+     * 获取限流键的剩余 TTL（秒）。
+     *
+     * <p>用于查询当前限流冷却还需等待多长时间。键不存在时返回 0。
+     *
+     * @param key 限流维度键
+     * @return 剩余秒数（0=可操作，>0=冷却中，<0=键不存在或查询失败）
+     */
+    public long getTtlSeconds(String key) {
+        if (key == null) {
+            return -1;
+        }
+        try {
+            String formattedKey = formatKey(key);
+            Long ttl = redisTemplate.getExpire(formattedKey);
+            return ttl == null ? 0L : ttl;
+        } catch (Exception e) {
+            log.warn("【RedisRateLimiter】获取 TTL 失败 | key={} | error={}", key, e.getMessage());
+            return -1;
+        }
+    }
+
     private String formatKey(String key) {
         String prefix = redisProperties != null ? redisProperties.getKeyPrefix() : null;
         if (prefix == null || prefix.isEmpty()) {

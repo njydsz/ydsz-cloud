@@ -40,6 +40,7 @@ import io.jsonwebtoken.security.Keys;
  *   <li>支持 Token 黑名单（登出后失效）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

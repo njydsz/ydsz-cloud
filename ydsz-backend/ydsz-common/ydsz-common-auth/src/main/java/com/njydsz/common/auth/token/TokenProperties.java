@@ -11,6 +11,7 @@ import lombok.Data;
 /**
  * Token 配置属性
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

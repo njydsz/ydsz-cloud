@@ -13,6 +13,7 @@ import com.njydsz.common.auth.model.UserInfo;
  *   <li>Token 解析（从令牌中提取用户信息）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

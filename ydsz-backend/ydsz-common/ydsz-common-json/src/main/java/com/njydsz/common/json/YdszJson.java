@@ -64,6 +64,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *   <li>JIT 友好设计 - 便于 JVM 内联优化</li>
  * </ul>
  * 
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class YdszJson {
