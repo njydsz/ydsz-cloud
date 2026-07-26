@@ -17,9 +17,10 @@ import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
 
 /**
- * Agent 模块健康检查
+ * Agent 模块健康检查。
  *
  * <p>对关键依赖进行真实探活：
  * <ul>
@@ -29,12 +30,11 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  *   <li><b>TraceRecorder</b> — 报告链路追踪器状态</li>
  *   <li><b>CostAnalysisService</b> — 报告成本分析服务状态</li>
  * </ul>
- * <p>任一关键依赖不可用则报告 DOWN，K8s readinessProbe 据此决定是否导入流量。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-public class AgentHealthIndicator implements HealthIndicator {
+public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
 
     private static final Logger log = LoggerFactory.getLogger(AgentHealthIndicator.class);
 
@@ -59,8 +59,7 @@ public class AgentHealthIndicator implements HealthIndicator {
     }
 
     @Override
-    public Health health() {
-        Health.Builder builder = Health.up();
+    protected void doHealthCheck(Health.Builder builder) {
         boolean allHealthy = true;
 
         // 检查 LLM Provider
@@ -129,8 +128,7 @@ public class AgentHealthIndicator implements HealthIndicator {
 
         if (!allHealthy) {
             log.warn("[Health] Agent 健康检查未通过，详见 health details");
-            return builder.down().build();
+            builder.down();
         }
-        return builder.build();
     }
 }

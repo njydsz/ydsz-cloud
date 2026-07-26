@@ -81,6 +81,8 @@ public class YdszJsonException extends RuntimeException {
     
     /**
      * 获取错误码
+     *
+     * @return 错误码，未设置时返回 0
      */
     public int getErrorCode() {
         return errorCode;
@@ -88,6 +90,8 @@ public class YdszJsonException extends RuntimeException {
     
     /**
      * 获取 JSON 字符串位置
+     *
+     * @return 字符位置，未设置时返回 -1
      */
     public int getPosition() {
         return position;

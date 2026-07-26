@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
 import com.njydsz.userinfo.server.service.MenuService;
-import com.njydsz.userinfo.server.util.TreeBuilder;
+import com.njydsz.common.domain.tree.TreeBuilder;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
