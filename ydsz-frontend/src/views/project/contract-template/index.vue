@@ -18,8 +18,11 @@ import {
 import type { ContractTemplateVO, ContractTemplateCreateDTO } from '@/api/contract/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 合同模板列表数据 */
 const list = ref<ContractTemplateVO[]>([])
+/** 合同模板列表总数 */
 const total = ref(0)
 const query = reactive({
   page: 1,

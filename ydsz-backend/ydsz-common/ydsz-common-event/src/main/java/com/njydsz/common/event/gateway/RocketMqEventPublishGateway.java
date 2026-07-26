@@ -41,8 +41,10 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
     private final String topic;
 
     /**
+     * 构造函数
+     *
      * @param rocketMQTemplate RocketMQ 模板
-     * @param topic            目标 Topic（null 时使用默认值）
+     * @param topic            目标 Topic（null 或空时使用默认值 ydsz-outbox-events）
      */
     public RocketMqEventPublishGateway(RocketMQTemplate rocketMQTemplate, String topic) {
         this.rocketMQTemplate = rocketMQTemplate;

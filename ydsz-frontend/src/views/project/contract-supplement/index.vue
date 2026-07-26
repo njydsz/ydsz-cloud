@@ -12,9 +12,13 @@ import PageLayout from '@/components/common/PageLayout.vue'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 补充协议列表数据 */
 const list = ref<any[]>([])
+/** 补充协议列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({
   page: 1,
   size: 10,
@@ -22,8 +26,11 @@ const query = reactive({
   keyword: '',
 })
 
+/** 新增弹窗显隐 */
 const dialogVisible = ref(false)
+/** 新增表单引用 */
 const formRef = ref<FormInstance>()
+/** 新增表单数据 */
 const form = reactive({
   contractId: undefined as number | undefined,
   supplementTitle: '',

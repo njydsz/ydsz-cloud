@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
@@ -152,7 +155,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final NameAssembler nameAssembler;
 
     /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null） */
-    private final org.springframework.beans.factory.ObjectProvider<com.njydsz.common.event.service.OutboxService> outboxServiceProvider;
+    private final ObjectProvider<OutboxService> outboxServiceProvider;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -254,11 +257,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dto.getFlowCode(), dto.getBusinessId(), instanceId);
 
         // P0-2: 发布 Outbox 事件（跨模块可靠投递）
-        com.njydsz.common.event.service.OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
         if (outboxService != null) {
             outboxService.appendToOutbox(
                     "FlowInstance", instanceId,
-                    com.njydsz.common.event.model.StandardEventTypes.FLOW_INSTANCE_APPROVED,
+                    StandardEventTypes.FLOW_INSTANCE_APPROVED,
                     YdszJson.toJson(Map.of(
                             "instanceId", instanceId,
                             "flowCode", dto.getFlowCode(),

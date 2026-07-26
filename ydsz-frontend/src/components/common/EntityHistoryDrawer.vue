@@ -10,6 +10,13 @@
   @since 1.0.0
 -->
 <script setup lang="ts">
+/**
+ * 实体变更历史抽屉
+ *
+ * 业务详情页中调用的右侧抽屉，展示某条记录的操作日志与字段级 diff。
+ * 数据来源: @/api/audit（getOperationLogByBiz / getOperationLogDiff）
+ * 场景: 审计、问题排查、变更追溯
+ */
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getOperationLogByBiz, getOperationLogDiff } from '@/api/audit'
@@ -18,19 +25,31 @@ import type { OperationLogVO, FieldDiffVO } from '@/api/audit'
 const { t } = useI18n()
 
 const props = defineProps<{
+  /** 弹窗可见性 */
   visible: boolean
+  /** 实体类型（如 'project', 'contract'） */
   entityType: string
+  /** 实体 ID */
   entityId: number
 }>()
 
-const emit = defineEmits<{ 'update:visible': [val: boolean] }>()
+const emit = defineEmits<{
+  /** 关闭弹窗 */
+  'update:visible': [val: boolean]
+}>()
 
+/** 加载状态 */
 const loading = ref(false)
+/** 操作日志列表 */
 const logs = ref<OperationLogVO[]>([])
+/** 当前查看的字段级 diff */
 const currentDiff = ref<FieldDiffVO[]>([])
+/** Diff 弹窗显隐 */
 const diffVisible = ref(false)
+/** 当前查看 Diff 的日志 ID */
 const currentLogId = ref<number>(0)
 
+/** 拉取变更历史 */
 const fetchHistory = async () => {
   if (!props.entityId) return
   loading.value = true
@@ -44,6 +63,7 @@ const fetchHistory = async () => {
   }
 }
 
+/** 查看指定日志的字段级 Diff */
 const showDiff = async (logId: number) => {
   currentLogId.value = logId
   diffVisible.value = true

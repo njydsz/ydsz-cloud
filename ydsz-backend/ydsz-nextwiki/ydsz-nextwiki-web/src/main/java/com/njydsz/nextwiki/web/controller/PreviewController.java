@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 文档预览 REST API
@@ -30,6 +32,9 @@ public class PreviewController {
 
     private final PreviewApplicationService previewService;
 
+    @Idempotent(key = "nextwiki:preview:generatePreview", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "nextwiki.preview.generatePreview", threshold = 50)
+    @SentinelRateLimit(resource = "nextwiki.preview.generatePreview", threshold = 50)
     @PostMapping("/{fileNodeId}/generate")
     @Operation(summary = "生成预览（异步）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_GENERATE)

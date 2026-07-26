@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.definition;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
@@ -71,6 +72,8 @@ public class FlowDesignerController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDesigner:saveDesignerData", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdesigner.saveDesignerData", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdesigner.saveDesignerData", threshold = 50)
     @PostMapping("/definition/{id}/designer")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveDesignerData(@PathVariable String id,
@@ -100,6 +103,8 @@ public class FlowDesignerController {
      * @return 统一响应结果，true=加锁成功
      */
     @Idempotent(key = "flowDesigner:lockDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdesigner.lockDefinition", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdesigner.lockDefinition", threshold = 50)
     @PostMapping("/definition/{id}/lock")
     @Operation(summary = "加锁流程定义（设计器协同编辑）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -117,6 +122,8 @@ public class FlowDesignerController {
      * @return 统一响应结果，true=解锁成功
      */
     @Idempotent(key = "flowDesigner:unlockDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdesigner.unlockDefinition", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdesigner.unlockDefinition", threshold = 50)
     @PostMapping("/definition/{id}/unlock")
     @Operation(summary = "解锁流程定义（设计器协同编辑）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -171,6 +178,8 @@ public class FlowDesignerController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDesigner:saveFormConfig", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdesigner.saveFormConfig", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdesigner.saveFormConfig", threshold = 50)
     @PostMapping("/definition/{id}/formConfig/{nodeCode}")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveFormConfig(@PathVariable String id,
@@ -205,6 +214,8 @@ public class FlowDesignerController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDesigner:saveSlaConfig", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdesigner.saveSlaConfig", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdesigner.saveSlaConfig", threshold = 50)
     @PostMapping("/definition/{id}/slaConfig/{nodeCode}")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Void> saveSlaConfig(@PathVariable String id,

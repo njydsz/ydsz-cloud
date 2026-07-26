@@ -1,13 +1,15 @@
 /**
- * ECharts 统一入口
+ * @file ECharts 统一入口
+ * @description P2-6: 配合 CDN 外置方案，统一使用 echarts 完整包导入。
+ *              提供 init、use、registerTheme 等核心方法导出，
+ *              以及 ECharts / EChartsOption 等类型定义。
  *
- * P2-6: 配合 CDN 外置方案，改为完整包导入。
+ * 设计说明：
  *  - 生产环境：echarts 通过 CDN external，import 会被替换为 window.echarts（完整 UMD 包）
  *  - 开发环境：从 node_modules 加载完整包
- *
- * 之前按需引入（echarts/core + 子模块 + echarts.use）的方案与 external 冲突：
- * external 只能匹配 'echarts' 顶层，无法为 'echarts/core' 等子路径映射全局变量。
- * 因此统一改为完整包导入，API 保持兼容，使用方无需修改。
+ *  - 之前按需引入（echarts/core + 子模块 + echarts.use）的方案与 external 冲突，
+ *    external 只能匹配 'echarts' 顶层，无法为 'echarts/core' 等子路径映射全局变量，
+ *    因此统一改为完整包导入，API 保持兼容。
  *
  * 使用方式:
  *   import { init, use, type ECharts, type EChartsOption } from '@/utils/echarts'
@@ -15,6 +17,8 @@
  * 或保持兼容:
  *   import * as echarts from '@/utils/echarts'
  *   echarts.init(...)
+ *
+ * @module utils/echarts
  */
 import * as echarts from 'echarts'
 

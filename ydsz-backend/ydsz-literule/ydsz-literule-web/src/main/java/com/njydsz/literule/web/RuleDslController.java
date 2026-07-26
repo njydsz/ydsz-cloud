@@ -31,6 +31,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 规则 DSL 管理接口（P3-6 DSL 语言支持）
@@ -74,6 +77,7 @@ public class RuleDslController {
      * @param request 请求体（含 content 和 format 字段）
      * @return 校验结果（valid + errors + ruleCount）
      */
+    @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/validate")
     @Operation(summary = "校验DSL", description = "校验 YAML/JSON 格式的 DSL 内容合法性")
     public BaseResponse<Map<String, Object>> validate(@RequestBody Map<String, Object> request) {
@@ -136,6 +140,7 @@ public class RuleDslController {
      * @param request 请求体（含 content 和 format）
      * @return DSL 模型（rules + chains + meta）
      */
+    @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'parse'")
     @PostMapping("/parse")
     @Operation(summary = "解析DSL", description = "将 YAML/JSON DSL 文本解析为结构化模型")
     public BaseResponse<RuleDsl> parse(@RequestBody Map<String, Object> request) {
@@ -166,6 +171,7 @@ public class RuleDslController {
      * @param request  请求体（含 content / format / operator）
      * @return 导入结果（成功/失败计数 + 详细信息）
      */
+    @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/import")
     @Operation(summary = "导入DSL规则", description = "将 YAML/JSON DSL 导入到规则引擎")
     public BaseResponse<Map<String, Object>> importDsl(@RequestBody Map<String, Object> request) {
@@ -287,6 +293,7 @@ public class RuleDslController {
      * @param request 请求体（含 content / format / facts）
      * @return 评估结果列表
      */
+    @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/preview")
     @Operation(summary = "预览DSL评估", description = "解析 DSL 并用提供的事实数据试运行，不持久化")
     public BaseResponse<List<Map<String, Object>>> preview(@RequestBody Map<String, Object> request) {

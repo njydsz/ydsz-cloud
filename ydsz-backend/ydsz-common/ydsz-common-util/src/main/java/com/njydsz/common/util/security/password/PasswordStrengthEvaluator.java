@@ -27,6 +27,14 @@ public final class PasswordStrengthEvaluator {
         WEAK, MEDIUM, STRONG, VERY_STRONG
     }
 
+    /**
+     * 评估密码强度
+     *
+     * <p>根据密码长度和字符集复杂度（小写字母、大写字母、数字、特殊字符）进行评估。
+     *
+     * @param password 待评估的密码
+     * @return 密码强度等级（WEAK / MEDIUM / STRONG / VERY_STRONG）
+     */
     public static Level evaluate(String password) {
         if (password == null || password.length() < MIN_LENGTH) {
             return Level.WEAK;
@@ -52,6 +60,12 @@ public final class PasswordStrengthEvaluator {
         return Level.WEAK;
     }
 
+    /**
+     * 判断密码是否符合安全合规要求（强度为 STRONG 或 VERY_STRONG）
+     *
+     * @param password 待检查的密码
+     * @return true 表示符合合规要求
+     */
     public static boolean isCompliant(String password) {
         Level level = evaluate(password);
         return level == Level.STRONG || level == Level.VERY_STRONG;

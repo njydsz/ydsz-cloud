@@ -2,6 +2,7 @@ package com.njydsz.agent.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,6 +21,10 @@ import com.njydsz.common.core.response.BaseResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * Agent 定义 REST API
@@ -68,16 +73,26 @@ public class AgentDefinitionController {
         return BaseResponse.success(agentDefinitionService.toDomain(entity));
     }
 
+    @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
+    @Idempotent(key = "agent:definition:create", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.agentdefinition.create", threshold = 50)
+    @SentinelRateLimit(resource = "agent.agentdefinition.create", threshold = 50)
     @PostMapping
     public BaseResponse<AgentDefinitionDO> create(@Valid @RequestBody AgentDefinitionDO entity) {
         return BaseResponse.success(agentDefinitionService.create(entity));
     }
 
+    @SentinelRateLimit(resource = "agent.agentdefinition.update", threshold = 50)
+    @SentinelRateLimit(resource = "agent.agentdefinition.update", threshold = 50)
     @PutMapping
     public BaseResponse<AgentDefinitionDO> update(@Valid @RequestBody AgentDefinitionDO entity) {
         return BaseResponse.success(agentDefinitionService.update(entity));
     }
 
+    @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
+    @Idempotent(key = "agent:definition:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.agentdefinition.delete", threshold = 50)
+    @SentinelRateLimit(resource = "agent.agentdefinition.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> delete(@PathVariable String id) {
         return BaseResponse.success(agentDefinitionService.removeById(id));

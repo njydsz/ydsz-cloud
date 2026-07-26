@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.Map;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,6 +50,8 @@ public class MessageFeedbackController {
      */
     @Operation(summary = "提交消息反馈")
     @Idempotent(key = "messageFeedback:submitFeedback", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "message.messagefeedback.submitFeedback", threshold = 50)
+    @SentinelRateLimit(resource = "message.messagefeedback.submitFeedback", threshold = 50)
     @PostMapping
     public BaseResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
         return BaseResponse.success(messageFeedbackService.submitFeedback(dto));

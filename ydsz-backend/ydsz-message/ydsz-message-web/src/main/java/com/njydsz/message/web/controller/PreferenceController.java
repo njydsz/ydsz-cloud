@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +24,9 @@ import com.njydsz.message.server.service.config.PreferenceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 用户消息偏好 Controller。
@@ -48,6 +52,9 @@ public class PreferenceController {
     @Operation(summary = "新增/更新偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
     @Idempotent(key = "preference:upsert", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
+    @SentinelRateLimit(resource = "message.preference.upsert", threshold = 50)
+    @SentinelRateLimit(resource = "message.preference.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
         return BaseResponse.success(preferenceService.upsert(dto));
@@ -92,6 +99,9 @@ public class PreferenceController {
     @Operation(summary = "删除偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_DELETE)
     @Idempotent(key = "preference:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
+    @SentinelRateLimit(resource = "message.preference.delete", threshold = 50)
+    @SentinelRateLimit(resource = "message.preference.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         preferenceService.delete(id);

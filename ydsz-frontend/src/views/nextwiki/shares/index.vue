@@ -15,9 +15,13 @@ import StatusTag from '@/components/common/StatusTag.vue'
 
 const { t } = useI18n()
 
+/** 分享列表加载状态 */
 const loading = ref(false)
+/** 分享链接列表 */
 const list = ref<ShareLinkVO[]>([])
+/** 分享列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({ page: 1, size: 10 })
 
 /** 分享状态映射 */

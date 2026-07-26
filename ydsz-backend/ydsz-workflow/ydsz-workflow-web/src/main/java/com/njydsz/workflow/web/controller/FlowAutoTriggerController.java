@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.integration;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -58,6 +59,8 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "创建触发规则")
     @Idempotent(key = "flowAutoTrigger:create", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowautotrigger.create", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowautotrigger.create", threshold = 50)
     @PostMapping
     public BaseResponse<Void> create(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
         String sourceFlowCode = dto.getSourceFlowCode();
@@ -75,6 +78,8 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "删除触发规则")
     @Idempotent(key = "flowAutoTrigger:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowautotrigger.delete", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowautotrigger.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         autoTriggerService.deleteById(id);

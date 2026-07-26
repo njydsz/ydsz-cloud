@@ -48,8 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  * 沙箱模式默认启用，禁用 NewInstance/Module 等危险 Feature。
  * 脚本返回 Boolean 时决定执行成功/失败，返回 null 视为成功。
  *
- * <p>RestTemplate 不通过构造器注入，直接 new 出默认实例（与 FlowNotificationServiceImpl 一致），
- * 避免 Spring 容器中必须存在 RestTemplate Bean。
+ * <p>RestTemplate 由 ydsz-common-notify 统一提供，通过构造器注入。
  *
  * @since 1.0.0
  */
@@ -58,13 +57,9 @@ import lombok.extern.slf4j.Slf4j;
 public class FlowServiceNodeExecutor {
 
     /**
-     * WEBHOOK / HTTP 通道使用的 RestTemplate。
-     *
-     * <p>不通过构造器/字段注入，避免强制要求容器中存在 RestTemplate Bean。
-     * 此处直接 new 出默认实例即可满足 best-effort 调用需求；
-     * final + 内联初始化使 Lombok @RequiredArgsConstructor 跳过该字段。
+     * WEBHOOK / HTTP 通道使用的 RestTemplate（由 ydsz-common-notify 统一提供）。
      */
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     /**
      * Aviator 脚本引擎实例（沙箱模式）。
@@ -75,9 +70,10 @@ public class FlowServiceNodeExecutor {
     private final AviatorEvaluatorInstance aviatorInstance;
 
     /**
-     * 构造器：初始化 Aviator 沙箱实例。
+     * 构造器：注入 RestTemplate 并初始化 Aviator 沙箱实例。
      */
-    public FlowServiceNodeExecutor() {
+    public FlowServiceNodeExecutor(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
         this.aviatorInstance = AviatorEvaluator.newInstance();
         // 浮点数解析为 Decimal，避免精度丢失
         this.aviatorInstance.setOption(Options.ALWAYS_PARSE_FLOATING_POINT_NUMBER_INTO_DECIMAL, true);

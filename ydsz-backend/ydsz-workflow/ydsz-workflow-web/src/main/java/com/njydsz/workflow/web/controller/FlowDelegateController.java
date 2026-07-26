@@ -2,6 +2,7 @@ package com.njydsz.workflow.web.controller.delegate;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -62,6 +63,8 @@ public class FlowDelegateController {
      * </pre>
      */
     @Idempotent(key = "flowDelegate:createDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
     @PostMapping("/delegateAuth/create")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
@@ -82,6 +85,8 @@ public class FlowDelegateController {
      * @return 空响应
      */
     @Idempotent(key = "flowDelegate:revokeDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdelegate.revokeDelegateAuth", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdelegate.revokeDelegateAuth", threshold = 50)
     @PostMapping("/delegateAuth/{id}/revoke")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
@@ -98,6 +103,8 @@ public class FlowDelegateController {
      * @return 空响应
      */
     @Idempotent(key = "flowDelegate:updateDelegateAuthStatus", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdelegate.updateDelegateAuthStatus", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdelegate.updateDelegateAuthStatus", threshold = 50)
     @PostMapping("/delegateAuth/{id}/status")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> updateDelegateAuthStatus(@PathVariable String id,

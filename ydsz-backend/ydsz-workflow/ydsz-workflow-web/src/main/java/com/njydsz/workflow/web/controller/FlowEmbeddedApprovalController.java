@@ -2,6 +2,7 @@ package com.njydsz.workflow.web.controller.integration;
 
 import jakarta.validation.Valid;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -94,6 +95,8 @@ public class FlowEmbeddedApprovalController {
      */
     @Operation(summary = "嵌入式快捷操作")
     @Idempotent(key = "flowEmbeddedApproval:quickAction", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
     @PostMapping("/action")
     public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
         LoginUser u = AuthContext.getCurrentOrNull();
@@ -119,6 +122,8 @@ public class FlowEmbeddedApprovalController {
      */
     @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
     @Idempotent(key = "flowEmbeddedApproval:quickActionByPath", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickActionByPath", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickActionByPath", threshold = 50)
     @PostMapping("/{businessType}/{businessId}/action")
     public BaseResponse<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,

@@ -20,6 +20,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 文件锁定 REST API（P1-6 + P0-R3 + P2-R2）
@@ -41,6 +45,8 @@ public class FileLockController {
     private final FileNodeRepository fileNodeRepository;
     private final com.njydsz.nextwiki.domain.service.FilePermissionService permissionService;
 
+    @Audit(module = "文件锁定", type = AuditType.FILE, action = AuditAction.CREATE, content = "'lock'")
+    @Idempotent(key = "nextwiki:filelock:lock", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{nodeId}/lock")
     @Operation(summary = "锁定文件（Check-out）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -70,6 +76,8 @@ public class FileLockController {
         return BaseResponse.success();
     }
 
+    @Audit(module = "文件锁定", type = AuditType.FILE, action = AuditAction.CREATE, content = "'unlock'")
+    @Idempotent(key = "nextwiki:filelock:unlock", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{nodeId}/unlock")
     @Operation(summary = "解锁文件（Check-in）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.instance;
 
 import java.time.LocalDateTime;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +66,8 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:startProcess", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'启动流程:' + #dto.flowCode")
+    @SentinelRateLimit(resource = "workflow.flowinstance.startProcess", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowinstance.startProcess", threshold = 50)
     @PostMapping("/instance/start")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
@@ -132,6 +135,8 @@ public class FlowInstanceController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowInstance:suspend", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowinstance.suspend", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowinstance.suspend", threshold = 50)
     @PostMapping("/instance/{id}/suspend")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> suspend(@PathVariable String id) {
@@ -146,6 +151,8 @@ public class FlowInstanceController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowInstance:activate", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowinstance.activate", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowinstance.activate", threshold = 50)
     @PostMapping("/instance/{id}/activate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> activate(@PathVariable String id) {
@@ -391,6 +398,8 @@ public class FlowInstanceController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowInstance:setVariables", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowinstance.setVariables", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowinstance.setVariables", threshold = 50)
     @PostMapping("/instance/{id}/variables")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> setVariables(@PathVariable String id,

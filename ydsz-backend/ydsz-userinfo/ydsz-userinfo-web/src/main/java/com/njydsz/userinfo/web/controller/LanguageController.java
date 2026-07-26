@@ -2,6 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,7 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.server.service.LanguageService;
@@ -47,18 +52,32 @@ public class LanguageController {
         return BaseResponse.success(service.getById(id));
     }
 
+    @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'创建语言: ' + #dto.languageName")
+    @Idempotent(key = "language:create", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "userinfo.language.create", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.language.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建语言")
     public BaseResponse<String> create(@Valid @RequestBody LanguageSaveDTO dto) {
         return BaseResponse.success(service.create(dto));
     }
 
+    @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'更新语言: ' + #dto.id")
+    @Idempotent(key = "language:update", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "userinfo.language.update", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.language.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新语言")
     public BaseResponse<Boolean> update(@Valid @RequestBody LanguageSaveDTO dto) {
         return BaseResponse.success(service.update(dto));
     }
 
+    @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
+            content = "'删除语言: ' + #id")
+    @SentinelRateLimit(resource = "userinfo.language.remove", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.language.remove", threshold = 50)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除语言")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

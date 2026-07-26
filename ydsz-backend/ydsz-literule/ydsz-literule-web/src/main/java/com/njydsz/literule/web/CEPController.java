@@ -32,6 +32,9 @@ import com.njydsz.literule.server.cep.CEPPattern;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * CEP 复杂事件处理 Controller（P0-2）
@@ -138,6 +141,7 @@ public class CEPController {
      * @return 注册结果
      */
     @Idempotent(key = "cep:registerPattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'registerPattern'")
     @PostMapping("/patterns")
     public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -159,6 +163,7 @@ public class CEPController {
      * @return 注销结果
      */
     @Idempotent(key = "cep:unregisterPattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'unregisterPattern'")
     @DeleteMapping("/patterns/{patternId}")
     public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -186,6 +191,7 @@ public class CEPController {
      * @return 投递结果（含本次事件触发的命中数）
      */
     @Idempotent(key = "cep:feedEvent", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/events")
     public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -209,6 +215,7 @@ public class CEPController {
      * @return 投递结果（含触发的命中数）
      */
     @Idempotent(key = "cep:feedEvents", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/events/batch")
     public BaseResponse<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -305,6 +312,7 @@ public class CEPController {
      * @return 测试结果（含命中列表、命中数、投递事件数）
      */
     @Idempotent(key = "cep:testPattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/patterns/test")
     public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();

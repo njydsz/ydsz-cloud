@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 存储分析与 AI 摘要 REST API
@@ -64,6 +66,9 @@ public class AnalysisController {
         return BaseResponse.success(storageAnalysisService.topLargeFiles(userId, limit));
     }
 
+    @Idempotent(key = "nextwiki:analysis:analyze", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "nextwiki.analysis.analyze", threshold = 50)
+    @SentinelRateLimit(resource = "nextwiki.analysis.analyze", threshold = 50)
     @PostMapping("/summary")
     @Operation(summary = "生成文档摘要")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)

@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.canary;
 
 import jakarta.validation.Valid;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,9 @@ import com.njydsz.message.server.service.canary.CanaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 灰度桶 Controller。
@@ -48,6 +52,9 @@ public class CanaryController {
     @Operation(summary = "新增/更新灰度桶")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_UPDATE)
     @Idempotent(key = "canary:upsert", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "灰度管理", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'upsert'")
+    @SentinelRateLimit(resource = "message.canary.upsert", threshold = 50)
+    @SentinelRateLimit(resource = "message.canary.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
         return BaseResponse.success(canaryService.upsert(dto));

@@ -18,9 +18,13 @@ import type { ContractChangeVO, ContractChangeCreateDTO } from '@/api/contract/t
 import { PC } from '@/constants/permissionCodes'
 
 // ===== 列表查询状态 =====
+/** 列表加载状态 */
 const loading = ref(false)
+/** 表单提交状态 */
 const submitting = ref(false)
+/** 合同变更列表数据 */
 const list = ref<ContractChangeVO[]>([])
+/** 合同变更列表总数 */
 const total = ref(0)
 const query = reactive({
   page: 1,

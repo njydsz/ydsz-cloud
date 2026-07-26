@@ -15,6 +15,10 @@ import com.njydsz.common.core.response.BaseResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * Human-in-the-Loop 审批 REST API
@@ -52,6 +56,8 @@ public class HumanApprovalController {
         return BaseResponse.success(request);
     }
 
+    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'approve'")
+    @Idempotent(key = "agent:approval:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/approve")
     public BaseResponse<Boolean> approve(@PathVariable String id,
                                           @RequestParam(required = false) String approver,
@@ -63,6 +69,8 @@ public class HumanApprovalController {
         return BaseResponse.success(true);
     }
 
+    @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'reject'")
+    @Idempotent(key = "agent:approval:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/reject")
     public BaseResponse<Boolean> reject(@PathVariable String id,
                                          @RequestParam(required = false) String approver,

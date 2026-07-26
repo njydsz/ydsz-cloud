@@ -23,6 +23,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 文件评论 REST API（P1-5）
@@ -48,6 +52,8 @@ public class FileCommentController {
         return BaseResponse.success(commentRepository.findByFileNodeId(fileNodeId));
     }
 
+    @Audit(module = "文件评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'addComment'")
+    @Idempotent(key = "nextwiki:comment:addComment", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "添加评论/回复")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -77,6 +83,8 @@ public class FileCommentController {
         return BaseResponse.success(saved);
     }
 
+    @Audit(module = "文件评论", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteComment'")
+    @Idempotent(key = "nextwiki:comment:deleteComment", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{commentId}")
     @Operation(summary = "删除评论")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
@@ -87,6 +95,8 @@ public class FileCommentController {
         return BaseResponse.success();
     }
 
+    @Audit(module = "文件评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resolveComment'")
+    @Idempotent(key = "nextwiki:comment:resolveComment", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{commentId}/resolve")
     @Operation(summary = "标记评论已解决")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)

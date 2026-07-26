@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 文件下载 REST API
@@ -63,6 +64,7 @@ public class DownloadController {
     /**
      * P1-3: 文件夹打包下载为 ZIP
      */
+    @Idempotent(key = "nextwiki:download:downloadFolder", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/folder/{folderId}")
     @Operation(summary = "打包下载文件夹", description = "将整个文件夹打包为 ZIP 下载")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
@@ -133,6 +135,7 @@ public class DownloadController {
     /**
      * 下载文件（支持 HTTP Range 断点续传）
      */
+    @Idempotent(key = "nextwiki:download:download", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{nodeId}")
     @Operation(summary = "下载文件", description = "支持断点续传（Range 请求），下载前校验限流和防盗链")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
@@ -229,6 +232,7 @@ public class DownloadController {
     /**
      * 生成签名下载 URL
      */
+    @Idempotent(key = "nextwiki:download:generateSignedUrl", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{nodeId}/signed-url")
     @Operation(summary = "生成签名下载URL", description = "生成带时效性和IP绑定的签名下载链接")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)

@@ -2,6 +2,7 @@ package com.njydsz.workflow.web.controller.delegate;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -35,6 +36,8 @@ public class FlowOfflineForwardController {
      * @return 成功转发的任务数
      */
     @Idempotent(key = "flowOfflineForward:autoForward", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowofflineforward.autoForward", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowofflineforward.autoForward", threshold = 50)
     @PostMapping("/auto")
     @Operation(summary = "按代理授权规则自动转发已有待办")
     public BaseResponse<Integer> autoForward(@RequestParam String authId) {
@@ -49,6 +52,8 @@ public class FlowOfflineForwardController {
      * @return 成功转发的任务数
      */
     @Idempotent(key = "flowOfflineForward:manualForward", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowofflineforward.manualForward", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowofflineforward.manualForward", threshold = 50)
     @PostMapping("/manual")
     @Operation(summary = "手动触发离线转发")
     public BaseResponse<Integer> manualForward(

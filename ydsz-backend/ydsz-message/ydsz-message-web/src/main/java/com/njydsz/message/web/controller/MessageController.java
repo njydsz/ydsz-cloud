@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 消息发送 Controller。
@@ -62,6 +66,9 @@ public class MessageController {
     @Operation(summary = "发送消息(基于共享请求)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'send'")
+    @SentinelRateLimit(resource = "message.message.send", threshold = 50)
+    @SentinelRateLimit(resource = "message.message.send", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
         return BaseResponse.success(messageService.send(request));
@@ -76,6 +83,9 @@ public class MessageController {
     @Operation(summary = "直接发送消息(本模块 DTO)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendDirect'")
+    @SentinelRateLimit(resource = "message.message.sendDirect", threshold = 50)
+    @SentinelRateLimit(resource = "message.message.sendDirect", threshold = 50)
     @PostMapping("/sendDirect")
     public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
         return BaseResponse.success(messageService.sendDirect(dto));
@@ -91,6 +101,9 @@ public class MessageController {
     @Operation(summary = "异步发送消息(先落库再投递 MQ)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendAsync'")
+    @SentinelRateLimit(resource = "message.message.sendAsync", threshold = 50)
+    @SentinelRateLimit(resource = "message.message.sendAsync", threshold = 50)
     @PostMapping("/sendAsync")
     public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
@@ -128,6 +141,9 @@ public class MessageController {
     @Operation(summary = "事务消息发送(RocketMQ 半消息)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendTransactionally", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendTransactionally'")
+    @SentinelRateLimit(resource = "message.message.sendTransactionally", threshold = 50)
+    @SentinelRateLimit(resource = "message.message.sendTransactionally", threshold = 50)
     @PostMapping("/sendTransactional")
     public BaseResponse<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
         return BaseResponse.success(messageService.sendTransactionally(request));
@@ -143,6 +159,9 @@ public class MessageController {
     @Operation(summary = "批量发送消息(限制 100 条/批)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:batchSend", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchSend'")
+    @SentinelRateLimit(resource = "message.message.batchSend", threshold = 50)
+    @SentinelRateLimit(resource = "message.message.batchSend", threshold = 50)
     @PostMapping("/batchSend")
     public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {

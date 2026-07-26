@@ -15,9 +15,13 @@ import PageLayout from '@/components/common/PageLayout.vue'
 
 const { t } = useI18n()
 
+/** 收藏列表加载状态 */
 const loading = ref(false)
+/** 收藏文件列表 */
 const list = ref<FileNodeVO[]>([])
+/** 收藏列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({ page: 1, size: 10 })
 
 /** 查询收藏文件列表 */

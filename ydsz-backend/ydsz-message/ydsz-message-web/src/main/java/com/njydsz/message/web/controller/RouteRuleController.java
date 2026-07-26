@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,9 @@ import com.njydsz.message.server.service.config.RouteRuleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 路由规则 Controller。
@@ -51,6 +55,9 @@ public class RouteRuleController {
     @Operation(summary = "创建路由规则")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
     @Idempotent(key = "routeRule:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'create'")
+    @SentinelRateLimit(resource = "message.routerule.create", threshold = 50)
+    @SentinelRateLimit(resource = "message.routerule.create", threshold = 50)
     @PostMapping
     public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
         return BaseResponse.success(routeRuleService.create(dto));
@@ -66,6 +73,9 @@ public class RouteRuleController {
     @Operation(summary = "更新路由规则")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
     @Idempotent(key = "routeRule:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.UPDATE, content = "'update'")
+    @SentinelRateLimit(resource = "message.routerule.update", threshold = 50)
+    @SentinelRateLimit(resource = "message.routerule.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
         return BaseResponse.success(routeRuleService.update(id, dto));
@@ -80,6 +90,9 @@ public class RouteRuleController {
     @Operation(summary = "删除路由规则")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
     @Idempotent(key = "routeRule:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.DELETE, content = "'delete'")
+    @SentinelRateLimit(resource = "message.routerule.delete", threshold = 50)
+    @SentinelRateLimit(resource = "message.routerule.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         routeRuleService.delete(id);

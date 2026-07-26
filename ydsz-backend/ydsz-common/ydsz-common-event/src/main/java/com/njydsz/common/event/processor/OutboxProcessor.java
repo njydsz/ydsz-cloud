@@ -145,7 +145,14 @@ public class OutboxProcessor {
     }
 
     /**
-     * 启动轮询
+     * 启动 Outbox 轮询处理器
+     *
+     * <p>启动以下定时任务：
+     * <ul>
+     *   <li>主轮询任务：定期扫描 PENDING 消息并投递</li>
+     *   <li>超时回收任务：定期回收 PROCESSING 状态超时的消息</li>
+     *   <li>自动清理任务：定期清理已投递的历史消息</li>
+     * </ul>
      */
     public void start() {
         if (running) {
@@ -177,7 +184,9 @@ public class OutboxProcessor {
     }
 
     /**
-     * 停止轮询
+     * 停止 Outbox 轮询处理器
+     *
+     * <p>优雅关闭调度线程和投递线程池，等待最多 10 秒。
      */
     public void stop() {
         running = false;
@@ -363,9 +372,9 @@ public class OutboxProcessor {
     }
 
     /**
-     * 清理已投递消息
+     * 清理已投递的历史消息
      *
-     * @param retentionDays 保留天数
+     * @param retentionDays 保留天数，早于此天数的 SENT 消息将被删除
      */
     public void cleanupSentMessages(int retentionDays) {
         Instant cutoff = Instant.now().minusSeconds(retentionDays * 86400L);

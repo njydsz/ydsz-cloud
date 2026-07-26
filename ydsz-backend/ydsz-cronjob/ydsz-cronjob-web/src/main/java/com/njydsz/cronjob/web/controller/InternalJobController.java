@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.web.controller.job;
 
 import org.springframework.context.ApplicationContext;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -73,6 +74,8 @@ public class InternalJobController {
      */
     @Operation(summary = "接收远程派发请求并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
+    @SentinelRateLimit(resource = "cronjob.internaljob.execute", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.internaljob.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<String> execute(@RequestBody RemoteTaskRequest request) {
         if (request == null || request.getJob() == null) {
@@ -124,6 +127,8 @@ public class InternalJobController {
      */
     @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
+    @SentinelRateLimit(resource = "cronjob.internaljob.executeSubTask", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.internaljob.executeSubTask", threshold = 50)
     @PostMapping("/executeSubTask")
     public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {

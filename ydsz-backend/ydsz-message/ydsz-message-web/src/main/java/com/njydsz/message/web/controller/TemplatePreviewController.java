@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.template;
 
 import java.util.HashMap;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import org.springframework.util.StringUtils;
@@ -71,6 +72,8 @@ public class TemplatePreviewController {
     }
 
     @Operation(summary = "预览自定义模板内容")
+    @SentinelRateLimit(resource = "message.templatepreview.previewRaw", threshold = 50)
+    @SentinelRateLimit(resource = "message.templatepreview.previewRaw", threshold = 50)
     @PostMapping("/raw")
     public BaseResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplate())) {

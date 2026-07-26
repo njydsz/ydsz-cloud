@@ -56,10 +56,11 @@ public class WxMiniChannel implements MessageChannel {
     private final RedisService redisService;
 
     public WxMiniChannel(MessageProperties messageProperties,
-                         StringRedisTemplate redisTemplate) {
+                         RestTemplate restTemplate,
+                         RedisService redisService) {
         this.messageProperties = messageProperties;
-        this.redisTemplate = redisTemplate;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
+        this.redisService = redisService;
     }
 
     @Override

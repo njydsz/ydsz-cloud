@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.core;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -31,6 +32,9 @@ import com.njydsz.message.server.service.receipt.RecallService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 站内通知 Controller。
@@ -60,6 +64,9 @@ public class NotificationController {
     @Operation(summary = "发送站内通知")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "notification:send", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'send'")
+    @SentinelRateLimit(resource = "message.notification.send", threshold = 50)
+    @SentinelRateLimit(resource = "message.notification.send", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
         return BaseResponse.success(notificationService.send(dto));
@@ -99,6 +106,9 @@ public class NotificationController {
     @Operation(summary = "标记单条已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "notification:markRead", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markRead'")
+    @SentinelRateLimit(resource = "message.notification.markRead", threshold = 50)
+    @SentinelRateLimit(resource = "message.notification.markRead", threshold = 50)
     @PostMapping("/{id}/read")
     public BaseResponse<Boolean> markRead(@PathVariable String id) {
         return BaseResponse.success(notificationService.markRead(AuthContext.getUserId(), id));
@@ -112,6 +122,9 @@ public class NotificationController {
     @Operation(summary = "全部标记已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "notification:markAllRead", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markAllRead'")
+    @SentinelRateLimit(resource = "message.notification.markAllRead", threshold = 50)
+    @SentinelRateLimit(resource = "message.notification.markAllRead", threshold = 50)
     @PostMapping("/readAll")
     public BaseResponse<Integer> markAllRead() {
         return BaseResponse.success(notificationService.markAllRead(AuthContext.getUserId()));
@@ -126,6 +139,9 @@ public class NotificationController {
     @Operation(summary = "删除通知(仅删自己的)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_DELETE)
     @Idempotent(key = "notification:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
+    @SentinelRateLimit(resource = "message.notification.delete", threshold = 50)
+    @SentinelRateLimit(resource = "message.notification.delete", threshold = 50)
     @DeleteMapping
     public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
         notificationService.delete(AuthContext.getUserId(), ids);
@@ -141,6 +157,9 @@ public class NotificationController {
     @Operation(summary = "撤回通知")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_RECALL)
     @Idempotent(key = "notification:recall", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recall'")
+    @SentinelRateLimit(resource = "message.notification.recall", threshold = 50)
+    @SentinelRateLimit(resource = "message.notification.recall", threshold = 50)
     @PostMapping("/{id}/recall")
     public BaseResponse<Boolean> recall(@PathVariable String id) {
         return BaseResponse.success(recallService.recallNotification(AuthContext.getUserId(), id));
@@ -157,6 +176,7 @@ public class NotificationController {
     @Operation(summary = "单推(实时推送指定用户)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_PUSH)
     @Idempotent(key = "notification:push", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/push")
     public BaseResponse<Map<String, Object>> push(
             @RequestParam String userId,
@@ -177,6 +197,7 @@ public class NotificationController {
     @Operation(summary = "广播(实时推送所有在线用户)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_BROADCAST)
     @Idempotent(key = "notification:broadcast", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/broadcast")
     public BaseResponse<Map<String, Object>> broadcast(
             @RequestParam String type,

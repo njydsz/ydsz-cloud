@@ -21,6 +21,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 回收站 REST API
@@ -44,6 +48,8 @@ public class TrashController {
         return BaseResponse.success(trashApplicationService.listTrash(userId));
     }
 
+    @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'restore'")
+    @Idempotent(key = "nextwiki:trash:restore", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{trashItemId}/restore")
     @Operation(summary = "从回收站恢复")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
@@ -54,6 +60,8 @@ public class TrashController {
         return BaseResponse.success();
     }
 
+    @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchRestore'")
+    @Idempotent(key = "nextwiki:trash:batchRestore", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch-restore")
     @Operation(summary = "批量恢复")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
@@ -64,6 +72,8 @@ public class TrashController {
         return BaseResponse.success();
     }
 
+    @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'purge'")
+    @Idempotent(key = "nextwiki:trash:purge", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{trashItemId}")
     @Operation(summary = "永久删除")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_PURGE)
@@ -74,6 +84,8 @@ public class TrashController {
         return BaseResponse.success();
     }
 
+    @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'emptyTrash'")
+    @Idempotent(key = "nextwiki:trash:emptyTrash", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/empty")
     @Operation(summary = "清空回收站")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_EMPTY)

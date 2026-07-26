@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.receipt;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -50,6 +51,8 @@ public class ReadStatusController {
     @Operation(summary = "标记消息已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markRead", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "message.readstatus.markRead", threshold = 50)
+    @SentinelRateLimit(resource = "message.readstatus.markRead", threshold = 50)
     @PostMapping("/read/{msgId}")
     public BaseResponse<Boolean> markRead(@PathVariable String msgId,
                                      @RequestParam String userId) {
@@ -66,6 +69,8 @@ public class ReadStatusController {
     @Operation(summary = "批量标记消息已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markReadBatch", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
+    @SentinelRateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
     @PostMapping("/readBatch")
     public BaseResponse<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
                                           @RequestParam String userId) {
@@ -82,6 +87,8 @@ public class ReadStatusController {
     @Operation(summary = "标记站内通知已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markNotificationRead", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
+    @SentinelRateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
     @PostMapping("/notification/{notificationId}")
     public BaseResponse<Boolean> markNotificationRead(@PathVariable String notificationId,
                                                   @RequestParam String userId) {

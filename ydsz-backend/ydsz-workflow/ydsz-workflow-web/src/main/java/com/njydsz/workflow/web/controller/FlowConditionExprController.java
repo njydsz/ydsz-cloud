@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.definition;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,8 @@ public class FlowConditionExprController {
      * @return 转换后的表达式字符串
      */
     @Idempotent(key = "flowConditionExpr:build", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowconditionexpr.build", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowconditionexpr.build", threshold = 50)
     @PostMapping("/build")
     @Operation(summary = "结构化条件 JSON → 表达式字符串")
     public BaseResponse<String> build(@RequestBody Map<String, String> body) {
@@ -53,6 +56,8 @@ public class FlowConditionExprController {
      * @return 转换后的结构化条件 JSON 字符串
      */
     @Idempotent(key = "flowConditionExpr:parse", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowconditionexpr.parse", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowconditionexpr.parse", threshold = 50)
     @PostMapping("/parse")
     @Operation(summary = "表达式字符串 → 结构化条件 JSON")
     public BaseResponse<String> parse(@RequestBody Map<String, String> body) {

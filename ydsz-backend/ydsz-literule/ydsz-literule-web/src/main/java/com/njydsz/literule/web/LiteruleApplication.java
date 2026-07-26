@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
@@ -37,6 +38,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableDiscoveryClient
 @EnableYdszAuth
 @EnableYdszSafe
+@EnableYdszAudit
 @EnableYdszFeign(basePackages = {
         "com.njydsz.literule.api",
         "com.njydsz.common.feign",

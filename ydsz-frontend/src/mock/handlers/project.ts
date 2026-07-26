@@ -1,18 +1,29 @@
 ﻿/**
- * 项目模块 mock (商机/立项/合同/变更)
+ * @file 项目模块 Mock 数据处理器
+ * @description 为项目管理的商机、立项、合同、变更等 API 路径提供 Mock 数据，
+ *              维护 in-memory 存储供 E2E 测试验证创建/状态变更结果
+ * @module mock/handlers/project
  */
 import type { MockHandler } from './types'
 
+/**
+ * 批量生成 Mock 列表数据
+ * @param n - 生成记录数
+ * @param factory - 单条记录工厂函数，入参为序号（从 1 开始）
+ * @returns 生成的记录数组
+ */
 const list = (n: number, factory: (i: number) => Record<string, unknown>) =>
   Array.from({ length: n }, (_, i) => factory(i + 1))
 
-/**
- * 简易 in-memory 存储, 让 E2E 测试能验证创建/状态变更结果
- */
+/** 立项 in-memory 存储，key 为 initiationCode */
 const initiationStore: Record<string, Record<string, unknown>> = {}
+/** 合同 in-memory 存储，key 为 contractCode */
 const contractStore: Record<string, Record<string, unknown>> = {}
+/** 风险 in-memory 存储，key 为风险编码 */
 const riskStore: Record<string, Record<string, unknown>> = {}
+/** 预警 in-memory 存储，key 为预警编码 */
 const alertStore: Record<string, Record<string, unknown>> = {}
+/** 自增 ID 序列 */
 let nextSeq = 1000
 
 export const projectHandlers: MockHandler[] = [

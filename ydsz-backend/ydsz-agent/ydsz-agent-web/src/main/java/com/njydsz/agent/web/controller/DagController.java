@@ -2,6 +2,7 @@ package com.njydsz.agent.web.controller;
 
 import java.util.Map;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
@@ -16,6 +17,10 @@ import com.njydsz.agent.domain.agent.AgentDag;
 import com.njydsz.agent.server.agent.DagDslParser;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * Agent DAG 编排 REST API
@@ -42,6 +47,10 @@ public class DagController {
     /**
      * 执行 DAG 编排
      */
+    @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
+    @Idempotent(key = "agent:dag:execute", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.dag.execute", threshold = 50)
+    @SentinelRateLimit(resource = "agent.dag.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
             @Valid @RequestBody DagExecutionDTO request) {
@@ -57,6 +66,8 @@ public class DagController {
     /**
      * 验证 DSL（不执行）
      */
+    @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @Idempotent(key = "agent:dag:write", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
     public BaseResponse<Map<String, Object>> validate(@RequestBody DagExecutionDTO request) {
         try {

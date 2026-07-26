@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * WOPI 协议接口（P1-4 + P1-R5 + P2-R4）
@@ -121,6 +122,7 @@ public class WopiController {
     /**
      * PutFile — 保存文件内容
      */
+    @Idempotent(key = "nextwiki:wopi:putFileContents", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/files/{fileId}/contents")
     @Operation(summary = "WOPI PutFile", description = "接收编辑器保存的文件内容")
     public WopiPutFileResponse putFileContents(
@@ -173,6 +175,7 @@ public class WopiController {
     /**
      * LockFile — 锁定文件
      */
+    @Idempotent(key = "nextwiki:wopi:lockFile", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/files/{fileId}/lock")
     @Operation(summary = "WOPI Lock", description = "锁定文件防止并发编辑")
     public WopiPutFileResponse lockFile(
@@ -199,6 +202,7 @@ public class WopiController {
     /**
      * UnlockFile — 解锁文件
      */
+    @Idempotent(key = "nextwiki:wopi:unlockFile", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/files/{fileId}/unlock")
     @Operation(summary = "WOPI Unlock", description = "解锁文件")
     public WopiPutFileResponse unlockFile(

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.definition;
 
 import java.io.IOException;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +59,8 @@ public class FlowDefinitionController {
      * @return 统一响应结果，包含流程定义 ID
      */
     @Idempotent(key = "flowDefinition:deploy", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdefinition.deploy", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdefinition.deploy", threshold = 50)
     @PostMapping("/definition/deploy")
     @Operation(summary = "部署流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
@@ -119,6 +122,8 @@ public class FlowDefinitionController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDefinition:deprecate", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdefinition.deprecate", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdefinition.deprecate", threshold = 50)
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -213,6 +218,8 @@ public class FlowDefinitionController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDefinition:enable", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdefinition.enable", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdefinition.enable", threshold = 50)
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -228,6 +235,8 @@ public class FlowDefinitionController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDefinition:disable", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdefinition.disable", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdefinition.disable", threshold = 50)
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -245,6 +254,8 @@ public class FlowDefinitionController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDefinition:updateNodeCoordinate", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdefinition.updateNodeCoordinate", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdefinition.updateNodeCoordinate", threshold = 50)
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -263,6 +274,8 @@ public class FlowDefinitionController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDefinition:updateDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowdefinition.updateDefinition", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdefinition.updateDefinition", threshold = 50)
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.instance;
 
 import java.math.BigDecimal;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +61,8 @@ public class FlowAdvancedController {
     }
 
     @Idempotent(key = "flowAdvanced:sendWeekly", ttlSeconds = 10, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowadvanced.sendWeekly", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowadvanced.sendWeekly", threshold = 50)
     @PostMapping("/report/weekly/send")
     @Operation(summary = "P2-4: 推送周报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
@@ -69,6 +72,8 @@ public class FlowAdvancedController {
     }
 
     @Idempotent(key = "flowAdvanced:sendMonthly", ttlSeconds = 10, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowadvanced.sendMonthly", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowadvanced.sendMonthly", threshold = 50)
     @PostMapping("/report/monthly/send")
     @Operation(summary = "P2-4: 推送月报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
@@ -80,6 +85,8 @@ public class FlowAdvancedController {
     // ==================== P2-5: 多实例合并审批 ====================
 
     @Idempotent(key = "flowAdvanced:merge", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowadvanced.merge", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowadvanced.merge", threshold = 50)
     @PostMapping("/merge")
     @Operation(summary = "P2-5: 合并多个流程实例")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -126,6 +133,8 @@ public class FlowAdvancedController {
     // ==================== P2-6: 会签动态完成条件 ====================
 
     @Idempotent(key = "flowAdvanced:updateCondition", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowadvanced.updateVotePassRate", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowadvanced.updateVotePassRate", threshold = 50)
     @PostMapping("/countersign/{taskId}/votePassRate")
     @Operation(summary = "P2-6: 动态修改会签通过率阈值")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
@@ -137,6 +146,8 @@ public class FlowAdvancedController {
     }
 
     @Idempotent(key = "flowAdvanced:updateApproveCount", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowadvanced.updateApproveCount", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowadvanced.updateApproveCount", threshold = 50)
     @PostMapping("/countersign/{taskId}/approveCount")
     @Operation(summary = "P2-6: 动态修改会签所需通过人数")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)

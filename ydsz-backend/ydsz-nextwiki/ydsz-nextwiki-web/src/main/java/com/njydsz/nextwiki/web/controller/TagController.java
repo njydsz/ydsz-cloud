@@ -20,6 +20,10 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 标签管理 REST API
@@ -37,6 +41,8 @@ public class TagController {
 
     private final TagApplicationService tagApplicationService;
 
+    @Audit(module = "标签管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createTag'")
+    @Idempotent(key = "nextwiki:tag:createTag", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
@@ -54,6 +60,8 @@ public class TagController {
         return BaseResponse.success(tagApplicationService.getAllTags());
     }
 
+    @Audit(module = "标签管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'bindTag'")
+    @Idempotent(key = "nextwiki:tag:bindTag", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/bind")
     @Operation(summary = "为文件绑定标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_BIND)

@@ -15,6 +15,9 @@ import com.njydsz.literule.server.expr.VariableRegistry;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 规则变量管理 Controller
@@ -77,6 +80,7 @@ public class RuleVariableAdminController {
      * @return 保存后的变量定义
      */
     @Idempotent(key = "ruleVariableAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "变量管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
     @PostMapping
     public BaseResponse<VariableDefinition> save(@RequestBody VariableDefinition definition) {
         if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
@@ -93,6 +97,7 @@ public class RuleVariableAdminController {
      * @return 操作结果
      */
     @Idempotent(key = "ruleVariableAdmin:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "变量管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @DeleteMapping("/{varName}")
     public BaseResponse<Void> delete(@PathVariable String varName) {
         variableRegistry.unregister(varName);
@@ -105,6 +110,7 @@ public class RuleVariableAdminController {
      * @return 操作结果
      */
     @Idempotent(key = "ruleVariableAdmin:refresh", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "变量管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'refresh'")
     @PostMapping("/refresh")
     public BaseResponse<Void> refresh() {
         variableRegistry.refresh();

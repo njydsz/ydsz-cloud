@@ -2,6 +2,7 @@ package com.njydsz.workflow.web.controller.integration;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,6 +72,8 @@ public class FlowAttachmentController {
      * @return 空响应
      */
     @Idempotent(key = "flowAttachment:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowattachment.delete", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowattachment.delete", threshold = 50)
     @DeleteMapping("/attachment/{attachmentId}")
     public BaseResponse<Void> delete(@PathVariable String attachmentId,
                                @RequestParam String operatorId) {

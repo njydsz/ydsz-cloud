@@ -121,9 +121,8 @@ class RedisTccTransactionLogStoreTest {
     }
 
     /** 用 Mockito 创建 Cursor mock，避免 Spring Data Redis 4.x 接口签名变化 */
-    @SuppressWarnings("unchecked")
     private static Cursor<String> mockCursor(Iterator<String> it) {
-        Cursor<String> cursor = mock(Cursor.class);
+        Cursor<String> cursor = Mockito.mock(Cursor.class);
         when(cursor.hasNext()).thenAnswer(inv -> it.hasNext());
         when(cursor.next()).thenAnswer(inv -> it.next());
         return cursor;

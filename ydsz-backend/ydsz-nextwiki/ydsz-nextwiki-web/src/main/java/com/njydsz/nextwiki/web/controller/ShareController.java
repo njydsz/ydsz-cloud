@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 文件分享 REST API
@@ -38,6 +43,8 @@ public class ShareController {
 
     private final ShareApplicationService shareApplicationService;
 
+    @Audit(module = "分享管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createShare'")
+    @Idempotent(key = "nextwiki:share:createShare", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建分享链接")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
@@ -55,6 +62,10 @@ public class ShareController {
         return BaseResponse.success(result);
     }
 
+    @Audit(module = "分享管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'verifyAccess'")
+    @Idempotent(key = "nextwiki:share:verifyAccess", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "nextwiki.share.verifyAccess", threshold = 50)
+    @SentinelRateLimit(resource = "nextwiki.share.verifyAccess", threshold = 50)
     @PostMapping("/verify")
     @Operation(summary = "验证分享链接访问权限")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
@@ -66,6 +77,8 @@ public class ShareController {
         return BaseResponse.success(result);
     }
 
+    @Audit(module = "分享管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'revoke'")
+    @Idempotent(key = "nextwiki:share:revoke", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{shareId}")
     @Operation(summary = "撤销分享")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_REVOKE)

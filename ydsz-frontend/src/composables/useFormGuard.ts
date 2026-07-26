@@ -74,7 +74,10 @@ export function useFormGuard(options: UseFormGuardOptions = {}) {
     }
   })
 
-  // beforeunload 监听器：刷新/关闭页面时由浏览器原生提示
+  /**
+   * beforeunload 监听器：刷新/关闭页面时由浏览器原生提示
+   * 现代浏览器忽略自定义文案，但仍需设置 returnValue 触发原生提示
+   */
   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
     if (!internalDirty.value) return
     // 现代浏览器忽略自定义文案，但仍需设置 returnValue 触发原生提示

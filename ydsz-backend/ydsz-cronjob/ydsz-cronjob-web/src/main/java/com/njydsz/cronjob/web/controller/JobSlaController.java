@@ -2,6 +2,7 @@ package com.njydsz.cronjob.web.controller.alert;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,6 +53,8 @@ public class JobSlaController {
     @Operation(summary = "创建 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_CREATE)
     @Idempotent(key = "jobSla:create", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "cronjob.jobsla.create", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.jobsla.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSlaSaveDTO dto) {
         return BaseResponse.success(jobSlaService.createSla(dto));
@@ -67,6 +70,8 @@ public class JobSlaController {
     @Operation(summary = "更新 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
     @Idempotent(key = "jobSla:update", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "cronjob.jobsla.update", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.jobsla.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
         jobSlaService.updateSla(id, dto);
@@ -82,6 +87,8 @@ public class JobSlaController {
     @Operation(summary = "删除 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_DELETE)
     @Idempotent(key = "jobSla:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "cronjob.jobsla.delete", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.jobsla.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         jobSlaService.deleteSla(id);
@@ -123,6 +130,8 @@ public class JobSlaController {
     @Operation(summary = "启用/禁用 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
     @Idempotent(key = "jobSla:toggle", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "cronjob.jobsla.toggle", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.jobsla.toggle", threshold = 50)
     @PutMapping("/{id}/toggle")
     public BaseResponse<Void> toggle(@PathVariable String id, @RequestParam Integer enabled) {
         jobSlaService.toggleSla(id, enabled);

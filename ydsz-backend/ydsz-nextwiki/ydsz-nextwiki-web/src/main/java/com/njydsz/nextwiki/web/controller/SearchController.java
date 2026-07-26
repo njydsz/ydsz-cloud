@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 搜索 REST API
@@ -35,6 +36,7 @@ public class SearchController {
 
     private final SearchApplicationService searchApplicationService;
 
+    @Idempotent(key = "nextwiki:search:search", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "综合搜索")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
@@ -51,6 +53,7 @@ public class SearchController {
         return BaseResponse.success(result);
     }
 
+    @Idempotent(key = "nextwiki:search:rebuildIndices", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rebuild")
     @Operation(summary = "重建全量索引")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH_REBUILD)

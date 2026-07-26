@@ -47,9 +47,10 @@ public class AlipayMiniChannel implements MessageChannel {
     private final MessageProperties messageProperties;
     private final RestTemplate restTemplate;
 
-    public AlipayMiniChannel(MessageProperties messageProperties) {
+    public AlipayMiniChannel(MessageProperties messageProperties,
+                             RestTemplate restTemplate) {
         this.messageProperties = messageProperties;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
     }
 
     @Override

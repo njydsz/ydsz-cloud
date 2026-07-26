@@ -2,6 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,6 +71,8 @@ public class UserAccountController {
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建用户: ' + #dto.username", excludeParams = {"password"})
     @Idempotent(key = "userAccount:create", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "userinfo.useraccount.create", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.useraccount.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建用户")
     public BaseResponse<String> create(@Valid @RequestBody UserAccountCreateDTO dto) {
@@ -79,6 +82,8 @@ public class UserAccountController {
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新用户: ' + #dto.id")
     @Idempotent(key = "userAccount:update", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "userinfo.useraccount.update", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.useraccount.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新用户信息")
     public BaseResponse<Boolean> update(@Valid @RequestBody UserAccountUpdateDTO dto) {
@@ -87,6 +92,8 @@ public class UserAccountController {
 
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除用户: ' + #id")
+    @SentinelRateLimit(resource = "userinfo.useraccount.remove", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.useraccount.remove", threshold = 50)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除用户")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
@@ -96,18 +103,24 @@ public class UserAccountController {
     @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'修改密码'", excludeParams = {"oldPassword", "newPassword"})
     @Idempotent(key = "userAccount:changePassword", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "userinfo.useraccount.changePassword", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.useraccount.changePassword", threshold = 50)
     @PostMapping("/change-password")
     @Operation(summary = "修改密码")
     public BaseResponse<Boolean> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
         return BaseResponse.success(service.changePassword(dto));
     }
 
+    @SentinelRateLimit(resource = "userinfo.useraccount.resetPassword", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.useraccount.resetPassword", threshold = 50)
     @PostMapping("/reset-password")
     @Operation(summary = "重置密码（管理员）")
     public BaseResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
         return BaseResponse.success(service.resetPassword(dto));
     }
 
+    @SentinelRateLimit(resource = "userinfo.useraccount.assignRoles", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.useraccount.assignRoles", threshold = 50)
     @PostMapping("/{userId}/roles")
     @Operation(summary = "分配用户角色")
     public BaseResponse<Boolean> assignRoles(

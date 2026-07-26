@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.receipt;
 
 import jakarta.validation.Valid;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +20,9 @@ import com.njydsz.message.server.service.receipt.RecallService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 消息撤回 Controller。
@@ -45,6 +49,9 @@ public class RecallController {
     @Operation(summary = "撤回站内通知")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallNotification", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallNotification'")
+    @SentinelRateLimit(resource = "message.recall.recallNotification", threshold = 50)
+    @SentinelRateLimit(resource = "message.recall.recallNotification", threshold = 50)
     @PostMapping("/notification")
     public BaseResponse<Boolean> recallNotification(@RequestParam String userId,
                                               @Valid @RequestBody RecallRequestDTO dto) {
@@ -60,6 +67,9 @@ public class RecallController {
     @Operation(summary = "撤回已发送消息")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallMessage", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallMessage'")
+    @SentinelRateLimit(resource = "message.recall.recallMessage", threshold = 50)
+    @SentinelRateLimit(resource = "message.recall.recallMessage", threshold = 50)
     @PostMapping("/message/{logId}")
     public BaseResponse<Boolean> recallMessage(@PathVariable String logId) {
         return BaseResponse.success(recallService.recallMessage(logId));
@@ -76,6 +86,9 @@ public class RecallController {
     @Operation(summary = "按消息 ID 撤回消息")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallByMsgId", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallByMsgId'")
+    @SentinelRateLimit(resource = "message.recall.recallByMsgId", threshold = 50)
+    @SentinelRateLimit(resource = "message.recall.recallByMsgId", threshold = 50)
     @PostMapping("/msg/{msgId}")
     public BaseResponse<Boolean> recallByMsgId(@PathVariable String msgId) {
         return BaseResponse.success(recallService.recallByMsgId(msgId));
@@ -90,6 +103,9 @@ public class RecallController {
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallBatch", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallBatch'")
+    @SentinelRateLimit(resource = "message.recall.recallBatch", threshold = 50)
+    @SentinelRateLimit(resource = "message.recall.recallBatch", threshold = 50)
     @PostMapping("/batch")
     public BaseResponse<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
         return BaseResponse.success(recallService.recallBatch(dto.getBizType(), dto.getBizId()));

@@ -33,10 +33,20 @@ public class Pbkdf2PasswordEncoder implements PasswordEncoder {
     private final int saltLength;
     private final int keyLength;
 
+    /**
+     * 使用默认参数创建 PBKDF2 密码编码器
+     */
     public Pbkdf2PasswordEncoder() {
         this(DEFAULT_ITERATIONS, DEFAULT_SALT_LENGTH, DEFAULT_KEY_LENGTH);
     }
 
+    /**
+     * 使用自定义参数创建 PBKDF2 密码编码器
+     *
+     * @param iterations 迭代次数（≥ 1000）
+     * @param saltLength Salt 长度（字节）
+     * @param keyLength  派生密钥长度（字节）
+     */
     public Pbkdf2PasswordEncoder(int iterations, int saltLength, int keyLength) {
         if (iterations < 1000) {
             throw new IllegalArgumentException("iterations must be >= 1000");

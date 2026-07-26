@@ -55,10 +55,17 @@ const DEFAULT_SAFETY_FLAGS = new Set<FeatureFlagKey>([
   'TOTP_TWO_FACTOR',
 ])
 
-/** 模块级缓存 */
+/** 模块级缓存：key -> { value, 缓存时间戳 } */
 const _cache = new Map<string, { value: boolean; at: number }>()
+/** 缓存有效期（毫秒），默认 30s */
 const CACHE_TTL_MS = 30_000
 
+/**
+ * 从缓存中读取 flag 值
+ * @param key flag key
+ * @param userId 用户 ID（可选，用于用户维度灰度）
+ * @returns 缓存值（过期或不存在返回 null）
+ */
 function getCached(key: string, userId?: number): boolean | null {
   const cacheKey = `${key}#${userId ?? 'any'}`
   const e = _cache.get(cacheKey)
@@ -67,14 +74,31 @@ function getCached(key: string, userId?: number): boolean | null {
   return e.value
 }
 
+/**
+ * 写入 flag 值到缓存
+ * @param key flag key
+ * @param userId 用户 ID（可选）
+ * @param value flag 值
+ */
 function setCached(key: string, userId: number | undefined, value: boolean): void {
   const cacheKey = `${key}#${userId ?? 'any'}`
   _cache.set(cacheKey, { value, at: Date.now() })
 }
 
+/**
+ * 特性开关 composable
+ *
+ * @returns `{ flags, loading, isEnabled, refresh, clearCache }`
+ *   - flags: 全量快照（响应式）
+ *   - loading: 拉取中标志
+ *   - isEnabled: 异步判断单个 flag（远程拉取并缓存）
+ *   - refresh: 拉取全量快照
+ *   - clearCache: 清空本地缓存
+ */
 export function useFeatureFlag() {
   /** 全量快照 (响应式) */
   const flags = ref<Record<string, boolean>>({})
+  /** 拉取中标志 */
   const loading = ref(false)
 
   /** 异步判断: 远程拉取并缓存 */
@@ -97,7 +121,10 @@ export function useFeatureFlag() {
     }
   }
 
-  /** 拉取全量快照, 写入 flags ref */
+  /**
+   * 拉取全量快照, 写入 flags ref
+   * @returns Promise，完成时 flags 已更新
+   */
   async function refresh(): Promise<void> {
     loading.value = true
     try {

@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 存储配额 REST API
@@ -46,6 +47,7 @@ public class QuotaController {
         return BaseResponse.success(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
     }
 
+    @Idempotent(key = "nextwiki:quota:setQuota", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/set")
     @Operation(summary = "设置配额（管理员）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)

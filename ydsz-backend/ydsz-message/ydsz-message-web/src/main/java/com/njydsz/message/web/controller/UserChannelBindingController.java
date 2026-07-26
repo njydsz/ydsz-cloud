@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +24,9 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 用户通道绑定 Controller。
@@ -40,6 +44,9 @@ public class UserChannelBindingController {
 
     @Operation(summary = "新增或更新通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
+    @SentinelRateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
+    @SentinelRateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgUserChannelDO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
         return BaseResponse.success(userChannelBindingService.upsert(dto));
@@ -61,6 +68,9 @@ public class UserChannelBindingController {
 
     @Operation(summary = "删除通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
+    @SentinelRateLimit(resource = "message.userchannelbinding.delete", threshold = 50)
+    @SentinelRateLimit(resource = "message.userchannelbinding.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         userChannelBindingService.delete(id);

@@ -32,6 +32,8 @@ public class OutboxHealthIndicator implements HealthIndicator {
     private final EventProperties properties;
 
     /**
+     * 构造函数
+     *
      * @param outboxRepository Outbox 仓储
      * @param properties       事件配置属性（用于读取告警阈值）
      */

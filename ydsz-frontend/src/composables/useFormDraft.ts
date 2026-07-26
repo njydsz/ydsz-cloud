@@ -67,8 +67,12 @@ export function useFormDraft<T extends Record<string, unknown>>(
   options: DraftOptions,
 ) {
   const { key, debounce = 2000, maxAge = 86400000, userId } = options
+
+  /** 是否存在未提交的草稿 */
   const hasDraft = ref(false)
+  /** 上次自动保存的时间戳 */
   const lastSavedAt = ref<Date | null>(null)
+  /** 防抖定时器引用 */
   let timer: ReturnType<typeof setTimeout> | null = null
 
   // 按用户隔离: 有 userId 时 key 形如 `ydsz-draft-1001-project-init`, 防止跨用户泄漏
@@ -76,6 +80,7 @@ export function useFormDraft<T extends Record<string, unknown>>(
     ? `${DRAFT_KEY_PREFIX}${userId}-${key}`
     : `${DRAFT_KEY_PREFIX}${key}`
 
+  /** 立即保存当前表单数据到 localStorage */
   const save = () => {
     try {
       const data = {
@@ -90,11 +95,16 @@ export function useFormDraft<T extends Record<string, unknown>>(
     }
   }
 
+  /** 防抖保存（表单数据变化时自动调用） */
   const debouncedSave = () => {
     if (timer) clearTimeout(timer)
     timer = setTimeout(save, debounce)
   }
 
+  /**
+   * 从 localStorage 恢复草稿
+   * @returns 是否成功恢复
+   */
   const restore = (): boolean => {
     try {
       const raw = localStorage.getItem(storageKey)
@@ -114,6 +124,7 @@ export function useFormDraft<T extends Record<string, unknown>>(
     }
   }
 
+  /** 清除草稿（提交成功后调用） */
   const clear = () => {
     localStorage.removeItem(storageKey)
     hasDraft.value = false

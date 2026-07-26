@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.core;
 
 import jakarta.validation.Valid;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,6 +48,8 @@ public class OrchestrationController {
     @Operation(summary = "执行编排流程")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "orchestration:execute", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "message.orchestration.execute", threshold = 50)
+    @SentinelRateLimit(resource = "message.orchestration.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {
         return BaseResponse.success(orchestrationService.execute(flow));

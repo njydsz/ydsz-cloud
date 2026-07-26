@@ -14,9 +14,13 @@ import PageLayout from '@/components/common/PageLayout.vue'
 
 const { t } = useI18n()
 
+/** 回收站列表加载状态 */
 const loading = ref(false)
+/** 回收站文件列表 */
 const list = ref<TrashItemVO[]>([])
+/** 回收站列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({ page: 1, size: 10 })
 
 /** 查询回收站列表 */

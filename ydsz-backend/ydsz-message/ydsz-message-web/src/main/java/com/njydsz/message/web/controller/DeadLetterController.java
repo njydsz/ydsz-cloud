@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.config;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 死信管理 Controller（P1-4）。
@@ -75,6 +79,9 @@ public class DeadLetterController {
     @Operation(summary = "手动重发死信")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
     @Idempotent(key = "deadLetter:resend", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "死信管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resend'")
+    @SentinelRateLimit(resource = "message.deadletter.resend", threshold = 50)
+    @SentinelRateLimit(resource = "message.deadletter.resend", threshold = 50)
     @PostMapping("/{logId}/resend")
     public BaseResponse<Void> resend(@PathVariable String logId) {
         if (logId == null || logId.isBlank()) {

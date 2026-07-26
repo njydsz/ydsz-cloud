@@ -2,6 +2,7 @@ package com.njydsz.system.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -62,6 +63,8 @@ public class DictController {
     @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建字典类型: ' + #dto.typeCode")
     @Operation(summary = "创建字典类型")
+    @SentinelRateLimit(resource = "system.dict.save", threshold = 50)
+    @SentinelRateLimit(resource = "system.dict.save", threshold = 50)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody DictTypeDTO dto) {
         return BaseResponse.success(service.save(dto));
@@ -70,6 +73,8 @@ public class DictController {
     @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新字典类型: ' + #dto.typeCode")
     @Operation(summary = "更新字典类型")
+    @SentinelRateLimit(resource = "system.dict.update", threshold = 50)
+    @SentinelRateLimit(resource = "system.dict.update", threshold = 50)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody DictTypeDTO dto) {
         return BaseResponse.success(service.updateById(dto));
@@ -78,6 +83,8 @@ public class DictController {
     @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除字典类型: ' + #id")
     @Operation(summary = "删除字典类型")
+    @SentinelRateLimit(resource = "system.dict.remove", threshold = 50)
+    @SentinelRateLimit(resource = "system.dict.remove", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));

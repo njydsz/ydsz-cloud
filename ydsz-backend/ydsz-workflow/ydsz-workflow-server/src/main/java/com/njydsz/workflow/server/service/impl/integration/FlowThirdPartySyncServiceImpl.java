@@ -39,9 +39,8 @@ public class FlowThirdPartySyncServiceImpl implements FlowThirdPartySyncService 
     private final FlowThirdPartyLogMapper logMapper;
     /** 三方账号服务，查询已配置的三方审批系统账号 */
     private final FlowThirdPartyAccountService accountService;
-
-    /** 轻量 RestTemplate（与 FlowNotificationServiceImpl 一致，直接 new 默认实例） */
-    private final RestTemplate restTemplate = new RestTemplate();
+    /** RestTemplate（由 ydsz-common-notify 统一提供） */
+    private final RestTemplate restTemplate;
 
     @Override
     public void syncBackOnTerminate(String instanceId, String reason) {

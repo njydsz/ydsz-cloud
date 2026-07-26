@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
@@ -20,7 +21,8 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableDiscoveryClient
 @EnableYdszAuth
 @EnableYdszSafe
-@EnableYdszFeign(basePackages = {"com.njydsz.cronjob.api", "com.njydsz.common.feign"})
+@EnableYdszAudit
+@EnableYdszFeign(basePackages = {"com.njydsz.cronjob.api", "com.njydsz.common.feign", "com.njydsz.userinfo.api", "com.njydsz.system.api"})
 @EnableScheduling
 @MapperScan("com.njydsz.cronjob.infra.mapper")
 public class CronjobApplication {

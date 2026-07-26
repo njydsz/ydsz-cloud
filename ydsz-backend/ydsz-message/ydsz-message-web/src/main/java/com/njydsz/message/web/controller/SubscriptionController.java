@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,9 @@ import com.njydsz.message.server.service.config.SubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 订阅关系 Controller。
@@ -48,6 +52,9 @@ public class SubscriptionController {
     @Operation(summary = "新增/更新订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
     @Idempotent(key = "subscription:upsert", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "订阅管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
+    @SentinelRateLimit(resource = "message.subscription.upsert", threshold = 50)
+    @SentinelRateLimit(resource = "message.subscription.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
         return BaseResponse.success(subscriptionService.upsert(dto));
@@ -92,6 +99,9 @@ public class SubscriptionController {
     @Operation(summary = "退订")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
     @Idempotent(key = "subscription:unsubscribe", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "订阅管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'unsubscribe'")
+    @SentinelRateLimit(resource = "message.subscription.unsubscribe", threshold = 50)
+    @SentinelRateLimit(resource = "message.subscription.unsubscribe", threshold = 50)
     @PostMapping("/unsubscribe")
     public BaseResponse<Void> unsubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,

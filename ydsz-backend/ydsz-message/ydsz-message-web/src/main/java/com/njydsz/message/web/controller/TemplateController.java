@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.template;
 
 import jakarta.validation.Valid;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,9 @@ import com.njydsz.message.server.service.template.TemplateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 消息模板管理 Controller。
@@ -50,6 +54,9 @@ public class TemplateController {
     @Operation(summary = "创建模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_CREATE)
     @Idempotent(key = "template:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
+    @SentinelRateLimit(resource = "message.template.create", threshold = 50)
+    @SentinelRateLimit(resource = "message.template.create", threshold = 50)
     @PostMapping
     public BaseResponse<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
         return BaseResponse.success(templateService.create(dto));
@@ -65,6 +72,9 @@ public class TemplateController {
     @Operation(summary = "更新模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
     @Idempotent(key = "template:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
+    @SentinelRateLimit(resource = "message.template.update", threshold = 50)
+    @SentinelRateLimit(resource = "message.template.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
         return BaseResponse.success(templateService.update(id, dto));
@@ -79,6 +89,9 @@ public class TemplateController {
     @Operation(summary = "删除模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_DELETE)
     @Idempotent(key = "template:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
+    @SentinelRateLimit(resource = "message.template.delete", threshold = 50)
+    @SentinelRateLimit(resource = "message.template.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         templateService.delete(id);
@@ -121,6 +134,9 @@ public class TemplateController {
     @Operation(summary = "审核模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
     @Idempotent(key = "template:audit", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'audit'")
+    @SentinelRateLimit(resource = "message.template.audit", threshold = 50)
+    @SentinelRateLimit(resource = "message.template.audit", threshold = 50)
     @PostMapping("/{id}/audit")
     public BaseResponse<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
         dto.setId(id);

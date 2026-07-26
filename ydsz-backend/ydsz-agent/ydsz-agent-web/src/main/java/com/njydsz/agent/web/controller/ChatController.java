@@ -1,6 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.io.IOException;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,10 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.ChatService;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 对话 REST API
@@ -73,6 +78,10 @@ public class ChatController {
     /**
      * 同步对话
      */
+    @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'chat'")
+    @Idempotent(key = "agent:chat:chat", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.chat.chat", threshold = 50)
+    @SentinelRateLimit(resource = "agent.chat.chat", threshold = 50)
     @PostMapping("/chat")
     public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 同步对话请求: convId={}, msgLen={}",
@@ -97,6 +106,10 @@ public class ChatController {
      * <p>每 {@value #HEARTBEAT_INTERVAL_SECONDS} 秒发送心跳保活事件，防止中间代理断连。
      * 客户端断开后自动中断 LLM 调用，避免 Token 浪费。
      */
+    @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'chatStream'")
+    @Idempotent(key = "agent:chat:chatStream", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.chat.chatStream", threshold = 50)
+    @SentinelRateLimit(resource = "agent.chat.chatStream", threshold = 50)
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
@@ -190,6 +203,10 @@ public class ChatController {
     /**
      * 清除对话历史
      */
+    @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'clearHistory'")
+    @Idempotent(key = "agent:chat:clearHistory", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.chat.clearHistory", threshold = 50)
+    @SentinelRateLimit(resource = "agent.chat.clearHistory", threshold = 50)
     @DeleteMapping("/history")
     public BaseResponse<Void> clearHistory(@RequestParam String conversationId) {
         chatService.clearHistory(conversationId);

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.instance;
 
 import java.time.LocalDateTime;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +82,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:claim", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.claim", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.claim", threshold = 50)
     @PostMapping("/task/claim")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> claim(@RequestParam String taskId) {
@@ -96,6 +99,8 @@ public class FlowTaskController {
      */
     @RateLimit(key = "flowTask:pass", qps = 10, windowSeconds = 60, message = "审批操作过于频繁，请稍后重试")
     @Idempotent(key = "flowTask:pass", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.pass", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.pass", threshold = 50)
     @PostMapping("/task/pass")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -113,6 +118,8 @@ public class FlowTaskController {
      */
     @RateLimit(key = "flowTask:reject", qps = 10, windowSeconds = 60, message = "审批操作过于频繁，请稍后重试")
     @Idempotent(key = "flowTask:reject", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.reject", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.reject", threshold = 50)
     @PostMapping("/task/reject")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -147,6 +154,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:transfer", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.transfer", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.transfer", threshold = 50)
     @PostMapping("/task/transfer")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -163,6 +172,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:delegate", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.delegate", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.delegate", threshold = 50)
     @PostMapping("/task/delegate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -179,6 +190,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:countersignBefore", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignBefore", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignBefore", threshold = 50)
     @PostMapping("/task/countersignBefore")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -195,6 +208,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:countersignAfter", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignAfter", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignAfter", threshold = 50)
     @PostMapping("/task/countersignAfter")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -211,6 +226,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:countersignParallel", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignParallel", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignParallel", threshold = 50)
     @PostMapping("/task/countersignParallel")
     @Operation(summary = "并加签（与原审批人并行审批）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -228,6 +245,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:jump", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.jump", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.jump", threshold = 50)
     @PostMapping("/task/jump")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -251,6 +270,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:freeJump", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.freeJump", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.freeJump", threshold = 50)
     @PostMapping("/task/freeJump")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
     public BaseResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -444,6 +465,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:countersignRemove", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignRemove", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.countersignRemove", threshold = 50)
     @PostMapping("/task/countersignRemove")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -460,6 +483,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:markRead", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.markRead", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.markRead", threshold = 50)
     @PostMapping("/task/{taskId}/read")
     public BaseResponse<Void> markRead(@PathVariable String taskId) {
         String userId = AuthContext.getUserId();
@@ -474,6 +499,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:communicate", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.communicate", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.communicate", threshold = 50)
     @PostMapping("/task/communicate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -490,6 +517,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:saveDraft", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.saveDraft", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.saveDraft", threshold = 50)
     @PostMapping("/task/saveDraft")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -506,6 +535,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:addApprover", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.addApprover", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.addApprover", threshold = 50)
     @PostMapping("/task/addApprover")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -558,6 +589,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "flowTask:activateTask", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.activateTask", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.activateTask", threshold = 50)
     @PostMapping("/task/{taskId}/activate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> activateTask(@PathVariable String taskId) {
@@ -595,6 +628,8 @@ public class FlowTaskController {
      * @return 是否成功
      */
     @Idempotent(key = "flowTask:pushMyTodoCount", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowtask.pushMyTodoCount", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowtask.pushMyTodoCount", threshold = 50)
     @PostMapping("/todo/pushMine")
     public BaseResponse<Boolean> pushMyTodoCount() {
         String userId = AuthContext.getUserId();

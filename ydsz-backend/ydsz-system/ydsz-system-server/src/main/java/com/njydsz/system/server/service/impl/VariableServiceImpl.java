@@ -34,21 +34,39 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class VariableServiceImpl implements VariableService {
 
+    /** 变量值缓存键前缀：system:variable:value:{variableKey} */
     private static final String CACHE_KEY_PREFIX = "system:variable:value:";
+    /** 空值哨兵，用于防缓存穿透 */
     private static final String NULL_SENTINEL = "__NULL__";
+    /** 空值哨兵 TTL（1 分钟） */
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
 
+    /** 系统变量 Mapper */
     private final VariableMapper mapper;
+    /** Redis 缓存服务 */
     private final RedisService redisService;
+    /** 系统配置属性 */
     private final SystemProperties properties;
+    /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public VariableVO getById(String id) {
         VariableDO entity = mapper.selectById(id);
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>优先查 Redis 缓存（含空值哨兵防穿透），未命中时查 DB 并回写缓存。
+     * 仅返回 status=ENABLED 的变量。
+     *
+     * @param variableKey 变量键
+     * @return 变量值字符串，不存在时返回 null
+     */
     @Override
     public String getVariableValue(String variableKey) {
         long start = System.nanoTime();
@@ -78,6 +96,10 @@ public class VariableServiceImpl implements VariableService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持按 variableKey 模糊匹配、status 精确匹配过滤。
+     */
     @Override
     public IPage<VariableVO> page(int pageNum, int pageSize, String variableKey, String status) {
         QueryWrapper<VariableDO> wrapper = new QueryWrapper<>();

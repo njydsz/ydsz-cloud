@@ -121,6 +121,8 @@ public class OutboxMessage {
 
     /**
      * 标记为已投递成功
+     *
+     * <p>设置状态为 SENT，记录投递成功时间，清空错误信息。
      */
     public void markAsSent() {
         this.status = OutboxStatus.SENT;
@@ -135,8 +137,8 @@ public class OutboxMessage {
      * <p>当 {@code retryCount} 达到 {@code maxRetries} 时，状态流转为 {@link OutboxStatus#DEAD_LETTER}；
      * 否则状态回退为 {@link OutboxStatus#PENDING} 等待下次调度。
      *
-     * @param errorMessage    失败错误信息
-     * @param backoffSeconds  退避秒数（下次重试时间 = 当前时间 + backoffSeconds）
+     * @param errorMessage   失败错误信息
+     * @param backoffSeconds 退避秒数（下次重试时间 = 当前时间 + backoffSeconds）
      */
     public void markAsFailed(String errorMessage, int backoffSeconds) {
         this.retryCount++;

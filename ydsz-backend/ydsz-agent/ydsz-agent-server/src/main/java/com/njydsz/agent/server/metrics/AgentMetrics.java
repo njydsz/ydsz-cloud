@@ -5,12 +5,15 @@ import java.util.concurrent.TimeUnit;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.common.core.metrics.AbstractModuleMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
 /**
  * Agent 模块 Micrometer 指标
+ *
+ * <p>P2-3: 继承 {@link AbstractModuleMetrics} 统一指标命名前缀管理。
  *
  * <p>暴露以下 Prometheus 指标：
  * <ul>
@@ -23,17 +26,15 @@ import io.micrometer.core.instrument.Timer;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class AgentMetrics {
+public class AgentMetrics extends AbstractModuleMetrics {
 
     private static final String METRIC_LLM_CALLS = "agent_llm_calls_total";
     private static final String METRIC_LLM_DURATION = "agent_llm_call_duration_seconds";
     private static final String METRIC_LLM_TOKENS = "agent_llm_tokens_total";
     private static final String METRIC_GUARDRAIL_REJECTIONS = "agent_guardrail_rejections_total";
 
-    private final MeterRegistry meterRegistry;
-
     public AgentMetrics(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
+        super(meterRegistry, "agent_");
     }
 
     /**
@@ -51,7 +52,7 @@ public class AgentMetrics {
         String errorType = error instanceof LlmException le
                 ? le.getErrorType().name() : error != null ? "UNKNOWN" : "NONE";
 
-        meterRegistry.counter(METRIC_LLM_CALLS,
+        registry.counter(METRIC_LLM_CALLS,
                 "provider", provider,
                 "model", model,
                 "status", status,
@@ -60,16 +61,16 @@ public class AgentMetrics {
         Timer.builder(METRIC_LLM_DURATION)
                 .tag("provider", provider)
                 .tag("model", model)
-                .register(meterRegistry)
+                .register(registry)
                 .record(durationMs, TimeUnit.MILLISECONDS);
 
         if (response != null && response.getUsage() != null) {
             TokenUsage usage = response.getUsage();
-            meterRegistry.counter(METRIC_LLM_TOKENS,
+            registry.counter(METRIC_LLM_TOKENS,
                     "provider", provider,
                     "model", model,
                     "type", "prompt").increment(usage.getPromptTokens());
-            meterRegistry.counter(METRIC_LLM_TOKENS,
+            registry.counter(METRIC_LLM_TOKENS,
                     "provider", provider,
                     "model", model,
                     "type", "completion").increment(usage.getCompletionTokens());
@@ -91,7 +92,7 @@ public class AgentMetrics {
         String errorType = error instanceof LlmException le
                 ? le.getErrorType().name() : error != null ? "UNKNOWN" : "NONE";
 
-        meterRegistry.counter(METRIC_LLM_CALLS,
+        registry.counter(METRIC_LLM_CALLS,
                 "provider", provider,
                 "model", model,
                 "status", status,
@@ -101,15 +102,15 @@ public class AgentMetrics {
         Timer.builder(METRIC_LLM_DURATION)
                 .tag("provider", provider)
                 .tag("model", model)
-                .register(meterRegistry)
+                .register(registry)
                 .record(durationMs, TimeUnit.MILLISECONDS);
 
         if (tokenUsage != null) {
-            meterRegistry.counter(METRIC_LLM_TOKENS,
+            registry.counter(METRIC_LLM_TOKENS,
                     "provider", provider,
                     "model", model,
                     "type", "prompt").increment(tokenUsage.getPromptTokens());
-            meterRegistry.counter(METRIC_LLM_TOKENS,
+            registry.counter(METRIC_LLM_TOKENS,
                     "provider", provider,
                     "model", model,
                     "type", "completion").increment(tokenUsage.getCompletionTokens());
@@ -123,7 +124,7 @@ public class AgentMetrics {
      * @param direction 方向（input/output）
      */
     public void recordGuardrailRejection(String guardName, String direction) {
-        meterRegistry.counter(METRIC_GUARDRAIL_REJECTIONS,
+        registry.counter(METRIC_GUARDRAIL_REJECTIONS,
                 "guard", guardName,
                 "direction", direction).increment();
     }

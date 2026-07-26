@@ -2,6 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,7 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -54,18 +59,27 @@ public class DepartmentController {
         return BaseResponse.success(service.getById(id));
     }
 
+    @SentinelRateLimit(resource = "userinfo.department.create", threshold = 50)
+    @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'创建部门: ' + #dto.deptName")
+    @Idempotent(key = "department:create", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "userinfo.department.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建部门")
     public BaseResponse<String> create(@Valid @RequestBody DepartmentSaveDTO dto) {
         return BaseResponse.success(service.create(dto));
     }
 
+    @SentinelRateLimit(resource = "userinfo.department.update", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.department.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新部门")
     public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentSaveDTO dto) {
         return BaseResponse.success(service.update(dto));
     }
 
+    @SentinelRateLimit(resource = "userinfo.department.remove", threshold = 50)
+    @SentinelRateLimit(resource = "userinfo.department.remove", threshold = 50)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除部门")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

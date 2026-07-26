@@ -13,7 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -44,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class AiSummaryApplicationService {
 
+    private final RestTemplate nextwikiRestTemplate;
+
     @Value("${nextwiki.ai.llm-enabled:false}")
     private boolean llmEnabled;
 
@@ -56,8 +57,9 @@ public class AiSummaryApplicationService {
     @Value("${nextwiki.ai.llm-model:gpt-3.5-turbo}")
     private String llmModel;
 
-    @Autowired
-    private RestTemplate nextwikiRestTemplate;
+    public AiSummaryApplicationService(RestTemplate restTemplate) {
+        this.nextwikiRestTemplate = restTemplate;
+    }
 
     /** 摘要最大句子数 */
     private static final int MAX_SENTENCES = 5;

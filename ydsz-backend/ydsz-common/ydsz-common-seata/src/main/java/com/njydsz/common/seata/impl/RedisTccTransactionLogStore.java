@@ -12,12 +12,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.njydsz.common.seata.api.TccBranchStatus;
 import com.njydsz.common.seata.api.TccTransactionLog;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
+import com.njydsz.common.json.YdszJson;
 
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -78,7 +76,6 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
     private static final long SCAN_BATCH_SIZE = 200L;
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ObjectMapper objectMapper;
     private final String keyPrefix;
     private final Duration retention;
 
@@ -92,23 +89,7 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
     public RedisTccTransactionLogStore(RedisTemplate<String, Object> redisTemplate,
                                        String keyPrefix,
                                        Duration retention) {
-        this(redisTemplate, new ObjectMapper(), keyPrefix, retention);
-    }
-
-    /**
-     * 构造 Redis 事务日志存储（指定 ObjectMapper，便于复用业务侧配置）
-     *
-     * @param redisTemplate Redis 操作模板
-     * @param objectMapper  Jackson ObjectMapper
-     * @param keyPrefix     key 前缀
-     * @param retention     日志保留时长
-     */
-    public RedisTccTransactionLogStore(RedisTemplate<String, Object> redisTemplate,
-                                       ObjectMapper objectMapper,
-                                       String keyPrefix,
-                                       Duration retention) {
         this.redisTemplate = redisTemplate;
-        this.objectMapper = objectMapper;
         this.keyPrefix = (keyPrefix == null || keyPrefix.isBlank()) ? "ydsz:tcc:log:" : keyPrefix;
         this.retention = (retention == null || retention.isZero() || retention.isNegative())
                 ? Duration.ofHours(24) : retention;
@@ -230,12 +211,8 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
      */
     public void saveContextSnapshot(String xid, String branchId, Map<String, Object> context) {
         String key = buildKey(xid, branchId);
-        try {
-            String json = objectMapper.writeValueAsString(context);
-            redisTemplate.opsForHash().put(key, FIELD_CTX_SNAPSHOT, json);
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to serialize TCC context snapshot: xid={}, branch={}", xid, branchId, e);
-        }
+        String json = YdszJson.toJson(context);
+        redisTemplate.opsForHash().put(key, FIELD_CTX_SNAPSHOT, json);
     }
 
     // ============= 私有辅助方法 =============

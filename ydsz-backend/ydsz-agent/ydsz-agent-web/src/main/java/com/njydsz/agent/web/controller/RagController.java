@@ -1,6 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -21,6 +22,10 @@ import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.server.rag.DocumentIngestionService;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * RAG REST API
@@ -53,6 +58,8 @@ public class RagController {
     /**
      * 摄入文档
      */
+    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @Idempotent(key = "agent:rag:write", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ingest")
     public BaseResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
         log.info("[RAG-API] 摄入文档: docId={}, title={}",
@@ -71,6 +78,8 @@ public class RagController {
     /**
      * 向量相似度检索
      */
+    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
+    @Idempotent(key = "agent:rag:write", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/search")
     public BaseResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
         int topK = request.getTopK() != null ? request.getTopK() : 5;
@@ -91,6 +100,10 @@ public class RagController {
     /**
      * 删除文档索引
      */
+    @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDocument'")
+    @Idempotent(key = "agent:rag:deleteDocument", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
+    @SentinelRateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
     @DeleteMapping("/documents/{documentId}")
     public BaseResponse<Void> deleteDocument(@PathVariable String documentId) {
         ingestionService.delete(documentId);

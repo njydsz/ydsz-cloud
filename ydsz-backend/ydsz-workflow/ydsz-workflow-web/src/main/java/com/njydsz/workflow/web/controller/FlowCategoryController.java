@@ -2,6 +2,7 @@ package com.njydsz.workflow.web.controller.definition;
 
 import java.util.List;
 
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.validation.annotation.Validated;
@@ -56,6 +57,8 @@ public class FlowCategoryController {
      * @return 新建分类 ID
      */
     @Idempotent(key = "flowCategory:create", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowcategory.create", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowcategory.create", threshold = 50)
     @PostMapping
     @Operation(summary = "新增分类")
     public BaseResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
@@ -69,6 +72,8 @@ public class FlowCategoryController {
      * @return 空响应
      */
     @Idempotent(key = "flowCategory:update", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowcategory.update", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowcategory.update", threshold = 50)
     @PutMapping
     @Operation(summary = "编辑分类")
     public BaseResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
@@ -83,6 +88,8 @@ public class FlowCategoryController {
      * @return 空响应
      */
     @Idempotent(key = "flowCategory:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "workflow.flowcategory.delete", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowcategory.delete", threshold = 50)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")
     public BaseResponse<Void> delete(@PathVariable String id) {

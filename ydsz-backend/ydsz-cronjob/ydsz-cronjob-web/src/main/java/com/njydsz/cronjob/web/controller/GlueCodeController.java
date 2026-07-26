@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.web.controller.schedule;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -27,6 +28,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * GLUE 在线编码 Controller（P1-2 GLUE 在线编码）。
@@ -64,6 +68,9 @@ public class GlueCodeController {
     @Operation(summary = "保存 GLUE 代码（新版本）")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
     @Idempotent(key = "glueCode:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
+    @SentinelRateLimit(resource = "cronjob.gluecode.save", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.gluecode.save", threshold = 50)
     @PostMapping("/save")
     public BaseResponse<GlueCodeDO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
         return BaseResponse.success(glueCodeService.save(
@@ -108,6 +115,9 @@ public class GlueCodeController {
     @Operation(summary = "回滚到指定版本")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
     @Idempotent(key = "glueCode:rollback", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollback'")
+    @SentinelRateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
+    @SentinelRateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
     @PostMapping("/rollback")
     public BaseResponse<GlueCodeDO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
         return BaseResponse.success(glueCodeService.rollback(request.getJobId(), request.getVersion()));
@@ -128,6 +138,7 @@ public class GlueCodeController {
     @Operation(summary = "在线测试 GLUE 代码")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_TEST)
     @RateLimit(key = "glue:test", qps = 10, windowSeconds = 60, message = "在线测试过于频繁，请稍后重试")
+    @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/test")
     public BaseResponse<Map<String, Object>> test(@Valid @RequestBody GlueTestRequest request) {
         return BaseResponse.success(glueCodeService.testCode(

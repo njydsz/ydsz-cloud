@@ -1,6 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import com.njydsz.agent.domain.trace.TraceRecorder.TraceStep;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder.TraceMeta;
 import com.njydsz.agent.server.debug.AgentDebuggerService;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * Agent 调试 REST API
@@ -97,6 +99,9 @@ public class DebugController {
      * @param traceId 链路 ID
      * @return 重放结果内容
      */
+    @Idempotent(key = "agent:debug:replayTrace", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.debug.replayTrace", threshold = 50)
+    @SentinelRateLimit(resource = "agent.debug.replayTrace", threshold = 50)
     @PostMapping("/trace/{traceId}/replay")
     public BaseResponse<String> replayTrace(@PathVariable String traceId) {
         log.info("[Debug-API] 重放链路: traceId={}", traceId);

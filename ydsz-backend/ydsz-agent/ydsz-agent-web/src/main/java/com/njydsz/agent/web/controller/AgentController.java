@@ -1,6 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.io.IOException;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,10 @@ import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * Agent REST API
@@ -95,6 +100,10 @@ public class AgentController {
     /**
      * 执行 Agent（同步）
      */
+    @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
+    @Idempotent(key = "agent:execute", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.agent.execute", threshold = 50)
+    @SentinelRateLimit(resource = "agent.agent.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<ChatResponseDTO> execute(
             @Valid @RequestBody AgentExecutionRequestDTO request) {
@@ -117,6 +126,10 @@ public class AgentController {
      * <p>每 {@value #HEARTBEAT_INTERVAL_SECONDS} 秒发送心跳保活事件。
      * 客户端断开后自动中断执行，避免资源浪费。
      */
+    @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'executeStream'")
+    @Idempotent(key = "agent:executeStream", ttlSeconds = 5, message = "请勿重复提交")
+    @SentinelRateLimit(resource = "agent.agent.executeStream", threshold = 50)
+    @SentinelRateLimit(resource = "agent.agent.executeStream", threshold = 50)
     @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());

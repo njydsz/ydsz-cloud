@@ -16,6 +16,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 批量导入 REST API
@@ -32,6 +36,8 @@ public class BatchImportController {
 
     private final BatchImportApplicationService batchImportService;
 
+    @Audit(module = "批量导入", type = AuditType.DATA, action = AuditAction.CREATE, content = "'batchUpload'")
+    @Idempotent(key = "nextwiki:import:batchUpload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch-upload")
     @Operation(summary = "批量上传文件")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)
@@ -42,6 +48,8 @@ public class BatchImportController {
         return BaseResponse.success(batchImportService.batchUpload(files, parentId, userId));
     }
 
+    @Audit(module = "批量导入", type = AuditType.DATA, action = AuditAction.CREATE, content = "'importZip'")
+    @Idempotent(key = "nextwiki:import:importZip", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/zip")
     @Operation(summary = "从 ZIP 压缩包导入")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)

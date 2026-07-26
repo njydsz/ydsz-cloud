@@ -1,6 +1,7 @@
 package com.njydsz.workflow.web.controller.dmn;
 
 import java.util.List;
+import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,8 @@ public class FlowDmnDecisionController {
 
     private final FlowDmnDecisionService dmnDecisionService;
 
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.createDecision", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.createDecision", threshold = 50)
     @PostMapping("/decision")
     @Operation(summary = "创建决策表")
     public BaseResponse<String> createDecision(@RequestBody CreateDecisionRequest request) {
@@ -42,6 +45,8 @@ public class FlowDmnDecisionController {
         return BaseResponse.success(id);
     }
 
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.updateDecision", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.updateDecision", threshold = 50)
     @PutMapping("/decision/{decisionId}")
     @Operation(summary = "更新决策表（仅草稿状态）")
     public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
@@ -51,6 +56,8 @@ public class FlowDmnDecisionController {
         return BaseResponse.success();
     }
 
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.publish", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.publish", threshold = 50)
     @PostMapping("/decision/{decisionId}/publish")
     @Operation(summary = "发布决策表")
     public BaseResponse<Void> publish(@PathVariable String decisionId) {
@@ -58,6 +65,8 @@ public class FlowDmnDecisionController {
         return BaseResponse.success();
     }
 
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.deprecate", threshold = 50)
+    @SentinelRateLimit(resource = "workflow.flowdmndecision.deprecate", threshold = 50)
     @PostMapping("/decision/{decisionId}/deprecate")
     @Operation(summary = "停用决策表")
     public BaseResponse<Void> deprecate(@PathVariable String decisionId) {
