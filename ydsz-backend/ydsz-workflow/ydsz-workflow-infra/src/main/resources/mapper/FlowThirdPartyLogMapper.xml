@@ -11,4 +11,14 @@
         WHERE id = #{id}
     </update>
 
+    <!-- P0-4: 更新重试结果（同时累加重试次数、更新最后重试时间） -->
+    <update id="updateRetryResult">
+        UPDATE ydsz_flow_third_party_log
+        SET handle_status  = #{status},
+            error_msg      = #{errorMsg},
+            retry_count    = #{retryCount},
+            last_retried_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
 </mapper>

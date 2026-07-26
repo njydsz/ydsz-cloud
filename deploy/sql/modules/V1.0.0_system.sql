@@ -437,6 +437,132 @@ INSERT INTO ydsz_tenant_quota (id, tenant_id, max_jobs, max_concurrent, max_dail
 VALUES ('1', '1', NULL, NULL, NULL, 1)
 ON CONFLICT (tenant_id) DO NOTHING;
 
+-- ============================ [006f] 租户元数据管理 ============================
+
+-- [P0-1] 租户主表：SaaS 多租户核心元数据
+CREATE TABLE IF NOT EXISTS ydsz_tenant(
+    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    tenant_code         VARCHAR(64)      NOT NULL UNIQUE,
+    tenant_name         VARCHAR(128)     NOT NULL,
+    contact_name        VARCHAR(64),
+    contact_phone       VARCHAR(32),
+    contact_email       VARCHAR(128),
+    status              VARCHAR(16)      NOT NULL DEFAULT 'ACTIVE',
+    plan_id             VARCHAR(20),
+    expire_at           TIMESTAMPTZ,
+    datasource_key      VARCHAR(64),
+    remark              VARCHAR(512),
+    -- 审计字段
+    created_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT         NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_tenant_status    CHECK (status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED')),
+    CONSTRAINT ck_tenant_deleted   CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_tenant IS '租户主表：SaaS 多租户核心元数据管理';
+COMMENT ON COLUMN ydsz_tenant.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_tenant.tenant_code IS '租户编码（唯一业务标识，如 TENANT_001）';
+COMMENT ON COLUMN ydsz_tenant.tenant_name IS '租户名称';
+COMMENT ON COLUMN ydsz_tenant.contact_name IS '联系人姓名';
+COMMENT ON COLUMN ydsz_tenant.contact_phone IS '联系电话';
+COMMENT ON COLUMN ydsz_tenant.contact_email IS '联系邮箱';
+COMMENT ON COLUMN ydsz_tenant.status IS '租户状态: ACTIVE 正常 / INACTIVE 未激活 / SUSPENDED 已停用';
+COMMENT ON COLUMN ydsz_tenant.plan_id IS '关联套餐 ID（ydsz_tenant_plan.id）';
+COMMENT ON COLUMN ydsz_tenant.expire_at IS '订阅到期时间（NULL=永不过期）';
+COMMENT ON COLUMN ydsz_tenant.datasource_key IS '独立数据源标识（ISOLATE_DB 模式下使用，对应 DynamicRoutingDataSource 的 key）';
+COMMENT ON COLUMN ydsz_tenant.remark IS '备注';
+COMMENT ON COLUMN ydsz_tenant.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_tenant.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_tenant.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_tenant.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_tenant.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+-- 索引：按状态查询
+CREATE INDEX IF NOT EXISTS idx_tenant_status ON ydsz_tenant (status) WHERE deleted = 0;
+-- 索引：按套餐查询
+CREATE INDEX IF NOT EXISTS idx_tenant_plan_id ON ydsz_tenant (plan_id) WHERE deleted = 0;
+
+-- 默认租户（tenant_id='1'）的初始记录
+INSERT INTO ydsz_tenant (id, tenant_code, tenant_name, contact_name, contact_email, status, plan_id, expire_at)
+VALUES ('1', 'DEFAULT', '默认租户', '系统管理员', 'admin@ydsz.example.com', 'ACTIVE', NULL, NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================ [006g] 租户套餐管理 ============================
+
+-- [P0-2] 租户套餐表：定义不同租户的权限/功能集合
+CREATE TABLE IF NOT EXISTS ydsz_tenant_plan(
+    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    plan_code           VARCHAR(64)      NOT NULL UNIQUE,
+    plan_name           VARCHAR(128)     NOT NULL,
+    description         VARCHAR(512),
+    status              VARCHAR(16)      NOT NULL DEFAULT 'ACTIVE',
+    sort_order          INTEGER          NOT NULL DEFAULT 0,
+    -- 审计字段
+    created_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT         NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_tplan_status    CHECK (status IN ('ACTIVE', 'INACTIVE')),
+    CONSTRAINT ck_tplan_deleted   CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_tenant_plan IS '租户套餐表：定义不同租户的权限/功能集合';
+COMMENT ON COLUMN ydsz_tenant_plan.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_tenant_plan.plan_code IS '套餐编码（唯一，如 BASIC / PROFESSIONAL / ENTERPRISE）';
+COMMENT ON COLUMN ydsz_tenant_plan.plan_name IS '套餐名称';
+COMMENT ON COLUMN ydsz_tenant_plan.description IS '套餐描述';
+COMMENT ON COLUMN ydsz_tenant_plan.status IS '套餐状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN ydsz_tenant_plan.sort_order IS '排序号';
+COMMENT ON COLUMN ydsz_tenant_plan.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_tenant_plan.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_tenant_plan.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN ydsz_tenant_plan.updated_at IS '最后修改时间';
+COMMENT ON COLUMN ydsz_tenant_plan.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+-- 索引：按状态查询
+CREATE INDEX IF NOT EXISTS idx_tplan_status ON ydsz_tenant_plan (status) WHERE deleted = 0;
+
+-- 默认套餐（基础版）
+INSERT INTO ydsz_tenant_plan (id, plan_code, plan_name, description, status, sort_order)
+VALUES ('1', 'BASIC', '基础版', '默认基础套餐，包含核心功能', 'ACTIVE', 1)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================ [006h] 租户套餐-菜单关联 ============================
+
+-- [P0-2] 租户套餐菜单关联表：套餐与菜单的多对多关系
+CREATE TABLE IF NOT EXISTS ydsz_tenant_plan_menu(
+    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    plan_id             VARCHAR(20)      NOT NULL,
+    menu_id             VARCHAR(20)      NOT NULL,
+    -- 审计字段
+    created_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT         NOT NULL DEFAULT 0,
+    -- 唯一约束：同一套餐下同一菜单只能关联一次
+    CONSTRAINT uk_tplan_menu UNIQUE (plan_id, menu_id),
+    -- 数据完整性约束
+    CONSTRAINT ck_tpm_deleted   CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE ydsz_tenant_plan_menu IS '租户套餐菜单关联表：套餐与菜单的多对多关系';
+COMMENT ON COLUMN ydsz_tenant_plan_menu.id IS '主键 ID';
+COMMENT ON COLUMN ydsz_tenant_plan_menu.plan_id IS '套餐 ID（ydsz_tenant_plan.id）';
+COMMENT ON COLUMN ydsz_tenant_plan_menu.menu_id IS '菜单 ID（ydsz_menu.id）';
+COMMENT ON COLUMN ydsz_tenant_plan_menu.created_by IS '创建人 ID';
+COMMENT ON COLUMN ydsz_tenant_plan_menu.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_tenant_plan_menu.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+-- 索引：按套餐查询
+CREATE INDEX IF NOT EXISTS idx_tpm_plan_id ON ydsz_tenant_plan_menu (plan_id) WHERE deleted = 0;
+-- 索引：按菜单查询
+CREATE INDEX IF NOT EXISTS idx_tpm_menu_id ON ydsz_tenant_plan_menu (menu_id) WHERE deleted = 0;
+
 -- --------------------------------------------------------------------
 
 -- ============================ [016] init ydsz security ============================

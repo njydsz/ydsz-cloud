@@ -10,6 +10,7 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -158,16 +159,21 @@ public class CachedJwtValidator {
     }
 
     /**
-     * Token 脱敏（日志中不暴露完整内容）
+     * Token 脱敏（P0-5：复用 ydsz-common-safe 的 SensitiveUtil 统一脱敏策略）
+     *
+     * <p>使用 {@link SensitiveUtil#defaultDesensitize} 默认脱敏规则：
+     * 保留首尾各 2 字符，中间用 * 替换。这样：
+     * <ul>
+     *   <li>与项目其它模块（auth/userinfo/finance 等）的脱敏策略保持一致</li>
+     *   <li>避免各模块自定义脱敏逻辑导致日志可读性不一致</li>
+     *   <li>短 Token（≤4 字符）整体替换为 ***</li>
+     * </ul>
      *
      * @param jwt JWT Token
      * @return 脱敏后的字符串
      */
     private String maskToken(String jwt) {
-        if (jwt == null || jwt.length() <= 10) {
-            return "***";
-        }
-        return jwt.substring(0, 5) + "***" + jwt.substring(jwt.length() - 5);
+        return SensitiveUtil.defaultDesensitize(jwt, '*');
     }
 
     /**

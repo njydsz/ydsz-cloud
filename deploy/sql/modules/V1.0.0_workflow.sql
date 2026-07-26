@@ -1919,6 +1919,9 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_third_party_log (
     -- P2-6: 双向同步 — 本地→三方回撤状态与结果
     sync_back_status    VARCHAR(20)     NOT NULL DEFAULT 'NOT_REQUIRED',
     sync_back_msg       VARCHAR(512),
+    -- P0-4: 失败重试 — 重试次数与最后重试时间，配合重试 JobHandler 实现最终一致
+    retry_count         INTEGER         NOT NULL DEFAULT 0,
+    last_retried_at     TIMESTAMPTZ,
     provider_trace_id   VARCHAR(64),
     created_at          TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     -- 数据完整性约束
@@ -1939,11 +1942,15 @@ COMMENT ON COLUMN ydsz_flow_third_party_log.business_type IS '业务类型';
 
 COMMENT ON COLUMN ydsz_flow_third_party_log.business_id IS '业务 ID';
 
-COMMENT ON COLUMN ydsz_flow_third_party_log.callback_data IS '回调原始数据';
+COMMENT ON COLUMN ydsz_flow_third_party_log.callback_data IS '回调原始数据（JSON）';
 
 COMMENT ON COLUMN ydsz_flow_third_party_log.handle_status IS '处理状态: PENDING/SUCCESS/FAIL';
 
 COMMENT ON COLUMN ydsz_flow_third_party_log.error_msg IS '处理失败原因';
+
+COMMENT ON COLUMN ydsz_flow_third_party_log.retry_count IS 'P0-4: 重试次数（超阈值进入死信，不再重试）';
+
+COMMENT ON COLUMN ydsz_flow_third_party_log.last_retried_at IS 'P0-4: 最后一次重试时间';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_platform_created
@@ -1952,6 +1959,11 @@ CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_platform_created
 CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
     ON ydsz_flow_third_party_log(tenant_id, handle_status, created_at DESC)
     WHERE handle_status = 'PENDING';
+
+-- P0-4: 失败重试扫描索引（handle_status=FAIL 且 retry_count 未超阈值的日志）
+CREATE INDEX IF NOT EXISTS idx_pftpl_retry_scan
+    ON ydsz_flow_third_party_log(handle_status, retry_count, last_retried_at NULLS FIRST)
+    WHERE handle_status = 'FAIL';
 
 -- --------------------------------------------------------------------
 

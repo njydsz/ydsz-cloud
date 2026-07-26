@@ -64,6 +64,17 @@ public interface FlowInstanceService {
     void terminate(String instanceId, String reason);
 
     /**
+     * P1-8: 批量终止流程实例（含子流程级联终止）
+     *
+     * <p>终止指定实例列表，同时级联终止所有关联的子流程实例。
+     *
+     * @param instanceIds 实例 ID 列表
+     * @param reason 终止原因
+     * @return 实际终止的实例数（含级联子流程）
+     */
+    int batchTerminate(List<String> instanceIds, String reason);
+
+    /**
      * 挂起
      */
     void suspend(String instanceId);

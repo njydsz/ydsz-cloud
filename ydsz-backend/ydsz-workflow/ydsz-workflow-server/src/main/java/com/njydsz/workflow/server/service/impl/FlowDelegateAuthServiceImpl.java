@@ -204,17 +204,22 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     /**
      * 定时扫描并标记过期授权（每 5 分钟）
+     *
+     * <p>集群幂等：通过 {@link FlowClusterLockHelper#tryRun} 加分布式锁，
+     * 多节点部署时仅一个节点执行扫描，避免重复标记。
      */
     @Scheduled(fixedDelay = 5 * 60 * 1000L, initialDelay = 60 * 1000L)
     public void scheduledScanExpired() {
-        try {
-            int n = scanAndMarkExpired();
-            if (n > 0) {
-                log.info("[FlowDelegate] 本轮扫描过期授权: count={}", n);
+        clusterLockHelper.tryRun("delegate:scan-expired", 55, () -> {
+            try {
+                int n = scanAndMarkExpired();
+                if (n > 0) {
+                    log.info("[FlowDelegate] 本轮扫描过期授权: count={}", n);
+                }
+            } catch (Exception e) {
+                log.error("[FlowDelegate] 扫描过期异常: {}", e.getMessage(), e);
             }
-        } catch (Exception e) {
-            log.error("[FlowDelegate] 扫描过期异常: {}", e.getMessage(), e);
-        }
+        });
     }
 
     @Override

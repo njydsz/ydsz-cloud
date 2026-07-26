@@ -41,7 +41,7 @@ public interface FlowDefinitionService {
      *   <li>有在途实例但节点未删除 → 记录警告日志后发布（LOW/MEDIUM 风险）</li>
      *   <li>有在途实例卡在已删除节点（HIGH 风险）：
      *     <ul>
-     *       <li>{@code force=false} 且 {@code workflow.publish.block-on-high-risk=true}（默认）→ 抛 SysException 阻断</li>
+     *       <li>{@code force=false} 且 {@code ydsz.flow.publish-block-on-high-risk=true}（默认）→ 抛 SysException 阻断</li>
      *       <li>{@code force=true} → 记录警告日志后强制发布（需管理员权限）</li>
      *     </ul>
      *   </li>

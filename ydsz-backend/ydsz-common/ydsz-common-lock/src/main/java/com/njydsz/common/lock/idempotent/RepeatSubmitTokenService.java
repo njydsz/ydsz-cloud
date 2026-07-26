@@ -7,7 +7,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContext;
-import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.security.LoginUser;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -125,7 +125,7 @@ public class RepeatSubmitTokenService {
      * @return 用户 ID，未登录返回 null
      */
     private String getCurrentUserId() {
-        UserInfo userInfo = AuthContext.getUserInfo();
-        return userInfo != null ? userInfo.getUserId() : null;
+        LoginUser loginUser = AuthContext.getCurrentOrNull();
+        return loginUser != null ? loginUser.getUserId() : null;
     }
 }

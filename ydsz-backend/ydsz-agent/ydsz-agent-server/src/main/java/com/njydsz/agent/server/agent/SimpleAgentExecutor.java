@@ -141,11 +141,76 @@ public class SimpleAgentExecutor implements AgentExecutor {
 
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-        ChatResponse response = execute(request);
-        chunkConsumer.accept(ChatChunk.content(response.getId(), response.getModel(),
-                response.getContent()));
-        chunkConsumer.accept(ChatChunk.finish(response.getId(), response.getModel(),
-                "stop", response.getUsage()));
+        String convId = request.getConversationId() != null
+                ? request.getConversationId() : UUID.randomUUID().toString();
+        String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
+        log.info("[Simple-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
+
+        String responseId = UUID.randomUUID().toString();
+        String model = properties.getLlm().getDefaultModel();
+
+        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        if (userInput == null) {
+            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
+            traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
+            chunkConsumer.accept(ChatChunk.content(responseId, model,
+                    "抱歉，您的输入被安全护栏拒绝。"));
+            chunkConsumer.accept(ChatChunk.finish(responseId, model, "guardrail_rejected", null));
+            return;
+        }
+
+        List<ChatMessage> messages = new ArrayList<>();
+        String systemPrompt = request.getSystemPrompt() != null
+                ? request.getSystemPrompt()
+                : "你是 YDSZ 项目管理信息系统的智能助手。请用中文回答。";
+        messages.add(ChatMessage.system(systemPrompt));
+        messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+        messages.add(ChatMessage.user(userInput, convId));
+
+        ChatRequest llmRequest = ChatRequest.builder()
+                .model(model)
+                .messages(messages)
+                .temperature(properties.getLlm().getTemperature())
+                .maxTokens(properties.getLlm().getMaxTokens())
+                .stream(true)
+                .build();
+
+        long startTime = System.currentTimeMillis();
+        StringBuilder contentBuilder = new StringBuilder();
+        TokenUsage[] usage = {TokenUsage.zero()};
+
+        try {
+            llmClient.stream(llmRequest, chunk -> {
+                if (chunk.hasContent()) {
+                    contentBuilder.append(chunk.getDeltaContent());
+                }
+                if (chunk.isFinished() && chunk.getUsage() != null) {
+                    usage[0] = chunk.getUsage();
+                }
+                chunkConsumer.accept(chunk);
+            });
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            agentMetrics.recordLlmCall(llmClient.getProvider(), model, duration, null, e);
+            traceRecorder.recordStep(traceId, "LLM_CALL_ERROR", "Stream failed", llmRequest, e.getMessage(), duration);
+            traceRecorder.endTrace(traceId, "FAILED");
+            throw e;
+        }
+        long duration = System.currentTimeMillis() - startTime;
+
+        agentMetrics.recordLlmStream(llmClient.getProvider(), model, duration, usage[0], null);
+        if (usage[0] != null && !usage[0].equals(TokenUsage.zero()) && costAnalysisService != null) {
+            costAnalysisService.recordUsage(convId, model, usage[0]);
+        }
+        traceRecorder.recordStep(traceId, "LLM_CALL", "Simple stream LLM call",
+                llmRequest, contentBuilder.toString(), duration);
+
+        String output = applyOutputGuardrails(contentBuilder.toString(), traceId);
+        memory.save(convId, ChatMessage.user(userInput, convId));
+        memory.save(convId, ChatMessage.assistant(output, convId, usage[0]));
+
+        traceRecorder.endTrace(traceId, "SUCCESS");
+        log.info("[Simple-Agent-Stream] 完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
     }
 
     @Override

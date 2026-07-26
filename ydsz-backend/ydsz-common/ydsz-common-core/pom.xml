@@ -50,6 +50,16 @@
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
         </dependency>
+        <!--
+            jakarta.servlet-api（provided）
+            TenantMdcFilter 实现 jakarta.servlet.Filter 接口，编译期需要 servlet API。
+            标记 provided 避免传递依赖污染，使用方需在 web 场景下自行引入 servlet 容器。
+        -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

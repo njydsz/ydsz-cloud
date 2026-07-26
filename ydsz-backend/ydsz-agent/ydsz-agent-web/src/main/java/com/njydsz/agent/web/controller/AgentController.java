@@ -2,6 +2,7 @@ package com.njydsz.agent.web.controller;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -25,8 +26,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.njydsz.agent.api.dto.AgentExecutionRequestDTO;
 import com.njydsz.agent.api.dto.ChatResponseDTO;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.common.core.response.BaseResponse;
@@ -56,14 +59,32 @@ public class AgentController {
     private final AgentFactory agentFactory;
     private final ToolRegistry toolRegistry;
     private final AgentRequestGuard requestGuard;
+    private final LlmClient llmClient;
     private final ScheduledExecutorService heartbeatScheduler =
             Executors.newScheduledThreadPool(2, Thread.ofVirtual().factory());
 
     public AgentController(AgentFactory agentFactory, ToolRegistry toolRegistry,
-                           AgentRequestGuard requestGuard) {
+                           AgentRequestGuard requestGuard, LlmClient llmClient) {
         this.agentFactory = agentFactory;
         this.toolRegistry = toolRegistry;
         this.requestGuard = requestGuard;
+        this.llmClient = llmClient;
+    }
+
+    /**
+     * 获取可用模型/Provider 列表
+     */
+    @GetMapping("/models")
+    public BaseResponse<List<Map<String, Object>>> models() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (llmClient instanceof LlmClientRouter router) {
+            for (String provider : router.getAvailableProviders()) {
+                result.add(Map.of("provider", provider, "available", true));
+            }
+        } else {
+            result.add(Map.of("provider", llmClient.getProvider(), "available", true));
+        }
+        return BaseResponse.success(result);
     }
 
     @PreDestroy

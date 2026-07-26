@@ -2,6 +2,7 @@ package com.njydsz.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.UUID;
 
 import com.njydsz.common.json.YdszJson;
 
@@ -28,12 +29,12 @@ import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.gateway.config.SecurityHeadersProperties;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
- * 认证全局过滤器（P0-C5 安全加固）
+ * 认证全局过滤器（P0-C5 安全加固 + P0-2 密钥分离 + P0-6 nonce 防重放）
  *
  * <p>核心职责:
  * <ol>
@@ -43,14 +44,25 @@ import reactor.core.publisher.Mono;
  *   <li>提取 Authorization 头中的 JWT 并校验</li>
  *   <li>检查 Token 黑名单（Redis）</li>
  *   <li>将 userId/username/roles/permissions 写入 X-User-* 头透传给下游</li>
- *   <li>注入 {@code X-Internal-Sig} + {@code X-Internal-Ts} 签名头，下游可校验</li>
+ *   <li>注入 {@code X-Internal-Sig} + {@code X-Internal-Ts} + {@code X-Internal-Nonce}
+ *       签名头，下游可校验（防伪造 + 防重放）</li>
  * </ol>
+ *
+ * <h3>P0-2: JWT 密钥与内部签名密钥分离</h3>
+ * <p>历史版本中，{@code internalSignSecret} 复用 {@code ydsz.jwt.secret}，导致一旦 JWT 密钥泄漏，
+ * 攻击者可伪造内部头绕过下游服务的身份信任。本版本引入独立的
+ * {@code ydsz.gateway.internal-sign-secret} 配置项，与 JWT 密钥隔离。
+ *
+ * <h3>P0-6: nonce 防重放</h3>
+ * <p>历史版本仅有时间戳防重放（60 秒窗口），攻击者可在窗口内重放同一签名。
+ * 本版本为每个请求生成唯一 nonce（UUID），纳入 HMAC 签名 payload 后透传给下游。
+ * 下游服务调用 {@link com.njydsz.common.safe.crypto.NonceCache#verifyAndConsume(String)}
+ * 校验 nonce 是否重复，形成"一次性签名"。
  *
  * @since 1.0.0
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     /** Token 黑名单前缀 (与 auth 服务保持一致) */
@@ -74,6 +86,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/workflow/third-party/wecom/callback"
     );
 
+    /** P0-2: 内部头签名密钥最小长度（HMAC-SHA256 安全要求） */
+    private static final int MIN_INTERNAL_SECRET_LENGTH = 32;
+
     /** P1-7: JWT 校验结果缓存（Caffeine TTL=5s） */
     private final CachedJwtValidator cachedJwtValidator;
     /** Redis 响应式模板（用于 Token 黑名单检查） */
@@ -82,16 +97,46 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private final SecurityHeadersProperties securityHeadersProperties;
 
     /**
-     * 内部头签名密钥（复用 JWT 密钥，避免新增配置）。
+     * P0-2: 内部头签名密钥（独立配置，禁止复用 JWT 密钥）。
      *
-     * <p>P0-C4 已强制校验：生产环境必须为强随机密钥，弱密钥拒绝启动。
+     * <p>配置项：{@code ydsz.gateway.internal-sign-secret}
+     * 环境变量：{@code YDSZ_GATEWAY_INTERNAL_SIGN_SECRET}
+     *
+     * <p>历史兼容：如未配置，回退到 {@code ydsz.jwt.secret}（启动时记录 WARN 日志提醒运维分离密钥）。
+     * 这种回退仅作为过渡，后续版本将强制要求独立配置。
      */
-    @Value("${ydsz.jwt.secret:}")
+    @Value("${ydsz.gateway.internal-sign-secret:${ydsz.jwt.secret:}}")
     private String internalSignSecret;
 
     /**
+     * P0-2: 启动时校验内部头签名密钥强度
+     *
+     * <p>HMAC-SHA256 安全要求密钥长度 ≥ 32 字节（256 bit），且非空、非弱密钥。
+     * 校验失败时记录 ERROR 日志（dev/sit 环境允许启动以方便调试，prod 环境建议通过部署校验拦截）。
+     */
+    @PostConstruct
+    private void validateSecret() {
+        if (internalSignSecret == null || internalSignSecret.isEmpty()) {
+            log.error("[AuthFilter] 内部头签名密钥未配置 (ydsz.gateway.internal-sign-secret)，"
+                    + "下游服务将无法验证内部头签名，存在身份伪造风险");
+            return;
+        }
+        if (internalSignSecret.length() < MIN_INTERNAL_SECRET_LENGTH) {
+            log.error("[AuthFilter] 内部头签名密钥长度不足 (current={}, min={})，"
+                            + "HMAC-SHA256 安全要求密钥长度 ≥ 32 字节",
+                    internalSignSecret.length(), MIN_INTERNAL_SECRET_LENGTH);
+        }
+        // 提示密钥来源（用于运维排查"密钥未分离"问题）
+        String source = System.getenv("YDSZ_GATEWAY_INTERNAL_SIGN_SECRET") != null
+                ? "YDSZ_GATEWAY_INTERNAL_SIGN_SECRET"
+                : (System.getenv("JWT_SECRET") != null ? "JWT_SECRET(fallback)" : "nacos-config");
+        log.info("[AuthFilter] 内部头签名密钥已加载, source={}, length={}",
+                source, internalSignSecret.length());
+    }
+
+    /**
      * 核心过滤逻辑：路径规范化 → 链路追踪 → 白名单放行 → Token 校验
-     * → 黑名单检查 → 剥离伪造头 → 注入签名头 → 用户信息透传
+     * → 黑名单检查 → 剥离伪造头 → 注入签名头（含 nonce） → 用户信息透传
      *
      * @param exchange 服务器 Web 交换上下文
      * @param chain    网关过滤器链
@@ -173,12 +218,16 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
                     String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
                     String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
+                    // P0-7: permsStr 留空（UserInfo 暂无 permissions 字段，权限由下游从 RBAC 缓存加载）
                     String permsStr = "";
 
-                    // P0-C5: 生成内部头签名（防伪造 + 防重放）
+                    // P0-6: 生成 nonce（一次性随机串），与 traceId/userId 一起纳入签名 payload
+                    String nonce = UUID.randomUUID().toString().replace("-", "");
+
+                    // P0-C5 + P0-6: 生成内部头签名（含 nonce，防伪造 + 防重放）
                     long tsSeconds = System.currentTimeMillis() / 1000L;
                     String sig = InternalHeaderSigner.sign(internalSignSecret, traceId,
-                            userIdStr, usernameStr, rolesStr, permsStr, tsSeconds);
+                            userIdStr, usernameStr, rolesStr, permsStr, tsSeconds, nonce);
 
                     // 透传用户信息（先剥离客户端伪造的内部头，再注入网关值）
                     final String acceptLang = request.getHeaders().getFirst("Accept-Language");
@@ -194,6 +243,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                                 h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
                                 h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
                                 h.set(GatewayConstants.HEADER_INTERNAL_TS, String.valueOf(tsSeconds));
+                                h.set(GatewayConstants.HEADER_INTERNAL_NONCE, nonce);
                                 h.set("Authorization", authHeader);
                                 h.set("Accept-Language",
                                         acceptLang != null && !acceptLang.isEmpty() ? acceptLang : "zh-CN");

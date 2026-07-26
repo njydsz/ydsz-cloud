@@ -224,7 +224,7 @@ public class DistributedLockAutoConfiguration {
         AtomicInteger threadNumber = new AtomicInteger(1);
         return new ThreadPoolExecutor(
                 pool.getCoreSize(), pool.getMaxSize(), 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(pool.getExecutorQueueCapacity()),
+                new LinkedBlockingQueue<>(pool.getQueueCapacity()),
                 r -> {
                     Thread t = new Thread(r, "ydsz-lock-acquire-" + threadNumber.getAndIncrement());
                     t.setDaemon(true);

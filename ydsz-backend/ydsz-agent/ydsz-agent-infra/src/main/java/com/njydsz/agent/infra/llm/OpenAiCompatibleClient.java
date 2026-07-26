@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -61,6 +63,9 @@ import reactor.netty.resources.ConnectionProvider;
 public class OpenAiCompatibleClient implements LlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleClient.class);
+    private static final int DEFAULT_MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_BASE_MS = 1000L;
+    private static final int DEFAULT_MAX_CONCURRENT = 50;
 
     private final String provider;
     private final String baseUrl;
@@ -68,12 +73,21 @@ public class OpenAiCompatibleClient implements LlmClient {
     private final int timeoutSeconds;
     private final RestClient restClient;
     private final WebClient webClient;
+    private final Semaphore concurrencyLimiter;
+    private final int maxRetries;
 
     public OpenAiCompatibleClient(String provider, String baseUrl, String apiKey, int timeoutSeconds) {
+        this(provider, baseUrl, apiKey, timeoutSeconds, DEFAULT_MAX_RETRIES, DEFAULT_MAX_CONCURRENT);
+    }
+
+    public OpenAiCompatibleClient(String provider, String baseUrl, String apiKey, int timeoutSeconds,
+                                  int maxRetries, int maxConcurrent) {
         this.provider = provider;
         this.baseUrl = baseUrl != null ? baseUrl : "https://api.openai.com/v1";
         this.apiKey = apiKey;
         this.timeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : 60;
+        this.maxRetries = maxRetries > 0 ? maxRetries : DEFAULT_MAX_RETRIES;
+        this.concurrencyLimiter = new Semaphore(maxConcurrent > 0 ? maxConcurrent : DEFAULT_MAX_CONCURRENT);
         this.restClient = RestClient.builder()
                 .baseUrl(this.baseUrl)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
@@ -98,29 +112,68 @@ public class OpenAiCompatibleClient implements LlmClient {
     @Override
     public ChatResponse chat(ChatRequest request) {
         Map<String, Object> requestBody = buildRequestBody(request, false);
-        try {
-            String responseJson = restClient.post()
-                    .uri("/chat/completions")
-                    .body(YdszJson.toJson(requestBody))
-                    .retrieve()
-                    .body(String.class);
-            return parseResponse(responseJson);
-        } catch (LlmException e) {
-            throw e;
-        } catch (HttpClientErrorException e) {
-            LlmException.ErrorType errorType = mapHttpError(e.getStatusCode().value());
-            log.error("[LLM-{}] 同步调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
-            throw new LlmException("LLM 调用失败 (HTTP " + e.getStatusCode().value() + ")",
-                    errorType, e);
-        } catch (ResourceAccessException e) {
-            log.error("[LLM-{}] 同步调用网络异常: {}", provider, e.getMessage());
-            throw new LlmException("LLM 网络超时或连接拒绝: " + e.getMessage(),
-                    LlmException.ErrorType.NETWORK_TIMEOUT, e);
-        } catch (Exception e) {
-            log.error("[LLM-{}] 同步调用失败: {}", provider, e.getMessage(), e);
-            throw new LlmException("LLM 调用失败: " + e.getMessage(),
-                    LlmException.ErrorType.PROVIDER_ERROR, e);
+        Exception lastException = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            if (attempt > 0) {
+                long delay = RETRY_DELAY_BASE_MS * attempt;
+                log.info("[LLM-{}] 重试 {}/{}: delay={}ms", provider, attempt, maxRetries, delay);
+                try { Thread.sleep(delay); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+            }
+            try {
+                if (!concurrencyLimiter.tryAcquire(timeoutSeconds, TimeUnit.SECONDS)) {
+                    throw new LlmException("LLM 并发限流等待超时", LlmException.ErrorType.RATE_LIMITED, null);
+                }
+                try {
+                    String responseJson = restClient.post()
+                            .uri("/chat/completions")
+                            .body(YdszJson.toJson(requestBody))
+                            .retrieve()
+                            .body(String.class);
+                    return parseResponse(responseJson);
+                } finally {
+                    concurrencyLimiter.release();
+                }
+            } catch (LlmException e) {
+                lastException = e;
+                if (!isRetryable(e) || attempt >= maxRetries) {
+                    throw e;
+                }
+                log.warn("[LLM-{}] 可重试错误 (attempt={}/{}): type={}, msg={}",
+                        provider, attempt + 1, maxRetries, e.getErrorType(), e.getMessage());
+            } catch (HttpClientErrorException e) {
+                LlmException.ErrorType errorType = mapHttpError(e.getStatusCode().value());
+                lastException = new LlmException("LLM 调用失败 (HTTP " + e.getStatusCode().value() + ")",
+                        errorType, e);
+                if (errorType != LlmException.ErrorType.RATE_LIMITED || attempt >= maxRetries) {
+                    log.error("[LLM-{}] 同步调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
+                    throw (LlmException) lastException;
+                }
+                log.warn("[LLM-{}] 限流重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
+            } catch (ResourceAccessException e) {
+                lastException = new LlmException("LLM 网络超时或连接拒绝: " + e.getMessage(),
+                        LlmException.ErrorType.NETWORK_TIMEOUT, e);
+                if (attempt >= maxRetries) {
+                    log.error("[LLM-{}] 同步调用网络异常: {}", provider, e.getMessage());
+                    throw (LlmException) lastException;
+                }
+                log.warn("[LLM-{}] 网络重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
+            } catch (Exception e) {
+                lastException = e;
+                if (attempt >= maxRetries) {
+                    log.error("[LLM-{}] 同步调用失败: {}", provider, e.getMessage(), e);
+                    throw new LlmException("LLM 调用失败: " + e.getMessage(),
+                            LlmException.ErrorType.PROVIDER_ERROR, e);
+                }
+                log.warn("[LLM-{}] 未知错误重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
+            }
         }
+        throw new LlmException("LLM 调用重试耗尽", LlmException.ErrorType.PROVIDER_ERROR, lastException);
+    }
+
+    private boolean isRetryable(LlmException e) {
+        return e.getErrorType() == LlmException.ErrorType.NETWORK_TIMEOUT
+                || e.getErrorType() == LlmException.ErrorType.RATE_LIMITED
+                || e.getErrorType() == LlmException.ErrorType.PROVIDER_ERROR;
     }
 
     @Override

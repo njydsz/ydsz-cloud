@@ -485,7 +485,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
     // ============================== 辅助方法 ==============================
 
-    private int readInt(Map<String, Object> config, String key, int defaultValue) {
+    private Integer readInt(Map<String, Object> config, String key, Integer defaultValue) {
         Object val = config.get(key);
         if (val == null) return defaultValue;
         if (val instanceof Number n) return n.intValue();
@@ -500,17 +500,6 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         Object val = config.get(key);
         if (val == null) return defaultValue;
         return String.valueOf(val);
-    }
-
-    private Integer readInt(Map<String, Object> config, String key, Integer defaultValue) {
-        Object val = config.get(key);
-        if (val == null) return defaultValue;
-        if (val instanceof Number n) return n.intValue();
-        try {
-            return Integer.parseInt(String.valueOf(val));
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
     }
 
     private String nullSafe(String s) {

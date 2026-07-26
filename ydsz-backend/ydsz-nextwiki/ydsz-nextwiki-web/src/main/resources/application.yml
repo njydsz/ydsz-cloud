@@ -27,6 +27,8 @@ nextwiki:
   upload:
     max-file-size: 524288000
     allowed-types: ""
+    conflict-strategy: KEEP_BOTH
+    chunk-temp-dir: ${java.io.tmpdir}/nextwiki-chunk
   preview:
     libreoffice-path: ${LIBREOFFICE_PATH:soffice}
     temp-dir: ${java.io.tmpdir}/nextwiki-preview
@@ -55,6 +57,13 @@ nextwiki:
     rate-limit-per-minute: 30
     ip-rate-limit-per-minute: 100
     signed-url-expire-seconds: 3600
+  wopi:
+    editor-url: ${WOPI_EDITOR_URL:}
+  # P3-4: API 限流配置（上传/搜索/预览）
+  api-rate-limit:
+    upload-per-minute: 50
+    search-per-minute: 60
+    preview-per-minute: 30
 
 # Actuator
 management:

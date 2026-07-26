@@ -130,14 +130,14 @@ public class QueueConfiguration {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(cfg.getCoreSize());
         executor.setMaxPoolSize(cfg.getMaxSize());
-        executor.setExecutorQueueCapacity(cfg.getExecutorQueueCapacity());
+        executor.setQueueCapacity(cfg.getQueueCapacity());
         executor.setThreadNamePrefix(cfg.getThreadNamePrefix());
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(cfg.getAwaitTerminationSeconds());
         executor.initialize();
         log.info("[Queue] 创建异步消费者线程池，core={}, max={}, queue={}",
-                cfg.getCoreSize(), cfg.getMaxSize(), cfg.getExecutorQueueCapacity());
+                cfg.getCoreSize(), cfg.getMaxSize(), cfg.getQueueCapacity());
         return executor.getThreadPoolExecutor();
     }
 

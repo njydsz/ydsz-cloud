@@ -3,9 +3,12 @@ package com.njydsz.common.web.filter;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 import java.io.*;
 import java.util.zip.GZIPOutputStream;
+
+import com.njydsz.common.web.config.ResponseCompressionProperties;
 
 /**
  * HTTP 响应压缩过滤器
@@ -176,16 +179,17 @@ public class ResponseCompressionFilter implements Filter {
 
             byte[] compressedData = byteArrayOutputStream != null ? byteArrayOutputStream.toByteArray() : new byte[0];
 
+            HttpServletResponse httpResponse = (HttpServletResponse) getResponse();
             // 检查是否需要压缩
             if (compressedData.length >= properties.getMinResponseSize() && shouldCompress()) {
                 isGzipped = true;
-                getResponse().setHeader("Content-Encoding", "gzip");
-                getResponse().setContentLength(compressedData.length);
-                getResponse().getOutputStream().write(compressedData);
+                httpResponse.setHeader("Content-Encoding", "gzip");
+                httpResponse.setContentLength(compressedData.length);
+                httpResponse.getOutputStream().write(compressedData);
             } else if (byteArrayOutputStream != null) {
                 // 不压缩，直接输出原始数据
-                getResponse().setContentLength(compressedData.length);
-                getResponse().getOutputStream().write(compressedData);
+                httpResponse.setContentLength(compressedData.length);
+                httpResponse.getOutputStream().write(compressedData);
             }
         }
 

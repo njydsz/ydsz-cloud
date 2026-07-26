@@ -22,6 +22,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowVariableStrategy;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowDmnDecisionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
@@ -62,6 +63,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
     /** P0-1: DMN 决策表服务（可选注入，未启用时为 null） */
     private final FlowDmnDecisionService dmnDecisionService;
+    /** 统一配置属性 */
+    private final FlowProperties flowProperties;
 
     public DefaultFlowAdvancer(FlowDefinitionCacheService flowDefinitionCacheService,
                                 FlowInstanceMapper instanceMapper,
@@ -71,7 +74,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                 FlowRunTaskMapper taskMapper,
                                 FlowJoinTokenService joinTokenService,
                                 @Autowired(required = false) FlowRoutingService routingService,
-                                @Autowired(required = false) FlowDmnDecisionService dmnDecisionService) {
+                                @Autowired(required = false) FlowDmnDecisionService dmnDecisionService,
+                                FlowProperties flowProperties) {
         this.flowDefinitionCacheService = flowDefinitionCacheService;
         this.instanceMapper = instanceMapper;
         this.taskService = taskService;
@@ -81,6 +85,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         this.joinTokenService = joinTokenService;
         this.routingService = routingService;
         this.dmnDecisionService = dmnDecisionService;
+        this.flowProperties = flowProperties;
     }
 
     @Override
@@ -371,7 +376,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             String decisionCode = condition.substring(4).trim();
             try {
                 // 从变量中提取租户 ID
-                String tenantId = "1";
+                String tenantId = flowProperties.getDefaultTenantId();
                 if (variables != null && variables.get("_tenantId") != null) {
                     tenantId = String.valueOf(variables.get("_tenantId"));
                 }

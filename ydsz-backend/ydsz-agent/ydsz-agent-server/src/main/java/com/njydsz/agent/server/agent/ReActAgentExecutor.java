@@ -184,11 +184,110 @@ public class ReActAgentExecutor implements AgentExecutor {
 
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-        ChatResponse response = execute(request);
-        chunkConsumer.accept(ChatChunk.content(response.getId(), response.getModel(),
-                response.getContent()));
-        chunkConsumer.accept(ChatChunk.finish(response.getId(), response.getModel(),
-                "stop", response.getUsage()));
+        String convId = request.getConversationId() != null
+                ? request.getConversationId() : UUID.randomUUID().toString();
+        String traceId = traceRecorder.startTrace(convId, "REACT_STREAM");
+        log.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
+
+        String responseId = UUID.randomUUID().toString();
+        String model = properties.getLlm().getDefaultModel();
+        TokenUsage totalUsage = TokenUsage.zero();
+
+        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        if (userInput == null) {
+            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
+            traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
+            chunkConsumer.accept(ChatChunk.content(responseId, model,
+                    "抱歉，您的输入被安全护栏拒绝。"));
+            chunkConsumer.accept(ChatChunk.finish(responseId, model, "guardrail_rejected", null));
+            return;
+        }
+
+        List<ChatMessage> messages = new ArrayList<>();
+        messages.add(ChatMessage.system(buildSystemPrompt(request)));
+        messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+        messages.add(ChatMessage.user(userInput, convId));
+
+        for (int i = 0; i < request.getMaxIterations(); i++) {
+            ChatRequest llmRequest = ChatRequest.builder()
+                    .model(model)
+                    .messages(messages)
+                    .temperature(properties.getLlm().getTemperature())
+                    .maxTokens(properties.getLlm().getMaxTokens())
+                    .tools(toolRegistry.getToolDefinitions().stream()
+                            .map(td -> td)
+                            .collect(Collectors.toList()))
+                    .build();
+
+            long llmStart = System.currentTimeMillis();
+            ChatResponse response;
+            try {
+                response = llmClient.chat(llmRequest);
+            } catch (Exception e) {
+                long llmDuration = System.currentTimeMillis() - llmStart;
+                agentMetrics.recordLlmCall(llmClient.getProvider(), model, llmDuration, null, e);
+                traceRecorder.endTrace(traceId, "FAILED");
+                chunkConsumer.accept(ChatChunk.content(responseId, model,
+                        "[错误] LLM 调用失败: " + e.getMessage()));
+                chunkConsumer.accept(ChatChunk.finish(responseId, model, "error", null));
+                throw e;
+            }
+            long llmDuration = System.currentTimeMillis() - llmStart;
+
+            if (response.getUsage() != null) {
+                totalUsage = totalUsage.add(response.getUsage());
+            }
+            agentMetrics.recordLlmCall(llmClient.getProvider(), model, llmDuration, response, null);
+            if (response.getUsage() != null && costAnalysisService != null) {
+                costAnalysisService.recordUsage(convId, model, response.getUsage());
+            }
+            traceRecorder.recordStep(traceId, "LLM_CALL",
+                    "ReAct iteration " + (i + 1), messages, response, llmDuration);
+
+            // P0-6: 推送 LLM 回复内容（Thought / Final Answer）
+            if (response.getContent() != null && !response.getContent().isBlank()) {
+                String prefix = i > 0 ? "\n\n[思考" + (i + 1) + "] " : "";
+                chunkConsumer.accept(ChatChunk.content(responseId, model, prefix + response.getContent()));
+            }
+
+            if (!response.hasToolCalls()) {
+                String output = applyOutputGuardrails(response.getContent(), traceId);
+                memory.save(convId, ChatMessage.user(userInput, convId));
+                memory.save(convId, ChatMessage.assistant(output, convId, totalUsage));
+                traceRecorder.endTrace(traceId, "SUCCESS");
+                chunkConsumer.accept(ChatChunk.finish(responseId, model, "stop", totalUsage));
+                return;
+            }
+
+            // 推送工具调用事件
+            messages.add(response.getMessage());
+            for (ToolCall toolCall : response.getToolCalls()) {
+                chunkConsumer.accept(ChatChunk.content(responseId, model,
+                        "\n\n[工具调用] " + toolCall.getName() + "..."));
+                long toolStart = System.currentTimeMillis();
+                String result = toolRegistry.execute(toolCall);
+                long toolDuration = System.currentTimeMillis() - toolStart;
+                traceRecorder.recordStep(traceId, "TOOL_CALL",
+                        toolCall.getName(), toolCall.getArguments(), result, toolDuration);
+                chunkConsumer.accept(ChatChunk.content(responseId, model,
+                        "\n[工具结果] " + truncateResult(result)));
+                ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
+                messages.add(toolMsg);
+            }
+        }
+
+        log.warn("[ReAct-Stream] 超过最大迭代次数: convId={}", convId);
+        traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
+        chunkConsumer.accept(ChatChunk.content(responseId, model,
+                "\n\n抱歉，我已达到最大推理次数限制，无法完成此任务。"));
+        chunkConsumer.accept(ChatChunk.finish(responseId, model, "max_iterations", totalUsage));
+    }
+
+    private String truncateResult(String result) {
+        if (result == null) {
+            return "";
+        }
+        return result.length() > 200 ? result.substring(0, 200) + "..." : result;
     }
 
     @Override

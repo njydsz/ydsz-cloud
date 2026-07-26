@@ -171,7 +171,7 @@ public class FlowMonitorController {
             if (statusCounts != null) {
                 for (Map<String, Object> row : statusCounts) {
                     String status = String.valueOf(row.get("flowStatus"));
-                    long cnt = ((Number) row.get("cnt")).longValue();
+                    long cnt = toLong(row.get("cnt"));
                     if ("RUNNING".equals(status)) running = cnt;
                 }
             }
@@ -185,9 +185,9 @@ public class FlowMonitorController {
             Map<String, Object> today = instanceMapper.selectTodayCount(tenantId);
             if (today != null) {
                 overview.put("todayNewCount",
-                        today.get("todayNewCount") == null ? 0 : ((Number) today.get("todayNewCount")).longValue());
+                        toLong(today.get("todayNewCount")));
                 overview.put("todayCompletedCount",
-                        today.get("todayCompletedCount") == null ? 0 : ((Number) today.get("todayCompletedCount")).longValue());
+                        toLong(today.get("todayCompletedCount")));
             } else {
                 overview.put("todayNewCount", 0);
                 overview.put("todayCompletedCount", 0);
@@ -291,7 +291,7 @@ public class FlowMonitorController {
         // 实例 ID（卡单场景从 task.instanceId 取，其他从 instanceId 取）
         Object instanceId = a.get("instanceId");
         if (instanceId == null) instanceId = a.get("taskId");
-        item.put("id", instanceId == null ? 0 : ((Number) instanceId).longValue());
+        item.put("id", instanceId == null ? 0 : toLong(instanceId));
 
         // 补实例详情字段（若有 instanceId）
         if (instanceId instanceof Number n) {
@@ -375,7 +375,7 @@ public class FlowMonitorController {
             for (Map<String, Object> row : newCounts) {
                 String d = String.valueOf(row.get("date"));
                 if (byDate.containsKey(d)) {
-                    byDate.get(d)[0] = ((Number) row.get("newCount")).longValue();
+                    byDate.get(d)[0] = toLong(row.get("newCount"));
                 }
             }
         }
@@ -383,7 +383,7 @@ public class FlowMonitorController {
             for (Map<String, Object> row : completedCounts) {
                 String d = String.valueOf(row.get("date"));
                 if (byDate.containsKey(d)) {
-                    byDate.get(d)[1] = ((Number) row.get("completedCount")).longValue();
+                    byDate.get(d)[1] = toLong(row.get("completedCount"));
                 }
             }
         }
@@ -466,7 +466,7 @@ public class FlowMonitorController {
         long total = 0;
         if (rows != null) {
             for (Map<String, Object> row : rows) {
-                total += ((Number) row.get("cnt")).longValue();
+                total += toLong(row.get("cnt"));
             }
         }
 
@@ -476,7 +476,7 @@ public class FlowMonitorController {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("flowCode", row.get("flowCode"));
                 item.put("flowName", row.get("flowName") == null ? row.get("flowCode") : row.get("flowName"));
-                long cnt = ((Number) row.get("cnt")).longValue();
+                long cnt = toLong(row.get("cnt"));
                 item.put("count", cnt);
                 item.put("percentage", total > 0 ? Math.round(cnt * 10000.0 / total) / 100.0 : 0.0);
                 result.add(item);
@@ -650,7 +650,7 @@ public class FlowMonitorController {
             if (statusCounts != null) {
                 for (Map<String, Object> row : statusCounts) {
                     String status = String.valueOf(row.get("flowStatus"));
-                    long cnt = ((Number) row.get("cnt")).longValue();
+                    long cnt = toLong(row.get("cnt"));
                     if ("RUNNING".equals(status)) running = cnt;
                 }
             }
@@ -663,9 +663,9 @@ public class FlowMonitorController {
             Map<String, Object> today = instanceMapper.selectTodayCount(tenantId);
             if (today != null) {
                 overview.put("todayNewCount",
-                        today.get("todayNewCount") == null ? 0L : ((Number) today.get("todayNewCount")).longValue());
+                        toLong(today.get("todayNewCount")));
                 overview.put("todayCompletedCount",
-                        today.get("todayCompletedCount") == null ? 0L : ((Number) today.get("todayCompletedCount")).longValue());
+                        toLong(today.get("todayCompletedCount")));
             } else {
                 overview.put("todayNewCount", 0L);
                 overview.put("todayCompletedCount", 0L);
@@ -717,7 +717,7 @@ public class FlowMonitorController {
             for (Map<String, Object> row : newCounts) {
                 String d = String.valueOf(row.get("date"));
                 if (byDate.containsKey(d)) {
-                    byDate.get(d)[0] = ((Number) row.get("newCount")).longValue();
+                    byDate.get(d)[0] = toLong(row.get("newCount"));
                 }
             }
         }
@@ -725,7 +725,7 @@ public class FlowMonitorController {
             for (Map<String, Object> row : completedCounts) {
                 String d = String.valueOf(row.get("date"));
                 if (byDate.containsKey(d)) {
-                    byDate.get(d)[1] = ((Number) row.get("completedCount")).longValue();
+                    byDate.get(d)[1] = toLong(row.get("completedCount"));
                 }
             }
         }
@@ -759,5 +759,12 @@ public class FlowMonitorController {
                 return null;
             }
         }
+    }
+
+    /** 安全转换为 long，null 或非数字返回 0 */
+    private long toLong(Object val) {
+        if (val == null) return 0L;
+        if (val instanceof Number n) return n.longValue();
+        try { return Long.parseLong(String.valueOf(val).trim()); } catch (NumberFormatException e) { return 0L; }
     }
 }

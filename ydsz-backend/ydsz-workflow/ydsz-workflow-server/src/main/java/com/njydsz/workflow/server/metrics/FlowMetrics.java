@@ -174,6 +174,59 @@ public class FlowMetrics extends AbstractModuleMetrics {
     }
 
     // ===========================================
+    // Counter：表单校验 + 缓存 + 定义管理
+    // ===========================================
+
+    /**
+     * 表单校验失败计数
+     */
+    public void incFormValidationError(String flowCode, String nodeCode, String errorType) {
+        counter("form_validation_error_total",
+                "flow_code", safe(flowCode),
+                "node_code", safe(nodeCode),
+                "error_type", safe(errorType)).increment();
+    }
+
+    /**
+     * 定义缓存命中计数
+     */
+    public void incDefinitionCacheHit(String flowCode) {
+        counter("definition_cache_hit_total", "flow_code", safe(flowCode)).increment();
+    }
+
+    /**
+     * 定义缓存未命中计数
+     */
+    public void incDefinitionCacheMiss(String flowCode) {
+        counter("definition_cache_miss_total", "flow_code", safe(flowCode)).increment();
+    }
+
+    /**
+     * 流程定义部署计数
+     */
+    public void incDefinitionDeployed(String flowCode, String deployType) {
+        counter("definition_deployed_total",
+                "flow_code", safe(flowCode),
+                "deploy_type", safe(deployType)).increment();
+    }
+
+    /**
+     * 流程定义发布计数
+     */
+    public void incDefinitionPublished(String flowCode) {
+        counter("definition_published_total", "flow_code", safe(flowCode)).increment();
+    }
+
+    /**
+     * 流程实例迁移计数
+     */
+    public void incInstanceMigrated(String flowCode, String migrationType) {
+        counter("instance_migrated_total",
+                "flow_code", safe(flowCode),
+                "migration_type", safe(migrationType)).increment();
+    }
+
+    // ===========================================
     // Timer：耗时
     // ===========================================
 

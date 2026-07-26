@@ -68,7 +68,7 @@ public class FileOperatedEventListener {
     }
 
     /**
-     * 持久化审计日志（结构化 JSON 格式，可被 Loki/Promtail 采集）
+     * 持久化审计日志（结构化 JSON 格式 + 数据库持久化 P2-6）
      */
     private void persistAuditLog(FileOperatedEvent event) {
         log.info(
@@ -82,6 +82,34 @@ public class FileOperatedEventListener {
                 event.getOperatedAt() != null ? event.getOperatedAt() : LocalDateTime.now(),
                 event.getExtra() != null ? event.getExtra() : ""
         );
+
+        // P2-6: 持久化到数据库（如果 AuditLogRepository 可用）
+        if (auditLogRepository != null) {
+            try {
+                com.njydsz.nextwiki.domain.entity.AuditLog auditLog =
+                        com.njydsz.nextwiki.domain.entity.AuditLog.builder()
+                                .id(java.util.UUID.randomUUID().toString().replace("-", ""))
+                                .operation(event.getOperation())
+                                .fileNodeId(event.getFileNodeId())
+                                .fileName(event.getFileName())
+                                .nodeType(event.getNodeType())
+                                .storageKey(event.getStorageKey())
+                                .bucketName(event.getBucketName())
+                                .operatorId(event.getOperatorId())
+                                .operatedAt(event.getOperatedAt() != null
+                                        ? event.getOperatedAt() : LocalDateTime.now())
+                                .extra(event.getExtra())
+                                .result("success")
+                                .revision(0)
+                                .deleted(0)
+                                .build();
+                auditLog.setCreatedBy(event.getOperatorId());
+                auditLog.setCreatedAt(LocalDateTime.now());
+                auditLogRepository.save(auditLog);
+            } catch (Exception e) {
+                log.warn("[FileOperatedEventListener] 审计日志持久化失败: {}", e.getMessage());
+            }
+        }
     }
 
     /**

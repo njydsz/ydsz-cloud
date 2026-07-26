@@ -109,6 +109,26 @@
             <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
             <optional>true</optional>
         </dependency>
+        <!--
+            jakarta.servlet-api（optional）
+            RepeatSubmitAspect / RepeatSubmitTokenController 引用 HttpServletRequest / @RestController。
+            标记 optional 避免强制非 web 场景下的使用方引入 servlet API。
+        -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+            ydsz-common-auth（optional）
+            RepeatSubmitTokenService 通过 AuthContext 获取当前登录用户 ID。
+            标记 optional 避免循环依赖；消费方在 web 场景下需自行引入。
+        -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

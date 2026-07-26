@@ -177,7 +177,9 @@ public class TenantIsolationProperties {
         /** 单租户模式：只取第一个字段 */
         SINGLE,
         /** 多级租户模式：取全部字段 */
-        MULTI
+        MULTI,
+        /** 数据库隔离模式：每个租户使用独立数据源 */
+        ISOLATE_DB
     }
 
     /**

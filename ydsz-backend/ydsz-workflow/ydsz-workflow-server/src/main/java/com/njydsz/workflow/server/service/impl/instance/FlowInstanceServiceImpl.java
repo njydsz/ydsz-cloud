@@ -1282,7 +1282,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (instance != null) {
             ctx.setTenantId(instance.getTenantId() == null
                     ? null : String.valueOf(instance.getTenantId()));
-            ctx.setTraceId(instance.getProviderTraceId());
+            // P1-5: 优先使用实例的 providerTraceId，回退到 MDC 分布式追踪 ID
+            String traceId = instance.getProviderTraceId();
+            if (traceId == null || traceId.isBlank()) {
+                traceId = org.slf4j.MDC.get("traceId");
+                if (traceId == null) traceId = org.slf4j.MDC.get("tid");
+            }
+            ctx.setTraceId(traceId);
         }
         return ctx;
     }

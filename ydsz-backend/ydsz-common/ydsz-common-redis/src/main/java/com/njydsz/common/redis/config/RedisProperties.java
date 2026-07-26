@@ -189,6 +189,11 @@ public class RedisProperties {
     private Metrics metrics = new Metrics();
 
     /**
+     * 租户隔离配置
+     */
+    private Tenant tenant = new Tenant();
+
+    /**
      * Lettuce 客户端配置类
      */
     @Data
@@ -366,5 +371,19 @@ public class RedisProperties {
          */
         @Min(0)
         private long slowOperationThresholdMs = 100;
+    }
+
+    /**
+     * 租户隔离配置类
+     */
+    @Data
+    public static class Tenant {
+
+        /**
+         * 是否启用租户级 Redis Key 隔离
+         * <p>启用后，所有 Redis key 会自动添加 {tenantId}: 前缀，实现租户间数据隔离
+         * <p>默认：false（不启用）
+         */
+        private boolean enabled = false;
     }
 }

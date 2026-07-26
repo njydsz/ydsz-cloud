@@ -1,5 +1,9 @@
 package com.njydsz.gateway.filter;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -10,6 +14,7 @@ import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.trace.TraceIdGenerator;
@@ -22,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
- * 网关访问日志全局过滤器（P0-2）
+ * 网关访问日志全局过滤器（P0-2 + P0-8 敏感参数脱敏）
  *
  * <p>记录每个经过网关的请求的结构化访问日志，对标大厂网关（阿里云 API 网关 / Netflix Zuul）的 access log。
  *
@@ -31,8 +36,8 @@ import reactor.core.publisher.Mono;
  *   <li>{@code traceId} — 链路追踪 ID</li>
  *   <li>{@code method} — HTTP 方法</li>
  *   <li>{@code path} — 请求路径</li>
- *   <li>{@code query} — 查询参数（截断防日志膨胀）</li>
- *   <li>{@code clientIp} — 客户端 IP（穿透代理）</li>
+ *   <li>{@code query} — 查询参数（P0-8: 敏感参数脱敏 + 截断防日志膨胀）</li>
+ *   <li>{@code clientIp} — 客户端 IP（P0-3: 穿透可信代理链）</li>
  *   <li>{@code routeId} — 命中的路由 ID</li>
  *   <li>{@code targetUri} — 目标服务 URI</li>
  *   <li>{@code status} — HTTP 响应状态码</li>
@@ -40,6 +45,16 @@ import reactor.core.publisher.Mono;
  *   <li>{@code userId} — 用户 ID（鉴权后填充）</li>
  *   <li>{@code userAgent} — 客户端 User-Agent（截断）</li>
  * </ul>
+ *
+ * <h3>P0-8: 敏感信息脱敏</h3>
+ * <p>访问日志严格禁止记录以下敏感信息：
+ * <ul>
+ *   <li>Authorization 头（Bearer Token / Basic Auth）— 不记录</li>
+ *   <li>查询参数 {@code token} / {@code access_token} / {@code password} — 脱敏为 {@code ***}</li>
+ *   <li>查询参数 {@code secret} / {@code apiKey} — 脱敏为 {@code ***}</li>
+ * </ul>
+ * 这样可避免 JWT 通过 WebSocket 的 {@code ?token=...} 查询参数泄漏到日志文件，
+ * 同时满足等保三级 / GDPR 等数据保护要求。
  *
  * <h3>执行顺序</h3>
  * <p>{@code HIGHEST_PRECEDENCE + 1}，在 {@link IpWhitelistFilter}(+5) 和
@@ -64,6 +79,19 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
 
     /** User-Agent 最大记录长度 */
     private static final int MAX_UA_LENGTH = 200;
+
+    /** P0-8: 敏感查询参数（小写匹配，值脱敏为 ***） */
+    private static final Set<String> SENSITIVE_QUERY_PARAMS = Set.of(
+            "token", "access_token", "refresh_token",
+            "password", "passwd", "pwd",
+            "secret", "client_secret",
+            "apikey", "api_key",
+            "authorization",
+            "code"  // OAuth2 授权码
+    );
+
+    /** P0-8: 脱敏占位符 */
+    private static final String MASKED_VALUE = "***";
 
     /** exchange attribute key: 请求开始时间戳 */
     private static final String ATTR_START_TIME = "__gateway_start_time";
@@ -108,10 +136,8 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
 
         String method = request.getMethod().name();
         String path = request.getURI().getPath();
-        String query = request.getURI().getQuery();
-        if (query != null && query.length() > MAX_QUERY_LENGTH) {
-            query = query.substring(0, MAX_QUERY_LENGTH) + "...";
-        }
+        // P0-8: 查询参数脱敏（避免 token / password 等敏感参数泄漏到日志）
+        String query = sanitizeQuery(request);
         String clientIp = extractClientIp(request);
         String userAgent = request.getHeaders().getFirst("User-Agent");
         if (userAgent != null && userAgent.length() > MAX_UA_LENGTH) {
@@ -136,7 +162,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
                 safeTraceId(traceId),
                 method,
                 path,
-                query != null ? query : "-",
+                query,
                 clientIp,
                 status,
                 duration,
@@ -153,6 +179,55 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         } else {
             log.info(logMessage);
         }
+    }
+
+    /**
+     * P0-8: 查询参数脱敏 + 截断
+     *
+     * <p>对敏感查询参数（token / password / secret 等）的值替换为 {@code ***}，
+     * 防止 JWT / OAuth2 授权码 / 密码等泄漏到 access log 文件。
+     *
+     * <p>同时保持查询字符串结构（key=value&key=value），便于日志排查；
+     * 总长度超过 {@link #MAX_QUERY_LENGTH} 时截断并标记。
+     *
+     * @param request 服务器 HTTP 请求
+     * @return 脱敏后的查询字符串，无查询参数时返回 "-"
+     */
+    private String sanitizeQuery(ServerHttpRequest request) {
+        MultiValueMap<String, String> queryParams = request.getQueryParams();
+        if (queryParams == null || queryParams.isEmpty()) {
+            return "-";
+        }
+
+        // 使用 LinkedHashMap 保持参数顺序（便于日志排查）
+        Map<String, String> sanitized = new LinkedHashMap<>();
+        for (Map.Entry<String, List<String>> entry : queryParams.entrySet()) {
+            String key = entry.getKey();
+            String firstValue = entry.getValue() != null && !entry.getValue().isEmpty()
+                    ? entry.getValue().get(0) : "";
+            // 敏感参数（小写匹配）的值替换为 ***
+            if (SENSITIVE_QUERY_PARAMS.contains(key.toLowerCase())) {
+                sanitized.put(key, MASKED_VALUE);
+            } else {
+                sanitized.put(key, firstValue);
+            }
+        }
+
+        // 重建查询字符串
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : sanitized.entrySet()) {
+            if (sb.length() > 0) {
+                sb.append('&');
+            }
+            sb.append(entry.getKey()).append('=').append(entry.getValue());
+        }
+
+        // 截断防日志膨胀
+        String result = sb.toString();
+        if (result.length() > MAX_QUERY_LENGTH) {
+            result = result.substring(0, MAX_QUERY_LENGTH) + "...";
+        }
+        return result;
     }
 
     /**

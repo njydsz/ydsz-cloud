@@ -1,10 +1,16 @@
 package com.njydsz.common.security;
 
+import com.njydsz.common.core.context.RequestContext;
+
 /**
  * 租户上下文
  *
- * <p>基于 ThreadLocal 的租户 ID 透传工具，供业务层在非 Web 线程（异步任务、定时任务、
+ * <p>基于 RequestContext 的租户 ID 透传工具，供业务层在非 Web 线程（异步任务、定时任务、
  * 消息消费）中获取当前租户标识。Web 请求线程由网关 / 过滤器在请求头解析后写入。
+ *
+ * <p><b>设计说明：</b>本类委托给 {@link RequestContext} 存储租户 ID，消除双源问题。
+ * 所有租户 ID 的读写统一通过 RequestContext 的 TransmittableThreadLocal 管理，
+ * 确保在异步任务、线程池等场景下自动传播。
  *
  * <p>使用示例：
  * <pre>{@code
@@ -24,8 +30,6 @@ public final class TenantContext {
     /** 默认租户 ID（未登录或无租户上下文时使用） */
     public static final String DEFAULT_TENANT_ID = "1";
 
-    private static final ThreadLocal<String> TENANT_HOLDER = new ThreadLocal<>();
-
     private TenantContext() {
     }
 
@@ -35,7 +39,7 @@ public final class TenantContext {
      * @param tenantId 租户 ID（可为 null）
      */
     public static void set(String tenantId) {
-        TENANT_HOLDER.set(tenantId);
+        RequestContext.setTenantId(tenantId);
     }
 
     /**
@@ -44,7 +48,7 @@ public final class TenantContext {
      * @return 租户 ID；未设置时返回 {@link #DEFAULT_TENANT_ID}
      */
     public static String get() {
-        String tenantId = TENANT_HOLDER.get();
+        String tenantId = RequestContext.getTenantId();
         return tenantId != null ? tenantId : DEFAULT_TENANT_ID;
     }
 
@@ -61,6 +65,6 @@ public final class TenantContext {
      * 清除当前线程的租户 ID
      */
     public static void clear() {
-        TENANT_HOLDER.remove();
+        RequestContext.remove(RequestContext.KEY_TENANT_ID);
     }
 }

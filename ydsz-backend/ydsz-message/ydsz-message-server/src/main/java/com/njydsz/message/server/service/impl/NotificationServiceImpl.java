@@ -164,7 +164,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
         // P2-7: 批量查询替代逐条 selectById，减少 N 次 DB 往返
         List<MsgNotificationDO> notifications = msgNotificationMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgNotificationDO>()
+                new LambdaQueryWrapper<MsgNotificationDO>()
                         .in(MsgNotificationDO::getId, ids)
                         .eq(MsgNotificationDO::getReceiverId, userId));
         for (MsgNotificationDO n : notifications) {

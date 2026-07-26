@@ -51,6 +51,10 @@ public class FlowTaskNotificationService {
         ctx.setTaskId(taskId);
         ctx.setAction(action);
         ctx.setOperatedAt(LocalDateTime.now());
+        // P1-5: 从 MDC 获取分布式追踪 ID（兼容 SkyWalking/Zipkin/Sleuth）
+        String mdcTraceId = org.slf4j.MDC.get("traceId");
+        if (mdcTraceId == null) mdcTraceId = org.slf4j.MDC.get("tid");
+        ctx.setTraceId(mdcTraceId);
         support.fireEvent(l -> l.onTaskCompleted(taskId, ctx), taskId);
         // P2-35: 发布 Spring 异步事件
         support.publishWorkflowEvent("TASK_COMPLETED", null, taskId);

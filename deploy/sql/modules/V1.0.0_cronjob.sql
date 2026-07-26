@@ -1741,6 +1741,17 @@ VALUES
      1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
 ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
 
+-- P0-4: 注册三方审批回调失败重试任务（每 10 分钟扫描一次，最大重试 3 次，单批 50 条）
+INSERT INTO ydsz_job
+    (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id, created_at, updated_at, deleted)
+VALUES
+    ('三方审批回调重试任务', 'WORKFLOW', 'flowThirdPartyRetryJob',
+     'flowThirdPartyRetryJobHandler', '0 0/10 * * * ?',
+     '{"maxRetries":3,"batchSize":50,"lockLeaseSec":120}',
+     'NORMAL', '每 10 分钟扫描失败的三方审批回调日志并重试, 最大重试 3 次, 单批 50 条, 集群锁 120s',
+     1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
+ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
+
 -- ============================================================
 -- 七、补齐遗漏的 10 张业务表 tenant_id 字段
 --   首轮扫描漏掉，启用 TenantLineInnerInterceptor 前必须补齐

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
@@ -278,7 +279,7 @@ public class FlowThirdPartyApprovalController {
         logEntry.setProcessInstanceId(processInstanceId);
         logEntry.setBusinessType(businessType);
         logEntry.setBusinessId(businessId);
-        logEntry.setCallbackData(body == null ? null : body.toString());
+        logEntry.setCallbackData(body == null ? null : YdszJson.toJson(body));
         logEntry.setTenantId("1"); // 默认租户，多租户场景由 account.tenantId 兜底
         return thirdPartyLogService.savePending(logEntry);
     }

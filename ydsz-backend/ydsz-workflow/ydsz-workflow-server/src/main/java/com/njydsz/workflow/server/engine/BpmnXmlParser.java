@@ -219,15 +219,6 @@ public class BpmnXmlParser {
      * 解析节点：BPMN 元素 → FlowNodeDO
      */
     private FlowNodeDO parseNode(Element elem, String localName) {
-        // P0-3: 暂未实现 eventBasedGateway / complexGateway 的行为语义
-        // 历史问题：mapNodeType 静默降级为 CONDITION（互斥网关），导致流程运行行为
-        // 与设计图不一致（事件网关应等待事件触发，复杂网关应基于复杂条件聚合）
-        // 解析阶段直接拒绝，强制用户改用 exclusiveGateway / parallelGateway / inclusiveGateway
-        String normalized = localName == null ? "" : localName.toLowerCase();
-        if ("eventbasedgateway".equals(normalized) || "complexgateway".equals(normalized)) {
-            throw new SysException(BaseResultCode.BAD_REQUEST,
-                    "error.workflow.msg_b1a3f7c2", localName);
-        }
         FlowNodeDO node = new FlowNodeDO();
         node.setNodeCode(elem.getAttribute("id"));
         node.setNodeName(elem.getAttribute("name"));
@@ -235,6 +226,19 @@ public class BpmnXmlParser {
             node.setNodeName(node.getNodeCode());
         }
         node.setNodeType(mapNodeType(localName));
+
+        // P1-3: eventBasedGateway / complexGateway 解析支持
+        // 映射为现有网关类型（CONDITION / INCLUSIVE）+ ext 标记 gatewayType，
+        // 引擎使用现有逻辑处理，未来可扩展为完整的事件/复杂网关行为
+        String normalized = localName == null ? "" : localName.toLowerCase();
+        if ("eventbasedgateway".equals(normalized) || "complexgateway".equals(normalized)) {
+            Map<String, Object> extMap = readOrInitExt(node);
+            extMap.put("gatewayType", "eventbasedgateway".equals(normalized) ? "EVENT_BASED" : "COMPLEX");
+            node.setExt(JsonHelper.toJson(extMap));
+            log.info("[BpmnXmlParser] {} 映射为 {} 类型 + ext.gatewayType 标记，nodeCode={}",
+                    localName, node.getNodeType() == FlowNodeType.CONDITION.getCode() ? "CONDITION" : "INCLUSIVE",
+                    node.getNodeCode());
+        }
 
         // P0-2: 网关默认出边 — BPMN 2.0 规范中 exclusiveGateway / inclusiveGateway 的
         // default 属性指向默认 sequenceFlow id（无条件匹配时走的边）。解析阶段捕获，
@@ -629,7 +633,10 @@ public class BpmnXmlParser {
             // manualTask / receiveTask 确实需要人工处理，保持映射为 APPROVAL(1)
             case "usertask", "manualtask", "receivetask" -> FlowNodeType.APPROVAL.getCode();
             case "callactivity", "subprocess" -> FlowNodeType.SUBPROCESS.getCode();
-            // P0-3: eventBasedGateway / complexGateway 在 parseNode 入口已拒绝，此处不再映射
+            // P1-3: eventBasedGateway 映射为 CONDITION，complexGateway 映射为 INCLUSIVE
+            // 引擎使用现有网关逻辑处理，ext.gatewayType 标记原始类型供未来扩展
+            case "eventbasedgateway" -> FlowNodeType.CONDITION.getCode();
+            case "complexgateway" -> FlowNodeType.INCLUSIVE.getCode();
             case "exclusivegateway" -> FlowNodeType.CONDITION.getCode();
             case "parallelgateway" -> FlowNodeType.PARALLEL.getCode();
             case "inclusivegateway" -> FlowNodeType.INCLUSIVE.getCode();

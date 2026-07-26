@@ -60,6 +60,12 @@ public class FlowThirdPartyLogDO extends LogBaseDO {
     /** P2-6: 双向同步 — 本地→三方回撤结果消息 */
     private String syncBackMsg;
 
+    /** P0-4: 重试次数（最大重试次数由 JobHandler 配置控制，超过则进入死信） */
+    private Integer retryCount;
+
+    /** P0-4: 最后一次重试时间 */
+    private LocalDateTime lastRetriedAt;
+
     /** 租户 ID */
     private String tenantId;
 }
