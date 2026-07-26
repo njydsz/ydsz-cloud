@@ -31,6 +31,7 @@ import com.njydsz.common.json.YdszJson;
  *   <li>内存占用：仅 O(1) 内存</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class JsonGenerator implements Closeable {

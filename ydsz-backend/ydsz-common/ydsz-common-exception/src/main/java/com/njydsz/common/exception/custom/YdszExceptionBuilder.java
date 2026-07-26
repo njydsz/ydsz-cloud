@@ -67,7 +67,10 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
     protected abstract B self();
 
     /**
-     * 子类构造函数中调用此方法设置默认值
+     * 子类构造函数中调用此方法设置默认错误码
+     *
+     * @param code 默认错误码
+     * @return 当前 Builder
      */
     protected B defaultCode(String code) {
         this.code = code;
@@ -85,16 +88,34 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
         return self();
     }
 
+    /**
+     * 设置默认异常级别（子类构造函数中调用）
+     *
+     * @param level 异常级别
+     * @return 当前 Builder
+     */
     protected B defaultLevel(ExceptionLevel level) {
         this.level = level;
         return self();
     }
 
+    /**
+     * 设置默认异常分类（子类构造函数中调用）
+     *
+     * @param category 异常分类
+     * @return 当前 Builder
+     */
     protected B defaultCategory(ExceptionCategory category) {
         this.category = category;
         return self();
     }
 
+    /**
+     * 设置错误码
+     *
+     * @param code 错误码
+     * @return 当前 Builder
+     */
     public B code(String code) {
         this.code = code;
         return self();
@@ -113,11 +134,23 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
         return self();
     }
 
+    /**
+     * 设置国际化消息键
+     *
+     * @param key 国际化消息键
+     * @return 当前 Builder
+     */
     public B key(String key) {
         this.key = key;
         return self();
     }
 
+    /**
+     * 设置消息参数
+     *
+     * @param params 消息参数
+     * @return 当前 Builder
+     */
     public B params(Object... params) {
         this.params = params;
         return self();
@@ -134,6 +167,12 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
         return self();
     }
 
+    /**
+     * 设置 HTTP 状态码
+     *
+     * @param httpStatus HTTP 状态码
+     * @return 当前 Builder
+     */
     public B httpStatus(int httpStatus) {
         this.httpStatus = httpStatus;
         return self();
@@ -150,16 +189,34 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B ex
         return self();
     }
 
+    /**
+     * 设置异常分类
+     *
+     * @param category 异常分类
+     * @return 当前 Builder
+     */
     public B category(ExceptionCategory category) {
         this.category = category;
         return self();
     }
 
+    /**
+     * 设置异常原因
+     *
+     * @param cause 异常原因
+     * @return 当前 Builder
+     */
     public B cause(Throwable cause) {
         this.cause = cause;
         return self();
     }
 
+    /**
+     * 设置请求路径
+     *
+     * @param path 请求路径
+     * @return 当前 Builder
+     */
     public B path(String path) {
         this.path = path;
         return self();

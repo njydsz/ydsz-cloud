@@ -37,6 +37,7 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * config.apply();
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class YdszJsonConfig implements Serializable {

@@ -22,6 +22,7 @@ import org.springframework.core.OrderComparator;
  *   <li>按 getOrder() 排序后依次通知监听器</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see PermissionChangedEvent

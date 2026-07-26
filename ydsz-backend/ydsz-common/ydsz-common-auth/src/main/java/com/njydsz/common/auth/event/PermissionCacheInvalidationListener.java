@@ -29,6 +29,7 @@ import com.njydsz.common.json.YdszJson;
  *   <li>用户角色被分配后自动清理缓存</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

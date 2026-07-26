@@ -113,6 +113,9 @@ public final class ErrorCodeDocGenerator {
 
     /**
      * 推断异常级别（基于分类）
+     *
+     * @param category 异常分类
+     * @return 推断的异常级别
      */
     private static ExceptionLevel inferLevel(ExceptionCategory category) {
         switch (category) {

@@ -585,4 +585,57 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
         return lazyRoots;
     }
+
+    // ==================== 静态便捷方法（无需实现 TreeNode 接口） ====================
+
+    /**
+     * 从扁平列表构建树形结构（静态便捷方法，无需实现 {@link TreeNode} 接口）。
+     *
+     * <p>适用于不希望或无法让 VO 类继承 {@link TreeNode} 的场景（如已有 VO 结构不便修改）。
+     * 通过函数式接口传入 ID/parentId/children/sort 的获取和设置方式。
+     *
+     * <p>算法：O(n) 时间复杂度，通过 HashMap 分组实现。
+     *
+     * @param flatList       扁平列表
+     * @param idGetter       ID 获取函数
+     * @param parentIdGetter 父 ID 获取函数
+     * @param childrenSetter children 设置函数
+     * @param sortGetter     排序字段获取函数（可为 null，null 表示不排序）
+     * @param <T>            节点类型
+     * @return 树形结构根节点列表
+     */
+    public static <T> List<T> buildSimple(
+            List<T> flatList,
+            java.util.function.Function<T, String> idGetter,
+            java.util.function.Function<T, String> parentIdGetter,
+            java.util.function.BiConsumer<T, List<T>> childrenSetter,
+            java.util.function.Function<T, Integer> sortGetter) {
+
+        if (flatList == null || flatList.isEmpty()) {
+            return List.of();
+        }
+
+        java.util.Map<String, List<T>> parentIdMap = flatList.stream()
+                .collect(java.util.stream.Collectors.groupingBy(item -> {
+                    String pid = parentIdGetter.apply(item);
+                    return pid == null ? "0" : pid;
+                }));
+
+        List<T> roots = new java.util.ArrayList<>(parentIdMap.getOrDefault("0", java.util.Collections.emptyList()));
+        for (T item : flatList) {
+            List<T> children = parentIdMap.get(idGetter.apply(item));
+            if (children != null) {
+                if (sortGetter != null) {
+                    children.sort(java.util.Comparator.comparingInt(sortGetter::apply));
+                }
+                childrenSetter.accept(item, children);
+            }
+        }
+
+        if (sortGetter != null) {
+            roots.sort(java.util.Comparator.comparingInt(sortGetter::apply));
+        }
+
+        return roots;
+    }
 }
