@@ -255,6 +255,46 @@
       "name": "ydsz.security.ip-whitelist-skip-paths",
       "type": "java.util.List<java.lang.String>",
       "description": "IP 白名单放行的路径前缀（健康检查、登录等必须公开的端点）。"
+    },
+    {
+      "name": "ydsz.gateway.api-key.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 API Key 认证（外部系统接入）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.gateway.api-key.keys",
+      "type": "java.lang.String",
+      "description": "有效的 API Key 列表（逗号分隔）。"
+    },
+    {
+      "name": "ydsz.gateway.api-key.protected-paths",
+      "type": "java.lang.String",
+      "description": "需要 API Key 认证的路径模式（逗号分隔 Ant Path）。"
+    },
+    {
+      "name": "ydsz.gateway.payload-validation.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用请求体安全校验。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.payload-validation.max-body-size-mb",
+      "type": "java.lang.int",
+      "description": "请求体最大大小（MB）。",
+      "defaultValue": 10
+    },
+    {
+      "name": "ydsz.gateway.payload-validation.max-json-depth",
+      "type": "java.lang.int",
+      "description": "JSON 最大嵌套深度。",
+      "defaultValue": 50
+    },
+    {
+      "name": "ydsz.gateway.payload-validation.strict-content-type",
+      "type": "java.lang.boolean",
+      "description": "是否强制校验 Content-Type（POST/PUT/PATCH 必须指定）。",
+      "defaultValue": true
     }
   ]
 }

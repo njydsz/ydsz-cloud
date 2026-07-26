@@ -3,139 +3,113 @@ package com.njydsz.gateway.config;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.stereotype.Component;
 
-import io.micrometer.core.instrument.Counter;
+import com.njydsz.common.core.metrics.AbstractModuleMetrics;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 网关自定义 Prometheus 指标（P3-14）
+ * 网关自定义 Prometheus 指标。
  *
- * <p>注册网关层精细化监控指标，对标大厂网关的 SLA 度量体系。
+ * <p>P0-2 架构优化：继承 {@link AbstractModuleMetrics}，统一指标前缀 {@code ydsz_gateway_}，
+ * 消除手动 ConcurrentHashMap Counter/Timer 缓存（Micrometer 内部已缓存），
+ * 修复 {@code recordJwtValidationDuration} 每次创建新 Timer 的性能问题。
  *
- * <h3>指标清单</h3>
+ * <h3>指标清单（Prometheus 指标名 = 前缀 + 名称）</h3>
  * <ul>
- *   <li>{@code gateway_request_duration_seconds} — 按路由分桶的请求延迟（P50/P95/P99）</li>
- *   <li>{@code gateway_request_total} — 请求总数计数器（按路由/状态码/方法标签）</li>
- *   <li>{@code gateway_ratelimit_triggered_total} — 限流触发计数器（按维度标签）</li>
- *   <li>{@code gateway_jwt_validation_duration_seconds} — JWT 校验耗时</li>
- *   <li>{@code gateway_circuit_breaker_state} — 熔断器状态（0=closed, 1=open, 2=half-open）</li>
+ *   <li>{@code ydsz_gateway_request_duration_seconds} — 按路由分桶的请求延迟（P50/P95/P99）</li>
+ *   <li>{@code ydsz_gateway_request_total} — 请求总数计数器（route/method/status 标签）</li>
+ *   <li>{@code ydsz_gateway_ratelimit_triggered_total} — 限流触发计数器（dimension/route 标签）</li>
+ *   <li>{@code ydsz_gateway_jwt_validation_duration_seconds} — JWT 校验耗时（cached 标签）</li>
+ *   <li>{@code ydsz_gateway_circuit_breaker_state} — 熔断器状态（0=closed, 1=open, 2=half-open）</li>
  * </ul>
  *
- * <h3>使用方式</h3>
- * <p>各过滤器通过依赖注入获取本组件，调用对应方法记录指标。
- * Prometheus 通过 {@code /actuator/prometheus} 端点采集。
+ * <p><b>命名变更说明</b>：原 {@code gateway_*} 指标名统一加 {@code ydsz_} 前缀，
+ * 与 FlowMetrics({@code ydsz_flow_*})、CronjobMetrics({@code ydsz_cronjob_*}) 等保持一致。
+ * Grafana 看板需同步更新指标名。
  *
  * @since 1.0.0
  */
 @Slf4j
 @Component
-public class GatewayMetrics {
+public class GatewayMetrics extends AbstractModuleMetrics {
 
-    /** 指标名: 请求延迟 */
-    private static final String METRIC_REQUEST_DURATION = "gateway_request_duration_seconds";
-    /** 指标名: 请求总数 */
-    private static final String METRIC_REQUEST_TOTAL = "gateway_request_total";
-    /** 指标名: 限流触发 */
-    private static final String METRIC_RATELIMIT_TRIGGERED = "gateway_ratelimit_triggered_total";
-    /** 指标名: JWT 校验耗时 */
-    private static final String METRIC_JWT_VALIDATION_DURATION = "gateway_jwt_validation_duration_seconds";
-    /** 指标名: 熔断器状态 */
-    private static final String METRIC_CIRCUIT_BREAKER_STATE = "gateway_circuit_breaker_state";
+    /** 按 routeId 维护的熔断器状态引用（AtomicInteger 可变，Gauge 回调能读到最新值） */
+    private final ConcurrentMap<String, AtomicInteger> breakerStates = new ConcurrentHashMap<>();
 
-    /** Micrometer 指标注册器 */
-    private final MeterRegistry meterRegistry;
-
-    /**
-     * P2-3: Counter 缓存（避免每次请求重复构建 Counter.builder().register()）
-     * <p>按 "name|tag1=v1,tag2=v2" 作为 key 缓存 Counter 实例。
-     */
-    private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
-
-    /**
-     * P2-3: Timer 缓存（避免每次请求重复构建 Timer.builder().register()）
-     */
-    private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
-
-    /**
-     * 构造网关指标组件
-     *
-     * @param meterRegistry Micrometer 指标注册器
-     */
     public GatewayMetrics(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
+        super(meterRegistry, "ydsz_gateway_");
         log.info("[GatewayMetrics] 自定义 Prometheus 指标初始化完成");
     }
 
     /**
-     * P2-3: 记录请求延迟（使用缓存 Timer）
+     * 记录请求延迟（使用基类 timer() 方法，Micrometer 内部缓存 Timer 实例）。
      */
     public void recordRequestDuration(String routeId, String method, int status, long durationMs) {
-        Tags tags = Tags.of("route", routeId, "method", method, "status", String.valueOf(status));
-        String cacheKey = METRIC_REQUEST_DURATION + "|" + tags;
-        Timer timer = timerCache.computeIfAbsent(cacheKey, k ->
-                Timer.builder(METRIC_REQUEST_DURATION)
-                        .tags(tags)
-                        .description("Gateway request duration in seconds")
-                        .register(meterRegistry));
-        timer.record(Duration.ofMillis(durationMs));
+        timer("request_duration_seconds",
+                "route", safe(routeId),
+                "method", safe(method),
+                "status", String.valueOf(status))
+                .record(Duration.ofMillis(durationMs));
     }
 
     /**
-     * P2-3: 增加请求计数（使用缓存 Counter）
+     * 增加请求计数。
      */
     public void incrementRequestTotal(String routeId, String method, int status) {
-        Tags tags = Tags.of("route", routeId, "method", method, "status", String.valueOf(status));
-        String cacheKey = METRIC_REQUEST_TOTAL + "|" + tags;
-        Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
-                Counter.builder(METRIC_REQUEST_TOTAL)
-                        .tags(tags)
-                        .description("Gateway request total count")
-                        .register(meterRegistry));
-        counter.increment();
+        incrementCounter("request_total",
+                "route", safe(routeId),
+                "method", safe(method),
+                "status", String.valueOf(status));
     }
 
     /**
-     * P2-3: 增加限流触发计数（使用缓存 Counter）
+     * 增加限流触发计数。
      */
     public void incrementRatelimitTriggered(String dimension, String routeId) {
-        Tags tags = Tags.of("dimension", dimension, "route", routeId);
-        String cacheKey = METRIC_RATELIMIT_TRIGGERED + "|" + tags;
-        Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
-                Counter.builder(METRIC_RATELIMIT_TRIGGERED)
-                        .tags(tags)
-                        .description("Gateway rate limit triggered count")
-                        .register(meterRegistry));
-        counter.increment();
+        incrementCounter("ratelimit_triggered_total",
+                "dimension", safe(dimension),
+                "route", safe(routeId));
     }
 
     /**
-     * 记录 JWT 校验耗时
+     * 记录 JWT 校验耗时。
+     *
+     * <p>P0-2 修复：原实现每次调用 {@code Timer.builder().register()} 创建新 Timer，
+     * 现委托基类 {@link #timer(String, String...)} 方法，Micrometer 内部缓存保证 Timer 复用。
      *
      * @param durationMs 耗时（毫秒）
      * @param cached     是否命中缓存
      */
     public void recordJwtValidationDuration(long durationMs, boolean cached) {
-        Timer.builder(METRIC_JWT_VALIDATION_DURATION)
-                .tags(Tags.of("cached", String.valueOf(cached)))
-                .description("JWT validation duration in seconds")
-                .register(meterRegistry)
+        timer("jwt_validation_duration_seconds", "cached", String.valueOf(cached))
                 .record(Duration.ofMillis(durationMs));
     }
 
     /**
-     * 设置熔断器状态
+     * 设置熔断器状态。
+     *
+     * <p>P0-2 修复：原实现每次传入 int 原始值（autobox 为不可变 Integer），
+     * Gauge 无法反映后续状态变更。现使用 {@link AtomicInteger} 可变引用，
+     * Gauge 回调时通过 {@code get()} 读取最新状态值。
      *
      * @param routeId 路由 ID
      * @param state   状态（0=closed, 1=open, 2=half-open）
      */
     public void setCircuitBreakerState(String routeId, int state) {
-        meterRegistry.gauge(METRIC_CIRCUIT_BREAKER_STATE,
-                Tags.of("route", routeId),
-                state);
+        AtomicInteger ref = breakerStates.computeIfAbsent(routeId, k -> {
+            AtomicInteger holder = new AtomicInteger(state);
+            registry.gauge(prefix + "circuit_breaker_state",
+                    Tags.of("route", safe(k)),
+                    holder, AtomicInteger::doubleValue);
+            return holder;
+        });
+        ref.set(state);
     }
 }

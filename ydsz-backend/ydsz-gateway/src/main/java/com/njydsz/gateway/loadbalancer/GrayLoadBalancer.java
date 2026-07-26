@@ -61,6 +61,19 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
     /** Nacos metadata 中版本标识 key */
     private static final String METADATA_VERSION = "version";
 
+    /**
+     * P3-5: Nacos metadata 中权重标识 key
+     * <p>实例 metadata 中 weight=10 表示该实例权重为 10（默认 1）。
+     * 加权轮询时高权重实例获得更多请求。
+     */
+    private static final String METADATA_WEIGHT = "weight";
+
+    /**
+     * P1-6: 灰度流量比例 key（当 X-Gray-Tag 未指定时，按比例自动分流到灰度）
+     * <p>metadata 中 grayRatio=10 表示 10% 流量走灰度。
+     */
+    private static final String METADATA_GRAY_RATIO = "grayRatio";
+
     /** 服务实例列表供给者(延迟加载,每个 serviceId 对应独立的子上下文) */
     private final ObjectProvider<ServiceInstanceListSupplier> supplierProvider;
 
@@ -220,16 +233,78 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
             filtered = instances;
         }
 
-        // 轮询选择(AtomicInteger 自增取模,保证均匀分布)
-        int idx = Math.abs(position.incrementAndGet()) % filtered.size();
-        ServiceInstance selected = filtered.get(idx);
+        // P3-5: 加权轮询选择（读取 Nacos metadata 中的 weight 字段）
+        ServiceInstance selected = selectByWeight(filtered);
 
         if (log.isDebugEnabled()) {
             Map<String, String> meta = selected.getMetadata();
             String selectedVersion = meta == null ? null : meta.get(METADATA_VERSION);
-            log.debug("[GrayLB] 服务 {} 选择实例 {} (grayTag={}, version={}, 候选 {} 个)",
-                    serviceId, selected.getInstanceId(), grayTag, selectedVersion, filtered.size());
+            String selectedWeight = meta == null ? null : meta.get(METADATA_WEIGHT);
+            log.debug("[GrayLB] 服务 {} 选择实例 {} (grayTag={}, version={}, weight={}, 候选 {} 个)",
+                    serviceId, selected.getInstanceId(), grayTag, selectedVersion, selectedWeight, filtered.size());
         }
         return new DefaultResponse(selected);
+    }
+
+    /**
+     * P3-5: 加权轮询选择
+     *
+     * <p>读取每个实例的 Nacos metadata {@code weight} 字段（默认 1），
+     * 按权重比例随机选择实例。权重越高的实例被选中概率越大。
+     * <p>当所有实例权重相同时退化为随机轮询。
+     *
+     * @param instances 候选实例列表
+     * @return 选中的实例
+     */
+    private ServiceInstance selectByWeight(List<ServiceInstance> instances) {
+        // 计算总权重
+        int totalWeight = 0;
+        int[] weights = new int[instances.size()];
+        for (int i = 0; i < instances.size(); i++) {
+            int w = getInstanceWeight(instances.get(i));
+            weights[i] = w;
+            totalWeight += w;
+        }
+
+        // 总权重为 0 或所有权重相同，使用随机选择
+        if (totalWeight <= 0) {
+            int idx = Math.abs(position.incrementAndGet()) % instances.size();
+            return instances.get(idx);
+        }
+
+        // 加权随机选择
+        int random = ThreadLocalRandom.current().nextInt(totalWeight);
+        int cumulative = 0;
+        for (int i = 0; i < instances.size(); i++) {
+            cumulative += weights[i];
+            if (random < cumulative) {
+                return instances.get(i);
+            }
+        }
+        // 兜底：返回最后一个
+        return instances.get(instances.size() - 1);
+    }
+
+    /**
+     * P3-5: 获取实例权重
+     *
+     * @param instance 服务实例
+     * @return 权重值（默认 1）
+     */
+    private int getInstanceWeight(ServiceInstance instance) {
+        Map<String, String> meta = instance.getMetadata();
+        if (meta == null) {
+            return 1;
+        }
+        String weightStr = meta.get(METADATA_WEIGHT);
+        if (weightStr == null || weightStr.isBlank()) {
+            return 1;
+        }
+        try {
+            int w = Integer.parseInt(weightStr.trim());
+            return w > 0 ? w : 1;
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 }

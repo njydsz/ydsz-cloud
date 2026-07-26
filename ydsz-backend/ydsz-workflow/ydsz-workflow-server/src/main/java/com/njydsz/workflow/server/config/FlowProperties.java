@@ -1,7 +1,9 @@
 package com.njydsz.workflow.server.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 /**
@@ -24,6 +26,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ydsz.flow")
 public class FlowProperties {
 
@@ -40,5 +43,26 @@ public class FlowProperties {
     private boolean publishBlockOnHighRisk = true;
 
     /** 设计器协同编辑锁定超时阈值（分钟） */
+    @Min(1)
     private long designerLockTimeoutMinutes = 30L;
+
+    /** 流程定义缓存 TTL（分钟），默认 30 */
+    @Min(1)
+    private int definitionCacheTtlMinutes = 30;
+
+    /** 单实例最大并发流程数（0=不限） */
+    @Min(0)
+    private int maxConcurrentInstances = 0;
+
+    /** 任务默认超时时间（小时，0=不超时） */
+    @Min(0)
+    private int defaultTaskTimeoutHours = 0;
+
+    /** 会签默认投票通过率（0-100） */
+    @Min(0)
+    private int defaultVotePassRate = 50;
+
+    /** 催办最小间隔（分钟），防止频繁催办 */
+    @Min(1)
+    private int urgeMinIntervalMinutes = 30;
 }

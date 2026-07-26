@@ -2,6 +2,7 @@ package com.njydsz.common.core.metrics;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -23,11 +24,11 @@ import io.micrometer.core.instrument.Timer;
  *     }
  *
  *     public void incInstanceCreated(String flowCode) {
- *         counter("instance_created_total", "flow_code", flowCode).increment();
+ *         incrementCounter("instance_created_total", "flow_code", safe(flowCode));
  *     }
  *
  *     public void recordInstanceDuration(String flowCode, long durationMs) {
- *         timer("instance_duration_ms", "flow_code", flowCode).record(durationMs, TimeUnit.MILLISECONDS);
+ *         recordTimer("instance_duration_ms", durationMs, "flow_code", safe(flowCode));
  *     }
  * }
  * }</pre>
@@ -57,6 +58,9 @@ public abstract class AbstractModuleMetrics {
     /**
      * 注册或获取 Counter 指标。
      *
+     * <p>标签以 key-value 交替形式传入，如
+     * {@code counter("send_total", "channel", "email", "status", "success")}。
+     *
      * @param name  指标名称（不含前缀，如 "instance_created_total"）
      * @param tags  标签键值对（如 "flow_code", "project_initiation"）
      * @return Counter 实例
@@ -65,6 +69,29 @@ public abstract class AbstractModuleMetrics {
         return Counter.builder(prefix + name)
                 .tags(Tags.of(tags))
                 .register(registry);
+    }
+
+    /**
+     * 便捷方法：注册/获取 Counter 并立即递增 1。
+     *
+     * <p>等价于 {@code counter(name, tags).increment()}，减少调用方样板代码。
+     *
+     * @param name  指标名称（不含前缀）
+     * @param tags  标签键值对
+     */
+    protected void incrementCounter(String name, String... tags) {
+        counter(name, tags).increment();
+    }
+
+    /**
+     * 便捷方法：注册/获取 Counter 并立即递增指定值。
+     *
+     * @param name   指标名称（不含前缀）
+     * @param amount 递增量
+     * @param tags   标签键值对
+     */
+    protected void incrementCounter(String name, double amount, String... tags) {
+        counter(name, tags).increment(amount);
     }
 
     /**
@@ -116,5 +143,33 @@ public abstract class AbstractModuleMetrics {
             Number n = s.get();
             return n == null ? 0.0 : n.doubleValue();
         });
+    }
+
+    /**
+     * 注册 Gauge 指标（通过固定数值引用提供，适用于 AtomicLong/AtomicReference 场景）。
+     *
+     * <p>调用方传入一个持有数值的引用对象（如 {@link java.util.concurrent.atomic.AtomicLong}），
+     * Gauge 回调时通过 {@code valueExtractor} 提取当前值。
+     *
+     * @param name           指标名称
+     * @param valueReference 数值引用对象
+     * @param valueExtractor 从引用对象提取 double 值的函数
+     * @param tags           标签键值对
+     * @param <N>            数值引用类型
+     */
+    protected <N> void gaugeRef(String name, N valueReference, ToDoubleFunction<N> valueExtractor, String... tags) {
+        registry.gauge(prefix + name, Tags.of(tags), valueReference, valueExtractor);
+    }
+
+    /**
+     * Null 安全的字符串处理：将 null/空字符串替换为 "unknown"。
+     *
+     * <p>所有指标标签值应经过此方法处理，避免 Micrometer 拒绝 null 标签值。
+     *
+     * @param value 原始值（可为 null）
+     * @return 非 null 字符串
+     */
+    protected static String safe(String value) {
+        return (value == null || value.isEmpty()) ? "unknown" : value;
     }
 }

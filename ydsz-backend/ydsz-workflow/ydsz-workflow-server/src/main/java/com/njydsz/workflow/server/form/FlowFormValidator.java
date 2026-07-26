@@ -3,6 +3,8 @@ package com.njydsz.workflow.server.form;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -225,8 +227,14 @@ public class FlowFormValidator {
     /** P3-2: 正则表达式最大长度限制（防 ReDoS） */
     private static final int MAX_PATTERN_LENGTH = 200;
     /** P3-2: 危险正则模式（嵌套量词，易导致 ReDoS） */
-    private static final java.util.regex.Pattern DANGEROUS_PATTERN =
-            java.util.regex.Pattern.compile("\\([^)]*[+*?][^)]*\\)[+*?]");
+    private static final Pattern DANGEROUS_PATTERN =
+            Pattern.compile("\\([^)]*[+*?][^)]*\\)[+*?]");
+    /** P3-2: 量词重叠模式（如 (a+)+、(a*)* ） */
+    private static final Pattern OVERLAPPING_QUANTIFIER =
+            Pattern.compile("\\([^)]*[+*][^)]*\\)[+*]");
+    /** P3-2: 分支重叠模式（如 (a|a)* ） */
+    private static final Pattern ALTERNATION_OVERLAP =
+            Pattern.compile("\\([^)]*\\|[^)]*\\)[*+]");
 
     private void validatePattern(FlowFormField field, Object value,
                                   FlowFormField.ValidationRule validation,
@@ -239,7 +247,9 @@ public class FlowFormValidator {
                     MAX_PATTERN_LENGTH, fieldKey);
             return;
         }
-        if (DANGEROUS_PATTERN.matcher(pattern).find()) {
+        if (DANGEROUS_PATTERN.matcher(pattern).find()
+                || OVERLAPPING_QUANTIFIER.matcher(pattern).find()
+                || ALTERNATION_OVERLAP.matcher(pattern).find()) {
             log.warn("[FormValidator] 检测到危险嵌套量词正则，跳过校验: field={} pattern={}",
                     fieldKey, pattern);
             return;

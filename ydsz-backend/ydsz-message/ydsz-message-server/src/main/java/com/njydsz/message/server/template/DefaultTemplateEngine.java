@@ -401,4 +401,34 @@ public class DefaultTemplateEngine implements TemplateEngine {
         }
         return params.get(key);
     }
+
+    /**
+     * GAP-5: 渲染 Markdown 内容为通道原生格式。
+     *
+     * <p>钉钉/飞书支持原生 Markdown，直接返回；其他通道降级为纯文本
+     * （简单去除 Markdown 语法标记，保留可读性）。
+     *
+     * @param markdownContent Markdown 原文
+     * @param channel         目标通道
+     * @return 通道适配后的内容
+     */
+    public String renderMarkdown(String markdownContent, String channel) {
+        if (markdownContent == null || markdownContent.isBlank()) {
+            return "";
+        }
+        if ("DINGTALK".equalsIgnoreCase(channel) || "FEISHU".equalsIgnoreCase(channel)
+                || "WECOM".equalsIgnoreCase(channel)) {
+            // IM 通道支持原生 Markdown，直接返回
+            return markdownContent;
+        }
+        // 其他通道降级为纯文本
+        return markdownContent
+                .replaceAll("#+\\s*", "")
+                .replaceAll("\\*\\*(.+?)\\*\\*", "$1")
+                .replaceAll("\\*(.+?)\\*", "$1")
+                .replaceAll("\\[(.+?)]\\(.+?\\)", "$1")
+                .replaceAll("`(.+?)`", "$1")
+                .replaceAll("^>\\s*", "")
+                .replaceAll("^-\\s*", "• ");
+    }
 }

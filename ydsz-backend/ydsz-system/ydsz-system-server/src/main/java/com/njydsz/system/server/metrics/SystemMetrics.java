@@ -5,24 +5,26 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import com.njydsz.common.core.metrics.AbstractModuleMetrics;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 系统模块 Micrometer 指标。
  *
- * <p>暴露以下指标：
+ * <p>P0-2 架构优化：继承 {@link AbstractModuleMetrics}，统一指标前缀 {@code ydsz_system_}，
+ * 消除 15 个手动 Counter/Timer 字段和构造器样板代码。
+ *
+ * <p>暴露以下指标（通过 Spring Boot Actuator /actuator/prometheus）：
  * <ul>
- *   <li>{@code system.config.read.total/duration} — 配置读取次数/耗时</li>
- *   <li>{@code system.config.cache.hit/miss} — 配置缓存命中/未命中</li>
- *   <li>{@code system.dict.query.total/duration} — 字典查询次数/耗时</li>
- *   <li>{@code system.dict.cache.hit/miss} — 字典缓存命中/未命中</li>
- *   <li>{@code system.variable.read.total/duration} — 系统变量读取次数/耗时</li>
- *   <li>{@code system.variable.cache.hit/miss} — 系统变量缓存命中/未命中</li>
- *   <li>{@code system.app.validate.success/fail} — 应用校验成功/失败</li>
+ *   <li>{@code ydsz_system_config_read_total / config_read_duration_ms} — 配置读取次数/耗时</li>
+ *   <li>{@code ydsz_system_config_cache_hit_total / cache_miss_total} — 配置缓存命中/未命中</li>
+ *   <li>{@code ydsz_system_dict_query_total / dict_query_duration_ms} — 字典查询次数/耗时</li>
+ *   <li>{@code ydsz_system_dict_cache_hit_total / cache_miss_total} — 字典缓存命中/未命中</li>
+ *   <li>{@code ydsz_system_variable_read_total / variable_read_duration_ms} — 系统变量读取次数/耗时</li>
+ *   <li>{@code ydsz_system_variable_cache_hit_total / cache_miss_total} — 系统变量缓存命中/未命中</li>
+ *   <li>{@code ydsz_system_app_validate_success_total / fail_total} — 应用校验成功/失败</li>
  * </ul>
  *
  * @author ydsz-team
@@ -30,73 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @ConditionalOnClass(MeterRegistry.class)
-public class SystemMetrics {
+public class SystemMetrics extends AbstractModuleMetrics {
 
-    private final MeterRegistry meterRegistry;
-    private final Counter configReadCounter;
-    private final Counter configCacheHitCounter;
-    private final Counter configCacheMissCounter;
-    private final Timer configReadTimer;
-    private final Counter dictQueryCounter;
-    private final Timer dictQueryTimer;
-    private final Counter dictCacheHitCounter;
-    private final Counter dictCacheMissCounter;
-    private final Counter variableReadCounter;
-    private final Timer variableReadTimer;
-    private final Counter variableCacheHitCounter;
-    private final Counter variableCacheMissCounter;
-    private final Counter appValidateSuccessCounter;
-    private final Counter appValidateFailCounter;
-
-    /**
-     * 构造函数，注册所有指标。
-     *
-     * @param meterRegistry Micrometer 指标注册中心
-     */
     public SystemMetrics(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
-        this.configReadCounter = Counter.builder("system.config.read.total")
-                .description("Config read total count")
-                .register(meterRegistry);
-        this.configCacheHitCounter = Counter.builder("system.config.cache.hit")
-                .description("Config cache hit count")
-                .register(meterRegistry);
-        this.configCacheMissCounter = Counter.builder("system.config.cache.miss")
-                .description("Config cache miss count")
-                .register(meterRegistry);
-        this.configReadTimer = Timer.builder("system.config.read.duration")
-                .description("Config read duration")
-                .register(meterRegistry);
-        this.dictQueryCounter = Counter.builder("system.dict.query.total")
-                .description("Dict query total count")
-                .register(meterRegistry);
-        this.dictQueryTimer = Timer.builder("system.dict.query.duration")
-                .description("Dict query duration")
-                .register(meterRegistry);
-        this.dictCacheHitCounter = Counter.builder("system.dict.cache.hit")
-                .description("Dict cache hit count")
-                .register(meterRegistry);
-        this.dictCacheMissCounter = Counter.builder("system.dict.cache.miss")
-                .description("Dict cache miss count")
-                .register(meterRegistry);
-        this.variableReadCounter = Counter.builder("system.variable.read.total")
-                .description("Variable read total count")
-                .register(meterRegistry);
-        this.variableReadTimer = Timer.builder("system.variable.read.duration")
-                .description("Variable read duration")
-                .register(meterRegistry);
-        this.variableCacheHitCounter = Counter.builder("system.variable.cache.hit")
-                .description("Variable cache hit count")
-                .register(meterRegistry);
-        this.variableCacheMissCounter = Counter.builder("system.variable.cache.miss")
-                .description("Variable cache miss count")
-                .register(meterRegistry);
-        this.appValidateSuccessCounter = Counter.builder("system.app.validate.success")
-                .description("App validate success count")
-                .register(meterRegistry);
-        this.appValidateFailCounter = Counter.builder("system.app.validate.fail")
-                .description("App validate fail count")
-                .register(meterRegistry);
+        super(meterRegistry, "ydsz_system_");
     }
 
     /**
@@ -105,22 +44,16 @@ public class SystemMetrics {
      * @param durationNanos 读取耗时（纳秒）
      */
     public void recordConfigRead(long durationNanos) {
-        configReadCounter.increment();
-        configReadTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+        incrementCounter("config_read_total");
+        timer("config_read_duration_ms").record(durationNanos, TimeUnit.NANOSECONDS);
     }
 
-    /**
-     * 记录配置缓存命中。
-     */
     public void recordConfigCacheHit() {
-        configCacheHitCounter.increment();
+        incrementCounter("config_cache_hit_total");
     }
 
-    /**
-     * 记录配置缓存未命中。
-     */
     public void recordConfigCacheMiss() {
-        configCacheMissCounter.increment();
+        incrementCounter("config_cache_miss_total");
     }
 
     /**
@@ -129,22 +62,16 @@ public class SystemMetrics {
      * @param durationNanos 查询耗时（纳秒）
      */
     public void recordDictQuery(long durationNanos) {
-        dictQueryCounter.increment();
-        dictQueryTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+        incrementCounter("dict_query_total");
+        timer("dict_query_duration_ms").record(durationNanos, TimeUnit.NANOSECONDS);
     }
 
-    /**
-     * 记录字典缓存命中。
-     */
     public void recordDictCacheHit() {
-        dictCacheHitCounter.increment();
+        incrementCounter("dict_cache_hit_total");
     }
 
-    /**
-     * 记录字典缓存未命中。
-     */
     public void recordDictCacheMiss() {
-        dictCacheMissCounter.increment();
+        incrementCounter("dict_cache_miss_total");
     }
 
     /**
@@ -153,35 +80,23 @@ public class SystemMetrics {
      * @param durationNanos 读取耗时（纳秒）
      */
     public void recordVariableRead(long durationNanos) {
-        variableReadCounter.increment();
-        variableReadTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+        incrementCounter("variable_read_total");
+        timer("variable_read_duration_ms").record(durationNanos, TimeUnit.NANOSECONDS);
     }
 
-    /**
-     * 记录系统变量缓存命中。
-     */
     public void recordVariableCacheHit() {
-        variableCacheHitCounter.increment();
+        incrementCounter("variable_cache_hit_total");
     }
 
-    /**
-     * 记录系统变量缓存未命中。
-     */
     public void recordVariableCacheMiss() {
-        variableCacheMissCounter.increment();
+        incrementCounter("variable_cache_miss_total");
     }
 
-    /**
-     * 记录应用校验成功。
-     */
     public void recordAppValidateSuccess() {
-        appValidateSuccessCounter.increment();
+        incrementCounter("app_validate_success_total");
     }
 
-    /**
-     * 记录应用校验失败。
-     */
     public void recordAppValidateFail() {
-        appValidateFailCounter.increment();
+        incrementCounter("app_validate_fail_total");
     }
 }

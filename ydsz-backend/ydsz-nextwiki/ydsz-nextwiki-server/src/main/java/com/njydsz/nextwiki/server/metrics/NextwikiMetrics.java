@@ -1,87 +1,63 @@
 package com.njydsz.nextwiki.server.metrics;
 
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.core.metrics.AbstractModuleMetrics;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * NextWiki Micrometer 指标采集（P1-R4: 从 NextwikiHealthIndicator 拆分）
- * <p>
- * 职责分离：HealthIndicator 仅报告健康状态，Metrics 仅采集指标。
+ * NextWiki Micrometer 指标采集。
+ *
+ * <p>P0-2 架构优化：继承 {@link AbstractModuleMetrics}，统一指标前缀 {@code ydsz_nextwiki_}，
+ * 消除手动 Counter 创建和 {@code @PostConstruct} 样板代码。
+ *
+ * <p>暴露以下指标（通过 Spring Boot Actuator /actuator/prometheus）：
+ * <ul>
+ *   <li>{@code ydsz_nextwiki_file_upload_total} — 文件上传次数</li>
+ *   <li>{@code ydsz_nextwiki_file_download_total} — 文件下载次数</li>
+ *   <li>{@code ydsz_nextwiki_file_delete_total} — 文件删除次数</li>
+ *   <li>{@code ydsz_nextwiki_share_create_total} — 分享创建次数</li>
+ *   <li>{@code ydsz_nextwiki_search_total} — 搜索请求次数</li>
+ *   <li>{@code ydsz_nextwiki_preview_generate_total} — 预览生成次数</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.4.0
  */
 @Slf4j
 @Component
-public class NextwikiMetrics {
+@ConditionalOnClass(MeterRegistry.class)
+public class NextwikiMetrics extends AbstractModuleMetrics {
 
-    @Autowired(required = false)
-    private MeterRegistry meterRegistry;
-
-    private Counter uploadCounter;
-    private Counter downloadCounter;
-    private Counter deleteCounter;
-    private Counter shareCounter;
-    private Counter searchCounter;
-    private Counter previewCounter;
-
-    @PostConstruct
-    public void initMetrics() {
-        if (meterRegistry != null) {
-            uploadCounter = Counter.builder("nextwiki.file.upload")
-                    .description("文件上传次数")
-                    .tags(Tags.of("operation", "upload"))
-                    .register(meterRegistry);
-            downloadCounter = Counter.builder("nextwiki.file.download")
-                    .description("文件下载次数")
-                    .tags(Tags.of("operation", "download"))
-                    .register(meterRegistry);
-            deleteCounter = Counter.builder("nextwiki.file.delete")
-                    .description("文件删除次数")
-                    .tags(Tags.of("operation", "delete"))
-                    .register(meterRegistry);
-            shareCounter = Counter.builder("nextwiki.share.create")
-                    .description("分享创建次数")
-                    .tags(Tags.of("operation", "share"))
-                    .register(meterRegistry);
-            searchCounter = Counter.builder("nextwiki.search.total")
-                    .description("搜索请求次数")
-                    .tags(Tags.of("operation", "search"))
-                    .register(meterRegistry);
-            previewCounter = Counter.builder("nextwiki.preview.generate")
-                    .description("预览生成次数")
-                    .tags(Tags.of("operation", "preview"))
-                    .register(meterRegistry);
-            log.info("[NextwikiMetrics] Micrometer 指标已注册（6 项）");
-        }
+    public NextwikiMetrics(MeterRegistry meterRegistry) {
+        super(meterRegistry, "ydsz_nextwiki_");
+        log.info("[NextwikiMetrics] 初始化完成，指标前缀 ydsz_nextwiki_");
     }
 
     public void recordUpload() {
-        if (uploadCounter != null) uploadCounter.increment();
+        incrementCounter("file_upload_total");
     }
 
     public void recordDownload() {
-        if (downloadCounter != null) downloadCounter.increment();
+        incrementCounter("file_download_total");
     }
 
     public void recordDelete() {
-        if (deleteCounter != null) deleteCounter.increment();
+        incrementCounter("file_delete_total");
     }
 
     public void recordShare() {
-        if (shareCounter != null) shareCounter.increment();
+        incrementCounter("share_create_total");
     }
 
     public void recordSearch() {
-        if (searchCounter != null) searchCounter.increment();
+        incrementCounter("search_total");
     }
 
     public void recordPreview() {
-        if (previewCounter != null) previewCounter.increment();
+        incrementCounter("preview_generate_total");
     }
 }

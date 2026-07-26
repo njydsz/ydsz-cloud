@@ -124,6 +124,17 @@ ydsz:
         - /actuator/health/liveness
         - /actuator/health/readiness
         - /actuator/info
+    # P1-3: API Key 认证配置（外部系统接入）
+    api-key:
+      enabled: ${YDSZ_GATEWAY_API_KEY_ENABLED:false}
+      keys: ${YDSZ_GATEWAY_API_KEYS:}
+      protected-paths: /api/project/**,/api/workflow/**
+    # P1-8: 请求体安全校验配置
+    payload-validation:
+      enabled: true
+      max-body-size-mb: 10
+      max-json-depth: 50
+      strict-content-type: true
 
 # 日志级别（dev 环境开 DEBUG）
 logging:

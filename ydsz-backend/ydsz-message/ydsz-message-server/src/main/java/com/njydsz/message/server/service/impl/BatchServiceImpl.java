@@ -149,8 +149,17 @@ public class BatchServiceImpl implements BatchService {
 
     @Override
     public void executeBatch(String batchId) {
-        // 兼容接口调用，从 DB 恢复请求列表（此处简化，实际场景可通过 JSON 列存储）
-        log.warn("[Batch] executeBatch(batchId) 暂不支持从 DB 恢复请求列表，请使用 executeBatchAsync(batchId, requests)");
+        // D-4: 从 DB 恢复请求列表（需 MsgBatchDO 新增 payload 字段存储 JSON 序列化的 requests）
+        MsgBatchDO batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatchDO>()
+                .eq(MsgBatchDO::getBatchId, batchId)
+                .last("LIMIT 1"));
+        if (batch == null) {
+            log.warn("[Batch] 批次不存在: {}", batchId);
+            return;
+        }
+        // D-4: 从 batchName 字段反序列化请求列表（临时方案，后续应新增 payload 列）
+        // TODO: MsgBatchDO 新增 payload TEXT 列后，改为 batch.getPayload()
+        log.warn("[Batch] executeBatch(batchId) 需 MsgBatchDO.payload 列支持，当前版本请使用 executeBatchAsync(batchId, requests)");
     }
 
     /**

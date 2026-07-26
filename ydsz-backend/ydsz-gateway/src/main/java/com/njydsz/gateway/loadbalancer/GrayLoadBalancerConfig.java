@@ -19,11 +19,16 @@ import org.springframework.core.env.Environment;
  * <p>配合 {@code spring.cloud.loadbalancer.configurations=gray} 配置项,
  * 抑制默认轮询负载均衡器,使灰度负载均衡器接管所有 {@code lb://} 路由。
  *
- * <h3>加载机制</h3>
- * <p>{@link LoadBalancerClientFactory} 为每个 serviceId 创建独立的子上下文,
- * 子上下文中通过 {@code environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME)}
- * 获取当前 serviceId,从而为每个服务构建独立的 {@link GrayLoadBalancer} 实例
- * (含独立的轮询计数器)。
+ * <h3>P1-1: 健康检查</h3>
+ * <p>注册 {@code HealthCheckServiceInstanceListSupplier} 作为实例列表供给者的装饰器,
+ * 实现主动健康检查：定期向后端实例发送 TCP/HTTP 探活请求，
+ * 连续失败 N 次后自动标记为不可用，避免请求被路由到故障实例。
+ * <p>配置项：
+ * <ul>
+ *   <li>{@code spring.cloud.loadbalancer.health-check.initial-delay} — 初始延迟（默认 0s）</li>
+ *   <li>{@code spring.cloud.loadbalancer.health-check.interval} — 检查间隔（默认 25s）</li>
+ *   <li>{@code spring.cloud.loadbalancer.health-check.path.default} — HTTP 探活路径（默认 /actuator/health）</li>
+ * </ul>
  *
  * @since 1.0.0
  */

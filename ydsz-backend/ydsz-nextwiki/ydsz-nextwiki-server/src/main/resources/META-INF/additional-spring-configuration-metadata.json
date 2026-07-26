@@ -193,6 +193,11 @@
       "name": "nextwiki.wopi.editor-url",
       "type": "java.lang.String",
       "description": "在线编辑器 URL（OnlyOffice/Collabora）"
+    },
+    {
+      "name": "nextwiki.wopi.access-token",
+      "type": "java.lang.String",
+      "description": "WOPI 协议访问令牌（留空则不验证）"
     }
   ]
 }

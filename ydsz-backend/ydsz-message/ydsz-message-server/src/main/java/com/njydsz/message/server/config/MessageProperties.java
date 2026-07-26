@@ -396,6 +396,19 @@ public class MessageProperties {
     private SmartTimingConfig smartTiming = new SmartTimingConfig();
 
     /**
+     * GAP-6: 默认投递保证级别。
+     *
+     * <p>对标 AWS SNS+SQS 的 QoS 级别选择：
+     * <ul>
+     *   <li>{@code AT_LEAST_ONCE}（默认）— 至少送达一次，可能重复（RocketMQ + 幂等）</li>
+     *   <li>{@code AT_MOST_ONCE} — 最多送达一次，允许丢失不允许重复（如营销消息）</li>
+     *   <li>{@code EXACTLY_ONCE} — 精确一次（需分布式锁 + DB 事务保证，性能较低）</li>
+     * </ul>
+     * 消息级覆盖：在 MessageRequest 中设置 deliveryGuarantee 字段优先于此全局默认值。
+     */
+    private String defaultDeliveryGuarantee = "AT_LEAST_ONCE";
+
+    /**
      * P1-5: 退订中心配置。
      *
      * <p>支持 token-based 一键退订（RFC 8058 List-Unsubscribe-Post），

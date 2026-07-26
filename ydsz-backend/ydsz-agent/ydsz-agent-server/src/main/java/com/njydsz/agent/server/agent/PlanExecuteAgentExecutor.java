@@ -84,11 +84,15 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         plan.markExecuting();
         List<String> stepResults = new ArrayList<>();
         TokenUsage totalUsage = TokenUsage.zero();
+        int maxReplans = 2;
+        int replanCount = 0;
 
-        for (ExecutionPlan.PlanStep step : plan.getSteps()) {
+        int stepIdx = 0;
+        while (stepIdx < plan.getSteps().size()) {
+            ExecutionPlan.PlanStep step = plan.getSteps().get(stepIdx);
             step.markExecuting();
             log.info("[Plan-Execute] 执行步骤 {}/{}: {}",
-                    step.getIndex() + 1, plan.getSteps().size(), step.getDescription());
+                    stepIdx + 1, plan.getSteps().size(), step.getDescription());
 
             ChatRequest stepRequest = ChatRequest.builder()
                     .model(properties.getLlm().getDefaultModel())
@@ -102,7 +106,35 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
                     .build();
 
             long stepStart = System.currentTimeMillis();
-            ChatResponse stepResponse = llmClient.chat(stepRequest);
+            ChatResponse stepResponse;
+            try {
+                stepResponse = llmClient.chat(stepRequest);
+            } catch (Exception e) {
+                long stepDuration = System.currentTimeMillis() - stepStart;
+                log.warn("[Plan-Execute] 步骤 {} 执行失败: {}, error={}",
+                        stepIdx + 1, step.getDescription(), e.getMessage());
+                traceRecorder.recordStep(traceId, "STEP_FAILED",
+                        "Step " + (stepIdx + 1) + " failed: " + step.getDescription(),
+                        stepRequest, e.getMessage(), stepDuration);
+                step.markFailed();
+
+                if (replanCount < maxReplans) {
+                    replanCount++;
+                    log.info("[Plan-Execute] 触发重规划 {}/{}", replanCount, maxReplans);
+                    traceRecorder.recordStep(traceId, "REPLAN",
+                            "Replanning after step " + (stepIdx + 1) + " failure",
+                            plan.getGoal(), "replan_" + replanCount, 0);
+
+                    List<ExecutionPlan.PlanStep> newSteps = regeneratePlan(
+                            plan.getGoal(), stepResults, step.getDescription(),
+                            e.getMessage(), convId);
+                    if (!newSteps.isEmpty()) {
+                        plan.replaceRemainingSteps(stepIdx, newSteps);
+                        continue;
+                    }
+                }
+                throw e;
+            }
             long stepDuration = System.currentTimeMillis() - stepStart;
 
             agentMetrics.recordLlmCall(llmClient.getProvider(),
@@ -113,7 +145,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
                         properties.getLlm().getDefaultModel(), stepResponse.getUsage());
             }
             traceRecorder.recordStep(traceId, "STEP_EXECUTE",
-                    "Step " + (step.getIndex() + 1) + ": " + step.getDescription(),
+                    "Step " + (stepIdx + 1) + ": " + step.getDescription(),
                     stepRequest, stepResponse, stepDuration);
 
             if (stepResponse.getUsage() != null) {
@@ -121,6 +153,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
             }
             stepResults.add(stepResponse.getContent());
             step.markCompleted();
+            stepIdx++;
         }
 
         long synthStart = System.currentTimeMillis();

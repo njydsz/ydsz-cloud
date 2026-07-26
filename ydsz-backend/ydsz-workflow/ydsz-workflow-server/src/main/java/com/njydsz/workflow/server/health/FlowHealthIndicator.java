@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
@@ -19,7 +18,6 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,15 +34,21 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.flow", name = "health-enabled", havingValue = "true", matchIfMissing = true)
-@RequiredArgsConstructor
 public class FlowHealthIndicator implements HealthIndicator {
 
     private final FlowInstanceMapper instanceMapper;
     private final FlowRunTaskMapper runTaskMapper;
     private final ObjectProvider<StringRedisTemplate> redisTemplateProvider;
+
+    public FlowHealthIndicator(FlowInstanceMapper instanceMapper,
+                                FlowRunTaskMapper runTaskMapper,
+                                ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+        this.instanceMapper = instanceMapper;
+        this.runTaskMapper = runTaskMapper;
+        this.redisTemplateProvider = redisTemplateProvider;
+    }
 
     @Override
     public Health health() {
