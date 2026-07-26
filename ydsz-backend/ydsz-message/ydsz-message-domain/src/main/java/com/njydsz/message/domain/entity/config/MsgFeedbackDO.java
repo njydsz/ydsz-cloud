@@ -2,13 +2,13 @@ package com.njydsz.message.domain.entity.config;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * P1-4: 消息用户反馈表。
@@ -25,16 +25,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_msg_feedback")
-public class MsgFeedbackDO extends BaseDO {
+public class MsgFeedbackDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 消息 ID（关联 ydsz_msg_log.msg_id） */
     private String msgId;

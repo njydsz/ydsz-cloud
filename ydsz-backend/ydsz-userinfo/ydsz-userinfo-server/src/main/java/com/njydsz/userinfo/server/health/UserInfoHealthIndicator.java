@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.token.TokenService;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserInfoHealthIndicator implements HealthIndicator {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisService redisService;
     private final TokenService tokenService;
     private final UserAccountMapper userAccountMapper;
     private final RoleMapper roleMapper;
@@ -46,7 +46,7 @@ public class UserInfoHealthIndicator implements HealthIndicator {
 
         // Redis 连通性检查（使用 execute 确保连接释放）
         try {
-            String ping = redisTemplate.execute(conn -> conn.ping(), true);
+            String ping = redisService.execute(conn -> conn.ping(), true);
             details.put("redis", "UP - " + ping);
         } catch (Exception e) {
             details.put("redis", "DOWN - " + e.getMessage());

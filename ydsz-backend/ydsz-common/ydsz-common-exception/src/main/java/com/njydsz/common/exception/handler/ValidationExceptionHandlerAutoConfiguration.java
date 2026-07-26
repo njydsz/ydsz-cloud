@@ -31,6 +31,13 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
 public class ValidationExceptionHandlerAutoConfiguration {
 
+    /**
+     * 创建校验异常处理器 Bean
+     *
+     * @param messageSource   国际化消息源
+     * @param exceptionMetrics 异常指标统计器（可选）
+     * @return 校验异常处理器实例
+     */
     @Bean
     public ValidationExceptionHandler validationExceptionHandler(MessageSource messageSource,
                                                                    ObjectProvider<ExceptionMetrics> exceptionMetrics) {

@@ -38,6 +38,7 @@ import java.lang.annotation.*;
  *   <li>示例：{@code sys:user:*} 可匹配 {@code sys:user:add}、{@code sys:user:delete} 等</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see AuthMenuPermission

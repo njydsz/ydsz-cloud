@@ -1,14 +1,12 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则变量定义 DO
@@ -21,14 +19,11 @@ import lombok.Data;
  * @since 1.4.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_variable_def")
-public class RuleVariableDefDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleVariableDefDO extends MpBaseEntity<String> {
 
     /** 变量名（如 cpi / budgetAmount / evmRedCount） */
     private String varName;
@@ -53,9 +48,4 @@ public class RuleVariableDefDO implements Serializable {
 
     /** 租户 ID（单租户部署默认 1） */
     private String tenantId;
-
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
 }

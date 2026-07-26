@@ -153,6 +153,8 @@ public class ExceptionAlertPublisher {
     /**
      * 判断异常是否需要告警
      *
+     * <p>仅 FATAL 和 ERROR 级别的 {@link AbstractYdszException} 才会触发告警。
+     *
      * @param throwable 异常对象
      * @return true-需要告警（FATAL/ERROR 级别的 AbstractYdszException）
      */
@@ -184,6 +186,8 @@ public class ExceptionAlertPublisher {
 
     /**
      * 清理过期的去重记录
+     *
+     * <p>当去重记录超过最大容量时，移除所有已过期的记录以防止内存泄漏。
      */
     public void cleanupExpiredDedupEntries() {
         long threshold = System.currentTimeMillis() - dedupWindowMillis;

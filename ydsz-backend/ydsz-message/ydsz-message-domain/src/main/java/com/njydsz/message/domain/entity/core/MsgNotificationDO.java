@@ -3,13 +3,13 @@ package com.njydsz.message.domain.entity.core;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 站内通知表: 系统消息/待办/预警/公告统一入口,支持优先级/聚合/撤回/业务跳转
@@ -18,16 +18,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_msg_notification")
-public class MsgNotificationDO extends BaseDO {
+public class MsgNotificationDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 通知标题 */
     private String title;

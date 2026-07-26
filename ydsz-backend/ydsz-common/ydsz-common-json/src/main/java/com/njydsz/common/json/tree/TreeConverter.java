@@ -8,7 +8,28 @@ import java.util.Map;
 /**
  * JSON 树模型转换器
  *
- * <p>将解析后的 Map/List 结构转换为 JsonNode 树模型</p>
+ * <p>将解析后的 Map/List 结构转换为 JsonNode 树模型，
+ * 支持递归转换嵌套的 JSON 结构。</p>
+ *
+ * <p><b>支持的类型映射：</b></p>
+ * <ul>
+ *   <li>Map → ObjectNode</li>
+ *   <li>List → ArrayNode</li>
+ *   <li>String → TextNode</li>
+ *   <li>Number → NumberNode</li>
+ *   <li>Boolean → BooleanNode</li>
+ *   <li>null → NullNode</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * Object parsed = YdszJsonParser.parse("{\"name\":\"John\"}");
+ * JsonNode tree = TreeConverter.convertToJsonNode(parsed);
+ * String name = tree.get("name").asText(); // "John"
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class TreeConverter {
 

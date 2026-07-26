@@ -2,14 +2,14 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 流程自动触发规则 DO
@@ -21,15 +21,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_auto_trigger")
-public class FlowAutoTriggerDO extends BaseDO {
+public class FlowAutoTriggerDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 源流程编码（触发方） */
     private String sourceFlowCode;

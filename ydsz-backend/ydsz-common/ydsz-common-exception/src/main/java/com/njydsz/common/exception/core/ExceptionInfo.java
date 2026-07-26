@@ -96,6 +96,13 @@ public class ExceptionInfo implements Serializable {
         this.subCode = "0000";
     }
 
+    /**
+     * 使用错误码、消息键和消息构造异常信息
+     *
+     * @param code    业务错误码
+     * @param key     国际化消息键
+     * @param message 已解析的消息
+     */
     public ExceptionInfo(String code, String key, String message) {
         this();
         this.code = code;
@@ -104,11 +111,27 @@ public class ExceptionInfo implements Serializable {
         this.fullCode = code;
     }
 
+    /**
+     * 使用错误码、消息键、消息和 HTTP 状态码构造异常信息
+     *
+     * @param code       业务错误码
+     * @param key        国际化消息键
+     * @param message    已解析的消息
+     * @param httpStatus HTTP 状态码
+     */
     public ExceptionInfo(String code, String key, String message, int httpStatus) {
         this(code, key, message);
         this.httpStatus = httpStatus;
     }
 
+    /**
+     * 使用错误码、消息键、消息和详情构造异常信息
+     *
+     * @param code    业务错误码
+     * @param key     国际化消息键
+     * @param message 已解析的消息
+     * @param details 错误详情
+     */
     public ExceptionInfo(String code, String key, String message, Map<String, Object> details) {
         this(code, key, message);
         this.details = details;
@@ -262,14 +285,34 @@ public class ExceptionInfo implements Serializable {
      * @param message 已解析的消息
      * @return 异常信息对象
      */
+    /**
+     * 根据错误码和消息创建异常信息
+     *
+     * @param code    业务错误码
+     * @param message 已解析的消息
+     * @return 异常信息对象
+     */
     public static ExceptionInfo of(String code, String message) {
         return new ExceptionInfo(code, null, message);
     }
 
+    /**
+     * 根据错误码、消息键和消息创建异常信息
+     *
+     * @param code    业务错误码
+     * @param key     国际化消息键
+     * @param message 已解析的消息
+     * @return 异常信息对象
+     */
     public static ExceptionInfo of(String code, String key, String message) {
         return new ExceptionInfo(code, key, message);
     }
 
+    /**
+     * 获取异常信息构建器
+     *
+     * @return 构建器实例
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -297,31 +340,68 @@ public class ExceptionInfo implements Serializable {
         /** HTTP 状态码 */
         private int httpStatus;
 
+        /**
+         * 设置业务错误码
+         *
+         * @param code 业务错误码
+         * @return 当前构建器
+         */
         public Builder code(String code) {
             this.code = code;
             return this;
         }
 
+        /**
+         * 设置子错误码
+         *
+         * @param subCode 子错误码（4 位数字）
+         * @return 当前构建器
+         */
         public Builder subCode(String subCode) {
             this.subCode = subCode == null || subCode.isEmpty() ? "0000" : subCode;
             return this;
         }
 
+        /**
+         * 设置国际化消息键
+         *
+         * @param key 国际化消息键
+         * @return 当前构建器
+         */
         public Builder key(String key) {
             this.key = key;
             return this;
         }
 
+        /**
+         * 设置已解析的消息
+         *
+         * @param message 已解析的消息
+         * @return 当前构建器
+         */
         public Builder message(String message) {
             this.message = message;
             return this;
         }
 
+        /**
+         * 设置错误详情
+         *
+         * @param details 错误详情
+         * @return 当前构建器
+         */
         public Builder details(Map<String, Object> details) {
             this.details = details;
             return this;
         }
 
+        /**
+         * 添加单个错误详情
+         *
+         * @param key   详情键
+         * @param value 详情值
+         * @return 当前构建器
+         */
         public Builder detail(String key, Object value) {
             if (this.details == null) {
                 this.details = new LinkedHashMap<>();
@@ -330,26 +410,55 @@ public class ExceptionInfo implements Serializable {
             return this;
         }
 
+        /**
+         * 设置异常发生时间
+         *
+         * @param timestamp 异常发生时间
+         * @return 当前构建器
+         */
         public Builder timestamp(LocalDateTime timestamp) {
             this.timestamp = timestamp;
             return this;
         }
 
+        /**
+         * 设置请求路径
+         *
+         * @param path 请求路径
+         * @return 当前构建器
+         */
         public Builder path(String path) {
             this.path = path;
             return this;
         }
 
+        /**
+         * 设置分布式追踪 ID
+         *
+         * @param traceId 分布式追踪 ID
+         * @return 当前构建器
+         */
         public Builder traceId(String traceId) {
             this.traceId = traceId;
             return this;
         }
 
+        /**
+         * 设置 HTTP 状态码
+         *
+         * @param httpStatus HTTP 状态码
+         * @return 当前构建器
+         */
         public Builder httpStatus(int httpStatus) {
             this.httpStatus = httpStatus;
             return this;
         }
 
+        /**
+         * 构建异常信息对象
+         *
+         * @return 异常信息对象
+         */
         public ExceptionInfo build() {
             ExceptionInfo info = new ExceptionInfo(code, key, message);
             info.setSubCode(subCode);

@@ -3,13 +3,13 @@ package com.njydsz.cronjob.domain.entity.job;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 任务告警规则实体（ydsz_job_alert_rule 表，P5 告警 + 监控）。
@@ -36,16 +36,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_alert_rule")
-public class JobAlertRuleDO extends BaseDO {
+public class JobAlertRuleDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 规则名称 */
     private String ruleName;

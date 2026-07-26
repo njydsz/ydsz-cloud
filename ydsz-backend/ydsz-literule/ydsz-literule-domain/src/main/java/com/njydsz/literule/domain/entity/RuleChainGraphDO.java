@@ -1,14 +1,12 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则链画布 DO（P0-1）
@@ -20,14 +18,11 @@ import lombok.Data;
  * @since 1.5.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_chain_graph")
-public class RuleChainGraphDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleChainGraphDO extends MpBaseEntity<String> {
 
     /** 关联规则编码（一对一） */
     private String ruleCode;
@@ -52,9 +47,4 @@ public class RuleChainGraphDO implements Serializable {
 
     /** 画布内容 JSON（包含 nodes/edges/viewport/metadata） */
     private String contentJson;
-
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
 }

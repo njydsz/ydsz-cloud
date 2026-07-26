@@ -2,13 +2,13 @@ package com.njydsz.message.domain.entity.canary;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布
@@ -17,16 +17,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_msg_canary")
-public class MsgCanaryDO extends BaseDO {
+public class MsgCanaryDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 灰度键(如 template_code 或 biz_type) */
     private String canaryKey;

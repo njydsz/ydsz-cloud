@@ -1,15 +1,16 @@
 package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 调度节点心跳实体（ydsz_job_node 表）。
@@ -21,14 +22,16 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_node")
-public class JobNodeDO implements Serializable {
+public class JobNodeDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     /** 节点 ID（hostname:port 或 hostname:pid） */
-    @TableId(type = IdType.ASSIGN_ID)
     private String nodeId;
 
     /** 应用名称 */
@@ -44,7 +47,7 @@ public class JobNodeDO implements Serializable {
     private LocalDateTime lastHeartbeat;
 
     /** 节点状态：ONLINE 在线 / OFFLINE 离线 / DRAINING 排空退出中 */
-    private String status;
+    private String nodeStatus;
 
     /** CPU 使用率（百分比，0-100） */
     private BigDecimal cpuUsage;

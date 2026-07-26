@@ -3,13 +3,13 @@ package com.njydsz.cronjob.domain.entity.alert;
 import java.io.Serial;
 import java.math.BigDecimal;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 任务 SLA 管理实体（P2-7 SLA 管理, P2-2-merge 重构为视图 DTO）。
@@ -32,16 +32,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_sla")
-public class JobSlaDO extends BaseDO {
+public class JobSlaDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 任务 ID */
     private String jobId;

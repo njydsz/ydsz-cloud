@@ -1,14 +1,15 @@
 package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * P2-3 流程实例归档 DO
@@ -19,14 +20,14 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_his_instance")
-public class FlowHisInstanceDO implements Serializable {
+public class FlowHisInstanceDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     private String flowCode;
     private String flowName;
@@ -46,10 +47,6 @@ public class FlowHisInstanceDO implements Serializable {
     private LocalDateTime startAt;
     private LocalDateTime endAt;
     private Long durationMs;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
     private LocalDateTime archivedAt;
     private String tenantId;
     private String providerTraceId;

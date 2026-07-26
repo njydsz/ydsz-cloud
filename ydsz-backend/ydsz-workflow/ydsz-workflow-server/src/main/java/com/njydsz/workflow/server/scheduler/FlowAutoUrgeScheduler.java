@@ -18,7 +18,7 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
-import com.njydsz.workflow.server.engine.FlowNotificationHelper;
+import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>第三次催办：任务创建后 72 小时未处理（同时通知发起人）</li>
  * </ul>
  *
- * <p>催办通知通过 {@link FlowNotificationHelper} 推送，覆盖站内信 + IM（钉钉/企微）双通道。
+ * <p>催办通知通过 {@link FlowNotificationService} 推送，覆盖站内信 + IM（钉钉/企微）双通道。
  * 分布式锁通过 {@link FlowClusterLockHelper} 保证集群只有一个节点执行。
  *
  * @since 1.0.0
@@ -49,7 +49,7 @@ public class FlowAutoUrgeScheduler {
     private final FlowRunTaskMapper taskMapper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowTaskUrgeService urgeService;
-    private final FlowNotificationHelper notificationHelper;
+    private final FlowNotificationService notificationService;
     private final FlowClusterLockHelper clusterLockHelper;
 
     /** 自动催办阈值（小时），可配置 */
@@ -166,7 +166,7 @@ public class FlowAutoUrgeScheduler {
         );
 
         // 站内信 + IM 双通道推送
-        notificationHelper.notifyUrge(receiverIds, title, content, instanceId);
+        notificationService.notifyBatch("INAPP", receiverIds, title, content, "WORKFLOW_URGE", "URGENT");
 
         // 额外推送 IM 通道（钉钉/企微）
         for (String receiverId : receiverIds) {
@@ -191,8 +191,8 @@ public class FlowAutoUrgeScheduler {
             extra.put("level", "URGENT");
             extra.put("instanceId", instanceId);
             extra.put("autoUrge", true);
-            // NotificationHelper 内部会尝试所有启用的通道
-            notificationHelper.notifyUrge(List.of(receiverId), title, content, instanceId);
+            // NotificationService 内部会尝试所有启用的通道
+            notificationService.notifyBatch("INAPP", List.of(receiverId), title, content, "WORKFLOW_URGE", "URGENT");
         } catch (Exception e) {
             log.debug("[AutoUrge] IM 推送失败: receiverId={} err={}", receiverId, e.getMessage());
         }

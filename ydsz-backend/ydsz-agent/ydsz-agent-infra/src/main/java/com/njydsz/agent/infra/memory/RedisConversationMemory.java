@@ -10,7 +10,7 @@ import com.njydsz.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -39,7 +39,7 @@ public class RedisConversationMemory implements ConversationMemory {
     private static final int DEFAULT_TTL_HOURS = 24;
     private static final int DEFAULT_MAX_LIST_SIZE = 50;
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final int ttlHours;
     private final int maxListSize;
 
@@ -61,20 +61,20 @@ public class RedisConversationMemory implements ConversationMemory {
     public void save(String conversationId, ChatMessage message) {
         String key = KEY_PREFIX + conversationId;
         String json = serializeMessage(message);
-        redisTemplate.opsForList().rightPush(key, json);
-        redisTemplate.opsForList().trim(key, -maxListSize, -1);
-        redisTemplate.expire(key, ttlHours, TimeUnit.HOURS);
+        redisService.opsForList().rightPush(key, json);
+        redisService.opsForList().trim(key, -maxListSize, -1);
+        redisService.expire(key, ttlHours, TimeUnit.HOURS);
     }
 
     @Override
     public List<ChatMessage> load(String conversationId, int maxMessages) {
         String key = KEY_PREFIX + conversationId;
-        Long size = redisTemplate.opsForList().size(key);
+        Long size = redisService.opsForList().size(key);
         if (size == null || size == 0) {
             return Collections.emptyList();
         }
         long start = Math.max(0, size - maxMessages);
-        List<String> rawList = redisTemplate.opsForList().range(key, start, size - 1);
+        List<String> rawList = redisService.opsForList().range(key, start, size - 1);
         if (rawList == null || rawList.isEmpty()) {
             return Collections.emptyList();
         }
@@ -90,12 +90,12 @@ public class RedisConversationMemory implements ConversationMemory {
 
     @Override
     public void clear(String conversationId) {
-        redisTemplate.delete(KEY_PREFIX + conversationId);
+        redisService.delete(KEY_PREFIX + conversationId);
     }
 
     @Override
     public long count(String conversationId) {
-        Long size = redisTemplate.opsForList().size(KEY_PREFIX + conversationId);
+        Long size = redisService.opsForList().size(KEY_PREFIX + conversationId);
         return size != null ? size : 0;
     }
 
@@ -106,7 +106,7 @@ public class RedisConversationMemory implements ConversationMemory {
      */
     public boolean isAvailable() {
         try {
-            return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + "health-check"));
+            return Boolean.TRUE.equals(redisService.hasKey(KEY_PREFIX + "health-check"));
         } catch (Exception e) {
             log.warn("[Memory] Redis 连接检查失败: {}", e.getMessage());
             return false;

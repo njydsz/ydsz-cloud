@@ -9,6 +9,7 @@ package com.njydsz.common.auth.model;
  *   <li>writable：是否可写</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see ColumnPermissionInfo

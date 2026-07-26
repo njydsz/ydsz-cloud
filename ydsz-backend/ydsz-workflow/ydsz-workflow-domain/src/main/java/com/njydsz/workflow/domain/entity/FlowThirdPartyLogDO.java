@@ -1,14 +1,15 @@
 package com.njydsz.workflow.domain.entity;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.LogBaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 三方审批回调日志 DO
@@ -17,20 +18,18 @@ import lombok.EqualsAndHashCode;
  * <p>回调入口先以 PENDING 状态写入，处理完成后更新为 SUCCESS/FAIL，
  * 由独立重试任务保证最终一致（重试任务暂未实现）。
  *
- * <p>说明：本表结构与 BaseDO 不对齐（仅 created_at，无 updated_by/deleted 等），
- * 因此不继承 BaseDO，独立实现 Serializable。
- *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_third_party_log")
-public class FlowThirdPartyLogDO extends LogBaseDO {
+public class FlowThirdPartyLogDO extends MpBaseEntity<String> {
 
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     /** 平台: DINGTALK/FEISHU/WECOM */
     private String platform;

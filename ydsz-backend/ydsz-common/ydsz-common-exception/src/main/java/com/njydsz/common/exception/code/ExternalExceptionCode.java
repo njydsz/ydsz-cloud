@@ -272,6 +272,12 @@ public enum ExternalExceptionCode implements ExceptionCode {
         ExceptionCodeRegistry.register(registryMap);
     }
 
+    /**
+     * 按 code 字符串查找外部服务异常码
+     *
+     * @param code 异常码字符串
+     * @return 对应的外部服务异常码枚举实例；未找到返回 null
+     */
     public static ExternalExceptionCode resolve(String code) {
         if (code == null) {
             return null;

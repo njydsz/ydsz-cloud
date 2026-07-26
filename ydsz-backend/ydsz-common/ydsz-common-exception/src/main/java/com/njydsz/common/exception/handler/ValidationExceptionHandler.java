@@ -46,6 +46,12 @@ public class ValidationExceptionHandler {
     private final MessageSource messageSource;
     private final ExceptionMetrics exceptionMetrics;
 
+    /**
+     * 构造校验异常处理器
+     *
+     * @param messageSource   国际化消息源
+     * @param exceptionMetrics 异常指标统计器
+     */
     public ValidationExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics) {
         this.messageSource = messageSource;
         this.exceptionMetrics = exceptionMetrics;

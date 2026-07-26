@@ -59,63 +59,133 @@ public class BusinessException extends AbstractYdszException {
 
     // ==================== 构造函数 ====================
 
+    /**
+     * 默认构造函数，初始化为 400 Bad Request / ERROR / BUSINESS
+     */
     public BusinessException() {
         super();
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用异常码枚举构造业务异常
+     *
+     * @param exceptionCode 异常码枚举
+     */
     public BusinessException(ExceptionCode exceptionCode) {
         super();
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用异常码枚举和参数构造业务异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        消息参数
+     */
     public BusinessException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用国际化消息键构造业务异常
+     *
+     * @param key 国际化消息键
+     */
     public BusinessException(String key) {
         super();
         init(DEFAULT_CODE, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用国际化消息键和参数构造业务异常
+     *
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public BusinessException(String key, Object[] params) {
         super();
         init(DEFAULT_CODE, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用自定义错误码和消息键构造业务异常
+     *
+     * @param code 错误码字符串
+     * @param key  国际化消息键
+     */
     public BusinessException(String code, String key) {
         super();
         init(code, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用自定义错误码、消息键和参数构造业务异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public BusinessException(String code, String key, Object[] params) {
         super();
         init(code, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用原始异常构造业务异常
+     *
+     * @param cause 原始异常
+     */
     public BusinessException(Throwable cause) {
         super(cause);
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         this.code = DEFAULT_CODE;
     }
 
+    /**
+     * 使用自定义错误码和原始异常构造业务异常
+     *
+     * @param code  错误码字符串
+     * @param cause 原始异常
+     */
     public BusinessException(String code, Throwable cause) {
         super(cause);
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         this.code = code;
     }
 
+    /**
+     * 使用异常码枚举和原始异常构造业务异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param cause         原始异常
+     */
     public BusinessException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用自定义错误码、消息键和原始异常构造业务异常
+     *
+     * @param code  错误码字符串
+     * @param key   国际化消息键
+     * @param cause 原始异常
+     */
     public BusinessException(String code, String key, Throwable cause) {
         super(null, cause);
         init(code, key, new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
+    /**
+     * 使用自定义错误码、消息键、参数和原始异常构造业务异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     * @param cause  原始异常
+     */
     public BusinessException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
         init(code, key, params, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);

@@ -30,26 +30,50 @@ public class ConcurrencyException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 默认构造函数，初始化为 409 Conflict / WARN / CONCURRENCY
+     */
     public ConcurrencyException() {
         super();
         initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.CONCURRENCY);
     }
 
+    /**
+     * 使用异常码枚举构造并发冲突异常
+     *
+     * @param exceptionCode 异常码枚举
+     */
     public ConcurrencyException(ExceptionCode exceptionCode) {
         super();
         init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.CONCURRENCY);
     }
 
+    /**
+     * 使用国际化消息键构造并发冲突异常
+     *
+     * @param key 国际化消息键
+     */
     public ConcurrencyException(String key) {
         super();
         init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.CONCURRENCY);
     }
 
+    /**
+     * 使用异常码枚举和参数构造并发冲突异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        消息参数
+     */
     public ConcurrencyException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.CONCURRENCY);
     }
 
+    /**
+     * 使用原始异常构造并发冲突异常
+     *
+     * @param cause 原始异常
+     */
     public ConcurrencyException(Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.CONCURRENCY);

@@ -25,7 +25,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowTimerMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
-import com.njydsz.workflow.server.engine.FlowNotificationHelper;
+import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTimerService;
 import com.njydsz.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
@@ -57,7 +57,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     private final FlowNodeMapper nodeMapper;
     /** 流程推进引擎，定时器触发后推进流程 */
     private final FlowAdvancer advancer;
-    private final FlowNotificationHelper notificationHelper;
+    private final FlowNotificationService notificationService;
     /** P0-2: 集群调度分布式锁辅助 */
     private final FlowClusterLockHelper clusterLockHelper;
 
@@ -211,12 +211,12 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         // 2. 通知原办理人
         try {
             if (task.getAssigneeId() != null) {
-                notificationHelper.notifyTaskAssigned(task.getAssigneeId(),
+                notificationService.notify("INAPP", task.getAssigneeId(),
                         "审批超时",
                         String.format("【%s】%s 已超时，请尽快处理",
                                 nullSafe(instance.getFlowName()),
                                 nullSafe(task.getNodeName())),
-                        task.getId(), "WORKFLOW_TASK_TIMEOUT", "WARN");
+                        "WORKFLOW_TASK_TIMEOUT", "WARN");
             }
         } catch (Exception e) {
             log.warn("[FlowTimer] 超时通知失败: {}", e.getMessage());

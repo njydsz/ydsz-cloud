@@ -33,6 +33,7 @@ import com.njydsz.common.auth.service.RbacPermissionEvaluator;
  * <p><b>切面顺序：</b>
  * <p>本切面 Order 为 10，在行级权限注入之前执行。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see AuthMenuPermission

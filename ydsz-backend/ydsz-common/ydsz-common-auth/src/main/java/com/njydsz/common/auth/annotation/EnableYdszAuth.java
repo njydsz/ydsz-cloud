@@ -29,6 +29,7 @@ import com.njydsz.common.auth.config.AuthFilterConfiguration;
  * }
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see AuthConfiguration
  * @see AuthFilterConfiguration

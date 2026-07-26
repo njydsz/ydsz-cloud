@@ -30,26 +30,50 @@ public class DuplicateException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 默认构造函数，初始化为 409 Conflict / WARN / DUPLICATE
+     */
     public DuplicateException() {
         super();
         initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
+    /**
+     * 使用异常码枚举构造重复异常
+     *
+     * @param exceptionCode 异常码枚举
+     */
     public DuplicateException(ExceptionCode exceptionCode) {
         super();
         init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
+    /**
+     * 使用国际化消息键构造重复异常
+     *
+     * @param key 国际化消息键
+     */
     public DuplicateException(String key) {
         super();
         init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
+    /**
+     * 使用异常码枚举和参数构造重复异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        消息参数
+     */
     public DuplicateException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
+    /**
+     * 使用原始异常构造重复异常
+     *
+     * @param cause 原始异常
+     */
     public DuplicateException(Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);

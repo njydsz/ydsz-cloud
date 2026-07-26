@@ -8,7 +8,7 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.constant.YdszMessageTopics;
@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BatchMessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /** 批量消费幂等前缀 */
     private static final String BATCH_IDEMPOTENT_PREFIX = "msg:batch:";
@@ -96,7 +96,7 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
             // 批量内逐条幂等检查
             String idempotentKey = BATCH_IDEMPOTENT_PREFIX + request.getMessageId();
             if (request.getMessageId() != null) {
-                Boolean acquired = redisTemplate.opsForValue()
+                Boolean acquired = redisService.opsForValue()
                         .setIfAbsent(idempotentKey, "1", Duration.ofSeconds(IDEMPOTENT_TTL_SECONDS));
                 if (!Boolean.TRUE.equals(acquired)) {
                     log.debug("[BatchConsumer] 批量内消息已处理,跳过: msgId={}", request.getMessageId());
@@ -112,7 +112,7 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
                         request.getMessageId(), e.getMessage());
                 // 释放幂等锁，允许重试
                 if (request.getMessageId() != null) {
-                    redisTemplate.delete(idempotentKey);
+                    redisService.delete(idempotentKey);
                 }
             }
         }

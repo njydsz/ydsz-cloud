@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,7 +38,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     private final FlowRunTaskMapper taskMapper;
     private final FlowTaskService taskService;
     private final WorkflowFacade workflowFacade;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     private static final String MERGE_GROUP_KEY = "ydsz:flow:merge:group:";
     private static final String MERGE_GROUP_DETAIL_KEY = "ydsz:flow:merge:detail:";
@@ -73,7 +73,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         // 存储合并组关系
         String groupKey = MERGE_GROUP_KEY + mergeGroupId;
         for (String instanceId : instanceIds) {
-            redisTemplate.opsForSet().add(groupKey, instanceId);
+            redisService.sAdd(groupKey, instanceId);
         }
 
         // 存储合并组元信息
@@ -83,7 +83,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         detail.put("flowCode", flowCodes.iterator().next());
         detail.put("instanceCount", String.valueOf(instanceIds.size()));
         detail.put("createdAt", String.valueOf(System.currentTimeMillis()));
-        redisTemplate.opsForHash().putAll(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
+        redisService.opsForHash().putAll(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
 
         log.info("[FlowMerge] 合并实例: groupId={} count={} flowCode={} operator={}",
                 mergeGroupId, instanceIds.size(), flowCodes.iterator().next(), operatorId);
@@ -153,7 +153,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     @Override
     public Map<String, Object> getMergeGroup(String mergeGroupId) {
         Set<String> instanceIds = getGroupInstanceIds(mergeGroupId);
-        Map<Object, Object> detail = redisTemplate.opsForHash()
+        Map<Object, Object> detail = redisService.opsForHash()
                 .entries(MERGE_GROUP_DETAIL_KEY + mergeGroupId);
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -218,7 +218,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         if (mergeGroupId == null) {
             return Collections.emptySet();
         }
-        Set<String> ids = redisTemplate.opsForSet().members(MERGE_GROUP_KEY + mergeGroupId);
+        Set<String> ids = redisService.sMembers(MERGE_GROUP_KEY + mergeGroupId, String.class);
         return ids != null ? ids : Collections.emptySet();
     }
 }

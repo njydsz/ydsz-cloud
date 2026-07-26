@@ -2,12 +2,13 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 流程模板 DO
@@ -31,16 +32,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_template")
-public class FlowTemplateDO {
+public class FlowTemplateDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 模板编码（唯一标识，如 hr_leave_approval） */
     private String templateCode;

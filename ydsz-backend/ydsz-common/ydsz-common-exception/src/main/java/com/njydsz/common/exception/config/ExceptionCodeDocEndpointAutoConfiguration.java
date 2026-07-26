@@ -24,6 +24,12 @@ import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "doc-endpoint-enabled", havingValue = "true", matchIfMissing = true)
 public class ExceptionCodeDocEndpointAutoConfiguration {
 
+    /**
+     * 创建错误码文档端点 Bean
+     *
+     * @param messageSource 国际化消息源
+     * @return 错误码文档端点实例
+     */
     @Bean
     @ConditionalOnMissingBean(ExceptionCodeDocEndpoint.class)
     public ExceptionCodeDocEndpoint exceptionCodeDocEndpoint(MessageSource messageSource) {

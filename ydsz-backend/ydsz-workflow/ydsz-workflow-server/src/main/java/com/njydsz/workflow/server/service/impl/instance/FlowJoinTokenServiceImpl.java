@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.time.Duration;
 import java.util.List;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
@@ -58,7 +58,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     private static final long TTL_SECONDS = TTL.getSeconds();
 
     /** Redis 模板，操作 join 令牌计数 key（原子 Lua 脚本保证并发安全） */
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /**
      * P1-7: 初始化脚本 —— 原子写入 total + arrived 并带 TTL。
@@ -139,7 +139,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
         try {
             // P1-7: 原子写入 total + arrived 并带 TTL（单条 Lua 脚本）
-            redisTemplate.execute(INIT_SCRIPT,
+            redisService.execute(INIT_SCRIPT,
                     List.of(arrivedKey, totalKey),
                     String.valueOf(total), String.valueOf(TTL_SECONDS));
             log.info("[FlowJoinToken] 初始化 join 令牌 instanceId={} node={} branchCount={}",
@@ -166,7 +166,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
         try {
             // P1-7: 原子 INCR + 比较 total + 补设 TTL（单条 Lua 脚本，消除并发竞态）
-            Long result = redisTemplate.execute(ARRIVE_SCRIPT,
+            Long result = redisService.execute(ARRIVE_SCRIPT,
                     List.of(arrivedKey, totalKey), String.valueOf(TTL_SECONDS));
             boolean allArrived = result != null && result == 1L;
             log.debug("[FlowJoinToken] 分支到达 instanceId={} node={} allArrived={}",
@@ -193,7 +193,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         }
         try {
             int total = readTotal(instanceId, joinNodeCode);
-            String arrivedStr = redisTemplate.opsForValue().get(buildArrivedKey(instanceId, joinNodeCode));
+            String arrivedStr = redisService.get(buildArrivedKey(instanceId, joinNodeCode, String.class));
             if (arrivedStr == null) {
                 return false;
             }
@@ -228,7 +228,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         String totalKey = buildTotalKey(instanceId, joinNodeCode);
         String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
         try {
-            redisTemplate.execute(INIT_REQUIRED_SCRIPT,
+            redisService.execute(INIT_REQUIRED_SCRIPT,
                     List.of(arrivedKey, totalKey, requiredKey),
                     String.valueOf(total), String.valueOf(required),
                     String.valueOf(TTL_SECONDS));
@@ -252,7 +252,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
         try {
             // 先尝试 N/M 评估
-            Long result = redisTemplate.execute(ARRIVE_REQUIRED_SCRIPT,
+            Long result = redisService.execute(ARRIVE_REQUIRED_SCRIPT,
                     List.of(arrivedKey, requiredKey), String.valueOf(TTL_SECONDS));
             if (result != null && result == 1L) {
                 log.debug("[FlowJoinToken] P0-3 N/M 聚合条件满足 instanceId={} node={}",
@@ -260,7 +260,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
                 return true;
             }
             // required key 不存在时回退到全部分支语义
-            Boolean hasRequired = redisTemplate.hasKey(requiredKey);
+            Boolean hasRequired = redisService.hasKey(requiredKey);
             if (Boolean.FALSE.equals(hasRequired)) {
                 return arriveToken(instanceId, joinNodeCode);
             }
@@ -281,15 +281,15 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
             return false;
         }
         try {
-            String requiredStr = redisTemplate.opsForValue().get(
-                    buildRequiredKey(instanceId, joinNodeCode));
+            String requiredStr = redisService.get(
+                    buildRequiredKey(instanceId, joinNodeCode, String.class));
             if (requiredStr == null) {
                 // 未设置 required，回退到全部分支到达语义
                 return allArrived(instanceId, joinNodeCode);
             }
             int required = Integer.parseInt(requiredStr);
-            String arrivedStr = redisTemplate.opsForValue().get(
-                    buildArrivedKey(instanceId, joinNodeCode));
+            String arrivedStr = redisService.get(
+                    buildArrivedKey(instanceId, joinNodeCode, String.class));
             if (arrivedStr == null) {
                 return false;
             }
@@ -313,9 +313,9 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
             return;
         }
         try {
-            redisTemplate.delete(buildArrivedKey(instanceId, joinNodeCode));
-            redisTemplate.delete(buildTotalKey(instanceId, joinNodeCode));
-            redisTemplate.delete(buildRequiredKey(instanceId, joinNodeCode));
+            redisService.delete(buildArrivedKey(instanceId, joinNodeCode));
+            redisService.delete(buildTotalKey(instanceId, joinNodeCode));
+            redisService.delete(buildRequiredKey(instanceId, joinNodeCode));
             log.info("[FlowJoinToken] 清除 join 令牌 instanceId={} node={}",
                     instanceId, joinNodeCode);
         } catch (Exception e) {
@@ -333,7 +333,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
             return false;
         }
         try {
-            Boolean exists = redisTemplate.hasKey(buildTotalKey(instanceId, joinNodeCode));
+            Boolean exists = redisService.hasKey(buildTotalKey(instanceId, joinNodeCode));
             return Boolean.TRUE.equals(exists);
         } catch (Exception e) {
             log.warn("[FlowJoinToken] 检查初始化状态失败 instanceId={} node={} err={}",
@@ -347,7 +347,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     /** 读取分支总数，未初始化时返回 Integer.MAX_VALUE（避免误判为已全部到达） */
     private int readTotal(String instanceId, String joinNodeCode) {
         try {
-            String totalStr = redisTemplate.opsForValue().get(buildTotalKey(instanceId, joinNodeCode));
+            String totalStr = redisService.get(buildTotalKey(instanceId, joinNodeCode, String.class));
             if (totalStr == null) {
                 // 未初始化：返回最大值，确保 allArrived 返回 false（fail-safe）
                 log.warn("[FlowJoinToken] 分支总数未初始化 instanceId={} node={}",

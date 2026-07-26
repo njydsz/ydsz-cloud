@@ -1,17 +1,17 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则测试用例实体
@@ -20,13 +20,11 @@ import lombok.Data;
  * @since 2026-07-02
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_test_case", autoResultMap = true)
-public class RuleTestCaseDO implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleTestCaseDO extends MpBaseEntity<String> {
 
     /** 测试用例名称 */
     private String name;
@@ -44,10 +42,4 @@ public class RuleTestCaseDO implements Serializable {
 
     /** 描述 */
     private String description;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
-
-    /** 更新时间 */
-    private LocalDateTime updatedAt;
 }

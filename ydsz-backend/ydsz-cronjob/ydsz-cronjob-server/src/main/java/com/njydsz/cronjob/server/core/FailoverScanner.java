@@ -10,7 +10,7 @@ import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -92,7 +92,7 @@ public class FailoverScanner {
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
     /** P0-10: Redis 模板，用于故障转移时安全释放死节点持有的任务锁 */
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /** P0-10: Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete），统一引用 LockKeyUtil 常量 */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT;
@@ -338,7 +338,7 @@ public class FailoverScanner {
         // P0-11: 通过 LockKeyUtil 统一构造 lockKey（含分片感知）
         String lockKey = LockKeyUtil.buildJobLockKey(logEntry.getJobKey(), logEntry.getShardIndex());
         try {
-            Long result = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+            Long result = redisService.execute(RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(lockKey), lockHolder);
             if (result != null && result > 0) {
                 log.debug("[FailoverScanner] 释放死节点锁成功: lockKey={} holder={}",

@@ -1,14 +1,14 @@
 package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * WebHook 事件订阅实体（P3-13 WebHook 事件订阅）。
@@ -19,14 +19,14 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_webhook")
-public class JobWebhookDO implements Serializable {
+public class JobWebhookDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** WebHook 名称 */
     private String name;
@@ -53,14 +53,5 @@ public class JobWebhookDO implements Serializable {
     private String secret;
 
     /** 状态: ACTIVE / INACTIVE */
-    private String status;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
-
-    /** 更新时间 */
-    private LocalDateTime updatedAt;
-
-    /** 逻辑删除 */
-    private Integer deleted;
+    private String webhookStatus;
 }

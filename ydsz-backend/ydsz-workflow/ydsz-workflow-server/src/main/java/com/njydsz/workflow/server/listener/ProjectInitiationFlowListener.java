@@ -20,9 +20,9 @@ import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowEventListener;
-import com.njydsz.workflow.server.engine.FlowNotificationHelper;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.queue.FlowQueuePublisher;
+import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * 项目立项流程事件监听器（业务侧示例 + 站内信触发器）
  *
  * <p>P2-35: 异步监听 FlowWorkflowEvent，解耦主流程事务。
- * <p>P0-1: 在关键生命周期埋点调用 FlowNotificationHelper，触发站内信触达。
+ * <p>P0-1: 在关键生命周期埋点调用 FlowNotificationService，触发站内信触达。
  * <p>P0-7: 立项状态联动由原 InitiationFeignClient 同步调用迁移至消息队列异步路径，
  *         通过 {@link FlowQueuePublisher#publish(String, Map)} 发布 INITIATION_STATUS_SYNC
  *         事件到 {@code ydsz:flow:event} 通道，由 project 模块订阅消费实现状态同步。
@@ -61,7 +61,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     private static final String ACTION_MARK_APPROVED = "markApproved";
     private static final String ACTION_MARK_REJECTED = "markRejected";
 
-    private final FlowNotificationHelper notificationHelper;
+    private final FlowNotificationService notificationService;
     private final FlowInstanceMapper instanceMapper;
     private final FlowRunTaskMapper taskMapper;
     /** P1-3: 子流程服务（监听器作为子流程完成回调的入口） */
@@ -102,7 +102,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 nullSafe(task.getFlowName()),
                 nullSafe(task.getTitle()),
                 nullSafe(task.getNodeName()));
-        notificationHelper.notifyTaskAssigned(assigneeId, title, content, taskId,
+        notificationService.notify("INAPP", assigneeId, title, content,
                 "WORKFLOW_TASK", "INFO");
         // P1-7: 推送实时消息给当前办理人（IM / WebSocket 渠道）
         pushImNotification(assigneeId, title, content, taskId);
@@ -135,12 +135,12 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         instanceId, instance.getParentInstanceId(), e.getMessage(), e);
             }
         }
-        notificationHelper.notifyInstanceCompleted(instance.getInitiatorId(),
+        notificationService.notify("INAPP", instance.getInitiatorId(),
                 "您的审批已通过",
                 String.format("【%s】 您发起的 %s 已审批通过",
                         nullSafe(instance.getFlowName()),
                         nullSafe(instance.getTitle())),
-                instanceId);
+                "WORKFLOW_COMPLETED", "INFO");
         // P0-7: 流程通过 → 发布立项状态联动事件（markApproved）到 MQ
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
@@ -168,13 +168,13 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         instanceId, instance.getParentInstanceId(), e.getMessage(), e);
             }
         }
-        notificationHelper.notifyInstanceRejected(instance.getInitiatorId(),
+        notificationService.notify("INAPP", instance.getInitiatorId(),
                 "您的审批被驳回",
                 String.format("【%s】 您发起的 %s 已被驳回%s",
                         nullSafe(instance.getFlowName()),
                         nullSafe(instance.getTitle()),
                         reason == null || reason.isBlank() ? "" : "，原因：" + reason),
-                instanceId);
+                "WORKFLOW_REJECTED", "WARN");
         // P0-7: 流程驳回 → 发布立项状态联动事件（markRejected）到 MQ
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
@@ -233,7 +233,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         String flowName = instance == null ? "" : nullSafe(instance.getFlowName());
         String title = "审批催办";
         String content = String.format("【%s】 您有一个待办任务被催办，请尽快处理", flowName);
-        notificationHelper.notifyUrge(receivers, title, content, instanceId);
+        notificationService.notifyBatch("INAPP", receivers, title, content, "WORKFLOW_URGE", "URGENT");
     }
 
     @Override
@@ -246,13 +246,13 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (instance == null || instance.getInitiatorId() == null) {
             return;
         }
-        notificationHelper.notifyInstanceTerminated(instance.getInitiatorId(),
+        notificationService.notify("INAPP", instance.getInitiatorId(),
                 "您的流程已被终止",
                 String.format("【%s】 您发起的 %s 已被终止%s",
                         nullSafe(instance.getFlowName()),
                         nullSafe(instance.getTitle()),
                         reason == null || reason.isBlank() ? "" : "，原因：" + reason),
-                instanceId);
+                "WORKFLOW_TERMINATED", "WARN");
     }
 
     @Override
@@ -271,7 +271,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         String flowName = instance == null ? "" : nullSafe(instance.getFlowName());
         String title = "审批已撤回";
         String content = String.format("【%s】 该流程已被发起人撤回", flowName);
-        notificationHelper.notifyInstanceRecalled(receivers, title, content, instanceId);
+        notificationService.notifyBatch("INAPP", receivers, title, content, "WORKFLOW_RECALLED", "WARN");
     }
 
     @Override
@@ -284,13 +284,13 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (task == null) {
             return;
         }
-        notificationHelper.notifyTaskTransferred(toUserId,
+        notificationService.notify("INAPP", toUserId,
                 "您有一个转办任务",
                 String.format("【%s】 %s - %s 已转办给您",
                         nullSafe(task.getFlowName()),
                         nullSafe(task.getTitle()),
                         nullSafe(task.getNodeName())),
-                taskId);
+                "WORKFLOW_TRANSFERRED", "INFO");
     }
 
     @Override
@@ -303,13 +303,13 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (task == null) {
             return;
         }
-        notificationHelper.notifyTaskDelegated(toUserId,
+        notificationService.notify("INAPP", toUserId,
                 "您有一个委派任务",
                 String.format("【%s】 %s - %s 已委派给您",
                         nullSafe(task.getFlowName()),
                         nullSafe(task.getTitle()),
                         nullSafe(task.getNodeName())),
-                taskId);
+                "WORKFLOW_DELEGATED", "INFO");
     }
 
     @Override
@@ -326,13 +326,13 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (assigneeId == null) {
             return;
         }
-        notificationHelper.notifyTaskTimeout(assigneeId,
+        notificationService.notify("INAPP", assigneeId,
                 "审批任务已超时",
                 String.format("【%s】 %s - %s 已超时，请尽快处理",
                         nullSafe(task.getFlowName()),
                         nullSafe(task.getTitle()),
                         nullSafe(task.getNodeName())),
-                taskId);
+                "WORKFLOW_TIMEOUT", "WARN");
     }
 
     // ============================== 工具方法 ==============================

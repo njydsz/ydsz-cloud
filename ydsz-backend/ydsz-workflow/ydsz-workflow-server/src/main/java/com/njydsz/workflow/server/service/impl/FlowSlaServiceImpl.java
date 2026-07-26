@@ -22,7 +22,7 @@ import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
-import com.njydsz.workflow.server.engine.FlowNotificationHelper;
+import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -56,7 +56,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
     @Lazy
     private final FlowTaskService taskService;
-    private final FlowNotificationHelper notificationHelper;
+    private final FlowNotificationService notificationService;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
     private final FlowMetrics flowMetrics;
     /** P0-2: 集群调度分布式锁辅助 */
@@ -252,7 +252,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                         task.getId(), task.getAssigneeId());
                 return false;
             }
-            notificationHelper.notifyTaskTimeout(receiverId, title, content, task.getId());
+            notificationService.notify("INAPP", receiverId, title, content, "WORKFLOW_TIMEOUT", "WARN");
             log.info("[FlowSla] 发送 SLA 提醒: taskId={} receiver={} count={}/{} action={}",
                     task.getId(), receiverId, newReminderCount, maxReminders, action);
             return true;
@@ -400,8 +400,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                 // transfer 失败时降级：仅通知目标用户，标记升级
                 log.warn("[FlowSla] 转办失败，改用通知: taskId={} err={}",
                         task.getId(), transferEx.getMessage());
-                notificationHelper.notifyTaskAssigned(escalateUserId,
-                        "审批任务已升级", comment, task.getId(),
+                notificationService.notify("INAPP", escalateUserId,
+                        "审批任务已升级", comment,
                         "WORKFLOW_TASK_ESCALATED", "URGENT");
                 taskMapper.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
                 return true;
@@ -440,7 +440,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                     nullSafe(task.getNodeName()),
                     task.getId(),
                     nullSafe(task.getAssigneeId()));
-            notificationHelper.notifyUrge(targets, title, content, task.getInstanceId());
+            notificationService.notifyBatch("INAPP", targets, title, content, "WORKFLOW_URGE", "URGENT");
             // 标记 slaAction=NOTIFY（slaEscalated=0 表示任务仍活跃，未转办）
             taskMapper.markSlaAction(task.getId(), FlowSlaAction.NOTIFY.name(), 0);
             log.info("[FlowSla] NOTIFY 通知已发送: taskId={} targets={} flowCode={} nodeCode={}",

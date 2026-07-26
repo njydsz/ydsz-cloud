@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +43,7 @@ public class ShareDomainService {
     private final FileAclRepository fileAclRepository;
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     private final BCryptPasswordEncoder passwordEncoder;
 
@@ -115,7 +115,7 @@ public class ShareDomainService {
     public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
         // P0-4: 防暴力破解——检查失败次数是否超限
         String failKey = KEY_SHARE_FAIL + shareCode;
-        String failCountStr = redisTemplate.opsForValue().get(failKey);
+        String failCountStr = redisService.get(failKey, String.class);
         if (failCountStr != null && Integer.parseInt(failCountStr) >= MAX_FAIL_COUNT) {
             log.warn("[ShareDomainService] 分享链接已被临时锁定: shareCode={}", shareCode);
             throw new BusinessException(NextwikiExceptionCode.SHARE_LOCKED);
@@ -159,9 +159,9 @@ public class ShareDomainService {
 
         if (verifyFailed) {
             // 记录失败次数
-            Long failCount = redisTemplate.opsForValue().increment(failKey);
+            Long failCount = redisService.incr(failKey, 1);
             if (failCount != null && failCount == 1) {
-                redisTemplate.expire(failKey, LOCK_DURATION_MINUTES, TimeUnit.MINUTES);
+                redisService.expire(failKey, LOCK_DURATION_MINUTES, TimeUnit.MINUTES);
             }
             log.warn("[ShareDomainService] 验证失败: shareCode={}, failCount={}", shareCode, failCount);
             throw new BusinessException(
@@ -171,7 +171,7 @@ public class ShareDomainService {
         }
 
         // 验证成功，清除失败计数
-        redisTemplate.delete(failKey);
+        redisService.delete(failKey);
 
         shareLinkRepository.incrementAccessCount(shareLink.getId());
 

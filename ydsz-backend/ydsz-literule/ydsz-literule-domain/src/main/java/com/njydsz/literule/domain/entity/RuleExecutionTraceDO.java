@@ -1,16 +1,16 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则执行链路追踪实体
@@ -19,13 +19,11 @@ import lombok.Data;
  * @since 2026-07-02
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_execution_trace", autoResultMap = true)
-public class RuleExecutionTraceDO implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleExecutionTraceDO extends MpBaseEntity<String> {
 
     /** 追踪 ID（同一批次评估共享） */
     private String traceId;
@@ -61,10 +59,4 @@ public class RuleExecutionTraceDO implements Serializable {
 
     /** 错误信息 */
     private String errorMessage;
-
-    /** 创建人（VARCHAR(64) 支持工号/SSO 用户名，DEFAULT 'SYSTEM' 表示系统兜底） */
-    private String createdBy;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
 }

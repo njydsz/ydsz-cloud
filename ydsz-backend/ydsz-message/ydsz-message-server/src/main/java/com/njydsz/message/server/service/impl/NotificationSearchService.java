@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NotificationSearchService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     private static final String INDEX_KEY_PREFIX = "search:idx:";
     private static final long INDEX_TTL_DAYS = 30L;
@@ -57,8 +57,8 @@ public class NotificationSearchService {
                 continue;
             }
             String key = INDEX_KEY_PREFIX + userId + ":" + keyword.toLowerCase();
-            redisTemplate.opsForSet().add(key, notificationId);
-            redisTemplate.expire(key, Duration.ofDays(INDEX_TTL_DAYS));
+            redisService.sAdd(key, notificationId);
+            redisService.expire(key, Duration.ofDays(INDEX_TTL_DAYS));
         }
     }
 
@@ -85,7 +85,7 @@ public class NotificationSearchService {
             return List.of();
         }
         // 取所有关键词的并集
-        Set<String> ids = redisTemplate.opsForSet().union(keys);
+        Set<String> ids = redisService.opsForSet().union(keys);
         if (ids == null) {
             return List.of();
         }
@@ -108,7 +108,7 @@ public class NotificationSearchService {
                 continue;
             }
             String key = INDEX_KEY_PREFIX + userId + ":" + keyword.toLowerCase();
-            redisTemplate.opsForSet().remove(key, notificationId);
+            redisService.opsForSet().remove(key, notificationId);
         }
     }
 

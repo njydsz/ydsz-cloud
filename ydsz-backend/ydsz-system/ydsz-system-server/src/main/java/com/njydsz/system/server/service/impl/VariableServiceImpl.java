@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +39,7 @@ public class VariableServiceImpl implements VariableService {
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
 
     private final VariableMapper mapper;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final SystemProperties properties;
     private final SystemMetrics metrics;
 
@@ -54,7 +54,7 @@ public class VariableServiceImpl implements VariableService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_KEY_PREFIX + variableKey;
-            String cached = redisTemplate.opsForValue().get(cacheKey);
+            String cached = redisService.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
                     metrics.recordVariableCacheHit();
@@ -68,10 +68,10 @@ public class VariableServiceImpl implements VariableService {
             wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
             VariableDO entity = mapper.selectOne(wrapper);
             if (entity != null) {
-                redisTemplate.opsForValue().set(cacheKey, entity.getVariableValue(), getCacheTtl());
+                redisService.set(cacheKey, entity.getVariableValue(), getCacheTtl());
                 return entity.getVariableValue();
             }
-            redisTemplate.opsForValue().set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
+            redisService.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
             return null;
         } finally {
             metrics.recordVariableRead(System.nanoTime() - start);
@@ -133,7 +133,7 @@ public class VariableServiceImpl implements VariableService {
 
     private void evictCache(String variableKey) {
         if (variableKey != null) {
-            redisTemplate.delete(CACHE_KEY_PREFIX + variableKey);
+            redisService.delete(CACHE_KEY_PREFIX + variableKey);
         }
     }
 

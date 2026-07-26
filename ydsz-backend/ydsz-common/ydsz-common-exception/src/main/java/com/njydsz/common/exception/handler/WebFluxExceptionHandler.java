@@ -60,6 +60,12 @@ public class WebFluxExceptionHandler {
     private final MessageSource messageSource;
     private final ExceptionMetrics exceptionMetrics;
 
+    /**
+     * 构造 WebFlux 全局异常处理器
+     *
+     * @param messageSource   国际化消息源
+     * @param exceptionMetrics 异常指标统计器
+     */
     public WebFluxExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics) {
         this.messageSource = messageSource;
         this.exceptionMetrics = exceptionMetrics;

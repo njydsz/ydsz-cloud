@@ -14,6 +14,7 @@ import com.njydsz.common.util.url.UrlPathUtils;
  * 认证过滤器配置类
  * 用于配置不同层级的 URL 忽略规则
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

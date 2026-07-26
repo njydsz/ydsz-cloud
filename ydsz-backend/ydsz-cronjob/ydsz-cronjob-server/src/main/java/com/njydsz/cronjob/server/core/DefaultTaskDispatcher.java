@@ -36,7 +36,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.support.CronTrigger;
@@ -110,7 +110,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final JobMapper jobMapper;
     private final JobLogMapper jobLogMapper;
     private final ApplicationContext applicationContext;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final CronjobProperties cronjobProperties;
     /** P1-1: 心跳组件（可选注入，type=nacos 时不注册） */
     private final ObjectProvider<JobNodeHeartbeat> jobNodeHeartbeatProvider;
@@ -544,7 +544,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (holdLock) {
             lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey(), shardIndex);
             Duration ttl = resolveLockTtl(job);
-            Boolean acquired = redisTemplate.opsForValue()
+            Boolean acquired = redisService.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);
             if (!Boolean.TRUE.equals(acquired)) {
                 log.info("[Dispatcher] 分片锁被其他实例持有, 跳过: key={} shard={}",
@@ -613,7 +613,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
             if (lockKey != null) {
                 try {
-                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                    redisService.execute(RELEASE_LOCK_SCRIPT,
                             Collections.singletonList(lockKey), INSTANCE_ID);
                 } catch (Exception e) {
                     log.warn("[Dispatcher] 释放分片锁失败(将等待 TTL 自动过期): key={} reason={}",
@@ -868,7 +868,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (holdLock) {
             lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
             Duration ttl = resolveLockTtl(job);
-            Boolean acquired = redisTemplate.opsForValue()
+            Boolean acquired = redisService.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);
             if (!Boolean.TRUE.equals(acquired)) {
                 // P1-2: 锁被持有时根据阻塞策略决定行为
@@ -984,7 +984,7 @@ try {
             // 释放分布式锁（Lua 脚本安全释放）
             if (lockKey != null) {
                 try {
-                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                    redisService.execute(RELEASE_LOCK_SCRIPT,
                             Collections.singletonList(lockKey), INSTANCE_ID);
                 } catch (Exception e) {
                     log.warn("[Dispatcher] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
@@ -1281,7 +1281,7 @@ try {
      */
     private void safeReleaseLock(String lockKey, String lockHolder) {
         try {
-            redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+            redisService.execute(RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(lockKey), lockHolder);
         } catch (Exception e) {
             log.warn("[Dispatcher] COVER 释放锁失败(将等待 TTL 自动过期): key={} reason={}",

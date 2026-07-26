@@ -40,6 +40,13 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties(ExceptionProperties.class)
 public class ExceptionAlertAutoConfiguration {
 
+    /**
+     * 创建异常告警发布器 Bean
+     *
+     * @param properties      异常模块配置属性
+     * @param listenersProvider 告警监听器列表（可选）
+     * @return 异常告警发布器实例
+     */
     @Bean
     @ConditionalOnMissingBean(ExceptionAlertPublisher.class)
     public ExceptionAlertPublisher exceptionAlertPublisher(

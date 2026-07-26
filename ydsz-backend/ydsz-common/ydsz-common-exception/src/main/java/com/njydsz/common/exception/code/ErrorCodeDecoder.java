@@ -91,10 +91,20 @@ public final class ErrorCodeDecoder {
      * 错误码解码结果
      */
     public static class ErrorCodeParts {
+        /** 主错误码 */
         private final String mainCode;
+        /** 子错误码 */
         private final String subCode;
+        /** traceId 短哈希 */
         private final String traceIdShort;
 
+        /**
+         * 构造解码结果
+         *
+         * @param mainCode     主错误码
+         * @param subCode      子错误码
+         * @param traceIdShort traceId 短哈希
+         */
         public ErrorCodeParts(String mainCode, String subCode, String traceIdShort) {
             this.mainCode = mainCode;
             this.subCode = subCode == null ? SubErrorCode.DEFAULT : subCode;
@@ -105,14 +115,29 @@ public final class ErrorCodeDecoder {
             return new ErrorCodeParts(null, SubErrorCode.DEFAULT, null);
         }
 
+        /**
+         * 获取主错误码
+         *
+         * @return 主错误码
+         */
         public String getMainCode() {
             return mainCode;
         }
 
+        /**
+         * 获取子错误码
+         *
+         * @return 子错误码
+         */
         public String getSubCode() {
             return subCode;
         }
 
+        /**
+         * 获取 traceId 短哈希
+         *
+         * @return traceId 短哈希
+         */
         public String getTraceIdShort() {
             return traceIdShort;
         }

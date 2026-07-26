@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +44,7 @@ public class ConfigServiceImpl implements ConfigService {
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
 
     private final ConfigMapper mapper;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final SystemMetrics metrics;
     private final SystemProperties properties;
 
@@ -59,7 +59,7 @@ public class ConfigServiceImpl implements ConfigService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_KEY_PREFIX + configKey;
-            String cached = redisTemplate.opsForValue().get(cacheKey);
+            String cached = redisService.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
                     metrics.recordConfigCacheHit();
@@ -71,11 +71,11 @@ public class ConfigServiceImpl implements ConfigService {
             metrics.recordConfigCacheMiss();
             ConfigDO config = mapper.selectByConfigKey(configKey);
             if (config != null) {
-                redisTemplate.opsForValue().set(cacheKey, config.getConfigValue(), getCacheTtl());
+                redisService.set(cacheKey, config.getConfigValue(), getCacheTtl());
                 return config.getConfigValue();
             }
             // 缓存空值防穿透
-            redisTemplate.opsForValue().set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
+            redisService.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
             return null;
         } finally {
             metrics.recordConfigRead(System.nanoTime() - start);
@@ -85,7 +85,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public List<ConfigVO> getConfigsByGroup(String configGroup) {
         String cacheKey = CACHE_GROUP_PREFIX + configGroup;
-        String cached = redisTemplate.opsForValue().get(cacheKey);
+        String cached = redisService.get(cacheKey, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
             return YdszJson.parseArray(cached, ConfigVO.class);
@@ -94,13 +94,13 @@ public class ConfigServiceImpl implements ConfigService {
         QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
         wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
         List<ConfigVO> vos = mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
-        redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
+        redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
         return vos;
     }
 
     @Override
     public List<ConfigVO> listPublicConfigs() {
-        String cached = redisTemplate.opsForValue().get(CACHE_PUBLIC_KEY);
+        String cached = redisService.get(CACHE_PUBLIC_KEY, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
             return YdszJson.parseArray(cached, ConfigVO.class);
@@ -109,7 +109,7 @@ public class ConfigServiceImpl implements ConfigService {
         QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
         wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
         List<ConfigVO> vos = mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
-        redisTemplate.opsForValue().set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
+        redisService.set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
         return vos;
     }
 
@@ -181,12 +181,12 @@ public class ConfigServiceImpl implements ConfigService {
 
     private void evictCache(String configKey, String configGroup) {
         if (configKey != null) {
-            redisTemplate.delete(CACHE_KEY_PREFIX + configKey);
+            redisService.delete(CACHE_KEY_PREFIX + configKey);
         }
         if (configGroup != null) {
-            redisTemplate.delete(CACHE_GROUP_PREFIX + configGroup);
+            redisService.delete(CACHE_GROUP_PREFIX + configGroup);
         }
-        redisTemplate.delete(CACHE_PUBLIC_KEY);
+        redisService.delete(CACHE_PUBLIC_KEY);
     }
 
     private Duration getCacheTtl() {

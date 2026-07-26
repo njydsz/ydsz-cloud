@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -57,7 +57,7 @@ public class PreemptiveScheduler {
 
     private final JobLogMapper jobLogMapper;
     private final JobMapper jobMapper;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /** 抢占计数器 key 前缀 */
     private static final String PREEMPT_COUNT_PREFIX = "ydsz:job:preempt:count:";
@@ -231,7 +231,7 @@ public class PreemptiveScheduler {
      */
     private int getPreemptCount(String jobKey) {
         try {
-            String value = redisTemplate.opsForValue().get(PREEMPT_COUNT_PREFIX + jobKey);
+            String value = redisService.get(PREEMPT_COUNT_PREFIX + jobKey, String.class);
             return value != null ? Integer.parseInt(value) : 0;
         } catch (Exception e) {
             return 0;
@@ -244,9 +244,9 @@ public class PreemptiveScheduler {
     private void incrementPreemptCount(String jobKey) {
         try {
             String key = PREEMPT_COUNT_PREFIX + jobKey;
-            redisTemplate.opsForValue().increment(key);
+            redisService.incr(key, 1);
             // 设置 1 小时 TTL，超时后重置计数
-            redisTemplate.expire(key, Duration.ofHours(1));
+            redisService.expire(key, Duration.ofHours(1));
         } catch (Exception e) {
             log.debug("[Preemptive] 递增抢占计数失败: reason={}", e.getMessage());
         }

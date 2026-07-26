@@ -2,13 +2,13 @@ package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 任务告警日志实体（P5 告警 + 监控, P3-1-merge 重构）。
@@ -23,16 +23,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_alert_dispatch")
-public class JobAlertLogDO extends BaseDO {
+public class JobAlertLogDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 预警编码（cronjob 自动生成: CRONJOB-{timestamp}-{ruleId}） */
     private String alertCode;
@@ -68,7 +66,7 @@ public class JobAlertLogDO extends BaseDO {
     private String channels;
 
     /** 告警状态: PENDING / SUCCESS / PARTIAL / FAILED / *_RECOVERY */
-    private String status;
+    private String alertStatus;
 
     /** 错误信息（部分通道失败时记录; 映射到 fail_reason） */
     private String errorMessage;

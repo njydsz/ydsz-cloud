@@ -66,6 +66,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p><b>切面顺序：</b>
  * <p>本切面 Order 为 12，在行级权限注入之后执行。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see AuthColPermission

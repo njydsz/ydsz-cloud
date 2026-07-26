@@ -5,13 +5,13 @@ import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * DAG 工作流定义实体（ydsz_job_dag 表，P2 DAG 增强）。
@@ -26,16 +26,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_dag")
-public class JobDagDO extends BaseDO {
+public class JobDagDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** DAG 唯一 KEY（调度与触发使用） */
     @NotBlank(message = "{validation.cronjob.msg_dag_key_required}")
@@ -50,7 +48,7 @@ public class JobDagDO extends BaseDO {
     private String dagDefinition;
 
     /** DAG 状态: DRAFT 草稿 / ENABLED 启用 / DISABLED 禁用 */
-    private String status;
+    private String dagStatus;
 
     /** 触发类型: MANUAL 手动 / CRON 定时 */
     private String triggerType;

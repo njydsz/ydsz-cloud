@@ -3,13 +3,13 @@ package com.njydsz.message.domain.entity.batch;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 消息发送批次实体：记录异步批量发送的批次状态与进度。
@@ -21,16 +21,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.2.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_msg_batch")
-public class MsgBatchDO extends BaseDO {
+public class MsgBatchDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 批次 ID（业务侧生成，全局唯一） */
     private String batchId;

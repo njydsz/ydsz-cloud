@@ -31,6 +31,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p><b>配置要求：</b>
  * Redis 需要开启 keyspace notification，配置: notify-keyspace-events KEA
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

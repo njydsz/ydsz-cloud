@@ -3,14 +3,14 @@ package com.njydsz.workflow.domain.entity;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.njydsz.common.domain.entity.BaseDO;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 流程实例 DO
@@ -21,15 +21,14 @@ import com.njydsz.common.domain.entity.BaseDO;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_instance")
-public class FlowInstanceDO extends BaseDO {
+public class FlowInstanceDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 流程编码 */
     private String flowCode;
@@ -105,7 +104,7 @@ public class FlowInstanceDO extends BaseDO {
     @TableField("due_at")
     private LocalDateTime dueAt;
 
-    /** 乐观锁版本号由 BaseDO 继承，无需在此声明 */
+    /** 乐观锁版本号由 MpBaseEntity 继承，无需在此声明 */
 
     /** 退回原因（最近一次 REJECT 操作的备注，重审时清空） */
     private String rejectReason;

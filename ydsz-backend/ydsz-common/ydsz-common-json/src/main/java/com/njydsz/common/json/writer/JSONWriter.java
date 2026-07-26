@@ -28,7 +28,8 @@ import com.njydsz.common.json.number.NumberUtils;
  * <p>通过 {@link Feature} 枚举控制序列化行为，参考 FastJSON2 和 Jackson 的 Feature 设计。
  * 使用 {@link #of(Feature...)} 或 {@link #of(Set)} 计算特性标志位。</p>
  * 
- * @author YdszJson Team
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class JSONWriter {
 

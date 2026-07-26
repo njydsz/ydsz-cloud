@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -62,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenService tokenService;
     private final TokenBlacklistService tokenBlacklistService;
     private final RedisHashOps redisHashOps;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final UserInfoMetrics userInfoMetrics;
     private final UserInfoProperties properties;
@@ -179,7 +179,7 @@ public class AuthServiceImpl implements AuthService {
         sessionInfo.put("roleName", roleNames);
         sessionInfo.put("tenantId", user.getTenantId());
         redisHashOps.hMSet(accessToken, sessionInfo);
-        redisTemplate.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+        redisService.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
         updateLoginSuccess(user);
 
@@ -212,7 +212,7 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
         tokenBlacklistService.addToBlacklist(accessToken);
-        redisTemplate.delete(accessToken);
+        redisService.delete(accessToken);
         userInfoMetrics.recordLogout();
         log.info("User logged out, token blacklisted");
     }

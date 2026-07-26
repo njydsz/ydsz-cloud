@@ -14,7 +14,7 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
@@ -64,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final MsgLogMapper msgLogMapper;
     private final MessageServiceMetrics messageServiceMetrics;
     private final MessageProperties messageProperties;
@@ -139,7 +139,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         String idempotentKey = buildIdempotentKey(request);
         boolean locked = false;
         if (idempotentKey != null) {
-            Boolean acquired = redisTemplate.opsForValue()
+            Boolean acquired = redisService.opsForValue()
                     .setIfAbsent(idempotentKey, INSTANCE_ID, Duration.ofSeconds(MessageConstants.IDEMPOTENT_TTL_SECONDS));
             locked = Boolean.TRUE.equals(acquired);
             if (!locked) {
@@ -252,7 +252,7 @@ public class MessageConsumer implements RocketMQListener<String> {
             return;
         }
         try {
-            redisTemplate.execute(RELEASE_SCRIPT, Collections.singletonList(lockKey), INSTANCE_ID);
+            redisService.execute(RELEASE_SCRIPT, Collections.singletonList(lockKey), INSTANCE_ID);
         } catch (Exception e) {
             log.warn("[MessageConsumer] 释放幂等锁失败(等待 TTL 过期): key={} err={}", lockKey, e.getMessage(), e);
         }

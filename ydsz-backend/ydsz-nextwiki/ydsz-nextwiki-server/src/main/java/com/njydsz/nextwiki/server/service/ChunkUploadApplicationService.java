@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class ChunkUploadApplicationService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final FileNodeRepository fileNodeRepository;
     private final QuotaDomainService quotaDomainService;
     private final FileVersionDomainService versionDomainService;
@@ -123,8 +123,7 @@ public class ChunkUploadApplicationService {
         session.setUserId(userId);
         session.setCreatedAt(LocalDateTime.now().toString());
 
-        redisTemplate.opsForValue().set(KEY_UPLOAD_SESSION + uploadId,
-                session.toJson(), SESSION_TTL);
+        redisService.set(KEY_UPLOAD_SESSION + uploadId, session.toJson(), SESSION_TTL);
 
         log.info("[ChunkUploadApplicationService] 初始化分片上传: uploadId={}, fileName={}, totalChunks={}",
                 uploadId, fileName, totalChunks);
@@ -155,8 +154,8 @@ public class ChunkUploadApplicationService {
             chunk.transferTo(chunkFile);
 
             // 记录已上传分片
-            redisTemplate.opsForSet().add(KEY_UPLOADED_CHUNKS + uploadId, String.valueOf(chunkNumber));
-            redisTemplate.expire(KEY_UPLOADED_CHUNKS + uploadId, SESSION_TTL);
+            redisService.sAdd(KEY_UPLOADED_CHUNKS + uploadId, String.valueOf(chunkNumber));
+            redisService.expire(KEY_UPLOADED_CHUNKS + uploadId, SESSION_TTL);
 
             log.debug("[ChunkUploadApplicationService] 分片上传成功: uploadId={}, chunk={}", uploadId, chunkNumber);
         } catch (IOException e) {
@@ -173,7 +172,7 @@ public class ChunkUploadApplicationService {
         ChunkUploadSession session = validateSession(uploadId);
 
         // 检查所有分片是否已上传
-        Set<String> uploaded = redisTemplate.opsForSet().members(KEY_UPLOADED_CHUNKS + uploadId);
+        Set<String> uploaded = redisService.sMembers(KEY_UPLOADED_CHUNKS + uploadId, String.class);
         if (uploaded == null || uploaded.size() < session.getTotalChunks()) {
             throw BusinessException.of(NextwikiExceptionCode.CHUNK_INCOMPLETE)
                     .data("uploaded", uploaded != null ? uploaded.size() : 0)
@@ -285,8 +284,8 @@ public class ChunkUploadApplicationService {
             throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
         } finally {
             cleanupChunks(uploadId, session.getTotalChunks(), session.getFileName());
-            redisTemplate.delete(KEY_UPLOAD_SESSION + uploadId);
-            redisTemplate.delete(KEY_UPLOADED_CHUNKS + uploadId);
+            redisService.delete(KEY_UPLOAD_SESSION + uploadId);
+            redisService.delete(KEY_UPLOADED_CHUNKS + uploadId);
         }
     }
 
@@ -301,8 +300,8 @@ public class ChunkUploadApplicationService {
             // session 不存在时仍尝试清理目录
             cleanupChunks(uploadId, 0, null);
         }
-        redisTemplate.delete(KEY_UPLOAD_SESSION + uploadId);
-        redisTemplate.delete(KEY_UPLOADED_CHUNKS + uploadId);
+        redisService.delete(KEY_UPLOAD_SESSION + uploadId);
+        redisService.delete(KEY_UPLOADED_CHUNKS + uploadId);
         log.info("[ChunkUploadApplicationService] 取消分片上传: uploadId={}", uploadId);
     }
 
@@ -310,7 +309,7 @@ public class ChunkUploadApplicationService {
      * 查询已上传分片列表（用于断点续传）
      */
     public Set<Integer> getUploadedChunks(String uploadId) {
-        Set<String> uploaded = redisTemplate.opsForSet().members(KEY_UPLOADED_CHUNKS + uploadId);
+        Set<String> uploaded = redisService.sMembers(KEY_UPLOADED_CHUNKS + uploadId, String.class);
         if (uploaded == null) {
             return new HashSet<>();
         }
@@ -329,7 +328,7 @@ public class ChunkUploadApplicationService {
     }
 
     private ChunkUploadSession getSession(String uploadId) {
-        String json = redisTemplate.opsForValue().get(KEY_UPLOAD_SESSION + uploadId);
+        String json = redisService.get(KEY_UPLOAD_SESSION + uploadId, String.class);
         if (json == null) {
             return null;
         }

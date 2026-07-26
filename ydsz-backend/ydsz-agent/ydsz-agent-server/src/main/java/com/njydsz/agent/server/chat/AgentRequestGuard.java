@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.DuplicateException;
@@ -42,7 +42,7 @@ public class AgentRequestGuard {
     private static final int MAX_REQUESTS_PER_MINUTE = 10;
     private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     public AgentRequestGuard(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -69,7 +69,7 @@ public class AgentRequestGuard {
      */
     private void checkIdempotent(String requestId) {
         String key = IDEM_KEY_PREFIX + requestId;
-        Boolean acquired = redisTemplate.opsForValue()
+        Boolean acquired = redisService.opsForValue()
                 .setIfAbsent(key, "1", IDEM_TTL.toSeconds(), TimeUnit.SECONDS);
         if (acquired == null || !acquired) {
             log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
@@ -85,9 +85,9 @@ public class AgentRequestGuard {
      */
     private void checkRateLimit(String userId) {
         String key = RATE_KEY_PREFIX + userId;
-        Long count = redisTemplate.opsForValue().increment(key);
+        Long count = redisService.incr(key, 1);
         if (count != null && count == 1) {
-            redisTemplate.expire(key, RATE_WINDOW.toSeconds(), TimeUnit.SECONDS);
+            redisService.expire(key, RATE_WINDOW.toSeconds(), TimeUnit.SECONDS);
         }
         if (count != null && count > MAX_REQUESTS_PER_MINUTE) {
             log.warn("[Agent-Guard] 限流触发: userId={}, count={}", userId, count);
@@ -103,6 +103,6 @@ public class AgentRequestGuard {
             return;
         }
         String key = IDEM_KEY_PREFIX + requestId;
-        redisTemplate.delete(key);
+        redisService.delete(key);
     }
 }

@@ -3,14 +3,14 @@ package com.njydsz.workflow.domain.entity;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.njydsz.common.domain.entity.BaseDO;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 流程定义 DO
@@ -22,15 +22,14 @@ import com.njydsz.common.domain.entity.BaseDO;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_definition")
-public class FlowDefinitionDO extends BaseDO {
+public class FlowDefinitionDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 流程编码（业务语义：project_initiation/contract_change/...） */
     private String flowCode;
@@ -120,7 +119,7 @@ public class FlowDefinitionDO extends BaseDO {
      */
     private String canaryRolloutLog;
 
-    /** 乐观锁版本号由 BaseDO 继承，无需在此声明 */
+    /** 乐观锁版本号由 MpBaseEntity 继承，无需在此声明 */
 
     // ============================== P2-4: 设计器协同编辑锁定 ==============================
 

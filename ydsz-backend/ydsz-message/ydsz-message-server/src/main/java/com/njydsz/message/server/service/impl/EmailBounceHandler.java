@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class EmailBounceHandler {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /** 退信黑名单 Key 前缀 */
     private static final String BOUNCE_KEY_PREFIX = "email:bounce:";
@@ -51,8 +51,7 @@ public class EmailBounceHandler {
             return;
         }
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        redisTemplate.opsForValue().set(key, bounceReason != null ? bounceReason : "unknown",
-                Duration.ofDays(BOUNCE_TTL_DAYS));
+        redisService.set(key, bounceReason != null ? bounceReason : "unknown", Duration.ofDays(BOUNCE_TTL_DAYS));
         log.warn("[Bounce] 邮件退信已记录: email={} reason={}", email, bounceReason);
     }
 
@@ -67,7 +66,7 @@ public class EmailBounceHandler {
             return false;
         }
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        return Boolean.TRUE.equals(redisService.hasKey(key));
     }
 
     /**
@@ -77,7 +76,7 @@ public class EmailBounceHandler {
      */
     public void removeFromBounceList(String email) {
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        redisTemplate.delete(key);
+        redisService.delete(key);
         log.info("[Bounce] 邮箱已从退信黑名单移除: email={}", email);
     }
 
@@ -89,6 +88,6 @@ public class EmailBounceHandler {
      */
     public String getBounceReason(String email) {
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        return redisTemplate.opsForValue().get(key);
+        return redisService.get(key, String.class);
     }
 }

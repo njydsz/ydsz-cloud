@@ -11,7 +11,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,7 +71,7 @@ public class SelfHealingScanner {
     private final JobLogMapper jobLogMapper;
     private final LeaderElector leaderElector;
     private final CronjobProperties cronjobProperties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     /** 告警触发器（可选注入） */
     private final ObjectProvider<AlertTrigger> alertTriggerProvider;
     /** 任务派发器（可选注入，用于重新派发） */
@@ -209,13 +209,13 @@ public class SelfHealingScanner {
     private void tryRedispatch(JobLogDO stuckLog, CronjobProperties.SelfHealing config) {
         String retryKey = HEAL_RETRY_PREFIX + stuckLog.getJobKey();
         try {
-            Long retryCount = redisTemplate.opsForValue().increment(retryKey);
+            Long retryCount = redisService.incr(retryKey, 1);
             if (retryCount == null) {
                 retryCount = 1L;
             }
             // 设置 1 小过期
             if (retryCount == 1) {
-                redisTemplate.expire(retryKey, Duration.ofHours(1));
+                redisService.expire(retryKey, Duration.ofHours(1));
             }
 
             if (retryCount > config.getMaxRedispatchRetries()) {
@@ -266,7 +266,7 @@ public class SelfHealingScanner {
         for (JobDO job : autoPausedJobs) {
             try {
                 // 清除重试计数
-                redisTemplate.delete(HEAL_RETRY_PREFIX + job.getJobKey());
+                redisService.delete(HEAL_RETRY_PREFIX + job.getJobKey());
                 // 恢复为 NORMAL
                 jobMapper.resumeAutoPaused(job.getId());
                 log.info("[SelfHealing] 任务已自动恢复: jobKey={}", job.getJobKey());
@@ -290,7 +290,7 @@ public class SelfHealingScanner {
         try {
             // P0-11: 通过 LockKeyUtil 统一构造，支持分片任务锁释放
             String lockKey = LockKeyUtil.buildJobLockKey(jobKey, shardIndex);
-            Long released = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+            Long released = redisService.execute(RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(lockKey), lockHolder);
             if (released != null && released > 0) {
                 log.info("[SelfHealing] 释放卡死任务锁成功: jobKey={} shardIndex={} lockKey={}",

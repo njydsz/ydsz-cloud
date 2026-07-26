@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class RealtimeStatsService {
     private static final DateTimeFormatter MINUTE_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /**
      * 记录一次消息发送到实时统计。
@@ -48,25 +48,25 @@ public class RealtimeStatsService {
         try {
             String minuteKey = "ydsz:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
             // 按状态+通道计数
-            redisTemplate.opsForHash().increment(minuteKey, channel + ":" + status, 1);
-            redisTemplate.expire(minuteKey, Duration.ofHours(2));
+            redisService.opsForHash().increment(minuteKey, channel + ":" + status, 1);
+            redisService.expire(minuteKey, Duration.ofHours(2));
             // 记录延迟到 Sorted Set（保留最近 10000 条用于分位数计算）
             if ("SUCCESS".equals(status) && costMs > 0) {
                 String latencyKey = "ydsz:stats:latency:" + channel;
                 String member = channel + ":" + System.nanoTime();
-                redisTemplate.opsForZSet().add(latencyKey, member, costMs);
-                redisTemplate.expire(latencyKey, Duration.ofMinutes(30));
+                redisService.opsForZSet().add(latencyKey, member, costMs);
+                redisService.expire(latencyKey, Duration.ofMinutes(30));
                 // 限制 Sorted Set 大小
-                Long size = redisTemplate.opsForZSet().size(latencyKey);
+                Long size = redisService.opsForZSet().size(latencyKey);
                 if (size != null && size > 10000) {
-                    redisTemplate.opsForZSet().removeRange(latencyKey, 0, (int) (size - 10000) - 1);
+                    redisService.opsForZSet().removeRange(latencyKey, 0, (int) (size - 10000) - 1);
                 }
             }
             // 错误计数
             if (!"SUCCESS".equals(status)) {
                 String errorKey = "ydsz:stats:errors:" + channel + ":" + LocalDateTime.now().format(DAY_FMT);
-                redisTemplate.opsForValue().increment(errorKey);
-                redisTemplate.expire(errorKey, Duration.ofDays(7));
+                redisService.incr(errorKey, 1);
+                redisService.expire(errorKey, Duration.ofDays(7));
             }
         } catch (Exception e) {
             log.debug("[RealtimeStats] 记录失败(忽略): {}", e.getMessage());
@@ -80,7 +80,7 @@ public class RealtimeStatsService {
      */
     public Map<String, String> getRealtimeStats() {
         String minuteKey = "ydsz:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
-        Map<Object, Object> raw = redisTemplate.opsForHash().entries(minuteKey);
+        Map<Object, Object> raw = redisService.hGetAll(minuteKey, String.class);
         Map<String, String> result = new HashMap<>();
         raw.forEach((k, v) -> result.put(String.valueOf(k), String.valueOf(v)));
         return result;
@@ -95,7 +95,7 @@ public class RealtimeStatsService {
     public double[] getLatencyPercentiles(String channel) {
         String latencyKey = "ydsz:stats:latency:" + channel;
         try {
-            Long size = redisTemplate.opsForZSet().size(latencyKey);
+            Long size = redisService.opsForZSet().size(latencyKey);
             if (size == null || size == 0) {
                 return new double[]{0, 0, 0};
             }
@@ -115,7 +115,7 @@ public class RealtimeStatsService {
     private double getPercentile(String key, long size, double percentile) {
         long index = (long) Math.ceil(size * percentile) - 1;
         if (index < 0) index = 0;
-        var range = redisTemplate.opsForZSet().rangeWithScores(key, index, index);
+        var range = redisService.opsForZSet().rangeWithScores(key, index, index);
         if (range != null && !range.isEmpty()) {
             return range.iterator().next().getScore();
         }
@@ -132,7 +132,7 @@ public class RealtimeStatsService {
         Map<String, Long> result = new HashMap<>();
         for (String channel : new String[]{"SMS", "EMAIL", "PUSH", "INAPP", "DINGTALK", "WECOM", "WECOM_APP", "FEISHU", "WEBHOOK"}) {
             String key = "ydsz:stats:errors:" + channel + ":" + daySuffix;
-            String val = redisTemplate.opsForValue().get(key);
+            String val = redisService.get(key, String.class);
             if (val != null) {
                 try {
                     result.put(channel, Long.parseLong(val));

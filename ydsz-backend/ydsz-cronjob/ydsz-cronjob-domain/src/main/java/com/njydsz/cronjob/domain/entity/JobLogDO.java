@@ -1,14 +1,15 @@
 package com.njydsz.cronjob.domain.entity.log;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 任务执行日志
@@ -22,15 +23,14 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_log")
-public class JobLogDO implements Serializable {
+public class JobLogDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 任务 ID */
     private String jobId;
@@ -42,9 +42,6 @@ public class JobLogDO implements Serializable {
     private LocalDateTime endTime;
     /** 耗时(毫秒) */
     private Long durationMs;
-
-    /** RUNNING/SUCCESS/FAILED */
-    private String status;
 
     /** 错误信息 */
     private String errorMessage;
@@ -109,9 +106,4 @@ public class JobLogDO implements Serializable {
     private LocalDateTime handlerInitTime;
     /** Handler 执行结束时间（JobHandler.execute() 返回的时刻，与 endTime 可能不同：endTime 含后续清理） */
     private LocalDateTime handlerEndTime;
-
-    /** 创建时间（与 SQL 字段 created_at 对齐） */
-    private LocalDateTime createdAt;
-    /** 逻辑删除标识：0 未删除 / 1 已删除 */
-    private Integer deleted;
 }

@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
  *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see ColumnPermissionResolver

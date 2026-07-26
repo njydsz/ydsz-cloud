@@ -1,15 +1,15 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * LiteRule 规则定义 DO
@@ -20,14 +20,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_def")
-public class RuleDefinitionDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleDefinitionDO extends MpBaseEntity<String> {
 
     private String ruleCode;
     private String ruleName;
@@ -117,9 +114,4 @@ public class RuleDefinitionDO implements Serializable {
 
     /** 灰度候选版本严重度表达式 */
     private String canarySeverityExpression;
-
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
 }

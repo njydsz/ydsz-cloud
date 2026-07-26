@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.core;
 
 import java.time.Duration;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CrossChannelDedupService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /** 跨通道去重窗口（秒） */
     private static final long DEDUP_TTL_SECONDS = 300;
@@ -45,14 +45,14 @@ public class CrossChannelDedupService {
         }
         String key = buildKey(bizType, bizId);
         try {
-            String existing = redisTemplate.opsForValue().get(key);
+            String existing = redisService.get(key, String.class);
             if (existing != null) {
                 log.info("[CrossChannelDedup] 去重命中: bizType={} bizId={} channels={}",
                         bizType, bizId, existing);
                 return true;
             }
             // 标记已发送
-            redisTemplate.opsForValue().set(key, channel, Duration.ofSeconds(DEDUP_TTL_SECONDS));
+            redisService.set(key, channel, Duration.ofSeconds(DEDUP_TTL_SECONDS));
             return false;
         } catch (Exception e) {
             log.warn("[CrossChannelDedup] Redis 异常,降级放行: {}", e.getMessage(), e);
@@ -71,7 +71,7 @@ public class CrossChannelDedupService {
             return;
         }
         try {
-            redisTemplate.delete(buildKey(bizType, bizId));
+            redisService.delete(buildKey(bizType, bizId));
         } catch (Exception e) {
             log.warn("[CrossChannelDedup] 清除去重标记失败: {}", e.getMessage(), e);
         }

@@ -51,6 +51,7 @@ import com.njydsz.common.util.string.StringUtils;
  *   <li>支持定时刷新缓存，保证数据最终一致性</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see RolePermissionLoader

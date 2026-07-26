@@ -1,17 +1,17 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 决策表实体
@@ -20,13 +20,11 @@ import lombok.Data;
  * @since 2026-07-02
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_decision_table", autoResultMap = true)
-public class DecisionTableDO implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class DecisionTableDO extends MpBaseEntity<String> {
 
     /** 决策表编码 */
     private String tableCode;
@@ -67,16 +65,4 @@ public class DecisionTableDO implements Serializable {
 
     /** 版本 */
     private Integer version;
-
-    /** 创建人 */
-    private String createdBy;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
-
-    /** 更新人 */
-    private String updatedBy;
-
-    /** 更新时间 */
-    private LocalDateTime updatedAt;
 }

@@ -28,6 +28,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>从 {@code com.njydsz.common.util.auth.AbstractAuthHandler} 迁移而来，
  * 已移除对旧版弃用类的继承依赖，新代码应继承本类。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see AuthHandler

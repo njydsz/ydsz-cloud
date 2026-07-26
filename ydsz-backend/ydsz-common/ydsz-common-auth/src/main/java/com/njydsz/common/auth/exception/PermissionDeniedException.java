@@ -41,6 +41,7 @@ import lombok.Getter;
  *     .build();
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see BusinessException

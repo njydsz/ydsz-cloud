@@ -2,13 +2,13 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.njydsz.common.domain.entity.BaseDO;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * P0-1: DMN 决策表 DO
@@ -36,15 +36,14 @@ import com.njydsz.common.domain.entity.BaseDO;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_dmn_decision")
-public class FlowDmnDecisionDO extends BaseDO {
+public class FlowDmnDecisionDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 决策表编码（全局唯一，如 risk_level_decision） */
     private String decisionCode;

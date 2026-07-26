@@ -11,6 +11,7 @@ import lombok.Data;
  * 当权限数据在 Redis 中被修改/删除时，通过 Keyspace Notification 精确触发缓存失效，
  * 替代原有的 Pub/Sub 广播模式。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

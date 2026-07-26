@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -52,7 +52,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     /** SpEL 表达式解析器（条件求值） */
     private final ExpressionParser expressionParser;
     /** Redis 模板（路由规则缓存） */
-    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisService redisService;
 
     @Override
     public MsgRouteRuleDO create(RouteRuleUpsertDTO dto) {
@@ -183,7 +183,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
      */
     private List<MsgRouteRuleDO> loadEnabledRulesFromCache() {
         try {
-            String json = stringRedisTemplate.opsForValue().get(MessageConstants.ROUTE_RULE_CACHE_KEY);
+            String json = redisService.get(MessageConstants.ROUTE_RULE_CACHE_KEY, String.class);
             if (StringUtils.hasText(json)) {
                 List<MsgRouteRuleDO> cached = YdszJson.parseArray(json, MsgRouteRuleDO.class);
                 if (cached != null) {
@@ -197,9 +197,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 .eq(MsgRouteRuleDO::getStatus, "ENABLED")
                 .orderByAsc(MsgRouteRuleDO::getPriority));
         try {
-            stringRedisTemplate.opsForValue().set(
-                    MessageConstants.ROUTE_RULE_CACHE_KEY,
-                    YdszJson.toJson(rules),
+            redisService.set(
+                    MessageConstants.ROUTE_RULE_CACHE_KEY, YdszJson.toJson(rules),
                     CACHE_TTL);
         } catch (Exception e) {
             log.warn("[RouteRule] 缓存回填失败: {}", e.getMessage(), e);
@@ -212,7 +211,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
      */
     private void evictCache() {
         try {
-            stringRedisTemplate.delete(MessageConstants.ROUTE_RULE_CACHE_KEY);
+            redisService.delete(MessageConstants.ROUTE_RULE_CACHE_KEY);
         } catch (Exception e) {
             log.warn("[RouteRule] 缓存失效失败: {}", e.getMessage(), e);
         }

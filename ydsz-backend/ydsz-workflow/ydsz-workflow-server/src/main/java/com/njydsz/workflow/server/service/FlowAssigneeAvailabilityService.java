@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class FlowAssigneeAvailabilityService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     private static final String TODO_COUNT_PREFIX = "flow:assignee:todo_count:";
     private static final String LAST_ACTIVE_PREFIX = "flow:assignee:last_active:";
@@ -52,9 +52,9 @@ public class FlowAssigneeAvailabilityService {
         if (!StringUtils.hasText(userId)) return;
         try {
             String key = TODO_COUNT_PREFIX + userId;
-            Long count = redisTemplate.opsForValue().increment(key);
+            Long count = redisService.incr(key, 1);
             if (count != null && count == 1) {
-                redisTemplate.expire(key, TTL);
+                redisService.expire(key, TTL);
             }
             updateLastActive(userId);
         } catch (Exception e) {
@@ -69,9 +69,9 @@ public class FlowAssigneeAvailabilityService {
         if (!StringUtils.hasText(userId)) return;
         try {
             String key = TODO_COUNT_PREFIX + userId;
-            Long count = redisTemplate.opsForValue().decrement(key);
+            Long count = redisService.opsForValue().decrement(key);
             if (count != null && count <= 0) {
-                redisTemplate.delete(key);
+                redisService.delete(key);
             }
             updateLastActive(userId);
         } catch (Exception e) {
@@ -154,7 +154,7 @@ public class FlowAssigneeAvailabilityService {
 
     private int getTodoCount(String userId) {
         try {
-            String val = redisTemplate.opsForValue().get(TODO_COUNT_PREFIX + userId);
+            String val = redisService.get(TODO_COUNT_PREFIX + userId, String.class);
             if (val == null) return 0;
             return Integer.parseInt(val);
         } catch (Exception e) {
@@ -164,7 +164,7 @@ public class FlowAssigneeAvailabilityService {
 
     private String getLastActive(String userId) {
         try {
-            return redisTemplate.opsForValue().get(LAST_ACTIVE_PREFIX + userId);
+            return redisService.get(LAST_ACTIVE_PREFIX + userId, String.class);
         } catch (Exception e) {
             return null;
         }
@@ -174,7 +174,7 @@ public class FlowAssigneeAvailabilityService {
         try {
             String key = LAST_ACTIVE_PREFIX + userId;
             String now = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            redisTemplate.opsForValue().set(key, now, TTL);
+            redisService.set(key, now, TTL);
         } catch (Exception e) {
             log.debug("[Availability] 更新活跃时间失败 userId={} err={}", userId, e.getMessage());
         }

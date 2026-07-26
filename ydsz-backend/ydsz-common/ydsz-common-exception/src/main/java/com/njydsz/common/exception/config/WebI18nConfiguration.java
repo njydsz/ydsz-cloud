@@ -36,10 +36,22 @@ public class WebI18nConfiguration {
 
     private final I18nProperties properties;
 
+    /**
+     * 构造函数，注入国际化配置属性
+     *
+     * @param properties 国际化配置属性
+     */
     public WebI18nConfiguration(I18nProperties properties) {
         this.properties = properties;
     }
 
+    /**
+     * 创建区域解析器 Bean
+     *
+     * <p>基于 Accept-Language 请求头解析用户语言环境，默认语言为中文。
+     *
+     * @return 区域解析器实例
+     */
     @Bean
     @ConditionalOnMissingBean(LocaleResolver.class)
     public LocaleResolver localeResolver() {
@@ -60,6 +72,13 @@ public class WebI18nConfiguration {
         return resolver;
     }
 
+    /**
+     * 创建语言切换拦截器 Bean
+     *
+     * <p>支持通过请求参数动态切换语言环境。
+     *
+     * @return 语言切换拦截器实例
+     */
     @Bean
     @ConditionalOnMissingBean(LocaleChangeInterceptor.class)
     public LocaleChangeInterceptor localeChangeInterceptor() {

@@ -1,14 +1,12 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则依赖关系 DO（P1-8）
@@ -26,14 +24,11 @@ import lombok.Data;
  * @since 1.5.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_dependency")
-public class RuleDependencyDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleDependencyDO extends MpBaseEntity<String> {
 
     /** 主规则编码（依赖方） */
     private String ruleCode;
@@ -52,7 +47,4 @@ public class RuleDependencyDO implements Serializable {
 
     /** 租户 ID */
     private String tenantId;
-
-    private String createdBy;
-    private LocalDateTime createdAt;
 }

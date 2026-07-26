@@ -1,14 +1,14 @@
 package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * MapReduce 子任务记录（P0-4）。
@@ -27,15 +27,14 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_task")
-public class JobTaskDO implements Serializable {
+public class JobTaskDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 任务 ID（关联 ydsz_job.id） */
     private String jobId;
@@ -62,7 +61,7 @@ public class JobTaskDO implements Serializable {
     /**
      * 执行状态：PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败。
      */
-    private String status;
+    private String taskStatus;
 
     /** 执行结果 JSON（ProcessResult.result 序列化后的字符串） */
     private String result;
@@ -79,13 +78,4 @@ public class JobTaskDO implements Serializable {
      * <p>用于限制子任务最大重试次数（默认 3 次），防止无限重试。
      */
     private Integer retryCount;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
-
-    /** 更新时间 */
-    private LocalDateTime updatedAt;
-
-    /** 逻辑删除标识：0 未删除 / 1 已删除 */
-    private Integer deleted;
 }

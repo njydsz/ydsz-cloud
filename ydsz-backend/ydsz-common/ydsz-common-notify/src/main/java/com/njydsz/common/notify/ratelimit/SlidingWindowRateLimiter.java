@@ -8,10 +8,18 @@ import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 基于滑动窗口的限流器
+ * 基于滑动窗口的限流器（内存级，单实例部署）。
  *
  * <p>使用滑动窗口算法实现限流控制，适用于通知发送等场景的频率限制。
  * 相比固定窗口，滑动窗口能更平滑地控制请求速率，避免窗口边界处的突发流量。
+ *
+ * <p><b>架构说明</b>：本类为纯内存实现，不依赖 Redis。
+ * <ul>
+ *   <li>单实例部署：直接使用本类即可</li>
+ *   <li>多实例部署：应使用 {@code com.njydsz.common.redis.service.RedisRateLimiter}
+ *       的 {@code tryAcquireSlidingWindowBucketed()} 方法实现分布式滑动窗口限流，
+ *       确保所有实例共享同一限流计数</li>
+ * </ul>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -27,8 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 2026-06-16
  */
 @Slf4j
 public class SlidingWindowRateLimiter {

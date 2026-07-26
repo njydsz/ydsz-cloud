@@ -23,6 +23,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>对于 Token-based 认证（JWT in Authorization Header），CSRF 风险较低，
  * 因为攻击者无法跨域读取 JWT Token。但作为纵深防御措施仍建议启用。
  *
+ * @author ydsz-team
  * @since 1.0.0
 
  */

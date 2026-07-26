@@ -1,14 +1,15 @@
 package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 执行产物记录（P2-8 执行产物管理）。
@@ -19,14 +20,14 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_artifact")
-public class JobArtifactDO implements Serializable {
+public class JobArtifactDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 任务 ID */
     private String jobId;
@@ -57,10 +58,4 @@ public class JobArtifactDO implements Serializable {
 
     /** 过期时间（null=不过期） */
     private LocalDateTime expireAt;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
-
-    /** 逻辑删除 */
-    private Integer deleted;
 }

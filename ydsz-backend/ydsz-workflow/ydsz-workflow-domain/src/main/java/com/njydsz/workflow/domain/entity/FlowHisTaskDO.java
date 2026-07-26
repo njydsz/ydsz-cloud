@@ -4,33 +4,32 @@ import java.io.Serial;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 历史任务 DO
  *
  * <p>对标 Warm-Flow flow_his_task，已完成任务归档，避免主表膨胀。<br>
- * 设计要点：created_at 复用 BaseDO 字段，但关闭自动填充，归档时由业务代码显式从源 task.createdAt 复制（保留业务创建时间，非归档时间）。
+ * 设计要点：created_at 复用 MpBaseEntity 字段，但关闭自动填充，归档时由业务代码显式从源 task.createdAt 复制（保留业务创建时间，非归档时间）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_his_task")
-public class FlowHisTaskDO extends BaseDO {
+public class FlowHisTaskDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 流程实例 ID */
     private String instanceId;

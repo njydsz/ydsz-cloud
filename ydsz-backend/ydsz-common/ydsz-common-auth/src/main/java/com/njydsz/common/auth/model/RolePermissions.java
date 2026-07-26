@@ -25,6 +25,7 @@ import com.njydsz.common.auth.service.RolePermissionLoader;
  *   <li>RbacPermissionEvaluator 合并多角色权限时创建新的 RolePermissions</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see RolePermissionLoader

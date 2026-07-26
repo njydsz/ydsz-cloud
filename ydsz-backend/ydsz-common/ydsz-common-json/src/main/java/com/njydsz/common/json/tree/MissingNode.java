@@ -1,7 +1,28 @@
 package com.njydsz.common.json.tree;
 
 /**
- * JSON 缺失节点（字段不存在时返回）
+ * JSON 缺失节点
+ *
+ * <p>表示 JSON 中不存在的字段或索引，对标 Jackson MissingNode。
+ * 当访问不存在的字段或数组索引时返回此节点。</p>
+ *
+ * <p><b>特性：</b></p>
+ * <ul>
+ *   <li>单例模式，全局唯一</li>
+ *   <li>不可变对象，线程安全</li>
+ *   <li>isMissing() 返回 true，用于区分 null 值</li>
+ *   <li>asText() 返回空字符串，避免 NullPointerException</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * JsonNode node = ObjectNode.get("nonexistent");
+ * node.isMissing(); // true
+ * node.asText("");  // 返回默认值 ""
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class MissingNode extends JsonNode {
 
@@ -9,6 +30,11 @@ public final class MissingNode extends JsonNode {
 
     private MissingNode() {}
 
+    /**
+     * 获取 MissingNode 单例实例
+     *
+     * @return MissingNode 单例
+     */
     public static MissingNode getInstance() {
         return INSTANCE;
     }

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VariableSourceResolver {
 
     private final MsgVariableSourceMapper variableSourceMapper;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final JdbcTemplate jdbcTemplate;
     private final ApplicationContext applicationContext;
 
@@ -114,7 +114,7 @@ public class VariableSourceResolver {
         if (source.getCacheTtl() != null && source.getCacheTtl() > 0) {
             cacheKey = "ydsz:msg:vars:" + source.getTemplateCode() + ":" + source.getVariableName()
                     + ":" + (context == null ? "" : context.hashCode());
-            String cached = redisTemplate.opsForValue().get(cacheKey);
+            String cached = redisService.get(cacheKey, String.class);
             if (StringUtils.hasText(cached)) {
                 return YdszJson.toObject(cached, Object.class);
             }
@@ -133,7 +133,7 @@ public class VariableSourceResolver {
 
         // 缓存写入
         if (value != null && cacheKey != null) {
-            redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(value),
+            redisService.set(cacheKey, YdszJson.toJson(value),
                     Duration.ofSeconds(source.getCacheTtl()));
         }
         return value;

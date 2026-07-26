@@ -4,13 +4,13 @@ import java.io.Serial;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.njydsz.common.domain.entity.BaseDO;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 待办任务运行态 DO
@@ -25,15 +25,14 @@ import com.njydsz.common.domain.entity.BaseDO;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_run_task")
-public class FlowRunTaskDO extends BaseDO {
+public class FlowRunTaskDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 流程实例 ID */
     private String instanceId;
@@ -131,7 +130,7 @@ public class FlowRunTaskDO extends BaseDO {
     /** P1-6: 是否已升级（0 否 / 1 是，避免重复升级） */
     private Integer slaEscalated;
 
-    /** 乐观锁版本号由 BaseDO 继承，无需在此声明 */
+    /** 乐观锁版本号由 MpBaseEntity 继承，无需在此声明 */
 
     /**
      * GAP-P2-10: FOREACH 当前迭代元素值

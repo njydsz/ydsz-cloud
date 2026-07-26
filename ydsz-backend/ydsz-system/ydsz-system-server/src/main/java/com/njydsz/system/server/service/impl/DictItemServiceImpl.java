@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,7 +54,7 @@ public class DictItemServiceImpl implements DictItemService {
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(2);
 
     private final DictItemMapper mapper;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final SystemMetrics metrics;
     private final SystemProperties properties;
     private final DictVersionService dictVersionService;
@@ -70,7 +70,7 @@ public class DictItemServiceImpl implements DictItemService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_ITEM_PREFIX + typeCode + ":" + itemCode;
-            String cached = redisTemplate.opsForValue().get(cacheKey);
+            String cached = redisService.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
                     metrics.recordDictCacheHit();
@@ -84,10 +84,10 @@ public class DictItemServiceImpl implements DictItemService {
             DictItemVO vo = toVO(entity);
             Duration ttl = getCacheTtl();
             if (vo != null) {
-                redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(vo), ttl);
+                redisService.set(cacheKey, YdszJson.toJson(vo), ttl);
             } else {
                 // 缓存空值防穿透，短 TTL
-                redisTemplate.opsForValue().set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
+                redisService.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
             }
             return vo;
         } finally {
@@ -100,7 +100,7 @@ public class DictItemServiceImpl implements DictItemService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_LIST_PREFIX + typeCode;
-            String cached = redisTemplate.opsForValue().get(cacheKey);
+            String cached = redisService.get(cacheKey, String.class);
             if (cached != null) {
                 metrics.recordDictCacheHit();
                 return YdszJson.parseArray(cached, DictItemVO.class);
@@ -108,7 +108,7 @@ public class DictItemServiceImpl implements DictItemService {
             metrics.recordDictCacheMiss();
             List<DictItemDO> entities = mapper.listEnabledByTypeCode(typeCode);
             List<DictItemVO> vos = entities.stream().map(this::toVO).collect(Collectors.toList());
-            redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
+            redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
             return vos;
         } finally {
             metrics.recordDictQuery(System.nanoTime() - start);
@@ -209,12 +209,12 @@ public class DictItemServiceImpl implements DictItemService {
         if (typeCode == null) {
             return;
         }
-        redisTemplate.delete(CACHE_LIST_PREFIX + typeCode);
+        redisService.delete(CACHE_LIST_PREFIX + typeCode);
         // 使用 SCAN 替代 KEYS，避免 Redis 阻塞
         String pattern = CACHE_ITEM_PREFIX + typeCode + ":*";
         Set<String> keys = scanKeys(pattern);
         if (!keys.isEmpty()) {
-            redisTemplate.delete(keys);
+            redisService.delete(keys);
         }
     }
 
@@ -227,7 +227,7 @@ public class DictItemServiceImpl implements DictItemService {
     private Set<String> scanKeys(String pattern) {
         ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
         Set<String> keys = new HashSet<>();
-        redisTemplate.execute((RedisCallback<Void>) connection -> {
+        redisService.execute((RedisCallback<Void>) connection -> {
             try (Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
                 while (cursor.hasNext()) {
                     keys.add(new String(cursor.next()));

@@ -30,9 +30,9 @@ import lombok.Getter;
  *   <li>customSqlCondition：自定义 SQL 条件片段</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
- * @see DataScopeType
  */
 @Getter
 public class DataScopeInfo {

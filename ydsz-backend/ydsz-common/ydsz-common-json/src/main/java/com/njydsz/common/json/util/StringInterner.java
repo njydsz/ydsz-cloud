@@ -22,8 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li>对于高频重复字段名、枚举值等场景效果显著</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * @version 1.0.0
  */
 public final class StringInterner {
 

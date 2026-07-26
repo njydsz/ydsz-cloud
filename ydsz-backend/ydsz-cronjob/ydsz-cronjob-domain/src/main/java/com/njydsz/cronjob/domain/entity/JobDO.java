@@ -5,13 +5,13 @@ import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 定时任务定义
@@ -22,16 +22,14 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job")
-public class JobDO extends BaseDO {
+public class JobDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 任务名称 */
     @NotBlank(message = "{validation.cronjob.msg_f96f7bb7}")
@@ -76,11 +74,8 @@ public class JobDO extends BaseDO {
     /** 参数 JSON */
     private String paramsJson;
 
-    /** 状态: NORMAL/PAUSED/ERROR */
-    private String status;
-
     /** 备注 */
-    private String remark;
+    private String jobRemark;
 
     /** 下次触发时间 */
     private LocalDateTime nextFireTime;

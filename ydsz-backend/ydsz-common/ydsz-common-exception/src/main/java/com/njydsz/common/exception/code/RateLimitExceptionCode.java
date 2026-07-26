@@ -177,6 +177,12 @@ public enum RateLimitExceptionCode implements ExceptionCode {
         ExceptionCodeRegistry.register(registryMap);
     }
 
+    /**
+     * 按 code 字符串查找限流异常码
+     *
+     * @param code 异常码字符串
+     * @return 对应的限流异常码枚举实例；未找到返回 null
+     */
     public static RateLimitExceptionCode resolve(String code) {
         if (code == null) {
             return null;

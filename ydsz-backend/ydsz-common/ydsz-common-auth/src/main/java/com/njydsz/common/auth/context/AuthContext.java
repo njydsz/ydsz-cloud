@@ -30,6 +30,7 @@ import com.njydsz.common.security.LoginUser;
  *   <li>在请求结束时必须调用 {@link #clear()} 清理，防止内存泄漏</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class AuthContext {

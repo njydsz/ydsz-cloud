@@ -8,10 +8,27 @@ import java.lang.invoke.MethodHandle;
 
 /**
  * Bean 专用序列化器
- * 
- * <p>为每个 Bean 类预计算字段元数据，使用 char[] 直接写入，消除运行时类型检查</p>
- * 
- * @author YdszJson Team
+ *
+ * <p>为每个 Bean 类预计算字段元数据，使用 char[] 直接写入缓冲区，
+ * 消除运行时类型检查开销，提供高性能的 Bean 序列化能力。</p>
+ *
+ * <p><b>优化策略：</b></p>
+ * <ul>
+ *   <li>预计算字段元数据 - 避免运行时反射</li>
+ *   <li>char[] 直接写入 - 避免 StringBuilder 开销</li>
+ *   <li>类型代码快速路径 - String/int/long 直接写入</li>
+ *   <li>列权限字段排除 - 支持字段级权限控制</li>
+ * </ul>
+ *
+ * <p><b>使用场景：</b></p>
+ * <ul>
+ *   <li>高性能 Bean 序列化</li>
+ *   <li>需要字段级权限控制的场景</li>
+ *   <li>高频调用的序列化热点</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class BeanSerializer {
     
@@ -28,7 +45,12 @@ public final class BeanSerializer {
     public final int estimatedSize;
     
     /**
-     * 构造函数
+     * 构造 Bean 序列化器
+     *
+     * <p>预计算字段元数据，过滤需要跳过的字段，计算预估 JSON 大小。</p>
+     *
+     * @param clazz Bean 类型
+     * @param fieldMetas 字段元数据数组
      */
     public BeanSerializer(Class<?> clazz, FieldMeta[] fieldMetas) {
         this.clazz = clazz;
@@ -79,7 +101,9 @@ public final class BeanSerializer {
         public final int typeCode;
         
         /**
-         * 构造函数
+         * 构造字段写入器
+         *
+         * @param meta 字段元数据
          */
         public FieldWriter(FieldMeta meta) {
             this.getter = meta.getter;
@@ -92,6 +116,12 @@ public final class BeanSerializer {
     
     /**
      * 序列化对象到 JSONWriter
+     *
+     * <p>将 Bean 对象序列化为 JSON 格式，直接写入缓冲区，
+     * 支持列权限字段排除。</p>
+     *
+     * @param obj 要序列化的 Bean 对象
+     * @param writer JSON 写入器
      */
     public void write(Object obj, JSONWriter writer) {
         writer.ensureCapacity(estimatedSize);
@@ -233,7 +263,14 @@ public final class BeanSerializer {
     }
     
     /**
-     * 写入带转义的字符串
+     * 写入带转义的字符串到缓冲区
+     *
+     * <p>处理特殊字符的转义，生成合法的 JSON 字符串。</p>
+     *
+     * @param str 原始字符串
+     * @param buf 目标缓冲区
+     * @param pos 当前写入位置
+     * @return 写入后的新位置
      */
     private static int writeStringWithEscape(String str, char[] buf, int pos) {
         int len = str.length();

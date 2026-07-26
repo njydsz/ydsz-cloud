@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SenderQuotaService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     private static final String DAILY_KEY_PREFIX = "quota:daily:";
     private static final String HOURLY_KEY_PREFIX = "quota:hourly:";
@@ -63,7 +63,7 @@ public class SenderQuotaService {
         }
         String today = LocalDate.now().toString();
         String dailyKey = DAILY_KEY_PREFIX + senderId + ":" + channel + ":" + today;
-        String dailyCountStr = redisTemplate.opsForValue().get(dailyKey);
+        String dailyCountStr = redisService.get(dailyKey, String.class);
         long dailyCount = dailyCountStr != null ? Long.parseLong(dailyCountStr) : 0;
         if (dailyCount >= dailyLimit) {
             log.warn("[Quota] 日配额已用尽: senderId={} channel={} count={} limit={}",
@@ -72,7 +72,7 @@ public class SenderQuotaService {
         }
         String hourKey = HOURLY_KEY_PREFIX + senderId + ":" + channel + ":" + today + ":" +
                 String.format("%02d", LocalTime.now().getHour());
-        String hourCountStr = redisTemplate.opsForValue().get(hourKey);
+        String hourCountStr = redisService.get(hourKey, String.class);
         long hourCount = hourCountStr != null ? Long.parseLong(hourCountStr) : 0;
         if (hourCount >= hourlyLimit) {
             log.warn("[Quota] 小时配额已用尽: senderId={} channel={} count={} limit={}",
@@ -94,15 +94,15 @@ public class SenderQuotaService {
         }
         String today = LocalDate.now().toString();
         String dailyKey = DAILY_KEY_PREFIX + senderId + ":" + channel + ":" + today;
-        Long dailyCount = redisTemplate.opsForValue().increment(dailyKey);
+        Long dailyCount = redisService.incr(dailyKey, 1);
         if (dailyCount != null && dailyCount == 1L) {
-            redisTemplate.expire(dailyKey, Duration.ofDays(2));
+            redisService.expire(dailyKey, Duration.ofDays(2));
         }
         String hourKey = HOURLY_KEY_PREFIX + senderId + ":" + channel + ":" + today + ":" +
                 String.format("%02d", LocalTime.now().getHour());
-        Long hourCount = redisTemplate.opsForValue().increment(hourKey);
+        Long hourCount = redisService.incr(hourKey, 1);
         if (hourCount != null && hourCount == 1L) {
-            redisTemplate.expire(hourKey, Duration.ofHours(2));
+            redisService.expire(hourKey, Duration.ofHours(2));
         }
     }
 
@@ -116,7 +116,7 @@ public class SenderQuotaService {
     public long getDailyCount(String senderId, String channel) {
         String today = LocalDate.now().toString();
         String dailyKey = DAILY_KEY_PREFIX + senderId + ":" + channel + ":" + today;
-        String countStr = redisTemplate.opsForValue().get(dailyKey);
+        String countStr = redisService.get(dailyKey, String.class);
         return countStr != null ? Long.parseLong(countStr) : 0;
     }
 }

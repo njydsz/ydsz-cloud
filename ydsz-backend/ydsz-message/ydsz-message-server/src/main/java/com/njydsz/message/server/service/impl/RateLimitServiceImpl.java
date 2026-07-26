@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.constant.SystemConstants;
@@ -44,7 +44,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final RedisRateLimiter rateLimiter;
-    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisService redisService;
     private final PreferenceService preferenceService;
     private final MessageProperties messageProperties;
 
@@ -171,7 +171,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     private Long readCounter(String prefix, String userId, String channel, String bizType, String suffix) {
         String key = prefix + userId + ":" + (channel == null ? SystemConstants.SYSTEM_USER_ID : channel)
                 + ":" + (bizType == null ? SystemConstants.SYSTEM_USER_ID : bizType) + ":" + suffix;
-        String val = stringRedisTemplate.opsForValue().get(key);
+        String val = redisService.get(key, String.class);
         if (val == null || val.isBlank()) {
             return 0L;
         }
@@ -186,9 +186,9 @@ public class RateLimitServiceImpl implements RateLimitService {
         String key = prefix + userId + ":" + (channel == null ? SystemConstants.SYSTEM_USER_ID : channel)
                 + ":" + (bizType == null ? SystemConstants.SYSTEM_USER_ID : bizType) + ":" + suffix;
         try {
-            Long count = stringRedisTemplate.opsForValue().increment(key);
+            Long count = redisService.incr(key, 1);
             if (count != null && count == 1L) {
-                stringRedisTemplate.expire(key, Duration.ofSeconds(ttlSeconds));
+                redisService.expire(key, Duration.ofSeconds(ttlSeconds));
             }
         } catch (Exception e) {
             log.warn("[RateLimit] 计数失败(降级忽略): key={} err={}", key, e.getMessage(), e);

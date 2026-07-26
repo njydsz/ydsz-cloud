@@ -6,7 +6,7 @@ import java.time.ZonedDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DndService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /** DND Key 前缀 */
     private static final String DND_KEY_PREFIX = "dnd:";
@@ -86,7 +86,7 @@ public class DndService {
      */
     public void setDnd(String userId, String startTime, String endTime, String timezone) {
         String value = startTime + "-" + endTime + " " + (timezone != null ? timezone : DEFAULT_TIMEZONE);
-        redisTemplate.opsForValue().set(DND_KEY_PREFIX + userId, value);
+        redisService.set(DND_KEY_PREFIX + userId, value);
         // 更新本地缓存
         configCache.put(userId, new CachedDndConfig(parseConfig(value), System.currentTimeMillis()));
         log.info("[DND] 用户免打扰配置已设置: userId={} window={}~{} tz={}",
@@ -99,7 +99,7 @@ public class DndService {
      * @param userId 用户 ID
      */
     public void removeDnd(String userId) {
-        redisTemplate.delete(DND_KEY_PREFIX + userId);
+        redisService.delete(DND_KEY_PREFIX + userId);
         configCache.remove(userId);
         log.info("[DND] 用户免打扰配置已移除: userId={}", userId);
     }
@@ -117,7 +117,7 @@ public class DndService {
             return cached.config;
         }
         // 缓存过期或不存在，从 Redis 加载
-        String value = redisTemplate.opsForValue().get(DND_KEY_PREFIX + userId);
+        String value = redisService.get(DND_KEY_PREFIX + userId, String.class);
         if (value == null || value.isBlank()) {
             configCache.remove(userId);
             return null;

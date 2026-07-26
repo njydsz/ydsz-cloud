@@ -1,15 +1,15 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * AB Test 自动回滚策略 DO（P1-10）
@@ -18,14 +18,11 @@ import lombok.Data;
  * 定时任务会按监控窗口检查错误率，超过阈值则按 rollback_action 执行 AUTO 回滚或 NOTIFY 通知。
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_ab_policy")
-public class RuleABPolicyDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleABPolicyDO extends MpBaseEntity<String> {
 
     /** 关联规则编码（一对一） */
     private String ruleCode;
@@ -53,9 +50,4 @@ public class RuleABPolicyDO implements Serializable {
 
     private LocalDateTime lastEvaluatedAt;
     private LocalDateTime lastRollbackAt;
-
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
 }

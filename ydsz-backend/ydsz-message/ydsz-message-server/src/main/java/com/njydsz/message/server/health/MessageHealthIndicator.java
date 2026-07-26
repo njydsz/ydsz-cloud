@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MessageHealthIndicator implements HealthIndicator {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final MsgLogMapper msgLogMapper;
     private final ChannelRouter channelRouter;
 
@@ -68,7 +68,7 @@ public class MessageHealthIndicator implements HealthIndicator {
 
         // ② Redis 连通性
         try {
-            String ping = redisTemplate.execute(conn -> conn.ping(), true);
+            String ping = redisService.execute(conn -> conn.ping(), true);
             details.put("redis", "UP - " + ping);
         } catch (Exception e) {
             details.put("redis", "DOWN - " + e.getMessage());

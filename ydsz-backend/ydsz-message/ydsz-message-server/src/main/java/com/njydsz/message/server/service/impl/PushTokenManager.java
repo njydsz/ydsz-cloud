@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class PushTokenManager {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     private static final String TOKENS_KEY_PREFIX = "push:tokens:";
     private static final String INVALID_KEY_PREFIX = "push:invalid:";
@@ -60,9 +60,9 @@ public class PushTokenManager {
         Map<String, String> tokenInfo = new HashMap<>();
         tokenInfo.put("token", token);
         tokenInfo.put("platform", platform != null ? platform : "UNKNOWN");
-        redisTemplate.opsForHash().put(key, deviceId, YdszJson.toJson(tokenInfo));
-        redisTemplate.expire(key, Duration.ofDays(TOKEN_TTL_DAYS));
-        redisTemplate.opsForSet().remove(INVALID_KEY_PREFIX + userId, token);
+        redisService.hSet(key, deviceId, YdszJson.toJson(tokenInfo));
+        redisService.expire(key, Duration.ofDays(TOKEN_TTL_DAYS));
+        redisService.opsForSet().remove(INVALID_KEY_PREFIX + userId, token);
         log.info("[PushToken] Token 注册: userId={} deviceId={} platform={}", userId, deviceId, platform);
     }
 
@@ -74,11 +74,11 @@ public class PushTokenManager {
      */
     public Map<String, String> getValidTokens(String userId) {
         String key = TOKENS_KEY_PREFIX + userId;
-        Map<Object, Object> raw = redisTemplate.opsForHash().entries(key);
+        Map<Object, Object> raw = redisService.hGetAll(key, String.class);
         if (raw == null || raw.isEmpty()) {
             return Map.of();
         }
-        Set<String> invalidTokens = redisTemplate.opsForSet().members(INVALID_KEY_PREFIX + userId);
+        Set<String> invalidTokens = redisService.sMembers(INVALID_KEY_PREFIX + userId, String.class);
         Map<String, String> result = new HashMap<>();
         raw.forEach((deviceId, tokenInfoJson) -> {
             // OD-6: 从 JSON 解析 token 和 platform
@@ -102,7 +102,7 @@ public class PushTokenManager {
      * @param token  失效的 Token
      */
     public void markInvalid(String userId, String token) {
-        redisTemplate.opsForSet().add(INVALID_KEY_PREFIX + userId, token);
+        redisService.sAdd(INVALID_KEY_PREFIX + userId, token);
         log.warn("[PushToken] Token 标记无效: userId={} token={}...",
                 userId, token != null && token.length() > 20 ? token.substring(0, 20) : token);
     }
@@ -115,7 +115,7 @@ public class PushTokenManager {
      */
     public void removeToken(String userId, String deviceId) {
         String key = TOKENS_KEY_PREFIX + userId;
-        redisTemplate.opsForHash().delete(key, deviceId);
+        redisService.opsForHash().delete(key, deviceId);
         log.info("[PushToken] Token 移除: userId={} deviceId={}", userId, deviceId);
     }
 

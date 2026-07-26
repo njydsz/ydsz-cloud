@@ -20,6 +20,7 @@ import org.springframework.context.ApplicationEvent;
  *   <li>角色被删除后</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

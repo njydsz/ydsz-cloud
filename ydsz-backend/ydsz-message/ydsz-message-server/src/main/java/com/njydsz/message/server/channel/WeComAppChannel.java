@@ -6,7 +6,7 @@ import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -51,7 +51,7 @@ public class WeComAppChannel implements MessageChannel {
     private static final Duration TOKEN_TTL = Duration.ofSeconds(7200);
 
     private final ChannelProperties channelProperties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     RestClient restClient;
 
@@ -127,7 +127,7 @@ public class WeComAppChannel implements MessageChannel {
     private String getAccessToken(ChannelProperties.WeComAppConfig cfg) {
         try {
             String cacheKey = TOKEN_CACHE_KEY_PREFIX + cfg.getCorpId();
-            String cached = redisTemplate.opsForValue().get(cacheKey);
+            String cached = redisService.get(cacheKey, String.class);
             if (StringUtils.hasText(cached)) {
                 return cached;
             }
@@ -139,7 +139,7 @@ public class WeComAppChannel implements MessageChannel {
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     String token = (String) body.get("access_token");
-                    redisTemplate.opsForValue().set(cacheKey, token, TOKEN_TTL.minusSeconds(300));
+                    redisService.set(cacheKey, token, TOKEN_TTL.minusSeconds(300));
                     log.info("[WECOM_APP] 刷新 access_token 成功: corpId={}", cfg.getCorpId());
                     return token;
                 }

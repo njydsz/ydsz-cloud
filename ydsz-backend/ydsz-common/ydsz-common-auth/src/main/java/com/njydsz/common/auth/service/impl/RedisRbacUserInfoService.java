@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
  *   <li>userInfo 中必须包含 roleCode 字段（支持多角色 CSV 格式）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see RbacUserInfoService

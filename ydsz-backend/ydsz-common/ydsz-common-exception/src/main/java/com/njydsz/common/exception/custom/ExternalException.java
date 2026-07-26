@@ -34,63 +34,133 @@ public class ExternalException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 默认构造函数，初始化为 502 Bad Gateway / ERROR / EXTERNAL
+     */
     public ExternalException() {
         super();
         initDefaults(HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用国际化消息键构造外部服务异常
+     *
+     * @param key 国际化消息键
+     */
     public ExternalException(String key) {
         super();
         init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用异常码枚举构造外部服务异常
+     *
+     * @param exceptionCode 异常码枚举
+     */
     public ExternalException(ExceptionCode exceptionCode) {
         super();
         init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用国际化消息键和参数构造外部服务异常
+     *
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public ExternalException(String key, Object[] params) {
         super();
         init(UnifiedExceptionCode.FAIL.getCode(), key, params, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用异常码枚举和参数构造外部服务异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        消息参数
+     */
     public ExternalException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用自定义错误码和消息键构造外部服务异常
+     *
+     * @param code 错误码字符串
+     * @param key  国际化消息键
+     */
     public ExternalException(String code, String key) {
         super();
         init(code, key, new Object[]{}, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用自定义错误码、消息键和参数构造外部服务异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public ExternalException(String code, String key, Object[] params) {
         super();
         init(code, key, params, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用原始异常构造外部服务异常
+     *
+     * @param cause 原始异常
+     */
     public ExternalException(Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
         this.code = UnifiedExceptionCode.FAIL.getCode();
     }
 
+    /**
+     * 使用自定义错误码和原始异常构造外部服务异常
+     *
+     * @param code  错误码字符串
+     * @param cause 原始异常
+     */
     public ExternalException(String code, Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
         this.code = code;
     }
 
+    /**
+     * 使用异常码枚举和原始异常构造外部服务异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param cause         原始异常
+     */
     public ExternalException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用自定义错误码、消息键和原始异常构造外部服务异常
+     *
+     * @param code  错误码字符串
+     * @param key   国际化消息键
+     * @param cause 原始异常
+     */
     public ExternalException(String code, String key, Throwable cause) {
         super(null, cause);
         init(code, key, new Object[]{}, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
+    /**
+     * 使用自定义错误码、消息键、参数和原始异常构造外部服务异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     * @param cause  原始异常
+     */
     public ExternalException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
         init(code, key, params, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);

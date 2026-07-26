@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.impl.core;
 
 import java.time.Duration;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.message.domain.constant.MessageConstants;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DedupServiceImpl implements DedupService {
 
     /** Redis 模板（SET NX EX 原子去重） */
-    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisService redisService;
     /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
@@ -50,7 +50,7 @@ public class DedupServiceImpl implements DedupService {
         int ttl = cfg.getTtlSeconds() <= 0 ? 60 : cfg.getTtlSeconds();
         String redisKey = MessageConstants.DEDUP_KEY_PREFIX + dedupKey;
         try {
-            Boolean acquired = stringRedisTemplate.opsForValue()
+            Boolean acquired = redisService.opsForValue()
                     .setIfAbsent(redisKey, "1", Duration.ofSeconds(ttl));
             if (Boolean.TRUE.equals(acquired)) {
                 log.debug("[Dedup] 首次到达,放行: key={} ttl={}s", dedupKey, ttl);

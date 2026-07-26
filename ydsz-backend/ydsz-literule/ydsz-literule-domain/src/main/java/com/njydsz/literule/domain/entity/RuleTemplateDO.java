@@ -1,14 +1,12 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * LiteRule 规则模板 DO
@@ -20,14 +18,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_template")
-public class RuleTemplateDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleTemplateDO extends MpBaseEntity<String> {
 
     private String templateCode;
     private String templateName;
@@ -42,6 +37,4 @@ public class RuleTemplateDO implements Serializable {
     private String scope;
     private String industry;
     private String tags;
-    private String createdBy;
-    private LocalDateTime createdAt;
 }

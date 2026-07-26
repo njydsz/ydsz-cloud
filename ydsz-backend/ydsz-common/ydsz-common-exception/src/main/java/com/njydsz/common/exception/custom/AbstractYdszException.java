@@ -71,16 +71,30 @@ public abstract class AbstractYdszException extends RuntimeException {
     protected transient Object extData;
     protected String userMessage;
 
+    /**
+     * 默认构造函数
+     */
     protected AbstractYdszException() {
         super();
         this.timestamp = LocalDateTime.now();
     }
 
+    /**
+     * 使用消息构造异常
+     *
+     * @param message 异常消息
+     */
     protected AbstractYdszException(String message) {
         super(message);
         this.timestamp = LocalDateTime.now();
     }
 
+    /**
+     * 使用消息和原因构造异常
+     *
+     * @param message 异常消息
+     * @param cause   异常原因
+     */
     protected AbstractYdszException(String message, Throwable cause) {
         super(message, cause);
         this.timestamp = LocalDateTime.now();
@@ -96,6 +110,14 @@ public abstract class AbstractYdszException extends RuntimeException {
         this.timestamp = LocalDateTime.now();
     }
 
+    /**
+     * 完整构造函数
+     *
+     * @param message            异常消息
+     * @param cause              异常原因
+     * @param enableSuppression  是否启用抑制
+     * @param writableStackTrace 是否可写堆栈
+     */
     protected AbstractYdszException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
         this.timestamp = LocalDateTime.now();

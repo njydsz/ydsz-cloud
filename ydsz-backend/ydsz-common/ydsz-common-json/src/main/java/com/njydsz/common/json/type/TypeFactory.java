@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentMap;
  * List&lt;User&gt; users = YdszJson.toObject(json, listType);
  * </pre>
  * 
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class TypeFactory {

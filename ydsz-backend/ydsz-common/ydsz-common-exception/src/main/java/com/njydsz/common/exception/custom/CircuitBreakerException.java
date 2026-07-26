@@ -34,63 +34,133 @@ public class CircuitBreakerException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 默认构造函数，初始化为 503 Service Unavailable / ERROR / INFRASTRUCTURE
+     */
     public CircuitBreakerException() {
         super();
         initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用国际化消息键构造熔断器异常
+     *
+     * @param key 国际化消息键
+     */
     public CircuitBreakerException(String key) {
         super();
         init(UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode(), key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用异常码枚举构造熔断器异常
+     *
+     * @param exceptionCode 异常码枚举
+     */
     public CircuitBreakerException(ExceptionCode exceptionCode) {
         super();
         init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用国际化消息键和参数构造熔断器异常
+     *
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public CircuitBreakerException(String key, Object[] params) {
         super();
         init(UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode(), key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用异常码枚举和参数构造熔断器异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param params        消息参数
+     */
     public CircuitBreakerException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用自定义错误码和消息键构造熔断器异常
+     *
+     * @param code 错误码字符串
+     * @param key  国际化消息键
+     */
     public CircuitBreakerException(String code, String key) {
         super();
         init(code, key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用自定义错误码、消息键和参数构造熔断器异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     */
     public CircuitBreakerException(String code, String key, Object[] params) {
         super();
         init(code, key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用原始异常构造熔断器异常
+     *
+     * @param cause 原始异常
+     */
     public CircuitBreakerException(Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
         this.code = UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode();
     }
 
+    /**
+     * 使用自定义错误码和原始异常构造熔断器异常
+     *
+     * @param code  错误码字符串
+     * @param cause 原始异常
+     */
     public CircuitBreakerException(String code, Throwable cause) {
         super(cause);
         initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
         this.code = code;
     }
 
+    /**
+     * 使用异常码枚举和原始异常构造熔断器异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param cause         原始异常
+     */
     public CircuitBreakerException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用自定义错误码、消息键和原始异常构造熔断器异常
+     *
+     * @param code  错误码字符串
+     * @param key   国际化消息键
+     * @param cause 原始异常
+     */
     public CircuitBreakerException(String code, String key, Throwable cause) {
         super(null, cause);
         init(code, key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
+    /**
+     * 使用自定义错误码、消息键、参数和原始异常构造熔断器异常
+     *
+     * @param code   错误码字符串
+     * @param key    国际化消息键
+     * @param params 消息参数
+     * @param cause  原始异常
+     */
     public CircuitBreakerException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
         init(code, key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);

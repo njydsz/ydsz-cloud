@@ -1,15 +1,14 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
 import java.math.BigDecimal;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.domain.entity.BaseDO;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则评分卡实体
@@ -21,16 +20,11 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_scorecard", autoResultMap = true)
-public class RuleScorecardDO extends BaseDO {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleScorecardDO extends MpBaseEntity<String> {
 
     /** 租户 ID */
     private String tenantId;

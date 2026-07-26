@@ -109,7 +109,8 @@ public @interface AuthColPermission {
     /**
      * 列权限过滤模式枚举。
      *
-     * @since 1.0.0
+ * @author ydsz-team
+ * @since 1.0.0
      * 
      */
     enum ColumnMode {

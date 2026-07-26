@@ -16,6 +16,7 @@ import com.njydsz.common.cache.listener.RemovalCause;
  * <p>当 Redis 不可用时，提供本地缓存作为降级方案。
  * 使用 ydsz-common-cache 实现，支持 5 分钟过期。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

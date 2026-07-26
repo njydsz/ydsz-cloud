@@ -6,7 +6,7 @@ import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -51,7 +51,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
     private static final Duration TOKEN_TTL = Duration.ofSeconds(7200);
 
     private final ChannelProperties channelProperties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     RestClient restClient;
 
@@ -126,7 +126,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
      */
     private String getAccessToken(ChannelProperties.DingTalkWorkConfig cfg) {
         try {
-            String cached = redisTemplate.opsForValue().get(TOKEN_CACHE_KEY);
+            String cached = redisService.get(TOKEN_CACHE_KEY, String.class);
             if (StringUtils.hasText(cached)) {
                 return cached;
             }
@@ -138,7 +138,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     String token = (String) body.get("access_token");
-                    redisTemplate.opsForValue().set(TOKEN_CACHE_KEY, token, TOKEN_TTL.minusSeconds(300));
+                    redisService.set(TOKEN_CACHE_KEY, token, TOKEN_TTL.minusSeconds(300));
                     log.info("[DINGTALK_WORK] 刷新 access_token 成功");
                     return token;
                 }

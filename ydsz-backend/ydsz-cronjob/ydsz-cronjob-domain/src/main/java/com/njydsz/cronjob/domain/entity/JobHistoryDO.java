@@ -1,15 +1,16 @@
 package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 // 引入 fastjson2 仅用于 beforeSnapshot 字段的序列化说明, 实际序列化由 Service 层完成
 
@@ -20,22 +21,18 @@ import lombok.Data;
  * 支持版本列表查询、版本对比和一键回滚。回滚操作会基于历史快照恢复配置字段，
  * 同时保留当前任务的统计字段（触发次数等），并产生新的历史版本。
  *
- * <p>注意：本表不包含标准审计字段（created_by/created_at/updated_by/updated_at），
- * 仅记录 {@code changed_by}（修改人）和 {@code changed_at}（修改时间），因此不继承 {@code BaseDO}。
- *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_history")
-public class JobHistoryDO implements Serializable {
+public class JobHistoryDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 任务 ID（关联 ydsz_job.id） */
     private String jobId;
@@ -81,5 +78,5 @@ public class JobHistoryDO implements Serializable {
 
     /** 逻辑删除标记: 0 未删除 / 1 已删除 */
     @TableLogic
-    private Integer deleted;
+    private Integer historyDeleted;
 }

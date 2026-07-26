@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.impl.core;
 import java.time.Duration;
 import java.util.Map;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MessageAlertService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final RealtimeStatsService realtimeStatsService;
     private final MessageService messageService;
     /** OD-2: 延迟分位数统一到 MessageServiceMetrics (Micrometer Timer) */
@@ -122,7 +122,7 @@ public class MessageAlertService {
     private void sendAlert(String alertKey, String message) {
         try {
             // 去重检查
-            Boolean isNew = redisTemplate.opsForValue()
+            Boolean isNew = redisService.opsForValue()
                     .setIfAbsent(ALERT_DEDUP_PREFIX + alertKey, "1", Duration.ofSeconds(ALERT_DEDUP_TTL));
             if (!Boolean.TRUE.equals(isNew)) {
                 log.debug("[Alert] 告警去重跳过: {}", alertKey);

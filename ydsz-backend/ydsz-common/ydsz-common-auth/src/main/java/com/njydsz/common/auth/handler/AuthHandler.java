@@ -14,6 +14,7 @@ import com.njydsz.common.util.auth.AuthInfo;
  * <p>从 {@code com.njydsz.common.util.auth.AuthHandler} 迁移而来，
  * 已移除对旧版弃用接口的继承依赖。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see AbstractAuthHandler

@@ -45,6 +45,18 @@ public class ExceptionAlertEvent {
     /** 追踪 ID */
     private final String traceId;
 
+    /**
+     * 构造异常告警事件
+     *
+     * @param code       异常错误码
+     * @param key        国际化消息键
+     * @param message    异常消息（已解析的 i18n 消息）
+     * @param level      异常级别
+     * @param category   异常分类
+     * @param httpStatus HTTP 状态码
+     * @param timestamp  告警时间戳（毫秒）
+     * @param traceId    追踪 ID
+     */
     public ExceptionAlertEvent(String code, String key, String message,
                                 ExceptionLevel level, ExceptionCategory category,
                                 int httpStatus, long timestamp, String traceId) {

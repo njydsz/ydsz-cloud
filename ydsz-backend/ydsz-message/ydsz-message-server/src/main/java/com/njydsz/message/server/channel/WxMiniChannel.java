@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -53,7 +53,7 @@ public class WxMiniChannel implements MessageChannel {
 
     private final MessageProperties messageProperties;
     private final RestTemplate restTemplate;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     public WxMiniChannel(MessageProperties messageProperties,
                          StringRedisTemplate redisTemplate) {
@@ -130,7 +130,7 @@ public class WxMiniChannel implements MessageChannel {
      */
     private String getAccessToken(MessageProperties.WxMiniConfig config) {
         try {
-            String cached = redisTemplate.opsForValue().get(ACCESS_TOKEN_CACHE_KEY);
+            String cached = redisService.get(ACCESS_TOKEN_CACHE_KEY, String.class);
             if (StringUtils.hasText(cached)) {
                 return cached;
             }
@@ -144,8 +144,7 @@ public class WxMiniChannel implements MessageChannel {
             if (body != null && body.containsKey("access_token")) {
                 String token = (String) body.get("access_token");
                 int expiresIn = body.containsKey("expires_in") ? (Integer) body.get("expires_in") : 7200;
-                redisTemplate.opsForValue().set(ACCESS_TOKEN_CACHE_KEY, token,
-                        Duration.ofSeconds(expiresIn - 300));
+                redisService.set(ACCESS_TOKEN_CACHE_KEY, token, Duration.ofSeconds(expiresIn - 300));
                 return token;
             }
             log.error("[WxMiniChannel] 获取 access_token 失败: {}",

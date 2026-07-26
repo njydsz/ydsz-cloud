@@ -1,15 +1,14 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则集实体（P2-14）。
@@ -24,15 +23,11 @@ import lombok.Data;
  * @since 1.0.0 (P2-14)
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_pack")
-public class RulePackDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    /** 主键 ID（雪花算法字符串） */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RulePackDO extends MpBaseEntity<String> {
 
     /** 规则集编码（全局唯一，用于版本间关联） */
     private String packCode;
@@ -81,16 +76,4 @@ public class RulePackDO implements Serializable {
 
     /** 是否官方认证规则集（true=官方发布, false=社区贡献） */
     private Boolean official;
-
-    /** 创建人 ID */
-    private String createdBy;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
-
-    /** 更新人 ID */
-    private String updatedBy;
-
-    /** 更新时间 */
-    private LocalDateTime updatedAt;
 }

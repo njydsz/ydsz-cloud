@@ -2,36 +2,34 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.njydsz.common.domain.entity.BaseDO;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 自建工作流引擎 - 审批附件实体
  *
  * <p>P1-6 (GAP-51): 审批时提交的附件（图片/文档/视频等）统一落库，支持查询与下载。
  *
- * <p>P1-7 重构：继承 {@link BaseDO}，统一审计字段（createdBy/createdAt/updatedBy/
- * updatedAt/deleted）与乐观锁（version）由父类管理，消除字段重复声明。
+ * <p>P1-7 重构：继承 {@link MpBaseEntity}，统一审计字段（createdBy/createdAt/updatedBy/
+ * updatedAt/deleted）与乐观锁（revision）由父类管理，消除字段重复声明。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_attachment")
-public class FlowAttachmentDO extends BaseDO {
+public class FlowAttachmentDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 租户 ID */
     private String tenantId;

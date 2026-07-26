@@ -1,15 +1,14 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 规则灰度分桶统计 DO
@@ -18,14 +17,11 @@ import lombok.Data;
  * 用于 AB Test 自动回滚判断（比较两桶错误率/触发率）。
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_canary_bucket")
-public class RuleCanaryBucketDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleCanaryBucketDO extends MpBaseEntity<String> {
 
     private String ruleCode;
 
@@ -35,5 +31,4 @@ public class RuleCanaryBucketDO implements Serializable {
     private Long bucketCount;
 
     private LocalDate statDate;
-    private LocalDateTime updatedAt;
 }

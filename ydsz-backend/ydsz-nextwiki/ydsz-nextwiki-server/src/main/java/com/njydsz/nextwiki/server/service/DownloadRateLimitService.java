@@ -3,7 +3,7 @@ package com.njydsz.nextwiki.server.service;
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DownloadRateLimitService {
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
     private final RedisRateLimiter redisRateLimiter;
 
     @Value("${nextwiki.download.rate-limit-per-minute:30}")
@@ -107,7 +107,7 @@ public class DownloadRateLimitService {
 
         // 存储签名到 Redis（用于验证）
         String signKey = "nextwiki:sign:" + sign;
-        redisTemplate.opsForValue().set(signKey, storageKey, Duration.ofSeconds(signedUrlExpireSeconds));
+        redisService.set(signKey, storageKey, Duration.ofSeconds(signedUrlExpireSeconds));
 
         return "/nextwiki/download/" + sign + "?expires=" + expireTime;
     }
@@ -120,12 +120,12 @@ public class DownloadRateLimitService {
             return null; // 已过期
         }
         String signKey = "nextwiki:sign:" + sign;
-        String storageKey = redisTemplate.opsForValue().get(signKey);
+        String storageKey = redisService.get(signKey, String.class);
         if (storageKey == null) {
             return null; // 签名无效
         }
         // 验证后删除（一次性使用）
-        redisTemplate.delete(signKey);
+        redisService.delete(signKey);
         return storageKey;
     }
 

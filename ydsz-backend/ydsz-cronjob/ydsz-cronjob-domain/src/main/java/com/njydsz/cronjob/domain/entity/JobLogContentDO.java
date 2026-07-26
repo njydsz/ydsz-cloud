@@ -1,14 +1,15 @@
 package com.njydsz.cronjob.domain.entity.log;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 任务执行日志内容（P0-2 在线日志白屏化）。
@@ -21,15 +22,14 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_log_content")
-public class JobLogContentDO implements Serializable {
+public class JobLogContentDO extends MpBaseEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 主键 ID */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
 
     /** 任务执行日志 ID（关联 ydsz_job_log.id） */
     private String logId;
@@ -45,10 +45,4 @@ public class JobLogContentDO implements Serializable {
 
     /** 日志内容（单行文本，最长 4000 字符） */
     private String content;
-
-    /** 写入时间 */
-    private LocalDateTime createdAt;
-
-    /** 逻辑删除标识：0 未删除 / 1 已删除 */
-    private Integer deleted;
 }

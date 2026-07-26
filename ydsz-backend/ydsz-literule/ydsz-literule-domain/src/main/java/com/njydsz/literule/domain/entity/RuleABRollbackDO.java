@@ -1,15 +1,15 @@
 package com.njydsz.literule.domain.entity;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * AB Test 回滚历史实体（P1-10）。
@@ -28,15 +28,11 @@ import lombok.Data;
  * @since 1.0.0 (P1-10)
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_ab_rollback")
-public class RuleABRollbackDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    /** 主键 ID（雪花算法字符串） */
-    @TableId(type = IdType.ASSIGN_ID)
-    private String id;
+public class RuleABRollbackDO extends MpBaseEntity<String> {
 
     /** 规则编码（关联 {@code ydsz_rule_definition.code}） */
     private String ruleCode;

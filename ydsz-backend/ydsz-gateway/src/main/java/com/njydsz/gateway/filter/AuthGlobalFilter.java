@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.CachedJwtValidator;
@@ -65,8 +66,25 @@ import reactor.core.publisher.Mono;
 @Component
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
-    /** Token 黑名单前缀 (与 auth 服务保持一致) */
-    private static final String TOKEN_BLACKLIST_PREFIX = "ydsz:token:blacklist:";
+    /**
+     * GAP-P0-1: Token 黑名单检查委托给 ReactiveTokenBlacklistService
+     *
+     * <p>历史版本硬编码 {@code TOKEN_BLACKLIST_PREFIX = "ydsz:token:blacklist:"} 并直接使用
+     * {@code redisTemplate.hasKey()} 检查黑名单，存在以下问题：
+     * <ul>
+     *   <li>key 前缀与 common-auth 的 {@code auth:token:blacklist:} 不一致，跨服务黑名单不生效</li>
+     *   <li>每个请求都查 Redis，无 Bloom Filter 前置过滤，高 QPS 下 Redis 压力大</li>
+     *   <li>Redis key 使用完整 JWT（500+ 字节），浪费内存</li>
+     * </ul>
+     *
+     * <p>改为注入 {@link ReactiveTokenBlacklistService}，复用公共模块能力：
+     * <ul>
+     *   <li>统一 key 前缀 + SHA-256 摘要</li>
+     *   <li>Bloom Filter 前置过滤，减少 90%+ Redis 查询</li>
+     *   <li>配置化黑名单开关和 TTL</li>
+     * </ul>
+     */
+    private final ReactiveTokenBlacklistService tokenBlacklistService;
 
     /**
      * 白名单(不校验 Token)。
@@ -216,8 +234,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
         }
 
-        // 黑名单检查
-        return redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + jwt)
+        // GAP-P0-1: 黑名单检查委托给 ReactiveTokenBlacklistService（Bloom Filter 前置过滤 + SHA-256 摘要 key）
+        return tokenBlacklistService.isBlacklisted(jwt)
                 .flatMap(blacklisted -> {
                     if (Boolean.TRUE.equals(blacklisted)) {
                         // P2-12: 黑名单命中时立即清除缓存

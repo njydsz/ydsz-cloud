@@ -24,6 +24,7 @@ import lombok.Getter;
  * <p>列权限信息会通过 header（X-Visible-Columns、X-Editable-Columns）透传到下游服务，
  * SQL 拦截器根据这些信息自动在 SELECT/INSERT/UPDATE 语句中过滤无权访问的字段。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see AuthColPermission

@@ -9,7 +9,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -66,7 +66,7 @@ public class JobNodeReaper {
     private final JobLogMapper jobLogMapper;
     private final LeaderElector leaderElector;
     private final CronjobProperties cronjobProperties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisService redisService;
 
     /** 离线节点记录保留时长（分钟），超过此时长才物理删除 */
     private static final long STALE_NODE_RETENTION_MINUTES = 30;
@@ -186,7 +186,7 @@ public class JobNodeReaper {
         // P0-11: 统一通过 LockKeyUtil 构造 lockKey（含分片感知）
         String lockKey = LockKeyUtil.buildJobLockKey(logEntry.getJobKey(), logEntry.getShardIndex());
         try {
-            Long result = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+            Long result = redisService.execute(RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(lockKey), lockHolder);
             if (result != null && result > 0) {
                 log.info("[JobNodeReaper] 释放锁成功: key={} holder={}", lockKey, lockHolder);

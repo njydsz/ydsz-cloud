@@ -15,6 +15,7 @@ import java.util.Map;
  * String message = PermissionMessageResolver.resolve("permission.denied", "zh-CN");
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
 
  */

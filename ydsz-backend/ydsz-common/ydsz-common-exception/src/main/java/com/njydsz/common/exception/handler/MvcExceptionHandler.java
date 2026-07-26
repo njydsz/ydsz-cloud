@@ -73,6 +73,14 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     private final MessageSource messageSource;
 
+    /**
+     * 构造 MVC 全局异常处理器
+     *
+     * @param messageSource   国际化消息源
+     * @param exceptionMetrics 异常指标统计器
+     * @param properties      异常模块配置属性
+     * @param alertPublisher  异常告警发布器
+     */
     public MvcExceptionHandler(MessageSource messageSource,
                                ExceptionMetrics exceptionMetrics,
                                ExceptionProperties properties,
