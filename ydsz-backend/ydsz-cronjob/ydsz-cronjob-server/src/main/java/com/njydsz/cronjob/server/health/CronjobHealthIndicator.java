@@ -35,13 +35,30 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(HealthIndicator.class)
 public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
 
+    /** Redis 连接工厂（可选依赖，未配置时跳过 Redis 健康检查） */
     private final ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider;
+    /** Leader 选举器（可选依赖，未配置时报告 leaderless 模式） */
     private final ObjectProvider<LeaderElector> leaderElectorProvider;
+    /** 任务 Mapper（可选依赖，未配置时跳过任务数探针） */
     private final ObjectProvider<JobMapper> jobMapperProvider;
+    /** 任务日志 Mapper（可选依赖，未配置时跳过运行中日志探针） */
     private final ObjectProvider<JobLogMapper> jobLogMapperProvider;
+    /** Micrometer 指标采集器（可选依赖） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+    /** 调度引擎配置属性 */
     private final CronjobProperties cronjobProperties;
 
+    /**
+     * 构造健康检查组件。
+     * <p>所有依赖通过 {@link ObjectProvider} 注入，支持可选装配场景（如单体部署不启用 Leader 选举）。
+     *
+     * @param redisConnectionFactoryProvider Redis 连接工厂提供者
+     * @param leaderElectorProvider          Leader 选举器提供者
+     * @param jobMapperProvider              任务 Mapper 提供者
+     * @param jobLogMapperProvider           任务日志 Mapper 提供者
+     * @param cronjobMetricsProvider         指标采集器提供者
+     * @param cronjobProperties              调度引擎配置属性
+     */
     public CronjobHealthIndicator(
             ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
             ObjectProvider<LeaderElector> leaderElectorProvider,
@@ -57,6 +74,12 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
         this.cronjobProperties = cronjobProperties;
     }
 
+    /**
+     * 执行健康检查，依次检测 Redis 连通性、Leader 选举状态、DB 探针（任务数/运行中日志数）、
+     * 调度器配置摘要、Metrics 可用性。
+     *
+     * @param builder Spring Boot Health 构建器
+     */
     @Override
     protected void doHealthCheck(Health.Builder builder) {
         // 1. Redis 连通性

@@ -95,6 +95,20 @@ public class FtpUtils {
         return uploadFile(host, port, username, password, basePath, filePath, filename, input, DEFAULT_RETRY_COUNT);
     }
 
+    /**
+     * 上传文件到 FTP 服务器（指定重试次数，直接传入连接参数）
+     *
+     * @param host      FTP 服务器地址
+     * @param port      FTP 端口
+     * @param username  用户名
+     * @param password  密码
+     * @param basePath  基础路径
+     * @param filePath  远程文件路径
+     * @param filename  文件名
+     * @param input     文件输入流
+     * @param retryCount 重试次数
+     * @return 上传是否成功
+     */
     public static boolean uploadFile(String host, int port, String username, String password,
                                      String basePath, String filePath, String filename, InputStream input, int retryCount) {
         FTPClient ftp = null;
@@ -121,11 +135,36 @@ public class FtpUtils {
         }
     }
 
+    /**
+     * 从 FTP 服务器下载文件（使用默认重试次数）
+     *
+     * @param host       FTP 服务器地址
+     * @param port       FTP 端口
+     * @param username   用户名
+     * @param password   密码
+     * @param remotePath 远程文件路径
+     * @param fileName   文件名
+     * @param localPath  本地保存路径
+     * @return 下载是否成功
+     */
     public static boolean downloadFile(String host, int port, String username, String password,
                                        String remotePath, String fileName, String localPath) {
         return downloadFile(host, port, username, password, remotePath, fileName, localPath, DEFAULT_RETRY_COUNT);
     }
 
+    /**
+     * 从 FTP 服务器下载文件（指定重试次数）
+     *
+     * @param host       FTP 服务器地址
+     * @param port       FTP 端口
+     * @param username   用户名
+     * @param password   密码
+     * @param remotePath 远程文件路径
+     * @param fileName   文件名
+     * @param localPath  本地保存路径
+     * @param retryCount 重试次数
+     * @return 下载是否成功
+     */
     public static boolean downloadFile(String host, int port, String username, String password,
                                        String remotePath, String fileName, String localPath, int retryCount) {
         FTPClient ftp = null;

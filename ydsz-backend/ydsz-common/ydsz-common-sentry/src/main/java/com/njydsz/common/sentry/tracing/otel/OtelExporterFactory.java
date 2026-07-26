@@ -4,10 +4,11 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessorBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.sdk.trace.SpanProcessor;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -70,10 +71,6 @@ public final class OtelExporterFactory {
         }
         if (config.getExporterTimeoutMillis() > 0) {
             builder.setExporterTimeout(Duration.ofMillis(config.getExporterTimeoutMillis()));
-        }
-        if (config.getMaxExportAttempts() > 0) {
-            // 注意：OTel SDK 1.x 通过环境变量设置 max-always-attribute；
-            // 重新调度机制由 SDK 内置
         }
 
         SpanProcessor processor = builder.build();

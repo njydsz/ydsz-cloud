@@ -138,6 +138,15 @@ public class SentryProperties {
 
         /** 令牌桶限流（每秒最大发送量，0 表示不限流） */
         private int maxRatePerSecond = 0;
+
+        /**
+         * 获取执行器队列容量（兼容命名）
+         *
+         * @return 队列容量
+         */
+        public int getExecutorQueueCapacity() {
+            return queueCapacity;
+        }
     }
 
     @Data
@@ -201,6 +210,21 @@ public class SentryProperties {
 
         /** 资源自定义属性 */
         private Map<String, String> resourceAttributes = new HashMap<>();
+
+        @Data
+        public static class BatchConfig {
+            /** 队列大小 */
+            private int maxQueueSize = 2048;
+
+            /** 批量导出大小 */
+            private int maxExportBatchSize = 512;
+
+            /** 调度延迟（毫秒） */
+            private long scheduleDelayMillis = 5000;
+
+            /** 导出超时（毫秒） */
+            private long exporterTimeoutMillis = 30000;
+        }
     }
 
     @Data
@@ -234,21 +258,6 @@ public class SentryProperties {
 
         /** 慢 Span 阈值（毫秒） */
         private long slowThresholdMillis = 3000;
-    }
-
-    @Data
-    public static class BatchConfig {
-        /** 队列大小 */
-        private int maxQueueSize = 2048;
-
-        /** 批量导出大小 */
-        private int maxExportBatchSize = 512;
-
-        /** 调度延迟（毫秒） */
-        private long scheduleDelayMillis = 5000;
-
-        /** 导出超时（毫秒） */
-        private long exporterTimeoutMillis = 30000;
     }
 
     @Data

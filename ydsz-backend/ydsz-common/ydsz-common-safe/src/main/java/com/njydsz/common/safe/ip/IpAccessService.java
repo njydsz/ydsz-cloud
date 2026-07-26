@@ -29,6 +29,7 @@ import com.njydsz.common.safe.config.IpAccessProperties;
  *   <li>自动封禁/解封 API</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see IpAccessFilter
  */

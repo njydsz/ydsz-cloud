@@ -47,6 +47,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-queue</artifactId>
         </dependency>
+        <!-- P0-2: 事务性 Outbox 事件模式 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-event</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

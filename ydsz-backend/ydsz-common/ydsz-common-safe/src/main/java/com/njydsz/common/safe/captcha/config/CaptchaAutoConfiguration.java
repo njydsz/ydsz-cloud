@@ -23,8 +23,8 @@ import com.njydsz.common.safe.captcha.validator.CaptchaValidator;
  * 验证码自动配置类
  * 根据配置自动注册验证码生成器、存储器和验证器
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @AutoConfiguration
 @EnableConfigurationProperties(CaptchaProperties.class)

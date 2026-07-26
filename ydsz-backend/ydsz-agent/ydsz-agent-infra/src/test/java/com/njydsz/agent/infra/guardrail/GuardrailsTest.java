@@ -149,56 +149,69 @@ class GuardrailsTest {
         }
 
         @Test
-        @DisplayName("手机号脱敏：13812345678 → 138****5678")
+        @DisplayName("手机号脱敏：13812345678 → 138****5678（委托 SensitiveUtil.maskPhone）")
         void shouldMaskPhoneNumber() {
             GuardrailResult result = guardrail.check("联系电话：13812345678，请回拨");
 
             assertThat(result.isPassed()).isTrue();
+            // SensitiveUtil.maskPhone 规则：前3后4保留，中间星号
             assertThat(result.getSanitizedInput()).contains("138****5678");
             assertThat(result.getSanitizedInput()).doesNotContain("13812345678");
         }
 
         @Test
-        @DisplayName("身份证号脱敏：320102199001011234 → 3201**********1234")
+        @DisplayName("身份证号脱敏：委托 SensitiveUtil.idCard（前3后5保留，中间8位星号）")
         void shouldMaskIdCard() {
-            GuardrailResult result = guardrail.check("身份证号：320102199001011234");
+            String idCard = "320102199001011234";
+            GuardrailResult result = guardrail.check("身份证号：" + idCard);
 
             assertThat(result.isPassed()).isTrue();
-            assertThat(result.getSanitizedInput()).contains("3201**********1234");
-            assertThat(result.getSanitizedInput()).doesNotContain("320102199001011234");
+            // SensitiveUtil.idCard 规则：保留前3位 + 中间8位星号 + 后位（substring(11)）
+            // 原 PII 不应再出现
+            assertThat(result.getSanitizedInput()).doesNotContain(idCard);
+            // 应包含星号（脱敏标记）
+            assertThat(result.getSanitizedInput()).contains("*");
         }
 
         @Test
-        @DisplayName("邮箱脱敏：test@example.com → t***@example.com")
+        @DisplayName("邮箱脱敏：委托 SensitiveUtil.maskEmail（首尾字符保留，中间星号）")
         void shouldMaskEmail() {
             GuardrailResult result = guardrail.check("邮箱：test@example.com");
 
             assertThat(result.isPassed()).isTrue();
-            assertThat(result.getSanitizedInput()).contains("t***@example.com");
+            // SensitiveUtil.maskEmail 规则：保留首尾字符，中间2位星号
+            // 用户名 "test" → "t**t"
+            assertThat(result.getSanitizedInput()).contains("t**t@example.com");
             assertThat(result.getSanitizedInput()).doesNotContain("test@example.com");
         }
 
         @Test
-        @DisplayName("单字符邮箱用户名不脱敏（atIdx <= 1）")
-        void shouldNotMaskSingleCharEmail() {
+        @DisplayName("单字符邮箱用户名（atIdx <= 1）：全部替换为星号")
+        void shouldMaskSingleCharEmail() {
             GuardrailResult result = guardrail.check("邮箱：a@b.com");
 
             assertThat(result.isPassed()).isTrue();
-            // a@b.com 的 atIdx=1，不脱敏，保持原样
-            assertThat(result.getSanitizedInput()).contains("a@b.com");
+            // SensitiveUtil.maskEmail：atIdx <= 1 时，整串替换为星号
+            assertThat(result.getSanitizedInput()).doesNotContain("a@b.com");
+            assertThat(result.getSanitizedInput()).contains("*");
         }
 
         @Test
-        @DisplayName("多种 PII 混合脱敏")
+        @DisplayName("多种 PII 混合脱敏：委托 SensitiveUtil 统一规则")
         void shouldMaskMultiplePii() {
             String input = "手机 13812345678，邮箱 test@example.com，身份证 320102199001011234";
             GuardrailResult result = guardrail.check(input);
 
             assertThat(result.isPassed()).isTrue();
             String sanitized = result.getSanitizedInput();
+            // 手机号脱敏
             assertThat(sanitized).contains("138****5678");
-            assertThat(sanitized).contains("t***@example.com");
-            assertThat(sanitized).contains("3201**********1234");
+            // 邮箱脱敏（SensitiveUtil 规则）
+            assertThat(sanitized).contains("t**t@example.com");
+            // 原 PII 不应出现
+            assertThat(sanitized).doesNotContain("13812345678");
+            assertThat(sanitized).doesNotContain("test@example.com");
+            assertThat(sanitized).doesNotContain("320102199001011234");
         }
 
         @Test

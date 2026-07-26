@@ -29,8 +29,8 @@ import com.njydsz.common.safe.captcha.core.CaptchaResult;
  *   <li>安全随机数生成器</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class ImageCaptchaGenerator implements CaptchaGenerator {
 

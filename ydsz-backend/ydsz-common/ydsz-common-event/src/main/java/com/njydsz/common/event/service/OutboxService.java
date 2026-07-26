@@ -303,7 +303,9 @@ public class OutboxService {
     }
 
     /**
-     * 从 RequestContext / MDC 获取链路追踪 ID
+     * 解析链路追踪 ID
+     *
+     * <p>优先级：RequestContext > MDC > null
      *
      * @return traceId，若不可用则返回 null
      */
@@ -367,6 +369,8 @@ public class OutboxService {
     /**
      * 注册事务提交后的同步投递回调
      *
+     * <p>若无活跃事务上下文，则直接同步投递。
+     *
      * @param message Outbox 消息
      */
     private void registerSyncPublishCallback(OutboxMessage message) {
@@ -385,6 +389,8 @@ public class OutboxService {
 
     /**
      * 执行同步投递
+     *
+     * <p>投递成功则标记为 SENT，失败则由异步轮询器后续处理。
      *
      * @param message Outbox 消息
      */

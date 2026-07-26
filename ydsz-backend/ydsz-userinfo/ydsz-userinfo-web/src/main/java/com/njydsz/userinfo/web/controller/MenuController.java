@@ -58,18 +58,26 @@ public class MenuController {
         return BaseResponse.success(service.getById(id));
     }
 
+    @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'创建菜单: ' + #dto.menuName")
+    @Idempotent(key = "menu:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建菜单")
     public BaseResponse<String> create(@Valid @RequestBody MenuSaveDTO dto) {
         return BaseResponse.success(service.create(dto));
     }
 
+    @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'更新菜单: ' + #dto.id")
+    @Idempotent(key = "menu:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "更新菜单")
     public BaseResponse<Boolean> update(@Valid @RequestBody MenuSaveDTO dto) {
         return BaseResponse.success(service.update(dto));
     }
 
+    @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
+            content = "'删除菜单: ' + #id")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除菜单")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

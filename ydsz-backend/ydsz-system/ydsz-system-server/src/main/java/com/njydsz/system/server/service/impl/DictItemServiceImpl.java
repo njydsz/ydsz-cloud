@@ -48,23 +48,44 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DictItemServiceImpl implements DictItemService {
 
+    /** 单个字典项缓存键前缀：system:dict:item:{typeCode}:{itemCode} */
     private static final String CACHE_ITEM_PREFIX = "system:dict:item:";
+    /** 字典项列表缓存键前缀：system:dict:list:{typeCode} */
     private static final String CACHE_LIST_PREFIX = "system:dict:list:";
+    /** 空值哨兵，用于防缓存穿透 */
     private static final String NULL_SENTINEL = "__NULL__";
+    /** 空值哨兵 TTL（2 分钟），比正常缓存短避免长时间占用 */
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(2);
 
+    /** 字典项 Mapper */
     private final DictItemMapper mapper;
+    /** Redis 缓存服务 */
     private final RedisService redisService;
+    /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
+    /** 系统配置属性 */
     private final SystemProperties properties;
+    /** 字典版本服务，用于记录变更快照 */
     private final DictVersionService dictVersionService;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DictItemVO getById(String id) {
         DictItemDO entity = mapper.selectById(id);
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>优先查 Redis 缓存（含空值哨兵防穿透），缓存未命中时查 DB 并回写缓存。
+     * 同时记录缓存命中/未命中指标和查询耗时指标。
+     *
+     * @param typeCode 字典类型编码
+     * @param itemCode 字典项编码
+     * @return 字典项 VO，不存在时返回 null（缓存在短 TTL 内返回 null 防穿透）
+     */
     @Override
     public DictItemVO getByTypeAndCode(String typeCode, String itemCode) {
         long start = System.nanoTime();
@@ -95,6 +116,13 @@ public class DictItemServiceImpl implements DictItemService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>优先查 Redis 缓存，未命中时查 DB 并回写缓存。仅返回启用状态的字典项。
+     *
+     * @param typeCode 字典类型编码
+     * @return 启用状态的字典项列表（按 sortOrder 升序）
+     */
     @Override
     public List<DictItemVO> listEnabledByTypeCode(String typeCode) {
         long start = System.nanoTime();
@@ -115,6 +143,12 @@ public class DictItemServiceImpl implements DictItemService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param parentId 父字典项 ID
+     * @return 子字典项列表（按 sortOrder 升序）
+     */
     @Override
     public List<DictItemVO> listChildren(String parentId) {
         QueryWrapper<DictItemDO> wrapper = new QueryWrapper<>();
@@ -122,6 +156,17 @@ public class DictItemServiceImpl implements DictItemService {
         return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持按 typeCode 精确匹配、itemCode 模糊匹配、status 精确匹配进行过滤。
+     *
+     * @param pageNum  页码（1-based）
+     * @param pageSize 每页条数
+     * @param typeCode 字典类型编码（可选过滤条件）
+     * @param itemCode 字典项编码（可选，模糊匹配）
+     * @param status   状态（可选过滤条件）
+     * @return 分页结果
+     */
     @Override
     public IPage<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status) {
         QueryWrapper<DictItemDO> wrapper = new QueryWrapper<>();
@@ -142,11 +187,24 @@ public class DictItemServiceImpl implements DictItemService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部字典项列表（不区分状态）
+     */
     @Override
     public List<DictItemVO> list() {
         return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行唯一性校验（typeCode + itemCode 组合不能重复），插入后清除缓存并创建版本快照。
+     *
+     * @param dto 字典项数据
+     * @return 新创建的字典项 ID
+     * @throws IllegalArgumentException 当 typeCode + itemCode 组合已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(DictItemDTO dto) {
@@ -165,6 +223,13 @@ public class DictItemServiceImpl implements DictItemService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>更新成功后清除缓存并创建版本快照。
+     *
+     * @param dto 字典项数据（需包含 id）
+     * @return true 表示更新成功
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(DictItemDTO dto) {
@@ -177,6 +242,13 @@ public class DictItemServiceImpl implements DictItemService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>删除成功后清除缓存并创建版本快照。
+     *
+     * @param id 字典项 ID
+     * @return true 表示删除成功
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -205,6 +277,12 @@ public class DictItemServiceImpl implements DictItemService {
                 "v" + System.currentTimeMillis(), changeLog, snapshotJson);
     }
 
+    /**
+     * 清除指定 typeCode 下的所有缓存（列表缓存 + 所有单项缓存）。
+     * <p>使用 SCAN 替代 KEYS 命令避免阻塞 Redis。
+     *
+     * @param typeCode 字典类型编码
+     */
     private void evictCache(String typeCode) {
         if (typeCode == null) {
             return;
@@ -238,11 +316,23 @@ public class DictItemServiceImpl implements DictItemService {
         return keys;
     }
 
+    /**
+     * 获取字典缓存 TTL，从 {@link SystemProperties.Dict#getCacheTtlMinutes()} 读取，
+     * 默认 10 分钟。
+     *
+     * @return 缓存 TTL
+     */
     private Duration getCacheTtl() {
         int minutes = properties.getDict().getCacheTtlMinutes();
         return Duration.ofMinutes(minutes > 0 ? minutes : 10);
     }
 
+    /**
+     * 将 DO 转换为 VO。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象，entity 为 null 时返回 null
+     */
     private DictItemVO toVO(DictItemDO entity) {
         if (entity == null) {
             return null;
@@ -260,6 +350,12 @@ public class DictItemServiceImpl implements DictItemService {
         return vo;
     }
 
+    /**
+     * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
+     *
+     * @param dto 数据传输对象
+     * @return 数据库实体
+     */
     private DictItemDO toEntity(DictItemDTO dto) {
         DictItemDO entity = new DictItemDO();
         entity.setId(dto.getId());
