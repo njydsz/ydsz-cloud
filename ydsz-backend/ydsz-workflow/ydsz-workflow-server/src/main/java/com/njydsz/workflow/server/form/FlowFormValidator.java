@@ -222,12 +222,30 @@ public class FlowFormValidator {
         }
     }
 
+    /** P3-2: 正则表达式最大长度限制（防 ReDoS） */
+    private static final int MAX_PATTERN_LENGTH = 200;
+    /** P3-2: 危险正则模式（嵌套量词，易导致 ReDoS） */
+    private static final java.util.regex.Pattern DANGEROUS_PATTERN =
+            java.util.regex.Pattern.compile("\\([^)]*[+*?][^)]*\\)[+*?]");
+
     private void validatePattern(FlowFormField field, Object value,
                                   FlowFormField.ValidationRule validation,
                                   List<FlowFormValidationError> errors, String fieldKey) {
         String strVal = String.valueOf(value);
+        String pattern = validation.getPattern();
+        // P3-2: ReDoS 防护 — 限制正则长度 + 检测危险嵌套量词
+        if (pattern == null || pattern.length() > MAX_PATTERN_LENGTH) {
+            log.warn("[FormValidator] 正则表达式为空或超长（>{}字符），跳过校验: field={}",
+                    MAX_PATTERN_LENGTH, fieldKey);
+            return;
+        }
+        if (DANGEROUS_PATTERN.matcher(pattern).find()) {
+            log.warn("[FormValidator] 检测到危险嵌套量词正则，跳过校验: field={} pattern={}",
+                    fieldKey, pattern);
+            return;
+        }
         try {
-            if (!strVal.matches(validation.getPattern())) {
+            if (!strVal.matches(pattern)) {
                 String msg = StringUtils.hasText(validation.getPatternMessage())
                         ? validation.getPatternMessage()
                         : field.getLabel() + " 格式不正确";
@@ -235,7 +253,7 @@ public class FlowFormValidator {
             }
         } catch (Exception e) {
             log.warn("[FormValidator] 正则表达式无效: field={} pattern={} err={}",
-                    fieldKey, validation.getPattern(), e.getMessage());
+                    fieldKey, pattern, e.getMessage());
         }
     }
 
@@ -382,12 +400,12 @@ public class FlowFormValidator {
         }
         switch (operator.toUpperCase()) {
             case "EQ":
-                return Objects_equals(actual, expected);
+                return safeStringEquals(actual, expected);
             case "NE":
-                return !Objects_equals(actual, expected);
+                return !safeStringEquals(actual, expected);
             case "IN":
                 if (expected instanceof List<?> list) {
-                    return list.stream().anyMatch(e -> Objects_equals(actual, e));
+                    return list.stream().anyMatch(e -> safeStringEquals(actual, e));
                 }
                 return false;
             case "CONTAINS":
@@ -449,7 +467,7 @@ public class FlowFormValidator {
         return Double.compare(da, db);
     }
 
-    private boolean Objects_equals(Object a, Object b) {
+    private boolean safeStringEquals(Object a, Object b) {
         if (a == null && b == null) {
             return true;
         }

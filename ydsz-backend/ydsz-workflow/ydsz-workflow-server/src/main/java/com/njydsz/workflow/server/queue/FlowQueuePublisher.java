@@ -140,6 +140,56 @@ public class FlowQueuePublisher {
         }
     }
 
+    /**
+     * 发布业务自定义事件到消息队列
+     *
+     * <p>P0-7: 供业务监听器（如 ProjectInitiationFlowListener）跨服务联动业务状态使用。
+     * 与 {@link #publishWithContext} 不同，本方法直接接收任意数据负载，
+     * 适用于无法用 {@link FlowEventContext} 表达的业务事件（如立项状态联动）。
+     *
+     * <p><b>使用示例：</b>
+     * <pre>{@code
+     * Map<String, Object> data = new HashMap<>();
+     * data.put("initiationId", "12345");
+     * data.put("action", "markProcessing");
+     * queuePublisher.publish("INITIATION_STATUS_SYNC", data);
+     * }</pre>
+     *
+     * @param eventType 事件类型（建议使用业务前缀，如 INITIATION_STATUS_SYNC）
+     * @param data      业务数据负载（不可为 null）
+     * @since 1.0.0
+     */
+    public void publish(String eventType, Map<String, Object> data) {
+        if (flowEventPublisher == null || eventType == null || data == null) {
+            return;
+        }
+        try {
+            Map<String, Object> payload = new HashMap<>(data.size() + 2);
+            payload.put("eventType", eventType);
+            payload.putAll(data);
+
+            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
+            message.addHeader("eventType", eventType);
+            message.addHeader("source", "workflow");
+            // 透传 instanceId/initiationId 便于消费者做消息路由
+            Object instanceId = data.get("instanceId");
+            if (instanceId != null) {
+                message.addHeader("instanceId", String.valueOf(instanceId));
+            }
+            Object bizId = data.get("initiationId");
+            if (bizId != null) {
+                message.addHeader("initiationId", String.valueOf(bizId));
+            }
+
+            flowEventPublisher.publish(message);
+            log.debug("[FlowQueue] 业务事件已发布到队列: type={} payload={}",
+                    eventType, data.keySet());
+        } catch (Exception e) {
+            log.warn("[FlowQueue] 业务事件发布到队列失败: type={} err={}",
+                    eventType, e.getMessage());
+        }
+    }
+
     @PreDestroy
     public void destroy() {
         if (flowEventPublisher != null) {

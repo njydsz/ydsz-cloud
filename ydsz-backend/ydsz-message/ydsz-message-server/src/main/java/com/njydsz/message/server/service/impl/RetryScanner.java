@@ -2,6 +2,7 @@ package com.njydsz.message.server.service.impl.core;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RLock;
@@ -160,7 +161,11 @@ public class RetryScanner {
                 }
                 // 继续重试,指数退避（P1-7: 策略可配）
                 logDO.setStatus(MessageStatusEnum.RETRY.name());
-                logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(newRetryCount, logDO.getChannel()));
+                LocalDateTime nextRetry = retryStrategyResolver.calcNextRetryAt(newRetryCount, logDO.getChannel());
+                // GAP-7: 加入随机抖动因子（0~1s），避免多实例同时重试导致惊群效应
+                long jitterMs = ThreadLocalRandom.current().nextLong(0, 1000);
+                nextRetry = nextRetry.plusNanos(jitterMs * 1_000_000L);
+                logDO.setNextRetryAt(nextRetry);
                 msgLogMapper.updateById(logDO);
                 messageMetrics.recordRetry(logDO.getChannel());
                 log.info("[RetryScanner] 重试失败继续等待: logId={} retryCount={} nextRetryAt={}",

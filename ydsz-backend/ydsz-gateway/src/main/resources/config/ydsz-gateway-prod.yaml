@@ -30,7 +30,11 @@ server:
     ciphers: TLS_AES_256_GCM_SHA384,TLS_AES_128_GCM_SHA256,TLS_CHACHA20_POLY1305_SHA256,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-AES128-GCM-SHA256
   # P1-6: 隐藏 Server 头（防指纹识别）
   netty:
-    # 禁用 Server 头暴露
+    # P1: 隐藏 Server 响应头，避免暴露 Reactor Netty 版本
+    # 默认值为 "Reactor Netty" 会让攻击者据此搜索 CVE
+    # 设为空字符串时 ResponseHeaders 将不包含 Server 头
+    response:
+      server-header: ""
     connection-timeout: 5s
 
 spring:

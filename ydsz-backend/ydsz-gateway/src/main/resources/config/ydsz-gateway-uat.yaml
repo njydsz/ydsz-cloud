@@ -17,6 +17,10 @@ server:
     min-response-size: 1024
   # P0-阶段二-8: 优雅停机（等待进行中的请求完成）
   shutdown: graceful
+  # P1: 隐藏 Server 响应头，避免暴露 Reactor Netty 技术栈指纹
+  netty:
+    response:
+      server-header: ""
 
 spring:
   profiles: uat

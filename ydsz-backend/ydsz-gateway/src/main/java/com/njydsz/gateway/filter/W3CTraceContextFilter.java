@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
  * <p>{@code HIGHEST_PRECEDENCE + 2}，在 {@link AccessLogGlobalFilter}(+1) 之后、
  * {@link IpBlacklistFilter}(+3) 之前，确保所有下游请求都携带 trace context。
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Component
 public class W3CTraceContextFilter implements GlobalFilter, Ordered {

@@ -36,7 +36,7 @@ import lombok.Data;
  *         policy: same-origin  # same-origin | same-site | cross-origin
  * </pre>
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Data
 @Configuration

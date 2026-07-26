@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.alibaba.csp.sentinel.datasource.Converter;
 import com.alibaba.csp.sentinel.datasource.ReadableDataSource;
 import com.alibaba.csp.sentinel.datasource.nacos.NacosDataSource;
+import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.system.SystemRule;
@@ -124,7 +126,7 @@ public class GatewaySentinelRulesConfig {
         // 规则 1: 异常比例熔断（5 秒内 ≥ 10 请求，异常率 ≥ 50% → 熔断 30 秒）
         DegradeRule exceptionRatioRule = new DegradeRule();
         exceptionRatioRule.setResource("ydsz-userinfo");
-        exceptionRatioRule.setGrade(DegradeRule.DEGRADE_GRADE_EXCEPTION_RATIO);
+        exceptionRatioRule.setGrade(RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO);
         exceptionRatioRule.setCount(0.5);
         exceptionRatioRule.setTimeWindow(30);
         exceptionRatioRule.setMinRequestAmount(10);
@@ -134,7 +136,7 @@ public class GatewaySentinelRulesConfig {
         // 规则 2: 慢调用比例熔断（RT > 3s 占比 ≥ 50% → 熔断 30 秒）
         DegradeRule slowCallRule = new DegradeRule();
         slowCallRule.setResource("ydsz-system");
-        slowCallRule.setGrade(DegradeRule.DEGRADE_GRADE_RT);
+        slowCallRule.setGrade(RuleConstant.DEGRADE_GRADE_RT);
         slowCallRule.setCount(3000);
         slowCallRule.setTimeWindow(30);
         slowCallRule.setMinRequestAmount(5);
@@ -190,15 +192,15 @@ public class GatewaySentinelRulesConfig {
                 System.getenv().getOrDefault("NACOS_NAMESPACE", "ydsz"));
 
         // 熔断降级规则数据源
+        Converter<String, List<DegradeRule>> degradeConverter = source -> YdszJson.parseArray(source, DegradeRule.class);
         ReadableDataSource<String, List<DegradeRule>> degradeDs = new NacosDataSource<>(
-                serverAddr, namespace, ruleGroup, degradeRuleDataId,
-                source -> YdszJson.parseArray(source, DegradeRule.class));
+                serverAddr, namespace, ruleGroup, degradeRuleDataId, degradeConverter);
         DegradeRuleManager.register2Property(degradeDs.getProperty());
 
         // 系统保护规则数据源
+        Converter<String, List<SystemRule>> systemConverter = source -> YdszJson.parseArray(source, SystemRule.class);
         ReadableDataSource<String, List<SystemRule>> systemDs = new NacosDataSource<>(
-                serverAddr, namespace, ruleGroup, systemRuleDataId,
-                source -> YdszJson.parseArray(source, SystemRule.class));
+                serverAddr, namespace, ruleGroup, systemRuleDataId, systemConverter);
         SystemRuleManager.register2Property(systemDs.getProperty());
 
         log.info("[SentinelRules] Nacos 数据源已注册 (P0-阶段二-4: degrade={}, system={}, group={}, addr={})",

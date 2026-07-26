@@ -50,6 +50,18 @@ public class TokenProperties {
     private String subject = "ydsz-user";
 
     /**
+     * Token 受众（audience）— P1: 防止跨服务令牌重用
+     *
+     * <p>当 token 颁发给网关消费时，audience 应为 "ydsz-gateway"；
+     * 下游服务（如 userinfo/finance）解析时校验 aud 必须匹配，
+     * 防止 token 被错误地用在其它服务上。
+     *
+     * <p>留空（默认）时不强制校验 aud，保持向后兼容；
+     * 配置后会在签发时写入 aud，在解析时强制 require(aud)。
+     */
+    private String audience;
+
+    /**
      * 校验密钥配置
      * <p>启动时检查 secretKey 是否已配置且长度 >= 32 字节
      *

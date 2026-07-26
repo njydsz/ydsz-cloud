@@ -30,7 +30,7 @@ import javax.crypto.spec.SecretKeySpec;
  *   <li>{@code slowEquals()}: 恒定时间比较，防计时攻击</li>
  * </ul>
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 public final class InternalHeaderSigner {
 

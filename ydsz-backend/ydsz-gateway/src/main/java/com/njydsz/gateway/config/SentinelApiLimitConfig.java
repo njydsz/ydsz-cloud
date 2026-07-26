@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>global-api: /** — QPS=200（全局兜底）</li>
  * </ul>
  *
- * @since 1.3.1 (P2-8)
+ * @since 1.0.0 (P2-8)
  */
 @Slf4j
 @Configuration

@@ -50,7 +50,7 @@ import java.util.concurrent.Executors;
  * <p>配置变更自动监听：Nacos 配置更新后自动触发 {@code RefreshRoutesEvent}，
  * 无需手动重启网关即可实时生效。
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Slf4j
 public class NacosRouteDefinitionRepository implements RouteDefinitionRepository {

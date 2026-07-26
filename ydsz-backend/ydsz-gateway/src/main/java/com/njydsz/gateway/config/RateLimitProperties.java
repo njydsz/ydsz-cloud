@@ -53,7 +53,7 @@ import lombok.Data;
  *         retry-after: 5
  * </pre>
  *
- * @since 2.1.0
+ * @since 1.0.0
  */
 @Data
 @Configuration

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -54,6 +55,18 @@ public class JwtTokenService implements TokenService {
     private static final String CLAIM_TENANT_ID = "tenantId";
     private static final String CLAIM_ROLE_CODE = "roleCode";
     private static final String CLAIM_TOKEN_TYPE = "tokenType";
+
+    /**
+     * P1: JWT ID（jti）— 每个 token 唯一标识
+     *
+     * <p>用途：
+     * <ul>
+     *   <li>支持精确的 Token 黑名单（基于 jti 而非完整 token 字符串）</li>
+     *   <li>审计日志关联具体 token</li>
+     *   <li>未来扩展：refresh_token 轮换时关联父子 token</li>
+     * </ul>
+     */
+    private static final String CLAIM_JTI = "jti";
 
     private static final String TOKEN_TYPE_ACCESS = "access";
     private static final String TOKEN_TYPE_REFRESH = "refresh";
@@ -151,6 +164,12 @@ public class JwtTokenService implements TokenService {
 
     /**
      * 构建 JWT Token
+     *
+     * <p>P1: 在原有 iss/sub/iat/exp 基础上，新增 jti（JWT ID）和 aud（audience）：
+     * <ul>
+     *   <li>jti：每个 token 唯一标识，用于精确黑名单和审计</li>
+     *   <li>aud：受众声明，防止跨服务令牌重用（如颁发给 gateway 的 token 不能用于其他服务）</li>
+     * </ul>
      */
     private String buildToken(UserInfo userInfo, String tokenType, long expireSeconds) {
         Date now = new Date();
@@ -163,13 +182,22 @@ public class JwtTokenService implements TokenService {
         claims.put(CLAIM_ROLE_CODE, userInfo.getRoleCode());
         claims.put(CLAIM_TOKEN_TYPE, tokenType);
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .claims(claims)
+                // P1: jti — 每个 token 唯一 ID，便于精确黑名单和审计关联
+                .id(UUID.randomUUID().toString())
                 .issuer(tokenProperties.getIssuer())
                 .subject(tokenProperties.getSubject())
                 .issuedAt(now)
-                .expiration(expiration)
-                .signWith(secretKey)
+                .expiration(expiration);
+
+        // P1: aud — 受众声明（可选），配置后强制校验，防止跨服务令牌重用
+        String audience = tokenProperties.getAudience();
+        if (audience != null && !audience.isBlank()) {
+            builder.audience().add(audience).and();
+        }
+
+        return builder.signWith(secretKey)
                 .compact();
     }
 

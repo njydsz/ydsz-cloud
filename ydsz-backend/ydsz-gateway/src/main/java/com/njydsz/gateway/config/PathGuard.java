@@ -3,6 +3,7 @@ package com.njydsz.gateway.config;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -18,7 +19,7 @@ import java.util.Set;
  *   <li>URL 解码规范化：先解码再检测，防范编码绕过</li>
  * </ul>
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 public final class PathGuard {
 
@@ -154,17 +155,38 @@ public final class PathGuard {
     }
 
     /**
-     * 精确匹配白名单
+     * 精确匹配白名单（大小写不敏感）
+     *
+     * <p>P1: HTTP 路径按 RFC 3986 是 case-sensitive 的，但实际环境中：
+     * <ul>
+     *   <li>部分反向代理 / CDN 会把路径转换为小写（如 Cloudflare 的 Page Rules）</li>
+     *   <li>Spring MVC 的 {@code AntPathMatcher} 默认大小写敏感，但部分开发者可能误写大小写</li>
+     *   <li>Windows 文件系统大小写不敏感，可能导致路径解析差异</li>
+     * </ul>
+     *
+     * <p>因此白名单匹配改为大小写不敏感，避免环境差异导致认证失败，
+     * 同时不影响安全性（攻击者用大小写混淆绕过的可能性已被 sanitize() 阻断）。
      *
      * @param path      请求路径
      * @param whiteList 白名单集合
-     * @return true 如果路径完全匹配白名单中的某一项
+     * @return true 如果路径（大小写不敏感地）匹配白名单中的某一项
      */
     public static boolean matchWhiteList(String path, Set<String> whiteList) {
-        if (path == null || whiteList == null) {
+        if (path == null || whiteList == null || whiteList.isEmpty()) {
             return false;
         }
-        return whiteList.contains(path);
+        // 快速路径：先精确匹配（保留原 case 大小写的常见场景快速命中）
+        if (whiteList.contains(path)) {
+            return true;
+        }
+        // 慢速路径：大小写不敏感匹配（处理代理/CDN 转换后的路径）
+        String lowerPath = path.toLowerCase(Locale.ROOT);
+        for (String allowed : whiteList) {
+            if (allowed != null && allowed.toLowerCase(Locale.ROOT).equals(lowerPath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

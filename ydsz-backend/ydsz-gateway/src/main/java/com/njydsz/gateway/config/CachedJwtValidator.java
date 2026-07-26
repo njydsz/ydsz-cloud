@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>假设单实例 QPS=2000，90% 请求在 5 秒窗口内复用缓存，
  * JWT 解析次数从 2000/s 降至 ~200/s，CPU 开销减少 90%。
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

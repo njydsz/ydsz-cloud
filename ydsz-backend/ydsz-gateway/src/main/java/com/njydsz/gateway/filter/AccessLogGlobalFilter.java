@@ -67,7 +67,7 @@ import reactor.core.publisher.Mono;
  *   <li>服务端错误 (5xx) — ERROR</li>
  * </ul>
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

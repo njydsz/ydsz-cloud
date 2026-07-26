@@ -2,10 +2,12 @@ package com.njydsz.nextwiki.server.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -25,10 +27,13 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
+import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 
@@ -60,6 +65,8 @@ public class ChunkUploadApplicationService {
     private final FileNodeRepository fileNodeRepository;
     private final QuotaDomainService quotaDomainService;
     private final FileVersionDomainService versionDomainService;
+    private final FolderDomainService folderDomainService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -81,11 +88,15 @@ public class ChunkUploadApplicationService {
     public ChunkUploadApplicationService(StringRedisTemplate redisTemplate,
                                           FileNodeRepository fileNodeRepository,
                                           QuotaDomainService quotaDomainService,
-                                          FileVersionDomainService versionDomainService) {
+                                          FileVersionDomainService versionDomainService,
+                                          FolderDomainService folderDomainService,
+                                          org.springframework.context.ApplicationEventPublisher eventPublisher) {
         this.redisTemplate = redisTemplate;
         this.fileNodeRepository = fileNodeRepository;
         this.quotaDomainService = quotaDomainService;
         this.versionDomainService = versionDomainService;
+        this.folderDomainService = folderDomainService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -192,15 +203,42 @@ public class ChunkUploadApplicationService {
                 throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
             }
 
+            // P0-R2: 计算 SHA-256 哈希（用于秒传去重）
+            String fileHash = calculateSha256(mergedFile);
+
+            // P0-R2: 秒传去重检查
+            if (fileHash != null) {
+                FileNode existing = fileNodeRepository.findByFileHash(fileHash);
+                if (existing != null) {
+                    log.info("[ChunkUploadApplicationService] 秒传命中: hash={}, existingId={}",
+                            fileHash, existing.getId());
+                    FileNode deduped = buildDedupedNode(session, existing, fileHash, userId);
+                    FileNode saved = fileNodeRepository.save(deduped);
+                    versionDomainService.createVersion(saved.getId(), existing.getStorageKey(),
+                            existing.getSize(), fileHash, existing.getMimeType(), "秒传", userId);
+                    quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
+                    publishUploadEvent(saved, userId);
+                    return FileNodeVO.builder().id(saved.getId()).name(saved.getName())
+                            .nodeType(saved.getNodeType()).size(saved.getSize()).build();
+                }
+            }
+
             String storageKey = generateStorageKey(userId, session.getFileName());
             MultipartFile multipartFile = createMultipartFile(
                     mergedFile, session.getFileName());
             FileStorage stored = storage.upload(null, storageKey, multipartFile);
 
-            // 创建 FileNode
+            // P0-R2: 解析父目录获取正确 path/level（不再硬编码 "/" 和 1）
+            FileNode parent = resolveParent(session.getParentId(), userId);
+            String parentPath = parent.getPath() != null ? parent.getPath() : "/";
+            String path = parentPath.endsWith("/")
+                    ? parentPath + session.getFileName() + "/"
+                    : parentPath + "/" + session.getFileName() + "/";
+            int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
+
             FileNode fileNode = FileNode.builder()
                     .id(UUID.randomUUID().toString().replace("-", ""))
-                    .parentId(session.getParentId())
+                    .parentId(parent.getId())
                     .name(session.getFileName())
                     .nodeType(FileNode.TYPE_FILE)
                     .suffix(extractSuffix(session.getFileName()))
@@ -208,10 +246,11 @@ public class ChunkUploadApplicationService {
                     .storageKey(storageKey)
                     .bucketName(stored.getUuidName())
                     .mimeType(stored.getMimeType())
-                    .path("/")
-                    .level(1)
+                    .path(path)
+                    .level(level)
                     .sort(0)
                     .currentVersion(0)
+                    .fileHash(fileHash)
                     .previewReady(false)
                     .starred(false)
                     .shareStatus("private")
@@ -227,9 +266,12 @@ public class ChunkUploadApplicationService {
             FileNode saved = fileNodeRepository.save(fileNode);
 
             versionDomainService.createVersion(saved.getId(), storageKey, stored.getSize(),
-                    null, stored.getMimeType(), "分片上传", userId);
+                    fileHash, stored.getMimeType(), "分片上传", userId);
 
             quotaDomainService.addUsage("user", userId, stored.getSize(), 1);
+
+            // P0-R2: 发布上传事件（触发内容提取、索引同步、审计日志）
+            publishUploadEvent(saved, userId);
 
             log.info("[ChunkUploadApplicationService] 分片上传完成: uploadId={}, nodeId={}", uploadId, saved.getId());
             return FileNodeVO.builder()
@@ -242,7 +284,7 @@ public class ChunkUploadApplicationService {
             log.error("[ChunkUploadApplicationService] 合并失败: uploadId={}", uploadId, e);
             throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
         } finally {
-            cleanupChunks(uploadId, session.getTotalChunks());
+            cleanupChunks(uploadId, session.getTotalChunks(), session.getFileName());
             redisTemplate.delete(KEY_UPLOAD_SESSION + uploadId);
             redisTemplate.delete(KEY_UPLOADED_CHUNKS + uploadId);
         }
@@ -254,7 +296,10 @@ public class ChunkUploadApplicationService {
     public void abortChunkUpload(String uploadId) {
         ChunkUploadSession session = getSession(uploadId);
         if (session != null) {
-            cleanupChunks(uploadId, session.getTotalChunks());
+            cleanupChunks(uploadId, session.getTotalChunks(), session.getFileName());
+        } else {
+            // session 不存在时仍尝试清理目录
+            cleanupChunks(uploadId, 0, null);
         }
         redisTemplate.delete(KEY_UPLOAD_SESSION + uploadId);
         redisTemplate.delete(KEY_UPLOADED_CHUNKS + uploadId);
@@ -299,7 +344,7 @@ public class ChunkUploadApplicationService {
         return Path.of(chunkTempDir, uploadId, "merged-" + sanitizeFileName(fileName));
     }
 
-    private void cleanupChunks(String uploadId, int totalChunks) {
+    private void cleanupChunks(String uploadId, int totalChunks, String fileName) {
         for (int i = 1; i <= totalChunks; i++) {
             try {
                 Files.deleteIfExists(getChunkPath(uploadId, i));
@@ -307,8 +352,15 @@ public class ChunkUploadApplicationService {
                 log.warn("[ChunkUploadApplicationService] 清理分片失败: uploadId={}, chunk={}", uploadId, i);
             }
         }
+        // P0-R2: 使用真实文件名清理合并文件（不再用 "merged" 硬编码）
+        if (fileName != null) {
+            try {
+                Files.deleteIfExists(getMergedPath(uploadId, fileName));
+            } catch (IOException e) {
+                log.warn("[ChunkUploadApplicationService] 清理合并文件失败: uploadId={}", uploadId);
+            }
+        }
         try {
-            Files.deleteIfExists(getMergedPath(uploadId, "merged"));
             Path sessionDir = Path.of(chunkTempDir, uploadId);
             if (Files.exists(sessionDir)) {
                 Files.list(sessionDir).forEach(p -> {
@@ -348,6 +400,91 @@ public class ChunkUploadApplicationService {
             return fileStorageProvider.getStorage();
         }
         return null;
+    }
+
+    // P0-R2: 新增辅助方法
+
+    private FileNode resolveParent(String parentId, String userId) {
+        if (parentId == null || parentId.isEmpty() || "0".equals(parentId)) {
+            return fileNodeRepository.findOrCreateRoot(userId);
+        }
+        FileNode parent = fileNodeRepository.findById(parentId);
+        if (parent == null) {
+            throw BusinessException.of(NextwikiExceptionCode.FILE_FOLDER_NOT_FOUND).data("parentId", parentId);
+        }
+        return parent;
+    }
+
+    private String calculateSha256(Path filePath) {
+        try (InputStream is = Files.newInputStream(filePath)) {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = is.read(buffer)) != -1) {
+                digest.update(buffer, 0, len);
+            }
+            byte[] hash = digest.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.warn("[ChunkUploadApplicationService] SHA-256 计算失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private FileNode buildDedupedNode(ChunkUploadSession session, FileNode existing,
+                                         String fileHash, String userId) {
+        FileNode parent = resolveParent(session.getParentId(), userId);
+        String parentPath = parent.getPath() != null ? parent.getPath() : "/";
+        String path = parentPath.endsWith("/")
+                ? parentPath + session.getFileName() + "/"
+                : parentPath + "/" + session.getFileName() + "/";
+        int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
+
+        FileNode node = FileNode.builder()
+                .id(UUID.randomUUID().toString().replace("-", ""))
+                .parentId(parent.getId())
+                .name(session.getFileName())
+                .nodeType(FileNode.TYPE_FILE)
+                .suffix(extractSuffix(session.getFileName()))
+                .size(existing.getSize())
+                .storageKey(existing.getStorageKey())
+                .bucketName(existing.getBucketName())
+                .mimeType(existing.getMimeType())
+                .path(path)
+                .level(level)
+                .sort(0)
+                .currentVersion(0)
+                .fileHash(fileHash)
+                .thumbnailKey(existing.getThumbnailKey())
+                .previewReady(existing.getPreviewReady())
+                .starred(false)
+                .shareStatus("private")
+                .status("active")
+                .deleted(0)
+                .revision(0)
+                .build();
+        node.setCreatedBy(userId);
+        node.setCreatedAt(LocalDateTime.now());
+        node.setUpdatedBy(userId);
+        node.setUpdatedAt(LocalDateTime.now());
+        return node;
+    }
+
+    private void publishUploadEvent(FileNode saved, String userId) {
+        eventPublisher.publishEvent(FileOperatedEvent.builder()
+                .operation(FileOperatedEvent.OP_UPLOAD)
+                .fileNodeId(saved.getId())
+                .fileName(saved.getName())
+                .nodeType(saved.getNodeType())
+                .storageKey(saved.getStorageKey())
+                .bucketName(saved.getBucketName())
+                .operatorId(userId)
+                .operatedAt(LocalDateTime.now())
+                .build());
     }
 
 /**
@@ -416,7 +553,7 @@ public class ChunkUploadApplicationService {
     }
 
     /**
-     * 分片上传会话（Redis 存储）
+     * 分片上传会话（Redis 存储，P0-R4: 改用 YdszJson 序列化替代管道符分隔）
      */
     @Data
     public static class ChunkUploadSession {
@@ -429,21 +566,11 @@ public class ChunkUploadApplicationService {
         private String createdAt;
 
         String toJson() {
-            return uploadId + "|" + fileName + "|" + fileSize + "|"
-                    + totalChunks + "|" + parentId + "|" + userId + "|" + createdAt;
+            return YdszJson.toJson(this);
         }
 
         static ChunkUploadSession fromJson(String json) {
-            String[] parts = json.split("\\|", 7);
-            ChunkUploadSession s = new ChunkUploadSession();
-            s.uploadId = parts[0];
-            s.fileName = parts[1];
-            s.fileSize = Long.parseLong(parts[2]);
-            s.totalChunks = Integer.parseInt(parts[3]);
-            s.parentId = parts.length > 4 ? parts[4] : null;
-            s.userId = parts.length > 5 ? parts[5] : null;
-            s.createdAt = parts.length > 6 ? parts[6] : null;
-            return s;
+            return YdszJson.fromJson(json, ChunkUploadSession.class);
         }
     }
 }

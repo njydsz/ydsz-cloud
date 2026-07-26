@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>所有响应均注入 traceId，便于排障关联。
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

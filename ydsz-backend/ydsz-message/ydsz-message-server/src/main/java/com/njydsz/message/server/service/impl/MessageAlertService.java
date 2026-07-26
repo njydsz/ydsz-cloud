@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.server.service.core.MessageService;
+import com.njydsz.message.server.metrics.MessageServiceMetrics;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ public class MessageAlertService {
     private final StringRedisTemplate redisTemplate;
     private final RealtimeStatsService realtimeStatsService;
     private final MessageService messageService;
+    /** OD-2: 延迟分位数统一到 MessageServiceMetrics (Micrometer Timer) */
+    private final MessageServiceMetrics messageServiceMetrics;
 
     /** 告警去重 key 前缀 */
     private static final String ALERT_DEDUP_PREFIX = "ydsz:alert:dedup:";
@@ -95,15 +98,16 @@ public class MessageAlertService {
     }
 
     /**
-     * 检查各通道 P95 延迟。
+     * OD-2+OD-3: 检查各通道错误计数（替代 ZSet 分位数计算）。
+     * <p>通道列表从 RealtimeStatsService 动态获取，不再硬编码。
      */
     private void checkLatency() {
-        for (String channel : new String[]{"SMS", "EMAIL", "PUSH", "DINGTALK"}) {
-            double[] percentiles = realtimeStatsService.getLatencyPercentiles(channel);
-            if (percentiles.length >= 2 && percentiles[1] > P95_LATENCY_THRESHOLD) {
-                String alertKey = "p95_latency:" + channel;
-                String msg = String.format("⚠️ 延迟告警: 通道=%s P95=%.0fms P99=%.0fms (阈值%.0fms)",
-                        channel, percentiles[1], percentiles[2], P95_LATENCY_THRESHOLD);
+        Map<String, Long> errorCounts = realtimeStatsService.getDailyErrorCounts();
+        for (Map.Entry<String, Long> entry : errorCounts.entrySet()) {
+            if (entry.getValue() > 50) {
+                String alertKey = "error_count:" + entry.getKey();
+                String msg = String.format("⚠️ 错误计数告警: 通道=%s 当日错误数=%d",
+                        entry.getKey(), entry.getValue());
                 sendAlert(alertKey, msg);
             }
         }

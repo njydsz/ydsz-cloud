@@ -28,7 +28,6 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 import com.njydsz.workflow.server.service.FlowRoutingService;
 import com.njydsz.workflow.server.service.FlowTaskService;
-import com.njydsz.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -114,13 +113,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return instanceService.toView(instanceService.getById(instanceId),
                     loadCurrentTasks(instanceId));
         }
-        FlowInstanceServiceImpl impl = null;
-        if (instanceService instanceof FlowInstanceServiceImpl) {
-            impl = (FlowInstanceServiceImpl) instanceService;
-        }
-        if (impl != null) {
-            impl.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
-        }
+        // P2-4: 直接通过接口调用，无需 instanceof 强转
+        instanceService.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
         if (nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
             instanceMapper.updateStatus(instanceId,
                     instance.getFlowStatus(),

@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono;
  * <p>{@code HIGHEST_PRECEDENCE + 3}，在 {@link IpWhitelistFilter}(+5) 之前执行，
  * 黑名单优先于白名单检查（恶意 IP 即使在白名单中也应被拒绝）。
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

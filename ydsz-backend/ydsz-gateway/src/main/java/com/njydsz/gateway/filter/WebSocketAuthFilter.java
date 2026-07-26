@@ -60,7 +60,7 @@ import reactor.core.publisher.Mono;
  * <p>{@code HIGHEST_PRECEDENCE + 8}，在 {@link AuthGlobalFilter}(+10) 之前执行，
  * WebSocket 请求由本过滤器处理并标记为已认证，{@link AuthGlobalFilter} 检测到标记后跳过。
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

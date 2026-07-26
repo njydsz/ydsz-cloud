@@ -64,6 +64,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
     /** 单次扫描上限（避免大表全表扫描） */
     private static final int SCAN_BATCH_SIZE = 500;
+    /** P1-6: 单轮扫描最大迭代次数（安全阀，避免大量超期任务导致单次扫描耗时过长） */
+    private static final int MAX_SCAN_ITERATIONS = 10;
 
     /** 默认 SLA 配置（节点未配 slaConfig 时使用） */
     private static final int DEFAULT_REMINDER_INTERVAL_MINUTES = 60;
@@ -121,26 +123,37 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     @Override
     public int scanAndProcess() {
         try {
-            List<FlowRunTaskDO> candidates = taskMapper.selectSlaCandidates(SCAN_BATCH_SIZE);
-            if (candidates == null || candidates.isEmpty()) {
-                return 0;
-            }
             LocalDateTime now = LocalDateTime.now();
-            int processed = 0;
-            for (FlowRunTaskDO task : candidates) {
-                try {
-                    if (processOverdue(task, now)) {
-                        processed++;
-                    }
-                } catch (Exception e) {
-                    log.error("[FlowSla] 单条处理异常: taskId={} err={}",
-                            task.getId(), e.getMessage(), e);
+            int totalProcessed = 0;
+            int iterations = 0;
+            // P1-6: 游标分页 — 循环处理多批，直到无候选或达到最大迭代次数
+            while (iterations < MAX_SCAN_ITERATIONS) {
+                List<FlowRunTaskDO> candidates = taskMapper.selectSlaCandidates(SCAN_BATCH_SIZE);
+                if (candidates == null || candidates.isEmpty()) {
+                    break;
                 }
+                int batchProcessed = 0;
+                for (FlowRunTaskDO task : candidates) {
+                    try {
+                        if (processOverdue(task, now)) {
+                            batchProcessed++;
+                        }
+                    } catch (Exception e) {
+                        log.error("[FlowSla] 单条处理异常: taskId={} err={}",
+                                task.getId(), e.getMessage(), e);
+                    }
+                }
+                totalProcessed += batchProcessed;
+                // 批次未满或本批无处理（剩余候选均未到 dueAt），结束循环
+                if (candidates.size() < SCAN_BATCH_SIZE || batchProcessed == 0) {
+                    break;
+                }
+                iterations++;
             }
-            if (processed > 0) {
-                log.info("[FlowSla] 本轮扫描处理: count={}", processed);
+            if (totalProcessed > 0) {
+                log.info("[FlowSla] 本轮扫描处理: count={} iterations={}", totalProcessed, iterations + 1);
             }
-            return processed;
+            return totalProcessed;
         } catch (Exception e) {
             log.error("[FlowSla] 扫描异常: {}", e.getMessage(), e);
             return 0;

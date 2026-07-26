@@ -11,6 +11,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.slf4j.MDC;
 
 import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
@@ -21,6 +22,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowNotificationHelper;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
+import com.njydsz.workflow.server.queue.FlowQueuePublisher;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,10 +33,13 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>P2-35: 异步监听 FlowWorkflowEvent，解耦主流程事务。
  * <p>P0-1: 在关键生命周期埋点调用 FlowNotificationHelper，触发站内信触达。
+ * <p>P0-7: 立项状态联动由原 InitiationFeignClient 同步调用迁移至消息队列异步路径，
+ *         通过 {@link FlowQueuePublisher#publish(String, Map)} 发布 INITIATION_STATUS_SYNC
+ *         事件到 {@code ydsz:flow:event} 通道，由 project 模块订阅消费实现状态同步。
  *
  * <p>本监听器兼任两层职责：
  * <ol>
- *   <li>业务流程联动（原通过 InitiationFeignClient 跨服务联动立项状态，Feign 契约下线后待迁移至消息队列异步路径）</li>
+ *   <li>业务流程联动（通过 MQ 发布立项状态变更事件，跨服务异步解耦）</li>
  *   <li>通知触达（对标用友 BPM / 钉钉审批的实时通知能力）</li>
  * </ol>
  *
@@ -48,6 +53,14 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     /** 立项业务键前缀（见 InitiationServiceImpl#startProcess: YDSZ_INIT_ + id） */
     private static final String INIT_BIZ_KEY_PREFIX = "YDSZ_INIT_";
 
+    /** P0-7: 立项状态联动 MQ 事件类型 */
+    private static final String EVENT_INITIATION_STATUS_SYNC = "INITIATION_STATUS_SYNC";
+
+    /** P0-7: 立项状态联动动作枚举（与 project 模块消费方约定） */
+    private static final String ACTION_MARK_PROCESSING = "markProcessing";
+    private static final String ACTION_MARK_APPROVED = "markApproved";
+    private static final String ACTION_MARK_REJECTED = "markRejected";
+
     private final FlowNotificationHelper notificationHelper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowRunTaskMapper taskMapper;
@@ -55,18 +68,18 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     private final FlowSubProcessService subProcessService;
     /** P1-7: 实时推送 Feign 客户端（IM 渠道待办通知） */
     private final NotificationClient notificationClient;
+    /** P0-7: 工作流 MQ 发布者（发布立项状态联动事件） */
+    private final FlowQueuePublisher queuePublisher;
 
     @Override
     public void onInstanceStart(String instanceId, Map<String, Object> variables) {
         log.info("[FlowListener] 立项流程启动: instanceId={} vars={}", instanceId,
                 variables == null ? Collections.emptySet() : variables.keySet());
-        // P1-7: 流程启动 → 标记立项为审批中（APPROVING）
+        // P0-7: 流程启动 → 发布立项状态联动事件（markProcessing）到 MQ
         FlowInstanceDO instance = instanceId == null ? null : instanceMapper.selectById(instanceId);
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markProcessing 联动立项状态，
-            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
-            log.info("[FlowListener] 立项状态联动待迁移: action=markProcessing initiationId={}", initiationId);
+            publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instance);
         }
     }
 
@@ -128,12 +141,10 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         nullSafe(instance.getFlowName()),
                         nullSafe(instance.getTitle())),
                 instanceId);
-        // P1-7: 流程通过 → 标记立项为已批准（APPROVED）
+        // P0-7: 流程通过 → 发布立项状态联动事件（markApproved）到 MQ
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markApproved 联动立项状态，
-            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
-            log.info("[FlowListener] 立项状态联动待迁移: action=markApproved initiationId={}", initiationId);
+            publishInitiationStatusSync(initiationId, ACTION_MARK_APPROVED, instanceId, instance);
         }
     }
 
@@ -164,28 +175,24 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         nullSafe(instance.getTitle()),
                         reason == null || reason.isBlank() ? "" : "，原因：" + reason),
                 instanceId);
-        // P1-7: 流程驳回 → 标记立项为已驳回（REJECTED）
+        // P0-7: 流程驳回 → 发布立项状态联动事件（markRejected）到 MQ
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markRejected 联动立项状态，
-            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
-            log.info("[FlowListener] 立项状态联动待迁移: action=markRejected initiationId={}", initiationId);
+            publishInitiationStatusSync(initiationId, ACTION_MARK_REJECTED, instanceId, instance, reason);
         }
     }
 
     @Override
     public void onError(String instanceId, Throwable t) {
         log.error("[FlowListener][ALERT] 立项流程异常: instanceId={}", instanceId, t);
-        // P1-7: 触发重试机制 —— 尝试恢复立项状态联动（标记审批中），失败不抛出
+        // P0-7: 异常恢复 —— 重新发布 markProcessing 事件让消费方有机会恢复立项状态
         if (instanceId == null) {
             return;
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
-            // TODO Feign 契约已下线：原通过 InitiationFeignClient.markProcessing 恢复立项状态，
-            //      后续应迁移至消息队列（WorkflowEventQueueSubscriber）或同进程 Service 调用
-            log.info("[FlowListener] 立项状态联动待迁移: action=markProcessing(recover) initiationId={}", initiationId);
+            publishInitiationStatusSync(initiationId, ACTION_MARK_PROCESSING, instanceId, instance);
         }
     }
 
@@ -350,11 +357,62 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         String raw = bizId.startsWith(INIT_BIZ_KEY_PREFIX)
                 ? bizId.substring(INIT_BIZ_KEY_PREFIX.length())
                 : bizId;
+        return raw.trim();
+    }
+
+    /**
+     * P0-7: 发布立项状态联动事件到消息队列。
+     *
+     * <p>消息体字段约定（与 project 模块消费方契约对齐）：
+     * <ul>
+     *   <li>{@code initiationId} - 立项 ID</li>
+     *   <li>{@code action} - 状态联动动作：markProcessing / markApproved / markRejected</li>
+     *   <li>{@code instanceId} - 流程实例 ID（便于消费方回查）</li>
+     *   <li>{@code tenantId} - 租户 ID（多租户场景下做隔离）</li>
+     *   <li>{@code traceId} - 链路追踪 ID（跨服务 trace 串联）</li>
+     *   <li>{@code reason} - 驳回原因（仅 markRejected 携带）</li>
+     * </ul>
+     *
+     * <p>MQ 发布失败不影响主流程，仅记录日志（消费方需保证幂等）。
+     *
+     * @param initiationId 立项 ID
+     * @param action       状态联动动作
+     * @param instanceId   流程实例 ID
+     * @param instance     流程实例（用于提取 tenantId/traceId，可空）
+     * @param reason       驳回原因（仅 markRejected 时传入，可空）
+     */
+    private void publishInitiationStatusSync(String initiationId, String action,
+                                             String instanceId, FlowInstanceDO instance,
+                                             String... reason) {
+        if (queuePublisher == null || initiationId == null || action == null) {
+            return;
+        }
         try {
-            return raw.trim();
-        } catch (NumberFormatException e) {
-            log.warn("[FlowListener] 无法从业务键解析立项 ID: bizId={}", bizId);
-            return null;
+            Map<String, Object> data = new HashMap<>(8);
+            data.put("initiationId", initiationId);
+            data.put("action", action);
+            data.put("instanceId", instanceId);
+            if (instance != null) {
+                data.put("tenantId", instance.getTenantId() == null
+                        ? null : String.valueOf(instance.getTenantId()));
+                String traceId = instance.getProviderTraceId();
+                if (traceId == null || traceId.isBlank()) {
+                    traceId = MDC.get("traceId");
+                    if (traceId == null) traceId = MDC.get("tid");
+                }
+                if (traceId != null) {
+                    data.put("traceId", traceId);
+                }
+            }
+            if (reason != null && reason.length > 0 && reason[0] != null) {
+                data.put("reason", reason[0]);
+            }
+            queuePublisher.publish(EVENT_INITIATION_STATUS_SYNC, data);
+            log.info("[FlowListener] 立项状态联动事件已发布: action={} initiationId={} instanceId={}",
+                    action, initiationId, instanceId);
+        } catch (Exception e) {
+            log.warn("[FlowListener] 立项状态联动事件发布失败: action={} initiationId={} err={}",
+                    action, initiationId, e.getMessage());
         }
     }
 

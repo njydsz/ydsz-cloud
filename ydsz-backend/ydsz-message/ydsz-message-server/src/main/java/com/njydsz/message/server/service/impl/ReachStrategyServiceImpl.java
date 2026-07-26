@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.message.domain.dto.core.UserReachProfileDTO;
 import com.njydsz.message.server.service.core.ReachStrategyService;
+import com.njydsz.message.server.service.impl.DndService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,8 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     );
 
     private final StringRedisTemplate redisTemplate;
+    /** OD-1: DND 逻辑委托给 DndService，消除重复实现 */
+    private final DndService dndService;
 
     @Override
     public UserReachProfileDTO getProfile(String userId) {
@@ -127,26 +130,8 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
 
     @Override
     public boolean isInDndPeriod(String userId) {
-        UserReachProfileDTO profile = getProfile(userId);
-        if (!StringUtils.hasText(profile.getDndStart()) || !StringUtils.hasText(profile.getDndEnd())) {
-            return false;
-        }
-        try {
-            ZoneId zone = ZoneId.of(profile.getTimezone() != null ? profile.getTimezone() : DEFAULT_TIMEZONE);
-            ZonedDateTime now = ZonedDateTime.now(zone);
-            LocalTime currentTime = now.toLocalTime();
-            LocalTime start = LocalTime.parse(profile.getDndStart());
-            LocalTime end = LocalTime.parse(profile.getDndEnd());
-            // 处理跨天情况（如 22:00-08:00）
-            if (start.isBefore(end)) {
-                return !currentTime.isBefore(start) && currentTime.isBefore(end);
-            } else {
-                return !currentTime.isBefore(start) || currentTime.isBefore(end);
-            }
-        } catch (Exception e) {
-            log.warn("[ReachStrategy] DND 判断异常: userId={} err={}", userId, e.getMessage(), e);
-            return false;
-        }
+        // OD-1: 委托给 DndService，消除重复的跨天窗口判断逻辑
+        return dndService.shouldDelay(userId, null);
     }
 
     @Override

@@ -26,6 +26,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -37,6 +38,7 @@ import net.sf.jsqlparser.statement.select.ParenthesedSelect;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.Values;
 import net.sf.jsqlparser.statement.update.Update;
 
 /**
@@ -229,6 +231,9 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
             case SELECT:
                 processSelectIntercept(sh);
                 break;
+            case INSERT:
+                processInsertIntercept(sh);
+                break;
             default:
                 break;
         }
@@ -284,6 +289,21 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
             throw new SysException(
                     "Failed to parse DELETE SQL, logical delete conversion aborted to prevent physical delete", e);
         }
+    }
+
+    /**
+     * 处理 INSERT 语句拦截
+     *
+     * <p>委托父类 {@link JsqlParserSupport#parserMulti(String, Object)} 解析 SQL，
+     * 自动调用 {@link #processInsert(Insert, int, String, Object)} 完成列与值的补充，
+     * 最后将改写后的 SQL 写回 BoundSql。
+     *
+     * @param sh StatementHandler 实例
+     */
+    private void processInsertIntercept(StatementHandler sh) {
+        PluginUtils.MPStatementHandler mpSh = PluginUtils.mpStatementHandler(sh);
+        PluginUtils.MPBoundSql mpBs = mpSh.mPBoundSql();
+        mpBs.sql(parserMulti(mpBs.sql(), null));
     }
 
     /**
@@ -397,10 +417,30 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
     }
 
     /**
-     * 处理 INSERT 语句（逻辑删除不涉及 INSERT，此方法为空）
+     * 处理 INSERT 语句 - 自动补充 deleted = normalValue 字面量
      *
-     * <p>保留此方法是因为父类 JsqlParserSupport 要求实现该抽象方法。
-     * 实际上逻辑删除主要作用于 SELECT 和 DELETE，INSERT 操作不受影响。
+     * <p>对 {@code INSERT INTO table (col1, col2) VALUES (v1, v2)} 形式的语句，
+     * 若列声明中未显式包含 {@code deleted} 列，则自动追加该列与对应字面量值，
+     * 避免因 DDL 未设置 DEFAULT 或实体未填充字段导致记录变为 NULL，
+     * 进而被 {@code WHERE deleted = 0} 过滤掉的问题。
+     *
+     * <p><b>处理规则：</b>
+     * <ul>
+     *   <li>忽略表（{@link #shouldIgnoreTable(String)}）跳过</li>
+     *   <li>无显式列声明（{@code INSERT INTO t VALUES (...)}）跳过，无法对齐列值位置</li>
+     *   <li>已显式声明 deleted 列，跳过，保留业务侧明确语义</li>
+     *   <li>仅处理 {@code INSERT ... VALUES} 单行形式，{@code INSERT ... SELECT}
+     *       由 {@link #processSelect} 走 SELECT 链路递归处理</li>
+     * </ul>
+     *
+     * <p>SQL 转换示例：
+     * <pre>
+     * // 原始
+     * INSERT INTO rs_company (id, name) VALUES (1, 'test')
+     *
+     * // 转换后
+     * INSERT INTO rs_company (id, name, deleted) VALUES (1, 'test', 0)
+     * </pre>
      *
      * @param insert INSERT 语句对象
      * @param index  语句索引
@@ -409,6 +449,53 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
      */
     @Override
     protected void processInsert(Insert insert, int index, String sql, Object obj) {
+        if (!enabled) {
+            return;
+        }
+
+        Table table = insert.getTable();
+        if (table == null || shouldIgnoreTable(table.getName())) {
+            return;
+        }
+
+        // 获取显式列声明；为空表示 INSERT INTO ... VALUES (...)（无列名），
+        // 此时无法安全地追加列值对应（位置不对齐），跳过让 DDL DEFAULT 兜底
+        List<Column> columns = JSqlParserHelper.getInsertColumns(insert);
+        if (CollectionUtils.isEmpty(columns)) {
+            return;
+        }
+
+        // 若已显式声明 deleted 列，不重复添加（避免覆盖业务侧明确语义）
+        boolean hasDeleted = columns.stream()
+                .anyMatch(col -> col.getColumnName() != null
+                        && col.getColumnName().equalsIgnoreCase(deletedColumn));
+        if (hasDeleted) {
+            return;
+        }
+
+        // 仅处理 INSERT ... VALUES 单行形式；INSERT ... SELECT 由 processSelect 走 SELECT 链路
+        Values values = insert.getValues();
+        if (values == null) {
+            return;
+        }
+        ExpressionList<?> expressionList = values.getExpressions();
+        if (expressionList == null || expressionList.isEmpty()) {
+            return;
+        }
+
+        // 追加 deleted 列到列声明
+        columns.add(new Column(deletedColumn));
+
+        // 重建 VALUES 列表，追加 normalValue 字面量
+        ExpressionList<Expression> typedList = new ExpressionList<>();
+        for (Object item : expressionList) {
+            typedList.add(Expression.class.cast(item));
+        }
+        typedList.add(new LongValue(normalValue));
+        values.setExpressions(typedList);
+
+        log.debug("LogicalDeleteInterceptor: Added {}={} to INSERT VALUES for table {}",
+                deletedColumn, normalValue, table.getName());
     }
 
     /**

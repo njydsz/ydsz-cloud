@@ -23,7 +23,7 @@ import com.njydsz.common.safe.util.ClientIpResolver;
  * 但可信代理判定逻辑完全复用 ydsz-common-safe 中的 {@link ClientIpResolver#isTrustedProxy}，
  * 保持单一来源一致。
  *
- * @since 2.2.0
+ * @since 1.0.0
  */
 public final class GatewayIpUtils {
 

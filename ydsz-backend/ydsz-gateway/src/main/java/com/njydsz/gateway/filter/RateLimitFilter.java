@@ -64,7 +64,7 @@ import reactor.core.publisher.Mono;
  *   <li>{@code Retry-After}: 建议重试等待时间（秒）</li>
  * </ul>
  *
- * @since 2.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component
