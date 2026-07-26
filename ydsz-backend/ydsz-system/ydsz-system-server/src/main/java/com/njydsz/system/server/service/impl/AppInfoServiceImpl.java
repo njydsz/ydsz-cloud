@@ -91,6 +91,12 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(AppInfoDTO dto) {
+        // 唯一性校验：appKey 不能重复
+        QueryWrapper<AppInfoDO> checkWrapper = new QueryWrapper<>();
+        checkWrapper.eq("app_key", dto.getAppKey());
+        if (mapper.selectCount(checkWrapper) > 0) {
+            throw new IllegalArgumentException("应用 Key 已存在: " + dto.getAppKey());
+        }
         AppInfoDO entity = toEntity(dto);
         if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
             entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));

@@ -150,6 +150,14 @@ public class DictItemServiceImpl implements DictItemService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(DictItemDTO dto) {
+        // 唯一性校验：(typeCode, itemCode) 组合不能重复
+        QueryWrapper<DictItemDO> checkWrapper = new QueryWrapper<>();
+        checkWrapper.eq("type_code", dto.getTypeCode())
+                .eq("item_code", dto.getItemCode());
+        if (mapper.selectCount(checkWrapper) > 0) {
+            throw new IllegalArgumentException(
+                    "字典项编码已存在: " + dto.getTypeCode() + "/" + dto.getItemCode());
+        }
         DictItemDO entity = toEntity(dto);
         mapper.insert(entity);
         evictCache(entity.getTypeCode());

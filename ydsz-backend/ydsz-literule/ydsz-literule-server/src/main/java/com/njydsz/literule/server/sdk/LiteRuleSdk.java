@@ -22,13 +22,13 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  *
  * <h3>快速入门（嵌入式）</h3>
  * <pre>{@code
- * LiteRuleClient client = LiteRuleClient.builder()
+ * LiteRuleSdk sdk = LiteRuleSdk.builder()
  *     .tenantId("T001")
  *     .environment("prod")
  *     .build();
  *
  * // 编程式注册规则
- * client.addRule(RuleDefinition.builder()
+ * sdk.addRule(RuleDefinition.builder()
  *     .code("R001")
  *     .name("高额预警")
  *     .conditionExpression("amount > 10000")
@@ -36,12 +36,12 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  *     .build());
  *
  * // 评估
- * List<RuleResult> results = client.evaluate(Map.of("amount", 15000));
+ * List<RuleResult> results = sdk.evaluate(Map.of("amount", 15000));
  * }</pre>
  *
  * <h3>链式 Builder 注册规则</h3>
  * <pre>{@code
- * client.rule("R002")
+ * sdk.rule("R002")
  *     .name("低利润告警")
  *     .condition("grossMargin < 0.05 && confirmedRevenue > 0")
  *     .severity(RuleSeverity.YELLOW)
@@ -49,9 +49,12 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  *     .register();
  * }</pre>
  *
+ * <p>注意：本类与 {@code com.njydsz.literule.api.client.LiteRuleClient}（Feign 远程调用接口）
+ * 是不同的概念。{@code LiteRuleSdk} 是嵌入式 SDK 入口，{@code LiteRuleClient} 是远程 Feign 客户端。
+ *
  * @since 2.0.0
  */
-public class LiteRuleClient {
+public class LiteRuleSdk {
 
     private final RuleEngine ruleEngine;
     private final ExpressionEvaluator evaluator;
@@ -59,7 +62,7 @@ public class LiteRuleClient {
     private final String environment;
     private final Map<String, RuleDefinition> ruleDefinitions = new ConcurrentHashMap<>();
 
-    LiteRuleClient(RuleEngine ruleEngine, ExpressionEvaluator evaluator,
+    public LiteRuleSdk(RuleEngine ruleEngine, ExpressionEvaluator evaluator,
                    String tenantId, String environment) {
         this.ruleEngine = Objects.requireNonNull(ruleEngine, "ruleEngine");
         this.evaluator = Objects.requireNonNull(evaluator, "evaluator");
@@ -70,8 +73,8 @@ public class LiteRuleClient {
     /**
      * 创建 Builder
      */
-    public static LiteRuleClientBuilder builder() {
-        return new LiteRuleClientBuilder();
+    public static LiteRuleSdkBuilder builder() {
+        return new LiteRuleSdkBuilder();
     }
 
     /**
@@ -188,11 +191,11 @@ public class LiteRuleClient {
      * 链式规则构建器
      */
     public static class RuleBuilder {
-        private final LiteRuleClient client;
+        private final LiteRuleSdk sdk;
         private final RuleDefinition.RuleDefinitionBuilder builder;
 
-        RuleBuilder(LiteRuleClient client, String code) {
-            this.client = client;
+        RuleBuilder(LiteRuleSdk sdk, String code) {
+            this.sdk = sdk;
             this.builder = RuleDefinition.builder().code(code);
         }
 
@@ -245,7 +248,7 @@ public class LiteRuleClient {
          * 完成构建并注册到客户端
          */
         public void register() {
-            client.addRule(builder.build());
+            sdk.addRule(builder.build());
         }
     }
 }

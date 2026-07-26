@@ -46,9 +46,6 @@ public class SystemProperties {
 
         /** 配置缓存 TTL（分钟）。 */
         private int cacheTtlMinutes = 5;
-
-        /** 是否启用配置热加载（监听 Nacos 配置变更事件）。 */
-        private boolean hotReloadEnabled = true;
     }
 
     /**

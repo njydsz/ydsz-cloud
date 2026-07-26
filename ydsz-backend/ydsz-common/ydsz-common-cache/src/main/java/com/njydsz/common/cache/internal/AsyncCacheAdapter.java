@@ -2,6 +2,7 @@ package com.njydsz.common.cache.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,9 @@ public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
 
   /** 正在加载的 Future 映射（key -> 进行中的 CompletableFuture），用于异步防击穿 */
   private final Map<K, CompletableFuture<V>> loadingFutures = new ConcurrentHashMap<>();
+
+  /** 正在刷新的 Future 映射（key -> 进行中的 CompletableFuture），用于刷新防击穿 */
+  private final Map<K, CompletableFuture<V>> refreshingFutures = new ConcurrentHashMap<>();
 
   /**
    * 创建 AsyncCache 适配器（使用默认线程池）
@@ -135,6 +139,79 @@ public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {
   @Override
   public CompletableFuture<Void> put(K key, V value) {
     return CompletableFuture.runAsync(() -> delegate.put(key, value), actualExecutor());
+  }
+
+  @Override
+  public CompletableFuture<V> refresh(K key, AsyncFunction<K, V> loader) {
+    if (key == null) {
+      return CompletableFuture.failedFuture(new NullPointerException("缓存键不能为 null"));
+    }
+    if (loader == null) {
+      return CompletableFuture.failedFuture(new NullPointerException("加载器不能为 null"));
+    }
+    // 刷新防击穿：同一 key 的并发刷新请求共享同一个 Future
+    // 注意：whenComplete 必须在 computeIfAbsent 之外附加，避免在 mapping function
+    // 内部触发 refreshingFutures.remove 导致 ConcurrentHashMap 抛 Recursive update
+    CompletableFuture<V> future =
+        refreshingFutures.computeIfAbsent(
+            key,
+            k ->
+                CompletableFuture.supplyAsync(() -> loader.apply(k), actualExecutor())
+                    .thenCompose(f -> f));
+    future.whenComplete(
+        (v, ex) -> {
+          // 加载完成后从刷新中映射移除（用 value 相等性检查避免误删其他线程的 future）
+          refreshingFutures.remove(key, future);
+          if (ex == null) {
+            if (v != null) {
+              // 加载成功且非 null，更新缓存
+              delegate.put(key, v);
+            } else {
+              // 加载返回 null，从缓存中移除该键
+              delegate.remove(key);
+            }
+          }
+          // 加载失败时（ex != null）保留缓存旧值，不清空
+        });
+    return future;
+  }
+
+  @Override
+  public CompletableFuture<Map<K, V>> refreshAll(
+      Collection<K> keys, AsyncFunction<Collection<K>, Map<K, V>> loader) {
+    if (keys == null || keys.isEmpty()) {
+      return CompletableFuture.completedFuture(Collections.emptyMap());
+    }
+    if (loader == null) {
+      return CompletableFuture.failedFuture(new NullPointerException("加载器不能为 null"));
+    }
+    return CompletableFuture.supplyAsync(
+            () -> {
+              try {
+                Map<K, V> loaded = loader.apply(keys).join();
+                if (loaded == null) {
+                  return Collections.<K, V>emptyMap();
+                }
+                Map<K, V> result = new HashMap<>(loaded.size());
+                for (Map.Entry<K, V> entry : loaded.entrySet()) {
+                  V value = entry.getValue();
+                  if (value != null) {
+                    // 加载成功且非 null，更新缓存
+                    delegate.put(entry.getKey(), value);
+                    result.put(entry.getKey(), value);
+                  } else {
+                    // 加载返回 null，从缓存中移除该键
+                    delegate.remove(entry.getKey());
+                  }
+                }
+                return result;
+              } catch (Exception e) {
+                log.warn("批量刷新失败, keys={}", keys, e);
+                // 批量加载失败时保留所有键的旧值，返回空 Map
+                return Collections.<K, V>emptyMap();
+              }
+            },
+            actualExecutor());
   }
 
   @Override

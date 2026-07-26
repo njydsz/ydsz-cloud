@@ -11,8 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.entity.ConfigDO;
+import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 import com.njydsz.system.server.config.SystemProperties;
@@ -36,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfigServiceImpl implements ConfigService {
 
     private static final String CACHE_KEY_PREFIX = "system:config:value:";
+    private static final String CACHE_GROUP_PREFIX = "system:config:group:";
+    private static final String CACHE_PUBLIC_KEY = "system:config:public";
     private static final String NULL_SENTINEL = "__NULL__";
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
 
@@ -80,16 +84,33 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public List<ConfigVO> getConfigsByGroup(String configGroup) {
+        String cacheKey = CACHE_GROUP_PREFIX + configGroup;
+        String cached = redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            metrics.recordConfigCacheHit();
+            return YdszJson.parseArray(cached, ConfigVO.class);
+        }
+        metrics.recordConfigCacheMiss();
         QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
         wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
-        return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
+        List<ConfigVO> vos = mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
+        redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
+        return vos;
     }
 
     @Override
     public List<ConfigVO> listPublicConfigs() {
+        String cached = redisTemplate.opsForValue().get(CACHE_PUBLIC_KEY);
+        if (cached != null) {
+            metrics.recordConfigCacheHit();
+            return YdszJson.parseArray(cached, ConfigVO.class);
+        }
+        metrics.recordConfigCacheMiss();
         QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
         wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
-        return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
+        List<ConfigVO> vos = mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
+        redisTemplate.opsForValue().set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
+        return vos;
     }
 
     @Override
@@ -121,9 +142,17 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional(rollbackFor = Exception.class)
     public String save(ConfigDTO dto) {
         validateValueType(dto.getValueType());
+        // 唯一性校验：(configGroup, configKey) 组合不能重复
+        QueryWrapper<ConfigDO> checkWrapper = new QueryWrapper<>();
+        checkWrapper.eq("config_group", dto.getConfigGroup())
+                .eq("config_key", dto.getConfigKey());
+        if (mapper.selectCount(checkWrapper) > 0) {
+            throw new IllegalArgumentException(
+                    "配置键已存在: " + dto.getConfigGroup() + "/" + dto.getConfigKey());
+        }
         ConfigDO entity = toEntity(dto);
         mapper.insert(entity);
-        evictCache(entity.getConfigKey());
+        evictCache(entity.getConfigKey(), entity.getConfigGroup());
         return entity.getId();
     }
 
@@ -134,7 +163,7 @@ public class ConfigServiceImpl implements ConfigService {
         ConfigDO entity = toEntity(dto);
         boolean result = mapper.updateById(entity) > 0;
         if (result) {
-            evictCache(entity.getConfigKey());
+            evictCache(entity.getConfigKey(), entity.getConfigGroup());
         }
         return result;
     }
@@ -145,15 +174,19 @@ public class ConfigServiceImpl implements ConfigService {
         ConfigDO entity = mapper.selectById(id);
         boolean result = mapper.deleteById(id) > 0;
         if (result && entity != null) {
-            evictCache(entity.getConfigKey());
+            evictCache(entity.getConfigKey(), entity.getConfigGroup());
         }
         return result;
     }
 
-    private void evictCache(String configKey) {
+    private void evictCache(String configKey, String configGroup) {
         if (configKey != null) {
             redisTemplate.delete(CACHE_KEY_PREFIX + configKey);
         }
+        if (configGroup != null) {
+            redisTemplate.delete(CACHE_GROUP_PREFIX + configGroup);
+        }
+        redisTemplate.delete(CACHE_PUBLIC_KEY);
     }
 
     private Duration getCacheTtl() {
@@ -162,10 +195,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     private void validateValueType(String valueType) {
-        if (valueType != null && !valueType.equals("STRING") && !valueType.equals("NUMBER")
-                && !valueType.equals("BOOLEAN") && !valueType.equals("JSON")) {
-            throw new IllegalArgumentException("无效的值类型: " + valueType + "，支持: STRING/NUMBER/BOOLEAN/JSON");
-        }
+        ConfigValueType.validate(valueType);
     }
 
     private ConfigVO toVO(ConfigDO entity) {

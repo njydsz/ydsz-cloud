@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.server.sdk.LiteRuleClient;
+import com.njydsz.literule.server.sdk.LiteRuleSdk;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <h3>基本用法</h3>
  * <pre>{@code
- * LiteRuleClient client = LiteRuleClient.builder().build();
+ * LiteRuleSdk sdk = LiteRuleSdk.builder().build();
  * // ... 注册规则 ...
  *
  * RuleTestRunner runner = new RuleTestRunner(client);
@@ -58,16 +58,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RuleTestRunner {
 
-    private final LiteRuleClient client;
+    private final LiteRuleSdk client;
 
-    public RuleTestRunner(LiteRuleClient client) {
-        this.client = Objects.requireNonNull(client, "LiteRuleClient");
+    public RuleTestRunner(LiteRuleSdk client) {
+        this.client = Objects.requireNonNull(client, "LiteRuleSdk");
     }
 
     /**
      * 创建测试执行器
      */
-    public static RuleTestRunner create(LiteRuleClient client) {
+    public static RuleTestRunner create(LiteRuleSdk client) {
         return new RuleTestRunner(client);
     }
 

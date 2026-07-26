@@ -27,9 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>启用方式：{@code ydsz.cronjob.sharding-strategy=weighted}
  *
- * @author ydsz-team
- * @since 1.0.0
+ * @deprecated P2-C1: 建议使用 {@link AverageShardingStrategy} 或 {@link ConsistentHashShardingStrategy}。
+ *     过多分片策略增加维护成本且实际生产使用率低，对标 XXL-Job 仅保留 2 种。
  */
+@Deprecated(since = "1.5.0", forRemoval = true)
 @Slf4j
 @Configuration
 @RequiredArgsConstructor

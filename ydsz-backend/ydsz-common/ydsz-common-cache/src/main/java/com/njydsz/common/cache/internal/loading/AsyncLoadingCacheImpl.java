@@ -1,6 +1,7 @@
 package com.njydsz.common.cache.internal.loading;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -197,6 +198,69 @@ public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
   public CompletableFuture<Void> put(K key, V value) {
     return CompletableFuture.runAsync(
         () -> delegate.put(key, value), executor);
+  }
+
+  @Override
+  public CompletableFuture<V> refresh(K key, AsyncFunction<K, V> asyncLoader) {
+    if (key == null) {
+      return CompletableFuture.failedFuture(new NullPointerException("缓存键不能为 null"));
+    }
+    if (asyncLoader == null) {
+      return CompletableFuture.failedFuture(new NullPointerException("加载器不能为 null"));
+    }
+    // 刷新防击穿：复用 loadingMap 共享 Future（避免同一 key 同时刷新 + 加载冲突）
+    // 注意：whenComplete 必须在 computeIfAbsent 之外附加，避免在 mapping function
+    // 内部触发 loadingMap.remove 导致 ConcurrentHashMap 抛 Recursive update
+    CompletableFuture<V> future =
+        loadingMap.computeIfAbsent(
+            key,
+            k -> asyncLoader.apply(k));
+    future.whenComplete(
+        (v, ex) -> {
+          loadingMap.remove(key, future);
+          if (ex == null) {
+            if (v != null) {
+              delegate.put(key, v);
+            } else {
+              delegate.remove(key);
+            }
+          }
+        });
+    return future;
+  }
+
+  @Override
+  public CompletableFuture<Map<K, V>> refreshAll(
+      Collection<K> keys, AsyncFunction<Collection<K>, Map<K, V>> asyncLoader) {
+    if (keys == null || keys.isEmpty()) {
+      return CompletableFuture.completedFuture(Collections.emptyMap());
+    }
+    if (asyncLoader == null) {
+      return CompletableFuture.failedFuture(new NullPointerException("加载器不能为 null"));
+    }
+    return asyncLoader
+        .apply(keys)
+        .thenApply(
+            loaded -> {
+              Map<K, V> result = new HashMap<>();
+              if (loaded != null) {
+                for (Map.Entry<K, V> entry : loaded.entrySet()) {
+                  V value = entry.getValue();
+                  if (value != null) {
+                    delegate.put(entry.getKey(), value);
+                    result.put(entry.getKey(), value);
+                  } else {
+                    delegate.remove(entry.getKey());
+                  }
+                }
+              }
+              return result;
+            })
+        .exceptionally(
+            ex -> {
+              log.warn("批量刷新失败, keys={}", keys, ex);
+              return Collections.emptyMap();
+            });
   }
 
   @Override

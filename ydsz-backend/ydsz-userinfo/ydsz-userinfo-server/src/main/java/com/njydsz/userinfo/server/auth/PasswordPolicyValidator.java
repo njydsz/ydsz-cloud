@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -14,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>对标互联网大厂密码安全标准：
  * <ul>
- *   <li>最小长度 8 字符</li>
- *   <li>必须包含大小写字母、数字、特殊字符中的至少 3 种</li>
+ *   <li>最小长度可配置（默认 8 字符）</li>
+ *   <li>必须包含大小写字母、数字、特殊字符中的至少 N 种（可配置）</li>
  *   <li>不允许连续重复字符（如 aaa、111）</li>
  *   <li>不允许与用户名相同或包含用户名</li>
  * </ul>
@@ -25,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class PasswordPolicyValidator {
 
-    private static final int MIN_LENGTH = 8;
-    private static final int MAX_LENGTH = 64;
+    private final UserInfoProperties properties;
 
     private static final Pattern HAS_LOWER = Pattern.compile("[a-z]");
     private static final Pattern HAS_UPPER = Pattern.compile("[A-Z]");
@@ -44,13 +46,17 @@ public class PasswordPolicyValidator {
      * @throws BusinessException 密码不符合策略时抛出
      */
     public void validate(String password, String username) {
-        if (password == null || password.length() < MIN_LENGTH) {
+        int minLength = properties.getPasswordMinLength();
+        int maxLength = properties.getPasswordMaxLength();
+        int minCategoryCount = properties.getPasswordMinCategoryCount();
+
+        if (password == null || password.length() < minLength) {
             throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
-                    "密码长度不能少于 " + MIN_LENGTH + " 个字符");
+                    "密码长度不能少于 " + minLength + " 个字符");
         }
-        if (password.length() > MAX_LENGTH) {
+        if (password.length() > maxLength) {
             throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
-                    "密码长度不能超过 " + MAX_LENGTH + " 个字符");
+                    "密码长度不能超过 " + maxLength + " 个字符");
         }
 
         int categoryCount = 0;
@@ -59,9 +65,9 @@ public class PasswordPolicyValidator {
         if (HAS_DIGIT.matcher(password).find()) categoryCount++;
         if (HAS_SPECIAL.matcher(password).find()) categoryCount++;
 
-        if (categoryCount < 3) {
+        if (categoryCount < minCategoryCount) {
             throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
-                    "密码必须包含大写字母、小写字母、数字、特殊字符中的至少 3 种");
+                    "密码必须包含大写字母、小写字母、数字、特殊字符中的至少 " + minCategoryCount + " 种");
         }
 
         if (REPEAT_3.matcher(password).find()) {

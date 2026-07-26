@@ -85,6 +85,12 @@ public class JobScanner {
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
 
+    /** P3-D4: 上次扫描时间戳，用于精准调度模式下降频控制 */
+    private volatile long lastScanTimeMs = 0L;
+
+    /** P3-D4: 精准调度启用时兜底扫描间隔（30s），减少无效 DB 查询 */
+    private static final long PRECISE_MODE_FALLBACK_INTERVAL_MS = 30_000L;
+
     /** Leader 角色（从配置读取，便于多套调度集群隔离） */
     private String leaderRole;
 
@@ -134,6 +140,19 @@ public class JobScanner {
             log.debug("[JobScanner] 上次扫描尚未完成, 跳过本次执行");
             return;
         }
+        // P3-D4: 启用精准调度时，JobScanner 降频为兜底扫描（30s），
+        // 减少无效 DB 查询（精准调度器 PreciseSchedulingManager 已处理窗口内任务）
+        if (cronjobProperties.getPreciseScheduling() != null
+                && cronjobProperties.getPreciseScheduling().isEnabled()) {
+            long lastScanAge = System.currentTimeMillis() - lastScanTimeMs;
+            if (lastScanAge < PRECISE_MODE_FALLBACK_INTERVAL_MS) {
+                log.debug("[JobScanner] 精准调度已启用, 兜底扫描降频: age={}ms threshold={}ms",
+                        lastScanAge, PRECISE_MODE_FALLBACK_INTERVAL_MS);
+                scanning.set(false);
+                return;
+            }
+        }
+        lastScanTimeMs = System.currentTimeMillis();
         // P6-2: 更新扫描中状态指标
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
         if (metrics != null) {

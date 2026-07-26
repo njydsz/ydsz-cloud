@@ -55,16 +55,14 @@ public final class TreeBuilder {
             List<T> children = parentIdMap.get(idGetter.apply(item));
             if (children != null) {
                 if (sortGetter != null) {
-                    children.sort(Comparator.comparingInt(sortGetter::apply)
-                            .reversed());
+                    children.sort(Comparator.comparingInt(sortGetter::apply));
                 }
                 childrenSetter.accept(item, children);
             }
         }
 
         if (sortGetter != null) {
-            roots.sort(Comparator.comparingInt(sortGetter::apply)
-                    .reversed());
+            roots.sort(Comparator.comparingInt(sortGetter::apply));
         }
 
         return roots;

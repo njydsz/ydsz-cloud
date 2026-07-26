@@ -16,6 +16,7 @@ import com.njydsz.system.domain.entity.VariableDO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.mapper.VariableMapper;
 import com.njydsz.system.server.config.SystemProperties;
+import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.VariableService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 系统变量 Service 实现。
  *
- * <p>集成 Redis 缓存（TTL 可配置）、缓存穿透防护，与 ConfigService 能力对齐。
+ * <p>集成 Redis 缓存（TTL 可配置）、Micrometer 指标、缓存穿透防护，与 ConfigService 能力对齐。
  *
  * @author ydsz-team
  */
@@ -40,6 +41,7 @@ public class VariableServiceImpl implements VariableService {
     private final VariableMapper mapper;
     private final StringRedisTemplate redisTemplate;
     private final SystemProperties properties;
+    private final SystemMetrics metrics;
 
     @Override
     public VariableVO getById(String id) {
@@ -49,23 +51,31 @@ public class VariableServiceImpl implements VariableService {
 
     @Override
     public String getVariableValue(String variableKey) {
-        String cacheKey = CACHE_KEY_PREFIX + variableKey;
-        String cached = redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) {
-            if (NULL_SENTINEL.equals(cached)) {
-                return null;
+        long start = System.nanoTime();
+        try {
+            String cacheKey = CACHE_KEY_PREFIX + variableKey;
+            String cached = redisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                if (NULL_SENTINEL.equals(cached)) {
+                    metrics.recordVariableCacheHit();
+                    return null;
+                }
+                metrics.recordVariableCacheHit();
+                return cached;
             }
-            return cached;
+            metrics.recordVariableCacheMiss();
+            QueryWrapper<VariableDO> wrapper = new QueryWrapper<>();
+            wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
+            VariableDO entity = mapper.selectOne(wrapper);
+            if (entity != null) {
+                redisTemplate.opsForValue().set(cacheKey, entity.getVariableValue(), getCacheTtl());
+                return entity.getVariableValue();
+            }
+            redisTemplate.opsForValue().set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
+            return null;
+        } finally {
+            metrics.recordVariableRead(System.nanoTime() - start);
         }
-        QueryWrapper<VariableDO> wrapper = new QueryWrapper<>();
-        wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
-        VariableDO entity = mapper.selectOne(wrapper);
-        if (entity != null) {
-            redisTemplate.opsForValue().set(cacheKey, entity.getVariableValue(), getCacheTtl());
-            return entity.getVariableValue();
-        }
-        redisTemplate.opsForValue().set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
-        return null;
     }
 
     @Override

@@ -61,6 +61,12 @@ public class DictServiceImpl implements DictService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(DictTypeDTO dto) {
+        // 唯一性校验：typeCode 不能重复
+        QueryWrapper<DictTypeDO> checkWrapper = new QueryWrapper<>();
+        checkWrapper.eq("type_code", dto.getTypeCode());
+        if (mapper.selectCount(checkWrapper) > 0) {
+            throw new IllegalArgumentException("字典类型编码已存在: " + dto.getTypeCode());
+        }
         DictTypeDO entity = toEntity(dto);
         mapper.insert(entity);
         return entity.getId();

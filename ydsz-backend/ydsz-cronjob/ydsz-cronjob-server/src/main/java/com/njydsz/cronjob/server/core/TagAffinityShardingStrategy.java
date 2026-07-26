@@ -34,7 +34,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated P2-C1: 建议使用 AverageShardingStrategy 或 ConsistentHashShardingStrategy。
  */
+@Deprecated(since = "1.5.0", forRemoval = true)
 @Slf4j
 @Configuration
 @RequiredArgsConstructor

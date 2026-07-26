@@ -880,6 +880,10 @@ CREATE INDEX IF NOT EXISTS idx_pdv_tenant_type_created
     ON ydsz_dict_version (tenant_id, type_code, created_at DESC)
     WHERE deleted = 0;
 
+ALTER TABLE ydsz_dict_version ADD COLUMN IF NOT EXISTS snapshot_json TEXT;
+
+COMMENT ON COLUMN ydsz_dict_version.snapshot_json IS '字典项列表 JSON 快照(用于版本回滚)';
+
 ANALYZE ydsz_dict_version;
 
 -- ====================================================================

@@ -124,8 +124,7 @@ public class FailoverScanner {
      *
      * <p>使用 {@code fixedDelayString} 而非 {@code fixedRateString}，
      * 避免上次扫描耗时较长时任务堆积。
-     * 配置项 {@code ydsz.cronjob.failover.scan-interval-seconds} 为秒数，
-     * 拼接 "000" 转换为毫秒供 Spring 解析。
+     * 配置项 {@code ydsz.cronjob.failover.scan-interval-ms} 为毫秒值（默认 30000）。
      */
     @Scheduled(fixedDelayString = "${ydsz.cronjob.failover.scan-interval-ms:30000}")
     public void scan() {

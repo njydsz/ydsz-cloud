@@ -19,6 +19,7 @@ import com.njydsz.common.cache.support.AsyncFunction;
  *   <li>异步加载：get 方法支持异步加载器，自动防击穿
  *   <li>异步批量：getAll 支持批量异步加载
  *   <li>异步写入：put 返回 CompletableFuture
+ *   <li>主动刷新：refresh / refreshAll 强制重新加载，绕过缓存命中检查
  * </ul>
  *
  * @param <K> 键类型
@@ -64,6 +65,67 @@ public interface AsyncCache<K, V> {
    * @return 表示操作完成的 CompletableFuture
    */
   CompletableFuture<Void> put(K key, V value);
+
+  /**
+   * 主动刷新单个缓存键 — 强制重新加载，绕过缓存命中检查
+   *
+   * <p>与 {@link #get(Object, AsyncFunction)} 的区别：
+   *
+   * <ul>
+   *   <li>{@code get} 在缓存命中时直接返回旧值，不触发加载
+   *   <li>{@code refresh} 总是调用 loader 重新加载，加载成功后用新值覆盖缓存
+   * </ul>
+   *
+   * <p>刷新失败时的行为：
+   *
+   * <ul>
+   *   <li>加载器抛异常：返回异常完成的 Future，<b>保留缓存中的旧值</b>（避免后台刷新失败导致缓存被清空）
+   *   <li>加载器返回 null：返回包含 null 的 Future，并从缓存中移除该键
+   *   <li>加载器返回非 null：返回包含新值的 Future，并更新缓存
+   * </ul>
+   *
+   * <p>对同一 key 的并发刷新请求会共享同一个 Future，实现刷新防击穿。
+   *
+   * @param key 缓存键
+   * @param loader 异步加载器（必须非 null）
+   * @return 包含新值的 CompletableFuture；加载失败时返回异常完成的 Future
+   * @since 1.0.0
+   */
+  CompletableFuture<V> refresh(K key, AsyncFunction<K, V> loader);
+
+  /**
+   * 主动批量刷新缓存键 — 强制重新加载多个键
+   *
+   * <p>底层调用批量加载器一次性加载所有未命中键，避免逐键触发加载。
+   * 加载失败的键会保留旧值（不删除缓存），加载成功的键用新值覆盖。
+   *
+   * @param keys 需要刷新的键集合（必须非 null 且非空）
+   * @param loader 批量异步加载器（必须非 null）
+   * @return 包含刷新结果 Map 的 CompletableFuture（仅包含加载成功的键值对）
+   * @since 1.0.0
+   */
+  CompletableFuture<Map<K, V>> refreshAll(
+      Collection<K> keys, AsyncFunction<Collection<K>, Map<K, V>> loader);
+
+  /**
+   * 刷新缓存中的所有键
+   *
+   * <p>等价于 {@code refreshAll(synchronous().keySet(), loader)}。 当缓存为空时返回空 Map，不调用 loader。
+   *
+   * <p><b>注意</b>：此方法会遍历底层缓存的 {@link Cache#keySet()}，对于大容量缓存可能产生较高开销。
+   * 建议仅在缓存键数量可控（如配置类缓存）或离线场景使用。
+   *
+   * @param loader 批量异步加载器（必须非 null）
+   * @return 包含刷新结果 Map 的 CompletableFuture
+   * @since 1.0.0
+   */
+  default CompletableFuture<Map<K, V>> refreshAll(AsyncFunction<Collection<K>, Map<K, V>> loader) {
+    Collection<K> allKeys = synchronous().keySet();
+    if (allKeys == null || allKeys.isEmpty()) {
+      return CompletableFuture.completedFuture(java.util.Collections.emptyMap());
+    }
+    return refreshAll(allKeys, loader);
+  }
 
   /**
    * 获取底层同步缓存

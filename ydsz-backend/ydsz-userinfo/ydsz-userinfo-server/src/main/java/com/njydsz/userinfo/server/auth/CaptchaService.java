@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 图形验证码服务。
  *
- * <p>生成 4 位字母数字混合验证码，存储到 Redis（5 分钟有效），
+ * <p>生成 4 位字母数字混合验证码，存储到 Redis（TTL 可配置），
  * 提供 Base64 编码的 PNG 图片供前端展示。
  *
  * @author ydsz-team
@@ -37,8 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 public class CaptchaService {
 
     private final RedisStringOps redisStringOps;
+    private final UserInfoProperties properties;
 
-    private static final long CAPTCHA_TTL_SECONDS = 300;
     private static final String CAPTCHA_KEY_PREFIX = "auth:captcha:";
     private static final int WIDTH = 120;
     private static final int HEIGHT = 40;
@@ -55,7 +56,7 @@ public class CaptchaService {
      */
     public String generateCaptcha(String captchaKey) {
         String code = generateCode();
-        redisStringOps.set(CAPTCHA_KEY_PREFIX + captchaKey, code, CAPTCHA_TTL_SECONDS);
+        redisStringOps.set(CAPTCHA_KEY_PREFIX + captchaKey, code, properties.getCaptchaTtlSeconds());
 
         BufferedImage image = drawCaptcha(code);
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

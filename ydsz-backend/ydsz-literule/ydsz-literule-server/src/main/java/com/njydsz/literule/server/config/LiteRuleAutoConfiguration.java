@@ -50,6 +50,7 @@ import com.njydsz.literule.server.expr.VariableRegistry;
 import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
 import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
+import com.njydsz.literule.server.sdk.LiteRuleSdk;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -1194,6 +1195,37 @@ public class LiteRuleAutoConfiguration {
         log.info("[LiteRule-Audit] 规则审计日志服务已初始化（store={}）",
                 store != null ? store.getClass().getSimpleName() : "InMemory");
         return service;
+    }
+
+    // ------------------------------------------------------------------
+    // P3-3 SDK Bean 注册（Spring Boot 场景下可通过 @Autowired 获取 LiteRuleSdk）
+    // ------------------------------------------------------------------
+
+    /**
+     * LiteRule SDK Bean（P3-3）
+     *
+     * <p>当 {@code RuleEngine} 和 {@code ExpressionEvaluator} Bean 存在时自动装配，
+     * 使业务方可在 Spring Boot 场景下通过 {@code @Autowired} 注入 {@link LiteRuleSdk}，
+     * 无需手动调用 {@code LiteRuleSdk.builder()}。
+     *
+     * <p>可通过 {@code ydsz.literule.sdk.enabled=false} 关闭。
+     *
+     * @param ruleEngine 规则引擎
+     * @param evaluator  表达式求值器
+     * @param properties 配置属性
+     * @return LiteRuleSdk 实例
+     * @since 2.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean(LiteRuleSdk.class)
+    @ConditionalOnProperty(prefix = "ydsz.literule.sdk", name = "enabled",
+            havingValue = "true", matchIfMissing = true)
+    public LiteRuleSdk liteRuleSdk(RuleEngine ruleEngine,
+                                     ExpressionEvaluator evaluator,
+                                     LiteRuleProperties properties) {
+        LiteRuleSdk sdk = new LiteRuleSdk(ruleEngine, evaluator, "1", properties.getEnvironment());
+        log.info("[LiteRule-SDK] LiteRuleSdk 已初始化（environment={}）", properties.getEnvironment());
+        return sdk;
     }
 
     // ------------------------------------------------------------------

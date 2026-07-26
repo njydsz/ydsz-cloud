@@ -11,7 +11,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
@@ -97,7 +96,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public LoginVO login(LoginDTO loginDTO) {
         Timer.Sample sample = userInfoMetrics.startTimer();
 
