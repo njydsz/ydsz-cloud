@@ -249,6 +249,13 @@ public class UserAccountServiceImpl implements UserAccountService {
     private UserAccountVO toVO(UserAccountDO entity) {
         UserAccountVO vo = new UserAccountVO();
         BeanUtils.copyProperties(entity, vo);
+        if (entity.getStatus() != null) {
+            try {
+                vo.setStatus(Integer.valueOf(entity.getStatus()));
+            } catch (NumberFormatException e) {
+                vo.setStatus(null);
+            }
+        }
         return vo;
     }
 
@@ -263,4 +270,9 @@ public class UserAccountServiceImpl implements UserAccountService {
             if (wrapper.isReadableProperty(pd.getName())
                     && wrapper.getPropertyValue(pd.getName()) == null) {
                 nullNames.add(pd.getName());
- 
+            }
+        }
+        nullNames.add("id");
+        return nullNames.toArray(new String[0]);
+    }
+}

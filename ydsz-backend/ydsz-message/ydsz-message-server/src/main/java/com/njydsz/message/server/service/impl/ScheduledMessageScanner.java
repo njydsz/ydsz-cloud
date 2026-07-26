@@ -48,7 +48,7 @@ public class ScheduledMessageScanner {
     private final MsgLogMapper msgLogMapper;
     private final ChannelRouter channelRouter;
     private final MessageMetrics messageMetrics;
-    private final RedissonClient redissonClient;
+    private final DistributedLocker distributedLocker;
 
     /** 分布式锁 key */
     private static final String LOCK_KEY = "ydsz:msg:scheduled:scan:lock";
@@ -63,11 +63,10 @@ public class ScheduledMessageScanner {
      */
     @Scheduled(fixedDelayString = "${ydsz.message.scheduled-scan-interval-ms:30000}")
     public void scan() {
-        RLock lock = redissonClient.getLock(LOCK_KEY);
-        boolean locked = false;
+        String lockValue = null;
         try {
-            locked = lock.tryLock(0, 60, TimeUnit.SECONDS);
-            if (!locked) {
+            lockValue = distributedLocker.tryLock(LOCK_KEY, 0, 60, TimeUnit.SECONDS);
+            if (lockValue == null) {
                 log.debug("[ScheduledScanner] 未获取锁,跳过本次扫描");
                 return;
             }
@@ -78,8 +77,8 @@ public class ScheduledMessageScanner {
         } catch (Exception e) {
             log.error("[ScheduledScanner] 扫描异常: {}", e.getMessage(), e);
         } finally {
-            if (locked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            if (lockValue != null) {
+                distributedLocker.unlock(LOCK_KEY, lockValue);
             }
         }
     }

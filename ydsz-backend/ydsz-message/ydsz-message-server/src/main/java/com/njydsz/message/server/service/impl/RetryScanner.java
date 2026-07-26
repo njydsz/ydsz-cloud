@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -51,7 +49,7 @@ public class RetryScanner {
     private final MsgLogMapper msgLogMapper;
     private final ChannelRouter channelRouter;
     private final MessageMetrics messageMetrics;
-    private final RedissonClient redissonClient;
+    private final DistributedLocker distributedLocker;
     private final RetryStrategyResolver retryStrategyResolver;
 
     /**
@@ -62,11 +60,10 @@ public class RetryScanner {
      */
     @Scheduled(fixedDelayString = "${ydsz.message.retry-scan-interval-ms:30000}")
     public void scan() {
-        RLock lock = redissonClient.getLock(MessageConstants.RETRY_SCAN_LOCK_KEY);
-        boolean locked = false;
+        String lockValue = null;
         try {
-            locked = lock.tryLock(0, 60, TimeUnit.SECONDS);
-            if (!locked) {
+            lockValue = distributedLocker.tryLock(MessageConstants.RETRY_SCAN_LOCK_KEY, 0, 60, TimeUnit.SECONDS);
+            if (lockValue == null) {
                 log.debug("[RetryScanner] 未获取锁,跳过本次扫描");
                 return;
             }
@@ -77,8 +74,8 @@ public class RetryScanner {
         } catch (Exception e) {
             log.error("[RetryScanner] 扫描异常: {}", e.getMessage(), e);
         } finally {
-            if (locked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            if (lockValue != null) {
+                distributedLocker.unlock(MessageConstants.RETRY_SCAN_LOCK_KEY, lockValue);
             }
         }
     }

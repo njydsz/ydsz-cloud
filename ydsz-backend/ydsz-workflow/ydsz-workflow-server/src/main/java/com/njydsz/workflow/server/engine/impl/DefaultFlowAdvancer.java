@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResultCode;
@@ -72,8 +72,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                 FlowVariableStrategy variableStrategy,
                                 FlowRunTaskMapper taskMapper,
                                 FlowJoinTokenService joinTokenService,
-                                @Autowired(required = false) FlowRoutingService routingService,
-                                @Autowired(required = false) FlowDmnDecisionService dmnDecisionService,
+                                ObjectProvider<FlowRoutingService> routingServiceProvider,
+                                ObjectProvider<FlowDmnDecisionService> dmnDecisionServiceProvider,
                                 FlowProperties flowProperties) {
         this.flowDefinitionCacheService = flowDefinitionCacheService;
         this.instanceMapper = instanceMapper;
@@ -82,8 +82,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         this.variableStrategy = variableStrategy;
         this.taskMapper = taskMapper;
         this.joinTokenService = joinTokenService;
-        this.routingService = routingService;
-        this.dmnDecisionService = dmnDecisionService;
+        this.routingService = routingServiceProvider.getIfAvailable();
+        this.dmnDecisionService = dmnDecisionServiceProvider.getIfAvailable();
         this.flowProperties = flowProperties;
     }
 

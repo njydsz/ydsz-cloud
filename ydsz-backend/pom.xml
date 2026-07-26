@@ -340,11 +340,6 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-batch</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-userinfo</artifactId>
                 <version>${project.version}</version>
             </dependency>

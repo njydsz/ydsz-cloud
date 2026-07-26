@@ -123,8 +123,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
 
-        // 账号状态检查（status 为 Integer: 0=禁用, 1=启用）
-        if (user.getStatus() != null && user.getStatus() == 0) {
+        // 账号状态检查（status 为 String: "0"=禁用, "1"=启用）
+        if ("0".equals(user.getStatus())) {
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoResultCode.USER_DISABLED);

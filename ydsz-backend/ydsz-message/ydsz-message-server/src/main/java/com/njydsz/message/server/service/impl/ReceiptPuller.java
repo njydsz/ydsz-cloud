@@ -5,14 +5,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.receipt.ReceiptResult;
 import com.njydsz.message.domain.entity.core.MsgLogDO;
@@ -66,7 +65,7 @@ public class ReceiptPuller {
     private final ChannelRouter channelRouter;
     private final MessageLogService messageLogService;
     private final MessageProperties messageProperties;
-    private final RedissonClient redissonClient;
+    private final DistributedLocker distributedLocker;
 
     /**
      * 定时扫描回执缺失的消息。
@@ -76,11 +75,10 @@ public class ReceiptPuller {
      */
     @Scheduled(fixedDelayString = "${ydsz.message.receipt-pull-scan-interval-ms:120000}")
     public void scan() {
-        RLock lock = redissonClient.getLock(MessageConstants.RECEIPT_PULL_LOCK_KEY);
-        boolean locked = false;
+        String lockValue = null;
         try {
-            locked = lock.tryLock(0, 60, TimeUnit.SECONDS);
-            if (!locked) {
+            lockValue = distributedLocker.tryLock(MessageConstants.RECEIPT_PULL_LOCK_KEY, 0, 60, TimeUnit.SECONDS);
+            if (lockValue == null) {
                 log.debug("[ReceiptPuller] 未获取锁,跳过本次扫描");
                 return;
             }
@@ -91,8 +89,8 @@ public class ReceiptPuller {
         } catch (Exception e) {
             log.error("[ReceiptPuller] 扫描异常: {}", e.getMessage(), e);
         } finally {
-            if (locked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            if (lockValue != null) {
+                distributedLocker.unlock(MessageConstants.RECEIPT_PULL_LOCK_KEY, lockValue);
             }
         }
     }
