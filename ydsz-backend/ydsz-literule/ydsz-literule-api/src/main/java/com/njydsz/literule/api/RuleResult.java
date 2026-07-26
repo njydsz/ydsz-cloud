@@ -142,6 +142,16 @@ public class RuleResult implements Serializable {
     }
 
     /**
+     * 获取严重度权重（P3-T1：消除 DefaultRuleEngine/ParallelRuleEvaluator 重复方法）
+     *
+     * @return 严重度权重值；severity 为 null 时返回 0
+     * @since 2.3.0
+     */
+    public int getSeverityWeight() {
+        return severity != null ? severity.getWeight() : 0;
+    }
+
+    /**
      * 快速构建未触发结果
      *
      * @param ruleCode 规则编码

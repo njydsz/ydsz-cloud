@@ -91,6 +91,12 @@
       "defaultValue": "default"
     },
     {
+      "name": "ydsz.literule.default-tenant-id",
+      "type": "java.lang.String",
+      "description": "默认租户 ID（SDK 和自动注册规则的默认租户标识）。",
+      "defaultValue": "1"
+    },
+    {
       "name": "ydsz.literule.annotation-scan-base-packages",
       "type": "java.lang.String",
       "description": "@LiteRule / @RuleDefinitionMeta 扫描基包，逗号分隔。",
@@ -323,6 +329,54 @@
       "type": "java.lang.Integer",
       "description": "断点挂起超时时间（秒）。",
       "defaultValue": 60
+    },
+    {
+      "name": "ydsz.literule.sdk.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 LiteRuleSdk Bean（Spring Boot 场景下可通过 @Autowired 注入）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.literule.action.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用规则动作分发器（规则触发后自动执行消息通知等后续动作）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.literule.action.default-alert-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用默认告警动作处理器（将规则触发结果转换为事件发布）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.literule.action.cronjob-trigger-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用定时任务触发处理器（规则触发后自动触发关联的 cronjob 定时任务，需 CronjobServiceClient）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.literule.action.workflow-trigger-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用工作流触发处理器（规则触发后自动启动关联的工作流流程实例，需 WorkflowServiceClient）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.literule.effectiveness.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用规则效果评估服务（基于人工反馈标注的 Precision/Recall/F1 指标计算）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.literule.model.mock-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Mock 模型提供者（返回配置的模拟模型输出，便于开发/测试）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.literule.model.mock-outputs",
+      "type": "java.util.Map<java.lang.String,java.lang.Object>",
+      "description": "Mock 模型输出（key 为模型字段名，value 为数值/字符串/布尔）。",
+      "defaultValue": {}
     }
   ]
 }

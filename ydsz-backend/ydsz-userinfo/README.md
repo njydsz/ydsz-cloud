@@ -108,7 +108,7 @@ ydsz:
       enabled: false
       host: 10.248.3.56
       port: 389
-      domain: "@wuxibio"
+      domain: "@njydsz"
   userinfo:
     health-enabled: true
 ```

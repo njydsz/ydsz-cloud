@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import lombok.Data;
 
@@ -13,12 +12,12 @@ import lombok.Data;
  * 用户信息中心配置属性。
  *
  * <p>集中管理安全参数，替代硬编码常量。
+ * 通过 {@link UserInfoConfiguration} 的 {@code @EnableConfigurationProperties} 注册。
  *
  * @author ydsz-team
  * @since 1.1.0
  */
 @Data
-@Component
 @ConfigurationProperties(prefix = "ydsz.userinfo")
 public class UserInfoProperties {
 

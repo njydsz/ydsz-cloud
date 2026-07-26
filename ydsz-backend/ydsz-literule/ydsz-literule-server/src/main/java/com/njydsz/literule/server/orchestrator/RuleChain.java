@@ -62,6 +62,9 @@ public class RuleChain {
      * <p>当调用方未提供 parallelExecutor 时，使用此线程池替代 ForkJoinPool.commonPool()，
      * 避免 WHEN 链并行任务污染公共线程池导致其他组件线程饥饿。
      * 使用守护线程确保不阻止 JVM 退出。
+     *
+     * <p>P1-T4：提供 {@link #shutdownFallbackExecutor()} 方法用于优雅关闭，
+     * 建议在应用关闭时（如 @PreDestroy 方法中）调用。
      */
     private static final ExecutorService WHEN_FALLBACK_EXECUTOR =
             Executors.newFixedThreadPool(
@@ -71,6 +74,20 @@ public class RuleChain {
                         t.setDaemon(true);
                         return t;
                     });
+
+    /**
+     * 优雅关闭 WHEN 回退线程池（P1-T4）
+     *
+     * <p>建议在 Spring 容器关闭时调用（如通过 @PreDestroy 方法）。
+     * 由于线程池使用守护线程，即使不显式关闭也不会阻止 JVM 退出，
+     * 但显式关闭可以更快速地释放线程资源。
+     */
+    public static void shutdownFallbackExecutor() {
+        if (!WHEN_FALLBACK_EXECUTOR.isShutdown()) {
+            WHEN_FALLBACK_EXECUTOR.shutdown();
+            log.info("[LiteRule-Chain] WHEN 回退线程池已关闭");
+        }
+    }
 
     /** 链类型（THEN/WHEN/IF/SWITCH） */
     private final RuleChainType chainType;

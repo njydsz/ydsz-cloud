@@ -87,10 +87,10 @@ public class LiteRuleSdk {
         Objects.requireNonNull(definition.getCode(), "rule code");
 
         // 填充租户和环境（如果未设置）
-        if (definition.getTenantId() == null || definition.getTenantId().equals("1")) {
+        if (definition.getTenantId() == null || definition.getTenantId().isBlank()) {
             definition.setTenantId(tenantId);
         }
-        if (definition.getEnvironment() == null || definition.getEnvironment().equals("default")) {
+        if (definition.getEnvironment() == null || definition.getEnvironment().isBlank()) {
             definition.setEnvironment(environment);
         }
 

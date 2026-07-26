@@ -387,70 +387,20 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
                 }
             }
 
-            long start = System.nanoTime();
-            RuleResult result = null;
-            Exception caughtException = null;
-            boolean routedToCanary = false;
-
-            // 灰度路由：仅对带 canaryRatio 的表达式规则生效
-            RuleDefinition canaryDef = resolveCanaryDefinition(rule);
-            if (canaryDef != null) {
-                boolean goCanary = canaryRouter.shouldRouteToCanary(canaryDef, context);
-                canaryRouter.recordBucket(rule.getCode(), goCanary);
-                if (goCanary) {
-                    routedToCanary = true;
-                    Rule canaryRule = canaryRouter.buildCanaryRule(canaryDef);
-                    try {
-                        if (timeoutExecutor != null) {
-                            result = timeoutExecutor.evaluateWithTimeout(canaryRule, context, 0);
-                        } else {
-                            result = canaryRule.evaluate(context);
-                        }
-                    } catch (Exception e) {
-                        caughtException = e;
-                    }
-                    if (result != null) {
-                        canaryRouter.markCanary(result);
-                    }
-                    if (log.isDebugEnabled()) {
-                        log.debug("[LiteRule-Canary] 规则 {} 命中灰度桶，评估候选版本", rule.getCode());
-                    }
-                }
-            }
-
-            // 未路由到灰度桶：评估主版本
-            if (!routedToCanary) {
-                try {
-                    if (timeoutExecutor != null) {
-                        result = timeoutExecutor.evaluateWithTimeout(rule, context, 0);
-                    } else {
-                        result = rule.evaluate(context);
-                    }
-                } catch (Exception e) {
-                    caughtException = e;
-                }
-            }
-
-            long elapsed = (System.nanoTime() - start) / 1_000_000;
-            boolean isTriggered = result != null && result.isTriggered();
-            // 异常 + 超时返回的"未触发"也算异常（用于熔断统计）
-            boolean isError = caughtException != null
-                    || (result != null && result.getDescription() != null
-                        && result.getDescription().startsWith("评估超时"));
-            record(rule.getCode(), isTriggered, isError, elapsed);
+            // 执行评估并记录统计/监控/熔断/轨迹（P2-T3：共享方法，消除串行/并行重复代码）
+            RuleEvaluationOutcome outcome = executeAndRecordRuleEvaluation(rule, context, scenario, "[LiteRule]");
 
             // 断点调试（P2-3）：评估后回调，供 hook 查看结果与上下文快照
             if (hasBreakpoint) {
-                // 提取 final 局部变量，IDE 才能识别为非空
                 final BreakpointHook hook = Objects.requireNonNull(bpHook, "breakpointHook");
                 try {
                     BreakpointHook.BreakpointContext afterCtx = new BreakpointHook.BreakpointContext(
                             "AFTER", context.getTraceId(), rule.getCode(), rule.getName(),
                             scenario, bpFactsSnapshot);
-                    afterCtx.setResult(result);
-                    afterCtx.setElapsedMs(elapsed);
-                    if (caughtException != null) {
-                        afterCtx.setException(caughtException);
+                    afterCtx.setResult(outcome.result);
+                    afterCtx.setElapsedMs(outcome.elapsedMs);
+                    if (outcome.caughtException != null) {
+                        afterCtx.setException(outcome.caughtException);
                     }
                     hook.onAfterEvaluate(afterCtx);
                 } catch (Exception ae) {
@@ -458,35 +408,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
                 }
             }
 
-            // 熔断器记录结果
-            if (circuitBreaker != null) {
-                circuitBreaker.recordResult(rule.getCode(), !isError);
-            }
-
-            // 监控指标记录
-            if (metrics != null) {
-                try {
-                    metrics.recordEvaluation(rule.getCode(), scenario, isTriggered,
-                            result != null ? result.getSeverity() : null, isError, elapsed);
-                } catch (Exception me) {
-                    log.debug("[LiteRule] 指标记录失败: {}", me.getMessage());
-                }
-            }
-
-            if (isError && caughtException != null) {
-                log.warn("[LiteRule] 规则 {} 评估异常: {}", rule.getCode(), caughtException.getMessage());
-            }
-            // 异步记录 Trace（即使异常也记录，便于排查）
-            if (traceRecorder != null && traceRecorder.isEnabled()) {
-                try {
-                    RuleExecutionTrace trace = buildTrace(context, rule, result, elapsed, caughtException);
-                    traceRecorder.record(trace);
-                } catch (Exception te) {
-                    log.debug("[LiteRule] Trace 记录失败: {}", te.getMessage());
-                }
-            }
-            if (isTriggered) {
-                triggered.add(result);
+            if (outcome.isTriggered) {
+                triggered.add(outcome.result);
                 // 互斥组：记录已命中的组，同组后续规则跳过评估
                 if (mutexGroup != null && !mutexGroup.isBlank()) {
                     triggeredGroups.add(mutexGroup);
@@ -494,7 +417,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             }
         }
         // 按严重度倒序
-        triggered.sort(Comparator.comparingInt((RuleResult r) -> severityWeight(r)).reversed());
+        triggered.sort(Comparator.comparingInt(RuleResult::getSeverityWeight).reversed());
         // 记录本次评估遍历的规则数（用于规则规模监控）
         if (metrics != null) {
             metrics.recordEvaluatedRules(evaluatedCount);
@@ -1156,6 +1079,148 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
+     * 单规则评估结果封装（P2-T3：串行/并行路径共享）
+     *
+     * <p>封装单规则评估的完整结果，供串行路径和并行路径统一使用，
+     * 消除两路径间灰度路由 + 评估执行 + 统计/监控/熔断/轨迹记录的重复代码。
+     *
+     * @since 2.3.0
+     */
+    private static class RuleEvaluationOutcome {
+        final RuleResult result;
+        final Exception caughtException;
+        final long elapsedMs;
+        final boolean isTriggered;
+        final boolean isError;
+
+        RuleEvaluationOutcome(RuleResult result, Exception caughtException, long elapsedMs) {
+            this.result = result;
+            this.caughtException = caughtException;
+            this.elapsedMs = elapsedMs;
+            this.isTriggered = result != null && result.isTriggered();
+            this.isError = caughtException != null
+                    || (result != null && result.getDescription() != null
+                        && result.getDescription().startsWith("评估超时"));
+        }
+    }
+
+    /**
+     * 执行单规则评估并记录统计/监控/熔断/轨迹（P2-T3：串行/并行路径共享核心逻辑）
+     *
+     * <p>封装以下共享逻辑：
+     * <ol>
+     *   <li>灰度路由解析与候选版本评估</li>
+     *   <li>主版本评估（可选超时控制）</li>
+     *   <li>统计记录（{@link #record}）</li>
+     *   <li>熔断器结果记录</li>
+     *   <li>监控指标记录</li>
+     *   <li>异常告警日志</li>
+     *   <li>异步执行轨迹记录</li>
+     * </ol>
+     *
+     * <p>串行路径额外处理断点调试回调（before/after），并行路径额外处理
+     * 熔断器预检查和 MDC 传播，这些由各自路径自行实现。
+     *
+     * @param rule     规则
+     * @param context  规则上下文
+     * @param scenario 业务场景
+     * @param logTag   日志标签（如 "[LiteRule]" 或 "[LiteRule-Parallel]"）
+     * @return 评估结果封装
+     * @since 2.3.0
+     */
+    private RuleEvaluationOutcome executeAndRecordRuleEvaluation(Rule rule, RuleContext context,
+                                                                   String scenario, String logTag) {
+        long start = System.nanoTime();
+        RuleResult result = null;
+        Exception caughtException = null;
+        boolean routedToCanary = false;
+
+        // 灰度路由：仅对带 canaryRatio 的表达式规则生效
+        RuleDefinition canaryDef = resolveCanaryDefinition(rule);
+        if (canaryDef != null) {
+            boolean goCanary = canaryRouter.shouldRouteToCanary(canaryDef, context);
+            canaryRouter.recordBucket(rule.getCode(), goCanary);
+            if (goCanary) {
+                routedToCanary = true;
+                Rule canaryRule = canaryRouter.buildCanaryRule(canaryDef);
+                try {
+                    result = evaluateWithOptionalTimeout(canaryRule, context);
+                } catch (Exception e) {
+                    caughtException = e;
+                }
+                if (result != null) {
+                    canaryRouter.markCanary(result);
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("{} 规则 {} 命中灰度桶，评估候选版本", logTag, rule.getCode());
+                }
+            }
+        }
+
+        // 未路由到灰度桶：评估主版本
+        if (!routedToCanary) {
+            try {
+                result = evaluateWithOptionalTimeout(rule, context);
+            } catch (Exception e) {
+                caughtException = e;
+            }
+        }
+
+        long elapsed = (System.nanoTime() - start) / 1_000_000;
+        RuleEvaluationOutcome outcome = new RuleEvaluationOutcome(result, caughtException, elapsed);
+
+        // 统计记录
+        record(rule.getCode(), outcome.isTriggered, outcome.isError, elapsed);
+
+        // 熔断器记录结果
+        if (circuitBreaker != null) {
+            circuitBreaker.recordResult(rule.getCode(), !outcome.isError);
+        }
+
+        // 监控指标记录
+        if (metrics != null) {
+            try {
+                metrics.recordEvaluation(rule.getCode(), scenario, outcome.isTriggered,
+                        result != null ? result.getSeverity() : null, outcome.isError, elapsed);
+            } catch (Exception me) {
+                log.debug("{} 指标记录失败: {}", logTag, me.getMessage());
+            }
+        }
+
+        if (outcome.isError && caughtException != null) {
+            log.warn("{} 规则 {} 评估异常: {}", logTag, rule.getCode(), caughtException.getMessage());
+        }
+
+        // 异步记录 Trace（即使异常也记录，便于排查）
+        if (traceRecorder != null && traceRecorder.isEnabled()) {
+            try {
+                RuleExecutionTrace trace = buildTrace(context, rule, result, elapsed, caughtException);
+                traceRecorder.record(trace);
+            } catch (Exception te) {
+                log.debug("{} Trace 记录失败: {}", logTag, te.getMessage());
+            }
+        }
+
+        return outcome;
+    }
+
+    /**
+     * 带可选超时控制的规则评估（P2-T3 提取）
+     *
+     * @param rule    规则
+     * @param context 规则上下文
+     * @return 评估结果
+     * @throws Exception 评估异常
+     * @since 2.3.0
+     */
+    private RuleResult evaluateWithOptionalTimeout(Rule rule, RuleContext context) throws Exception {
+        if (timeoutExecutor != null) {
+            return timeoutExecutor.evaluateWithTimeout(rule, context, 0);
+        }
+        return rule.evaluate(context);
+    }
+
+    /**
      * 并行评估候选规则（P2-2）
      *
      * <p>将候选规则委托给 {@link ParallelRuleEvaluator#evaluateParallel}，
@@ -1215,86 +1280,15 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     private RuleResult evaluateSingleRule(Rule rule, RuleContext context,
                                            String scenario, String traceId) {
         return TraceContext.withContext(traceId, () -> {
-            // 熔断检查
+            // 熔断预检查
             if (circuitBreaker != null && !circuitBreaker.allowEvaluate(rule.getCode())) {
                 log.debug("[LiteRule-Parallel] 规则 {} 已被熔断，跳过评估", rule.getCode());
                 return null;
             }
-            long start = System.nanoTime();
-            RuleResult result = null;
-            Exception caughtException = null;
-            boolean routedToCanary = false;
-
-            // 灰度路由
-            RuleDefinition canaryDef = resolveCanaryDefinition(rule);
-            if (canaryDef != null) {
-                boolean goCanary = canaryRouter.shouldRouteToCanary(canaryDef, context);
-                canaryRouter.recordBucket(rule.getCode(), goCanary);
-                if (goCanary) {
-                    routedToCanary = true;
-                    Rule canaryRule = canaryRouter.buildCanaryRule(canaryDef);
-                    try {
-                        if (timeoutExecutor != null) {
-                            result = timeoutExecutor.evaluateWithTimeout(canaryRule, context, 0);
-                        } else {
-                            result = canaryRule.evaluate(context);
-                        }
-                    } catch (Exception e) {
-                        caughtException = e;
-                    }
-                    if (result != null) {
-                        canaryRouter.markCanary(result);
-                    }
-                }
-            }
-
-            // 主版本评估
-            if (!routedToCanary) {
-                try {
-                    if (timeoutExecutor != null) {
-                        result = timeoutExecutor.evaluateWithTimeout(rule, context, 0);
-                    } else {
-                        result = rule.evaluate(context);
-                    }
-                } catch (Exception e) {
-                    caughtException = e;
-                }
-            }
-
-            long elapsed = (System.nanoTime() - start) / 1_000_000;
-            boolean isTriggered = result != null && result.isTriggered();
-            boolean isError = caughtException != null
-                    || (result != null && result.getDescription() != null
-                        && result.getDescription().startsWith("评估超时"));
-            record(rule.getCode(), isTriggered, isError, elapsed);
-
-            // 熔断器记录
-            if (circuitBreaker != null) {
-                circuitBreaker.recordResult(rule.getCode(), !isError);
-            }
-            // 监控指标
-            if (metrics != null) {
-                try {
-                    metrics.recordEvaluation(rule.getCode(), scenario, isTriggered,
-                            result != null ? result.getSeverity() : null, isError, elapsed);
-                } catch (Exception me) {
-                    log.debug("[LiteRule-Parallel] 指标记录失败: {}", me.getMessage());
-                }
-            }
-            if (isError && caughtException != null) {
-                log.warn("[LiteRule-Parallel] 规则 {} 评估异常: {}",
-                        rule.getCode(), caughtException.getMessage());
-            }
-            // 异步 Trace
-            if (traceRecorder != null && traceRecorder.isEnabled()) {
-                try {
-                    RuleExecutionTrace trace = buildTrace(context, rule, result, elapsed, caughtException);
-                    traceRecorder.record(trace);
-                } catch (Exception te) {
-                    log.debug("[LiteRule-Parallel] Trace 记录失败: {}", te.getMessage());
-                }
-            }
-            return isTriggered ? result : null;
+            // 委托共享评估+记录逻辑（P2-T3：消除串行/并行路径重复代码）
+            RuleEvaluationOutcome outcome = executeAndRecordRuleEvaluation(
+                    rule, context, scenario, "[LiteRule-Parallel]");
+            return outcome.isTriggered ? outcome.result : null;
         });
     }
 
@@ -1449,13 +1443,14 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
-     * 严重度权重
+     * 严重度权重（已废弃，使用 {@link RuleResult#getSeverityWeight()}）
      *
      * @param result 规则结果
      * @return 权重值
+     * @deprecated 使用 {@link RuleResult#getSeverityWeight()}
      */
+    @Deprecated
     private int severityWeight(RuleResult result) {
-        if (result == null || result.getSeverity() == null) return 0;
-        return result.getSeverity().getWeight();
+        return result != null ? result.getSeverityWeight() : 0;
     }
 }

@@ -412,7 +412,7 @@ public class CEPEngine implements Serializable {
         switch (wt) {
             case COUNT -> {
                 queue.addLast(event);
-        enforceQueueLimit(queue);
+                enforceQueueLimit(queue);
                 int count = queue.size();
                 int threshold = pattern.getCountWindow() > 0 ? pattern.getCountWindow() : (int) pattern.getThreshold();
                 if (count >= threshold) {
@@ -426,7 +426,7 @@ public class CEPEngine implements Serializable {
                 Instant now = event.getTimestamp();
                 Instant windowStart = now.minus(pattern.getWindow());
                 queue.addLast(event);
-        enforceQueueLimit(queue);
+                enforceQueueLimit(queue);
                 while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
                     queue.pollFirst();
                 }

@@ -3,11 +3,10 @@ package com.njydsz.literule.server.health;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.server.cep.CEPEngine;
 import com.njydsz.literule.server.core.AsyncTraceRecorder;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
@@ -36,8 +35,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2.3.0
  */
 @Slf4j
-@ConditionalOnClass(HealthIndicator.class)
-@ConditionalOnProperty(prefix = "ydsz.literule", name = "health-enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class LiteRuleHealthIndicator implements HealthIndicator {
 
@@ -84,7 +81,7 @@ public class LiteRuleHealthIndicator implements HealthIndicator {
                 Map<String, Object> breakerDetails = new LinkedHashMap<>();
                 int openCount = 0;
                 int halfOpenCount = 0;
-                for (com.njydsz.literule.api.Rule rule : ruleEngine.getRules()) {
+                for (Rule rule : ruleEngine.getRules()) {
                     RuleCircuitBreaker.State state = breaker.getState(rule.getCode());
                     if (state == RuleCircuitBreaker.State.OPEN) {
                         openCount++;

@@ -213,6 +213,7 @@ public class AuthServiceImpl implements AuthService {
         }
         tokenBlacklistService.addToBlacklist(accessToken);
         redisTemplate.delete(accessToken);
+        userInfoMetrics.recordLogout();
         log.info("User logged out, token blacklisted");
     }
 

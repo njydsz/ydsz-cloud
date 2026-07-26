@@ -56,6 +56,7 @@ public enum UserInfoResultCode implements ResultCode {
     ROLE_HAS_USERS("B32004", "该角色下存在用户，无法删除"),
     PERMISSION_NOT_FOUND("B32005", "权限不存在"),
     MENU_NOT_FOUND("B32006", "菜单不存在"),
+    MENU_HAS_CHILDREN("B32011", "该菜单下存在子菜单，无法删除"),
     POST_NOT_FOUND("B32007", "岗位不存在"),
     POST_CODE_DUPLICATE("B32008", "岗位编码已存在"),
     LANGUAGE_NOT_FOUND("B32009", "语言不存在"),

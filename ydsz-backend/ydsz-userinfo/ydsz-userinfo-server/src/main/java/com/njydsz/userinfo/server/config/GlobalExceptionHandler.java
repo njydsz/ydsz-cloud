@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.BaseResultCode;
+import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.exception.BusinessException;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -46,6 +49,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<BaseResponse<Void>> handleConstraintViolationException(ConstraintViolationException e) {
+        String errors = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining("; "));
+        log.warn("Constraint violation: {}", errors);
+        BaseResponse<Void> response = BaseResponse.error(BaseResultCode.VALIDATION_FAILED.getCode(), errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<BaseResponse<Void>> handleIllegalArgument(IllegalArgumentException e) {
         log.warn("Illegal argument: {}", e.getMessage());
@@ -65,11 +78,9 @@ public class GlobalExceptionHandler {
      *
      * <p>映射规则：
      * <ul>
-     *   <li>B30001 (USER_NOT_FOUND) → 404</li>
-     *   <li>B30002 (PASSWORD_INCORRECT) → 401</li>
-     *   <li>A20003 (TOKEN_INVALID) → 401</li>
-     *   <li>A20110 (ACCOUNT_LOCKED) → 423</li>
-     *   <li>A20108/A20109 (MFA) → 401</li>
+     *   <li>USER_NOT_FOUND → 404</li>
+     *   <li>PASSWORD_INCORRECT / TOKEN_INVALID / MFA → 401</li>
+     *   <li>ACCOUNT_LOCKED → 423</li>
      *   <li>其余业务异常 → 400</li>
      * </ul>
      */
@@ -77,18 +88,18 @@ public class GlobalExceptionHandler {
         if (code == null) {
             return HttpStatus.BAD_REQUEST;
         }
-        switch (code) {
-            case "B30001":
-                return HttpStatus.NOT_FOUND;
-            case "B30002":
-            case "A20003":
-            case "A20108":
-            case "A20109":
-                return HttpStatus.UNAUTHORIZED;
-            case "A20110":
-                return HttpStatus.LOCKED;
-            default:
-                return HttpStatus.BAD_REQUEST;
+        if (UserInfoResultCode.USER_NOT_FOUND.getCode().equals(code)) {
+            return HttpStatus.NOT_FOUND;
         }
+        if (UserInfoResultCode.PASSWORD_INCORRECT.getCode().equals(code)
+                || UserInfoResultCode.TOKEN_INVALID.getCode().equals(code)
+                || UserInfoResultCode.MFA_REQUIRED.getCode().equals(code)
+                || UserInfoResultCode.MFA_INVALID.getCode().equals(code)) {
+            return HttpStatus.UNAUTHORIZED;
+        }
+        if (UserInfoResultCode.ACCOUNT_LOCKED.getCode().equals(code)) {
+            return HttpStatus.LOCKED;
+        }
+        return HttpStatus.BAD_REQUEST;
     }
 }

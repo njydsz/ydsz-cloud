@@ -89,6 +89,13 @@ public class MenuServiceImpl implements MenuService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
         }
+        // 检查子菜单
+        LambdaQueryWrapper<MenuDO> childWrapper = new LambdaQueryWrapper<>();
+        childWrapper.eq(MenuDO::getParentId, id);
+        childWrapper.eq(MenuDO::getDeleted, 0);
+        if (mapper.selectCount(childWrapper) > 0) {
+            throw new BusinessException(UserInfoResultCode.MENU_HAS_CHILDREN);
+        }
         return mapper.deleteById(id) > 0;
     }
 

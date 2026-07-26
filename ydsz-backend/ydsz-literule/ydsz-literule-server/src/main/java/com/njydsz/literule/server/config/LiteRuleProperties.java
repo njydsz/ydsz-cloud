@@ -162,6 +162,19 @@ public class LiteRuleProperties {
     private String annotationScanBasePackages = "";
 
     /**
+     * 默认租户 ID（P2-T4：消除硬编码）
+     *
+     * <p>SDK 和自动注册规则的默认租户标识。未在规则定义中显式指定 tenantId 时，
+     * 引擎使用此值作为默认租户。
+     *
+     * <p>默认值 {@code "1"}（向后兼容）。多租户场景下通过
+     * {@code ydsz.literule.default-tenant-id} 配置覆盖。
+     *
+     * @since 2.3.0
+     */
+    private String defaultTenantId = "1";
+
+    /**
      * 当前运行环境（P1-5 多环境隔离）
      *
      * <p>可选值：

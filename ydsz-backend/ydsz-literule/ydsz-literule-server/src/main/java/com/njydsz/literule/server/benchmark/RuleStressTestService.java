@@ -11,8 +11,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 
-import org.springframework.stereotype.Service;
-
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.server.config.RuleAdminService;
 
@@ -41,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.6.0
  */
 @Slf4j
-@Service
 public class RuleStressTestService {
 
     private final RuleAdminService ruleAdminService;

@@ -1,10 +1,13 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -147,7 +150,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
-        BeanUtils.copyProperties(dto, entity, "id");
+        // 仅复制非 null 属性，避免覆盖已有值
+        BeanUtils.copyProperties(dto, entity, getNullPropertyNames(dto));
         return userAccountMapper.updateById(entity) > 0;
     }
 
@@ -243,5 +247,22 @@ public class UserAccountServiceImpl implements UserAccountService {
         UserAccountVO vo = new UserAccountVO();
         BeanUtils.copyProperties(entity, vo);
         return vo;
+    }
+
+    /**
+     * 获取对象中值为 null 的属性名数组，用于 BeanUtils.copyProperties 忽略 null 值。
+     */
+    private String[] getNullPropertyNames(Object source) {
+        final BeanWrapper wrapper = new BeanWrapperImpl(source);
+        PropertyDescriptor[] pds = wrapper.getPropertyDescriptors();
+        List<String> nullNames = new ArrayList<>();
+        for (PropertyDescriptor pd : pds) {
+            if (wrapper.isReadableProperty(pd.getName())
+                    && wrapper.getPropertyValue(pd.getName()) == null) {
+                nullNames.add(pd.getName());
+            }
+        }
+        nullNames.add("id");
+        return nullNames.toArray(new String[0]);
     }
 }

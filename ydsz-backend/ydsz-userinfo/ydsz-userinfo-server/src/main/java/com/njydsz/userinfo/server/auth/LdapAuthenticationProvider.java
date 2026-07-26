@@ -10,31 +10,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.util.auth.AuthInfo;
+import com.njydsz.userinfo.server.config.LdapProperties;
 
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * LDAP/ADFS 域账号认证提供者。
  *
  * <p>实现 common-auth AuthenticationProvider SPI，支持 LDAP/Active Directory 域认证。
- * 配置通过 @ConfigurationProperties 注入，替代原硬编码值。
- *
- * <p>配置示例：
- * <pre>
- * ydsz:
- *   auth:
- *     ldap:
- *       enabled: true
- *       host: 10.248.3.56
- *       port: 389
- *       domain: @wuxibio
- * </pre>
+ * 配置通过 {@link LdapProperties} 注入。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,17 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @ConditionalOnProperty(prefix = "ydsz.auth.ldap", name = "enabled", havingValue = "true")
-@ConfigurationProperties(prefix = "ydsz.auth.ldap")
-@Data
+@RequiredArgsConstructor
 public class LdapAuthenticationProvider implements AuthenticationProvider {
 
-    private boolean enabled = false;
-    private String host = "127.0.0.1";
-    private int port = 389;
-    private String domain = "";
-    private String baseDn = "";
-    private int connectTimeoutMs = 5000;
-    private int readTimeoutMs = 10000;
+    private final LdapProperties properties;
 
     @Override
     public AuthInfo authenticate(HttpServletRequest request, HttpServletResponse response) {
@@ -79,7 +61,8 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
      * @return true 认证成功
      */
     public boolean authenticateLdap(String username, String password) {
-        String url = "ldap://" + host + ":" + port;
+        String url = "ldap://" + properties.getHost() + ":" + properties.getPort();
+        String domain = properties.getDomain();
         String user = username.indexOf(domain) > 0 ? username : username + domain;
 
         Hashtable<String, String> env = new Hashtable<>();
@@ -88,8 +71,8 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
         env.put(Context.SECURITY_CREDENTIALS, password);
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, url);
-        env.put("com.sun.jndi.ldap.connect.timeout", String.valueOf(connectTimeoutMs));
-        env.put("com.sun.jndi.ldap.read.timeout", String.valueOf(readTimeoutMs));
+        env.put("com.sun.jndi.ldap.connect.timeout", String.valueOf(properties.getConnectTimeoutMs()));
+        env.put("com.sun.jndi.ldap.read.timeout", String.valueOf(properties.getReadTimeoutMs()));
 
         DirContext ctx = null;
         try {
@@ -108,5 +91,14 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
                 }
             }
         }
+    }
+
+    /**
+     * LDAP 是否启用。
+     *
+     * @return true 启用
+     */
+    public boolean isEnabled() {
+        return properties.isEnabled();
     }
 }

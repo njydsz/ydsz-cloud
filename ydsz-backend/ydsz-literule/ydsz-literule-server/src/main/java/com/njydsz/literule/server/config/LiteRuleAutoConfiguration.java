@@ -1,6 +1,5 @@
 package com.njydsz.literule.server.config;
 
-import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +26,7 @@ import com.njydsz.literule.server.approval.ApprovalRecordRepository;
 import com.njydsz.literule.server.approval.RuleApprovalService;
 import com.njydsz.literule.server.approval.RuleApprovalWorkflowBridge;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
+import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.cache.CachingRuleConfigProvider;
 import com.njydsz.literule.server.cep.CEPEngine;
 import com.njydsz.literule.server.core.AsyncTraceRecorder;
@@ -50,7 +50,13 @@ import com.njydsz.literule.server.expr.VariableRegistry;
 import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
 import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
+import com.njydsz.literule.server.orchestrator.RuleChain;
 import com.njydsz.literule.server.sdk.LiteRuleSdk;
+
+import io.micrometer.core.instrument.MeterRegistry;
+
+import jakarta.annotation.PreDestroy;
+
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -92,6 +98,17 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling
 @ConditionalOnProperty(prefix = "ydsz.literule", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class LiteRuleAutoConfiguration {
+
+    /**
+     * 优雅关闭 RuleChain 静态线程池（P1-T4）
+     *
+     * <p>Spring 容器关闭时调用 {@link RuleChain#shutdownFallbackExecutor()}，
+     * 释放 WHEN 链回退线程池资源。
+     */
+    @PreDestroy
+    public void destroy() {
+        RuleChain.shutdownFallbackExecutor();
+    }
 
     /**
      * 表达式求值器
@@ -136,7 +153,7 @@ public class LiteRuleAutoConfiguration {
                                   ObjectProvider<FactProviderRegistry> factRegistryProvider,
                                   ObjectProvider<RuleActionDispatcher> actionDispatcherProvider,
                                   ObjectProvider<ParallelRuleEvaluator> parallelEvaluatorProvider,
-                                  ApplicationContext applicationContext) {
+                                  ObjectProvider<MeterRegistry> meterRegistryProvider) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
 
@@ -149,7 +166,7 @@ public class LiteRuleAutoConfiguration {
         configureCanaryRouting(engine, properties, evaluatorProvider);
 
         // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
-        bindMicrometerIfAvailable(engine, applicationContext);
+        bindMicrometerIfAvailable(engine, meterRegistryProvider);
 
         // P1-7: 评估结果缓存
         if (properties.getPerformance().isCacheEnabled()) {
@@ -278,31 +295,21 @@ public class LiteRuleAutoConfiguration {
     }
 
     /**
-     * 当 classpath 存在 MeterRegistry 时桥接到 Micrometer
+     * 当 classpath 存在 MeterRegistry 时桥接到 Micrometer（P1-T3：从反射改为 ObjectProvider 注入）
      *
-     * <p>使用反射式检测避免对 MeterRegistry 类的硬依赖，使得 literule 在缺少 micrometer 依赖的环境下仍能工作。
+     * <p>使用 {@link ObjectProvider} 可选注入，避免反射式检测的{
+     * 性能开销和类型不安全。ObjectProvider 在 MeterRegistry 不在 classpath
+     * 或无 Bean 注册时返回 null，天然支持可选依赖。
      */
-    private void bindMicrometerIfAvailable(DefaultRuleEngine engine, ApplicationContext ctx) {
-        Class<?> meterRegistryClass;
-        try {
-            meterRegistryClass = Class.forName("io.micrometer.core.instrument.MeterRegistry", false,
-                    getClass().getClassLoader());
-        } catch (ClassNotFoundException e) {
-            log.debug("[LiteRule] Micrometer 不在 classpath，跳过 Prometheus 指标桥接");
+    private void bindMicrometerIfAvailable(DefaultRuleEngine engine,
+                                             ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        MeterRegistry registry = meterRegistryProvider.getIfAvailable();
+        if (registry == null) {
+            log.debug("[LiteRule] MeterRegistry 未注入，跳过 Prometheus 指标桥接");
             return;
         }
-        Map<String, ?> beans = ctx.getBeansOfType(meterRegistryClass);
-        if (beans.isEmpty()) {
-            log.debug("[LiteRule] 未找到 MeterRegistry Bean，跳过 Prometheus 指标桥接");
-            return;
-        }
-        Object registry = beans.values().iterator().next();
         try {
-            Class<?> metricsClass = Class.forName(
-                    "com.njydsz.literule.server.core.MicrometerRuleMetrics", true,
-                    getClass().getClassLoader());
-            Constructor<?> ctor = metricsClass.getConstructor(meterRegistryClass);
-            RuleMetrics metrics = (RuleMetrics) ctor.newInstance(registry);
+            RuleMetrics metrics = new MicrometerRuleMetrics(registry);
             engine.setMetrics(metrics);
             log.info("[LiteRule] Prometheus 监控指标已启用 (registry={})",
                     registry.getClass().getSimpleName());
@@ -1223,7 +1230,8 @@ public class LiteRuleAutoConfiguration {
     public LiteRuleSdk liteRuleSdk(RuleEngine ruleEngine,
                                      ExpressionEvaluator evaluator,
                                      LiteRuleProperties properties) {
-        LiteRuleSdk sdk = new LiteRuleSdk(ruleEngine, evaluator, "1", properties.getEnvironment());
+        LiteRuleSdk sdk = new LiteRuleSdk(ruleEngine, evaluator,
+                properties.getDefaultTenantId(), properties.getEnvironment());
         log.info("[LiteRule-SDK] LiteRuleSdk 已初始化（environment={}）", properties.getEnvironment());
         return sdk;
     }
@@ -1276,5 +1284,28 @@ public class LiteRuleAutoConfiguration {
                 log.warn("[LiteRule-Maintenance] CEP 过期事件清理失败: {}", e.getMessage());
             }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // P0-T2 规则压测服务（@Bean 注册，替代 @Service）
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则压测服务 Bean（P0-T2）
+     *
+     * <p>当存在 {@link RuleAdminService} 时自动装配，提供规则引擎并发压测能力。
+     * 从 @Service 改为 @Bean 注册，与项目其他模块规范一致。
+     *
+     * @param ruleAdminService 规则管理服务
+     * @return RuleStressTestService 实例
+     * @since 2.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RuleAdminService.class)
+    public RuleStressTestService ruleStressTestService(
+            RuleAdminService ruleAdminService) {
+        log.info("[LiteRule-Benchmark] 规则压测服务已初始化");
+        return new RuleStressTestService(ruleAdminService);
     }
 }

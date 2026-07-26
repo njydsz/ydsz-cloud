@@ -84,11 +84,16 @@ public class LiteExprSandbox {
     }
 
     /**
-     * 同步 facts key 到白名单
+     * 同步 facts key 到白名单（P0-T4：每次调用先清空再添加，防止高基数场景下 Set 无限增长）
+     *
+     * <p>每次评估前调用此方法，将当前 facts 的 key 替换为白名单内容。
+     * 避免不同请求的 facts key（如 traceId、时间戳等高基数 key）在 Set 中累积导致内存泄漏。
      */
     public void syncFacts(Map<String, Object> facts) {
-        if (facts == null) return;
-        allowedVariables.addAll(facts.keySet());
+        allowedVariables.clear();
+        if (facts != null) {
+            allowedVariables.addAll(facts.keySet());
+        }
     }
 
     /**
