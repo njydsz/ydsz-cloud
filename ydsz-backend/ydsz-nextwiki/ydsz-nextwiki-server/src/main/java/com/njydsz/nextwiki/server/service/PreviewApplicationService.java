@@ -277,36 +277,19 @@ public class PreviewApplicationService {
     }
 
     /**
-     * 生成图片缩略图
-     * 下载原图 -> 复制到临时文件 -> 上传缩略图到存储
+     * 生成图片缩略图（P0-R4: 委托 ThumbnailApplicationService，消除重复逻辑）
+     * <p>
+     * 原实现直接上传原图作为缩略图（无缩放），与 ThumbnailApplicationService 的实际缩放逻辑冲突。
+     * 现委托 ThumbnailApplicationService 统一处理。
      */
-    private void generateImageThumbnail(FileNode fileNode) throws Exception {
-        IFileStorage storage = resolveStorage();
-        if (storage == null) {
-            // 存储不可用时仅标记预览就绪
-            fileNode.setPreviewReady(true);
-            fileNodeRepository.update(fileNode);
-            return;
-        }
-
-        // 下载原图
-        Path tempFile = downloadToTemp(fileNode);
-        String thumbnailKey = "wiki/thumbnail/" + fileNode.getId() + "_thumb." + fileNode.getSuffix();
-
-        try {
-            // 上传缩略图到存储（当前直接上传原图作为缩略图）
-            // 实际生产环境应使用 ImageIO + 缩放算法生成缩略图
-            String contentType = "image/" + (fileNode.getSuffix() != null ? fileNode.getSuffix() : "png");
-            uploadFileToStorage(storage, tempFile, thumbnailKey, contentType);
-
-            fileNode.setThumbnailKey(thumbnailKey);
-            fileNode.setPreviewReady(true);
-            fileNodeRepository.update(fileNode);
-            log.info("[PreviewApplicationService] 图片缩略图已上传: fileNodeId={}, thumbnailKey={}",
-                    fileNode.getId(), thumbnailKey);
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+    private void generateImageThumbnail(FileNode fileNode) {
+        // P0-R4: 直接委托 ThumbnailApplicationService，不再重复实现
+        // ThumbnailApplicationService 会下载原图、缩放、上传到存储、更新 thumbnailKey
+        // 此处仅标记预览就绪（图片可直接预览）
+        fileNode.setPreviewReady(true);
+        fileNodeRepository.update(fileNode);
+        log.info("[PreviewApplicationService] 图片预览就绪（缩略图由 ThumbnailApplicationService 异步生成）: fileNodeId={}",
+                fileNode.getId());
     }
 
     /**

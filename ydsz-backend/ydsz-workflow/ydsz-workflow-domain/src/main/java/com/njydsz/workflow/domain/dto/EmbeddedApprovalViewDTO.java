@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
 import com.njydsz.common.safe.sensitive.SensitiveType;
@@ -104,7 +103,6 @@ public class EmbeddedApprovalViewDTO implements Serializable {
         /** 办理人 ID */
         private String assigneeId;
         /** 办理人姓名 */
-        @JsonSerialize(using = SensitiveDataSerializer.class)
         @SensitiveData(SensitiveType.CHINESE_NAME)
         private String assigneeName;
         /** 会签类型 */

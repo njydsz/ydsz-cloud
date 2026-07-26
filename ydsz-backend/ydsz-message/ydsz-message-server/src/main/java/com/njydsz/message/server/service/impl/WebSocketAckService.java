@@ -1,9 +1,6 @@
 package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -16,12 +13,15 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>实现消息投递的 At-Least-Once 语义：
  * <ol>
- *   <li>推送消息时记录 unacked 状态（Redis + 本地内存双写）</li>
+ *   <li>推送消息时记录 unacked 状态（Redis Hash 存储）</li>
  *   <li>客户端收到消息后回复 ACK</li>
  *   <li>超时未 ACK 的消息触发重推（由定时扫描器补偿）</li>
  * </ol>
  *
- * <p>Redis Key 格式：{@code ws:unacked:{userId}:{msgId}} → timestamp
+ * <p>OD-5: 改用 Redis Hash 存储每个用户的 unacked 消息，
+ * 消除本地计数器在多实例部署下的不一致问题。
+ *
+ * <p>Redis Key 格式：{@code ws:unacked:{userId}} → Hash(msgId → timestamp)
  * <p>TTL：默认 60s，超时后可被重推
  *
  * @author ydsz-team
@@ -40,38 +40,34 @@ public class WebSocketAckService {
     /** 默认 ACK 超时时间（秒） */
     private static final long DEFAULT_ACK_TIMEOUT_SECONDS = 60L;
 
-    /** 本地 unacked 计数（用于快速判断是否有待确认消息） */
-    private final ConcurrentMap<String, AtomicInteger> localUnackedCount = new ConcurrentHashMap<>();
-
     /**
      * 记录消息为 unacked。
+     *
+     * <p>OD-5: 改用 Redis Hash 存储，消除本地计数器多实例不一致问题。
      *
      * @param userId 用户 ID
      * @param msgId  消息 ID
      */
     public void markUnacked(String userId, String msgId) {
-        String key = buildKey(userId, msgId);
-        redisTemplate.opsForValue().set(key, String.valueOf(System.currentTimeMillis()),
-                Duration.ofSeconds(DEFAULT_ACK_TIMEOUT_SECONDS));
-        localUnackedCount.computeIfAbsent(userId, k -> new AtomicInteger(0)).incrementAndGet();
+        String key = buildKey(userId);
+        redisTemplate.opsForHash().put(key, msgId, String.valueOf(System.currentTimeMillis()));
+        redisTemplate.expire(key, Duration.ofSeconds(DEFAULT_ACK_TIMEOUT_SECONDS));
         log.debug("[WS-ACK] 消息标记 unacked: userId={} msgId={}", userId, msgId);
     }
 
     /**
      * 处理客户端 ACK。
      *
+     * <p>OD-5: 改用 Redis Hash 删除字段，消除本地计数器。
+     *
      * @param userId 用户 ID
      * @param msgId  消息 ID
      * @return true 表示 ACK 成功（消息之前是 unacked 状态）
      */
     public boolean handleAck(String userId, String msgId) {
-        String key = buildKey(userId, msgId);
-        Boolean deleted = redisTemplate.delete(key);
-        if (Boolean.TRUE.equals(deleted)) {
-            AtomicInteger count = localUnackedCount.get(userId);
-            if (count != null) {
-                count.decrementAndGet();
-            }
+        String key = buildKey(userId);
+        Long deleted = redisTemplate.opsForHash().delete(key, msgId);
+        if (deleted != null && deleted > 0) {
             log.debug("[WS-ACK] 收到 ACK: userId={} msgId={}", userId, msgId);
             return true;
         }
@@ -86,22 +82,25 @@ public class WebSocketAckService {
      * @return true 表示尚未 ACK
      */
     public boolean isUnacked(String userId, String msgId) {
-        String key = buildKey(userId, msgId);
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        String key = buildKey(userId);
+        return redisTemplate.opsForHash().hasKey(key, msgId);
     }
 
     /**
      * 获取用户未 ACK 消息数。
      *
+     * <p>OD-5: 使用 Redis Hash HLEN，多实例一致。
+     *
      * @param userId 用户 ID
      * @return 未 ACK 消息数
      */
     public int getUnackedCount(String userId) {
-        AtomicInteger count = localUnackedCount.get(userId);
-        return count == null ? 0 : count.get();
+        String key = buildKey(userId);
+        Long size = redisTemplate.opsForHash().size(key);
+        return size != null ? size.intValue() : 0;
     }
 
-    private String buildKey(String userId, String msgId) {
-        return UNACKED_KEY_PREFIX + userId + ":" + msgId;
+    private String buildKey(String userId) {
+        return UNACKED_KEY_PREFIX + userId;
     }
 }

@@ -22,9 +22,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 文件锁定 REST API（P1-6）
+ * 文件锁定 REST API（P1-6 + P0-R3 + P2-R2）
  * <p>
  * 支持 Check-out / Check-in 机制，防止多用户并发编辑冲突。
+ * P0-R3 修复：不再滥用 shareStatus 字段，改用 status 字段记录锁定状态。
+ * P2-R2 修复：增加权限检查。
  *
  * @author ydsz-team
  * @since 1.4.0
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FileLockController {
 
     private final FileNodeRepository fileNodeRepository;
+    private final com.njydsz.nextwiki.domain.service.FilePermissionService permissionService;
 
     @PostMapping("/{nodeId}/lock")
     @Operation(summary = "锁定文件（Check-out）")
@@ -45,17 +48,20 @@ public class FileLockController {
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId) {
 
+        // P2-R2: 权限检查
+        permissionService.checkWrite(nodeId, userId);
+
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null || !node.isFile()) {
             throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
-        if (node.getShareStatus() != null && node.getShareStatus().equals("locked")
-                && !userId.equals(node.getUpdatedBy())) {
+        // P0-R3: 使用 status 字段记录锁定状态，不再覆盖 shareStatus
+        if ("locked".equals(node.getStatus()) && !userId.equals(node.getUpdatedBy())) {
             throw new BusinessException(NextwikiExceptionCode.FILE_LOCKED);
         }
 
-        node.setShareStatus("locked");
+        node.setStatus("locked");
         node.setUpdatedBy(userId);
         node.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(node);
@@ -71,12 +77,16 @@ public class FileLockController {
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId) {
 
+        // P2-R2: 权限检查
+        permissionService.checkWrite(nodeId, userId);
+
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
             throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
 
-        node.setShareStatus("private");
+        // P0-R3: 恢复 status 为 active，不影响 shareStatus
+        node.setStatus("active");
         node.setUpdatedBy(userId);
         node.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(node);

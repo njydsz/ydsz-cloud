@@ -7,7 +7,6 @@ import java.util.Map;
 
 import jakarta.validation.constraints.NotBlank;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
 import com.njydsz.common.safe.sensitive.SensitiveType;
@@ -53,7 +52,6 @@ public class FlowStartProcessDTO implements Serializable {
     private String initiatorId;
 
     /** 发起人姓名 */
-    @JsonSerialize(using = SensitiveDataSerializer.class)
     @SensitiveData(SensitiveType.CHINESE_NAME)
     private String initiatorName;
 

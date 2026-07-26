@@ -2,6 +2,7 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -33,11 +34,12 @@ public class ChannelSuppressionEngine {
 
     private final StringRedisTemplate redisTemplate;
 
-    /** 抑制 Key 前缀 */
-    private static final String SUPPRESS_KEY_PREFIX = "suppress:";
+    /** OD-7: 抑制窗口配置化 */
+    @Value("${ydsz.message.suppress-window-seconds:300}")
+    private long suppressWindowSeconds;
 
-    /** 默认抑制窗口（秒） */
-    private static final long DEFAULT_SUPPRESS_WINDOW_SECONDS = 300L;
+    /** OD-7: 抑制 Key 前缀 */
+    private static final String SUPPRESS_KEY_PREFIX = "suppress:";
 
     /**
      * 检查是否应该抑制此消息。
@@ -57,7 +59,7 @@ public class ChannelSuppressionEngine {
         }
         String key = buildKey(bizType, bizId, receiver);
         Boolean acquired = redisTemplate.opsForValue()
-                .setIfAbsent(key, channel, Duration.ofSeconds(DEFAULT_SUPPRESS_WINDOW_SECONDS));
+                .setIfAbsent(key, channel, Duration.ofSeconds(suppressWindowSeconds));
         if (Boolean.TRUE.equals(acquired)) {
             // 首个渠道，放行
             log.debug("[Suppress] 首渠道放行: bizType={} bizId={} receiver={} channel={}",

@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
 import com.njydsz.common.safe.sensitive.SensitiveType;
@@ -34,7 +33,6 @@ public class FlowDelegateAuthSaveDTO implements Serializable {
     private String ownerUserId;
 
     @Schema(description = "授权人姓名")
-    @JsonSerialize(using = SensitiveDataSerializer.class)
     @SensitiveData(SensitiveType.CHINESE_NAME)
     private String ownerUserName;
 
@@ -43,7 +41,6 @@ public class FlowDelegateAuthSaveDTO implements Serializable {
     private String delegateUserId;
 
     @Schema(description = "被委托人姓名")
-    @JsonSerialize(using = SensitiveDataSerializer.class)
     @SensitiveData(SensitiveType.CHINESE_NAME)
     private String delegateUserName;
 

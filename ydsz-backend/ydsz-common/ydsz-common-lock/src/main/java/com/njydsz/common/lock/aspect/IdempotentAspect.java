@@ -113,19 +113,28 @@ public class IdempotentAspect {
         String userKey = resolveUserKey(idempotent.key(), method, joinPoint.getArgs());
         String redisKey = buildRedisKey(userKey);
 
+        long acquireStart = System.currentTimeMillis();
         String token = idempotentStrategy.acquire(redisKey, idempotent.ttlSeconds() * 1000L);
         if (token == null) {
+            // 幂等命中：同一 key 在 TTL 窗口内被重复提交，拒绝处理
             recordIdempotentHit(idempotent, redisKey);
+            recordAcquireFail("idempotent");
             throw new IdempotentException(idempotent.message(), redisKey);
         }
+
+        // acquire 成功
+        recordAcquireSuccess(System.currentTimeMillis() - acquireStart, "idempotent");
+        long heldStart = System.currentTimeMillis();
 
         try {
             Object result = joinPoint.proceed();
             // 正常返回：保留幂等锁至 TTL 自然过期，防止重复提交
+            log.debug("[IdempotentAspect] 方法正常完成，保留幂等锁至 TTL 过期 key={}", redisKey);
             return result;
         } catch (BusinessException bizEx) {
             // 业务异常：自动释放幂等锁，允许客户端修正后重试（项目硬约束 P2-9）
             idempotentStrategy.release(redisKey, token);
+            recordRelease(System.currentTimeMillis() - heldStart, "idempotent");
             log.debug("[IdempotentAspect] 业务异常释放幂等锁 key={} cause={}", redisKey, bizEx.getMessage());
             throw bizEx;
         } catch (Throwable ex) {
@@ -134,6 +143,41 @@ public class IdempotentAspect {
             log.warn("[IdempotentAspect] 非 BusinessException 抛出，保留幂等锁 key={} cause={}",
                     redisKey, ex.getClass().getSimpleName());
             throw ex;
+        }
+    }
+
+    /**
+     * 记录 acquire 成功指标
+     *
+     * @param waitMillis 等待耗时（毫秒）
+     * @param lockType   锁类型
+     */
+    private void recordAcquireSuccess(long waitMillis, String lockType) {
+        if (lockMetrics != null) {
+            lockMetrics.recordAcquireSuccess(waitMillis, lockType);
+        }
+    }
+
+    /**
+     * 记录 acquire 失败指标
+     *
+     * @param lockType 锁类型
+     */
+    private void recordAcquireFail(String lockType) {
+        if (lockMetrics != null) {
+            lockMetrics.recordAcquireFail(lockType);
+        }
+    }
+
+    /**
+     * 记录 release 指标
+     *
+     * @param holdMillis 持锁耗时（毫秒）
+     * @param lockType   锁类型
+     */
+    private void recordRelease(long holdMillis, String lockType) {
+        if (lockMetrics != null) {
+            lockMetrics.recordRelease(holdMillis, lockType);
         }
     }
 

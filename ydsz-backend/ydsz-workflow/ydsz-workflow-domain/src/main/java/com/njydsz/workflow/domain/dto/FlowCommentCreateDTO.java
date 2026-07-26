@@ -6,7 +6,6 @@ import java.io.Serializable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
 import com.njydsz.common.safe.sensitive.SensitiveType;
@@ -50,7 +49,6 @@ public class FlowCommentCreateDTO implements Serializable {
     private String replyToUserId;
 
     /** 被回复人姓名（可选） */
-    @JsonSerialize(using = SensitiveDataSerializer.class)
     @SensitiveData(SensitiveType.CHINESE_NAME)
     private String replyToUserName;
 }

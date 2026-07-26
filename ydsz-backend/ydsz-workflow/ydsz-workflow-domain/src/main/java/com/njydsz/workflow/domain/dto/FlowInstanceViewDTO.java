@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
 import com.njydsz.common.safe.sensitive.SensitiveType;
@@ -49,7 +48,6 @@ public class FlowInstanceViewDTO implements Serializable {
     /** 发起人 ID */
     private String initiatorId;
     /** 发起人姓名 */
-    @JsonSerialize(using = SensitiveDataSerializer.class)
     @SensitiveData(SensitiveType.CHINESE_NAME)
     private String initiatorName;
     /** 当前节点编码 */
@@ -91,7 +89,6 @@ public class FlowInstanceViewDTO implements Serializable {
         /** 办理人 ID */
         private String assigneeId;
         /** 办理人姓名 */
-        @JsonSerialize(using = SensitiveDataSerializer.class)
         @SensitiveData(SensitiveType.CHINESE_NAME)
         private String assigneeName;
         /** 会签类型 */

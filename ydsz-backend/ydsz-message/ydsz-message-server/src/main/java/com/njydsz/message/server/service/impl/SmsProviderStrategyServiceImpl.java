@@ -13,8 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.channel.sms.SmsProvider;
 import com.njydsz.message.server.service.core.SmsProviderStrategyService;
+
+import java.math.BigDecimal;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
 
     /** Redis 模板（服务商日发送量 / 失败量统计） */
     private final StringRedisTemplate redisTemplate;
+    /** OD-4: 成本配置注入 */
+    private final MessageProperties messageProperties;
 
     /** 策略类型 */
     @Value("${ydsz.message.sms.strategy:ROUND_ROBIN}")
@@ -197,14 +202,14 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     }
 
     /**
-     * 获取 provider 成本（越低越优先）。
+     * OD-4: 从 MessageProperties.CostConfig 读取成本，消除硬编码 switch。
      */
     private int getProviderCost(String providerType) {
-        return switch (providerType) {
-            case "aliyun" -> 1;
-            case "tencent" -> 2;
-            case "mock" -> 99;
-            default -> 50;
-        };
+        // OD-4: 从配置读取成本，无配置时默认 50
+        BigDecimal cost = messageProperties.getCost().getUnitPrices().get(providerType.toUpperCase());
+        if (cost != null) {
+            return cost.multiply(BigDecimal.valueOf(1000)).intValue();
+        }
+        return 50;
     }
 }
