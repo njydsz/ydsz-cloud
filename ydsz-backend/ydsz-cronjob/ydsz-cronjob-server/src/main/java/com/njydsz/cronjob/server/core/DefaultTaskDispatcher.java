@@ -156,8 +156,15 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
     private static final String INSTANCE_ID = initInstanceId();
 
-    /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete） */
+    /** P0-A4: Lua 脚本统一引用 LockKeyUtil 常量，消除内联 Lua 字符串 */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
+
+    private static DefaultRedisScript<Long> initReleaseScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
+        script.setResultType(Long.class);
+        return script;
+    }
 
     /** P0-2: 执行节点 ID（hostname:port），用于故障转移时定位任务所在节点 */
     private String nodeId;
@@ -1605,12 +1612,5 @@ try {
                 taskExecutorPool.shutdownNow();
             }
         }
-    }
-
-    private static DefaultRedisScript<Long> initReleaseScript() {
-        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-        script.setScriptText("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
-        script.setResultType(Long.class);
-        return script;
     }
 }

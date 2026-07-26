@@ -3,14 +3,24 @@ package com.njydsz.userinfo.server.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.server.service.UserDeptService;
 import com.njydsz.userinfo.domain.entity.UserDeptDO;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
+import com.njydsz.userinfo.server.service.UserDeptService;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 用户部门关联 Service 实现。
+ *
+ * <p>内部关联表服务，供其他 Service 内部调用。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -20,26 +30,35 @@ public class UserDeptServiceImpl implements UserDeptService {
 
     @Override
     public UserDeptDO getById(String id) {
-        return mapper.selectById(id);
+        UserDeptDO entity = mapper.selectById(id);
+        if (entity == null || entity.getDeleted() == 1) {
+            return null;
+        }
+        return entity;
     }
 
     @Override
     public List<UserDeptDO> list() {
-        return mapper.selectList(null);
+        LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserDeptDO::getDeleted, 0);
+        return mapper.selectList(wrapper);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String save(UserDeptDO entity) {
         mapper.insert(entity);
         return entity.getId();
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateById(UserDeptDO entity) {
         return mapper.updateById(entity) > 0;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
         return mapper.deleteById(id) > 0;
     }

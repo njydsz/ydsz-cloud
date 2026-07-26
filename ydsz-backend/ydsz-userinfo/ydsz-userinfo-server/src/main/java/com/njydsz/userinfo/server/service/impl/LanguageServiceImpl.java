@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
 import com.njydsz.userinfo.domain.entity.LanguageDO;
+import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
+import com.njydsz.userinfo.domain.exception.BusinessException;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 import com.njydsz.userinfo.server.service.LanguageService;
@@ -34,7 +36,7 @@ public class LanguageServiceImpl implements LanguageService {
     public LanguageVO getById(String id) {
         LanguageDO entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            return null;
+            throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
         }
         return toVO(entity);
     }
@@ -67,7 +69,7 @@ public class LanguageServiceImpl implements LanguageService {
     public boolean update(LanguageSaveDTO dto) {
         LanguageDO entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
-            return false;
+            throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
         }
         BeanUtils.copyProperties(dto, entity, "id");
         return mapper.updateById(entity) > 0;
@@ -78,7 +80,7 @@ public class LanguageServiceImpl implements LanguageService {
     public boolean removeById(String id) {
         LanguageDO entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
-            return false;
+            throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
         }
         return mapper.deleteById(id) > 0;
     }

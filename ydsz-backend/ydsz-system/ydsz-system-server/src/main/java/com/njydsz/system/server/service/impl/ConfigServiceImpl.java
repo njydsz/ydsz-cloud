@@ -123,6 +123,7 @@ public class ConfigServiceImpl implements ConfigService {
         validateValueType(dto.getValueType());
         ConfigDO entity = toEntity(dto);
         mapper.insert(entity);
+        evictCache(entity.getConfigKey());
         return entity.getId();
     }
 

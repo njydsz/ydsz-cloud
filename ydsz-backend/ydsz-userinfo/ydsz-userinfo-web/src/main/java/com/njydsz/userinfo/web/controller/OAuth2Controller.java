@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.exception.BusinessException;
@@ -69,13 +70,27 @@ public class OAuth2Controller {
         }
 
         // 验证 clientId 是否已注册
-        if (!properties.getOauth2Clients().containsKey(clientId)) {
+        UserInfoProperties.OAuth2Client clientConfig = properties.getOauth2Clients().get(clientId);
+        if (clientConfig == null) {
             throw new BusinessException(UserInfoResultCode.OAUTH2_CLIENT_INVALID);
         }
 
-        // 使用 JSON 存储授权码上下文（替代字符串拼接，避免分隔符冲突）
+        // 校验 redirect_uri 在客户端注册白名单中（RFC 6749 §3.1.2.3）
+        if (clientConfig.getRedirectUris() != null
+                && !clientConfig.getRedirectUris().isEmpty()
+                && !clientConfig.getRedirectUris().contains(redirectUri)) {
+            throw new BusinessException(UserInfoResultCode.OAUTH2_REDIRECT_URI_MISMATCH);
+        }
+
+        // 使用 YdszJson 序列化授权码上下文（含 tenantId）
         String code = UUID.randomUUID().toString().replace("-", "");
-        String context = buildCodeContext(clientId, userInfo.getUserId(), userInfo.getUsername());
+        Map<String, String> contextMap = new HashMap<>();
+        contextMap.put("clientId", clientId);
+        contextMap.put("userId", userInfo.getUserId());
+        contextMap.put("username", userInfo.getUsername());
+        contextMap.put("tenantId", userInfo.getTenantId() != null ? userInfo.getTenantId() : "1");
+        contextMap.put("redirectUri", redirectUri);
+        String context = YdszJson.toJson(contextMap);
         redisStringOps.set(CODE_KEY_PREFIX + code, context, CODE_TTL_SECONDS);
         log.info("OAuth2 authorize: clientId={}, userId={}, code={}", clientId, userInfo.getUserId(), code);
         return BaseResponse.success(code);
@@ -98,11 +113,19 @@ public class OAuth2Controller {
             throw new BusinessException(UserInfoResultCode.OAUTH2_CODE_INVALID);
         }
 
-        // 解析 JSON 上下文
-        Map<String, String> context = parseCodeContext(storedContext);
-        String storedClientId = context.get("clientId");
-        String userId = context.get("userId");
-        String username = context.get("username");
+        // 使用 YdszJson 解析上下文
+        Map<String, Object> context;
+        try {
+            context = YdszJson.parseMap(storedContext);
+        } catch (Exception e) {
+            log.error("Failed to parse OAuth2 code context", e);
+            throw new BusinessException(UserInfoResultCode.OAUTH2_CODE_INVALID);
+        }
+
+        String storedClientId = getString(context, "clientId");
+        String userId = getString(context, "userId");
+        String username = getString(context, "username");
+        String tenantId = getString(context, "tenantId");
 
         if (!clientId.equals(storedClientId)) {
             throw new BusinessException(UserInfoResultCode.OAUTH2_CLIENT_INVALID);
@@ -114,7 +137,7 @@ public class OAuth2Controller {
         UserInfo userInfo = new UserInfo();
         userInfo.setUserId(userId);
         userInfo.setUsername(username);
-        userInfo.setTenantId("1");
+        userInfo.setTenantId(tenantId != null ? tenantId : "1");
 
         String newAccessToken = tokenService.issueAccessToken(userInfo);
         String refreshToken = tokenService.issueRefreshToken(userInfo);
@@ -130,53 +153,8 @@ public class OAuth2Controller {
         ));
     }
 
-    /**
-     * 构建授权码 JSON 上下文（替代字符串拼接）。
-     */
-    private String buildCodeContext(String clientId, String userId, String username) {
-        return "{\"clientId\":\"" + escapeJson(clientId) + "\""
-                + ",\"userId\":\"" + escapeJson(userId != null ? userId : "") + "\""
-                + ",\"username\":\"" + escapeJson(username != null ? username : "") + "\"}";
-    }
-
-    /**
-     * 解析授权码 JSON 上下文。
-     */
-    private Map<String, String> parseCodeContext(String json) {
-        try {
-            return parseSimpleJson(json);
-        } catch (Exception e) {
-            log.error("Failed to parse OAuth2 code context", e);
-            throw new BusinessException(UserInfoResultCode.OAUTH2_CODE_INVALID);
-        }
-    }
-
-    /**
-     * 简单 JSON 解析（避免引入额外依赖，格式固定为 {"k":"v","k":"v"}）。
-     */
-    private Map<String, String> parseSimpleJson(String json) {
-        Map<String, String> result = new HashMap<>();
-        json = json.trim();
-        if (json.startsWith("{")) json = json.substring(1);
-        if (json.endsWith("}")) json = json.substring(0, json.length() - 1);
-        String[] pairs = json.split("\",\"");
-        for (String pair : pairs) {
-            int colon = pair.indexOf("\":\"");
-            if (colon > 0) {
-                String key = pair.substring(0, colon).replace("\"", "").trim();
-                String value = pair.substring(colon + 2);
-                if (value.endsWith("\"")) value = value.substring(0, value.length() - 1);
-                result.put(key, unescapeJson(value));
-            }
-        }
-        return result;
-    }
-
-    private String escapeJson(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
-
-    private String unescapeJson(String s) {
-        return s.replace("\\\"", "\"").replace("\\\\", "\\");
+    private String getString(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        return value != null ? value.toString() : null;
     }
 }

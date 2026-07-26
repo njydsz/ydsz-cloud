@@ -39,6 +39,7 @@ public enum UserInfoResultCode implements ResultCode {
     TOKEN_INVALID("A20003", "Token 无效"),
     OAUTH2_CODE_INVALID("B30016", "授权码无效或已过期"),
     OAUTH2_CLIENT_INVALID("B30017", "客户端 ID 无效"),
+    OAUTH2_REDIRECT_URI_MISMATCH("B30018", "回调地址不匹配"),
 
     // ==================== B31xxx 组织架构 ====================
     DEPARTMENT_NOT_FOUND("B30101", "部门不存在"),
@@ -56,7 +57,9 @@ public enum UserInfoResultCode implements ResultCode {
     PERMISSION_NOT_FOUND("B32005", "权限不存在"),
     MENU_NOT_FOUND("B32006", "菜单不存在"),
     POST_NOT_FOUND("B32007", "岗位不存在"),
-    POST_CODE_DUPLICATE("B32008", "岗位编码已存在");
+    POST_CODE_DUPLICATE("B32008", "岗位编码已存在"),
+    LANGUAGE_NOT_FOUND("B32009", "语言不存在"),
+    LANGUAGE_CODE_DUPLICATE("B32010", "语言编码已存在");
 
     private final String code;
     private final String msg;

@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.config;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -39,8 +40,31 @@ public class UserInfoProperties {
     /** 健康检查是否启用 */
     private boolean healthEnabled = true;
 
-    /** OAuth2 客户端密钥注册表（clientId → clientSecret） */
-    private Map<String, String> oauth2Clients = new HashMap<>();
+    /** 密码最小长度 */
+    private int passwordMinLength = 8;
+
+    /** 密码最大长度 */
+    private int passwordMaxLength = 64;
+
+    /** 密码最少字符种类数（大写/小写/数字/特殊字符） */
+    private int passwordMinCategoryCount = 3;
+
+    /** BCrypt 加密强度（4-31） */
+    private int bcryptStrength = 10;
+
+    /** OAuth2 客户端注册表（clientId → 客户端配置） */
+    private Map<String, OAuth2Client> oauth2Clients = new HashMap<>();
+
+    /**
+     * OAuth2 客户端配置。
+     */
+    @Data
+    public static class OAuth2Client {
+        /** 客户端密钥 */
+        private String clientSecret;
+        /** 允许的回调地址白名单 */
+        private List<String> redirectUris;
+    }
 
     /**
      * OAuth2 客户端密钥校验。
@@ -53,7 +77,7 @@ public class UserInfoProperties {
         if (clientId == null || clientSecret == null) {
             return false;
         }
-        String secret = oauth2Clients.get(clientId);
-        return clientSecret.equals(secret);
+        OAuth2Client client = oauth2Clients.get(clientId);
+        return client != null && clientSecret.equals(client.getClientSecret());
     }
 }

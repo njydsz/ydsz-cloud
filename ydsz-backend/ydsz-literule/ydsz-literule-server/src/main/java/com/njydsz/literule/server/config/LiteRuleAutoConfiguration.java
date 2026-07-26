@@ -7,6 +7,7 @@ import java.util.Map;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -59,7 +60,10 @@ import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.literule.server.spi.DefaultAlertActionHandler;
 import com.njydsz.literule.server.spi.FactProvider;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
+import com.njydsz.literule.server.spi.DbRuleSource;
 import com.njydsz.literule.server.spi.FileRuleSource;
+import com.njydsz.literule.server.spi.RuleSource;
+import com.njydsz.literule.server.spi.RuleSourceManager;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
@@ -661,6 +665,52 @@ public class LiteRuleAutoConfiguration {
             ObjectProvider<CEPEngine> cepEngineProvider) {
         log.info("[LiteRule-Health] 规则引擎健康检查已初始化");
         return new LiteRuleHealthIndicator(ruleEngine, cepEngineProvider.getIfAvailable());
+    }
+
+    // ------------------------------------------------------------------
+    // P1-11 规则数据源注册（DbRuleSource + RuleSourceManager）
+    // ------------------------------------------------------------------
+
+    /**
+     * 数据库规则数据源 Bean（P1-11）
+     *
+     * <p>当 {@code RuleConfigProvider} 存在且 {@code ydsz.literule.rule-source.type=db}（默认）时
+     * 自动装配 {@link DbRuleSource}，代理 {@link RuleConfigProvider} 作为默认数据源。
+     *
+     * @param configProvider 规则配置提供者
+     * @return DbRuleSource 实例
+     * @since 2.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean(RuleSource.class)
+    @ConditionalOnBean(RuleConfigProvider.class)
+    @ConditionalOnProperty(prefix = "ydsz.literule.rule-source", name = "type",
+            havingValue = "db", matchIfMissing = true)
+    public DbRuleSource dbRuleSource(RuleConfigProvider configProvider) {
+        log.info("[LiteRule-Source] 数据库规则数据源已初始化");
+        return new DbRuleSource(configProvider);
+    }
+
+    /**
+     * 规则数据源管理器 Bean（P1-11）
+     *
+     * <p>当存在 {@link RuleSource} Bean 时自动装配，管理多个数据源并提供统一切换能力。
+     * 自动注册所有 {@link RuleSource} Bean，首个可用数据源设为主数据源。
+     *
+     * @param sources 所有 RuleSource Bean
+     * @return RuleSourceManager 实例
+     * @since 2.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RuleSource.class)
+    public RuleSourceManager ruleSourceManager(List<RuleSource> sources) {
+        RuleSourceManager manager = new RuleSourceManager();
+        for (RuleSource source : sources) {
+            manager.registerSource(source);
+        }
+        log.info("[LiteRule-Source] 规则数据源管理器已初始化（sources={}）", sources.size());
+        return manager;
     }
 
     // ------------------------------------------------------------------

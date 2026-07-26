@@ -95,6 +95,7 @@ public class VariableServiceImpl implements VariableService {
     public String save(VariableDTO dto) {
         VariableDO entity = toEntity(dto);
         mapper.insert(entity);
+        evictCache(entity.getVariableKey());
         return entity.getId();
     }
 
@@ -104,7 +105,7 @@ public class VariableServiceImpl implements VariableService {
         VariableDO entity = toEntity(dto);
         boolean result = mapper.updateById(entity) > 0;
         if (result && entity.getVariableKey() != null) {
-            redisTemplate.delete(CACHE_KEY_PREFIX + entity.getVariableKey());
+            evictCache(entity.getVariableKey());
         }
         return result;
     }
@@ -115,13 +116,19 @@ public class VariableServiceImpl implements VariableService {
         VariableDO entity = mapper.selectById(id);
         boolean result = mapper.deleteById(id) > 0;
         if (result && entity != null && entity.getVariableKey() != null) {
-            redisTemplate.delete(CACHE_KEY_PREFIX + entity.getVariableKey());
+            evictCache(entity.getVariableKey());
         }
         return result;
     }
 
+    private void evictCache(String variableKey) {
+        if (variableKey != null) {
+            redisTemplate.delete(CACHE_KEY_PREFIX + variableKey);
+        }
+    }
+
     private Duration getCacheTtl() {
-        int minutes = properties.getConfig().getCacheTtlMinutes();
+        int minutes = properties.getVariable().getCacheTtlMinutes();
         return Duration.ofMinutes(minutes > 0 ? minutes : 5);
     }
 

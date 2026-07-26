@@ -278,8 +278,9 @@ public class EvaluationResultCache {
     /**
      * 构建缓存键
      *
-     * <p>缓存键由 scenario + tenantId + environment + facts 哈希组成。
-     * facts 按 key 排序后拼接，保证相同事实数据产生相同键。
+     * <p>缓存键由 scenario + tenantId + environment + facts 组成。
+     * facts 按 key 排序后拼接，value 使用 {@code String.valueOf()} 序列化，
+     * 保证相同事实数据产生相同键（不依赖对象的 hashCode，避免不可靠性）。
      *
      * @param context 规则上下文
      * @return 缓存键
@@ -298,13 +299,13 @@ public class EvaluationResultCache {
                 .forEach(e -> {
                     sb.append(e.getKey()).append('=');
                     if (e.getValue() != null) {
-                        sb.append(e.getValue().hashCode());
+                        sb.append(String.valueOf(e.getValue()));
                     } else {
                         sb.append("null");
                     }
                     sb.append(';');
                 });
 
-        return Integer.toHexString(sb.toString().hashCode());
+        return sb.toString();
     }
 }

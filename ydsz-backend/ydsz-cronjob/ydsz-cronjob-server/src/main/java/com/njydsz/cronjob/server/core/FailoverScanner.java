@@ -94,13 +94,12 @@ public class FailoverScanner {
     /** P0-10: Redis 模板，用于故障转移时安全释放死节点持有的任务锁 */
     private final StringRedisTemplate redisTemplate;
 
-    /** P0-10: Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete），避免误删其他节点持有的锁 */
+    /** P0-10: Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete），统一引用 LockKeyUtil 常量 */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT;
 
     static {
         RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>();
-        RELEASE_LOCK_SCRIPT.setScriptText(
-                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        RELEASE_LOCK_SCRIPT.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
         RELEASE_LOCK_SCRIPT.setResultType(Long.class);
     }
 

@@ -27,6 +27,9 @@ public class SystemProperties {
     /** 字典缓存相关。 */
     private DictCache dict = new DictCache();
 
+    /** 系统变量缓存相关。 */
+    private VariableCache variable = new VariableCache();
+
     /** 应用密钥相关。 */
     private App app = new App();
 
@@ -58,6 +61,18 @@ public class SystemProperties {
 
         /** 字典缓存 TTL（分钟）。 */
         private int cacheTtlMinutes = 10;
+    }
+
+    /**
+     * 系统变量缓存配置。
+     */
+    @Data
+    public static class VariableCache {
+        /** 是否启用系统变量缓存。 */
+        private boolean enabled = true;
+
+        /** 系统变量缓存 TTL（分钟）。 */
+        private int cacheTtlMinutes = 5;
     }
 
     /**

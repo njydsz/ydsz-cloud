@@ -8,7 +8,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Configuration;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.properties.HasAnnotations;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
@@ -61,9 +63,8 @@ class ArchitectureTest {
     void filterAndInterceptorShouldNotDependOnConfigurationClass() {
         ArchRule rule = noClasses()
                 .that().resideInAnyPackage("..filter..", "..interceptor..")
-                .should().dependOnClassesThat()
-                .resideInAPackage("..config..")
-                .and().areAnnotatedWith(Configuration.class)
+                .should().dependOnClassesThat(JavaClass.Predicates.resideInAPackage("..config..")
+                        .and(HasAnnotations.Predicates.annotatedWith(Configuration.class)))
                 .because("配置层的 @Configuration 类负责装配过滤器/拦截器，过滤器/拦截器只应被装配，"
                         + "不应反向调用 @Configuration 类；但允许依赖 @ConfigurationProperties 属性类读取自身配置");
 
