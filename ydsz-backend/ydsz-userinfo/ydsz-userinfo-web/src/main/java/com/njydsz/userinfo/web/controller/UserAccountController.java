@@ -102,18 +102,12 @@ public class UserAccountController {
         return BaseResponse.success(service.changePassword(dto));
     }
 
-    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
-            content = "'重置密码: ' + #dto.userId", excludeParams = {"newPassword"})
-    @Idempotent(key = "userAccount:resetPassword", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reset-password")
     @Operation(summary = "重置密码（管理员）")
     public BaseResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
         return BaseResponse.success(service.resetPassword(dto));
     }
 
-    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
-            content = "'分配用户角色: ' + #userId")
-    @Idempotent(key = "userAccount:assignRoles", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{userId}/roles")
     @Operation(summary = "分配用户角色")
     public BaseResponse<Boolean> assignRoles(

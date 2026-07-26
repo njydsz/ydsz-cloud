@@ -22,10 +22,15 @@
  * 通用响应封装
  */
 export interface CommonResult<T = unknown> {
+  /** 业务状态码 */
   code: number
+  /** 提示信息 */
   message: string
+  /** 响应数据 */
   data: T
+  /** 链路追踪ID */
   traceId?: string
+  /** 响应时间戳 */
   timestamp?: string
 }
 
@@ -33,9 +38,13 @@ export interface CommonResult<T = unknown> {
  * 分页查询响应
  */
 export interface PageResult<T = unknown> {
+  /** 数据列表 */
   list: T[]
+  /** 总记录数 */
   total: number
+  /** 当前页码 */
   pageNum: number
+  /** 每页条数 */
   pageSize: number
 }
 

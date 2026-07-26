@@ -11,8 +11,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
@@ -59,12 +63,18 @@ public class RoleController {
         return BaseResponse.success(service.getById(id));
     }
 
+    @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'创建角色: ' + #dto.roleName")
+    @Idempotent(key = "role:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建角色")
     public BaseResponse<String> create(@Valid @RequestBody RoleSaveDTO dto) {
         return BaseResponse.success(service.create(dto));
     }
 
+    @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'更新角色: ' + #dto.id")
+    @Idempotent(key = "role:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "更新角色")
     public BaseResponse<Boolean> update(@Valid @RequestBody RoleSaveDTO dto) {

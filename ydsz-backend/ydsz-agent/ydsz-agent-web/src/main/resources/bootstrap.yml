@@ -1,24 +1,59 @@
+# =====================================================================
+#  YDSZ AI Agent 服务 bootstrap 配置
+#  --------------------------------------------------------------------
+#  端口：9010
+#  职责：LLM 对话/RAG/记忆/工具调用/PII 脱敏/护栏/Guardrail
+#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、LLM API
+#  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
+# =====================================================================
+
+server:
+  # HTTP 监听端口（按构建顺序 9/7）
+  port: 9010
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
 spring:
   application:
     name: ydsz-agent
   profiles:
+    # 默认 dev，可通过 -Dspring.profiles.active=dev|sit|uat|prod 或 ENV SPRING_PROFILES_ACTIVE 覆盖
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
   cloud:
     nacos:
+      # ---------- 服务注册 ----------
       discovery:
-        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:}
+        enabled: true
+        register-enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        metadata:
+          version: 1.0.0
+          port: 9010
+        ip-type: IPv4
+      # ---------- 配置中心 ----------
       config:
-        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:}
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
         file-extension: yaml
+        refresh-enabled: true
         shared-configs:
           - data-id: ydsz-common.yaml
+            group: ${spring.profiles.active}
             refresh: true
 
-server:
-  port: 9010
-
+# ---------- Agent 模块特有配置 ----------
 ydsz:
   agent:
     enabled: true

@@ -90,24 +90,6 @@ public class BusinessException extends AbstractYdszException {
     }
 
     /**
-     * 使用异常码枚举和自定义消息构造业务异常
-     *
-     * <p>用于业务模块已迁移到 {@link ExceptionCode} 体系，但某些场景需要覆盖默认 i18n 消息
-     * （如动态拼接密码策略提示语）。{@code message} 会直接作为异常消息，
-     * 跳过 i18n 解析。
-     *
-     * @param exceptionCode 异常码枚举（提供 code / httpStatus / category）
-     * @param message       自定义异常消息（直接展示，不经过 i18n 解析）
-     */
-    public BusinessException(ExceptionCode exceptionCode, String message) {
-        super(message);
-        initDefaults(exceptionCode.getHttpStatus(), DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        initFields(exceptionCode.getCode(), exceptionCode.getKey(), new Object[]{});
-        this.message = message;
-        this.messageResolved = true;
-    }
-
-    /**
      * 使用统一结果码构造业务异常（兼容 {@link ResultCode} 体系）
      *
      * <p>用于业务模块尚未迁移到 {@link ExceptionCode}，但已实现 {@link ResultCode} 的场景。

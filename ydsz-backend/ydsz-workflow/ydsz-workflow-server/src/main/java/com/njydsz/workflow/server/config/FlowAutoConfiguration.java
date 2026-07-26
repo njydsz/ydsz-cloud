@@ -9,7 +9,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
@@ -65,23 +65,7 @@ public class FlowAutoConfiguration {
         return new FlowMetrics(registry, instanceMapperProvider, taskMapperProvider, ccMapperProvider);
     }
 
-    /**
-     * P3-4: 工作流事件队列专用线程池（语义化命名，便于监控排查）
-     *
-     * <p>用于 FlowQueuePublisher 的 @Async("flowQueueExecutor") 异步事件发布。
-     * 核心线程 2、最大线程 8、队列 256、线程名前缀 flow-queue-。
-     */
-    @Bean("flowQueueExecutor")
-    @ConditionalOnMissingBean(name = "flowQueueExecutor")
-    public ThreadPoolTaskExecutor flowQueueExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(8);
-        executor.setQueueCapacity(256);
-        executor.setThreadNamePrefix("flow-queue-");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(10);
-        executor.initialize();
-        return executor;
-    }
+    // P0-1: flowQueueExecutor 线程池已迁移到 ydsz-common-thread 统一管理
+    // 配置项: ydsz.thread.pools.flowQueue.* (见 application.yml)
+    // Bean 名称: flowQueueExecutor（key + "Executor"）
 }

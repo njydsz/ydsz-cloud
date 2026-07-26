@@ -140,12 +140,6 @@ public class OutboxProcessor {
         }
     }
 
-    /**
-     * 获取缓存的队列深度
-     *
-     * @param status 消息状态
-     * @return 该状态下的消息数量
-     */
     private long getCachedCount(OutboxStatus status) {
         return cachedStatusCounts.getOrDefault(status.name(), 0L);
     }
@@ -249,8 +243,6 @@ public class OutboxProcessor {
      *
      * <p>当 workerThreads=1 时直接在调度线程中执行（同步），避免线程切换开销。
      * 当 workerThreads>1 时提交到线程池异步执行。
-     *
-     * @param messages 待投递消息列表
      */
     private void dispatchPublish(List<OutboxMessage> messages) {
         Runnable task = messages.size() > 1
@@ -264,7 +256,11 @@ public class OutboxProcessor {
     }
 
     /**
-     * 批量投递
+     * 批量投递消息到 MQ
+     *
+     * <p>批量投递失败时降级为逐条投递。
+     *
+     * @param messages 待投递消息列表
      */
     private void processBatchPublish(List<OutboxMessage> messages) {
         long startNanos = System.nanoTime();
@@ -390,12 +386,6 @@ public class OutboxProcessor {
         }
     }
 
-    /**
-     * 记录耗时指标（空安全）
-     *
-     * @param timer        计时器，可为 null
-     * @param durationNanos 耗时（纳秒）
-     */
     private void recordTimer(Timer timer, long durationNanos) {
         if (timer != null) {
             timer.record(durationNanos, TimeUnit.NANOSECONDS);

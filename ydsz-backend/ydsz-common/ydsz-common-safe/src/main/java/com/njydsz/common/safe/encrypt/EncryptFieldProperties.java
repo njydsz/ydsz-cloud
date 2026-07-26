@@ -25,6 +25,7 @@ import lombok.Data;
  * </pre>
  *
  * @author ydsz-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Data

@@ -6,6 +6,7 @@ package com.njydsz.common.safe.captcha.core;
  * <p>定义不同类型验证码的生成行为，实现类可根据具体验证码类型
  * （图形验证码、算术验证码、滑块验证码等）生成相应的验证码数据。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see CaptchaResult

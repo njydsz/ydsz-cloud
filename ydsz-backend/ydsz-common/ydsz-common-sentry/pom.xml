@@ -131,6 +131,21 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!-- OpenTelemetry SDK（可选，提供 OpenTelemetrySdk） -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenTelemetry Semantic Conventions（可选，提供 ResourceAttributes） -->
+        <dependency>
+            <groupId>io.opentelemetry.semconv</groupId>
+            <artifactId>opentelemetry-semconv</artifactId>
+            <version>1.30.0-rc.1</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <!--lombok-->
         <dependency>
             <groupId>org.projectlombok</groupId>

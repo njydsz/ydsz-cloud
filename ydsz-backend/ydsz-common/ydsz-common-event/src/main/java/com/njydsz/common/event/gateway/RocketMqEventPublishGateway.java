@@ -108,6 +108,12 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         return results;
     }
 
+    /**
+     * 构建 RocketMQ 目标地址（topic:tag）
+     *
+     * @param message Outbox 消息
+     * @return 目标地址字符串
+     */
     private String buildDestination(OutboxMessage message) {
         String tag = message.getEventType() != null ? message.getEventType() : "*";
         return topic + ":" + tag;

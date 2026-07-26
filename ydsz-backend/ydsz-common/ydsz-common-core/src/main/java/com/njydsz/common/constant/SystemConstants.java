@@ -22,4 +22,7 @@ public final class SystemConstants {
 
     /** 默认租户 ID */
     public static final String DEFAULT_TENANT_ID = "1";
+
+    /** 默认语言（zh-CN） */
+    public static final String DEFAULT_LOCALE = "zh-CN";
 }
