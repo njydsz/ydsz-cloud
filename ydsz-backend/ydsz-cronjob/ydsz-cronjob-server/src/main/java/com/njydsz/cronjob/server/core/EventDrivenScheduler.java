@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 使用 Redis SETNX 进行消息去重，确保同一事件不会重复触发。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

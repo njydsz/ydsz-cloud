@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持阿里云 CDN、腾讯云 CDN、Cloudflare 等主流 CDN 服务商。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

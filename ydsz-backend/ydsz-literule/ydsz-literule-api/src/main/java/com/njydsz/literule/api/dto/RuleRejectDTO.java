@@ -12,7 +12,7 @@ import lombok.Data;
  * 状态变更为 ARCHIVED，并记录驳回理由。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则审批驳回请求体")

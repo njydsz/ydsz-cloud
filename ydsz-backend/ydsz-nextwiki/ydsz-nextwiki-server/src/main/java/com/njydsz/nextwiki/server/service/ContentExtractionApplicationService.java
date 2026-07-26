@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * PDF/Office 文档需要集成 Apache Tika 或 PDFBox（可选依赖）。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

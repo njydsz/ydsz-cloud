@@ -25,7 +25,7 @@ import com.njydsz.literule.api.Rule;
  * <p>规则实例解析：Graph → Chain 时，需要外部提供 nodeId 对应的 Rule 实例
  * （因为 Graph 只携带 ruleCode，不携带表达式），由 {@link RuleResolver} 接口回调获取。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class ChainGraphConverter {
 
@@ -654,7 +654,7 @@ public final class ChainGraphConverter {
      * @param graph    画布图（用于查找子节点）
      * @param resolver 规则解析器
      * @return Rule 实例；无法解析返回 null
-     * @since 1.6.0
+     * @since 1.0.0
      */
     private static Rule resolveNodeWithContext(ChainNodeDTO node, RuleChainGraph graph, RuleResolver resolver) {
         if (node == null) return null;

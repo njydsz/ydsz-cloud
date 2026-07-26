@@ -21,7 +21,7 @@ import com.njydsz.message.domain.dto.core.CardMessageDTO;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Component
 public class CardMessageRenderer {

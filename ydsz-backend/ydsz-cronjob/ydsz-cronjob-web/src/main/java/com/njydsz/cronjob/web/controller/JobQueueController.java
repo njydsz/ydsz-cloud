@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * 暴露线程池的实时运行指标，便于运维监控和容量规划。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "执行队列状态")

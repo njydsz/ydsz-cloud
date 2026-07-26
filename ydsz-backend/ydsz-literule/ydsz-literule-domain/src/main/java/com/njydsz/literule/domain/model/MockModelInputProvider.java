@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>规则表达式可直接引用：{@code model.riskScore > 0.8}
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 public class MockModelInputProvider implements ModelInputProvider {

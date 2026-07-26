@@ -63,7 +63,7 @@ import com.njydsz.literule.api.RuleContext;
  * }
  * </pre>
  *
- * @since 2.1.0
+ * @since 1.0.0
  */
 public interface FactProvider {
 

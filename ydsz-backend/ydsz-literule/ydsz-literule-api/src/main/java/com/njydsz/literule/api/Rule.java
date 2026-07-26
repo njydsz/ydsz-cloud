@@ -65,7 +65,7 @@ public interface Rule {
      * 表达式规则 / 决策表规则应覆盖此方法返回原始定义。
      *
      * @return 规则定义；null 表示编码规则
-     * @since 1.4.0
+     * @since 1.0.0
      */
     default RuleDefinition getRuleDefinition() {
         return null;
@@ -81,7 +81,7 @@ public interface Rule {
      * 例如：金额>1000（RED）与 金额>500（YELLOW）归属同一互斥组，避免重复告警。
      *
      * @return 互斥组名称；null 或空串表示无互斥组
-     * @since 1.5.0
+     * @since 1.0.0
      */
     default String getMutexGroup() {
         return null;
@@ -99,7 +99,7 @@ public interface Rule {
      * 的规则会覆写此方法返回定义中的 tenantId。
      *
      * @return 租户 ID；默认 "1"
-     * @since 1.5.0
+     * @since 1.0.0
      */
     default String getTenantId() {
         return "1";
@@ -120,7 +120,7 @@ public interface Rule {
      * 的规则会覆写此方法返回定义中的 environment。
      *
      * @return 环境标识；默认 "default"
-     * @since 1.6.0
+     * @since 1.0.0
      */
     default String getEnvironment() {
         return RuleEnvironment.DEFAULT;

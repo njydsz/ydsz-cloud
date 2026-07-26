@@ -28,7 +28,7 @@ import com.njydsz.literule.api.Rule;
  * <p>适用于以 Java 编码方式实现复杂规则逻辑的场景，兼顾"声明式注册"与"命令式求值"。
  *
  * @author ydsz-team
- * @since 1.5.2
+ * @since 1.0.0
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

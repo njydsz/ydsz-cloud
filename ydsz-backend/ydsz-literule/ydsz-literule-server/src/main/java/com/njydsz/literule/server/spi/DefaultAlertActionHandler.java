@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>将规则触发结果转换为 {@link RuleTriggeredEvent} 并发布 Spring 事件，
  * 消费方可通过 {@code @EventListener} 监听此事件，转换为统一告警通知。
  *
- * @since 2.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class DefaultAlertActionHandler implements RuleActionHandler {

@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>P1-8: 描述用户在不同通道的触达偏好和活跃度，用于智能选择最优通道。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 public class UserReachProfileDTO {

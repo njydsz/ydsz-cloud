@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>免打扰判断：基于用户偏好中的 DND 配置，结合用户时区判断当前是否在免打扰时段。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

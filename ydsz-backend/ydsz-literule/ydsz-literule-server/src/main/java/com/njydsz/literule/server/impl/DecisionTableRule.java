@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>条件表达式解析由 {@link #matchCondition} 实现，支持字面值、比较、区间、枚举、LiteExpr 表达式。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class DecisionTableRule implements Rule {

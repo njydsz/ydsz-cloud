@@ -100,7 +100,7 @@ public class ScorecardRule implements Rule {
      * @param def       评分卡定义
      * @param evaluator 表达式求值器
      * @return ScorecardRule 实例
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static ScorecardRule from(ScorecardDefinition def, ExpressionEvaluator evaluator) {
         ScorecardRuleBuilder b = ScorecardRule.builder()

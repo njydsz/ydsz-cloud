@@ -40,7 +40,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  *   <li>仅 {@code ydsz.literule.distributed.enabled=true}：降级为内存实现（单节点/开发环境）</li>
  * </ol>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "enabled", havingValue = "true")

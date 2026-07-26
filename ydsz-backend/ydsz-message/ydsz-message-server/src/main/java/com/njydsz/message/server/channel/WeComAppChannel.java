@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>未配置 CorpID 时降级为 mock 输出日志,保证开发环境可运行。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

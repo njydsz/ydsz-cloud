@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * P2-R4: 返回 DTO 替代 Map<String, Object>。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

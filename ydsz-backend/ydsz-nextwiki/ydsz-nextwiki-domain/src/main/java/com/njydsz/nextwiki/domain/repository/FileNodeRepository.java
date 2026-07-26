@@ -11,7 +11,7 @@ import com.njydsz.nextwiki.domain.entity.FileNode;
  * 领域层定义接口契约，基础设施层提供 MyBatis-Plus 实现。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface FileNodeRepository {
 

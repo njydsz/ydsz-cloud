@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对标 PowerJob 的优先级队列 + 抢占式调度能力。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

@@ -9,7 +9,7 @@ package com.njydsz.literule.server.approval;
  * <p>当未提供实现时，{@link RuleApprovalService} 默认放行所有权限检查
  * （仅校验审批人是否在指定审批人列表中），便于单元测试与开发环境调试。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 public interface ApprovalPermissionChecker {
 

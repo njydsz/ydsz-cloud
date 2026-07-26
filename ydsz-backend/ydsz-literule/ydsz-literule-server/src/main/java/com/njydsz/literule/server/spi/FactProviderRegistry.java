@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>本注册中心在模型注入之前执行，采集的事实可供模型 provider 使用</li>
  * </ul>
  *
- * @since 2.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class FactProviderRegistry {

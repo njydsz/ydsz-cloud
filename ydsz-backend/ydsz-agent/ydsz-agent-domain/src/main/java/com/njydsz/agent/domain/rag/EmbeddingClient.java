@@ -9,7 +9,7 @@ import java.util.List;
  * 实现可选择 OpenAI Embeddings、Cohere、BGE、m3e 等。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface EmbeddingClient {
 

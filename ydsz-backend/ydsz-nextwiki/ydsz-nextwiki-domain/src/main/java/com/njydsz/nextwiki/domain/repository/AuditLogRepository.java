@@ -9,7 +9,7 @@ import com.njydsz.nextwiki.domain.entity.AuditLog;
  * 审计日志仓储接口（P2-6）
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface AuditLogRepository {
 

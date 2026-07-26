@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.domain.entity.TrashItem;
  * 回收站 MyBatis Mapper
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Mapper
 public interface TrashItemMapper extends BaseMapper<TrashItem> {

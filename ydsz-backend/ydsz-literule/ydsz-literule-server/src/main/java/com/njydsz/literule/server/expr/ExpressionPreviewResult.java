@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>由 {@link ExpressionValidationService#previewEvaluate} 返回，
  * 供前端表达式编辑器实时展示求值结果与类型信息。
  *
- * @since 1.5.1
+ * @since 1.0.0
  */
 @Data
 public class ExpressionPreviewResult implements Serializable {

@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P1-6: 提供模板版本历史查询、版本回滚、模板预览（渲染）和模板试发接口。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "模板版本管理", description = "版本历史、回滚、预览、试发")

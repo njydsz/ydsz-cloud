@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * 后台线程池逐条发送，前端轮询 {@code /progress/{batchId}} 查询进度。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "批量发送", description = "异步批量发送与进度查询")

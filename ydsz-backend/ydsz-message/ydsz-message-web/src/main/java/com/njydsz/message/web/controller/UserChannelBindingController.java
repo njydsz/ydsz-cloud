@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
  * 用户通道绑定 Controller。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Tag(name = "用户通道绑定", description = "用户通道联系方式绑定/查询/删除")
 @RestController

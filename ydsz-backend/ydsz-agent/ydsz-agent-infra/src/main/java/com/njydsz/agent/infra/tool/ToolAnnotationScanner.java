@@ -43,7 +43,7 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 public class ToolAnnotationScanner implements BeanPostProcessor, ApplicationContextAware {
 

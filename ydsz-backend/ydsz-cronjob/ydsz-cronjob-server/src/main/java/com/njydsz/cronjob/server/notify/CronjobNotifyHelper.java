@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  * 本助手通过 common-notify 直接发送（适合系统级通知和 IM 渠道直推）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

@@ -14,7 +14,7 @@ import com.njydsz.literule.domain.entity.RuleTemplateDO;
  *
  * <p>literule 模块的 {@code RuleAdminController} 通过此接口反转依赖调用模板市场能力。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface RuleTemplateProvider {
 

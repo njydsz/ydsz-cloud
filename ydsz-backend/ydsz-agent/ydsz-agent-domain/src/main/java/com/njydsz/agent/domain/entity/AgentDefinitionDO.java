@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
  * Agent 定义 DO（映射 ydsz_agent_definition 表）
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

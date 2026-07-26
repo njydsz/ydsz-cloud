@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * 默认保留 30 天，超期自动永久删除。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

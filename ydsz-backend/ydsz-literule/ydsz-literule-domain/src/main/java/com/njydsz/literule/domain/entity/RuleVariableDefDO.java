@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * 供 {@link com.njydsz.literule.server.expr.ExpressionValidationService} 做 UNDEFINED_VARIABLE 校验。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

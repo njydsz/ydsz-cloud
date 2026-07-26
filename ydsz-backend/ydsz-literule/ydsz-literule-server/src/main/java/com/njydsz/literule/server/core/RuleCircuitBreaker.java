@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 仅计算窗口内的错误率，避免历史成功稀释近期突发错误导致熔断器永不触发。
  * 对标 Resilience4j {@code BitSet} 滑动窗口实现。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RuleCircuitBreaker {

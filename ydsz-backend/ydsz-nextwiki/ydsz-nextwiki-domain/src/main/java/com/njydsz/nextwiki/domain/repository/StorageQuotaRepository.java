@@ -6,7 +6,7 @@ import com.njydsz.nextwiki.domain.entity.StorageQuota;
  * 存储配额仓储接口
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface StorageQuotaRepository {
 

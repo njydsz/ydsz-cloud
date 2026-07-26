@@ -99,7 +99,7 @@ public class ExpressionRule implements Rule {
      * 暴露规则定义（用于灰度路由 / Trace 记录 / 监控指标）
      *
      * @return 原始规则定义
-     * @since 1.4.0
+     * @since 1.0.0
      */
     @Override
     public RuleDefinition getRuleDefinition() { return definition; }
@@ -111,7 +111,7 @@ public class ExpressionRule implements Rule {
      * 在评估前会比较本方法返回值与 {@link RuleContext#getTenantId()}，仅当两者匹配时才评估该规则。
      *
      * @return 规则定义中的租户 ID；默认 "1"
-     * @since 1.5.0
+     * @since 1.0.0
      */
     @Override
     public String getTenantId() { return definition.getTenantId(); }
@@ -125,7 +125,7 @@ public class ExpressionRule implements Rule {
      * 非 "default" 时必须完全匹配。
      *
      * @return 规则定义中的环境标识；默认 "default"
-     * @since 1.6.0
+     * @since 1.0.0
      */
     @Override
     public String getEnvironment() {

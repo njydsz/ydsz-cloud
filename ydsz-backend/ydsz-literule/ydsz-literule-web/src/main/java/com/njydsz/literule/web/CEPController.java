@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * 未启用时所有接口返回 503（通过 ObjectProvider 判空）。
  *
  * @author ydsz-team
- * @since 1.5.1
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

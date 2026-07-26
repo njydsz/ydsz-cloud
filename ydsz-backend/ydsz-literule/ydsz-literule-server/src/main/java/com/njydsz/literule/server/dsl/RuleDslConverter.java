@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * List&lt;RuleChain&gt; chains = RuleDslConverter.toChains(dsl, ruleMap, evaluator);
  * </pre>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public final class RuleDslConverter {
@@ -174,7 +174,7 @@ public final class RuleDslConverter {
      *
      * @param entry DSL 规则条目
      * @return RuleDefinition
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static RuleDefinition toRuleDefinition(RuleDslEntry entry) {
         RuleSeverity defaultSeverity = parseSeverity(entry.getSeverity(), RuleSeverity.INFO);

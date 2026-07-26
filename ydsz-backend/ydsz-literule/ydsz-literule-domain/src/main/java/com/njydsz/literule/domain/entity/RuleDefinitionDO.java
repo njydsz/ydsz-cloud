@@ -64,7 +64,7 @@ public class RuleDefinitionDO extends MpBaseEntity<String> {
     /**
      * 互斥组名称（同组内首个命中后跳过其余规则；null 表示无互斥组）
      *
-     * @since 1.5.0
+     * @since 1.0.0
      */
     private String mutexGroup;
 

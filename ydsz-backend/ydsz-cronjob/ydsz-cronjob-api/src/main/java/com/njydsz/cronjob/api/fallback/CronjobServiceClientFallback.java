@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 保证规则引擎主流程不受影响。
  *
  * @author ydsz-team
- * @since 2.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

@@ -8,7 +8,7 @@ import java.util.List;
  * <p>将长文本切分为合适大小的块（chunk），以便向量化处理。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface TextChunker {
 

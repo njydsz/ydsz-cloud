@@ -6,7 +6,7 @@ import lombok.Data;
  * 用户通道绑定 DTO。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 public class UserChannelBindingDTO {

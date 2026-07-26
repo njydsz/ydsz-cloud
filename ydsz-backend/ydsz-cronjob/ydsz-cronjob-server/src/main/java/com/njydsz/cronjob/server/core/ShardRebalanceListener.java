@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对标 ElasticJob 的分片重平衡机制：实例变更后自动感知并重新分片。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

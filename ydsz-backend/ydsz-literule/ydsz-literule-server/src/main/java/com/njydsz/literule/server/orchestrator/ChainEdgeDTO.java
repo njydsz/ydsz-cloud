@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
  * <p>连线本身不参与运行时执行（执行由 {@link RuleChain} 内部逻辑驱动），
  * 仅作为可视化布局元数据，便于前端画布渲染和后端持久化。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

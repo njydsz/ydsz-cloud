@@ -88,7 +88,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             wrapper.like(UserAccountDO::getEmail, query.getEmail());
         }
         if (query.getStatus() != null) {
-            wrapper.eq(UserAccountDO::getStatus, query.getStatus());
+            wrapper.eq(UserAccountDO::getStatus, String.valueOf(query.getStatus()));
         }
         if (query.getUserType() != null && !query.getUserType().isBlank()) {
             wrapper.eq(UserAccountDO::getUserType, query.getUserType());
@@ -133,7 +133,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         UserAccountDO entity = new UserAccountDO();
         BeanUtils.copyProperties(dto, entity);
         entity.setPassword(passwordEncoder.encode(dto.getPassword()));
-        entity.setStatus(1);
+        entity.setStatus("1");
         entity.setLoginFailCount(0);
         if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
             entity.setTenantId("1");
@@ -152,6 +152,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         // 仅复制非 null 属性，避免覆盖已有值
         BeanUtils.copyProperties(dto, entity, getNullPropertyNames(dto));
+        if (dto.getStatus() != null) {
+            entity.setStatus(String.valueOf(dto.getStatus()));
+        }
         return userAccountMapper.updateById(entity) > 0;
     }
 
@@ -260,9 +263,4 @@ public class UserAccountServiceImpl implements UserAccountService {
             if (wrapper.isReadableProperty(pd.getName())
                     && wrapper.getPropertyValue(pd.getName()) == null) {
                 nullNames.add(pd.getName());
-            }
-        }
-        nullNames.add("id");
-        return nullNames.toArray(new String[0]);
-    }
-}
+ 

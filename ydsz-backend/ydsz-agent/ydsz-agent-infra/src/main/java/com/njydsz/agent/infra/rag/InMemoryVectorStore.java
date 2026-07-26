@@ -19,7 +19,7 @@ import com.njydsz.agent.domain.rag.VectorStore;
  * 适用于开发测试、PG 不可用时的降级方案。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class InMemoryVectorStore implements VectorStore {
 

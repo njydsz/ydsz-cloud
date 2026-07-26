@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.entity.FileVersion;
  * 文件版本 MyBatis Mapper
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FileVersionMapper extends BaseMapper<FileVersion> {

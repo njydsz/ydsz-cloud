@@ -34,7 +34,7 @@ import com.njydsz.agent.server.rag.RagService;
  * 使 LLM 能够基于私有知识回答问题。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class RagAgentExecutor implements AgentExecutor {
 

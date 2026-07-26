@@ -11,7 +11,7 @@ import lombok.Data;
  * 用于渲染前自动校验 + 前端可视化编辑器渲染表单。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 public class TemplateVariableDef {

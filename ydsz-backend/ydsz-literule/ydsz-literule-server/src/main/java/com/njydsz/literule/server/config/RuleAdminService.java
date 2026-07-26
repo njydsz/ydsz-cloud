@@ -123,7 +123,7 @@ public class RuleAdminService {
      * 设置规则冲突检测器
      *
      * @param conflictDetector 冲突检测器实例
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setConflictDetector(RuleConflictDetector conflictDetector) {
         this.conflictDetector = conflictDetector;
@@ -133,7 +133,7 @@ public class RuleAdminService {
      * 设置是否启用冲突检测
      *
      * @param conflictDetectionEnabled 是否启用
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setConflictDetectionEnabled(boolean conflictDetectionEnabled) {
         this.conflictDetectionEnabled = conflictDetectionEnabled;
@@ -143,7 +143,7 @@ public class RuleAdminService {
      * 设置 ERROR 级别冲突是否阻塞保存
      *
      * @param conflictDetectionBlockOnError 是否阻塞
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setConflictDetectionBlockOnError(boolean conflictDetectionBlockOnError) {
         this.conflictDetectionBlockOnError = conflictDetectionBlockOnError;
@@ -193,7 +193,7 @@ public class RuleAdminService {
      * @param offset   分页偏移
      * @param limit    分页大小
      * @return 搜索结果列表
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public List<RuleDefinition> search(String query, String status, String category,
                                         Boolean enabled, int offset, int limit) {
@@ -254,7 +254,7 @@ public class RuleAdminService {
      * @param category 分类过滤
      * @param enabled  启停过滤
      * @return 匹配的规则总数
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public int searchCount(String query, String status, String category, Boolean enabled) {
         return search(query, status, category, enabled, 0, Integer.MAX_VALUE).size();
@@ -355,7 +355,7 @@ public class RuleAdminService {
      * @param ruleCode 规则编码
      * @param owner    责任人（工号/用户名）
      * @param operator 操作人
-     * @since 1.5.0
+     * @since 1.0.0
      */
     @Transactional(rollbackFor = Exception.class)
     public void updateOwner(String ruleCode, String owner, String operator) {
@@ -385,7 +385,7 @@ public class RuleAdminService {
      * @param ruleCode 规则编码
      * @param path     分类路径
      * @param operator 操作人
-     * @since 1.5.0
+     * @since 1.0.0
      */
     @Transactional(rollbackFor = Exception.class)
     public void updateCategoryPath(String ruleCode, String path, String operator) {
@@ -511,7 +511,7 @@ public class RuleAdminService {
      * @param defaultSeverity     默认严重度（severityExpression 为空时使用）
      * @param facts               事实数据
      * @return 评估结果；表达式非法或评估异常时返回未触发结果
-     * @since 1.7.0
+     * @since 1.0.0
      */
     public RuleResult evaluateWithExpression(String ruleCode, String conditionExpression,
                                               String severityExpression, RuleSeverity defaultSeverity,
@@ -567,7 +567,7 @@ public class RuleAdminService {
      * @param expression 表达式字符串
      * @param facts      事实数据
      * @return 追踪结果（含求值结果和追踪树）
-     * @since 1.6.0
+     * @since 1.0.0
      */
     public ExpressionEvaluator.TraceResult traceExpression(String expression, Map<String, Object> facts) {
         if (expression == null || expression.isBlank()) {
@@ -597,7 +597,7 @@ public class RuleAdminService {
      * </ul>
      *
      * @param definition 待保存的规则定义
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private void validateStatusTransition(RuleDefinition definition) {
         String statusStr = definition.getStatus();
@@ -647,7 +647,7 @@ public class RuleAdminService {
      * WARN 级别冲突仅记录日志。
      *
      * @param definition 待保存的规则定义
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private void detectConflicts(RuleDefinition definition) {
         if (!conflictDetectionEnabled || conflictDetector == null) {

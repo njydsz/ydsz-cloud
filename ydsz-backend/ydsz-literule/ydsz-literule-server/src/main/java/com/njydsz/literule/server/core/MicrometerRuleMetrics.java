@@ -38,7 +38,7 @@ import io.micrometer.core.instrument.Timer;
  * <p><b>命名变更说明</b>：原 {@code literule_*} 指标名统一加 {@code ydsz_} 前缀，
  * 与其他业务模块保持一致。Grafana 看板需同步更新指标名。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class MicrometerRuleMetrics extends RuleMetrics {
 

@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
  * 默认保留 30 天，超期自动永久删除。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

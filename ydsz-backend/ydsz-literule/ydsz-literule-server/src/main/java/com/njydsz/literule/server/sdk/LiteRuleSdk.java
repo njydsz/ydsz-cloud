@@ -52,7 +52,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  * <p>注意：本类与 {@code com.njydsz.literule.api.client.LiteRuleClient}（Feign 远程调用接口）
  * 是不同的概念。{@code LiteRuleSdk} 是嵌入式 SDK 入口，{@code LiteRuleClient} 是远程 Feign 客户端。
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 public class LiteRuleSdk {
 

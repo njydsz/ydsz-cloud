@@ -12,7 +12,7 @@ import lombok.Data;
  * 节点间通过 {@code dependsOn} 建立依赖关系，形成有向无环图。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 public class OrchestrationNodeDTO {

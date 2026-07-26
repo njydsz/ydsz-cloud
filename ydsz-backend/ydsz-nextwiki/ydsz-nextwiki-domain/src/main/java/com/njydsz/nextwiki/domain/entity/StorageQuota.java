@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
  * 按用户/租户/项目维度设置存储上限，上传时校验配额。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

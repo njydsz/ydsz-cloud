@@ -13,7 +13,7 @@ import com.njydsz.message.domain.entity.template.MsgTemplateVersionDO;
  * <p>P1-6: 提供模板版本历史查询、版本回滚、模板预览（渲染参数）和模板试发功能。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface TemplateVersionService {
 

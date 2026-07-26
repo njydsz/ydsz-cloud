@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持文件级别的评论、回复、标记已解决。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

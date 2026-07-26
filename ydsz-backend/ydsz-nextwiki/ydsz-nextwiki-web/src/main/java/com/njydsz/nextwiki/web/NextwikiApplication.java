@@ -19,7 +19,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
  * <p>@EnableAsync 已移至 {@code AsyncConfig} 统一管理异步线程池。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.nextwiki", "com.njydsz.common"})
 @EnableDiscoveryClient

@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
  * 文件-标签关联实体（多对多）
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -63,7 +63,7 @@ public interface RuleConfigProvider {
      *
      * @param tenantId 租户 ID
      * @return 该租户下启用的规则定义列表
-     * @since 1.5.1
+     * @since 1.0.0
      */
     default List<RuleDefinition> loadEnabledRulesByTenant(String tenantId) {
         List<RuleDefinition> all = loadEnabledRules();
@@ -82,7 +82,7 @@ public interface RuleConfigProvider {
      *
      * @param tenantId 租户 ID
      * @return 该租户下全部规则定义列表
-     * @since 1.5.1
+     * @since 1.0.0
      */
     default List<RuleDefinition> loadAllRulesByTenant(String tenantId) {
         List<RuleDefinition> all = loadAllRules();
@@ -108,7 +108,7 @@ public interface RuleConfigProvider {
      * @param tenantId    租户 ID
      * @param environment 环境标识（dev/staging/prod/default）
      * @return 该租户下匹配环境的启用规则定义列表
-     * @since 1.6.0
+     * @since 1.0.0
      */
     default List<RuleDefinition> loadEnabledRulesByEnv(String tenantId, String environment) {
         List<RuleDefinition> all = loadEnabledRulesByTenant(tenantId);

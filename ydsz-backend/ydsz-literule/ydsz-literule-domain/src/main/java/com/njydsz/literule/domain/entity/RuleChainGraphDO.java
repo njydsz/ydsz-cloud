@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
  * 一条规则对应一条画布记录，画布版本号独立递增，与规则版本号解耦。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

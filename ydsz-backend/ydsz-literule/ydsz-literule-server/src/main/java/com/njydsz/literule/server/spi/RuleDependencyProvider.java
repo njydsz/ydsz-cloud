@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.entity.RuleDependencyDO;
  * 级联禁用影响范围计算等能力。将原有 {@code RuleDependencyService} 的能力抽象为 SPI，
  * 避免 literule 模块直接依赖 project 模块。
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 public interface RuleDependencyProvider {
 

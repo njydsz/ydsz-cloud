@@ -8,7 +8,7 @@ import com.njydsz.nextwiki.domain.entity.FileComment;
  * 文件评论仓储接口（P1-5）
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface FileCommentRepository {
 

@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>通过 {@link DashboardDataProvider} SPI 反转依赖，由 project 模块提供数据聚合实现。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

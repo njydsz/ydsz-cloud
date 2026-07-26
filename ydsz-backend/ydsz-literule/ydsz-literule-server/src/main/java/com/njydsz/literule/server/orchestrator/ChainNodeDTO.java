@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
  *       .build();
  * </pre>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

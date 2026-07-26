@@ -13,7 +13,7 @@ import com.njydsz.cronjob.domain.entity.dag.JobDagVersionDO;
  * DAG 工作流版本历史 Mapper（P1-8 工作流版本管理）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Mapper
 public interface JobDagVersionMapper extends BaseMapper<JobDagVersionDO> {

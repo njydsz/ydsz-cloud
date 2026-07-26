@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,10 +16,10 @@ import java.time.LocalDateTime;
  * 用户账号实体。
  *
  * <p><b>注意</b>：本模块中实体状态字段类型不统一——
- * UserAccountDO.status 为 Integer（0=禁用, 1=启用），
+ * user_account 表使用整数状态码（0=禁用, 1=启用，历史遗留），
  * RoleDO/MenuDO/DepartmentDO/CompanyDO/PostDO/LanguageDO.status 为 String（"ENABLED"/"DISABLED"）。
- * 这是因为 user_account 表使用整数状态码（历史遗留），其余表使用字符串状态码。
- * 修改字段类型需要数据库迁移，当前版本通过适配层处理差异。
+ * 为兼容 {@link MpBaseEntity#getStatus()} 的 String 返回类型，本类 status 字段声明为 String，
+ * 并通过 {@link IntegerStringTypeHandler} 在持久化时与整数列双向转换。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -41,7 +42,10 @@ public class UserAccountDO extends MpBaseEntity<String> {
     private String phone;
     private String email;
     private String avatar;
-    private Integer status;
+
+    @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
+    private String status;
+
     private String userType;
     private String companyId;
     private LocalDateTime lastLoginAt;

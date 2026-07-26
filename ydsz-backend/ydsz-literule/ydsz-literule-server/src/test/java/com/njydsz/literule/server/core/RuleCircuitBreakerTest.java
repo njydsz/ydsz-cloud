@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * {@link RuleCircuitBreaker} 单元测试：覆盖 CLOSED/OPEN/HALF_OPEN 三态流转，
  * 包括错误率触发熔断、恢复时间触发半开、探测成功/失败的状态转换。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @DisplayName("规则熔断器 RuleCircuitBreaker 测试")
 class RuleCircuitBreakerTest {

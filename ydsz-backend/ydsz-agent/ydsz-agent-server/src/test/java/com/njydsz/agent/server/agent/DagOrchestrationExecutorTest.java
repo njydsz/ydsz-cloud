@@ -37,7 +37,7 @@ import com.njydsz.agent.server.config.AgentProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("DAG 编排执行器 DagOrchestrationExecutor 测试")
 @ExtendWith(MockitoExtension.class)

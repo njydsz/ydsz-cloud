@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 例如用户偏好 en-US 时回退链为: en-US → zh-CN。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

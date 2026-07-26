@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * 将 nextwiki 文件节点注册到统一搜索体系，支持文件名、路径、标签搜索。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

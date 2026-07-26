@@ -28,7 +28,7 @@ import com.njydsz.agent.server.agent.AgentFactory;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Service
 public class AgentDebuggerService {

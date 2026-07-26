@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>批量执行测试用例后的聚合报告，包含通过率统计、失败详情、耗时等。
  * 可用于 CI/CD 流水线门禁：当 {@link #passRate} < 100% 时阻断发布。
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Data
 @Builder

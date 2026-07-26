@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * 消息编排流程执行结果 VO。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @NoArgsConstructor

@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持 Redis 缓存（cacheTtl > 0 时）。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

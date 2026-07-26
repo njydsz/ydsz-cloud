@@ -16,7 +16,7 @@ import com.njydsz.literule.api.dto.RuleDashboardTrendVO;
  * literule 模块的 {@code RuleDashboardController} 通过此接口反转依赖，
  * 避免直接依赖 project 模块的服务实现。
  *
- * @since 1.6.0
+ * @since 1.0.0
  */
 public interface DashboardDataProvider {
 

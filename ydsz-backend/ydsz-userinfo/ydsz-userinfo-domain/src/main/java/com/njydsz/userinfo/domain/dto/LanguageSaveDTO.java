@@ -9,7 +9,7 @@ import lombok.Data;
  * 语言创建/更新 DTO。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 public class LanguageSaveDTO {

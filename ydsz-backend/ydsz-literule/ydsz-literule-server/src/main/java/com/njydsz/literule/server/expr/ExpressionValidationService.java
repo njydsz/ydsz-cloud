@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Bean 装配见 {@link com.njydsz.literule.server.config.LiteRuleAutoConfiguration#expressionValidationService}。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ExpressionValidationService {
@@ -258,7 +258,7 @@ public class ExpressionValidationService {
      * @param expression 表达式
      * @param facts      样例事实数据
      * @return 求值结果（含 value / type / error）
-     * @since 1.5.1
+     * @since 1.0.0
      */
     public ExpressionPreviewResult previewEvaluate(String expression, Map<String, Object> facts) {
         long start = System.nanoTime();

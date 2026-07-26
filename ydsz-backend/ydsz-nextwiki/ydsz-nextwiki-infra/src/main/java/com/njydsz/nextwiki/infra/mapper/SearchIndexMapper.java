@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.entity.SearchIndex;
  * 搜索索引 MyBatis Mapper
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Mapper
 public interface SearchIndexMapper extends BaseMapper<SearchIndex> {

@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

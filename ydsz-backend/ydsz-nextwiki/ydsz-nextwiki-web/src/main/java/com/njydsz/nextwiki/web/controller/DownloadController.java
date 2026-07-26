@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
  * 提供文件下载接口，集成下载限流与防盗链验证。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

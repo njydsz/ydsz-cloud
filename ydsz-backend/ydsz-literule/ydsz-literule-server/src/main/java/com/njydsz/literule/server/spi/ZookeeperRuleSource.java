@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>依赖：需在 classpath 中引入 {@code org.apache.curator:curator-recipes}。
  *
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ZookeeperRuleSource implements RuleSource {

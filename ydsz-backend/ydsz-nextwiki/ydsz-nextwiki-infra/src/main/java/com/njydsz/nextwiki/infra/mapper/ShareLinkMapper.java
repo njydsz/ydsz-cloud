@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.domain.entity.ShareLink;
  * 分享链接 MyBatis Mapper
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Mapper
 public interface ShareLinkMapper extends BaseMapper<ShareLink> {

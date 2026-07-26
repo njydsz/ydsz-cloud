@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 使用分布式锁确保多实例部署时同一任务不会被并发执行。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

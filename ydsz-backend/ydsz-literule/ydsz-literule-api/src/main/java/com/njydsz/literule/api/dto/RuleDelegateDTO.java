@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/{ruleCode}/delegate} 接口，将当前级别的审批权委托给他人。
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则审批委托请求体")

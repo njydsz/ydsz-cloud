@@ -212,7 +212,7 @@ public class ScriptRule implements Rule {
      *
      * @param def 脚本规则定义
      * @return ScriptRule 实例
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static ScriptRule from(ScriptDefinition def) {
         RuleSeverity severity = def.getDefaultSeverity() != null
@@ -504,7 +504,7 @@ public class ScriptRule implements Rule {
      * 获取脚本语言
      *
      * @return 语言名（groovy/javascript/python）
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public String getLanguage() {
         return language;

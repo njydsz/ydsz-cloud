@@ -20,7 +20,7 @@ import com.njydsz.agent.domain.agent.AgentDag;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("YAML DSL 解析器 DagDslParser 测试")
 class DagDslParserTest {

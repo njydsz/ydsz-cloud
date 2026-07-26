@@ -11,7 +11,7 @@ import java.util.Objects;
  * <p>文档分块后的最小检索单元，包含文本内容、来源信息和向量嵌入。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public final class TextChunk implements Serializable {
 

@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 自动补全、变量校验配置使用。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

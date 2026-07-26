@@ -27,7 +27,7 @@ import com.njydsz.common.cache.builder.CacheType;
  *   <li><b>AST 级错误定位</b>：编译错误携带精确行列号</li>
  * </ul>
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 public class LiteExprCompiler {
 

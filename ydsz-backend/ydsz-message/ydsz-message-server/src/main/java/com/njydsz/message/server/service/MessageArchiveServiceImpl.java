@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 通过 {@code ydsz.message.archive.es-enabled} 配置开关。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

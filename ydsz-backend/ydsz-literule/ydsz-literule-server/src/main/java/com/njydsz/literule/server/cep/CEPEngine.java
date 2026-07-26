@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * engine.feed(event);
  * </pre>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 public class CEPEngine implements Serializable {
@@ -90,7 +90,7 @@ public class CEPEngine implements Serializable {
      *（沙箱开关、自定义函数注册等），避免独立 new 实例导致的配置不一致。
      *
      * @param expressionEvaluator 表达式求值器
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public CEPEngine(ExpressionEvaluator expressionEvaluator) {
         this.expressionEvaluator = expressionEvaluator != null ? expressionEvaluator : DEFAULT_EVALUATOR;
@@ -610,7 +610,7 @@ public class CEPEngine implements Serializable {
      * 移除窗口外的过期事件，防止长时间运行时队列无限增长。
      * 建议由 @Scheduled 定时调用（如每 60 秒）。
      *
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public void cleanupExpiredEvents() {
         Instant now = Instant.now();
@@ -636,7 +636,7 @@ public class CEPEngine implements Serializable {
     /**
      * 优雅关闭：清理所有队列和状态（P0-5）
      *
-     * @since 2.3.0
+     * @since 1.0.0
      */
     @PreDestroy
     public void destroy() {
@@ -651,7 +651,7 @@ public class CEPEngine implements Serializable {
      * 防止高吞吐场景下队列无限增长导致 OOM。
      *
      * @param queue 事件队列
-     * @since 2.3.0
+     * @since 1.0.0
      */
     private void enforceQueueLimit(ConcurrentLinkedDeque<CEPEvent> queue) {
         while (queue.size() > MAX_EVENTS_PER_PARTITION) {

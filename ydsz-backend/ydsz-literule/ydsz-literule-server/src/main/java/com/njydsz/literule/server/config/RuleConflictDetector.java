@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>租户隔离：仅在同一 tenantId 内检测冲突（单租户部署下 tenantId 恒为 1）。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -176,7 +176,7 @@ public class RuleConflictDetector {
      *
      * @param conflicts     冲突输出列表
      * @param newDefinition 待检测规则
-     * @since 1.5.1
+     * @since 1.0.0
      */
     private void detectDeadRule(List<RuleConflict> conflicts, RuleDefinition newDefinition) {
         String expr = newDefinition.getConditionExpression();
@@ -227,7 +227,7 @@ public class RuleConflictDetector {
      *
      * @param conflicts     冲突输出列表
      * @param newDefinition 待检测规则
-     * @since 1.5.1
+     * @since 1.0.0
      */
     private void detectUnreachableSubcondition(List<RuleConflict> conflicts, RuleDefinition newDefinition) {
         String expr = newDefinition.getConditionExpression();

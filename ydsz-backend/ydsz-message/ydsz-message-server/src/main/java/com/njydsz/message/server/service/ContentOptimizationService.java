@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>后续可接入 LLM API 提供更智能的优化建议。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

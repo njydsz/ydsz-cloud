@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * 单批最大 10000 条，超出拒绝。异步处理通过 Spring {@code @Async} 线程池执行。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

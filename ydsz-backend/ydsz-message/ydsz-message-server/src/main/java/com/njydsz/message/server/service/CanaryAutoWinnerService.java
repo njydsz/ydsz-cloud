@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * 将胜出方案（送达率/已读率最高）设为正式版本,关闭灰度实验。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

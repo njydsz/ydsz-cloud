@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>用 {@link CompletableFuture} 包裹同步规则评估，超时则取消任务并返回未触发结果。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RuleTimeoutExecutor {

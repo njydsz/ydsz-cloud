@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * 支持文件级别的评论和回复，用于知识库协作讨论。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

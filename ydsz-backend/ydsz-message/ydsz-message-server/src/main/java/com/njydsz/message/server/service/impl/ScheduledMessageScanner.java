@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  * 默认 30s 扫描一次，可通过 {@code ydsz.message.scheduled-scan-interval-ms} 配置。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

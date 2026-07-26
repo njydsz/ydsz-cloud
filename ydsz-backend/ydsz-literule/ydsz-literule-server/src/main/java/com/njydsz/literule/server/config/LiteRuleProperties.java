@@ -127,7 +127,7 @@ public class LiteRuleProperties {
      *       watch: true
      * </pre>
      *
-     * @since 1.7.0
+     * @since 1.0.0
      */
     private FileSourceConfig fileSource = new FileSourceConfig();
 
@@ -145,7 +145,7 @@ public class LiteRuleProperties {
      *   <li>写操作通过 Redis 版本号失效全部节点 L1</li>
      * </ul>
      *
-     * @since 1.6.0
+     * @since 1.0.0
      */
     private CacheConfig cache = new CacheConfig();
 
@@ -157,7 +157,7 @@ public class LiteRuleProperties {
      * 未配置时仅扫描 {@code @LiteRule} 标注的已注册 Spring Bean（无需指定包），
      * 而 {@code @RuleDefinitionMeta} 类扫描需显式配置本项以提高扫描性能。
      *
-     * @since 1.5.2
+     * @since 1.0.0
      */
     private String annotationScanBasePackages = "";
 
@@ -170,7 +170,7 @@ public class LiteRuleProperties {
      * <p>默认值 {@code "1"}（向后兼容）。多租户场景下通过
      * {@code ydsz.literule.default-tenant-id} 配置覆盖。
      *
-     * @since 2.3.0
+     * @since 1.0.0
      */
     private String defaultTenantId = "1";
 
@@ -188,7 +188,7 @@ public class LiteRuleProperties {
      * <p>配置后，引擎评估时仅放行 environment 为 {@code "default"} 或与本配置匹配的规则。
      * 用于 dev/staging/prod 环境的规则隔离，避免开发环境的测试规则在生产环境触发。
      *
-     * @since 1.6.0
+     * @since 1.0.0
      */
     private String environment = "default";
 
@@ -216,7 +216,7 @@ public class LiteRuleProperties {
      *       mock-enabled: false
      * </pre>
      *
-     * @since 1.8.0
+     * @since 1.0.0
      */
     private ModelConfig model = new ModelConfig();
 
@@ -240,7 +240,7 @@ public class LiteRuleProperties {
      *       fallback-on-error: true
      * </pre>
      *
-     * @since 2.1.0
+     * @since 1.0.0
      */
     private FactConfig fact = new FactConfig();
 
@@ -250,7 +250,7 @@ public class LiteRuleProperties {
      * <p>控制 {@link com.njydsz.literule.server.core.DefaultBreakpointHook} 的 SUSPEND 超时时间。
      * 默认启用（{@code enabled=true}），超时 60 秒。
      *
-     * @since 2.3.0
+     * @since 1.0.0
      */
     private DebugConfig debug = new DebugConfig();
 
@@ -259,7 +259,7 @@ public class LiteRuleProperties {
      *
      * <p>控制评估结果缓存与规则分组并行评估。
      *
-     * @since 2.0.0
+     * @since 1.0.0
      */
     private PerformanceConfig performance = new PerformanceConfig();
 
@@ -268,7 +268,7 @@ public class LiteRuleProperties {
      *
      * <p>控制退役检测的阈值参数，用于自动识别应退役的规则。
      *
-     * @since 2.0.0
+     * @since 1.0.0
      */
     private LifecycleConfig lifecycle = new LifecycleConfig();
 
@@ -278,7 +278,7 @@ public class LiteRuleProperties {
      * <p>启用后规则引擎按一致性 hash 将规则分片到集群节点，
      * 每个节点只执行属于自己的规则，避免重复计算。
      *
-     * @since 1.5.0
+     * @since 1.0.0
      */
     @Data
     public static class Distributed {
@@ -321,7 +321,7 @@ public class LiteRuleProperties {
      *         path: /literule/definitions
      * </pre>
      *
-     * @since 1.6.0
+     * @since 1.0.0
      */
     @Data
     public static class RuleSourceConfig {
@@ -371,7 +371,7 @@ public class LiteRuleProperties {
      *
      * <p>控制 Caffeine（L1）+ Redis（L2）两级缓存行为。
      *
-     * @since 1.6.0
+     * @since 1.0.0
      */
     @Data
     public static class CacheConfig {
@@ -405,7 +405,7 @@ public class LiteRuleProperties {
      *
      * <p>控制 {@link com.njydsz.literule.server.spi.FileRuleSource} 的加载行为。
      *
-     * @since 1.7.0
+     * @since 1.0.0
      */
     @Data
     public static class FileSourceConfig {
@@ -449,7 +449,7 @@ public class LiteRuleProperties {
      * {@link com.njydsz.literule.domain.model.MockModelInputProvider} 的行为。
      * 默认关闭（{@code enabled=false}），需显式启用以保证向后兼容。
      *
-     * @since 1.8.0
+     * @since 1.0.0
      */
     @Data
     public static class ModelConfig {
@@ -506,7 +506,7 @@ public class LiteRuleProperties {
      * <p>控制 {@link com.njydsz.literule.server.spi.FactProviderRegistry} 的行为。
      * 默认关闭（{@code enabled=false}），需显式启用以保证向后兼容。
      *
-     * @since 2.1.0
+     * @since 1.0.0
      */
     @Data
     public static class FactConfig {
@@ -546,7 +546,7 @@ public class LiteRuleProperties {
      *
      * <p>控制断点调试器的行为，包括启用开关和 SUSPEND 超时时间。
      *
-     * @since 2.3.0
+     * @since 1.0.0
      */
     @Data
     public static class DebugConfig {
@@ -575,7 +575,7 @@ public class LiteRuleProperties {
      *
      * <p>控制评估结果缓存与规则分组并行评估，提升大规则量场景下的评估吞吐。
      *
-     * @since 2.0.0
+     * @since 1.0.0
      */
     @Data
     public static class PerformanceConfig {
@@ -629,7 +629,7 @@ public class LiteRuleProperties {
          * 0（默认）表示关闭慢规则检测。
          * 推荐生产环境设置为 100~500ms，对标在线风控引擎性能要求。
          *
-         * @since 2.2.0
+         * @since 1.0.0
          */
         private long slowRuleThresholdMs = 0L;
     }
@@ -646,7 +646,7 @@ public class LiteRuleProperties {
      *   <li>低影响：触发率 &lt; {@link #lowImpactTriggerRate} 且评估次数 ≥ {@link #minSampleSize}</li>
      * </ul>
      *
-     * @since 2.0.0
+     * @since 1.0.0
      */
     @Data
     public static class LifecycleConfig {

@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于折线图展示触发次数、P99 耗时、错误率的时间序列趋势。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 @Builder

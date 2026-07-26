@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
  * 每次模板内容变更并审核通过后，自动插入一条版本记录。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

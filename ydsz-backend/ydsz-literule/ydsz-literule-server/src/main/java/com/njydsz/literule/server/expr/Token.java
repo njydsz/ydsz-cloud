@@ -13,7 +13,7 @@ package com.njydsz.literule.server.expr.liteexpr;
  * @param column     列号（1-based）
  * @param offset     在源代码中的字符偏移量（0-based）
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 public record Token(
         TokenType type,

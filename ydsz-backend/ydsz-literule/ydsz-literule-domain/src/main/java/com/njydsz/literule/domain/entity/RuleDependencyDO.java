@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
  * <p>cascade_on_disable=true 表示被依赖规则被禁用时，本规则也要级联禁用。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

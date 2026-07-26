@@ -11,7 +11,7 @@ import com.njydsz.message.domain.entity.batch.MsgBatchDO;
  * <p>管理异步批量发送的批次创建、进度查询、状态更新。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface BatchService {
 

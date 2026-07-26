@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * RAG 查询请求 DTO
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Schema(description = "RAG 查询请求")
 public class RagQueryDTO implements Serializable {

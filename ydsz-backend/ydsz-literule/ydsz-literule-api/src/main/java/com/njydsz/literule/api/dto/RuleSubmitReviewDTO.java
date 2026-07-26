@@ -10,7 +10,7 @@ import lombok.Data;
  * 提交到指定审批流的第一级。flowCode 为空时使用默认 2 级审批流。
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则提交审核请求体")

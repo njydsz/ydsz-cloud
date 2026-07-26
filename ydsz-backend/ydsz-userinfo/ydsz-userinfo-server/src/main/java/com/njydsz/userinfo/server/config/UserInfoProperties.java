@@ -15,7 +15,7 @@ import lombok.Data;
  * 通过 {@link UserInfoConfiguration} 的 {@code @EnableConfigurationProperties} 注册。
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo")

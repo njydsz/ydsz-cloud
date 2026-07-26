@@ -18,7 +18,7 @@ import com.njydsz.agent.domain.guardrail.GuardrailResult;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("护栏组件测试")
 class GuardrailsTest {

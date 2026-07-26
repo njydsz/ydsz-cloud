@@ -19,7 +19,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * 线程安全：使用 {@link ConcurrentHashMap} 存储，支持并发写入。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class CostAnalysisService {
 

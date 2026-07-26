@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 用于从扫描件、图片 PDF 中提取文本内容，供全文搜索索引。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

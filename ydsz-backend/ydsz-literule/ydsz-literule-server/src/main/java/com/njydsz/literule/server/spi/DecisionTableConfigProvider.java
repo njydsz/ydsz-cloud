@@ -10,7 +10,7 @@ import com.njydsz.literule.api.DecisionTableDefinition;
  * <p>由消费方（如 execution 模块）提供实现，从数据库加载决策表定义。
  * literule 模块本身不依赖持久层。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface DecisionTableConfigProvider {
 

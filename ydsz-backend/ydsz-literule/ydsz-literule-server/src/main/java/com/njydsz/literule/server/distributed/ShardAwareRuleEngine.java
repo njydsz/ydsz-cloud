@@ -37,7 +37,7 @@ import com.njydsz.literule.api.RuleResult;
  * List&lt;RuleResult&gt; results = engine.evaluate(context);
  * </pre>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 public class ShardAwareRuleEngine implements RuleEngine {
 

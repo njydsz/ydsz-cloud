@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * 编排文件分享相关操作，协调领域服务。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

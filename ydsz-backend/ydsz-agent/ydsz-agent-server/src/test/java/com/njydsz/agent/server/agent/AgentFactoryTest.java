@@ -35,7 +35,7 @@ import com.njydsz.agent.server.rag.RagService;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("Agent 工厂 AgentFactory 测试")
 @ExtendWith(MockitoExtension.class)

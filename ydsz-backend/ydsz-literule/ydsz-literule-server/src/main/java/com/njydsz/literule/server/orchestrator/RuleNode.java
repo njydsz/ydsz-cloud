@@ -21,7 +21,7 @@ import com.njydsz.literule.api.Rule;
  * <p>使用静态工厂方法 {@link #of(Rule)} 与 {@link #of(RuleChain)} 构建节点，
  * 保证节点形态与字段填充的一致性。
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class RuleNode {
 
@@ -102,7 +102,7 @@ public class RuleNode {
      * @param retryCount      重试次数（0=不重试）
      * @param retryIntervalMs 重试间隔毫秒
      * @return SINGLE 类型节点
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static RuleNode of(Rule rule, long timeoutMs, int retryCount, long retryIntervalMs) {
         Objects.requireNonNull(rule, "rule 不能为 null");
@@ -128,7 +128,7 @@ public class RuleNode {
      * @param retryCount      重试次数
      * @param retryIntervalMs 重试间隔毫秒
      * @return CHAIN 类型节点
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static RuleNode of(RuleChain chain, long timeoutMs, int retryCount, long retryIntervalMs) {
         Objects.requireNonNull(chain, "chain 不能为 null");
@@ -196,7 +196,7 @@ public class RuleNode {
      * 获取节点级超时（毫秒）
      *
      * @return 超时毫秒；0 表示不超时
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public long getTimeoutMs() {
         return timeoutMs;
@@ -206,7 +206,7 @@ public class RuleNode {
      * 获取节点级重试次数
      *
      * @return 重试次数；0 表示不重试
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public int getRetryCount() {
         return retryCount;
@@ -216,7 +216,7 @@ public class RuleNode {
      * 获取节点级重试间隔（毫秒）
      *
      * @return 重试间隔毫秒
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public long getRetryIntervalMs() {
         return retryIntervalMs;
@@ -226,7 +226,7 @@ public class RuleNode {
      * 获取节点名称
      *
      * @return 节点名称；可能为 null
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public String getName() {
         return name;
@@ -236,7 +236,7 @@ public class RuleNode {
      * 是否配置了超时
      *
      * @return true=有超时配置
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public boolean hasTimeout() {
         return timeoutMs > 0;
@@ -246,7 +246,7 @@ public class RuleNode {
      * 是否配置了重试
      *
      * @return true=有重试配置
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public boolean hasRetry() {
         return retryCount > 0;

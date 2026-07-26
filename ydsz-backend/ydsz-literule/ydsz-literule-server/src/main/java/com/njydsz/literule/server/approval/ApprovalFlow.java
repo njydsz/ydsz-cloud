@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
  *   <li>{@code strict-3level}：一级审核 → 二级审核 → 终审（COUNTERSIGN）→ 发布</li>
  * </ul>
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>定时任务每分钟将上一分钟的预聚合数据持久化到数据库统计表（可选）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

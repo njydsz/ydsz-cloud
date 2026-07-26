@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>P1-6: 使用指定模板向测试接收人发送一条真实消息，验证模板渲染效果和通道连通性。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 public class TemplateTestSendDTO {

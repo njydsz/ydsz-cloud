@@ -11,7 +11,7 @@ import com.njydsz.literule.api.RuleResult;
  * <p>由消费方（如 project 模块）提供实现，将可视化画布转换为可执行的规则链并执行评估。
  * 将原有 {@code GraphExecutionService} 的能力抽象为 SPI，避免 literule 模块直接依赖 project 模块。
  *
- * @since 1.5.1
+ * @since 1.0.0
  */
 public interface GraphExecutionProvider {
 

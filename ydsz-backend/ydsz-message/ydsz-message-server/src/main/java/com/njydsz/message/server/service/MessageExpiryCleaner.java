@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 避免收件箱累积大量过期消息影响查询性能。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

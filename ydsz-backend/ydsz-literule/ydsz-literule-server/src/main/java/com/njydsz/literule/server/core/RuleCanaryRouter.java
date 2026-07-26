@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>分桶统计通过 {@link #getCanaryBucketStats} 暴露给运营监控</li>
  * </ul>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RuleCanaryRouter {
@@ -155,7 +155,7 @@ public class RuleCanaryRouter {
      *
      * @param original 原始规则定义
      * @return 候选版本 Rule
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public Rule buildCanaryRule(RuleDefinition original) {
         return new ExpressionRule(buildCanaryDefinition(original), evaluator);

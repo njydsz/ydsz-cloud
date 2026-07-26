@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * 管理文件分享链接的创建、访问验证、撤销，以及文件级 ACL 权限的授予和校验。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

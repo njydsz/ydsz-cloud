@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * 提取后可统一日志格式和执行轨迹字段管理。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class JobExecutionRecorder {

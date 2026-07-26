@@ -15,7 +15,7 @@ package com.njydsz.literule.server.expr.liteexpr;
  * });
  * </pre>
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 @FunctionalInterface
 public interface LiteExprFunction {

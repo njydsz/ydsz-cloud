@@ -136,10 +136,11 @@ public class GatewayAlertService {
             message.append(title).append("\n");
             details.forEach((k, v) -> message.append(k).append(": ").append(v).append("\n"));
 
-            NotifyRequest request = new NotifyRequest();
-            request.setChannel(NotifyChannel.DING_TALK);
-            request.setTitle(title);
-            request.setContent(message.toString());
+            NotifyRequest request = NotifyRequest.builder()
+                    .channel(NotifyChannel.DINGTALK)
+                    .title(title)
+                    .content(message.toString())
+                    .build();
 
             notifyService.send(request);
             log.info("[GatewayAlert] 告警已发送: {}", title);

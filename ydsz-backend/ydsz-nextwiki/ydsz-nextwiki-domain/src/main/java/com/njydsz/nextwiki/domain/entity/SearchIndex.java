@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * 每条记录与 {@link FileNode} 一一对应（通过 fileNodeId 关联）。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

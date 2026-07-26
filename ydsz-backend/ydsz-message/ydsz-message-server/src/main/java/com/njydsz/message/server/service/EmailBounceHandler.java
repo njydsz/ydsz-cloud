@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 并记录退信原因（硬退信/软退信），后续可用于清理无效邮箱。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

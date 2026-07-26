@@ -25,7 +25,7 @@ import com.njydsz.literule.api.RuleResult;
  *   <li>Hook 是 SPI 接口，由应用层（如 literule-debug 模块）提供实现，引擎层不依赖具体实现</li>
  * </ol>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface BreakpointHook {
 

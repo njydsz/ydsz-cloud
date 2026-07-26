@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
  * 避免业务方在调用消息中心时自行查询各通道联系方式。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

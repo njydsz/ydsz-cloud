@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>对标 DolphinScheduler 的 Docker 沙箱和 Airflow 的 KubernetesPodOperator。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

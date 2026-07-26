@@ -60,7 +60,7 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("对话服务 ChatService 测试")
 @ExtendWith(MockitoExtension.class)

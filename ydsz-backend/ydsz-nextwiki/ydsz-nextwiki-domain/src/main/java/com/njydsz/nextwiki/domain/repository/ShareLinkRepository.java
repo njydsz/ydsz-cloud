@@ -8,7 +8,7 @@ import com.njydsz.nextwiki.domain.entity.ShareLink;
  * 分享链接仓储接口
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface ShareLinkRepository {
 

@@ -197,7 +197,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * @param priority 待插入规则的优先级
      * @return 插入位置索引
-     * @since 1.5.1
+     * @since 1.0.0
      */
     private int binarySearchInsertIndex(int priority) {
         int low = 0;
@@ -446,7 +446,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * @param rule 规则
      * @return 灰度定义；不满足条件返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private RuleDefinition resolveCanaryDefinition(Rule rule) {
         if (!canaryEnabled || canaryRouter == null) {
@@ -480,7 +480,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * @param context 原始上下文
      * @return 包含外部事实的新上下文；无需注入时返回原 context
-     * @since 2.1.0
+     * @since 1.0.0
      */
     private RuleContext injectFactsIfNeeded(RuleContext context) {
         FactProviderRegistry registry = this.factProviderRegistry;
@@ -537,7 +537,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * @param context 原始上下文
      * @return 包含模型输出的新上下文；无需注入时返回原 context
-     * @since 1.8.0
+     * @since 1.0.0
      */
     private RuleContext injectModelOutputsIfNeeded(RuleContext context) {
         ModelInputRegistry registry = this.modelInputRegistry;
@@ -668,7 +668,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * @param context 规则上下文
      * @return 有效 traceId（非 null、非空）
-     * @since 2.2.0
+     * @since 1.0.0
      */
     private String resolveTraceId(RuleContext context) {
         String traceId = context.getTraceId();
@@ -763,7 +763,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置轨迹记录器
      *
      * @param traceRecorder 轨迹记录器；null 表示禁用 Trace
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setTraceRecorder(TraceRecorder traceRecorder) {
         this.traceRecorder = traceRecorder;
@@ -773,7 +773,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取轨迹记录器
      *
      * @return 轨迹记录器；未配置返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public TraceRecorder getTraceRecorder() {
         return traceRecorder;
@@ -783,7 +783,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置超时执行器
      *
      * @param timeoutExecutor 超时执行器；null 表示禁用超时控制
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setTimeoutExecutor(RuleTimeoutExecutor timeoutExecutor) {
         this.timeoutExecutor = timeoutExecutor;
@@ -793,7 +793,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取超时执行器
      *
      * @return 超时执行器；未配置返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public RuleTimeoutExecutor getTimeoutExecutor() {
         return timeoutExecutor;
@@ -803,7 +803,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置熔断器
      *
      * @param circuitBreaker 熔断器；null 表示禁用熔断
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setCircuitBreaker(RuleCircuitBreaker circuitBreaker) {
         this.circuitBreaker = circuitBreaker;
@@ -813,7 +813,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取熔断器
      *
      * @return 熔断器；未配置返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public RuleCircuitBreaker getCircuitBreaker() {
         return circuitBreaker;
@@ -823,7 +823,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置监控指标
      *
      * @param metrics 监控指标；null 表示禁用
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setMetrics(RuleMetrics metrics) {
         this.metrics = metrics;
@@ -833,7 +833,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取监控指标
      *
      * @return 监控指标；未配置返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public RuleMetrics getMetrics() {
         return metrics;
@@ -843,7 +843,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置灰度路由器
      *
      * @param canaryRouter 灰度路由器；null 表示禁用灰度
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setCanaryRouter(RuleCanaryRouter canaryRouter) {
         this.canaryRouter = canaryRouter;
@@ -853,7 +853,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取灰度路由器
      *
      * @return 灰度路由器；未配置返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public RuleCanaryRouter getCanaryRouter() {
         return canaryRouter;
@@ -863,7 +863,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取规则索引器
      *
      * @return 规则索引器实例
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public RuleIndexer getRuleIndexer() {
         return ruleIndexer;
@@ -876,7 +876,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 未命中则执行评估后写入缓存。规则注册/注销/热加载时自动清除缓存。
      *
      * @param cache 评估结果缓存实例
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public void setEvaluationResultCache(EvaluationResultCache cache) {
         this.evaluationResultCache = cache;
@@ -886,7 +886,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取评估结果缓存
      *
      * @return 评估结果缓存实例；未配置返回 null
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public EvaluationResultCache getEvaluationResultCache() {
         return evaluationResultCache;
@@ -896,7 +896,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置是否启用灰度路由
      *
      * @param canaryEnabled 是否启用
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setCanaryEnabled(boolean canaryEnabled) {
         this.canaryEnabled = canaryEnabled;
@@ -906,7 +906,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取是否启用灰度路由
      *
      * @return 是否启用
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public boolean isCanaryEnabled() {
         return canaryEnabled;
@@ -916,7 +916,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置断点调试 Hook（P2-3）
      *
      * @param breakpointHook 断点 Hook；null 表示禁用断点调试
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setBreakpointHook(BreakpointHook breakpointHook) {
         this.breakpointHook = breakpointHook;
@@ -929,7 +929,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取断点调试 Hook（P2-3）
      *
      * @return 断点 Hook；未配置返回 null
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public BreakpointHook getBreakpointHook() {
         return breakpointHook;
@@ -942,7 +942,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 合并到 {@link RuleContext} 的 facts 中。null 表示禁用模型融合（向后兼容）。
      *
      * @param modelInputRegistry 模型输入注册表；null 表示禁用
-     * @since 1.8.0
+     * @since 1.0.0
      */
     public void setModelInputRegistry(ModelInputRegistry modelInputRegistry) {
         this.modelInputRegistry = modelInputRegistry;
@@ -957,7 +957,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取模型输入注册表（P3-1）
      *
      * @return 模型输入注册表；未配置返回 null
-     * @since 1.8.0
+     * @since 1.0.0
      */
     public ModelInputRegistry getModelInputRegistry() {
         return modelInputRegistry;
@@ -970,7 +970,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 合并到 {@link RuleContext} 的 facts 中。null 表示禁用事实采集（向后兼容）。
      *
      * @param factProviderRegistry 事实数据提供者注册表；null 表示禁用
-     * @since 2.1.0
+     * @since 1.0.0
      */
     public void setFactProviderRegistry(FactProviderRegistry factProviderRegistry) {
         this.factProviderRegistry = factProviderRegistry;
@@ -985,7 +985,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取事实数据提供者注册表（P0-2）
      *
      * @return 事实数据提供者注册表；未配置返回 null
-     * @since 2.1.0
+     * @since 1.0.0
      */
     public FactProviderRegistry getFactProviderRegistry() {
         return factProviderRegistry;
@@ -999,7 +999,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * null 表示禁用动作分发（向后兼容）。
      *
      * @param actionDispatcher 动作分发器；null 表示禁用
-     * @since 2.1.0
+     * @since 1.0.0
      */
     public void setActionDispatcher(RuleActionDispatcher actionDispatcher) {
         this.actionDispatcher = actionDispatcher;
@@ -1013,7 +1013,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 获取规则动作分发器（P1-1）
      *
      * @return 动作分发器；未配置返回 null
-     * @since 2.1.0
+     * @since 1.0.0
      */
     public RuleActionDispatcher getActionDispatcher() {
         return actionDispatcher;
@@ -1026,7 +1026,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 引擎自动切换为并行评估模式。
      *
      * @param parallelEvaluator 并行评估器；null 表示始终串行
-     * @since 2.2.0
+     * @since 1.0.0
      */
     public void setParallelEvaluator(ParallelRuleEvaluator parallelEvaluator) {
         this.parallelEvaluator = parallelEvaluator;
@@ -1039,7 +1039,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置并行评估触发阈值（P2-2）
      *
      * @param threshold 候选规则数阈值；< 1 时视为 1
-     * @since 2.2.0
+     * @since 1.0.0
      */
     public void setParallelThreshold(int threshold) {
         this.parallelThreshold = Math.max(1, threshold);
@@ -1049,7 +1049,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 设置慢规则告警阈值（P2-4）
      *
      * @param thresholdMs 单规则评估耗时阈值（毫秒）；≤ 0 表示关闭慢规则检测
-     * @since 2.2.0
+     * @since 1.0.0
      */
     public void setSlowRuleThresholdMs(long thresholdMs) {
         this.slowRuleThresholdMs = thresholdMs;
@@ -1070,7 +1070,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * @param candidateRules 候选规则列表
      * @return true 表示应使用并行评估
-     * @since 2.2.0
+     * @since 1.0.0
      */
     private boolean shouldUseParallelEvaluation(List<Rule> candidateRules) {
         return parallelEvaluator != null
@@ -1084,7 +1084,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * <p>封装单规则评估的完整结果，供串行路径和并行路径统一使用，
      * 消除两路径间灰度路由 + 评估执行 + 统计/监控/熔断/轨迹记录的重复代码。
      *
-     * @since 2.3.0
+     * @since 1.0.0
      */
     private static class RuleEvaluationOutcome {
         final RuleResult result;
@@ -1126,7 +1126,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @param scenario 业务场景
      * @param logTag   日志标签（如 "[LiteRule]" 或 "[LiteRule-Parallel]"）
      * @return 评估结果封装
-     * @since 2.3.0
+     * @since 1.0.0
      */
     private RuleEvaluationOutcome executeAndRecordRuleEvaluation(Rule rule, RuleContext context,
                                                                    String scenario, String logTag) {
@@ -1211,7 +1211,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @param context 规则上下文
      * @return 评估结果
      * @throws Exception 评估异常
-     * @since 2.3.0
+     * @since 1.0.0
      */
     private RuleResult evaluateWithOptionalTimeout(Rule rule, RuleContext context) throws Exception {
         if (timeoutExecutor != null) {
@@ -1234,7 +1234,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @param context        规则上下文
      * @param scenario       业务场景
      * @return 触发的规则结果列表（按严重度倒序）
-     * @since 2.2.0
+     * @since 1.0.0
      */
     private List<RuleResult> evaluateInParallel(List<Rule> candidateRules,
                                                  RuleContext context, String scenario) {
@@ -1275,7 +1275,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @param scenario 业务场景
      * @param traceId  MDC traceId（用于工作线程传播）
      * @return 已触发的 RuleResult；未触发/被熔断返回 null
-     * @since 2.2.0
+     * @since 1.0.0
      */
     private RuleResult evaluateSingleRule(Rule rule, RuleContext context,
                                            String scenario, String traceId) {
@@ -1301,7 +1301,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @param elapsedMs 耗时
      * @param exception 评估异常（可能为 null）
      * @return 轨迹记录
-     * @since 1.4.0
+     * @since 1.0.0
      */
     private RuleExecutionTrace buildTrace(RuleContext context, Rule rule, RuleResult result,
                                           long elapsedMs, Exception exception) {
@@ -1336,7 +1336,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     /**
      * 优雅关闭：释放 TraceRecorder、超时执行器与模型注册表资源
      *
-     * @since 1.4.0
+     * @since 1.0.0
      */
     @PreDestroy
     public void destroy() {
@@ -1397,7 +1397,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * @param rule 规则
      * @param contextEnvironment 上下文环境标识
      * @return true=匹配；false=不匹配
-     * @since 1.6.0
+     * @since 1.0.0
      */
     private boolean environmentMatches(Rule rule, String contextEnvironment) {
         String ruleEnv = rule.getEnvironment();

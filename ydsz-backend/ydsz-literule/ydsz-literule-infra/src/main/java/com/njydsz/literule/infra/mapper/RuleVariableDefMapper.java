@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.entity.RuleVariableDefDO;
  * 规则变量定义 Mapper
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Mapper
 public interface RuleVariableDefMapper extends BaseMapper<RuleVariableDefDO> {

@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * 本类作为 common-queue 的订阅者，自动消费消息并调用该方法，补全了事件驱动调度的消费端闭环。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

@@ -14,7 +14,7 @@ package com.njydsz.message.domain.enums.core;
  * <p>数值越大优先级越高，用于排序比较。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public enum MessagePriorityEnum {
 

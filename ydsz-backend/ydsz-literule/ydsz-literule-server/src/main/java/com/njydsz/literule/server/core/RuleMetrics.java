@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>当 MeterRegistry 不可用时（如单元测试），退化为内存计数器</li>
  * </ul>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RuleMetrics {
@@ -92,7 +92,7 @@ public class RuleMetrics {
      * </ul>
      *
      * @param count 当前注册规则数
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public void recordRegisteredRules(int count) {
         this.registeredRules = count;
@@ -103,7 +103,7 @@ public class RuleMetrics {
      * 记录单次评估遍历的规则数
      *
      * @param count 遍历规则数
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public void recordEvaluatedRules(int count) {
         this.lastEvaluatedRules = count;
@@ -118,7 +118,7 @@ public class RuleMetrics {
      * @param ruleCode    规则编码
      * @param elapsedMs   实际耗时
      * @param thresholdMs 阈值
-     * @since 2.2.0
+     * @since 1.0.0
      */
     public void recordSlowRule(String ruleCode, long elapsedMs, long thresholdMs) {
         log.debug("[LiteRule-Metrics] 慢规则: rule={}, elapsed={}ms, threshold={}ms",

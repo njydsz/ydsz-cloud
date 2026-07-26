@@ -27,7 +27,7 @@ import com.njydsz.cronjob.api.fallback.CronjobServiceClientFallback;
  * 不影响调用方主流程（降级为 WARN 日志）。
  *
  * @author ydsz-team
- * @since 2.1.0
+ * @since 1.0.0
  */
 @FeignClient(
         name = FeignClientConstants.CRONJOB,

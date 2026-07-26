@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * 标签用于知识库文件的分类和检索，支持手动创建和基于文件名的自动推荐。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

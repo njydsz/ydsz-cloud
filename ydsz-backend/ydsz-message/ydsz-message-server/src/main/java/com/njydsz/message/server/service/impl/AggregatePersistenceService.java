@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 提取到独立 Bean 后 Spring AOP 代理可正常拦截事务边界。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

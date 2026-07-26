@@ -81,7 +81,7 @@ public interface LiteRuleClient {
      * @param scenario 场景标识（可选，用于规则过滤和统计分组）
      * @param facts    事实数据
      * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
-     * @since 2.3.0
+     * @since 1.0.0
      */
     @PostMapping("/ruleEngine/rules/evaluate")
     BaseResponse<List<RuleResult>> evaluate(@RequestParam(value = "ruleCode", required = false) String ruleCode,

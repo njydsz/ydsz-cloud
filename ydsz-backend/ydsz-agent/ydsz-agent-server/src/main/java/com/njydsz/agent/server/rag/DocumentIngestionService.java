@@ -25,7 +25,7 @@ import com.njydsz.agent.domain.rag.VectorStore;
  * </ol>
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Service
 public class DocumentIngestionService {

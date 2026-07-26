@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  *   RuleChain.breakChain()                           // 终止执行
  * </pre>
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RuleChain {
@@ -381,7 +381,7 @@ public class RuleChain {
      * @param primaryRule 主规则（正常执行）
      * @param catchRule   补偿规则（异常时执行，可为 null 表示仅记录日志不补偿）
      * @return CATCH 类型规则链
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static RuleChain catchThen(Rule primaryRule, Rule catchRule) {
         Objects.requireNonNull(primaryRule, "primaryRule 不能为 null");
@@ -398,7 +398,7 @@ public class RuleChain {
      * @param primaryChain 主子链
      * @param catchChain   补偿子链（可为 null）
      * @return CATCH 类型规则链
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static RuleChain catchThen(RuleChain primaryChain, RuleChain catchChain) {
         Objects.requireNonNull(primaryChain, "primaryChain 不能为 null");
@@ -426,7 +426,7 @@ public class RuleChain {
      * @param retryIntervalMs  重试间隔（毫秒）
      * @param rollbackRule     回滚规则（全部重试失败后执行，可为 null）
      * @return RETRY 类型规则链
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static RuleChain retryThen(Rule primaryRule, int maxRetries, long retryIntervalMs, Rule rollbackRule) {
         Objects.requireNonNull(primaryRule, "primaryRule 不能为 null");
@@ -448,7 +448,7 @@ public class RuleChain {
      * @param retryIntervalMs  重试间隔（毫秒）
      * @param rollbackChain    回滚子链（可为 null）
      * @return RETRY 类型规则链
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public static RuleChain retryThen(RuleChain primaryChain, int maxRetries, long retryIntervalMs, RuleChain rollbackChain) {
         Objects.requireNonNull(primaryChain, "primaryChain 不能为 null");
@@ -796,7 +796,7 @@ public class RuleChain {
      * @param context   规则上下文
      * @param evaluator 表达式求值器
      * @return 主节点或补偿节点的评估结果
-     * @since 2.0.0
+     * @since 1.0.0
      */
     private List<RuleResult> evaluateCatch(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
@@ -831,7 +831,7 @@ public class RuleChain {
      * @param context   规则上下文
      * @param evaluator 表达式求值器
      * @return 主节点或回滚节点的评估结果
-     * @since 2.0.0
+     * @since 1.0.0
      */
     private List<RuleResult> evaluateRetry(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
@@ -1020,7 +1020,7 @@ public class RuleChain {
      * P0-1 增强：暴露给 {@link ChainGraphConverter} 提取子节点。
      *
      * @return 不可修改的多分支条件列表
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public List<Map.Entry<String, RuleNode>> getElifBranches() {
         return elifBranches;
@@ -1030,7 +1030,7 @@ public class RuleChain {
      * 获取 ELSE 节点（ELIF 专用）
      *
      * @return ELSE 节点；ELIF 链之外或未设置时返回 null
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public RuleNode getElseNode() {
         return elseNode;
@@ -1040,7 +1040,7 @@ public class RuleChain {
      * 获取 SWITCH 默认分支节点
      *
      * @return 默认分支节点；SWITCH 链之外或未设置时返回 null
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public RuleNode getDefaultBranch() {
         return defaultBranch;
@@ -1050,7 +1050,7 @@ public class RuleChain {
      * 获取 FOR 迭代集合表达式（如 {@code "items"}）
      *
      * @return 集合表达式；FOR 链之外返回 null
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public String getIterableExpression() {
         return iterableExpression;
@@ -1060,7 +1060,7 @@ public class RuleChain {
      * 获取 FOR 迭代变量名（如 {@code "item"}）
      *
      * @return 迭代变量名；FOR 链之外返回 null
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public String getIterationVar() {
         return iterationVar;
@@ -1070,7 +1070,7 @@ public class RuleChain {
      * 获取 WHILE 最大迭代次数
      *
      * @return 最大迭代次数；WHILE 链之外返回 0
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public int getMaxIterations() {
         return maxIterations;
@@ -1107,7 +1107,7 @@ public class RuleChain {
      * 获取主节点（CATCH/RETRY 使用）
      *
      * @return 主节点；CATCH/RETRY 之外为 null
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public RuleNode getPrimaryNode() {
         return primaryNode;
@@ -1117,7 +1117,7 @@ public class RuleChain {
      * 获取补偿/回滚节点（CATCH/RETRY 使用）
      *
      * @return 补偿节点；CATCH/RETRY 之外为 null
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public RuleNode getCatchNode() {
         return catchNode;
@@ -1127,7 +1127,7 @@ public class RuleChain {
      * 获取最大重试次数（RETRY 使用）
      *
      * @return 最大重试次数；RETRY 之外为 0
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public int getMaxRetries() {
         return maxRetries;
@@ -1137,7 +1137,7 @@ public class RuleChain {
      * 获取重试间隔（RETRY 使用）
      *
      * @return 重试间隔毫秒；RETRY 之外为 0
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public long getRetryIntervalMs() {
         return retryIntervalMs;
@@ -1147,7 +1147,7 @@ public class RuleChain {
      * 获取节点级超时（毫秒）
      *
      * @return 节点级超时；0 表示不超时
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public long getNodeTimeoutMs() {
         return nodeTimeoutMs;
@@ -1157,7 +1157,7 @@ public class RuleChain {
      * 获取节点级重试次数
      *
      * @return 节点级重试次数；0 表示不重试
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public int getNodeRetries() {
         return nodeRetries;

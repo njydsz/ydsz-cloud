@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
  * <p>单条测试用例执行后的完整结果，包含实际触发的规则、预期触发的规则、
  * 通过/失败判定、详细差异信息等。
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 @Data
 @Builder

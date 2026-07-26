@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * 以兼容 LiteExpr 表达式 {@code model.riskScore} 的属性访问语法。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ModelInputRegistry {

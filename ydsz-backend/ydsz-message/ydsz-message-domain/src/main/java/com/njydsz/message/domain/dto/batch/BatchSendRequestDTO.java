@@ -18,7 +18,7 @@ import lombok.Data;
  * <p>异步模式下立即返回 batchId，后台异步处理，前端通过 {@code /batch/{batchId}/progress} 查询进度。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 public class BatchSendRequestDTO {

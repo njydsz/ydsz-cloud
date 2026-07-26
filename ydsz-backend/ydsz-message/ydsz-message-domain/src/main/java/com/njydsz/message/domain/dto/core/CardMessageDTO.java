@@ -11,7 +11,7 @@ import lombok.Data;
  * 各通道按自身能力渲染为对应格式（钉钉 actionCard / 企微 textcard / 站内卡片）。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 public class CardMessageDTO {

@@ -11,7 +11,7 @@ import java.util.Map;
  * 由 {@code TraceRecorder} 在每条规则评估后异步写入。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class RuleExecutionTrace implements Serializable {
 

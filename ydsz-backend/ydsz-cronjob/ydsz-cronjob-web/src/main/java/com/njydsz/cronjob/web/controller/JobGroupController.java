@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * 便于运维按业务域批量管理任务。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "任务分组管理")

@@ -260,7 +260,7 @@ public class RuleAdminController {
      * @param oldVersion  旧版本号
      * @param newVersion  新版本号
      * @return 结构化 Diff 结果
-     * @since 2.0.0
+     * @since 1.0.0
      */
     @GetMapping("/{ruleCode}/versionDiff")
     public BaseResponse<RuleVersionDiff> versionDiff(@PathVariable String ruleCode,
@@ -343,7 +343,7 @@ public class RuleAdminController {
      *
      * @param request 包含 expression 和 facts 的请求体
      * @return 追踪结果（含求值结果和追踪树）
-     * @since 1.6.0
+     * @since 1.0.0
      */
     @PostMapping("/exprTrace")
     public BaseResponse<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {

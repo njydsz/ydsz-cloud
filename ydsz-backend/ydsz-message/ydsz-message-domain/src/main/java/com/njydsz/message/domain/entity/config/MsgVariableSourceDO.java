@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
  * 渲染前自动拉取变量值,免除调用方手动传入所有参数。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

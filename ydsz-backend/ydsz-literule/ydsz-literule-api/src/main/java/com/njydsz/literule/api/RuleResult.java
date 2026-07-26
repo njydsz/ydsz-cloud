@@ -88,7 +88,7 @@ public class RuleResult implements Serializable {
      * <p>当规则定义了 canaryRatio 且当前流量命中灰度桶时，
      * 引擎会同时评估主版本与候选版本，候选版本结果此字段为 true。
      *
-     * @since 1.4.0
+     * @since 1.0.0
      */
     @Builder.Default
     private boolean canary = false;
@@ -105,7 +105,7 @@ public class RuleResult implements Serializable {
      *
      * <p>对于单结果策略（UNIQUE/FIRST/PRIORITY/ANY），此字段为空列表。
      *
-     * @since 1.5.0
+     * @since 1.0.0
      */
     @Builder.Default
     private List<RuleResult> collectedResults = Collections.emptyList();
@@ -145,7 +145,7 @@ public class RuleResult implements Serializable {
      * 获取严重度权重（P3-T1：消除 DefaultRuleEngine/ParallelRuleEvaluator 重复方法）
      *
      * @return 严重度权重值；severity 为 null 时返回 0
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public int getSeverityWeight() {
         return severity != null ? severity.getWeight() : 0;

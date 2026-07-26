@@ -24,7 +24,7 @@ import com.njydsz.agent.domain.rag.VectorStore;
  * <p>其中 k 为平滑常数（默认 60），rank_i(d) 为文档 d 在第 i 路检索中的排名（从 1 开始）。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public class HybridRetriever {
 

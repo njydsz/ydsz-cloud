@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * 上传时校验配额，删除时释放配额。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

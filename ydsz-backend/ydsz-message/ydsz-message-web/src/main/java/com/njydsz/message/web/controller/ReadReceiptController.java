@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P2-12: 提供邮件追踪像素和短信短链的 HTTP 回调端点。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "已读回执", description = "邮件追踪像素与短信短链回调")

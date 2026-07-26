@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  * StressTestResult result = service.run("BUDGET_WARN", factsList, 10, 1000, 100);
  * </pre>
  *
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RuleStressTestService {

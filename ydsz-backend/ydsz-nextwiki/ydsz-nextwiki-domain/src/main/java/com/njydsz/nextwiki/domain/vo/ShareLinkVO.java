@@ -13,7 +13,7 @@ import lombok.Data;
  * 分享链接 VO
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.domain.entity.FileAcl;
  * 文件 ACL MyBatis Mapper
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FileAclMapper extends BaseMapper<FileAcl> {

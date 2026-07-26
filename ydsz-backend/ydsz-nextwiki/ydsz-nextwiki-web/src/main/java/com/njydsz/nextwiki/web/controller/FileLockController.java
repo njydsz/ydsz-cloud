@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * P2-R2 修复：增加权限检查。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

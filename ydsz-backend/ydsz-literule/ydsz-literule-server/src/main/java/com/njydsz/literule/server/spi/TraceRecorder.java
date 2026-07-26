@@ -18,7 +18,7 @@ import com.njydsz.literule.api.RuleExecutionTrace;
  *   <li>支持历史 Trace 回放对比</li>
  * </ul>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface TraceRecorder {
 

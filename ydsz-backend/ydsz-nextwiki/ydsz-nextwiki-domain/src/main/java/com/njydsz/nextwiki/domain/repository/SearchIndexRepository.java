@@ -11,7 +11,7 @@ import com.njydsz.nextwiki.domain.entity.SearchIndex;
  * 领域层定义索引增删改查契约，基础设施层提供 MyBatis 实现。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public interface SearchIndexRepository {
 

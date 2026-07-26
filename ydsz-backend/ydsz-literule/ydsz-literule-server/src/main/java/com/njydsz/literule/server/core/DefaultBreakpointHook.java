@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>线程安全：断点集合与快照列表基于并发容器；阻塞 latch 按规则编码隔离，
  * 同一规则同一时刻仅允许一个评估线程进入 SUSPEND。
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 public class DefaultBreakpointHook implements BreakpointHook {
 
@@ -75,7 +75,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
      * <p>由 {@code LiteRuleProperties.debug.suspend-timeout-seconds} 配置注入。
      *
      * @param suspendTimeoutSeconds SUSPEND 最大等待时间（秒），必须 > 0
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public DefaultBreakpointHook(long suspendTimeoutSeconds) {
         if (suspendTimeoutSeconds <= 0) {
@@ -103,7 +103,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
      *
      * @param ruleCode  规则编码
      * @param condition 条件表达式（null 或空表示无条件断点）
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public void addConditionalBreakpoint(String ruleCode, String condition) {
         if (ruleCode != null && !ruleCode.isBlank()) {
@@ -120,7 +120,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
      * 添加 Watch 表达式（2.0.0）
      *
      * @param expression 表达式
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public void addWatch(String expression) {
         if (expression != null && !expression.isBlank()) {
@@ -132,7 +132,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
      * 移除 Watch 表达式（2.0.0）
      *
      * @param expression 表达式
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public void removeWatch(String expression) {
         watchExpressions.remove(expression);
@@ -142,7 +142,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
      * 获取 Watch 表达式列表（2.0.0）
      *
      * @return 不可修改的 Watch 表达式列表
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public List<String> getWatchExpressions() {
         return Collections.unmodifiableList(watchExpressions);
@@ -152,7 +152,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
      * 获取条件断点映射（2.0.0）
      *
      * @return 不可修改的条件断点映射
-     * @since 2.0.0
+     * @since 1.0.0
      */
     public Map<String, String> getConditionalBreakpoints() {
         return Collections.unmodifiableMap(conditionalBreakpoints);

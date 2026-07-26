@@ -55,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>并发安全：ydsz-common-cache 的 {@code cache.get(key, mapper)} 保证同一 key 仅一个线程执行加载，
  * 其余线程阻塞等待结果，天然防止缓存击穿。
  *
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 public class CachingRuleConfigProvider implements RuleConfigProvider {

@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
  *   <li>{@link #ACTION_CANCEL} - 撤回审核</li>
  * </ul>
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 @Builder

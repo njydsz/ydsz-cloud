@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
  * 每次单条发送完成后更新 success/failed/skipped 计数，前端轮询查询进度。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder

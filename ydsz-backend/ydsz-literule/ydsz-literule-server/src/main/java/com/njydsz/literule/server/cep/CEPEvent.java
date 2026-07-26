@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>attributes：事件属性（用于聚合、模式匹配时的字段比较）</li>
  * </ul>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @Builder(toBuilder = true)

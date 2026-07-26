@@ -10,7 +10,7 @@ import lombok.Data;
  * 状态变更为 PUBLISHED，并记录审批人、审批时间、审批意见。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则审批通过请求体")

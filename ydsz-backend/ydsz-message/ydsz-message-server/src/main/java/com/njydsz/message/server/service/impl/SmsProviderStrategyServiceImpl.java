@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * 成本优先按 provider 成本排序，可用性优先跳过连续失败超过阈值的 provider。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

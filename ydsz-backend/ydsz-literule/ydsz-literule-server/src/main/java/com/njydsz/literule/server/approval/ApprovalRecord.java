@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
  *   <li>{@link #STATUS_CANCELLED} - 已撤回</li>
  * </ul>
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 @Builder

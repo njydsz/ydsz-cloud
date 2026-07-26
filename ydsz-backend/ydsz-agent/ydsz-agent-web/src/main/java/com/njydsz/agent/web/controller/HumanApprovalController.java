@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

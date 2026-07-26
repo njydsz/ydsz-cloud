@@ -79,7 +79,7 @@ public class RuleHotReloader {
      * 设置决策表配置提供者
      *
      * @param provider 决策表配置提供者
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setDecisionTableConfigProvider(DecisionTableConfigProvider provider) {
         this.decisionTableConfigProvider = provider;
@@ -89,7 +89,7 @@ public class RuleHotReloader {
      * 设置评分卡配置提供者
      *
      * @param provider 评分卡配置提供者
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setScorecardConfigProvider(ScorecardConfigProvider provider) {
         this.scorecardConfigProvider = provider;
@@ -99,7 +99,7 @@ public class RuleHotReloader {
      * 设置决策树配置提供者
      *
      * @param provider 决策树配置提供者
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setDecisionTreeConfigProvider(DecisionTreeConfigProvider provider) {
         this.decisionTreeConfigProvider = provider;
@@ -109,7 +109,7 @@ public class RuleHotReloader {
      * 设置脚本规则配置提供者
      *
      * @param provider 脚本配置提供者
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public void setScriptConfigProvider(ScriptConfigProvider provider) {
         this.scriptConfigProvider = provider;

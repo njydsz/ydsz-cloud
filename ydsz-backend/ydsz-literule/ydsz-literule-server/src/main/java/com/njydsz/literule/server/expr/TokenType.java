@@ -6,7 +6,7 @@ package com.njydsz.literule.server.expr.liteexpr;
  * <p>定义自研表达式引擎的所有词法单元类型。Lexer 将源代码拆分为
  * {@link Token} 序列，每个 Token 携带一个 {@link TokenType}。
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 public enum TokenType {
 

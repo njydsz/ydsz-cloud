@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * 文件分享 REST API
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

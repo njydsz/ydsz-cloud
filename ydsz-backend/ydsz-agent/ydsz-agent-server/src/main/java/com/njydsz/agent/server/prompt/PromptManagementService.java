@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
  * <p>当前使用内存存储，生产环境可替换为数据库实现。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Service
 public class PromptManagementService {

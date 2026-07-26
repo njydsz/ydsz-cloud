@@ -54,7 +54,7 @@ public interface ExpressionEvaluator {
      *
      * @param expression 表达式字符串
      * @return 校验结果
-     * @since 1.4.0
+     * @since 1.0.0
      */
     default ExpressionValidationResult validateDetailed(String expression) {
         long start = System.nanoTime();
@@ -74,7 +74,7 @@ public interface ExpressionEvaluator {
      * <p>用于向前端暴露自动补全 + 文档悬浮。
      * 默认返回 {@link ExpressionFunctionDef#defaults()}。
      *
-     * @since 1.5.0
+     * @since 1.0.0
      */
     default List<ExpressionFunctionDef> registeredFunctionDefs() {
         return ExpressionFunctionDef.defaults();
@@ -91,7 +91,7 @@ public interface ExpressionEvaluator {
      * @param expression 表达式字符串
      * @param context    规则上下文
      * @return 求值结果 + 追踪树
-     * @since 1.6.0
+     * @since 1.0.0
      */
     default TraceResult evalBooleanWithTrace(String expression, RuleContext context) {
         long start = System.nanoTime();
@@ -109,7 +109,7 @@ public interface ExpressionEvaluator {
     /**
      * 表达式追踪结果
      *
-     * @since 1.6.0
+     * @since 1.0.0
      */
     record TraceResult(boolean result, ExpressionTraceNode traceTree) {}
 }

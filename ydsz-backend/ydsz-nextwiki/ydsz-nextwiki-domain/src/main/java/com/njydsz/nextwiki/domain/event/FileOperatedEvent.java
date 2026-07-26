@@ -13,7 +13,7 @@ import lombok.Data;
  * 由异步监听器驱动后续管线：索引同步、缩略图生成、审计记录、通知推送。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

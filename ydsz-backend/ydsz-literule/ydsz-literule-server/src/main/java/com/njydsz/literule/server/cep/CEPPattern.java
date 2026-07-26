@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * - threshold: 5
  * </pre>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @Builder(toBuilder = true)

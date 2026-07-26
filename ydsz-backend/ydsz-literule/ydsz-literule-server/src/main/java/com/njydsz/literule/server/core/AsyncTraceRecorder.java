@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>优雅关闭：{@link #shutdown} 等待剩余事件写入</li>
  * </ul>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 public class AsyncTraceRecorder implements TraceRecorder {
@@ -116,7 +116,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
      * 获取当前队列积压大小
      *
      * @return 队列中的待写入轨迹数
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public int getQueueSize() {
         return queue.size();
@@ -126,7 +126,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
      * 获取队列总容量
      *
      * @return 队列容量
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public int getQueueCapacity() {
         return queueCapacity;
@@ -136,7 +136,7 @@ public class AsyncTraceRecorder implements TraceRecorder {
      * 检查后台线程是否仍在运行
      *
      * @return true 表示后台线程正在运行
-     * @since 2.3.0
+     * @since 1.0.0
      */
     public boolean isRunning() {
         return running.get();

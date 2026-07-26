@@ -4,7 +4,7 @@ package com.njydsz.nextwiki.domain.enums;
  * 网盘知识库枚举集合
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class NextwikiEnums {
 

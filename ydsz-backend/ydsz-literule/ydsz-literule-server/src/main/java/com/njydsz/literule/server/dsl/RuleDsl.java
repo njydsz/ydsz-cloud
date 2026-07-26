@@ -53,7 +53,7 @@ import lombok.NoArgsConstructor;
  *     step: HIGH_AMOUNT_RULE
  * </pre>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @Builder

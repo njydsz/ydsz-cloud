@@ -16,7 +16,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
  * 文件节点 MyBatis Mapper
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FileNodeMapper extends BaseMapper<FileNode> {

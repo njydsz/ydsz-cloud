@@ -20,7 +20,7 @@ import lombok.Data;
  *   <li>新增 {@code usageCount} 反映模板被引用次数，用于市场排序</li>
  * </ul>
  *
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

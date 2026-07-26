@@ -12,7 +12,7 @@ import java.util.List;
  *   <li>RedisNodeRegistry - 基于 Redis 的分布式注册表（生产环境，由消费方实现）</li>
  * </ul>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 public interface NodeRegistry {
 

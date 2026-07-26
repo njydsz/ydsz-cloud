@@ -21,7 +21,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * <p><b>稳定性：</b>错误码是业务契约，修改/废弃必须保留向前兼容。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public enum NextwikiExceptionCode implements ExceptionCode {
 

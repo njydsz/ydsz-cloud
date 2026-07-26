@@ -20,7 +20,7 @@ import com.njydsz.message.domain.entity.core.MsgLogDO;
  * <p>降级策略：ES 不可用时降级为数据库 LIKE 查询（性能较差但功能可用）。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 public interface MessageArchiveService {
 

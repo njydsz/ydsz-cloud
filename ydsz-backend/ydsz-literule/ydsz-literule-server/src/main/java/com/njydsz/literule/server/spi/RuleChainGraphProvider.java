@@ -8,7 +8,7 @@ import com.njydsz.literule.server.orchestrator.RuleChainGraph;
  * <p>由消费方（如 project 模块）提供实现，提供画布的 CRUD 与持久化能力。
  * 将原有 {@code RuleChainGraphService} 的能力抽象为 SPI，避免 literule 模块直接依赖 project 模块。
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 public interface RuleChainGraphProvider {
 

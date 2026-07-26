@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
  * └── Final = false (short-circuit at 2nd condition)
  * </pre>
  *
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Data
 @Builder

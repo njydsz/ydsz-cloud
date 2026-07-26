@@ -10,7 +10,7 @@ import com.njydsz.common.exception.custom.InfrastructureException;
  *
  * <p>继承 {@link InfrastructureException}，纳入 common-exception 统一异常体系。
  *
- * @since 2.1.0
+ * @since 1.0.0
  */
 public class FactCollectionException extends InfrastructureException {
 

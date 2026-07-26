@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
  * 转换为可执行规则。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * TTL: 默认 5 分钟（300s）,可通过配置调整。
  *
  * @author ydsydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

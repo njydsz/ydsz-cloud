@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
  * <p>提供模板渲染预览接口,前端编辑模板时可实时预览渲染效果。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Tag(name = "模板预览", description = "模板渲染预览")
 @RestController

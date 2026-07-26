@@ -21,7 +21,7 @@ import com.njydsz.common.file.storage.IFileStorageProvider;
  * 消除跨 5 个 Service 重复的工具方法和 MultipartFile 适配器实现。
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 public final class NextwikiFileUtils {
 

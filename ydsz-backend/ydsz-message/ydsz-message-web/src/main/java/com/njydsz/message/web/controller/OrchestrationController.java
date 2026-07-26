@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P1-9: 提供 DAG 流程编排接口，支持多节点依赖、条件分支和失败策略。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Tag(name = "消息编排", description = "DAG 流程编排引擎")

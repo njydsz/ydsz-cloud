@@ -60,7 +60,7 @@ import lombok.NoArgsConstructor;
  *     max_iterations: 5
  * </pre>
  *
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -26,7 +26,7 @@ import java.util.Map;
  *   <li>{@link TemplateStringNode} — 模板字符串 `Hello ${name}`</li>
  * </ul>
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
 
 // ===== AST 节点接口 =====

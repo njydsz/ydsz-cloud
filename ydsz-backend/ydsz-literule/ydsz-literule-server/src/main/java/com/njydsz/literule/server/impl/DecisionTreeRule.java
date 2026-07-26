@@ -71,7 +71,7 @@ public class DecisionTreeRule implements Rule {
      * @param def       决策树定义
      * @param evaluator 表达式求值器
      * @return DecisionTreeRule 实例
-     * @since 1.4.0
+     * @since 1.0.0
      */
     public static DecisionTreeRule from(DecisionTreeDefinition def, ExpressionEvaluator evaluator) {
         return new DecisionTreeRule(

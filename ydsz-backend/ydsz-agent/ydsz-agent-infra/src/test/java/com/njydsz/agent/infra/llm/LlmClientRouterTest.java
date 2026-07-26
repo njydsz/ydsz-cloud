@@ -43,7 +43,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("LLM 客户端路由器 LlmClientRouter 测试")
 @ExtendWith(MockitoExtension.class)

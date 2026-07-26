@@ -12,7 +12,7 @@ import com.njydsz.literule.domain.entity.RuleDependencyDO;
  * 规则依赖关系 Mapper（P1-8）
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Mapper
 public interface RuleDependencyMapper extends BaseMapper<RuleDependencyDO> {

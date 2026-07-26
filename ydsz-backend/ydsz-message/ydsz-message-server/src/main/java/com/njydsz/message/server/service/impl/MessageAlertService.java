@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>告警去重：同一告警 5 分钟内只发一次（Redis SET NX EX）。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

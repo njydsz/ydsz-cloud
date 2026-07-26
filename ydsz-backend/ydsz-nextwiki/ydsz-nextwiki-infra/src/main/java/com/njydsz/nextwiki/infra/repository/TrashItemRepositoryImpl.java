@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
  * 回收站仓储实现
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Repository
 @RequiredArgsConstructor

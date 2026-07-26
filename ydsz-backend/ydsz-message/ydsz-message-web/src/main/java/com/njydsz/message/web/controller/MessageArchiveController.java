@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  * 消息归档搜索 Controller（P0-5）。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
 @RestController

@@ -12,7 +12,7 @@ import com.njydsz.agent.domain.entity.AgentDefinitionDO;
  * {@link AgentDefinition} 领域对象供 {@link AgentFactory} 使用。
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public interface AgentDefinitionService {
 

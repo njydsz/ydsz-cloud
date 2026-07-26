@@ -9,7 +9,7 @@ import com.njydsz.message.domain.entity.config.MsgVariableSourceDO;
  * 消息变量数据源 Mapper。
  *
  * @author ydsz-team
- * @since 1.5.0
+ * @since 1.0.0
  */
 @Mapper
 public interface MsgVariableSourceMapper extends BaseMapper<MsgVariableSourceDO> {

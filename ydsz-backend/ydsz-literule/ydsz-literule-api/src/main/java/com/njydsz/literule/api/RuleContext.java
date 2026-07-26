@@ -91,7 +91,7 @@ public final class RuleContext implements Serializable {
      * @param tenantId    租户 ID
      * @param environment 环境标识（dev/staging/prod/default）
      * @return RuleContext 实例
-     * @since 1.6.0
+     * @since 1.0.0
      */
     public static RuleContext of(Map<String, Object> facts, String scenario, String source,
                                  String traceId, String tenantId, String environment) {
@@ -112,7 +112,7 @@ public final class RuleContext implements Serializable {
      * @param traceId  追踪 ID
      * @param tenantId 租户 ID
      * @return RuleContext 实例
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public static RuleContext of(Map<String, Object> facts, String scenario, String source,
                                  String traceId, String tenantId) {
@@ -184,7 +184,7 @@ public final class RuleContext implements Serializable {
      * 默认 "1"（单租户部署，向后兼容）。
      *
      * @return 租户 ID；默认 "1"
-     * @since 1.5.0
+     * @since 1.0.0
      */
     public String getTenantId() { return tenantId; }
 
@@ -196,7 +196,7 @@ public final class RuleContext implements Serializable {
      * 非 "default" 时必须与本字段完全匹配。默认 "default"（向后兼容）。
      *
      * @return 环境标识；默认 "default"
-     * @since 1.6.0
+     * @since 1.0.0
      */
     public String getEnvironment() { return environment; }
 
@@ -207,7 +207,7 @@ public final class RuleContext implements Serializable {
      * 仅读取不纳入序列化（{@code transient}）。
      *
      * @return 表达式缓存 Map（key=表达式，value=求值结果）
-     * @since 1.5.2
+     * @since 1.0.0
      */
     public Map<String, Object> getExpressionCache() {
         // P0-4 修复：双重检查锁确保线程安全的懒初始化
@@ -229,7 +229,7 @@ public final class RuleContext implements Serializable {
      *
      * <p>在复用同一 {@link RuleContext} 进行多次独立评估前调用，避免跨批次污染。
      *
-     * @since 1.5.2
+     * @since 1.0.0
      */
     public void clearExpressionCache() {
         if (expressionCache != null) {

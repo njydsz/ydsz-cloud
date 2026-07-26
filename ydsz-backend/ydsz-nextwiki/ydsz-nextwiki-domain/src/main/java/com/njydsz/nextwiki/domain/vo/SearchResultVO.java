@@ -11,7 +11,7 @@ import lombok.Data;
  * 全文搜索结果 VO
  *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Data
 @Builder

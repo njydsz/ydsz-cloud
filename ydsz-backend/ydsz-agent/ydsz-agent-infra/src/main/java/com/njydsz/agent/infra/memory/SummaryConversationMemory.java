@@ -35,7 +35,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
  * </pre>
  *
  * @author ydsz-team
- * @since 1.6.0
+ * @since 1.0.0
  */
 public class SummaryConversationMemory implements ConversationMemory {
 

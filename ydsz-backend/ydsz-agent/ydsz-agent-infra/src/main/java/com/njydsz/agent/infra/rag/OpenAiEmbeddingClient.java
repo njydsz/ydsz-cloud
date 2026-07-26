@@ -22,7 +22,7 @@ import com.njydsz.agent.domain.rag.EmbeddingClient;
  * <p>覆盖 OpenAI text-embedding-3-small/large、DeepSeek、通义千问等兼容 API。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public class OpenAiEmbeddingClient implements EmbeddingClient {
 
