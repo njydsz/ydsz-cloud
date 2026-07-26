@@ -56,6 +56,9 @@ public class DownloadController {
     private final NextwikiHealthIndicator healthIndicator;
     private final com.njydsz.nextwiki.domain.repository.FileNodeRepository fileNodeRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.njydsz.common.safe.util.ClientIpResolver clientIpResolver;
+
     /**
      * P1-3: 文件夹打包下载为 ZIP
      */
@@ -277,11 +280,14 @@ public class DownloadController {
     // ==================== 私有方法（HTTP 层处理） ====================
 
     /**
-     * P2-4: 委托 ClientIpResolver 解析客户端 IP（消除重复实现）
+     * P2-R3: 委托 ClientIpResolver 解析客户端 IP（可用时委托，不可用降级）
      */
     private String getClientIp(HttpServletRequest request) {
-        // 优先使用 common-safe 的 ClientIpResolver（如果可用）
-        // 当 ClientIpResolver Bean 未注入时降级到本地解析
+        // 优先使用 common-safe ClientIpResolver（如果 Bean 可用）
+        if (clientIpResolver != null) {
+            return clientIpResolver.resolve(request);
+        }
+        // 降级到本地解析
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty()) {
             ip = request.getHeader("X-Real-IP");

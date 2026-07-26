@@ -6,6 +6,8 @@ import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
 import com.njydsz.message.domain.entity.template.MsgTemplateDO;
 
+import java.util.Map;
+
 /**
  * 消息模板服务
  *
@@ -72,4 +74,19 @@ public interface TemplateService {
      * @param dto 审核参数
      */
     void audit(String id, TemplateAuditDTO dto);
+
+    /**
+     * GAP-3: 模板预览——渲染模板但不发送，供开发调试使用。
+     *
+     * <p>对标钉钉/飞书开放平台的模板预览 API，传入模板编码 + 参数，
+     * 返回渲染后的内容预览，不落库不发送。
+     *
+     * @param templateCode 模板编码
+     * @param channel      通道
+     * @param params       模板参数
+     * @param locale       语言区域（可为空）
+     * @param tenantId     租户 ID
+     * @return 渲染后的内容
+     */
+    String preview(String templateCode, String channel, Map<String, Object> params, String locale, String tenantId);
 }

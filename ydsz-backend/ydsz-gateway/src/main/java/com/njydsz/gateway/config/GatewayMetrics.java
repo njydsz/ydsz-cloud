@@ -1,6 +1,8 @@
 package com.njydsz.gateway.config;
 
 import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.springframework.stereotype.Component;
 
@@ -49,6 +51,17 @@ public class GatewayMetrics {
     private final MeterRegistry meterRegistry;
 
     /**
+     * P2-3: Counter 缓存（避免每次请求重复构建 Counter.builder().register()）
+     * <p>按 "name|tag1=v1,tag2=v2" 作为 key 缓存 Counter 实例。
+     */
+    private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+
+    /**
+     * P2-3: Timer 缓存（避免每次请求重复构建 Timer.builder().register()）
+     */
+    private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+
+    /**
      * 构造网关指标组件
      *
      * @param meterRegistry Micrometer 指标注册器
@@ -59,48 +72,45 @@ public class GatewayMetrics {
     }
 
     /**
-     * 记录请求延迟
-     *
-     * @param routeId   路由 ID
-     * @param method    HTTP 方法
-     * @param status    HTTP 状态码
-     * @param durationMs 延迟（毫秒）
+     * P2-3: 记录请求延迟（使用缓存 Timer）
      */
     public void recordRequestDuration(String routeId, String method, int status, long durationMs) {
-        Timer.builder(METRIC_REQUEST_DURATION)
-                .tags(Tags.of("route", routeId, "method", method, "status", String.valueOf(status)))
-                .description("Gateway request duration in seconds")
-                .register(meterRegistry)
-                .record(Duration.ofMillis(durationMs));
+        Tags tags = Tags.of("route", routeId, "method", method, "status", String.valueOf(status));
+        String cacheKey = METRIC_REQUEST_DURATION + "|" + tags;
+        Timer timer = timerCache.computeIfAbsent(cacheKey, k ->
+                Timer.builder(METRIC_REQUEST_DURATION)
+                        .tags(tags)
+                        .description("Gateway request duration in seconds")
+                        .register(meterRegistry));
+        timer.record(Duration.ofMillis(durationMs));
     }
 
     /**
-     * 增加请求计数
-     *
-     * @param routeId 路由 ID
-     * @param method  HTTP 方法
-     * @param status  HTTP 状态码
+     * P2-3: 增加请求计数（使用缓存 Counter）
      */
     public void incrementRequestTotal(String routeId, String method, int status) {
-        Counter.builder(METRIC_REQUEST_TOTAL)
-                .tags(Tags.of("route", routeId, "method", method, "status", String.valueOf(status)))
-                .description("Gateway request total count")
-                .register(meterRegistry)
-                .increment();
+        Tags tags = Tags.of("route", routeId, "method", method, "status", String.valueOf(status));
+        String cacheKey = METRIC_REQUEST_TOTAL + "|" + tags;
+        Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
+                Counter.builder(METRIC_REQUEST_TOTAL)
+                        .tags(tags)
+                        .description("Gateway request total count")
+                        .register(meterRegistry));
+        counter.increment();
     }
 
     /**
-     * 增加限流触发计数
-     *
-     * @param dimension 限流维度（IP / USER / TENANT）
-     * @param routeId   路由 ID
+     * P2-3: 增加限流触发计数（使用缓存 Counter）
      */
     public void incrementRatelimitTriggered(String dimension, String routeId) {
-        Counter.builder(METRIC_RATELIMIT_TRIGGERED)
-                .tags(Tags.of("dimension", dimension, "route", routeId))
-                .description("Gateway rate limit triggered count")
-                .register(meterRegistry)
-                .increment();
+        Tags tags = Tags.of("dimension", dimension, "route", routeId);
+        String cacheKey = METRIC_RATELIMIT_TRIGGERED + "|" + tags;
+        Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
+                Counter.builder(METRIC_RATELIMIT_TRIGGERED)
+                        .tags(tags)
+                        .description("Gateway rate limit triggered count")
+                        .register(meterRegistry));
+        counter.increment();
     }
 
     /**

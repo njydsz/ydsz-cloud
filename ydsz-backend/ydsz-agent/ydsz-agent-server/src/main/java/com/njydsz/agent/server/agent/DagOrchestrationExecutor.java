@@ -139,6 +139,16 @@ public class DagOrchestrationExecutor {
             }
         }
 
+        String nodeType = (String) node.getConfig().getOrDefault("nodeType", "AGENT");
+        if ("CONDITION".equalsIgnoreCase(nodeType)) {
+            executeConditionNode(node, results, completed, failed, executionId);
+            return;
+        }
+        if ("LOOP".equalsIgnoreCase(nodeType)) {
+            executeLoopNode(dag, node, userInput, results, usages, completed, failed, executionId);
+            return;
+        }
+
         String input = buildNodeInput(node, userInput, results);
         log.info("[DAG] 执行节点: id={}, type={}", node.getId(), node.getAgentType());
 
@@ -164,6 +174,128 @@ public class DagOrchestrationExecutor {
             log.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
             failed.add(node.getId());
         }
+    }
+
+    /**
+     * 执行条件分支节点
+     *
+     * <p>config 中需提供：
+     * <ul>
+     *   <li>condition: 条件表达式（简单包含判断，如 "results['nodeId'].contains('yes')"）</li>
+     *   <li>trueBranch: 条件为真时的跳转节点 ID</li>
+     *   <li>falseBranch: 条件为假时的跳转节点 ID（可选）</li>
+     * </ul>
+     */
+    private void executeConditionNode(AgentDag.Node node, Map<String, String> results,
+                                      Set<String> completed, Set<String> failed,
+                                      String executionId) {
+        String condition = (String) node.getConfig().get("condition");
+        String trueBranch = (String) node.getConfig().get("trueBranch");
+        String falseBranch = (String) node.getConfig().get("falseBranch");
+
+        log.info("[DAG] 执行条件节点: id={}, condition={}", node.getId(), condition);
+
+        boolean conditionResult = evaluateCondition(condition, results);
+        String branchNodeId = conditionResult ? trueBranch : falseBranch;
+
+        results.put(node.getId(), String.valueOf(conditionResult));
+        completed.add(node.getId());
+
+        if (branchNodeId != null) {
+            results.put("__BRANCH__" + node.getId(), branchNodeId);
+            log.info("[DAG] 条件路由: node={}, result={}, branch={}",
+                    node.getId(), conditionResult, branchNodeId);
+        }
+    }
+
+    /**
+     * 执行循环节点
+     *
+     * <p>config 中需提供：
+     * <ul>
+     *   <li>loopCondition: 循环继续条件表达式</li>
+     *   <li>maxIterations: 最大迭代次数（默认 10）</li>
+     *   <li>loopBody: 循环体节点 ID 列表（逗号分隔）</li>
+     * </ul>
+     */
+    private void executeLoopNode(AgentDag dag, AgentDag.Node node, String userInput,
+                                  Map<String, String> results,
+                                  Map<String, TokenUsage> usages,
+                                  Set<String> completed, Set<String> failed,
+                                  String executionId) {
+        String loopCondition = (String) node.getConfig().get("loopCondition");
+        int maxIter = node.getConfig().containsKey("maxIterations")
+                ? (Integer) node.getConfig().get("maxIterations") : 10;
+        String loopBodyStr = (String) node.getConfig().getOrDefault("loopBody", "");
+        List<String> loopBodyNodes = loopBodyStr.isBlank()
+                ? List.of() : List.of(loopBodyStr.split(","));
+
+        log.info("[DAG] 执行循环节点: id={}, maxIterations={}", node.getId(), maxIter);
+
+        int iteration = 0;
+        while (iteration < maxIter) {
+            if (!evaluateCondition(loopCondition, results)) {
+                break;
+            }
+            log.info("[DAG] 循环迭代: node={}, iteration={}", node.getId(), iteration + 1);
+            for (String bodyNodeId : loopBodyNodes) {
+                AgentDag.Node bodyNode = dag.getNodes().get(bodyNodeId.trim());
+                if (bodyNode != null && !failed.contains(bodyNodeId.trim())) {
+                    executeNodeLogic(dag, bodyNode, userInput, results, usages,
+                            completed, failed, executionId);
+                }
+            }
+            iteration++;
+        }
+
+        results.put(node.getId(), "loop_completed_" + iteration + "_iterations");
+        completed.add(node.getId());
+        log.info("[DAG] 循环完成: node={}, iterations={}", node.getId(), iteration);
+    }
+
+    /**
+     * 简单条件求值（支持 contains/equals/startsWith 等字符串操作）
+     */
+    private boolean evaluateCondition(String condition, Map<String, String> results) {
+        if (condition == null || condition.isBlank()) {
+            return true;
+        }
+        try {
+            String expr = condition.trim();
+            if (expr.contains(".contains(")) {
+                int idx = expr.indexOf(".contains(\"");
+                String varPart = expr.substring(0, idx);
+                String valuePart = expr.substring(idx + 11, expr.indexOf("\")"));
+                String resolved = resolveVariable(varPart.trim(), results);
+                return resolved.contains(valuePart);
+            }
+            if (expr.contains(".equals(")) {
+                int idx = expr.indexOf(".equals(\"");
+                String varPart = expr.substring(0, idx);
+                String valuePart = expr.substring(idx + 9, expr.indexOf("\")"));
+                String resolved = resolveVariable(varPart.trim(), results);
+                return resolved.equals(valuePart);
+            }
+            if (expr.contains(".startsWith(")) {
+                int idx = expr.indexOf(".startsWith(\"");
+                String varPart = expr.substring(0, idx);
+                String valuePart = expr.substring(idx + 13, expr.indexOf("\")"));
+                String resolved = resolveVariable(varPart.trim(), results);
+                return resolved.startsWith(valuePart);
+            }
+            return Boolean.parseBoolean(expr);
+        } catch (Exception e) {
+            log.warn("[DAG] 条件求值失败: condition={}, error={}", condition, e.getMessage());
+            return false;
+        }
+    }
+
+    private String resolveVariable(String varExpr, Map<String, String> results) {
+        if (varExpr.startsWith("results['") || varExpr.startsWith("results[\"")) {
+            String nodeId = varExpr.substring(9, varExpr.length() - 2);
+            return results.getOrDefault(nodeId, "");
+        }
+        return results.getOrDefault(varExpr, varExpr);
     }
 
     /**

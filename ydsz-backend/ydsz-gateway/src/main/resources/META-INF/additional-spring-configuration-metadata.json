@@ -1,0 +1,260 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.gateway.internal-sign-secret",
+      "type": "java.lang.String",
+      "description": "内部头签名密钥（HMAC-SHA256），与 JWT 密钥分离。生产环境通过环境变量注入。",
+      "defaultValue": ""
+    },
+    {
+      "name": "ydsz.gateway.websocket.allowed-origins",
+      "type": "java.lang.String",
+      "description": "WebSocket Origin 白名单，逗号分隔，支持通配符。",
+      "defaultValue": ""
+    },
+    {
+      "name": "ydsz.gateway.health-probe.paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "K8s 健康探针路径放行列表。"
+    },
+    {
+      "name": "ydsz.gateway.httpclient.pool.max-connections",
+      "type": "java.lang.int",
+      "description": "HttpClient 连接池最大连接数（每路由维度）。",
+      "defaultValue": 500
+    },
+    {
+      "name": "ydsz.gateway.httpclient.pool.pending-acquire-timeout-ms",
+      "type": "java.lang.long",
+      "description": "获取连接超时（毫秒）。",
+      "defaultValue": 45000
+    },
+    {
+      "name": "ydsz.gateway.httpclient.pool.max-idle-time-seconds",
+      "type": "java.lang.long",
+      "description": "连接最大空闲时间（秒）。",
+      "defaultValue": 30
+    },
+    {
+      "name": "ydsz.gateway.httpclient.pool.max-life-time-seconds",
+      "type": "java.lang.long",
+      "description": "连接最大生命周期（秒）。",
+      "defaultValue": 60
+    },
+    {
+      "name": "ydsz.gateway.httpclient.pool.eviction-interval-seconds",
+      "type": "java.lang.long",
+      "description": "后台驱逐检查间隔（秒）。",
+      "defaultValue": 60
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用精细化限流。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-user.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用用户级限流。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-user.default-qps",
+      "type": "java.lang.int",
+      "description": "用户级默认每秒请求数。",
+      "defaultValue": 50
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-user.burst-capacity",
+      "type": "java.lang.int",
+      "description": "用户级突发容量（令牌桶）。",
+      "defaultValue": 100
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-ip.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 IP 级限流。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-ip.default-qps",
+      "type": "java.lang.int",
+      "description": "IP 级默认每秒请求数。",
+      "defaultValue": 30
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-ip.burst-capacity",
+      "type": "java.lang.int",
+      "description": "IP 级突发容量。",
+      "defaultValue": 60
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-tenant.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用租户级限流。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-tenant.default-qps",
+      "type": "java.lang.int",
+      "description": "租户级默认每秒请求数。",
+      "defaultValue": 500
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.per-tenant.burst-capacity",
+      "type": "java.lang.int",
+      "description": "租户级突发容量。",
+      "defaultValue": 1000
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.response-headers.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否返回限流响应头。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.ratelimit.response-headers.retry-after",
+      "type": "java.lang.int",
+      "description": "Retry-After 头值（秒）。",
+      "defaultValue": 5
+    },
+    {
+      "name": "ydsz.gateway.security-headers.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用安全响应头（全局开关）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.csp.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Content-Security-Policy 响应头。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.csp.unsafe-eval",
+      "type": "java.lang.boolean",
+      "description": "是否允许 unsafe-eval（仅开发环境）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.gateway.security-headers.hsts.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Strict-Transport-Security 响应头。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.hsts.max-age",
+      "type": "java.lang.long",
+      "description": "HSTS max-age（秒）。",
+      "defaultValue": 31536000
+    },
+    {
+      "name": "ydsz.gateway.security-headers.hsts.include-subdomains",
+      "type": "java.lang.boolean",
+      "description": "HSTS 是否包含子域名。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.hsts.preload",
+      "type": "java.lang.boolean",
+      "description": "是否启用 HSTS preload。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.coop.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Cross-Origin-Opener-Policy 响应头。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.coop.policy",
+      "type": "java.lang.String",
+      "description": "COOP 策略值。",
+      "defaultValue": "same-origin"
+    },
+    {
+      "name": "ydsz.gateway.security-headers.coep.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Cross-Origin-Embedder-Policy 响应头。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.coep.policy",
+      "type": "java.lang.String",
+      "description": "COEP 策略值。",
+      "defaultValue": "require-corp"
+    },
+    {
+      "name": "ydsz.gateway.security-headers.corp.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Cross-Origin-Resource-Policy 响应头。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.security-headers.corp.policy",
+      "type": "java.lang.String",
+      "description": "CORP 策略值。",
+      "defaultValue": "same-origin"
+    },
+    {
+      "name": "ydsz.gateway.dynamic-routes.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Nacos 动态路由。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.gateway.dynamic-routes.data-id",
+      "type": "java.lang.String",
+      "description": "Nacos 中路由配置的 DataId。",
+      "defaultValue": "gateway-routes.json"
+    },
+    {
+      "name": "ydsz.gateway.sentinel.nacos-datasource-enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Sentinel Nacos 数据源（动态规则推送）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.gateway.sentinel.degrade-rule-data-id",
+      "type": "java.lang.String",
+      "description": "Nacos 中 Sentinel 熔断降级规则的 DataId。",
+      "defaultValue": "ydsz-gateway-sentinel-degrade.json"
+    },
+    {
+      "name": "ydsz.gateway.sentinel.system-rule-data-id",
+      "type": "java.lang.String",
+      "description": "Nacos 中 Sentinel 系统保护规则的 DataId。",
+      "defaultValue": "ydsz-gateway-sentinel-system.json"
+    },
+    {
+      "name": "ydsz.gateway.sentinel.rule-group",
+      "type": "java.lang.String",
+      "description": "Nacos 中 Sentinel 规则的 Group。",
+      "defaultValue": "dev"
+    },
+    {
+      "name": "ydsz.gateway.sentinel.api-limits.enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 Sentinel API 级限流规则。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.security.ip-whitelist",
+      "type": "java.lang.String",
+      "description": "IP 白名单（逗号分隔，支持 CIDR 与单个 IP）。",
+      "defaultValue": ""
+    },
+    {
+      "name": "ydsz.security.ip-whitelist-enabled",
+      "type": "java.lang.boolean",
+      "description": "是否启用 IP 白名单校验。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.security.ip-whitelist-skip-paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "IP 白名单放行的路径前缀（健康检查、登录等必须公开的端点）。"
+    }
+  ]
+}

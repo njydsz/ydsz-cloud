@@ -34,6 +34,7 @@ import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.metrics.MessageServiceMetrics;
 import com.njydsz.message.server.service.core.MessageService;
+import com.njydsz.message.server.tracing.MessageTraceContext;
 import com.njydsz.message.server.util.MessageCompressor;
 
 import lombok.RequiredArgsConstructor;
@@ -161,7 +162,8 @@ public class MessageConsumer implements RocketMQListener<String> {
             }
         }
 
-        try {
+        // GAP-2: 全链路 Trace ID 贯穿——消费者入口设置 MDC traceId
+        try (MessageTraceContext ctx = MessageTraceContext.enter(request.getMessageId())) {
             inFlight.incrementAndGet();
             messageService.send(request);
             // P3-23: 记录消费延迟（从开始消费到消费完成的耗时）

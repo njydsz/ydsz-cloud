@@ -1,7 +1,5 @@
 package com.njydsz.common.core.metrics;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 

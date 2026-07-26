@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.njydsz.common.json.YdszJson;
@@ -60,6 +61,18 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
     private final IpWhitelistProperties properties;
 
     /**
+     * P2-4: 缓存解析后的白名单集合（避免每次请求都 split + stream + collect）
+     * <p>使用 AtomicReference 保证线程安全的缓存切换。
+     * 当 @RefreshScope 刷新 properties 时，下次请求会重新解析。
+     */
+    private final AtomicReference<Set<String>> cachedWhitelist = new AtomicReference<>(Set.of());
+
+    /**
+     * P2-4: 上一次解析的白名单原始字符串（用于检测配置是否变更）
+     */
+    private volatile String lastRawWhitelist = null;
+
+    /**
      * 核心过滤逻辑：开关校验 → 白名单解析 → 跳过路径 → IP 校验 → 拒绝/放行
      *
      * @param exchange 服务器 Web 交换上下文
@@ -73,8 +86,8 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        // 2) 解析白名单集合
-        Set<String> whitelist = parseWhitelist(properties.getIpWhitelist());
+        // 2) P2-4: 获取缓存的白名单集合（仅在配置变更时重新解析）
+        Set<String> whitelist = getOrParseWhitelist(properties.getIpWhitelist());
         // 白名单为空：视为未配置，放行所有（不启用白名单功能）
         if (whitelist.isEmpty()) {
             return chain.filter(exchange);
@@ -117,6 +130,27 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         return AUTH_FILTER_ORDER - 5;
+    }
+
+    /**
+     * P2-4: 获取缓存的白名单集合（仅在配置变更时重新解析）
+     *
+     * <p>当配置字符串与上次相同时直接返回缓存，避免每次请求都执行 split + stream + collect。
+     * 当 @RefreshScope 刷新 properties 后，配置字符串会变化，触发重新解析。
+     *
+     * @param raw 原始配置字符串
+     * @return 白名单条目集合
+     */
+    private Set<String> getOrParseWhitelist(String raw) {
+        // 配置未变更，直接返回缓存
+        if (raw != null ? raw.equals(lastRawWhitelist) : lastRawWhitelist == null) {
+            return cachedWhitelist.get();
+        }
+        // 配置变更，重新解析
+        Set<String> parsed = parseWhitelist(raw);
+        cachedWhitelist.set(parsed);
+        lastRawWhitelist = raw;
+        return parsed;
     }
 
     /**
