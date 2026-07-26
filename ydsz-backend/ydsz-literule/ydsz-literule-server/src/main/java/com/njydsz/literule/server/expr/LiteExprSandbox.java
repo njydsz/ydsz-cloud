@@ -9,8 +9,7 @@ import java.util.Set;
 /**
  * LiteExpr AST 级别沙箱
  *
- * <p>在 AST 层面进行安全校验，比 {@link com.njydsz.literule.server.expr.ExpressionSandbox}
- * 的词法分析更精准：
+ * <p>在 AST 层面进行安全校验，比传统词法分析更精准：
  * <ul>
  *   <li>检查 {@link MemberAccessNode} 的属性链是否在白名单中</li>
  *   <li>检查 {@link FunctionCallNode} 的函数名是否在白名单中</li>

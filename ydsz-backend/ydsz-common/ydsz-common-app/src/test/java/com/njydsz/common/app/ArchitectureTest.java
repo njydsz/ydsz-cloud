@@ -6,6 +6,7 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Configuration;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -56,13 +57,15 @@ class ArchitectureTest {
     }
 
     @Test
-    @DisplayName("过滤器/拦截器层不应反向依赖配置层（config）")
-    void filterAndInterceptorShouldNotDependOnConfig() {
+    @DisplayName("过滤器/拦截器层不应反向依赖配置层（config）的 @Configuration 装配类")
+    void filterAndInterceptorShouldNotDependOnConfigurationClass() {
         ArchRule rule = noClasses()
                 .that().resideInAnyPackage("..filter..", "..interceptor..")
                 .should().dependOnClassesThat()
                 .resideInAPackage("..config..")
-                .because("配置层负责装配过滤器/拦截器，过滤器/拦截器只应被装配，不应反向读取配置类的内部状态");
+                .and().areAnnotatedWith(Configuration.class)
+                .because("配置层的 @Configuration 类负责装配过滤器/拦截器，过滤器/拦截器只应被装配，"
+                        + "不应反向调用 @Configuration 类；但允许依赖 @ConfigurationProperties 属性类读取自身配置");
 
         rule.check(classes);
     }
