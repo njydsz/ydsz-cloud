@@ -50,13 +50,16 @@ public interface DictItemService {
     List<DictItemVO> listChildren(String parentId);
 
     /**
-     * 分页查询字典项。
+     * 分页查询字典项（支持搜索过滤）。
      *
      * @param pageNum  当前页码
      * @param pageSize 每页记录数
+     * @param typeCode 字典类型编码过滤（可选）
+     * @param itemCode 字典项编码模糊搜索（可选）
+     * @param status   状态过滤（可选）
      * @return 分页结果（VO）
      */
-    IPage<DictItemVO> page(int pageNum, int pageSize);
+    IPage<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status);
 
     /**
      * 查询全部字典项（仅内部使用）。

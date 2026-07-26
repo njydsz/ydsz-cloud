@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.web.controller.log;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -113,6 +114,73 @@ public class JobLogController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "100") int size) {
         return BaseResponse.success(jobLogContentService.searchByKeyword(logId, keyword, page, size));
+    }
+
+    /**
+     * P1-B3: 下载执行日志为文本文件。
+     *
+     * <p>对标 XXL-Job 的日志文件下载功能，将指定执行日志的全部内容
+     * 以纯文本格式返回，Content-Disposition 触发浏览器下载。
+     *
+     * @param logId 执行日志 ID
+     * @return 文本文件响应
+     */
+    @Operation(summary = "下载执行日志")
+    @GetMapping("/content/download")
+    public org.springframework.http.ResponseEntity<byte[]> downloadContent(
+            @RequestParam String logId) {
+        List<JobLogContentDO> allLines = jobLogContentService.pageByLogId(logId, 1, 100000);
+        StringBuilder sb = new StringBuilder();
+        for (JobLogContentDO line : allLines) {
+            sb.append(String.format("[%s] %s%n", line.getLogLevel(), line.getContent()));
+        }
+        byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String filename = "job-log-" + logId + ".log";
+        return org.springframework.http.ResponseEntity.ok()
+                .header("Content-Disposition",
+                        "attachment; filename=\"" + filename + "\"")
+                .header("Content-Type", "text/plain; charset=UTF-8")
+                .body(bytes);
+    }
+
+    /**
+     * P1-B6: 对比两次执行结果。
+     *
+     * <p>对标 PowerJob 的 InstanceDTO diff，对比同一任务的两次执行日志
+     * 的结果 JSON 差异，便于排查执行结果变化原因。
+     *
+     * @param logId1 执行日志 ID 1
+     * @param logId2 执行日志 ID 2
+     * @return 统一响应结果，包含两次执行的状态/耗时/结果对比
+     */
+    @Operation(summary = "对比两次执行结果")
+    @GetMapping("/compare")
+    public BaseResponse<Map<String, Object>> compareExecutions(
+            @RequestParam String logId1,
+            @RequestParam String logId2) {
+        JobLogDO log1 = jobLogMapper.selectById(logId1);
+        JobLogDO log2 = jobLogMapper.selectById(logId2);
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        if (log1 == null || log2 == null) {
+            return BaseResponse.error("404", "执行日志不存在");
+        }
+        result.put("log1", Map.of(
+                "status", log1.getStatus(),
+                "durationMs", log1.getDurationMs() != null ? log1.getDurationMs() : 0,
+                "triggerType", log1.getTriggerType() != null ? log1.getTriggerType() : "",
+                "errorMessage", log1.getErrorMessage() != null ? log1.getErrorMessage() : ""));
+        result.put("log2", Map.of(
+                "status", log2.getStatus(),
+                "durationMs", log2.getDurationMs() != null ? log2.getDurationMs() : 0,
+                "triggerType", log2.getTriggerType() != null ? log2.getTriggerType() : "",
+                "errorMessage", log2.getErrorMessage() != null ? log2.getErrorMessage() : ""));
+        result.put("statusChanged", !java.util.Objects.equals(log1.getStatus(), log2.getStatus()));
+        result.put("durationDiffMs", (log2.getDurationMs() != null ? log2.getDurationMs() : 0)
+                - (log1.getDurationMs() != null ? log1.getDurationMs() : 0));
+        result.put("result1Json", log1.getResultJson() != null ? log1.getResultJson() : "");
+        result.put("result2Json", log2.getResultJson() != null ? log2.getResultJson() : "");
+        result.put("resultChanged", !java.util.Objects.equals(log1.getResultJson(), log2.getResultJson()));
+        return BaseResponse.success(result);
     }
 
     /**

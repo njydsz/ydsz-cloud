@@ -79,6 +79,57 @@ public class JobController {
     }
 
     /**
+     * P1-B1+B2: Cron 表达式校验 + 下次触发时间预览。
+     *
+     * <p>对标 XXL-Job 的 cronCheck 端点，在保存任务前验证 Cron 表达式合法性，
+     * 并返回下次 N 次触发时间，帮助用户确认调度频率正确。
+     *
+     * @param expr Cron 表达式
+     * @param count 预览次数（默认 5）
+     * @return 统一响应结果，包含校验结果和下次触发时间列表
+     */
+    @Operation(summary = "Cron 表达式校验 + 触发时间预览")
+    @GetMapping("/cron/validate")
+    public BaseResponse<Map<String, Object>> validateCron(
+            @RequestParam String expr,
+            @RequestParam(defaultValue = "5") int count) {
+        Map<String, Object> result = new java.util.HashMap<>();
+        try {
+            org.springframework.scheduling.support.CronExpression cron =
+                    org.springframework.scheduling.support.CronExpression.parse(expr);
+            result.put("valid", true);
+            java.util.List<String> nextFireTimes = new java.util.ArrayList<>();
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            for (int i = 0; i < count; i++) {
+                now = cron.next(now);
+                if (now == null) {
+                    break;
+                }
+                nextFireTimes.add(now.toString());
+            }
+            result.put("nextFireTimes", nextFireTimes);
+        } catch (IllegalArgumentException e) {
+            result.put("valid", false);
+            result.put("error", e.getMessage());
+        }
+        return BaseResponse.success(result);
+    }
+
+    /**
+     * P1-B5: 批量删除任务。
+     *
+     * @param dto 批量操作请求（含任务 ID 列表）
+     * @return 统一响应结果，包含成功处理的数量
+     */
+    @Operation(summary = "批量删除任务")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
+    @Idempotent(key = "job:batchDelete", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/batch/delete")
+    public BaseResponse<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
+        return BaseResponse.success(jobService.batchDelete(dto.getJobIds()));
+    }
+
+    /**
      * 删除任务
      *
      * @param id 任务 ID

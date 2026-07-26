@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * 字典项 Service 实现。
  *
  * <p>集成 Redis 缓存（TTL 可配置）、Micrometer 指标、缓存穿透防护（空值哨兵）、
- * 字典版本快照（写操作自动记录变更历史）。
+ * 字典版本快照（写操作自动记录变更历史，含完整快照支持回滚）。
  *
  * <p>缓存键：
  * <ul>
@@ -123,8 +123,19 @@ public class DictItemServiceImpl implements DictItemService {
     }
 
     @Override
-    public IPage<DictItemVO> page(int pageNum, int pageSize) {
-        IPage<DictItemDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), null);
+    public IPage<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status) {
+        QueryWrapper<DictItemDO> wrapper = new QueryWrapper<>();
+        if (typeCode != null && !typeCode.isBlank()) {
+            wrapper.eq("type_code", typeCode);
+        }
+        if (itemCode != null && !itemCode.isBlank()) {
+            wrapper.like("item_code", itemCode);
+        }
+        if (status != null && !status.isBlank()) {
+            wrapper.eq("status", status);
+        }
+        wrapper.orderByDesc("created_at");
+        IPage<DictItemDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<DictItemVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
         Page<DictItemVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
@@ -142,8 +153,7 @@ public class DictItemServiceImpl implements DictItemService {
         DictItemDO entity = toEntity(dto);
         mapper.insert(entity);
         evictCache(entity.getTypeCode());
-        dictVersionService.createVersion(entity.getTypeCode(),
-                "v" + System.currentTimeMillis(), "新增字典项: " + entity.getItemCode());
+        createSnapshotVersion(entity.getTypeCode(), "新增字典项: " + entity.getItemCode());
         return entity.getId();
     }
 
@@ -154,8 +164,7 @@ public class DictItemServiceImpl implements DictItemService {
         boolean result = mapper.updateById(entity) > 0;
         if (result) {
             evictCache(entity.getTypeCode());
-            dictVersionService.createVersion(entity.getTypeCode(),
-                    "v" + System.currentTimeMillis(), "更新字典项: " + entity.getItemCode());
+            createSnapshotVersion(entity.getTypeCode(), "更新字典项: " + entity.getItemCode());
         }
         return result;
     }
@@ -167,10 +176,25 @@ public class DictItemServiceImpl implements DictItemService {
         boolean result = mapper.deleteById(id) > 0;
         if (result && entity != null) {
             evictCache(entity.getTypeCode());
-            dictVersionService.createVersion(entity.getTypeCode(),
-                    "v" + System.currentTimeMillis(), "删除字典项: " + entity.getItemCode());
+            createSnapshotVersion(entity.getTypeCode(), "删除字典项: " + entity.getItemCode());
         }
         return result;
+    }
+
+    /**
+     * 创建字典版本快照（含当前 typeCode 下所有字典项的 JSON 快照，支持回滚）。
+     *
+     * @param typeCode  字典类型编码
+     * @param changeLog 变更说明
+     */
+    private void createSnapshotVersion(String typeCode, String changeLog) {
+        if (typeCode == null) {
+            return;
+        }
+        List<DictItemDO> snapshot = mapper.listEnabledByTypeCode(typeCode);
+        String snapshotJson = YdszJson.toJson(snapshot);
+        dictVersionService.createVersion(typeCode,
+                "v" + System.currentTimeMillis(), changeLog, snapshotJson);
     }
 
     private void evictCache(String typeCode) {
@@ -196,11 +220,11 @@ public class DictItemServiceImpl implements DictItemService {
         ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
         Set<String> keys = new HashSet<>();
         redisTemplate.execute((RedisCallback<Void>) connection -> {
-            Cursor<byte[]> cursor = connection.keyCommands().scan(options);
-            while (cursor.hasNext()) {
-                keys.add(new String(cursor.next()));
+            try (Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
+                while (cursor.hasNext()) {
+                    keys.add(new String(cursor.next()));
+                }
             }
-            cursor.close();
             return null;
         });
         return keys;

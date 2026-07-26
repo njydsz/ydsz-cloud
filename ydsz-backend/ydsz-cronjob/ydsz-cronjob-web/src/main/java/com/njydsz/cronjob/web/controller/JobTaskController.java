@@ -74,4 +74,41 @@ public class JobTaskController {
                 .orderByAsc(JobTaskDO::getCreatedAt);
         return BaseResponse.success(jobTaskMapper.selectPage(pageObj, wrapper));
     }
+
+    /**
+     * P0-A3: 查询子任务执行进度。
+     *
+     * <p>对标 XXL-Job 子任务进度页和 PowerJob InstanceDetail.taskList，
+     * 返回各状态子任务数量汇总，便于前端渲染进度条。
+     *
+     * @param logId 执行日志 ID
+     * @return 进度汇总（total/pending/running/success/failed）
+     */
+    @Operation(summary = "查询子任务执行进度")
+    @GetMapping("/progress")
+    public BaseResponse<java.util.Map<String, Object>> progress(@RequestParam String logId) {
+        java.util.List<JobTaskDO> all = jobTaskMapper.selectByLogId(logId);
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        int total = all.size();
+        int pending = 0, running = 0, success = 0, failed = 0;
+        for (JobTaskDO task : all) {
+            String status = task.getStatus();
+            if ("PENDING".equals(status)) {
+                pending++;
+            } else if ("RUNNING".equals(status)) {
+                running++;
+            } else if ("SUCCESS".equals(status)) {
+                success++;
+            } else if ("FAILED".equals(status)) {
+                failed++;
+            }
+        }
+        result.put("total", total);
+        result.put("pending", pending);
+        result.put("running", running);
+        result.put("success", success);
+        result.put("failed", failed);
+        result.put("progressPercent", total > 0 ? (int) ((success + failed) * 100.0 / total) : 0);
+        return BaseResponse.success(result);
+    }
 }

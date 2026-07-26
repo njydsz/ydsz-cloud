@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code system.config.cache.hit/miss} — 配置缓存命中/未命中</li>
  *   <li>{@code system.dict.query.total/duration} — 字典查询次数/耗时</li>
  *   <li>{@code system.dict.cache.hit/miss} — 字典缓存命中/未命中</li>
+ *   <li>{@code system.variable.read.total/duration} — 系统变量读取次数/耗时</li>
+ *   <li>{@code system.variable.cache.hit/miss} — 系统变量缓存命中/未命中</li>
  *   <li>{@code system.app.validate.success/fail} — 应用校验成功/失败</li>
  * </ul>
  *
@@ -39,6 +41,10 @@ public class SystemMetrics {
     private final Timer dictQueryTimer;
     private final Counter dictCacheHitCounter;
     private final Counter dictCacheMissCounter;
+    private final Counter variableReadCounter;
+    private final Timer variableReadTimer;
+    private final Counter variableCacheHitCounter;
+    private final Counter variableCacheMissCounter;
     private final Counter appValidateSuccessCounter;
     private final Counter appValidateFailCounter;
 
@@ -72,6 +78,18 @@ public class SystemMetrics {
                 .register(meterRegistry);
         this.dictCacheMissCounter = Counter.builder("system.dict.cache.miss")
                 .description("Dict cache miss count")
+                .register(meterRegistry);
+        this.variableReadCounter = Counter.builder("system.variable.read.total")
+                .description("Variable read total count")
+                .register(meterRegistry);
+        this.variableReadTimer = Timer.builder("system.variable.read.duration")
+                .description("Variable read duration")
+                .register(meterRegistry);
+        this.variableCacheHitCounter = Counter.builder("system.variable.cache.hit")
+                .description("Variable cache hit count")
+                .register(meterRegistry);
+        this.variableCacheMissCounter = Counter.builder("system.variable.cache.miss")
+                .description("Variable cache miss count")
                 .register(meterRegistry);
         this.appValidateSuccessCounter = Counter.builder("system.app.validate.success")
                 .description("App validate success count")
@@ -127,6 +145,30 @@ public class SystemMetrics {
      */
     public void recordDictCacheMiss() {
         dictCacheMissCounter.increment();
+    }
+
+    /**
+     * 记录系统变量读取。
+     *
+     * @param durationNanos 读取耗时（纳秒）
+     */
+    public void recordVariableRead(long durationNanos) {
+        variableReadCounter.increment();
+        variableReadTimer.record(durationNanos, TimeUnit.NANOSECONDS);
+    }
+
+    /**
+     * 记录系统变量缓存命中。
+     */
+    public void recordVariableCacheHit() {
+        variableCacheHitCounter.increment();
+    }
+
+    /**
+     * 记录系统变量缓存未命中。
+     */
+    public void recordVariableCacheMiss() {
+        variableCacheMissCounter.increment();
     }
 
     /**

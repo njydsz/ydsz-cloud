@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.system.domain.entity.DictVersionDO;
+import com.njydsz.system.domain.vo.DictVersionVO;
 import com.njydsz.system.server.service.DictVersionService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +32,7 @@ public class DictVersionController {
 
     @Operation(summary = "按类型编码查询版本历史")
     @GetMapping("/{typeCode}")
-    public BaseResponse<List<DictVersionDO>> listByTypeCode(@PathVariable String typeCode) {
+    public BaseResponse<List<DictVersionVO>> listByTypeCode(@PathVariable String typeCode) {
         return BaseResponse.success(service.listByTypeCode(typeCode));
     }
 }

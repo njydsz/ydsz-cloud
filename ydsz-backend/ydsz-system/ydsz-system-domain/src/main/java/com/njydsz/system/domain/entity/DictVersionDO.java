@@ -44,5 +44,6 @@ public class DictVersionDO {
     private String typeCode;
     private String version;
     private String changeLog;
+    private String snapshotJson;
     private LocalDateTime effectiveDate;
 }
