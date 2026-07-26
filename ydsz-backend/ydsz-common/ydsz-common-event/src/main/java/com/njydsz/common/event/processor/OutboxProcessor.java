@@ -140,6 +140,12 @@ public class OutboxProcessor {
         }
     }
 
+    /**
+     * 获取缓存的队列深度
+     *
+     * @param status 消息状态
+     * @return 该状态下的消息数量
+     */
     private long getCachedCount(OutboxStatus status) {
         return cachedStatusCounts.getOrDefault(status.name(), 0L);
     }
@@ -243,6 +249,8 @@ public class OutboxProcessor {
      *
      * <p>当 workerThreads=1 时直接在调度线程中执行（同步），避免线程切换开销。
      * 当 workerThreads>1 时提交到线程池异步执行。
+     *
+     * @param messages 待投递消息列表
      */
     private void dispatchPublish(List<OutboxMessage> messages) {
         Runnable task = messages.size() > 1
@@ -285,6 +293,11 @@ public class OutboxProcessor {
         }
     }
 
+    /**
+     * 处理单条消息投递
+     *
+     * @param message Outbox 消息
+     */
     private void processSingle(OutboxMessage message) {
         long startNanos = System.nanoTime();
         try {
@@ -304,6 +317,12 @@ public class OutboxProcessor {
         }
     }
 
+    /**
+     * 处理投递失败：更新重试计数、计算退避时间、判断是否进入死信
+     *
+     * @param message      Outbox 消息
+     * @param errorMessage 错误信息
+     */
     private void handleFailure(OutboxMessage message, String errorMessage) {
         long backoff = calculateBackoff(message.getRetryCount());
         outboxRepository.markAsFailed(message.getId(), errorMessage, backoff);
@@ -336,6 +355,8 @@ public class OutboxProcessor {
 
     /**
      * 回收超时的 PROCESSING 消息
+     *
+     * @param thresholdMinutes 超时阈值（分钟）
      */
     private void reclaimStaleMessages(int thresholdMinutes) {
         try {
@@ -358,12 +379,23 @@ public class OutboxProcessor {
         }
     }
 
+    /**
+     * 递增计数器（空安全）
+     *
+     * @param counter 计数器，可为 null
+     */
     private void incrementCounter(Counter counter) {
         if (counter != null) {
             counter.increment();
         }
     }
 
+    /**
+     * 记录耗时指标（空安全）
+     *
+     * @param timer        计时器，可为 null
+     * @param durationNanos 耗时（纳秒）
+     */
     private void recordTimer(Timer timer, long durationNanos) {
         if (timer != null) {
             timer.record(durationNanos, TimeUnit.NANOSECONDS);

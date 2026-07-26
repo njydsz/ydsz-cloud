@@ -14,6 +14,7 @@ import com.njydsz.common.cache.api.Cache;
  * <p>将 YdszCache 的 Cache 接口适配为 Spring Cache 的标准接口，
  * 支持 @Cacheable、@CachePut、@CacheEvict 等 Spring Cache 注解。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

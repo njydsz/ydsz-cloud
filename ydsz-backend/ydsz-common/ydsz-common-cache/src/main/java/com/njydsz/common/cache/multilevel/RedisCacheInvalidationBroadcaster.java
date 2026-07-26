@@ -29,7 +29,9 @@ import com.njydsz.common.json.YdszJson;
  * <p>注意：本类需要 Spring Data Redis 在 classpath 中。 如果 Redis 不可用，应降级为
  * NoopCacheInvalidationBroadcaster。
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroadcaster {
 

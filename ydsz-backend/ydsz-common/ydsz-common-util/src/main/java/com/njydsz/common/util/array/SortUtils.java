@@ -45,7 +45,11 @@ public class SortUtils {
     }
 
     /**
-     * 排序 (对象数组)
+     * 排序 (对象数组，使用自定义比较器)
+     *
+     * @param arr 待排序的对象数组，null 时跳过
+     * @param c   自定义比较器，不能为 null
+     * @param <T> 元素类型
      */
     public static <T> void sort(T[] arr, Comparator<? super T> c) {
         if (arr != null) {
@@ -54,7 +58,11 @@ public class SortUtils {
     }
 
     /**
-     * 排序 (List)
+     * 排序 (List，使用自定义比较器)
+     *
+     * @param list 待排序的 List，null 时跳过
+     * @param c    自定义比较器，不能为 null
+     * @param <T>  元素类型
      */
     public static <T> void sort(List<T> list, Comparator<? super T> c) {
         if (list != null) {
@@ -64,6 +72,9 @@ public class SortUtils {
 
     /**
      * 排序 (自然顺序，要求元素实现 Comparable 接口)
+     *
+     * @param arr 待排序的对象数组，null 时跳过
+     * @param <T> 实现了 Comparable 接口的元素类型
      */
     public static <T extends Comparable<? super T>> void sort(T[] arr) {
         if (arr != null) {
@@ -73,6 +84,9 @@ public class SortUtils {
 
     /**
      * 排序 List (自然顺序)
+     *
+     * @param list 待排序的 List，null 时跳过
+     * @param <T>  实现了 Comparable 接口的元素类型
      */
     public static <T extends Comparable<? super T>> void sort(List<T> list) {
         if (list != null) {
@@ -82,6 +96,10 @@ public class SortUtils {
 
     /**
      * 降序排序 (对象数组)
+     *
+     * @param arr 待排序的对象数组，null 时跳过
+     * @param c   自定义比较器，不能为 null
+     * @param <T> 元素类型
      */
     public static <T> void reverseSort(T[] arr, Comparator<? super T> c) {
         if (arr != null) {
@@ -91,6 +109,10 @@ public class SortUtils {
 
     /**
      * 降序排序 List
+     *
+     * @param list 待排序的 List，null 时跳过
+     * @param c    自定义比较器，不能为 null
+     * @param <T>  元素类型
      */
     public static <T> void reverseSort(List<T> list, Comparator<? super T> c) {
         if (list != null) {

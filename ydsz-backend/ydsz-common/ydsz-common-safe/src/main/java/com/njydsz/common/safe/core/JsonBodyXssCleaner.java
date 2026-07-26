@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>递归遍历 JSON 对象的所有字符串值，使用 EscapeUtils 清理潜在的 XSS 脚本。
  * 基于 YdszJson {@link JsonNode} 实现，与 YdszJson 引擎保持一致。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j

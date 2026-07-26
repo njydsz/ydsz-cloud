@@ -25,6 +25,8 @@ import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.feign.assembler.NameAssembler;
+import com.njydsz.common.feign.assembler.NameType;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.security.DataScopeHelper;
 import com.njydsz.common.security.LoginUser;
@@ -253,7 +255,19 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     @Transactional(readOnly = true)
     public FlowInstanceDO getById(String id) {
-        return instanceMapper.selectById(id);
+        FlowInstanceDO instance = instanceMapper.selectById(id);
+        if (instance == null) {
+            return null;
+        }
+        // P0-4: 读路径兜底富化 initiatorName，避免历史数据或写入遗漏导致前端显示空白
+        if (!StringUtils.hasText(instance.getInitiatorName())
+                && StringUtils.hasText(instance.getInitiatorId())) {
+            nameAssembler.enrichOne(instance,
+                    FlowInstanceDO::getInitiatorId,
+                    FlowInstanceDO::setInitiatorName,
+                    NameType.USER);
+        }
+        return instance;
     }
 
     @Override

@@ -16,7 +16,9 @@ import java.util.Collection;
  *   <li>Noop：不广播（适用于单节点部署）
  * </ul>
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public interface CacheInvalidationBroadcaster {
 

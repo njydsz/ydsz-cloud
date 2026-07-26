@@ -28,6 +28,7 @@ import com.njydsz.common.cache.support.AsyncFunction;
  *
  * @param <K> 键类型
  * @param <V> 值类型
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class AsyncCacheAdapter<K, V> implements AsyncCache<K, V> {

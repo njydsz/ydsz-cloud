@@ -40,7 +40,9 @@ import com.njydsz.common.cache.support.CacheWarmer;
  *         maximum-size: 20000
  * </pre>
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @AutoConfiguration
 @ConditionalOnClass(YdszCacheManager.class)

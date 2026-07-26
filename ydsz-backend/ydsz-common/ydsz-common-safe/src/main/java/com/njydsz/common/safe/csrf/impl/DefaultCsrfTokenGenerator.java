@@ -17,6 +17,7 @@ import com.njydsz.common.safe.csrf.CsrfTokenRepository;
  * <p>基于 SecureRandom + SHA-256 实现安全的令牌生成。
  * 验证时需要配合 {@link CsrfTokenRepository} 校验令牌是否存在于存储中。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see CsrfTokenGenerator

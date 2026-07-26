@@ -308,7 +308,7 @@ public class EscapeUtils {
      *
      * <p>将以下字符转换为转义序列：
      * 双引号、单引号、反斜杠、斜杠、尖括号、控制字符等。
-     * 非 ASCII 字符使用 {@code \\uXXXX} 格式转义。
+     * 非 ASCII 字符使用 {@code &#92;uXXXX} 格式转义。
      *
      * @param text 待转义的文本
      * @return 转义后的 JavaScript 安全字符串

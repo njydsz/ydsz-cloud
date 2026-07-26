@@ -15,6 +15,7 @@ package com.njydsz.common.safe.desensitize;
  *   <li>{@link #CUSTOM}：使用调用方提供的正则与替换模板</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see ColumnDesensitizationExecutor
  */

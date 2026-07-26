@@ -60,17 +60,27 @@ public class ThreadPoolProperties {
     public static class PoolConfig {
 
         /**
+         * 线程池类型：PLATFORM（平台线程，默认）或 VIRTUAL（虚拟线程，JDK 21+）。
+         * <p>虚拟线程池不受 coreSize/maxSize/queueCapacity 限制，
+         * 每个任务分配一个虚拟线程，适合 IO 密集型场景。
+         */
+        private PoolType type = PoolType.PLATFORM;
+
+        /**
          * 核心线程数（默认 2）。
+         * <p>仅对 PLATFORM 类型生效。
          */
         private int coreSize = 2;
 
         /**
          * 最大线程数（默认 8）。
+         * <p>仅对 PLATFORM 类型生效。
          */
         private int maxSize = 8;
 
         /**
          * 阻塞队列容量（默认 100）。
+         * <p>仅对 PLATFORM 类型生效。
          */
         private int queueCapacity = 100;
 
@@ -81,6 +91,7 @@ public class ThreadPoolProperties {
 
         /**
          * 拒绝策略（默认 CALLER_RUNS）。
+         * <p>仅对 PLATFORM 类型生效。
          */
         private RejectPolicy rejectPolicy = RejectPolicy.CALLER_RUNS;
 
@@ -91,13 +102,25 @@ public class ThreadPoolProperties {
 
         /**
          * 是否允许核心线程超时回收（默认 false）。
+         * <p>仅对 PLATFORM 类型生效。
          */
         private boolean allowCoreThreadTimeOut = false;
 
         /**
          * 线程空闲存活秒数（默认 60）。
+         * <p>仅对 PLATFORM 类型生效。
          */
         private int keepAliveSeconds = 60;
+    }
+
+    /**
+     * 线程池类型枚举。
+     */
+    public enum PoolType {
+        /** 平台线程池（传统 ThreadPoolExecutor） */
+        PLATFORM,
+        /** 虚拟线程池（JDK 21+，每任务一线程） */
+        VIRTUAL
     }
 
     /**

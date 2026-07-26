@@ -5,8 +5,8 @@ package com.njydsz.common.safe.csrf;
  *
  * <p>定义 CSRF 令牌的存储策略，支持自定义实现（如 Redis、内存等）。
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public interface CsrfTokenRepository {
 

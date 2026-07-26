@@ -24,6 +24,7 @@ import com.njydsz.common.safe.csrf.CsrfTokenRepository;
  *   <li>会话映射：csrf:session:{sessionId} -> tokenValue</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see CsrfTokenRepository

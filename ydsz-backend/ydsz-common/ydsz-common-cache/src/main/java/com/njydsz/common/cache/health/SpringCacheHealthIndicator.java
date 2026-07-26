@@ -21,6 +21,7 @@ import com.njydsz.common.cache.spring.YdszCacheManager;
  *   <li>DOWN → Health.down()
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class SpringCacheHealthIndicator implements HealthIndicator {

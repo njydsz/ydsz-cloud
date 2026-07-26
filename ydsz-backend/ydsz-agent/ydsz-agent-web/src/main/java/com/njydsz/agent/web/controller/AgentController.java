@@ -61,7 +61,7 @@ public class AgentController {
     private final AgentRequestGuard requestGuard;
     private final LlmClient llmClient;
     private final ScheduledExecutorService heartbeatScheduler =
-            Executors.newScheduledThreadPool(2, Thread.ofVirtual().factory());
+            Executors.newScheduledThreadPool(2, Thread.ofVirtual().name("agent-exec-heartbeat-", 0).factory());
 
     public AgentController(AgentFactory agentFactory, ToolRegistry toolRegistry,
                            AgentRequestGuard requestGuard, LlmClient llmClient) {

@@ -47,7 +47,9 @@ export interface SubmitExportParams {
 
 /** 提交导出任务响应 */
 export interface SubmitExportResult {
+  /** 记录 ID */
   recordId: string
+  /** 任务状态 */
   status: string
 }
 

@@ -40,7 +40,8 @@ import com.njydsz.common.json.autotype.SafeObjectInputFilter;
  *   <li>业务自定义类型如需反序列化，请通过 {@code AutoTypeChecker.addToWhitelist()} 显式注册
  * </ul>
  *
- *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class CacheExportImport {
 

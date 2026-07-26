@@ -44,6 +44,7 @@ import java.lang.annotation.*;
  * UserVO sanitized = SensitiveDataProcessor.process(userVO);
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see SensitiveType

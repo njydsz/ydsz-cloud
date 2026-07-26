@@ -42,11 +42,17 @@ export interface ReportSubscription {
 
 /** 创建报表订阅参数 */
 export interface CreateSubscriptionParams {
+  /** 报表类型 */
   reportType: string
+  /** 报表名称 */
   reportName: string
+  /** Cron 表达式 */
   cronExpression: string
+  /** 投递渠道（逗号分隔） */
   deliveryChannels: string
+  /** 投递邮箱（逗号分隔） */
   deliveryEmails?: string
+  /** 报表参数（JSON） */
   params: string
 }
 

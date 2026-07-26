@@ -23,6 +23,7 @@ import java.util.Set;
  * }
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see ColumnDesensitizationRule
  * @see ColumnDesensitizationExecutor

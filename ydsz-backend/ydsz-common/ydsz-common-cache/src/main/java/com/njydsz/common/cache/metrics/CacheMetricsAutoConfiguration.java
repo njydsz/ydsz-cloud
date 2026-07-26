@@ -40,7 +40,9 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  *   <li>cache.put.duration - PUT 操作耗时分布（Timer，含 P50/P90/P99）
  * </ul>
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)

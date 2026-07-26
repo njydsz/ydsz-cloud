@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
  * // masked = "138****5678"
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see ColumnDesensitizationRule
  * @see ColumnDesensitizationContext

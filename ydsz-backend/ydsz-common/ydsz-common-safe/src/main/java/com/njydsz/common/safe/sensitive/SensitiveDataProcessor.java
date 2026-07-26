@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
  *   <li>兼容不可变对象（返回新实例而非修改原对象）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see SensitiveData

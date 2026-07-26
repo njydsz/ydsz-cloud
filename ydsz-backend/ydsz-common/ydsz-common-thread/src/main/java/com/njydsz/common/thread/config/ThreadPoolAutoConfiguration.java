@@ -3,6 +3,8 @@ package com.njydsz.common.thread.config;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -23,6 +25,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.thread.health.ThreadHealthIndicator;
+import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
+import com.njydsz.common.thread.config.ThreadPoolProperties.PoolType;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -62,7 +66,9 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
     private final ThreadPoolProperties properties;
     private final ObjectProvider<MeterRegistry> meterRegistryProvider;
     private ConfigurableListableBeanFactory beanFactory;
+    private final Map<String, Object> allExecutors = new LinkedHashMap<>();
     private final Map<String, ThreadPoolTaskExecutor> executors = new LinkedHashMap<>();
+    private final Map<String, ExecutorService> virtualExecutors = new LinkedHashMap<>();
 
     /**
      * 构造线程池自动配置。
@@ -94,23 +100,38 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
             return;
         }
         properties.getPools().forEach((name, config) -> {
-            ThreadPoolTaskExecutor executor = createExecutor(name, config);
-            executors.put(name, executor);
-            beanFactory.registerSingleton(name + "Executor", executor);
-            log.info("ydsz-thread: 注册线程池 [{}] (core={}, max={}, queue={}, prefix={}, reject={})",
-                name, config.getCoreSize(), config.getMaxSize(), config.getQueueCapacity(),
-                config.getThreadNamePrefix(), config.getRejectPolicy());
+            if (config.getType() == PoolType.VIRTUAL) {
+                ExecutorService executor = createVirtualExecutor(name, config);
+                virtualExecutors.put(name, executor);
+                allExecutors.put(name, executor);
+                beanFactory.registerSingleton(name + "Executor", executor);
+                log.info("ydsz-thread: 注册虚拟线程池 [{}] (prefix={})", name, config.getThreadNamePrefix());
+            } else {
+                ThreadPoolTaskExecutor executor = createExecutor(name, config);
+                executors.put(name, executor);
+                allExecutors.put(name, executor);
+                beanFactory.registerSingleton(name + "Executor", executor);
+                log.info("ydsz-thread: 注册线程池 [{}] (core={}, max={}, queue={}, prefix={}, reject={})",
+                    name, config.getCoreSize(), config.getMaxSize(), config.getQueueCapacity(),
+                    config.getThreadNamePrefix(), config.getRejectPolicy());
+            }
         });
         bindMetrics();
     }
 
     @Override
     public void destroy() {
-        for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
-            log.info("ydsz-thread: 关闭线程池 [{}]", entry.getKey());
-            entry.getValue().shutdown();
-        }
+        executors.forEach((name, executor) -> {
+            log.info("ydsz-thread: 关闭线程池 [{}]", name);
+            executor.shutdown();
+        });
+        virtualExecutors.forEach((name, executor) -> {
+            log.info("ydsz-thread: 关闭虚拟线程池 [{}]", name);
+            executor.shutdown();
+        });
         executors.clear();
+        virtualExecutors.clear();
+        allExecutors.clear();
     }
 
     /**
@@ -134,7 +155,20 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
         return Collections.unmodifiableMap(executors);
     }
 
-    private ThreadPoolTaskExecutor createExecutor(String name, ThreadPoolProperties.PoolConfig config) {
+    /**
+     * 创建虚拟线程池（JDK 21+）。
+     *
+     * @param name   线程池名称
+     * @param config 线程池配置
+     * @return 虚拟线程 ExecutorService
+     */
+    private ExecutorService createVirtualExecutor(String name, PoolConfig config) {
+        return Executors.newThreadPerTaskExecutor(
+            Thread.ofVirtual().name(config.getThreadNamePrefix(), 0).factory()
+        );
+    }
+
+    private ThreadPoolTaskExecutor createExecutor(String name, PoolConfig config) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(config.getCoreSize());
         executor.setMaxPoolSize(config.getMaxSize());
@@ -170,7 +204,7 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
 
     private void bindMetrics() {
         MeterRegistry registry = meterRegistryProvider.getIfAvailable();
-        if (registry == null || executors.isEmpty()) {
+        if (registry == null || allExecutors.isEmpty()) {
             return;
         }
         executors.forEach((name, executor) -> {
@@ -192,6 +226,7 @@ public class ThreadPoolAutoConfiguration implements InitializingBean, Disposable
                 log.warn("ydsz-thread: 绑定线程池 [{}] 底层指标失败", name, e);
             }
         });
-        log.info("ydsz-thread: Micrometer 指标绑定完成 (pools={})", executors.size());
+        log.info("ydsz-thread: Micrometer 指标绑定完成 (platform={}, virtual={})",
+            executors.size(), virtualExecutors.size());
     }
 }

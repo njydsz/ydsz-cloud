@@ -34,7 +34,9 @@ import io.micrometer.core.instrument.Tags;
  * <p>注意：{@code cache.size} 始终返回 0，因为 CacheStats 不包含缓存大小信息。 如需准确的缓存大小指标，请使用 {@link
  * CacheMeterBinder}。
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class CacheMetricsCollector {
 

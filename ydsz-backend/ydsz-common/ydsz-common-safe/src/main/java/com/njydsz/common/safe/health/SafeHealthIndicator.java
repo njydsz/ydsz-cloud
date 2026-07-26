@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>各安全能力注册状态（XSS/SQL注入/CSRF/限流/IP访问控制/API签名/自动封禁/脱敏）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j

@@ -27,6 +27,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
  * <p>此前各 Filter 各自实现缓存逻辑（CachedBodyHttpServletRequest / CachedRequestBody），
  * 此公共类消除了重复实现。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class CachedBodyHttpServletRequestWrapper extends HttpServletRequestWrapper {

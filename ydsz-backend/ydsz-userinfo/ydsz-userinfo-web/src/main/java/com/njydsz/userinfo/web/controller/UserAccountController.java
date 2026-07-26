@@ -67,36 +67,53 @@ public class UserAccountController {
         return BaseResponse.success(service.getById(id));
     }
 
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'创建用户: ' + #dto.username", excludeParams = {"password"})
+    @Idempotent(key = "userAccount:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建用户")
     public BaseResponse<String> create(@Valid @RequestBody UserAccountCreateDTO dto) {
         return BaseResponse.success(service.create(dto));
     }
 
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'更新用户: ' + #dto.id")
+    @Idempotent(key = "userAccount:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "更新用户信息")
     public BaseResponse<Boolean> update(@Valid @RequestBody UserAccountUpdateDTO dto) {
         return BaseResponse.success(service.update(dto));
     }
 
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
+            content = "'删除用户: ' + #id")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除用户")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
     }
 
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'修改密码'", excludeParams = {"oldPassword", "newPassword"})
+    @Idempotent(key = "userAccount:changePassword", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/change-password")
     @Operation(summary = "修改密码")
     public BaseResponse<Boolean> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
         return BaseResponse.success(service.changePassword(dto));
     }
 
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'重置密码: ' + #dto.userId", excludeParams = {"newPassword"})
+    @Idempotent(key = "userAccount:resetPassword", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reset-password")
     @Operation(summary = "重置密码（管理员）")
     public BaseResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
         return BaseResponse.success(service.resetPassword(dto));
     }
 
+    @Audit(module = "用户管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'分配用户角色: ' + #userId")
+    @Idempotent(key = "userAccount:assignRoles", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{userId}/roles")
     @Operation(summary = "分配用户角色")
     public BaseResponse<Boolean> assignRoles(
