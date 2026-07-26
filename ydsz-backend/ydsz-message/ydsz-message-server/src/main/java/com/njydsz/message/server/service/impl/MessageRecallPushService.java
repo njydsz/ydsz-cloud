@@ -3,6 +3,8 @@ package com.njydsz.message.server.service.impl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 
@@ -59,6 +61,7 @@ public class MessageRecallPushService {
 
     /**
      * 批量推送撤回通知。
+     * <p>D-2: 使用 CompletableFuture 并行推送，替代串行 for 循环。
      *
      * @param userIds    用户 ID 列表
      * @param messageId  被撤回的消息 ID
@@ -68,8 +71,14 @@ public class MessageRecallPushService {
         if (userIds == null || userIds.isEmpty()) {
             return;
         }
-        for (String userId : userIds) {
-            pushRecall(userId, messageId, recallReason);
-        }
+        // D-2: 并行推送，所有 CompletableFuture 完成后统一等待
+        List<CompletableFuture<Void>> futures = userIds.stream()
+                .map(userId -> CompletableFuture.runAsync(
+                        () -> pushRecall(userId, messageId, recallReason)))
+                .toList();
+        // 等待所有推送完成，最多 10s 超时
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .orTimeout(10, TimeUnit.SECONDS)
+                .join();
     }
 }

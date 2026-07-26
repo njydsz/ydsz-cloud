@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -42,11 +43,12 @@ public class SenderQuotaService {
     private static final String DAILY_KEY_PREFIX = "quota:daily:";
     private static final String HOURLY_KEY_PREFIX = "quota:hourly:";
 
-    /** 默认日配额 */
-    private static final long DEFAULT_DAILY_LIMIT = 10000L;
+    /** OD-8: 配额配置化 */
+    @Value("${ydsz.message.sender-daily-limit:10000}")
+    private long dailyLimit;
 
-    /** 默认小时配额 */
-    private static final long DEFAULT_HOURLY_LIMIT = 1000L;
+    @Value("${ydsz.message.sender-hourly-limit:1000}")
+    private long hourlyLimit;
 
     /**
      * 检查发送方配额是否允许发送。
@@ -63,18 +65,18 @@ public class SenderQuotaService {
         String dailyKey = DAILY_KEY_PREFIX + senderId + ":" + channel + ":" + today;
         String dailyCountStr = redisTemplate.opsForValue().get(dailyKey);
         long dailyCount = dailyCountStr != null ? Long.parseLong(dailyCountStr) : 0;
-        if (dailyCount >= DEFAULT_DAILY_LIMIT) {
+        if (dailyCount >= dailyLimit) {
             log.warn("[Quota] 日配额已用尽: senderId={} channel={} count={} limit={}",
-                    senderId, channel, dailyCount, DEFAULT_DAILY_LIMIT);
+                    senderId, channel, dailyCount, dailyLimit);
             return false;
         }
         String hourKey = HOURLY_KEY_PREFIX + senderId + ":" + channel + ":" + today + ":" +
                 String.format("%02d", LocalTime.now().getHour());
         String hourCountStr = redisTemplate.opsForValue().get(hourKey);
         long hourCount = hourCountStr != null ? Long.parseLong(hourCountStr) : 0;
-        if (hourCount >= DEFAULT_HOURLY_LIMIT) {
+        if (hourCount >= hourlyLimit) {
             log.warn("[Quota] 小时配额已用尽: senderId={} channel={} count={} limit={}",
-                    senderId, channel, hourCount, DEFAULT_HOURLY_LIMIT);
+                    senderId, channel, hourCount, hourlyLimit);
             return false;
         }
         return true;

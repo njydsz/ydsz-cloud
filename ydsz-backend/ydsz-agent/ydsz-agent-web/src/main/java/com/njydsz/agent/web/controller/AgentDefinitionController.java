@@ -1,0 +1,85 @@
+package com.njydsz.agent.web.controller;
+
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.agent.domain.agent.AgentDefinition;
+import com.njydsz.agent.domain.entity.AgentDefinitionDO;
+import com.njydsz.agent.server.agent.AgentDefinitionService;
+import com.njydsz.common.core.response.BaseResponse;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Agent 定义 REST API
+ *
+ * <p>提供 Agent 定义的 CRUD 管理接口：
+ * <ul>
+ *   <li>{@code GET /agent/definitions} — 列出所有活跃 Agent 定义</li>
+ *   <li>{@code GET /agent/definitions/{id}} — 获取单个 Agent 定义</li>
+ *   <li>{@code GET /agent/definitions/code/{code}} — 按 code 获取 Agent 定义</li>
+ *   <li>{@code POST /agent/definitions} — 创建 Agent 定义</li>
+ *   <li>{@code PUT /agent/definitions} — 更新 Agent 定义</li>
+ *   <li>{@code DELETE /agent/definitions/{id}} — 删除 Agent 定义</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.6.0
+ */
+@Slf4j
+@RestController
+@RequestMapping("/agent/definitions")
+@RequiredArgsConstructor
+public class AgentDefinitionController {
+
+    private final AgentDefinitionService agentDefinitionService;
+
+    @GetMapping
+    public BaseResponse<List<AgentDefinitionDO>> list() {
+        return BaseResponse.success(agentDefinitionService.listActive());
+    }
+
+    @GetMapping("/{id}")
+    public BaseResponse<AgentDefinitionDO> getById(@PathVariable String id) {
+        AgentDefinitionDO entity = agentDefinitionService.getById(id);
+        if (entity == null) {
+            return BaseResponse.error("Agent not found: " + id);
+        }
+        return BaseResponse.success(entity);
+    }
+
+    @GetMapping("/code/{code}")
+    public BaseResponse<AgentDefinition> getByCode(@PathVariable String code) {
+        AgentDefinitionDO entity = agentDefinitionService.getByCode(code);
+        if (entity == null) {
+            return BaseResponse.error("Agent not found: " + code);
+        }
+        return BaseResponse.success(agentDefinitionService.toDomain(entity));
+    }
+
+    @PostMapping
+    public BaseResponse<AgentDefinitionDO> create(@Valid @RequestBody AgentDefinitionDO entity) {
+        return BaseResponse.success(agentDefinitionService.create(entity));
+    }
+
+    @PutMapping
+    public BaseResponse<AgentDefinitionDO> update(@Valid @RequestBody AgentDefinitionDO entity) {
+        return BaseResponse.success(agentDefinitionService.update(entity));
+    }
+
+    @DeleteMapping("/{id}")
+    public BaseResponse<Boolean> delete(@PathVariable String id) {
+        return BaseResponse.success(agentDefinitionService.removeById(id));
+    }
+}

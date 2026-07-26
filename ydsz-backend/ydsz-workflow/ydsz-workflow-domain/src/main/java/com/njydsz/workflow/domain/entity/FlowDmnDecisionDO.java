@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.njydsz.common.domain.entity.BaseDO;
 
 /**
  * P0-1: DMN 决策表 DO

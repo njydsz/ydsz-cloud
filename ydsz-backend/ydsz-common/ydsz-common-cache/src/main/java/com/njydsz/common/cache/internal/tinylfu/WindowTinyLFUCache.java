@@ -89,17 +89,15 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     if (key == null || value == null) {
       return;
     }
-    Node<K, V> existing = data.get(key);
-    if (existing != null) {
-      existing.value = value;
-      frequencySketch.increment(key);
-      return;
-    }
+    // 整个 put 流程均在 writeLock 内执行，避免：
+    // 1) 与 evictOnce() 中 data.remove + notifyRemoval(victim.value) 的数据竞争
+    // 2) existing.value = value 与 frequencySketch.increment(key) 的非原子组合
+    // 3) LFU 容量超限（无锁 size 检查与 put 不原子）
     writeLock.lock();
     try {
-      Node<K, V> doubleCheck = data.get(key);
-      if (doubleCheck != null) {
-        doubleCheck.value = value;
+      Node<K, V> existing = data.get(key);
+      if (existing != null) {
+        existing.value = value;
         frequencySketch.increment(key);
         return;
       }

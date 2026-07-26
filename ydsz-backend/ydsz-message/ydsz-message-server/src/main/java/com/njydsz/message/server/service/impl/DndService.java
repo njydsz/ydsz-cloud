@@ -44,7 +44,10 @@ public class DndService {
     private static final String DEFAULT_TIMEZONE = "Asia/Shanghai";
 
     /** 本地缓存（减少 Redis 访问） */
-    private final ConcurrentMap<String, DndConfig> configCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, CachedDndConfig> configCache = new ConcurrentHashMap<>();
+
+    /** D-3: 缓存过期时间（毫秒），默认 5 分钟 */
+    private static final long CACHE_TTL_MS = 5 * 60 * 1000L;
 
     /**
      * 检查消息是否应被 DND 延迟。
@@ -108,13 +111,22 @@ public class DndService {
      * @return DND 配置，null 表示未设置
      */
     private DndConfig getDndConfig(String userId) {
-        return configCache.computeIfAbsent(userId, uid -> {
-            String value = redisTemplate.opsForValue().get(DND_KEY_PREFIX + uid);
-            if (value == null || value.isBlank()) {
-                return null;
-            }
-            return parseConfig(value);
-        });
+        CachedDndConfig cached = configCache.get(userId);
+        // D-3: 检查缓存是否过期
+        if (cached != null && (System.currentTimeMillis() - cached.cachedAt) < CACHE_TTL_MS) {
+            return cached.config;
+        }
+        // 缓存过期或不存在，从 Redis 加载
+        String value = redisTemplate.opsForValue().get(DND_KEY_PREFIX + userId);
+        if (value == null || value.isBlank()) {
+            configCache.remove(userId);
+            return null;
+        }
+        DndConfig config = parseConfig(value);
+        if (config != null) {
+            configCache.put(userId, new CachedDndConfig(config, System.currentTimeMillis()));
+        }
+        return config;
     }
 
     /**
@@ -161,4 +173,7 @@ public class DndService {
 
     /** DND 配置内部类 */
     private record DndConfig(LocalTime startTime, LocalTime endTime, String timezone) {}
+
+    /** D-3: 带时间戳的缓存包装类 */
+    private record CachedDndConfig(DndConfig config, long cachedAt) {}
 }

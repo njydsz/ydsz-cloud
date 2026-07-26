@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.njydsz.common.domain.entity.BaseDO;
 
 /**
  * 流程定义 DO

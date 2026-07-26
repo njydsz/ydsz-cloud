@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.njydsz.common.domain.entity.BaseDO;
 
 /**
  * 自建工作流引擎 - 审批附件实体

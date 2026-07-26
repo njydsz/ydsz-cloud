@@ -109,9 +109,12 @@ public class ContentExtractionApplicationService {
                 bytes = java.util.Arrays.copyOf(bytes, MAX_CONTENT_LENGTH);
             }
             String content = new String(bytes, StandardCharsets.UTF_8);
-            // 清理 HTML 标签（简单版）
-            if ("html".equals(fileNode.getSuffix()) || "htm".equals(fileNode.getSuffix())) {
-                content = content.replaceAll("<[^>]+>", " ").replaceAll("\\s+", " ").trim();
+            String suffix = fileNode.getSuffix();
+            if (suffix != null) {
+                suffix = suffix.toLowerCase();
+                if ("html".equals(suffix) || "htm".equals(suffix)) {
+                    content = stripHtmlTags(content);
+                }
             }
             return content;
         } catch (Exception e) {
@@ -119,6 +122,29 @@ public class ContentExtractionApplicationService {
                     fileNode.getId(), e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * P2-R1: HTML 标签清理增强（先移除 script/style 块再清理标签）
+     */
+    private String stripHtmlTags(String html) {
+        // 先移除 script 和 style 块（含内容）
+        String result = html;
+        result = result.replaceAll("(?is)<script[^>]*>.*?</script>", " ");
+        result = result.replaceAll("(?is)<style[^>]*>.*?</style>", " ");
+        // 移除 HTML 注释
+        result = result.replaceAll("(?is)<!--.*?-->", " ");
+        // 移除 CDATA 块
+        result = result.replaceAll("(?is)<!\\[CDATA\\[.*?\\]\\]>", " ");
+        // 移除所有 HTML 标签
+        result = result.replaceAll("<[^>]+>", " ");
+        // 解码常见 HTML 实体
+        result = result.replace("&amp;", "&").replace("&lt;", "<")
+                .replace("&gt;", ">").replace("&quot;", "\"")
+                .replace("&apos;", "'").replace("&nbsp;", " ");
+        // 压缩连续空白
+        result = result.replaceAll("\\s+", " ").trim();
+        return result;
     }
 
     private IFileStorage resolveStorage() {
