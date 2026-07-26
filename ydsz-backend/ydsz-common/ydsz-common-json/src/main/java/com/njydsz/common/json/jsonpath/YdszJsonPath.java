@@ -17,6 +17,7 @@ import com.njydsz.common.json.YdszJson;
  * 6. 多选择器：$.items[*].name
  * 7. 条件表达式：$.items[?(@.age >= 18 && @.status == 'active')]
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class YdszJsonPath {
