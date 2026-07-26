@@ -2,6 +2,7 @@ package com.njydsz.userinfo.server.service.impl;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,12 +18,16 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
+import com.njydsz.userinfo.domain.entity.RoleDO;
 import com.njydsz.userinfo.domain.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.entity.UserDeptDO;
 import com.njydsz.userinfo.domain.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.service.UserAccountService;
@@ -56,6 +61,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     private final UserAccountMapper userAccountMapper;
     private final UserRoleMapper userRoleMapper;
+    private final RoleMapper roleMapper;
+    private final UserDeptMapper userDeptMapper;
     private final PasswordEncoder passwordEncoder;
     private final PasswordPolicyValidator passwordPolicyValidator;
 
@@ -243,6 +250,117 @@ public class UserAccountServiceImpl implements UserAccountService {
         wrapper.eq(UserRoleDO::getDeleted, 0);
         return userRoleMapper.selectList(wrapper).stream()
                 .map(UserRoleDO::getRoleId)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 按角色编码查询用户 ID 列表。
+     *
+     * <p>实现：先按 role_code 查 ydsz_role 获取 role_id，再按 role_id 查 ydsz_user_role 获取 user_id 列表。
+     * 因单次查询数据量可控（单角色关联用户通常 ≤ 千级），未做缓存。
+     */
+    @Override
+    public List<String> listUserIdsByRoleCode(String roleCode) {
+        if (roleCode == null || roleCode.isBlank()) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.eq(RoleDO::getRoleCode, roleCode);
+        roleWrapper.eq(RoleDO::getDeleted, 0);
+        RoleDO role = roleMapper.selectOne(roleWrapper);
+        if (role == null) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<UserRoleDO> userRoleWrapper = new LambdaQueryWrapper<>();
+        userRoleWrapper.eq(UserRoleDO::getRoleId, role.getId());
+        userRoleWrapper.eq(UserRoleDO::getDeleted, 0);
+        return userRoleMapper.selectList(userRoleWrapper).stream()
+                .map(UserRoleDO::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 查询用户拥有的角色编码列表。
+     *
+     * <p>实现：先按 user_id 查 ydsz_user_role 获取 role_id 列表，再按 role_id IN(...) 查 ydsz_role 获取 role_code。
+     */
+    @Override
+    public List<String> listRoleCodesByUserId(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<UserRoleDO> userRoleWrapper = new LambdaQueryWrapper<>();
+        userRoleWrapper.eq(UserRoleDO::getUserId, userId);
+        userRoleWrapper.eq(UserRoleDO::getDeleted, 0);
+        List<String> roleIds = userRoleMapper.selectList(userRoleWrapper).stream()
+                .map(UserRoleDO::getRoleId)
+                .distinct()
+                .collect(Collectors.toList());
+        if (roleIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.in(RoleDO::getId, roleIds);
+        roleWrapper.eq(RoleDO::getDeleted, 0);
+        return roleMapper.selectList(roleWrapper).stream()
+                .map(RoleDO::getRoleCode)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 查询用户所属部门 ID 列表（支持多部门）。
+     */
+    @Override
+    public List<String> listDeptIdsByUserId(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserDeptDO::getUserId, userId);
+        wrapper.eq(UserDeptDO::getDeleted, 0);
+        return userDeptMapper.selectList(wrapper).stream()
+                .map(UserDeptDO::getDeptId)
+                .filter(d -> d != null && !d.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 查询用户的直属上级 ID。
+     *
+     * <p>实现：直接读 ydsz_user_account.leader_id 字段。
+     */
+    @Override
+    public String getLeaderByUserId(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return null;
+        }
+        UserAccountDO entity = userAccountMapper.selectById(userId);
+        if (entity == null || entity.getDeleted() == 1) {
+            return null;
+        }
+        return entity.getLeaderId();
+    }
+
+    /**
+     * 按岗位编码查询用户 ID 列表。
+     *
+     * <p>实现：直接按 position_code 查 ydsz_user_account。
+     */
+    @Override
+    public List<String> listUserIdsByPositionCode(String positionCode) {
+        if (positionCode == null || positionCode.isBlank()) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserAccountDO::getPositionCode, positionCode);
+        wrapper.eq(UserAccountDO::getDeleted, 0);
+        return userAccountMapper.selectList(wrapper).stream()
+                .map(UserAccountDO::getId)
+                .distinct()
                 .collect(Collectors.toList());
     }
 

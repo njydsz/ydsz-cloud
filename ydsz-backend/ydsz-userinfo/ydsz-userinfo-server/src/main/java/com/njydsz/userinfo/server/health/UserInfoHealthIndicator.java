@@ -40,7 +40,10 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
     @Override
     protected void doHealthCheck(org.springframework.boot.health.contributor.Health.Builder builder) {
         // Redis 连通性
-        checkRedis(builder, () -> redisService.execute(conn -> conn.ping(), true));
+        checkRedis(builder, () -> {
+            redisService.hasKey("ydsz:userinfo:health:probe");
+            return "PONG";
+        });
 
         // JWT 配置
         if (tokenService != null) {

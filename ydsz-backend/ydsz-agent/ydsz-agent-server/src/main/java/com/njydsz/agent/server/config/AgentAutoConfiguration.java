@@ -37,6 +37,7 @@ import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
+import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.redis.service.RedisService;
@@ -193,6 +194,14 @@ public class AgentAutoConfiguration {
     @ConditionalOnMissingBean(AgentRequestGuard.class)
     public AgentRequestGuard agentRequestGuard(RedisService redisService) {
         return new AgentRequestGuard(redisService);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(GuardrailService.class)
+    public GuardrailService guardrailService(List<InputGuardrail> inputGuardrails,
+                                             List<OutputGuardrail> outputGuardrails,
+                                             AgentMetrics agentMetrics) {
+        return new GuardrailService(inputGuardrails, outputGuardrails, agentMetrics);
     }
 
     @Bean

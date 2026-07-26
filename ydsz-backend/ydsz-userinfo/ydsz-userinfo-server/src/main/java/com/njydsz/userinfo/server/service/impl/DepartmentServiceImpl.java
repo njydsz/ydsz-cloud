@@ -139,6 +139,44 @@ public class DepartmentServiceImpl implements DepartmentService {
                 DepartmentTreeVO::getSortOrder);
     }
 
+    /**
+     * 按部门 ID 查询部门负责人。
+     *
+     * <p>实现：直接读 ydsz_department.leader_id 字段。部门不存在或逻辑删除时返回 null。
+     */
+    @Override
+    public String getDeptLeaderByDeptId(String deptId) {
+        if (deptId == null || deptId.isBlank()) {
+            return null;
+        }
+        DepartmentDO entity = departmentMapper.selectById(deptId);
+        if (entity == null || entity.getDeleted() == 1) {
+            return null;
+        }
+        return entity.getLeaderId();
+    }
+
+    /**
+     * 按部门编码查询部门负责人。
+     *
+     * <p>实现：按 dept_code 查 ydsz_department 后取 leader_id。
+     */
+    @Override
+    public String getDeptLeaderByDeptCode(String deptCode) {
+        if (deptCode == null || deptCode.isBlank()) {
+            return null;
+        }
+        LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DepartmentDO::getDeptCode, deptCode);
+        wrapper.eq(DepartmentDO::getDeleted, 0);
+        wrapper.last("LIMIT 1");
+        DepartmentDO entity = departmentMapper.selectOne(wrapper);
+        if (entity == null) {
+            return null;
+        }
+        return entity.getLeaderId();
+    }
+
     private DepartmentVO toVO(DepartmentDO entity) {
         DepartmentVO vo = new DepartmentVO();
         BeanUtils.copyProperties(entity, vo);

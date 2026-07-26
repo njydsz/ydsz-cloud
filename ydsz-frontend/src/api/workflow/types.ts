@@ -135,23 +135,41 @@ export interface FlowTaskDTO {
 
 /** 抄送 */
 export interface FlowCcDTO {
+  /** 抄送 ID */
   id: string
+  /** 实例 ID */
   instanceId: string
+  /** 任务 ID */
   taskId?: string
+  /** 节点编码 */
   nodeCode: string
+  /** 节点名称 */
   nodeName?: string
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName?: string
+  /** 业务 Key */
   businessKey?: string
+  /** 抄送用户 ID */
   ccUserId: string
+  /** 抄送用户姓名 */
   ccUserName?: string
+  /** CC_NODE / MANUAL_CC / AUTO_CC */
   ccType: 'CC_NODE' | 'MANUAL_CC' | 'AUTO_CC'
+  /** 触发人 ID */
   triggerUserId?: string
+  /** 触发人姓名 */
   triggerUserName?: string
+  /** 标题 */
   title?: string
+  /** 内容 */
   content?: string
+  /** UNREAD / READ */
   readStatus: 'UNREAD' | 'READ'
+  /** 阅读时间 */
   readAt?: string
+  /** 创建时间 */
   createTime?: string
 }
 

@@ -5,7 +5,7 @@ import re
 
 BASE = pathlib.Path('ydsz-backend')
 
-CLASS_DECL = re.compile(r'(public\s+)?(abstract\s+)?(class|interface|enum|record)\s+\w+')
+CLASS_DECL = re.compile(r'(public\s+)?(abstract\s+)?(final\s+)?(class|interface|enum|record|@interface)\s+\w+')
 
 
 def has_class_javadoc(filepath):
@@ -16,13 +16,22 @@ def has_class_javadoc(filepath):
     for i, line in enumerate(lines):
         if CLASS_DECL.search(line):
             # Look backwards for Javadoc closing */
-            for j in range(i - 1, max(i - 30, -1), -1):
+            paren_depth = 0
+            for j in range(i - 1, max(i - 50, -1), -1):
                 l = lines[j]
                 stripped = l.strip()
                 # Found Javadoc closing - has Javadoc
                 if '*/' in stripped:
                     return True
-                # Skip annotations, blank lines, and annotation continuation
+                # Count parentheses to handle multi-line annotations
+                # Count closing parens (we're going backwards, so ) opens and ( closes)
+                close_count = stripped.count(')')
+                open_count = stripped.count('(')
+                paren_depth += close_count - open_count
+                # If we're inside annotation parentheses, skip
+                if paren_depth > 0:
+                    continue
+                # Skip annotations, blank lines, and other non-class lines
                 if (not stripped
                     or stripped.startswith('@')
                     or stripped.startswith(')')
@@ -32,7 +41,19 @@ def has_class_javadoc(filepath):
                     or stripped.startswith('//')
                     or stripped.startswith('/*')
                     or stripped.startswith('import')
-                    or stripped.startswith('package')):
+                    or stripped.startswith('package')
+                    or stripped.startswith('}')
+                    or stripped.startswith(')')
+                    # Annotation parameter continuation lines
+                    or '=' in stripped and not stripped.endswith(';')
+                    or stripped.startswith('"')
+                    or stripped.startswith('}')
+                    or '.class' in stripped
+                    or stripped.endswith(',')
+                    or stripped.endswith('})')
+                    or stripped.endswith(')')
+                    or stripped.endswith('"')
+                    or stripped.endswith('}')):
                     continue
                 # Hit a non-comment, non-annotation line - no Javadoc
                 return False

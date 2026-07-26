@@ -40,6 +40,18 @@ public class OutboxHealthIndicator implements HealthIndicator {
         this.properties = properties;
     }
 
+    /**
+     * 执行 Outbox 健康检查
+     *
+     * <p>根据各状态消息数量与配置阈值比较，返回健康状态：
+     * <ul>
+     *   <li>UP - 消息积压在正常范围内</li>
+     *   <li>DEGRADED - PENDING 或 PROCESSING 消息数超过阈值</li>
+     *   <li>DOWN - DEAD_LETTER 消息数超过阈值</li>
+     * </ul>
+     *
+     * @return 健康检查结果，包含各状态消息数和阈值详情
+     */
     @Override
     public Health health() {
         try {

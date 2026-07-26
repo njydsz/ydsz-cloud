@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
+import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.safe.crypto.NonceCache;
+import com.njydsz.gateway.config.GatewayAlertService;
 import com.njydsz.gateway.config.GatewayHealthIndicator;
 import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.IpWhitelistProperties;
@@ -77,5 +79,17 @@ public class GatewayApplication {
     @Bean
     public NonceCache nonceCache() {
         return new NonceCache();
+    }
+
+    /**
+     * GAP-P1-1 + GAP-P1-2: 注册网关告警通知服务
+     *
+     * <p>集成 ydsz-common-notify 的 NotifyService，在限流触发、黑名单命中、
+     * 下游 502/504 等关键事件时发送钉钉/飞书 IM 通知。
+     */
+    @Bean
+    public GatewayAlertService gatewayAlertService(
+            ObjectProvider<NotifyService> notifyServiceProvider) {
+        return new GatewayAlertService(notifyServiceProvider);
     }
 }
