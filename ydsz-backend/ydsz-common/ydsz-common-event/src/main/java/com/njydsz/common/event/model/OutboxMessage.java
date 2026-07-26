@@ -110,7 +110,9 @@ public class OutboxMessage {
     private final String traceId;
 
     /**
-     * 标记为处理中（已被某个实例 claim，正在投递）
+     * 标记为处理中
+     *
+     * <p>将状态从 PENDING 改为 PROCESSING，表示已被某个实例 claim，正在投递。
      */
     public void markAsProcessing() {
         this.status = OutboxStatus.PROCESSING;

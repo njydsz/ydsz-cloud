@@ -39,6 +39,13 @@ public class MacAddressUtils {
     private static volatile boolean CACHE_ENABLED = true;
     private static String cachedAllMacAddress = null;
 
+    /**
+     * 获取本机所有网络接口的 MAC 地址（逗号分隔）
+     *
+     * <p>结果会缓存，首次获取后后续调用直接返回缓存值。
+     *
+     * @return 所有 MAC 地址的逗号分隔字符串
+     */
     public static String getAllHostMacAddress() {
         if (CACHE_ENABLED && cachedAllMacAddress != null) {
             return cachedAllMacAddress;

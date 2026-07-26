@@ -1,5 +1,7 @@
 package com.njydsz.common.sentry.tracing.otel;
 
+import java.util.Map;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -81,7 +83,7 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
      * 从 MDC 注入属性
      */
     private void applyMdc(ReadWriteSpan span) {
-        org.slf4j.MDC mdc = org.slf4j.MDC.getCopyOfContextMap();
+        Map<String, String> mdc = org.slf4j.MDC.getCopyOfContextMap();
         if (mdc == null || mdc.isEmpty()) {
             return;
         }

@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 import lombok.extern.slf4j.Slf4j;
@@ -225,7 +226,7 @@ public final class YdszSpan {
 
         public Builder parent(Span parent) {
             if (parent != null) {
-                builder.setParent(parent.getSpanContext());
+                builder.setParent(Context.current().with(parent));
             }
             return this;
         }
@@ -263,7 +264,10 @@ public final class YdszSpan {
         }
 
         public Builder tag(String key, String value) {
-            return setAttr(key, value);
+            if (key != null && value != null && !value.isEmpty()) {
+                builder.setAttribute(key, value);
+            }
+            return this;
         }
 
         public Builder tag(String key, long value) {
