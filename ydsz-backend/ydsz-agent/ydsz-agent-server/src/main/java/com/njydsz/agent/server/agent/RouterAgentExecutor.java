@@ -81,11 +81,32 @@ public class RouterAgentExecutor implements AgentExecutor {
 
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-        ChatResponse response = execute(request);
-        chunkConsumer.accept(ChatChunk.content(response.getId(), response.getModel(),
-                response.getContent()));
-        chunkConsumer.accept(ChatChunk.finish(response.getId(), response.getModel(),
-                "stop", response.getUsage()));
+        String convId = request.getConversationId() != null
+                ? request.getConversationId() : UUID.randomUUID().toString();
+        String traceId = traceRecorder.startTrace(convId, "ROUTER_STREAM");
+        log.info("[Router-Stream] 分析意图: convId={}, traceId={}", convId, traceId);
+
+        long routeStart = System.currentTimeMillis();
+        String agentType = routeIntent(request.getUserInput());
+        long routeDuration = System.currentTimeMillis() - routeStart;
+
+        traceRecorder.recordStep(traceId, "ROUTE",
+                "Routed to " + agentType, request.getUserInput(),
+                agentType, routeDuration);
+        log.info("[Router-Stream] 路由到: {} Agent", agentType);
+
+        AgentExecutor executor = agentFactory.getExecutor(
+                new AgentDefinition(
+                        UUID.randomUUID().toString(), "router-dispatched", "Router",
+                        AgentDefinition.Type.valueOf(agentType),
+                        request.getSystemPrompt(), List.of(),
+                        properties.getLlm().getTemperature(),
+                        properties.getLlm().getMaxTokens(),
+                        request.getMaxIterations(),
+                        properties.getLlm().getDefaultModel()));
+
+        executor.executeStream(request, chunkConsumer);
+        traceRecorder.endTrace(traceId, "SUCCESS");
     }
 
     @Override

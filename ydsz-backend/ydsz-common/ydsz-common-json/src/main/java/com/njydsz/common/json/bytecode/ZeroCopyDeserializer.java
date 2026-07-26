@@ -59,6 +59,7 @@ import com.njydsz.common.json.util.StringInterner;
  *   <li>对象池 - ThreadLocal 复用集合对象</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class ZeroCopyDeserializer {

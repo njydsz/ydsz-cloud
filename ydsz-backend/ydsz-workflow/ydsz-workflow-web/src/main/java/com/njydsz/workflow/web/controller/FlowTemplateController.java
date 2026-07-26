@@ -6,6 +6,9 @@ import java.util.Map;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -88,6 +91,8 @@ public class FlowTemplateController {
      */
     @Operation(summary = "导入模板")
     @Idempotent(key = "flowTemplate:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'导入模板:' + #templateCode")
     @PostMapping("/{templateCode}/import")
     public BaseResponse<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {
@@ -107,6 +112,8 @@ public class FlowTemplateController {
      */
     @Operation(summary = "导出为模板")
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
+    @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'导出模板:' + #templateName")
     @PostMapping("/export/{definitionId}")
     public BaseResponse<Void> exportAsTemplate(@PathVariable String definitionId,
                                          @RequestParam String templateName,
@@ -154,6 +161,8 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-9: 创建模板新版本")
     @Idempotent(key = "flowTemplate:createNewVersion", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'创建模板新版本:' + #templateCode")
     @PostMapping("/{templateCode}/newVersion")
     public BaseResponse<Integer> createNewVersion(@PathVariable String templateCode,
                                             @RequestParam(required = false) String versionLabel) {
@@ -173,6 +182,8 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-9: 克隆模板为独立新模板")
     @Idempotent(key = "flowTemplate:cloneTemplate", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'克隆模板:' + #templateCode + ' -> ' + #newTemplateCode")
     @PostMapping("/{templateCode}/clone")
     public BaseResponse<String> cloneTemplate(@PathVariable String templateCode,
                                         @RequestParam String newTemplateCode,

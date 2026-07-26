@@ -11,6 +11,9 @@ import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
@@ -60,6 +63,8 @@ public class FlowInstanceController {
      */
     @RateLimit(key = "flowInstance:start", qps = 5, windowSeconds = 60, message = "流程启动过于频繁，请稍后重试")
     @Idempotent(key = "flowInstance:startProcess", ttlSeconds = 5, message = "请勿重复提交")
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'启动流程:' + #dto.flowCode")
     @PostMapping("/instance/start")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
@@ -82,6 +87,8 @@ public class FlowInstanceController {
      * @param dtos 流程启动参数列表
      * @return 统一响应结果，包含 successCount / failedCount / instanceIds / failedItems
      */
+    @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'批量启动流程: ' + #dtos.size() + ' 条")
     @PostMapping("/instance/batchStart")
     @Operation(summary = "批量启动流程实例")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)

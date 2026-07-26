@@ -24,6 +24,7 @@ package com.njydsz.common.json.bytecode;
  *   <li>JIT 可内联到调用方（{@code ZeroCopyDeserializer} 热点路径）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class VectorSimdUtil {

@@ -75,7 +75,7 @@ public class FlowQueuePublisher {
      *
      * @param event 工作流事件
      */
-    @Async("auditExecutor")
+    @Async("flowQueueExecutor")
     @EventListener
     public void onFlowWorkflowEvent(FlowWorkflowEvent event) {
         if (flowEventPublisher == null) {

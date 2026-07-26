@@ -13,6 +13,7 @@ package com.njydsz.common.json.bytecode;
  *   <li>紧密循环可被 JIT 内联到调用方热点路径</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class BytesUtil {

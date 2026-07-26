@@ -122,6 +122,12 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
     int countByUser(@Param("userId") String userId);
 
     /**
+     * 统计用户文件夹数量
+     */
+    @Select("SELECT COUNT(*) FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'folder'")
+    int countFoldersByUser(@Param("userId") String userId);
+
+    /**
      * 查询用户文件总大小
      */
     @Select("SELECT COALESCE(SUM(size), 0) FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file'")

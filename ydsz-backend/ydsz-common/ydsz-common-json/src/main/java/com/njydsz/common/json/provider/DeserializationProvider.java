@@ -37,6 +37,7 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
  * </ol>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class DeserializationProvider {

@@ -37,6 +37,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ydsz.flow.history")
 public class FlowHistoryProperties {
 
@@ -44,12 +45,16 @@ public class FlowHistoryProperties {
     private boolean archiveEnabled = true;
 
     /** 归档阈值天数：已结束实例结束时间超过该天数后归档（默认 30 天） */
+    @Min(1)
     private int retentionDays = 30;
 
     /** 单次归档批量大小：每次扫描最多处理的实例数（默认 100） */
+    @Min(1)
+    @Max(10000)
     private int batchSize = 100;
 
     /** 单次归档最大耗时（毫秒）：达到上限后剩余实例留待下次执行（默认 30 秒） */
+    @Min(1000)
     private long maxProcessMs = 30_000L;
 
     /** 归档任务 cron 表达式（用于 ydsz_job 表配置参考，默认每日 03:00） */
@@ -59,5 +64,6 @@ public class FlowHistoryProperties {
     private boolean purgeEnabled = false;
 
     /** 归档数据清理阈值天数：archived_at 超过该天数的归档记录将被物理删除（默认 5 年 = 1825 天） */
+    @Min(30)
     private int purgeDays = 1825;
 }

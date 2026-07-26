@@ -135,6 +135,11 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     }
 
     @Override
+    public int countFoldersByUser(String userId) {
+        return fileNodeMapper.countFoldersByUser(userId);
+    }
+
+    @Override
     public long sumSizeByUser(String userId) {
         Long sum = fileNodeMapper.sumSizeByUser(userId);
         return sum != null ? sum : 0L;

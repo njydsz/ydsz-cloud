@@ -31,6 +31,7 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
  * // animal 是 Dog 实例
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class PolymorphicTypeResolver {

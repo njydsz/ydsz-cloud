@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>集合/Map 完整支持，自动类型转。</li>
  * </ul>
  * 
- * @author YdszJson Team
+ * @author ydsz-team
  */
 public final class ObjectReader<T> {
     
