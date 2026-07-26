@@ -59,16 +59,23 @@ public class ChannelRouter {
     /** P0-4: 熔断器缓存改为 ConcurrentHashMap */
     private final Map<String, CircuitBreaker> breakerCache = new ConcurrentHashMap<>();
 
-    /** 默认熔断配置：50% 失败率触发熔断,开启 30s,半开试探 3 次 */
-    private static final CircuitBreakerConfig DEFAULT_CB_CONFIG = CircuitBreakerConfig.custom()
-            .failureRateThreshold(50)
-            .slowCallRateThreshold(80)
-            .slowCallDurationThreshold(Duration.ofSeconds(5))
-            .waitDurationInOpenState(Duration.ofSeconds(30))
-            .permittedNumberOfCallsInHalfOpenState(3)
-            .slidingWindowSize(20)
-            .minimumNumberOfCalls(10)
-            .build();
+    /**
+     * D-5: 从 MessageProperties.CircuitBreakerConfig 构建熔断配置，消除硬编码。
+     *
+     * <p>在 {@link #initChannels()} 中构建，确保配置已注入完成。
+     */
+    private CircuitBreakerConfig buildCircuitBreakerConfig() {
+        MessageProperties.CircuitBreakerConfig cb = messageProperties.getCircuitBreaker();
+        return CircuitBreakerConfig.custom()
+                .failureRateThreshold(cb.getFailureRateThreshold())
+                .slowCallRateThreshold(cb.getSlowCallRateThreshold())
+                .slowCallDurationThreshold(Duration.ofSeconds(cb.getSlowCallDurationSeconds()))
+                .waitDurationInOpenState(Duration.ofSeconds(cb.getWaitDurationInOpenStateSeconds()))
+                .permittedNumberOfCallsInHalfOpenState(cb.getPermittedNumberOfCallsInHalfOpenState())
+                .slidingWindowSize(cb.getSlidingWindowSize())
+                .minimumNumberOfCalls(cb.getMinimumNumberOfCalls())
+                .build();
+    }
 
     /**
      * 收集所有 MessageChannel Bean 并按通道类型注册,同时为每个通道创建独立熔断器。
@@ -76,7 +83,8 @@ public class ChannelRouter {
     @PostConstruct
     public void initChannels() {
         Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
-        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(DEFAULT_CB_CONFIG);
+        CircuitBreakerConfig cbConfig = buildCircuitBreakerConfig();
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(cbConfig);
         for (MessageChannel channel : beans.values()) {
             String type = channel.channelType() == null ? "" : channel.channelType().trim().toUpperCase();
             if (type.isEmpty()) {
@@ -84,7 +92,7 @@ public class ChannelRouter {
                 continue;
             }
             channelCache.put(type, channel);
-            breakerCache.put(type, registry.circuitBreaker("ch-" + type, DEFAULT_CB_CONFIG));
+            breakerCache.put(type, registry.circuitBreaker("ch-" + type, cbConfig));
         }
         log.info("[ChannelRouter] 已注册 {} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
     }

@@ -7,7 +7,11 @@ import java.util.Map;
 
 import jakarta.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.njydsz.common.safe.annotation.Xss;
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 
 import lombok.Data;
 
@@ -32,6 +36,8 @@ public class FlowTaskOperateDTO implements Serializable {
     private String userId;
 
     /** 操作人姓名 */
+    @JsonSerialize(using = SensitiveDataSerializer.class)
+    @SensitiveData(SensitiveType.CHINESE_NAME)
     private String userName;
 
     /** 操作：PASS/REJECT/CLAIM/DELEGATE/TRANSFER/CC */
@@ -96,6 +102,8 @@ public class FlowTaskOperateDTO implements Serializable {
     private String targetUserId;
 
     /** 转办/委派目标人姓名 */
+    @JsonSerialize(using = SensitiveDataSerializer.class)
+    @SensitiveData(SensitiveType.CHINESE_NAME)
     private String targetUserName;
 
     /** 租户 ID */

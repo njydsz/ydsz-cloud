@@ -689,6 +689,12 @@
                 <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
                 <version>1.8.9</version>
             </dependency>
+            <!-- P0-阶段二-4: Sentinel 规则 Nacos 数据源（动态推送） -->
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-datasource-nacos</artifactId>
+                <version>1.8.9</version>
+            </dependency>
 
             <!-- Resilience4j: 重试/熔断/隔离舱（与 Sentinel 互补，Feign 重试统一由此接管） -->
             <dependency>

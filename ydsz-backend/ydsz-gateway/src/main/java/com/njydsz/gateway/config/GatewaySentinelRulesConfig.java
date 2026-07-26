@@ -7,20 +7,16 @@ import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
 
 import com.alibaba.csp.sentinel.datasource.ReadableDataSource;
 import com.alibaba.csp.sentinel.datasource.nacos.NacosDataSource;
-import com.alibaba.csp.sentinel.init.InitFunc;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
-import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager.LoadJsonArray;
 import com.alibaba.csp.sentinel.slots.system.SystemRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
-import com.alibaba.csp.sentinel.slots.system.SystemRuleManager.LoadSystemJsonArray;
-import com.alibaba.fastjson2.JSON;
 import com.alibaba.nacos.api.PropertyKeyConst;
+import com.njydsz.common.json.YdszJson;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <h3>DegradeRule 默认策略</h3>
  * <ul>
- *   <li>所有路由默认熔断：5 秒内请求数 ≥ 10，异常比例 ≥ 50% → 熔断 30 秒</li>
+ *   <li>异常比例熔断：5 秒内请求数 ≥ 10，异常比例 ≥ 50% → 熔断 30 秒</li>
  *   <li>慢调用熔断：RT &gt; 3s 占比 ≥ 50% → 熔断 30 秒</li>
  * </ul>
  *
@@ -49,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>入口 QPS 上限：5000（防瞬时洪峰）</li>
  *   <li>平均 RT 上限：100ms（防慢调用堆积）</li>
  *   <li>线程数上限：500（防线程池打满）</li>
- *   <li>LOAD 上限：64 * 2 = 128（Linux 机器 CPU 核数 64 为基准）</li>
+ *   <li>LOAD 上限：128（按 64 核基准的 2 倍）</li>
  * </ul>
  *
  * <h3>Nacos 数据源</h3>
@@ -64,10 +60,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Configuration
-@RefreshScope
 @ConfigurationProperties(prefix = "ydsz.gateway.sentinel")
 @Data
-public class GatewaySentinelRulesConfig implements InitFunc {
+public class GatewaySentinelRulesConfig {
 
     /**
      * 是否启用 Nacos 数据源（P0-阶段二-4）
@@ -95,6 +90,15 @@ public class GatewaySentinelRulesConfig implements InitFunc {
     @Value("${ydsz.gateway.sentinel.rule-group:${spring.cloud.nacos.config.group:DEFAULT_GROUP}}")
     private String ruleGroup;
 
+    /**
+     * 初始化 Sentinel 规则
+     *
+     * <p>启动顺序：
+     * <ol>
+     *   <li>注册代码内默认规则（兜底）</li>
+     *   <li>若启用 Nacos 数据源，注册动态数据源覆盖默认规则</li>
+     * </ol>
+     */
     @PostConstruct
     public void init() {
         // 1. 注册默认规则（代码内兜底）
@@ -120,18 +124,18 @@ public class GatewaySentinelRulesConfig implements InitFunc {
         // 规则 1: 异常比例熔断（5 秒内 ≥ 10 请求，异常率 ≥ 50% → 熔断 30 秒）
         DegradeRule exceptionRatioRule = new DegradeRule();
         exceptionRatioRule.setResource("ydsz-userinfo");
-        exceptionRatioRule.setGrade(com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule.DEGRADE_GRADE_EXCEPTION_RATIO);
-        exceptionRatioRule.setCount(0.5); // 异常比例阈值
-        exceptionRatioRule.setTimeWindow(30); // 熔断时长（秒）
-        exceptionRatioRule.setMinRequestAmount(10); // 最小请求数
-        exceptionRatioRule.setStatIntervalMs(5000); // 统计窗口
+        exceptionRatioRule.setGrade(DegradeRule.DEGRADE_GRADE_EXCEPTION_RATIO);
+        exceptionRatioRule.setCount(0.5);
+        exceptionRatioRule.setTimeWindow(30);
+        exceptionRatioRule.setMinRequestAmount(10);
+        exceptionRatioRule.setStatIntervalMs(5000);
         rules.add(exceptionRatioRule);
 
         // 规则 2: 慢调用比例熔断（RT > 3s 占比 ≥ 50% → 熔断 30 秒）
         DegradeRule slowCallRule = new DegradeRule();
         slowCallRule.setResource("ydsz-system");
-        slowCallRule.setGrade(com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule.DEGRADE_GRADE_RT);
-        slowCallRule.setCount(3000); // 慢调用阈值（ms）
+        slowCallRule.setGrade(DegradeRule.DEGRADE_GRADE_RT);
+        slowCallRule.setCount(3000);
         slowCallRule.setTimeWindow(30);
         slowCallRule.setMinRequestAmount(5);
         slowCallRule.setStatIntervalMs(5000);
@@ -188,21 +192,16 @@ public class GatewaySentinelRulesConfig implements InitFunc {
         // 熔断降级规则数据源
         ReadableDataSource<String, List<DegradeRule>> degradeDs = new NacosDataSource<>(
                 serverAddr, namespace, ruleGroup, degradeRuleDataId,
-                source -> JSON.parseObject(source, LoadJsonArray.JSON_ARRAY_TYPE));
+                source -> YdszJson.parseArray(source, DegradeRule.class));
         DegradeRuleManager.register2Property(degradeDs.getProperty());
 
         // 系统保护规则数据源
         ReadableDataSource<String, List<SystemRule>> systemDs = new NacosDataSource<>(
                 serverAddr, namespace, ruleGroup, systemRuleDataId,
-                source -> JSON.parseObject(source, LoadSystemJsonArray.JSON_ARRAY_TYPE));
+                source -> YdszJson.parseArray(source, SystemRule.class));
         SystemRuleManager.register2Property(systemDs.getProperty());
 
         log.info("[SentinelRules] Nacos 数据源已注册 (P0-阶段二-4: degrade={}, system={}, group={}, addr={})",
                 degradeRuleDataId, systemRuleDataId, ruleGroup, serverAddr);
-    }
-
-    @Override
-    public void init() throws Exception {
-        // InitFunc 接口实现，Sentinel 启动时回调（此处不做实际初始化，由 @PostConstruct 处理）
     }
 }

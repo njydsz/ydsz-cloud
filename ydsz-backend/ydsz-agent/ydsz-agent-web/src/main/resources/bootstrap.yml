@@ -17,7 +17,7 @@ spring:
             refresh: true
 
 server:
-  port: 9007
+  port: 9010
 
 ydsz:
   agent:

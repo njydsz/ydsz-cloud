@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -306,6 +307,40 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             log.warn("[Flow] 三方审批同步回退失败（不影响本地终止）: instanceId={} err={}",
                     instanceId, e.getMessage());
         }
+    }
+
+    // P1-8: 批量终止 + 子流程级联终止
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int batchTerminate(List<String> instanceIds, String reason) {
+        if (instanceIds == null || instanceIds.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (String instanceId : instanceIds) {
+            try {
+                terminate(instanceId, reason);
+                count++;
+                // 级联终止子流程实例
+                List<FlowInstanceDO> children = instanceMapper.selectList(
+                        new LambdaQueryWrapper<FlowInstanceDO>()
+                                .eq(FlowInstanceDO::getParentInstanceId, instanceId)
+                                .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
+                for (FlowInstanceDO child : children) {
+                    try {
+                        terminate(child.getId(), "级联终止: " + reason);
+                        count++;
+                    } catch (Exception e) {
+                        log.warn("[Flow] 级联终止子流程失败: parentId={} childId={} err={}",
+                                instanceId, child.getId(), e.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[Flow] 批量终止实例失败: instanceId={} err={}", instanceId, e.getMessage());
+            }
+        }
+        log.info("[Flow] 批量终止完成: requested={} actual={}", instanceIds.size(), count);
+        return count;
     }
 
     @Override

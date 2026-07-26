@@ -7,6 +7,11 @@ import java.util.Map;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
+import com.njydsz.common.safe.sensitive.SensitiveType;
+
 import lombok.Data;
 
 /**
@@ -42,6 +47,8 @@ public class EmbeddedApprovalActionDTO implements Serializable {
     private String userId;
 
     /** 操作人姓名 */
+    @JsonSerialize(using = SensitiveDataSerializer.class)
+    @SensitiveData(SensitiveType.CHINESE_NAME)
     private String userName;
 
     /** 审批意见 */
@@ -54,6 +61,8 @@ public class EmbeddedApprovalActionDTO implements Serializable {
     private String targetUserId;
 
     /** 转办/委派目标人姓名 */
+    @JsonSerialize(using = SensitiveDataSerializer.class)
+    @SensitiveData(SensitiveType.CHINESE_NAME)
     private String targetUserName;
 
     /** 流程变量 */

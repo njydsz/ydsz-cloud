@@ -1,0 +1,121 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.agent.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Agent 模块。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.agent.llm.default-provider",
+      "type": "java.lang.String",
+      "description": "默认 LLM Provider（openai / deepseek / qwen / ollama）。",
+      "defaultValue": "openai"
+    },
+    {
+      "name": "ydsz.agent.llm.default-model",
+      "type": "java.lang.String",
+      "description": "默认模型名称。",
+      "defaultValue": "gpt-4o-mini"
+    },
+    {
+      "name": "ydsz.agent.llm.api-key",
+      "type": "java.lang.String",
+      "description": "LLM API Key。"
+    },
+    {
+      "name": "ydsz.agent.llm.base-url",
+      "type": "java.lang.String",
+      "description": "LLM API Base URL。",
+      "defaultValue": "https://api.openai.com/v1"
+    },
+    {
+      "name": "ydsz.agent.llm.temperature",
+      "type": "java.lang.Double",
+      "description": "默认温度参数（0.0-2.0）。",
+      "defaultValue": 0.7
+    },
+    {
+      "name": "ydsz.agent.llm.max-tokens",
+      "type": "java.lang.Integer",
+      "description": "默认最大 Token 数。",
+      "defaultValue": 2048
+    },
+    {
+      "name": "ydsz.agent.llm.timeout-seconds",
+      "type": "java.lang.Integer",
+      "description": "LLM 调用超时（秒）。",
+      "defaultValue": 60
+    },
+    {
+      "name": "ydsz.agent.memory.ttl-hours",
+      "type": "java.lang.Integer",
+      "description": "对话记忆 TTL（小时）。",
+      "defaultValue": 24
+    },
+    {
+      "name": "ydsz.agent.memory.max-messages",
+      "type": "java.lang.Integer",
+      "description": "滑动窗口最大消息数。",
+      "defaultValue": 20
+    },
+    {
+      "name": "ydsz.agent.rag.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 RAG 知识增强。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.agent.rag.vector-store",
+      "type": "java.lang.String",
+      "description": "向量存储类型（pgvector / memory）。",
+      "defaultValue": "memory"
+    },
+    {
+      "name": "ydsz.agent.rag.embedding-model",
+      "type": "java.lang.String",
+      "description": "Embedding 模型名称。",
+      "defaultValue": "text-embedding-3-small"
+    },
+    {
+      "name": "ydsz.agent.rag.embedding-api-key",
+      "type": "java.lang.String",
+      "description": "Embedding API Key（默认复用 LLM API Key）。"
+    },
+    {
+      "name": "ydsz.agent.rag.embedding-base-url",
+      "type": "java.lang.String",
+      "description": "Embedding API Base URL（默认复用 LLM Base URL）。"
+    },
+    {
+      "name": "ydsz.agent.rag.dimension",
+      "type": "java.lang.Integer",
+      "description": "向量维度。",
+      "defaultValue": 1536
+    },
+    {
+      "name": "ydsz.agent.rag.chunk-size",
+      "type": "java.lang.Integer",
+      "description": "文本分块大小（字符数）。",
+      "defaultValue": 500
+    },
+    {
+      "name": "ydsz.agent.rag.chunk-overlap",
+      "type": "java.lang.Integer",
+      "description": "文本分块重叠（字符数）。",
+      "defaultValue": 50
+    },
+    {
+      "name": "ydsz.agent.rag.top-k",
+      "type": "java.lang.Integer",
+      "description": "检索 Top-K。",
+      "defaultValue": 5
+    },
+    {
+      "name": "ydsz.agent.rag.min-score",
+      "type": "java.lang.Double",
+      "description": "最小相似度阈值。",
+      "defaultValue": 0.7
+    }
+  ]
+}

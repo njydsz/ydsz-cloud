@@ -6,6 +6,11 @@ import java.io.Serializable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
+import com.njydsz.common.safe.sensitive.SensitiveType;
+
 import lombok.Data;
 
 /**
@@ -15,7 +20,7 @@ import lombok.Data;
  * 回复时传入 {@code parentCommentId}（必填）和 {@code replyToUserId}（可选）。
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 public class FlowCommentCreateDTO implements Serializable {
@@ -45,5 +50,7 @@ public class FlowCommentCreateDTO implements Serializable {
     private String replyToUserId;
 
     /** 被回复人姓名（可选） */
+    @JsonSerialize(using = SensitiveDataSerializer.class)
+    @SensitiveData(SensitiveType.CHINESE_NAME)
     private String replyToUserName;
 }

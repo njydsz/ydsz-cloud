@@ -1,12 +1,10 @@
 # =====================================================================
-#  YDSZ · Gateway · DEV 环境配置（Nacos DataId）
+#  YDSZ · Gateway · PROD 环境配置（Nacos DataId）
 #  --------------------------------------------------------------------
-#  DataId:    ydsz-gateway-dev.yaml
-#  Group:     dev
-#  Profile:   dev
-#  端口:      9000
-#  说明:      Nacos 配置中心加载此文件后等价于 application.yml，
-#             配合 bootstrap.yml 完成启动。
+#  DataId:    ydsz-gateway-prod.yaml
+#  Group:     prod
+#  Profile:   prod
+#  端口:      9000 (HTTPS)
 # =====================================================================
 
 server:
@@ -19,9 +17,24 @@ server:
     min-response-size: 1024
   # P0-阶段二-8: 优雅停机（等待进行中的请求完成）
   shutdown: graceful
+  # P0-阶段二-9: 仅 HTTPS 通信（生产环境强制 TLS）
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE_PATH:classpath:keystore/ydsz-gateway.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS:ydsz-gateway}
+    # TLS 1.2+（禁用 SSLv3/TLSv1.0/TLSv1.1）
+    enabled-protocols: TLSv1.2,TLSv1.3
+    # 仅强加密套件
+    ciphers: TLS_AES_256_GCM_SHA384,TLS_AES_128_GCM_SHA256,TLS_CHACHA20_POLY1305_SHA256,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-AES128-GCM-SHA256
+  # P1-6: 隐藏 Server 头（防指纹识别）
+  netty:
+    # 禁用 Server 头暴露
+    connection-timeout: 5s
 
 spring:
-  profiles: dev
+  profiles: prod
   # P0-阶段二-8: 优雅停机超时（30s 内未完成则强制关闭）
   lifecycle:
     timeout-per-shutdown-phase: 30s
@@ -29,12 +42,14 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
           lower-case-service-id: true
+      # P0-阶段二-10: 生产环境 CORS 严格化
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:*}
+            # 生产环境必须配置可信域，禁止 *
+            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:https://ydsz.example.com,https://*.ydsz.example.com}
             allowedMethods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
             allowedHeaders: "Authorization,Content-Type,X-Requested-With,X-Access-Token,X-Trace-Id,X-Gray-Tag"
             exposedHeaders:
@@ -76,6 +91,22 @@ spring:
           mode: response
           response-status: 429
           response-body: '{"code":429,"message":"error.RATE_LIMIT"}'
+      # P0-阶段二-4: 生产环境启用 Nacos 规则动态推送
+      datasource:
+        ds1:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:ydsz}
+            groupId: ${NACOS_GROUP:prod}
+            dataId: ydsz-gateway-sentinel-flow.json
+            ruleType: flow
+        ds2:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:ydsz}
+            groupId: ${NACOS_GROUP:prod}
+            dataId: ydsz-gateway-sentinel-degrade.json
+            ruleType: degrade
     loadbalancer:
       configurations: gray
       nacos:
@@ -90,25 +121,21 @@ feign:
 # =====================================================================
 ydsz:
   gateway:
-    # P0-2: 内部头签名密钥（与 JWT 密钥分离，避免单密钥泄漏导致整体信任链破裂）
-    # ⚠️ 生产环境必须通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入强随机密钥（≥32 字节）
-    # 开发环境如未配置，自动回退到 ydsz.jwt.secret（仅用于本地调试）
-    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
-    # P0-4: WebSocket Origin 白名单（防跨域 WebSocket 劫持）
-    # 逗号分隔，支持通配符（如 https://*.ydsz.example.com）
-    # dev 环境为空表示不校验 Origin；prod 环境必须配置可信域
+    # P0-2: 内部头签名密钥（生产环境必须通过环境变量注入强随机密钥）
+    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
+    # P0-4: WebSocket Origin 白名单（生产环境必须配置）
     websocket:
-      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:}
+      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://ydsz.example.com,https://*.ydsz.example.com}
     # P0-阶段二-2/3/4: Sentinel 规则配置
     sentinel:
-      nacos-datasource-enabled: false
+      nacos-datasource-enabled: true
       degrade-rule-data-id: ydsz-gateway-sentinel-degrade.json
       system-rule-data-id: ydsz-gateway-sentinel-system.json
-      rule-group: dev
+      rule-group: prod
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:
-        max-connections: 500
+        max-connections: 1000
         pending-acquire-timeout-ms: 45000
         max-idle-time-seconds: 30
         max-life-time-seconds: 60
@@ -121,23 +148,22 @@ ydsz:
         - /actuator/health/readiness
         - /actuator/info
 
-# 日志级别（dev 环境开 DEBUG）
+# 日志级别（prod 环境仅 INFO/WARN/ERROR）
 logging:
   level:
-    root: INFO
-    "[com.njydsz]": DEBUG
-    "[org.springframework.cloud.gateway]": INFO
+    root: WARN
+    "[com.njydsz]": INFO
+    "[org.springframework.cloud.gateway]": WARN
 
-# SpringDoc / Knife4j dev 环境开启
+# 生产环境关闭 Knife4j 文档 UI（防止接口泄露）
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
   swagger-ui:
-    enabled: true
+    enabled: false
 knife4j:
-  production: false
+  production: true
 
-# Actuator 暴露端点
 management:
   endpoint:
     gateway:

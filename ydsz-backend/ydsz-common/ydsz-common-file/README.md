@@ -1,6 +1,6 @@
 # ydsz-common-file
 
-YDSZ 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 / COS / OBS / Qiniu）、分片上传、断点续传、文件去重（秒传）、文件类型安全检测、生命周期管理。
+YDSZ 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 / COS / OBS / Qiniu）、分片上传、断点续传、文件去重（秒传）、文件类型安全检测、病毒扫描接口、生命周期管理、上传并发保护、重试、指标采集、健康检查。
 
 ## 模块定位
 
@@ -31,10 +31,12 @@ YDSZ 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 |---|---|
 | `IFileStorage` | 文件存储接口（上传 / 下载 / 删除 / 列表） |
 | `AbstractFileStorage` | 存储抽象基类 |
-| `IFileStorageProvider` / `IStorageFactory` | 存储提供者 / 工厂 |
-| `FileUploader` / `FileUploadDelegate` | 文件上传器 |
-| `FileDownloader` / `FileDownloadDelegate` | 文件下载器 |
+| `IFileStorageProvider` / `DefaultStorageFactory` | 存储提供者 / 工厂 |
+| `FileUploader` | 文件上传器 |
+| `FileDownloader` | 文件下载器 |
 | `FileManager` | 文件管理器 |
+| `StorageRetryHelper` | 存储操作重试助手（指数退避） |
+| `UploadConcurrencyGuard` | 上传并发保护（防同文件并发分片冲突） |
 
 ### 分片上传与断点续传
 
@@ -47,7 +49,6 @@ YDSZ 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 | `MultipartContextStore` | 分片上下文存储 |
 | `RedisMultipartContextStore` / `InMemoryMultipartContextStore` | Redis / 内存实现 |
 | `DelegatingMultipartContextStore` | 委托存储 |
-| `UploadConcurrencyGuard` | 上传并发保护 |
 | `ChunkedUploadResult` | 分片上传结果 |
 
 ### 文件去重（秒传）
@@ -65,11 +66,28 @@ YDSZ 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 | `MagicNumberRegistry` | Magic Number 注册表 |
 | `FileValidationException` / `FileExceptionCode` | 校验异常 |
 
+### 病毒扫描
+
+| 类 | 说明 |
+|---|---|
+| `VirusScanner` | 病毒扫描接口（`scan` / `isAvailable`） |
+| `NoOpVirusScanner` | 默认 NoOp 实现（直接返回 CLEAN，**仅用于开发 / 测试**） |
+
+> **生产环境警示**：默认装配的 `NoOpVirusScanner` 不会真正扫描病毒，仅占位返回 CLEAN。生产环境必须替换为真实实现（如 ClamAV），见 P0-8 任务。
+
 ### 生命周期管理
 
 | 类 | 说明 |
 |---|---|
 | `FileLifecycleManager` | 文件生命周期管理（过期 / 归档 / 清理） |
+| `FileLifecycleProperties` | 生命周期配置属性 |
+
+### 可观测性
+
+| 类 | 说明 |
+|---|---|
+| `FileMetrics` | 文件指标采集（上传 / 下载 QPS、耗时、存储用量） |
+| `FileHealthIndicator` | 健康检查（存储连通性） |
 
 ### 领域模型
 
@@ -89,6 +107,12 @@ YDSZ 统一文件存储框架 — 7 种存储平台（Local / OSS / MinIO / S3 /
 |---|---|
 | `UploadProgressListener` | 上传进度回调 |
 
+### 开关注解
+
+| 注解 | 说明 |
+|---|---|
+| `@EnableYdszFile` | 文件模块自动装配入口 |
+
 ## 配置项
 
 ```yaml
@@ -105,6 +129,8 @@ ydsz:
     lifecycle:
       enabled: true
       temp-expire: 7d              # 临时文件过期
+    virus-scan:
+      enabled: false               # 默认关闭，开启需引入真实 VirusScanner Bean
 ```
 
 ## 自动配置
@@ -112,6 +138,8 @@ ydsz:
 | 配置类 | 激活条件 |
 |---|---|
 | `FileConfiguration` | 总是激活 |
+| `FileProperties` / `FileUploadProperties` / `FileLifecycleProperties` | 总是激活 |
+
 ## 依赖
 
 ```xml

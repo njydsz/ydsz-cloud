@@ -5,6 +5,11 @@ import java.io.Serializable;
 
 import jakarta.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
+import com.njydsz.common.safe.sensitive.SensitiveType;
+
 import lombok.Data;
 
 /**
@@ -28,5 +33,7 @@ public class FlowAssigneeDTO implements Serializable {
     private String userId;
 
     /** 姓名 */
+    @JsonSerialize(using = SensitiveDataSerializer.class)
+    @SensitiveData(SensitiveType.CHINESE_NAME)
     private String userName;
 }

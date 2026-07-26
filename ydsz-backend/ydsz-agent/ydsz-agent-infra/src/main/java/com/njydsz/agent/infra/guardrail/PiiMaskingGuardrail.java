@@ -16,6 +16,8 @@ import com.njydsz.agent.domain.guardrail.OutputGuardrail;
  *   <li>手机号：138****8888</li>
  *   <li>身份证号：3201**********1234</li>
  *   <li>邮箱：z***@example.com</li>
+ *   <li>银行卡号：6222****1234</li>
+ *   <li>护照号：G12345****</li>
  * </ul>
  *
  * @author ydsz-team
@@ -31,6 +33,10 @@ public class PiiMaskingGuardrail implements OutputGuardrail {
             Pattern.compile("(?<!\\d)\\d{17}[0-9Xx](?!\\d)");
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+    private static final Pattern BANK_CARD_PATTERN =
+            Pattern.compile("(?<!\\d)[1-9]\\d{14,17}(?!\\d)");
+    private static final Pattern PASSPORT_PATTERN =
+            Pattern.compile("(?<![A-Z])[GEKS][1-9]\\d{7}(?!\\d)");
 
     @Override
     public GuardrailResult check(String output) {
@@ -53,6 +59,14 @@ public class PiiMaskingGuardrail implements OutputGuardrail {
                 return email;
             }
             return email.charAt(0) + "***" + email.substring(atIdx);
+        });
+        sanitized = BANK_CARD_PATTERN.matcher(sanitized).replaceAll(matchResult -> {
+            String card = matchResult.group();
+            return card.substring(0, 4) + "****" + card.substring(card.length() - 4);
+        });
+        sanitized = PASSPORT_PATTERN.matcher(sanitized).replaceAll(matchResult -> {
+            String passport = matchResult.group();
+            return passport.substring(0, 2) + "****" + passport.substring(6);
         });
         if (!sanitized.equals(output)) {
             log.info("[Guardrail] PII 脱敏处理完成");

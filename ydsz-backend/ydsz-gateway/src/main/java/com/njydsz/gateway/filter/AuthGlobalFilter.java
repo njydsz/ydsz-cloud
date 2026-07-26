@@ -73,6 +73,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      *
      * <p>P0-C5 改为精确匹配：仅路径完全相等才放行，
      * 杜绝 {@code /auth/login/../users/list} 等 startsWith 绕过。
+     *
+     * <p>P0-阶段二-7: 新增 K8s 健康探针路径放行，避免探针请求被 401 拦截导致 Pod 重启。
      */
     private static final Set<String> WHITE_LIST = PathGuard.whiteList(
             "/auth/login",
@@ -80,6 +82,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/auth/captcha",
             "/auth/register",
             "/health",
+            // P0-阶段二-7: K8s health probe 路径放行（liveness/readiness/info）
+            "/actuator/health",
+            "/actuator/health/liveness",
+            "/actuator/health/readiness",
+            "/actuator/info",
             // P0-2: 三方审批回调 webhook（钉钉/飞书/企微），通过签名验证保证安全
             "/workflow/third-party/dingtalk/callback",
             "/workflow/third-party/feishu/callback",
