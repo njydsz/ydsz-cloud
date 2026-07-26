@@ -19,11 +19,39 @@ ydsz:
   thread:
     enabled: true
     pools:
-      rule-parallel:
+      ruleParallel:
         core-size: 4
         max-size: 8
         queue-capacity: 200
         thread-name-prefix: ydsz-rule-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      ruleTimeout:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydsz-rule-timeout-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      ruleChain:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydsz-rule-chain-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      factProvider:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-fact-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      modelInput:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-model-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
   literule:

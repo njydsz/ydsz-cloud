@@ -38,6 +38,8 @@ public class RuleTimeoutExecutor {
      */
     public RuleTimeoutExecutor(long defaultTimeoutMs, int threadPoolSize) {
         this.defaultTimeoutMs = defaultTimeoutMs;
+        // P0-1 TODO: 迁移到 common-thread 统一管理（ydsz.thread.pools.ruleTimeout）
+        // 当前保留手动创建是因为 RuleTimeoutExecutor 非 Spring Bean，由 DefaultRuleEngine 编程式创建
         this.executor = Executors.newFixedThreadPool(Math.max(2, threadPoolSize), r -> {
             Thread t = new Thread(r, "literule-timeout-exec");
             t.setDaemon(true);

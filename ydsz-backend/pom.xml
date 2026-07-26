@@ -24,7 +24,7 @@
         <module>ydsz-literule</module>
         <module>ydsz-userinfo</module>
         <module>ydsz-system</module>
-        <!-- ydsz-project 模块已在 f79d1e4b5 提交中移除，待业务域重建时恢复 -->
+        <module>ydsz-project</module>
         <module>ydsz-message</module>
         <module>ydsz-cronjob</module>
         <module>ydsz-workflow</module>

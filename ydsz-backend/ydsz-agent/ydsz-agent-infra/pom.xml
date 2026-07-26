@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -27,6 +27,11 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
+        <!-- P1-8: PiiMaskingGuardrail 委托 common-safe 的 SensitiveUtil 进行 PII 脱敏 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>

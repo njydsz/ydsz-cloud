@@ -266,7 +266,7 @@ public class OutboxService {
     }
 
     /**
-     * 校验 payload 大小
+     * 校验 payload 大小是否超过配置的最大限制
      *
      * @param payload 消息负载
      * @throws IllegalArgumentException payload 超过最大限制
@@ -284,7 +284,9 @@ public class OutboxService {
     }
 
     /**
-     * 从 RequestContext 获取租户 ID
+     * 解析租户 ID
+     *
+     * <p>优先从 RequestContext 获取，若未启用租户隔离或 RequestContext 不可用则返回 null。
      *
      * @return 租户 ID，若未启用租户隔离则返回 null
      */

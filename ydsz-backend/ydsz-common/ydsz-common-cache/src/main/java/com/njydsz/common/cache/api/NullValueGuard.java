@@ -23,7 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *       超过时自动清空重建，防止单缓存穿透攻击导致内存溢出
  * </ul>
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class NullValueGuard {
 

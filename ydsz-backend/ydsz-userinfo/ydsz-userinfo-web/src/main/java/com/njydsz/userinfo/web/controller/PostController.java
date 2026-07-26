@@ -69,6 +69,8 @@ public class PostController {
         return BaseResponse.success(service.update(dto));
     }
 
+    @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
+            content = "'删除岗位: ' + #id")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除岗位")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

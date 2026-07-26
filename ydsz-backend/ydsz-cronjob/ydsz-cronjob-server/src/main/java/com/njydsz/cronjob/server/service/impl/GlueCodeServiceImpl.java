@@ -44,6 +44,17 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     /** GLUE 代码 Mapper（版本化源码 CRUD） */
     private final GlueCodeMapper glueCodeMapper;
 
+    /**
+     * {@inheritDoc}
+     * <p>版本号自增策略：查询当前最大版本号，+1 后插入新记录。语言默认 GROOVY。
+     *
+     * @param jobId      任务 ID
+     * @param sourceCode 源代码内容
+     * @param language   编程语言（GROOVY/PYTHON/SHELL/JAVASCRIPT），为空时默认 GROOVY
+     * @param remark     版本备注
+     * @return 新创建的 GLUE 代码版本记录
+     * @throws SysException 当 jobId 为空或 sourceCode 为空白时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public GlueCodeDO save(String jobId, String sourceCode, String language, String remark) {
@@ -68,6 +79,12 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param jobId 任务 ID
+     * @return 最新版本的 GLUE 代码记录，jobId 为空或不存在时返回 null
+     */
     @Override
     public GlueCodeDO getLatest(String jobId) {
         if (!StringUtils.hasText(jobId)) {
@@ -76,6 +93,13 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         return glueCodeMapper.selectLatestByJobId(jobId);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>按版本号降序排列返回全部历史版本。
+     *
+     * @param jobId 任务 ID
+     * @return 版本列表（降序），jobId 为空时返回空列表
+     */
     @Override
     public List<GlueCodeDO> listVersions(String jobId) {
         if (!StringUtils.hasText(jobId)) {
@@ -87,6 +111,16 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         return glueCodeMapper.selectList(wrapper);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>回滚策略：查询目标版本源代码，创建新版本（version=max+1）写入，
+     * 而非物理删除中间版本，保证版本链完整性。
+     *
+     * @param jobId   任务 ID
+     * @param version 要回滚到的目标版本号
+     * @return 回滚后生成的新版本记录
+     * @throws SysException 当 jobId 为空、版本号无效或目标版本不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public GlueCodeDO rollback(String jobId, Integer version) {
@@ -124,6 +158,17 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     /** 测试执行超时时间（毫秒） */
     private static final long TEST_TIMEOUT_MS = 10_000;
 
+    /**
+     * {@inheritDoc}
+     * <p>仅支持 Groovy/Java 内存编译执行（GroovyClassLoader），
+     * Python/Shell/JavaScript 需保存后通过任务调度执行。
+     * 执行结果包含 success/result/durationMs/error 四个字段。
+     *
+     * @param sourceCode 源代码内容
+     * @param language   编程语言
+     * @param paramsJson 任务参数 JSON 字符串
+     * @return 执行结果 Map，包含 success、result/error、durationMs
+     */
     @Override
     public Map<String, Object> testCode(String sourceCode, String language, String paramsJson) {
         Map<String, Object> result = new HashMap<>();
@@ -149,6 +194,14 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持 GROOVY/JAVA、PYTHON、SHELL、JAVASCRIPT 四种语言模板，
+     * 返回 Map 包含 language、template、description 三个字段。
+     *
+     * @param language 编程语言，为空时默认 GROOVY
+     * @return 代码模板 Map
+     */
     @Override
     public Map<String, String> getCodeTemplate(String language) {
         String lang = StringUtils.hasText(language) ? language.toUpperCase() : "GROOVY";
@@ -216,6 +269,17 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         return template;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>返回 versionA 和 versionB 的源代码信息及行级差异列表，
+     * 差异类型包括 ADDED（新增行）、REMOVED（删除行）、MODIFIED（修改行）。
+     *
+     * @param jobId    任务 ID
+     * @param versionA 对比版本 A
+     * @param versionB 对比版本 B
+     * @return 差异对比结果，包含 versionA、versionB、diff 三个字段
+     * @throws SysException 当参数缺失或版本不存在时抛出
+     */
     @Override
     public Map<String, Object> diffVersions(String jobId, Integer versionA, Integer versionB) {
         Map<String, Object> result = new HashMap<>();

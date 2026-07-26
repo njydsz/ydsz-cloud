@@ -70,3 +70,42 @@ ydsz:
       retention-days: 30
       batch-size: 1000
       cron: "0 0 3 * * ?"
+  # P0-1: 统一线程池配置（ydsz-common-thread）
+  thread:
+    enabled: true
+    pools:
+      cronjobDispatch:
+        core-size: 8
+        max-size: 32
+        queue-capacity: 500
+        thread-name-prefix: cron-dispatch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+      cronjobRetry:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 200
+        thread-name-prefix: cron-retry-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      cronjobScan:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 100
+        thread-name-prefix: cron-scan-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      cronjobMapTask:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 200
+        thread-name-prefix: cron-map-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+      cronjobPrecise:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: cron-precise-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30

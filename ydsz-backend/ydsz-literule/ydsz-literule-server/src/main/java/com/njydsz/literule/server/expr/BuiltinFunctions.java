@@ -42,6 +42,12 @@ public final class BuiltinFunctions {
 
     // ===== 数学函数 =====
 
+    /**
+     * 注册数学类内置函数：abs/max/min/round/floor/ceil/sqrt/pow/log/log10/exp/random。
+     * <p>所有数学运算统一使用 {@link BigDecimal} 保证精度，避免 double 浮点误差。
+     *
+     * @param r 函数注册表
+     */
     private static void registerMath(FunctionRegistry r) {
         r.register("abs", args -> toDecimal(args[0]).abs(), "abs(n)", "绝对值");
         r.register("max", args -> {
@@ -76,6 +82,14 @@ public final class BuiltinFunctions {
 
     // ===== 字符串函数 =====
 
+    /**
+     * 注册字符串类内置函数：length/size/upper/lower/trim/contains/startsWith/endsWith/
+     * substring/indexOf/lastIndexOf/replace/split/join/concat/equals/compareTo/
+     * isEmpty/isBlank/isNotBlank。
+     * <p>所有字符串函数对 null 参数安全处理，null 转为空字符串。
+     *
+     * @param r 函数注册表
+     */
     private static void registerString(FunctionRegistry r) {
         r.register("length", args -> {
             Object v = args[0];
@@ -148,6 +162,12 @@ public final class BuiltinFunctions {
 
     // ===== 集合函数 =====
 
+    /**
+     * 注册集合类内置函数：count/sum/avg/first/last/distinct/contains/filter/map/reduce/sortBy。
+     * <p>支持 Collection、Map、数组等多种容器类型，filter/map/reduce 接受 Lambda 函数作为参数。
+     *
+     * @param r 函数注册表
+     */
     private static void registerCollection(FunctionRegistry r) {
         r.register("count", args -> {
             Object v = args[0];
@@ -247,6 +267,13 @@ public final class BuiltinFunctions {
 
     // ===== 类型转换函数 =====
 
+    /**
+     * 注册类型转换类内置函数：toString/toNumber/toInt/toLong/toDouble/toBoolean/toDecimal/
+     * isNull/isNotNull/typeOf。
+     * <p>所有转换函数对 null 安全处理，null 转为对应类型的零值（0/""/false）。
+     *
+     * @param r 函数注册表
+     */
     private static void registerType(FunctionRegistry r) {
         r.register("toString", args -> str(args[0]), "toString(v)", "转字符串");
         r.register("toNumber", args -> toDecimal(args[0]), "toNumber(v)", "转数字");
@@ -262,6 +289,13 @@ public final class BuiltinFunctions {
 
     // ===== 时间函数 =====
 
+    /**
+     * 注册时间类内置函数：now/today/dateFormat/dateParse/year/month/day。
+     * <p>支持 {@link LocalDateTime} 和 {@link LocalDate} 两种时间类型，
+     * dateFormat/dateParse 使用 Java 标准日期模式字符串（如 yyyy-MM-dd HH:mm:ss）。
+     *
+     * @param r 函数注册表
+     */
     private static void registerDateTime(FunctionRegistry r) {
         r.register("now", args -> LocalDateTime.now(), "now()", "当前时间");
         r.register("today", args -> LocalDate.now(), "today()", "今天日期");
@@ -300,6 +334,11 @@ public final class BuiltinFunctions {
 
     // ===== 工具函数 =====
 
+    /**
+     * 注册工具类内置函数：uuid（生成随机 UUID）、if（三元条件表达式）。
+     *
+     * @param r 函数注册表
+     */
     private static void registerUtility(FunctionRegistry r) {
         r.register("uuid", args -> UUID.randomUUID().toString(), "uuid()", "生成 UUID");
         r.register("if", args -> {
@@ -311,7 +350,11 @@ public final class BuiltinFunctions {
     // ===== 类型转换辅助方法 =====
 
     /**
-     * 检查是否为整数类型（Integer/Long 或 scale=0 的 BigDecimal）
+     * 检查给定值是否为整数类型（Integer/Long 或 scale≤0 的 BigDecimal）。
+     * <p>用于 {@link #smartAdd} 等智能运算方法判断是否可以走整数快速路径。
+     *
+     * @param v 待检查的值
+     * @return true 表示为整数类型
      */
     static boolean isIntegerLike(Object v) {
         if (v instanceof Integer || v instanceof Long) return true;
@@ -359,11 +402,24 @@ public final class BuiltinFunctions {
         return toDecimal(left).remainder(toDecimal(right));
     }
 
+    /**
+     * 将任意对象安全转为字符串，null 返回空字符串。
+     *
+     * @param v 待转换的值
+     * @return 字符串表示，null 返回 ""
+     */
     static String str(Object v) {
         if (v == null) return "";
         return String.valueOf(v);
     }
 
+    /**
+     * 将任意对象转为 {@link BigDecimal}，null/无法解析时返回 {@link BigDecimal#ZERO}。
+     * <p>支持 Number、Boolean（true→1, false→0）、字符串（尝试解析为 BigDecimal）。
+     *
+     * @param v 待转换的值
+     * @return BigDecimal 表示
+     */
     static BigDecimal toDecimal(Object v) {
         if (v == null) return BigDecimal.ZERO;
         if (v instanceof BigDecimal bd) return bd;
@@ -376,6 +432,13 @@ public final class BuiltinFunctions {
         }
     }
 
+    /**
+     * 将任意对象转为 int，null/无法解析时返回 0。
+     * <p>支持 Number、Boolean（true→1, false→0）、字符串（先尝试整数解析，再尝试浮点截断）。
+     *
+     * @param v 待转换的值
+     * @return int 表示
+     */
     static int toInt(Object v) {
         if (v == null) return 0;
         if (v instanceof Number n) return n.intValue();
@@ -391,6 +454,13 @@ public final class BuiltinFunctions {
         }
     }
 
+    /**
+     * 将任意对象转为 long，null/无法解析时返回 0L。
+     * <p>支持 Number、Boolean（true→1L, false→0L）、字符串（先尝试长整型解析，再降级 BigDecimal 截断）。
+     *
+     * @param v 待转换的值
+     * @return long 表示
+     */
     static long toLong(Object v) {
         if (v == null) return 0L;
         if (v instanceof Number n) return n.longValue();
@@ -402,6 +472,13 @@ public final class BuiltinFunctions {
         }
     }
 
+    /**
+     * 将任意对象转为 boolean，null 返回 false。
+     * <p>转换规则：Boolean 直接返回；Number 非零为 true；字符串 "false"/"0"/"" 为 false，其余为 true。
+     *
+     * @param v 待转换的值
+     * @return boolean 表示
+     */
     static boolean toBool(Object v) {
         if (v == null) return false;
         if (v instanceof Boolean b) return b;

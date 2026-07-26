@@ -49,15 +49,47 @@ public class FtpUtils {
         throw new IllegalStateException("Utility class");
     }
 
+    /**
+     * 上传文件到 FTP 服务器（使用默认重试次数）
+     *
+     * @param config   FTP 连接配置
+     * @param filePath 远程文件路径
+     * @param filename 文件名
+     * @param input    文件输入流
+     * @return 上传是否成功
+     */
     public static boolean uploadFile(FtpConfig config, String filePath, String filename, InputStream input) {
         return uploadFile(config, filePath, filename, input, DEFAULT_RETRY_COUNT);
     }
 
+    /**
+     * 上传文件到 FTP 服务器（指定重试次数）
+     *
+     * @param config    FTP 连接配置
+     * @param filePath  远程文件路径
+     * @param filename  文件名
+     * @param input     文件输入流
+     * @param retryCount 重试次数
+     * @return 上传是否成功
+     */
     public static boolean uploadFile(FtpConfig config, String filePath, String filename, InputStream input, int retryCount) {
         return uploadFile(config.getHost(), config.getPort(), config.getUsername(), config.getPassword(),
                 config.getBasePath(), filePath, filename, input, retryCount);
     }
 
+    /**
+     * 上传文件到 FTP 服务器（使用默认重试次数，直接传入连接参数）
+     *
+     * @param host     FTP 服务器地址
+     * @param port     FTP 端口
+     * @param username 用户名
+     * @param password 密码
+     * @param basePath 基础路径
+     * @param filePath 远程文件路径
+     * @param filename 文件名
+     * @param input    文件输入流
+     * @return 上传是否成功
+     */
     public static boolean uploadFile(String host, int port, String username, String password,
                                      String basePath, String filePath, String filename, InputStream input) {
         return uploadFile(host, port, username, password, basePath, filePath, filename, input, DEFAULT_RETRY_COUNT);

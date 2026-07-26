@@ -79,3 +79,18 @@ ydsz:
       chunk-overlap: 50
       top-k: 5
       min-score: 0.7
+  # P0-1: 统一线程池配置（ydsz-common-thread）
+  thread:
+    enabled: true
+    pools:
+      agentDag:
+        type: VIRTUAL
+        thread-name-prefix: agent-dag-
+        await-termination-seconds: 30
+      agentHeartbeat:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: agent-heartbeat-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10

@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>SMS → {@link NotifyChannel#SMS}</li>
  *   <li>DINGTALK → {@link NotifyChannel#DINGTALK}</li>
  *   <li>WECOM → {@link NotifyChannel#WECOM}</li>
+ *   <li>WECOM_APP → {@link NotifyChannel#WECOM}</li>
  *   <li>FEISHU → {@link NotifyChannel#FEISHU}</li>
  *   <li>INAPP → {@link NotifyChannel#INSITE}</li>
  * </ul>
@@ -39,13 +41,18 @@ import lombok.extern.slf4j.Slf4j;
  * common-notify 的 {@code NotifyServiceImpl} 通过 {@code List<NotifyChannelStrategy>}
  * 自动收集，实现两套体系的统一。
  *
+ * <p><b>实现说明</b>：使用 {@link ConfigurableListableBeanFactory#registerSingleton}
+ * 将每个适配器注册为独立的 {@link NotifyChannelStrategy} Bean，
+ * 而非返回 {@code List<NotifyChannelStrategy>}（后者只注册 List 本身为一个 Bean，
+ * common-notify 的 {@code List<NotifyChannelStrategy>} 注入无法收集到 List 内的元素）。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Configuration
 @ConditionalOnClass(NotifyChannelStrategy.class)
-public class NotifyChannelBridgeConfiguration {
+public class NotifyChannelBridgeConfiguration implements InitializingBean {
 
     /** 消息服务通道类型 → common-notify 渠道枚举映射 */
     private static final Map<String, NotifyChannel> CHANNEL_MAP = Map.of(
@@ -58,21 +65,28 @@ public class NotifyChannelBridgeConfiguration {
             "INAPP", NotifyChannel.INSITE
     );
 
+    private final ListableBeanFactory beanFactory;
+
     /**
-     * 注册通道适配器列表。
-     *
-     * <p>每个适配器实现 {@link NotifyChannelStrategy} 接口，
-     * common-notify 的 {@code NotifyServiceImpl} 通过 {@code List<NotifyChannelStrategy>}
-     * 自动收集这些适配器，从而复用消息服务的通道实现。
+     * 构造通道桥接配置。
      *
      * @param beanFactory Spring Bean 工厂
-     * @return 通道适配器列表
      */
-    @Bean
-    public List<NotifyChannelStrategy> notifyChannelStrategyAdapters(
-            ListableBeanFactory beanFactory) {
+    public NotifyChannelBridgeConfiguration(ListableBeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        if (!(beanFactory instanceof ConfigurableListableBeanFactory configurableFactory)) {
+            log.warn("[NotifyBridge] BeanFactory 不是 ConfigurableListableBeanFactory,跳过通道桥接: {}",
+                    beanFactory.getClass().getName());
+            return;
+        }
+
         Map<String, MessageChannel> channels = beanFactory.getBeansOfType(MessageChannel.class);
-        List<NotifyChannelStrategy> adapters = new ArrayList<>();
+        List<NotifyChannelStrategy> registered = new ArrayList<>();
+
         for (Map.Entry<String, MessageChannel> entry : channels.entrySet()) {
             MessageChannel channel = entry.getValue();
             String channelType = channel.channelType() == null
@@ -84,11 +98,12 @@ public class NotifyChannelBridgeConfiguration {
                 continue;
             }
             NotifyChannelStrategyAdapter adapter = new NotifyChannelStrategyAdapter(channel, notifyChannel);
-            adapters.add(adapter);
+            String beanName = "notifyAdapter_" + channelType.toLowerCase() + "_" + entry.getKey();
+            configurableFactory.registerSingleton(beanName, adapter);
+            registered.add(adapter);
             log.info("[NotifyBridge] 通道适配器已注册: bean={} type={} → {}",
-                    entry.getKey(), channelType, notifyChannel.getName());
+                    beanName, channelType, notifyChannel.getName());
         }
-        log.info("[NotifyBridge] 通道桥接完成,共注册 {} 个 NotifyChannelStrategy 适配器", adapters.size());
-        return adapters;
+        log.info("[NotifyBridge] 通道桥接完成,共注册 {} 个 NotifyChannelStrategy 适配器", registered.size());
     }
 }

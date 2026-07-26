@@ -36,7 +36,9 @@ import org.slf4j.LoggerFactory;
  *   <li>外层 {@link WeakHashMap} 确保缓存实例 GC 后状态自动清理
  * </ul>
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class CacheProtectionGuard {
 
