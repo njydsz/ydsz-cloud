@@ -47,6 +47,10 @@ public class CookieUtils {
 
     /**
      * 按名称获取 cookie 中的值
+     *
+     * @param name    Cookie 名称
+     * @param request HTTP 请求
+     * @return Cookie 值，未找到返回 null
      */
     public static String getCookieValue(String name, HttpServletRequest request) {
         Cookie cookie = getCookie(name, request);

@@ -36,10 +36,17 @@ for filepath in TARGETS:
         module = "userinfo"
 
     class_name = filepath.stem.replace("Controller", "").lower()
-    modified = False
+    modified = [False]  # 使用 list 避免 nonlocal 问题
 
     # 匹配: @SentinelRateLimit(...)\n    @PostMapping\n    public ... methodName(
-    # 在 @SentinelRateLimit 之前插入 @Idempotent
+    def replace_with_ratelimit(match):
+        indent = match.group(2)
+        method_name = match.group(3)
+        key = f"'{module}:{class_name}:{method_name}'"
+        idempotent_line = f'{indent}@Idempotent(key = {key}, ttlSeconds = 5, message = "请勿重复提交")\n'
+        modified[0] = True
+        return idempotent_line + match.group(1)
+
     pattern = re.compile(
         r'((\s+)@SentinelRateLimit\([^)]+\)\n'
         r'\2@(?:Post|Put|Delete)Mapping[^\n]*\n'
@@ -47,37 +54,27 @@ for filepath in TARGETS:
         re.MULTILINE
     )
 
-    def replace_with_ratelimit(match):
-        nonlocal modified
-        indent = match.group(2)
-        method_name = match.group(3)
-        key = f"'{module}:{class_name}:{method_name}'"
-        idempotent_line = f'{indent}@Idempotent(key = {key}, ttlSeconds = 5, message = "请勿重复提交")\n'
-        modified = True
-        return idempotent_line + match.group(1)
-
     new_content = pattern.sub(replace_with_ratelimit, content)
 
     # 如果没有 @SentinelRateLimit，匹配纯 @PostMapping
-    if not modified:
+    if not modified[0]:
+        def replace_no_ratelimit(match):
+            indent = match.group(2)
+            method_name = match.group(3)
+            key = f"'{module}:{class_name}:{method_name}'"
+            idempotent_line = f'{indent}@Idempotent(key = {key}, ttlSeconds = 5, message = "请勿重复提交")\n'
+            modified[0] = True
+            return idempotent_line + match.group(1)
+
         pattern2 = re.compile(
             r'((\s+)@(?:Post|Put|Delete)Mapping[^\n]*\n'
             r'\2public\s+\S+\s+(\w+)\s*\([^)]*\)\s*\{)',
             re.MULTILINE
         )
 
-        def replace_no_ratelimit(match):
-            nonlocal modified
-            indent = match.group(2)
-            method_name = match.group(3)
-            key = f"'{module}:{class_name}:{method_name}'"
-            idempotent_line = f'{indent}@Idempotent(key = {key}, ttlSeconds = 5, message = "请勿重复提交")\n'
-            modified = True
-            return idempotent_line + match.group(1)
-
         new_content = pattern2.sub(replace_no_ratelimit, new_content)
 
-    if not modified:
+    if not modified[0]:
         print(f"  [SKIP] 无匹配: {filepath.name}")
         continue
 

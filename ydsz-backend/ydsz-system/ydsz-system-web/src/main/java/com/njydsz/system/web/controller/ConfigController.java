@@ -2,6 +2,7 @@ package com.njydsz.system.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
@@ -82,6 +83,7 @@ public class ConfigController {
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建配置: ' + #dto.configKey")
     @Operation(summary = "创建配置")
+    @Idempotent(key = 'system:config:save', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.config.save", threshold = 50)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
@@ -91,6 +93,7 @@ public class ConfigController {
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新配置: ' + #dto.configKey")
     @Operation(summary = "更新配置")
+    @Idempotent(key = 'system:config:update', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.config.update", threshold = 50)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
@@ -100,6 +103,7 @@ public class ConfigController {
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除配置: ' + #id")
     @Operation(summary = "删除配置")
+    @Idempotent(key = 'system:config:remove', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.config.remove", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

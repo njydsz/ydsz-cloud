@@ -21,7 +21,17 @@ function close(): void {
   visible.value = false
 }
 
-/** 全局搜索 composable */
+/**
+ * 全局搜索 composable
+ *
+ * 跨组件共享全局搜索弹窗的显示状态。
+ * 模块级单例，visible 状态在所有调用方之间同步。
+ *
+ * @returns `{ visible, open, close }`
+ *   - visible: 弹窗是否可见（响应式）
+ *   - open: 打开弹窗
+ *   - close: 关闭弹窗
+ */
 export function useGlobalSearch() {
   return { visible, open, close }
 }

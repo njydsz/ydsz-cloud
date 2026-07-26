@@ -85,6 +85,7 @@ const getChangeTypeColor = (type: string) => {
   }
 }
 
+/** 变更类型对应的文本标签 */
 const getChangeTypeLabel = (type: string) => {
   switch (type) {
     case 'ADD': return t('common.entityHistory.typeAdd')

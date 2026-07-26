@@ -76,7 +76,7 @@ async function fetchList() {
   }
 }
 
-/** 重置查询条件并重新加载列表 */
+/** 重置查询条件并重新加载 */
 function handleReset() {
   query.contractId = undefined
   query.status = ''

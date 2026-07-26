@@ -15,9 +15,13 @@ import { useUserStore } from '@/store/modules/user'
 const { t } = useI18n()
 const userStore = useUserStore()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 跟进记录列表数据 */
 const list = ref<any[]>([])
+/** 跟进记录总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({
   page: 1,
   size: 10,

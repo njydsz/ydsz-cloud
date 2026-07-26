@@ -40,10 +40,15 @@ import { useUserStore } from '@/store/modules/user'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 表单提交状态 */
 const submitting = ref(false)
+/** 商机列表数据 */
 const list = ref<OpportunityVO[]>([])
+/** 商机列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({
   page: 1,
   size: 10,

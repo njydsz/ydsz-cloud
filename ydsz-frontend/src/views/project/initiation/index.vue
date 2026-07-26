@@ -28,12 +28,17 @@ import { useUserStore } from '@/store/modules/user'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
-/** H17.1 修复：3 个提交按钮共享 loading 状态，防止重复提交 */
+/** 表单提交状态（防止重复提交） */
 const submitting = ref(false)
+/** 预算提交状态 */
 const submittingBudget = ref(false)
+/** 门径评审提交状态 */
 const submittingGate = ref(false)
+/** 立项列表数据 */
 const list = ref<InitiationVO[]>([])
+/** 立项列表总数 */
 const total = ref(0)
 const query = reactive({
   page: 1,

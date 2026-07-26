@@ -53,9 +53,11 @@ public class OutboxRepository {
     private final SimpleJdbcInsert jdbcInsert;
 
     /**
+     * 构造函数
+     *
      * @param jdbcTemplate JDBC 模板
-     * @param tableName     Outbox 表名（默认 ydsz_outbox）
-     * @param dialect       数据库方言
+     * @param tableName    Outbox 表名（默认 ydsz_outbox），需通过正则校验防 SQL 注入
+     * @param dialect      数据库方言，用于适配不同数据库的 SQL 语法
      */
     public OutboxRepository(JdbcTemplate jdbcTemplate, String tableName, DatabaseDialect dialect) {
         if (tableName == null || !tableName.matches(TABLE_NAME_PATTERN)) {

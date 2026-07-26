@@ -2,6 +2,7 @@ package com.njydsz.system.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
@@ -85,6 +86,7 @@ public class DictItemController {
             content = "'创建字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
     @Operation(summary = "创建字典项")
     @SentinelRateLimit(resource = "system.dictitem.save", threshold = 50)
+    @Idempotent(key = 'system:dictitem:save', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.dictitem.save", threshold = 50)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody DictItemDTO dto) {
@@ -95,6 +97,7 @@ public class DictItemController {
             content = "'更新字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
     @Operation(summary = "更新字典项")
     @SentinelRateLimit(resource = "system.dictitem.update", threshold = 50)
+    @Idempotent(key = 'system:dictitem:update', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.dictitem.update", threshold = 50)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody DictItemDTO dto) {
@@ -105,6 +108,7 @@ public class DictItemController {
             content = "'删除字典项: ' + #id")
     @Operation(summary = "删除字典项")
     @SentinelRateLimit(resource = "system.dictitem.remove", threshold = 50)
+    @Idempotent(key = 'system:dictitem:remove', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.dictitem.remove", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

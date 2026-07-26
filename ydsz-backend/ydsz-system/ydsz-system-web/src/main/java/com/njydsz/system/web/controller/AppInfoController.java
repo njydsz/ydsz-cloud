@@ -2,6 +2,7 @@ package com.njydsz.system.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import jakarta.validation.Valid;
 
@@ -64,6 +65,7 @@ public class AppInfoController {
             content = "'创建应用: ' + #dto.appCode", excludeParams = {"appSecret"})
     @Operation(summary = "创建应用")
     @SentinelRateLimit(resource = "system.appinfo.save", threshold = 50)
+    @Idempotent(key = 'system:appinfo:save', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.appinfo.save", threshold = 50)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody AppInfoDTO dto) {
@@ -74,6 +76,7 @@ public class AppInfoController {
             content = "'更新应用: ' + #dto.appCode", excludeParams = {"appSecret"})
     @Operation(summary = "更新应用")
     @SentinelRateLimit(resource = "system.appinfo.update", threshold = 50)
+    @Idempotent(key = 'system:appinfo:update', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.appinfo.update", threshold = 50)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody AppInfoDTO dto) {
@@ -84,6 +87,7 @@ public class AppInfoController {
             content = "'删除应用: ' + #id")
     @Operation(summary = "删除应用")
     @SentinelRateLimit(resource = "system.appinfo.remove", threshold = 50)
+    @Idempotent(key = 'system:appinfo:remove', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.appinfo.remove", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
