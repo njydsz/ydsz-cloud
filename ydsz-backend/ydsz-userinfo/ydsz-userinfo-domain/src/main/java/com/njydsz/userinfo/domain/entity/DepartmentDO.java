@@ -26,4 +26,7 @@ public class DepartmentDO extends MpBaseEntity<String> {
     private String description;
     private Integer sortOrder;
     private String status;
+
+    /** 部门负责人 ID（关联 ydsz_user_account.id，支持 dept: 审批人展开） */
+    private String leaderId;
 }
