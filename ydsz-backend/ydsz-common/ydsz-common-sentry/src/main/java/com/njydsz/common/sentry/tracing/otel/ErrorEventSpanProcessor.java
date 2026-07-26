@@ -1,12 +1,10 @@
 package com.njydsz.common.sentry.tracing.otel;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.data.StatusData;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -67,8 +65,7 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
         // 1) HTTP 5xx 但未标记为 ERROR
         Long status = span.getAttribute(OtelSemConv.HTTP_RESPONSE_STATUS_CODE);
         boolean isServerError = status != null && status >= 500 && status < 600;
-        StatusData spanStatus = span.toSpanData().getStatus();
-        boolean isError = spanStatus.getStatusCode() == StatusCode.ERROR;
+        boolean isError = span.getStatus().getCode() == io.opentelemetry.api.trace.StatusCode.ERROR;
 
         if (isServerError || isError) {
             String errorCode = span.getAttribute(OtelSemConv.YDSZ_ERROR_CODE);
@@ -77,7 +74,7 @@ public class ErrorEventSpanProcessor implements SpanProcessor {
                     span.getName(),
                     isServerError ? ErrorEvent.Reason.SERVER_ERROR : ErrorEvent.Reason.SPAN_ERROR,
                     errorCode != null ? errorCode : (isServerError ? "HTTP_" + status : "UNCLASSIFIED"),
-                    spanStatus.getDescription(),
+                    span.getStatus().getDescription(),
                     span.getLatencyNanos() / 1_000_000L,
                     span.getKind());
         }

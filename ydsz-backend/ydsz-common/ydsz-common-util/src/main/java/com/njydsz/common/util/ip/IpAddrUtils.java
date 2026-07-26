@@ -49,15 +49,6 @@ public class IpAddrUtils {
             "fe80:", "fc", "fd", "::1", "::ffff:"
     };
 
-    /**
-     * 获取客户端真实 IP 地址
-     *
-     * <p>按照优先级依次尝试从以下请求头获取：
-     * X-Forwarded-For、Proxy-Client-IP、WL-Proxy-Client-IP、X-Real-IP、REMOTE_ADDR。
-     *
-     * @param request HTTP 请求对象
-     * @return 客户端 IP 地址，无法获取时返回 "unknown"
-     */
     public static String getIpAddr(HttpServletRequest request) {
         if (request == null) {
             return UNKNOWN;

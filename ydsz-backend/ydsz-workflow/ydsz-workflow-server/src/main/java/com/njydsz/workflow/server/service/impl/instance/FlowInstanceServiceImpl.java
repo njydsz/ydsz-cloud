@@ -151,6 +151,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      */
     private final NameAssembler nameAssembler;
 
+    /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null） */
+    private final org.springframework.beans.factory.ObjectProvider<com.njydsz.common.event.service.OutboxService> outboxServiceProvider;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String start(FlowStartProcessDTO dto) {
@@ -249,6 +252,24 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         log.info("[Flow] 启动流程: code={} bizId={} instanceId={}",
                 dto.getFlowCode(), dto.getBusinessId(), instanceId);
+
+        // P0-2: 发布 Outbox 事件（跨模块可靠投递）
+        com.njydsz.common.event.service.OutboxService outboxService = outboxServiceProvider.getIfAvailable();
+        if (outboxService != null) {
+            outboxService.appendToOutbox(
+                    "FlowInstance", instanceId,
+                    com.njydsz.common.event.model.StandardEventTypes.FLOW_INSTANCE_APPROVED,
+                    YdszJson.toJson(Map.of(
+                            "instanceId", instanceId,
+                            "flowCode", dto.getFlowCode(),
+                            "businessType", dto.getBusinessType(),
+                            "businessId", dto.getBusinessId(),
+                            "initiatorId", dto.getInitiatorId() != null ? dto.getInitiatorId() : "",
+                            "tenantId", tenantId
+                    ))
+            );
+        }
+
         return instanceId;
     }
 

@@ -43,16 +43,16 @@ public class RedisConversationMemory implements ConversationMemory {
     private final int ttlHours;
     private final int maxListSize;
 
-    public RedisConversationMemory(RedisService redisService) {
-        this(redisService, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
+    public RedisConversationMemory(StringRedisTemplate redisTemplate) {
+        this(redisTemplate, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
     }
 
-    public RedisConversationMemory(RedisService redisService, int ttlHours) {
-        this(redisService, ttlHours, DEFAULT_MAX_LIST_SIZE);
+    public RedisConversationMemory(StringRedisTemplate redisTemplate, int ttlHours) {
+        this(redisTemplate, ttlHours, DEFAULT_MAX_LIST_SIZE);
     }
 
-    public RedisConversationMemory(RedisService redisService, int ttlHours, int maxListSize) {
-        this.redisService = redisService;
+    public RedisConversationMemory(StringRedisTemplate redisTemplate, int ttlHours, int maxListSize) {
+        this.redisTemplate = redisTemplate;
         this.ttlHours = ttlHours > 0 ? ttlHours : DEFAULT_TTL_HOURS;
         this.maxListSize = maxListSize > 0 ? maxListSize : DEFAULT_MAX_LIST_SIZE;
     }

@@ -12,7 +12,6 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -117,7 +116,7 @@ public final class OtelSdkBuilder {
      */
     public OpenTelemetrySdk build() {
         // 1) TracerProvider
-        SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
+        SdkTracerProvider.Builder tracerProviderBuilder = SdkTracerProvider.builder();
 
         if (resource != null) {
             tracerProviderBuilder.setResource(resource);

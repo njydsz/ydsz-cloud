@@ -37,23 +37,43 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ConfigServiceImpl implements ConfigService {
 
+    /** 单个配置值缓存键前缀：system:config:value:{configKey} */
     private static final String CACHE_KEY_PREFIX = "system:config:value:";
+    /** 配置组缓存键前缀：system:config:group:{configGroup} */
     private static final String CACHE_GROUP_PREFIX = "system:config:group:";
+    /** 公开配置列表缓存键：system:config:public */
     private static final String CACHE_PUBLIC_KEY = "system:config:public";
+    /** 空值哨兵，用于防缓存穿透 */
     private static final String NULL_SENTINEL = "__NULL__";
+    /** 空值哨兵 TTL（1 分钟） */
     private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
 
+    /** 系统配置 Mapper */
     private final ConfigMapper mapper;
+    /** Redis 缓存服务 */
     private final RedisService redisService;
+    /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
+    /** 系统配置属性 */
     private final SystemProperties properties;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ConfigVO getById(String id) {
         ConfigDO entity = mapper.selectById(id);
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>优先查 Redis 缓存（含空值哨兵防穿透），未命中时查 DB 并回写缓存。
+     * 同时记录缓存命中/未命中指标和读取耗时指标。
+     *
+     * @param configKey 配置键
+     * @return 配置值字符串，不存在时返回 null
+     */
     @Override
     public String getConfigValue(String configKey) {
         long start = System.nanoTime();
@@ -82,6 +102,13 @@ public class ConfigServiceImpl implements ConfigService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>优先查 Redis 缓存，未命中时查 DB 并回写缓存。仅返回启用状态的配置。
+     *
+     * @param configGroup 配置组名
+     * @return 该组下所有启用配置列表（按 sortOrder 升序）
+     */
     @Override
     public List<ConfigVO> getConfigsByGroup(String configGroup) {
         String cacheKey = CACHE_GROUP_PREFIX + configGroup;
@@ -98,6 +125,13 @@ public class ConfigServiceImpl implements ConfigService {
         return vos;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>优先查 Redis 缓存，未命中时查 DB 并回写缓存。
+     * 仅返回 is_public=1 且 status=ENABLED 的配置。
+     *
+     * @return 公开配置列表（按 sortOrder 升序）
+     */
     @Override
     public List<ConfigVO> listPublicConfigs() {
         String cached = redisService.get(CACHE_PUBLIC_KEY, String.class);
@@ -113,6 +147,17 @@ public class ConfigServiceImpl implements ConfigService {
         return vos;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持按 configGroup 精确匹配、configKey 模糊匹配、status 精确匹配过滤。
+     *
+     * @param pageNum     页码（1-based）
+     * @param pageSize    每页条数
+     * @param configGroup 配置组名（可选过滤条件）
+     * @param configKey   配置键（可选，模糊匹配）
+     * @param status      状态（可选过滤条件）
+     * @return 分页结果
+     */
     @Override
     public IPage<ConfigVO> page(int pageNum, int pageSize, String configGroup, String configKey, String status) {
         QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
@@ -133,11 +178,25 @@ public class ConfigServiceImpl implements ConfigService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部配置列表（不区分状态）
+     */
     @Override
     public List<ConfigVO> list() {
         return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行值类型校验和唯一性校验（configGroup + configKey 组合不能重复），
+     * 插入后清除相关缓存。
+     *
+     * @param dto 配置数据
+     * @return 新创建的配置 ID
+     * @throws IllegalArgumentException 当值类型无效或配置键已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(ConfigDTO dto) {
@@ -156,6 +215,14 @@ public class ConfigServiceImpl implements ConfigService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行值类型校验，更新成功后清除相关缓存。
+     *
+     * @param dto 配置数据（需包含 id）
+     * @return true 表示更新成功
+     * @throws IllegalArgumentException 当值类型无效时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(ConfigDTO dto) {
@@ -168,6 +235,13 @@ public class ConfigServiceImpl implements ConfigService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>删除成功后清除相关缓存。
+     *
+     * @param id 配置 ID
+     * @return true 表示删除成功
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -179,6 +253,12 @@ public class ConfigServiceImpl implements ConfigService {
         return result;
     }
 
+    /**
+     * 清除指定配置相关的所有缓存（单值缓存 + 组缓存 + 公开配置缓存）。
+     *
+     * @param configKey   配置键（可为 null）
+     * @param configGroup 配置组名（可为 null）
+     */
     private void evictCache(String configKey, String configGroup) {
         if (configKey != null) {
             redisService.delete(CACHE_KEY_PREFIX + configKey);
@@ -189,15 +269,33 @@ public class ConfigServiceImpl implements ConfigService {
         redisService.delete(CACHE_PUBLIC_KEY);
     }
 
+    /**
+     * 获取配置缓存 TTL，从 {@link SystemProperties.Config#getCacheTtlMinutes()} 读取，
+     * 默认 5 分钟。
+     *
+     * @return 缓存 TTL
+     */
     private Duration getCacheTtl() {
         int minutes = properties.getConfig().getCacheTtlMinutes();
         return Duration.ofMinutes(minutes > 0 ? minutes : 5);
     }
 
+    /**
+     * 校验值类型是否合法，委托给 {@link ConfigValueType#validate(String)}。
+     *
+     * @param valueType 值类型（STRING/NUMBER/BOOLEAN/JSON）
+     * @throws IllegalArgumentException 当值类型无效时抛出
+     */
     private void validateValueType(String valueType) {
         ConfigValueType.validate(valueType);
     }
 
+    /**
+     * 将 DO 转换为 VO。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象，entity 为 null 时返回 null
+     */
     private ConfigVO toVO(ConfigDO entity) {
         if (entity == null) {
             return null;
@@ -216,6 +314,12 @@ public class ConfigServiceImpl implements ConfigService {
         return vo;
     }
 
+    /**
+     * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
+     *
+     * @param dto 数据传输对象
+     * @return 数据库实体
+     */
     private ConfigDO toEntity(ConfigDTO dto) {
         ConfigDO entity = new ConfigDO();
         entity.setId(dto.getId());

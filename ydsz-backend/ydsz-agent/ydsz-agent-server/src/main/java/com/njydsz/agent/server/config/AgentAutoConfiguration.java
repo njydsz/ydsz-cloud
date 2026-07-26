@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -19,6 +20,7 @@ import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
@@ -106,11 +108,11 @@ public class AgentAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ConversationMemory.class)
-    public ConversationMemory conversationMemory(RedisService redisService,
+    public ConversationMemory conversationMemory(StringRedisTemplate redisTemplate,
                                                    AgentProperties properties) {
         int maxMessages = properties.getMemory().getMaxMessages();
         int maxListSize = Math.max(maxMessages * 2, 50);
-        return new RedisConversationMemory(redisService,
+        return new RedisConversationMemory(redisTemplate,
                 properties.getMemory().getTtlHours(), maxListSize);
     }
 

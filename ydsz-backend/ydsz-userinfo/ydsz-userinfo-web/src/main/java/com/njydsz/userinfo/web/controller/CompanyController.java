@@ -11,11 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.server.service.CompanyService;
@@ -51,9 +47,6 @@ public class CompanyController {
         return BaseResponse.success(service.getById(id));
     }
 
-    @Audit(module = "公司管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
-            content = "'创建公司: ' + #dto.companyName")
-    @Idempotent(key = "company:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建公司")
     public BaseResponse<String> create(@Valid @RequestBody CompanySaveDTO dto) {

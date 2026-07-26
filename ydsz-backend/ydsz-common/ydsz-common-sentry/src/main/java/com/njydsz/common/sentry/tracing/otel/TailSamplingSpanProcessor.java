@@ -6,7 +6,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -227,8 +226,7 @@ public class TailSamplingSpanProcessor implements SpanProcessor {
                     .name("error-status")
                     .predicate(span -> {
                         // 1) OTel Span 自身状态
-                        if (span.toSpanData().getStatus().getStatusCode()
-                                == StatusCode.ERROR) {
+                        if (span.getStatus().getCode() == io.opentelemetry.api.trace.StatusCode.ERROR) {
                             return true;
                         }
                         // 2) HTTP 状态码 5xx
