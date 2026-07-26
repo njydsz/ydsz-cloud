@@ -7,7 +7,7 @@ import java.util.Map;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.sdk.trace.export.SpanProcessor;
+import io.opentelemetry.sdk.trace.SpanProcessor;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 
@@ -23,7 +22,6 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.nextwiki", "com.njydsz.common"})
 @EnableDiscoveryClient
-@EnableYdszAudit
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.nextwiki.api", "com.njydsz.common.feign"})

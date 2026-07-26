@@ -81,12 +81,17 @@ public class RoleController {
         return BaseResponse.success(service.update(dto));
     }
 
+    @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
+            content = "'删除角色: ' + #id")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除角色")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
     }
 
+    @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'分配角色权限: ' + #roleId")
+    @Idempotent(key = "role:assignPermissions", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{roleId}/permissions")
     @Operation(summary = "分配角色权限")
     public BaseResponse<Boolean> assignPermissions(

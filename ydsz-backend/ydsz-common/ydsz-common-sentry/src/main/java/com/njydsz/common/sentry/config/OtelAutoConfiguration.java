@@ -197,7 +197,7 @@ public class OtelAutoConfiguration {
         }
     }
 
-    private static Sampler buildSampler(SentryProperties.TracingConfig.OtelConfig config) {
+    private static Sampler buildSampler(SentryProperties.OtelConfig config) {
         if (config.getSampler() == null) {
             return OtelSamplers.parentBased(config.getSamplerRatio());
         }
@@ -224,7 +224,7 @@ public class OtelAutoConfiguration {
     }
 
     private static List<TailSamplingSpanProcessor.SamplingRule> buildTailSamplingRules(
-            SentryProperties.TracingConfig.OtelConfig.TailSamplingConfig config) {
+            SentryProperties.OtelConfig.TailSamplingConfig config) {
         List<TailSamplingSpanProcessor.SamplingRule> rules = new ArrayList<>();
         if (config.isErrorStatus()) {
             rules.add(TailSamplingSpanProcessor.Rules.errorStatus());
@@ -248,8 +248,8 @@ public class OtelAutoConfiguration {
     }
 
     private static OtelExporterFactory.BatchConfig buildBatchConfig(
-            SentryProperties.TracingConfig.OtelConfig config) {
-        SentryProperties.TracingConfig.OtelConfig.BatchConfig batch =
+            SentryProperties.OtelConfig config) {
+        SentryProperties.OtelConfig.BatchConfig batch =
                 config.getBatch();
         OtelExporterFactory.BatchConfig result = new OtelExporterFactory.BatchConfig();
         if (batch != null) {

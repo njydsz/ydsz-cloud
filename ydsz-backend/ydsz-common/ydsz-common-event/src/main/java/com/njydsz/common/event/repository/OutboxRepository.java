@@ -275,6 +275,12 @@ public class OutboxRepository {
         return tableName;
     }
 
+    /**
+     * 序列化扩展头为 JSON 字符串
+     *
+     * @param headers 扩展头映射
+     * @return JSON 字符串，序列化失败返回 null
+     */
     private String serializeHeaders(Map<String, String> headers) {
         if (headers == null || headers.isEmpty()) {
             return null;

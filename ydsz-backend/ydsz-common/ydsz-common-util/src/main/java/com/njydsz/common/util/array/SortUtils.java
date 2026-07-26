@@ -137,6 +137,10 @@ public class SortUtils {
 
     /**
      * 二分查找 (依赖已排序数组)
+     *
+     * @param arr 已排序的 int 数组
+     * @param key 查找的目标值
+     * @return 目标值的索引，未找到返回负数
      */
     public static int binarySearch(int[] arr, int key) {
         return arr == null ? -1 : Arrays.binarySearch(arr, key);
@@ -144,6 +148,12 @@ public class SortUtils {
 
     /**
      * 二分查找 (对象数组)
+     *
+     * @param arr 已排序的对象数组
+     * @param key 查找的目标值
+     * @param c   自定义比较器
+     * @param <T> 元素类型
+     * @return 目标值的索引，未找到返回负数
      */
     public static <T> int binarySearch(T[] arr, T key, Comparator<? super T> c) {
         return arr == null ? -1 : Arrays.binarySearch(arr, key, c);

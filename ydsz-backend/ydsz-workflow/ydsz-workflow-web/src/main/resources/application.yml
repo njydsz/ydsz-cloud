@@ -29,3 +29,16 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# P0-1: 统一线程池配置（ydsz-common-thread）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      flowQueue:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 256
+        thread-name-prefix: flow-queue-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10
