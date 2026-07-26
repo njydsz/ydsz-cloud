@@ -36,6 +36,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *   <li>热路径内联 - 减少虚方法调用和方法调用开销</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class SerializationProvider {

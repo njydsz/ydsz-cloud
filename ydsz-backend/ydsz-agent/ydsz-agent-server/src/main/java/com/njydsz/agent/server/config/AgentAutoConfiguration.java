@@ -35,8 +35,10 @@ import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
+import com.njydsz.common.redis.service.RedisService;
 
 import io.micrometer.core.instrument.MeterRegistry;
 

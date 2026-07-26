@@ -19,16 +19,36 @@ import { listEffectivePartTimeRates } from '@/api/resource/part-time-rate'
 import type { PartTimeRateVO } from '@/api/resource/part-time-rate/types'
 import { listEffectiveOutsourceRates } from '@/api/resource/outsource-rate'
 import type { OutsourceRateVO } from '@/api/resource/outsource-rate/types'
+import { useTable } from '@/composables/useTable'
+import type { PageResult } from '@/utils/request'
 
-const loading = ref(false)
-const empList = ref<EmployeeVO[]>([])
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(20)
-
-const keyword = ref('')
-const employeeTypeFilter = ref('')
-const workStatusFilter = ref('')
+const {
+  loading,
+  list: empList,
+  total,
+  query,
+  fetchData,
+  handleQuery,
+  resetQuery,
+  handlePageChange,
+} = useTable<{
+  page: number
+  size: number
+  keyword: string
+  employeeType: string
+  workStatus: string
+}>(async (q) => {
+  const resp = await pageEmployees({
+    page: q.page,
+    size: q.size,
+    keyword: q.keyword || undefined,
+    employeeType: q.employeeType || undefined,
+    workStatus: q.workStatus || undefined,
+  })
+  const data = resp.data ?? (resp as unknown as PageResult)
+  const records = (data as any).records ?? data.list ?? []
+  return { list: records, total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
+}, { defaultSize: 20 })
 
 const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
@@ -122,23 +142,6 @@ outsourceRates.value = []
 }
 }
 
-async function fetchData() {
-  loading.value = true
-  try {
-    const { data } = await pageEmployees({
-      page: currentPage.value,
-      size: pageSize.value,
-      keyword: keyword.value || undefined,
-      employeeType: employeeTypeFilter.value || undefined,
-      workStatus: workStatusFilter.value || undefined,
-    })
-    empList.value = data?.records || []
-    total.value = data?.total || 0
-  } finally {
-    loading.value = false
-  }
-}
-
 function openCreate() {
   dialogMode.value = 'create'
   editingId.value = ''
@@ -218,19 +221,6 @@ async function handleDelete(row: EmployeeVO) {
   })
   await deleteEmployee(row.id)
   ElMessage.success('删除成功')
-  fetchData()
-}
-
-function handleSearch() {
-  currentPage.value = 1
-  fetchData()
-}
-
-function handleReset() {
-  keyword.value = ''
-  employeeTypeFilter.value = ''
-  workStatusFilter.value = ''
-  currentPage.value = 1
   fetchData()
 }
 

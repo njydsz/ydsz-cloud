@@ -26,6 +26,7 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code ydsz.json.deserialize.failure} — 反序列化失败次数</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Configuration

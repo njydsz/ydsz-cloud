@@ -18,6 +18,7 @@ import com.njydsz.common.json.config.YdszJsonConfig;
  *   <li>最大序列化深度</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class JsonHealthIndicator implements HealthIndicator {

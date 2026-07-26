@@ -42,6 +42,7 @@ import com.njydsz.common.json.exception.JsonDeserializationException;
  * AutoTypeChecker.addToBlacklist("com.example.DangerousClass");
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class AutoTypeChecker {

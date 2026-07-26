@@ -46,6 +46,7 @@ import java.io.ObjectInputFilter;
  *
  * @see AutoTypeChecker
  * @see ObjectInputFilter
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class SafeObjectInputFilter {
