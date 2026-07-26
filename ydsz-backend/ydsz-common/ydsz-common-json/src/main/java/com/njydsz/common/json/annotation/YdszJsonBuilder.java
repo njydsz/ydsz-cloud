@@ -67,6 +67,7 @@ import java.lang.annotation.*;
  * }
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see YdszJsonCreator
  */

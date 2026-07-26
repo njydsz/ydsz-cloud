@@ -67,4 +67,15 @@ public class GatewayApplication {
             AuthProperties authProperties) {
         return new ReactiveTokenBlacklistService(redisTemplateProvider, authProperties);
     }
+
+    /**
+     * GAP-P0-3: 注册 Nonce 防重放缓存
+     *
+     * <p>复用 ydsz-common-safe 的 NonceCache，网关生成 nonce 时存储，
+     * 下游服务通过 X-Internal-Nonce 头接收后调用 verifyAndConsume() 双重校验。
+     */
+    @Bean
+    public NonceCache nonceCache() {
+        return new NonceCache();
+    }
 }

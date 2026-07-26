@@ -53,7 +53,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  *   <li>15: 嵌套 Bean</li>
  * </ul>
  * 
- * @author YdszJson Team
+ * @author ydsz-team
  */
 public final class AsmBeanCodecGenerator {
 

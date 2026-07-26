@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import com.njydsz.common.redis.service.RedisService;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -19,6 +19,7 @@ import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
@@ -186,6 +187,12 @@ public class AgentAutoConfiguration {
     @ConditionalOnMissingBean(CostAnalysisService.class)
     public CostAnalysisService costAnalysisService() {
         return new CostAnalysisService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(AgentRequestGuard.class)
+    public AgentRequestGuard agentRequestGuard(RedisService redisService) {
+        return new AgentRequestGuard(redisService);
     }
 
     @Bean

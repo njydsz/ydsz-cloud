@@ -238,21 +238,21 @@ fetchData()
     <el-card shadow="never" class="filter-card">
       <el-form inline>
         <el-form-item label="关键字">
-          <el-input v-model="keyword" placeholder="工号/姓名" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="query.keyword" placeholder="工号/姓名" clearable @keyup.enter="handleQuery" />
         </el-form-item>
         <el-form-item label="雇佣类型">
-          <el-select v-model="employeeTypeFilter" placeholder="全部" clearable style="width: 120px">
+          <el-select v-model="query.employeeType" placeholder="全部" clearable style="width: 120px">
             <el-option v-for="(label, key) in employeeTypeMap" :key="key" :label="label" :value="key" />
           </el-select>
         </el-form-item>
         <el-form-item label="在职状态">
-          <el-select v-model="workStatusFilter" placeholder="全部" clearable style="width: 120px">
+          <el-select v-model="query.workStatus" placeholder="全部" clearable style="width: 120px">
             <el-option v-for="(label, key) in workStatusMap" :key="key" :label="label" :value="key" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">{{ $t('common.search') }}</el-button>
-          <el-button @click="handleReset">{{ $t('common.reset') }}</el-button>
+          <el-button type="primary" @click="handleQuery">{{ $t('common.search') }}</el-button>
+          <el-button @click="resetQuery">{{ $t('common.reset') }}</el-button>
           <el-button type="success" @click="openCreate">{{ $t('common.addEmployee') }}</el-button>
         </el-form-item>
       </el-form>
@@ -306,12 +306,12 @@ fetchData()
       </vxe-table>
 
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        v-model:current-page="query.page"
+        v-model:page-size="query.size"
         :total="total"
         layout="total, prev, pager, next"
         style="margin-top: 16px; justify-content: flex-end"
-        @current-change="fetchData"
+        @current-change="handlePageChange"
       />
     </el-card>
 

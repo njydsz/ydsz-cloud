@@ -40,6 +40,7 @@ package com.njydsz.common.json.module;
  * }
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public interface YdszJsonModule {

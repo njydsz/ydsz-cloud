@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.metrics;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -46,6 +47,19 @@ public class FlowMetrics extends AbstractModuleMetrics {
     private final FlowInstanceMapper instanceMapper;
     private final FlowRunTaskMapper taskMapper;
     private final FlowCcMapper ccMapper;
+
+    /**
+     * P2-2: Gauge 查询 30s TTL 缓存（避免 Prometheus 每次抓取都打 DB）
+     *
+     * <p>Prometheus 默认 15s 抓取一次，多个 Gauge 会在同一轮抓取中全部触发。
+     * 使用单次缓存 + AtomicReference 保证线程安全，30s 内复用查询结果。
+     */
+    private static final long GAUGE_CACHE_TTL_NS = 30_000_000_000L; // 30s
+    private final AtomicReference<GaugeSnapshot> gaugeCache = new AtomicReference<>();
+
+    /** P2-2: Gauge 快照数据 */
+    private record GaugeSnapshot(long runningInstances, long pendingTasks,
+                                 long overdueTasks, long unreadCc, long cachedAtNanos) {}
 
     public FlowMetrics(MeterRegistry registry,
                        ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
@@ -280,52 +294,48 @@ public class FlowMetrics extends AbstractModuleMetrics {
 
     private void registerGauges() {
         // 运行中实例数
-        registry.gauge("ydsz_flow_instance_running", Tags.empty(), this, m -> {
-            if (m.instanceMapper == null) return 0d;
-            try {
-                Long count = m.queryRunningInstanceCount();
-                return count == null ? 0d : count.doubleValue();
-            } catch (Exception e) {
-                log.debug("[FlowMetrics] gauge instance_running 查询失败: {}", e.getMessage());
-                return 0d;
-            }
-        });
+        registry.gauge("ydsz_flow_instance_running", Tags.empty(), this, m -> m.getGaugeSnapshot().runningInstances());
 
         // 待办任务数
-        registry.gauge("ydsz_flow_task_pending", Tags.empty(), this, m -> {
-            if (m.taskMapper == null) return 0d;
-            try {
-                Long count = m.queryPendingTaskCount();
-                return count == null ? 0d : count.doubleValue();
-            } catch (Exception e) {
-                log.debug("[FlowMetrics] gauge task_pending 查询失败: {}", e.getMessage());
-                return 0d;
-            }
-        });
+        registry.gauge("ydsz_flow_task_pending", Tags.empty(), this, m -> m.getGaugeSnapshot().pendingTasks());
 
         // 超期任务数
-        registry.gauge("ydsz_flow_task_overdue", Tags.empty(), this, m -> {
-            if (m.taskMapper == null) return 0d;
-            try {
-                Long count = m.queryOverdueTaskCount();
-                return count == null ? 0d : count.doubleValue();
-            } catch (Exception e) {
-                log.debug("[FlowMetrics] gauge task_overdue 查询失败: {}", e.getMessage());
-                return 0d;
-            }
-        });
+        registry.gauge("ydsz_flow_task_overdue", Tags.empty(), this, m -> m.getGaugeSnapshot().overdueTasks());
 
         // 抄送未读数
-        registry.gauge("ydsz_flow_cc_unread", Tags.empty(), this, m -> {
-            if (m.ccMapper == null) return 0d;
-            try {
-                Long count = m.queryUnreadCcCount();
-                return count == null ? 0d : count.doubleValue();
-            } catch (Exception e) {
-                log.debug("[FlowMetrics] gauge cc_unread 查询失败: {}", e.getMessage());
-                return 0d;
-            }
-        });
+        registry.gauge("ydsz_flow_cc_unread", Tags.empty(), this, m -> m.getGaugeSnapshot().unreadCc());
+    }
+
+    /**
+     * P2-2: 获取 Gauge 快照（30s TTL 缓存）
+     *
+     * <p>Prometheus 抓取时多个 Gauge 会并发调用，使用 AtomicReference CAS 保证只查一次 DB。
+     * 缓存过期后下一次调用会触发刷新。
+     */
+    private GaugeSnapshot getGaugeSnapshot() {
+        long now = System.nanoTime();
+        GaugeSnapshot snapshot = gaugeCache.get();
+        if (snapshot != null && (now - snapshot.cachedAtNanos()) < GAUGE_CACHE_TTL_NS) {
+            return snapshot;
+        }
+        // 缓存过期，重新查询
+        long running = safeQuery(this::queryRunningInstanceCount);
+        long pending = safeQuery(this::queryPendingTaskCount);
+        long overdue = safeQuery(this::queryOverdueTaskCount);
+        long unread = safeQuery(this::queryUnreadCcCount);
+        GaugeSnapshot fresh = new GaugeSnapshot(running, pending, overdue, unread, now);
+        gaugeCache.set(fresh);
+        return fresh;
+    }
+
+    private long safeQuery(Supplier<Long> query) {
+        try {
+            Long val = query.get();
+            return val == null ? 0L : val;
+        } catch (Exception e) {
+            log.debug("[FlowMetrics] Gauge 查询失败: {}", e.getMessage());
+            return 0L;
+        }
     }
 
     // ===========================================

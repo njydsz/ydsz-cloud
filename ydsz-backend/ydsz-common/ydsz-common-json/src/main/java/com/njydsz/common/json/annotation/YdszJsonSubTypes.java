@@ -20,6 +20,7 @@ import java.lang.annotation.Target;
  * public abstract class Animal { }
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)

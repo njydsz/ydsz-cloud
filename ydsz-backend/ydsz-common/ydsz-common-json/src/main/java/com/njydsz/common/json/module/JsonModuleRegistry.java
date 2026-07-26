@@ -38,6 +38,7 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  * JsonSerializer serializer = registry.getSerializer(User.class);
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class JsonModuleRegistry {

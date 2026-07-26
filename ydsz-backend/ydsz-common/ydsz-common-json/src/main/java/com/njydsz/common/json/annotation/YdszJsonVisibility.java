@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
  * private String secretKey;       // 强制可见
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)

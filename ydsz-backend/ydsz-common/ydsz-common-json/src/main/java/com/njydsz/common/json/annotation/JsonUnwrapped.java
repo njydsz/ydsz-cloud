@@ -25,6 +25,7 @@ import java.lang.annotation.*;
  *
  * <p>序列化结果：{"orderId":"123","street":"...","city":"...","zipCode":"..."}</p>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Documented

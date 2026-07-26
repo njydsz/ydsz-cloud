@@ -1,9 +1,9 @@
 package com.njydsz.nextwiki.domain.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
@@ -161,7 +161,7 @@ public class ShareDomainService {
             // 记录失败次数
             Long failCount = redisService.incr(failKey, 1);
             if (failCount != null && failCount == 1) {
-                redisService.expire(failKey, LOCK_DURATION_MINUTES, TimeUnit.MINUTES);
+                redisService.expire(failKey, Duration.ofMinutes(LOCK_DURATION_MINUTES));
             }
             log.warn("[ShareDomainService] 验证失败: shareCode={}, failCount={}", shareCode, failCount);
             throw new BusinessException(

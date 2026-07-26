@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 
@@ -27,6 +28,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.workflow", "com.njydsz.common", "com.njydsz.literule"})
 @EnableDiscoveryClient
+@EnableYdszAudit
 @EnableYdszAuth
 @EnableYdszFeign(basePackages = {"com.njydsz.workflow.api", "com.njydsz.common.feign"})
 @MapperScan({"com.njydsz.workflow.infra.mapper", "com.njydsz.literule.infra.mapper"})
