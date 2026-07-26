@@ -5,6 +5,7 @@ package com.njydsz.common.json.exception;
  * 
  * <p>所有 YdszJson 相关异常的基类。</p>
  * 
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class YdszJsonException extends RuntimeException {
@@ -17,30 +18,61 @@ public class YdszJsonException extends RuntimeException {
     /** JSON 字符串位置 */
     private final int position;
     
+    /**
+     * 构造函数（仅消息）
+     *
+     * @param message 错误消息
+     */
     public YdszJsonException(String message) {
         super(message);
         this.errorCode = 0;
         this.position = -1;
     }
     
+    /**
+     * 构造函数（消息和原因）
+     *
+     * @param message 错误消息
+     * @param cause 原始异常
+     */
     public YdszJsonException(String message, Throwable cause) {
         super(message, cause);
         this.errorCode = 0;
         this.position = -1;
     }
     
+    /**
+     * 构造函数（错误码和消息）
+     *
+     * @param errorCode 错误码
+     * @param message 错误消息
+     */
     public YdszJsonException(int errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
         this.position = -1;
     }
     
+    /**
+     * 构造函数（错误码、消息和位置）
+     *
+     * @param errorCode 错误码
+     * @param message 错误消息
+     * @param position JSON 字符串中的位置
+     */
     public YdszJsonException(int errorCode, String message, int position) {
         super(message + " at position " + position);
         this.errorCode = errorCode;
         this.position = position;
     }
     
+    /**
+     * 构造函数（错误码、消息和原因）
+     *
+     * @param errorCode 错误码
+     * @param message 错误消息
+     * @param cause 原始异常
+     */
     public YdszJsonException(int errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;

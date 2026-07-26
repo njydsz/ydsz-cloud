@@ -11,6 +11,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
 import com.njydsz.cronjob.domain.entity.job.JobDO;
 import com.njydsz.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
@@ -26,17 +27,13 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>检查项：Redis 连通性、Leader 选举状态、DB 连通性（任务数/运行中日志数）、调度器配置摘要。
  *
- * <h3>对标</h3>
- * <p>对标 XXL-Job 的 /xxl-job-admin/api/registry 和 PowerJob 的 /systemHealth 接口，
- * 提供 Spring Boot Actuator 标准健康检查端点。
- *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Component
 @ConditionalOnClass(HealthIndicator.class)
-public class CronjobHealthIndicator implements HealthIndicator {
+public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
 
     private final ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider;
     private final ObjectProvider<LeaderElector> leaderElectorProvider;
@@ -61,22 +58,13 @@ public class CronjobHealthIndicator implements HealthIndicator {
     }
 
     @Override
-    public Health health() {
-        Map<String, Object> details = new LinkedHashMap<>();
-        boolean allUp = true;
-
+    protected void doHealthCheck(Health.Builder builder) {
         // 1. Redis 连通性
         RedisConnectionFactory redisFactory = redisConnectionFactoryProvider.getIfAvailable();
         if (redisFactory != null) {
-            try {
-                String ping = redisFactory.getConnection().ping();
-                details.put("redis", "UP - " + ping);
-            } catch (Exception e) {
-                details.put("redis", "DOWN - " + e.getMessage());
-                allUp = false;
-            }
+            checkRedis(builder, () -> redisFactory.getConnection().ping());
         } else {
-            details.put("redis", "UNKNOWN - RedisConnectionFactory not available");
+            checkRedisNotConfigured(builder);
         }
 
         // 2. Leader 选举状态
@@ -91,46 +79,33 @@ public class CronjobHealthIndicator implements HealthIndicator {
                 leaderInfo.put("isLeader", isLeader);
                 leaderInfo.put("currentLeader", currentLeader != null ? currentLeader : "none");
                 leaderInfo.put("role", leaderRole);
-                details.put("leader", leaderInfo);
+                builder.withDetail("leader", leaderInfo);
             } catch (Exception e) {
-                details.put("leader", "ERROR - " + e.getMessage());
-                allUp = false;
+                builder.withDetail("leader", "ERROR - " + extractMessage(e));
             }
         } else {
             Map<String, Object> leaderInfo = new LinkedHashMap<>();
             leaderInfo.put("enabled", cronjobProperties.getLeader().isEnabled());
             leaderInfo.put("mode", "leaderless");
-            details.put("leader", leaderInfo);
+            builder.withDetail("leader", leaderInfo);
         }
 
-        // 3. DB 连通性 — 任务总数
+        // 3. DB 探针 — 任务数
         JobMapper jobMapper = jobMapperProvider.getIfAvailable();
         if (jobMapper != null) {
-            try {
-                long normalCount = jobMapper.selectCount(
-                        new LambdaQueryWrapper<JobDO>()
-                                .eq(JobDO::getStatus, "NORMAL")
-                                .eq(JobDO::getDeleted, 0));
-                details.put("normalJobCount", normalCount);
-            } catch (Exception e) {
-                details.put("database", "DOWN - " + e.getMessage());
-                allUp = false;
-            }
+            checkTableProbeWithValue(builder, "normalJobCount", () ->
+                    jobMapper.selectCount(new LambdaQueryWrapper<JobDO>()
+                            .eq(JobDO::getStatus, "NORMAL")
+                            .eq(JobDO::getDeleted, 0)));
         }
 
-        // 4. DB 连通性 — 运行中任务日志数
+        // 4. DB 探针 — 运行中日志数
         JobLogMapper jobLogMapper = jobLogMapperProvider.getIfAvailable();
         if (jobLogMapper != null) {
-            try {
-                long runningCount = jobLogMapper.selectCount(
-                        new LambdaQueryWrapper<JobLogDO>()
-                                .eq(JobLogDO::getStatus, "RUNNING")
-                                .eq(JobLogDO::getDeleted, 0));
-                details.put("runningJobCount", runningCount);
-            } catch (Exception e) {
-                details.put("database", "DOWN - " + e.getMessage());
-                allUp = false;
-            }
+            checkTableProbeWithValue(builder, "runningJobCount", () ->
+                    jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>()
+                            .eq(JobLogDO::getStatus, "RUNNING")
+                            .eq(JobLogDO::getDeleted, 0)));
         }
 
         // 5. 调度器配置摘要
@@ -142,15 +117,10 @@ public class CronjobHealthIndicator implements HealthIndicator {
         schedulerInfo.put("timeoutMonitorEnabled", cronjobProperties.getLeader().isEnabled());
         schedulerInfo.put("selfHealingEnabled", cronjobProperties.getSelfHealing() != null
                 && cronjobProperties.getSelfHealing().isEnabled());
-        details.put("scheduler", schedulerInfo);
+        builder.withDetail("scheduler", schedulerInfo);
 
         // 6. Metrics 可用性
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
-        details.put("metricsEnabled", metrics != null);
-
-        if (allUp) {
-            return Health.up().withDetails(details).build();
-        }
-        return Health.down().withDetails(details).build();
+        builder.withDetail("metricsEnabled", metrics != null);
     }
 }
