@@ -24,6 +24,12 @@ images:
     newTag: v1.0.0-rc.2
   - name: ydsz/workflow
     newTag: v1.0.0-rc.2
+  - name: ydsz/message
+    newTag: v1.0.0-rc.2
+  - name: ydsz/agent
+    newTag: v1.0.0-rc.2
+  - name: ydsz/nextwiki
+    newTag: v1.0.0-rc.2
 
 # P2-12: UAT 环境 30% 采样
 configMapGenerator:

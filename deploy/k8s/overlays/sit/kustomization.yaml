@@ -24,6 +24,12 @@ images:
     newTag: v1.0.0-rc.1
   - name: ydsz/workflow
     newTag: v1.0.0-rc.1
+  - name: ydsz/message
+    newTag: v1.0.0-rc.1
+  - name: ydsz/agent
+    newTag: v1.0.0-rc.1
+  - name: ydsz/nextwiki
+    newTag: v1.0.0-rc.1
 
 # P2-12: SIT 环境 50% 采样
 configMapGenerator:

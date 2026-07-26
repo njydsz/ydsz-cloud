@@ -91,7 +91,7 @@ public class ToolAnnotationScanner implements BeanPostProcessor, ApplicationCont
             if (result instanceof String str) {
                 return str;
             }
-            return com.njydsz.common.json.YdszJson.toJson(result);
+            return YdszJson.toJson(result);
         };
 
         ToolRegistration registration = new ToolRegistration(definition, executor);

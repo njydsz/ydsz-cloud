@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>Redis — PING 命令（可选依赖，缺失时标记为 UNKNOWN）</li>
  *   <li>流程实例表 — 轻量探针查询运行中实例数</li>
  *   <li>待办任务表 — 轻量探针查询待办任务数</li>
+ *   <li>SLA 超期任务 — 轻量探针查询超期待办数（P2-6 新增）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -72,6 +73,17 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
                     new LambdaQueryWrapper<FlowRunTaskDO>()
                             .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name()));
             return "pending: " + pendingCount;
+        });
+
+        // P2-6: SLA 超期任务探针（超过 SLA 时限仍未处理的待办）
+        checkTableProbeWithValue(builder, "slaOverdue", () -> {
+            try {
+                Long overdueCount = runTaskMapper.countOverdue(null, null);
+                return "overdue: " + (overdueCount == null ? 0 : overdueCount);
+            } catch (Exception e) {
+                log.debug("[FlowHealth] SLA 超期查询失败: {}", e.getMessage());
+                return "overdue: N/A";
+            }
         });
     }
 }

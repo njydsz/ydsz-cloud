@@ -150,11 +150,85 @@ public class RagAgentExecutor implements AgentExecutor {
 
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-        ChatResponse response = execute(request);
-        chunkConsumer.accept(ChatChunk.content(response.getId(), response.getModel(),
-                response.getContent()));
-        chunkConsumer.accept(ChatChunk.finish(response.getId(), response.getModel(),
-                "stop", response.getUsage()));
+        String convId = request.getConversationId() != null
+                ? request.getConversationId() : UUID.randomUUID().toString();
+        String traceId = traceRecorder.startTrace(convId, "RAG_STREAM");
+        log.info("[RAG-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
+
+        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        if (userInput == null) {
+            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
+            traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
+            chunkConsumer.accept(ChatChunk.content("", "guardrail",
+                    "抱歉，您的输入被安全护栏拒绝。"));
+            chunkConsumer.accept(ChatChunk.finish("", "guardrail", "guardrail_rejected", null));
+            return;
+        }
+
+        long ragStart = System.currentTimeMillis();
+        List<TextChunk> retrievedChunks = ragService.retrieve(userInput);
+        long ragDuration = System.currentTimeMillis() - ragStart;
+        String ragContext = ragService.buildContext(retrievedChunks);
+
+        traceRecorder.recordStep(traceId, "RAG_RETRIEVE",
+                "Retrieved " + retrievedChunks.size() + " chunks",
+                userInput, retrievedChunks, ragDuration);
+
+        String systemPrompt = buildSystemPrompt(request, ragContext);
+        List<ChatMessage> messages = new ArrayList<>();
+        messages.add(ChatMessage.system(systemPrompt));
+        messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+        messages.add(ChatMessage.user(userInput, convId));
+
+        ChatRequest llmRequest = ChatRequest.builder()
+                .model(properties.getLlm().getDefaultModel())
+                .messages(messages)
+                .temperature(properties.getLlm().getTemperature())
+                .maxTokens(properties.getLlm().getMaxTokens())
+                .stream(true)
+                .build();
+
+        long startTime = System.currentTimeMillis();
+        StringBuilder contentBuilder = new StringBuilder();
+        TokenUsage[] usage = {TokenUsage.zero()};
+
+        try {
+            llmClient.stream(llmRequest, chunk -> {
+                if (chunk.hasContent()) {
+                    contentBuilder.append(chunk.getDeltaContent());
+                }
+                if (chunk.isFinished() && chunk.getUsage() != null) {
+                    usage[0] = chunk.getUsage();
+                }
+                chunkConsumer.accept(chunk);
+            });
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            agentMetrics.recordLlmCall(llmClient.getProvider(),
+                    properties.getLlm().getDefaultModel(), duration, null, e);
+            traceRecorder.recordStep(traceId, "LLM_CALL_ERROR",
+                    "Stream failed", llmRequest, e.getMessage(), duration);
+            traceRecorder.endTrace(traceId, "FAILED");
+            throw e;
+        }
+        long duration = System.currentTimeMillis() - startTime;
+
+        agentMetrics.recordLlmStream(llmClient.getProvider(),
+                properties.getLlm().getDefaultModel(), duration, usage[0], null);
+        if (usage[0] != null && !usage[0].equals(TokenUsage.zero()) && costAnalysisService != null) {
+            costAnalysisService.recordUsage(convId,
+                    properties.getLlm().getDefaultModel(), usage[0]);
+        }
+        traceRecorder.recordStep(traceId, "LLM_CALL",
+                "RAG stream LLM call", llmRequest, contentBuilder.toString(), duration);
+
+        String output = applyOutputGuardrails(contentBuilder.toString(), traceId);
+        memory.save(convId, ChatMessage.user(userInput, convId));
+        memory.save(convId, ChatMessage.assistant(output, convId, usage[0]));
+
+        traceRecorder.endTrace(traceId, "SUCCESS");
+        log.info("[RAG-Agent-Stream] 完成: convId={}, retrieved={}, tokens={}",
+                convId, retrievedChunks.size(), usage[0].getTotalTokens());
     }
 
     @Override

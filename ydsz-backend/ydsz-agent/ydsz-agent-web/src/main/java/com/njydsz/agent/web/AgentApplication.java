@@ -1,5 +1,6 @@
 package com.njydsz.agent.web;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -19,6 +20,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
 @EnableDiscoveryClient
 @EnableYdszAuth
 @EnableYdszFeign(basePackages = {"com.njydsz.agent.api", "com.njydsz.common.feign"})
+@MapperScan("com.njydsz.agent.infra.mapper")
 public class AgentApplication {
 
     public static void main(String[] args) {

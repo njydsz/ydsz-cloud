@@ -5,10 +5,9 @@ import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 
+import com.njydsz.common.notify.core.NotifyRequest;
 import com.njydsz.common.notify.core.NotifyService;
-import com.njydsz.common.notify.model.NotifyChannel;
-import com.njydsz.common.notify.model.NotifyRequest;
-import com.njydsz.common.notify.model.NotifySeverity;
+import com.njydsz.common.notify.enums.NotifyChannel;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>IP 黑名单连续命中 — 恶意 IP 访问</li>
  *   <li>下游服务 502/504 — 服务不可用</li>
  *   <li>Redis 限流降级切换 — 限流熔断器打开</li>
- *   <li>JWT 解析异常率飙升 — 可能的 Token 伪造攻击</li>
  * </ul>
  *
  * <p>使用 ObjectProvider 实现可选依赖，当 NotifyService 不可用时不影响网关正常运行。
@@ -67,8 +65,7 @@ public class GatewayAlertService {
         }
         lastRatelimitAlertTs = now;
 
-        sendAlert(NotifySeverity.HIGH,
-                "网关限流触发",
+        sendAlert("【高】网关限流触发",
                 Map.of(
                         "维度", dimension,
                         "标识", maskIdentity(identity),
@@ -90,8 +87,7 @@ public class GatewayAlertService {
         }
         lastBlacklistAlertTs = now;
 
-        sendAlert(NotifySeverity.CRITICAL,
-                "IP 黑名单命中",
+        sendAlert("【严重】IP 黑名单命中",
                 Map.of(
                         "IP", clientIp,
                         "路径", path,
@@ -113,8 +109,7 @@ public class GatewayAlertService {
         }
         lastDownstreamAlertTs = now;
 
-        sendAlert(NotifySeverity.CRITICAL,
-                "下游服务不可用",
+        sendAlert("【严重】下游服务不可用",
                 Map.of(
                         "路由", routeId,
                         "目标", targetUri,
@@ -126,11 +121,10 @@ public class GatewayAlertService {
     /**
      * 发送告警通知
      *
-     * @param severity 告警级别
-     * @param title    告警标题
-     * @param details  告警详情
+     * @param title   告警标题
+     * @param details 告警详情
      */
-    private void sendAlert(NotifySeverity severity, String title, Map<String, String> details) {
+    private void sendAlert(String title, Map<String, String> details) {
         NotifyService notifyService = notifyServiceProvider.getIfAvailable();
         if (notifyService == null) {
             log.debug("[GatewayAlert] NotifyService 不可用，跳过告警: {}", title);
@@ -139,18 +133,16 @@ public class GatewayAlertService {
 
         try {
             StringBuilder message = new StringBuilder();
-            message.append("【").append(severity.name()).append("】").append(title).append("\n");
+            message.append(title).append("\n");
             details.forEach((k, v) -> message.append(k).append(": ").append(v).append("\n"));
 
-            NotifyRequest request = NotifyRequest.builder()
-                    .channel(NotifyChannel.DING_TALK)
-                    .severity(severity)
-                    .title("[" + title + "]")
-                    .content(message.toString())
-                    .build();
+            NotifyRequest request = new NotifyRequest();
+            request.setChannel(NotifyChannel.DING_TALK);
+            request.setTitle(title);
+            request.setContent(message.toString());
 
             notifyService.send(request);
-            log.info("[GatewayAlert] 告警已发送: {} severity={}", title, severity);
+            log.info("[GatewayAlert] 告警已发送: {}", title);
         } catch (Exception e) {
             log.warn("[GatewayAlert] 告警发送失败: {} err={}", title, e.getMessage());
         }

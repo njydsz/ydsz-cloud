@@ -26,7 +26,7 @@ def has_class_javadoc(filepath):
                 if (not stripped
                     or stripped.startswith('@')
                     or stripped.startswith(')')
-                    or stripped.startswith('('
+                    or stripped.startswith('(')
                     or stripped.startswith(',')
                     or stripped.startswith('*')
                     or stripped.startswith('//')

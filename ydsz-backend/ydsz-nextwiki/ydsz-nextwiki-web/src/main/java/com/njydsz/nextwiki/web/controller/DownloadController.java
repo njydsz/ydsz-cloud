@@ -25,6 +25,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;

@@ -85,13 +85,13 @@ public class ChunkUploadApplicationService {
     private static final String KEY_UPLOADED_CHUNKS = "nextwiki:chunk:uploaded:";
     private static final Duration SESSION_TTL = Duration.ofHours(2);
 
-    public ChunkUploadApplicationService(StringRedisTemplate redisTemplate,
+    public ChunkUploadApplicationService(RedisService redisService,
                                           FileNodeRepository fileNodeRepository,
                                           QuotaDomainService quotaDomainService,
                                           FileVersionDomainService versionDomainService,
                                           FolderDomainService folderDomainService,
                                           org.springframework.context.ApplicationEventPublisher eventPublisher) {
-        this.redisTemplate = redisTemplate;
+        this.redisService = redisService;
         this.fileNodeRepository = fileNodeRepository;
         this.quotaDomainService = quotaDomainService;
         this.versionDomainService = versionDomainService;
