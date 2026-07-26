@@ -17,7 +17,7 @@ import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
-import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 
 /**
  * Agent 模块健康检查。

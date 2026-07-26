@@ -7,6 +7,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.common.auth.config.AuthProperties;
+import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
+import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.gateway.config.GatewayHealthIndicator;
 import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.IpWhitelistProperties;
@@ -50,5 +53,18 @@ public class GatewayApplication {
         return new GatewayHealthIndicator(redisTemplateProvider, securityHeadersProvider,
                 rateLimitPropertiesProvider, ipWhitelistProvider, authFilterProvider,
                 gatewayMetricsProvider);
+    }
+
+    /**
+     * GAP-P0-1: 注册 Reactive Token 黑名单服务
+     *
+     * <p>复用 ydsz-common-auth 的 TokenBlacklistBloomFilter + SHA-256 摘要 key，
+     * 替代网关手写的 Redis 黑名单检查。
+     */
+    @Bean
+    public ReactiveTokenBlacklistService reactiveTokenBlacklistService(
+            ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
+            AuthProperties authProperties) {
+        return new ReactiveTokenBlacklistService(redisTemplateProvider, authProperties);
     }
 }

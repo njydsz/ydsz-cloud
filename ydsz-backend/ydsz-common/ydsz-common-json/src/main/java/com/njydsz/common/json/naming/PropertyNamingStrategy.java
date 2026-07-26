@@ -29,6 +29,7 @@ import java.io.Serializable;
  * String json = YdszJson.toJson(user);
  * </pre>
  * 
+ * @author ydsz-team
  * @since 1.0.0
  */
 public interface PropertyNamingStrategy extends Serializable {

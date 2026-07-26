@@ -11,7 +11,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.cronjob.domain.entity.job.JobDO;
 import com.njydsz.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;

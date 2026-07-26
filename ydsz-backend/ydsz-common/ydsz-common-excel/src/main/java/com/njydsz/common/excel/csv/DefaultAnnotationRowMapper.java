@@ -94,7 +94,7 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
                 setters[i].set(instance, converted);
             }
             return instance;
-        } catch (ReflectiveOperationException e) {
+        } catch (Exception e) {
             throw new IllegalStateException(
                     "Failed to instantiate " + clazz.getName() + " from CSV row", e);
         }

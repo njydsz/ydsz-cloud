@@ -25,23 +25,41 @@ import {
 } from '@/api/execution/time-entry'
 import type { TimeEntryVO, TimeEntryCreateDTO } from '@/api/execution/time-entry/types'
 import { PC } from '@/constants/permissionCodes'
+import { useTable } from '@/composables/useTable'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
 
-// 列表查询状态
-const loading = ref(false)
-const list = ref<TimeEntryVO[]>([])
-const total = ref(0)
-const query = reactive({
-  page: 1,
-  size: 10,
-  keyword: '',
-  status: '',
-  employeeId: undefined as number | undefined,
-  initiationId: undefined as number | undefined,
-  startDate: '',
-  endDate: '',
-})
+const {
+  loading,
+  list,
+  total,
+  query,
+  fetchData: fetchList,
+  handleQuery,
+  resetQuery,
+  handlePageChange,
+} = useTable<{
+  page: number
+  size: number
+  keyword: string
+  status: string
+  employeeId: number | undefined
+  initiationId: number | undefined
+  startDate: string
+  endDate: string
+}>(async (q) => {
+  const resp = await pageTimeEntries(q.page, q.size, {
+    keyword: q.keyword || undefined,
+    status: q.status || undefined,
+    employeeId: q.employeeId,
+    initiationId: q.initiationId,
+    startDate: q.startDate || undefined,
+    endDate: q.endDate || undefined,
+  })
+  const data = resp.data ?? (resp as unknown as PageResult)
+  return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
+}, { defaultSize: 10 })
 
 // 状态字典：工时审批状态映射到标签文案与色值
 const statusMap = computed(() => ({
@@ -58,37 +76,6 @@ const workTypeMap = computed(() => ({
   TRAINING: { label: t('execution.timeEntry.workType.TRAINING') },
   LEAVE: { label: t('execution.timeEntry.workType.LEAVE') },
 }))
-
-/** 拉取工时分页数据 */
-async function fetchList() {
-  loading.value = true
-  try {
-    const { data } = await pageTimeEntries(query.page, query.size, {
-      keyword: query.keyword,
-      status: query.status,
-      employeeId: query.employeeId,
-      initiationId: query.initiationId,
-      startDate: query.startDate,
-      endDate: query.endDate,
-    })
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-/** 重置查询条件并刷新列表 */
-function handleReset() {
-  query.keyword = ''
-  query.status = ''
-  query.employeeId = undefined
-  query.initiationId = undefined
-  query.startDate = ''
-  query.endDate = ''
-  query.page = 1
-  fetchList()
-}
 
 // 弹窗 - 填写工时
 const dialogVisible = ref(false)
@@ -178,13 +165,13 @@ onMounted(fetchList)
     :list="list"
     :total="total"
     :loading="loading"
-    @query="query.page = 1; fetchList()"
-    @reset="handleReset"
-    @page-change="fetchList"
+    @query="handleQuery"
+    @reset="resetQuery"
+    @page-change="handlePageChange"
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item :label="$t('execution.timeEntry.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.timeEntry.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
+      <el-form-item :label="$t('execution.timeEntry.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.timeEntry.search.keywordPlaceholder')" clearable @keyup.enter="handleQuery" /></el-form-item>
       <el-form-item :label="$t('execution.timeEntry.search.status')">
         <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />

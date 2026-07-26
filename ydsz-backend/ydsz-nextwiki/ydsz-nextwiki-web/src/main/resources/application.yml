@@ -76,3 +76,25 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# 统一线程池配置（ydsz-common-thread）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      nextwikiTask:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 100
+        thread-name-prefix: nextwiki-async-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+      nextwikiSchedule:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: nextwiki-sched-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60

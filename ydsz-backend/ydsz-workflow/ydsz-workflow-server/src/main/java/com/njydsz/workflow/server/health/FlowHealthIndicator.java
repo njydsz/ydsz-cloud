@@ -8,7 +8,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;

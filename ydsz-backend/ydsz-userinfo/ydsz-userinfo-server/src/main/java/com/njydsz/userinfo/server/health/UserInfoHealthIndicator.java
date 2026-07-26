@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.userinfo.domain.entity.RoleDO;
 import com.njydsz.userinfo.domain.entity.UserAccountDO;

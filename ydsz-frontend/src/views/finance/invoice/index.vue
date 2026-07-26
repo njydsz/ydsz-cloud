@@ -1,4 +1,4 @@
-﻿﻿<!--
+﻿<!--
   @file 发票管理
   @description 项目执行过程中的发票管理页面，覆盖发票全生命周期：草稿 → 提交 → 审批 → 开票 → 红冲/取消；
                支持蓝字发票与红字发票（红冲），开票依据包括里程碑、外协人天、按月、终验等；
@@ -32,28 +32,46 @@ import {
 import type { InvoiceVO, InvoiceCreateDTO } from '@/api/finance/invoice/types'
 import { PC } from '@/constants/permissionCodes'
 import { useOptimisticUpdate } from '@/composables/useOptimisticUpdate'
+import { useTable } from '@/composables/useTable'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
 const { optimistic } = useOptimisticUpdate()
 
 /** 列表加载状态 */
-const loading = ref(false)
 /** H17.1 修复：提交按钮 loading 状态，防止重复提交 */
 const submitting = ref(false)
 /** 发票记录列表 */
-const list = ref<InvoiceVO[]>([])
 /** 记录总数（分页用） */
-const total = ref(0)
 /** 查询条件：关键字 + 状态 + 类型 + 客户 ID + 项目 ID */
-const query = reactive({
-  page: 1,
-  size: 10,
-  keyword: '',
-  status: '',
-  invoiceType: '',
-  customerId: undefined as number | undefined,
-  initiationId: undefined as number | undefined,
-})
+const {
+  loading,
+  list,
+  total,
+  query,
+  fetchData: fetchList,
+  handleQuery,
+  resetQuery,
+  handlePageChange,
+} = useTable<{
+  page: number
+  size: number
+  keyword: string
+  status: string
+  invoiceType: string
+  customerId: number | undefined
+  initiationId: number | undefined
+}>(async (q) => {
+  const resp = await pageInvoices(q.page, q.size, {
+    keyword: q.keyword || undefined,
+    status: q.status || undefined,
+    invoiceType: q.invoiceType || undefined,
+    customerId: q.customerId,
+    initiationId: q.initiationId,
+  })
+  const data = resp.data ?? (resp as unknown as PageResult)
+  return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
+}, { defaultSize: 10 })
 
 /** 发票状态 → 标签/样式映射（i18n 响应式） */
 const statusMap = computed(() => ({
@@ -80,39 +98,6 @@ const basisMap = computed(() => ({
   FINAL: { label: t('finance.invoice.basis.FINAL') },
   OTHER: { label: t('finance.invoice.basis.OTHER') },
 }))
-
-/** 分页查询发票列表 */
-async function fetchList() {
-  loading.value = true
-  try {
-    const { data } = await pageInvoices(query.page, query.size, {
-      keyword: query.keyword,
-      status: query.status,
-      invoiceType: query.invoiceType,
-      customerId: query.customerId,
-      initiationId: query.initiationId,
-    })
-    list.value = data.list
-    total.value = data.total
-  } catch {
-    // H16.1 修复：查询失败时清空陈旧数据，避免用户误以为是当前页结果
-    list.value = []
-    total.value = 0
-  } finally {
-    loading.value = false
-  }
-}
-
-/** 重置查询条件并回到首页刷新 */
-function handleReset() {
-  query.keyword = ''
-  query.status = ''
-  query.invoiceType = ''
-  query.customerId = undefined
-  query.initiationId = undefined
-  query.page = 1
-  fetchList()
-}
 
 /** 新增发票弹窗可见性 */
 const dialogVisible = ref(false)
@@ -372,13 +357,13 @@ onMounted(fetchList)
     :loading="loading"
     loading-type="skeleton"
     empty-preset="list"
-    @query="query.page = 1; fetchList()"
-    @reset="handleReset"
-    @page-change="fetchList"
+    @query="handleQuery"
+    @reset="resetQuery"
+    @page-change="handlePageChange"
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item :label="t('finance.invoice.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('finance.invoice.search.keywordPlaceholder')" clearable :aria-label="t('common.search')" @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
+      <el-form-item :label="t('finance.invoice.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('finance.invoice.search.keywordPlaceholder')" clearable :aria-label="t('common.search')" @clear="handleQuery" @keyup.enter="handleQuery" /></el-form-item>
       <el-form-item :label="t('finance.invoice.search.status')">
         <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />

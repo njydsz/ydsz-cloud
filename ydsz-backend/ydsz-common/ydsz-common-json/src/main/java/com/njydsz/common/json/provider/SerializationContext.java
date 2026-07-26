@@ -91,7 +91,8 @@ public final class SerializationContext {
      * StringBuilder 池、JSONWriter 池、IdentityHashMap 等开销。</p>
      *
      * @return 估算内存占用
-     * @since 1.0.0
+ * @author ydsz-team
+ * @since 1.0.0
      */
     public static long estimateThreadLocalMemory() {
         long total = 0;

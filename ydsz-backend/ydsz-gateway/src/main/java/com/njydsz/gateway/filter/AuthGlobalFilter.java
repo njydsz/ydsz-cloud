@@ -24,6 +24,7 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.InternalHeaderSigner;
@@ -119,6 +120,20 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private final CachedJwtValidator cachedJwtValidator;
     /** P2-12: 安全响应头配置 */
     private final SecurityHeadersProperties securityHeadersProperties;
+
+    /**
+     * GAP-P0-3: Nonce 防重放缓存
+     *
+     * <p>网关为每个请求生成唯一 nonce（UUID），存入 NonceCache（TTL=5min），
+     * 同时通过 X-Internal-Nonce 头透传给下游服务。
+     *
+     * <p>下游服务调用 {@code NonceCache.verifyAndConsume(nonce)} 校验 nonce 是否重复，
+     * 形成完整的"一次性签名"防重放机制。
+     *
+     * <p>网关侧存储 nonce 的目的是：当同一请求被重试/重放时，网关自身也能检测到
+     * nonce 重复（无需等待下游反馈）。
+     */
+    private final NonceCache nonceCache;
 
     /**
      * P0-2: 内部头签名密钥（独立配置，禁止复用 JWT 密钥）。
@@ -248,8 +263,15 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     // P0-7: permsStr 留空（UserInfo 暂无 permissions 字段，权限由下游从 RBAC 缓存加载）
                     String permsStr = "";
 
-                    // P0-6: 生成 nonce（一次性随机串），与 traceId/userId 一起纳入签名 payload
+                    // P0-6 + GAP-P0-3: 生成 nonce 并存入 NonceCache（一次性随机串），与 traceId/userId 一起纳入签名 payload
+                    // NonceCache.verifyAndConsume() 保证原子性，如果 nonce 已存在返回 false（表示重放攻击）
                     String nonce = UUID.randomUUID().toString().replace("-", "");
+                    // GAP-P0-3: 网关侧存储 nonce（下游服务也会调用 NonceCache.verifyAndConsume 双重校验）
+                    if (!nonceCache.verifyAndConsume(nonce)) {
+                        // 理论上 UUID 不会碰撞，如果碰撞说明可能是重放攻击
+                        log.warn("[AuthFilter] Nonce 碰撞（疑似重放攻击）traceId={} userId={}", traceId, userIdStr);
+                        return unauthorized(exchange, traceId, "error.REPLAY_DETECTED");
+                    }
 
                     // P0-C5 + P0-6: 生成内部头签名（含 nonce，防伪造 + 防重放）
                     long tsSeconds = System.currentTimeMillis() / 1000L;

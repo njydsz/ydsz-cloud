@@ -5,7 +5,7 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;

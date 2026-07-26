@@ -23,26 +23,24 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
- * 网关全局异常处理器配置（P0-1）
+ * GAP-P0-2: 网关全局异常处理器配置（增强 common-exception WebFluxExceptionHandler）
  *
- * <p>注册自定义 {@link WebExceptionHandler} 作为全局异常处理器，
- * 替代 Spring Cloud Gateway 默认的 HTML 错误页，统一返回 {@link Result} JSON。
+ * <p>历史版本完全自定义 WebExceptionHandler，与 ydsz-common-exception 的
+ * {@code WebFluxExceptionHandler} 功能重复。本版本保留网关特有的 HTTP 状态码→业务码映射
+ * （404→40400、502→50200、504→50400），但通过委托公共异常处理器的方式实现统一格式：
  *
- * <h3>覆盖场景</h3>
  * <ul>
- *   <li>404 — 路由匹配失败（NotFoundException）</li>
- *   <li>502 — 下游服务连接失败（ConnectException）</li>
- *   <li>504 — 下游服务响应超时（TimeoutException）</li>
- *   <li>500 — 网关内部异常</li>
- *   <li>ResponseStatusException — 携带 HTTP 状态码的业务异常</li>
+ *   <li>{@code WebFluxExceptionHandler}（common-exception 自动注册）处理通用异常</li>
+ *   <li>{@link GatewayExceptionHandler}（本类注册，@Order(-2) 优先级）补充网关特有场景：
+ *     <ul>
+ *       <li>404 — 路由匹配失败（NotFoundException）</li>
+ *       <li>502 — 下游服务连接失败（ConnectException）</li>
+ *       <li>504 — 下游服务响应超时（TimeoutException）</li>
+ *     </ul>
+ *   </li>
  * </ul>
  *
- * <h3>设计原则</h3>
- * <ol>
- *   <li>所有响应均为 {@code application/json;charset=UTF-8}</li>
- *   <li>所有响应包含 {@code traceId}，与网关日志关联</li>
- *   <li>不暴露内部堆栈信息，仅返回用户友好的错误码与消息</li>
- * </ol>
+ * <p>所有响应均为 {@code application/json;charset=UTF-8}，包含 traceId，不暴露内部堆栈。
  *
  * @since 1.0.0
  */

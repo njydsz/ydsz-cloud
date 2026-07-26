@@ -25,21 +25,36 @@ import type { RankVO } from '@/api/resource/rank/types'
 import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
+import { useTable } from '@/composables/useTable'
+import type { PageResult } from '@/utils/request'
 
 // 权限助手：统一通过 userStore 校验按钮级权限
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
-// 列表查询状态
-const loading = ref(false)
-const list = ref<RateCardVO[]>([])
-const total = ref(0)
-const query = reactive({
-  page: 1,
-  size: 10,
-  levelCode: '',
-  status: '',
-})
+const {
+  loading,
+  list,
+  total,
+  query,
+  fetchData: fetchList,
+  handleQuery,
+  resetQuery,
+  handlePageChange,
+} = useTable<{
+  page: number
+  size: number
+  levelCode: string
+  status: string
+}>(async (q) => {
+  const resp = await pageRateCards(q.page, q.size, {
+    levelCode: q.levelCode || undefined,
+    status: q.status || undefined,
+  })
+  const data = resp.data ?? (resp as unknown as PageResult)
+  return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
+}, { defaultSize: 10 })
+
 // 职级下拉数据
 const levels = ref<RankVO[]>([])
 
@@ -56,21 +71,6 @@ async function fetchLevels() {
   }
 }
 
-/** 拉取报价费率分页数据 */
-async function fetchList() {
-  loading.value = true
-  try {
-    const { data } = await pageRateCards(query.page, query.size, {
-      levelCode: query.levelCode || undefined,
-      status: query.status || undefined,
-    })
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
 // 状态字典：生效/停用
 const statusMap: Record<string, { label: string; type: 'success' | 'info' }> = {
   ACTIVE: { label: '生效', type: 'success' },
@@ -82,28 +82,6 @@ function fmtMoney(n?: number, cur = 'CNY') {
   if (n === undefined || n === null) return '-'
   const symbol = cur === 'CNY' ? '¥' : cur === 'USD' ? '$' : '€'
   return `${symbol}${Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
-}
-
-/** 点击查询：重置页码后拉取列表 */
-function onQuery() {
-  query.page = 1
-  fetchList()
-}
-/** 重置查询条件并刷新列表 */
-function onReset() {
-  query.page = 1
-  query.size = 10
-  query.levelCode = ''
-  query.status = ''
-  fetchList()
-}
-/** 翻页回调 */
-function onPageChange() {
-  fetchList()
-}
-/** 手动刷新列表 */
-async function onRefresh() {
-  await fetchList()
 }
 
 /** 提交按钮 loading 状态，防止重复提交 */
@@ -217,10 +195,10 @@ onMounted(async () => {
     :list="list"
     :total="total"
     :loading="loading"
-    @query="onQuery"
-    @reset="onReset"
-    @page-change="onPageChange"
-    @refresh="onRefresh"
+    @query="handleQuery"
+    @reset="resetQuery"
+    @page-change="handlePageChange"
+    @refresh="fetchList"
   >
     <!-- 查询条件区：职级 / 状态 -->
     <template #search>

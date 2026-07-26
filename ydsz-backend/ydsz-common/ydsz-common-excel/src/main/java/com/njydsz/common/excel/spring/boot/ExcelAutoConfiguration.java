@@ -85,6 +85,9 @@ public class ExcelAutoConfiguration {
         if (properties.getStrictNumberConversion() != null) {
             config.setStrictNumberConversion(properties.getStrictNumberConversion());
         }
+        if (properties.getUse1904Windowing() != null) {
+            config.setUse1904Windowing(properties.getUse1904Windowing());
+        }
         if (properties.getHeadRowNumber() != null) {
             config.setHeadRowNumber(properties.getHeadRowNumber());
         }

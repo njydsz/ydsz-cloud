@@ -28,25 +28,40 @@ import type { ExpenseVO, ExpenseCreateDTO } from '@/api/finance/expense/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
 import { useUserStore } from '@/store/modules/user'
+import { useTable } from '@/composables/useTable'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
 
-/** 列表加载状态 */
-const loading = ref(false)
-/** 费用报销记录列表 */
-const list = ref<ExpenseVO[]>([])
-/** 记录总数（分页用） */
-const total = ref(0)
-/** 查询条件：关键字 + 状态 + 类型 + 员工 ID + 项目 ID */
-const query = reactive({
-  page: 1,
-  size: 10,
-  keyword: '',
-  status: '',
-  expenseType: '',
-  employeeId: undefined as number | undefined,
-  initiationId: undefined as number | undefined,
-})
+// ===== 列表查询 (useTable composable) =====
+const {
+  loading,
+  list,
+  total,
+  query,
+  fetchData: fetchList,
+  handleQuery,
+  resetQuery: resetQueryBase,
+  handlePageChange,
+} = useTable<{
+  page: number
+  size: number
+  keyword: string
+  status: string
+  expenseType: string
+  employeeId: number | undefined
+  initiationId: number | undefined
+}>(async (q) => {
+  const resp = await pageExpenses(q.page, q.size, {
+    keyword: q.keyword || undefined,
+    status: q.status || undefined,
+    expenseType: q.expenseType || undefined,
+    employeeId: q.employeeId,
+    initiationId: q.initiationId,
+  })
+  const data = resp.data ?? (resp as unknown as PageResult)
+  return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
+}, { defaultSize: 10 })
 
 /** 报销状态 → 标签/样式映射 */
 const statusMap = {
@@ -68,33 +83,9 @@ const typeMap = {
   OTHER: { label: t('execution.expense.type.OTHER') },
 }
 
-/** 分页查询费用报销列表 */
-async function fetchList() {
-  loading.value = true
-  try {
-    const { data } = await pageExpenses(query.page, query.size, {
-      keyword: query.keyword,
-      status: query.status,
-      expenseType: query.expenseType,
-      employeeId: query.employeeId,
-      initiationId: query.initiationId,
-    })
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
 /** 重置查询条件并回到首页刷新 */
 function handleReset() {
-  query.keyword = ''
-  query.status = ''
-  query.expenseType = ''
-  query.employeeId = undefined
-  query.initiationId = undefined
-  query.page = 1
-  fetchList()
+  resetQueryBase()
 }
 
 /** 提交按钮 loading 状态，防止重复提交 */
@@ -224,13 +215,13 @@ onMounted(fetchList)
     :list="list"
     :total="total"
     :loading="loading"
-    @query="query.page = 1; fetchList()"
+    @query="handleQuery"
     @reset="handleReset"
-    @page-change="fetchList"
+    @page-change="handlePageChange"
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item :label="$t('execution.expense.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.expense.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
+      <el-form-item :label="$t('execution.expense.search.keyword')">        <el-input v-model="query.keyword" :placeholder="$t('execution.expense.search.keywordPlaceholder')" clearable @keyup.enter="handleQuery" /></el-form-item>
       <el-form-item :label="$t('execution.expense.search.status')">
         <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />

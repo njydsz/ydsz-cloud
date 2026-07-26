@@ -68,6 +68,15 @@ public class ExcelConfig {
     /** ZIP压缩级别，默认BEST_SPEED(1)，范围-1~9 */
     private int compressionLevel = Deflater.BEST_SPEED;
 
+    /** 是否使用1904日期窗口（Mac版Excel兼容），默认false */
+    private boolean use1904Windowing = false;
+
+    /** 默认表头行号，默认1（从第1行开始） */
+    private int headRowNumber = 1;
+
+    /** SXSSF 写入缓存行数，默认100 */
+    private int writeCacheSize = 100;
+
     /**
      * 私有构造函数，防止外部实例化。
      */
@@ -252,5 +261,35 @@ public class ExcelConfig {
             throw new IllegalArgumentException("compressionLevel must be between -1 and 9, got: " + compressionLevel);
         }
         this.compressionLevel = compressionLevel;
+    }
+
+    public boolean isUse1904Windowing() {
+        return use1904Windowing;
+    }
+
+    public void setUse1904Windowing(boolean use1904Windowing) {
+        this.use1904Windowing = use1904Windowing;
+    }
+
+    public int getHeadRowNumber() {
+        return headRowNumber;
+    }
+
+    public void setHeadRowNumber(Integer headRowNumber) {
+        if (headRowNumber == null || headRowNumber < 1) {
+            throw new IllegalArgumentException("headRowNumber must be >= 1, got: " + headRowNumber);
+        }
+        this.headRowNumber = headRowNumber;
+    }
+
+    public int getWriteCacheSize() {
+        return writeCacheSize;
+    }
+
+    public void setWriteCacheSize(Integer writeCacheSize) {
+        if (writeCacheSize == null || writeCacheSize < 1) {
+            throw new IllegalArgumentException("writeCacheSize must be positive, got: " + writeCacheSize);
+        }
+        this.writeCacheSize = writeCacheSize;
     }
 }

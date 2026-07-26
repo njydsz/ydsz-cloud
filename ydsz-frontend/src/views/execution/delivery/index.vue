@@ -26,24 +26,41 @@ import {
 } from '@/api/execution/delivery'
 import type { DeliveryItemVO, DeliveryItemCreateDTO } from '@/api/execution/delivery/types'
 import { PC } from '@/constants/permissionCodes'
+import { useTable } from '@/composables/useTable'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
 
 /** 列表加载状态 */
-const loading = ref(false)
 /** 交付物记录列表 */
-const list = ref<DeliveryItemVO[]>([])
 /** 记录总数（分页用） */
-const total = ref(0)
 /** 查询条件：关键字 + 状态 + 项目 ID + 阶段 */
-const query = reactive({
-  page: 1,
-  size: 10,
-  keyword: '',
-  status: '',
-  initiationId: undefined as number | undefined,
-  stage: '',
-})
+const {
+  loading,
+  list,
+  total,
+  query,
+  fetchData: fetchList,
+  handleQuery,
+  resetQuery,
+  handlePageChange,
+} = useTable<{
+  page: number
+  size: number
+  keyword: string
+  status: string
+  initiationId: number | undefined
+  stage: string
+}>(async (q) => {
+  const resp = await pageDeliveryItems(q.page, q.size, {
+    keyword: q.keyword || undefined,
+    status: q.status || undefined,
+    initiationId: q.initiationId,
+    stage: q.stage || undefined,
+  })
+  const data = resp.data ?? (resp as unknown as PageResult)
+  return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
+}, { defaultSize: 10 })
 
 /** 交付阶段 → 标签/样式映射（CD1~CD5） */
 const stageMap = {
@@ -67,33 +84,6 @@ const statusMap = {
   ACCEPTED: { label: t('execution.delivery.status.ACCEPTED'), type: 'success' as const },
   REJECTED: { label: t('execution.delivery.status.REJECTED'), type: 'danger' as const },
   WAIVED: { label: t('execution.delivery.status.WAIVED'), type: 'info' as const },
-}
-
-/** 分页查询交付物列表 */
-async function fetchList() {
-  loading.value = true
-  try {
-    const { data } = await pageDeliveryItems(query.page, query.size, {
-      keyword: query.keyword,
-      status: query.status,
-      initiationId: query.initiationId,
-      stage: query.stage,
-    })
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-/** 重置查询条件并回到首页刷新 */
-function handleReset() {
-  query.keyword = ''
-  query.status = ''
-  query.initiationId = undefined
-  query.stage = ''
-  query.page = 1
-  fetchList()
 }
 
 /** 提交按钮 loading 状态，防止重复提交 */
@@ -176,14 +166,14 @@ onMounted(fetchList)
     :list="list"
     :total="total"
     :loading="loading"
-    @query="query.page = 1; fetchList()"
-    @reset="handleReset"
-    @page-change="fetchList"
+    @query="handleQuery"
+    @reset="resetQuery"
+    @page-change="handlePageChange"
     @refresh="fetchList"
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item :label="$t('execution.delivery.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.delivery.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
+      <el-form-item :label="$t('execution.delivery.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.delivery.search.keywordPlaceholder')" clearable @keyup.enter="handleQuery" /></el-form-item>
       <el-form-item :label="$t('execution.delivery.search.stage')">
         <el-select v-model="query.stage" :placeholder="$t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in stageMap" :key="k" :label="v.label" :value="k" />

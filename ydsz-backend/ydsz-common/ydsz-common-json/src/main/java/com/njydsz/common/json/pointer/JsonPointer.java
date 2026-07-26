@@ -27,6 +27,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  * Object value = pointer.evaluate(json);
  * </pre>
  *
+ * @author ydsz-team
  * @see <a href="https://tools.ietf.org/html/rfc6901">RFC 6901</a>
  * @since 1.0.0
  */

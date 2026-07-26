@@ -14,8 +14,31 @@ import com.njydsz.common.json.YdszJson;
 
 /**
  * YdszJson 数组实现
- * 对应 fastjson2 的 JSONArray，提供动态 JSON 数组操作
  *
+ * <p>对应 FastJSON2 的 JSONArray，继承 ArrayList 提供动态 JSON 数组操作。
+ * 支持类型安全的 getter、链式调用、嵌套对象访问等功能。</p>
+ *
+ * <p><b>主要功能：</b></p>
+ * <ul>
+ *   <li>类型安全的 getter - getString、getInteger、getLong 等</li>
+ *   <li>嵌套对象访问 - getJSONObject、getJSONArray</li>
+ *   <li>日期时间支持 - getDate、getLocalDateTime 等</li>
+ *   <li>批量操作 - addAll、addAll 等</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * YdszJsonArray array = new YdszJsonArray();
+ * array.add("hello")
+ *      .add(42)
+ *      .add(true);
+ *
+ * // 类型安全的 getter
+ * String first = array.getString(0);
+ * int second = array.getIntValue(1);
+ * </pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class YdszJsonArray extends ArrayList<Object> {

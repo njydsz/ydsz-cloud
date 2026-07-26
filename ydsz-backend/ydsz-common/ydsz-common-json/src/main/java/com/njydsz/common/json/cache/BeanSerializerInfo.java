@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandle;
  *   <li>缓存方式：~5-10ns/字段（仅 MethodHandle 调用）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class BeanSerializerInfo {

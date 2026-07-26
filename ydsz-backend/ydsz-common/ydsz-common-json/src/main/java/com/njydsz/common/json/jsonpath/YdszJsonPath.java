@@ -29,7 +29,11 @@ public class YdszJsonPath {
     }
 
     /**
-     * 编译 YdszJsonPath
+     * 编译 JSONPath 表达式
+     *
+     * @param path JSONPath 表达式（必须以 $ 开头）
+     * @return 编译后的 YdszJsonPath 实例
+     * @throws IllegalArgumentException 如果路径格式无效
      */
     public static YdszJsonPath compile(String path) {
         if (path == null || path.trim().isEmpty()) {
@@ -46,6 +50,9 @@ public class YdszJsonPath {
 
     /**
      * 从对象中获取值
+     *
+     * @param obj 要查询的对象
+     * @return 匹配的值，如果路径不存在返回 null，多个结果返回 List
      */
     public Object getValue(Object obj) {
         if (obj == null) {
@@ -68,6 +75,9 @@ public class YdszJsonPath {
 
     /**
      * 从 JSON 字符串中获取值
+     *
+     * @param json JSON 字符串
+     * @return 匹配的值，如果路径不存在返回 null
      */
     public Object getValue(String json) {
         Object obj = YdszJson.parseObjectToJsonObject(json);
@@ -76,6 +86,9 @@ public class YdszJsonPath {
 
     /**
      * 获取所有匹配的值
+     *
+     * @param obj 要查询的对象
+     * @return 所有匹配值的列表
      */
     public List<Object> getAllValues(Object obj) {
         List<Object> results = new ArrayList<>();
@@ -85,6 +98,9 @@ public class YdszJsonPath {
 
     /**
      * 获取所有匹配的值（从 JSON 字符串）
+     *
+     * @param json JSON 字符串
+     * @return 所有匹配值的列表
      */
     public List<Object> getAllValues(String json) {
         Object obj = YdszJson.parseObjectToJsonObject(json);

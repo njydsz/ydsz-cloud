@@ -19,6 +19,7 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * <p>默认关闭内置性能监控（消除 System.nanoTime + volatile 写入开销，约 60-120ns/次）。
  * 可通过 {@code -Dydsz.json.monitoring=true} 系统属性启用。</p>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class SerializerEngine {

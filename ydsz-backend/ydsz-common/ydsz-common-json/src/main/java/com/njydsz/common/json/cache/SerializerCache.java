@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentMap;
  *   <li>字段排序和过滤</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see FieldMeta
  * @see BeanSerializerInfo

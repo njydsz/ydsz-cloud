@@ -16,8 +16,32 @@ import com.njydsz.common.json.YdszJson;
 
 /**
  * YdszJson 对象实现
- * 对应 fastjson2 的 JSONObject，提供动态 JSON 对象操作
  *
+ * <p>对应 FastJSON2 的 JSONObject，继承 LinkedHashMap 提供动态 JSON 对象操作。
+ * 支持类型安全的 getter/setter、链式调用、嵌套对象访问等功能。</p>
+ *
+ * <p><b>主要功能：</b></p>
+ * <ul>
+ *   <li>类型安全的 getter - getString、getInteger、getLong 等</li>
+ *   <li>链式调用 - put 方法返回 this</li>
+ *   <li>嵌套对象访问 - getJSONObject、getJSONArray</li>
+ *   <li>日期时间支持 - getDate、getLocalDateTime 等</li>
+ *   <li>批量操作 - getAll、putAll 等</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * YdszJsonObject json = new YdszJsonObject();
+ * json.put("name", "John")
+ *     .put("age", 30)
+ *     .put("active", true);
+ *
+ * // 类型安全的 getter
+ * String name = json.getString("name");
+ * int age = json.getIntValue("age");
+ * </pre>
+ *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class YdszJsonObject extends LinkedHashMap<String, Object> {

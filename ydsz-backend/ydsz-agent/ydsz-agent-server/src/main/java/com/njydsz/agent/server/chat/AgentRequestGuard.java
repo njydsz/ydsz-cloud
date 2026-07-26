@@ -1,15 +1,13 @@
 package com.njydsz.agent.server.chat;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.njydsz.common.redis.service.RedisService;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.DuplicateException;
 import com.njydsz.common.exception.custom.RateLimitException;
+import com.njydsz.common.redis.service.RedisService;
 
 /**
  * Agent 请求守卫：幂等去重 + 限流
@@ -25,13 +23,12 @@ import com.njydsz.common.exception.custom.RateLimitException;
  * 同一 requestId 60 秒内只能成功调用一次。
  *
  * <h3>限流</h3>
- * <p>基于 Redis 滑动窗口计数，key = {@code ydsz:agent:rate:{userId}}，
+ * <p>基于 Redis INCR + EXPIRE 实现固定窗口计数，key = {@code ydsz:agent:rate:{userId}}，
  * 默认 10 QPM（每分钟 10 次）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Component
 public class AgentRequestGuard {
 
     private static final Logger log = LoggerFactory.getLogger(AgentRequestGuard.class);
@@ -44,8 +41,8 @@ public class AgentRequestGuard {
 
     private final RedisService redisService;
 
-    public AgentRequestGuard(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public AgentRequestGuard(RedisService redisService) {
+        this.redisService = redisService;
     }
 
     /**
@@ -69,8 +66,7 @@ public class AgentRequestGuard {
      */
     private void checkIdempotent(String requestId) {
         String key = IDEM_KEY_PREFIX + requestId;
-        Boolean acquired = redisService.opsForValue()
-                .setIfAbsent(key, "1", IDEM_TTL.toSeconds(), TimeUnit.SECONDS);
+        Boolean acquired = redisService.setIfAbsent(key, "1", IDEM_TTL.toSeconds());
         if (acquired == null || !acquired) {
             log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
             throw new DuplicateException("重复请求，请勿在 60 秒内重复提交");
@@ -78,18 +74,18 @@ public class AgentRequestGuard {
     }
 
     /**
-     * 限流检查：滑动窗口计数
+     * 限流检查：固定窗口计数
      *
      * <p>使用 Redis INCR + EXPIRE 实现固定窗口计数。
      * 窗口内首次请求设置 TTL，后续请求递增计数。
      */
     private void checkRateLimit(String userId) {
         String key = RATE_KEY_PREFIX + userId;
-        Long count = redisService.incr(key, 1);
-        if (count != null && count == 1) {
-            redisService.expire(key, RATE_WINDOW.toSeconds(), TimeUnit.SECONDS);
+        long count = redisService.incr(key, 1);
+        if (count == 1) {
+            redisService.expire(key, RATE_WINDOW.toSeconds());
         }
-        if (count != null && count > MAX_REQUESTS_PER_MINUTE) {
+        if (count > MAX_REQUESTS_PER_MINUTE) {
             log.warn("[Agent-Guard] 限流触发: userId={}, count={}", userId, count);
             throw new RateLimitException("请求过于频繁，每分钟最多 " + MAX_REQUESTS_PER_MINUTE + " 次");
         }

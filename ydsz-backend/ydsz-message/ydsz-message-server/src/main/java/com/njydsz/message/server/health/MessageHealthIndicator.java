@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.message.domain.entity.core.MsgLogDO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;

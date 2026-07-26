@@ -26,10 +26,10 @@ public class ColumnarConfig {
     public static final int DEFAULT_PAGE_SIZE = 1024 * 1024; // 1MB
     public static final long DEFAULT_STRIPE_SIZE = 64L * 1024L * 1024L; // 64MB
 
-    private int batchSize = DEFAULT_BATCH_SIZE;
-    private ColumnarCompression compression = ColumnarCompression.defaultCodec();
-    private boolean enableDictionary = true;
-    private boolean withHeader = true;
+    protected int batchSize = DEFAULT_BATCH_SIZE;
+    protected ColumnarCompression compression = ColumnarCompression.defaultCodec();
+    protected boolean enableDictionary = true;
+    protected boolean withHeader = true;
 
     public int getBatchSize() {
         return batchSize;

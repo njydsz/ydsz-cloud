@@ -84,6 +84,9 @@ public class ExcelProperties {
     /** 是否启用严格数字转换 */
     private Boolean strictNumberConversion;
 
+    /** 是否使用1904日期窗口（Mac版Excel兼容） */
+    private Boolean use1904Windowing;
+
     /** 默认表头行号 */
     private Integer headRowNumber;
 
@@ -194,6 +197,14 @@ public class ExcelProperties {
 
     public void setStrictNumberConversion(Boolean strictNumberConversion) {
         this.strictNumberConversion = strictNumberConversion;
+    }
+
+    public Boolean getUse1904Windowing() {
+        return use1904Windowing;
+    }
+
+    public void setUse1904Windowing(Boolean use1904Windowing) {
+        this.use1904Windowing = use1904Windowing;
     }
 
     public Integer getHeadRowNumber() {

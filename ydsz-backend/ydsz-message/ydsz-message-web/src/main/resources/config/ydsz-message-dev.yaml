@@ -139,6 +139,20 @@ resilience4j:
         limit-refresh-period: 1s
         timeout-duration: 0
 
+# 统一线程池配置（ydsz-common-thread）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      messageBatch:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 200
+        thread-name-prefix: msg-batch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+
 springdoc:
   api-docs:
     path: /v3/api-docs

@@ -7,6 +7,7 @@ import java.util.*;
  * 
  * <p>包含验证是否通过以及错误信息列表。</p>
  * 
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class ValidationResult {
