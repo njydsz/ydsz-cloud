@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.userinfo.domain.dto.MenuSaveDTO;
 import com.njydsz.userinfo.domain.entity.MenuDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
@@ -114,7 +114,7 @@ public class MenuServiceImpl implements MenuService {
             return vo;
         }).collect(Collectors.toList());
 
-        return TreeBuilder.build(voList,
+        return TreeBuilder.buildSimple(voList,
                 MenuTreeVO::getId,
                 MenuTreeVO::getParentId,
                 MenuTreeVO::setChildren,

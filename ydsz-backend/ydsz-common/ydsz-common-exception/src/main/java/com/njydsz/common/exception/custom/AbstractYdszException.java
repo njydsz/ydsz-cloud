@@ -209,10 +209,20 @@ public abstract class AbstractYdszException extends RuntimeException {
         return params == null ? new Object[]{} : params;
     }
 
+    /**
+     * 获取错误码
+     *
+     * @return 错误码字符串
+     */
     public String getCode() {
         return code;
     }
 
+    /**
+     * 设置错误码
+     *
+     * @param code 错误码字符串
+     */
     public void setCode(String code) {
         this.code = code;
     }
@@ -250,18 +260,38 @@ public abstract class AbstractYdszException extends RuntimeException {
         return code + "-" + effectiveSub;
     }
 
+    /**
+     * 获取国际化消息键
+     *
+     * @return 国际化消息键
+     */
     public String getKey() {
         return key;
     }
 
+    /**
+     * 设置国际化消息键
+     *
+     * @param key 国际化消息键
+     */
     public void setKey(String key) {
         this.key = key;
     }
 
+    /**
+     * 获取消息参数（防御性拷贝）
+     *
+     * @return 消息参数数组副本
+     */
     public Object[] getParams() {
         return params != null ? params.clone() : null;
     }
 
+    /**
+     * 设置消息参数
+     *
+     * @param params 消息参数
+     */
     public void setParams(Object[] params) {
         this.params = params;
     }
@@ -292,63 +322,138 @@ public abstract class AbstractYdszException extends RuntimeException {
         return message;
     }
 
+    /**
+     * 设置异常消息（直接覆盖，跳过懒加载解析）
+     *
+     * @param message 异常消息
+     */
     public void setMessage(String message) {
         this.message = message;
         this.messageResolved = true;
     }
 
+    /**
+     * 获取 HTTP 状态码
+     *
+     * @return HTTP 状态码
+     */
     public int getHttpStatus() {
         return httpStatus;
     }
 
+    /**
+     * 设置 HTTP 状态码
+     *
+     * @param httpStatus HTTP 状态码
+     */
     public void setHttpStatus(int httpStatus) {
         this.httpStatus = httpStatus;
     }
 
+    /**
+     * 获取异常级别
+     *
+     * @return 异常级别
+     */
     public ExceptionLevel getLevel() {
         return level;
     }
 
+    /**
+     * 设置异常级别
+     *
+     * @param level 异常级别
+     */
     public void setLevel(ExceptionLevel level) {
         this.level = level;
     }
 
+    /**
+     * 获取异常分类
+     *
+     * @return 异常分类
+     */
     public ExceptionCategory getCategory() {
         return category;
     }
 
+    /**
+     * 设置异常分类
+     *
+     * @param category 异常分类
+     */
     public void setCategory(ExceptionCategory category) {
         this.category = category;
     }
 
+    /**
+     * 获取异常发生时间
+     *
+     * @return 异常发生时间
+     */
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
+    /**
+     * 设置异常发生时间
+     *
+     * @param timestamp 异常发生时间
+     */
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 
+    /**
+     * 获取请求路径
+     *
+     * @return 请求路径
+     */
     public String getPath() {
         return path;
     }
 
+    /**
+     * 设置请求路径
+     *
+     * @param path 请求路径
+     */
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * 获取用户可见消息（优先使用 userMessage，否则使用 getMessage()）
+     *
+     * @return 用户可见消息
+     */
     public String getUserMessage() {
         return userMessage != null ? userMessage : getMessage();
     }
 
+    /**
+     * 设置用户可见消息
+     *
+     * @param userMessage 用户可见消息
+     */
     public void setUserMessage(String userMessage) {
         this.userMessage = userMessage;
     }
 
+    /**
+     * 获取扩展数据
+     *
+     * @return 扩展数据
+     */
     public Object getExtData() {
         return extData;
     }
 
+    /**
+     * 设置扩展数据
+     *
+     * @param extData 扩展数据
+     */
     public void setExtData(Object extData) {
         this.extData = extData;
     }

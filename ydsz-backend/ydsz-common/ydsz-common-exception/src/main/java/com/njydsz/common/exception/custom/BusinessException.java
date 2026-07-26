@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
 
+import com.njydsz.common.core.response.ResultCode;
 import com.njydsz.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
@@ -86,6 +87,33 @@ public class BusinessException extends AbstractYdszException {
     public BusinessException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
+    /**
+     * 使用统一结果码构造业务异常（兼容 {@link ResultCode} 体系）
+     *
+     * <p>用于业务模块尚未迁移到 {@link ExceptionCode}，但已实现 {@link ResultCode} 的场景。
+     * 消息回退为 {@link ResultCode#getMsg()}，避免缺少国际化消息时出现纯 key。
+     *
+     * @param resultCode 统一结果码
+     */
+    public BusinessException(ResultCode resultCode) {
+        super();
+        init(resultCode.getCode(), resultCode.getMsg(), new Object[]{}, DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    }
+
+    /**
+     * 使用统一结果码和自定义消息构造业务异常
+     *
+     * @param resultCode 统一结果码
+     * @param message    自定义异常消息
+     */
+    public BusinessException(ResultCode resultCode, String message) {
+        super(message);
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        initFields(resultCode.getCode(), resultCode.getMsg(), new Object[]{});
+        this.message = message;
+        this.messageResolved = true;
     }
 
     /**

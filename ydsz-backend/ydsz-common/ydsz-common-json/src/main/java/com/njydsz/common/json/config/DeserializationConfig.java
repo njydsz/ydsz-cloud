@@ -17,6 +17,7 @@ import com.njydsz.common.json.autotype.AutoTypeChecker;
  *   <li>解析深度限制: 委托至 {@link YdszJsonConfig#getMaxDepth()}，默认 256</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class DeserializationConfig {

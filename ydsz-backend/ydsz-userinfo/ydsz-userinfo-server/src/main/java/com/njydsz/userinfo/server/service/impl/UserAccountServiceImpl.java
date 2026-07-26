@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;

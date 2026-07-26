@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
 import com.njydsz.userinfo.domain.entity.CompanyDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 import com.njydsz.userinfo.server.service.CompanyService;

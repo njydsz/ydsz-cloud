@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
 import com.njydsz.userinfo.domain.entity.DepartmentDO;
 import com.njydsz.userinfo.domain.entity.UserDeptDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;

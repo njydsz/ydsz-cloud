@@ -139,6 +139,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置错误码（覆盖）
+     *
+     * @param code 业务错误码
      */
     public void setCode(String code) {
         this.code = code;
@@ -148,6 +150,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置子错误码
+     *
+     * @param subCode 子错误码（4 位数字）
      */
     public void setSubCode(String subCode) {
         this.subCode = subCode == null || subCode.isEmpty() ? "0000" : subCode;
@@ -157,6 +161,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置国际化消息键
+     *
+     * @param key 国际化消息键
      */
     public void setKey(String key) {
         this.key = key;
@@ -164,6 +170,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层覆盖消息内容
+     *
+     * @param message 消息内容
      */
     public void setMessage(String message) {
         this.message = message;
@@ -171,6 +179,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置请求路径
+     *
+     * @param path 请求路径
      */
     public void setPath(String path) {
         this.path = path;
@@ -178,6 +188,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置追踪 ID
+     *
+     * @param traceId 追踪 ID
      */
     public void setTraceId(String traceId) {
         this.traceId = traceId;
@@ -191,6 +203,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置 HTTP 状态码
+     *
+     * @param httpStatus HTTP 状态码
      */
     public void setHttpStatus(int httpStatus) {
         this.httpStatus = httpStatus;
@@ -198,6 +212,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置错误详情
+     *
+     * @param details 错误详情
      */
     public void setDetails(Map<String, Object> details) {
         this.details = details;
@@ -205,6 +221,8 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 供 Handler 层设置时间戳
+     *
+     * @param timestamp 时间戳
      */
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;

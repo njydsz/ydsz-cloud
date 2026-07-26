@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.entity.RoleDO;
 import com.njydsz.userinfo.domain.entity.RolePermissionDO;
 import com.njydsz.userinfo.domain.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;

@@ -33,6 +33,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  *   <li>{@link JsonModuleRegistrar} — 模块注册器（自动发现 YdszJsonModule Bean）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @AutoConfiguration

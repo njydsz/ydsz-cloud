@@ -14,6 +14,7 @@ import com.njydsz.common.json.module.JsonModuleRegistry;
  * <p>自动发现所有实现 {@link YdszJsonModule.SpringFactory} 接口的 Bean 并注册到
  * {@link JsonModuleRegistry}。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class JsonModuleRegistrar {

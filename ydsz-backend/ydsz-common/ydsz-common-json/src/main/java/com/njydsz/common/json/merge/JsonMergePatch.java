@@ -29,6 +29,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  * // result2: {"a":1}
  * </pre>
  *
+ * @author ydsz-team
  * @see <a href="https://tools.ietf.org/html/rfc7396">RFC 7396</a>
  * @since 1.0.0
  */

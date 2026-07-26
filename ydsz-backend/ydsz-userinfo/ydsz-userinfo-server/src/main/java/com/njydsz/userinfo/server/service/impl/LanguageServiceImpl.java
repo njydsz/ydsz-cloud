@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
 import com.njydsz.userinfo.domain.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 import com.njydsz.userinfo.server.service.LanguageService;

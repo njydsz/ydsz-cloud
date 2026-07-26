@@ -17,7 +17,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 import io.swagger.v3.oas.annotations.Operation;
