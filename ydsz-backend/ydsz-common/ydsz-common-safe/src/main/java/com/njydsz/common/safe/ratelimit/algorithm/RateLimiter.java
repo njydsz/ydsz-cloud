@@ -21,6 +21,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  * }</pre>
  *
  * @author ydsz-team
+ * @author ydsz-team
  * @since 1.0.0
  */
 public interface RateLimiter {

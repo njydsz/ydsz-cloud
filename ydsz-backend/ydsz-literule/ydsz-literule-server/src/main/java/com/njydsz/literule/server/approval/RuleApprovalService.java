@@ -773,6 +773,11 @@ public class RuleApprovalService {
      * 更新规则状态
      */
     private void updateRuleStatus(RuleDefinition def, RuleStatus target, String operator, String changeDesc) {
+        RuleStatus current = RuleStatus.fromCode(def.getStatus());
+        if (current != null && !current.canTransitionTo(target)) {
+            throw new IllegalStateException("不允许的状态转换: "
+                    + (current != null ? current.getDesc() : "UNKNOWN") + " → " + target.getDesc());
+        }
         def.setStatus(target.name());
         if (target == RuleStatus.PUBLISHED) {
             def.setEnabled(true);

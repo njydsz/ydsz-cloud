@@ -1,5 +1,6 @@
 package com.njydsz.common.security;
 
+import com.njydsz.common.constant.SystemConstants;
 import com.njydsz.common.core.context.RequestContext;
 
 /**
@@ -27,8 +28,8 @@ import com.njydsz.common.core.context.RequestContext;
  */
 public final class TenantContext {
 
-    /** 默认租户 ID（未登录或无租户上下文时使用） */
-    public static final String DEFAULT_TENANT_ID = "1";
+    /** 默认租户 ID（未登录或无租户上下文时使用，委托 {@link SystemConstants#DEFAULT_TENANT_ID}） */
+    public static final String DEFAULT_TENANT_ID = SystemConstants.DEFAULT_TENANT_ID;
 
     private TenantContext() {
     }

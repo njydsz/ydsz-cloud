@@ -15,6 +15,17 @@ mybatis-plus:
 
 # 规则引擎核心配置（生产环境由 Nacos ydsz-literule.yaml 覆盖）
 ydsz:
+  # 统一线程池配置（common-thread）
+  thread:
+    enabled: true
+    pools:
+      rule-parallel:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-rule-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
   literule:
     # ---------- 核心开关 ----------
     auto-register-builtin-rules: true

@@ -8,6 +8,8 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.constant.SystemConstants;
+
 /**
  * 规则评估上下文
  *
@@ -32,8 +34,8 @@ public final class RuleContext implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 默认租户 ID（单租户部署） */
-    private static final String DEFAULT_TENANT_ID = "1";
+    /** 默认租户 ID（单租户部署，委托 {@link SystemConstants#DEFAULT_TENANT_ID}） */
+    private static final String DEFAULT_TENANT_ID = SystemConstants.DEFAULT_TENANT_ID;
 
     /** 默认环境（全环境生效，向后兼容） */
     private static final String DEFAULT_ENVIRONMENT = RuleEnvironment.DEFAULT;

@@ -37,6 +37,7 @@ import com.njydsz.common.cache.support.AsyncFunction;
  *
  * @param <K> 键类型
  * @param <V> 值类型
+ * @author ydsz-team
  * 
  */
 public class ConditionalCacheDecorator<K, V> implements Cache<K, V> {

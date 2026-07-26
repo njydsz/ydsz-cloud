@@ -271,6 +271,11 @@ public class OutboxRepository {
         return count != null && count > 0;
     }
 
+    /**
+     * 获取 Outbox 表名
+     *
+     * @return 表名
+     */
     String getTableName() {
         return tableName;
     }
@@ -318,6 +323,14 @@ public class OutboxRepository {
 
         static final OutboxRowMapper INSTANCE = new OutboxRowMapper();
 
+        /**
+         * 将结果集行映射为 OutboxMessage 实体
+         *
+         * @param rs     结果集
+         * @param rowNum 行号（从 0 开始）
+         * @return OutboxMessage 实例
+         * @throws SQLException 读取列数据失败
+         */
         @Override
         public OutboxMessage mapRow(ResultSet rs, int rowNum) throws SQLException {
             Timestamp nextRetry = rs.getTimestamp("next_retry_at");
@@ -365,6 +378,13 @@ public class OutboxRepository {
             return builder.build();
         }
 
+        /**
+         * 获取 ResultSet 中所有列名（小写）
+         *
+         * @param rs 结果集
+         * @return 列名集合
+         * @throws SQLException 获取元数据失败
+         */
         private Set<String> getColumnNames(ResultSet rs) throws SQLException {
             ResultSetMetaData meta = rs.getMetaData();
             int count = meta.getColumnCount();

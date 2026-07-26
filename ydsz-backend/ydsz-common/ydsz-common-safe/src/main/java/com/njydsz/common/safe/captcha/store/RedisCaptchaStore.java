@@ -13,8 +13,8 @@ import com.njydsz.common.safe.captcha.core.CaptchaStore;
  * 基于 Redis 实现，适用于集群环境
  * 支持自动过期，由 Redis TTL 机制管理，无需定时任务
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class RedisCaptchaStore implements CaptchaStore {
 

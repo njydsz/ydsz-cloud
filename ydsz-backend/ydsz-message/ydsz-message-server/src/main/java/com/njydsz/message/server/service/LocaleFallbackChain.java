@@ -3,6 +3,7 @@ package com.njydsz.message.server.service.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.common.constant.SystemConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -21,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class LocaleFallbackChain {
 
-    /** 系统默认语言 */
-    public static final String DEFAULT_LOCALE = "zh-CN";
+    /** 系统默认语言（委托 {@link SystemConstants#DEFAULT_LOCALE}） */
+    public static final String DEFAULT_LOCALE = SystemConstants.DEFAULT_LOCALE;
 
     /**
      * 构建 locale 回退链。

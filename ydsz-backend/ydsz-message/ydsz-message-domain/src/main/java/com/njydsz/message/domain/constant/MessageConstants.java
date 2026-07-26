@@ -1,5 +1,6 @@
 package com.njydsz.message.domain.constant;
 
+import com.njydsz.common.constant.SystemConstants;
 
 /**
  * 消息通知引擎常量集中定义。
@@ -12,11 +13,11 @@ public final class MessageConstants {
     private MessageConstants() {
     }
 
-    /** 默认租户 ID */
-    public static final String DEFAULT_TENANT_ID = "1";
+    /** 默认租户 ID（委托 {@link SystemConstants#DEFAULT_TENANT_ID}） */
+    public static final String DEFAULT_TENANT_ID = SystemConstants.DEFAULT_TENANT_ID;
 
-    /** 默认语言 */
-    public static final String DEFAULT_LOCALE = "zh-CN";
+    /** 默认语言（委托 {@link SystemConstants#DEFAULT_LOCALE}） */
+    public static final String DEFAULT_LOCALE = SystemConstants.DEFAULT_LOCALE;
 
     /** 默认业务类型（偏好表占位） */
     public static final String DEFAULT_BIZ_TYPE = "__DEFAULT__";

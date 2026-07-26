@@ -3,15 +3,15 @@ package com.njydsz.message.server.config;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.thread.config.ThreadPoolAutoConfiguration;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -20,85 +20,64 @@ import lombok.extern.slf4j.Slf4j;
  * <p>为每个通道类型分配独立的线程池，避免单通道故障（如 SMTP 超时）耗尽
  * 全局线程资源导致其他通道也被拖垮。
  *
- * <p>隔离策略：
- * <ul>
- *   <li>EMAIL: 核心线程 5，最大 20，队列 100</li>
- *   <li>SMS: 核心线程 10，最大 30，队列 200</li>
- *   <li>DINGTALK/WECOM/FEISHU: 核心线程 5，最大 15，队列 100</li>
- *   <li>INAPP/PUSH: 核心线程 3，最大 10，队列 50</li>
- *   <li>WEBHOOK: 核心线程 5，最大 15，队列 100</li>
- * </ul>
+ * <p>P0-1: 线程池由 ydsz-common-thread 统一创建管理（配置化 + Micrometer 指标 + 优雅关闭），
+ * 本类仅负责将已注册的线程池按通道类型组装为 Map 供业务使用。
  *
- * <p>拒绝策略：CallerRunsPolicy（队列满时由调用线程执行，形成背压）
+ * <p>通道线程池配置见 application.yml: ydsz.thread.pools.msgEmail.*, msgSms.*, ...
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class ChannelBulkheadConfiguration {
 
-    /** 通道 → 线程池 映射 */
-    private final Map<String, ExecutorService> channelExecutors = new ConcurrentHashMap<>();
+    private final ThreadPoolAutoConfiguration threadPoolAutoConfiguration;
+
+    /** 通道类型 → 线程池 Bean 名称映射 */
+    private static final Map<String, String> CHANNEL_POOL_NAMES = Map.of(
+            "EMAIL", "msgEmail",
+            "SMS", "msgSms",
+            "DINGTALK", "msgDingtalk",
+            "WECOM", "msgWecom",
+            "WECOM_APP", "msgWecomApp",
+            "FEISHU", "msgFeishu",
+            "INAPP", "msgInapp",
+            "PUSH", "msgPush",
+            "WEBHOOK", "msgWebhook"
+    );
 
     /**
-     * 注册通道级线程池 Map。
+     * 组装通道级线程池 Map。
      *
-     * <p>各通道可通过 {@code channelExecutorMap.get(channelType)} 获取专属线程池。
-     * 通道发送时提交到对应线程池执行，实现 Bulkhead 隔离。
+     * <p>从 common-thread 已注册的线程池中查找各通道对应的执行器，
+     * 提取底层 ThreadPoolExecutor 供业务使用。
      *
      * @return 通道类型 → 线程池 的 Map
      */
     @Bean
     public Map<String, ExecutorService> channelExecutorMap() {
-        registerChannel("EMAIL", 5, 20, 100);
-        registerChannel("SMS", 10, 30, 200);
-        registerChannel("DINGTALK", 5, 15, 100);
-        registerChannel("WECOM", 5, 15, 100);
-        registerChannel("WECOM_APP", 5, 15, 100);
-        registerChannel("FEISHU", 5, 15, 100);
-        registerChannel("INAPP", 3, 10, 50);
-        registerChannel("PUSH", 3, 10, 50);
-        registerChannel("WEBHOOK", 5, 15, 100);
-        log.info("[Bulkhead] 通道级线程池初始化完成: channels={}", channelExecutors.keySet());
-        return channelExecutors;
-    }
+        Map<String, ThreadPoolTaskExecutor> registered = threadPoolAutoConfiguration.getExecutors();
+        Map<String, ExecutorService> result = new ConcurrentHashMap<>();
 
-    /**
-     * 注册通道线程池。
-     *
-     * @param channelType  通道类型
-     * @param coreThreads  核心线程数
-     * @param maxThreads   最大线程数
-     * @param queueCapacity 队列容量
-     */
-    private void registerChannel(String channelType, int coreThreads, int maxThreads, int queueCapacity) {
-        ThreadFactory threadFactory = new ChannelThreadFactory(channelType);
-        ExecutorService executor = new ThreadPoolExecutor(
-                coreThreads, maxThreads, 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(queueCapacity),
-                threadFactory,
-                new ThreadPoolExecutor.CallerRunsPolicy()
-        );
-        channelExecutors.put(channelType, executor);
-    }
+        CHANNEL_POOL_NAMES.forEach((channelType, poolName) -> {
+            ThreadPoolTaskExecutor executor = registered.get(poolName);
+            if (executor != null) {
+                try {
+                    ThreadPoolExecutor underlying = executor.getThreadPoolExecutor();
+                    result.put(channelType, underlying);
+                    log.info("[Bulkhead] 通道 [{}] 线程池已绑定 (pool={})", channelType, poolName);
+                } catch (Exception e) {
+                    log.warn("[Bulkhead] 通道 [{}] 线程池底层提取失败: {}", channelType, e.getMessage());
+                }
+            } else {
+                log.warn("[Bulkhead] 通道 [{}] 线程池未在 common-thread 中注册 (poolName={})，请检查 ydsz.thread.pools 配置",
+                        channelType, poolName);
+            }
+        });
 
-    /**
-     * 通道级线程工厂。
-     */
-    static class ChannelThreadFactory implements ThreadFactory {
-        private final String channelType;
-        private final AtomicInteger counter = new AtomicInteger(0);
-
-        ChannelThreadFactory(String channelType) {
-            this.channelType = channelType;
-        }
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "msg-" + channelType.toLowerCase() + "-" + counter.incrementAndGet());
-            thread.setDaemon(true);
-            return thread;
-        }
+        log.info("[Bulkhead] 通道级线程池初始化完成: channels={}", result.keySet());
+        return result;
     }
 }

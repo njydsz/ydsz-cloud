@@ -101,8 +101,73 @@ ydsz:
       base-url: https://qyapi.weixin.qq.com
       connect-timeout: 5000
       read-timeout: 10000
-
-# RocketMQ
+  # P0-1: 统一线程池配置（ydsz-common-thread）
+  thread:
+    enabled: true
+    pools:
+      messageBatch:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 200
+        thread-name-prefix: msg-batch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+      # 通道级 Bulkhead 线程池
+      msgEmail:
+        core-size: 5
+        max-size: 20
+        queue-capacity: 100
+        thread-name-prefix: msg-email-
+        reject-policy: CALLER_RUNS
+      msgSms:
+        core-size: 10
+        max-size: 30
+        queue-capacity: 200
+        thread-name-prefix: msg-sms-
+        reject-policy: CALLER_RUNS
+      msgDingtalk:
+        core-size: 5
+        max-size: 15
+        queue-capacity: 100
+        thread-name-prefix: msg-dingtalk-
+        reject-policy: CALLER_RUNS
+      msgWecom:
+        core-size: 5
+        max-size: 15
+        queue-capacity: 100
+        thread-name-prefix: msg-wecom-
+        reject-policy: CALLER_RUNS
+      msgWecomApp:
+        core-size: 5
+        max-size: 15
+        queue-capacity: 100
+        thread-name-prefix: msg-wecom-app-
+        reject-policy: CALLER_RUNS
+      msgFeishu:
+        core-size: 5
+        max-size: 15
+        queue-capacity: 100
+        thread-name-prefix: msg-feishu-
+        reject-policy: CALLER_RUNS
+      msgInapp:
+        core-size: 3
+        max-size: 10
+        queue-capacity: 50
+        thread-name-prefix: msg-inapp-
+        reject-policy: CALLER_RUNS
+      msgPush:
+        core-size: 3
+        max-size: 10
+        queue-capacity: 50
+        thread-name-prefix: msg-push-
+        reject-policy: CALLER_RUNS
+      msgWebhook:
+        core-size: 5
+        max-size: 15
+        queue-capacity: 100
+        thread-name-prefix: msg-webhook-
+        reject-policy: CALLER_RUNS
 rocketmq:
   name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
   producer:
@@ -138,20 +203,6 @@ resilience4j:
         limit-for-period: 1000
         limit-refresh-period: 1s
         timeout-duration: 0
-
-# 统一线程池配置（ydsz-common-thread）
-ydsz:
-  thread:
-    enabled: true
-    pools:
-      messageBatch:
-        core-size: 2
-        max-size: 4
-        queue-capacity: 200
-        thread-name-prefix: msg-batch-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 60
-        keep-alive-seconds: 60
 
 springdoc:
   api-docs:

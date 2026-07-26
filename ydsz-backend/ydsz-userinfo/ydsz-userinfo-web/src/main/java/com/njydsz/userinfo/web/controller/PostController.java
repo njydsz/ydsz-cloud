@@ -11,7 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.userinfo.domain.dto.PostSaveDTO;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.server.service.PostService;
@@ -47,12 +51,18 @@ public class PostController {
         return BaseResponse.success(service.getById(id));
     }
 
+    @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'创建岗位: ' + #dto.postName")
+    @Idempotent(key = "post:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建岗位")
     public BaseResponse<String> create(@Valid @RequestBody PostSaveDTO dto) {
         return BaseResponse.success(service.create(dto));
     }
 
+    @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'更新岗位: ' + #dto.id")
+    @Idempotent(key = "post:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "更新岗位")
     public BaseResponse<Boolean> update(@Valid @RequestBody PostSaveDTO dto) {

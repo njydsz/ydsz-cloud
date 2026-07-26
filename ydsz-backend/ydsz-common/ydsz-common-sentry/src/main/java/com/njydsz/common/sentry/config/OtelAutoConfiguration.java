@@ -224,7 +224,7 @@ public class OtelAutoConfiguration {
     }
 
     private static List<TailSamplingSpanProcessor.SamplingRule> buildTailSamplingRules(
-            SentryProperties.OtelConfig.TailSamplingConfig config) {
+            SentryProperties.TailSamplingConfig config) {
         List<TailSamplingSpanProcessor.SamplingRule> rules = new ArrayList<>();
         if (config.isErrorStatus()) {
             rules.add(TailSamplingSpanProcessor.Rules.errorStatus());

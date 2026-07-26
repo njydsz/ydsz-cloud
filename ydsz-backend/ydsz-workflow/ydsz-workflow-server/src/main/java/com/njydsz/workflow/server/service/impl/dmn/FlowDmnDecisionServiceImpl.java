@@ -120,6 +120,10 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         if (existing == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
+        if (!"DRAFT".equals(existing.getStatus()) && !"DEPRECATED".equals(existing.getStatus())) {
+            throw new SysException(BaseResultCode.BAD_REQUEST,
+                    "决策表状态不允许发布，当前状态: " + existing.getStatus());
+        }
         existing.setStatus("PUBLISHED");
         existing.setDecisionVersion(
                 (existing.getDecisionVersion() == null ? 0 : existing.getDecisionVersion()) + 1);
@@ -132,6 +136,10 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+        }
+        if (!"PUBLISHED".equals(existing.getStatus())) {
+            throw new SysException(BaseResultCode.BAD_REQUEST,
+                    "决策表状态不允许停用，当前状态: " + existing.getStatus());
         }
         existing.setStatus("DEPRECATED");
         decisionMapper.updateById(existing);

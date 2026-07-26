@@ -421,6 +421,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Override
     public void pause(String id) {
         JobDO j = getById(id);
+        if (!"NORMAL".equals(j.getStatus())) {
+            throw new SysException(BaseResultCode.BAD_REQUEST,
+                    "error.cronjob.msg_job_status_invalid", j.getStatus());
+        }
         unregister(j.getJobKey());
         // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
         unregisterFromSecondLevel(j.getId());
@@ -442,10 +446,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             if (!scheduledMap.containsKey(j.getJobKey())) {
                 register(j);
             }
-        } else {
+        } else if ("PAUSED".equals(j.getStatus())) {
             j.setStatus("NORMAL");
             jobMapper.updateById(j);
             register(j);
+        } else {
+            throw new SysException(BaseResultCode.BAD_REQUEST,
+                    "error.cronjob.msg_job_status_invalid", j.getStatus());
         }
         log.info("[Cronjob] 恢复任务: key={}", j.getJobKey());
     }

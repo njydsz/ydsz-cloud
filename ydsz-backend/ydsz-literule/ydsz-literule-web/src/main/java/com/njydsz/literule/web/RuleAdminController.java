@@ -1606,6 +1606,10 @@ public class RuleAdminController {
         if (def == null) {
             return BaseResponse.error("规则不存在: " + ruleCode);
         }
+        RuleStatus current = parseStatusSafely(def.getStatus());
+        if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
+            return BaseResponse.error("当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
+        }
         def.setStatus(RuleStatus.ARCHIVED.name());
         def.setEnabled(false);
         ruleAdminService.save(def, operator, "[删除] 软删除规则 status=ARCHIVED");

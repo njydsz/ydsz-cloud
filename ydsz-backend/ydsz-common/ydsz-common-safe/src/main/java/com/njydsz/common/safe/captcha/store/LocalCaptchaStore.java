@@ -16,8 +16,8 @@ import com.njydsz.common.util.concurrent.ExecutorUtils;
  * 基于 ConcurrentHashMap 实现,适用于单机环境
  * 支持自动过期清理
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class LocalCaptchaStore implements CaptchaStore {
 

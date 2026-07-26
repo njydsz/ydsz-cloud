@@ -12,8 +12,8 @@ import com.njydsz.common.safe.captcha.core.CaptchaResult;
  * 算术验证码生成器
  * 生成简单的加减法运算验证码,如 "3 + 5 = ?"
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class ArithmeticCaptchaGenerator implements CaptchaGenerator {
 
