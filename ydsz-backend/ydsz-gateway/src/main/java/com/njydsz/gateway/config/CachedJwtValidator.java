@@ -3,6 +3,13 @@ package com.njydsz.gateway.config;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.model.UserInfo;
@@ -13,9 +20,10 @@ import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 /**
- * JWT 校验结果缓存（P1-7 + P2-12 增强）
+ * JWT 校验结果缓存（P1-7 + P2-12 增强 + P1 多实例广播）
  *
  * <p>使用 ydsz-common-cache 本地缓存 JWT 解析结果，避免每个请求重复执行
  * {@code tokenService.parseAccessToken(token)} 的 CPU 开销。
@@ -38,6 +46,18 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code recordMetrics()}: JWT 校验耗时指标集成（GatewayMetrics）</li>
  * </ul>
  *
+ * <h3>P1: 多实例缓存广播（Redis Pub/Sub）</h3>
+ * <p>当网关多实例部署时，单实例调用 {@link #invalidate(String)} 仅清除本实例的 Caffeine 缓存，
+ * 其他实例最长 5 秒 TTL 期间仍可能命中旧缓存（导致黑名单生效延迟）。
+ *
+ * <p>本版本引入 Redis Pub/Sub 失效广播：
+ * <ol>
+ *   <li>调用 {@link #invalidate(String)} 时，本地清除 + 发布失效事件到 Redis 频道</li>
+ *   <li>所有网关实例订阅该频道，收到事件后清除本地缓存</li>
+ *   <li>广播消息为 Token 字符串（Redis 内网通信，且订阅者仅本服务实例）</li>
+ *   <li>回环消息幂等：本实例发布的消息也会被自己订阅，重复 invalidate 是无副作用操作</li>
+ * </ol>
+ *
  * <h3>性能预期</h3>
  * <p>假设单实例 QPS=2000，90% 请求在 5 秒窗口内复用缓存，
  * JWT 解析次数从 2000/s 降至 ~200/s，CPU 开销减少 90%。
@@ -54,6 +74,9 @@ public class CachedJwtValidator {
     /** 缓存最大容量 */
     private static final long CACHE_MAX_SIZE = 10_000;
 
+    /** P1: Redis Pub/Sub 失效广播频道 */
+    private static final String INVALIDATION_CHANNEL = "ydsz:gateway:jwt-cache:invalidate";
+
     /** 本地缓存实例 */
     private final Cache<String, Optional<UserInfo>> claimsCache;
 
@@ -61,24 +84,80 @@ public class CachedJwtValidator {
     private final TokenService tokenService;
 
     /** P2-12: 网关指标组件（可选，用于记录 JWT 校验耗时） */
-    private GatewayMetrics gatewayMetrics;
+    private final GatewayMetrics gatewayMetrics;
+
+    /** P1: Reactive Redis 模板（可选，未配置时降级为单实例模式） */
+    private final ReactiveStringRedisTemplate redisTemplate;
+
+    /** P1: Redis 消息监听容器（可选） */
+    private final ReactiveRedisMessageListenerContainer messageListenerContainer;
+
+    /** P1: 订阅句柄（用于 @PreDestroy 释放） */
+    private Disposable subscription;
 
     /**
      * 构造 JWT 缓存校验器
      *
      * @param tokenService Token 服务
      * @param gatewayMetrics 网关指标组件（可选）
+     * @param redisTemplateProvider Reactive Redis 模板提供者（可选，未配置时降级为单实例模式）
+     * @param listenerContainerProvider Redis 监听容器提供者（可选）
      */
-    public CachedJwtValidator(TokenService tokenService, GatewayMetrics gatewayMetrics) {
+    public CachedJwtValidator(TokenService tokenService,
+                                GatewayMetrics gatewayMetrics,
+                                ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
+                                ObjectProvider<ReactiveRedisMessageListenerContainer> listenerContainerProvider) {
         this.tokenService = tokenService;
         this.gatewayMetrics = gatewayMetrics;
+        this.redisTemplate = redisTemplateProvider.getIfAvailable();
+        this.messageListenerContainer = listenerContainerProvider.getIfAvailable();
         this.claimsCache = YdszCache.<String, Optional<UserInfo>>newBuilder()
                 .type(CacheType.STRIPED)
                 .expireAfterWrite(CACHE_TTL_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAX_SIZE)
                 .recordStats()
                 .build();
-        log.info("[JwtCache] JWT 校验缓存初始化完成, TTL={}s, maxSize={}", CACHE_TTL_SECONDS, CACHE_MAX_SIZE);
+        log.info("[JwtCache] JWT 校验缓存初始化完成, TTL={}s, maxSize={}, redisBroadcast={}",
+                CACHE_TTL_SECONDS, CACHE_MAX_SIZE, redisTemplate != null);
+    }
+
+    /**
+     * P1: 启动后订阅 Redis Pub/Sub 失效广播频道
+     *
+     * <p>当 Redis 不可用时降级为单实例模式（仅本实例 invalidate 生效，其他实例通过 TTL 自然过期）。
+     */
+    @PostConstruct
+    public void subscribeInvalidationChannel() {
+        if (redisTemplate == null || messageListenerContainer == null) {
+            log.warn("[JwtCache] Redis 未配置，降级为单实例模式（多实例部署时黑名单生效延迟最长 {}s）", CACHE_TTL_SECONDS);
+            return;
+        }
+        try {
+            subscription = messageListenerContainer
+                    .receive(ChannelTopic.of(INVALIDATION_CHANNEL))
+                    .doOnNext(message -> {
+                        String token = message.getMessage();
+                        // 收到广播后本地清除（幂等操作，回环消息无副作用）
+                        claimsCache.invalidate(token);
+                        log.debug("[JwtCache] 收到广播失效事件 token={}", maskToken(token));
+                    })
+                    .onErrorContinue((e, o) -> log.warn("[JwtCache] Redis 广播订阅异常: {}", e.getMessage()))
+                    .subscribe();
+            log.info("[JwtCache] 已订阅失效广播频道 channel={}", INVALIDATION_CHANNEL);
+        } catch (Exception e) {
+            log.warn("[JwtCache] 订阅 Redis 失效广播失败，降级为单实例模式: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * P1: 关闭时释放订阅
+     */
+    @PreDestroy
+    public void unsubscribe() {
+        if (subscription != null && !subscription.isDisposed()) {
+            subscription.dispose();
+            log.info("[JwtCache] 已释放 Redis 失效广播订阅");
+        }
     }
 
     /**
@@ -124,10 +203,16 @@ public class CachedJwtValidator {
     }
 
     /**
-     * P2-12: 失效单个 Token（黑名单加入后立即清除缓存）
+     * P2-12 + P1: 失效单个 Token（黑名单加入后立即清除缓存）
      *
-     * <p>当 Token 被加入 Redis 黑名单时，调用此方法立即清除 Caffeine 缓存，
-     * 无需等待 TTL 过期。
+     * <p>当 Token 被加入 Redis 黑名单时，调用此方法立即清除 Caffeine 缓存，无需等待 TTL 过期。
+     *
+     * <p>P1: 多实例部署时，本方法同时：
+     * <ol>
+     *   <li>清除本实例的 Caffeine 缓存</li>
+     *   <li>发布失效事件到 Redis Pub/Sub 频道</li>
+     *   <li>其他实例订阅到事件后清除各自的 Caffeine 缓存</li>
+     * </ol>
      *
      * <p>调用时机：在 {@link com.njydsz.gateway.filter.AuthGlobalFilter} 中，
      * 当检测到 Token 在黑名单中时调用。
@@ -135,9 +220,38 @@ public class CachedJwtValidator {
      * @param jwt 需要失效的 JWT Token
      */
     public void invalidate(String jwt) {
-        if (jwt != null && !jwt.isBlank()) {
-            claimsCache.invalidate(jwt);
-            log.debug("[JwtCache] Token 已从缓存中移除 jwt={}", maskToken(jwt));
+        if (jwt == null || jwt.isBlank()) {
+            return;
+        }
+        // 1. 本地立即清除
+        claimsCache.invalidate(jwt);
+        log.debug("[JwtCache] Token 已从本地缓存移除 jwt={}", maskToken(jwt));
+
+        // 2. P1: 广播到其他实例（异步，不阻塞主流程）
+        broadcastInvalidation(jwt);
+    }
+
+    /**
+     * P1: 发布失效事件到 Redis Pub/Sub 频道
+     *
+     * <p>使用 reactive 模式异步发布，发布失败不影响主流程（最坏情况下其他实例通过 TTL 自然过期）。
+     *
+     * @param jwt 需要失效的 JWT Token
+     */
+    private void broadcastInvalidation(String jwt) {
+        if (redisTemplate == null) {
+            // Redis 未配置，跳过广播（单实例模式）
+            return;
+        }
+        try {
+            redisTemplate.convertAndSend(INVALIDATION_CHANNEL, jwt)
+                    .onErrorResume(e -> {
+                        log.warn("[JwtCache] Redis 广播失效失败（其他实例将通过 TTL 过期）: {}", e.getMessage());
+                        return Mono.empty();
+                    })
+                    .subscribe();
+        } catch (Exception e) {
+            log.warn("[JwtCache] Redis 广播发布异常: {}", e.getMessage());
         }
     }
 
@@ -161,14 +275,6 @@ public class CachedJwtValidator {
     /**
      * Token 脱敏（P0-5：复用 ydsz-common-safe 的 SensitiveUtil 统一脱敏策略）
      *
-     * <p>使用 {@link SensitiveUtil#defaultDesensitize} 默认脱敏规则：
-     * 保留首尾各 2 字符，中间用 * 替换。这样：
-     * <ul>
-     *   <li>与项目其它模块（auth/userinfo/finance 等）的脱敏策略保持一致</li>
-     *   <li>避免各模块自定义脱敏逻辑导致日志可读性不一致</li>
-     *   <li>短 Token（≤4 字符）整体替换为 ***</li>
-     * </ul>
-     *
      * @param jwt JWT Token
      * @return 脱敏后的字符串
      */
@@ -187,6 +293,9 @@ public class CachedJwtValidator {
 
     /**
      * 手动清除缓存（供 Nacos 配置刷新时调用）
+     *
+     * <p>P1: 多实例部署时仅清除本实例，其他实例通过 TTL 自然过期。
+     * 如需全量清除，可调用 {@link #broadcastInvalidateAll()} 广播清除事件。
      */
     public void invalidateAll() {
         claimsCache.invalidateAll();

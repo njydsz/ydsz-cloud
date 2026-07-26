@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.stereotype.Component;
 
 import lombok.Data;
 
@@ -30,7 +29,6 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@Component
 @RefreshScope
 @ConfigurationProperties(prefix = "ydsz.security")
 public class IpWhitelistProperties {

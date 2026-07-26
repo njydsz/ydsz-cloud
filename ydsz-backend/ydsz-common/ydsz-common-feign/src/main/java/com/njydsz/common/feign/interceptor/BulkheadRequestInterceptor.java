@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.common.feign.config.FeignProperties;
 
 import feign.RequestInterceptor;
@@ -74,9 +75,11 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
      * 当前线程已获取许可的服务名（用于在调用完成后释放许可）。
      *
      * <p>仅在 {@link #apply} 成功获取许可后写入，调用 {@link #releaseCurrentPermit} 后清除。
-     * 使用 ThreadLocal 保证多线程环境下不串扰。
+     * 使用 {@link TransmittableThreadLocal} 而非裸 {@link ThreadLocal}，
+     * 在业务方使用 {@code TtlExecutors.getTtlExecutorService} 包装线程池的场景下，
+     * 服务名上下文能跨线程池传递，避免异步调用时许可泄漏。
      */
-    private final ThreadLocal<String> currentServiceName = new ThreadLocal<>();
+    private final TransmittableThreadLocal<String> currentServiceName = new TransmittableThreadLocal<>();
 
     /**
      * 使用默认最大并发数（50）和默认获取超时（100ms）构造。

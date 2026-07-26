@@ -56,7 +56,6 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@Configuration
 @RefreshScope
 @ConfigurationProperties(prefix = "ydsz.gateway.ratelimit")
 public class RateLimitProperties {

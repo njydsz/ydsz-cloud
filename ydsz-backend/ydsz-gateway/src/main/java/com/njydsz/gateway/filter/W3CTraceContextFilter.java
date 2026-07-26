@@ -92,8 +92,17 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
     }
 
+    /**
+     * P0-2: 过滤器执行顺序调整为 HIGHEST_PRECEDENCE + 0
+     *
+     * <p>作为最早期执行的过滤器，统一生成 traceId 并注入 traceparent 头。
+     * 后续所有过滤器（AccessLog +1、IpBlacklist +3、Auth +10 等）直接读取已注入的 traceId，
+     * 不再各自生成新的 traceId，避免 traceId 被覆盖导致链路追踪断裂。
+     *
+     * @return 顺序值
+     */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 2;
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 }

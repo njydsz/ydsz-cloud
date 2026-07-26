@@ -128,38 +128,40 @@ public class LFUCache<K, V> extends AbstractCache<K, V> {
 
   @Override
   public void put(K key, V value) {
-    CacheEntry<V> oldEntry = map.get(key);
-    if (oldEntry != null) {
-      long stamp = lock.writeLock();
-      try {
-        oldEntry = map.get(key);
-        if (oldEntry != null) {
-          oldEntry.value = value;
-          return;
-        }
-      } finally {
-        lock.unlockWrite(stamp);
+    // 整个 put 流程在 writeLock 内执行，避免：
+    // 1) 容量检查与写入的非原子组合导致 map.size() > maxSize
+    // 2) 淘汰决策与淘汰执行之间，候选键可能已被其他线程替换或删除
+    // 3) 与 remove/clear 的并发数据竞争
+    long stamp = lock.writeLock();
+    try {
+      CacheEntry<V> oldEntry = map.get(key);
+      if (oldEntry != null) {
+        oldEntry.value = value;
+        return;
       }
-      return;
-    }
 
-    if (map.size() >= maxSize) {
-      K evictKey = findEvictionCandidate();
-      if (evictKey != null) {
-        long stamp = lock.writeLock();
-        try {
+      // 容量再校验：在 writeLock 内 size 不会变化
+      if (map.size() >= maxSize) {
+        K evictKey = findEvictionCandidate();
+        if (evictKey != null) {
           CacheEntry<V> entry = map.remove(evictKey);
           if (entry != null) {
             log.debug("LFU 淘汰，key={}, frequency={}", evictKey, entry.getFrequency());
             notifyRemoval(evictKey, entry.value, RemovalCause.SIZE);
           }
-        } finally {
-          lock.unlockWrite(stamp);
         }
       }
-    }
 
-    map.put(key, new CacheEntry<>(value));
+      // 容量再校验后写入
+      if (map.size() >= maxSize) {
+        // 淘汰失败（findEvictionCandidate 返回 null 或 map 仍超限），保守拒绝写入避免容量超限
+        log.warn("LFU 容量超限但淘汰失败，跳过 put key={}", key);
+        return;
+      }
+      map.put(key, new CacheEntry<>(value));
+    } finally {
+      lock.unlockWrite(stamp);
+    }
   }
 
   @Override
@@ -213,9 +215,10 @@ public class LFUCache<K, V> extends AbstractCache<K, V> {
   }
 
   /**
-   * 在写锁外查找淘汰候选键（仅做采样决策）
+   * 在 writeLock 内查找淘汰候选键（采样决策）
    *
-   * <p>基于 ConcurrentHashMap + 无锁频率计数，减少写锁持有时间
+   * <p>采样策略：随机选取 sampleSize 个 key，返回频率最低者。
+   * 调用方需持有 writeLock，确保采样期间 map 不会被并发修改。
    */
   private K findEvictionCandidate() {
     if (map.isEmpty()) {

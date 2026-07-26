@@ -1,11 +1,12 @@
 package com.njydsz.nextwiki.server.service;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.redis.service.RedisRateLimiter;
 
 import cn.hutool.crypto.digest.DigestUtil;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 下载限流与防盗链服务
  * <p>
- * 基于 Redis 实现下载速率限制和防盗链验证。
+ * 基于 {@link RedisRateLimiter} 实现下载速率限制和防盗链验证。
  *
  * <p><b>限流策略：</b>
  * <ul>
@@ -32,8 +33,12 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>Token 验证</li>
  * </ul>
  *
+ * <p><b>原子性保证：</b>限流逻辑统一使用 {@link RedisRateLimiter#tryAcquireFixedWindow}，
+ * 底层基于 Redis Lua 脚本（INCR + EXPIRE 在同一个脚本中执行），避免原 INCR 后 EXPIRE 失败
+ * 导致 key 永不过期的限流卡死 bug。</p>
+ *
  * @author ydsz-team
- * @since 1.4.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -41,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DownloadRateLimitService {
 
     private final StringRedisTemplate redisTemplate;
+    private final RedisRateLimiter redisRateLimiter;
 
     @Value("${nextwiki.download.rate-limit-per-minute:30}")
     private int rateLimitPerMinute;
@@ -56,29 +62,25 @@ public class DownloadRateLimitService {
     private static final String KEY_IP_RATE = "nextwiki:rate:ip:";
     private static final String KEY_FILE_RATE = "nextwiki:rate:file:";
 
+    /** 限流时间窗口：1 分钟 */
+    private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
+
     /**
      * 检查下载限流
+     * <p>
+     * 委托 {@link RedisRateLimiter#tryAcquireFixedWindow} 执行原子化限流，
+     * 故障时按 FAIL_CLOSED 策略拒绝请求，保证安全性。
      */
     public RateLimitResult checkRateLimit(String userId, String ip, String fileNodeId) {
         // 用户级限流
-        String userKey = KEY_USER_RATE + userId;
-        Long userCount = redisTemplate.opsForValue().increment(userKey);
-        if (userCount != null && userCount == 1) {
-            redisTemplate.expire(userKey, 1, TimeUnit.MINUTES);
-        }
-        if (userCount != null && userCount > rateLimitPerMinute) {
-            log.warn("[DownloadRateLimitService] 用户下载限流: userId={}, count={}", userId, userCount);
+        if (!redisRateLimiter.tryAcquireFixedWindow(KEY_USER_RATE + userId, rateLimitPerMinute, RATE_WINDOW)) {
+            log.warn("[DownloadRateLimitService] 用户下载限流: userId={}, limit={}/分钟", userId, rateLimitPerMinute);
             return RateLimitResult.blocked("用户下载频率超限: " + rateLimitPerMinute + "/分钟");
         }
 
         // IP 级限流
-        String ipKey = KEY_IP_RATE + ip;
-        Long ipCount = redisTemplate.opsForValue().increment(ipKey);
-        if (ipCount != null && ipCount == 1) {
-            redisTemplate.expire(ipKey, 1, TimeUnit.MINUTES);
-        }
-        if (ipCount != null && ipCount > ipRateLimitPerMinute) {
-            log.warn("[DownloadRateLimitService] IP 下载限流: ip={}, count={}", ip, ipCount);
+        if (!redisRateLimiter.tryAcquireFixedWindow(KEY_IP_RATE + ip, ipRateLimitPerMinute, RATE_WINDOW)) {
+            log.warn("[DownloadRateLimitService] IP 下载限流: ip={}, limit={}/分钟", ip, ipRateLimitPerMinute);
             return RateLimitResult.blocked("IP 下载频率超限: " + ipRateLimitPerMinute + "/分钟");
         }
 

@@ -15,7 +15,9 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Nacos 动态路由仓库（P1-6 + P2-12 增强）
@@ -77,6 +79,22 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
     private volatile boolean listenerRegistered = false;
 
     /**
+     * P0-5: 内存缓存（避免每次请求同步阻塞调用 Nacos getConfig）
+     * <p>启动时加载路由到内存，配置变更时通过 Listener 回调刷新。
+     * 使用 AtomicReference 保证线程安全的缓存切换。
+     */
+    private final AtomicReference<List<RouteDefinition>> routeCache = new AtomicReference<>(Collections.emptyList());
+
+    /**
+     * P0-6: 共享单线程 Executor（避免每次 listener 回调创建新线程池导致泄漏）
+     */
+    private final ExecutorService sharedExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "nacos-route-listener");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /**
      * 构造 Nacos 动态路由仓库
      *
      * @param nacosConfigManager Nacos 配置管理器
@@ -96,14 +114,17 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
 
         // P2-12: 注册配置变更监听器
         if (enabled) {
+            // P0-5: 启动时加载路由到内存缓存
+            loadRoutesFromNacos();
             registerConfigListener();
         }
     }
 
     /**
-     * 从 Nacos 加载路由定义
+     * P0-5: 从内存缓存返回路由定义（避免每次请求同步阻塞调用 Nacos getConfig）
      *
-     * <p>若 Nacos 中无配置或解析失败，返回空列表（回退到 Java 路由）。
+     * <p>路由在构造时加载到 {@link #routeCache}，配置变更时通过 Nacos Listener 回调刷新。
+     * 此方法仅读取内存缓存，无网络 I/O，不会阻塞 Netty EventLoop 线程。
      *
      * @return 路由定义 Flux
      */
@@ -112,13 +133,23 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
         if (!enabled) {
             return Flux.empty();
         }
+        return Flux.fromIterable(routeCache.get());
+    }
 
+    /**
+     * P0-5: 从 Nacos 加载路由到内存缓存
+     *
+     * <p>在构造器和配置变更监听器中调用。同步调用 Nacos getConfig 仅发生在启动/刷新时，
+     * 不在请求处理路径中，不会阻塞 Netty EventLoop。
+     */
+    private void loadRoutesFromNacos() {
         try {
             String config = nacosConfigManager.getConfigService()
                     .getConfig(dataId, group, 5000);
             if (config == null || config.isBlank()) {
                 log.debug("[NacosRoutes] Nacos 中无路由配置 dataId={} group={}，回退到 Java 路由", dataId, group);
-                return Flux.empty();
+                routeCache.set(Collections.emptyList());
+                return;
             }
 
             List<RouteDefinition> routes = YdszJson.fromJson(config,
@@ -127,11 +158,11 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                 routes = Collections.emptyList();
             }
 
+            routeCache.set(routes);
             log.info("[NacosRoutes] 从 Nacos 加载 {} 条路由定义 dataId={} group={}", routes.size(), dataId, group);
-            return Flux.fromIterable(routes);
         } catch (Exception e) {
             log.warn("[NacosRoutes] 从 Nacos 加载路由失败，回退到 Java 路由: dataId={} err={}", dataId, e.getMessage());
-            return Flux.empty();
+            routeCache.set(Collections.emptyList());
         }
     }
 
@@ -146,8 +177,13 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
     }
 
     /**
-     * P2-12: 注册 Nacos 配置变更监听器
-     * <p>当 Nacos 中的路由配置变更时，自动触发 {@code RefreshRoutesEvent}。
+     * P2-12 + P0-5 + P0-6: 注册 Nacos 配置变更监听器
+     * <p>当 Nacos 中的路由配置变更时：
+     * <ol>
+     *   <li>P0-5: 重新加载路由到内存缓存</li>
+     *   <li>触发 {@code RefreshRoutesEvent} 通知 Spring Cloud Gateway 刷新路由表</li>
+     * </ol>
+     * <p>P0-6: 使用共享 {@link #sharedExecutor} 替代每次创建新线程池。
      */
     private void registerConfigListener() {
         if (listenerRegistered) {
@@ -159,6 +195,8 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                 @Override
                 public void receiveConfigInfo(String configInfo) {
                     log.info("[NacosRoutes] 检测到路由配置变更 dataId={} group={}", dataId, group);
+                    // P0-5: 重新加载路由到内存缓存
+                    loadRoutesFromNacos();
                     // 触发路由刷新事件
                     eventPublisher.publishEvent(new RefreshRoutesEvent(this));
                     log.info("[NacosRoutes] 已触发路由刷新事件");
@@ -166,11 +204,8 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
 
                 @Override
                 public Executor getExecutor() {
-                    return Executors.newSingleThreadExecutor(r -> {
-                        Thread t = new Thread(r, "nacos-route-listener");
-                        t.setDaemon(true);
-                        return t;
-                    });
+                    // P0-6: 返回共享 Executor，避免每次创建新线程池导致线程泄漏
+                    return sharedExecutor;
                 }
             });
             listenerRegistered = true;

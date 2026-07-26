@@ -18,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
@@ -124,7 +125,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 输出结构化访问日志
+     * P2-2: 输出结构化 JSON 访问日志（替代管道分隔格式，便于 Loki/ELK 采集查询）
      *
      * @param exchange 服务器 Web 交换上下文
      * @param traceId  链路追踪 ID
@@ -136,7 +137,6 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
 
         String method = request.getMethod().name();
         String path = request.getURI().getPath();
-        // P0-8: 查询参数脱敏（避免 token / password 等敏感参数泄漏到日志）
         String query = sanitizeQuery(request);
         String clientIp = extractClientIp(request);
         String userAgent = request.getHeaders().getFirst("User-Agent");
@@ -156,28 +156,28 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         gatewayMetrics.recordRequestDuration(routeId, method, status, duration);
         gatewayMetrics.incrementRequestTotal(routeId, method, status);
 
-        String logMessage = String.format(
-                "traceId=%s | method=%s | path=%s | query=%s | clientIp=%s | status=%d | latencyMs=%d | " +
-                        "routeId=%s | targetUri=%s | userId=%s | userAgent=%s",
-                safeTraceId(traceId),
-                method,
-                path,
-                query,
-                clientIp,
-                status,
-                duration,
-                routeId,
-                targetUri,
-                userId != null ? userId : "-",
-                userAgent != null ? userAgent : "-"
-        );
+        // P2-2: 结构化 JSON 日志（便于 Loki 标签查询和 ELK 采集）
+        Map<String, Object> logData = new LinkedHashMap<>();
+        logData.put("traceId", safeTraceId(traceId));
+        logData.put("method", method);
+        logData.put("path", path);
+        logData.put("query", query);
+        logData.put("clientIp", clientIp);
+        logData.put("status", status);
+        logData.put("latencyMs", duration);
+        logData.put("routeId", routeId);
+        logData.put("targetUri", targetUri);
+        logData.put("userId", userId != null ? userId : "-");
+        logData.put("userAgent", userAgent != null ? userAgent : "-");
+
+        String jsonLog = YdszJson.toJson(logData);
 
         if (status >= 500) {
-            log.error(logMessage);
+            log.error(jsonLog);
         } else if (status >= 400) {
-            log.warn(logMessage);
+            log.warn(jsonLog);
         } else {
-            log.info(logMessage);
+            log.info(jsonLog);
         }
     }
 

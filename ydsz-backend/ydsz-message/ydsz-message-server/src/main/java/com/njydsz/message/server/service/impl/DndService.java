@@ -88,7 +88,7 @@ public class DndService {
         String value = startTime + "-" + endTime + " " + (timezone != null ? timezone : DEFAULT_TIMEZONE);
         redisTemplate.opsForValue().set(DND_KEY_PREFIX + userId, value);
         // 更新本地缓存
-        configCache.put(userId, parseConfig(value));
+        configCache.put(userId, new CachedDndConfig(parseConfig(value), System.currentTimeMillis()));
         log.info("[DND] 用户免打扰配置已设置: userId={} window={}~{} tz={}",
                 userId, startTime, endTime, timezone);
     }

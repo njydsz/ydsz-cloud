@@ -3,6 +3,7 @@ package com.njydsz.gateway.filter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.common.json.YdszJson;
 
@@ -23,6 +24,7 @@ import org.springframework.web.server.ServerWebExchange;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayIpUtils;
+import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.RateLimitProperties;
 
 import lombok.RequiredArgsConstructor;
@@ -73,6 +75,19 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
     private final RateLimitProperties properties;
     private final ReactiveStringRedisTemplate redisTemplate;
+    private final GatewayMetrics gatewayMetrics;
+
+    /**
+     * P0-3: Redis 连续失败计数器，超过阈值切换本地兜底
+     */
+    private static final int CIRCUIT_THRESHOLD = 5;
+    private final AtomicInteger redisFailureCount = new AtomicInteger(0);
+
+    /**
+     * P0-3: 本地兜底限流状态（Redis 不可用时的降级）
+     */
+    private volatile long localBucketTokens = 200;
+    private volatile long localBucketLastRefill = System.currentTimeMillis() / 1000;
 
     /**
      * 令牌桶 Lua 脚本
@@ -119,11 +134,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             return {allowed, remaining, reset}
             """;
 
-    /** 预编译 Lua 脚本 */
-    @SuppressWarnings("unchecked")
-    private final RedisScript<List<Long>> tokenBucketScript = RedisScript.of(
+    /**
+     * P0-1: 预编译 Lua 脚本（移除 @SuppressWarnings）
+     * <p>使用 List.class 而非 List<Long>.class（泛型擦除后等价），
+     * 避免未经检查的强制类型转换。
+     */
+    private final RedisScript<List> tokenBucketScript = RedisScript.of(
             new ByteArrayResource(TOKEN_BUCKET_SCRIPT.getBytes(StandardCharsets.UTF_8)),
-            (Class<List<Long>>) (Class<?>) List.class
+            List.class
     );
 
     @Override
@@ -144,108 +162,179 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
         String tenantId = request.getHeaders().getFirst("X-Tenant-Id");
 
-        // 依次检查各维度限流
-        return checkIpRateLimit(exchange, clientIp)
-                .flatMap(allowed -> {
-                    if (!allowed) {
-                        return rejectWithRateLimit(exchange, "IP", clientIp, properties.getPerIp().getDefaultQps());
+        // P2-5: 三维度并行检查，避免嵌套 flatMap 回调地狱
+        Mono<RateLimitResult> ipLimit = checkRateLimit("IP", clientIp,
+                properties.getPerIp().isEnabled(), properties.getPerIp().getDefaultQps(),
+                properties.getPerIp().getBurstCapacity(), "ydsz:ratelimit:ip:");
+
+        Mono<RateLimitResult> userLimit = checkRateLimit("USER", userId,
+                properties.getPerUser().isEnabled(), resolveUserQps(exchange),
+                properties.getPerUser().getBurstCapacity(), "ydsz:ratelimit:user:");
+
+        Mono<RateLimitResult> tenantLimit = Mono.just(new RateLimitResult(true, 0, 0));
+        if (properties.getPerTenant().isEnabled() && tenantId != null) {
+            tenantLimit = checkRateLimit("TENANT", tenantId,
+                    properties.getPerTenant().isEnabled(),
+                    properties.getPerTenant().getDefaultQps(),
+                    properties.getPerTenant().getBurstCapacity(), "ydsz:ratelimit:tenant:");
+        }
+
+        // 并行执行三维度检查，任一失败即拒绝
+        return Mono.zip(ipLimit, userLimit, tenantLimit)
+                .flatMap(tuple -> {
+                    RateLimitResult ip = tuple.getT1();
+                    RateLimitResult user = tuple.getT2();
+                    RateLimitResult tenant = tuple.getT3();
+
+                    if (!ip.allowed()) {
+                        return rejectWithRateLimit(exchange, "IP", clientIp,
+                                properties.getPerIp().getDefaultQps(), ip.resetSeconds());
                     }
-                    return checkUserRateLimit(exchange, userId)
-                            .flatMap(userAllowed -> {
-                                if (!userAllowed) {
-                                    return rejectWithRateLimit(exchange, "USER", userId, properties.getPerUser().getDefaultQps());
-                                }
-                                if (properties.getPerTenant().isEnabled() && tenantId != null) {
-                                    return checkTenantRateLimit(exchange, tenantId)
-                                            .flatMap(tenantAllowed -> {
-                                                if (!tenantAllowed) {
-                                                    return rejectWithRateLimit(exchange, "TENANT", tenantId, properties.getPerTenant().getDefaultQps());
-                                                }
-                                                return chain.filter(exchange);
-                                            });
-                                }
-                                return chain.filter(exchange);
-                            });
+                    if (!user.allowed()) {
+                        return rejectWithRateLimit(exchange, "USER", userId,
+                                resolveUserQps(exchange), user.resetSeconds());
+                    }
+                    if (!tenant.allowed()) {
+                        return rejectWithRateLimit(exchange, "TENANT", tenantId,
+                                properties.getPerTenant().getDefaultQps(), tenant.resetSeconds());
+                    }
+                    return chain.filter(exchange);
                 });
     }
 
     /**
-     * IP 级限流检查
+     * P2-5: 统一限流检查方法（替代原有三个独立方法）
+     *
+     * @param dimension       限流维度（IP / USER / TENANT）
+     * @param identity        限流标识
+     * @param dimensionEnabled 该维度是否启用
+     * @param replenishRate   每秒填充速率
+     * @param burstCapacity   突发容量
+     * @param keyPrefix       Redis 键前缀
+     * @return 限流结果
      */
-    private Mono<Boolean> checkIpRateLimit(ServerWebExchange exchange, String clientIp) {
-        if (!properties.getPerIp().isEnabled() || clientIp == null) {
-            return Mono.just(true);
+    private Mono<RateLimitResult> checkRateLimit(String dimension, String identity,
+                                                 boolean dimensionEnabled,
+                                                 int replenishRate, int burstCapacity,
+                                                 String keyPrefix) {
+        if (!dimensionEnabled || identity == null || identity.isEmpty()) {
+            return Mono.just(new RateLimitResult(true, 0, 0));
         }
 
-        // IP 白名单
-        if (properties.getPerIp().getWhitelist() != null
-                && properties.getPerIp().getWhitelist().contains(clientIp)) {
-            return Mono.just(true);
+        // IP 白名单检查
+        if ("IP".equals(dimension) && properties.getPerIp().getWhitelist() != null
+                && properties.getPerIp().getWhitelist().contains(identity)) {
+            return Mono.just(new RateLimitResult(true, 0, 0));
         }
 
-        String key = "ydsz:ratelimit:ip:" + clientIp;
-        return executeTokenBucket(key, properties.getPerIp().getDefaultQps(),
-                properties.getPerIp().getBurstCapacity());
-    }
-
-    /**
-     * 用户级限流检查
-     */
-    private Mono<Boolean> checkUserRateLimit(ServerWebExchange exchange, String userId) {
-        if (!properties.getPerUser().isEnabled() || userId == null || userId.isEmpty()) {
-            return Mono.just(true);
-        }
-
-        int qps = resolveUserQps(exchange);
-        String key = "ydsz:ratelimit:user:" + userId;
-        return executeTokenBucket(key, qps, properties.getPerUser().getBurstCapacity());
-    }
-
-    /**
-     * 租户级限流检查
-     */
-    private Mono<Boolean> checkTenantRateLimit(ServerWebExchange exchange, String tenantId) {
-        if (!properties.getPerTenant().isEnabled() || tenantId == null) {
-            return Mono.just(true);
-        }
-
-        String key = "ydsz:ratelimit:tenant:" + tenantId;
-        return executeTokenBucket(key, properties.getPerTenant().getDefaultQps(),
-                properties.getPerTenant().getBurstCapacity());
+        String key = keyPrefix + identity;
+        return executeTokenBucket(key, replenishRate, burstCapacity);
     }
 
     /**
      * 执行令牌桶限流检查
      *
+     * <p>P0-3: 当 Redis 连续失败超过阈值时切换到本地兜底模式。
+     * P0-1: 安全类型转换避免 unchecked cast。
+     * P3-6: 返回 RateLimitResult 携带实际 reset 值。
+     *
      * @param key           Redis 键
      * @param replenishRate 每秒填充速率
      * @param burstCapacity 突发容量
-     * @return true=允许；false=限流
+     * @return 限流结果
      */
-    private Mono<Boolean> executeTokenBucket(String key, int replenishRate, int burstCapacity) {
+    private Mono<RateLimitResult> executeTokenBucket(String key, int replenishRate, int burstCapacity) {
+        // P0-3: Redis 熔断检查 — 连续失败超过阈值时走本地兜底
+        if (redisFailureCount.get() >= CIRCUIT_THRESHOLD) {
+            log.warn("[RateLimit] Redis 连续失败 {} 次，切换到本地兜底限流模式", redisFailureCount.get());
+            return Mono.just(localFallback(replenishRate, burstCapacity));
+        }
+
         long now = System.currentTimeMillis() / 1000;
         List<String> keys = List.of(key);
         List<Object> args = Arrays.asList(
                 String.valueOf(replenishRate),
                 String.valueOf(burstCapacity),
                 String.valueOf(now),
-                "1"  // 每次请求消耗 1 个令牌
+                "1"
         );
 
         return redisTemplate.execute(tokenBucketScript, keys, args)
                 .next()
                 .map(result -> {
-                    if (result == null || result.size() < 1) {
-                        return true; // Redis 异常时降级放行
+                    if (result == null || result.isEmpty()) {
+                        redisFailureCount.incrementAndGet();
+                        return new RateLimitResult(true, 0, 0);
                     }
-                    Long allowed = result.get(0);
-                    return allowed != null && allowed == 1L;
+                    // P0-1: 安全类型转换
+                    Long allowed = getLong(result, 0);
+                    Long remaining = getLong(result, 1);
+                    Long reset = getLong(result, 2);
+                    boolean allow = allowed != null && allowed == 1L;
+                    redisFailureCount.set(0);
+                    return new RateLimitResult(allow,
+                            remaining != null ? remaining.intValue() : 0,
+                            reset != null ? reset.intValue() : 0);
                 })
                 .onErrorResume(e -> {
-                    log.warn("[RateLimit] Redis 限流检查异常，降级放行: key={} err={}", key, e.getMessage());
-                    return Mono.just(true);
+                    int count = redisFailureCount.incrementAndGet();
+                    log.warn("[RateLimit] Redis 限流检查异常 (连续 {} 次)，降级到本地兜底: key={} err={}",
+                            count, key, e.getMessage());
+                    return Mono.just(localFallback(replenishRate, burstCapacity));
                 })
-                .defaultIfEmpty(true);
+                .defaultIfEmpty(new RateLimitResult(true, 0, 0));
+    }
+
+    /**
+     * P0-1: 安全地从 List 中获取 Long 值
+     */
+    private Long getLong(List list, int index) {
+        if (list == null || index < 0 || index >= list.size()) {
+            return null;
+        }
+        Object value = list.get(index);
+        if (value instanceof Long l) {
+            return l;
+        }
+        if (value instanceof Number n) {
+            return n.longValue();
+        }
+        if (value instanceof String s) {
+            try {
+                return Long.parseLong(s.trim());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * P0-3: 本地兜底限流（Redis 不可用时的降级策略）
+     */
+    private RateLimitResult localFallback(int replenishRate, int burstCapacity) {
+        long now = System.currentTimeMillis() / 1000;
+        long elapsed = now - localBucketLastRefill;
+        long refill = elapsed * replenishRate;
+        long tokens = Math.min(burstCapacity, localBucketTokens + refill);
+
+        boolean allowed = tokens >= 1;
+        if (allowed) {
+            tokens = tokens - 1;
+        }
+        localBucketTokens = tokens;
+        localBucketLastRefill = now;
+
+        int reset = replenishRate > 0
+                ? (int) Math.ceil((double) (burstCapacity - tokens) / replenishRate)
+                : properties.getResponseHeaders().getRetryAfter();
+        return new RateLimitResult(allowed, (int) tokens, reset);
+    }
+
+    /**
+     * P3-6: 限流结果记录（携带 Lua 脚本返回的实际 reset 值）
+     */
+    private record RateLimitResult(boolean allowed, int remainingTokens, int resetSeconds) {
     }
 
     /**
@@ -269,27 +358,42 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 返回 429 限流响应（带 RateLimit 响应头）
+     * P3-6: 返回 429 限流响应（带 RateLimit 响应头，使用 Lua 脚本返回的实际 reset 值）
+     *
+     * @param exchange     服务器 Web 交换上下文
+     * @param dimension    限流维度
+     * @param identity     限流标识
+     * @param limit        限流配额
+     * @param resetSeconds  重置时间（秒，由 Lua 脚本返回）
+     * @return 完成信号 Mono
      */
-    private Mono<Void> rejectWithRateLimit(ServerWebExchange exchange, String dimension, String identity, int limit) {
+    private Mono<Void> rejectWithRateLimit(ServerWebExchange exchange, String dimension,
+                                           String identity, int limit, int resetSeconds) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        // P2-15: 标准限流响应头
+        // P3-6: 标准限流响应头，使用 Lua 脚本返回的实际 reset 值
         if (properties.getResponseHeaders().isEnabled()) {
             response.getHeaders().add("X-RateLimit-Limit", String.valueOf(limit));
             response.getHeaders().add("X-RateLimit-Remaining", "0");
-            response.getHeaders().add("X-RateLimit-Reset", String.valueOf(properties.getResponseHeaders().getRetryAfter()));
-            response.getHeaders().add("Retry-After", String.valueOf(properties.getResponseHeaders().getRetryAfter()));
+            response.getHeaders().add("X-RateLimit-Reset", String.valueOf(resetSeconds));
+            response.getHeaders().add("Retry-After", String.valueOf(resetSeconds));
         }
 
-        BaseResponse<Void> body = BaseResponse.error("429", "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
+        // 记录限流指标
+        if (gatewayMetrics != null) {
+            gatewayMetrics.incrementRatelimitTriggered(dimension,
+                    exchange.getRequest().getURI().getPath());
+        }
+
+        BaseResponse<Void> body = BaseResponse.error("429",
+                "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
         byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
-        log.info("[RateLimit] 限流触发: dimension={} identity={} path={}",
-                dimension, maskIdentity(identity), exchange.getRequest().getURI().getPath());
+        log.info("[RateLimit] 限流触发: dimension={} identity={} path={} reset={}s",
+                dimension, maskIdentity(identity), exchange.getRequest().getURI().getPath(), resetSeconds);
         return response.writeWith(Mono.just(buffer));
     }
 

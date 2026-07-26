@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.web.controller;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.util.NextwikiFileUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,20 +27,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * WOPI 协议接口（P1-4）
+ * WOPI 协议接口（P1-4 + P1-R5 + P2-R4）
  * <p>
  * 集成 OnlyOffice / Collabora Online 在线协同编辑。
- * WOPI（Web Application Open Platform Interface）是标准协议，
- * 允许在线文档编辑器与存储后端交互。
- *
- * <p><b>WOPI 端点：</b>
- * <ul>
- *   <li>GET /wopi/files/{id} — 获取文件元信息（CheckFileInfo）</li>
- *   <li>GET /wopi/files/{id}/contents — 获取文件内容（GetFile）</li>
- *   <li>POST /wopi/files/{id}/contents — 保存文件内容（PutFile）</li>
- *   <li>POST /wopi/files/{id}/lock — 锁定文件</li>
- *   <li>POST /wopi/files/{id}/unlock — 解锁文件</li>
- * </ul>
+ * P1-R5: 增加 WOPI Token 验证 + 锁定状态检查。
+ * P2-R4: 返回 DTO 替代 Map<String, Object>。
  *
  * @author ydsz-team
  * @since 1.4.0
@@ -58,33 +51,40 @@ public class WopiController {
     @Value("${nextwiki.wopi.editor-url:}")
     private String editorUrl;
 
+    @Value("${nextwiki.wopi.access-token:}")
+    private String expectedAccessToken;
+
     /**
      * CheckFileInfo — 获取文件元信息
      */
     @GetMapping("/files/{fileId}")
     @Operation(summary = "WOPI CheckFileInfo", description = "返回文件元信息供在线编辑器使用")
-    public Map<String, Object> checkFileInfo(
+    public WopiCheckFileInfoResponse checkFileInfo(
             @PathVariable String fileId,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken) {
+
+        // P1-R5: WOPI Token 验证
+        validateWopiToken(authToken);
 
         FileNode fileNode = fileNodeRepository.findById(fileId);
         if (fileNode == null || !fileNode.isFile()) {
-            return Map.of("error", "file not found");
+            return WopiCheckFileInfoResponse.error("file not found");
         }
 
-        return Map.of(
-                "BaseFileName", fileNode.getName(),
-                "OwnerId", fileNode.getCreatedBy() != null ? fileNode.getCreatedBy() : "",
-                "Size", fileNode.getSize() != null ? fileNode.getSize() : 0,
-                "UserId", userId != null ? userId : "guest",
-                "UserFriendlyName", userId != null ? userId : "Guest",
-                "Version", fileNode.getCurrentVersion() != null ? fileNode.getCurrentVersion() : 1,
-                "UserCanWrite", true,
-                "SupportsUpdate", true,
-                "SupportsLocks", true,
-                "LastModifiedTime", fileNode.getUpdatedAt() != null
-                        ? fileNode.getUpdatedAt().toString() : LocalDateTime.now().toString()
-        );
+        return WopiCheckFileInfoResponse.builder()
+                .baseFileName(fileNode.getName())
+                .ownerId(fileNode.getCreatedBy() != null ? fileNode.getCreatedBy() : "")
+                .size(fileNode.getSize() != null ? fileNode.getSize() : 0)
+                .userId(userId != null ? userId : "guest")
+                .userFriendlyName(userId != null ? userId : "Guest")
+                .version(fileNode.getCurrentVersion() != null ? fileNode.getCurrentVersion() : 1)
+                .userCanWrite(true)
+                .supportsUpdate(true)
+                .supportsLocks(true)
+                .lastModifiedTime(fileNode.getUpdatedAt() != null
+                        ? fileNode.getUpdatedAt().toString() : LocalDateTime.now().toString())
+                .build();
     }
 
     /**
@@ -92,7 +92,13 @@ public class WopiController {
      */
     @GetMapping("/files/{fileId}/contents")
     @Operation(summary = "WOPI GetFile", description = "返回文件原始内容")
-    public byte[] getFileContents(@PathVariable String fileId) {
+    public byte[] getFileContents(
+            @PathVariable String fileId,
+            @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken) {
+
+        // P1-R5: WOPI Token 验证
+        validateWopiToken(authToken);
+
         FileNode fileNode = fileNodeRepository.findById(fileId);
         if (fileNode == null || fileNode.getStorageKey() == null) {
             return new byte[0];
@@ -117,39 +123,38 @@ public class WopiController {
      */
     @PostMapping("/files/{fileId}/contents")
     @Operation(summary = "WOPI PutFile", description = "接收编辑器保存的文件内容")
-    public Map<String, Object> putFileContents(
+    public WopiPutFileResponse putFileContents(
             @PathVariable String fileId,
             @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken,
+            @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
             @org.springframework.web.bind.annotation.RequestBody byte[] content) {
+
+        // P1-R5: WOPI Token 验证
+        validateWopiToken(authToken);
 
         FileNode fileNode = fileNodeRepository.findById(fileId);
         if (fileNode == null) {
-            return Map.of("error", "file not found");
+            return WopiPutFileResponse.error("file not found");
+        }
+
+        // P1-R5: 锁定状态检查——如果文件被锁定，只允许锁持有者保存
+        if ("locked".equals(fileNode.getStatus()) && !userId.equals(fileNode.getUpdatedBy())) {
+            log.warn("[WopiController] 文件被其他用户锁定，拒绝保存: fileId={}, lockedBy={}",
+                    fileId, fileNode.getUpdatedBy());
+            return WopiPutFileResponse.error("file is locked by another user");
         }
 
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            return Map.of("error", "storage not configured");
+            return WopiPutFileResponse.error("storage not configured");
         }
 
         try {
-            // 上传新版本
             String storageKey = fileNode.getStorageKey();
             org.springframework.web.multipart.MultipartFile multipartFile =
-                    new org.springframework.web.multipart.MultipartFile() {
-                        @Override public String getName() { return "content"; }
-                        @Override public String getOriginalFilename() { return fileNode.getName(); }
-                        @Override public String getContentType() { return fileNode.getMimeType(); }
-                        @Override public boolean isEmpty() { return content.length == 0; }
-                        @Override public long getSize() { return content.length; }
-                        @Override public byte[] getBytes() { return content; }
-                        @Override public java.io.InputStream getInputStream() {
-                            return new java.io.ByteArrayInputStream(content);
-                        }
-                        @Override public void transferTo(java.io.File dest) throws java.io.IOException {
-                            java.nio.file.Files.write(dest.toPath(), content);
-                        }
-                    };
+                    NextwikiFileUtils.toMultipartFile(
+                            writeTempFile(content), fileNode.getName(), fileNode.getMimeType());
             storage.upload(null, storageKey, multipartFile);
 
             fileNode.setSize((long) content.length);
@@ -158,53 +163,80 @@ public class WopiController {
             fileNodeRepository.update(fileNode);
 
             log.info("[WopiController] PutFile 成功: fileId={}, size={}", fileId, content.length);
-            return Map.of("status", "ok");
+            return WopiPutFileResponse.ok();
         } catch (Exception e) {
             log.error("[WopiController] PutFile 失败: fileId={}", fileId, e);
-            return Map.of("error", e.getMessage());
+            return WopiPutFileResponse.error(e.getMessage());
         }
     }
 
     /**
-     * LockFile — 锁定文件（编辑器获取编辑权时调用）
+     * LockFile — 锁定文件
      */
     @PostMapping("/files/{fileId}/lock")
     @Operation(summary = "WOPI Lock", description = "锁定文件防止并发编辑")
-    public Map<String, Object> lockFile(
+    public WopiPutFileResponse lockFile(
             @PathVariable String fileId,
             @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken) {
+
+        validateWopiToken(authToken);
 
         FileNode fileNode = fileNodeRepository.findById(fileId);
         if (fileNode == null) {
-            return Map.of("error", "file not found");
+            return WopiPutFileResponse.error("file not found");
         }
 
-        // 简单实现：在 FileNode 上记录锁定信息
         fileNode.setStatus("locked");
+        fileNode.setUpdatedBy(userId);
+        fileNode.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(fileNode);
 
-        return Map.of("status", "ok", "lockId", lockId != null ? lockId : "");
+        return WopiPutFileResponse.ok();
     }
 
     /**
-     * UnlockFile — 解锁文件（编辑器保存或关闭时调用）
+     * UnlockFile — 解锁文件
      */
     @PostMapping("/files/{fileId}/unlock")
     @Operation(summary = "WOPI Unlock", description = "解锁文件")
-    public Map<String, Object> unlockFile(
+    public WopiPutFileResponse unlockFile(
             @PathVariable String fileId,
-            @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId) {
+            @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
+            @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken) {
+
+        validateWopiToken(authToken);
 
         FileNode fileNode = fileNodeRepository.findById(fileId);
         if (fileNode == null) {
-            return Map.of("error", "file not found");
+            return WopiPutFileResponse.error("file not found");
         }
 
         fileNode.setStatus("active");
         fileNodeRepository.update(fileNode);
 
-        return Map.of("status", "ok");
+        return WopiPutFileResponse.ok();
+    }
+
+    // ==================== 私有方法 ====================
+
+    /**
+     * P1-R5: WOPI Token 验证
+     */
+    private void validateWopiToken(String authToken) {
+        if (expectedAccessToken != null && !expectedAccessToken.isEmpty()) {
+            if (authToken == null || !authToken.equals(expectedAccessToken)) {
+                throw new com.njydsz.common.exception.custom.BusinessException(
+                        com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode.FILE_NOT_FOUND);
+            }
+        }
+    }
+
+    private Path writeTempFile(byte[] content) throws java.io.IOException {
+        Path tempFile = java.nio.file.Files.createTempFile("wopi-", ".tmp");
+        java.nio.file.Files.write(tempFile, content);
+        return tempFile;
     }
 
     private IFileStorage resolveStorage() {
@@ -212,5 +244,51 @@ public class WopiController {
             return fileStorageProvider.getStorage();
         }
         return null;
+    }
+
+    // ==================== DTO（P2-R4: 替代 Map<String, Object>） ====================
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.AllArgsConstructor
+    public static class WopiCheckFileInfoResponse {
+        @lombok.Builder.Default
+        private boolean error = false;
+        private String errorMessage;
+        private String baseFileName;
+        private String ownerId;
+        private long size;
+        private String userId;
+        private String userFriendlyName;
+        private int version;
+        private boolean userCanWrite;
+        private boolean supportsUpdate;
+        private boolean supportsLocks;
+        private String lastModifiedTime;
+
+        public static WopiCheckFileInfoResponse error(String message) {
+            return WopiCheckFileInfoResponse.builder()
+                    .error(true).errorMessage(message).build();
+        }
+    }
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.AllArgsConstructor
+    public static class WopiPutFileResponse {
+        @lombok.Builder.Default
+        private boolean error = false;
+        private String errorMessage;
+        @lombok.Builder.Default
+        private String status = "ok";
+
+        public static WopiPutFileResponse ok() {
+            return WopiPutFileResponse.builder().status("ok").build();
+        }
+
+        public static WopiPutFileResponse error(String message) {
+            return WopiPutFileResponse.builder()
+                    .error(true).errorMessage(message).status("error").build();
+        }
     }
 }

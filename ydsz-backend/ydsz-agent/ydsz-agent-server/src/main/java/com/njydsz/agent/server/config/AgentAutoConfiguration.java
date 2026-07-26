@@ -25,6 +25,7 @@ import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.infra.llm.OpenAiCompatibleClient;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.rag.InMemoryVectorStore;
+import com.njydsz.agent.infra.rag.HybridRetriever;
 import com.njydsz.agent.infra.rag.OpenAiEmbeddingClient;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
@@ -205,6 +206,12 @@ public class AgentAutoConfiguration {
     public DagOrchestrationExecutor dagOrchestrationExecutor(
             LlmClient llmClient, AgentProperties properties, AgentFactory agentFactory) {
         return new DagOrchestrationExecutor(llmClient, properties, agentFactory);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(HybridRetriever.class)
+    public HybridRetriever hybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {
+        return new HybridRetriever(vectorStore, jdbcTemplate);
     }
 
     @Bean

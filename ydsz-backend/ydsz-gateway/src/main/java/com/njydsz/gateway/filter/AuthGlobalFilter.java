@@ -166,8 +166,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        // 链路追踪 ID（网关层强制重新生成，剥离客户端伪造的 X-Trace-Id）
-        final String traceId = TraceIdGenerator.generate();
+        // P0-2: 链路追踪 ID — 优先复用 W3CTraceContextFilter（order=0）已注入的 traceId
+        // 避免多个过滤器各自生成独立 traceId 导致链路追踪断裂
+        String existingTraceId = request.getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+        final String traceId = (existingTraceId != null && !existingTraceId.isBlank())
+                ? existingTraceId : TraceIdGenerator.generate();
 
         // 统一写入 traceId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追踪 ID
         exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);

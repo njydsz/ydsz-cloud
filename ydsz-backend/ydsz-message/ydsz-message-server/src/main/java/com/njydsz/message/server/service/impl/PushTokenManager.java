@@ -8,6 +8,8 @@ import java.util.Set;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.json.YdszJson;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,8 +56,11 @@ public class PushTokenManager {
      */
     public void registerToken(String userId, String deviceId, String token, String platform) {
         String key = TOKENS_KEY_PREFIX + userId;
-        String value = token + ":" + (platform != null ? platform : "UNKNOWN");
-        redisTemplate.opsForHash().put(key, deviceId, value);
+        // OD-6: 改用 JSON 存储，消除 token:platform 字符串拼接脆弱性
+        Map<String, String> tokenInfo = new HashMap<>();
+        tokenInfo.put("token", token);
+        tokenInfo.put("platform", platform != null ? platform : "UNKNOWN");
+        redisTemplate.opsForHash().put(key, deviceId, YdszJson.toJson(tokenInfo));
         redisTemplate.expire(key, Duration.ofDays(TOKEN_TTL_DAYS));
         redisTemplate.opsForSet().remove(INVALID_KEY_PREFIX + userId, token);
         log.info("[PushToken] Token 注册: userId={} deviceId={} platform={}", userId, deviceId, platform);
@@ -75,10 +80,16 @@ public class PushTokenManager {
         }
         Set<String> invalidTokens = redisTemplate.opsForSet().members(INVALID_KEY_PREFIX + userId);
         Map<String, String> result = new HashMap<>();
-        raw.forEach((deviceId, tokenInfo) -> {
-            String token = tokenInfo.toString().split(":")[0];
-            if (invalidTokens == null || !invalidTokens.contains(token)) {
-                result.put(deviceId.toString(), tokenInfo.toString());
+        raw.forEach((deviceId, tokenInfoJson) -> {
+            // OD-6: 从 JSON 解析 token 和 platform
+            try {
+                Map<String, Object> info = YdszJson.fromJsonToMap(String.valueOf(tokenInfoJson), String.class, Object.class);
+                String token = info.get("token") != null ? String.valueOf(info.get("token")) : "";
+                if (invalidTokens == null || !invalidTokens.contains(token)) {
+                    result.put(deviceId.toString(), String.valueOf(tokenInfoJson));
+                }
+            } catch (Exception e) {
+                log.warn("[PushToken] JSON 解析失败: deviceId={} err={}", deviceId, e.getMessage());
             }
         });
         return result;

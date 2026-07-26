@@ -60,6 +60,16 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!--
+            micrometer-core（P1: AbstractModuleMetrics 基类依赖）
+            提供统一的 Micrometer 指标注册能力（Counter / Timer / Gauge），
+            供各业务模块的 Metrics 类继承使用。
+            版本由 Spring Boot 4.1.0 BOM 统一管理。
+        -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
         <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

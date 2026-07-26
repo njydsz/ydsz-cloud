@@ -194,7 +194,9 @@ public class JwtTokenService implements TokenService {
         // P1: aud — 受众声明（可选），配置后强制校验，防止跨服务令牌重用
         String audience = tokenProperties.getAudience();
         if (audience != null && !audience.isBlank()) {
-            builder.audience().add(audience).and();
+            // jjwt 0.12.x: audience() 返回 AudienceCollection<JwtBuilder>，
+            // 调用 single(String) 设置单一 audience 并返回 JwtBuilder
+            builder.audience().single(audience);
         }
 
         return builder.signWith(secretKey)
@@ -248,7 +250,10 @@ public class JwtTokenService implements TokenService {
     /**
      * 解析 JWT Claims
      *
-     * <p>校验签名 + issuer + subject，防止跨服务令牌混淆攻击
+     * <p>校验签名 + issuer + subject + audience，防止跨服务令牌混淆攻击
+     *
+     * <p>P1: 新增 audience 校验，配置 {@link TokenProperties#getAudience()} 后，
+     * token 必须包含匹配的 aud 字段，防止颁发给其他服务的 token 被错误地用于本服务。
      */
     private Claims parseClaims(String token) {
         // 快速格式校验：JWT 格式必须包含恰好两个 '.' 分隔符（header.payload.signature）
@@ -271,6 +276,14 @@ public class JwtTokenService implements TokenService {
         String subject = tokenProperties.getSubject();
         if (subject != null && !subject.isBlank()) {
             parserBuilder.requireSubject(subject);
+        }
+        // P1: 校验 audience 防止跨服务令牌重用
+        // 若配置了 audience，则 token 必须包含匹配的 aud 字段
+        String audience = tokenProperties.getAudience();
+        if (audience != null && !audience.isBlank()) {
+            // jjwt 0.12.x: require(claimName, expectedValue)
+            // 注意：require("aud", audience) 要求 token 中 aud 字段精确匹配配置值
+            parserBuilder.require("aud", audience);
         }
         return parserBuilder.build()
                 .parseSignedClaims(token)

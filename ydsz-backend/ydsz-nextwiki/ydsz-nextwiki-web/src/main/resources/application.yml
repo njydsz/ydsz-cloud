@@ -59,11 +59,6 @@ nextwiki:
     signed-url-expire-seconds: 3600
   wopi:
     editor-url: ${WOPI_EDITOR_URL:}
-  # P3-4: API 限流配置（上传/搜索/预览）
-  api-rate-limit:
-    upload-per-minute: 50
-    search-per-minute: 60
-    preview-per-minute: 30
 
 # Actuator
 management:

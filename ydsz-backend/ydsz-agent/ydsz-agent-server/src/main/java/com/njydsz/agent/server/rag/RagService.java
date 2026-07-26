@@ -6,9 +6,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
+import com.njydsz.agent.infra.rag.HybridRetriever;
 
 /**
  * RAG 检索服务
@@ -33,9 +35,12 @@ public class RagService {
     private static final double DEFAULT_MIN_SCORE = 0.7;
 
     private final VectorStore vectorStore;
+    private final ObjectProvider<HybridRetriever> hybridRetrieverProvider;
 
-    public RagService(VectorStore vectorStore) {
+    public RagService(VectorStore vectorStore,
+                      ObjectProvider<HybridRetriever> hybridRetrieverProvider) {
         this.vectorStore = vectorStore;
+        this.hybridRetrieverProvider = hybridRetrieverProvider;
     }
 
     /**
@@ -60,8 +65,15 @@ public class RagService {
         if (query == null || query.isBlank()) {
             return List.of();
         }
-        List<TextChunk> chunks = vectorStore.search(query, topK, minScore);
-        log.info("[RAG] 检索完成: query='{}', results={}", truncate(query, 50), chunks.size());
+        HybridRetriever hybridRetriever = hybridRetrieverProvider.getIfAvailable();
+        List<TextChunk> chunks;
+        if (hybridRetriever != null) {
+            chunks = hybridRetriever.retrieve(query, topK, minScore);
+        } else {
+            chunks = vectorStore.search(query, topK, minScore);
+        }
+        log.info("[RAG] 检索完成: query='{}', mode={}, results={}",
+                truncate(query, 50), hybridRetriever != null ? "hybrid" : "vector", chunks.size());
         return chunks;
     }
 
