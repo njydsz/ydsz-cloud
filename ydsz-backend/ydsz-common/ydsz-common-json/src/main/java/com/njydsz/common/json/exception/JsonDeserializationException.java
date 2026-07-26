@@ -5,6 +5,7 @@ package com.njydsz.common.json.exception;
  *
  * <p>在 JSON 反序列化过程中抛出的异常，包含行列号和上下文片段。</p>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class JsonDeserializationException extends YdszJsonException {
@@ -27,22 +28,52 @@ public class JsonDeserializationException extends YdszJsonException {
     /** 上下文片段（错误位置前后的 JSON 文本） */
     private String contextSnippet;
 
+    /**
+     * 构造函数（仅消息）
+     *
+     * @param message 错误消息
+     */
     public JsonDeserializationException(String message) {
         super(TYPE_MISMATCH, message);
     }
 
+    /**
+     * 构造函数（错误码和消息）
+     *
+     * @param errorCode 错误码
+     * @param message 错误消息
+     */
     public JsonDeserializationException(int errorCode, String message) {
         super(errorCode, message);
     }
 
+    /**
+     * 构造函数（消息和位置）
+     *
+     * @param message 错误消息
+     * @param position JSON 字符串中的位置
+     */
     public JsonDeserializationException(String message, int position) {
         super(TYPE_MISMATCH, message, position);
     }
 
+    /**
+     * 构造函数（错误码、消息和位置）
+     *
+     * @param errorCode 错误码
+     * @param message 错误消息
+     * @param position JSON 字符串中的位置
+     */
     public JsonDeserializationException(int errorCode, String message, int position) {
         super(errorCode, message, position);
     }
 
+    /**
+     * 构造函数（消息和原因）
+     *
+     * @param message 错误消息
+     * @param cause 原始异常
+     */
     public JsonDeserializationException(String message, Throwable cause) {
         super(TYPE_MISMATCH, message, cause);
     }
@@ -61,14 +92,29 @@ public class JsonDeserializationException extends YdszJsonException {
         computeLineColumn(json, position);
     }
 
+    /**
+     * 获取行号（从 1 开始）
+     *
+     * @return 行号，未设置时返回 -1
+     */
     public int getLine() {
         return line;
     }
 
+    /**
+     * 获取列号（从 1 开始）
+     *
+     * @return 列号，未设置时返回 -1
+     */
     public int getColumn() {
         return column;
     }
 
+    /**
+     * 获取上下文片段
+     *
+     * @return 错误位置前后的 JSON 文本片段
+     */
     public String getContextSnippet() {
         return contextSnippet;
     }
@@ -123,11 +169,25 @@ public class JsonDeserializationException extends YdszJsonException {
         return message + " (line " + lineNum + ", column " + colNum + ")";
     }
 
+    /**
+     * 创建缺少必需字段异常
+     *
+     * @param fieldName 字段名
+     * @return 反序列化异常
+     */
     public static JsonDeserializationException missingField(String fieldName) {
         return new JsonDeserializationException(MISSING_FIELD,
             "Missing required field: " + fieldName);
     }
 
+    /**
+     * 创建类型不匹配异常
+     *
+     * @param fieldName 字段名
+     * @param expected 期望类型
+     * @param actual 实际类型
+     * @return 反序列化异常
+     */
     public static JsonDeserializationException typeMismatch(String fieldName, Class<?> expected, Class<?> actual) {
         return new JsonDeserializationException(TYPE_MISMATCH,
             "Type mismatch for field '" + fieldName + "': expected " +
@@ -135,21 +195,47 @@ public class JsonDeserializationException extends YdszJsonException {
             (actual != null ? actual.getName() : "null"));
     }
 
+    /**
+     * 创建无效值异常
+     *
+     * @param fieldName 字段名
+     * @param value 无效值
+     * @return 反序列化异常
+     */
     public static JsonDeserializationException invalidValue(String fieldName, String value) {
         return new JsonDeserializationException(INVALID_VALUE,
             "Invalid value '" + value + "' for field '" + fieldName + "'");
     }
 
+    /**
+     * 创建缺少默认构造函数异常
+     *
+     * @param clazz 类型
+     * @return 反序列化异常
+     */
     public static JsonDeserializationException noDefaultConstructor(Class<?> clazz) {
         return new JsonDeserializationException(NO_DEFAULT_CONSTRUCTOR,
             "No default constructor for class: " + (clazz != null ? clazz.getName() : "null"));
     }
 
+    /**
+     * 创建解析错误异常
+     *
+     * @param json JSON 字符串
+     * @param position 错误位置
+     * @return 反序列化异常
+     */
     public static JsonDeserializationException parseError(String json, int position) {
         return new JsonDeserializationException(PARSE_ERROR,
             "Failed to parse JSON at position " + position, position, json);
     }
 
+    /**
+     * 创建验证错误异常
+     *
+     * @param message 错误消息
+     * @return 反序列化异常
+     */
     public static JsonDeserializationException validationError(String message) {
         return new JsonDeserializationException(VALIDATION_ERROR, message);
     }

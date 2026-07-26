@@ -64,6 +64,7 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Component
+@lombok.RequiredArgsConstructor
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     /**
@@ -116,8 +117,6 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     /** P1-7: JWT 校验结果缓存（Caffeine TTL=5s） */
     private final CachedJwtValidator cachedJwtValidator;
-    /** Redis 响应式模板（用于 Token 黑名单检查） */
-    private final ReactiveStringRedisTemplate redisTemplate;
     /** P2-12: 安全响应头配置 */
     private final SecurityHeadersProperties securityHeadersProperties;
 

@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.server.service.DepartmentService;
-import com.njydsz.userinfo.server.util.TreeBuilder;
+import com.njydsz.common.domain.tree.TreeBuilder;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -132,7 +132,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             return vo;
         }).collect(Collectors.toList());
 
-        return TreeBuilder.build(voList,
+        return TreeBuilder.buildSimple(voList,
                 DepartmentTreeVO::getId,
                 DepartmentTreeVO::getParentId,
                 DepartmentTreeVO::setChildren,
