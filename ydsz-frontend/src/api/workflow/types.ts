@@ -5,73 +5,131 @@
 
 /** 流程定义 */
 export interface FlowDefinitionDTO {
+  /** 流程定义 ID */
   id: string
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName: string
+  /** 版本号 */
   version: number
+  /** 分类 */
   category?: string
+  /** DRAFT / PUBLISHED / DEPRECATED / OFFLINE */
   status: 'DRAFT' | 'PUBLISHED' | 'DEPRECATED' | 'OFFLINE'
+  /** 表单路径 */
   formPath?: string
+  /** BPMN XML */
   bpmnXml?: string
+  /** JSON 模型 */
   jsonModel?: string
+  /** 创建人 */
   createBy?: string
+  /** 创建时间 */
   createTime?: string
+  /** 更新人 */
   updateBy?: string
+  /** 更新时间 */
   updateTime?: string
 }
 
 /** 流程实例 */
 export interface FlowInstanceDTO {
+  /** 实例 ID */
   id: string
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName?: string
+  /** 流程定义 ID */
   definitionId?: string
+  /** 业务类型 */
   businessType?: string
+  /** 业务 Key */
   businessKey?: string
+  /** 业务编号 */
   businessNo?: string
+  /** 实例标题 */
   title?: string
+  /** 发起人 ID */
   initiatorId?: string
+  /** 发起人姓名 */
   initiatorName?: string
+  /** RUNNING / SUSPENDED / COMPLETED / TERMINATED / REJECTED */
   status: 'RUNNING' | 'SUSPENDED' | 'COMPLETED' | 'TERMINATED' | 'REJECTED'
+  /** 当前节点编码 */
   currentNodeCode?: string
+  /** 当前节点名称 */
   currentNodeName?: string
+  /** 变量 JSON */
   variableJson?: string
+  /** 开始时间 */
   startTime?: string
+  /** 结束时间 */
   endTime?: string
+  /** 耗时（毫秒） */
   durationMs?: number
+  /** 租户 ID */
   tenantId?: string
+  /** 提供方跟踪 ID */
   providerTraceId?: string
 }
 
 /** 任务 */
 export interface FlowTaskDTO {
+  /** 任务 ID */
   id: string
+  /** 实例 ID */
   instanceId: string
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName?: string
+  /** 节点编码 */
   nodeCode: string
+  /** 节点名称 */
   nodeName?: string
+  /** 节点类型 */
   nodeType?: number
+  /** 业务类型 */
   businessType?: string
+  /** 业务 ID */
   businessId?: string
+  /** 业务编号 */
   businessNo?: string
+  /** 任务标题 */
   title?: string
+  /** 指派人 ID */
   assignorId?: string
+  /** 指派人姓名 */
   assignorName?: string
+  /** 办理人类型 */
   assigneeType?: string
+  /** 办理人 ID */
   assigneeId?: string
+  /** 办理人姓名 */
   assigneeName?: string
+  /** 执行类型 */
   performType?: string
+  /** 审批总数 */
   approveCount?: number
+  /** 已审批数 */
   approveFinished?: number
+  /** PENDING / CLAIMED / COMPLETED / REJECTED / SKIPPED / CANCELLED / TIMEOUT / DELEGATED / FROZEN */
   taskStatus: 'PENDING' | 'CLAIMED' | 'COMPLETED' | 'REJECTED' | 'SKIPPED' | 'CANCELLED' | 'TIMEOUT' | 'DELEGATED' | 'FROZEN'
+  /** 审批意见 */
   comment?: string
+  /** 签收时间 */
   claimAt?: string
+  /** 完成时间 */
   finishAt?: string
+  /** 耗时（毫秒） */
   durationMs?: number
+  /** 截止时间 */
   dueAt?: string
-  /** P1-1: 任务优先级（1-100，默认 50） */
+  /** 任务优先级（1-100，默认 50） */
   priority?: number
+  /** 创建时间 */
   createTime?: string
 }
 

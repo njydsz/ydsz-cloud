@@ -75,7 +75,6 @@ public class AuthServiceImpl implements AuthService {
                            TokenService tokenService,
                            TokenBlacklistService tokenBlacklistService,
                            RedisHashOps redisHashOps,
-                           RedisTemplate<String, Object> redisTemplate,
                            PasswordEncoder passwordEncoder,
                            UserInfoMetrics userInfoMetrics,
                            UserInfoProperties properties,
@@ -87,7 +86,6 @@ public class AuthServiceImpl implements AuthService {
         this.tokenService = tokenService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.redisHashOps = redisHashOps;
-        this.redisTemplate = redisTemplate;
         this.passwordEncoder = passwordEncoder;
         this.userInfoMetrics = userInfoMetrics;
         this.properties = properties;

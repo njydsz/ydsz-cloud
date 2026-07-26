@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS ydsz_dict_version(
     version         VARCHAR(32)    NOT NULL,
     change_log      TEXT,
     effective_date  TIMESTAMP      NOT NULL,
-    created_by      VARCHAR(20)         NOT NULL,
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0
 );
@@ -67,9 +67,9 @@ CREATE TABLE IF NOT EXISTS ydsz_config(
     is_public       SMALLINT       NOT NULL DEFAULT 0,
     sort_order      INTEGER        NOT NULL DEFAULT 0,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
@@ -297,9 +297,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file (
     uploader_id     VARCHAR(20),
     uploader_name   VARCHAR(64),
     description     VARCHAR(512),
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
@@ -395,9 +395,9 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_quota(
     -- 是否启用配额检查（false=该租户不受配额限制，即使配置了上限）
     enabled               SMALLINT       NOT NULL DEFAULT 1,
     -- 审计字段
-    created_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_by            VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at            TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_by            VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at            TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT       NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -453,9 +453,9 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant(
     datasource_key      VARCHAR(64),
     remark              VARCHAR(512),
     -- 审计字段
-    created_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    created_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    updated_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT         NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -502,9 +502,9 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_plan(
     status              VARCHAR(16)      NOT NULL DEFAULT 'ACTIVE',
     sort_order          INTEGER          NOT NULL DEFAULT 0,
     -- 审计字段
-    created_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    created_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    updated_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT         NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -541,7 +541,7 @@ CREATE TABLE IF NOT EXISTS ydsz_tenant_plan_menu(
     plan_id             VARCHAR(20)      NOT NULL,
     menu_id             VARCHAR(20)      NOT NULL,
     -- 审计字段
-    created_by          VARCHAR(20)      NOT NULL DEFAULT 'SYSTEM',
+    created_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at          TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT         NOT NULL DEFAULT 0,
     -- 唯一约束：同一套餐下同一菜单只能关联一次
@@ -1208,9 +1208,9 @@ CREATE TABLE IF NOT EXISTS ydsz_meta_schema_version (
     pending_tables      TEXT         NOT NULL DEFAULT '',
     notes               TEXT         NOT NULL DEFAULT '',
     -- 审计字段
-    created_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
@@ -1793,9 +1793,9 @@ CREATE TABLE IF NOT EXISTS ydsz_app_info(
     redirect_url    VARCHAR(512),
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
@@ -1831,9 +1831,9 @@ CREATE TABLE IF NOT EXISTS ydsz_variable(
     value_type      VARCHAR(16)    NOT NULL DEFAULT 'STRING',
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',

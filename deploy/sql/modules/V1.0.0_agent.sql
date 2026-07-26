@@ -19,9 +19,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_definition (
     status          VARCHAR(16)   DEFAULT 'ACTIVE',
     deleted         BOOLEAN       DEFAULT FALSE,
     tenant_id       VARCHAR(64)   DEFAULT '1',
-    created_by      VARCHAR(64)   DEFAULT 'SYSTEM',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMPTZ   DEFAULT NOW(),
-    updated_by      VARCHAR(64)   DEFAULT 'SYSTEM',
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMPTZ   DEFAULT NOW()
 );
 COMMENT ON TABLE ydsz_agent_definition IS 'Agent 定义表';
@@ -82,9 +82,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_model_config (
     status          VARCHAR(16)   DEFAULT 'ACTIVE',
     deleted         BOOLEAN       DEFAULT FALSE,
     tenant_id       VARCHAR(64)   DEFAULT '1',
-    created_by      VARCHAR(64)   DEFAULT 'SYSTEM',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMPTZ   DEFAULT NOW(),
-    updated_by      VARCHAR(64)   DEFAULT 'SYSTEM',
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMPTZ   DEFAULT NOW()
 );
 COMMENT ON TABLE ydsz_agent_model_config IS 'LLM 模型配置表';
@@ -144,9 +144,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_prompt_template (
     status          VARCHAR(16)   DEFAULT 'ACTIVE',
     deleted         BOOLEAN       DEFAULT FALSE,
     tenant_id       VARCHAR(64)   DEFAULT '1',
-    created_by      VARCHAR(64)   DEFAULT 'SYSTEM',
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMPTZ   DEFAULT NOW(),
-    updated_by      VARCHAR(64)   DEFAULT 'SYSTEM',
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMPTZ   DEFAULT NOW(),
     UNIQUE(template_code, version)
 );
@@ -164,9 +164,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agent_tool_def (
     status              VARCHAR(16)   DEFAULT 'ACTIVE',
     deleted             BOOLEAN       DEFAULT FALSE,
     tenant_id           VARCHAR(64)   DEFAULT '1',
-    created_by          VARCHAR(64)   DEFAULT 'SYSTEM',
+    created_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at          TIMESTAMPTZ   DEFAULT NOW(),
-    updated_by          VARCHAR(64)   DEFAULT 'SYSTEM',
+    updated_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at          TIMESTAMPTZ   DEFAULT NOW(),
     UNIQUE(tool_name)
 );

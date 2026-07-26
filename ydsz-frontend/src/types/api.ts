@@ -24,28 +24,43 @@ export interface PageQuery {
 /** 分页响应（与后端 PageResult 一致） */
 export interface PageData<T> {
   records: T[]
+  /** 总记录数 */
   total: number
+  /** 当前页码 */
   page: number
+  /** 每页条数 */
   size: number
+  /** 总页数 */
   pages?: number
 }
 
 /** 统一 R 包装响应（与后端 com.njydsz.common.api.R<T> 一致） */
 export interface ApiResponse<T> {
+  /** 业务状态码 */
   code: number
+  /** 提示消息 */
   message: string
+  /** 响应数据 */
   data: T
+  /** 请求追踪 ID */
   traceId?: string
+  /** 响应时间戳 */
   timestamp?: number
 }
 
 /** 业务实体基类 */
 export interface BusinessEntity {
+  /** 业务主键 ID */
   id: number
+  /** 创建人 ID */
   createdBy?: number
+  /** 创建时间 */
   createdAt?: string
+  /** 更新人 ID */
   updatedBy?: number
+  /** 更新时间 */
   updatedAt?: string
+  /** 业务状态 */
   status?: string
 }
 
@@ -54,15 +69,22 @@ export type BaseVO = BusinessEntity
 
 /** 下拉项 / 树节点 */
 export interface OptionVO<T = string | number> {
+  /** 显示标签 */
   label: string
+  /** 选项值 */
   value: T
+  /** 是否禁用 */
   disabled?: boolean
+  /** 子选项列表 */
   children?: OptionVO<T>[]
 }
 
 export interface TreeNode<T> {
+  /** 节点 ID */
   id: number
+  /** 父节点 ID */
   parentId: number
+  /** 子节点列表 */
   children?: TreeNode<T>[]
 }
 

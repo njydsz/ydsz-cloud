@@ -17,31 +17,51 @@
  */
 
 interface EvmInput {
+  /** 任务列表 */
   tasks: EvmTask[]
-  bac: number // 完工预算 (Budget at Completion)
+  /** 完工预算 (Budget at Completion) */
+  bac: number
+  /** 测量日期 */
   measureDate: string
 }
 
 interface EvmTask {
+  /** 任务 ID */
   id: string
+  /** 计划成本 */
   plannedCost: number
+  /** 实际成本 */
   actualCost: number
-  progressPct: number // 0-100
-  plannedPct: number // 0-100
+  /** 实际完成百分比 (0-100) */
+  progressPct: number
+  /** 计划完成百分比 (0-100) */
+  plannedPct: number
 }
 
 interface EvmResult {
+  /** 计划价值 (Planned Value) */
   pv: number
+  /** 挣值 (Earned Value) */
   ev: number
+  /** 实际成本 (Actual Cost) */
   ac: number
+  /** 进度偏差 (Schedule Variance) = EV - PV */
   sv: number
+  /** 成本偏差 (Cost Variance) = EV - AC */
   cv: number
+  /** 进度绩效指数 (Schedule Performance Index) = EV / PV */
   spi: number
+  /** 成本绩效指数 (Cost Performance Index) = EV / AC */
   cpi: number
+  /** 完工估算 (Estimate at Completion) = BAC / CPI */
   eac: number
+  /** 完工偏差 (Variance at Completion) = BAC - EAC */
   vac: number
+  /** 完工尚需绩效指数 (To-Complete Performance Index) = (BAC - EV) / (BAC - AC) */
   tcpi: number
+  /** 状态: GREEN 正常 / YELLOW 预警 / RED 偏差 */
   status: 'GREEN' | 'YELLOW' | 'RED'
+  /** 测量日期 */
   measureDate: string
 }
 

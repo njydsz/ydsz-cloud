@@ -29,9 +29,9 @@ CREATE TABLE IF NOT EXISTS nw_file_node (
     deleted_time    TIMESTAMP,
     original_path   VARCHAR(1024),
     status          VARCHAR(20) DEFAULT 'active',
-    created_by      VARCHAR(64),
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision        INT NOT NULL DEFAULT 0,
     deleted         INT NOT NULL DEFAULT 0
@@ -62,9 +62,9 @@ CREATE TABLE IF NOT EXISTS nw_file_version (
     change_type     VARCHAR(20) NOT NULL DEFAULT 'update',
     is_active       BOOLEAN NOT NULL DEFAULT FALSE,
     status          VARCHAR(20) DEFAULT 'active',
-    created_by      VARCHAR(64),
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision        INT NOT NULL DEFAULT 0,
     deleted         INT NOT NULL DEFAULT 0
@@ -87,9 +87,9 @@ CREATE TABLE IF NOT EXISTS nw_share_link (
     access_count      INT NOT NULL DEFAULT 0,
     status            VARCHAR(10) NOT NULL DEFAULT 'active',
     password          VARCHAR(128),
-    created_by        VARCHAR(64),
+    created_by        VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(64),
+    updated_by        VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision          INT NOT NULL DEFAULT 0,
     deleted           INT NOT NULL DEFAULT 0
@@ -112,9 +112,9 @@ CREATE TABLE IF NOT EXISTS nw_file_acl (
     inherited       BOOLEAN NOT NULL DEFAULT FALSE,
     is_owner        BOOLEAN NOT NULL DEFAULT FALSE,
     status          VARCHAR(20) DEFAULT 'active',
-    created_by      VARCHAR(64),
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision        INT NOT NULL DEFAULT 0,
     deleted         INT NOT NULL DEFAULT 0
@@ -135,9 +135,9 @@ CREATE TABLE IF NOT EXISTS nw_tag (
     type            VARCHAR(10) NOT NULL DEFAULT 'manual',
     usage_count     INT NOT NULL DEFAULT 0,
     status          VARCHAR(20) DEFAULT 'active',
-    created_by      VARCHAR(64),
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision        INT NOT NULL DEFAULT 0,
     deleted         INT NOT NULL DEFAULT 0
@@ -151,9 +151,9 @@ CREATE TABLE IF NOT EXISTS nw_file_tag (
     file_node_id    VARCHAR(32) NOT NULL,
     tag_id          VARCHAR(32) NOT NULL,
     status          VARCHAR(20) DEFAULT 'active',
-    created_by      VARCHAR(64),
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision        INT NOT NULL DEFAULT 0,
     deleted         INT NOT NULL DEFAULT 0
@@ -174,9 +174,9 @@ CREATE TABLE IF NOT EXISTS nw_storage_quota (
     file_count_limit    INT NOT NULL DEFAULT 10000,
     file_count_used     INT NOT NULL DEFAULT 0,
     status              VARCHAR(20) DEFAULT 'active',
-    created_by          VARCHAR(64),
+    created_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(64),
+    updated_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision            INT NOT NULL DEFAULT 0,
     deleted             INT NOT NULL DEFAULT 0
@@ -199,9 +199,9 @@ CREATE TABLE IF NOT EXISTS nw_trash_item (
     deleted_time        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     purge_time          TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '30 days'),
     status              VARCHAR(10) NOT NULL DEFAULT 'in_trash',
-    created_by          VARCHAR(64),
+    created_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(64),
+    updated_by          VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision            INT NOT NULL DEFAULT 0,
     deleted             INT NOT NULL DEFAULT 0
@@ -224,8 +224,9 @@ CREATE TABLE IF NOT EXISTS nw_search_index (
     mime_type       VARCHAR(128),
     size            BIGINT,
     tags            VARCHAR(500),
-    created_by      VARCHAR(64),
+    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revision        INT NOT NULL DEFAULT 0,
     deleted         INT NOT NULL DEFAULT 0
@@ -245,3 +246,56 @@ CREATE INDEX IF NOT EXISTS idx_search_user ON nw_search_index (created_by) WHERE
 INSERT INTO nw_storage_quota (id, scope_type, scope_id, quota_limit, quota_used, file_count_limit, file_count_used, status, created_by, updated_by)
 SELECT '0', 'tenant', 'default', 10737418240, 0, 10000, 0, 'active', 'SYSTEM', 'SYSTEM'
 WHERE NOT EXISTS (SELECT 1 FROM nw_storage_quota WHERE scope_type = 'tenant' AND scope_id = 'default');
+
+-- 10. 文件评论表（从 V1.4.0 合并，PG 语法重写）
+CREATE TABLE IF NOT EXISTS nw_file_comment (
+    id                VARCHAR(32)   PRIMARY KEY,
+    file_node_id      VARCHAR(32)   NOT NULL,
+    content           TEXT          NOT NULL,
+    parent_comment_id VARCHAR(32)   DEFAULT NULL,
+    resolved          BOOLEAN       NOT NULL DEFAULT FALSE,
+    position          VARCHAR(500)  DEFAULT NULL,
+    edited            BOOLEAN       NOT NULL DEFAULT FALSE,
+    revision          INT           NOT NULL DEFAULT 0,
+    deleted           INT           NOT NULL DEFAULT 0,
+    status            VARCHAR(20)   DEFAULT 'active',
+    created_by        VARCHAR(64)   DEFAULT 'SYSTEM' NOT NULL,
+    created_at        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(64)   DEFAULT 'SYSTEM' NOT NULL,
+    updated_at        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE nw_file_comment IS '文件评论表';
+
+CREATE INDEX IF NOT EXISTS idx_file_comment_node ON nw_file_comment (file_node_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_file_comment_parent ON nw_file_comment (parent_comment_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_file_comment_created_by ON nw_file_comment (created_by) WHERE deleted = 0;
+
+-- 11. 审计日志表（从 V1.4.0 合并，PG 语法重写）
+CREATE TABLE IF NOT EXISTS nw_audit_log (
+    id              VARCHAR(32)   PRIMARY KEY,
+    operation       VARCHAR(50)   NOT NULL,
+    file_node_id    VARCHAR(32)   DEFAULT NULL,
+    file_name       VARCHAR(255)  DEFAULT NULL,
+    node_type       VARCHAR(20)   DEFAULT NULL,
+    storage_key     VARCHAR(500)  DEFAULT NULL,
+    bucket_name     VARCHAR(100)  DEFAULT NULL,
+    operator_id     VARCHAR(32)   NOT NULL,
+    operated_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    extra           VARCHAR(2000) DEFAULT NULL,
+    result          VARCHAR(20)   DEFAULT 'success',
+    error_message   VARCHAR(1000) DEFAULT NULL,
+    revision        INT           NOT NULL DEFAULT 0,
+    deleted         INT           NOT NULL DEFAULT 0,
+    status          VARCHAR(20)   DEFAULT 'active',
+    created_by      VARCHAR(64)   DEFAULT 'SYSTEM' NOT NULL,
+    created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(64)   DEFAULT 'SYSTEM' NOT NULL,
+    updated_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE nw_audit_log IS '审计日志表';
+
+CREATE INDEX IF NOT EXISTS idx_audit_log_node ON nw_audit_log (file_node_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_audit_log_operator ON nw_audit_log (operator_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_audit_log_operated_at ON nw_audit_log (operated_at) WHERE deleted = 0;

@@ -11,7 +11,9 @@ const BASE = '/favorites'
 
 /** 收藏记录 */
 export interface FavoriteVO {
+  /** 收藏记录 ID */
   id: number
+  /** 用户 ID */
   userId: number
   /** 收藏对象类型: PAGE 页面 / PROJECT 项目 / CONTRACT 合同 */
   targetType: string
@@ -23,10 +25,15 @@ export interface FavoriteVO {
 
 /** 最近访问记录 */
 export interface RecentAccessVO {
+  /** 访问记录 ID */
   id: number
+  /** 用户 ID */
   userId: number
+  /** 路由路径 */
   path: string
+  /** 页面标题 */
   title: string
+  /** 访问时间 */
   accessedAt: string
 }
 

@@ -20,6 +20,18 @@
             <artifactId>ydsz-common-base</artifactId>
         </dependency>
 
+        <!-- 领域模型模块（BaseCrudController 使用 BaseCrudService / PageQuery / PageResult） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+
+        <!-- OpenAPI 注解（common-base 中按 optional 引入，web 层直接使用需显式声明） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
+
         <!-- 认证模块 -->
         <dependency>
             <groupId>com.njydsz</groupId>
