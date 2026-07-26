@@ -2,7 +2,8 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.CompanyDO;
+import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
+import com.njydsz.userinfo.domain.vo.CompanyVO;
 
 /**
  * 公司 Service 接口。
@@ -11,9 +12,9 @@ import com.njydsz.userinfo.domain.entity.CompanyDO;
  * @since 1.0.0
  */
 public interface CompanyService {
-    CompanyDO getById(String id);
-    List<CompanyDO> list();
-    String save(CompanyDO entity);
-    boolean updateById(CompanyDO entity);
+    CompanyVO getById(String id);
+    List<CompanyVO> list();
+    String create(CompanySaveDTO dto);
+    boolean update(CompanySaveDTO dto);
     boolean removeById(String id);
 }

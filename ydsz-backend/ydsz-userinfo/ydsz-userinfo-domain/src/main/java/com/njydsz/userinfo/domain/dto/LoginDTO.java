@@ -21,7 +21,9 @@ public class LoginDTO {
     @NotBlank(message = "密码不能为空")
     private String password;
 
+    /** 验证码（captchaEnabled=true 时必填） */
     private String captcha;
+
+    /** 验证码 key（captchaEnabled=true 时必填） */
     private String captchaKey;
-    private String mfaCode;
 }

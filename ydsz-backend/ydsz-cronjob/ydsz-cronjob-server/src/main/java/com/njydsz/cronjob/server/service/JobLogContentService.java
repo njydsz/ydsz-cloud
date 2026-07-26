@@ -45,4 +45,18 @@ public interface JobLogContentService {
      * @return 总行数
      */
     int countByLogId(String logId);
+
+    /**
+     * P1-9: 关键字搜索日志内容。
+     *
+     * <p>在指定执行日志的内容中搜索包含关键字的行，支持大小写不敏感匹配。
+     * 用于快速定位错误信息或关键变量输出。
+     *
+     * @param logId   执行日志 ID
+     * @param keyword 搜索关键词
+     * @param page    页码（从 1 开始）
+     * @param size    每页条数
+     * @return 匹配的日志行列表
+     */
+    List<JobLogContentDO> searchByKeyword(String logId, String keyword, int page, int size);
 }

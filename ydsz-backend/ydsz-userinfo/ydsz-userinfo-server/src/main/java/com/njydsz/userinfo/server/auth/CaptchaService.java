@@ -5,8 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.security.SecureRandom;
 
 import javax.imageio.ImageIO;
 
@@ -46,7 +45,7 @@ public class CaptchaService {
     private static final int CODE_LENGTH = 4;
     private static final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     /**
      * 生成验证码并返回 Base64 图片。
@@ -112,7 +111,8 @@ public class CaptchaService {
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, WIDTH, HEIGHT);
 
-        g.setFont(new Font("Arial", Font.BOLD, 28));
+        // 字体回退：优先 SansSerif（跨平台），避免 Linux 无 Arial 导致渲染异常
+        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
         for (int i = 0; i < code.length(); i++) {
             g.setColor(new Color(random.nextInt(150), random.nextInt(150), random.nextInt(150)));
             g.drawString(String.valueOf(code.charAt(i)), 20 + i * 25, 30);

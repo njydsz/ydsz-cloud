@@ -61,6 +61,24 @@
       "defaultValue": 60000
     },
     {
+      "name": "ydsz.seata.tcc-log-store",
+      "type": "com.njydsz.common.seata.config.SeataProperties$TccLogStoreType",
+      "description": "TCC 事务日志存储类型：memory（默认，单机/测试）或 redis（生产环境，跨服务共享）。仅当 redis 且类路径存在 RedisTemplate 时才注册 Redis 实现，否则回退到 memory。",
+      "defaultValue": "memory"
+    },
+    {
+      "name": "ydsz.seata.tcc-log-redis-key-prefix",
+      "type": "java.lang.String",
+      "description": "TCC 日志 Redis key 前缀（仅当 tcc-log-store=redis 时生效）。",
+      "defaultValue": "ydsz:tcc:log:"
+    },
+    {
+      "name": "ydsz.seata.tcc-log-redis-retention-hours",
+      "type": "java.lang.Integer",
+      "description": "TCC 日志 Redis 保留时长（小时，仅当 tcc-log-store=redis 时生效，最小值 1）。",
+      "defaultValue": 24
+    },
+    {
       "name": "ydsz.seata.saga-max-retries",
       "type": "java.lang.Integer",
       "description": "SAGA 补偿最大重试次数。",

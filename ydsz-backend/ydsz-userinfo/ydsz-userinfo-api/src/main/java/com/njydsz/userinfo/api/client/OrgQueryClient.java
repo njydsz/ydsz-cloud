@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
@@ -20,12 +21,12 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
         fallbackFactory = OrgQueryClientFallback.class)
 public interface OrgQueryClient {
 
-    @GetMapping("/api/internal/user/query")
+    @GetMapping("/api/internal/user/info")
     BaseResponse<UserAccountVO> queryUserById(@RequestParam String userId);
 
     @GetMapping("/api/internal/dept/tree")
     BaseResponse<List<DepartmentTreeVO>> getDeptTree();
 
     @GetMapping("/api/internal/dept/list")
-    BaseResponse<List<DepartmentTreeVO>> getDeptList();
+    BaseResponse<List<DepartmentVO>> getDeptList();
 }

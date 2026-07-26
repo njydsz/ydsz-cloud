@@ -58,4 +58,13 @@ public class JobLogContentServiceImpl implements JobLogContentService {
     public int countByLogId(String logId) {
         return jobLogContentMapper.countByLogId(logId);
     }
+
+    @Override
+    public List<JobLogContentDO> searchByKeyword(String logId, String keyword, int page, int size) {
+        if (logId == null || logId.isBlank() || keyword == null || keyword.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+        int offset = Math.max(0, (page - 1) * size);
+        return jobLogContentMapper.selectByLogIdAndKeyword(logId, keyword, offset, size);
+    }
 }

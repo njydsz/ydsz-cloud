@@ -7,22 +7,34 @@
       "defaultValue": true
     },
     {
+      "name": "ydsz.system.config.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用配置缓存。",
+      "defaultValue": true
+    },
+    {
       "name": "ydsz.system.config.cache-ttl-minutes",
       "type": "java.lang.Integer",
       "description": "系统配置 Redis 缓存 TTL（分钟）。",
       "defaultValue": 5
     },
     {
+      "name": "ydsz.system.config.hot-reload-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用配置热加载（监听 Nacos 配置变更事件，当前版本预留）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.system.dict.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用字典缓存。",
+      "defaultValue": true
+    },
+    {
       "name": "ydsz.system.dict.cache-ttl-minutes",
       "type": "java.lang.Integer",
       "description": "字典项 Redis 缓存 TTL（分钟）。",
       "defaultValue": 10
-    },
-    {
-      "name": "ydsz.system.config.hot-reload-enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用配置热加载（监听 Nacos 配置变更事件）。",
-      "defaultValue": true
     },
     {
       "name": "ydsz.system.app.bcrypt-strength",
@@ -33,7 +45,7 @@
     {
       "name": "ydsz.system.internal-api-ip-whitelist",
       "type": "java.util.List",
-      "description": "内部 API (/api/internal/**) IP 白名单列表。",
+      "description": "内部 API (/api/internal/**) IP 白名单列表（空列表=不限制，需 Gateway 层配合）。",
       "defaultValue": []
     }
   ]

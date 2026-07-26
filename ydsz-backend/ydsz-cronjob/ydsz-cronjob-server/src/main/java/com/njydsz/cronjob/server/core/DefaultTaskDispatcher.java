@@ -820,7 +820,31 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             log.warn("[Dispatcher] SHELL 处理器未注册, 降级到 BEAN 模式: key={} handler={}",
                     job.getJobKey(), job.getHandler());
         }
-        return applicationContext.getBean(job.getHandler(), JobHandler.class);
+        // P1-6: 灰度发布路由
+        String effectiveHandler = resolveCanaryHandler(job);
+        return applicationContext.getBean(effectiveHandler, JobHandler.class);
+    }
+
+    /**
+     * P1-6: 灰度处理器路由。
+     *
+     * <p>当任务配置了 canaryRatio (>0) 且 canaryHandler 非空时，
+     * 按 canaryRatio% 概率返回 canaryHandler，否则返回原 handler。
+     *
+     * @param job 任务定义
+     * @return 实际使用的 handler Bean 名称
+     */
+    private String resolveCanaryHandler(JobDO job) {
+        if (job.getCanaryRatio() != null && job.getCanaryRatio() > 0
+                && job.getCanaryHandler() != null && !job.getCanaryHandler().isBlank()) {
+            int ratio = Math.min(100, Math.max(0, job.getCanaryRatio()));
+            if (java.util.concurrent.ThreadLocalRandom.current().nextInt(100) < ratio) {
+                log.info("[Dispatcher] 灰度路由命中: jobKey={} canaryHandler={} ratio={}%",
+                        job.getJobKey(), job.getCanaryHandler(), ratio);
+                return job.getCanaryHandler();
+            }
+        }
+        return job.getHandler();
     }
 
     /**

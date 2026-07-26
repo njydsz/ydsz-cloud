@@ -98,10 +98,10 @@ public class NettyChannelMetrics {
     }
 
     /**
-     * 递减活跃 Channel 数。
+     * 递减活跃 Channel 数（不会变为负数）。
      */
     public void decrementActiveChannels() {
-        activeChannels.decrementAndGet();
+        activeChannels.updateAndGet(curr -> Math.max(0, curr - 1));
     }
 
     /**

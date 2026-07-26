@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.userinfo.domain.entity.DepartmentDO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.UserAccountService;
@@ -35,14 +35,8 @@ public class InternalApiController {
     private final UserAccountService userAccountService;
     private final DepartmentService departmentService;
 
-    @GetMapping("/user/query")
-    @Operation(summary = "根据 userId 查询用户信息（内部调用）")
-    public BaseResponse<UserAccountVO> queryUserById(@RequestParam String userId) {
-        return BaseResponse.success(userAccountService.getById(userId));
-    }
-
     @GetMapping("/user/info")
-    @Operation(summary = "获取用户信息（内部调用别名）")
+    @Operation(summary = "根据 userId 查询用户信息（内部调用）")
     public BaseResponse<UserAccountVO> getUserInfo(@RequestParam String userId) {
         return BaseResponse.success(userAccountService.getById(userId));
     }
@@ -55,7 +49,7 @@ public class InternalApiController {
 
     @GetMapping("/dept/list")
     @Operation(summary = "查询部门列表（内部调用）")
-    public BaseResponse<List<DepartmentDO>> getDeptList() {
+    public BaseResponse<List<DepartmentVO>> getDeptList() {
         return BaseResponse.success(departmentService.list());
     }
 }

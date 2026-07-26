@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,12 +15,14 @@ import com.njydsz.userinfo.domain.entity.RolePermissionDO;
 import com.njydsz.userinfo.domain.entity.UserRoleDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.exception.BusinessException;
+import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.service.RoleService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 角色 Service 实现。
  *
- * <p>核心能力：角色 CRUD、唯一性校验、内置角色保护、角色-权限分配。
+ * <p>核心能力：角色 CRUD、唯一性校验、内置角色保护、角色-权限批量分配。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,16 +45,16 @@ public class RoleServiceImpl implements RoleService {
     private final UserRoleMapper userRoleMapper;
 
     @Override
-    public RoleDO getById(String id) {
+    public RoleVO getById(String id) {
         RoleDO entity = roleMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
         }
-        return entity;
+        return toVO(entity);
     }
 
     @Override
-    public Page<RoleDO> page(RolePageQueryDTO query) {
+    public Page<RoleVO> page(RolePageQueryDTO query) {
         Page<RoleDO> page = new Page<>(query.getSafePageNum(), query.getSafePageSize());
         LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RoleDO::getDeleted, 0);
@@ -65,15 +68,23 @@ public class RoleServiceImpl implements RoleService {
             wrapper.eq(RoleDO::getStatus, query.getStatus());
         }
         wrapper.orderByAsc(RoleDO::getSortOrder);
-        return roleMapper.selectPage(page, wrapper);
+        Page<RoleDO> result = roleMapper.selectPage(page, wrapper);
+        Page<RoleVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        List<RoleVO> voList = result.getRecords().stream()
+                .map(this::toVO)
+                .collect(Collectors.toList());
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     @Override
-    public List<RoleDO> list() {
+    public List<RoleVO> list() {
         LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RoleDO::getDeleted, 0);
         wrapper.orderByAsc(RoleDO::getSortOrder);
-        return roleMapper.selectList(wrapper);
+        return roleMapper.selectList(wrapper).stream()
+                .map(this::toVO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -149,12 +160,18 @@ public class RoleServiceImpl implements RoleService {
         wrapper.eq(RolePermissionDO::getDeleted, 0);
         rolePermissionMapper.delete(wrapper);
 
+        // 批量插入（替代 N+1 循环）
+        List<RolePermissionDO> list = new ArrayList<>(permissionIds.size());
         for (String permId : permissionIds) {
             RolePermissionDO rp = new RolePermissionDO();
+            rp.setId(IdWorker.getIdStr());
             rp.setRoleId(roleId);
             rp.setPermissionId(permId);
             rp.setTenantId(role.getTenantId());
-            rolePermissionMapper.insert(rp);
+            list.add(rp);
+        }
+        if (!list.isEmpty()) {
+            rolePermissionMapper.batchInsert(list);
         }
         log.info("Permissions assigned to role {}: {}", roleId, permissionIds.size());
         return true;
@@ -168,5 +185,11 @@ public class RoleServiceImpl implements RoleService {
         return rolePermissionMapper.selectList(wrapper).stream()
                 .map(RolePermissionDO::getPermissionId)
                 .collect(Collectors.toList());
+    }
+
+    private RoleVO toVO(RoleDO entity) {
+        RoleVO vo = new RoleVO();
+        BeanUtils.copyProperties(entity, vo);
+        return vo;
     }
 }

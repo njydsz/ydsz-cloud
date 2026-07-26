@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,9 +21,11 @@ import com.njydsz.userinfo.domain.exception.BusinessException;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.service.UserAccountService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,12 +35,12 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>核心能力：
  * <ul>
- *   <li>密码加密（BCrypt）</li>
+ *   <li>密码加密（BCrypt）+ 密码策略校验</li>
  *   <li>用户名唯一性校验</li>
  *   <li>DTO→DO 转换，VO 隔离敏感字段</li>
  *   <li>分页查询</li>
- *   <li>修改密码/重置密码</li>
- *   <li>用户角色分配</li>
+ *   <li>修改密码/重置密码（含密码策略校验）</li>
+ *   <li>用户角色批量分配</li>
  * </ul>
  *
  * @author ydsz-team
@@ -51,6 +54,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserAccountMapper userAccountMapper;
     private final UserRoleMapper userRoleMapper;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordPolicyValidator passwordPolicyValidator;
 
     @Override
     public UserAccountVO getById(String id) {
@@ -120,6 +124,9 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new BusinessException(UserInfoResultCode.USERNAME_DUPLICATE);
         }
 
+        // 密码策略校验
+        passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
+
         UserAccountDO entity = new UserAccountDO();
         BeanUtils.copyProperties(dto, entity);
         entity.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -167,6 +174,10 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (passwordEncoder.matches(dto.getNewPassword(), entity.getPassword())) {
             throw new BusinessException(UserInfoResultCode.PASSWORD_SAME_AS_OLD);
         }
+
+        // 密码策略校验
+        passwordPolicyValidator.validate(dto.getNewPassword(), entity.getUsername());
+
         entity.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         return userAccountMapper.updateById(entity) > 0;
     }
@@ -178,6 +189,10 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
+
+        // 密码策略校验
+        passwordPolicyValidator.validate(dto.getNewPassword(), entity.getUsername());
+
         entity.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         entity.setLoginFailCount(0);
         entity.setLockedUntil(null);
@@ -197,12 +212,18 @@ public class UserAccountServiceImpl implements UserAccountService {
         wrapper.eq(UserRoleDO::getDeleted, 0);
         userRoleMapper.delete(wrapper);
 
+        // 批量插入（替代 N+1 循环）
+        List<UserRoleDO> list = new ArrayList<>(roleIds.size());
         for (String roleId : roleIds) {
             UserRoleDO ur = new UserRoleDO();
+            ur.setId(IdWorker.getIdStr());
             ur.setUserId(userId);
             ur.setRoleId(roleId);
             ur.setTenantId(entity.getTenantId());
-            userRoleMapper.insert(ur);
+            list.add(ur);
+        }
+        if (!list.isEmpty()) {
+            userRoleMapper.batchInsert(list);
         }
         log.info("Roles assigned to user {}: {}", userId, roleIds);
         return true;

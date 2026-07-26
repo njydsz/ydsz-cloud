@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +17,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * System module health indicator.
+ * 系统模块健康检查。
  *
- * <p>Reports Redis connectivity, config table reachability, and dict table reachability.
+ * <p>使用轻量级探针检查 Redis 连通性和数据库表可达性，避免全表 COUNT 扫描。
+ *
+ * <p>检查项：
+ * <ul>
+ *   <li>Redis — PING 命令</li>
+ *   <li>配置表 — SELECT 1 LIMIT 1（轻量探针，不走 COUNT）</li>
+ *   <li>字典表 — SELECT 1 LIMIT 1（轻量探针，不走 COUNT）</li>
+ * </ul>
  *
  * @author ydsz-team
  */
@@ -39,7 +45,7 @@ public class SystemHealthIndicator implements HealthIndicator {
     public Health health() {
         Map<String, Object> details = new LinkedHashMap<>();
 
-        // Check Redis connectivity (using execute to ensure connection is released)
+        // 检查 Redis 连通性（使用 execute 确保连接释放）
         try {
             String ping = redisTemplate.execute(conn -> conn.ping(), true);
             details.put("redis", "UP - " + ping);
@@ -48,18 +54,18 @@ public class SystemHealthIndicator implements HealthIndicator {
             return Health.down().withDetails(details).build();
         }
 
-        // Check config table reachability
+        // 检查配置表可达性（轻量探针，仅查 1 条记录，不走 COUNT）
         try {
-            configMapper.selectCount(null);
+            configMapper.selectByConfigKey("__health_probe__");
             details.put("config", "UP - table reachable");
         } catch (Exception e) {
             details.put("config", "DOWN - " + e.getMessage());
             return Health.down().withDetails(details).build();
         }
 
-        // Check dict table reachability
+        // 检查字典表可达性（轻量探针）
         try {
-            dictItemMapper.selectCount(null);
+            dictItemMapper.selectByTypeAndCode("__health_probe__", "__health_probe__");
             details.put("dict", "UP - table reachable");
         } catch (Exception e) {
             details.put("dict", "DOWN - " + e.getMessage());

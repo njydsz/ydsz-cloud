@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
@@ -16,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.json.autotype.SafeObjectInputFilter;
 
 /**
  * 缓存导出导入工具类
@@ -33,39 +33,25 @@ import com.njydsz.common.cache.api.Cache;
  * <p>安全优化（P1 修复）：
  *
  * <ul>
- *   <li>反序列化使用 {@link ObjectInputFilter} 白名单机制，仅允许 JDK 核心类型
+ *   <li>反序列化白名单统一委托 {@link SafeObjectInputFilter}（基于 {@code AutoTypeChecker}），
+ *       消除本模块独立的白名单硬编码，与 JSON AutoType 共享单一来源白名单
  *   <li>限制反序列化深度（≤5）、引用数（≤500000）、字节数（≤256MB）
  *   <li>限制导入 Map 大小，防止 OOM 攻击
+ *   <li>业务自定义类型如需反序列化，请通过 {@code AutoTypeChecker.addToWhitelist()} 显式注册
  * </ul>
  *
- * 
+ *
  */
 public class CacheExportImport {
-
-  /** 最大允许的反序列化深度 */
-  private static final int MAX_DEPTH = 5;
-
-  /** 最大允许的引用数量 */
-  private static final long MAX_REFERENCES = 500_000L;
-
-  /** 最大允许的反序列化字节数（256MB） */
-  private static final long MAX_STREAM_BYTES = 256L * 1024 * 1024;
 
   /** 默认最大导入条目数 */
   private static final int DEFAULT_MAX_ENTRIES = 1_000_000;
 
-  /** 反序列化白名单前缀 */
-  private static final String[] ALLOWED_PACKAGE_PREFIXES = {
-    "java.lang.",
-    "java.util.",
-    "java.math.",
-    "java.time.",
-    "java.lang.reflect.",
-    "sun.reflect.annotation.",
-  };
-
   /**
    * 创建安全的 ObjectInputStream，配置反序列化过滤器
+   *
+   * <p>反序列化白名单统一委托 {@link SafeObjectInputFilter}，与 JSON AutoType
+   * 共享 {@code AutoTypeChecker} 的单一来源白名单。
    *
    * @param fis 文件输入流
    * @return 配置了安全过滤器的 ObjectInputStream
@@ -74,36 +60,7 @@ public class CacheExportImport {
   private static ObjectInputStream createSafeObjectInputStream(FileInputStream fis)
       throws IOException {
     ObjectInputStream ois = new ObjectInputStream(fis);
-    ois.setObjectInputFilter(
-        filterInfo -> {
-          // 限制反序列化深度
-          if (filterInfo.depth() > MAX_DEPTH) {
-            return ObjectInputFilter.Status.REJECTED;
-          }
-          // 限制引用数量
-          if (filterInfo.references() > MAX_REFERENCES) {
-            return ObjectInputFilter.Status.REJECTED;
-          }
-          // 限制字节数
-          if (filterInfo.streamBytes() > MAX_STREAM_BYTES) {
-            return ObjectInputFilter.Status.REJECTED;
-          }
-          // 白名单类检查
-          if (filterInfo.serialClass() != null) {
-            String className = filterInfo.serialClass().getName();
-            // 数组类型：交给元素级检查（每个元素会单独触发 filter 回调）
-            if (className.startsWith("[")) {
-              return ObjectInputFilter.Status.UNDECIDED;
-            }
-            for (String prefix : ALLOWED_PACKAGE_PREFIXES) {
-              if (className.startsWith(prefix)) {
-                return ObjectInputFilter.Status.ALLOWED;
-              }
-            }
-            return ObjectInputFilter.Status.REJECTED;
-          }
-          return ObjectInputFilter.Status.UNDECIDED;
-        });
+    ois.setObjectInputFilter(SafeObjectInputFilter.create());
     return ois;
   }
 

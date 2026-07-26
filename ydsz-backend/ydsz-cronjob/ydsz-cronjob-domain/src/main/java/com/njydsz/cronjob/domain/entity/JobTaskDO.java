@@ -73,6 +73,13 @@ public class JobTaskDO implements Serializable {
     /** 执行节点 ID（hostname:port） */
     private String execNodeId;
 
+    /**
+     * P1-5: 重试次数（默认 0，每次重试递增）。
+     *
+     * <p>用于限制子任务最大重试次数（默认 3 次），防止无限重试。
+     */
+    private Integer retryCount;
+
     /** 创建时间 */
     private LocalDateTime createdAt;
 

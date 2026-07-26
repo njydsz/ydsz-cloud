@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.userinfo.domain.entity.PostDO;
+import com.njydsz.userinfo.domain.dto.PostSaveDTO;
+import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.server.service.PostService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -35,26 +37,26 @@ public class PostController {
 
     @GetMapping("/list")
     @Operation(summary = "查询全部岗位列表")
-    public BaseResponse<List<PostDO>> list() {
+    public BaseResponse<List<PostVO>> list() {
         return BaseResponse.success(service.list());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "根据 ID 查询岗位")
-    public BaseResponse<PostDO> getById(@PathVariable String id) {
+    public BaseResponse<PostVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
     }
 
     @PostMapping
     @Operation(summary = "创建岗位")
-    public BaseResponse<String> save(@RequestBody PostDO entity) {
-        return BaseResponse.success(service.save(entity));
+    public BaseResponse<String> create(@Valid @RequestBody PostSaveDTO dto) {
+        return BaseResponse.success(service.create(dto));
     }
 
     @PutMapping
     @Operation(summary = "更新岗位")
-    public BaseResponse<Boolean> update(@RequestBody PostDO entity) {
-        return BaseResponse.success(service.updateById(entity));
+    public BaseResponse<Boolean> update(@Valid @RequestBody PostSaveDTO dto) {
+        return BaseResponse.success(service.update(dto));
     }
 
     @DeleteMapping("/{id}")

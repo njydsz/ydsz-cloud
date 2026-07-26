@@ -85,6 +85,63 @@ class ExceptionCodeRegistryTest {
     }
 
     @Test
+    @DisplayName("registerStrict() 重复注册不同实例时抛出 IllegalStateException")
+    void testRegisterStrictThrowsOnConflict() {
+        ExceptionCode first = new TestExceptionCode("TEST_STRICT_001", "first.strict.key", 400);
+        ExceptionCode second = new TestExceptionCode("TEST_STRICT_001", "second.strict.key", 500);
+
+        ExceptionCodeRegistry.registerStrict(Map.of("TEST_STRICT_001", first));
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> ExceptionCodeRegistry.registerStrict(Map.of("TEST_STRICT_001", second)));
+        assertTrue(ex.getMessage().contains("TEST_STRICT_001"));
+        assertTrue(ex.getMessage().contains("requireNotExists"));
+
+        // 首次注册的值仍然保留
+        ExceptionCode found = ExceptionCodeRegistry.lookup("TEST_STRICT_001");
+        assertEquals("first.strict.key", found.getKey());
+    }
+
+    @Test
+    @DisplayName("register(map, true) 与 registerStrict 行为一致")
+    void testRegisterWithRequireNotExistsTrue() {
+        ExceptionCode first = new TestExceptionCode("TEST_STRICT_002", "first.key", 400);
+        ExceptionCode second = new TestExceptionCode("TEST_STRICT_002", "second.key", 500);
+
+        ExceptionCodeRegistry.register(Map.of("TEST_STRICT_002", first), true);
+        assertThrows(IllegalStateException.class,
+                () -> ExceptionCodeRegistry.register(Map.of("TEST_STRICT_002", second), true));
+    }
+
+    @Test
+    @DisplayName("registerStrict() 同一实例重复注册幂等不抛异常")
+    void testRegisterStrictIdempotentSameInstance() {
+        ExceptionCode code = new TestExceptionCode("TEST_STRICT_003", "idempotent.key", 400);
+        ExceptionCodeRegistry.registerStrict(Map.of("TEST_STRICT_003", code));
+        // 同一实例再次注册，幂等，不抛异常
+        assertDoesNotThrow(() -> ExceptionCodeRegistry.registerStrict(Map.of("TEST_STRICT_003", code)));
+    }
+
+    @Test
+    @DisplayName("register(map, false) 与 register(map) 行为一致（宽松模式）")
+    void testRegisterWithRequireNotExistsFalse() {
+        ExceptionCode first = new TestExceptionCode("TEST_LOOSE_001", "first.key", 400);
+        ExceptionCode second = new TestExceptionCode("TEST_LOOSE_001", "second.key", 500);
+
+        ExceptionCodeRegistry.register(Map.of("TEST_LOOSE_001", first), false);
+        assertDoesNotThrow(() -> ExceptionCodeRegistry.register(Map.of("TEST_LOOSE_001", second), false));
+
+        // 首次注册的值仍然保留
+        ExceptionCode found = ExceptionCodeRegistry.lookup("TEST_LOOSE_001");
+        assertEquals("first.key", found.getKey());
+    }
+
+    @Test
+    @DisplayName("registerStrict(null) 抛出 IllegalArgumentException")
+    void testRegisterStrictNullMap() {
+        assertThrows(IllegalArgumentException.class, () -> ExceptionCodeRegistry.registerStrict(null));
+    }
+
+    @Test
     @DisplayName("ExceptionCode.fromCode() 已注册 code 返回枚举实例")
     void testFromCodeRegistered() {
         ExceptionCode code = new TestExceptionCode("TEST004", "test.key.004", 400);

@@ -2,8 +2,9 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.MenuDO;
+import com.njydsz.userinfo.domain.dto.MenuSaveDTO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
+import com.njydsz.userinfo.domain.vo.MenuVO;
 
 /**
  * 菜单 Service 接口。
@@ -13,10 +14,10 @@ import com.njydsz.userinfo.domain.vo.MenuTreeVO;
  */
 public interface MenuService {
 
-    MenuDO getById(String id);
-    List<MenuDO> list();
-    String save(MenuDO entity);
-    boolean updateById(MenuDO entity);
+    MenuVO getById(String id);
+    List<MenuVO> list();
+    String create(MenuSaveDTO dto);
+    boolean update(MenuSaveDTO dto);
     boolean removeById(String id);
     List<MenuTreeVO> tree();
 }

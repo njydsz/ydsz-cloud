@@ -18,18 +18,28 @@ import org.slf4j.LoggerFactory;
  * <ul>
  *   <li>内部使用 {@link ConcurrentHashMap} 保证并发安全</li>
  *   <li>register() 支持增量注册，同一 code 重复注册将被忽略（首次注册生效）</li>
+ *   <li>registerStrict() / register(map, true) 在重复注册时 fail-fast 抛出异常</li>
  *   <li>lookup() 未找到时返回 null，调用方可按需抛出异常</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 枚举类静态块中注册
+ * // 枚举类静态块中注册（宽松模式：重复忽略 + warn 日志）
  * static {
  *     Map<String, ExceptionCode> map = new HashMap<>();
  *     for (MyExceptionCode c : values()) {
  *         map.put(c.getCode(), c);
  *     }
  *     ExceptionCodeRegistry.register(map);
+ * }
+ *
+ * // 严格模式：重复注册直接抛异常，避免不同模块误用相同 code
+ * static {
+ *     Map<String, ExceptionCode> map = new HashMap<>();
+ *     for (MyExceptionCode c : values()) {
+ *         map.put(c.getCode(), c);
+ *     }
+ *     ExceptionCodeRegistry.registerStrict(map);
  * }
  *
  * // 全局查找
@@ -51,25 +61,79 @@ public final class ExceptionCodeRegistry {
     }
 
     /**
-     * 注册一组异常码映射
+     * 注册一组异常码映射（宽松模式）
      *
      * <p>将传入的 map 中所有条目合并到全局注册表。如果某个 code 已被注册，
-     * 则保留首次注册的映射，不会覆盖。
+     * 则保留首次注册的映射，不会覆盖，仅输出 warn 日志。
+     *
+     * <p>等价于 {@code register(codeMap, false)}。
      *
      * @param codeMap 异常码映射表，key 为 code 字符串，value 为 ExceptionCode 枚举实例
      * @throws IllegalArgumentException 如果传入的 map 为 null
      */
     public static void register(Map<String, ExceptionCode> codeMap) {
+        register(codeMap, false);
+    }
+
+    /**
+     * 注册一组异常码映射（严格模式）
+     *
+     * <p>等价于 {@code register(codeMap, true)}。当发现某个 code 已被注册时，
+     * 立即抛出 {@link IllegalStateException}，避免不同模块误用相同 code
+     * 而被静默忽略。
+     *
+     * @param codeMap 异常码映射表，key 为 code 字符串，value 为 ExceptionCode 枚举实例
+     * @throws IllegalArgumentException 如果传入的 map 为 null
+     * @throws IllegalStateException 如果 requireNotExists=true 且某个 code 已被注册
+     * @since 1.0.0
+     */
+    public static void registerStrict(Map<String, ExceptionCode> codeMap) {
+        register(codeMap, true);
+    }
+
+    /**
+     * 注册一组异常码映射，可指定重复注册时的处理策略
+     *
+     * <p>将传入的 map 中所有条目合并到全局注册表。
+     *
+     * @param codeMap 异常码映射表，key 为 code 字符串，value 为 ExceptionCode 枚举实例
+     * @param requireNotExists 是否要求所有 code 未被注册过
+     *        <ul>
+     *          <li>{@code false}：重复注册时保留首次值，仅输出 warn 日志（宽松模式，默认）</li>
+     *          <li>{@code true}：重复注册时立即抛出 {@link IllegalStateException}（严格模式，fail-fast）</li>
+     *        </ul>
+     * @throws IllegalArgumentException 如果传入的 map 为 null
+     * @throws IllegalStateException 如果 requireNotExists=true 且某个 code 已被注册
+     * @since 1.0.0
+     */
+    public static void register(Map<String, ExceptionCode> codeMap, boolean requireNotExists) {
         if (codeMap == null) {
             throw new IllegalArgumentException("codeMap cannot be null");
         }
-        // 使用 putIfAbsent 循环实现增量注册，首次注册生效
         for (Map.Entry<String, ExceptionCode> entry : codeMap.entrySet()) {
-            ExceptionCode existing = REGISTRY.putIfAbsent(entry.getKey(), entry.getValue());
-            if (existing != null && existing != entry.getValue()) {
-                log.warn("异常码重复注册被忽略 | code={} | 已注册: {} | 新注册: {}",
-                        entry.getKey(), existing.getClass().getName(), entry.getValue().getClass().getName());
+            String code = entry.getKey();
+            ExceptionCode newValue = entry.getValue();
+            ExceptionCode existing = REGISTRY.putIfAbsent(code, newValue);
+            if (existing == null) {
+                // 首次注册，无冲突
+                continue;
             }
+            // 已存在相同 code 的注册
+            if (existing == newValue) {
+                // 同一实例重复注册，幂等，不告警
+                continue;
+            }
+            // 不同实例冲突
+            if (requireNotExists) {
+                throw new IllegalStateException(
+                    "异常码重复注册冲突 | code=" + code
+                    + " | 已注册: " + existing.getClass().getName()
+                    + " | 新注册: " + newValue.getClass().getName()
+                    + " | requireNotExists=true，请检查不同模块是否误用了相同的异常码"
+                );
+            }
+            log.warn("异常码重复注册被忽略 | code={} | 已注册: {} | 新注册: {}",
+                    code, existing.getClass().getName(), newValue.getClass().getName());
         }
     }
 

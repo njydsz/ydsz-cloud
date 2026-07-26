@@ -67,6 +67,14 @@ public class JobDagDO extends BaseDO {
     /** DAG 描述 */
     private String description;
 
+    /**
+     * P1-3: DAG 超时时间（毫秒，null=不限时）。
+     *
+     * <p>整个 DAG 工作流从启动到完成的最大允许耗时。超时后 DAG 实例标记为 TIMEOUT，
+     * 运行中的节点根据 failStrategy 决定是否中止。
+     */
+    private Long timeoutMs;
+
     /** 下次触发时间（CRON 模式） */
     private LocalDateTime nextFireTime;
 

@@ -2,7 +2,8 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.PostDO;
+import com.njydsz.userinfo.domain.dto.PostSaveDTO;
+import com.njydsz.userinfo.domain.vo.PostVO;
 
 /**
  * 岗位 Service 接口。
@@ -11,9 +12,9 @@ import com.njydsz.userinfo.domain.entity.PostDO;
  * @since 1.0.0
  */
 public interface PostService {
-    PostDO getById(String id);
-    List<PostDO> list();
-    String save(PostDO entity);
-    boolean updateById(PostDO entity);
+    PostVO getById(String id);
+    List<PostVO> list();
+    String create(PostSaveDTO dto);
+    boolean update(PostSaveDTO dto);
     boolean removeById(String id);
 }

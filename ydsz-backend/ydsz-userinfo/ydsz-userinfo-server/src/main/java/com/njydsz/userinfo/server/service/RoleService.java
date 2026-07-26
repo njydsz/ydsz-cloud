@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
-import com.njydsz.userinfo.domain.entity.RoleDO;
+import com.njydsz.userinfo.domain.vo.RoleVO;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
@@ -16,9 +16,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
  */
 public interface RoleService {
 
-    RoleDO getById(String id);
-    Page<RoleDO> page(RolePageQueryDTO query);
-    List<RoleDO> list();
+    RoleVO getById(String id);
+    Page<RoleVO> page(RolePageQueryDTO query);
+    List<RoleVO> list();
     String create(RoleSaveDTO dto);
     boolean update(RoleSaveDTO dto);
     boolean removeById(String id);

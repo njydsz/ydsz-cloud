@@ -1,5 +1,7 @@
 package com.njydsz.common.auth.metrics;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,10 +18,15 @@ import io.micrometer.core.instrument.Timer;
 /**
  * 认证授权模块 Micrometer 指标采集器。
  *
+ * <p>同时实现 {@link AuthMetrics} 与 {@link PermissionMetrics} 两个契约接口，
+ * 统一采集认证与授权核心链路指标。
+ *
  * <p>采集以下指标：
  * <ul>
+ *   <li>{@code auth.login.total} - 认证总次数 Counter（tag: result, userType, reason）</li>
+ *   <li>{@code auth.login.duration} - 认证耗时 Timer（tag: result, userType）</li>
  *   <li>{@code auth.permission.check.time} - 权限校验耗时 Timer</li>
- *   <li>{@code auth.permission.deny.count} - 权限拒绝次数 Counter（按 type 标签区分）</li>
+ *   <li>{@code auth.permission.deny.count} - 权限拒绝次数 Counter</li>
  *   <li>{@code auth.permission.allow.count} - 权限通过次数 Counter</li>
  *   <li>{@code auth.cache.hit} - 缓存命中次数 Counter</li>
  *   <li>{@code auth.cache.miss} - 缓存未命中次数 Counter</li>
@@ -28,17 +35,32 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p>同时负责权限拒绝事件的安全审计日志记录。
  *
+ * <p><b>性能要点：</b>动态标签组合的 Counter/Timer 通过 {@link ConcurrentHashMap} 缓存，
+ * 避免每次调用都创建新的 Builder 对象。Micrometer 内部对同 name+tags 的注册做了幂等处理，
+ * 但缓存 Builder 仍可减少对象分配与 map 查询开销。
+ *
+ * @author ydsz-team
  * @since 1.0.0
-
+ * @see AuthMetrics
+ * @see PermissionMetrics
  */
 @ConditionalOnClass(MeterRegistry.class)
-public class AuthMetricsCollector {
+public class AuthMetricsCollector implements AuthMetrics, PermissionMetrics {
 
     private static final Logger log = LoggerFactory.getLogger(AuthMetricsCollector.class);
     private static final Logger securityLog = LoggerFactory.getLogger("SECURITY_AUDIT");
 
+    /** 默认降级值，避免 null/空串污染指标基数 */
+    private static final String UNKNOWN = "unknown";
+
     private final MeterRegistry meterRegistry;
 
+    /** 动态标签 Counter 缓存，避免重复创建 Builder */
+    private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+    /** 动态标签 Timer 缓存，避免重复创建 Builder */
+    private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+
+    /** 权限校验指标（无动态标签，预注册即可） */
     private Counter permissionDenyCounter;
     private Counter permissionAllowCounter;
     private Counter cacheHitCounter;
@@ -48,7 +70,7 @@ public class AuthMetricsCollector {
     /**
      * Redis 可用状态，通过 Gauge 暴露到监控系统。
      */
-    private final java.util.concurrent.atomic.AtomicInteger redisAvailable = new java.util.concurrent.atomic.AtomicInteger(1);
+    private final AtomicInteger redisAvailable = new AtomicInteger(1);
 
     public AuthMetricsCollector(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
@@ -80,23 +102,38 @@ public class AuthMetricsCollector {
         meterRegistry.gauge("auth.redis.available", redisAvailable, AtomicInteger::get);
     }
 
-    /**
-     * 记录权限校验通过。
-     *
-     * @param permissionType 权限类型
-     */
+    // ==================== AuthMetrics 接口实现 ====================
+
+    @Override
+    public void recordAuthSuccess(String userType, long durationNanos) {
+        String type = normalize(userType);
+        getCounter("auth.login.total", "result", "success", "userType", type).increment();
+        getTimer("auth.login.duration", "result", "success", "userType", type)
+                .record(durationNanos, TimeUnit.NANOSECONDS);
+    }
+
+    @Override
+    public void recordAuthFailure(String userType, String reason, long durationNanos) {
+        String type = normalize(userType);
+        String r = normalize(reason);
+        getCounter("auth.login.total", "result", "failure", "userType", type, "reason", r).increment();
+        getTimer("auth.login.duration", "result", "failure", "userType", type)
+                .record(durationNanos, TimeUnit.NANOSECONDS);
+    }
+
+    @Override
+    public void recordAuthSkip(String reason) {
+        getCounter("auth.login.total", "result", "skip", "reason", normalize(reason)).increment();
+    }
+
+    // ==================== PermissionMetrics 接口实现 ====================
+
+    @Override
     public void recordPermissionAllow(String permissionType) {
         permissionAllowCounter.increment();
     }
 
-    /**
-     * 记录权限校验拒绝，并写入安全审计日志。
-     *
-     * @param userId 用户 ID
-     * @param permissionType 权限类型
-     * @param requiredPermissions 缺少的权限
-     * @param resource 资源路径
-     */
+    @Override
     public void recordPermissionDeny(String userId, String permissionType,
                                       String requiredPermissions, String resource) {
         permissionDenyCounter.increment();
@@ -106,36 +143,68 @@ public class AuthMetricsCollector {
                 userId, permissionType, requiredPermissions, resource);
     }
 
-    /**
-     * 记录缓存命中。
-     */
+    @Override
     public void recordCacheHit() {
         cacheHitCounter.increment();
     }
 
-    /**
-     * 记录缓存未命中。
-     */
+    @Override
     public void recordCacheMiss() {
         cacheMissCounter.increment();
     }
 
-    /**
-     * 记录权限校验耗时。
-     *
-     * @param nanos 耗时（纳秒）
-     */
+    @Override
     public void recordCheckTime(long nanos) {
         permissionCheckTimer.record(nanos, TimeUnit.NANOSECONDS);
     }
 
-    /**
-     * 更新 Redis 可用状态。
-     *
-     * @param available Redis 是否可用
-     */
+    @Override
     public void updateRedisAvailable(boolean available) {
         redisAvailable.set(available ? 1 : 0);
+    }
+
+    // ==================== 工具方法 ====================
+
+    /**
+     * 规范化标签值，避免 null/空串污染指标基数。
+     *
+     * @param value 原始值
+     * @return 规范化后的值
+     */
+    private static String normalize(String value) {
+        return (value == null || value.isBlank()) ? UNKNOWN : value;
+    }
+
+    /**
+     * 获取（或创建）带动态标签的 Counter，使用缓存避免重复创建 Builder。
+     *
+     * @param name 指标名
+     * @param tags 标签键值对（交替排列：key1, val1, key2, val2, ...）
+     * @return Counter 实例
+     */
+    private Counter getCounter(String name, String... tags) {
+        String cacheKey = buildCacheKey(name, tags);
+        return counterCache.computeIfAbsent(cacheKey, k -> Counter.builder(name).tags(tags).register(meterRegistry));
+    }
+
+    /**
+     * 获取（或创建）带动态标签的 Timer，使用缓存避免重复创建 Builder。
+     *
+     * @param name 指标名
+     * @param tags 标签键值对（交替排列：key1, val1, key2, val2, ...）
+     * @return Timer 实例
+     */
+    private Timer getTimer(String name, String... tags) {
+        String cacheKey = buildCacheKey(name, tags);
+        return timerCache.computeIfAbsent(cacheKey, k -> Timer.builder(name).tags(tags).register(meterRegistry));
+    }
+
+    private static String buildCacheKey(String name, String... tags) {
+        StringBuilder sb = new StringBuilder(name);
+        for (int i = 0; i < tags.length; i++) {
+            sb.append(':').append(tags[i]);
+        }
+        return sb.toString();
     }
 
     /**

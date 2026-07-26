@@ -1,12 +1,16 @@
 package com.njydsz.system.api.client;
 
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 
 /**
  * ConfigClient fallback.
  *
- * <p>Returns safe default values instead of null to prevent NPE in callers.
+ * <p>Returns null instead of empty string to allow callers to distinguish
+ * "service unavailable" from "config exists but value is empty".
  *
  * @author ydsz-team
  */
@@ -15,14 +19,15 @@ import org.springframework.stereotype.Component;
 public class ConfigClientFallback implements ConfigClient {
 
     @Override
-    public String getConfig(String key) {
-        log.warn("ConfigClient fallback: getConfig={}", key);
-        return "";
+    public String getConfig(Map<String, String> request) {
+        log.warn("ConfigClient fallback: getConfig key={}", request.get("key"));
+        return null;
     }
 
     @Override
-    public String getDictItem(String typeCode, String itemCode) {
-        log.warn("ConfigClient fallback: getDictItem={},{}", typeCode, itemCode);
-        return "{}";
+    public String getDictItem(Map<String, String> request) {
+        log.warn("ConfigClient fallback: getDictItem typeCode={}, itemCode={}",
+                request.get("typeCode"), request.get("itemCode"));
+        return null;
     }
 }

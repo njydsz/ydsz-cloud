@@ -16,7 +16,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
-import com.njydsz.userinfo.domain.entity.RoleDO;
+import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.service.RoleService;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -41,21 +41,21 @@ public class RoleController {
 
     @GetMapping("/page")
     @Operation(summary = "分页查询角色列表")
-    public BaseResponse<PageResponse<List<RoleDO>>> page(@Valid RolePageQueryDTO query) {
-        Page<RoleDO> page = service.page(query);
+    public BaseResponse<PageResponse<List<RoleVO>>> page(@Valid RolePageQueryDTO query) {
+        Page<RoleVO> page = service.page(query);
         return BaseResponse.success(PageResponse.success(
                 page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords()));
     }
 
     @GetMapping("/list")
     @Operation(summary = "查询全部角色列表")
-    public BaseResponse<List<RoleDO>> list() {
+    public BaseResponse<List<RoleVO>> list() {
         return BaseResponse.success(service.list());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "根据 ID 查询角色")
-    public BaseResponse<RoleDO> getById(@PathVariable String id) {
+    public BaseResponse<RoleVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
     }
 

@@ -1,5 +1,6 @@
 package com.njydsz.common.jdbc.datasource;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,10 +46,24 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
         return ds;
     }
 
+    /**
+     * 重写父类方法，同步维护内部 {@link #dataSourceMap}。
+     *
+     * <p>注意：Spring 6+ 中父类 {@code setTargetDataSources} 签名为
+     * {@code Map<Object, Object>}，此处保持签名一致以正确覆盖。
+     *
+     * @param targetDataSources 目标数据源映射（value 实际为 {@link DataSource} 类型）
+     */
     @Override
-    public void setTargetDataSources(Map<Object, DataSource> targetDataSources) {
+    public void setTargetDataSources(Map<Object, Object> targetDataSources) {
         super.setTargetDataSources(targetDataSources);
-        this.dataSourceMap.putAll(targetDataSources);
+        if (targetDataSources != null) {
+            targetDataSources.forEach((k, v) -> {
+                if (v instanceof DataSource) {
+                    this.dataSourceMap.put(k, (DataSource) v);
+                }
+            });
+        }
     }
 
     @Override
@@ -65,7 +80,7 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
      */
     public void addDataSource(Object key, DataSource dataSource) {
         dataSourceMap.put(key, dataSource);
-        super.setTargetDataSources(dataSourceMap);
+        super.setTargetDataSources(castToTargetMap(dataSourceMap));
         log.info("动态添加数据源: {}", key);
     }
 
@@ -79,8 +94,25 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
             throw new IllegalArgumentException("不能移除默认数据源: " + key);
         }
         dataSourceMap.remove(key);
-        super.setTargetDataSources(dataSourceMap);
+        super.setTargetDataSources(castToTargetMap(dataSourceMap));
         log.info("动态移除数据源: {}", key);
+    }
+
+    /**
+     * 将 {@code Map<Object, DataSource>} 安全转换为父类要求的 {@code Map<Object, Object>}。
+     *
+     * <p>通过新建 {@code HashMap<Object, Object>} 装载原 Map 的 entry，利用 Java 泛型
+     * 协变特性（{@code DataSource} 是 {@code Object} 的子类）避免 unchecked 警告。
+     *
+     * @param source 原始数据源映射
+     * @return 父类要求的 Map 形式
+     */
+    private static Map<Object, Object> castToTargetMap(Map<Object, DataSource> source) {
+        Map<Object, Object> result = new HashMap<>(source.size());
+        for (Map.Entry<Object, DataSource> entry : source.entrySet()) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+        return result;
     }
 
     /**

@@ -132,7 +132,16 @@ public class IOUtils {
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     /**
-     * 反序列化安全过滤器，仅允许基础类型和remi包下的类
+     * 反序列化安全过滤器，仅允许 JDK 基础类型和 {@code com.njydsz.**} 包下的类。
+     *
+     * <p><b>与 AutoTypeChecker 的关系：</b>
+     * 本过滤器面向 IOUtils 的<b>通用</b>反序列化场景，使用模块/包前缀模式（JDK 9+），
+     * 允许所有业务类（{@code com.njydsz.**}）；而 {@code AutoTypeChecker} 面向 JSON AutoType
+     * 与缓存导入等<b>特定</b>场景，使用类名精确白名单（更严格）。
+     * 两套机制独立维护，避免通用工具被过严的白名单限制。
+     *
+     * <p>如需更严格的反序列化白名单，请使用
+     * {@link com.njydsz.common.json.autotype.SafeObjectInputFilter}。
      */
     private static final ObjectInputFilter DESERIALIZE_FILTER = ObjectInputFilter.Config.createFilter(
         "java.base/java.lang.*;java.base/java.util.*;java.base/java.time.*;java.base/java.math.*;"

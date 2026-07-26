@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
-import com.njydsz.userinfo.domain.entity.DepartmentDO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.server.service.DepartmentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,7 +38,7 @@ public class DepartmentController {
 
     @GetMapping("/list")
     @Operation(summary = "查询全部部门列表")
-    public BaseResponse<List<DepartmentDO>> list() {
+    public BaseResponse<List<DepartmentVO>> list() {
         return BaseResponse.success(service.list());
     }
 
@@ -50,7 +50,7 @@ public class DepartmentController {
 
     @GetMapping("/{id}")
     @Operation(summary = "根据 ID 查询部门")
-    public BaseResponse<DepartmentDO> getById(@PathVariable String id) {
+    public BaseResponse<DepartmentVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
     }
 

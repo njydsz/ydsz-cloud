@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,7 @@ public final class TreeBuilder {
             List<T> flatList,
             Function<T, String> idGetter,
             Function<T, String> parentIdGetter,
-            java.util.function.BiConsumer<T, List<T>> childrenSetter,
+            BiConsumer<T, List<T>> childrenSetter,
             Function<T, Integer> sortGetter) {
 
         if (flatList == null || flatList.isEmpty()) {

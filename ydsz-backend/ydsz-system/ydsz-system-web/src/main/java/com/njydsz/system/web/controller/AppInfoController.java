@@ -1,7 +1,6 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -22,7 +21,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.AppInfoDTO;
-import com.njydsz.system.domain.entity.AppInfoDO;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.server.service.AppInfoService;
 
@@ -44,16 +42,15 @@ public class AppInfoController {
 
     private final AppInfoService service;
 
-    @Operation(summary = "分页查询应用列表")
+    @Operation(summary = "分页查询应用列表（支持搜索过滤）")
     @GetMapping("/page")
     public PageResponse<List<AppInfoVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
-        IPage<AppInfoDO> page = service.page(pageNum, pageSize);
-        List<AppInfoVO> vos = page.getRecords().stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
+            @Parameter(description = "应用名称模糊搜索") @RequestParam(required = false) String appName,
+            @Parameter(description = "状态") @RequestParam(required = false) String status) {
+        IPage<AppInfoVO> page = service.page(pageNum, pageSize, appName, status);
+        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
     }
 
     @Operation(summary = "按 ID 查询应用")
@@ -84,20 +81,5 @@ public class AppInfoController {
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
-    }
-
-    private AppInfoVO toVO(AppInfoDO entity) {
-        if (entity == null) {
-            return null;
-        }
-        AppInfoVO vo = new AppInfoVO();
-        vo.setId(entity.getId());
-        vo.setAppCode(entity.getAppCode());
-        vo.setAppName(entity.getAppName());
-        vo.setAppKey(entity.getAppKey());
-        vo.setRedirectUrl(entity.getRedirectUrl());
-        vo.setDescription(entity.getDescription());
-        vo.setStatus(entity.getStatus());
-        return vo;
     }
 }

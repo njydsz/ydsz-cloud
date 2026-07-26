@@ -1,8 +1,6 @@
 package com.njydsz.userinfo.server.service.impl;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
@@ -15,9 +13,11 @@ import com.njydsz.userinfo.domain.entity.UserDeptDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.exception.BusinessException;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.server.service.DepartmentService;
+import com.njydsz.userinfo.server.util.TreeBuilder;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -40,20 +40,22 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final UserDeptMapper userDeptMapper;
 
     @Override
-    public DepartmentDO getById(String id) {
+    public DepartmentVO getById(String id) {
         DepartmentDO entity = departmentMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
         }
-        return entity;
+        return toVO(entity);
     }
 
     @Override
-    public List<DepartmentDO> list() {
+    public List<DepartmentVO> list() {
         LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DepartmentDO::getDeleted, 0);
-        wrapper.orderByAsc(DepartmentDO::getSortOrder);
-        return departmentMapper.selectList(wrapper);
+        wrapper.orderByDesc(DepartmentDO::getSortOrder);
+        return departmentMapper.selectList(wrapper).stream()
+                .map(this::toVO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -117,7 +119,9 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public List<DepartmentTreeVO> tree() {
-        List<DepartmentDO> all = list();
+        List<DepartmentDO> all = departmentMapper.selectList(
+                new LambdaQueryWrapper<DepartmentDO>()
+                        .eq(DepartmentDO::getDeleted, 0));
         if (all.isEmpty()) {
             return List.of();
         }
@@ -128,17 +132,16 @@ public class DepartmentServiceImpl implements DepartmentService {
             return vo;
         }).collect(Collectors.toList());
 
-        Map<String, List<DepartmentTreeVO>> parentIdMap = voList.stream()
-                .collect(Collectors.groupingBy(vo ->
-                        vo.getParentId() == null ? "0" : vo.getParentId()));
+        return TreeBuilder.build(voList,
+                DepartmentTreeVO::getId,
+                DepartmentTreeVO::getParentId,
+                DepartmentTreeVO::setChildren,
+                DepartmentTreeVO::getSortOrder);
+    }
 
-        List<DepartmentTreeVO> roots = parentIdMap.getOrDefault("0", new ArrayList<>());
-        for (DepartmentTreeVO vo : voList) {
-            List<DepartmentTreeVO> children = parentIdMap.get(vo.getId());
-            if (children != null) {
-                vo.setChildren(children);
-            }
-        }
-        return roots;
+    private DepartmentVO toVO(DepartmentDO entity) {
+        DepartmentVO vo = new DepartmentVO();
+        BeanUtils.copyProperties(entity, vo);
+        return vo;
     }
 }

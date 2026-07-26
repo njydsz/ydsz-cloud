@@ -1,7 +1,6 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -22,7 +21,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
-import com.njydsz.system.domain.entity.VariableDO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.service.VariableService;
 
@@ -36,7 +34,7 @@ import lombok.RequiredArgsConstructor;
  *
  * @author ydsz-team
  */
-@Tag(name = "系统变量", description = "系统变量 CRUD")
+@Tag(name = "系统变量", description = "系统变量 CRUD + 按 key 查询")
 @RestController
 @RequestMapping("/api/v1/variable")
 @RequiredArgsConstructor
@@ -44,22 +42,27 @@ public class VariableController {
 
     private final VariableService service;
 
-    @Operation(summary = "分页查询系统变量")
+    @Operation(summary = "分页查询系统变量（支持搜索过滤）")
     @GetMapping("/page")
     public PageResponse<List<VariableVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
-        IPage<VariableDO> page = service.page(pageNum, pageSize);
-        List<VariableVO> vos = page.getRecords().stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
+            @Parameter(description = "变量键模糊搜索") @RequestParam(required = false) String variableKey,
+            @Parameter(description = "状态") @RequestParam(required = false) String status) {
+        IPage<VariableVO> page = service.page(pageNum, pageSize, variableKey, status);
+        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
     }
 
     @Operation(summary = "按 ID 查询系统变量")
     @GetMapping("/{id}")
     public BaseResponse<VariableVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
+    }
+
+    @Operation(summary = "按变量键查询变量值")
+    @GetMapping("/key/{variableKey}")
+    public BaseResponse<String> getByKey(@PathVariable String variableKey) {
+        return BaseResponse.success(service.getVariableValue(variableKey));
     }
 
     @Audit(module = "系统变量", type = AuditType.OPERATION, action = AuditAction.CREATE,
@@ -84,19 +87,5 @@ public class VariableController {
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
-    }
-
-    private VariableVO toVO(VariableDO entity) {
-        if (entity == null) {
-            return null;
-        }
-        VariableVO vo = new VariableVO();
-        vo.setId(entity.getId());
-        vo.setVariableKey(entity.getVariableKey());
-        vo.setVariableValue(entity.getVariableValue());
-        vo.setValueType(entity.getValueType());
-        vo.setDescription(entity.getDescription());
-        vo.setStatus(entity.getStatus());
-        return vo;
     }
 }

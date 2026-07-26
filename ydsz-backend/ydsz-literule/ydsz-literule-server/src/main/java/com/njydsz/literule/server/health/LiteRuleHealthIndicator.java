@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.literule.server.cep.CEPEngine;
 import com.njydsz.literule.server.core.AsyncTraceRecorder;
@@ -37,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2.3.0
  */
 @Slf4j
-@Component
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.literule", name = "health-enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
@@ -121,10 +119,14 @@ public class LiteRuleHealthIndicator implements HealthIndicator {
 
         // CEP 引擎状态
         try {
-            Map<String, Object> cepDetails = new LinkedHashMap<>();
-            cepDetails.put("patterns", cepEngine.patternCount());
-            cepDetails.put("totalHits", cepEngine.totalHits());
-            details.put("cep", cepDetails);
+            if (cepEngine != null) {
+                Map<String, Object> cepDetails = new LinkedHashMap<>();
+                cepDetails.put("patterns", cepEngine.patternCount());
+                cepDetails.put("totalHits", cepEngine.totalHits());
+                details.put("cep", cepDetails);
+            } else {
+                details.put("cep", "disabled");
+            }
         } catch (Exception e) {
             details.put("cep", "DOWN - " + e.getMessage());
             allUp = false;

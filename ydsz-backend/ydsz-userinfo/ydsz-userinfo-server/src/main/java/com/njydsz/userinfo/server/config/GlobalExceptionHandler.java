@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 全局异常处理器。
  *
  * <p>统一处理 BusinessException、参数校验异常、其他未捕获异常，
- * 转换为标准 BaseResponse 格式返回。
+ * 转换为标准 BaseResponse 格式返回，并根据错误类型映射不同的 HTTP 状态码。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -31,8 +31,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<BaseResponse<Void>> handleBusinessException(BusinessException e) {
         log.warn("Business exception: code={}, msg={}", e.getCode(), e.getMessage());
+        HttpStatus status = resolveHttpStatus(e.getCode());
         BaseResponse<Void> response = BaseResponse.error(e.getCode(), e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(status).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -57,5 +58,37 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error", e);
         BaseResponse<Void> response = BaseResponse.error(BaseResultCode.INTERNAL_ERROR);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    /**
+     * 根据业务错误码映射 HTTP 状态码。
+     *
+     * <p>映射规则：
+     * <ul>
+     *   <li>B30001 (USER_NOT_FOUND) → 404</li>
+     *   <li>B30002 (PASSWORD_INCORRECT) → 401</li>
+     *   <li>A20003 (TOKEN_INVALID) → 401</li>
+     *   <li>A20110 (ACCOUNT_LOCKED) → 423</li>
+     *   <li>A20108/A20109 (MFA) → 401</li>
+     *   <li>其余业务异常 → 400</li>
+     * </ul>
+     */
+    private HttpStatus resolveHttpStatus(String code) {
+        if (code == null) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        switch (code) {
+            case "B30001":
+                return HttpStatus.NOT_FOUND;
+            case "B30002":
+            case "A20003":
+            case "A20108":
+            case "A20109":
+                return HttpStatus.UNAUTHORIZED;
+            case "A20110":
+                return HttpStatus.LOCKED;
+            default:
+                return HttpStatus.BAD_REQUEST;
+        }
     }
 }

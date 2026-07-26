@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.web.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -154,7 +155,7 @@ public class OAuth2Controller {
      * 简单 JSON 解析（避免引入额外依赖，格式固定为 {"k":"v","k":"v"}）。
      */
     private Map<String, String> parseSimpleJson(String json) {
-        Map<String, String> result = new java.util.HashMap<>();
+        Map<String, String> result = new HashMap<>();
         json = json.trim();
         if (json.startsWith("{")) json = json.substring(1);
         if (json.endsWith("}")) json = json.substring(0, json.length() - 1);

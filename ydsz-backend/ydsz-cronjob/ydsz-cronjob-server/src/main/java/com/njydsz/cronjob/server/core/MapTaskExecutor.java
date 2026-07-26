@@ -535,4 +535,58 @@ public class MapTaskExecutor {
         taskDO.setDeleted(0);
         return taskDO;
     }
+
+    /**
+     * P1-5: 重试失败的子任务。
+     *
+     * <p>将指定 FAILED 状态的子任务重置为 PENDING 并重新执行。
+     * 重试次数记录在 TaskDO 的 retryCount 字段中，超过最大重试次数（默认 3 次）时拒绝重试。
+     *
+     * @param taskId 子任务 ID（ydsz_job_task.id）
+     * @param jobDO  任务定义（用于获取 handler 和重新执行）
+     * @param logId  日志 ID
+     * @return 重试结果（true=重试成功，false=重试失败或超过限制）
+     */
+    public boolean retryFailedSubTask(String taskId, JobDO jobDO, String logId) {
+        JobTaskDO taskDO = jobTaskMapper.selectById(taskId);
+        if (taskDO == null) {
+            log.warn("[MapTaskRetry] 子任务不存在: taskId={}", taskId);
+            return false;
+        }
+        if (!STATUS_FAILED.equals(taskDO.getStatus())) {
+            log.warn("[MapTaskRetry] 子任务非 FAILED 状态, 拒绝重试: taskId={} status={}",
+                    taskId, taskDO.getStatus());
+            return false;
+        }
+        int currentRetryCount = taskDO.getRetryCount() != null ? taskDO.getRetryCount() : 0;
+        int maxRetries = 3;
+        if (currentRetryCount >= maxRetries) {
+            log.warn("[MapTaskRetry] 子任务超过最大重试次数, 拒绝重试: taskId={} retries={}/{}",
+                    taskId, currentRetryCount, maxRetries);
+            return false;
+        }
+        // 获取 MapProcessor Bean
+        MapProcessor processor;
+        try {
+            processor = applicationContext.getBean(jobDO.getHandler(), MapProcessor.class);
+        } catch (Exception e) {
+            log.error("[MapTaskRetry] 获取 MapProcessor 失败: handler={} err={}",
+                    jobDO.getHandler(), e.getMessage());
+            return false;
+        }
+        // 重置状态为 PENDING，递增 retryCount
+        taskDO.setStatus(STATUS_PENDING);
+        taskDO.setRetryCount(currentRetryCount + 1);
+        taskDO.setUpdatedAt(LocalDateTime.now());
+        jobTaskMapper.updateById(taskDO);
+        // 构造上下文并重新执行
+        MapContext context = new MapContext();
+        context.setTaskName(taskDO.getTaskName());
+        context.setTaskParams(taskDO.getTaskParams());
+        context.setRoot(false);
+        log.info("[MapTaskRetry] 开始重试子任务: taskId={} retryCount={}", taskId, currentRetryCount + 1);
+        ProcessResult result = executeSingleTask(processor, context, taskDO, jobDO.getJobKey(), logId);
+        log.info("[MapTaskRetry] 重试完成: taskId={} success={}", taskId, result.isSuccess());
+        return result.isSuccess();
+    }
 }

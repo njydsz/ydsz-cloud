@@ -27,6 +27,7 @@ import com.njydsz.common.app.metrics.AppMetrics;
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.handler.AbstractAuthHandler;
+import com.njydsz.common.auth.metrics.AuthMetrics;
 import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
@@ -139,9 +140,14 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     /**
      * 创建 App 端鉴权过滤器 Bean
      *
+     * <p>认证指标采集器通过 {@link ObjectProvider} 注入，避免与 {@code AuthMetricsCollector}
+     * （同样实现 {@link AuthMetrics} 接口）产生 bean 歧义。App 端始终使用 {@link AppMetrics}
+     * 作为指标实现。
+     *
      * @param appAuthHandler             App 端认证处理器
      * @param authFilterConfiguration    通用鉴权过滤器配置
      * @param authenticationProvider     自定义认证提供者（可为空）
+     * @param appMetricsProvider         App 指标采集器（可选依赖）
      * @param applicationContext         Spring 应用上下文
      * @return AppAuthFilter 实例
      */
@@ -150,9 +156,12 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     public AppAuthFilter appAuthFilter(AuthHandler appAuthHandler,
                                         AuthFilterConfiguration authFilterConfiguration,
                                         @Nullable AuthenticationProvider authenticationProvider,
+                                        ObjectProvider<AppMetrics> appMetricsProvider,
                                         ApplicationContext applicationContext) {
         String applicationName = applicationContext.getApplicationName();
-        return new AppAuthFilter(applicationName, authFilterConfiguration, appAuthHandler, authenticationProvider);
+        AppMetrics appMetrics = appMetricsProvider.getIfAvailable();
+        return new AppAuthFilter(applicationName, authFilterConfiguration, appAuthHandler,
+                authenticationProvider, appMetrics);
     }
 
     /**

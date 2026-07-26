@@ -200,6 +200,23 @@ public class JobDO extends BaseDO {
      */
     private String cluster;
 
+    /**
+     * P1-6: 灰度发布比例（0-100，0=不灰度，100=全量灰度）。
+     *
+     * <p>当 canaryRatio > 0 时，每次任务执行有 canaryRatio% 的概率
+     * 使用 {@link #canaryHandler} 而非 {@link #handler} 执行。
+     * 用于灰度发布新版本处理器，对标 SchedulerX 的灰度发布能力。
+     */
+    private Integer canaryRatio;
+
+    /**
+     * P1-6: 灰度处理器 Bean 名称（canaryRatio > 0 时生效）。
+     *
+     * <p>灰度流量使用此 handler 执行，非灰度流量仍使用 {@link #handler}。
+     * 灰度验证通过后，将 canaryHandler 复制到 handler 并将 canaryRatio 设为 0 即可完成全量发布。
+     */
+    private String canaryHandler;
+
     /** 租户 ID */
     private String tenantId;
 }

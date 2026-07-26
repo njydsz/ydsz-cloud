@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.common.json.annotation.YdszJsonClass;
 import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.string.StringUtils;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -52,9 +52,9 @@ import lombok.NoArgsConstructor;
  * @see TracerUtils
  */
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@YdszJsonClass
 public class QueueMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -79,6 +79,10 @@ public class QueueMessage implements Serializable {
     /**
      * 消息头信息
      * <p>用于传递元数据，如消息类型、来源系统、自定义属性等
+     *
+     * <p><b>序列化说明：</b>该字段为 {@code transient}，不参与 JSON 序列化。
+     * 消息在跨服务传输时，headers 不会随 payload 一起传递。如需传递元数据，
+     * 请将其编码到 body 中或使用独立的传输通道。
      */
     private transient Map<String, String> headers;
 
@@ -249,7 +253,8 @@ public class QueueMessage implements Serializable {
         }
         try {
             QueueMessage message = YdszJson.toObject(payload, QueueMessage.class);
-            if (message == null) {
+            // 反序列化返回 null 或 body 为 null（非 JSON 字符串被宽松解析）时，降级为以 payload 为 body
+            if (message == null || message.getBody() == null) {
                 return QueueMessage.of(payload);
             }
             if (message.getHeaders() == null) {

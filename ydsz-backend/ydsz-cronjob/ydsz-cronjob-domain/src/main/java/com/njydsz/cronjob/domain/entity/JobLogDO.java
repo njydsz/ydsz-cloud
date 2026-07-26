@@ -15,6 +15,9 @@ import lombok.Data;
  *
  * <p>对应 ydsz_job_log 表，记录每次任务执行的开始/结束/耗时/状态/结果。
  *
+ * <p>P1-2: 新增执行轨迹字段（{@link #queueTime}/{@link #dispatchTime}/
+ * {@link #handlerInitTime}/{@link #handlerEndTime}），支持全链路执行耗时分解分析。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -97,6 +100,16 @@ public class JobLogDO implements Serializable {
      * NULL=未配置慢任务检测。快照保留执行时的阈值，避免后续修改 job 配置影响历史判定。
      */
     private Long slowThresholdMs;
+    // ============================== P1-2: 执行轨迹字段 ==============================
+    /** 入队时间（任务被 JobScanner 扫描到并入队的时刻） */
+    private LocalDateTime queueTime;
+    /** 派发时间（任务被 Dispatcher 从队列取出并派发的时刻） */
+    private LocalDateTime dispatchTime;
+    /** Handler 初始化时间（JobHandler 实例化/资源准备完成的时刻） */
+    private LocalDateTime handlerInitTime;
+    /** Handler 执行结束时间（JobHandler.execute() 返回的时刻，与 endTime 可能不同：endTime 含后续清理） */
+    private LocalDateTime handlerEndTime;
+
     /** 创建时间（与 SQL 字段 created_at 对齐） */
     private LocalDateTime createdAt;
     /** 逻辑删除标识：0 未删除 / 1 已删除 */

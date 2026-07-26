@@ -1,6 +1,7 @@
 package com.njydsz.common.jdbc.datasource;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -74,8 +75,7 @@ public class DsAnnotationInterceptor implements MethodInterceptor {
         try {
             EvaluationContext context = new StandardEvaluationContext();
             Object[] args = invocation.getArguments();
-            String[] paramNames = invocation.getMethod().getParameters()
-                    .stream()
+            String[] paramNames = Arrays.stream(invocation.getMethod().getParameters())
                     .map(p -> p.getName())
                     .toArray(String[]::new);
 

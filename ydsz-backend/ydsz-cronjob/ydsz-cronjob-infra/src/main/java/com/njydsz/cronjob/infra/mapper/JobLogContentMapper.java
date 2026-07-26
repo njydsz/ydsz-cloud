@@ -62,6 +62,25 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContentDO> {
     int countByLogId(@Param("logId") String logId);
 
     /**
+     * P1-9: 关键字搜索日志内容（大小写不敏感）。
+     *
+     * @param logId   任务执行日志 ID
+     * @param keyword 搜索关键词
+     * @param offset  偏移量
+     * @param limit   每页条数
+     * @return 匹配的日志行列表
+     */
+    @Select("SELECT id, log_id, job_key, line_no, log_level, content, created_at "
+            + "FROM ydsz_job_log_content "
+            + "WHERE log_id = #{logId} AND deleted = 0 AND content ILIKE '%' || #{keyword} || '%' "
+            + "ORDER BY line_no ASC "
+            + "LIMIT #{limit} OFFSET #{offset}")
+    List<JobLogContentDO> selectByLogIdAndKeyword(@Param("logId") String logId,
+                                                    @Param("keyword") String keyword,
+                                                    @Param("offset") int offset,
+                                                    @Param("limit") int limit);
+
+    /**
      * P2-2: 批量清理过期日志内容（硬删除）。
      *
      * @param before 过期分界时间

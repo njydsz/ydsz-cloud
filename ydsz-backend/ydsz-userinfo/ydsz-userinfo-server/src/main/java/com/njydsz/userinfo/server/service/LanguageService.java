@@ -2,7 +2,8 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.LanguageDO;
+import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
+import com.njydsz.userinfo.domain.vo.LanguageVO;
 
 /**
  * 语言 Service 接口。
@@ -11,9 +12,9 @@ import com.njydsz.userinfo.domain.entity.LanguageDO;
  * @since 1.0.0
  */
 public interface LanguageService {
-    LanguageDO getById(String id);
-    List<LanguageDO> list();
-    String save(LanguageDO entity);
-    boolean updateById(LanguageDO entity);
+    LanguageVO getById(String id);
+    List<LanguageVO> list();
+    String create(LanguageSaveDTO dto);
+    boolean update(LanguageSaveDTO dto);
     boolean removeById(String id);
 }

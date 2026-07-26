@@ -145,6 +145,80 @@ public class CronjobMetrics extends AbstractModuleMetrics {
     }
 
     // ===========================================
+    // P1-10: 补充指标 — DAG / 分片 / 重试
+    // ===========================================
+
+    /**
+     * P1-10: DAG 执行计数（按状态分类）。
+     *
+     * @param dagKey   DAG KEY
+     * @param status   执行结果：SUCCESS / FAILED / TIMEOUT / PARTIAL_SUCCESS
+     */
+    public void incDagExecution(String dagKey, String status) {
+        counter("dag_execution_total",
+                "dag_key", safe(dagKey),
+                "status", safe(status)).increment();
+    }
+
+    /**
+     * P1-10: DAG 执行耗时记录。
+     *
+     * @param dagKey DAG KEY
+     * @param status 执行结果
+     * @param millis 耗时（毫秒）
+     */
+    public void recordDagDuration(String dagKey, String status, long millis) {
+        if (millis < 0) {
+            return;
+        }
+        timer("dag_duration_ms",
+                "dag_key", safe(dagKey),
+                "status", safe(status))
+                .record(Duration.ofMillis(millis));
+    }
+
+    /**
+     * P1-10: 分片任务派发计数。
+     *
+     * @param jobKey     任务 KEY
+     * @param shardIndex 分片索引
+     * @param status     执行结果
+     */
+    public void incShardDispatched(String jobKey, int shardIndex, String status) {
+        counter("shard_dispatched_total",
+                "job_key", safe(jobKey),
+                "shard", String.valueOf(shardIndex),
+                "status", safe(status)).increment();
+    }
+
+    /**
+     * P1-10: 任务重试计数（按触发类型分类）。
+     *
+     * @param jobKey       任务 KEY
+     * @param triggerType  触发类型：RETRY / FAILOVER / SELF_HEALING
+     */
+    public void incJobRetry(String jobKey, String triggerType) {
+        counter("job_retry_total",
+                "job_key", safe(jobKey),
+                "trigger_type", safe(triggerType)).increment();
+    }
+
+    /**
+     * P1-10: 任务队列等待耗时记录（从入队到派发的耗时）。
+     *
+     * @param jobKey 任务 KEY
+     * @param millis 等待耗时（毫秒）
+     */
+    public void recordQueueWaitDuration(String jobKey, long millis) {
+        if (millis < 0) {
+            return;
+        }
+        timer("job_queue_wait_ms",
+                "job_key", safe(jobKey))
+                .record(Duration.ofMillis(millis));
+    }
+
+    // ===========================================
     // Timer：耗时
     // ===========================================
 

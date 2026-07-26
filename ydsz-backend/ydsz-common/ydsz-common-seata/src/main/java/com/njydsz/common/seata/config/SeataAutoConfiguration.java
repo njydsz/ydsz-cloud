@@ -1,5 +1,9 @@
 package com.njydsz.common.seata.config;
 
+import java.time.Duration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -17,6 +21,7 @@ import com.njydsz.common.seata.api.XidPropagator;
 import com.njydsz.common.seata.impl.DefaultXidPropagator;
 import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.common.seata.impl.LocalTransactionManager;
+import com.njydsz.common.seata.impl.RedisTccTransactionLogStore;
 import com.njydsz.common.seata.impl.SagaOrchestrator;
 import com.njydsz.common.seata.impl.SeataGlobalTransactionExecutor;
 import com.njydsz.common.seata.impl.SeataTransactionManager;
@@ -29,6 +34,8 @@ import com.njydsz.common.seata.health.SeataHealthIndicator;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
+
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 分布式事务自动配置
@@ -46,6 +53,10 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <p><b>P0-4/P0-11/P0-12</b>：注册 {@link TccTransactionLogStore}（内存版）和
  * {@link TccTransactionRecoveryScanner}（定时恢复扫描）。
  *
+ * <p><b>P1-4 修复</b>：新增 {@link RedisTccTransactionLogStore} 注册路径。
+ * 当 {@code ydsz.seata.tcc-log-store=redis} 且类路径存在 {@code RedisTemplate} 时
+ * 自动切换到 Redis 实现，支持跨服务事务状态共享；否则回退到 {@link InMemoryTccTransactionLogStore}。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -55,15 +66,45 @@ import io.micrometer.core.instrument.MeterRegistry;
 @ConditionalOnProperty(prefix = "ydsz.seata", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SeataAutoConfiguration {
 
+    private static final Logger log = LoggerFactory.getLogger(SeataAutoConfiguration.class);
+
     /**
      * TCC 事务日志存储（内存版，默认）
      *
-     * <p>生产环境可覆盖为 {@code JdbcTccTransactionLogStore} 配合数据库持久化
+     * <p>仅当 {@code ydsz.seata.tcc-log-store} 未设置为 {@code redis} 或
+     * 类路径无 {@code RedisTemplate} 时注册。
      */
     @Bean
     @ConditionalOnMissingBean(TccTransactionLogStore.class)
-    public TccTransactionLogStore tccTransactionLogStore() {
+    @ConditionalOnProperty(prefix = "ydsz.seata", name = "tcc-log-store",
+            havingValue = "memory", matchIfMissing = true)
+    public TccTransactionLogStore inMemoryTccTransactionLogStore() {
         return new InMemoryTccTransactionLogStore();
+    }
+
+    /**
+     * TCC 事务日志存储（Redis 版，生产环境推荐）
+     *
+     * <p>当 {@code ydsz.seata.tcc-log-store=redis} 且类路径存在
+     * {@code RedisTemplate} 时注册，支持跨服务事务状态共享与持久化。
+     */
+    @Bean
+    @ConditionalOnMissingBean(TccTransactionLogStore.class)
+    @ConditionalOnClass(name = "org.springframework.data.redis.core.RedisTemplate")
+    @ConditionalOnProperty(prefix = "ydsz.seata", name = "tcc-log-store", havingValue = "redis")
+    public TccTransactionLogStore redisTccTransactionLogStore(
+            ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
+            SeataProperties properties) {
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisTemplate == null) {
+            log.warn("ydsz.seata.tcc-log-store=redis but no RedisTemplate available, fallback to InMemory");
+            return new InMemoryTccTransactionLogStore();
+        }
+        Duration retention = Duration.ofHours(Math.max(1, properties.getTccLogRedisRetentionHours()));
+        return new RedisTccTransactionLogStore(
+                redisTemplate,
+                properties.getTccLogRedisKeyPrefix(),
+                retention);
     }
 
     /**

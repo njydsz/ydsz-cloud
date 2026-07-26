@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class OrgQueryClientFallback implements OrgQueryClient {
     }
 
     @Override
-    public BaseResponse<List<DepartmentTreeVO>> getDeptList() {
+    public BaseResponse<List<DepartmentVO>> getDeptList() {
         log.warn("OrgQueryClient fallback: getDeptList");
         return BaseResponse.success(Collections.emptyList());
     }

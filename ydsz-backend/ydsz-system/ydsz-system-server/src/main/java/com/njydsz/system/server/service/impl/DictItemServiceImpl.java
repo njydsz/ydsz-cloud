@@ -1,19 +1,19 @@
 package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.json.YdszJson;
@@ -117,10 +117,9 @@ public class DictItemServiceImpl implements DictItemService {
 
     @Override
     public List<DictItemVO> listChildren(String parentId) {
-        return mapper.selectList(null).stream()
-                .filter(e -> parentId.equals(e.getParentId()))
-                .map(this::toVO)
-                .collect(Collectors.toList());
+        QueryWrapper<DictItemDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("parent_id", parentId).orderByAsc("sort_order");
+        return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
     }
 
     @Override
@@ -196,7 +195,7 @@ public class DictItemServiceImpl implements DictItemService {
     private Set<String> scanKeys(String pattern) {
         ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
         Set<String> keys = new HashSet<>();
-        redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Void>) connection -> {
+        redisTemplate.execute((RedisCallback<Void>) connection -> {
             Cursor<byte[]> cursor = connection.keyCommands().scan(options);
             while (cursor.hasNext()) {
                 keys.add(new String(cursor.next()));

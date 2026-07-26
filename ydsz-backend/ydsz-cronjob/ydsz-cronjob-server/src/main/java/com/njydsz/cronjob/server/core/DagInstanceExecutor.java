@@ -123,6 +123,18 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             markInstanceFailed(dagInstanceId, "DAG 定义不存在");
             return;
         }
+
+        // P1-3: DAG 超时检查
+        if (dag.getTimeoutMs() != null && dag.getTimeoutMs() > 0 && instance.getStartedAt() != null) {
+            long elapsedMs = java.time.Duration.between(instance.getStartedAt(), LocalDateTime.now()).toMillis();
+            if (elapsedMs > dag.getTimeoutMs()) {
+                log.warn("[DagInstance] DAG 已超时, 标记为 TIMEOUT: instanceId={} elapsedMs={} timeoutMs={}",
+                        dagInstanceId, elapsedMs, dag.getTimeoutMs());
+                dagInstanceMapper.markFailed(dagInstanceId,
+                        "DAG 超时: elapsed=" + elapsedMs + "ms, timeout=" + dag.getTimeoutMs() + "ms");
+                return;
+            }
+        }
         DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
         log.info("[DagInstance] 开始执行: instanceId={} dagKey={} nodes={} edges={}",
                 dagInstanceId, dag.getDagKey(), definition.nodeCount(), definition.edges().size());

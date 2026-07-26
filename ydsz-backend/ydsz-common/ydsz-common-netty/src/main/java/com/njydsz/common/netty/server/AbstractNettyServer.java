@@ -27,6 +27,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
 
 import java.net.BindException;
+import java.net.InetSocketAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -187,7 +188,7 @@ public abstract class AbstractNettyServer {
                             pipeline.addLast("trafficMonitor", trafficHandler);
                         }
 
-                        // è¿æäºä»¶çæ§(ååç½®)
+                        // 连接事件监控（后置）
                         if (connectionHandler != null) {
                             pipeline.addLast("connectionEvent", connectionHandler);
                         }
@@ -196,7 +197,7 @@ public abstract class AbstractNettyServer {
                             pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
                         }
 
-                        // åç±»èªå®ä¹ Pipeline
+                        // 子类自定义 Pipeline
                         initChannelPipeline(ch);
 
                         if (messageDispatcher != null) {
@@ -280,9 +281,19 @@ public abstract class AbstractNettyServer {
     /**
      * 获取监听端口。
      *
+     * <p>若 Server 已启动且绑定端口为 0（自动分配），返回实际监听端口；
+     * 否则返回构造时配置的端口。
+     *
      * @return 端口
      */
     public int getPort() {
+        if (serverChannel != null && serverChannel.isActive()) {
+            try {
+                return ((InetSocketAddress) serverChannel.localAddress()).getPort();
+            } catch (ClassCastException | NullPointerException ignored) {
+                // 降级返回配置端口
+            }
+        }
         return port;
     }
 
@@ -352,5 +363,14 @@ public abstract class AbstractNettyServer {
 
     public void setMessageDispatcher(MessageDispatcher messageDispatcher) {
         this.messageDispatcher = messageDispatcher;
+    }
+
+    /**
+     * 获取全局流量整形 Handler（仅供测试与监控诊断使用）。
+     *
+     * @return GlobalTrafficShapingHandler 实例（未启用时为 null）
+     */
+    GlobalTrafficShapingHandler getGlobalTrafficShapingHandler() {
+        return globalTrafficShapingHandler;
     }
 }

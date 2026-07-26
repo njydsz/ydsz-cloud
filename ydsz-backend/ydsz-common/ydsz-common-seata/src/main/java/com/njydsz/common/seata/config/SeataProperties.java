@@ -60,6 +60,32 @@ public class SeataProperties {
     /** TCC Try 阶段超时时间（毫秒），0 表示不限制 */
     private long tccTryTimeoutMs = 60000;
 
+    // ============= TCC 事务日志存储配置（P1-4） =============
+
+    /**
+     * TCC 事务日志存储类型：
+     * <ul>
+     *   <li>{@code memory} - 内存实现（默认，单机/测试）</li>
+     *   <li>{@code redis} - Redis 实现（生产环境，跨服务共享）</li>
+     * </ul>
+     * 仅当选择 {@code redis} 且类路径存在 {@code RedisTemplate} 时才注册 Redis 实现；
+     * 否则回退到 {@code memory}。
+     */
+    private TccLogStoreType tccLogStore = TccLogStoreType.MEMORY;
+
+    /** TCC 日志 Redis key 前缀（仅当 tcc-log-store=redis 时生效） */
+    private String tccLogRedisKeyPrefix = "ydsz:tcc:log:";
+
+    /** TCC 日志 Redis 保留时长（小时，仅当 tcc-log-store=redis 时生效） */
+    private int tccLogRedisRetentionHours = 24;
+
+    public enum TccLogStoreType {
+        /** 内存实现（单机/测试） */
+        MEMORY,
+        /** Redis 实现（生产环境，跨服务共享） */
+        REDIS
+    }
+
     // ============= SAGA 配置 =============
 
     /** SAGA 最大重试次数 */

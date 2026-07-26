@@ -14,6 +14,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.cronjob.domain.dto.dag.JobDagTriggerDTO;
 import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagVersionDO;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionValidator;
@@ -188,5 +189,36 @@ public class JobDagController {
         DagDefinition definition = dagDefinitionCodec.fromJson(dagDefinitionJson);
         dagDefinitionValidator.validate(definition);
         return BaseResponse.success(true);
+    }
+
+    /**
+     * P1-4: 查询 DAG 版本历史列表。
+     *
+     * <p>返回指定 DAG 的所有历史版本快照（按版本号降序）。
+     *
+     * @param dagId DAG ID
+     * @return 统一响应结果，包含版本历史列表
+     */
+    @Operation(summary = "查询 DAG 版本历史")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
+    @GetMapping("/{dagId}/versions")
+    public BaseResponse<List<JobDagVersionDO>> listDagVersions(@PathVariable String dagId) {
+        return BaseResponse.success(jobDagService.listDagVersions(dagId, 50));
+    }
+
+    /**
+     * P1-4: 回滚 DAG 到指定版本。
+     *
+     * @param dagId   DAG ID
+     * @param version 目标版本号
+     * @return 统一响应结果，包含回滚后的 DAG 定义
+     */
+    @Operation(summary = "回滚 DAG 到指定版本")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
+    @Idempotent(key = "jobDag:rollbackDag", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{dagId}/rollback")
+    public BaseResponse<JobDagDO> rollbackDag(@PathVariable String dagId,
+                                                @RequestParam Integer version) {
+        return BaseResponse.success(jobDagService.rollbackDag(dagId, version));
     }
 }

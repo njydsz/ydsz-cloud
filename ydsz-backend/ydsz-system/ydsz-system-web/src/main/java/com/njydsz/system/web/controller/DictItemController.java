@@ -1,7 +1,6 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -22,7 +21,6 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictItemDTO;
-import com.njydsz.system.domain.entity.DictItemDO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemService;
 
@@ -36,7 +34,7 @@ import lombok.RequiredArgsConstructor;
  *
  * @author ydsz-team
  */
-@Tag(name = "字典项", description = "字典项 CRUD + 按类型查询")
+@Tag(name = "字典项", description = "字典项 CRUD + 按类型查询 + 树形查询")
 @RestController
 @RequestMapping("/api/v1/dict/item")
 @RequiredArgsConstructor
@@ -49,11 +47,8 @@ public class DictItemController {
     public PageResponse<List<DictItemVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
-        IPage<DictItemDO> page = service.page(pageNum, pageSize);
-        List<DictItemVO> vos = page.getRecords().stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+        IPage<DictItemVO> page = service.page(pageNum, pageSize);
+        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
     }
 
     @Operation(summary = "按 ID 查询字典项")
@@ -74,6 +69,12 @@ public class DictItemController {
     @GetMapping("/type/{typeCode}")
     public BaseResponse<List<DictItemVO>> listByType(@PathVariable String typeCode) {
         return BaseResponse.success(service.listEnabledByTypeCode(typeCode));
+    }
+
+    @Operation(summary = "按父级 ID 查询子字典项列表（树形字典）")
+    @GetMapping("/children/{parentId}")
+    public BaseResponse<List<DictItemVO>> listChildren(@PathVariable String parentId) {
+        return BaseResponse.success(service.listChildren(parentId));
     }
 
     @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
@@ -98,22 +99,5 @@ public class DictItemController {
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
-    }
-
-    private DictItemVO toVO(DictItemDO entity) {
-        if (entity == null) {
-            return null;
-        }
-        DictItemVO vo = new DictItemVO();
-        vo.setId(entity.getId());
-        vo.setTypeCode(entity.getTypeCode());
-        vo.setItemCode(entity.getItemCode());
-        vo.setItemValue(entity.getItemValue());
-        vo.setSortOrder(entity.getSortOrder());
-        vo.setParentId(entity.getParentId());
-        vo.setDescription(entity.getDescription());
-        vo.setExtJson(entity.getExtJson());
-        vo.setStatus(entity.getStatus());
-        return vo;
     }
 }

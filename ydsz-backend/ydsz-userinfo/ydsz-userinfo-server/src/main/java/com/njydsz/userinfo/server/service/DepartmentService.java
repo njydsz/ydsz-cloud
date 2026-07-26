@@ -3,8 +3,8 @@ package com.njydsz.userinfo.server.service;
 import java.util.List;
 
 import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
-import com.njydsz.userinfo.domain.entity.DepartmentDO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 
 /**
  * 部门 Service 接口。
@@ -14,8 +14,8 @@ import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
  */
 public interface DepartmentService {
 
-    DepartmentDO getById(String id);
-    List<DepartmentDO> list();
+    DepartmentVO getById(String id);
+    List<DepartmentVO> list();
     String create(DepartmentSaveDTO dto);
     boolean update(DepartmentSaveDTO dto);
     boolean removeById(String id);

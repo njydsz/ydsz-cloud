@@ -96,6 +96,50 @@ public class JobLogController {
         return BaseResponse.success(jobLogContentService.countByLogId(logId));
     }
 
+    /**
+     * P1-9: 关键字搜索日志内容。
+     *
+     * @param logId   执行日志 ID
+     * @param keyword 搜索关键词
+     * @param page    页码（默认 1）
+     * @param size    每页条数（默认 100）
+     * @return 统一响应结果，包含匹配的日志行列表
+     */
+    @Operation(summary = "搜索日志内容")
+    @GetMapping("/content/search")
+    public BaseResponse<List<JobLogContentDO>> searchContent(
+            @RequestParam String logId,
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return BaseResponse.success(jobLogContentService.searchByKeyword(logId, keyword, page, size));
+    }
+
+    /**
+     * P1-2: 获取执行轨迹（全链路耗时分解）。
+     *
+     * <p>返回任务执行各阶段的时间戳和耗时分解：
+     * <ul>
+     *   <li>queueTime → dispatchTime：队列等待耗时</li>
+     *   <li>dispatchTime → handlerInitTime：派发到 Handler 初始化耗时</li>
+     *   <li>handlerInitTime → handlerEndTime：Handler 实际执行耗时</li>
+     *   <li>handlerEndTime → endTime：后续清理耗时</li>
+     *   <li>startTime → endTime：总执行耗时</li>
+     * </ul>
+     *
+     * @param logId 执行日志 ID
+     * @return 统一响应结果，包含执行日志（含轨迹字段）
+     */
+    @Operation(summary = "获取执行轨迹")
+    @GetMapping("/trace")
+    public BaseResponse<JobLogDO> getExecutionTrace(@RequestParam String logId) {
+        JobLogDO log = jobLogMapper.selectById(logId);
+        if (log == null) {
+            return BaseResponse.error("404", "执行日志不存在: " + logId);
+        }
+        return BaseResponse.success(log);
+    }
+
     // ==================== 内部辅助方法 ====================
 
     /**
