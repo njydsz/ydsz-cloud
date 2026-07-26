@@ -1,16 +1,14 @@
 package com.njydsz.workflow.server.health;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import com.njydsz.common.redis.service.RedisService;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.common.core.health.AbstractModuleHealthIndicator;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -36,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.flow", name = "health-enabled", havingValue = "true", matchIfMissing = true)
-public class FlowHealthIndicator implements HealthIndicator {
+public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
 
     private final FlowInstanceMapper instanceMapper;
     private final FlowRunTaskMapper runTaskMapper;
@@ -51,45 +49,29 @@ public class FlowHealthIndicator implements HealthIndicator {
     }
 
     @Override
-    public Health health() {
-        Map<String, Object> details = new LinkedHashMap<>();
-
-        // 检查 Redis 连通性（可选依赖）
+    protected void doHealthCheck(Health.Builder builder) {
+        // Redis 可选
         StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
         if (redisTemplate != null) {
-            try {
-                String ping = redisTemplate.execute(conn -> conn.ping(), true);
-                details.put("redis", "UP - " + ping);
-            } catch (Exception e) {
-                details.put("redis", "DOWN - " + e.getMessage());
-                return Health.down().withDetails(details).build();
-            }
+            checkRedis(builder, () -> redisTemplate.execute(conn -> conn.ping(), true));
         } else {
-            details.put("redis", "UNKNOWN - not configured");
+            checkRedisNotConfigured(builder);
         }
 
-        // 检查流程实例表可达性 + 运行中实例数
-        try {
+        // 流程实例探针
+        checkTableProbeWithValue(builder, "flowInstance", () -> {
             Long runningCount = instanceMapper.selectCount(
                     new LambdaQueryWrapper<FlowInstanceDO>()
                             .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
-            details.put("flowInstance", "UP - running: " + runningCount);
-        } catch (Exception e) {
-            details.put("flowInstance", "DOWN - " + e.getMessage());
-            return Health.down().withDetails(details).build();
-        }
+            return "running: " + runningCount;
+        });
 
-        // 检查待办任务表可达性 + 待办数
-        try {
+        // 待办任务探针
+        checkTableProbeWithValue(builder, "flowTask", () -> {
             Long pendingCount = runTaskMapper.selectCount(
                     new LambdaQueryWrapper<FlowRunTaskDO>()
                             .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name()));
-            details.put("flowTask", "UP - pending: " + pendingCount);
-        } catch (Exception e) {
-            details.put("flowTask", "DOWN - " + e.getMessage());
-            return Health.down().withDetails(details).build();
-        }
-
-        return Health.up().withDetails(details).build();
+            return "pending: " + pendingCount;
+        });
     }
 }

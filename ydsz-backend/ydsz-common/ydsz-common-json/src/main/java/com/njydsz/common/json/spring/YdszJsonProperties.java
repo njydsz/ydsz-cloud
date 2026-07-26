@@ -27,6 +27,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  *     monitoring-enabled: false
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.json")

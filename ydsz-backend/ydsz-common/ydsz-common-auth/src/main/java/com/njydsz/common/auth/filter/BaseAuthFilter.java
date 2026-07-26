@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>提取 Web 端和 App 端认证过滤器的公共逻辑。</p>
  *
+ * @author ydsz-team
+ * @since 1.0.0
  * 
  */
 @Slf4j
