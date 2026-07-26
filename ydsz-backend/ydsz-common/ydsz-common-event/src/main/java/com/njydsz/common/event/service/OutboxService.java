@@ -337,11 +337,11 @@ public class OutboxService {
      * <p>优先级：
      * <ol>
      *   <li>调用方显式指定的 deduplicationId</li>
-     *   <li>若 auto-dedup=true，基于内容 SHA-256 自动生成</li>
+     *   <li>若 auto-dedup=true，基于 aggregateType + aggregateId + eventType + payload 生成 SHA-256 哈希</li>
      *   <li>否则返回 null（不进行去重）</li>
      * </ol>
      *
-     * @param partial 消息快照
+     * @param partial 消息快照（包含业务字段）
      * @return 去重 ID，若不启用则返回 null
      */
     private String resolveDeduplicationId(OutboxMessage partial) {

@@ -17,9 +17,13 @@ import PageLayout from '@/components/common/PageLayout.vue'
 const { t } = useI18n()
 const route = useRoute()
 
+/** 搜索加载状态 */
 const loading = ref(false)
+/** 搜索结果列表 */
 const list = ref<SearchResultVO[]>([])
+/** 搜索结果总数 */
 const total = ref(0)
+/** 搜索关键字（支持从路由参数初始化） */
 const keyword = ref('')
 
 /** 搜索文件 */

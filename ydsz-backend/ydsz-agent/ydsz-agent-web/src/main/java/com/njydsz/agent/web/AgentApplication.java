@@ -8,6 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 
 /**
  * AI Agent 智能体服务启动类
@@ -20,6 +21,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.agent", "com.njydsz.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
+@EnableYdszAudit
 @EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.agent.api", "com.njydsz.common.feign"})
 @MapperScan("com.njydsz.agent.infra.mapper")

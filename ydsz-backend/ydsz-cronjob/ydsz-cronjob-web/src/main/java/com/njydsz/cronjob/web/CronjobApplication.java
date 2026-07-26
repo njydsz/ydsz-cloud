@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 
 /**
  * 定时任务调度服务启动类
@@ -19,6 +20,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.cronjob", "com.njydsz.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
+@EnableYdszAudit
 @EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.cronjob.api", "com.njydsz.common.feign"})
 @EnableScheduling

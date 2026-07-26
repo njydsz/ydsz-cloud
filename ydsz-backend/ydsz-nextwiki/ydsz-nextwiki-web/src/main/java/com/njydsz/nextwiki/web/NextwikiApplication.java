@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 
 /**
  * 网盘知识库服务启动类
@@ -24,6 +25,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.nextwiki", "com.njydsz.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
+@EnableYdszAudit
 @EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.nextwiki.api", "com.njydsz.common.feign"})
 @MapperScan("com.njydsz.nextwiki.infra.mapper")

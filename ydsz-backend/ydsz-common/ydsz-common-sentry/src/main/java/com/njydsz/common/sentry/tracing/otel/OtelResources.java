@@ -5,6 +5,7 @@ import java.util.Map;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 
 import lombok.Builder;
@@ -47,27 +48,17 @@ public final class OtelResources {
             AttributesBuilder attrs = Attributes.builder();
 
             // OTel 语义约定
-            attrs.put(OtelSemConv.SERVICE_NAME, config.getServiceName());
-            if (config.getServiceVersion() != null) {
-                attrs.put(OtelSemConv.SERVICE_VERSION, config.getServiceVersion());
-            }
-            if (config.getServiceNamespace() != null) {
-                attrs.put(OtelSemConv.SERVICE_NAMESPACE, config.getServiceNamespace());
-            }
-            if (config.getServiceInstanceId() != null) {
-                attrs.put(OtelSemConv.SERVICE_INSTANCE_ID, config.getServiceInstanceId());
-            }
-            if (config.getEnvironment() != null) {
-                attrs.put(OtelSemConv.DEPLOYMENT_ENVIRONMENT, config.getEnvironment());
-            }
+            putIfNotNull(attrs, OtelSemConv.SERVICE_NAME, config.getServiceName());
+            putIfNotNull(attrs, OtelSemConv.SERVICE_VERSION, config.getServiceVersion());
+            putIfNotNull(attrs, OtelSemConv.SERVICE_NAMESPACE, config.getServiceNamespace());
+            putIfNotNull(attrs, OtelSemConv.SERVICE_INSTANCE_ID, config.getServiceInstanceId());
+            putIfNotNull(attrs, OtelSemConv.DEPLOYMENT_ENVIRONMENT, config.getEnvironment());
 
             // 主机信息
             if (config.isIncludeHostInfo()) {
                 try {
                     String hostName = java.net.InetAddress.getLocalHost().getHostName();
-                    if (hostName != null) {
-                        attrs.put(AttributeKey.stringKey("host.name"), hostName);
-                    }
+                    putIfNotNull(attrs, AttributeKey.stringKey("host.name"), hostName);
                 } catch (Exception ignored) {
                     // 主机名获取失败不影响主流程
                 }
@@ -86,7 +77,7 @@ public final class OtelResources {
             // YDSZ 自定义属性
             if (config.getCustomAttributes() != null) {
                 for (Map.Entry<String, String> entry : config.getCustomAttributes().entrySet()) {
-                    attrs.put(entry.getKey(), entry.getValue());
+                    putIfNotNull(attrs, entry.getKey(), entry.getValue());
                 }
             }
 
@@ -98,6 +89,18 @@ public final class OtelResources {
         } catch (Exception e) {
             log.error("[Sentry] OtelResource 创建失败，回退到默认", e);
             return Resource.getDefault();
+        }
+    }
+
+    private static void putIfNotNull(AttributesBuilder builder, AttributeKey<String> key, String value) {
+        if (value != null) {
+            builder.put(key, value);
+        }
+    }
+
+    private static void putIfNotNull(AttributesBuilder builder, String key, String value) {
+        if (value != null) {
+            builder.put(key, value);
         }
     }
 
@@ -141,28 +144,4 @@ public final class OtelResources {
         private Map<String, String> customAttributes = new HashMap<>();
     }
 
-    /**
-     * 用于链式构造 Attributes 的简化包装
-     */
-    private static class AttributesBuilder {
-        private final io.opentelemetry.api.common.AttributesBuilder delegate = Attributes.builder();
-
-        public AttributesBuilder put(String key, String value) {
-            if (value != null) {
-                delegate.put(key, value);
-            }
-            return this;
-        }
-
-        public AttributesBuilder put(AttributeKey<String> key, String value) {
-            if (value != null) {
-                delegate.put(key, value);
-            }
-            return this;
-        }
-
-        public Attributes build() {
-            return delegate.build();
-        }
-    }
 }

@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 
 /**
  * 消息通知引擎启动类（独立自研 - 大厂级统一通知中心）
@@ -38,6 +39,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
         "com.njydsz.common"
 })
 @EnableDiscoveryClient
+@EnableYdszAudit
 @EnableYdszSafe
 @EnableFeignClients(basePackages = {"com.njydsz.message.api", "com.njydsz.common.feign"})
 @MapperScan("com.njydsz.message.infra.mapper")

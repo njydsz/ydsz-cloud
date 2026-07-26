@@ -15,7 +15,9 @@ import QuotaProgressBar from '@/components/common/QuotaProgressBar.vue'
 
 const { t } = useI18n()
 
+/** 配额查询加载状态 */
 const loading = ref(false)
+/** 存储配额信息 */
 const quota = ref<StorageQuotaVO | null>(null)
 
 /** 配额设置弹窗 */

@@ -32,10 +32,23 @@ export interface WarmupResult {
  *
  * 仅在 import.meta.env.DEV 为 true 时自动执行预热。
  */
+/**
+ * 开发环境预热 composable
+ *
+ * 仅在 import.meta.env.DEV 为 true 时自动执行预热。
+ *
+ * @returns `{ isWarmupComplete, warmupResult, warmup }`
+ *   - isWarmupComplete: 预热是否已完成（失败也算完成）
+ *   - warmupResult: 预热结果数据
+ *   - warmup: 手动触发预热
+ */
 export function useDevWarmup() {
+  /** 预热是否已完成（失败也算完成，防止重复执行） */
   const isWarmupComplete = ref(false)
+  /** 预热结果数据（成功时包含数据库/Redis/JIT 状态） */
   const warmupResult = ref<WarmupResult | null>(null)
 
+  /** 执行预热请求 */
   async function warmup() {
     if (!import.meta.env.DEV) {
       return

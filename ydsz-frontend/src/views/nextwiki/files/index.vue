@@ -31,13 +31,13 @@ import StatusTag from '@/components/common/StatusTag.vue'
 const { t } = useI18n()
 const router = useRouter()
 
-/** 加载状态 */
+/** 文件列表加载状态 */
 const loading = ref(false)
-/** 文件列表 */
+/** 文件列表数据 */
 const list = ref<FileNodeVO[]>([])
-/** 当前父目录 ID */
+/** 当前父目录 ID（根目录为 '0'） */
 const currentParentId = ref('0')
-/** 搜索关键字 */
+/** 搜索关键字（回车后跳转搜索页） */
 const keyword = ref('')
 
 /** 目录树数据 */
