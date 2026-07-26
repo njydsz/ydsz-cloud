@@ -9,8 +9,8 @@ import com.njydsz.common.safe.captcha.enums.CaptchaType;
  * 验证码配置属性类
  * 用于读取 application.yml 中的 ydsz.safe.captcha.* 配置项
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @ConfigurationProperties(prefix = "ydsz.safe.captcha")
 public class CaptchaProperties {

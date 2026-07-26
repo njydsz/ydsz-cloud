@@ -6,8 +6,8 @@ package com.njydsz.common.safe.captcha.core;
  * <p>定义验证码数据的存储与读取行为，支持多种存储方式（本地内存、Redis 等）。
  * 验证码在验证后立即删除，防止重放攻击。
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public interface CaptchaStore {
 

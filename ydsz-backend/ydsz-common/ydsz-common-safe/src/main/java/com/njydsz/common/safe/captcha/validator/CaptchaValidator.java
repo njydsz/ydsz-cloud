@@ -10,8 +10,8 @@ import com.njydsz.common.safe.captcha.exception.CaptchaException;
  * 验证码验证器
  * 负责验证码的校验逻辑,支持大小写不敏感匹配
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class CaptchaValidator {
 

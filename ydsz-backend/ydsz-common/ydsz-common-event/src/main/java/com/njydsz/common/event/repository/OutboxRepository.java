@@ -293,6 +293,12 @@ public class OutboxRepository {
         }
     }
 
+    /**
+     * 反序列化 JSON 字符串为扩展头映射
+     *
+     * @param json JSON 字符串
+     * @return 扩展头映射，反序列化失败返回空 Map
+     */
     private static Map<String, String> deserializeHeaders(String json) {
         if (json == null || json.isBlank()) {
             return Map.of();

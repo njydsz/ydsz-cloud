@@ -16,7 +16,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
-import io.opentelemetry.context.propagation.BaggagePropagator;
+
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 
 import lombok.extern.slf4j.Slf4j;
@@ -143,7 +143,7 @@ public final class OtelSdkBuilder {
         if (propagators == null || propagators.length == 0) {
             combinedPropagator = TextMapPropagator.composite(
                     W3CTraceContextPropagator.getInstance(),
-                    BaggagePropagator.create(io.opentelemetry.context.propagation.BaggagePropagator.class.cast(W3CBaggagePropagator.getInstance()))
+                    W3CBaggagePropagator.getInstance()
             );
         } else if (propagators.length == 1) {
             combinedPropagator = propagators[0];

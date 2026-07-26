@@ -17,6 +17,7 @@ import com.njydsz.common.safe.captcha.exception.CaptchaException;
  *   <li>连续验证失败 5 次后锁定该 IP 10 分钟</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

@@ -6,7 +6,6 @@ import java.util.Map;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
 
 import lombok.Builder;
 import lombok.Data;
@@ -48,18 +47,18 @@ public final class OtelResources {
             AttributesBuilder attrs = Attributes.builder();
 
             // OTel 语义约定
-            attrs.put(ResourceAttributes.SERVICE_NAME, config.getServiceName());
+            attrs.put(OtelSemConv.SERVICE_NAME, config.getServiceName());
             if (config.getServiceVersion() != null) {
-                attrs.put(ResourceAttributes.SERVICE_VERSION, config.getServiceVersion());
+                attrs.put(OtelSemConv.SERVICE_VERSION, config.getServiceVersion());
             }
             if (config.getServiceNamespace() != null) {
-                attrs.put(ResourceAttributes.SERVICE_NAMESPACE, config.getServiceNamespace());
+                attrs.put(OtelSemConv.SERVICE_NAMESPACE, config.getServiceNamespace());
             }
             if (config.getServiceInstanceId() != null) {
-                attrs.put(ResourceAttributes.SERVICE_INSTANCE_ID, config.getServiceInstanceId());
+                attrs.put(OtelSemConv.SERVICE_INSTANCE_ID, config.getServiceInstanceId());
             }
             if (config.getEnvironment() != null) {
-                attrs.put(ResourceAttributes.DEPLOYMENT_ENVIRONMENT, config.getEnvironment());
+                attrs.put(OtelSemConv.DEPLOYMENT_ENVIRONMENT, config.getEnvironment());
             }
 
             // 主机信息
@@ -67,12 +66,12 @@ public final class OtelResources {
                 try {
                     String hostName = java.net.InetAddress.getLocalHost().getHostName();
                     if (hostName != null) {
-                        attrs.put(ResourceAttributes.HOST_NAME, hostName);
+                        attrs.put(AttributeKey.stringKey("host.name"), hostName);
                     }
                 } catch (Exception ignored) {
                     // 主机名获取失败不影响主流程
                 }
-                attrs.put(ResourceAttributes.HOST_ARCH, System.getProperty("os.arch", "unknown"));
+                attrs.put(AttributeKey.stringKey("host.arch"), System.getProperty("os.arch", "unknown"));
             }
 
             // 进程信息

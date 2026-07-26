@@ -6,8 +6,8 @@ package com.njydsz.common.safe.captcha.enums;
  * <p>定义验证码数据的存储方式，支持本地内存存储和 Redis 分布式存储。
  * 单机环境可使用 LOCAL，集群环境建议使用 REDIS。
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public enum CaptchaStoreType {
 

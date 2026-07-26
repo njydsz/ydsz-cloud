@@ -98,3 +98,11 @@ ydsz:
         reject-policy: CALLER_RUNS
         await-termination-seconds: 60
         keep-alive-seconds: 60
+      nextwikiBatchImport:
+        core-size: 5
+        max-size: 5
+        queue-capacity: 200
+        thread-name-prefix: nextwiki-batch-import-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+        keep-alive-seconds: 60

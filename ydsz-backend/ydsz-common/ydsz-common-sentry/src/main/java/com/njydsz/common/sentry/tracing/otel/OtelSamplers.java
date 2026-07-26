@@ -110,7 +110,7 @@ public final class OtelSamplers {
                                            String name,
                                            SpanKind spanKind,
                                            Attributes attributes,
-                                           java.util.List<io.opentelemetry.api.common.LinkData> parentLinks) {
+                                           java.util.List<io.opentelemetry.sdk.trace.data.LinkData> parentLinks) {
             // 1) 健康检查路径直接 DROP
             for (String prefix : config.getHealthCheckPaths()) {
                 if (name != null && name.contains(prefix)) {

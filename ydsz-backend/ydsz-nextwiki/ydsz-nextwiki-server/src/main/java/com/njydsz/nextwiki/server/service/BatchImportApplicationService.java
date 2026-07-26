@@ -13,13 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import jakarta.annotation.PreDestroy;
+import jakarta.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,17 +51,9 @@ public class BatchImportApplicationService {
 
     private final FileApplicationService fileApplicationService;
 
-    /** 并发上传线程池（有界队列 + 优雅关闭） */
-    private final ThreadPoolExecutor importExecutor = new ThreadPoolExecutor(
-            5, 5, 60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(200),
-            r -> {
-                Thread t = new Thread(r, "nextwiki-batch-import");
-                t.setDaemon(true);
-                return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy()
-    );
+    /** P0-1: 并发上传线程池（由 ydsz-common-thread 统一管理，配置项: ydsz.thread.pools.nextwikiBatchImport） */
+    @Resource(name = "nextwikiBatchImportExecutor")
+    private java.util.concurrent.Executor batchImportExecutor;
 
     /** 最大批量上传数量 */
     private static final int MAX_BATCH_SIZE = 100;
@@ -77,24 +66,6 @@ public class BatchImportApplicationService {
 
     /** ZIP 炸弹防护：总解压大小上限（500MB） */
     private static final long MAX_TOTAL_UNCOMPRESSED = 500L * 1024 * 1024;
-
-    /**
-     * 优雅关闭线程池
-     */
-    @PreDestroy
-    public void shutdown() {
-        log.info("[BatchImportApplicationService] 关闭线程池...");
-        importExecutor.shutdown();
-        try {
-            if (!importExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
-                importExecutor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            importExecutor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
-        log.info("[BatchImportApplicationService] 线程池已关闭");
-    }
 
     /**
      * 批量上传文件
@@ -118,7 +89,7 @@ public class BatchImportApplicationService {
                             file.getOriginalFilename(), e);
                     return null;
                 }
-            }, importExecutor);
+            }, batchImportExecutor);
             futures.add(future);
         }
 

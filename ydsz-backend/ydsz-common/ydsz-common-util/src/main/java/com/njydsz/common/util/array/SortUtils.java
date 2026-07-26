@@ -161,6 +161,11 @@ public class SortUtils {
 
     /**
      * 二分查找 (自然顺序)
+     *
+     * @param arr 已排序的对象数组
+     * @param key 查找的目标值
+     * @param <T> 实现了 Comparable 接口的元素类型
+     * @return 目标值的索引，未找到返回负数
      */
     public static <T extends Comparable<? super T>> int binarySearch(T[] arr, T key) {
         return arr == null ? -1 : Arrays.binarySearch(arr, key);
