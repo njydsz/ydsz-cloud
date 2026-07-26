@@ -75,6 +75,7 @@ const showDiff = async (logId: number) => {
   }
 }
 
+/** 变更类型对应的颜色 */
 const getChangeTypeColor = (type: string) => {
   switch (type) {
     case 'ADD': return 'success'

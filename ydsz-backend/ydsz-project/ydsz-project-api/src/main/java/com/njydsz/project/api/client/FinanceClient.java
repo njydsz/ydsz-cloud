@@ -1,10 +1,10 @@
 package com.njydsz.project.api.client;
 
-import com.njydsz.common.core.model.Result;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.constant.FeignClientConstants;
+import com.njydsz.project.api.fallback.FinanceClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 财务数据 Feign 接口（利润/成本/发票/回款）。
@@ -15,13 +15,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(
     name = "ydsz-project",
     contextId = "financeClient",
-    path = FeignClientConstants.BASE_PATH)
+    path = FeignClientConstants.BASE_PATH,
+    fallbackFactory = FinanceClientFallback.class)
 public interface FinanceClient {
 
     @GetMapping("/project/finance/getProfitSnapshot")
-    Result<?> getProfitSnapshot();
+    BaseResponse<?> getProfitSnapshot();
     @GetMapping("/project/finance/getCostSummary")
-    Result<?> getCostSummary();
+    BaseResponse<?> getCostSummary();
     @GetMapping("/project/finance/getRevenueSummary")
-    Result<?> getRevenueSummary();
+    BaseResponse<?> getRevenueSummary();
 }

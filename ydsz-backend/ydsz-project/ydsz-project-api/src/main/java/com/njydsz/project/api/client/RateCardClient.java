@@ -1,7 +1,8 @@
 package com.njydsz.project.api.client;
 
-import com.njydsz.common.core.model.Result;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.constant.FeignClientConstants;
+import com.njydsz.project.api.fallback.RateCardClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,11 +16,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(
     name = "ydsz-project",
     contextId = "rateCardClient",
-    path = FeignClientConstants.BASE_PATH)
+    path = FeignClientConstants.BASE_PATH,
+    fallbackFactory = RateCardClientFallback.class)
 public interface RateCardClient {
 
     @GetMapping("/project/ratecard/getByLevel")
-    Result<?> getByLevel(@RequestParam("levelCode") String levelCode);
+    BaseResponse<?> getByLevel(@RequestParam("levelCode") String levelCode);
     @GetMapping("/project/ratecard/list")
-    Result<?> listAll();
+    BaseResponse<?> listAll();
 }

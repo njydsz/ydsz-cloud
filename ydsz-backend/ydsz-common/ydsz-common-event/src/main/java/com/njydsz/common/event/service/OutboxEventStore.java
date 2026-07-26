@@ -31,6 +31,8 @@ public class OutboxEventStore implements EventStore {
     private final OutboxService outboxService;
 
     /**
+     * 构造函数
+     *
      * @param outboxService Outbox 写入服务
      */
     public OutboxEventStore(OutboxService outboxService) {

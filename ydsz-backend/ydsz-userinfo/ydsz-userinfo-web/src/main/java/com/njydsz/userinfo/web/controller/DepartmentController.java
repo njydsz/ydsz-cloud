@@ -72,6 +72,9 @@ public class DepartmentController {
 
     @SentinelRateLimit(resource = "userinfo.department.update", threshold = 50)
     @SentinelRateLimit(resource = "userinfo.department.update", threshold = 50)
+    @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
+            content = "'更新部门: ' + #dto.id")
+    @Idempotent(key = "department:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "更新部门")
     public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentSaveDTO dto) {

@@ -1,7 +1,8 @@
 package com.njydsz.project.api.client;
 
-import com.njydsz.common.core.model.Result;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.constant.FeignClientConstants;
+import com.njydsz.project.api.fallback.ProjectContractClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,13 +16,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(
     name = "ydsz-project",
     contextId = "projectContractClient",
-    path = FeignClientConstants.BASE_PATH)
+    path = FeignClientConstants.BASE_PATH,
+    fallbackFactory = ProjectContractClientFallback.class)
 public interface ProjectContractClient {
 
     @GetMapping("/project/projectcontract/getById")
-    Result<?> getById(@RequestParam("id") String id);
+    BaseResponse<?> getById(@RequestParam("id") String id);
     @GetMapping("/project/projectcontract/page")
-    Result<?> page(ProjectContractPageQuery query);
+    BaseResponse<?> page(@RequestParam("query") Object query);
     @GetMapping("/project/projectcontract/list")
-    Result<?> listByInitiationId(String initiationId);
+    BaseResponse<?> listByInitiationId(@RequestParam("initiationId") String initiationId);
 }

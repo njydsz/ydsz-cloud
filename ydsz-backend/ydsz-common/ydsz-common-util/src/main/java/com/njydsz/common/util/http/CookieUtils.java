@@ -24,6 +24,10 @@ public class CookieUtils {
 
     /**
      * 按名称获取 cookie
+     *
+     * @param name    Cookie 名称
+     * @param request HTTP 请求
+     * @return Cookie 对象，未找到返回 null
      */
     public static Cookie getCookie(String name, HttpServletRequest request) {
         if (StringUtils.isEmpty(name) || request == null) {

@@ -46,6 +46,7 @@ const statusMap: Record<string, { label: string; type: string }> = {
   EXECUTED: { label: '已执行', type: 'success' },
 }
 
+/** 拉取补充协议列表数据 */
 async function loadData() {
   loading.value = true
   try {
@@ -56,10 +57,12 @@ async function loadData() {
   }
 }
 
+/** 打开新增补充协议弹窗 */
 function handleAdd() {
   dialogVisible.value = true
 }
 
+/** 提交新增补充协议 */
 async function handleSubmit() {
   if (!formRef.value) return
   await formRef.value.validate()

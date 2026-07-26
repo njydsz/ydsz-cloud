@@ -1,7 +1,8 @@
 package com.njydsz.project.api.client;
 
-import com.njydsz.common.core.model.Result;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.constant.FeignClientConstants;
+import com.njydsz.project.api.fallback.EvmMeasureClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,11 +16,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(
     name = "ydsz-project",
     contextId = "evmMeasureClient",
-    path = FeignClientConstants.BASE_PATH)
+    path = FeignClientConstants.BASE_PATH,
+    fallbackFactory = EvmMeasureClientFallback.class)
 public interface EvmMeasureClient {
 
     @GetMapping("/project/evmmeasure/getByInitiationId")
-    Result<?> getByInitiationId(@RequestParam("initiationId") String initiationId);
+    BaseResponse<?> getByInitiationId(@RequestParam("initiationId") String initiationId);
     @GetMapping("/project/evmmeasure/getLatestSnapshot")
-    Result<?> getLatestSnapshot();
+    BaseResponse<?> getLatestSnapshot();
 }
