@@ -173,12 +173,16 @@ public class ChatService {
     public void stream(String conversationId, String userMessage, String systemPrompt,
                        Consumer<ChatChunk> chunkConsumer) {
         String convId = conversationId != null ? conversationId : UUID.randomUUID().toString();
-        log.info("[Chat] 流式对话: convId={}, messageLen={}", convId, userMessage.length());
+        String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
+        log.info("[Chat-Stream] 流式对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 
         String sanitizedInput = applyInputGuardrails(userMessage);
         if (sanitizedInput == null) {
-            log.warn("[Chat] 流式输入被安全护栏拒绝: convId={}", convId);
+            log.warn("[Chat-Stream] 流式输入被安全护栏拒绝: convId={}", convId);
             metrics.recordGuardrailRejection("input-guardrail", "input");
+            traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_INPUT",
+                    "Input rejected by guardrail", userMessage, "rejected", 0);
+            traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             memory.save(convId, ChatMessage.assistant(
                     "抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero()));
             chunkConsumer.accept(ChatChunk.content("", "guardrail",
@@ -217,18 +221,28 @@ public class ChatService {
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             metrics.recordLlmStream(provider, model, duration, null, e);
-            log.error("[Chat] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
+            traceRecorder.recordStep(traceId, "LLM_CALL_ERROR",
+                    "Stream LLM call failed", request, e.getMessage(), duration);
+            traceRecorder.endTrace(traceId, "FAILED");
+            log.error("[Chat-Stream] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
             memory.save(convId, ChatMessage.assistant(
                     "[错误] LLM 流式调用失败: " + e.getMessage(), convId, TokenUsage.zero()));
             throw e;
         }
-        metrics.recordLlmStream(provider, model, System.currentTimeMillis() - startTime, usage[0], null);
+        long duration = System.currentTimeMillis() - startTime;
+        metrics.recordLlmStream(provider, model, duration, usage[0], null);
+        if (usage[0] != null && !usage[0].equals(TokenUsage.zero()) && costAnalysisService != null) {
+            costAnalysisService.recordUsage(convId, model, usage[0]);
+        }
+        traceRecorder.recordStep(traceId, "LLM_CALL",
+                "Stream LLM call", request, contentBuilder.toString(), duration);
 
         String output = applyOutputGuardrails(contentBuilder.toString());
         ChatMessage assistantMsg = ChatMessage.assistant(output, convId, usage[0]);
         memory.save(convId, assistantMsg);
 
-        log.info("[Chat] 流式对话完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
+        traceRecorder.endTrace(traceId, "SUCCESS");
+        log.info("[Chat-Stream] 流式对话完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
     }
 
     /**
