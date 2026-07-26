@@ -54,6 +54,9 @@ public class InternalApiController {
 
     private final UserAccountService userAccountService;
     private final DepartmentService departmentService;
+    private final RoleService roleService;
+    private final PostService postService;
+    private final CompanyService companyService;
 
     @GetMapping("/user/info")
     @Operation(summary = "根据 userId 查询用户信息（内部调用）")

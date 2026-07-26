@@ -31,6 +31,7 @@ import com.njydsz.common.safe.alert.SecurityEvent;
  * }
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class SecurityAuditLogger {

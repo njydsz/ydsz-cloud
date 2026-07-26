@@ -19,6 +19,7 @@ import lombok.Data;
  *       window-seconds: 60
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Data

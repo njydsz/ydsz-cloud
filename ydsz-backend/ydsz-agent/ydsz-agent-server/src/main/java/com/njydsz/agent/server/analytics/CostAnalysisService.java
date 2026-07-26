@@ -27,7 +27,15 @@ public class CostAnalysisService {
     private static final int MAX_RECORDS = 10000;
 
     private final TokenUsageRepository usageRepository = new TokenUsageRepository();
-    private final ModelPriceConfig priceConfig = new ModelPriceConfig();
+    private final ModelPriceConfig priceConfig;
+
+    public CostAnalysisService() {
+        this.priceConfig = new ModelPriceConfig();
+    }
+
+    public CostAnalysisService(Map<String, Double> modelPrices) {
+        this.priceConfig = new ModelPriceConfig(modelPrices);
+    }
 
     /**
      * 记录 Token 用量
@@ -120,12 +128,29 @@ public class CostAnalysisService {
      * 模型价格配置
      */
     public static class ModelPriceConfig {
-        private final Map<String, Double> prices = Map.of(
+        private final Map<String, Double> prices;
+
+        public ModelPriceConfig() {
+            this(Map.of(
                 "gpt-4o", 0.0025,
                 "gpt-4o-mini", 0.00015,
                 "gpt-4-turbo", 0.01,
                 "gpt-3.5-turbo", 0.0005,
-                "deepseek-chat", 0.00014);
+                "deepseek-chat", 0.00014));
+        }
+
+        public ModelPriceConfig(Map<String, Double> customPrices) {
+            if (customPrices != null && !customPrices.isEmpty()) {
+                this.prices = new java.util.LinkedHashMap<>(customPrices);
+            } else {
+                this.prices = Map.of(
+                    "gpt-4o", 0.0025,
+                    "gpt-4o-mini", 0.00015,
+                    "gpt-4-turbo", 0.01,
+                    "gpt-3.5-turbo", 0.0005,
+                    "deepseek-chat", 0.00014);
+            }
+        }
 
         public double getPrice(String model) {
             if (model == null || model.isBlank()) {

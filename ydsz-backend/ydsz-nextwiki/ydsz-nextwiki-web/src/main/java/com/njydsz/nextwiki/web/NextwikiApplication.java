@@ -25,6 +25,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
 @EnableDiscoveryClient
 @EnableYdszAudit
 @EnableYdszAuth
+@EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.nextwiki.api", "com.njydsz.common.feign"})
 @MapperScan("com.njydsz.nextwiki.infra.mapper")
 @EnableScheduling

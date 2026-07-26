@@ -58,7 +58,7 @@ public class ChatController {
     private final ChatService chatService;
     private final AgentRequestGuard requestGuard;
     private final ScheduledExecutorService heartbeatScheduler =
-            Executors.newScheduledThreadPool(2, Thread.ofVirtual().factory());
+            Executors.newScheduledThreadPool(2, Thread.ofVirtual().name("agent-heartbeat-", 0).factory());
 
     public ChatController(ChatService chatService, AgentRequestGuard requestGuard) {
         this.chatService = chatService;

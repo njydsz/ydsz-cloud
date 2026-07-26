@@ -140,6 +140,15 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Lazy
     private final FlowInstanceServiceImpl self;
 
+    /**
+     * P0-4: 跨服务名称解析门面，用于在 getById / page 读路径兜底富化 initiatorName。
+     *
+     * <p>当 FlowInstanceDO.initiatorName 在写时未持久化（历史数据或某些路径遗漏）时，
+     * 通过 NameAssembler 调用 ydsz-userinfo 服务的 batch-names 端点，
+     * 用 initiatorId 实时解析 realName 并回填到返回对象。Feign 失败时降级为用 ID 顶替。
+     */
+    private final NameAssembler nameAssembler;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String start(FlowStartProcessDTO dto) {

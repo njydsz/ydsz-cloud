@@ -49,6 +49,12 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         this.topic = (topic != null && !topic.isBlank()) ? topic : DEFAULT_TOPIC;
     }
 
+    /**
+     * 投递单条消息到 RocketMQ
+     *
+     * @param message Outbox 消息
+     * @return true 投递成功，false 投递失败
+     */
     @Override
     public boolean publish(OutboxMessage message) {
         String destination = buildDestination(message);
@@ -85,6 +91,14 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         }
     }
 
+    /**
+     * 批量投递消息到 RocketMQ
+     *
+     * <p>当前实现逐条投递，后续可优化为使用 RocketMQ 批量发送能力。
+     *
+     * @param messages Outbox 消息列表
+     * @return 每条消息的投递结果，顺序与输入一致
+     */
     @Override
     public List<Boolean> publishBatch(List<OutboxMessage> messages) {
         List<Boolean> results = new ArrayList<>(messages.size());

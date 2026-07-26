@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
  * <p>通过 {@link SecurityAlertListener} SPI 注册，
  * 使用 WARN 级别日志记录安全事件。
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class DefaultSecurityAlertLogger implements SecurityAlertListener {
 

@@ -49,6 +49,9 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
  * }
  * }</pre>
  *
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  * 
  */
 public class YdszCacheManager implements CacheManager, DisposableBean {

@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.config;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -186,8 +187,11 @@ public class AgentAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(CostAnalysisService.class)
-    public CostAnalysisService costAnalysisService() {
-        return new CostAnalysisService();
+    public CostAnalysisService costAnalysisService(AgentProperties properties) {
+        Map<String, Double> prices = properties.getLlm().getModelPrices();
+        return prices != null && !prices.isEmpty()
+                ? new CostAnalysisService(prices)
+                : new CostAnalysisService();
     }
 
     @Bean

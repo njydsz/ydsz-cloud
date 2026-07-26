@@ -20,6 +20,9 @@ import com.njydsz.common.util.bytes.HexUtils;
  *
  * <p>提供 MD5、SHA-1、SHA-256、SHA-512 散列、HMAC-SHA256 签名、PBKDF2 密钥派生、
  * 常量时间比较等安全能力。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class DigestUtils {
 

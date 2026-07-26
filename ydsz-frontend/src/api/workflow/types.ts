@@ -615,12 +615,15 @@ export interface CreateDelegateAuthDTO {
 
 /** 委托处理记录 */
 export interface DelegateLogDTO {
+  /** 日志 ID */
   id: string
   /** 原授权人 ID */
   ownerId: string
+  /** 原授权人姓名 */
   ownerName?: string
   /** 代理人 ID */
   delegateId: string
+  /** 代理人姓名 */
   delegateName?: string
   /** 任务 ID */
   taskId?: string
@@ -714,6 +717,7 @@ export type CanaryStatus = 'DRAFT' | 'ROLLING_OUT' | 'PROMOTED' | 'ROLLED_BACK'
 
 /** 灰度发布记录 */
 export interface CanaryRolloutDTO {
+  /** 灰度发布 ID */
   id: string
   /** 流程定义 ID */
   definitionId: string
@@ -733,12 +737,15 @@ export interface CanaryRolloutDTO {
   startTime?: string
   /** 结束时间 */
   endTime?: string
+  /** 创建人 */
   createBy?: string
+  /** 创建时间 */
   createTime?: string
 }
 
 /** 灰度发布日志 */
 export interface CanaryRolloutLogDTO {
+  /** 日志 ID */
   id: string
   /** 流程编码 */
   flowCode: string
@@ -750,6 +757,7 @@ export interface CanaryRolloutLogDTO {
   percentage?: number
   /** 操作人 */
   operatorId?: string
+  /** 操作人姓名 */
   operatorName?: string
   /** 操作详情 */
   detail?: string
@@ -759,8 +767,11 @@ export interface CanaryRolloutLogDTO {
 
 /** 启动灰度请求 */
 export interface PublishCanaryDTO {
+  /** 灰度策略 */
   strategy: CanaryStrategy
+  /** 灰度比例（0-100） */
   percentage?: number
+  /** 白名单用户 ID 列表 */
   whitelist?: string[]
 }
 
@@ -843,40 +854,63 @@ export interface SimulateResultDTO {
 
 /** P2-3: 任务评论 */
 export interface TaskCommentDTO {
+  /** 评论 ID */
   id: string
+  /** 租户 ID */
   tenantId?: string
+  /** 实例 ID */
   instanceId: string
+  /** 任务 ID */
   taskId?: string
+  /** 节点编码 */
   nodeCode?: string
+  /** 用户 ID */
   userId: string
+  /** 用户姓名 */
   userName?: string
+  /** 评论内容 */
   content: string
   /** 评论类型：COMMENT / QUESTION / REPLY */
   type: string
   /** 父评论 ID（楼中楼回复） */
   parentId?: string
+  /** 创建时间 */
   createdAt?: string
+  /** 更新时间 */
   updatedAt?: string
 }
 
 /** P2-6: 流程模板 */
 export interface FlowTemplateDTO {
+  /** 模板编码 */
   templateCode: string
+  /** 模板名称 */
   templateName: string
+  /** 分类 */
   category?: string
+  /** 描述 */
   description?: string
+  /** 图标 */
   icon?: string
+  /** 使用次数 */
   useCount?: number
+  /** 表单路径 */
   formPath?: string
+  /** BPMN XML */
   bpmnXml?: string
+  /** 创建时间 */
   createdAt?: string
+  /** 更新时间 */
   updatedAt?: string
 }
 
 /** P3-3: 实例迁移入参 */
 export interface InstanceMigrationDTO {
+  /** 源流程定义 ID */
   sourceDefinitionId: string
+  /** 目标流程定义 ID */
   targetDefinitionId: string
+  /** 租户 ID */
   tenantId?: string
   /** 旧节点编码 → 新节点编码 映射 */
   nodeMapping?: Record<string, string>
@@ -886,21 +920,32 @@ export interface InstanceMigrationDTO {
 
 /** P3-3: 迁移明细 */
 export interface MigrationDetail {
+  /** 实例 ID */
   instanceId: string
+  /** 实例标题 */
   instanceTitle?: string
+  /** 旧节点编码 */
   oldNodeCode?: string
+  /** 新节点编码 */
   newNodeCode?: string
   /** MIGRATED / SKIPPED / FAILED */
   status: string
+  /** 原因 */
   reason?: string
 }
 
 /** P3-3: 实例迁移结果 */
 export interface InstanceMigrationResultDTO {
+  /** 总实例数 */
   totalInstances: number
+  /** 已迁移数 */
   migratedCount: number
+  /** 跳过数 */
   skippedCount: number
+  /** 失败数 */
   failedCount: number
+  /** 迁移明细列表 */
   details: MigrationDetail[]
+  /** 节点映射结果 */
   nodeMappingApplied?: Record<string, string>
 }

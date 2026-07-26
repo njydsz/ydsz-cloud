@@ -20,6 +20,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
 @EnableDiscoveryClient
 @EnableYdszAudit
 @EnableYdszAuth
+@EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.cronjob.api", "com.njydsz.common.feign"})
 @EnableScheduling
 @MapperScan("com.njydsz.cronjob.infra.mapper")

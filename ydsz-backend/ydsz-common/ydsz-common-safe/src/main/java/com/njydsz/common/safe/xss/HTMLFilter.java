@@ -205,10 +205,22 @@ public final class HTMLFilter {
         return (String[]) obj;
     }
 
+    /**
+     * 将十进制数字转换为对应的字符
+     *
+     * @param decimal 字符的十进制编码
+     * @return 对应的字符
+     */
     public static String chr(final int decimal) {
         return String.valueOf((char) decimal);
     }
 
+    /**
+     * 转义 HTML 特殊字符
+     *
+     * @param s 待转义的字符串
+     * @return 转义后的字符串
+     */
     public static String htmlSpecialChars(final String s) {
         String result = s;
         result = regexReplace(P_AMP, "&amp;", result);
@@ -218,6 +230,12 @@ public final class HTMLFilter {
         return result;
     }
 
+    /**
+     * 过滤输入内容，移除不安全的 HTML 标签和属性
+     *
+     * @param input 待过滤的 HTML 内容
+     * @return 过滤后的安全内容
+     */
     public String filter(final String input) {
         String s = input;
 
@@ -229,10 +247,20 @@ public final class HTMLFilter {
         return s;
     }
 
+    /**
+     * 是否始终生成完整标签（自动闭合未闭合的标签）
+     *
+     * @return true 表示始终生成完整标签
+     */
     public boolean isAlwaysMakeTags() {
         return alwaysMakeTags;
     }
 
+    /**
+     * 是否移除 HTML 注释
+     *
+     * @return true 表示移除注释
+     */
     public boolean isStripComments() {
         return stripComment;
     }

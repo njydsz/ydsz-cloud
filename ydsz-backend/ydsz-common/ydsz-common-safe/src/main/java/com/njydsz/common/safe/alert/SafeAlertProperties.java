@@ -15,8 +15,8 @@ import lombok.Data;
  *       enabled: true
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.safe.alert")

@@ -44,6 +44,9 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  *   <li>{@code cache_type} - 缓存类型
  * </ul>
  *
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  * 
  */
 public class CacheMeterBinder implements MeterBinder {

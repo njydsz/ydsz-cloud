@@ -6,8 +6,8 @@ import java.time.Instant;
 /**
  * 安全事件
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class SecurityEvent implements Serializable {
 

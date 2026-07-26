@@ -45,6 +45,9 @@ import jakarta.validation.constraints.NotNull;
  *         expire-after-write: 0
  * </pre>
  *
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  * 
  */
 @ConfigurationProperties(prefix = "ydsz.cache")

@@ -25,6 +25,7 @@ package com.njydsz.common.cache.builder;
  * <p><b>TTL 缓存</b>：通过 {@code builder.expireAfterWrite()} 或 {@code builder.expireAfterAccess()} 配置，
  * 不再作为独立 CacheType。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public enum CacheType {

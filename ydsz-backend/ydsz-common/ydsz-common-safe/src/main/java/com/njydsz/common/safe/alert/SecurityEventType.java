@@ -3,8 +3,8 @@ package com.njydsz.common.safe.alert;
 /**
  * 安全事件类型枚举
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public enum SecurityEventType {
 

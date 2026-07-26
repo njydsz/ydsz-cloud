@@ -36,6 +36,7 @@ import com.njydsz.common.safe.ip.IpAccessService;
  *       window-seconds: 60
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see SecurityEvent
  * @see IpAccessService

@@ -170,7 +170,10 @@ public class EventAutoConfiguration {
     }
 
     /**
-     * 启动后检查：如果使用 NoopEventPublishGateway 且 fail-on-noop=true，抛异常阻止启动
+     * 启动后校验投递网关
+     *
+     * <p>如果使用 NoopEventPublishGateway 且 fail-on-noop=true，抛出异常阻止应用启动，
+     * 避免生产环境消息丢失。
      */
     @PostConstruct
     public void validateGateway() {
@@ -183,6 +186,9 @@ public class EventAutoConfiguration {
         }
     }
 
+    /**
+     * 销毁时停止 Outbox 处理器
+     */
     @PreDestroy
     public void destroy() {
         if (outboxProcessor != null) {

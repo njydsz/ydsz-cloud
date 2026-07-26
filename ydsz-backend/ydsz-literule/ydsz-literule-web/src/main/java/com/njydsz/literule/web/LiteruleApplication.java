@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
  * 规则引擎服务启动类
@@ -35,6 +36,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.literule", "com.njydsz.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
+@EnableYdszSafe
 @EnableYdszFeign(basePackages = {
         "com.njydsz.literule.api",
         "com.njydsz.common.feign",

@@ -23,6 +23,12 @@ public class NoopEventPublishGateway implements EventPublishGateway {
 
     private static final Logger log = LoggerFactory.getLogger(NoopEventPublishGateway.class);
 
+    /**
+     * 空操作投递（记录 WARN 日志但不实际投递）
+     *
+     * @param message Outbox 消息
+     * @return 始终返回 true，使消息被标记为 SENT
+     */
     @Override
     public boolean publish(OutboxMessage message) {
         log.warn("NoopEventPublishGateway: message id={}, type={}, aggregate={}/{} not actually published",
@@ -31,6 +37,12 @@ public class NoopEventPublishGateway implements EventPublishGateway {
         return true;
     }
 
+    /**
+     * 空操作批量投递（记录 WARN 日志但不实际投递）
+     *
+     * @param messages Outbox 消息列表
+     * @return 始终返回全 true 列表，使所有消息被标记为 SENT
+     */
     @Override
     public List<Boolean> publishBatch(List<OutboxMessage> messages) {
         for (OutboxMessage message : messages) {

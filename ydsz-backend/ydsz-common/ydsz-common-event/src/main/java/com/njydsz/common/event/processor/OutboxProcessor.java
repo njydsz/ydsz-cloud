@@ -199,7 +199,9 @@ public class OutboxProcessor {
     }
 
     /**
-     * 处理一批消息
+     * 处理一批待投递消息
+     *
+     * <p>执行流程：查询 PENDING 消息 → 批量 claim → 分发投递任务
      */
     void processBatch() {
         try {
