@@ -21,7 +21,7 @@ import lombok.Data;
  *   <li>项目：立项申请/变更申请/验收申请/结项申请</li>
  * </ul>
  *
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Data
 public class FlowTemplateDefinition implements Serializable {

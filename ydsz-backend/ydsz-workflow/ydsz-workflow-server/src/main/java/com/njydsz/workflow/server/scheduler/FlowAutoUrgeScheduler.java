@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>催办通知通过 {@link FlowNotificationHelper} 推送，覆盖站内信 + IM（钉钉/企微）双通道。
  * 分布式锁通过 {@link FlowClusterLockHelper} 保证集群只有一个节点执行。
  *
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

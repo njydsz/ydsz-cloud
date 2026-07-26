@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
  * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力，支持按业务线/部门对流程进行分组归类。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>条件比较支持的操作符：{@code >=}, {@code <=}, {@code >}, {@code <}, {@code ==}, {@code !=},
  * {@code in:}（逗号分隔枚举）。"-"表示通配（不做限制）。
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

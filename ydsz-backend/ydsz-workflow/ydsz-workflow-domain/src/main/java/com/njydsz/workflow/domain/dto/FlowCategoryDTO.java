@@ -10,7 +10,7 @@ import lombok.Data;
  * 流程分类 DTO
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "流程分类")

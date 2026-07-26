@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * 内部自调用（{@code this.pass}），跨 Bean 调用可正确触发 Spring 事务代理，事务传播
  * （默认 REQUIRED）将每条 {@code pass} 加入批量事务，保证整批原子提交/回滚。
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

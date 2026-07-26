@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>角色过期自动失效：查询时检查 expireAt，过期角色视为无效。
  *
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

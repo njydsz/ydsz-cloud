@@ -131,7 +131,7 @@ public interface FlowTaskService {
      * 后加签是"当前人审完→加签人审"的串行流程；并加签是"当前人+加签人同时审"的并行流程。
      *
      * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
-     * @since 1.6.0
+     * @since 1.0.0
      */
     void countersignParallel(FlowTaskOperateDTO dto);
 
@@ -340,7 +340,7 @@ public interface FlowTaskService {
      * @param taskId     任务 ID
      * @param operatorId 操作人 ID
      * @param reason     挂起原因（可选，写入 comment）
-     * @since 1.7.0
+     * @since 1.0.0
      */
     void suspendTask(String taskId, String operatorId, String reason);
 
@@ -356,7 +356,7 @@ public interface FlowTaskService {
      *
      * @param taskId     任务 ID
      * @param operatorId 操作人 ID
-     * @since 1.7.0
+     * @since 1.0.0
      */
     void activateTask(String taskId, String operatorId);
 
@@ -379,7 +379,7 @@ public interface FlowTaskService {
      * @param operatorId 操作人 ID（校验与 hisTask.assigneeId 一致）
      * @param comment 取回说明（可选）
      * @return 新创建的待办任务 ID
-     * @since 1.6.0
+     * @since 1.0.0
      */
     String retract(String hisTaskId, String operatorId, String comment);
 }

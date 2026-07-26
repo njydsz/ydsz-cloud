@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供决策表的 CRUD、发布、评估 RESTful API。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

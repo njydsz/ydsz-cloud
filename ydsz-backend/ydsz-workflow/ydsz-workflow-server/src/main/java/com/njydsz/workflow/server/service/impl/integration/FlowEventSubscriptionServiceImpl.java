@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>调用 instanceService.generateTasksForNodes() 创建下游任务</li>
  * </ol>
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

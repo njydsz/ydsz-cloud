@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务签收"职责。
  * 签收将 PENDING 任务标记为 CLAIMED，记录签收时间和办理人。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

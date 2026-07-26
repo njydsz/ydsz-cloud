@@ -12,7 +12,7 @@ import com.njydsz.workflow.domain.entity.FlowDmnRuleDO;
  * P0-1: DMN 决策规则 Mapper
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowDmnRuleMapper extends BaseMapper<FlowDmnRuleDO> {

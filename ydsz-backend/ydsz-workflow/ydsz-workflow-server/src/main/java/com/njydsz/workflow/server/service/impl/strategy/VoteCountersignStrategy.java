@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>对标钉钉/飞书"票签"。达到阈值后 skipByNode 跳过剩余 PENDING task。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Component
 @RequiredArgsConstructor

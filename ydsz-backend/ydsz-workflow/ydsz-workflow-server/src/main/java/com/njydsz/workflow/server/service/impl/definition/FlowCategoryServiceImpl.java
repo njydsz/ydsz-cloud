@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

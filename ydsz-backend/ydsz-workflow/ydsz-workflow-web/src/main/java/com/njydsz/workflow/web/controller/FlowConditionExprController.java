@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 条件表达式可视化编辑器 Controller（P2-1）。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

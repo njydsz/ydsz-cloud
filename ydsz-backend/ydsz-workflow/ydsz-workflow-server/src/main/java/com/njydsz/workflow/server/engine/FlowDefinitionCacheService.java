@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  *   其余按 nodeCode / nextNodeCode / 起始节点 等维度的查询均从缓存列表中派生，
  *   将原本每次推进 5+ 次查库降为首次 2 次、后续 0 次。
  *
- * @since 1.6.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

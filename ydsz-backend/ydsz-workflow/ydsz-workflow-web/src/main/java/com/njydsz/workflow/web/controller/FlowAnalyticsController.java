@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * 审批数据分析 Controller（P2-2）。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

@@ -25,7 +25,7 @@ import lombok.EqualsAndHashCode;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

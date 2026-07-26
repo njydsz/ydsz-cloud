@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>对标用友/金蝶"加权会签"。每个办理人有 weight 属性，累计通过权重达到阈值推进。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Component
 @RequiredArgsConstructor

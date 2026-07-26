@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>驳回完成后会推进到目标节点重新生成待办，并触发 onInstanceRejected 事件、
  * 累计指标、推送 WebSocket 待办数。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

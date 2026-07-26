@@ -10,7 +10,7 @@ import com.njydsz.workflow.domain.entity.FlowCommentDO;
  *
  * <p>审批评论多级回复能力。对标钉钉/飞书审批评论区。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 public interface FlowCommentService {
 

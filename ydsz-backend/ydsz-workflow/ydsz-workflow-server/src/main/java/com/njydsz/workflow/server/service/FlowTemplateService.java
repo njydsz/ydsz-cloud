@@ -21,7 +21,7 @@ import java.util.Map;
  *
  * <p>对标钉钉/飞书的"模板中心"能力。
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface FlowTemplateService {
 

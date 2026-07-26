@@ -10,7 +10,7 @@ import com.njydsz.workflow.domain.entity.FlowQuickCommentDO;
  *
  * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力。
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 public interface FlowQuickCommentService {
 

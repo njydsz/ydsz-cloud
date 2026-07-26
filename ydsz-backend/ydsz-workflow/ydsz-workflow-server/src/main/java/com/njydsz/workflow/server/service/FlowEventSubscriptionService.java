@@ -11,7 +11,7 @@ import com.njydsz.workflow.domain.entity.FlowNodeDO;
  *
  * <p>P0-1: BPMN 错误事件 / 消息事件运行时支持。
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface FlowEventSubscriptionService {
 

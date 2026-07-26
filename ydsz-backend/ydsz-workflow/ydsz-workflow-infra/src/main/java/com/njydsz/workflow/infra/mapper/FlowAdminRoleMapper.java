@@ -12,7 +12,7 @@ import com.njydsz.workflow.domain.entity.FlowAdminRoleDO;
  * 流程管理员角色 Mapper（P1-6）
  *
  * @author ydsz-team
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowAdminRoleMapper extends BaseMapper<FlowAdminRoleDO> {

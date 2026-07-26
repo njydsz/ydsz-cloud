@@ -15,7 +15,7 @@ import com.njydsz.workflow.domain.entity.FlowDelegateAuthDO;
  * <p>P1-4: 长期授权委派。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {

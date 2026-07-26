@@ -13,7 +13,7 @@ package com.njydsz.workflow.server.queue;
  *   <li>{@link #FLOW_TIMEOUT} - 流程超时事件（供 cronjob 模块消费触发超时处理任务）</li>
  * </ul>
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 public final class FlowQueueChannels {
 

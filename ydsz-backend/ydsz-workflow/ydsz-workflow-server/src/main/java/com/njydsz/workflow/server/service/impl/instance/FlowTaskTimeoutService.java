@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>这四个方法都不推进流程，仅做任务状态切换；超时和挂起触发对应事件，挂起期
  * 间 JobScanner 应跳过 SUSPENDED 状态任务。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

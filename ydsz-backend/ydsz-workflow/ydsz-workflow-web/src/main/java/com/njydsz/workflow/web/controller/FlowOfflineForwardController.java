@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 离线代理自动转发 Controller（P2-5）。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

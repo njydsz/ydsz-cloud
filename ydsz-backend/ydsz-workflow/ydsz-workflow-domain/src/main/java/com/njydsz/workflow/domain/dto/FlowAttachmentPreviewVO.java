@@ -18,7 +18,7 @@ import lombok.Data;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Data
 public class FlowAttachmentPreviewVO implements Serializable {

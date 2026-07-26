@@ -4,14 +4,19 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.rag.VectorStore;
+import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
+import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 
 /**
  * Agent 模块健康检查
@@ -19,24 +24,38 @@ import com.njydsz.agent.infra.memory.RedisConversationMemory;
  * <p>对关键依赖进行真实探活：
  * <ul>
  *   <li><b>LLM Provider</b> — 检查路由器是否注册了至少一个 Provider</li>
- *   <li><b>Redis 记忆</b> — 检查 Redis 连接是否可用（仅对 {@link RedisConversationMemory}）</li>
+ *   <li><b>Redis 记忆</b> — 检查 Redis 连接是否可用（仅对 RedisConversationMemory）</li>
+ *   <li><b>RAG 向量存储</b> — 检查 VectorStore 是否可用</li>
+ *   <li><b>TraceRecorder</b> — 报告链路追踪器状态</li>
+ *   <li><b>CostAnalysisService</b> — 报告成本分析服务状态</li>
  * </ul>
  * <p>任一关键依赖不可用则报告 DOWN，K8s readinessProbe 据此决定是否导入流量。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Component
 public class AgentHealthIndicator implements HealthIndicator {
 
     private static final Logger log = LoggerFactory.getLogger(AgentHealthIndicator.class);
 
     private final LlmClient llmClient;
     private final ConversationMemory memory;
+    private final ObjectProvider<VectorStore> vectorStoreProvider;
+    private final ObjectProvider<TraceRecorder> traceRecorderProvider;
+    private final ObjectProvider<CostAnalysisService> costAnalysisServiceProvider;
+    private final ObjectProvider<AgentMetrics> agentMetricsProvider;
 
-    public AgentHealthIndicator(LlmClient llmClient, ConversationMemory memory) {
+    public AgentHealthIndicator(LlmClient llmClient, ConversationMemory memory,
+                                ObjectProvider<VectorStore> vectorStoreProvider,
+                                ObjectProvider<TraceRecorder> traceRecorderProvider,
+                                ObjectProvider<CostAnalysisService> costAnalysisServiceProvider,
+                                ObjectProvider<AgentMetrics> agentMetricsProvider) {
         this.llmClient = llmClient;
         this.memory = memory;
+        this.vectorStoreProvider = vectorStoreProvider;
+        this.traceRecorderProvider = traceRecorderProvider;
+        this.costAnalysisServiceProvider = costAnalysisServiceProvider;
+        this.agentMetricsProvider = agentMetricsProvider;
     }
 
     @Override
@@ -75,6 +94,38 @@ public class AgentHealthIndicator implements HealthIndicator {
             builder.withDetail("memoryType", memory.getClass().getSimpleName());
             builder.withDetail("memoryStatus", "UP");
         }
+
+        // 检查 RAG 向量存储
+        VectorStore vectorStore = vectorStoreProvider.getIfAvailable();
+        if (vectorStore != null) {
+            builder.withDetail("vectorStoreType", vectorStore.getClass().getSimpleName());
+            builder.withDetail("ragStatus", "UP");
+        } else {
+            builder.withDetail("vectorStoreType", "not-configured");
+            builder.withDetail("ragStatus", "DISABLED");
+        }
+
+        // 检查 TraceRecorder
+        TraceRecorder traceRecorder = traceRecorderProvider.getIfAvailable();
+        if (traceRecorder != null) {
+            if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
+                builder.withDetail("traceRecorder", "memory");
+                builder.withDetail("traceCount", inMem.getTraceCount());
+            } else {
+                builder.withDetail("traceRecorder", traceRecorder.getClass().getSimpleName());
+            }
+            builder.withDetail("traceStatus", "UP");
+        } else {
+            builder.withDetail("traceStatus", "NOT_CONFIGURED");
+        }
+
+        // 检查 CostAnalysisService
+        CostAnalysisService costService = costAnalysisServiceProvider.getIfAvailable();
+        builder.withDetail("costAnalysis", costService != null ? "UP" : "NOT_CONFIGURED");
+
+        // 检查 AgentMetrics
+        AgentMetrics metrics = agentMetricsProvider.getIfAvailable();
+        builder.withDetail("agentMetrics", metrics != null ? "UP" : "NOT_CONFIGURED");
 
         if (!allHealthy) {
             log.warn("[Health] Agent 健康检查未通过，详见 health details");

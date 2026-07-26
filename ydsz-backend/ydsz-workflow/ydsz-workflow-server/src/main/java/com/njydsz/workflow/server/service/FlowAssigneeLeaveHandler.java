@@ -12,7 +12,7 @@ package com.njydsz.workflow.server.service;
  *   <li>流程管理员兜底</li>
  * </ol>
  *
- * @since 1.9.0
+ * @since 1.0.0
  */
 public interface FlowAssigneeLeaveHandler {
 

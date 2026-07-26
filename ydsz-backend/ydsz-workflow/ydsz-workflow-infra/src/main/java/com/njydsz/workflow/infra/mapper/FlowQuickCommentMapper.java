@@ -9,7 +9,7 @@ import com.njydsz.workflow.domain.entity.FlowQuickCommentDO;
  * 审批常用语 Mapper
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowQuickCommentMapper extends BaseMapper<FlowQuickCommentDO> {

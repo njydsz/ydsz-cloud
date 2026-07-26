@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>对标钉钉/飞书"或签"语义。一人通过 → 立即完成+推进。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Component
 @RequiredArgsConstructor

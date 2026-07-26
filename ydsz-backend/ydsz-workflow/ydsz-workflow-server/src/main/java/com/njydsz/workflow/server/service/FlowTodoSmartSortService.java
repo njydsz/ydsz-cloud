@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  *         + reminderCount * 100（max 500）
  * </pre>
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

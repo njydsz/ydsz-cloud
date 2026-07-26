@@ -143,6 +143,20 @@ public class MessageConsumer implements RocketMQListener<String> {
                 log.info("[MessageConsumer] 重复消息已跳过: key={} messageId={}", idempotentKey, request.getMessageId());
                 return;
             }
+            // GAP-1: DB二级幂等检查——Redis宕机恢复后TTL可能已过期，用msg_log表兜底
+            if (StringUtils.hasText(request.getMessageId())) {
+                Long dbCount = msgLogMapper.selectCount(
+                        new LambdaQueryWrapper<MsgLogDO>()
+                                .eq(MsgLogDO::getMsgId, request.getMessageId())
+                                .in(MsgLogDO::getStatus,
+                                        MessageStatusEnum.SUCCESS.name(),
+                                        MessageStatusEnum.SENDING.name())
+                                .last("LIMIT 1"));
+                if (dbCount != null && dbCount > 0) {
+                    log.warn("[MessageConsumer] DB二级幂等检查命中,跳过: messageId={}", request.getMessageId());
+                    return;
+                }
+            }
         }
 
         try {

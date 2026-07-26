@@ -20,7 +20,7 @@ package com.njydsz.workflow.domain.enums;
  * 要么持续通知管理员介入，绝不出现"标记 TIMEOUT 后流程卡死"的情况。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 public enum FlowSlaAction {
 

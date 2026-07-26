@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
  * <p>拆分背景：原文件 1847 行 / 87KB，远超 Checkstyle 2000 行限制，且构造函数注入 18 个依赖。
  * 拆分后本门面仅持有 4 个子 Service 引用，各子 Service 各自注入所需依赖。
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Service
 @RequiredArgsConstructor

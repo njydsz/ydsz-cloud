@@ -23,7 +23,7 @@ import lombok.Data;
  *   <li>选项数据源：静态选项 / 动态 API 选项</li>
  * </ul>
  *
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Data
 public class FlowFormField implements Serializable {

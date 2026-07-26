@@ -32,7 +32,7 @@ import lombok.Data;
  * }
  * }</pre>
  *
- * @since 1.9.0
+ * @since 1.0.0
  */
 @Data
 public class FlowFormSchema implements Serializable {

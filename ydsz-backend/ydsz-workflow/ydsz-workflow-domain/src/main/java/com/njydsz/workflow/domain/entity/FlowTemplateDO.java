@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
  * 模板为系统级预置数据，仅需 created_at / updated_at / deleted。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

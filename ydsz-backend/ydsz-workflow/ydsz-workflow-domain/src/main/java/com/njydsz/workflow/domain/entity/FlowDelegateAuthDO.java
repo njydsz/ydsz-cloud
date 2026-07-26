@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
  * <p>用户预先设置规则：在 [startTime, endTime] 区间内到达的匹配任务自动转给被代理人。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

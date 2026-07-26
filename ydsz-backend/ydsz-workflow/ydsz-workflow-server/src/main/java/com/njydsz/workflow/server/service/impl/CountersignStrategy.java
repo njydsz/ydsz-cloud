@@ -25,7 +25,7 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
  *   <li>主流程推进 → 触发 onAdvanceAfter（事件/审计已在主流程统一处理）</li>
  * </ol>
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 public interface CountersignStrategy {
 

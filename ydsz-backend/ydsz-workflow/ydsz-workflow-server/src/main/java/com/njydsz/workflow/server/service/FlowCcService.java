@@ -22,7 +22,7 @@ import com.njydsz.workflow.domain.entity.FlowNodeDO;
  *   <li>分页查询返回 {@link PageResult}，统一分页响应结构</li>
  * </ul>
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface FlowCcService {
 

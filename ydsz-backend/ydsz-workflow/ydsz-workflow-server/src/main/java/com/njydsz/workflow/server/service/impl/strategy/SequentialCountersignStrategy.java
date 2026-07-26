@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>对标钉钉/飞书"顺序会签"。当前人通过后切换到下一个人，乐观锁防并发。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Component
 @RequiredArgsConstructor

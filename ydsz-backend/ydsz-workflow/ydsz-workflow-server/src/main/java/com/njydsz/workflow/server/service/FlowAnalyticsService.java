@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>对标钉钉/飞书审批的"数据分析"仪表盘，聚合审批效率、驳回率、
  * 办理人排行、流程效率对比等核心指标。
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 public interface FlowAnalyticsService {
 

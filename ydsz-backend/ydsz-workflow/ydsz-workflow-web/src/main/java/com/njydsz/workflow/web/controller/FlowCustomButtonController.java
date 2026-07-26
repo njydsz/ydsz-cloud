@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * 节点自定义按钮 Controller（P2-4）。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @RestController

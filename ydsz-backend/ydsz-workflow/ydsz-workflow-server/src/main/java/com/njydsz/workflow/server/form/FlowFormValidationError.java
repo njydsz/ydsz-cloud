@@ -6,7 +6,7 @@ import java.io.Serializable;
 /**
  * 表单校验错误（P0-3 表单引擎 MVP）
  *
- * @since 1.9.0
+ * @since 1.0.0
  */
 public class FlowFormValidationError implements Serializable {
 

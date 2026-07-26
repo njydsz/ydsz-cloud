@@ -13,7 +13,7 @@ import com.njydsz.workflow.domain.entity.FlowEventSubscriptionDO;
  * 工作流事件订阅 Mapper
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowEventSubscriptionMapper extends BaseMapper<FlowEventSubscriptionDO> {

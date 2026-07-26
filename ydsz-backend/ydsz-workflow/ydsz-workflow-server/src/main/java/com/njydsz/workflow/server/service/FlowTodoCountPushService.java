@@ -7,7 +7,7 @@ import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
  *
  * <p>P1-7: WebSocket 待办数推送
  *
- * @since 1.2.0
+ * @since 1.0.0
  */
 public interface FlowTodoCountPushService {
 

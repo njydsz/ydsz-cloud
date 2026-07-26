@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力。
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Slf4j
 @Validated

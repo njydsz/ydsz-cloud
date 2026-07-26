@@ -16,7 +16,7 @@ import com.njydsz.workflow.domain.entity.FlowCommentDO;
  * 回复（parent_comment_id 非空）通过不同索引高效查询。
  *
  * @author ydsz-team
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {

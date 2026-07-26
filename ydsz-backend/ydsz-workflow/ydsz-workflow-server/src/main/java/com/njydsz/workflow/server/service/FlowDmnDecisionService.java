@@ -12,7 +12,7 @@ import com.njydsz.workflow.domain.entity.FlowDmnRuleDO;
  * <p>提供决策表的 CRUD、发布、评估能力。
  * 对标钉钉/飞书的"规则引擎"路由配置能力。
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 public interface FlowDmnDecisionService {
 

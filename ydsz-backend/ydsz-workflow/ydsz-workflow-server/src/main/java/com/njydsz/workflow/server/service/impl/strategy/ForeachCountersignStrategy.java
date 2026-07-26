@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
  * 与 PARALLEL 会签的区别：会签是 1 task + N user 共享审批意见；
  * FOREACH 是 N 条独立 task，每条独立完成，全部完成才推进。
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Component
 @RequiredArgsConstructor

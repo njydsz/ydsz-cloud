@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
  * throwError API 触发事件，匹配后标记 COMPLETED 并推进流程。
  *
  * @author ydsz-team
- * @since 1.2.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

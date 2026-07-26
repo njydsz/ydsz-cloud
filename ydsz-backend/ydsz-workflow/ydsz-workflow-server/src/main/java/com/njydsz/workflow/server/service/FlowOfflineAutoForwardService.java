@@ -12,7 +12,7 @@ package com.njydsz.workflow.server.service;
  *   <li>OfflineAutoForwardService — 处理代理人设置时**已存在的待办**，批量转发</li>
  * </ul>
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 public interface FlowOfflineAutoForwardService {
 

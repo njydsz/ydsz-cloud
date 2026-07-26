@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>扩展性：新增会签类型只需实现 {@code CountersignStrategy}，无需修改主流程</li>
  * </ul>
  *
- * @since 1.7.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

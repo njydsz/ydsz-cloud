@@ -201,9 +201,22 @@ public class AgentAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(DagOrchestrationExecutor.class)
     public DagOrchestrationExecutor dagOrchestrationExecutor(
             LlmClient llmClient, AgentProperties properties, AgentFactory agentFactory) {
         return new DagOrchestrationExecutor(llmClient, properties, agentFactory);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public com.njydsz.agent.server.health.AgentHealthIndicator agentHealthIndicator(
+            LlmClient llmClient, ConversationMemory memory,
+            org.springframework.beans.factory.ObjectProvider<VectorStore> vectorStoreProvider,
+            org.springframework.beans.factory.ObjectProvider<TraceRecorder> traceRecorderProvider,
+            org.springframework.beans.factory.ObjectProvider<CostAnalysisService> costAnalysisServiceProvider,
+            org.springframework.beans.factory.ObjectProvider<AgentMetrics> agentMetricsProvider) {
+        return new com.njydsz.agent.server.health.AgentHealthIndicator(
+                llmClient, memory, vectorStoreProvider, traceRecorderProvider,
+                costAnalysisServiceProvider, agentMetricsProvider);
     }
 }

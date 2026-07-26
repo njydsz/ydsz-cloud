@@ -127,7 +127,7 @@ public interface FlowInstanceService {
      * @param initiatorId    发起人 ID
      * @param targetNodeCode 目标节点编码（null/空时降级到 {@link #recall(String, String)}）
      * @return 是否撤回成功
-     * @since 1.6.0
+     * @since 1.0.0
      */
     boolean recall(String instanceId, String initiatorId, String targetNodeCode);
 
@@ -141,7 +141,7 @@ public interface FlowInstanceService {
      * @param instanceId  实例 ID
      * @param initiatorId 发起人 ID
      * @return 节点列表，每个 Map 包含 nodeCode / nodeName / firstFinishAt / visitCount
-     * @since 1.6.0
+     * @since 1.0.0
      */
     List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId);
 
@@ -306,7 +306,7 @@ public interface FlowInstanceService {
      * @param comment     重做说明（可选）
      * @param redoMode    重做模式：RESTART / NEW_INSTANCE（null/空时默认 RESTART）
      * @return 实例 ID（RESTART 返回原 instanceId，NEW_INSTANCE 返回新 instanceId）
-     * @since 1.6.0
+     * @since 1.0.0
      */
     String resubmit(String instanceId, String initiatorId,
                     Map<String, Object> variables, String comment, String redoMode);

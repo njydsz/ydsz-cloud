@@ -9,7 +9,7 @@ import com.njydsz.workflow.domain.entity.FlowCategoryDO;
  * 流程分类 Mapper
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowCategoryMapper extends BaseMapper<FlowCategoryDO> {

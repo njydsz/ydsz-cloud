@@ -56,7 +56,7 @@ public interface FlowAdvancer {
      * @param targetNodeCodes  退回多节点目标列表（REJECT 时使用，非空时优先于单节点）
      * @param variables        流程变量
      * @return 推进后产生的下一节点列表（空表示流程结束）
-     * @since 1.6.0
+     * @since 1.0.0
      */
     default List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
                                            String currentNodeCode,
@@ -85,7 +85,7 @@ public interface FlowAdvancer {
      * @param condition 跳转条件表达式
      * @param variables 流程变量
      * @return true=条件成立，false=不成立
-     * @since 1.2.0
+     * @since 1.0.0
      */
     default boolean evaluateSkipCondition(String condition, Map<String, Object> variables) {
         return condition == null || condition.isBlank();

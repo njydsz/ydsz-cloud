@@ -20,7 +20,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>权限数据来源：{@code FlowNodeDO.formFieldsConfig} JSON 字段，
  * 格式为 {@code {"fieldKey":"EDIT|READONLY|HIDDEN|REQUIRED",...}}。
  *
- * @since 1.8.0
+ * @since 1.0.0
  */
 public interface FlowFormFieldPermService {
 
