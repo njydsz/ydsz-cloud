@@ -35,6 +35,15 @@ public final class GatewayConstants {
     /** 内部头签名时间戳请求头 */
     public static final String HEADER_INTERNAL_TS = "X-Internal-Ts";
 
+    /**
+     * 内部头签名 nonce 请求头（P0-6 防重放）。
+     *
+     * <p>网关为每个请求生成唯一 nonce，纳入 HMAC 签名 payload 后透传给下游。
+     * 下游服务使用 {@code NonceCache.verifyAndConsume(nonce)} 校验是否重复，
+     * 配合时间戳窗口形成"一次性签名"机制。
+     */
+    public static final String HEADER_INTERNAL_NONCE = "X-Internal-Nonce";
+
     /** 租户 ID 请求头 */
     public static final String HEADER_TENANT_ID = "X-Tenant-Id";
 }

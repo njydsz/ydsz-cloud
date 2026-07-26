@@ -48,6 +48,7 @@ public class FileController {
 
     private final FileApplicationService fileApplicationService;
     private final NextwikiHealthIndicator healthIndicator;
+    private final com.njydsz.nextwiki.server.service.ChunkUploadApplicationService chunkUploadService;
 
     @PostMapping("/upload")
     @Operation(summary = "上传文件", description = "支持单文件上传，自动创建版本记录")
@@ -192,5 +193,55 @@ public class FileController {
 
         fileApplicationService.toggleStar(nodeId, userId);
         return BaseResponse.success();
+    }
+
+    // ==================== P1-1: 分片上传 ====================
+
+    @PostMapping("/chunk/init")
+    @Operation(summary = "初始化分片上传", description = "大文件分片上传，支持断点续传")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+    public BaseResponse<com.njydsz.nextwiki.server.service.ChunkUploadApplicationService.ChunkUploadInit> initChunkUpload(
+            @RequestParam("fileName") String fileName,
+            @RequestParam("fileSize") long fileSize,
+            @RequestParam("totalChunks") int totalChunks,
+            @RequestParam(value = "parentId", required = false) String parentId,
+            @RequestHeader("X-User-Id") String userId) {
+        return BaseResponse.success(chunkUploadService.initChunkUpload(
+                fileName, fileSize, totalChunks, parentId, userId));
+    }
+
+    @PostMapping("/chunk/{uploadId}/{chunkNumber}")
+    @Operation(summary = "上传单个分片")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+    public BaseResponse<Void> uploadChunk(
+            @PathVariable String uploadId,
+            @PathVariable int chunkNumber,
+            @RequestParam("chunk") MultipartFile chunk) {
+        chunkUploadService.uploadChunk(uploadId, chunkNumber, chunk);
+        return BaseResponse.success();
+    }
+
+    @PostMapping("/chunk/{uploadId}/complete")
+    @Operation(summary = "完成分片上传", description = "合并分片并上传到存储")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+    public BaseResponse<FileNodeVO> completeChunkUpload(
+            @PathVariable String uploadId,
+            @RequestHeader("X-User-Id") String userId) {
+        return BaseResponse.success(chunkUploadService.completeChunkUpload(uploadId, userId));
+    }
+
+    @DeleteMapping("/chunk/{uploadId}")
+    @Operation(summary = "取消分片上传")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+    public BaseResponse<Void> abortChunkUpload(@PathVariable String uploadId) {
+        chunkUploadService.abortChunkUpload(uploadId);
+        return BaseResponse.success();
+    }
+
+    @GetMapping("/chunk/{uploadId}/uploaded-chunks")
+    @Operation(summary = "查询已上传分片列表", description = "用于断点续传")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+    public BaseResponse<java.util.Set<Integer>> getUploadedChunks(@PathVariable String uploadId) {
+        return BaseResponse.success(chunkUploadService.getUploadedChunks(uploadId));
     }
 }

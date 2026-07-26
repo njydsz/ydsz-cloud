@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.core.MsgLogDO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -86,10 +87,12 @@ public class RetryScanner {
      */
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
-        List<MsgLogDO> due = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
+        // P2-3: 使用 MyBatis-Plus 分页替代 .last("LIMIT ...")
+        Page<MsgLogDO> page = new Page<>(1, MessageConstants.RETRY_SCAN_BATCH_SIZE);
+        Page<MsgLogDO> duePage = msgLogMapper.selectPage(page, new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getStatus, MessageStatusEnum.RETRY.name())
-                .le(MsgLogDO::getNextRetryAt, now)
-                .last("LIMIT " + MessageConstants.RETRY_SCAN_BATCH_SIZE));
+                .le(MsgLogDO::getNextRetryAt, now));
+        List<MsgLogDO> due = duePage.getRecords();
         if (due.isEmpty()) {
             return;
         }

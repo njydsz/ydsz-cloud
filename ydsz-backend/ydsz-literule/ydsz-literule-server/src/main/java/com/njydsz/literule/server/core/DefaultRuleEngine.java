@@ -1442,15 +1442,4 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         }
     }
 
-    /**
-     * 严重度权重（已废弃，使用 {@link RuleResult#getSeverityWeight()}）
-     *
-     * @param result 规则结果
-     * @return 权重值
-     * @deprecated 使用 {@link RuleResult#getSeverityWeight()}
-     */
-    @Deprecated
-    private int severityWeight(RuleResult result) {
-        return result != null ? result.getSeverityWeight() : 0;
-    }
 }

@@ -1,6 +1,5 @@
 package com.njydsz.gateway.filter;
 
-import java.net.InetSocketAddress;
 import java.util.UUID;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -15,6 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
 
 import lombok.RequiredArgsConstructor;
@@ -156,22 +156,16 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 提取客户端真实 IP（穿透代理）
+     * 提取客户端真实 IP（P0-3：复用 GatewayIpUtils 的可信代理链校验）
+     *
+     * <p>不直接信任 {@code X-Forwarded-For}，先校验直连 IP 是否为可信代理。
+     * 仅当直连 IP 是可信代理（本地回环或内网私有地址）时，才使用 X-Forwarded-For / X-Real-IP。
      *
      * @param request 服务器 HTTP 请求
      * @return 客户端 IP
      */
     private String extractClientIp(ServerHttpRequest request) {
-        String ip = request.getHeaders().getFirst("X-Forwarded-For");
-        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeaders().getFirst("X-Real-IP");
-        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-        InetSocketAddress remoteAddress = request.getRemoteAddress();
-        return remoteAddress != null ? remoteAddress.getAddress().getHostAddress() : "unknown";
+        return GatewayIpUtils.getClientIp(request);
     }
 
     /**

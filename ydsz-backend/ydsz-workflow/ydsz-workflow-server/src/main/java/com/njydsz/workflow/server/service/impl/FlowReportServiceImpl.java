@@ -8,6 +8,9 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
+import com.njydsz.workflow.server.engine.JsonHelper;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
@@ -32,31 +35,43 @@ public class FlowReportServiceImpl implements FlowReportService {
     private final FlowAnalyticsService analyticsService;
     @Lazy
     private final FlowNotificationService notificationService;
+    /** 集群锁：避免多节点重复推送周报/月报 */
+    private final FlowClusterLockHelper clusterLockHelper;
 
     /**
      * 定时推送周报：每周一 9:00
+     *
+     * <p>集群幂等：通过 {@link FlowClusterLockHelper#tryRun} 加分布式锁，
+     * 多节点部署时仅一个节点执行推送，避免重复发送。
      */
     @Scheduled(cron = "0 0 9 ? * MON")
     public void scheduledWeeklyReport() {
-        try {
-            sendWeeklyReport("1");
-            log.info("[FlowReport] 周报推送完成");
-        } catch (Exception e) {
-            log.error("[FlowReport] 周报推送失败: {}", e.getMessage(), e);
-        }
+        clusterLockHelper.tryRun("report:weekly", 600, () -> {
+            try {
+                sendWeeklyReport("1");
+                log.info("[FlowReport] 周报推送完成");
+            } catch (Exception e) {
+                log.error("[FlowReport] 周报推送失败: {}", e.getMessage(), e);
+            }
+        });
     }
 
     /**
      * 定时推送月报：每月 1 号 9:00
+     *
+     * <p>集群幂等：通过 {@link FlowClusterLockHelper#tryRun} 加分布式锁，
+     * 多节点部署时仅一个节点执行推送，避免重复发送。
      */
     @Scheduled(cron = "0 0 9 1 * ?")
     public void scheduledMonthlyReport() {
-        try {
-            sendMonthlyReport("1");
-            log.info("[FlowReport] 月报推送完成");
-        } catch (Exception e) {
-            log.error("[FlowReport] 月报推送失败: {}", e.getMessage(), e);
-        }
+        clusterLockHelper.tryRun("report:monthly", 600, () -> {
+            try {
+                sendMonthlyReport("1");
+                log.info("[FlowReport] 月报推送完成");
+            } catch (Exception e) {
+                log.error("[FlowReport] 月报推送失败: {}", e.getMessage(), e);
+            }
+        });
     }
 
     @Override
@@ -162,15 +177,14 @@ public class FlowReportServiceImpl implements FlowReportService {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private String buildReportContent(Map<String, Object> report) {
         StringBuilder sb = new StringBuilder();
         sb.append("报告周期: ").append(report.get("period")).append("\n");
         sb.append("生成时间: ").append(report.get("generatedAt")).append("\n\n");
 
         Object overview = report.get("overview");
-        if (overview instanceof Map) {
-            Map<String, Object> om = (Map<String, Object>) overview;
+        if (overview instanceof Map<?, ?> rawMap) {
+            Map<String, Object> om = JsonHelper.toStringObjectMap(rawMap);
             sb.append("【核心指标】\n");
             for (Map.Entry<String, Object> entry : om.entrySet()) {
                 sb.append("  ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");

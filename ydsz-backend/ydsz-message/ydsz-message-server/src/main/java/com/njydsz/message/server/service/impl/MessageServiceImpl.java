@@ -60,6 +60,7 @@ import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.core.RateLimitService;
+import com.njydsz.message.server.service.impl.AggregatePersistenceService;
 import com.njydsz.message.server.service.impl.ChannelSuppressionEngine;
 import com.njydsz.message.server.service.impl.DndService;
 import com.njydsz.message.server.service.impl.EmailBounceHandler;
@@ -146,6 +147,8 @@ public class MessageServiceImpl implements MessageService {
     private final ParallelBatchSender parallelBatchSender;
     /** P2-14: 时区感知 DND 服务 */
     private final DndService dndService;
+    /** P0-5: 聚合路径独立 Service（事务安全） */
+    private final AggregatePersistenceService aggregatePersistenceService;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -185,6 +188,16 @@ public class MessageServiceImpl implements MessageService {
 
         // ② 渲染内容: 模板加载 → 变量填充 → 渲染 → 敏感词 → 富媒体
         RenderedContent rendered = renderContent(request, ctx);
+
+        // P1-7: 消息内容大小限制
+        int maxLen = messageProperties.getMaxContentLength();
+        if (maxLen > 0 && rendered.content() != null && rendered.content().length() > maxLen) {
+            messageMetrics.recordSend(ctx.channel, "CONTENT_TOO_LARGE", 0);
+            log.warn("[Message] 内容超长拒绝发送: length={} max={} channel={}",
+                    rendered.content().length(), maxLen, ctx.channel);
+            return MessageResult.fail(ctx.channel, "消息内容超过最大长度限制: "
+                    + rendered.content().length() + " > " + maxLen);
+        }
 
         // ③ 构造落库对象
         MsgLogDO logDO = buildLogDO(request, ctx, rendered);
@@ -533,19 +546,11 @@ public class MessageServiceImpl implements MessageService {
             }
         }
 
-        // ⑨ 聚合判断(P0-6) —— insert + appendOrStart + updateById
-        // 注: 此处未加 @Transactional,因为 Spring 同类 self-invocation 不生效。
-        // appendOrStart 失败时 insert 的 PENDING 记录会被恢复扫描器兜底处理,不致数据不一致。
-        // 如需强一致,可将聚合路径提取到独立 Service 类通过代理调用。
+        // P0-5: 聚合判断 —— 委托 AggregatePersistenceService 执行事务安全的原子操作
         if (ctx.pref != null && Integer.valueOf(1).equals(ctx.pref.getDigestEnabled())
                 && StringUtils.hasText(ctx.bizType) && StringUtils.hasText(ctx.receiver)) {
-            msgLogMapper.insert(logDO);
-            aggregateService.appendOrStart(ctx.bizType, ctx.receiver, ctx.channel, logDO.getTenantId());
-            logDO.setStatus(MessageStatusEnum.PENDING.name());
-            logDO.setErrorMessage("AGGREGATED");
-            msgLogMapper.updateById(logDO);
-            log.info("[Message] 已加入聚合批次: msgId={} group={} receiver={}",
-                    logDO.getMsgId(), ctx.bizType, ctx.receiver);
+            aggregatePersistenceService.persistAggregated(
+                    logDO, ctx.bizType, ctx.receiver, ctx.channel, logDO.getTenantId());
             return MessageResult.ok(ctx.channel, logDO.getMsgId());
         }
         return null;

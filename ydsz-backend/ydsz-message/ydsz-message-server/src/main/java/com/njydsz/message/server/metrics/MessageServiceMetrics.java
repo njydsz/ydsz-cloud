@@ -34,11 +34,13 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code ydsz.message.exception} — 异常计数（Counter）</li>
  * </ul>
  *
+ * <p>P2-4: 从 @Component 改为由 {@link com.njydsz.message.server.config.MessageAutoConfiguration}
+ * 中 @Bean 注册。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-@Component
 public class MessageServiceMetrics {
 
     private final MeterRegistry meterRegistry;

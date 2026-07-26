@@ -190,7 +190,7 @@ public class ParallelRuleEvaluator {
         }
 
         // 按严重度倒序
-        allResults.sort(Comparator.comparingInt((RuleResult r) -> severityWeight(r)).reversed());
+        allResults.sort(Comparator.comparingInt(RuleResult::getSeverityWeight).reversed());
         return allResults;
     }
 
@@ -214,7 +214,7 @@ public class ParallelRuleEvaluator {
                 }
             }
         }
-        triggered.sort(Comparator.comparingInt((RuleResult r) -> severityWeight(r)).reversed());
+        triggered.sort(Comparator.comparingInt(RuleResult::getSeverityWeight).reversed());
         return triggered;
     }
 
@@ -269,14 +269,6 @@ public class ParallelRuleEvaluator {
             groupRules.sort(Comparator.comparingInt((Rule r) -> r.getPriority()));
         }
         return groups;
-    }
-
-    /**
-     * 严重度权重
-     */
-    private int severityWeight(RuleResult result) {
-        if (result == null || result.getSeverity() == null) return 0;
-        return result.getSeverity().getWeight();
     }
 
     /**

@@ -99,28 +99,4 @@ public class FlowTaskAuditService {
         }
         return assigneeId;
     }
-
-    /**
-     * 解析委派授权 ID。
-     *
-     * <p>查询当前任务实例，按租户/授权人/流程/节点匹配最合适的授权规则，
-     * 用于审计日志中关联授权记录。
-     */
-    @SuppressWarnings("unused")
-    private String resolveDelegateAuthId(FlowRunTaskDO task, String ownerId) {
-        try {
-            FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
-            if (instance == null) {
-                return null;
-            }
-            FlowDelegateAuthDO matched = delegateAuthService.matchAuth(
-                    instance.getTenantId(), ownerId,
-                    instance.getFlowCode(), task.getNodeCode());
-            return matched != null ? matched.getId() : null;
-        } catch (Exception e) {
-            FlowTaskAuditService.log.debug("[Flow] 委派 authId 解析失败: taskId={} err={}",
-                    task.getId(), e.getMessage());
-            return null;
-        }
-    }
 }

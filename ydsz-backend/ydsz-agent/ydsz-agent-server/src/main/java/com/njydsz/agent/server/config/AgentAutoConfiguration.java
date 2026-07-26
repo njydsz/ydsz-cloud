@@ -29,10 +29,15 @@ import com.njydsz.agent.infra.rag.OpenAiEmbeddingClient;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
+import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Agent 自动配置
@@ -49,6 +54,8 @@ import com.njydsz.agent.server.rag.RagService;
  *   <li>{@link OpenAiEmbeddingClient} — Embedding 客户端</li>
  *   <li>{@link SimpleTextChunker} — 文本分块器</li>
  *   <li>{@link PgVectorStore} / {@link InMemoryVectorStore} — 向量存储</li>
+ *   <li>{@link AgentMetrics} — Micrometer 指标采集</li>
+ *   <li>{@link CostAnalysisService} — Token 用量成本核算</li>
  *   <li>{@link AgentFactory} — Agent 工厂</li>
  * </ul>
  *
@@ -65,12 +72,31 @@ public class AgentAutoConfiguration {
     public LlmClient llmClient(AgentProperties properties) {
         LlmClientRouter router = new LlmClientRouter();
         AgentProperties.Llm llmConfig = properties.getLlm();
-        OpenAiCompatibleClient client = new OpenAiCompatibleClient(
+
+        // 注册默认 Provider
+        OpenAiCompatibleClient defaultClient = new OpenAiCompatibleClient(
                 llmConfig.getDefaultProvider(),
                 llmConfig.getBaseUrl(),
                 llmConfig.getApiKey(),
                 llmConfig.getTimeoutSeconds());
-        router.register(client);
+        router.register(defaultClient);
+
+        // 注册额外 Provider（多模型 + Fallback 链）
+        if (llmConfig.getProviders() != null) {
+            for (var entry : llmConfig.getProviders().entrySet()) {
+                AgentProperties.ProviderConfig pc = entry.getValue();
+                if (!pc.isEnabled()) {
+                    continue;
+                }
+                String providerName = pc.getName() != null ? pc.getName() : entry.getKey();
+                OpenAiCompatibleClient client = new OpenAiCompatibleClient(
+                        providerName,
+                        pc.getBaseUrl(),
+                        pc.getApiKey(),
+                        llmConfig.getTimeoutSeconds());
+                router.register(client);
+            }
+        }
         return router;
     }
 
@@ -88,6 +114,12 @@ public class AgentAutoConfiguration {
     @ConditionalOnMissingBean(ToolRegistry.class)
     public ToolRegistry toolRegistry() {
         return new DefaultToolRegistry();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ToolAnnotationScanner.class)
+    public ToolAnnotationScanner toolAnnotationScanner(ToolRegistry toolRegistry) {
+        return new ToolAnnotationScanner(toolRegistry);
     }
 
     @Bean
@@ -142,14 +174,30 @@ public class AgentAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(AgentMetrics.class)
+    public AgentMetrics agentMetrics(MeterRegistry meterRegistry) {
+        return new AgentMetrics(meterRegistry);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(CostAnalysisService.class)
+    public CostAnalysisService costAnalysisService() {
+        return new CostAnalysisService();
+    }
+
+    @Bean
     @ConditionalOnMissingBean(AgentFactory.class)
     public AgentFactory agentFactory(LlmClient llmClient, ConversationMemory memory,
                                      ToolRegistry toolRegistry, AgentProperties properties,
                                      List<InputGuardrail> inputGuardrails,
                                      List<OutputGuardrail> outputGuardrails,
-                                     RagService ragService) {
+                                     RagService ragService,
+                                     TraceRecorder traceRecorder,
+                                     AgentMetrics agentMetrics,
+                                     CostAnalysisService costAnalysisService) {
         return new AgentFactory(llmClient, memory, toolRegistry, properties,
-                inputGuardrails, outputGuardrails, ragService);
+                inputGuardrails, outputGuardrails, ragService,
+                traceRecorder, agentMetrics, costAnalysisService);
     }
 
     @Bean

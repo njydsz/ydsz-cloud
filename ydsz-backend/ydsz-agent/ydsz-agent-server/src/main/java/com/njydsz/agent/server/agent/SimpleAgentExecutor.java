@@ -20,7 +20,10 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 
 /**
  * 简单 Agent 执行器（单轮 LLM 调用，无工具）
@@ -40,26 +43,38 @@ public class SimpleAgentExecutor implements AgentExecutor {
     private final AgentProperties properties;
     private final List<InputGuardrail> inputGuardrails;
     private final List<OutputGuardrail> outputGuardrails;
+    private final TraceRecorder traceRecorder;
+    private final AgentMetrics agentMetrics;
+    private final CostAnalysisService costAnalysisService;
 
     public SimpleAgentExecutor(LlmClient llmClient, ConversationMemory memory,
                                AgentProperties properties,
                                List<InputGuardrail> inputGuardrails,
-                               List<OutputGuardrail> outputGuardrails) {
+                               List<OutputGuardrail> outputGuardrails,
+                               TraceRecorder traceRecorder,
+                               AgentMetrics agentMetrics,
+                               CostAnalysisService costAnalysisService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
         this.inputGuardrails = inputGuardrails != null ? inputGuardrails : List.of();
         this.outputGuardrails = outputGuardrails != null ? outputGuardrails : List.of();
+        this.traceRecorder = traceRecorder;
+        this.agentMetrics = agentMetrics;
+        this.costAnalysisService = costAnalysisService;
     }
 
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
                 ? request.getConversationId() : UUID.randomUUID().toString();
-        log.info("[Simple-Agent] 执行: convId={}", convId);
+        String traceId = traceRecorder.startTrace(convId, "CHAT");
+        log.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
-        String userInput = applyInputGuardrails(request.getUserInput());
+        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
         if (userInput == null) {
+            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
+            traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
             return new ChatResponse(UUID.randomUUID().toString(), "guardrail",
                     msg, TokenUsage.zero(), "guardrail_rejected", List.of());
@@ -80,12 +95,43 @@ public class SimpleAgentExecutor implements AgentExecutor {
                 .maxTokens(properties.getLlm().getMaxTokens())
                 .build();
 
-        ChatResponse response = llmClient.chat(llmRequest);
-        String output = applyOutputGuardrails(response.getContent());
+        long llmStart = System.currentTimeMillis();
+        ChatResponse response;
+        try {
+            response = llmClient.chat(llmRequest);
+        } catch (Exception e) {
+            long llmDuration = System.currentTimeMillis() - llmStart;
+            agentMetrics.recordLlmCall(llmClient.getProvider(),
+                    properties.getLlm().getDefaultModel(),
+                    llmDuration, null, e);
+            traceRecorder.recordStep(traceId, "LLM_CALL_ERROR",
+                    "LLM 调用失败", request.getUserInput(), e.getMessage(), llmDuration);
+            traceRecorder.endTrace(traceId, "FAILED");
+            throw e;
+        }
+        long llmDuration = System.currentTimeMillis() - llmStart;
+
+        // P0-3: AgentMetrics 指标采集
+        agentMetrics.recordLlmCall(llmClient.getProvider(),
+                properties.getLlm().getDefaultModel(),
+                llmDuration, response, null);
+
+        // P0-2: CostAnalysisService 成本核算
+        if (response.getUsage() != null && costAnalysisService != null) {
+            costAnalysisService.recordUsage(convId,
+                    properties.getLlm().getDefaultModel(), response.getUsage());
+        }
+
+        // P0-1: TraceRecorder 记录 LLM 调用步骤
+        traceRecorder.recordStep(traceId, "LLM_CALL",
+                "Simple chat", messages, response, llmDuration);
+
+        String output = applyOutputGuardrails(response.getContent(), traceId);
 
         memory.save(convId, ChatMessage.user(userInput, convId));
         memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
 
+        traceRecorder.endTrace(traceId, "SUCCESS");
         log.info("[Simple-Agent] 完成: convId={}, tokens={}",
                 convId, response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
         return new ChatResponse(response.getId(), response.getModel(),
@@ -112,11 +158,13 @@ public class SimpleAgentExecutor implements AgentExecutor {
         return "chat".equalsIgnoreCase(type) || "simple".equalsIgnoreCase(type);
     }
 
-    private String applyInputGuardrails(String input) {
+    private String applyInputGuardrails(String input, String traceId) {
         String sanitized = input;
         for (InputGuardrail guard : inputGuardrails) {
             GuardrailResult result = guard.check(sanitized);
             if (result.isRejected()) {
+                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_INPUT",
+                        guard.getName(), input, result.getReason(), 0);
                 return null;
             }
             if (result.getSanitizedInput() != null) {
@@ -126,11 +174,14 @@ public class SimpleAgentExecutor implements AgentExecutor {
         return sanitized;
     }
 
-    private String applyOutputGuardrails(String output) {
+    private String applyOutputGuardrails(String output, String traceId) {
         String sanitized = output;
         for (OutputGuardrail guard : outputGuardrails) {
             GuardrailResult result = guard.check(sanitized);
             if (result.isRejected()) {
+                agentMetrics.recordGuardrailRejection(guard.getName(), "output");
+                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_OUTPUT",
+                        guard.getName(), output, result.getReason(), 0);
                 return "抱歉，我无法回答这个问题。";
             }
             if (result.getSanitizedInput() != null) {

@@ -1,7 +1,14 @@
 package com.njydsz.message.server.service.impl.core;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.expression.Expression;
@@ -76,11 +83,28 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         // 执行结果
         Map<String, String> nodeResults = new ConcurrentHashMap<>();
         Map<String, Boolean> nodeSuccess = new ConcurrentHashMap<>();
+
+        // P1-2: 流程级超时控制
+        long flowStartNanos = System.nanoTime();
+        int flowTimeoutSeconds = flow.getGlobalTimeoutSeconds() != null
+                ? flow.getGlobalTimeoutSeconds() : 300;
+        long flowTimeoutNanos = TimeUnit.SECONDS.toNanos(flowTimeoutSeconds);
+
         int successCount = 0;
         int failedCount = 0;
         int skippedCount = 0;
+        boolean timeoutTriggered = false;
 
         for (String nodeId : topoOrder) {
+            // P1-2: 检查流程是否已超时
+            long elapsedNanos = System.nanoTime() - flowStartNanos;
+            if (elapsedNanos > flowTimeoutNanos) {
+                log.warn("[Orchestration] 流程超时,剩余节点跳过: flowId={} elapsed={}s timeout={}s",
+                        flowId, TimeUnit.NANOSECONDS.toSeconds(elapsedNanos), flowTimeoutSeconds);
+                timeoutTriggered = true;
+                break;
+            }
+
             OrchestrationNodeDTO node = nodeMap.get(nodeId);
             // 检查依赖是否全部成功
             if (!CollectionUtils.isEmpty(node.getDependsOn())) {
@@ -110,7 +134,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                 }
             }
             // 执行节点
-            boolean nodeOk = executeNode(node, flow, nodeResults);
+            boolean nodeOk = executeNode(node, flow, nodeResults, flowStartNanos, flowTimeoutNanos);
             nodeSuccess.put(nodeId, nodeOk);
             if (nodeOk) {
                 successCount++;
@@ -124,20 +148,39 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             }
         }
 
-        String status = failedCount > 0 && successCount == 0 ? "FAILED" : "COMPLETED";
-        log.info("[Orchestration] 流程完成: flowId={} status={} success={} failed={} skipped={}",
-                flowId, status, successCount, failedCount, skippedCount);
+        // P1-2: 超时节点计入 skipped
+        if (timeoutTriggered) {
+            skippedCount = flow.getNodes().size() - successCount - failedCount - skippedCount;
+            skippedCount = Math.max(skippedCount, 0);
+        }
+
+        String status;
+        if (timeoutTriggered) {
+            status = "TIMEOUT";
+        } else if (failedCount > 0 && successCount == 0) {
+            status = "FAILED";
+        } else {
+            status = "COMPLETED";
+        }
+        log.info("[Orchestration] 流程完成: flowId={} status={} success={} failed={} skipped={} timeout={}",
+                flowId, status, successCount, failedCount, skippedCount, timeoutTriggered);
         return new OrchestrationResultVO(flowId, status, successCount, failedCount, skippedCount,
-                flow.getNodes().size(), nodeResults, null);
+                flow.getNodes().size(), nodeResults, timeoutTriggered ? "流程超时" : null);
     }
 
     /**
      * 执行单个编排节点（支持重试）。
      */
     private boolean executeNode(OrchestrationNodeDTO node, OrchestrationFlowDTO flow,
-                                Map<String, String> nodeResults) {
+                                Map<String, String> nodeResults,
+                                long flowStartNanos, long flowTimeoutNanos) {
         int retryCount = "RETRY".equalsIgnoreCase(node.getOnFailure()) ? MAX_RETRY : 1;
         for (int attempt = 1; attempt <= retryCount; attempt++) {
+            // P1-2: 检查流程是否已超时
+            if (System.nanoTime() - flowStartNanos > flowTimeoutNanos) {
+                nodeResults.put(node.getNodeId(), "SKIPPED (流程超时)");
+                return false;
+            }
             try {
                 MessageRequest request = new MessageRequest();
                 request.setChannel(node.getChannel());
@@ -155,7 +198,15 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                 String errMsg = result != null ? result.getErrorMessage() : "未知错误";
                 if (attempt < retryCount) {
                     log.info("[Orchestration] 节点重试: nodeId={} attempt={}/{}", node.getNodeId(), attempt, retryCount);
-                    Thread.sleep(1000L * attempt);
+                    // P1-2: 使用可中断的 sleep 替代 Thread.sleep，以便响应超时
+                    long sleepMs = 1000L * attempt;
+                    long remainingNanos = flowTimeoutNanos - (System.nanoTime() - flowStartNanos);
+                    long remainingMs = TimeUnit.NANOSECONDS.toMillis(remainingNanos);
+                    if (remainingMs <= 0) {
+                        nodeResults.put(node.getNodeId(), "FAILED: 流程超时");
+                        return false;
+                    }
+                    Thread.sleep(Math.min(sleepMs, remainingMs));
                 } else {
                     nodeResults.put(node.getNodeId(), "FAILED: " + errMsg);
                 }
@@ -181,8 +232,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
      * @throws IllegalStateException 检测到环时抛出
      */
     private List<String> topologicalSort(List<OrchestrationNodeDTO> nodes) {
-        Map<String, Integer> inDegree = new HashMap<>();
-        Map<String, List<String>> adjacency = new HashMap<>();
+        // P2-2: 使用 LinkedHashMap 保证拓扑排序的确定性
+        Map<String, Integer> inDegree = new LinkedHashMap<>();
+        Map<String, List<String>> adjacency = new LinkedHashMap<>();
         for (OrchestrationNodeDTO node : nodes) {
             inDegree.putIfAbsent(node.getNodeId(), 0);
             adjacency.putIfAbsent(node.getNodeId(), new ArrayList<>());

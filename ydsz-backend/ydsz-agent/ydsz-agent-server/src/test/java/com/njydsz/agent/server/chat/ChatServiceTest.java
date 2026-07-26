@@ -39,6 +39,8 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageRole;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 
@@ -70,6 +72,10 @@ class ChatServiceTest {
     private ConversationMemory memory;
     @Mock
     private AgentMetrics metrics;
+    @Mock
+    private CostAnalysisService costAnalysisService;
+    @Mock
+    private TraceRecorder traceRecorder;
 
     private AgentProperties properties;
 
@@ -79,10 +85,12 @@ class ChatServiceTest {
         properties.getLlm().setDefaultModel("gpt-4o-mini");
         // lenient：护栏拒绝场景不调用 LLM，getProvider 不会被调用
         lenient().when(llmClient.getProvider()).thenReturn("openai");
+        lenient().when(traceRecorder.startTrace(anyString(), anyString())).thenReturn("trace-1");
     }
 
     private ChatService buildService(List<InputGuardrail> inputs, List<OutputGuardrail> outputs) {
-        return new ChatService(llmClient, memory, properties, inputs, outputs, metrics);
+        return new ChatService(llmClient, memory, properties, inputs, outputs, metrics,
+                costAnalysisService, traceRecorder);
     }
 
     private ChatResponse mockResponse(String content, int prompt, int completion) {

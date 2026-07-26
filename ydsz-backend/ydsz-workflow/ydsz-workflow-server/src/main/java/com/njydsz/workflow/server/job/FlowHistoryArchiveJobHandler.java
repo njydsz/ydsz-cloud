@@ -89,7 +89,8 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
         try {
             Map<String, Object> obj = YdszJson.parseMap(json);
             if (obj == null) return null;
-            Integer v = obj.getInteger(key);
+            Object raw = obj.get(key);
+            Integer v = raw instanceof Number n ? n.intValue() : null;
             return v == null || v <= 0 ? null : v;
         } catch (Exception e) {
             log.warn("[FlowHistoryArchiveJobHandler] JSON 整数解析失败 key={}: {}", key, e.getMessage());
@@ -102,7 +103,8 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
         try {
             Map<String, Object> obj = YdszJson.parseMap(json);
             if (obj == null) return null;
-            Long v = obj.getLong(key);
+            Object raw = obj.get(key);
+            Long v = raw instanceof Number n ? n.longValue() : null;
             return v == null || v <= 0 ? null : v;
         } catch (Exception e) {
             log.warn("[FlowHistoryArchiveJobHandler] JSON 长整数解析失败 key={}: {}", key, e.getMessage());

@@ -35,6 +35,7 @@ public final class PathGuard {
             GatewayConstants.HEADER_USER_PERMISSIONS,
             GatewayConstants.HEADER_INTERNAL_SIG,
             GatewayConstants.HEADER_INTERNAL_TS,
+            GatewayConstants.HEADER_INTERNAL_NONCE,
             GatewayConstants.HEADER_TENANT_ID,
             "X-Forwarded-For",
             "X-Real-IP"
@@ -104,8 +105,8 @@ public final class PathGuard {
         }
 
         // P2-12: null 字节注入检测（可导致文件系统问题）
+        // 检测 URL 编码的 null 字节 %00 和原始 \0 字符
         if (lowerPath.contains("%00") ||
-                lowerPath.contains("%00") ||
                 decodedPath.contains("\0")) {
             return null;
         }

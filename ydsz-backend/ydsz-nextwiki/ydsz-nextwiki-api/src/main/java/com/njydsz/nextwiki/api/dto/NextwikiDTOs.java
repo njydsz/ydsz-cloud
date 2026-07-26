@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -191,6 +192,7 @@ public final class NextwikiDTOs {
         @Schema(description = "每页大小")
         @NotNull(message = "每页大小不能为空")
         @Positive(message = "每页大小必须大于0")
+        @Max(value = 100, message = "每页大小不能超过100")
         private Integer pageSize;
     }
 

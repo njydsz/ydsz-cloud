@@ -1,0 +1,198 @@
+{
+  "groups": [
+    {
+      "name": "nextwiki",
+      "description": "NextWiki 网盘知识库服务配置"
+    },
+    {
+      "name": "nextwiki.upload",
+      "description": "文件上传配置"
+    },
+    {
+      "name": "nextwiki.preview",
+      "description": "文档预览配置"
+    },
+    {
+      "name": "nextwiki.thumbnail",
+      "description": "缩略图生成配置"
+    },
+    {
+      "name": "nextwiki.ai",
+      "description": "AI 摘要配置"
+    },
+    {
+      "name": "nextwiki.cdn",
+      "description": "CDN 集成配置"
+    },
+    {
+      "name": "nextwiki.virus-scan",
+      "description": "病毒扫描配置"
+    },
+    {
+      "name": "nextwiki.ocr",
+      "description": "OCR 文字识别配置"
+    },
+    {
+      "name": "nextwiki.download",
+      "description": "下载限流配置"
+    },
+    {
+      "name": "nextwiki.wopi",
+      "description": "WOPI 协议配置（在线编辑）"
+    }
+  ],
+  "properties": [
+    {
+      "name": "nextwiki.upload.max-file-size",
+      "type": "java.lang.Long",
+      "description": "最大文件上传大小（字节）",
+      "defaultValue": 524288000
+    },
+    {
+      "name": "nextwiki.upload.allowed-types",
+      "type": "java.lang.String",
+      "description": "允许的文件类型（逗号分隔，空表示不限制）"
+    },
+    {
+      "name": "nextwiki.upload.conflict-strategy",
+      "type": "java.lang.String",
+      "description": "同名冲突策略：OVERWRITE(覆盖) / KEEP_BOTH(保留两者) / SKIP(跳过)",
+      "defaultValue": "KEEP_BOTH"
+    },
+    {
+      "name": "nextwiki.upload.chunk-temp-dir",
+      "type": "java.lang.String",
+      "description": "分片上传临时目录"
+    },
+    {
+      "name": "nextwiki.preview.libreoffice-path",
+      "type": "java.lang.String",
+      "description": "LibreOffice 可执行文件路径",
+      "defaultValue": "soffice"
+    },
+    {
+      "name": "nextwiki.preview.temp-dir",
+      "type": "java.lang.String",
+      "description": "预览临时目录"
+    },
+    {
+      "name": "nextwiki.thumbnail.temp-dir",
+      "type": "java.lang.String",
+      "description": "缩略图临时目录"
+    },
+    {
+      "name": "nextwiki.ai.llm-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 LLM 摘要",
+      "defaultValue": false
+    },
+    {
+      "name": "nextwiki.ai.llm-api-url",
+      "type": "java.lang.String",
+      "description": "LLM API URL（OpenAI 兼容接口）"
+    },
+    {
+      "name": "nextwiki.ai.llm-api-key",
+      "type": "java.lang.String",
+      "description": "LLM API Key"
+    },
+    {
+      "name": "nextwiki.ai.llm-model",
+      "type": "java.lang.String",
+      "description": "LLM 模型名称",
+      "defaultValue": "gpt-3.5-turbo"
+    },
+    {
+      "name": "nextwiki.cdn.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 CDN",
+      "defaultValue": false
+    },
+    {
+      "name": "nextwiki.cdn.provider",
+      "type": "java.lang.String",
+      "description": "CDN 服务商：aliyun / tencent / cloudflare",
+      "defaultValue": "aliyun"
+    },
+    {
+      "name": "nextwiki.cdn.domain",
+      "type": "java.lang.String",
+      "description": "CDN 域名"
+    },
+    {
+      "name": "nextwiki.cdn.access-key",
+      "type": "java.lang.String",
+      "description": "CDN Access Key"
+    },
+    {
+      "name": "nextwiki.cdn.secret-key",
+      "type": "java.lang.String",
+      "description": "CDN Secret Key"
+    },
+    {
+      "name": "nextwiki.virus-scan.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用病毒扫描",
+      "defaultValue": false
+    },
+    {
+      "name": "nextwiki.virus-scan.host",
+      "type": "java.lang.String",
+      "description": "ClamAV 主机地址",
+      "defaultValue": "localhost"
+    },
+    {
+      "name": "nextwiki.virus-scan.port",
+      "type": "java.lang.Integer",
+      "description": "ClamAV 端口",
+      "defaultValue": 3310
+    },
+    {
+      "name": "nextwiki.ocr.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 OCR",
+      "defaultValue": false
+    },
+    {
+      "name": "nextwiki.ocr.provider",
+      "type": "java.lang.String",
+      "description": "OCR 引擎：tesseract / aliyun / tencent",
+      "defaultValue": "tesseract"
+    },
+    {
+      "name": "nextwiki.ocr.tesseract-path",
+      "type": "java.lang.String",
+      "description": "Tesseract 可执行文件路径",
+      "defaultValue": "tesseract"
+    },
+    {
+      "name": "nextwiki.ocr.language",
+      "type": "java.lang.String",
+      "description": "OCR 语言",
+      "defaultValue": "chi_sim+eng"
+    },
+    {
+      "name": "nextwiki.download.rate-limit-per-minute",
+      "type": "java.lang.Integer",
+      "description": "每用户每分钟下载次数限制",
+      "defaultValue": 30
+    },
+    {
+      "name": "nextwiki.download.ip-rate-limit-per-minute",
+      "type": "java.lang.Integer",
+      "description": "每 IP 每分钟下载次数限制",
+      "defaultValue": 100
+    },
+    {
+      "name": "nextwiki.download.signed-url-expire-seconds",
+      "type": "java.lang.Long",
+      "description": "签名 URL 过期时间（秒）",
+      "defaultValue": 3600
+    },
+    {
+      "name": "nextwiki.wopi.editor-url",
+      "type": "java.lang.String",
+      "description": "在线编辑器 URL（OnlyOffice/Collabora）"
+    }
+  ]
+}

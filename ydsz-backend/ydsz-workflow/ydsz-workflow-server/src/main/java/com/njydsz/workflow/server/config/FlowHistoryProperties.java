@@ -1,7 +1,6 @@
 package com.njydsz.workflow.server.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 import lombok.Data;
 
@@ -34,7 +33,6 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@Configuration
 @ConfigurationProperties(prefix = "ydsz.flow.history")
 public class FlowHistoryProperties {
 

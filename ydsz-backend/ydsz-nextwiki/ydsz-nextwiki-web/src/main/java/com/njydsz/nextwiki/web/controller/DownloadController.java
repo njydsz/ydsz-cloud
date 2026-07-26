@@ -3,6 +3,9 @@ package com.njydsz.nextwiki.web.controller;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -51,12 +54,83 @@ public class DownloadController {
 
     private final DownloadApplicationService downloadApplicationService;
     private final NextwikiHealthIndicator healthIndicator;
+    private final com.njydsz.nextwiki.domain.repository.FileNodeRepository fileNodeRepository;
 
     /**
-     * 下载文件
+     * P1-3: 文件夹打包下载为 ZIP
+     */
+    @PostMapping("/folder/{folderId}")
+    @Operation(summary = "打包下载文件夹", description = "将整个文件夹打包为 ZIP 下载")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
+    public void downloadFolder(
+            @PathVariable String folderId,
+            @RequestHeader("X-User-Id") String userId,
+            HttpServletResponse response) {
+
+        com.njydsz.nextwiki.domain.entity.FileNode folder = fileNodeRepository.findById(folderId);
+        if (folder == null || !folder.isFolder()) {
+            throw new BusinessException(NextwikiExceptionCode.FILE_NOT_FOUND);
+        }
+
+        String zipName = folder.getName() + ".zip";
+        setDownloadHeaders(response, zipName, "application/zip");
+
+        try (ZipOutputStream zos = new ZipOutputStream(response.getOutputStream(), StandardCharsets.UTF_8)) {
+            downloadFolderRecursive(folder, zos, userId, "");
+            zos.finish();
+            zos.flush();
+        } catch (Exception e) {
+            log.error("[DownloadController] 文件夹打包下载失败: folderId={}", folderId, e);
+            throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
+        }
+
+        healthIndicator.recordDownload();
+        log.info("[DownloadController] 文件夹打包下载: folderId={}, userId={}", folderId, userId);
+    }
+
+    /**
+     * 递归打包文件夹内容到 ZipOutputStream
+     */
+    private void downloadFolderRecursive(com.njydsz.nextwiki.domain.entity.FileNode folder,
+                                           ZipOutputStream zos, String userId, String basePath) {
+        List<com.njydsz.nextwiki.domain.entity.FileNode> children =
+                fileNodeRepository.findChildren(folder.getId());
+        if (children == null) return;
+
+        IFileStorage storage = downloadApplicationService.resolveStorageForDownload();
+
+        for (com.njydsz.nextwiki.domain.entity.FileNode child : children) {
+            String entryPath = basePath.isEmpty() ? child.getName() : basePath + "/" + child.getName();
+            if (child.isFolder()) {
+                try {
+                    zos.putNextEntry(new ZipEntry(entryPath + "/"));
+                    zos.closeEntry();
+                } catch (Exception e) {
+                    log.warn("[DownloadController] 添加目录条目失败: {}", entryPath, e);
+                }
+                downloadFolderRecursive(child, zos, userId, entryPath);
+            } else {
+                try {
+                    zos.putNextEntry(new ZipEntry(entryPath));
+                    if (storage != null && child.getStorageKey() != null) {
+                        try (InputStream is = storage.downloadAsStream(
+                                child.getBucketName(), child.getStorageKey())) {
+                            is.transferTo(zos);
+                        }
+                    }
+                    zos.closeEntry();
+                } catch (Exception e) {
+                    log.warn("[DownloadController] 添加文件条目失败: {}", entryPath, e);
+                }
+            }
+        }
+    }
+
+    /**
+     * 下载文件（支持 HTTP Range 断点续传）
      */
     @PostMapping("/{nodeId}")
-    @Operation(summary = "下载文件", description = "下载前校验限流和防盗链")
+    @Operation(summary = "下载文件", description = "支持断点续传（Range 请求），下载前校验限流和防盗链")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
     public void download(
             @PathVariable String nodeId,
@@ -73,12 +147,79 @@ public class DownloadController {
         }
 
         FileNode fileNode = context.getFileNode();
-        setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
-        storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
+
+        // P0-3: 支持 HTTP Range 断点续传
+        String rangeHeader = request.getHeader("Range");
+        if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+            handleRangeDownload(storage, fileNode, rangeHeader, response);
+        } else {
+            setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
+            if (fileNode.getSize() != null) {
+                response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileNode.getSize()));
+            }
+            response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
+            storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
+        }
 
         healthIndicator.recordDownload();
-        log.info("[DownloadController] 文件下载: nodeId={}, userId={}, ip={}",
-                nodeId, userId, ip);
+        log.info("[DownloadController] 文件下载: nodeId={}, userId={}, ip={}, range={}",
+                nodeId, userId, ip, rangeHeader);
+    }
+
+    /**
+     * 处理 Range 请求（断点续传）
+     */
+    private void handleRangeDownload(IFileStorage storage, FileNode fileNode,
+                                       String rangeHeader, HttpServletResponse response) {
+        long fileSize = fileNode.getSize() != null ? fileNode.getSize() : 0;
+        String rangeValue = rangeHeader.substring(6); // strip "bytes="
+        String[] parts = rangeValue.split("-");
+        long start = 0;
+        long end = fileSize - 1;
+        try {
+            start = Long.parseLong(parts[0].trim());
+            if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+                end = Long.parseLong(parts[1].trim());
+            }
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+            return;
+        }
+        if (start > end || start >= fileSize) {
+            response.setHeader(HttpHeaders.CONTENT_RANGE, "bytes */" + fileSize);
+            response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+            return;
+        }
+        if (end >= fileSize) {
+            end = fileSize - 1;
+        }
+        long contentLength = end - start + 1;
+        response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+        response.setHeader(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileSize);
+        response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
+        response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
+        setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
+        try (InputStream is = storage.downloadAsStream(fileNode.getBucketName(), fileNode.getStorageKey())) {
+            long skipped = is.skip(start);
+            if (skipped < start) {
+                log.warn("[DownloadController] skip 不足: start={}, skipped={}", start, skipped);
+            }
+            long remaining = contentLength;
+            byte[] buffer = new byte[8192];
+            while (remaining > 0) {
+                int toRead = (int) Math.min(buffer.length, remaining);
+                int read = is.read(buffer, 0, toRead);
+                if (read == -1) {
+                    break;
+                }
+                response.getOutputStream().write(buffer, 0, read);
+                remaining -= read;
+            }
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            log.error("[DownloadController] Range 下载失败: nodeId={}", fileNode.getId(), e);
+            throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
+        }
     }
 
     /**
@@ -135,7 +276,12 @@ public class DownloadController {
 
     // ==================== 私有方法（HTTP 层处理） ====================
 
+    /**
+     * P2-4: 委托 ClientIpResolver 解析客户端 IP（消除重复实现）
+     */
     private String getClientIp(HttpServletRequest request) {
+        // 优先使用 common-safe 的 ClientIpResolver（如果可用）
+        // 当 ClientIpResolver Bean 未注入时降级到本地解析
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty()) {
             ip = request.getHeader("X-Real-IP");

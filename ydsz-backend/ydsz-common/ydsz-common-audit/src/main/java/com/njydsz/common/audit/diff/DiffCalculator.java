@@ -49,7 +49,7 @@ public class DiffCalculator {
     private final Map<Class<?>, List<FieldMeta>> fieldMetaCache = new ConcurrentHashMap<>();
 
     /** 格式化器实例缓存：Class -> Instance */
-    private final Map<Class<?>, DiffValueFormatter> formatterCache = new ConcurrentHashMap<>();
+    private final Map<Class<? extends DiffValueFormatter>, DiffValueFormatter> formatterCache = new ConcurrentHashMap<>();
 
     private DiffCalculator() {
     }

@@ -20,7 +20,10 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 
 /**
  * Plan-and-Execute Agent 执行器
@@ -46,21 +49,36 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
     private final LlmClient llmClient;
     private final ConversationMemory memory;
     private final AgentProperties properties;
+    private final TraceRecorder traceRecorder;
+    private final AgentMetrics agentMetrics;
+    private final CostAnalysisService costAnalysisService;
 
     public PlanExecuteAgentExecutor(LlmClient llmClient, ConversationMemory memory,
-                                     AgentProperties properties) {
+                                     AgentProperties properties,
+                                     TraceRecorder traceRecorder,
+                                     AgentMetrics agentMetrics,
+                                     CostAnalysisService costAnalysisService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
+        this.traceRecorder = traceRecorder;
+        this.agentMetrics = agentMetrics;
+        this.costAnalysisService = costAnalysisService;
     }
 
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
                 ? request.getConversationId() : UUID.randomUUID().toString();
-        log.info("[Plan-Execute] 开始: convId={}", convId);
+        String traceId = traceRecorder.startTrace(convId, "PLAN_EXECUTE");
+        log.info("[Plan-Execute] 开始: convId={}, traceId={}", convId, traceId);
 
+        long planStart = System.currentTimeMillis();
         ExecutionPlan plan = generatePlan(request.getUserInput(), convId);
+        long planDuration = System.currentTimeMillis() - planStart;
+        traceRecorder.recordStep(traceId, "PLAN_GENERATE",
+                "Generated plan with " + plan.getSteps().size() + " steps",
+                request.getUserInput(), plan, planDuration);
         log.info("[Plan-Execute] 计划生成: steps={}", plan.getSteps().size());
 
         plan.markExecuting();
@@ -83,7 +101,21 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
                     .maxTokens(properties.getLlm().getMaxTokens())
                     .build();
 
+            long stepStart = System.currentTimeMillis();
             ChatResponse stepResponse = llmClient.chat(stepRequest);
+            long stepDuration = System.currentTimeMillis() - stepStart;
+
+            agentMetrics.recordLlmCall(llmClient.getProvider(),
+                    properties.getLlm().getDefaultModel(),
+                    stepDuration, stepResponse, null);
+            if (stepResponse.getUsage() != null && costAnalysisService != null) {
+                costAnalysisService.recordUsage(convId,
+                        properties.getLlm().getDefaultModel(), stepResponse.getUsage());
+            }
+            traceRecorder.recordStep(traceId, "STEP_EXECUTE",
+                    "Step " + (step.getIndex() + 1) + ": " + step.getDescription(),
+                    stepRequest, stepResponse, stepDuration);
+
             if (stepResponse.getUsage() != null) {
                 totalUsage = totalUsage.add(stepResponse.getUsage());
             }
@@ -91,17 +123,29 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
             step.markCompleted();
         }
 
+        long synthStart = System.currentTimeMillis();
         ChatResponse finalResponse = synthesize(plan, stepResults, convId);
+        long synthDuration = System.currentTimeMillis() - synthStart;
+        agentMetrics.recordLlmCall(llmClient.getProvider(),
+                properties.getLlm().getDefaultModel(),
+                synthDuration, finalResponse, null);
+        if (finalResponse.getUsage() != null && costAnalysisService != null) {
+            costAnalysisService.recordUsage(convId,
+                    properties.getLlm().getDefaultModel(), finalResponse.getUsage());
+        }
+        traceRecorder.recordStep(traceId, "SYNTHESIZE",
+                "Final synthesis", plan, finalResponse, synthDuration);
         if (finalResponse.getUsage() != null) {
             totalUsage = totalUsage.add(finalResponse.getUsage());
         }
         plan.markCompleted();
+        traceRecorder.endTrace(traceId, "SUCCESS");
 
         memory.save(convId, ChatMessage.user(request.getUserInput(), convId));
         memory.save(convId, ChatMessage.assistant(finalResponse.getContent(), convId, totalUsage));
 
-        log.info("[Plan-Execute] 完成: convId={}, steps={}, tokens={}",
-                convId, plan.getSteps().size(), totalUsage.getTotalTokens());
+        log.info("[Plan-Execute] 完成: convId={}, steps={}, tokens={}, traceId={}",
+                convId, plan.getSteps().size(), totalUsage.getTotalTokens(), traceId);
         return new ChatResponse(finalResponse.getId(), finalResponse.getModel(),
                 ChatMessage.assistant(finalResponse.getContent(), convId, totalUsage),
                 totalUsage, "stop", List.of());

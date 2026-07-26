@@ -20,6 +20,7 @@ import com.njydsz.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.workflow.domain.entity.FlowSkipDO;
 import com.njydsz.workflow.domain.entity.FlowTemplateDO;
 import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
+import com.njydsz.workflow.server.engine.JsonHelper;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
 
@@ -556,11 +557,13 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     /**
      * 根据流程定义详情生成 BPMN 2.0 XML
      */
-    @SuppressWarnings("unchecked")
     private String generateBpmnXml(Map<String, Object> detail) {
-        FlowDefinitionDO definition = (FlowDefinitionDO) detail.get("definition");
-        List<FlowNodeDO> nodes = (List<FlowNodeDO>) detail.get("nodes");
-        List<FlowSkipDO> skips = (List<FlowSkipDO>) detail.get("skips");
+        Object defObj = detail.get("definition");
+        if (!(defObj instanceof FlowDefinitionDO definition)) {
+            throw new SysException(BaseResultCode.INTERNAL_ERROR, "流程定义详情缺少 definition");
+        }
+        List<FlowNodeDO> nodes = JsonHelper.safeCastList(detail.get("nodes"), FlowNodeDO.class);
+        List<FlowSkipDO> skips = JsonHelper.safeCastList(detail.get("skips"), FlowSkipDO.class);
 
         String processId = definition.getFlowCode();
         String processName = definition.getFlowName();
@@ -662,7 +665,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         try {
             Map<String, Object> extJson = YdszJson.parseMap(ext);
             if (extJson != null) {
-                String sourceRef = extJson.getString("sourceRef");
+                Object raw = extJson.get("sourceRef");
+                String sourceRef = raw == null ? null : String.valueOf(raw);
                 if (sourceRef != null && !sourceRef.isBlank()) {
                     return sourceRef;
                 }

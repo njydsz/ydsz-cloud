@@ -37,6 +37,7 @@ import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
+import com.njydsz.workflow.server.engine.JsonHelper;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
 import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.engine.FlowVariableStrategy;
@@ -390,8 +391,7 @@ public class FlowTaskCreateService {
         if (!(autoApproveObj instanceof Map<?, ?> autoApprove)) {
             return;
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> cfg = (Map<String, Object>) autoApprove;
+        Map<String, Object> cfg = JsonHelper.toStringObjectMap(autoApprove);
         Boolean enabled = (Boolean) cfg.get("enabled");
         if (enabled == null || !enabled) {
             return;
@@ -417,8 +417,7 @@ public class FlowTaskCreateService {
                 if (!(ruleObj instanceof Map<?, ?> rule)) {
                     continue;
                 }
-                @SuppressWarnings("unchecked")
-                Map<String, Object> ruleCfg = (Map<String, Object>) rule;
+                Map<String, Object> ruleCfg = JsonHelper.toStringObjectMap(rule);
                 String action = evaluateAutoApproveRule(ruleCfg, instance, task, env);
                 if (action != null) {
                     executeAutoAction(action, instance, node, task, variables, ruleCfg);

@@ -20,6 +20,8 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 
@@ -55,11 +57,15 @@ public class ChatService {
     private final List<InputGuardrail> inputGuardrails;
     private final List<OutputGuardrail> outputGuardrails;
     private final AgentMetrics metrics;
+    private final CostAnalysisService costAnalysisService;
+    private final TraceRecorder traceRecorder;
 
     public ChatService(LlmClient llmClient, ConversationMemory memory, AgentProperties properties,
                        List<InputGuardrail> inputGuardrails,
                        List<OutputGuardrail> outputGuardrails,
-                       AgentMetrics metrics) {
+                       AgentMetrics metrics,
+                       CostAnalysisService costAnalysisService,
+                       TraceRecorder traceRecorder) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
@@ -70,6 +76,8 @@ public class ChatService {
                 ? outputGuardrails.stream().sorted(Comparator.comparingInt(OutputGuardrail::getPriority)).toList()
                 : List.of();
         this.metrics = metrics;
+        this.costAnalysisService = costAnalysisService;
+        this.traceRecorder = traceRecorder;
     }
 
     /**
@@ -91,12 +99,14 @@ public class ChatService {
      */
     public ChatResponse chat(String conversationId, String userMessage, String systemPrompt) {
         String convId = conversationId != null ? conversationId : UUID.randomUUID().toString();
-        log.info("[Chat] 同步对话: convId={}, messageLen={}", convId, userMessage.length());
+        String traceId = traceRecorder.startTrace(convId, "CHAT");
+        log.info("[Chat] 同步对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 
         String sanitizedInput = applyInputGuardrails(userMessage);
         if (sanitizedInput == null) {
             log.warn("[Chat] 输入被安全护栏拒绝: convId={}", convId);
             metrics.recordGuardrailRejection("input-guardrail", "input");
+            traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             ChatMessage rejectedMsg = ChatMessage.assistant(
                     "抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
             memory.save(convId, rejectedMsg);
@@ -123,6 +133,8 @@ public class ChatService {
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             metrics.recordLlmCall(provider, model, duration, null, e);
+            traceRecorder.recordStep(traceId, "LLM_CALL_ERROR", "LLM call failed", request, e.getMessage(), duration);
+            traceRecorder.endTrace(traceId, "FAILED");
             log.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
             ChatMessage errorMsg = ChatMessage.assistant(
                     "[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
@@ -130,6 +142,11 @@ public class ChatService {
             throw e;
         }
         metrics.recordLlmCall(provider, model, System.currentTimeMillis() - startTime, response, null);
+        if (response.getUsage() != null && costAnalysisService != null) {
+            costAnalysisService.recordUsage(convId, model, response.getUsage());
+        }
+        traceRecorder.recordStep(traceId, "LLM_CALL", "Chat LLM call", request, response,
+                System.currentTimeMillis() - startTime);
 
         String output = applyOutputGuardrails(response.getContent());
         ChatMessage assistantMsg = ChatMessage.assistant(output, convId, response.getUsage());
@@ -137,6 +154,7 @@ public class ChatService {
 
         log.info("[Chat] 对话完成: convId={}, tokens={}", convId,
                 response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
+        traceRecorder.endTrace(traceId, "SUCCESS");
         return new ChatResponse(response.getId(), response.getModel(),
                 assistantMsg, response.getUsage(), response.getFinishReason(), List.of());
     }

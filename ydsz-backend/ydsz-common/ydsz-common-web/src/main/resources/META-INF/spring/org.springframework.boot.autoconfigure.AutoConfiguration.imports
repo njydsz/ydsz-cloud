@@ -5,4 +5,6 @@ com.njydsz.common.web.config.WebOpenApiConfiguration
 com.njydsz.common.web.config.WebTimezoneConfiguration
 com.njydsz.common.web.config.WebI18nConfiguration
 com.njydsz.common.web.config.WebSessionAutoConfiguration
+com.njydsz.common.web.config.WebMultipartAutoConfiguration
+com.njydsz.common.web.config.WebGracefulShutdownAutoConfiguration
 com.njydsz.common.web.version.ApiVersionAutoConfiguration

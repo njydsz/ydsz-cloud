@@ -100,6 +100,8 @@ public class CdnApplicationService {
 
     /**
      * 生成带签名的 CDN 访问 URL（防盗链）
+     * <p>
+     * 使用 HMAC-SHA256 签名算法替代不安全的 MD5（P2-8 修复）
      */
     public String generateSignedUrl(String storageKey, long expireSeconds) {
         if (!cdnEnabled || cdnDomain.isEmpty()) {
@@ -107,7 +109,7 @@ public class CdnApplicationService {
         }
         long expireTime = System.currentTimeMillis() / 1000 + expireSeconds;
         String signedValue = storageKey + "-" + expireTime + "-" + secretKey;
-        String md5 = DigestUtil.md5Hex(signedValue);
-        return "https://" + cdnDomain + "/" + storageKey + "?expires=" + expireTime + "&sign=" + md5;
+        String sign = DigestUtil.sha256Hex(signedValue);
+        return "https://" + cdnDomain + "/" + storageKey + "?expires=" + expireTime + "&sign=" + sign;
     }
 }

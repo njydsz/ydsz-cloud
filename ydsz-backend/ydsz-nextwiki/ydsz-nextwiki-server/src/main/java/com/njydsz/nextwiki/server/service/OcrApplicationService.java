@@ -93,20 +93,22 @@ public class OcrApplicationService {
 
     /**
      * 阿里云 OCR
+     * <p>
+     * TODO: 集成阿里云 OCR API（需要 aliyun-ocr-sdk 依赖）
      */
     private OcrResult recognizeByAliyun(InputStream imageStream) throws Exception {
-        // 实际实现：调用阿里云 OCR API
-        log.info("[OcrApplicationService] 阿里云 OCR");
-        return OcrResult.success("", List.of());
+        log.info("[OcrApplicationService] 阿里云 OCR（TODO: 待集成阿里云 OCR SDK）");
+        return OcrResult.skipped("阿里云 OCR 尚未集成");
     }
 
     /**
      * 腾讯云 OCR
+     * <p>
+     * TODO: 集成腾讯云 OCR API（需要 tencentcloud-sdk-java 依赖）
      */
     private OcrResult recognizeByTencent(InputStream imageStream) throws Exception {
-        // 实际实现：调用腾讯云 OCR API
-        log.info("[OcrApplicationService] 腾讯云 OCR");
-        return OcrResult.success("", List.of());
+        log.info("[OcrApplicationService] 腾讯云 OCR（TODO: 待集成腾讯云 OCR SDK）");
+        return OcrResult.skipped("腾讯云 OCR 尚未集成");
     }
 
     /**

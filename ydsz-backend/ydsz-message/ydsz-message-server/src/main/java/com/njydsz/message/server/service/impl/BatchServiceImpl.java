@@ -22,6 +22,8 @@ import com.njydsz.message.domain.entity.batch.MsgBatchDO;
 import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
 import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.core.MessageService;
+import com.njydsz.message.server.service.impl.ParallelBatchSender;
+import com.njydsz.message.domain.dto.batch.BatchSendResult;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +57,8 @@ public class BatchServiceImpl implements BatchService {
     private final MsgBatchMapper msgBatchMapper;
     /** 消息发送服务（逐条发送） */
     private final MessageService messageService;
+    /** P1-3: 并行批量发送器 */
+    private final ParallelBatchSender parallelBatchSender;
 
     @Override
     public MsgBatchDO submitBatch(BatchSendRequestDTO dto) {
@@ -152,6 +156,8 @@ public class BatchServiceImpl implements BatchService {
     /**
      * 执行批次发送核心逻辑。
      *
+     * <p>P1-3: 使用 ParallelBatchSender 并行发送，避免单线程逐条发送的性能瓶颈。
+     *
      * @param batchId  批次 ID
      * @param requests 消息请求列表
      */
@@ -167,43 +173,20 @@ public class BatchServiceImpl implements BatchService {
         batch.setStartedAt(LocalDateTime.now());
         msgBatchMapper.updateById(batch);
 
-        int success = 0;
-        int failed = 0;
-        int skipped = 0;
-        for (int i = 0; i < requests.size(); i++) {
-            MessageRequest req = requests.get(i);
-            if (req == null) {
-                skipped++;
-                continue;
-            }
-            req.setBizId(batchId);
-            try {
-                MessageResult result = messageService.send(req);
-                if (result != null && result.isSuccess()) {
-                    success++;
-                } else {
-                    failed++;
-                }
-            } catch (Exception e) {
-                log.warn("[Batch] 单条发送失败: batchId={} idx={} err={}", batchId, i, e.getMessage(), e);
-                failed++;
-            }
-            // 每 100 条更新一次进度
-            if ((i + 1) % 100 == 0 || i == requests.size() - 1) {
-                batch.setSuccess(success);
-                batch.setFailed(failed);
-                batch.setSkipped(skipped);
-                msgBatchMapper.updateById(batch);
-            }
-        }
-        batch.setSuccess(success);
-        batch.setFailed(failed);
-        batch.setSkipped(skipped);
+        // P1-3: 使用并行批量发送器
+        String channel = batch.getChannel() != null ? batch.getChannel() : "INAPP";
+        BatchSendResult batchResult = parallelBatchSender.sendBatch(
+                requests, channel, messageService::send);
+
+        batch.setSuccess(batchResult.getSuccess());
+        batch.setFailed(batchResult.getFailed());
+        batch.setSkipped(batchResult.getSkipped());
         batch.setStatus("COMPLETED");
         batch.setCompletedAt(LocalDateTime.now());
         msgBatchMapper.updateById(batch);
         log.info("[Batch] 批次完成: batchId={} total={} success={} failed={} skipped={}",
-                batchId, requests.size(), success, failed, skipped);
+                batchId, requests.size(), batchResult.getSuccess(),
+                batchResult.getFailed(), batchResult.getSkipped());
     }
 
     /**

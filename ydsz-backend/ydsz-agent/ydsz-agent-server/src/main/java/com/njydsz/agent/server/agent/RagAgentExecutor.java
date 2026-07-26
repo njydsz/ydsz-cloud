@@ -21,7 +21,10 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.rag.TextChunk;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 
 /**
@@ -29,16 +32,6 @@ import com.njydsz.agent.server.rag.RagService;
  *
  * <p>在 LLM 调用前先检索知识库，将检索到的上下文注入 System Prompt，
  * 使 LLM 能够基于私有知识回答问题。
- *
- * <p>执行流程：
- * <ol>
- *   <li>输入护栏检查</li>
- *   <li>RAG 检索（向量相似度搜索）</li>
- *   <li>构建 System Prompt = 基础指令 + 检索上下文</li>
- *   <li>调用 LLM（含历史消息）</li>
- *   <li>输出护栏检查</li>
- *   <li>返回响应 + 引用来源</li>
- * </ol>
  *
  * @author ydsz-team
  * @since 1.2.0
@@ -53,34 +46,52 @@ public class RagAgentExecutor implements AgentExecutor {
     private final RagService ragService;
     private final List<InputGuardrail> inputGuardrails;
     private final List<OutputGuardrail> outputGuardrails;
+    private final TraceRecorder traceRecorder;
+    private final AgentMetrics agentMetrics;
+    private final CostAnalysisService costAnalysisService;
 
     public RagAgentExecutor(LlmClient llmClient, ConversationMemory memory,
                             AgentProperties properties, RagService ragService,
                             List<InputGuardrail> inputGuardrails,
-                            List<OutputGuardrail> outputGuardrails) {
+                            List<OutputGuardrail> outputGuardrails,
+                            TraceRecorder traceRecorder,
+                            AgentMetrics agentMetrics,
+                            CostAnalysisService costAnalysisService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
         this.ragService = ragService;
         this.inputGuardrails = inputGuardrails != null ? inputGuardrails : List.of();
         this.outputGuardrails = outputGuardrails != null ? outputGuardrails : List.of();
+        this.traceRecorder = traceRecorder;
+        this.agentMetrics = agentMetrics;
+        this.costAnalysisService = costAnalysisService;
     }
 
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
                 ? request.getConversationId() : UUID.randomUUID().toString();
-        log.info("[RAG-Agent] 执行: convId={}", convId);
+        String traceId = traceRecorder.startTrace(convId, "RAG");
+        log.info("[RAG-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
-        String userInput = applyInputGuardrails(request.getUserInput());
+        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
         if (userInput == null) {
+            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
+            traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
             return new ChatResponse(UUID.randomUUID().toString(), "guardrail",
                     msg, TokenUsage.zero(), "guardrail_rejected", List.of());
         }
 
+        long ragStart = System.currentTimeMillis();
         List<TextChunk> retrievedChunks = ragService.retrieve(userInput);
+        long ragDuration = System.currentTimeMillis() - ragStart;
         String ragContext = ragService.buildContext(retrievedChunks);
+
+        traceRecorder.recordStep(traceId, "RAG_RETRIEVE",
+                "Retrieved " + retrievedChunks.size() + " chunks",
+                userInput, retrievedChunks, ragDuration);
 
         String systemPrompt = buildSystemPrompt(request, ragContext);
         List<ChatMessage> messages = new ArrayList<>();
@@ -95,12 +106,40 @@ public class RagAgentExecutor implements AgentExecutor {
                 .maxTokens(properties.getLlm().getMaxTokens())
                 .build();
 
-        ChatResponse response = llmClient.chat(llmRequest);
-        String output = applyOutputGuardrails(response.getContent());
+        long llmStart = System.currentTimeMillis();
+        ChatResponse response;
+        try {
+            response = llmClient.chat(llmRequest);
+        } catch (Exception e) {
+            long llmDuration = System.currentTimeMillis() - llmStart;
+            agentMetrics.recordLlmCall(llmClient.getProvider(),
+                    properties.getLlm().getDefaultModel(),
+                    llmDuration, null, e);
+            traceRecorder.recordStep(traceId, "LLM_CALL_ERROR",
+                    "LLM 调用失败", messages, e.getMessage(), llmDuration);
+            traceRecorder.endTrace(traceId, "FAILED");
+            throw e;
+        }
+        long llmDuration = System.currentTimeMillis() - llmStart;
+
+        agentMetrics.recordLlmCall(llmClient.getProvider(),
+                properties.getLlm().getDefaultModel(),
+                llmDuration, response, null);
+
+        if (response.getUsage() != null && costAnalysisService != null) {
+            costAnalysisService.recordUsage(convId,
+                    properties.getLlm().getDefaultModel(), response.getUsage());
+        }
+
+        traceRecorder.recordStep(traceId, "LLM_CALL",
+                "RAG enhanced LLM call", messages, response, llmDuration);
+
+        String output = applyOutputGuardrails(response.getContent(), traceId);
 
         memory.save(convId, ChatMessage.user(userInput, convId));
         memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
 
+        traceRecorder.endTrace(traceId, "SUCCESS");
         log.info("[RAG-Agent] 完成: convId={}, retrieved={}, tokens={}",
                 convId, retrievedChunks.size(),
                 response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
@@ -141,11 +180,13 @@ public class RagAgentExecutor implements AgentExecutor {
         return sb.toString();
     }
 
-    private String applyInputGuardrails(String input) {
+    private String applyInputGuardrails(String input, String traceId) {
         String sanitized = input;
         for (InputGuardrail guard : inputGuardrails) {
             GuardrailResult result = guard.check(sanitized);
             if (result.isRejected()) {
+                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_INPUT",
+                        guard.getName(), input, result.getReason(), 0);
                 return null;
             }
             if (result.getSanitizedInput() != null) {
@@ -155,11 +196,14 @@ public class RagAgentExecutor implements AgentExecutor {
         return sanitized;
     }
 
-    private String applyOutputGuardrails(String output) {
+    private String applyOutputGuardrails(String output, String traceId) {
         String sanitized = output;
         for (OutputGuardrail guard : outputGuardrails) {
             GuardrailResult result = guard.check(sanitized);
             if (result.isRejected()) {
+                agentMetrics.recordGuardrailRejection(guard.getName(), "output");
+                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_OUTPUT",
+                        guard.getName(), output, result.getReason(), 0);
                 return "抱歉，我无法回答这个问题。";
             }
             if (result.getSanitizedInput() != null) {

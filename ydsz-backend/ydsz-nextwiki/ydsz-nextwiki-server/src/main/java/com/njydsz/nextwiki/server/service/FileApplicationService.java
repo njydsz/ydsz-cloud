@@ -33,6 +33,29 @@ import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.domain.query.PageResult;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.domain.FileStorage;
+import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.entity.FileVersion;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
+import com.njydsz.nextwiki.domain.service.FolderDomainService;
+import com.njydsz.nextwiki.domain.service.QuotaDomainService;
+import com.njydsz.nextwiki.domain.service.TrashDomainService;
+import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,6 +98,10 @@ public class FileApplicationService {
     @Value("${nextwiki.upload.allowed-types:}")
     private String allowedTypes;
 
+    /** 同名冲突策略：OVERWRITE(覆盖) / KEEP_BOTH(保留两者) / SKIP(跳过) */
+    @Value("${nextwiki.upload.conflict-strategy:KEEP_BOTH}")
+    private String conflictStrategy;
+
     /** 是否启用病毒扫描 */
     @Value("${nextwiki.virus-scan.enabled:false}")
     private boolean virusScanEnabled;
@@ -105,15 +132,47 @@ public class FileApplicationService {
         FileNode parent = resolveParentNode(parentId, userId);
         String resolvedParentId = parent.getId();
         String parentPath = parent.getPath() != null ? parent.getPath() : "/";
+
+        // P0-2: 同名冲突处理策略
+        List<FileNode> existingNodes = fileNodeRepository.findByNameAndParent(
+                fileName, resolvedParentId, userId);
+        if (existingNodes != null && !existingNodes.isEmpty()) {
+            String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
+            switch (strategy) {
+                case "SKIP" -> {
+                    log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
+                    return toVO(existingNodes.get(0));
+                }
+                case "OVERWRITE" -> {
+                    FileNode existing = existingNodes.get(0);
+                    log.info("[FileApplicationService] 同名文件已存在，覆盖: name={}, existingId={}",
+                            fileName, existing.getId());
+                    if (existing.getStorageKey() != null) {
+                        IFileStorage storage = resolveStorage();
+                        if (storage != null) {
+                            storage.delete(existing.getBucketName(), existing.getStorageKey());
+                        }
+                    }
+                    if (existing.getSize() != null) {
+                        quotaDomainService.subtractUsage("user", userId, existing.getSize(), 1);
+                    }
+                    fileNodeRepository.physicalDelete(existing.getId());
+                }
+                default -> {
+                    fileName = resolveUniqueName(fileName, resolvedParentId, userId);
+                }
+            }
+        }
+
         String path = parentPath.endsWith("/")
                 ? parentPath + fileName + "/"
                 : parentPath + "/" + fileName + "/";
         int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
-        // 4. 计算文件哈希（用于秒传去重）
+        // 4. 计算文件哈希（用于秒传去重）—— try-with-resources 确保 InputStream 关闭
         String fileHash = null;
-        try {
-            fileHash = calculateSha256(file.getInputStream());
+        try (InputStream hashStream = file.getInputStream()) {
+            fileHash = calculateSha256(hashStream);
         } catch (Exception e) {
             log.warn("[FileApplicationService] SHA-256 计算失败: {}", e.getMessage());
         }
@@ -143,23 +202,20 @@ public class FileApplicationService {
         String storageKey = generateStorageKey(userId, fileName);
         FileStorage uploaded = storage.upload(null, storageKey, file);
 
-        // 病毒扫描（如果启用）
+        // 病毒扫描（如果启用）—— try-with-resources 确保 InputStream 关闭
         if (virusScanEnabled) {
-            try {
+            try (InputStream scanStream = file.getInputStream()) {
                 var scanResult = virusScanApplicationService.scan(
-                        file.getInputStream(), file.getSize());
+                        scanStream, file.getSize());
                 if (scanResult.isInfected()) {
-                    // 检测到病毒，删除已上传的文件并拒绝
                     storage.delete(null, storageKey);
                     throw BusinessException.of(NextwikiExceptionCode.FILE_VIRUS_DETECTED)
                             .data("message", scanResult.getMessage());
                 }
                 if (scanResult.isError()) {
-                    // 扫描出错，不阻断流程，仅记录警告
                     log.warn("[FileApplicationService] 病毒扫描出错，跳过: {}", scanResult.getMessage());
                 }
             } catch (IOException e) {
-                // 无法读取文件流进行扫描，不阻断流程，仅记录警告
                 log.warn("[FileApplicationService] 病毒扫描失败，跳过: {}", e.getMessage());
             }
         }
@@ -601,6 +657,30 @@ public class FileApplicationService {
         node.setUpdatedAt(LocalDateTime.now());
 
         return node;
+    }
+
+    /**
+     * 生成唯一文件名（用于 KEEP_BOTH 策略）
+     */
+    private String resolveUniqueName(String fileName, String parentId, String userId) {
+        String baseName = fileName;
+        String suffix = extractSuffix(fileName);
+        if (!suffix.isEmpty()) {
+            baseName = fileName.substring(0, fileName.length() - suffix.length() - 1);
+        }
+        int counter = 1;
+        String candidate = fileName;
+        while (true) {
+            List<FileNode> existing = fileNodeRepository.findByNameAndParent(
+                    candidate, parentId, userId);
+            if (existing == null || existing.isEmpty()) {
+                return candidate;
+            }
+            candidate = suffix.isEmpty()
+                    ? baseName + " (" + counter + ")"
+                    : baseName + " (" + counter + ")." + suffix;
+            counter++;
+        }
     }
 
     private String generateStorageKey(String userId, String originalFilename) {

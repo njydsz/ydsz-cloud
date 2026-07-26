@@ -3,9 +3,11 @@ package com.njydsz.nextwiki.domain.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,8 +43,14 @@ public class ShareDomainService {
     private final FileAclRepository fileAclRepository;
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final StringRedisTemplate redisTemplate;
 
     private final BCryptPasswordEncoder passwordEncoder;
+
+    /** P0-4: 防暴力破解配置 */
+    private static final String KEY_SHARE_FAIL = "nextwiki:share:fail:";
+    private static final int MAX_FAIL_COUNT = 5;
+    private static final long LOCK_DURATION_MINUTES = 30;
 
     /**
      * 创建分享链接
@@ -105,6 +113,14 @@ public class ShareDomainService {
      * 验证分享链接访问
      */
     public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
+        // P0-4: 防暴力破解——检查失败次数是否超限
+        String failKey = KEY_SHARE_FAIL + shareCode;
+        String failCountStr = redisTemplate.opsForValue().get(failKey);
+        if (failCountStr != null && Integer.parseInt(failCountStr) >= MAX_FAIL_COUNT) {
+            log.warn("[ShareDomainService] 分享链接已被临时锁定: shareCode={}", shareCode);
+            throw new BusinessException(NextwikiExceptionCode.SHARE_LOCKED);
+        }
+
         ShareLink shareLink = shareLinkRepository.findByShareCode(shareCode);
         if (shareLink == null) {
             throw new BusinessException(NextwikiExceptionCode.SHARE_NOT_FOUND);
@@ -112,11 +128,9 @@ public class ShareDomainService {
 
         ShareStatus currentStatus = ShareStatus.fromCode(shareLink.getStatus());
         if (currentStatus == null || currentStatus.isTerminal()) {
-            // 非 ACTIVE 状态（已过期/已撤销）视为已失效
             throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
         }
 
-        // 检查过期时间
         if (shareLink.getExpireTime() != null && shareLink.getExpireTime().isBefore(LocalDateTime.now())) {
             if (currentStatus.canTransitTo(ShareStatus.EXPIRED)) {
                 shareLink.setStatus(ShareStatus.EXPIRED.getCode());
@@ -125,26 +139,40 @@ public class ShareDomainService {
             throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
         }
 
-        // 检查访问次数
         if (shareLink.getMaxAccessCount() != null
                 && shareLink.getAccessCount() != null
                 && shareLink.getAccessCount() >= shareLink.getMaxAccessCount()) {
             throw new BusinessException(NextwikiExceptionCode.SHARE_ACCESS_LIMIT);
         }
 
-        // 验证提取码
+        boolean verifyFailed = false;
+
         if (shareLink.getExtractCode() != null && !shareLink.getExtractCode().equals(extractCode)) {
-            throw new BusinessException(NextwikiExceptionCode.SHARE_EXTRACT_CODE_ERROR);
+            verifyFailed = true;
         }
 
-        // 验证密码
-        if (shareLink.getPassword() != null && !shareLink.getPassword().isEmpty()) {
+        if (!verifyFailed && shareLink.getPassword() != null && !shareLink.getPassword().isEmpty()) {
             if (password == null || !passwordEncoder.matches(password, shareLink.getPassword())) {
-                throw new BusinessException(NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
+                verifyFailed = true;
             }
         }
 
-        // 增加访问次数
+        if (verifyFailed) {
+            // 记录失败次数
+            Long failCount = redisTemplate.opsForValue().increment(failKey);
+            if (failCount != null && failCount == 1) {
+                redisTemplate.expire(failKey, LOCK_DURATION_MINUTES, TimeUnit.MINUTES);
+            }
+            log.warn("[ShareDomainService] 验证失败: shareCode={}, failCount={}", shareCode, failCount);
+            throw new BusinessException(
+                    shareLink.getExtractCode() != null
+                            ? NextwikiExceptionCode.SHARE_EXTRACT_CODE_ERROR
+                            : NextwikiExceptionCode.SHARE_PASSWORD_ERROR);
+        }
+
+        // 验证成功，清除失败计数
+        redisTemplate.delete(failKey);
+
         shareLinkRepository.incrementAccessCount(shareLink.getId());
 
         return shareLink;

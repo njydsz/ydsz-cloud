@@ -11,6 +11,7 @@ import com.googlecode.aviator.AviatorEvaluator;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
+import com.njydsz.workflow.server.engine.JsonHelper;
 import com.njydsz.workflow.server.service.FlowConditionExprService;
 
 import lombok.RequiredArgsConstructor;
@@ -65,8 +66,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             String logicOp = "OR".equalsIgnoreCase(logic) ? " || " : " && ";
             int engineIdx = "SPEL".equalsIgnoreCase(engine) ? 1 : 0;
 
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> groups = (List<Map<String, Object>>) root.get("groups");
+            List<Map<String, Object>> groups = JsonHelper.getListOfMaps(root, "groups");
             if (groups == null || groups.isEmpty()) {
                 return "";
             }
@@ -265,8 +265,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             case "DATETIME":
                 return "'" + value + "'";
             case "LIST":
-                @SuppressWarnings("unchecked")
-                List<Object> list = (List<Object>) value;
+                List<Object> list = value instanceof List<?> l ? new ArrayList<>(l) : List.of();
                 if (engineIdx == 0) {
                     // Aviator: seq.list(a, b, c)
                     StringBuilder sb = new StringBuilder("seq.list(");
@@ -467,9 +466,11 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             if (formSchemaObj == null) {
                 return;
             }
-            @SuppressWarnings("unchecked")
-            Map<String, Object> schemaMap = (Map<String, Object>) formSchemaObj;
-            List<Map<String, Object>> fieldsMap = (List<Map<String, Object>>) schemaMap.get("fields");
+            Map<String, Object> schemaMap = JsonHelper.safeCastMap(formSchemaObj);
+            if (schemaMap == null) {
+                return;
+            }
+            List<Map<String, Object>> fieldsMap = JsonHelper.getListOfMaps(schemaMap, "fields");
             if (fieldsMap == null || fieldsMap.isEmpty()) {
                 return;
             }

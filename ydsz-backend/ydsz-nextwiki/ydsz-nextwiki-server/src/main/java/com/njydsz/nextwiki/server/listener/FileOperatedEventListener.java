@@ -33,6 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 public class FileOperatedEventListener {
 
     private final SearchDomainService searchDomainService;
+    private final com.njydsz.nextwiki.server.service.ContentExtractionApplicationService contentExtractionService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.njydsz.nextwiki.domain.repository.AuditLogRepository auditLogRepository;
 
     /**
      * 异步处理文件操作事件
@@ -85,7 +89,7 @@ public class FileOperatedEventListener {
      */
     private void handleUpload(FileOperatedEvent event) {
         if (!"folder".equals(event.getNodeType())) {
-            searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
+            contentExtractionService.extractAndIndexAsync(event.getFileNodeId(), event.getOperatorId());
         }
         log.info("[FileOperatedEventListener] 上传后处理完成: fileNodeId={}", event.getFileNodeId());
     }
@@ -121,11 +125,16 @@ public class FileOperatedEventListener {
     }
 
     /**
-     * 分享事件：通知推送
+     * 分享事件：通知推送（P2-5 接入通知服务）
      */
     private void handleShare(FileOperatedEvent event) {
+        // P2-5: 分享创建后通知被分享者
+        // TODO: 注入 NotifyService 发送站内信/邮件/IM 通知
         log.info("[FileOperatedEventListener] 分享后处理完成: fileNodeId={}, shareCode={}",
                 event.getFileNodeId(), event.getExtra());
+
+        // P1-8: 通过 WebSocket 推送文件变更通知（如果 ydsz-pmis-common-socket 可用）
+        // TODO: 注入 WebSocketMessageSender 推送实时通知
     }
 
     /**

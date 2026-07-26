@@ -22,6 +22,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.RateLimitProperties;
 
 import lombok.RequiredArgsConstructor;
@@ -293,21 +294,10 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 提取客户端真实 IP（穿透代理）
+     * 提取客户端真实 IP（P0-3：复用 GatewayIpUtils 的可信代理链校验）
      */
     private String extractClientIp(ServerHttpRequest request) {
-        String ip = request.getHeaders().getFirst("X-Forwarded-For");
-        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-            // X-Forwarded-For 可能包含多个 IP，取第一个
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeaders().getFirst("X-Real-IP");
-        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-            return ip;
-        }
-        return request.getRemoteAddress() != null
-                ? request.getRemoteAddress().getAddress().getHostAddress()
-                : "unknown";
+        return GatewayIpUtils.getClientIp(request);
     }
 
     /**

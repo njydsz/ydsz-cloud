@@ -2,8 +2,8 @@ package com.njydsz.message.server.channel;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PostConstruct;
@@ -53,11 +53,11 @@ public class ChannelRouter {
     /** P2-4: 通道级错误指标采集 */
     private final MessageMetrics messageMetrics;
 
-    /** 通道缓存：channelType(大写) -> MessageChannel */
-    private final Map<String, MessageChannel> channelCache = new HashMap<>();
+    /** P0-4: 通道缓存改为 ConcurrentHashMap，保证多线程并发读写的可见性与安全性 */
+    private final Map<String, MessageChannel> channelCache = new ConcurrentHashMap<>();
 
-    /** 熔断器缓存：channelType(大写) -> CircuitBreaker */
-    private final Map<String, CircuitBreaker> breakerCache = new HashMap<>();
+    /** P0-4: 熔断器缓存改为 ConcurrentHashMap */
+    private final Map<String, CircuitBreaker> breakerCache = new ConcurrentHashMap<>();
 
     /** 默认熔断配置：50% 失败率触发熔断,开启 30s,半开试探 3 次 */
     private static final CircuitBreakerConfig DEFAULT_CB_CONFIG = CircuitBreakerConfig.custom()

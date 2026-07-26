@@ -4,6 +4,9 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+
 import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
@@ -14,7 +17,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Redis 集群限流器（基于 Lua 脚本的令牌桶）
+ * Redis 集群限流器（基于 Lua 脚本的令牌桶 / 滑动窗口）
  *
  * <p><b>工作原理：</b>
  * <ul>
@@ -25,9 +28,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>Lua 脚本原子性优势：</b>避免「先 GET 再 SET」期间的竞态。
  *
- * <p><b>注意：</b>本类仅定义契约与降级路径，Redis Lua 脚本由
- * {@code ydsz-common-redis} 模块注入的 {@code StringRedisTemplate} 执行，
- * 实际 Lua 资源加载通过 Redis 6+ 的 {@code SCRIPT LOAD} 完成。
+ * <p><b>降级策略：</b>当 {@link StringRedisTemplate} 不可用时（如 Redis 故障），
+ * 按 {@code fallbackOnError} 配置决定：PASS（放行，默认）/ BLOCK（拒绝）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -121,25 +123,84 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
             + "end";
 
     /**
-     * Redis Key 前缀
+     * 计数器 Lua 脚本（固定窗口）
+     * <pre>
+     * local key = KEYS[1]
+     * local windowMs = tonumber(ARGV[1])
+     * local limit = tonumber(ARGV[2])
+     * local current = redis.call('INCR', key)
+     * if current == 1 then
+     *   redis.call('PEXPIRE', key, windowMs)
+     * end
+     * if current <= limit then
+     *   return {1, limit - current}
+     * else
+     *   return {0, 0}
+     * end
+     * </pre>
      */
-    public static final String REDIS_KEY_PREFIX = "ydsz:ratelimit:";
+    public static final String COUNTER_LUA = ""
+            + "local key = KEYS[1]\n"
+            + "local windowMs = tonumber(ARGV[1])\n"
+            + "local limit = tonumber(ARGV[2])\n"
+            + "local current = redis.call('INCR', key)\n"
+            + "if current == 1 then\n"
+            + "  redis.call('PEXPIRE', key, windowMs)\n"
+            + "end\n"
+            + "if current <= limit then\n"
+            + "  return {1, limit - current}\n"
+            + "else\n"
+            + "  return {0, 0}\n"
+            + "end";
+
+    /** Redis Key 前缀（默认值，可被 RateLimitProperties.clusterKeyPrefix 覆盖） */
+    public static final String DEFAULT_KEY_PREFIX = "ydsz:ratelimit:";
+
+    /** 令牌桶 RedisScript（返回 List：[passed, remaining]） */
+    private static final DefaultRedisScript<List> TOKEN_BUCKET_SCRIPT = buildScript(TOKEN_BUCKET_LUA);
+    private static final DefaultRedisScript<List> SLIDING_WINDOW_SCRIPT = buildScript(SLIDING_WINDOW_LUA);
+    private static final DefaultRedisScript<List> COUNTER_SCRIPT = buildScript(COUNTER_LUA);
+
+    /** Redis 客户端（可能为 null，表示 Redis 不可用） */
+    private final StringRedisTemplate redisTemplate;
+
+    /** Redis Key 前缀 */
+    private final String keyPrefix;
+
+    /** Redis 不可用时降级策略：PASS（放行）/ BLOCK（拒绝） */
+    private final String fallbackOnError;
+
+    public RedisClusterRateLimiter(StringRedisTemplate redisTemplate,
+                                   String keyPrefix,
+                                   String fallbackOnError) {
+        this.redisTemplate = redisTemplate;
+        this.keyPrefix = (keyPrefix == null || keyPrefix.isEmpty()) ? DEFAULT_KEY_PREFIX : keyPrefix;
+        this.fallbackOnError = (fallbackOnError == null || fallbackOnError.isEmpty()) ? "PASS" : fallbackOnError.toUpperCase();
+        if (redisTemplate == null) {
+            log.warn("RedisClusterRateLimiter initialized without StringRedisTemplate; cluster rate limit will fall back to {}", this.fallbackOnError);
+        } else {
+            log.info("RedisClusterRateLimiter initialized with keyPrefix={}, fallbackOnError={}", this.keyPrefix, this.fallbackOnError);
+        }
+    }
 
     @Override
     public RateLimitDecision tryAcquire(RateLimitRule rule, RateLimitContext context) {
-        // 降级：RedisTemplate 不可用时由调用方决定是否回退到本地限流
-        log.debug("Redis cluster rate limit called for resource={}, threshold={}, window={}",
-                context.getResource(), rule.getThreshold(), rule.getWindow());
-        return RateLimitDecision.builder()
-                .resource(context.getResource())
-                .key(buildKey(context))
-                .rule(rule)
-                .result(RateLimitResult.PASS)
-                .remaining(rule.getThreshold())
-                .threshold(rule.getThreshold())
-                .timestamp(Instant.now())
-                .reason("redis cluster limiter (fallback pass, see RedissonRateLimitIntegration)")
-                .build();
+        if (redisTemplate == null) {
+            return fallbackDecision(rule, context, "StringRedisTemplate not available");
+        }
+        try {
+            String key = buildKey(context);
+            DefaultRedisScript<List> script = selectScript(rule.getAlgorithm());
+            List<?> result = redisTemplate.execute(
+                    script,
+                    Collections.singletonList(key),
+                    buildArgs(rule, context));
+            return parseResult(result, rule, context, key);
+        } catch (Exception ex) {
+            log.error("Redis cluster rate limit failed for resource={}, fallback={}",
+                    context.getResource(), fallbackOnError, ex);
+            return fallbackDecision(rule, context, "redis error: " + ex.getMessage());
+        }
     }
 
     @Override
@@ -155,25 +216,120 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
     /**
      * 构造 Redis key
      */
-    public static String buildKey(RateLimitContext context) {
-        return REDIS_KEY_PREFIX + context.getResource();
+    public String buildKey(RateLimitContext context) {
+        return keyPrefix + context.getResource();
     }
 
     /**
      * 根据算法选择 Lua 脚本
      */
-    public static String selectScript(RateLimitAlgorithm algorithm) {
+    private static DefaultRedisScript<List> selectScript(RateLimitAlgorithm algorithm) {
         if (algorithm == null) {
-            return TOKEN_BUCKET_LUA;
+            return TOKEN_BUCKET_SCRIPT;
         }
         switch (algorithm) {
             case SLIDING_WINDOW:
-                return SLIDING_WINDOW_LUA;
+                return SLIDING_WINDOW_SCRIPT;
             case COUNTER:
+                return COUNTER_SCRIPT;
             case TOKEN_BUCKET:
             case LEAKY_BUCKET:
             default:
-                return TOKEN_BUCKET_LUA;
+                return TOKEN_BUCKET_SCRIPT;
         }
+    }
+
+    /**
+     * 构造 Lua 脚本参数
+     */
+    private Object[] buildArgs(RateLimitRule rule, RateLimitContext context) {
+        long now = Instant.now().toEpochMilli();
+        RateLimitAlgorithm algorithm = rule.getAlgorithm();
+        if (algorithm == RateLimitAlgorithm.SLIDING_WINDOW) {
+            long windowMs = rule.getWindow() == null ? 1000L : rule.getWindow().toMillis();
+            double limit = rule.getThreshold();
+            String member = now + ":" + Thread.currentThread().getId() + ":" + System.nanoTime();
+            return new Object[]{String.valueOf(now), String.valueOf(windowMs), String.valueOf(limit), member};
+        }
+        if (algorithm == RateLimitAlgorithm.COUNTER) {
+            long windowMs = rule.getWindow() == null ? 1000L : rule.getWindow().toMillis();
+            double limit = rule.getThreshold();
+            return new Object[]{String.valueOf(windowMs), String.valueOf(limit)};
+        }
+        // TOKEN_BUCKET / LEAKY_BUCKET / default
+        double rate = rule.getThreshold();
+        long capacity = rule.getBurstCapacity() > 0 ? rule.getBurstCapacity() : (long) rule.getThreshold();
+        double cost = 1.0;
+        return new Object[]{String.valueOf(rate), String.valueOf(capacity), String.valueOf(now), String.valueOf(cost)};
+    }
+
+    /**
+     * 解析 Lua 脚本返回结果
+     */
+    private RateLimitDecision parseResult(List<?> result, RateLimitRule rule, RateLimitContext context, String key) {
+        if (result == null || result.size() < 2) {
+            return fallbackDecision(rule, context, "redis returned null/empty result");
+        }
+        long passed = toLong(result.get(0));
+        double remaining = toDouble(result.get(1));
+        RateLimitResult res = (passed == 1L) ? RateLimitResult.PASS : RateLimitResult.BLOCKED;
+        return RateLimitDecision.builder()
+                .resource(context.getResource())
+                .key(key)
+                .rule(rule)
+                .result(res)
+                .remaining(remaining)
+                .threshold(rule.getThreshold())
+                .timestamp(Instant.now())
+                .reason(res == RateLimitResult.PASS ? "redis cluster limiter pass" : "redis cluster limiter blocked")
+                .build();
+    }
+
+    /**
+     * Redis 不可用时的降级决策
+     */
+    private RateLimitDecision fallbackDecision(RateLimitRule rule, RateLimitContext context, String reason) {
+        RateLimitResult res = "BLOCK".equals(fallbackOnError)
+                ? RateLimitResult.BLOCKED
+                : RateLimitResult.PASS;
+        return RateLimitDecision.builder()
+                .resource(context.getResource())
+                .rule(rule)
+                .result(res)
+                .remaining(res == RateLimitResult.PASS ? rule.getThreshold() : 0)
+                .threshold(rule.getThreshold())
+                .timestamp(Instant.now())
+                .reason("cluster limiter fallback: " + reason)
+                .build();
+    }
+
+    private static long toLong(Object o) {
+        if (o == null) return 0L;
+        if (o instanceof Number n) return n.longValue();
+        try {
+            return Long.parseLong(o.toString());
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
+    }
+
+    private static double toDouble(Object o) {
+        if (o == null) return 0.0;
+        if (o instanceof Number n) return n.doubleValue();
+        try {
+            return Double.parseDouble(o.toString());
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * 构造 RedisScript（返回类型固定为 List，遵循 Spring Data Redis 的 DefaultRedisScript 设计）
+     */
+    private static DefaultRedisScript<List> buildScript(String lua) {
+        DefaultRedisScript<List> script = new DefaultRedisScript<>();
+        script.setScriptText(lua);
+        script.setResultType(List.class);
+        return script;
     }
 }

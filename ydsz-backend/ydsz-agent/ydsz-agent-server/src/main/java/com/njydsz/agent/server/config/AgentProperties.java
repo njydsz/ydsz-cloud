@@ -1,5 +1,10 @@
 package com.njydsz.agent.server.config;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -47,6 +52,8 @@ public class AgentProperties {
         private int maxTokens = 2048;
         /** 调用超时（秒） */
         private int timeoutSeconds = 60;
+        /** 多 Provider 配置（key = provider 名称，如 openai/deepseek/qwen） */
+        private Map<String, ProviderConfig> providers = new LinkedHashMap<>();
 
         public String getDefaultProvider() { return defaultProvider; }
         public void setDefaultProvider(String defaultProvider) { this.defaultProvider = defaultProvider; }
@@ -62,6 +69,35 @@ public class AgentProperties {
         public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }
         public int getTimeoutSeconds() { return timeoutSeconds; }
         public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
+        public Map<String, ProviderConfig> getProviders() { return providers; }
+        public void setProviders(Map<String, ProviderConfig> providers) { this.providers = providers; }
+    }
+
+    /**
+     * Provider 配置（多模型供应商）
+     */
+    public static class ProviderConfig {
+        /** Provider 名称（如 openai/deepseek/qwen/ollama） */
+        private String name;
+        /** API Key */
+        private String apiKey = "";
+        /** API Base URL */
+        private String baseUrl = "https://api.openai.com/v1";
+        /** 支持的模型列表 */
+        private List<String> models = new ArrayList<>();
+        /** 是否启用 */
+        private boolean enabled = true;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getApiKey() { return apiKey; }
+        public void setApiKey(String apiKey) { this.apiKey = apiKey; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+        public List<String> getModels() { return models; }
+        public void setModels(List<String> models) { this.models = models; }
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
     }
 
     public static class Memory {

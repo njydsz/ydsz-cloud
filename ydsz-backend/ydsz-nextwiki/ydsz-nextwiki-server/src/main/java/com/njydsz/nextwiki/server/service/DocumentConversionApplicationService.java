@@ -83,13 +83,14 @@ public class DocumentConversionApplicationService {
 
     /**
      * HTML 转 PDF
+     * <p>
+     * TODO: 集成 OpenPDF 或 Flying Saucer 库实现真正的 HTML→PDF 转换。
+     * 当前版本仅输出 HTML 内容作为占位。
      */
     private void convertHtmlToPdf(InputStream inputStream, OutputStream outputStream) throws Exception {
-        // 实际应使用 OpenPDF 或 Flying Sacer 库
-        // 此处为框架占位
         String html = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        log.info("[DocumentConversionApplicationService] HTML→PDF 转换（HTML 长度: {}）", html.length());
-        // 占位：输出原始 HTML（实际应转换为 PDF 字节流）
+        log.info("[DocumentConversionApplicationService] HTML→PDF 转换（TODO: 待集成 OpenPDF/Flying Saucer, HTML 长度: {}）", html.length());
+        // TODO: 使用 OpenPDF 或 Flying Saucer 库将 HTML 转为 PDF
         outputStream.write(html.getBytes(StandardCharsets.UTF_8));
     }
 

@@ -2,8 +2,6 @@ package com.njydsz.agent.server.metrics;
 
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.stereotype.Component;
-
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
@@ -25,7 +23,6 @@ import io.micrometer.core.instrument.Timer;
  * @author ydsz-team
  * @since 1.1.0
  */
-@Component
 public class AgentMetrics {
 
     private static final String METRIC_LLM_CALLS = "agent_llm_calls_total";

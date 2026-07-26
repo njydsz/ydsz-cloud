@@ -119,6 +119,11 @@ public interface FileNodeRepository {
     int countByUser(String userId);
 
     /**
+     * 统计用户文件夹数量（P1-7 新增）
+     */
+    int countFoldersByUser(String userId);
+
+    /**
      * 查询用户文件总大小
      */
     long sumSizeByUser(String userId);

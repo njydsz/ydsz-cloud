@@ -18,7 +18,6 @@ import java.util.zip.ZipInputStream;
 
 import com.njydsz.common.json.YdszJson;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
@@ -47,6 +46,8 @@ import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.workflow.server.engine.JsonHelper;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowGraphValidator;
 import com.njydsz.workflow.server.engine.JsonHelper;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
@@ -88,24 +89,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     /** P0-2: 流程实例迁移服务（一键回滚时迁移在途实例） */
     @Lazy
     private final FlowInstanceMigrationService migrationService;
-
-    /**
-     * P2-4: 设计器协同编辑锁定超时阈值（分钟）。
-     *
-     * <p>超过此时间未续约的锁视为已过期，可被其他用户抢占。
-     * 默认 30 分钟，对标钉钉/飞书设计器协同编辑的默认锁定时长。
-     */
-    @Value("${workflow.designer.lock-timeout-minutes:30}")
-    private long lockTimeoutMinutes;
-
-    /**
-     * P1-4: 发布流程时是否阻断 HIGH 风险（在途实例卡在已删除节点）。
-     *
-     * <p>true（默认）— HIGH 风险且 force=false 时抛 SysException 阻断发布；
-     * false — 仅记录警告日志，允许发布（不推荐，仅用于紧急场景）。
-     */
-    @Value("${workflow.publish.block-on-high-risk:true}")
-    private boolean blockOnHighRisk;
+    /** 统一配置属性 */
+    private final FlowProperties flowProperties;
 
     public FlowDefinitionServiceImpl(
             FlowDefinitionMapper definitionMapper,
@@ -116,6 +101,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             FlowDefinitionCacheService flowDefinitionCacheService,
             FlowInstanceMapper instanceMapper,
             @Lazy FlowInstanceMigrationService migrationService,
+            FlowProperties flowProperties,
             @Lazy FlowDefinitionServiceImpl self) {
         this.definitionMapper = definitionMapper;
         this.nodeMapper = nodeMapper;
@@ -125,6 +111,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         this.flowDefinitionCacheService = flowDefinitionCacheService;
         this.instanceMapper = instanceMapper;
         this.migrationService = migrationService;
+        this.flowProperties = flowProperties;
         this.self = self;
     }
 
@@ -357,7 +344,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 log.warn("[Flow][P1-4] 强制发布 HIGH 风险流程: flowCode={} newDef={} oldDef={} "
                                 + "runningInstances={} recommendations={}",
                         flowCode, def.getId(), activeDef.getId(), runningTotal, recommendations);
-            } else if (blockOnHighRisk) {
+            } else if (flowProperties.isPublishBlockOnHighRisk()) {
                 log.warn("[Flow][P1-4] 阻断 HIGH 风险发布: flowCode={} newDef={} oldDef={} "
                                 + "runningInstances={} recommendations={}",
                         flowCode, def.getId(), activeDef.getId(), runningTotal, recommendations);
@@ -677,7 +664,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (!StringUtils.hasText(json)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "导入 JSON 不能为空");
         }
-        JSONObject root;
+        Map<String, Object> root;
         try {
             root = YdszJson.parseMap(json);
         } catch (Exception e) {
@@ -688,12 +675,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 1. 提取 definition 元数据
-        Map<String, Object> defJson = root.getJSONObject("definition");
+        Map<String, Object> defJson = JsonHelper.getMap(root, "definition");
         if (defJson == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "JSON 缺少 definition 字段");
         }
-        String flowCode = defJson.getString("flowCode");
-        String flowName = defJson.getString("flowName");
+        String flowCode = JsonHelper.getString(defJson, "flowCode");
+        String flowName = JsonHelper.getString(defJson, "flowName");
         if (!StringUtils.hasText(flowCode) || !StringUtils.hasText(flowName)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "definition 中 flowCode/flowName 不能为空");
         }
@@ -702,52 +689,52 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
         dto.setFlowCode(flowCode);
         dto.setFlowName(flowName);
-        dto.setVersion(defJson.getString("version"));
-        dto.setCategory(defJson.getString("category"));
-        dto.setDescription(defJson.getString("description"));
-        dto.setFormPath(defJson.getString("formPath"));
+        dto.setVersion(JsonHelper.getString(defJson, "version"));
+        dto.setCategory(JsonHelper.getString(defJson, "category"));
+        dto.setDescription(JsonHelper.getString(defJson, "description"));
+        dto.setFormPath(JsonHelper.getString(defJson, "formPath"));
         dto.setTenantId(tenantId);
-        dto.setProviderTraceId(defJson.getString("providerTraceId"));
+        dto.setProviderTraceId(JsonHelper.getString(defJson, "providerTraceId"));
 
         // 3. 提取 nodes
-        List<Object> nodesJson = root.getJSONArray("nodes");
+        List<Object> nodesJson = JsonHelper.getList(root, "nodes");
         if (nodesJson != null && !nodesJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowNodeDTO> nodes = new ArrayList<>();
             for (int i = 0; i < nodesJson.size(); i++) {
-                Map<String, Object> n = nodesJson.getJSONObject(i);
+                Map<String, Object> n = JsonHelper.getMapFromList(nodesJson, i);
                 FlowDeployProcessDTO.FlowNodeDTO node = new FlowDeployProcessDTO.FlowNodeDTO();
-                node.setNodeCode(n.getString("nodeCode"));
-                node.setNodeName(n.getString("nodeName"));
-                node.setNodeType(n.getInteger("nodeType"));
-                node.setPermissionFlag(n.getString("permissionFlag"));
-                node.setSkipAnyNode(n.getString("skipAnyNode"));
+                node.setNodeCode(JsonHelper.getString(n, "nodeCode"));
+                node.setNodeName(JsonHelper.getString(n, "nodeName"));
+                node.setNodeType(JsonHelper.getInteger(n, "nodeType"));
+                node.setPermissionFlag(JsonHelper.getString(n, "permissionFlag"));
+                node.setSkipAnyNode(JsonHelper.getString(n, "skipAnyNode"));
                 nodes.add(node);
             }
             dto.setNodes(nodes);
         }
 
         // 4. 提取 skips（从 ext.sourceRef 还原 fromNodeCode）
-        List<Object> skipsJson = root.getJSONArray("skips");
+        List<Object> skipsJson = JsonHelper.getList(root, "skips");
         if (skipsJson != null && !skipsJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowSkipDTO> skips = new ArrayList<>();
             for (int i = 0; i < skipsJson.size(); i++) {
-                Map<String, Object> s = skipsJson.getJSONObject(i);
+                Map<String, Object> s = JsonHelper.getMapFromList(skipsJson, i);
                 FlowDeployProcessDTO.FlowSkipDTO skip = new FlowDeployProcessDTO.FlowSkipDTO();
-                skip.setSkipName(s.getString("skipName"));
-                skip.setSkipType(s.getString("skipType"));
-                skip.setSkipCondition(s.getString("skipCondition"));
-                skip.setToNodeCode(s.getString("nextNodeCode"));
+                skip.setSkipName(JsonHelper.getString(s, "skipName"));
+                skip.setSkipType(JsonHelper.getString(s, "skipType"));
+                skip.setSkipCondition(JsonHelper.getString(s, "skipCondition"));
+                skip.setToNodeCode(JsonHelper.getString(s, "nextNodeCode"));
                 // 从 ext 字段还原 fromNodeCode
-                String ext = s.getString("ext");
+                String ext = JsonHelper.getString(s, "ext");
                 if (StringUtils.hasText(ext)) {
                     try {
                         Map<String, Object> extJson = YdszJson.parseMap(ext);
                         if (extJson != null) {
-                            skip.setFromNodeCode(extJson.getString("sourceRef"));
+                            skip.setFromNodeCode(JsonHelper.getString(extJson, "sourceRef"));
                         }
                     } catch (Exception e) {
                         log.warn("[Flow] 导入跳转 ext 解析失败: skipName={} err={}",
-                                s.getString("skipName"), e.getMessage());
+                                JsonHelper.getString(s, "skipName"), e.getMessage());
                     }
                 }
                 skips.add(skip);
@@ -773,8 +760,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         // 在 getDetail 基础上增加 edges 格式（供前端 VueFlow/LogicFlow 直接使用）
         Map<String, Object> result = new LinkedHashMap<>(detail);
-        @SuppressWarnings("unchecked")
-        List<FlowSkipDO> skips = (List<FlowSkipDO>) detail.get("skips");
+        List<FlowSkipDO> skips = JsonHelper.safeCastList(detail.get("skips"), FlowSkipDO.class);
         if (skips != null) {
             List<Map<String, Object>> edges = new ArrayList<>();
             for (FlowSkipDO skip : skips) {
@@ -785,7 +771,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 if (StringUtils.hasText(skip.getExt())) {
                     try {
                         Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-                        source = extJson != null ? extJson.getString("sourceRef") : null;
+                        source = JsonHelper.getString(extJson, "sourceRef");
                     } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
                 edge.put("source", source);
@@ -812,8 +798,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 1. 批量更新节点坐标 + 属性
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> nodes = (List<Map<String, Object>>) designerData.get("nodes");
+        List<Map<String, Object>> nodes = JsonHelper.getListOfMaps(designerData, "nodes");
         if (nodes != null) {
             for (Map<String, Object> nodeData : nodes) {
                 String nodeCode = (String) nodeData.get("nodeCode");
@@ -1142,7 +1127,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (StringUtils.hasText(skip.getExt())) {
             try {
                 Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-                sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
+                sourceRef = JsonHelper.getString(extJson, "sourceRef");
             } catch (Exception ignored) {
                 // ignore parse error
             }
@@ -1161,7 +1146,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (StringUtils.hasText(skip.getExt())) {
             try {
                 Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-                sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
+                sourceRef = JsonHelper.getString(extJson, "sourceRef");
             } catch (Exception ignored) {
                 // ignore
             }
@@ -1312,7 +1297,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime timeoutExpired = now.minusMinutes(lockTimeoutMinutes);
+        LocalDateTime timeoutExpired = now.minusMinutes(flowProperties.getDesignerLockTimeoutMinutes());
 
         // CAS 加锁：expectedOldBy = userId 用于"同号续约"场景
         // SQL 条件：(locked_by IS NULL OR locked_by = userId OR locked_at < timeoutExpired)
@@ -1323,7 +1308,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
         if (affected == 1) {
             log.info("[Flow] 设计器加锁成功: defId={} userId={} timeout={}min",
-                    definitionId, userId, lockTimeoutMinutes);
+                    definitionId, userId, flowProperties.getDesignerLockTimeoutMinutes());
             return true;
         }
 
@@ -1425,7 +1410,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         boolean locked = StringUtils.hasText(def.getLockedBy());
         boolean expired = false;
         if (locked && def.getLockedAt() != null) {
-            LocalDateTime timeoutExpired = LocalDateTime.now().minusMinutes(lockTimeoutMinutes);
+            LocalDateTime timeoutExpired = LocalDateTime.now().minusMinutes(flowProperties.getDesignerLockTimeoutMinutes());
             expired = def.getLockedAt().isBefore(timeoutExpired);
         }
         result.put("locked", locked);
@@ -1486,19 +1471,14 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
         // 4. 识别受影响实例
         // 4.1 卡死实例：当前节点在老版本存在但在新版本被删除
-        @SuppressWarnings("unchecked")
-        Map<String, Object> nodeChanges = (Map<String, Object>) diff.get("nodeChanges");
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> removedNodes = (List<Map<String, Object>>)
-                nodeChanges.get("removed");
-        Set<String> removedNodeCodes = removedNodes.stream()
+        Map<String, Object> nodeChanges = JsonHelper.safeCastMap(diff.get("nodeChanges"));
+        List<Map<String, Object>> removedNodes = JsonHelper.getListOfMaps(nodeChanges, "removed");
+        Set<String> removedNodeCodes = removedNodes != null ? removedNodes.stream()
                 .map(n -> String.valueOf(n.get("nodeCode")))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toSet()) : Set.of();
 
         // 4.2 类型/审批人变更节点
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> modifiedNodes = (List<Map<String, Object>>)
-                nodeChanges.get("modified");
+        List<Map<String, Object>> modifiedNodes = JsonHelper.getListOfMaps(nodeChanges, "modified");
 
         List<Map<String, Object>> stuckInstances = new ArrayList<>();
         List<Map<String, Object>> affectedInstances = new ArrayList<>();

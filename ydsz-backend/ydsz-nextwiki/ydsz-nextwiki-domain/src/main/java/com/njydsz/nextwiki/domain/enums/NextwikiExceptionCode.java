@@ -56,6 +56,20 @@ public enum NextwikiExceptionCode implements ExceptionCode {
     SIGN_URL_EXPIRED("W01014", "nextwiki.sign.url.expired"),
     /** 下载限流 */
     RATE_LIMIT_EXCEEDED("W01015", "nextwiki.rate.limit.exceeded", 429),
+    /** 同名文件冲突 */
+    FILE_NAME_CONFLICT("W01016", "nextwiki.file.name.conflict"),
+    /** 分享验证失败次数过多，已被临时锁定 */
+    SHARE_LOCKED("W03006", "nextwiki.share.locked", 429),
+    /** 文件已被锁定 */
+    FILE_LOCKED("W01017", "nextwiki.file.locked"),
+    /** 文件未锁定 */
+    FILE_NOT_LOCKED("W01018", "nextwiki.file.not.locked"),
+    /** 分片上传未找到 */
+    CHUNK_UPLOAD_NOT_FOUND("W01019", "nextwiki.chunk.upload.not.found", 404),
+    /** 分片上传已完成 */
+    CHUNK_UPLOAD_COMPLETED("W01020", "nextwiki.chunk.upload.completed"),
+    /** 分片不完整 */
+    CHUNK_INCOMPLETE("W01021", "nextwiki.chunk.incomplete"),
 
     // 版本相关 W02xxx
     /** 版本不存在 */

@@ -107,6 +107,13 @@ public class DownloadApplicationService {
     }
 
     /**
+     * 供 Controller 直接调用获取存储实例（文件夹打包下载用）
+     */
+    public IFileStorage resolveStorageForDownload() {
+        return resolveStorage();
+    }
+
+    /**
      * 下载上下文
      */
     @Data

@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>响应指标采集（用于 Micrometer 监控）</li>
  *   <li>慢调用检测与告警</li>
  *   <li>异常响应统一处理</li>
+ *   <li>Bulkhead 许可释放：在 finally 块中释放 {@link BulkheadRequestInterceptor} 获取的信号量许可</li>
  * </ul>
  *
  * @author ydsz-team
@@ -32,23 +33,32 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
     private final boolean logEnabled;
     private final long slowCallThresholdMillis;
     private final FeignCircuitBreakerStrategy circuitBreaker;
+    private final BulkheadRequestInterceptor bulkhead;
 
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled) {
-        this(metrics, logEnabled, 0, null);
+        this(metrics, logEnabled, 0, null, null);
     }
 
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
                                     long slowCallThresholdMillis) {
-        this(metrics, logEnabled, slowCallThresholdMillis, null);
+        this(metrics, logEnabled, slowCallThresholdMillis, null, null);
     }
 
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
                                     long slowCallThresholdMillis,
                                     @Nullable FeignCircuitBreakerStrategy circuitBreaker) {
+        this(metrics, logEnabled, slowCallThresholdMillis, circuitBreaker, null);
+    }
+
+    public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
+                                    long slowCallThresholdMillis,
+                                    @Nullable FeignCircuitBreakerStrategy circuitBreaker,
+                                    @Nullable BulkheadRequestInterceptor bulkhead) {
         this.metrics = metrics;
         this.logEnabled = logEnabled;
         this.slowCallThresholdMillis = slowCallThresholdMillis;
         this.circuitBreaker = circuitBreaker;
+        this.bulkhead = bulkhead;
     }
 
     @Override
@@ -73,6 +83,16 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
             Response response = context.response();
             recordFailure(serviceName, httpMethod, response, duration, e);
             throw e;
+        } finally {
+            // 释放 Bulkhead 许可：若 BulkheadRequestInterceptor.apply 已获取许可（写入 ThreadLocal），
+            // 此处释放；若未获取（apply 抛异常）或未启用 Bulkhead，此方法为空操作
+            if (bulkhead != null) {
+                try {
+                    bulkhead.releaseCurrentPermit();
+                } catch (Exception releaseEx) {
+                    log.warn("[Feign] Bulkhead 许可释放失败 | service={}", serviceName, releaseEx);
+                }
+            }
         }
     }
 

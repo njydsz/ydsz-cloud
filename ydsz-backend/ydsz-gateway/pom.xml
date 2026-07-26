@@ -1,4 +1,4 @@
-﻿﻿<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -34,6 +34,18 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+        <!--
+            P0-3 / P0-5 / P0-6: 复用 ydsz-common-safe 的安全能力
+              - ClientIpResolver.isTrustedProxy(): 网关 IP 解析时校验可信代理链
+              - SensitiveUtil.defaultDesensitize(): JWT Token 日志脱敏统一
+              - NonceCache: 内部头签名防重放（gateway 端生成 nonce，下游服务消费）
+            注意：ydsz-common-safe 已声明 jakarta.servlet-api 为 provided，
+                  本模块（WebFlux）不引入 servlet 实现，仅复用 servlet 无关的工具类。
+        -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

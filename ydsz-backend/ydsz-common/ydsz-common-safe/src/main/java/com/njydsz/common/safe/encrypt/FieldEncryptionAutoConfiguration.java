@@ -48,6 +48,7 @@ public class FieldEncryptionAutoConfiguration {
                 properties.getDefaultKeyVersion()
         );
         EncryptTypeHandler.setEncryptionService(service);
+        EncryptTypeHandler.setFailureStrategy(properties.getFailureStrategy(), properties.getMaskedValue());
         return service;
     }
 }

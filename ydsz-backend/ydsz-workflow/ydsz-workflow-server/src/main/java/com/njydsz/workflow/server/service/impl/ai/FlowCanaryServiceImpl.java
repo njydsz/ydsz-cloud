@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -186,7 +187,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
             if (!StringUtils.hasText(d.getCanaryRolloutLog())) {
                 continue;
             }
-            JSONArray arr;
+            List<Object> arr;
             try {
                 arr = YdszJson.parseArray(d.getCanaryRolloutLog());
             } catch (Exception ex) {
@@ -194,7 +195,14 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
                 continue;
             }
             for (int i = 0; i < arr.size(); i++) {
-                Map<String, Object> o = arr.getJSONObject(i);
+                Object item = arr.get(i);
+                if (!(item instanceof Map<?, ?> rawMap)) {
+                    continue;
+                }
+                Map<String, Object> o = new HashMap<>();
+                for (Map.Entry<?, ?> e : rawMap.entrySet()) {
+                    o.put(String.valueOf(e.getKey()), e.getValue());
+                }
                 Map<String, Object> m = new HashMap<>();
                 m.put("definitionId", d.getId());
                 m.put("flowCode", d.getFlowCode());
@@ -241,18 +249,18 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     /** 追加一条 rollout log 记录 */
     private void appendRolloutLog(FlowDefinitionDO def, String operatorId, String operatorName,
                                    int fromPercent, int toPercent, String note) {
-        JSONArray arr;
+        List<Object> arr;
         if (StringUtils.hasText(def.getCanaryRolloutLog())) {
             try {
-                arr = YdszJson.parseArray(def.getCanaryRolloutLog());
+                arr = new ArrayList<>(YdszJson.parseArray(def.getCanaryRolloutLog()));
             } catch (Exception ex) {
                 log.warn("[Flow][Canary] 解析 rollout_log 失败，重置为空: defId={}", def.getId());
-                arr = new JSONArray();
+                arr = new ArrayList<>();
             }
         } else {
-            arr = new JSONArray();
+            arr = new ArrayList<>();
         }
-        Map<String, Object> o = new JSONObject();
+        Map<String, Object> o = new LinkedHashMap<>();
         o.put("operatorId", operatorId);
         o.put("operatorName", operatorName);
         o.put("fromPercent", fromPercent);

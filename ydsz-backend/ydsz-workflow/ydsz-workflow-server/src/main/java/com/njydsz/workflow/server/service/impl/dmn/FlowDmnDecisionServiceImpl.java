@@ -19,6 +19,7 @@ import com.njydsz.workflow.domain.entity.FlowDmnDecisionDO;
 import com.njydsz.workflow.domain.entity.FlowDmnRuleDO;
 import com.njydsz.workflow.infra.mapper.FlowDmnDecisionMapper;
 import com.njydsz.workflow.infra.mapper.FlowDmnRuleMapper;
+import com.njydsz.workflow.server.engine.JsonHelper;
 import com.njydsz.workflow.server.service.FlowDmnDecisionService;
 
 import lombok.RequiredArgsConstructor;
@@ -375,7 +376,6 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> parseJsonList(String json) {
         if (!StringUtils.hasText(json)) {
             return Collections.emptyList();
@@ -388,7 +388,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             List<Map<String, Object>> result = new ArrayList<>();
             for (Object item : list) {
                 if (item instanceof Map<?, ?> m) {
-                    result.add((Map<String, Object>) m);
+                    result.add(JsonHelper.toStringObjectMap(m));
                 }
             }
             return result;
@@ -398,7 +398,6 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private List<String> parseStringList(String json) {
         if (!StringUtils.hasText(json)) {
             return Collections.emptyList();

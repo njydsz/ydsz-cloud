@@ -51,13 +51,16 @@ public class FlowFormEngineService {
             if (extJson == null) {
                 return null;
             }
-            String schemaJson = extJson.getString("formSchema");
+            Object raw = extJson.get("formSchema");
+            String schemaJson = raw == null ? null : String.valueOf(raw);
             if (!StringUtils.hasText(schemaJson)) {
                 return null;
             }
             return formValidator.parseSchema(schemaJson);
+        } catch (SysException e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("[FormEngine] 提取 formSchema 失败: {}", e.getMessage());
+            log.warn("[FormEngine] 提取 formSchema 失败: {}", e.getMessage(), e);
             return null;
         }
     }
@@ -94,6 +97,9 @@ public class FlowFormEngineService {
         // 2. Schema 校验
         if (schema == null) {
             return;
+        }
+        if (formData == null) {
+            formData = Map.of();
         }
         List<FlowFormValidationError> errors = formValidator.validate(schema, formData);
         if (!errors.isEmpty()) {

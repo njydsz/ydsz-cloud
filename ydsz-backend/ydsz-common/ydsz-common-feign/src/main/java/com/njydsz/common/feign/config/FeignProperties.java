@@ -144,6 +144,11 @@ public class FeignProperties {
     private final CircuitBreaker circuitBreaker = new CircuitBreaker();
 
     /**
+     * 请求并发隔离（Bulkhead）配置。
+     */
+    private final Bulkhead bulkhead = new Bulkhead();
+
+    /**
      * 动态配置刷新配置。
      */
     private final Refresh refresh = new Refresh();
@@ -520,6 +525,58 @@ public class FeignProperties {
     }
 
     /**
+     * 请求并发隔离（Bulkhead）配置。
+     *
+     * <p>使用信号量按服务维度限制最大并发请求数，防止某个下游服务变慢
+     * 耗尽连接池资源影响其他服务。
+     */
+    @Getter
+    @Setter
+    public static class Bulkhead {
+
+        /**
+         * 是否启用 Bulkhead 隔离。
+         * <p>启用后，所有 Feign 调用会按服务名获取信号量许可，
+         * 超过 {@link #defaultMaxConcurrentCalls} 时快速失败。
+         * 默认值：{@code false}（需显式开启）
+         */
+        private boolean enabled = false;
+
+        /**
+         * 默认最大并发请求数。
+         * <p>未在 {@link #clientConfig} 中显式配置的服务使用此值。
+         * 默认值：{@code 50}
+         */
+        @Min(1)
+        private int defaultMaxConcurrentCalls = 50;
+
+        /**
+         * 获取信号量超时时间（毫秒）。
+         * <p>当信号量已耗尽时，等待此时间后仍未获取到许可则快速失败。
+         * 设为 0 表示不等待，立即失败。
+         * 默认值：{@code 100}
+         */
+        private long acquireTimeoutMillis = 100;
+
+        /**
+         * 按服务名定制的最大并发数。
+         * <p>Key 为服务名（与 FeignClient 的 name 对应），
+         * Value 为该服务的最大并发请求数。未配置的服务使用 {@link #defaultMaxConcurrentCalls}。
+         * <pre>
+         * ydsz:
+         *   feign:
+         *     bulkhead:
+         *       client-config:
+         *         message:
+         *           max-concurrent-calls: 10
+         *         user:
+         *           max-concurrent-calls: 100
+         * </pre>
+         */
+        private Map<String, Integer> clientConfig = new ConcurrentHashMap<>();
+    }
+
+    /**
      * 动态配置刷新配置。
      *
      * <p>控制 Feign 客户端配置热更新行为。当配置中心下发新的 Feign 配置时，
@@ -528,7 +585,6 @@ public class FeignProperties {
     @Getter
 @Setter
     public static class Refresh {
-
         /**
          * 是否启用动态配置刷新。
          * <p>启用后，当配置变更时会重新创建 Feign 客户端。

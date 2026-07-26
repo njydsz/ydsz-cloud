@@ -14,7 +14,8 @@ import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
  * 通知服务 Feign 客户端（兼容旧 com.njydsz.common.feign.NotificationClient）。
  *
  * <p>调用 message 服务提供的通知发送和实时推送接口。
- * 通过 Feign 声明式调用，配合 Sentinel/Resilience4j 熔断降级。
+ * 通过 Feign 声明式调用，配合 Resilience4j 熔断降级（启用方式：
+ * {@code ydsz.feign.circuit-breaker.enabled=true}）。
  *
  * @author ydsz-team
  * @since 1.0.0

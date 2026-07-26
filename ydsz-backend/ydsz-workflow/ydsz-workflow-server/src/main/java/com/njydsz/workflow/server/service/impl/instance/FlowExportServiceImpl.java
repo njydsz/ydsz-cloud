@@ -171,7 +171,6 @@ public class FlowExportServiceImpl implements FlowExportService {
         return history != null ? history : new ArrayList<>();
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseVariables(String json) {
         if (!StringUtils.hasText(json)) {
             return new LinkedHashMap<>();

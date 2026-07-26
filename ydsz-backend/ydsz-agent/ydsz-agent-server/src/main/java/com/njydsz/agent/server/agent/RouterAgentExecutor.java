@@ -15,26 +15,14 @@ import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 
 /**
  * Router Agent 执行器
  *
  * <p>根据用户输入的意图，将请求路由到最合适的子 Agent 执行器。
- *
- * <p>执行流程：
- * <ol>
- *   <li>调用 LLM 分析用户意图，选择最合适的 Agent 类型</li>
- *   <li>将请求转发到选中的 Agent 执行器</li>
- * </ol>
- *
- * <p>路由策略：
- * <ul>
- *   <li>需要查知识库 → RAG Agent</li>
- *   <li>需要使用工具 → ReAct Agent</li>
- *   <li>复杂多步任务 → Plan-Execute Agent</li>
- *   <li>简单问答 → Simple Agent</li>
- * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -46,21 +34,34 @@ public class RouterAgentExecutor implements AgentExecutor {
     private final LlmClient llmClient;
     private final AgentProperties properties;
     private final AgentFactory agentFactory;
+    private final TraceRecorder traceRecorder;
+    private final AgentMetrics agentMetrics;
 
     public RouterAgentExecutor(LlmClient llmClient, AgentProperties properties,
-                                AgentFactory agentFactory) {
+                                AgentFactory agentFactory,
+                                TraceRecorder traceRecorder,
+                                AgentMetrics agentMetrics) {
         this.llmClient = llmClient;
         this.properties = properties;
         this.agentFactory = agentFactory;
+        this.traceRecorder = traceRecorder;
+        this.agentMetrics = agentMetrics;
     }
 
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
                 ? request.getConversationId() : UUID.randomUUID().toString();
-        log.info("[Router] 分析意图: convId={}", convId);
+        String traceId = traceRecorder.startTrace(convId, "ROUTER");
+        log.info("[Router] 分析意图: convId={}, traceId={}", convId, traceId);
 
+        long routeStart = System.currentTimeMillis();
         String agentType = routeIntent(request.getUserInput());
+        long routeDuration = System.currentTimeMillis() - routeStart;
+
+        traceRecorder.recordStep(traceId, "ROUTE",
+                "Routed to " + agentType, request.getUserInput(),
+                agentType, routeDuration);
         log.info("[Router] 路由到: {} Agent", agentType);
 
         AgentExecutor executor = agentFactory.getExecutor(
@@ -73,7 +74,9 @@ public class RouterAgentExecutor implements AgentExecutor {
                         request.getMaxIterations(),
                         properties.getLlm().getDefaultModel()));
 
-        return executor.execute(request);
+        ChatResponse response = executor.execute(request);
+        traceRecorder.endTrace(traceId, "SUCCESS");
+        return response;
     }
 
     @Override
@@ -121,6 +124,9 @@ public class RouterAgentExecutor implements AgentExecutor {
 
         try {
             ChatResponse response = llmClient.chat(routeRequest);
+            agentMetrics.recordLlmCall(llmClient.getProvider(),
+                    properties.getLlm().getDefaultModel(),
+                    0, response, null);
             String content = response.getContent() != null ? response.getContent().trim().toUpperCase() : "CHAT";
             for (AgentDefinition.Type type : AgentDefinition.Type.values()) {
                 if (content.contains(type.name())) {
@@ -129,6 +135,9 @@ public class RouterAgentExecutor implements AgentExecutor {
             }
             return "CHAT";
         } catch (Exception e) {
+            agentMetrics.recordLlmCall(llmClient.getProvider(),
+                    properties.getLlm().getDefaultModel(),
+                    0, null, e);
             log.warn("[Router] 意图分析失败，降级到 CHAT: {}", e.getMessage());
             return "CHAT";
         }

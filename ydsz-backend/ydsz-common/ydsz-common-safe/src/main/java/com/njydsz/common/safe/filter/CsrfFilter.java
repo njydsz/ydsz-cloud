@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -66,6 +68,9 @@ public class CsrfFilter extends OncePerRequestFilter {
 
     /** CSRF Cookie 名称 */
     private static final String CSRF_TOKEN_COOKIE = "CSRF-TOKEN";
+
+    /** 通配符 Origin 模式编译缓存（allowedOrigin -> 编译后的 Pattern） */
+    private final ConcurrentHashMap<String, Pattern> originPatternCache = new ConcurrentHashMap<>();
 
     /** CSRF 配置属性 */
     private final CsrfProperties properties;
@@ -249,14 +254,61 @@ public class CsrfFilter extends OncePerRequestFilter {
 
     /**
      * 校验 Origin 是否匹配允许的模式（支持通配符）
+     *
+     * <p><b>安全约束：</b>
+     * <ul>
+     *   <li>正则使用 {@code ^...$} 锚点，避免部分匹配导致绕过
+     *       （如旧实现 {@code *.example.com} 可被 {@code evil.example.com.attacker.com} 绕过）；</li>
+     *   <li>通配符 {@code *} 仅匹配单个域名标签（{@code [^.]+}），不跨越点号，
+     *       防止 {@code *} 匹配整段子域名路径；</li>
+     *   <li>正则编译结果缓存到 {@link #originPatternCache}，避免每次请求重复编译。</li>
+     * </ul>
+     *
+     * <p><b>合法通配符示例：</b>
+     * <ul>
+     *   <li>{@code https://*.example.com} → 匹配 {@code https://sub.example.com}，
+     *       不匹配 {@code https://a.b.example.com}（{@code *} 不跨越点号）；</li>
+     *   <li>{@code https://app-*.example.com} → 匹配 {@code https://app-v2.example.com}。</li>
+     * </ul>
+     *
+     * @param origin  请求 Origin（如 {@code https://sub.example.com}）
+     * @param allowed 允许的 Origin 模式（如 {@code https://*.example.com}）
+     * @return true 表示匹配
      */
     private boolean matchesOrigin(String origin, String allowed) {
-        if (allowed.contains("*")) {
-            // 通配符匹配，如 https://*.example.com
-            String pattern = allowed.replace(".", "\\.").replace("*", ".*");
-            return origin.matches(pattern);
+        if (!allowed.contains("*")) {
+            return origin.equals(allowed);
         }
-        return origin.equals(allowed);
+        Pattern pattern = originPatternCache.computeIfAbsent(allowed, this::compileOriginPattern);
+        return pattern.matcher(origin).matches();
+    }
+
+    /**
+     * 将通配符 Origin 模式编译为安全的正则 Pattern
+     *
+     * <p>编译规则：
+     * <ul>
+     *   <li>{@code *} → {@code [^.]+}（匹配单个域名标签，不跨越点号）；</li>
+     *   <li>其他正则元字符（{@code . ? + $ 等}）→ 反斜杠转义；</li>
+     *   <li>最终包裹 {@code ^...$} 锚点，确保全字符串匹配。</li>
+     * </ul>
+     *
+     * @param allowed 允许的 Origin 模式
+     * @return 编译后的 Pattern（已加锚点，{@code *} 转为 {@code [^.]+}）
+     */
+    private Pattern compileOriginPattern(String allowed) {
+        StringBuilder regex = new StringBuilder(allowed.length() + 16);
+        for (int i = 0; i < allowed.length(); i++) {
+            char ch = allowed.charAt(i);
+            if (ch == '*') {
+                regex.append("[^.]+");
+            } else if ("\\.[]{}()+-?^$|".indexOf(ch) >= 0) {
+                regex.append('\\').append(ch);
+            } else {
+                regex.append(ch);
+            }
+        }
+        return Pattern.compile("^" + regex + "$");
     }
 
     /**

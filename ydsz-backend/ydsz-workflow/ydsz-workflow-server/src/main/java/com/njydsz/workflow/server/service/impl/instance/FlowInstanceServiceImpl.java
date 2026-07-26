@@ -47,6 +47,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
+import com.njydsz.workflow.server.engine.JsonHelper;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
@@ -775,9 +776,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * <p>ext JSON 由业务方配置（节点扩展字段），运行时信任其结构为 Map&lt;String,Object&gt;，
      * 因此这里的强转是安全的。该方法仅用于抑制 unchecked cast 编译警告。
      */
-    @SuppressWarnings("unchecked")
     private static Map<String, Object> castToStringObjectMap(Map<?, ?> m) {
-        return (Map<String, Object>) m;
+        return JsonHelper.toStringObjectMap(m);
     }
 
     // ============================== 内部方法 ==============================

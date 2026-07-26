@@ -245,7 +245,8 @@ public class FlowTimeoutJobHandler implements JobHandler {
             if (obj == null) {
                 return null;
             }
-            return obj.getString("tenantId");
+            Object val = obj.get("tenantId");
+            return val == null ? null : String.valueOf(val);
         } catch (Exception e) {
             log.warn("[FlowTimeout] 参数 JSON 解析失败，忽略 tenantId: {}", e.getMessage());
             return null;

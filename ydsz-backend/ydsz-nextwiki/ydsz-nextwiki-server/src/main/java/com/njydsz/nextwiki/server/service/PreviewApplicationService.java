@@ -3,9 +3,12 @@ package com.njydsz.nextwiki.server.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -178,72 +181,99 @@ public class PreviewApplicationService {
      * 转换后将 PDF 上传到存储作为预览副本。
      */
     private void convertOfficeToPdf(FileNode fileNode) throws Exception {
-        Path inputFile = downloadToTemp(fileNode);
+        Path inputFile = null;
+        Path outputDir = null;
+        try {
+            inputFile = downloadToTemp(fileNode);
 
-        Path tempDirPath = Path.of(tempDir);
-        String tempFileId = UUID.randomUUID().toString().replace("-", "");
-        Path outputDir = tempDirPath.resolve("output-" + tempFileId);
-        Files.createDirectories(outputDir);
+            String tempFileId = UUID.randomUUID().toString().replace("-", "");
+            outputDir = Path.of(tempDir).resolve("output-" + tempFileId);
+            Files.createDirectories(outputDir);
 
-        log.info("[PreviewApplicationService] 开始 Office->PDF 转换: fileNodeId={}, suffix={}",
-                fileNode.getId(), fileNode.getSuffix());
+            log.info("[PreviewApplicationService] 开始 Office->PDF 转换: fileNodeId={}, suffix={}",
+                    fileNode.getId(), fileNode.getSuffix());
 
-        ProcessBuilder pb = new ProcessBuilder(
-                libreofficePath,
-                "--headless",
-                "--convert-to", "pdf",
-                "--outdir", outputDir.toString(),
-                inputFile.toString()
-        );
-        pb.redirectErrorStream(true);
-        Process process = pb.start();
+            ProcessBuilder pb = new ProcessBuilder(
+                    libreofficePath,
+                    "--headless",
+                    "--convert-to", "pdf",
+                    "--outdir", outputDir.toString(),
+                    inputFile.toString()
+            );
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
 
-        boolean finished = process.waitFor(120, TimeUnit.SECONDS);
-        if (!finished) {
-            process.destroyForcibly();
-            throw new BusinessException(NextwikiExceptionCode.PREVIEW_GENERATION_FAILED);
-        }
+            boolean finished = process.waitFor(120, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                throw new BusinessException(NextwikiExceptionCode.PREVIEW_GENERATION_FAILED);
+            }
 
-        int exitCode = process.exitValue();
-        if (exitCode != 0) {
-            String errorOutput = new String(process.getInputStream().readAllBytes());
-            throw BusinessException.of(NextwikiExceptionCode.PREVIEW_GENERATION_FAILED)
-                    .data("errorOutput", errorOutput);
-        }
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                String errorOutput = new String(process.getInputStream().readAllBytes());
+                throw BusinessException.of(NextwikiExceptionCode.PREVIEW_GENERATION_FAILED)
+                        .data("errorOutput", errorOutput);
+            }
 
-        String pdfName = fileNode.getName().substring(0,
-                fileNode.getName().lastIndexOf('.')) + ".pdf";
-        Path pdfFile = outputDir.resolve(pdfName);
+            String pdfName = fileNode.getName().substring(0,
+                    fileNode.getName().lastIndexOf('.')) + ".pdf";
+            Path pdfFile = outputDir.resolve(pdfName);
 
-        if (!Files.exists(pdfFile)) {
-            File[] pdfs = outputDir.toFile().listFiles((dir, name) -> name.endsWith(".pdf"));
-            if (pdfs != null && pdfs.length > 0) {
-                pdfFile = pdfs[0].toPath();
-            } else {
-                throw new BusinessException(NextwikiExceptionCode.PREVIEW_NOT_READY);
+            if (!Files.exists(pdfFile)) {
+                File[] pdfs = outputDir.toFile().listFiles((dir, name) -> name.endsWith(".pdf"));
+                if (pdfs != null && pdfs.length > 0) {
+                    pdfFile = pdfs[0].toPath();
+                } else {
+                    throw new BusinessException(NextwikiExceptionCode.PREVIEW_NOT_READY);
+                }
+            }
+
+            // 上传 PDF 预览副本到存储
+            String previewStorageKey = "wiki/preview/" + fileNode.getId() + ".pdf";
+            IFileStorage storage = resolveStorage();
+            if (storage != null) {
+                uploadFileToStorage(storage, pdfFile, previewStorageKey, "application/pdf");
+                log.info("[PreviewApplicationService] PDF 预览副本已上传: fileNodeId={}, previewKey={}",
+                        fileNode.getId(), previewStorageKey);
+            }
+
+            fileNode.setPreviewReady(true);
+            fileNode.setThumbnailKey(previewStorageKey);
+            fileNodeRepository.update(fileNode);
+
+            log.info("[PreviewApplicationService] Office->PDF 转换完成: fileNodeId={}", fileNode.getId());
+        } finally {
+            // P0-5: 确保所有临时文件和目录被递归清理
+            if (inputFile != null) {
+                Files.deleteIfExists(inputFile);
+            }
+            if (outputDir != null) {
+                deleteDirectoryRecursive(outputDir);
             }
         }
+    }
 
-        // 上传 PDF 预览副本到存储
-        String previewStorageKey = "wiki/preview/" + fileNode.getId() + ".pdf";
-        IFileStorage storage = resolveStorage();
-        if (storage != null) {
-            uploadFileToStorage(storage, pdfFile, previewStorageKey, "application/pdf");
-            log.info("[PreviewApplicationService] PDF 预览副本已上传: fileNodeId={}, previewKey={}",
-                    fileNode.getId(), previewStorageKey);
+    /**
+     * P0-5: 递归删除目录及其内容
+     */
+    private void deleteDirectoryRecursive(Path directory) throws IOException {
+        if (!Files.exists(directory)) {
+            return;
         }
+        Files.walkFileTree(directory, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.deleteIfExists(file);
+                return FileVisitResult.CONTINUE;
+            }
 
-        // 更新文件节点
-        fileNode.setPreviewReady(true);
-        fileNode.setThumbnailKey(previewStorageKey);
-        fileNodeRepository.update(fileNode);
-
-        // 清理临时文件
-        Files.deleteIfExists(inputFile);
-        Files.deleteIfExists(pdfFile);
-        outputDir.toFile().delete();
-
-        log.info("[PreviewApplicationService] Office->PDF 转换完成: fileNodeId={}", fileNode.getId());
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.deleteIfExists(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     /**

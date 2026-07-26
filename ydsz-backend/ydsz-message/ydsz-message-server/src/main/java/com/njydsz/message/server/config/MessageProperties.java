@@ -9,7 +9,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 import lombok.Data;
 
@@ -20,11 +23,14 @@ import lombok.Data;
  * 包含通道开关、默认优先级、聚合 / 重试扫描间隔、全局频率上限、
  * 多维度限流（P2-5: receiver/templateCode/tenant）等。
  *
+ * <p>P0-3: 从 @Component 改为纯 @ConfigurationProperties，
+ * 由 {@link MessageAutoConfiguration} 通过 @EnableConfigurationProperties 注册。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-@Component
+@Validated
 @ConfigurationProperties(prefix = "ydsz.message")
 public class MessageProperties {
 
@@ -35,9 +41,11 @@ public class MessageProperties {
     private String defaultPriority = "NORMAL";
 
     /** 聚合扫描间隔（毫秒） */
+    @Min(1000)
     private long aggregateScanIntervalMs = 60000L;
 
     /** 重试扫描间隔（毫秒） */
+    @Min(5000)
     private long retryScanIntervalMs = 30000L;
 
     /**
@@ -75,6 +83,14 @@ public class MessageProperties {
 
     /** 全局每小时发送上限（单用户单通道，0 表示不限） */
     private int globalHourlyLimit = 0;
+
+    /**
+     * P1-7: 消息内容最大长度（字符），超过此长度拒绝发送。
+     *
+     * <p>防止超大消息体导致 DB 存储膨胀和内存压力。
+     * 默认 1MB（1,048,576 字符），0 表示不限制。
+     */
+    private int maxContentLength = 1048576;
 
     /** P2-5: 多维度限流配置 */
     private RateLimitConfig rateLimit = new RateLimitConfig();
@@ -341,6 +357,39 @@ public class MessageProperties {
         private int connectTimeout = 5000;
         /** 读取超时（毫秒） */
         private int readTimeout = 10000;
+    }
+
+    /** P2-8: 通道熔断器配置 */
+    private CircuitBreakerConfig circuitBreaker = new CircuitBreakerConfig();
+
+    /**
+     * P2-8: 通道级熔断器配置。
+     *
+     * <p>不同场景可按通道配置不同阈值，未配置的通道使用默认值。
+     */
+    @Data
+    public static class CircuitBreakerConfig {
+        /** 失败率阈值（0-100），默认 50% */
+        @Min(1) @Max(100)
+        private int failureRateThreshold = 50;
+        /** 慢调用率阈值（0-100），默认 80% */
+        @Min(1) @Max(100)
+        private int slowCallRateThreshold = 80;
+        /** 慢调用阈值（秒），默认 5s */
+        @Min(1)
+        private long slowCallDurationSeconds = 5L;
+        /** 熔断开启持续时间（秒），默认 30s */
+        @Min(5)
+        private long waitDurationInOpenStateSeconds = 30L;
+        /** 半开状态允许探测数，默认 3 */
+        @Min(1)
+        private int permittedNumberOfCallsInHalfOpenState = 3;
+        /** 滑动窗口大小，默认 20 */
+        @Min(10)
+        private int slidingWindowSize = 20;
+        /** 最小调用数，默认 10 */
+        @Min(5)
+        private int minimumNumberOfCalls = 10;
     }
 
     /** P2-5: 智能定时配置 */

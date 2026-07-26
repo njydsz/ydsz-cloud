@@ -28,6 +28,7 @@ import com.njydsz.common.feign.codec.JsonEncoder;
 import com.njydsz.common.feign.codec.ResponseUnwrapDecoder;
 import com.njydsz.common.feign.compress.GzipRequestCompressInterceptor;
 import com.njydsz.common.feign.health.FeignHealthIndicator;
+import com.njydsz.common.feign.interceptor.BulkheadRequestInterceptor;
 import com.njydsz.common.feign.interceptor.FeignResponseInterceptor;
 import com.njydsz.common.feign.monitor.FeignResponseMetricsAdapter;
 import com.njydsz.common.feign.trace.TraceRequestInterceptor;
@@ -278,7 +279,10 @@ public class FeignConfiguration {
      * <p>
      * 仅当 {@code ydsz.feign.response-interceptor.enabled=true} 时生效。
      *
-     * @param feignProperties Feign 配置属性
+     * @param feignProperties        Feign 配置属性
+     * @param meterRegistryProvider Micrometer 注册器（可选）
+     * @param circuitBreakerProvider 熔断器策略（可选）
+     * @param bulkheadProvider      Bulkhead 拦截器（可选，启用后用于在 finally 中释放许可）
      * @return FeignResponseInterceptor 实例
      */
     @Bean
@@ -286,7 +290,8 @@ public class FeignConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.feign.response-interceptor", name = "enabled", havingValue = "true", matchIfMissing = true)
     public ResponseInterceptor feignResponseInterceptor(FeignProperties feignProperties,
                                                           ObjectProvider<MeterRegistry> meterRegistryProvider,
-                                                          ObjectProvider<FeignCircuitBreakerStrategy> circuitBreakerProvider) {
+                                                          ObjectProvider<FeignCircuitBreakerStrategy> circuitBreakerProvider,
+                                                          ObjectProvider<BulkheadRequestInterceptor> bulkheadProvider) {
         boolean logEnabled = feignProperties.getResponseInterceptor().isLogEnabled();
         long slowCallThresholdMillis = feignProperties.getResponseInterceptor().getSlowCallThresholdMillis();
 
@@ -297,8 +302,29 @@ public class FeignConfiguration {
         }
 
         FeignCircuitBreakerStrategy circuitBreaker = circuitBreakerProvider.getIfAvailable();
+        BulkheadRequestInterceptor bulkhead = bulkheadProvider.getIfAvailable();
 
-        return new FeignResponseInterceptor(metrics, logEnabled, slowCallThresholdMillis, circuitBreaker);
+        return new FeignResponseInterceptor(metrics, logEnabled, slowCallThresholdMillis, circuitBreaker, bulkhead);
+    }
+
+    /**
+     * 创建 Bulkhead 请求隔离拦截器。
+     * <p>
+     * 使用信号量按服务维度限制最大并发请求数，防止某个下游服务变慢耗尽连接池。
+     * 仅当 {@code ydsz.feign.bulkhead.enabled=true} 时生效。
+     * <p>
+     * <b>许可释放：</b>{@link BulkheadRequestInterceptor#apply} 获取许可后写入 ThreadLocal，
+     * 由 {@link FeignResponseInterceptor} 在 finally 块中通过 {@code releaseCurrentPermit()} 释放。
+     *
+     * @param feignProperties Feign 配置属性
+     * @return BulkheadRequestInterceptor 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(BulkheadRequestInterceptor.class)
+    @ConditionalOnProperty(prefix = "ydsz.feign.bulkhead", name = "enabled", havingValue = "true")
+    public RequestInterceptor bulkheadRequestInterceptor(FeignProperties feignProperties) {
+        FeignProperties.Bulkhead config = feignProperties.getBulkhead();
+        return new BulkheadRequestInterceptor(config);
     }
 
     /**

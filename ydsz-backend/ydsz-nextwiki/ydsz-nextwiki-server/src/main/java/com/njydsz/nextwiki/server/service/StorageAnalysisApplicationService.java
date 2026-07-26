@@ -50,12 +50,14 @@ public class StorageAnalysisApplicationService {
         int fileCount = fileNodeRepository.countByUser(userId);
         long totalSize = fileNodeRepository.sumSizeByUser(userId);
         int trashCount = trashItemRepository.countActiveTrash(userId);
+        // P1-7 修复：folderCount 不再硬编码为 0
+        int folderCount = fileNodeRepository.countFoldersByUser(userId);
 
         return StorageOverview.builder()
                 .userId(userId)
                 .totalSize(totalSize)
                 .fileCount(fileCount)
-                .folderCount(0)
+                .folderCount(folderCount)
                 .trashCount(trashCount)
                 .build();
     }

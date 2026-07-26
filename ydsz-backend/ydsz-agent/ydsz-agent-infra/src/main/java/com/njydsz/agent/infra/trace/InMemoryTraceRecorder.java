@@ -27,12 +27,15 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 public class InMemoryTraceRecorder implements TraceRecorder {
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryTraceRecorder.class);
+    private static final int MAX_TRACES = 1000;
+    private static final long TTL_HOURS = 24L;
     private final Map<String, List<TraceStep>> traces = new ConcurrentHashMap<>();
     private final Map<String, String> traceStatus = new ConcurrentHashMap<>();
     private final Map<String, TraceMeta> traceMetas = new ConcurrentHashMap<>();
 
     @Override
     public String startTrace(String conversationId, String agentId) {
+        evictExpiredTraces();
         String traceId = UUID.randomUUID().toString();
         traces.put(traceId, new ArrayList<>());
         traceStatus.put(traceId, "RUNNING");
@@ -91,6 +94,36 @@ public class InMemoryTraceRecorder implements TraceRecorder {
         traces.clear();
         traceStatus.clear();
         traceMetas.clear();
+    }
+
+    /**
+     * 清理过期和超容量的链路
+     */
+    private void evictExpiredTraces() {
+        // 清理 TTL 过期的链路
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(TTL_HOURS);
+        traceMetas.values().stream()
+                .filter(meta -> meta.getStartedAt().isBefore(cutoff))
+                .map(TraceMeta::getTraceId)
+                .forEach(tid -> {
+                    traces.remove(tid);
+                    traceStatus.remove(tid);
+                    traceMetas.remove(tid);
+                });
+        // 超容量时清理最旧的链路
+        if (traces.size() >= MAX_TRACES) {
+            int toRemove = traces.size() - MAX_TRACES + 100;
+            traceMetas.values().stream()
+                    .sorted(Comparator.comparing(TraceMeta::getStartedAt))
+                    .limit(toRemove)
+                    .map(TraceMeta::getTraceId)
+                    .forEach(tid -> {
+                        traces.remove(tid);
+                        traceStatus.remove(tid);
+                        traceMetas.remove(tid);
+                    });
+            log.info("[Trace] 清理超容量链路: 清除 {} 条", toRemove);
+        }
     }
 
     /**

@@ -18,7 +18,10 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 
 /**
@@ -46,6 +49,12 @@ class AgentFactoryTest {
     private ToolRegistry toolRegistry;
     @Mock
     private RagService ragService;
+    @Mock
+    private TraceRecorder traceRecorder;
+    @Mock
+    private AgentMetrics agentMetrics;
+    @Mock
+    private CostAnalysisService costAnalysisService;
 
     private AgentProperties properties;
     private List<InputGuardrail> inputGuardrails;
@@ -58,7 +67,8 @@ class AgentFactoryTest {
         inputGuardrails = List.of();
         outputGuardrails = List.of();
         factory = new AgentFactory(llmClient, memory, toolRegistry, properties,
-                inputGuardrails, outputGuardrails, ragService);
+                inputGuardrails, outputGuardrails, ragService,
+                traceRecorder, agentMetrics, costAnalysisService);
     }
 
     private AgentDefinition definition(AgentDefinition.Type type) {

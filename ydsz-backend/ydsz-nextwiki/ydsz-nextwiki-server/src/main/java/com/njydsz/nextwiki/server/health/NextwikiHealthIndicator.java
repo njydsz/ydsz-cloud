@@ -49,6 +49,9 @@ public class NextwikiHealthIndicator implements HealthIndicator {
     private Counter uploadCounter;
     private Counter downloadCounter;
     private Counter deleteCounter;
+    private Counter shareCounter;
+    private Counter searchCounter;
+    private Counter previewCounter;
 
     @PostConstruct
     public void initMetrics() {
@@ -65,7 +68,20 @@ public class NextwikiHealthIndicator implements HealthIndicator {
                     .description("文件删除次数")
                     .tags(Tags.of("operation", "delete"))
                     .register(meterRegistry);
-            log.info("[NextwikiHealthIndicator] Micrometer 指标已注册");
+            // P3-3: 补全指标
+            shareCounter = Counter.builder("nextwiki.share.create")
+                    .description("分享创建次数")
+                    .tags(Tags.of("operation", "share"))
+                    .register(meterRegistry);
+            searchCounter = Counter.builder("nextwiki.search.total")
+                    .description("搜索请求次数")
+                    .tags(Tags.of("operation", "search"))
+                    .register(meterRegistry);
+            previewCounter = Counter.builder("nextwiki.preview.generate")
+                    .description("预览生成次数")
+                    .tags(Tags.of("operation", "preview"))
+                    .register(meterRegistry);
+            log.info("[NextwikiHealthIndicator] Micrometer 指标已注册（6 项）");
         }
     }
 
@@ -73,27 +89,42 @@ public class NextwikiHealthIndicator implements HealthIndicator {
      * 记录上传操作
      */
     public void recordUpload() {
-        if (uploadCounter != null) {
-            uploadCounter.increment();
-        }
+        if (uploadCounter != null) uploadCounter.increment();
     }
 
     /**
      * 记录下载操作
      */
     public void recordDownload() {
-        if (downloadCounter != null) {
-            downloadCounter.increment();
-        }
+        if (downloadCounter != null) downloadCounter.increment();
     }
 
     /**
      * 记录删除操作
      */
     public void recordDelete() {
-        if (deleteCounter != null) {
-            deleteCounter.increment();
-        }
+        if (deleteCounter != null) deleteCounter.increment();
+    }
+
+    /**
+     * P3-3: 记录分享操作
+     */
+    public void recordShare() {
+        if (shareCounter != null) shareCounter.increment();
+    }
+
+    /**
+     * P3-3: 记录搜索操作
+     */
+    public void recordSearch() {
+        if (searchCounter != null) searchCounter.increment();
+    }
+
+    /**
+     * P3-3: 记录预览生成
+     */
+    public void recordPreview() {
+        if (previewCounter != null) previewCounter.increment();
     }
 
     @Override

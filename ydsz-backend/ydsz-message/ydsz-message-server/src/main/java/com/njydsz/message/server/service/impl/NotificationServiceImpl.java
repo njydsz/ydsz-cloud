@@ -162,13 +162,15 @@ public class NotificationServiceImpl implements NotificationService {
         if (!StringUtils.hasText(userId) || CollectionUtils.isEmpty(ids)) {
             return;
         }
-        for (String id : ids) {
-            MsgNotificationDO n = msgNotificationMapper.selectById(id);
-            if (n != null && userId.equals(n.getReceiverId())) {
-                // P2-18: 移除全文搜索索引
-                notificationSearchService.removeIndex(userId, id, n.getTitle(), n.getContent());
-                msgNotificationMapper.deleteById(id);
-            }
+        // P2-7: 批量查询替代逐条 selectById，减少 N 次 DB 往返
+        List<MsgNotificationDO> notifications = msgNotificationMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgNotificationDO>()
+                        .in(MsgNotificationDO::getId, ids)
+                        .eq(MsgNotificationDO::getReceiverId, userId));
+        for (MsgNotificationDO n : notifications) {
+            // P2-18: 移除全文搜索索引
+            notificationSearchService.removeIndex(userId, n.getId(), n.getTitle(), n.getContent());
+            msgNotificationMapper.deleteById(n.getId());
         }
     }
 

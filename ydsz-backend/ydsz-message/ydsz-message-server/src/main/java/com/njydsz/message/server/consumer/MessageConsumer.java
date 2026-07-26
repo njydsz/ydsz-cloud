@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.annotation.PreDestroy;
 
@@ -75,6 +76,12 @@ public class MessageConsumer implements RocketMQListener<String> {
     /** P1-10: 优雅停机标志 */
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
+    /** P1-5: 在飞消息计数器（用于优雅停机等待） */
+    private final AtomicInteger inFlight = new AtomicInteger(0);
+
+    /** P1-5: 优雅停机最大等待时间（秒） */
+    private static final int GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS = 30;
+
     /** P2-5: 丢弃原因常量 - TTL 过期 */
     private static final String DROP_REASON_TTL_EXPIRED = "TTL_EXPIRED";
 
@@ -139,6 +146,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         }
 
         try {
+            inFlight.incrementAndGet();
             messageService.send(request);
             // P3-23: 记录消费延迟（从开始消费到消费完成的耗时）
             long consumeDuration = System.currentTimeMillis() - consumeStart;
@@ -155,6 +163,8 @@ public class MessageConsumer implements RocketMQListener<String> {
             log.error("[MessageConsumer] 系统异常: messageId={}", request.getMessageId(), e);
             releaseLock(idempotentKey);
             throw new RuntimeException("MessageConsumer failed, will retry", e);
+        } finally {
+            inFlight.decrementAndGet();
         }
     }
 
@@ -269,21 +279,34 @@ public class MessageConsumer implements RocketMQListener<String> {
     }
 
     /**
-     * P1-10: 优雅停机钩子。
+     * P1-5: 优雅停机钩子（改进版）。
      *
-     * <p>Spring 容器关闭时调用，设置停机标志拒绝新消息，
-     * 等待当前处理中的消息完成（最多 30s）。
+     * <p>设置停机标志拒绝新消息后，使用在飞计数器等待当前处理中的消息完成
+     * （最多 30 秒），替代原固定 Thread.sleep(2000)。
      */
     @PreDestroy
     public void gracefulShutdown() {
-        log.info("[MessageConsumer] 开始优雅停机...");
+        log.info("[MessageConsumer] 开始优雅停机... inFlight={}", inFlight.get());
         shuttingDown.set(true);
-        // 等待 2s 让 RocketMQ 消费者完成当前批次
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        // P1-5: 等待在飞消息处理完成
+        int waitSeconds = 0;
+        while (inFlight.get() > 0 && waitSeconds < GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS) {
+            try {
+                Thread.sleep(1000);
+                waitSeconds++;
+                if (inFlight.get() > 0 && waitSeconds % 5 == 0) {
+                    log.info("[MessageConsumer] 等待在飞消息完成: inFlight={} waited={}s",
+                            inFlight.get(), waitSeconds);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
-        log.info("[MessageConsumer] 优雅停机完成");
+        if (inFlight.get() > 0) {
+            log.warn("[MessageConsumer] 优雅停机超时,仍有 {} 条消息在处理中", inFlight.get());
+        } else {
+            log.info("[MessageConsumer] 优雅停机完成,所有消息已处理");
+        }
     }
 }

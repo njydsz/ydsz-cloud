@@ -6,51 +6,95 @@ import java.util.Set;
 
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
+import com.njydsz.common.safe.util.ClientIpResolver;
+
 /**
  * 网关 IP 工具类（WebFlux 响应式版本）
  *
  * <p>提供从 {@link ServerHttpRequest} 提取客户端真实 IP 以及 IP 白名单校验功能。
+ *
+ * <h3>P0-3 增强：可信代理链校验</h3>
+ * <p>复用 {@link ClientIpResolver#isTrustedProxy(String)} 进行可信代理校验，
+ * 仅当直连 IP 是可信代理（本地回环或内网私有地址）时才信任 {@code X-Forwarded-For} /
+ * {@code X-Real-IP}。这样可以防止外部客户端伪造 X-Forwarded-For 绕过 IP 限流或 IP 黑白名单。
+ *
+ * <p><b>注意：</b>WebFlux 栈不能直接复用 {@link ClientIpResolver#getClientIp(HttpServletRequest)}，
+ * 因为后者依赖 Servlet API。本类对应 WebFlux 的 {@link ServerHttpRequest} 做了等价实现，
+ * 但可信代理判定逻辑完全复用 ydsz-common-safe 中的 {@link ClientIpResolver#isTrustedProxy}，
+ * 保持单一来源一致。
  *
  * @since 2.2.0
  */
 public final class GatewayIpUtils {
 
     private static final String UNKNOWN = "unknown";
+    private static final String DEFAULT_IP = "0.0.0.0";
+
+    /** 可信代理头：X-Forwarded-For */
+    private static final String HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
+    /** 可信代理头：X-Real-IP */
+    private static final String HEADER_X_REAL_IP = "X-Real-IP";
 
     private GatewayIpUtils() {
         throw new UnsupportedOperationException("Utility class");
     }
 
     /**
-     * 从 WebFlux 请求中提取客户端真实 IP（穿透代理）
+     * 从 WebFlux 请求中提取客户端真实 IP（含可信代理链校验）
+     *
+     * <p>判断逻辑：
+     * <ol>
+     *   <li>获取直连 IP（request.getRemoteAddress()，不可伪造）</li>
+     *   <li>如果直连 IP 是可信代理（{@link ClientIpResolver#isTrustedProxy}），
+     *       才信任 {@code X-Forwarded-For} / {@code X-Real-IP}</li>
+     *   <li>否则直接使用直连 IP</li>
+     * </ol>
+     * 这样可以防止外部客户端伪造 X-Forwarded-For 绕过 IP 限流或 IP 黑白名单。
      *
      * @param request WebFlux 请求
-     * @return 客户端 IP，无法获取时返回空字符串
+     * @return 客户端 IP，无法获取时返回 {@link #DEFAULT_IP}
      */
     public static String getClientIp(ServerHttpRequest request) {
         if (request == null) {
-            return "";
+            return DEFAULT_IP;
         }
 
-        // X-Forwarded-For（可能包含多段，取第一个）
-        String ip = request.getHeaders().getFirst("X-Forwarded-For");
-        if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
-            return ip.split(",")[0].trim();
+        // 1. 获取直连 IP（不可伪造）
+        String directIp = resolveDirectIp(request);
+
+        // 2. 如果直连 IP 是可信代理，才信任 X-Forwarded-For / X-Real-IP
+        if (directIp != null && ClientIpResolver.isTrustedProxy(directIp)) {
+            String ip = request.getHeaders().getFirst(HEADER_X_FORWARDED_FOR);
+            if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
+                // X-Forwarded-For 可能包含多段，取最左边的客户端 IP
+                int index = ip.indexOf(',');
+                if (index != -1) {
+                    return ip.substring(0, index).trim();
+                }
+                return ip.trim();
+            }
+            ip = request.getHeaders().getFirst(HEADER_X_REAL_IP);
+            if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
+                return ip.trim();
+            }
         }
 
-        // X-Real-IP
-        ip = request.getHeaders().getFirst("X-Real-IP");
-        if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
-            return ip.trim();
-        }
+        // 3. 否则直接使用直连 IP
+        return directIp != null && !directIp.isEmpty() ? directIp : DEFAULT_IP;
+    }
 
-        // remote address
+    /**
+     * 从 WebFlux 请求的 RemoteAddress 中解析直连 IP
+     *
+     * @param request WebFlux 请求
+     * @return 直连 IP，无法获取时返回 null
+     */
+    private static String resolveDirectIp(ServerHttpRequest request) {
         InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress != null && remoteAddress.getAddress() != null) {
             return remoteAddress.getAddress().getHostAddress();
         }
-
-        return "";
+        return null;
     }
 
     /**

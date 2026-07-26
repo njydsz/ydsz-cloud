@@ -14,7 +14,10 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 
 /**
@@ -22,6 +25,9 @@ import com.njydsz.agent.server.rag.RagService;
  *
  * <p>根据 {@link AgentDefinition} 创建对应的 {@link AgentExecutor} 实现。
  * 支持按类型路由到不同的执行器实现。
+ *
+ * <p>所有执行器统一注入 {@link TraceRecorder}、{@link AgentMetrics}、{@link CostAnalysisService}，
+ * 确保执行链路可追踪、指标可采集、成本可核算。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -37,13 +43,19 @@ public class AgentFactory {
     private final List<InputGuardrail> inputGuardrails;
     private final List<OutputGuardrail> outputGuardrails;
     private final RagService ragService;
+    private final TraceRecorder traceRecorder;
+    private final AgentMetrics agentMetrics;
+    private final CostAnalysisService costAnalysisService;
     private final Map<String, AgentExecutor> executorCache = new ConcurrentHashMap<>();
 
     public AgentFactory(LlmClient llmClient, ConversationMemory memory,
                         ToolRegistry toolRegistry, AgentProperties properties,
                         List<InputGuardrail> inputGuardrails,
                         List<OutputGuardrail> outputGuardrails,
-                        RagService ragService) {
+                        RagService ragService,
+                        TraceRecorder traceRecorder,
+                        AgentMetrics agentMetrics,
+                        CostAnalysisService costAnalysisService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.toolRegistry = toolRegistry;
@@ -51,6 +63,9 @@ public class AgentFactory {
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
         this.ragService = ragService;
+        this.traceRecorder = traceRecorder;
+        this.agentMetrics = agentMetrics;
+        this.costAnalysisService = costAnalysisService;
     }
 
     /**
@@ -75,24 +90,30 @@ public class AgentFactory {
         log.info("[Agent-Factory] 创建执行器: type={}", type);
         if ("REACT".equalsIgnoreCase(type) || "REACT_AGENT".equalsIgnoreCase(type)) {
             return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,
-                    inputGuardrails, outputGuardrails);
+                    inputGuardrails, outputGuardrails,
+                    traceRecorder, agentMetrics, costAnalysisService);
         }
         if ("CHAT".equalsIgnoreCase(type)) {
             return new SimpleAgentExecutor(llmClient, memory, properties,
-                    inputGuardrails, outputGuardrails);
+                    inputGuardrails, outputGuardrails,
+                    traceRecorder, agentMetrics, costAnalysisService);
         }
         if ("RAG".equalsIgnoreCase(type)) {
             return new RagAgentExecutor(llmClient, memory, properties, ragService,
-                    inputGuardrails, outputGuardrails);
+                    inputGuardrails, outputGuardrails,
+                    traceRecorder, agentMetrics, costAnalysisService);
         }
         if ("PLAN_EXECUTE".equalsIgnoreCase(type)) {
-            return new PlanExecuteAgentExecutor(llmClient, memory, properties);
+            return new PlanExecuteAgentExecutor(llmClient, memory, properties,
+                    traceRecorder, agentMetrics, costAnalysisService);
         }
         if ("ROUTER".equalsIgnoreCase(type)) {
-            return new RouterAgentExecutor(llmClient, properties, this);
+            return new RouterAgentExecutor(llmClient, properties, this,
+                    traceRecorder, agentMetrics);
         }
         log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
         return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,
-                inputGuardrails, outputGuardrails);
+                inputGuardrails, outputGuardrails,
+                traceRecorder, agentMetrics, costAnalysisService);
     }
 }

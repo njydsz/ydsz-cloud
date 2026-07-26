@@ -1,13 +1,14 @@
 package com.njydsz.common.safe.ratelimit.core;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.njydsz.common.safe.ratelimit.algorithm.RateLimiter;
 import com.njydsz.common.safe.ratelimit.cluster.ClusterRateLimiter;
-import com.njydsz.common.safe.ratelimit.cluster.RedisClusterRateLimiter;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
@@ -35,12 +36,24 @@ public class RateLimitManager {
     /** 决策监听器（用于埋点） */
     private final List<DecisionListener> listeners = new CopyOnWriteArrayList<>();
 
+    /**
+     * 构造函数（推荐用法，由 Spring 注入 {@link ClusterRateLimiter} Bean）
+     *
+     * @param ruleProvider 规则提供器
+     * @param properties   限流配置
+     * @param clusterLimiter 集群限流器（可由 {@code RateLimitAutoConfiguration} 注入；
+     *                       为 {@code null} 时集群模式将降级为 PASS/BLOCK）
+     */
     public RateLimitManager(RateLimitRuleProvider ruleProvider,
-                            RateLimitProperties properties) {
+                            RateLimitProperties properties,
+                            ClusterRateLimiter clusterLimiter) {
         this.ruleProvider = ruleProvider;
         this.properties = properties;
         this.ruleCache = new RateLimitRuleCache(ruleProvider);
-        this.clusterLimiter = new RedisClusterRateLimiter();
+        this.clusterLimiter = clusterLimiter;
+        if (clusterLimiter == null) {
+            log.warn("RateLimitManager initialized without ClusterRateLimiter; CLUSTER mode will fall back to {}", properties.getFallbackOnError());
+        }
     }
 
     /**
@@ -65,7 +78,13 @@ public class RateLimitManager {
             if (rule.getMode() == RateLimitMode.LOCAL) {
                 decision = limiter.tryAcquire(context);
             } else if (rule.getMode() == RateLimitMode.CLUSTER) {
-                decision = clusterLimiter.tryAcquire(rule, context);
+                if (clusterLimiter == null) {
+                    // ClusterRateLimiter 未注入（如 Redis 未启用），降级为本地限流
+                    log.debug("ClusterRateLimiter not available, fall back to local limiter for resource={}", context.getResource());
+                    decision = limiter.tryAcquire(context);
+                } else {
+                    decision = clusterLimiter.tryAcquire(rule, context);
+                }
             } else {
                 // ADAPTIVE / HYBRID：简化处理，按 LOCAL 处理
                 decision = limiter.tryAcquire(context);
@@ -85,10 +104,10 @@ public class RateLimitManager {
     private RateLimitDecision passThrough(RateLimitContext context, String reason) {
         return RateLimitDecision.builder()
                 .resource(context.getResource())
-                .result(com.njydsz.common.safe.ratelimit.enums.RateLimitResult.PASS)
+                .result(RateLimitResult.PASS)
                 .remaining(Double.MAX_VALUE)
                 .threshold(-1)
-                .timestamp(java.time.Instant.now())
+                .timestamp(Instant.now())
                 .reason(reason)
                 .build();
     }
@@ -101,9 +120,9 @@ public class RateLimitManager {
             return RateLimitDecision.builder()
                     .resource(context.getResource())
                     .rule(rule)
-                    .result(com.njydsz.common.safe.ratelimit.enums.RateLimitResult.BLOCKED)
+                    .result(RateLimitResult.BLOCKED)
                     .remaining(0)
-                    .timestamp(java.time.Instant.now())
+                    .timestamp(Instant.now())
                     .reason("error fallback: " + ex.getMessage())
                     .build();
         }

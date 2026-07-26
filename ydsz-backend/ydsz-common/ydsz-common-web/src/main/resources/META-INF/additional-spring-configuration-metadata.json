@@ -123,6 +123,48 @@
       "type": "java.lang.Boolean",
       "description": "Enable Web health indicator for Actuator health check.",
       "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.multipart.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable unified multipart config (overrides Spring Boot default 1MB/10MB).",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.web.multipart.max-file-size",
+      "type": "org.springframework.util.unit.DataSize",
+      "description": "Max size per uploaded file. Default 50MB (overrides Spring Boot default 1MB).",
+      "defaultValue": "50MB"
+    },
+    {
+      "name": "ydsz.web.multipart.max-request-size",
+      "type": "org.springframework.util.unit.DataSize",
+      "description": "Max total size of a multipart request. Default 100MB.",
+      "defaultValue": "100MB"
+    },
+    {
+      "name": "ydsz.web.multipart.file-size-threshold",
+      "type": "org.springframework.util.unit.DataSize",
+      "description": "File size threshold for writing to disk. Default 0 (in-memory).",
+      "defaultValue": 0
+    },
+    {
+      "name": "ydsz.web.multipart.resolve-lazily",
+      "type": "java.lang.Boolean",
+      "description": "Whether to resolve multipart lazily at access time.",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.web.multipart.location",
+      "type": "java.lang.String",
+      "description": "Temp directory for uploaded files. Empty = Servlet container default.",
+      "defaultValue": ""
+    },
+    {
+      "name": "ydsz.web.shutdown.log-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable graceful shutdown observability logging (ContextClosedEvent / WebServerInitializedEvent).",
+      "defaultValue": true
     }
   ]
 }

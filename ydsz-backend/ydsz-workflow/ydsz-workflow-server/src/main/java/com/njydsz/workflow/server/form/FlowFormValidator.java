@@ -9,6 +9,8 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
 
+import com.njydsz.workflow.server.engine.JsonHelper;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -144,7 +146,6 @@ public class FlowFormValidator {
     /**
      * 子表单校验：行数限制 + 递归校验每行字段。
      */
-    @SuppressWarnings("unchecked")
     private void validateSubForm(FlowFormField field, Object value, Map<String, Object> allData,
                                   List<FlowFormValidationError> errors, String fieldKey) {
         if (!(value instanceof List<?> rows)) {
@@ -177,7 +178,7 @@ public class FlowFormValidator {
                         field.getLabel() + " 第 " + (i + 1) + " 行格式不正确"));
                 continue;
             }
-            Map<String, Object> rowData = (Map<String, Object>) rowMap;
+            Map<String, Object> rowData = JsonHelper.toStringObjectMap(rowMap);
             for (FlowFormField subField : field.getSubFields()) {
                 validateField(subField, rowData.get(subField.getFieldKey()), rowData,
                         errors, fieldKey + "[" + i + "].");
