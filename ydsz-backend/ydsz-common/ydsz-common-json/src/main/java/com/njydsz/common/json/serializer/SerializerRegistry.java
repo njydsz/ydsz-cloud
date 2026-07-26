@@ -25,6 +25,7 @@ import com.njydsz.common.json.deserializer.JsonDeserializer;
  *   <li>注册操作原子执行</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class SerializerRegistry {

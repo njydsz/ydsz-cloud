@@ -21,6 +21,7 @@ import com.njydsz.common.json.reader.JSONReader;
  * </pre>
  *
  * @param <T> 反序列化的目标类型
+ * @author ydsz-team
  * @since 1.0.0
  */
 public interface JsonDeserializer<T> {

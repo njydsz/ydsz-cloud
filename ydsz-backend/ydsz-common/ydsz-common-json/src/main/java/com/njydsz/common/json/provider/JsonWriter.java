@@ -17,6 +17,7 @@ package com.njydsz.common.json.provider;
  *   <li>char[] 直接写入: ~2ns/write</li>
  * </ul>
  * 
+ * @author ydsz-team
  * @since 1.0.0
  * @version 4.1.0
  */

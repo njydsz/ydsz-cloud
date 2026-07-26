@@ -24,6 +24,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  *   <li>判断字段可见性（isFieldVisible）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public final class FieldMetadataLoader {

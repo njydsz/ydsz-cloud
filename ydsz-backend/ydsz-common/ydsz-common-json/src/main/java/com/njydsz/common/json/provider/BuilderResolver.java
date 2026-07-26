@@ -15,6 +15,7 @@ import com.njydsz.common.json.parser.YdszJsonParser;
  *
  * <p>负责处理 Builder 模式的反序列化逻辑。</p>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 final class BuilderResolver {
