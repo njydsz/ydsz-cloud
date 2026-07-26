@@ -133,35 +133,55 @@
 
 ```
 ydsz-workflow/
-├── pom.xml
+├── pom.xml                              # 父 POM（5 模块 DDD 架构）
 ├── README.md
-└── src/main/
-    ├── java/com/njydsz/workflow/
-    │   ├── WorkflowApplication.java
-    │   ├── controller/
-    │   ├── service/
-    │   │   ├── FlowDefinitionService.java
-    │   │   ├── FlowInstanceService.java
-    │   │   ├── FlowTaskService.java
-    │   │   ├── BpmnParserService.java
-    │   │   ├── FlowSimulatorService.java
-    │   │   └── SlaMonitorService.java
-    │   ├── engine/            # 流程引擎核心
-    │   │   ├── FlowEngine.java
-    │   │   ├── NodeExecutor.java
-    │   │   ├── BpmnParser.java
-    │   │   └── EventDispatcher.java
-    │   ├── designer/          # 设计器数据 API
-    │   ├── mapper/ / entity/ / enums/
-    │   └── config/
-    ├── resources/
-    │   ├── bootstrap.yml
-    │   ├── mapper/            # classpath*:mapper/flow/**/*.xml
-    │   └── config/            # 原 nacos-config（已重命名）
-    │       ├── ydsz-workflow-dev.yaml
-    │       ├── ydsz-workflow-sit.yaml
-    │       └── ydsz-workflow-uat.yaml
-    └── test/
+├── ydsz-workflow-api/                   # API 层 — Feign 客户端 + Fallback
+│   └── src/main/java/.../api/
+│       ├── client/                      # Feign 客户端接口
+│       └── fallback/                    # Feign 降级实现
+├── ydsz-workflow-domain/                # 领域层 — 实体 + 枚举 + DTO
+│   └── src/main/java/.../domain/
+│       ├── dto/                         # 数据传输对象（20+）
+│       ├── entity/                      # 数据库实体 DO（25+）
+│       └── enums/                       # 枚举（11+）
+├── ydsz-workflow-infra/                 # 基础设施层 — Mapper + XML
+│   └── src/main/
+│       ├── java/.../infra/mapper/       # MyBatis-Plus Mapper 接口（24+）
+│       └── resources/mapper/            # MyBatis XML 映射文件（20+）
+├── ydsz-workflow-server/                # 服务层 — 核心业务逻辑
+│   └── src/main/
+│       ├── java/.../workflow/
+│       │   ├── WorkflowFacade.java      # 模块门面
+│       │   └── server/
+│       │       ├── config/              # 自动配置 + 属性（FlowAutoConfiguration / FlowProperties / FlowHistoryProperties）
+│       │       ├── engine/              # 流程引擎核心
+│       │       │   ├── BpmnXmlParser.java      # BPMN 2.0 XML 解析器
+│       │       │   ├── FlowAdvancer.java       # 流程推进器接口
+│       │       │   ├── FlowDefinitionCacheService.java  # 定义缓存服务
+│       │       │   ├── FlowGraphValidator.java # 流程图校验器
+│       │       │   ├── FlowSensitiveMasker.java # 敏感字段脱敏器
+│       │       │   ├── JsonHelper.java          # JSON 安全类型提取工具
+│       │       │   └── impl/                   # 引擎实现（DefaultFlowAdvancer 等）
+│       │       ├── form/                # 表单引擎（FlowFormValidator + 字段类型）
+│       │       ├── health/              # 健康检查（FlowHealthIndicator）
+│       │       ├── job/                 # 定时任务（归档/超时/重试 JobHandler）
+│       │       ├── listener/            # 事件监听器（ProjectInitiationFlowListener）
+│       │       ├── metrics/             # Prometheus 指标（FlowMetrics）
+│       │       ├── queue/               # 消息队列（FlowQueuePublisher + 频道定义）
+│       │       ├── scheduler/           # 调度器（FlowAutoUrgeScheduler）
+│       │       ├── service/             # 业务服务接口（40+ Service）
+│       │       │   └── impl/            # 业务服务实现（20+ ServiceImpl）
+│       │       ├── template/            # 模板库（预设流程模板）
+│       │       └── thirdparty/          # 第三方集成（钉钉/飞书签名工具）
+│       └── resources/META-INF/          # Spring Boot 自动配置
+│           ├── additional-spring-configuration-metadata.json
+│           └── spring/AutoConfiguration.imports
+└── ydsz-workflow-web/                   # Web 层 — Controller + 配置
+    └── src/main/
+        ├── java/.../web/                # REST Controller
+        └── resources/
+            ├── bootstrap.yml            # Nacos 注册配置
+            └── config/                  # 环境配置（dev/sit/uat）
 ```
 
 ## 配置文件

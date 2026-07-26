@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.batch.MsgAggregateDO;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
@@ -43,7 +42,7 @@ public class AggregateScheduler {
 
     private final MsgAggregateMapper msgAggregateMapper;
     private final AggregateService aggregateService;
-    private final RedissonClient redissonClient;
+    private final DistributedLocker distributedLocker;
 
     /**
      * 定时扫描聚合批次:将 PENDING 且 scheduled_send_at<=now 的批次置 READY,再 flushDue 发送。
@@ -52,11 +51,10 @@ public class AggregateScheduler {
      */
     @Scheduled(fixedDelayString = "${ydsz.message.aggregate-scan-interval-ms:60000}")
     public void scan() {
-        RLock lock = redissonClient.getLock(MessageConstants.AGGREGATE_SCAN_LOCK_KEY);
-        boolean locked = false;
+        String lockValue = null;
         try {
-            locked = lock.tryLock(0, 60, TimeUnit.SECONDS);
-            if (!locked) {
+            lockValue = distributedLocker.tryLock(MessageConstants.AGGREGATE_SCAN_LOCK_KEY, 0, 60, TimeUnit.SECONDS);
+            if (lockValue == null) {
                 log.debug("[AggregateScheduler] 未获取锁,跳过本次扫描");
                 return;
             }
@@ -67,8 +65,8 @@ public class AggregateScheduler {
         } catch (Exception e) {
             log.error("[AggregateScheduler] 扫描异常: {}", e.getMessage(), e);
         } finally {
-            if (locked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            if (lockValue != null) {
+                distributedLocker.unlock(MessageConstants.AGGREGATE_SCAN_LOCK_KEY, lockValue);
             }
         }
     }

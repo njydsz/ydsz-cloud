@@ -113,8 +113,8 @@ public class AggregateServiceImpl implements AggregateService {
             Thread.currentThread().interrupt();
             throw new SysException(BaseResultCode.RESOURCE_LOCKED, "聚合锁等待中断");
         } finally {
-            if (locked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            if (lockValue != null) {
+                distributedLocker.unlock(lockKey, lockValue);
             }
         }
     }
