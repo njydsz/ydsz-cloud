@@ -23,6 +23,7 @@ package com.njydsz.common.cache.stats;
  *   <li>averageLoadPenalty：平均加载耗时 = 总加载时间 / 加载成功次数
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  */

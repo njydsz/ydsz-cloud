@@ -35,6 +35,8 @@ public class SortUtils {
 
     /**
      * 快速排序 (基本类型)
+     *
+     * @param arr 待排序的 int 数组，null 时跳过
      */
     public static void sort(int[] arr) {
         if (arr != null) {

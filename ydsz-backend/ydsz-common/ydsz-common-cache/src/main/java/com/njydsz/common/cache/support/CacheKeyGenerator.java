@@ -30,7 +30,9 @@ import java.util.Objects;
  * // 结果: "user:v1:userId:12345" 或哈希后的 "user:v1:aBcDeFg..."
  * }</pre>
  *
- * 
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public final class CacheKeyGenerator {
 

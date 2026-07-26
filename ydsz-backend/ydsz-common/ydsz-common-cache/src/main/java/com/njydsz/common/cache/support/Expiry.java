@@ -21,6 +21,7 @@ package com.njydsz.common.cache.support;
  *
  * @param <K> 键类型
  * @param <V> 值类型
+ * @author ydsz-team
  * 
  */
 @FunctionalInterface
