@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
  * 用户信息中心服务启动类。
@@ -23,6 +24,7 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
 @EnableDiscoveryClient
 @EnableYdszAudit
 @EnableYdszAuth
+@EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.userinfo.api", "com.njydsz.common.feign"})
 @MapperScan("com.njydsz.userinfo.infra.mapper")
 @EnableScheduling

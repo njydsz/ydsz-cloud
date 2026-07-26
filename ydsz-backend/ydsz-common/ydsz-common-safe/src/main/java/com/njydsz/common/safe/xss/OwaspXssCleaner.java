@@ -4,51 +4,51 @@ import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
 
 /**
- * OWASP-based XSS cleaner implementation
+ * 基于 OWASP 的 XSS 清理器实现
  *
- * <p>Replaces the custom HTMLFilter with OWASP Java HTML Sanitizer for better security and maintainability.
+ * <p>替代自定义 HTMLFilter，使用 OWASP Java HTML Sanitizer 实现，提供更好的安全性和可维护性。
  *
- * <p><b>Features:</b>
+ * <p><b>核心特性：</b>
  * <ul>
- *   <li>Industry-standard XSS protection</li>
- *   <li>Configurable sanitization policies</li>
- *   <li>Better performance and security</li>
+ *   <li>业界标准 XSS 防护</li>
+ *   <li>可配置的清洗策略</li>
+ *   <li>高性能和安全性</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class OwaspXssCleaner {
 
     private static final PolicyFactory DEFAULT_POLICY = XssPolicyFactory.getPolicy(XssPolicyFactory.Policy.STANDARD);
 
     /**
-     * Clean HTML content with default policy
+     * 使用默认策略清洗 HTML 内容
      *
-     * @param dirtyHtml untrusted HTML content
-     * @return sanitized HTML content
+     * @param dirtyHtml 不可信的 HTML 内容
+     * @return 清洗后的 HTML 内容
      */
     public static String clean(String dirtyHtml) {
         return clean(dirtyHtml, DEFAULT_POLICY);
     }
 
     /**
-     * Clean HTML content with specified policy
+     * 使用指定策略清洗 HTML 内容
      *
-     * @param dirtyHtml untrusted HTML content
+     * @param dirtyHtml 不可信的 HTML 内容
      * @param policy    XSS 清洗策略
-     * @return sanitized HTML content
+     * @return 清洗后的 HTML 内容
      */
     public static String clean(String dirtyHtml, XssPolicyFactory.Policy policy) {
         return clean(dirtyHtml, XssPolicyFactory.getPolicy(policy));
     }
 
     /**
-     * Clean HTML content with specified PolicyFactory
+     * 使用指定的 PolicyFactory 清洗 HTML 内容
      *
-     * @param dirtyHtml untrusted HTML content
-     * @param policy    OWASP PolicyFactory
-     * @return sanitized HTML content
+     * @param dirtyHtml 不可信的 HTML 内容
+     * @param policy    OWASP PolicyFactory 实例
+     * @return 清洗后的 HTML 内容
      */
     public static String clean(String dirtyHtml, PolicyFactory policy) {
         if (dirtyHtml == null || dirtyHtml.isEmpty()) {
@@ -58,10 +58,10 @@ public class OwaspXssCleaner {
     }
 
     /**
-     * Clean JSON string values to prevent XSS attacks
+     * 清洗 JSON 字符串值，防止 XSS 攻击
      *
-     * @param jsonString JSON string potentially containing XSS
-     * @return sanitized JSON string
+     * @param jsonString 可能包含 XSS 的 JSON 字符串
+     * @return 清洗后的 JSON 字符串
      */
     public static String cleanJsonValue(String jsonString) {
         if (jsonString == null || jsonString.isEmpty()) {
@@ -72,10 +72,10 @@ public class OwaspXssCleaner {
     }
 
     /**
-     * Check if content contains potential XSS attacks
+     * 检查内容是否包含潜在的 XSS 攻击
      *
-     * @param content content to check
-     * @return true if XSS detected, false otherwise
+     * @param content 待检查的内容
+     * @return 检测到 XSS 返回 true，否则返回 false
      */
     public static boolean containsXSS(String content) {
         if (content == null || content.isEmpty()) {

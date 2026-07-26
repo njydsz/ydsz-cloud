@@ -1,8 +1,11 @@
 package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,7 +14,10 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.server.service.CompanyService;
 import com.njydsz.userinfo.server.service.DepartmentService;
+import com.njydsz.userinfo.server.service.PostService;
+import com.njydsz.userinfo.server.service.RoleService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -107,5 +113,37 @@ public class InternalApiController {
     @Operation(summary = "按部门编码查询部门负责人（工作流 dept:非数字 展开）")
     public BaseResponse<String> getDeptLeaderByDeptCode(@RequestParam String deptCode) {
         return BaseResponse.success(departmentService.getDeptLeaderByDeptCode(deptCode));
+    }
+
+    // ==================== NameAssembler 批量名称富化接口 ====================
+
+    @PostMapping("/user/batch-names")
+    @Operation(summary = "批量查询用户 ID → 真实姓名映射（NameAssembler 富化用）")
+    public BaseResponse<Map<String, String>> batchUserNames(@RequestBody List<String> userIds) {
+        return BaseResponse.success(userAccountService.batchUserNames(userIds));
+    }
+
+    @PostMapping("/dept/batch-names")
+    @Operation(summary = "批量查询部门 ID → 部门名映射（NameAssembler 富化用）")
+    public BaseResponse<Map<String, String>> batchDeptNames(@RequestBody List<String> deptIds) {
+        return BaseResponse.success(departmentService.batchNamesByIds(deptIds));
+    }
+
+    @PostMapping("/role/batch-names")
+    @Operation(summary = "批量查询角色 ID → 角色名映射（NameAssembler 富化用）")
+    public BaseResponse<Map<String, String>> batchRoleNames(@RequestBody List<String> roleIds) {
+        return BaseResponse.success(roleService.batchNamesByIds(roleIds));
+    }
+
+    @PostMapping("/post/batch-names")
+    @Operation(summary = "批量查询岗位 ID → 岗位名映射（NameAssembler 富化用）")
+    public BaseResponse<Map<String, String>> batchPostNames(@RequestBody List<String> postIds) {
+        return BaseResponse.success(postService.batchNamesByIds(postIds));
+    }
+
+    @PostMapping("/company/batch-names")
+    @Operation(summary = "批量查询公司 ID → 公司名映射（NameAssembler 富化用）")
+    public BaseResponse<Map<String, String>> batchCompanyNames(@RequestBody List<String> companyIds) {
+        return BaseResponse.success(companyService.batchNamesByIds(companyIds));
     }
 }

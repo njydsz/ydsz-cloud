@@ -22,8 +22,8 @@ import com.njydsz.common.util.string.StringUtils;
  * 6. 危险协议过滤 - 禁止 javascript:、data:、vbscript: 等危险 URL 协议
  * </p>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class EscapeUtils {
 
@@ -54,6 +54,21 @@ public class EscapeUtils {
     private static final Pattern P_ENTITY_HEX = Pattern.compile("&#x([0-9a-fA-F]+);?");
     private static final Pattern URL_PATTERN = Pattern.compile("[^a-zA-Z0-9\\-_.~!$'()*+,;=:@/?]");
 
+    /**
+     * 转义 HTML 特殊字符（HTML4 标准）
+     *
+     * <p>将以下字符转换为对应的 HTML 实体：
+     * <ul>
+     *   <li>{@code &} → {@code &amp;}</li>
+     *   <li>{@code <} → {@code &lt;}</li>
+     *   <li>{@code >} → {@code &gt;}</li>
+     *   <li>{@code "} → {@code &quot;}</li>
+     *   <li>{@code '} → {@code &#39;}</li>
+     * </ul>
+     *
+     * @param text 待转义的文本
+     * @return 转义后的文本，如果输入为空则返回原值
+     */
     public static String escape(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -66,10 +81,25 @@ public class EscapeUtils {
         return result;
     }
 
+    /**
+     * 转义 HTML 特殊字符（HTML4 标准），{@link #escape(String)} 的别名
+     *
+     * @param text 待转义的文本
+     * @return 转义后的文本
+     */
     public static String escapeHtml4(String text) {
         return escape(text);
     }
 
+    /**
+     * 转义 HTML 特殊字符（HTML5 标准）
+     *
+     * <p>在 HTML4 基础上，额外转义以下字符：
+     * 空格、版权符号、注册商标、商标、省略号、破折号等。
+     *
+     * @param text 待转义的文本
+     * @return 转义后的文本
+     */
     public static String escapeHtml5(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -95,6 +125,14 @@ public class EscapeUtils {
         return text.replace(ch, entity);
     }
 
+    /**
+     * 反转义 HTML 实体字符
+     *
+     * <p>将 HTML 实体还原为对应字符，支持十进制和十六进制数字实体。
+     *
+     * @param text 包含 HTML 实体的文本
+     * @return 反转义后的文本
+     */
     public static String unescape(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -140,14 +178,34 @@ public class EscapeUtils {
         return result;
     }
 
+    /**
+     * 反转义 HTML4 实体字符，{@link #unescape(String)} 的别名
+     *
+     * @param text 包含 HTML 实体的文本
+     * @return 反转义后的文本
+     */
     public static String unescapeHtml4(String text) {
         return unescape(text);
     }
 
+    /**
+     * 反转义 HTML5 实体字符，{@link #unescape(String)} 的别名
+     *
+     * @param text 包含 HTML 实体的文本
+     * @return 反转义后的文本
+     */
     public static String unescapeHtml5(String text) {
         return unescape(text);
     }
 
+    /**
+     * 清理内容中的 XSS 攻击代码（默认策略）
+     *
+     * <p>先过滤危险协议（javascript:、data:、vbscript:），再通过 HTMLFilter 清洗。
+     *
+     * @param content 待清理的内容
+     * @return 清理后的内容
+     */
     public static String clean(String content) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -172,6 +230,13 @@ public class EscapeUtils {
         return result;
     }
 
+    /**
+     * 使用自定义 Builder 清理内容中的 XSS 攻击代码
+     *
+     * @param content 待清理的内容
+     * @param builder HTMLFilter 构建器，用于自定义清洗规则
+     * @return 清理后的内容
+     */
     public static String clean(String content, HTMLFilter.Builder builder) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -179,6 +244,14 @@ public class EscapeUtils {
         return builder.build().filter(content);
     }
 
+    /**
+     * 使用宽松策略清理内容中的 XSS 攻击代码
+     *
+     * <p>保留格式化+图片+链接+样式+表格，适用于富文本编辑器场景。
+     *
+     * @param content 待清理的内容
+     * @return 清理后的内容
+     */
     public static String cleanRelaxed(String content) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -186,6 +259,14 @@ public class EscapeUtils {
         return HTMLFilter.Builder.relaxed().build().filter(content);
     }
 
+    /**
+     * 使用标准策略清理内容中的 XSS 攻击代码
+     *
+     * <p>保留基本格式化标签（b/i/em/strong/a 等），适用于普通表单场景。
+     *
+     * @param content 待清理的内容
+     * @return 清理后的内容
+     */
     public static String cleanStandard(String content) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -193,6 +274,14 @@ public class EscapeUtils {
         return HTMLFilter.Builder.standard().build().filter(content);
     }
 
+    /**
+     * 使用严格策略清理内容中的 XSS 攻击代码
+     *
+     * <p>仅保留纯文本，移除所有 HTML 标签，适用于 API 接口场景。
+     *
+     * @param content 待清理的内容
+     * @return 清理后的内容
+     */
     public static String cleanStrict(String content) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -200,6 +289,13 @@ public class EscapeUtils {
         return HTMLFilter.Builder.strict().build().filter(content);
     }
 
+    /**
+     * 使用自定义 HTMLFilter 清理内容中的 XSS 攻击代码
+     *
+     * @param content 待清理的内容
+     * @param filter  自定义 HTMLFilter 实例
+     * @return 清理后的内容
+     */
     public static String cleanCustom(String content, HTMLFilter filter) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -207,6 +303,16 @@ public class EscapeUtils {
         return filter.filter(content);
     }
 
+    /**
+     * 转义 JavaScript 字符串中的特殊字符
+     *
+     * <p>将以下字符转换为转义序列：
+     * 双引号、单引号、反斜杠、斜杠、尖括号、控制字符等。
+     * 非 ASCII 字符使用 {@code \uXXXX} 格式转义。
+     *
+     * @param text 待转义的文本
+     * @return 转义后的 JavaScript 安全字符串
+     */
     public static String escapeJavaScript(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -263,6 +369,12 @@ public class EscapeUtils {
         return sb.toString();
     }
 
+    /**
+     * 反转义 JavaScript 转义序列
+     *
+     * @param text 包含 JavaScript 转义序列的文本
+     * @return 反转义后的文本
+     */
     public static String unescapeJavaScript(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -343,6 +455,14 @@ public class EscapeUtils {
         return sb.toString();
     }
 
+    /**
+     * 转义 CSS 字符串中的特殊字符
+     *
+     * <p>将双引号、单引号、反斜杠、尖括号、花括号等转换为 CSS 十六进制转义序列。
+     *
+     * @param text 待转义的 CSS 文本
+     * @return 转义后的 CSS 安全字符串
+     */
     public static String escapeCSS(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -396,6 +516,14 @@ public class EscapeUtils {
         return sb.toString();
     }
 
+    /**
+     * 转义 URL 中的特殊字符
+     *
+     * <p>将非安全字符转换为百分号编码（{@code %XX}）。
+     *
+     * @param text 待转义的 URL 文本
+     * @return 转义后的 URL 安全字符串
+     */
     public static String escapeURL(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -413,6 +541,12 @@ public class EscapeUtils {
         return sb.toString();
     }
 
+    /**
+     * 转义 XML 特殊字符
+     *
+     * @param text 待转义的 XML 文本
+     * @return 转义后的 XML 安全字符串
+     */
     public static String escapeXML(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -427,6 +561,12 @@ public class EscapeUtils {
         return result;
     }
 
+    /**
+     * 反转义 XML 实体字符
+     *
+     * @param text 包含 XML 实体的文本
+     * @return 反转义后的文本
+     */
     public static String unescapeXML(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -441,6 +581,12 @@ public class EscapeUtils {
         return result;
     }
 
+    /**
+     * 移除内容中的所有 HTML 标签
+     *
+     * @param content 包含 HTML 标签的内容
+     * @return 移除标签后的纯文本
+     */
     public static String stripTags(String content) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -448,6 +594,13 @@ public class EscapeUtils {
         return content.replaceAll("<[^>]*>", "");
     }
 
+    /**
+     * 移除内容中的 HTML 标签（保留指定标签）
+     *
+     * @param content     包含 HTML 标签的内容
+     * @param allowedTags 允许保留的标签名列表
+     * @return 移除标签后的文本
+     */
     public static String stripTags(String content, String... allowedTags) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -472,6 +625,13 @@ public class EscapeUtils {
         return matcher.replaceAll("");
     }
 
+    /**
+     * 移除 HTML 标签中的属性（保留指定属性）
+     *
+     * @param content           包含 HTML 标签的内容
+     * @param allowedAttributes 允许保留的属性名列表
+     * @return 移除属性后的文本
+     */
     public static String stripAttributes(String content, String... allowedAttributes) {
         if (StringUtils.isEmpty(content)) {
             return content;
@@ -514,6 +674,21 @@ public class EscapeUtils {
         return sb.toString();
     }
 
+    /**
+     * 检查内容是否包含潜在的 XSS 攻击
+     *
+     * <p>检测以下 XSS 攻击模式：
+     * <ul>
+     *   <li>script 标签</li>
+     *   <li>javascript:、vbscript: 协议</li>
+     *   <li>事件处理器（onclick、onload 等）</li>
+     *   <li>iframe、object、embed 等危险标签</li>
+     *   <li>eval、alert、prompt、confirm 等危险函数</li>
+     * </ul>
+     *
+     * @param content 待检查的内容
+     * @return 检测到 XSS 返回 true，否则返回 false
+     */
     public static boolean containsXSS(String content) {
         if (StringUtils.isEmpty(content)) {
             return false;
@@ -552,10 +727,22 @@ public class EscapeUtils {
         return false;
     }
 
+    /**
+     * 清理内容中的 XSS 攻击代码（宽松策略别名）
+     *
+     * @param content 待清理的内容
+     * @return 清理后的内容
+     */
     public static String sanitize(String content) {
         return cleanRelaxed(content);
     }
 
+    /**
+     * Base64 编码
+     *
+     * @param text 待编码的文本
+     * @return Base64 编码后的字符串
+     */
     public static String encodeBase64(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;
@@ -563,6 +750,12 @@ public class EscapeUtils {
         return Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Base64 解码
+     *
+     * @param text 待解码的 Base64 字符串
+     * @return 解码后的文本，解码失败时返回原值
+     */
     public static String decodeBase64(String text) {
         if (StringUtils.isEmpty(text)) {
             return text;

@@ -17,6 +17,24 @@ import com.njydsz.common.cache.internal.lfu.FrequencySketch;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.stats.CacheStats;
 
+/**
+ * Window-TinyLFU 缓存实现（Caffeine 架构）。
+ *
+ * <p>采用三段式 LRU 队列（Window / Probation / Protected）配合 {@link FrequencySketch}
+ * 频率草图，在淘汰时优先保留高频访问条目，兼顾 recency 和 frequency。
+ *
+ * <p>新条目进入 Window 队列；再次访问从 Probation 提升到 Protected；
+ * 淘汰时从 Window 尾部开始，若 Probation 队列非空则比较频率决定淘汰对象。
+ * 频率草图周期性衰减（{@code shiftThreshold} 次访问后重置），实现滑动窗口效果。
+ *
+ * <p>线程安全：读操作无锁并发，写操作（put/remove/evict/promote）使用 {@link ReentrantReadWriteLock} 写锁。
+ * Protected 队列提升使用 {@code safeMoveToProtected} 在写锁内重新校验节点有效性，避免并发淘汰导致野指针。
+ *
+ * @param <K> 缓存键类型
+ * @param <V> 缓存值类型
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
 
   private static final Logger log = LoggerFactory.getLogger(WindowTinyLFUCache.class);

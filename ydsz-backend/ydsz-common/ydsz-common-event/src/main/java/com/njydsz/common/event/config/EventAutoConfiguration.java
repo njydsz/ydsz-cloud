@@ -60,7 +60,12 @@ public class EventAutoConfiguration {
     private EventProperties activeProperties;
 
     /**
-     * Outbox 仓储
+     * 创建 Outbox 仓储实例
+     *
+     * @param jdbcTemplate       JDBC 模板
+     * @param properties         事件配置属性
+     * @param dataSourceProvider 数据源提供者（用于检测数据库方言）
+     * @return Outbox 仓储实例
      */
     @Bean
     @ConditionalOnMissingBean
@@ -76,7 +81,12 @@ public class EventAutoConfiguration {
     }
 
     /**
-     * Outbox 写入服务
+     * 创建 Outbox 写入服务
+     *
+     * @param outboxRepository Outbox 仓储
+     * @param properties       事件配置属性
+     * @param gatewayProvider  投递网关提供者（用于同步投递模式）
+     * @return Outbox 写入服务实例
      */
     @Bean
     @ConditionalOnMissingBean
@@ -88,9 +98,12 @@ public class EventAutoConfiguration {
     }
 
     /**
-     * 领域事件存储适配器（实现 common-domain 的 EventStore SPI）
+     * 创建领域事件存储适配器（实现 common-domain 的 EventStore SPI）
      *
      * <p>当容器中不存在其他 EventStore 实现时，自动注册基于 Outbox 的适配器。
+     *
+     * @param outboxService Outbox 写入服务
+     * @return Outbox 事件存储适配器实例
      */
     @Bean
     @ConditionalOnMissingBean(EventStore.class)
@@ -100,9 +113,12 @@ public class EventAutoConfiguration {
     }
 
     /**
-     * 事件投递网关（降级实现）
+     * 创建事件投递网关降级实现
      *
      * <p>当容器中不存在其他 EventPublishGateway 实现且 RocketMQTemplate 不可用时使用 Noop 实现。
+     *
+     * @param properties 事件配置属性
+     * @return Noop 事件投递网关实例
      */
     @Bean
     @ConditionalOnMissingBean(EventPublishGateway.class)
@@ -113,7 +129,13 @@ public class EventAutoConfiguration {
     }
 
     /**
-     * Outbox 后台处理器
+     * 创建 Outbox 后台处理器
+     *
+     * @param outboxRepository    Outbox 仓储
+     * @param publishGateway      投递网关
+     * @param properties          事件配置属性
+     * @param meterRegistryProvider Micrometer 指标注册器提供者（可选）
+     * @return Outbox 后台处理器实例
      */
     @Bean(initMethod = "start")
     public OutboxProcessor outboxProcessor(OutboxRepository outboxRepository,
@@ -133,7 +155,11 @@ public class EventAutoConfiguration {
     }
 
     /**
-     * Outbox 健康指标
+     * 创建 Outbox 健康检查指标
+     *
+     * @param outboxRepository Outbox 仓储
+     * @param properties       事件配置属性
+     * @return Outbox 健康指标实例
      */
     @Bean
     @ConditionalOnMissingBean

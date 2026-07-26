@@ -18,6 +18,10 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-api</artifactId>
         </dependency>
         <dependency>

@@ -177,6 +177,34 @@ public class DepartmentServiceImpl implements DepartmentService {
         return entity.getLeaderId();
     }
 
+    /**
+     * 批量查询部门 ID → 部门名映射。
+     *
+     * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)}
+     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link DepartmentDO#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
+     */
+    @Override
+    public Map<String, String> batchNamesByIds(Collection<String> deptIds) {
+        if (deptIds == null || deptIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<String> distinctIds = deptIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
+        if (distinctIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<DepartmentDO> depts = departmentMapper.selectBatchIds(distinctIds);
+        Map<String, String> result = new LinkedHashMap<>(depts.size());
+        for (DepartmentDO dept : depts) {
+            if (dept.getDeptName() != null && !dept.getDeptName().isBlank()) {
+                result.put(dept.getId(), dept.getDeptName());
+            }
+        }
+        return result;
+    }
+
     private DepartmentVO toVO(DepartmentDO entity) {
         DepartmentVO vo = new DepartmentVO();
         BeanUtils.copyProperties(entity, vo);

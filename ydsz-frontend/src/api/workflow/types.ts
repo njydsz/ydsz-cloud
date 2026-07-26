@@ -175,39 +175,61 @@ export interface FlowCcDTO {
 
 /** 抄送查询 */
 export interface FlowCcQuery {
+  /** UNREAD / READ */
   readStatus?: 'UNREAD' | 'READ'
+  /** 流程编码 */
   flowCode?: string
+  /** 页码 */
   pageNum?: number
+  /** 每页条数 */
   pageSize?: number
 }
 
 /** 任务查询 */
 export interface FlowTaskQuery {
+  /** 办理人 ID */
   assigneeId?: string
+  /** 业务类型 */
   businessType?: string
+  /** 流程编码 */
   flowCode?: string
+  /** 开始时间 */
   startTime?: string
+  /** 结束时间 */
   endTime?: string
+  /** 页码 */
   pageNum?: number
+  /** 每页条数 */
   pageSize?: number
 }
 
 /** 启动流程 */
 export interface FlowStartProcessDTO {
+  /** 流程编码 */
   flowCode: string
+  /** 业务类型 */
   businessType?: string
+  /** 业务 Key */
   businessKey?: string
+  /** 业务编号 */
   businessNo?: string
+  /** 流程标题 */
   title?: string
+  /** 流程变量 */
   variables?: Record<string, unknown>
+  /** 发起人 ID */
   initiatorId?: string
 }
 
 /** 任务操作 DTO */
 export interface FlowTaskOperateDTO {
+  /** 任务 ID */
   taskId: string
+  /** 审批意见 */
   comment?: string
+  /** 目标用户 ID */
   targetUserId?: string
+  /** 目标用户姓名 */
   targetUserName?: string
   /**
    * 目标节点编码
@@ -219,84 +241,141 @@ export interface FlowTaskOperateDTO {
   targetNodeCodes?: string[]
   /** GAP-P2-9: 自由流（JUMP）运行时指定目标节点办理人列表（如 ['1001','1002']） */
   targetAssignees?: string[]
+  /** 流程变量 */
   variables?: Record<string, unknown>
 }
 
 /** 流程部署 */
 export interface FlowDeployDTO {
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName: string
+  /** 分类 */
   category?: string
+  /** 版本号 */
   version?: number
+  /** BPMN XML */
   bpmnXml?: string
+  /** JSON 模型 */
   jsonModel?: string
+  /** 表单路径 */
   formPath?: string
 }
 
 /** 流程图 DTO */
 export interface FlowDiagramDTO {
+  /** 实例 ID */
   instanceId: string
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName?: string
+  /** 状态 */
   status?: string
+  /** 节点列表 */
   nodes: FlowDiagramNodeDTO[]
+  /** 流转线列表 */
   skips: FlowDiagramSkipDTO[]
+  /** 活跃节点编码列表 */
   activeNodeCodes: string[]
+  /** 已完成节点编码列表 */
   completedNodeCodes: string[]
 }
 
+/** 流程图节点 DTO */
 export interface FlowDiagramNodeDTO {
+  /** 节点编码 */
   nodeCode: string
+  /** 节点名称 */
   nodeName?: string
+  /** 节点类型 */
   nodeType: number
+  /** X 坐标 */
   x?: number
+  /** Y 坐标 */
   y?: number
+  /** 宽度 */
   width?: number
+  /** 高度 */
   height?: number
+  /** 权限标识 */
   permissionFlag?: string
+  /** 扩展属性 */
   ext?: string
 }
 
+/** 流程图流转线 DTO */
 export interface FlowDiagramSkipDTO {
+  /** 流转线编码 */
   skipCode?: string
+  /** 流转线名称 */
   skipName?: string
+  /** 源节点编码 */
   sourceRef: string
+  /** 目标节点编码 */
   targetRef: string
+  /** 流转条件 */
   condition?: string
+  /** 流转线类型 */
   skipType?: string
 }
 
 /** 时间线 DTO */
 export interface FlowTimelineDTO {
+  /** 实例 ID */
   instanceId: string
+  /** 事件列表 */
   events: FlowTimelineEventDTO[]
 }
 
+/** 时间线事件 DTO */
 export interface FlowTimelineEventDTO {
+  /** 事件 ID */
   id?: string
+  /** START / TASK_CREATED / TASK_COMPLETED / URGE / TRANSFER / DELEGATE / COUNTERSIGN / TIMEOUT / TERMINATE / COMPLETE / REJECT / SUSPEND / ACTIVATE / RECALL / JUMP / CC */
   eventType: 'START' | 'TASK_CREATED' | 'TASK_COMPLETED' | 'URGE' | 'TRANSFER' | 'DELEGATE' | 'COUNTERSIGN' | 'TIMEOUT' | 'TERMINATE' | 'COMPLETE' | 'REJECT' | 'SUSPEND' | 'ACTIVATE' | 'RECALL' | 'JUMP' | 'CC'
+  /** 节点编码 */
   nodeCode?: string
+  /** 节点名称 */
   nodeName?: string
+  /** 用户 ID */
   userId?: string
+  /** 用户姓名 */
   userName?: string
+  /** 目标用户 ID */
   targetUserId?: string
+  /** 目标用户姓名 */
   targetUserName?: string
+  /** 备注 */
   comment?: string
+  /** 操作 */
   action?: string
+  /** 耗时（毫秒） */
   durationMs?: number
+  /** 创建时间 */
   createdAt: string
 }
 
 /** 节点耗时统计 */
 export interface FlowNodeDurationStatDTO {
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName?: string
+  /** 节点编码 */
   nodeCode: string
+  /** 节点名称 */
   nodeName?: string
+  /** 实例数 */
   instanceCount: number
+  /** 平均耗时（毫秒） */
   avgDurationMs: number
+  /** 最大耗时（毫秒） */
   maxDurationMs: number
+  /** 最小耗时（毫秒） */
   minDurationMs: number
+  /** 超时数 */
   overdueCount: number
 }
 
@@ -320,43 +399,69 @@ export interface MonitorOverviewDTO {
 
 /** 异常流程实例 */
 export interface AnomalyInstanceDTO {
+  /** 实例 ID */
   id: string
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName?: string
+  /** 标题 */
   title?: string
+  /** 发起人姓名 */
   initiatorName?: string
+  /** 状态 */
   status: string
+  /** 当前节点名称 */
   currentNodeName?: string
+  /** TIMEOUT / STUCK / CIRCULAR_APPROVAL / REPEATED_REJECT */
   anomalyType: 'TIMEOUT' | 'STUCK' | 'CIRCULAR_APPROVAL' | 'REPEATED_REJECT'
+  /** 异常类型标签 */
   anomalyTypeLabel?: string
+  /** 超时天数 */
   overdueDays?: number
+  /** 开始时间 */
   startTime?: string
+  /** 截止时间 */
   dueAt?: string
+  /** RED / YELLOW / ORANGE */
   warnLevel: 'RED' | 'YELLOW' | 'ORANGE'
 }
 
 /** 实例趋势数据点 */
 export interface InstanceTrendItemDTO {
+  /** 日期 */
   date: string
+  /** 新增数量 */
   newCount: number
+  /** 完成数量 */
   completedCount: number
 }
 
 /** 审批人效率统计 */
 export interface ApproverEfficiencyDTO {
+  /** 用户 ID */
   userId: string
+  /** 用户姓名 */
   userName: string
+  /** 部门 */
   department?: string
+  /** 完成审批数 */
   completedCount: number
+  /** 平均耗时（毫秒） */
   avgDurationMs: number
+  /** 总耗时（毫秒） */
   totalDurationMs: number
 }
 
 /** 流程类型分布 */
 export interface FlowTypeDistributionDTO {
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName: string
+  /** 数量 */
   count: number
+  /** 占比 */
   percentage?: number
 }
 
@@ -464,6 +569,7 @@ export type DelegateScopeType = 'ALL' | 'FLOW' | 'FLOW_NODE' | 'ROLE'
 
 /** 委托授权记录 */
 export interface DelegateAuthDTO {
+  /** 委托 ID */
   id: string
   /** 授权人 ID */
   ownerId: string
@@ -485,7 +591,9 @@ export interface DelegateAuthDTO {
   enabled: boolean
   /** 是否已撤回 */
   revoked?: boolean
+  /** 创建时间 */
   createTime?: string
+  /** 更新时间 */
   updateTime?: string
 }
 
@@ -537,13 +645,21 @@ export type SlaStrategy = 'REMIND' | 'NOTIFY' | 'ESCALATE' | 'AUTO_PASS' | 'AUTO
 
 /** SLA 超时任务 */
 export interface SlaOverdueTaskDTO {
+  /** 任务 ID */
   taskId: string
+  /** 实例 ID */
   instanceId: string
+  /** 流程编码 */
   flowCode: string
+  /** 流程名称 */
   flowName?: string
+  /** 节点编码 */
   nodeCode: string
+  /** 节点名称 */
   nodeName?: string
+  /** 办理人 ID */
   assigneeId?: string
+  /** 办理人姓名 */
   assigneeName?: string
   /** 任务创建时间 */
   createTime?: string

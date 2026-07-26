@@ -14,7 +14,6 @@ import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
-import com.njydsz.agent.domain.model.LlmModelConfig;
 
 /**
  * LLM 客户端路由器
@@ -63,20 +62,6 @@ public class LlmClientRouter implements LlmClient {
         if (defaultClient != null && defaultClient.getProvider().equals(provider)) {
             defaultClient = clients.values().stream().findFirst().orElse(null);
         }
-    }
-
-    public LlmClient resolve(LlmModelConfig config) {
-        String provider = config.getProvider();
-        LlmClient client = clients.get(provider);
-        if (client != null && client.supports(config.getModelName())) {
-            return client;
-        }
-        for (LlmClient c : clients.values()) {
-            if (c.supports(config.getModelName())) {
-                return c;
-            }
-        }
-        return defaultClient;
     }
 
     @Override

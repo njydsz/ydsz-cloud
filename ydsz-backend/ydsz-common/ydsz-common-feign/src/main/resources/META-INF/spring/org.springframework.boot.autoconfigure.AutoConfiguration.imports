@@ -1,3 +1,4 @@
 com.njydsz.common.feign.config.FeignConfiguration
 com.njydsz.common.feign.monitor.FeignMetricsConfiguration
 com.njydsz.common.feign.circuitbreaker.Resilience4jFeignConfiguration
+com.njydsz.common.feign.assembler.NameAssemblerAutoConfiguration

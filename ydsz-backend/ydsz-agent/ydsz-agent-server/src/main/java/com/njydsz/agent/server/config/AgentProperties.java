@@ -18,6 +18,8 @@ public class AgentProperties {
 
     /** 是否启用 Agent 模块 */
     private boolean enabled = true;
+    /** 默认系统提示词 */
+    private String defaultSystemPrompt = "你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。";
 
     /** LLM 配置 */
     private Llm llm = new Llm();
@@ -30,6 +32,8 @@ public class AgentProperties {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public String getDefaultSystemPrompt() { return defaultSystemPrompt; }
+    public void setDefaultSystemPrompt(String defaultSystemPrompt) { this.defaultSystemPrompt = defaultSystemPrompt; }
     public Llm getLlm() { return llm; }
     public void setLlm(Llm llm) { this.llm = llm; }
     public Memory getMemory() { return memory; }
@@ -54,6 +58,8 @@ public class AgentProperties {
         private int timeoutSeconds = 60;
         /** 多 Provider 配置（key = provider 名称，如 openai/deepseek/qwen） */
         private Map<String, ProviderConfig> providers = new LinkedHashMap<>();
+        /** 模型价格配置（key = 模型名前缀，value = 每千 token 价格 USD） */
+        private Map<String, Double> modelPrices = new LinkedHashMap<>();
 
         public String getDefaultProvider() { return defaultProvider; }
         public void setDefaultProvider(String defaultProvider) { this.defaultProvider = defaultProvider; }
@@ -71,6 +77,8 @@ public class AgentProperties {
         public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
         public Map<String, ProviderConfig> getProviders() { return providers; }
         public void setProviders(Map<String, ProviderConfig> providers) { this.providers = providers; }
+        public Map<String, Double> getModelPrices() { return modelPrices; }
+        public void setModelPrices(Map<String, Double> modelPrices) { this.modelPrices = modelPrices; }
     }
 
     /**

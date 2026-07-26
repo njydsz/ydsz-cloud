@@ -16,6 +16,18 @@ import com.njydsz.common.socket.interceptor.StompMessageInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * WebSocket STOMP 配置类。
+ *
+ * <p>注册 STOMP 端点、配置消息代理（SimpleBroker /app 前缀）、
+ * 设置传输参数（消息大小限制、发送超时）以及客户端入站通道拦截器。
+ *
+ * <p>认证拦截器（{@link WebSocketAuthInterceptor}）和消息拦截器（{@link StompMessageInterceptor}）
+ * 为可选依赖，未配置时降级跳过。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor

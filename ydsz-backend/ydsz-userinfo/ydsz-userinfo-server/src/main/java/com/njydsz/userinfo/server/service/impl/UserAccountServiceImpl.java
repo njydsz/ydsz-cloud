@@ -364,6 +364,37 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 批量查询用户 ID → 用户真实姓名映射。
+     *
+     * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)}
+     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link UserAccountDO#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
+     *
+     * <p>返回 realName（而非 username）：富化场景需要展示给人看的是真实姓名。
+     * 若 realName 为空则该 userId 不出现在结果中（让 NameAssembler 兜底用 userId 顶替）。
+     */
+    @Override
+    public Map<String, String> batchUserNames(Collection<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<String> distinctIds = userIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
+        if (distinctIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<UserAccountDO> users = userAccountMapper.selectBatchIds(distinctIds);
+        Map<String, String> result = new LinkedHashMap<>(users.size());
+        for (UserAccountDO user : users) {
+            if (user.getRealName() != null && !user.getRealName().isBlank()) {
+                result.put(user.getId(), user.getRealName());
+            }
+        }
+        return result;
+    }
+
     private UserAccountVO toVO(UserAccountDO entity) {
         UserAccountVO vo = new UserAccountVO();
         BeanUtils.copyProperties(entity, vo);

@@ -187,6 +187,34 @@ public class RoleServiceImpl implements RoleService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 批量查询角色 ID → 角色名映射。
+     *
+     * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)}
+     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link RoleDO#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
+     */
+    @Override
+    public Map<String, String> batchNamesByIds(Collection<String> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<String> distinctIds = roleIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
+        if (distinctIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<RoleDO> roles = roleMapper.selectBatchIds(distinctIds);
+        Map<String, String> result = new LinkedHashMap<>(roles.size());
+        for (RoleDO role : roles) {
+            if (role.getRoleName() != null && !role.getRoleName().isBlank()) {
+                result.put(role.getId(), role.getRoleName());
+            }
+        }
+        return result;
+    }
+
     private RoleVO toVO(RoleDO entity) {
         RoleVO vo = new RoleVO();
         BeanUtils.copyProperties(entity, vo);

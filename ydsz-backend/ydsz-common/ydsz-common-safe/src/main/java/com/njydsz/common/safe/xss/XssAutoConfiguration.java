@@ -17,8 +17,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  * <p>此方式与 XssFilter、XssJsonMessageConverter 互补，
  * 在 YdszJson 反序列化层面提供 XSS 防护。
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.safe.xss", name = "enabled", havingValue = "true", matchIfMissing = false)

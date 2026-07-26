@@ -34,6 +34,7 @@ import com.njydsz.common.util.url.UrlPathUtils;
  *
  * <p><b>降级策略：</b>Redis 异常时不阻断服务（fail-open），仅记录日志。
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see IpAccessService
  */

@@ -44,6 +44,7 @@ import com.njydsz.common.util.url.UrlPathUtils;
  * Permissions-Policy: 浏览器功能策略
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * 
  * @see SecurityHeaderProperties

@@ -3,6 +3,20 @@ package com.njydsz.common.cache.internal.lfu;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
+/**
+ * Count-Min Sketch 频率草图（LFU 淘汰策略核心组件）。
+ *
+ * <p>基于 4 路哈希 + CAS 无锁更新的紧凑频率计数器，用于 {@link WindowTinyLFUCache}
+ * 中估计元素的访问频率，以在淘汰时保留高频访问的条目。
+ *
+ * <p>每个计数器占用 4 bit（默认）或 8 bit（可配置），所有计数器定期衰减一半
+ * 以实现滑动窗口效果。表大小始终为 2 的幂次，通过位掩码索引。
+ *
+ * <p>线程安全：所有读写操作使用 {@link VarHandle} CAS 保证原子性。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public final class FrequencySketch {
 
   private static final long[] SEEDS = {

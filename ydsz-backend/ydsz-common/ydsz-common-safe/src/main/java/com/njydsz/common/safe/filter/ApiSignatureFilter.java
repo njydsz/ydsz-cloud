@@ -76,6 +76,7 @@ import com.njydsz.common.safe.util.ClientIpResolver;import com.njydsz.common.uti
  * request.setHeader("X-Signature", signature);
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see ApiSignatureProperties
  * @see NonceCache

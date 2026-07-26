@@ -64,8 +64,8 @@ public class AggregateServiceImpl implements AggregateService {
     private final TemplateEngine templateEngine;
     /** 模板管理服务（加载摘要模板） */
     private final TemplateService templateService;
-    /** Redisson 客户端（分布式锁） */
-    private final RedissonClient redissonClient;
+    /** 分布式锁 */
+    private final DistributedLocker distributedLocker;
 
     @Override
     public MsgAggregateDO appendOrStart(String group, String receiver, String channel, String tenantId) {
@@ -74,11 +74,10 @@ public class AggregateServiceImpl implements AggregateService {
         }
         String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
         String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
-        RLock lock = redissonClient.getLock(lockKey);
-        boolean locked = false;
+        String lockValue = null;
         try {
-            locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
-            if (!locked) {
+            lockValue = distributedLocker.tryLock(lockKey, 3, 10, TimeUnit.SECONDS);
+            if (lockValue == null) {
                 throw new SysException(BaseResultCode.RESOURCE_LOCKED, "获取聚合锁失败: " + group);
             }
             // 查 PENDING 批次

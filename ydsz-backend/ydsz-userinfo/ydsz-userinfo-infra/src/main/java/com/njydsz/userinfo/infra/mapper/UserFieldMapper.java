@@ -4,6 +4,15 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.userinfo.domain.entity.UserFieldDO;
 import org.apache.ibatis.annotations.Mapper;
 
+/**
+ * 用户自定义字段 Mapper 接口。
+ *
+ * <p>对应数据表 ydsz_user_field，
+ * 继承 MyBatis-Plus {@code BaseMapper} 提供标准 CRUD 操作。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface UserFieldMapper extends BaseMapper<UserFieldDO> {
 }

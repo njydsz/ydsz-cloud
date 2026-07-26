@@ -105,4 +105,54 @@ public interface OrgQueryClient {
      */
     @GetMapping("/api/internal/dept/leader-by-code")
     BaseResponse<String> getDeptLeaderByDeptCode(@RequestParam String deptCode);
+
+    // ==================== NameAssembler 批量名称富化接口 ====================
+
+    /**
+     * 批量查询用户 ID → 用户真实姓名映射（供 NameAssembler 富化 userName/createdByName 等字段）。
+     *
+     * <p>实现走单条 SQL {@code SELECT id, real_name FROM ydsz_user_account WHERE id IN (...)}，
+     * 一次 Feign 往返拿到全部结果，避免 N+1 调用。
+     *
+     * @param userIds 用户 ID 列表
+     * @return userId → realName 映射；未命中的 userId 不出现在 Map 中
+     */
+    @PostMapping("/api/internal/user/batch-names")
+    BaseResponse<Map<String, String>> batchUserNames(@RequestBody List<String> userIds);
+
+    /**
+     * 批量查询部门 ID → 部门名映射。
+     *
+     * @param deptIds 部门 ID 列表
+     * @return deptId → deptName 映射
+     */
+    @PostMapping("/api/internal/dept/batch-names")
+    BaseResponse<Map<String, String>> batchDeptNames(@RequestBody List<String> deptIds);
+
+    /**
+     * 批量查询角色 ID → 角色名映射。
+     *
+     * @param roleIds 角色 ID 列表
+     * @return roleId → roleName 映射
+     */
+    @PostMapping("/api/internal/role/batch-names")
+    BaseResponse<Map<String, String>> batchRoleNames(@RequestBody List<String> roleIds);
+
+    /**
+     * 批量查询岗位 ID → 岗位名映射。
+     *
+     * @param postIds 岗位 ID 列表
+     * @return postId → postName 映射
+     */
+    @PostMapping("/api/internal/post/batch-names")
+    BaseResponse<Map<String, String>> batchPostNames(@RequestBody List<String> postIds);
+
+    /**
+     * 批量查询公司 ID → 公司名映射。
+     *
+     * @param companyIds 公司 ID 列表
+     * @return companyId → companyName 映射
+     */
+    @PostMapping("/api/internal/company/batch-names")
+    BaseResponse<Map<String, String>> batchCompanyNames(@RequestBody List<String> companyIds);
 }

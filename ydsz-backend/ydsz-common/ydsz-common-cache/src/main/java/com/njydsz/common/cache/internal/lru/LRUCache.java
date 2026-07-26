@@ -13,6 +13,20 @@ import java.util.function.Function;
 import com.njydsz.common.cache.internal.AbstractCache;
 import com.njydsz.common.cache.listener.RemovalCause;
 
+/**
+ * 基于 {@link LinkedHashMap} 的 LRU（最近最少使用）缓存实现。
+ *
+ * <p>使用 {@link StampedLock} 保证并发安全，access-order 模式下 get 操作需要写锁
+ * （因为会修改链表结构）。淘汰条目通过 ThreadLocal 队列延迟通知监听器，
+ * 避免在写锁内触发回调导致死锁。
+ *
+ * <p>支持最大容量限制、命中/未命中统计、移除通知监听器。
+ *
+ * @param <K> 缓存键类型
+ * @param <V> 缓存值类型
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class LRUCache<K, V> extends AbstractCache<K, V> {
 
   private final LinkedHashMap<K, V> map;

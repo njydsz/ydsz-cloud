@@ -39,6 +39,7 @@ import com.njydsz.common.safe.config.SafeConfiguration;
  * }
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see SafeConfiguration
  */

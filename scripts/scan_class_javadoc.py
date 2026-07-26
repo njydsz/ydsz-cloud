@@ -5,7 +5,9 @@ import re
 
 BASE = pathlib.Path('ydsz-backend')
 
-CLASS_DECL = re.compile(r'(public\s+)?(abstract\s+)?(final\s+)?(class|interface|enum|record|@interface)\s+\w+')
+# Match actual class/interface/enum/record declarations (not inside comments)
+# Must start at beginning of line (with optional whitespace) and have access modifier or keyword
+CLASS_DECL = re.compile(r'^\s*(public\s+|private\s+|protected\s+)?(abstract\s+|final\s+|sealed\s+|non-sealed\s+)*(class|interface|enum|record|@interface)\s+\w+')
 
 
 def has_class_javadoc(filepath):
@@ -24,7 +26,6 @@ def has_class_javadoc(filepath):
                 if '*/' in stripped:
                     return True
                 # Count parentheses to handle multi-line annotations
-                # Count closing parens (we're going backwards, so ) opens and ( closes)
                 close_count = stripped.count(')')
                 open_count = stripped.count('(')
                 paren_depth += close_count - open_count
@@ -43,11 +44,9 @@ def has_class_javadoc(filepath):
                     or stripped.startswith('import')
                     or stripped.startswith('package')
                     or stripped.startswith('}')
-                    or stripped.startswith(')')
                     # Annotation parameter continuation lines
                     or '=' in stripped and not stripped.endswith(';')
                     or stripped.startswith('"')
-                    or stripped.startswith('}')
                     or '.class' in stripped
                     or stripped.endswith(',')
                     or stripped.endswith('})')
@@ -101,10 +100,11 @@ def main():
     for mod_name, files in sorted(missing_files.items()):
         if files:
             print(f'\n--- {mod_name} ({len(files)} files missing) ---')
-            for f in files[:20]:  # Show first 20
-                print(f'  {f}')
-            if len(files) > 20:
-                print(f'  ... and {len(files) - 20} more')
+            for f in files[:30]:
+                # Use forward slashes to avoid escape sequence issues
+                print(f'  {str(f).replace(chr(92), "/")}')
+            if len(files) > 30:
+                print(f'  ... and {len(files) - 30} more')
 
 
 if __name__ == '__main__':

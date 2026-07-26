@@ -58,30 +58,41 @@ public class DagDslParser {
         }
 
         String name = (String) root.getOrDefault("name", "unnamed-dag");
-        Map<String, Object> nodesYaml = (Map<String, Object>) root.get("nodes");
-        Map<String, Object> edgesYaml = (Map<String, Object>) root.get("edges");
-
-        if (nodesYaml == null || nodesYaml.isEmpty()) {
+        Object nodesRaw = root.get("nodes");
+        Object edgesRaw = root.get("edges");
+        if (!(nodesRaw instanceof Map<?, ?>) || ((Map<?, ?>) nodesRaw).isEmpty()) {
             throw new IllegalArgumentException("DSL 缺少 nodes 定义");
         }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> nodesYaml = (Map<String, Object>) nodesRaw;
 
         Map<String, AgentDag.Node> nodes = new HashMap<>();
         for (Map.Entry<String, Object> entry : nodesYaml.entrySet()) {
             String nodeId = entry.getKey();
-            Map<String, Object> nodeDef = (Map<String, Object>) entry.getValue();
+            Object nodeDefRaw = entry.getValue();
+            if (!(nodeDefRaw instanceof Map<?, ?>)) {
+                throw new IllegalArgumentException("节点定义格式错误: " + nodeId);
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> nodeDef = (Map<String, Object>) nodeDefRaw;
             String agentType = (String) nodeDef.getOrDefault("agent-type", "CHAT");
             String prompt = (String) nodeDef.getOrDefault("prompt", "");
             String inputFrom = (String) nodeDef.get("input-from");
-            Map<String, Object> config = (Map<String, Object>) nodeDef.get("config");
+            Object configRaw = nodeDef.get("config");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> config = configRaw instanceof Map ? (Map<String, Object>) configRaw : null;
             nodes.put(nodeId, new AgentDag.Node(nodeId, agentType, prompt, inputFrom, config));
         }
 
         Map<String, List<String>> edges = new HashMap<>();
-        if (edgesYaml != null) {
-            for (Map.Entry<String, Object> entry : edgesYaml.entrySet()) {
+        if (edgesRaw instanceof Map<?, ?> edgesYaml) {
+            for (Map.Entry<String, Object> entry : ((Map<String, Object>) edgesYaml).entrySet()) {
                 String nodeId = entry.getKey();
-                List<String> deps = (List<String>) entry.getValue();
-                edges.put(nodeId, deps);
+                if (entry.getValue() instanceof List<?> deps) {
+                    @SuppressWarnings("unchecked")
+                    List<String> depList = (List<String>) deps;
+                    edges.put(nodeId, depList);
+                }
             }
         }
 

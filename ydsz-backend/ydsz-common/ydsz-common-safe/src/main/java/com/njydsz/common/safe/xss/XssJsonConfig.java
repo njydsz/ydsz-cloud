@@ -13,6 +13,7 @@ import com.njydsz.common.json.YdszJson;
  * XssJsonConfig.registerXssProtection();
  * </pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class XssJsonConfig {

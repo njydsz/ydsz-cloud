@@ -1,8 +1,5 @@
 package com.njydsz.common.domain.service.impl;
 
-import java.util.List;
-import java.util.function.Function;
-
 import com.njydsz.common.domain.entity.AggregateRoot;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.domain.query.PageResult;
@@ -64,13 +61,13 @@ import com.njydsz.common.domain.service.BaseCrudService;
  *
  *     &#64;Override
  *     protected Specification<User> getPageSpecification(UserPageQuery query) {
- *         return (root, cq, cb) -> {
- *             List<Predicate> predicates = new ArrayList<>();
- *             if (query.getUsername() != null) {
- *                 predicates.add(cb.like(root.get("username"), "%" + query.getUsername() + "%"));
+ *         return Specification.where(user -> {
+ *             if (query.getUsername() != null
+ *                     && !user.getUsername().contains(query.getUsername())) {
+ *                 return false;
  *             }
- *             return cb.and(predicates.toArray(new Predicate[0]));
- *         };
+ *             return true;
+ *         });
  *     }
  * }
  * }</pre>
@@ -112,7 +109,7 @@ public abstract class AbstractCrudService<T extends AggregateRoot<String>, DTO, 
     /**
      * 构建分页查询条件。
      *
-     * <p>子类根据查询参数构建 JPA Specification 条件。
+     * <p>子类根据查询参数构建规约条件。
      * 返回 null 表示无条件查询（查询所有数据）。
      *
      * @param query 分页查询参数

@@ -33,7 +33,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @TableName("nw_file_acl")
-public class FileAcl extends BaseEntity<String> implements Serializable {
+public class FileAcl extends MpBaseEntity<String> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

@@ -41,8 +41,8 @@ import lombok.Data;
  *         - alt
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.safe.xss")

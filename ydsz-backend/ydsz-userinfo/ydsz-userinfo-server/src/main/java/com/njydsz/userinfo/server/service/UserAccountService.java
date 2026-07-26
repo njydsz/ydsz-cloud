@@ -1,6 +1,8 @@
 package com.njydsz.userinfo.server.service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
@@ -79,4 +81,15 @@ public interface UserAccountService {
      * @return 用户 ID 列表
      */
     List<String> listUserIdsByPositionCode(String positionCode);
+
+    /**
+     * 批量查询用户 ID → 用户真实姓名映射（供 NameAssembler 跨服务富化 userName / createdByName 等字段）。
+     *
+     * <p>实现：单条 SQL {@code SELECT id, real_name FROM ydsz_user_account WHERE id IN (...)}，
+     * 一次往返拿到全部结果。已逻辑删除的用户不会出现在结果中。
+     *
+     * @param userIds 用户 ID 集合（允许 null / 空，返回空 Map）
+     * @return userId → realName 映射；未命中的 userId 不出现在 Map 中
+     */
+    Map<String, String> batchUserNames(Collection<String> userIds);
 }

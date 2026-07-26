@@ -38,8 +38,8 @@ import lombok.Data;
  *   <li>Content-Security-Policy：内容安全策略</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.safe.security-headers")

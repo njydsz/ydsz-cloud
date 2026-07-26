@@ -18,8 +18,8 @@ import java.util.regex.Pattern;
  * 5. 高性能正则匹配和缓存机制
  * </p>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public final class HTMLFilter {
 

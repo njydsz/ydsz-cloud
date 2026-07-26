@@ -45,6 +45,7 @@ import com.njydsz.common.safe.aspect.XssValidator;
  * }
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see XssValidator
  */

@@ -272,8 +272,7 @@ public class ChatService {
     }
 
     private String getDefaultSystemPrompt() {
-        return "你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、"
-                + "分析项目进度、发起审批流程、发送消息通知等。请用中文回答。";
+        return properties.getDefaultSystemPrompt();
     }
 
     /**

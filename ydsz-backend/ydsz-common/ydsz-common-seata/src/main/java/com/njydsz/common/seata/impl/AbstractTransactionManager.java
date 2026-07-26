@@ -11,6 +11,19 @@ import com.njydsz.common.seata.metrics.SeataMetrics;
 
 import org.springframework.beans.factory.ObjectProvider;
 
+/**
+ * 分布式事务管理器抽象基类。
+ *
+ * <p>提供 XID 生成与 ThreadLocal 传播、事务开始/完成的指标记录和审计日志等公共能力。
+ * 子类（{@code SeataAtTransactionManager}、{@code TccTransactionManager}、{@code SagaOrchestrator}）
+ * 只需实现 {@link #getCurrentType()} 和具体的 begin/commit/rollback 逻辑。
+ *
+ * <p>通过 {@link ObjectProvider} 可选注入 {@link SeataMetrics} 和 {@link TransactionAuditLogger}，
+ * 未配置时降级跳过指标和审计。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public abstract class AbstractTransactionManager implements DistributedTransactionManager {
     private static final Logger log = LoggerFactory.getLogger(AbstractTransactionManager.class);
     private static final ThreadLocal<String> XID_HOLDER = new ThreadLocal<>();

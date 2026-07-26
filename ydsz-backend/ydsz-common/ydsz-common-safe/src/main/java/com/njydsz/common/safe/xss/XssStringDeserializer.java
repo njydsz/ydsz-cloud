@@ -17,8 +17,8 @@ import com.njydsz.common.json.reader.JSONReader;
  *   <li>HTML 实体编码特殊字符：{@code < > " ' &}</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class XssStringDeserializer implements JsonDeserializer<String> {
 

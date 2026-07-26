@@ -73,6 +73,7 @@ import com.njydsz.common.util.url.UrlPathUtils;
  * <p><b>误报控制：</b>不匹配裸 SQL 关键字（避免正常业务查询"select user"等被误判），
  * 仅匹配组合攻击特征。表单中包含 SQL 字段名（如 ORDER BY DESC）时建议加入白名单参数。</p>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class SqlInjectionFilter extends OncePerRequestFilter {

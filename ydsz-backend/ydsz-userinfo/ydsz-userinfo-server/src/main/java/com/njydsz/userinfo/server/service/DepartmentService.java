@@ -1,6 +1,8 @@
 package com.njydsz.userinfo.server.service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
@@ -36,4 +38,12 @@ public interface DepartmentService {
      * @return 部门负责人用户 ID，未设置时返回 null
      */
     String getDeptLeaderByDeptCode(String deptCode);
+
+    /**
+     * 批量查询部门 ID → 部门名映射（供 NameAssembler 跨服务富化 deptName 字段）。
+     *
+     * @param deptIds 部门 ID 集合（允许 null / 空，返回空 Map）
+     * @return deptId → deptName 映射；未命中的 deptId 不出现在 Map 中
+     */
+    Map<String, String> batchNamesByIds(Collection<String> deptIds);
 }

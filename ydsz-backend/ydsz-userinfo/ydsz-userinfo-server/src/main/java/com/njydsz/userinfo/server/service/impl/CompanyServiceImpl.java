@@ -1,6 +1,10 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
@@ -91,6 +95,34 @@ public class CompanyServiceImpl implements CompanyService {
             throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
         }
         return mapper.deleteById(id) > 0;
+    }
+
+    /**
+     * 批量查询公司 ID → 公司名映射。
+     *
+     * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)}
+     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link CompanyDO#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
+     */
+    @Override
+    public Map<String, String> batchNamesByIds(Collection<String> companyIds) {
+        if (companyIds == null || companyIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<String> distinctIds = companyIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
+        if (distinctIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<CompanyDO> companies = mapper.selectBatchIds(distinctIds);
+        Map<String, String> result = new LinkedHashMap<>(companies.size());
+        for (CompanyDO company : companies) {
+            if (company.getCompanyName() != null && !company.getCompanyName().isBlank()) {
+                result.put(company.getId(), company.getCompanyName());
+            }
+        }
+        return result;
     }
 
     private CompanyVO toVO(CompanyDO entity) {

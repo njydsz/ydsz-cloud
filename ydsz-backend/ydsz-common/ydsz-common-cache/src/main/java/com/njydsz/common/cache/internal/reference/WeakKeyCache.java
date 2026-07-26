@@ -14,6 +14,21 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.cache.internal.AbstractCache;
 import com.njydsz.common.cache.listener.RemovalCause;
 
+/**
+ * 弱引用键缓存实现。
+ *
+ * <p>缓存键使用 {@link WeakReference} 持有，当键对象被 GC 回收后，
+ * 对应的缓存条目会在下次访问时通过 {@link ReferenceQueue} 自动清理。
+ * 适用于以临时对象作为键、避免缓存阻止垃圾回收的场景。
+ *
+ * <p>基于 {@link ConcurrentHashMap} 实现，清理操作以 1ms 间隔惰性触发，
+ * 避免频繁扫描 {@link ReferenceQueue} 的性能开销。
+ *
+ * @param <K> 缓存键类型（弱引用持有）
+ * @param <V> 缓存值类型
+ * @author ydsz-team
+ * @since 1.0.0
+ */
 public class WeakKeyCache<K, V> extends AbstractCache<K, V> {
 
   private static final Logger log = LoggerFactory.getLogger(WeakKeyCache.class);

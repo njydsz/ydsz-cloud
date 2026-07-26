@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @TableName("nw_search_index")
-public class SearchIndex extends BaseEntity<String> implements Serializable {
+public class SearchIndex extends MpBaseEntity<String> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

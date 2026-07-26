@@ -60,8 +60,8 @@ import com.njydsz.common.cache.builder.CacheBuilder;
  *     .build();
  * }</pre>
  *
+ * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public final class YdszCache {
 

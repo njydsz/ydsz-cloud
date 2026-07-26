@@ -93,8 +93,13 @@ public class CostAnalysisService {
 
         public void save(TokenUsageRecord record) {
             if (store.size() >= MAX_RECORDS) {
-                log.warn("[Cost] Token 用量记录已达上限 ({}), 丢弃旧记录", MAX_RECORDS);
-                store.clear();
+                String oldestKey = store.values().stream()
+                        .min((a, b) -> a.createdAt().compareTo(b.createdAt()))
+                        .map(TokenUsageRecord::id)
+                        .orElse(null);
+                if (oldestKey != null) {
+                    store.remove(oldestKey);
+                }
             }
             store.put(record.id(), record);
         }
