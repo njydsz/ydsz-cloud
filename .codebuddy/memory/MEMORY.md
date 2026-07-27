@@ -26,6 +26,15 @@
 
 ## 公司代码规范（强制）
 
+### 实体类命名规范（无 DO 后缀）
+- **规则**：数据库实体类（Entity）**不以 `DO` 为后缀**，直接使用业务名称作为类名。`VO`、`DTO` 后缀保留不变。
+- **示例**：`UserAccount`（非 `UserAccountDO`）、`Role`（非 `RoleDO`）、`FlowDefinition`（非 `FlowDefinitionDO`）、`Job`（非 `JobDO`）
+- **基类**：`Base`（原 `BaseDO`）、`BaseLong`（原 `BaseLongDO`）、`LogBase`（原 `LogBaseDO`）
+- **例外**：6 个 DO 类因与同模块已有领域模型/API 类同名，保留 `DO` 后缀：`AgentDefinitionDO`、`RuleDefinitionDO`、`RuleExecutionTraceDO`、`RulePackDO`、`RuleChainGraphDO`、`RuleTestCaseDO`
+- **执行时间**：2026-07-27，批量重命名 130 个 DO 文件 + 更新 618 个 Java 文件 + 66 个 XML Mapper 文件
+- **规则文件**：`.trae/rules/entity-naming.md`（`alwaysApply: true`）
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 1）
+
 ### 禁止行内全限定类名（FQN）
 - **规则**：Java 代码中不允许出现行内 FQN 用法，必须使用标准 `import` 语句后在代码中直接引用简单类名。
 - **触发案例**：
@@ -37,7 +46,7 @@
 - **覆盖范围**：类型引用、`.class` 字面量、注解（含 `@Import` 等注解参数）、静态方法调用、`new` 表达式、`instanceof` 检查、方法引用（`::`）、Javadoc `@throws`/`@see`/`@param`/`@return` 标签中的类型名。
 - **唯一例外**：字符串字面量中的 FQN（如反射类名）、Javadoc `{@link FQN}` 引用（仅 `{@link}` 标签，不含 `@throws`/`@see` 等）可保留完整路径。但如果该类已被 import，则必须使用简单类名。
 - **规则文件**：`.trae/rules/no-inline-fqn.md`（`alwaysApply: true`）。
-- **详细文档**：`deploy/docs/architecture/coding-standards.md`。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 2）。
 - **修复历史**：
   - (1) 2026-07-12 第一轮修复。
   - (2) 2026-07-12 第二轮修复：清理 `@throws`/`@see`/`@Import`/方法参数 FQN 违规。
@@ -65,7 +74,7 @@
   - `deprecation`：迁移到推荐的新 API。
   - `all`：逐个分析和修复每个警告。
 - **规则文件**：`.trae/rules/no-inline-fqn.md`（`alwaysApply: true`，与 FQN 规则同一文件）。
-- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 2）。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 3）。
 - **检测脚本**：`deploy/scripts/check-inline-fqn.sh` 同时检测 `@SuppressWarnings`，`--strict` 模式阻断 PR。
 - **现有存量**：截至 2026-07-13，项目中存在约 208 处 `@SuppressWarnings` 用法，分布在 workflow、common-util、message、project 等模块，待后续批量修复。
 
@@ -78,7 +87,7 @@
   4. **跨平台不一致**：Windows PowerShell 5.x 与 PowerShell 7+ 行为差异大，脚本可移植性差。
 - **正确做法**：使用 Python `pathlib`、`io` 模块，固定 `encoding="utf-8"`，跨平台一致。
 - **规则文件**：`.trae/rules/prefer-python-over-powershell.md`（`alwaysApply: true`）。
-- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 3）。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 4）。
 - **新脚本约束**：所有新增脚本工具（`deploy/scripts/`、`scripts/`）默认使用 Python 实现。**既有 `.ps1` 脚本（如 `check-bom.ps1`、`strip-bom.ps1`、`build-images.ps1` 等）逐步迁移到 `.py`**，迁移完成前可保留作为 Windows 兼容入口；即便在例外场景下，所有涉及文件读写、文本处理的操作也必须通过 Python 包装执行。
 
 ### 忽略单元测试覆盖率检查
@@ -86,4 +95,4 @@
 - **配置**：`ydsz-backend/pom.xml` 中 `<skipJacoco>true</skipJacoco>` + `<skipJacocoCheck>true</skipJacocoCheck>`，并从 `<build><plugins>` 中移除 `jacoco-maven-plugin` 声明。
 - **临时启用**：`mvn verify -DskipJacoco=false -DskipTests=false` 可临时生成覆盖率报告。
 - **CI 影响**：CI 流水线仅执行 `mvn compile -DskipTests`，不涉及 verify 阶段，JaCoCo 禁用对 CI 无影响。
-- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 4）。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 5）。
