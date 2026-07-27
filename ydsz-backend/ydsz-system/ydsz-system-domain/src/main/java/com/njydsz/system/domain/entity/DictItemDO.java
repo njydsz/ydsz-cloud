@@ -23,8 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_dict_item")
 public class DictItemDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String typeCode;
     private String itemCode;
     private String itemValue;

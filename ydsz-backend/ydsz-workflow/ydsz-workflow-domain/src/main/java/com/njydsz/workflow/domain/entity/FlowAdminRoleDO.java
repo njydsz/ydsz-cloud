@@ -43,9 +43,6 @@ public class FlowAdminRoleDO extends MpBaseEntity<String> {
     /** 角色编码（FLOW_ADMIN / FLOW_DESIGNER / FLOW_AUDITOR） */
     private String roleCode;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 是否启用 */
     private Boolean enabled;
 

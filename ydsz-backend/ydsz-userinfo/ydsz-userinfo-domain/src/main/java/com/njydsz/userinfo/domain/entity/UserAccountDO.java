@@ -30,8 +30,6 @@ import java.time.LocalDateTime;
 @TableName("ydsz_user_account")
 public class UserAccountDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String username;
     private String password;
     private String realName;

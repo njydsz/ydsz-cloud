@@ -41,5 +41,4 @@ public class AgentDefinitionDO extends MpBaseEntity<String> {
 
     private Integer maxTokens;
 
-    private String tenantId;
 }

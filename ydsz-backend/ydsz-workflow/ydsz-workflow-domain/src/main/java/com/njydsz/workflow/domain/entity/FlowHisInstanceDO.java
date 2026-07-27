@@ -48,6 +48,6 @@ public class FlowHisInstanceDO extends MpBaseEntity<String> {
     private LocalDateTime endAt;
     private Long durationMs;
     private LocalDateTime archivedAt;
-    private String tenantId;
+
     private String providerTraceId;
 }

@@ -36,9 +36,6 @@ public class RuleChainGraphDO extends MpBaseEntity<String> {
     /** 适用场景（与 RuleContext.scenario 对应） */
     private String scenario;
 
-    /** 租户 ID（多租户隔离，默认 1） */
-    private String tenantId;
-
     /** 画布版本号（独立递增） */
     private Integer graphVersion;
 

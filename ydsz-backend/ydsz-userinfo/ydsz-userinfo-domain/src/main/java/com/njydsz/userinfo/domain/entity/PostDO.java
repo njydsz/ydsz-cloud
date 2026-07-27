@@ -23,8 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_post")
 public class PostDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String postName;
     private String postCode;
     private String description;

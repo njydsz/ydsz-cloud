@@ -46,6 +46,4 @@ public class FlowCategoryDO extends MpBaseEntity<String> {
     /** 备注 */
     private String remark;
 
-    /** 租户 ID */
-    private String tenantId;
 }

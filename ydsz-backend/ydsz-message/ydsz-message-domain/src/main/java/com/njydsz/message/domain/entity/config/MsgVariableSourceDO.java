@@ -47,6 +47,4 @@ public class MsgVariableSourceDO extends MpBaseEntity<String> {
     /** 描述说明 */
     private String description;
 
-    /** 租户 ID */
-    private String tenantId;
 }

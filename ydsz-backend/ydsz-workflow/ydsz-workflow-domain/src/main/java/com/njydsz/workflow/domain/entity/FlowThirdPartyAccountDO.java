@@ -64,6 +64,4 @@ public class FlowThirdPartyAccountDO extends MpBaseEntity<String> {
     /** P2-6: 双向同步 — 本地→三方"取消审批单"回调 URL（钉钉/飞书/企微提供） */
     private String cancelWebhookUrl;
 
-    /** 租户 ID */
-    private String tenantId;
 }

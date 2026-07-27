@@ -22,9 +22,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_dict_type")
 public class DictTypeDO extends MpBaseEntity<String> {
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 类型编码（唯一标识，用于业务引用） */
     private String typeCode;
     /** 类型名称（展示用） */

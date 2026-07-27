@@ -45,6 +45,4 @@ public class RuleDependencyDO extends MpBaseEntity<String> {
     /** 依赖说明 */
     private String description;
 
-    /** 租户 ID */
-    private String tenantId;
 }

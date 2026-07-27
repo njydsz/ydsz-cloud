@@ -141,9 +141,6 @@ public class FlowRunTaskDO extends MpBaseEntity<String> {
      */
     private String iterVar;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 链路追踪 ID */
     private String providerTraceId;
 }

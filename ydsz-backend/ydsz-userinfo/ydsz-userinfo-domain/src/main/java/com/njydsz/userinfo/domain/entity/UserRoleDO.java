@@ -23,8 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_user_role")
 public class UserRoleDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String userId;
     private String roleId;
 }

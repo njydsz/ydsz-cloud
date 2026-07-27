@@ -23,9 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_config")
 public class ConfigDO extends MpBaseEntity<String> {
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 配置分组（用于按业务域分类管理配置） */
     private String configGroup;
     /** 配置键（同组内唯一标识） */

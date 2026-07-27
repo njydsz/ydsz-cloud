@@ -75,6 +75,4 @@ public class MsgBatchDO extends MpBaseEntity<String> {
     /** 触发发送的用户 ID */
     private String senderId;
 
-    /** 租户 ID */
-    private String tenantId;
 }

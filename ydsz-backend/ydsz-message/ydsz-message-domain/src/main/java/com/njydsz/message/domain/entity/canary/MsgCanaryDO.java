@@ -50,6 +50,4 @@ public class MsgCanaryDO extends MpBaseEntity<String> {
     /** 描述说明 */
     private String description;
 
-    /** 租户 ID(单租户部署默认 1) */
-    private String tenantId;
 }

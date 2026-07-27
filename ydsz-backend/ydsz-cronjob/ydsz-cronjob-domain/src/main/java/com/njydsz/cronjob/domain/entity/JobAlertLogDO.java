@@ -77,6 +77,4 @@ public class JobAlertLogDO extends MpBaseEntity<String> {
     /** 触发该告警的任务日志 ID（关联 ydsz_job_log.id） */
     private String triggerLogId;
 
-    /** 租户 ID */
-    private String tenantId;
 }

@@ -24,8 +24,6 @@ import java.time.LocalDateTime;
 @TableName("ydsz_dict_version")
 public class DictVersionDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String typeCode;
     private String version;
     private String changeLog;

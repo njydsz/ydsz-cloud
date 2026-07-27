@@ -80,8 +80,7 @@ public class FlowHisTaskDO extends MpBaseEntity<String> {
     private LocalDateTime finishAt;
     /** 耗时（毫秒） */
     private Long durationMs;
-    /** 租户 ID */
-    private String tenantId;
+
     /** 链路追踪 ID */
     private String providerTraceId;
 

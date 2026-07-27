@@ -85,9 +85,6 @@ public class FlowDmnDecisionDO extends MpBaseEntity<String> {
     /** 备注 */
     private String remark;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 链路追踪 ID */
     private String providerTraceId;
 }

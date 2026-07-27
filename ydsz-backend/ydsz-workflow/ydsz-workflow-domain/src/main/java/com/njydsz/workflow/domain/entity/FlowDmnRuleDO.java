@@ -69,9 +69,6 @@ public class FlowDmnRuleDO extends MpBaseEntity<String> {
     /** 是否启用（0=禁用 / 1=启用） */
     private Integer enabled;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 链路追踪 ID */
     private String providerTraceId;
 }

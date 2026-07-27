@@ -48,6 +48,4 @@ public class MsgReceiptDO extends MpBaseEntity<String> {
     /** 原始响应 JSON */
     private String rawResponse;
 
-    /** 租户 ID(单租户部署默认 1) */
-    private String tenantId;
 }

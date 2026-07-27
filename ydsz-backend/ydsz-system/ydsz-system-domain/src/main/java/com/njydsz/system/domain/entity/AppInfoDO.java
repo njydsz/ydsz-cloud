@@ -22,9 +22,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_app_info")
 public class AppInfoDO extends MpBaseEntity<String> {
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 应用编码（唯一标识，用于 OAuth2 client_id） */
     private String appCode;
     /** 应用名称 */

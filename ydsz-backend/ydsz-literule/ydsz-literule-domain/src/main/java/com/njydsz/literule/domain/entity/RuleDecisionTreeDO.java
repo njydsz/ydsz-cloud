@@ -24,9 +24,6 @@ import lombok.experimental.SuperBuilder;
 @TableName(value = "ydsz_rule_decision_tree", autoResultMap = true)
 public class RuleDecisionTreeDO extends MpBaseEntity<String> {
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 规则编码 */
     private String ruleCode;
 

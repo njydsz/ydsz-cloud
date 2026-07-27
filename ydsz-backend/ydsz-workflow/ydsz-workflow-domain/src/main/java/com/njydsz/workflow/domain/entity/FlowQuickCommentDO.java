@@ -47,6 +47,4 @@ public class FlowQuickCommentDO extends MpBaseEntity<String> {
     /** 是否为系统预设（1=系统预设，0=用户自定义） */
     private Integer isSystem;
 
-    /** 租户 ID */
-    private String tenantId;
 }

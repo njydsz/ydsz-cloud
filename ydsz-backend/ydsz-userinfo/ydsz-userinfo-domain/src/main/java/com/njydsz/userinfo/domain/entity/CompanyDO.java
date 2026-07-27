@@ -23,8 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_company")
 public class CompanyDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String companyName;
     private String companyCode;
     private String parentId;

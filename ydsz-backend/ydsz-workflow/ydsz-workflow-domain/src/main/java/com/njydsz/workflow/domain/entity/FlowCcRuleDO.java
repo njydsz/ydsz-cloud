@@ -28,9 +28,6 @@ public class FlowCcRuleDO extends MpBaseEntity<String> {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 流程编码 */
     private String flowCode;
 

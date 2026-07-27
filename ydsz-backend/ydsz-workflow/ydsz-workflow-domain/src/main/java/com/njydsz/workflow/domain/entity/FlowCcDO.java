@@ -30,9 +30,6 @@ public class FlowCcDO extends MpBaseEntity<String> {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 流程实例 ID */
     private String instanceId;
 

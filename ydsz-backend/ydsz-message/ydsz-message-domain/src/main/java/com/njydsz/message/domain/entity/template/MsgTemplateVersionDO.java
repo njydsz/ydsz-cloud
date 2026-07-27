@@ -50,6 +50,4 @@ public class MsgTemplateVersionDO extends MpBaseEntity<String> {
     /** 审核意见 */
     private String auditRemark;
 
-    /** 租户 ID */
-    private String tenantId;
 }

@@ -52,6 +52,4 @@ public class MsgOfflineDO extends MpBaseEntity<String> {
     /** 过期时间（默认 createdAt + 30 天） */
     private LocalDateTime expiredAt;
 
-    /** 租户 ID */
-    private String tenantId;
 }

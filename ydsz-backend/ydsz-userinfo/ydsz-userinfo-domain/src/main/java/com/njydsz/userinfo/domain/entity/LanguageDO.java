@@ -23,8 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_language")
 public class LanguageDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String languageCode;
     private String languageName;
     private Integer isDefault;

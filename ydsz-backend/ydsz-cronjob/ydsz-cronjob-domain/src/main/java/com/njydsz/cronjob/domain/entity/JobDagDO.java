@@ -91,6 +91,4 @@ public class JobDagDO extends MpBaseEntity<String> {
     /** 版本号(乐观锁) */
     private Integer version;
 
-    /** 租户 ID */
-    private String tenantId;
 }

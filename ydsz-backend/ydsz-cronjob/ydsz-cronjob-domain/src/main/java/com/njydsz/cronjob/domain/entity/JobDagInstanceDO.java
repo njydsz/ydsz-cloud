@@ -83,6 +83,4 @@ public class JobDagInstanceDO extends MpBaseEntity<String> {
     /** 跳过节点数 */
     private Integer skippedNodes;
 
-    /** 租户 ID */
-    private String tenantId;
 }

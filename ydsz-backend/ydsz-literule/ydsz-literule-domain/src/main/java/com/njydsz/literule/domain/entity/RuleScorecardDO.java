@@ -26,9 +26,6 @@ import lombok.experimental.SuperBuilder;
 @TableName(value = "ydsz_rule_scorecard", autoResultMap = true)
 public class RuleScorecardDO extends MpBaseEntity<String> {
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 规则编码 */
     private String ruleCode;
 

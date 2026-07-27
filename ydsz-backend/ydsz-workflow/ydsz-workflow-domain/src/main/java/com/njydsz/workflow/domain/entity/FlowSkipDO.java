@@ -61,9 +61,6 @@ public class FlowSkipDO extends MpBaseEntity<String> {
     /** 扩展字段 JSON（存储 sourceRef/sequenceFlowId 等 BPMN 派生信息） */
     private String ext;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 链路追踪 ID */
     private String providerTraceId;
 }

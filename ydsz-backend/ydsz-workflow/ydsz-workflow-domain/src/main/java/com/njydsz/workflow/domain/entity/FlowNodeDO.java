@@ -77,9 +77,6 @@ public class FlowNodeDO extends MpBaseEntity<String> {
     /** GAP-P1: SLA 超时配置 JSON — {"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT","reminderCount":3,"adminUserId":1} */
     private String slaConfig;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 链路追踪 ID */
     private String providerTraceId;
 }

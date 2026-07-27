@@ -65,6 +65,4 @@ public class MsgPreferenceDO extends MpBaseEntity<String> {
     /** 扩展字段 JSON */
     private String extra;
 
-    /** 租户 ID(单租户部署默认 1) */
-    private String tenantId;
 }

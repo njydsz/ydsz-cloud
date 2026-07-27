@@ -84,6 +84,4 @@ public class JobAlertRuleDO extends MpBaseEntity<String> {
     /** 最后告警时间（用于冷却判断） */
     private LocalDateTime lastAlertAt;
 
-    /** 租户 ID */
-    private String tenantId;
 }

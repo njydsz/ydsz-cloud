@@ -70,9 +70,6 @@ public class MsgTraceDO extends MpBaseEntity<String> {
     /** 节点发生时间 */
     private LocalDateTime eventAt;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /**
      * 轨迹节点类型枚举。
      */

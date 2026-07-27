@@ -94,9 +94,6 @@ public class FlowInstanceDO extends MpBaseEntity<String> {
     /** GAP-P1: 父流程中触发子流程的节点编码（可空） */
     private String parentNodeCode;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 链路追踪 ID */
     private String providerTraceId;
 

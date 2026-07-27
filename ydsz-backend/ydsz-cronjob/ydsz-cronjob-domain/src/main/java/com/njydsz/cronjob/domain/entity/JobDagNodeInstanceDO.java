@@ -77,6 +77,4 @@ public class JobDagNodeInstanceDO extends MpBaseEntity<String> {
     /** 节点错误信息 */
     private String errorMessage;
 
-    /** 租户 ID */
-    private String tenantId;
 }

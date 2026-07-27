@@ -47,6 +47,4 @@ public class MsgUserChannelDO extends MpBaseEntity<String> {
     /** 扩展字段 JSON(如 deviceToken / openId 等) */
     private String extra;
 
-    /** 租户 ID */
-    private String tenantId;
 }

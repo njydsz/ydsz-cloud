@@ -23,8 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_menu")
 public class MenuDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String parentId;
     private String menuName;
     private String menuCode;

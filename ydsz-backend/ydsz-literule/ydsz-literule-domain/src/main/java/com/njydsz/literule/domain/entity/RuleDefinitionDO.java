@@ -80,9 +80,6 @@ public class RuleDefinitionDO extends MpBaseEntity<String> {
     @Version
     private Integer version;
 
-    /** 租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用） */
-    private String tenantId;
-
     /** 生命周期状态 */
     private String status;
 

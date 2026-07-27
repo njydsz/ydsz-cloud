@@ -57,6 +57,4 @@ public class MsgAggregateDO extends MpBaseEntity<String> {
     /** 聚合后摘要内容(渲染后) */
     private String digestContent;
 
-    /** 租户 ID(单租户部署默认 1) */
-    private String tenantId;
 }

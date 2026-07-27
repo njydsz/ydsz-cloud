@@ -46,6 +46,4 @@ public class RuleVariableDefDO extends MpBaseEntity<String> {
     /** 是否启用 */
     private Boolean enabled;
 
-    /** 租户 ID（单租户部署默认 1） */
-    private String tenantId;
 }

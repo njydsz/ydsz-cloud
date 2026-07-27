@@ -121,9 +121,6 @@ public class MsgLogDO extends MpBaseEntity<String> {
     /** RocketMQ 重试次数 */
     private Integer reconsumeTimes;
 
-    /** 租户 ID(单租户部署默认 1) */
-    private String tenantId;
-
     /** P2-6: 父消息 ID(级联发送时自动填充,用于追溯级联关系) */
     private String parentMsgId;
 

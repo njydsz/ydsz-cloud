@@ -30,9 +30,6 @@ public class FlowDelegateAuthDO extends MpBaseEntity<String> {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 授权人（原办理人）ID */
     private String ownerUserId;
 

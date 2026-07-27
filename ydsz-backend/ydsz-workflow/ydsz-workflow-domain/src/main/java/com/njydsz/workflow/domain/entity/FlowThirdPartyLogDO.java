@@ -67,6 +67,4 @@ public class FlowThirdPartyLogDO extends MpBaseEntity<String> {
     /** P0-4: 最后一次重试时间 */
     private LocalDateTime lastRetriedAt;
 
-    /** 租户 ID */
-    private String tenantId;
 }

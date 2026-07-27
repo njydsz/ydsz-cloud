@@ -31,9 +31,6 @@ public class FlowAttachmentDO extends MpBaseEntity<String> {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 关联流程实例 ID */
     private String instanceId;
 

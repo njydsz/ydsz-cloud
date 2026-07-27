@@ -212,6 +212,4 @@ public class JobDO extends MpBaseEntity<String> {
      */
     private String canaryHandler;
 
-    /** 租户 ID */
-    private String tenantId;
 }

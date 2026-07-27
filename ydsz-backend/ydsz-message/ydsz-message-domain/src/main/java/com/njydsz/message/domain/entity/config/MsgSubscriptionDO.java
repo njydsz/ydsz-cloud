@@ -45,9 +45,6 @@ public class MsgSubscriptionDO extends MpBaseEntity<String> {
     /** 扩展字段 JSON */
     private String extra;
 
-    /** 租户 ID(单租户部署默认 1) */
-    private String tenantId;
-
     /** 退订时间（P1-5：仅当 status=UNSUBSCRIBED 时有意义；SUBSCRIBED 时为 null） */
     private LocalDateTime unsubscribedAt;
 }

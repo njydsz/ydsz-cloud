@@ -99,4 +99,42 @@ public class TenantAutoConfiguration {
         log.info("多租户异步上下文传播已启用");
         return new TenantContextTaskDecorator(properties);
     }
+
+    /**
+     * ISOLATE_DB 模式数据源路由器（可选，mode=ISOLATE_DB 时）。
+     *
+     * @param routingDataSource 动态数据源
+     * @param properties       租户配置
+     * @return 数据源路由器
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "ydsz.tenant", name = "mode",
+                          havingValue = "ISOLATE_DB")
+    @ConditionalOnClass(name = "com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource")
+    @ConditionalOnMissingBean
+    public com.njydsz.common.tenant.datasource.TenantDataSourceRouter tenantDataSourceRouter(
+            com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource routingDataSource,
+            TenantProperties properties) {
+        log.info("多租户 ISOLATE_DB 模式已启用，数据源路由器已注册");
+        return new com.njydsz.common.tenant.datasource.TenantDataSourceRouter(routingDataSource, properties);
+    }
+
+    /**
+     * ISOLATE_DB 模式 Web 过滤器（可选，mode=ISOLATE_DB + web 应用时）。
+     *
+     * @param router     数据源路由器
+     * @param properties 租户配置
+     * @return Web 过滤器
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "ydsz.tenant", name = "mode",
+                          havingValue = "ISOLATE_DB")
+    @ConditionalOnClass(name = "jakarta.servlet.Filter")
+    @ConditionalOnWebApplication
+    @ConditionalOnMissingBean
+    public com.njydsz.common.tenant.datasource.TenantDataSourceFilter tenantDataSourceFilter(
+            com.njydsz.common.tenant.datasource.TenantDataSourceRouter router,
+            TenantProperties properties) {
+        return new com.njydsz.common.tenant.datasource.TenantDataSourceFilter(router, properties);
+    }
 }

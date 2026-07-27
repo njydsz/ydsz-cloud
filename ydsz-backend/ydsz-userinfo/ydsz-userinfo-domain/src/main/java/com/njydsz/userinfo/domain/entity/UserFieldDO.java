@@ -23,8 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_user_field")
 public class UserFieldDO extends MpBaseEntity<String> {
 
-    private String tenantId;
-
     private String userId;
     private String fieldKey;
     private String fieldValue;

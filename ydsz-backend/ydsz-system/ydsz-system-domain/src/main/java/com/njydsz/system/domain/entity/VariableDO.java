@@ -23,9 +23,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("ydsz_variable")
 public class VariableDO extends MpBaseEntity<String> {
 
-    /** 租户 ID */
-    private String tenantId;
-
     /** 变量键（唯一标识） */
     private String variableKey;
     /** 变量值 */

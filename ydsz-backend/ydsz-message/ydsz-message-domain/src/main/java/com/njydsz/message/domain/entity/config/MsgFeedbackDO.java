@@ -58,6 +58,4 @@ public class MsgFeedbackDO extends MpBaseEntity<String> {
     /** 反馈内容（用户自由文本输入） */
     private String content;
 
-    /** 租户 ID */
-    private String tenantId;
 }
