@@ -40,6 +40,7 @@ import net.sf.jsqlparser.statement.update.Update;
 
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 /**
  * 多租户隔离拦截器。
  *
@@ -243,7 +244,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                 }
                 inClause.append(")");
                 try {
-                    condition = net.sf.jsqlparser.parser.CCJSqlParserUtil.parseCondExpression(inClause.toString());
+                    condition = CCJSqlParserUtil.parseCondExpression(inClause.toString());
                 } catch (JSQLParserException e) {
                     throw new RuntimeException("解析 IN 表达式失败: " + inClause, e);
                 }

@@ -159,14 +159,23 @@ public final class TenantContext {
     /**
      * 获取字段值（多值）。
      *
+     * <p>通过遍历 {@code List<?>} 并对每个元素进行 {@code instanceof String}
+     * 检查来构建 {@code List<String>}，避免使用 {@code @SuppressWarnings("unchecked")}
+     * 注解和未经检查的强制类型转换。非 String 元素会被跳过。
+     *
      * @param claim 字段名
      * @return 多值列表，单值时包装为单元素列表，不存在返回空列表
      */
-    @SuppressWarnings("unchecked")
     public List<String> getFieldValues(String claim) {
         Object value = fields.get(claim);
         if (value instanceof List<?> list) {
-            return (List<String>) list;
+            List<String> result = new ArrayList<>(list.size());
+            for (Object item : list) {
+                if (item instanceof String s) {
+                    result.add(s);
+                }
+            }
+            return result;
         }
         if (value instanceof String s) {
             return List.of(s);

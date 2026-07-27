@@ -229,7 +229,7 @@ public class FileController {
     @PostMapping("/chunk/init")
     @Operation(summary = "初始化分片上传", description = "大文件分片上传，支持断点续传")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    public BaseResponse<com.njydsz.nextwiki.server.service.ChunkUploadApplicationService.ChunkUploadInit> initChunkUpload(
+    public BaseResponse<ChunkUploadApplicationService.ChunkUploadInit> initChunkUpload(
             @RequestParam("fileName") String fileName,
             @RequestParam("fileSize") long fileSize,
             @RequestParam("totalChunks") int totalChunks,

@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "灰度A/B报表", description = "灰度实验命中/转化对比统计")
 @RestController
-@RequestMapping("/message/canary/report")
+@RequestMapping("/api/v1/message/canary/report")
 @RequiredArgsConstructor
 public class CanaryReportController {
 

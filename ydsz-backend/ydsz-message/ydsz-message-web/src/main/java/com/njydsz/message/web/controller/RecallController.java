@@ -32,7 +32,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "消息撤回", description = "通知/消息撤回")
 @RestController
-@RequestMapping("/message/recall")
+@RequestMapping("/api/v1/message/recall")
 @RequiredArgsConstructor
 public class RecallController {
 

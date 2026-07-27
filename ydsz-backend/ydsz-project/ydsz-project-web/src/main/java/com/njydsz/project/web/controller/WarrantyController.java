@@ -32,14 +32,14 @@ public class WarrantyController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create Warranty")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create Warranty")
     public BaseResponse<Boolean> save(@RequestBody WarrantyPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update Warranty")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update Warranty")
     public BaseResponse<Boolean> update(@RequestBody WarrantyPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete Warranty")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete Warranty")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

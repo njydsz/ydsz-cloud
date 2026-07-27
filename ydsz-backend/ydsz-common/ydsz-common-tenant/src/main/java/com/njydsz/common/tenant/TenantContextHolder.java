@@ -3,6 +3,7 @@ package com.njydsz.common.tenant;
 import com.alibaba.ttl.TransmittableThreadLocal;
 
 import java.util.List;
+import java.util.Collections;
 /**
  * 租户上下文统一持有者。
  *
@@ -94,7 +95,7 @@ public final class TenantContextHolder {
      */
     public static List<String> getFieldValues(String claim) {
         TenantContext context = HOLDER.get();
-        return context != null ? context.getFieldValues(claim) : java.util.Collections.emptyList();
+        return context != null ? context.getFieldValues(claim) : Collections.emptyList();
     }
 
     /**

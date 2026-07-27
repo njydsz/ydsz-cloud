@@ -488,7 +488,7 @@ public class ChunkUploadApplicationService {
      * 创建基于 Path 的 MultipartFile（与 PreviewApplicationService 中实现一致）
      */
     private MultipartFile createMultipartFile(Path filePath, String name) throws IOException {
-        String contentType = java.nio.file.Files.probeContentType(filePath);
+        String contentType = Files.probeContentType(filePath);
         return new SimplePathMultipartFile(filePath, name, contentType != null ? contentType : "application/octet-stream");
     }
 

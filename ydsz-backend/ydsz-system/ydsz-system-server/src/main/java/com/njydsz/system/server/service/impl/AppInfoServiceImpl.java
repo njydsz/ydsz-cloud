@@ -95,7 +95,7 @@ public class AppInfoServiceImpl implements AppInfoService {
         }
         wrapper.orderByDesc("created_at");
         IPage<AppInfo> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        List<AppInfoVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        List<AppInfoVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
         Page<AppInfoVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
         return result;
@@ -104,7 +104,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<AppInfoVO> list() {
-        return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
+        return mapper.selectList(null).stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
     }
 
     /**
@@ -152,6 +152,8 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
         return mapper.deleteById(id) > 0;
+    }
+
     private AppInfo toEntity(AppInfoDTO dto) {
         AppInfo entity = new AppInfo();
         entity.setId(dto.getId());

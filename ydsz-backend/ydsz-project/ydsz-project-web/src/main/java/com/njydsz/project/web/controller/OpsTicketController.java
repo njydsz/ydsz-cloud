@@ -32,14 +32,14 @@ public class OpsTicketController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create OpsTicket")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create OpsTicket")
     public BaseResponse<Boolean> save(@RequestBody OpsTicketPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update OpsTicket")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update OpsTicket")
     public BaseResponse<Boolean> update(@RequestBody OpsTicketPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete OpsTicket")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete OpsTicket")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

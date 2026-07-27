@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.exception.custom.SysException;
 
+import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -75,7 +76,7 @@ class SqlFirewallInnerInterceptorTest {
     void shouldAllowDropForWhitelistedTable() {
         SqlFirewallInnerInterceptor firewall = new SqlFirewallInnerInterceptor();
         firewall.setEnabled(true);
-        firewall.setAllowTables(java.util.Set.of("temp_table"));
+        firewall.setAllowTables(Set.of("temp_table"));
         // 白名单表应允许 DROP
         assertDoesNotThrow(() -> {
             // 白名单表不抛异常

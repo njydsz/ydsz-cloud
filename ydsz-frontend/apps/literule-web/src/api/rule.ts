@@ -37,30 +37,30 @@ export function getRulePageApi(params: RuleApi.RulePageQuery) {
     current: number;
     size: number;
     items: RuleApi.RuleVO[];
-  }>(`/ruleEngine/rules/page`, { params });
+  }>(`/api/v1/literule/rules/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getRuleListApi() {
-  return requestClient.get<RuleApi.RuleVO[]>(`/ruleEngine/rules/list`);
+  return requestClient.get<RuleApi.RuleVO[]>(`/api/v1/literule/rules/list`);
 }
 
 /** 根据 ID 查询 */
 export function getRuleByIdApi(id: string) {
-  return requestClient.get<RuleApi.RuleVO>(`/ruleEngine/rules/${id}`);
+  return requestClient.get<RuleApi.RuleVO>(`/api/v1/literule/rules/${id}`);
 }
 
 /** 创建 */
 export function createRuleApi(data: RuleApi.RuleDTO) {
-  return requestClient.post<string>(`/ruleEngine/rules`, data);
+  return requestClient.post<string>(`/api/v1/literule/rules`, data);
 }
 
 /** 更新 */
 export function updateRuleApi(data: RuleApi.RuleDTO) {
-  return requestClient.put<boolean>(`/ruleEngine/rules`, data);
+  return requestClient.put<boolean>(`/api/v1/literule/rules`, data);
 }
 
 /** 删除 */
 export function deleteRuleApi(id: string) {
-  return requestClient.delete<boolean>(`/ruleEngine/rules/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/literule/rules/${id}`);
 }

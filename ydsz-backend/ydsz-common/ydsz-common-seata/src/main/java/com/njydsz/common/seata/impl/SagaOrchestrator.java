@@ -59,14 +59,17 @@ public class SagaOrchestrator extends AbstractTransactionManager {
      *
      * <p>按顺序执行步骤链，失败时逆序补偿已完成步骤。
      *
+     * <p><b>返回类型说明：</b>返回 {@link Object} 而非泛型 {@code <T>}，
+     * 因为 {@code (T) lastResult} 在类型擦除后无法做运行时检查，
+     * 必然导致未经检查的强制类型转换。调用方如需特定类型，请使用
+     * {@link #execute(String, List, Class)} 显式传入结果类型。
+     *
      * @param transactionName 事务名称
      * @param steps           SAGA 步骤链
-     * @param <T>             最后一步的返回值类型
-     * @return 最后一步的返回值
+     * @return 最后一步的返回值（类型为 {@link Object}）
      * @throws Exception 事务异常
      */
-    @SuppressWarnings("unchecked")
-    public <T> T execute(String transactionName, List<? extends SagaStep<?>> steps) throws Exception {
+    public Object execute(String transactionName, List<? extends SagaStep<?>> steps) throws Exception {
         String xid = beginXid(transactionName);
         log.info("SAGA transaction started: name={}, xid={}, steps={}", transactionName, xid, steps.size());
 
@@ -84,7 +87,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
             }
 
             log.info("SAGA transaction completed: name={}, xid={}", transactionName, xid);
-            return (T) lastResult;
+            return lastResult;
 
         } catch (Exception e) {
             log.error("SAGA transaction failed at step {}/{}, executing compensation: name={}, xid={}",
@@ -102,6 +105,24 @@ public class SagaOrchestrator extends AbstractTransactionManager {
             }
             throw e;
         }
+    }
+
+    /**
+     * 执行 SAGA 事务（带类型安全的结果转换）。
+     *
+     * <p>相比 {@link #execute(String, List)}，本方法通过 {@link Class#cast(Object)}
+     * 在运行时验证最后一步返回值的类型，避免调用方进行未经检查的强制类型转换。
+     *
+     * @param transactionName 事务名称
+     * @param steps           SAGA 步骤链
+     * @param resultType      最后一步返回值的预期类型
+     * @param <T>             最后一步的返回值类型
+     * @return 最后一步的返回值
+     * @throws Exception 事务异常或类型不匹配
+     */
+    public <T> T execute(String transactionName, List<? extends SagaStep<?>> steps, Class<T> resultType) throws Exception {
+        Object result = execute(transactionName, steps);
+        return resultType.cast(result);
     }
 
     private void compensateStepWithRetry(SagaStep<?> step, String xid) {
@@ -135,7 +156,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
      */
     @Override
     public TransactionType getCurrentType() {
-        return com.njydsz.common.seata.api.TransactionType.SAGA;
+        return TransactionType.SAGA;
     }
 
     /**

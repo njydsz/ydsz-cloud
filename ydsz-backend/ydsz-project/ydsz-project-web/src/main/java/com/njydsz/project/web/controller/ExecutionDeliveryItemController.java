@@ -32,14 +32,14 @@ public class ExecutionDeliveryItemController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionDeliveryItem")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionDeliveryItem")
     public BaseResponse<Boolean> save(@RequestBody ExecutionDeliveryItemPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionDeliveryItem")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionDeliveryItem")
     public BaseResponse<Boolean> update(@RequestBody ExecutionDeliveryItemPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionDeliveryItem")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionDeliveryItem")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

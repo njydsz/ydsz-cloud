@@ -37,7 +37,7 @@ import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-delegate", description = "工作流授权委派接口")
-@RequestMapping("/workflow/engine")
+@RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowDelegateController {

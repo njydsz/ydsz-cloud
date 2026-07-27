@@ -78,7 +78,7 @@ public class ConfigServiceImpl implements ConfigService {
         Page<Config> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<Config> result = configRepository.getConfigMapper().selectPage(mpPage, wrapper);
         List<ConfigVO> vos = result.getRecords().stream()
-                .map(this::toVO)
+                .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         return PageResult.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
@@ -183,7 +183,7 @@ public class ConfigServiceImpl implements ConfigService {
         QueryWrapper<Config> wrapper = new QueryWrapper<>();
         wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
         List<ConfigVO> vos = configRepository.getConfigMapper().selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
@@ -202,7 +202,7 @@ public class ConfigServiceImpl implements ConfigService {
         QueryWrapper<Config> wrapper = new QueryWrapper<>();
         wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
         List<ConfigVO> vos = configRepository.getConfigMapper().selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         redisService.set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
@@ -224,6 +224,8 @@ public class ConfigServiceImpl implements ConfigService {
         }
         wrapper.orderByDesc("created_at");
         return wrapper;
+    }
+
     private Config toEntity(ConfigDTO dto) {
         if (dto == null) {
             return null;

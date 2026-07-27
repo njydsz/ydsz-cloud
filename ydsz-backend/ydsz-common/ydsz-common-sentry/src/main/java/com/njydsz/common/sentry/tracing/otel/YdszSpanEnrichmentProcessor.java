@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
+import org.slf4j.MDC;
 /**
  * YDSZ Span 属性增强器
  *
@@ -85,7 +86,7 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
      * 从 MDC 注入属性
      */
     private void applyMdc(ReadWriteSpan span) {
-        Map<String, String> mdc = org.slf4j.MDC.getCopyOfContextMap();
+        Map<String, String> mdc = MDC.getCopyOfContextMap();
         if (mdc == null || mdc.isEmpty()) {
             return;
         }
@@ -138,7 +139,7 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
      * 从环境变量注入固定属性
      */
     private void applyEnv(ReadWriteSpan span) {
-        for (java.util.Map.Entry<String, String> entry : config.getEnvAttrs().entrySet()) {
+        for (Map.Entry<String, String> entry : config.getEnvAttrs().entrySet()) {
             String value = System.getenv(entry.getKey());
             if (value != null) {
                 span.setAttribute(entry.getValue(), value);
@@ -161,7 +162,7 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
         private boolean enabled = true;
         /** 来源：mdc / request-context / env */
         @Builder.Default
-        private List<String> sources = java.util.List.of("mdc");
+        private List<String> sources = List.of("mdc");
         /** 环境变量属性映射（envKey -> attrName） */
         @Builder.Default
         private Map<String, String> envAttrs = new HashMap<>();

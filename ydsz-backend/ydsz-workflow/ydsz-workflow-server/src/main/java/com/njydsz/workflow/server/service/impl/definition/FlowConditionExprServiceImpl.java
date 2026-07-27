@@ -11,7 +11,7 @@ import com.googlecode.aviator.AviatorEvaluator;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.service.FlowConditionExprService;
 
 import lombok.RequiredArgsConstructor;
@@ -66,7 +66,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             String logicOp = "OR".equalsIgnoreCase(logic) ? " || " : " && ";
             int engineIdx = "SPEL".equalsIgnoreCase(engine) ? 1 : 0;
 
-            List<Map<String, Object>> groups = JsonHelper.getListOfMaps(root, "groups");
+            List<Map<String, Object>> groups = MapUtils.getListOfMaps(root, "groups");
             if (groups == null || groups.isEmpty()) {
                 return "";
             }
@@ -466,11 +466,11 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             if (formSchemaObj == null) {
                 return;
             }
-            Map<String, Object> schemaMap = JsonHelper.safeCastMap(formSchemaObj);
+            Map<String, Object> schemaMap = MapUtils.safeCastMap(formSchemaObj);
             if (schemaMap == null) {
                 return;
             }
-            List<Map<String, Object>> fieldsMap = JsonHelper.getListOfMaps(schemaMap, "fields");
+            List<Map<String, Object>> fieldsMap = MapUtils.getListOfMaps(schemaMap, "fields");
             if (fieldsMap == null || fieldsMap.isEmpty()) {
                 return;
             }

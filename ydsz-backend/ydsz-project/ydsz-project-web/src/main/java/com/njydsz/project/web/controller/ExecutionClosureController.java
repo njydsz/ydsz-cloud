@@ -32,14 +32,14 @@ public class ExecutionClosureController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionClosure")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionClosure")
     public BaseResponse<Boolean> save(@RequestBody ExecutionClosurePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionClosure")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionClosure")
     public BaseResponse<Boolean> update(@RequestBody ExecutionClosurePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionClosure")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionClosure")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

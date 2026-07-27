@@ -17,6 +17,7 @@ import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 /**
  * 文档内容提取应用服务（P1-2）
  * <p>
@@ -106,7 +107,7 @@ public class ContentExtractionApplicationService {
         try (InputStream is = storage.downloadAsStream(fileNode.getBucketName(), fileNode.getStorageKey())) {
             byte[] bytes = is.readNBytes(MAX_CONTENT_LENGTH + 1);
             if (bytes.length > MAX_CONTENT_LENGTH) {
-                bytes = java.util.Arrays.copyOf(bytes, MAX_CONTENT_LENGTH);
+                bytes = Arrays.copyOf(bytes, MAX_CONTENT_LENGTH);
             }
             String content = new String(bytes, StandardCharsets.UTF_8);
             String suffix = fileNode.getSuffix();

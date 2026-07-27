@@ -34,7 +34,7 @@ import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 @Slf4j
 @Tag(name = "流程自动触发规则")
 @RestController
-@RequestMapping("/workflow/trigger")
+@RequestMapping("/api/v1/workflow/trigger")
 @RequiredArgsConstructor
 @Validated
 public class FlowAutoTriggerController {

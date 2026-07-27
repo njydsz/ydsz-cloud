@@ -32,14 +32,14 @@ public class ExecutionRiskController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionRisk")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionRisk")
     public BaseResponse<Boolean> save(@RequestBody ExecutionRiskPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionRisk")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionRisk")
     public BaseResponse<Boolean> update(@RequestBody ExecutionRiskPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionRisk")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionRisk")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

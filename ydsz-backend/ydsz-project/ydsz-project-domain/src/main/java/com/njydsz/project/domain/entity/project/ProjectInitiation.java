@@ -91,9 +91,6 @@ public class ProjectInitiation extends MpBaseEntity<String> {
     /** 风险评估 */
     private String riskAssessment;
 
-    /** 项目状态（DRAFT/APPROVED/IN_PROGRESS/CLOSED/CANCELLED） */
-    private String status;
-
     /** 实际开始日期 */
     private LocalDate actualStartDate;
 

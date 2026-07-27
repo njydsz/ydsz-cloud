@@ -117,8 +117,14 @@ echo ""
 echo "🔍 扫描 @SuppressWarnings 违规: $SRC_DIR"
 echo "-----------------------------------"
 
+# 仅检测真正的注解（行首空白后紧跟 @SuppressWarnings），
+# 跳过 Javadoc/注释中的文字提及（如 "<li>@SuppressWarnings 禁令..."）。
+# 检测正则解释：
+#   ^[[:space:]]*  — 行首允许任意空白
+#   @SuppressWarnings  — 注解名（区分大小写）
+# 后续字符通常是 ( 或 { （注解参数），或紧邻其他字符（如 @SuppressWarnings("unchecked")）
 find "$SRC_DIR" -name '*.java' -type f | while read -r file; do
-    grep -n '@SuppressWarnings' "$file" 2>/dev/null | while IFS=':' read -r line_num line_content; do
+    grep -nE '^[[:space:]]*@SuppressWarnings' "$file" 2>/dev/null | while IFS=':' read -r line_num line_content; do
         echo "$file:$line_num" >> "$SUPPRESSFILE"
         echo "   $line_content" >> "$SUPPRESSFILE"
     done

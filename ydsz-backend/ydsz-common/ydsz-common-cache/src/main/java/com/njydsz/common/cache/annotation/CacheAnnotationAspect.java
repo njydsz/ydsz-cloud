@@ -112,7 +112,7 @@ public class CacheAnnotationAspect {
     }
 
     // 先查缓存
-    org.springframework.cache.Cache.ValueWrapper valueWrapper = springCache.get(cacheKey);
+    Cache.ValueWrapper valueWrapper = springCache.get(cacheKey);
     if (valueWrapper != null) {
       Object cachedValue = valueWrapper.get();
       if (cachedValue == null && cached.unlessNull()) {

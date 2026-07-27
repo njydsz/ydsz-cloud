@@ -19,6 +19,8 @@ import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.config.YdszJsonConfig;
 import com.njydsz.common.json.writer.JSONWriter;
 
+import java.sql.Date;
+import java.sql.Timestamp;
 /**
  * 类型特定的值写入器
  *
@@ -90,8 +92,8 @@ public final class ValueWriter {
         TYPE_CODE_CACHE.put(YearMonth.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(MonthDay.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(Date.class, TYPE_CODE_DATE);
-        TYPE_CODE_CACHE.put(java.sql.Date.class, TYPE_CODE_DATE);
-        TYPE_CODE_CACHE.put(java.sql.Timestamp.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Date.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Timestamp.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(BigDecimal.class, TYPE_CODE_BIGDECIMAL);
         TYPE_CODE_CACHE.put(BigInteger.class, TYPE_CODE_BIGINTEGER);
         TYPE_CODE_CACHE.put(UUID.class, TYPE_CODE_UUID);

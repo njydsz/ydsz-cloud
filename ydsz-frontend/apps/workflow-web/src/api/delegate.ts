@@ -35,30 +35,30 @@ export function getDelegatePageApi(params: DelegateApi.DelegatePageQuery) {
     current: number;
     size: number;
     items: DelegateApi.DelegateVO[];
-  }>(`/workflow/engine/page`, { params });
+  }>(`/api/v1/workflow/engine/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getDelegateListApi() {
-  return requestClient.get<DelegateApi.DelegateVO[]>(`/workflow/engine/list`);
+  return requestClient.get<DelegateApi.DelegateVO[]>(`/api/v1/workflow/engine/list`);
 }
 
 /** 根据 ID 查询 */
 export function getDelegateByIdApi(id: string) {
-  return requestClient.get<DelegateApi.DelegateVO>(`/workflow/engine/${id}`);
+  return requestClient.get<DelegateApi.DelegateVO>(`/api/v1/workflow/engine/${id}`);
 }
 
 /** 创建 */
 export function createDelegateApi(data: DelegateApi.DelegateDTO) {
-  return requestClient.post<string>(`/workflow/engine`, data);
+  return requestClient.post<string>(`/api/v1/workflow/engine`, data);
 }
 
 /** 更新 */
 export function updateDelegateApi(data: DelegateApi.DelegateDTO) {
-  return requestClient.put<boolean>(`/workflow/engine`, data);
+  return requestClient.put<boolean>(`/api/v1/workflow/engine`, data);
 }
 
 /** 删除 */
 export function deleteDelegateApi(id: string) {
-  return requestClient.delete<boolean>(`/workflow/engine/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/workflow/engine/${id}`);
 }

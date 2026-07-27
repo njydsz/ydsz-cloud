@@ -48,7 +48,7 @@ import com.njydsz.common.audit.enums.AuditType;
 @Slf4j
 @Tag(name = "退订中心", description = "token 一键退订与退订管理")
 @RestController
-@RequestMapping("/message/unsubscribe")
+@RequestMapping("/api/v1/message/unsubscribe")
 @RequiredArgsConstructor
 public class UnsubscribeController {
 

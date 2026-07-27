@@ -44,7 +44,7 @@ import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-definition", description = "工作流流程定义接口")
-@RequestMapping("/workflow/engine")
+@RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowDefinitionController {

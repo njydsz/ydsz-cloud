@@ -87,6 +87,7 @@ import com.njydsz.project.domain.dto.post.ExecutionTimeEntryPostDTO;
 import com.njydsz.project.domain.dto.post.ExecutionWbsTaskPostDTO;
 import com.njydsz.project.domain.dto.post.OpsTicketPostDTO;
 import com.njydsz.project.domain.dto.post.ProjectBudgetItemPostDTO;
+import com.njydsz.project.domain.dto.post.ProjectInitiationPostDTO;
 import com.njydsz.project.domain.dto.post.ProjectChangePostDTO;
 import com.njydsz.project.domain.dto.post.ProjectContractChangePostDTO;
 import com.njydsz.project.domain.dto.post.ProjectContractPostDTO;
@@ -121,6 +122,7 @@ import com.njydsz.project.domain.dto.put.ExecutionTimeEntryPutDTO;
 import com.njydsz.project.domain.dto.put.ExecutionWbsTaskPutDTO;
 import com.njydsz.project.domain.dto.put.OpsTicketPutDTO;
 import com.njydsz.project.domain.dto.put.ProjectBudgetItemPutDTO;
+import com.njydsz.project.domain.dto.put.ProjectInitiationPutDTO;
 import com.njydsz.project.domain.dto.put.ProjectChangePutDTO;
 import com.njydsz.project.domain.dto.put.ProjectContractChangePutDTO;
 import com.njydsz.project.domain.dto.put.ProjectContractPutDTO;
@@ -1005,6 +1007,25 @@ public interface ProjectConverter {
     @Mapping(target = "pmName", ignore = true)
     @Mapping(target = "sponsorName", ignore = true)
     @Mapping(target = "durationDays", ignore = true)
+    @Mapping(target = "stage", ignore = true)
+    @Mapping(target = "currentGate", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "actualStartDate", ignore = true)
+    @Mapping(target = "actualEndDate", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    ProjectInitiation postDtoToEntity(ProjectInitiationPostDTO dto);
+
+    @Mapping(target = "stage", ignore = true)
+    @Mapping(target = "currentGate", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "actualStartDate", ignore = true)
+    @Mapping(target = "actualEndDate", ignore = true)
+    ProjectInitiation putDtoToEntity(ProjectInitiationPutDTO dto);
+
+    /**
+     * @deprecated 使用 {@link #postDtoToEntity} 或 {@link #putDtoToEntity}
+     */
+    @Deprecated
     @Mapping(target = "stage", ignore = true)
     @Mapping(target = "currentGate", ignore = true)
     @Mapping(target = "status", ignore = true)

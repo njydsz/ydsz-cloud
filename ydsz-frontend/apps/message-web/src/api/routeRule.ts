@@ -35,30 +35,30 @@ export function getRouteRulePageApi(params: RouteRuleApi.RouteRulePageQuery) {
     current: number;
     size: number;
     items: RouteRuleApi.RouteRuleVO[];
-  }>(`/message/routeRule/page`, { params });
+  }>(`/api/v1/message/routeRule/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getRouteRuleListApi() {
-  return requestClient.get<RouteRuleApi.RouteRuleVO[]>(`/message/routeRule/list`);
+  return requestClient.get<RouteRuleApi.RouteRuleVO[]>(`/api/v1/message/routeRule/list`);
 }
 
 /** 根据 ID 查询 */
 export function getRouteRuleByIdApi(id: string) {
-  return requestClient.get<RouteRuleApi.RouteRuleVO>(`/message/routeRule/${id}`);
+  return requestClient.get<RouteRuleApi.RouteRuleVO>(`/api/v1/message/routeRule/${id}`);
 }
 
 /** 创建 */
 export function createRouteRuleApi(data: RouteRuleApi.RouteRuleDTO) {
-  return requestClient.post<string>(`/message/routeRule`, data);
+  return requestClient.post<string>(`/api/v1/message/routeRule`, data);
 }
 
 /** 更新 */
 export function updateRouteRuleApi(data: RouteRuleApi.RouteRuleDTO) {
-  return requestClient.put<boolean>(`/message/routeRule`, data);
+  return requestClient.put<boolean>(`/api/v1/message/routeRule`, data);
 }
 
 /** 删除 */
 export function deleteRouteRuleApi(id: string) {
-  return requestClient.delete<boolean>(`/message/routeRule/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/message/routeRule/${id}`);
 }

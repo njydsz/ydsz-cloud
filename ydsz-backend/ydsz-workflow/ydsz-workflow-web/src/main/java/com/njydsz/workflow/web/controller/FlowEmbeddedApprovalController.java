@@ -46,7 +46,7 @@ import com.njydsz.workflow.domain.vo.EmbeddedApprovalViewDTOVO;
 @Slf4j
 @Tag(name = "嵌入式审批")
 @RestController
-@RequestMapping("/workflow/embedded")
+@RequestMapping("/api/v1/workflow/embedded")
 @RequiredArgsConstructor
 @Validated
 public class FlowEmbeddedApprovalController {

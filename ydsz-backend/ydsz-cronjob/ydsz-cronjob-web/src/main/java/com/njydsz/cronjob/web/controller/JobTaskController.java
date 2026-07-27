@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @Tag(name = "MapReduce 子任务查询")
 @RestController
-@RequestMapping("/cronjob/task")
+@RequestMapping("/api/v1/cronjob/task")
 @RequiredArgsConstructor
 @Validated
 public class JobTaskController {

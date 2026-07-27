@@ -37,30 +37,30 @@ export function getAgentPageApi(params: AgentApi.AgentPageQuery) {
     current: number;
     size: number;
     items: AgentApi.AgentVO[];
-  }>(`/agent/page`, { params });
+  }>(`/api/v1/agent/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getAgentListApi() {
-  return requestClient.get<AgentApi.AgentVO[]>(`/agent/list`);
+  return requestClient.get<AgentApi.AgentVO[]>(`/api/v1/agent/list`);
 }
 
 /** 根据 ID 查询 */
 export function getAgentByIdApi(id: string) {
-  return requestClient.get<AgentApi.AgentVO>(`/agent/${id}`);
+  return requestClient.get<AgentApi.AgentVO>(`/api/v1/agent/${id}`);
 }
 
 /** 创建 */
 export function createAgentApi(data: AgentApi.AgentDTO) {
-  return requestClient.post<string>(`/agent`, data);
+  return requestClient.post<string>(`/api/v1/agent`, data);
 }
 
 /** 更新 */
 export function updateAgentApi(data: AgentApi.AgentDTO) {
-  return requestClient.put<boolean>(`/agent`, data);
+  return requestClient.put<boolean>(`/api/v1/agent`, data);
 }
 
 /** 删除 */
 export function deleteAgentApi(id: string) {
-  return requestClient.delete<boolean>(`/agent/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/agent/${id}`);
 }

@@ -37,7 +37,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")
 @RestController
-@RequestMapping("/message/readStatus")
+@RequestMapping("/api/v1/message/readStatus")
 @RequiredArgsConstructor
 public class ReadStatusController {
 

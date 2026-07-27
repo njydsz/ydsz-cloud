@@ -33,30 +33,30 @@ export function getVariablePageApi(params: VariableApi.VariablePageQuery) {
     current: number;
     size: number;
     items: VariableApi.VariableVO[];
-  }>(`/ruleEngine/variables/page`, { params });
+  }>(`/api/v1/literule/variables/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getVariableListApi() {
-  return requestClient.get<VariableApi.VariableVO[]>(`/ruleEngine/variables/list`);
+  return requestClient.get<VariableApi.VariableVO[]>(`/api/v1/literule/variables/list`);
 }
 
 /** 根据 ID 查询 */
 export function getVariableByIdApi(id: string) {
-  return requestClient.get<VariableApi.VariableVO>(`/ruleEngine/variables/${id}`);
+  return requestClient.get<VariableApi.VariableVO>(`/api/v1/literule/variables/${id}`);
 }
 
 /** 创建 */
 export function createVariableApi(data: VariableApi.VariableDTO) {
-  return requestClient.post<string>(`/ruleEngine/variables`, data);
+  return requestClient.post<string>(`/api/v1/literule/variables`, data);
 }
 
 /** 更新 */
 export function updateVariableApi(data: VariableApi.VariableDTO) {
-  return requestClient.put<boolean>(`/ruleEngine/variables`, data);
+  return requestClient.put<boolean>(`/api/v1/literule/variables`, data);
 }
 
 /** 删除 */
 export function deleteVariableApi(id: string) {
-  return requestClient.delete<boolean>(`/ruleEngine/variables/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/literule/variables/${id}`);
 }

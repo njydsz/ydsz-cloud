@@ -15,6 +15,7 @@ import com.njydsz.literule.api.RuleResult;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
 /**
  * 规则超时执行器
  *
@@ -58,7 +59,7 @@ public class RuleTimeoutExecutor {
      */
     public RuleTimeoutExecutor(long defaultTimeoutMs, Executor executor) {
         this.defaultTimeoutMs = defaultTimeoutMs;
-        this.executor = java.util.Objects.requireNonNull(executor, "executor 不能为 null");
+        this.executor = Objects.requireNonNull(executor, "executor 不能为 null");
         this.ownsExecutor = false;
     }
 

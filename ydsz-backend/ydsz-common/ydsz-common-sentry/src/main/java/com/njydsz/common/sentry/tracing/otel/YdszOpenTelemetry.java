@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import java.util.Collections;
 /**
  * YDSZ OpenTelemetry 全局访问点 + 上下文传播工具
  *
@@ -117,7 +118,7 @@ public final class YdszOpenTelemetry {
     public static <C> void inject(C carrier, TextMapSetter<C> setter) {
         try {
             TextMapPropagator propagator = openTelemetry().getPropagators().getTextMapPropagator();
-            Context context = io.opentelemetry.context.Context.current();
+            Context context = Context.current();
             propagator.inject(context, carrier, setter);
         } catch (Exception e) {
             log.debug("[YdszOpenTelemetry] inject 失败: {}", e.getMessage());
@@ -135,10 +136,10 @@ public final class YdszOpenTelemetry {
     public static <C> Context extract(C carrier, TextMapGetter<C> getter) {
         try {
             TextMapPropagator propagator = openTelemetry().getPropagators().getTextMapPropagator();
-            return propagator.extract(io.opentelemetry.context.Context.current(), carrier, getter);
+            return propagator.extract(Context.current(), carrier, getter);
         } catch (Exception e) {
             log.debug("[YdszOpenTelemetry] extract 失败: {}", e.getMessage());
-            return io.opentelemetry.context.Context.current();
+            return Context.current();
         }
     }
 
@@ -181,7 +182,7 @@ public final class YdszOpenTelemetry {
     public static final TextMapGetter<Map<String, String>> MAP_GETTER = new TextMapGetter<>() {
         @Override
         public Iterable<String> keys(Map<String, String> carrier) {
-            return carrier == null ? java.util.Collections.emptyList() : carrier.keySet();
+            return carrier == null ? Collections.emptyList() : carrier.keySet();
         }
 
         @Override

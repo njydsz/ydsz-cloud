@@ -38,30 +38,30 @@ export function getJobPageApi(params: JobApi.JobPageQuery) {
     current: number;
     size: number;
     items: JobApi.JobVO[];
-  }>(`/cronjob/page`, { params });
+  }>(`/api/v1/cronjob/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getJobListApi() {
-  return requestClient.get<JobApi.JobVO[]>(`/cronjob/list`);
+  return requestClient.get<JobApi.JobVO[]>(`/api/v1/cronjob/list`);
 }
 
 /** 根据 ID 查询 */
 export function getJobByIdApi(id: string) {
-  return requestClient.get<JobApi.JobVO>(`/cronjob/${id}`);
+  return requestClient.get<JobApi.JobVO>(`/api/v1/cronjob/${id}`);
 }
 
 /** 创建 */
 export function createJobApi(data: JobApi.JobDTO) {
-  return requestClient.post<string>(`/cronjob`, data);
+  return requestClient.post<string>(`/api/v1/cronjob`, data);
 }
 
 /** 更新 */
 export function updateJobApi(data: JobApi.JobDTO) {
-  return requestClient.put<boolean>(`/cronjob`, data);
+  return requestClient.put<boolean>(`/api/v1/cronjob`, data);
 }
 
 /** 删除 */
 export function deleteJobApi(id: string) {
-  return requestClient.delete<boolean>(`/cronjob/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/cronjob/${id}`);
 }

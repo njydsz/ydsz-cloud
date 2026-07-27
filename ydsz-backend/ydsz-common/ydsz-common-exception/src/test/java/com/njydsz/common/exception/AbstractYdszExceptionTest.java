@@ -196,7 +196,7 @@ class AbstractYdszExceptionTest {
                     .data("userId", 123)
                     .data("tenant", "acme");
             assertNotNull(ex.getExtData());
-            assertInstanceOf(java.util.Map.class, ex.getExtData());
+            assertInstanceOf(Map.class, ex.getExtData());
             Map<?, ?> dataMap = (Map<?, ?>) ex.getExtData();
             assertEquals(123, dataMap.get("userId"));
             assertEquals("acme", dataMap.get("tenant"));

@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetAddress;
 /**
  * YDSZ Resource 工厂
  *
@@ -57,7 +58,7 @@ public final class OtelResources {
             // 主机信息
             if (config.isIncludeHostInfo()) {
                 try {
-                    String hostName = java.net.InetAddress.getLocalHost().getHostName();
+                    String hostName = InetAddress.getLocalHost().getHostName();
                     putIfNotNull(attrs, AttributeKey.stringKey("host.name"), hostName);
                 } catch (Exception ignored) {
                     // 主机名获取失败不影响主流程

@@ -49,7 +49,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
  */
 @Slf4j
 @RestController
-@RequestMapping("/agent/definitions")
+@RequestMapping("/api/v1/agent/definitions")
 @RequiredArgsConstructor
 public class AgentDefinitionController {
 

@@ -42,7 +42,7 @@ import com.njydsz.agent.domain.vo.AgentTraceListDTOVO;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/agent/debug")
+@RequestMapping("/api/v1/agent/debug")
 public class DebugController {
 
     private static final Logger log = LoggerFactory.getLogger(DebugController.class);

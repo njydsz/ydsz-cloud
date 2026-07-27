@@ -35,7 +35,7 @@ import com.njydsz.cronjob.domain.vo.JobWebhookVO;
  */
 @Tag(name = "WebHook 事件订阅")
 @RestController
-@RequestMapping("/cronjob/webhook")
+@RequestMapping("/api/v1/cronjob/webhook")
 @RequiredArgsConstructor
 public class JobWebhookController {
 

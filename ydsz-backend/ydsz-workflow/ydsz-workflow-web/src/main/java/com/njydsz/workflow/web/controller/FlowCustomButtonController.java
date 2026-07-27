@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/customButtons")
+@RequestMapping("/api/v1/workflow/customButtons")
 @RequiredArgsConstructor
 @Tag(name = "节点自定义按钮", description = "流程节点的自定义操作按钮管理")
 public class FlowCustomButtonController {

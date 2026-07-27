@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.server.service.core.MessageService;
-import com.njydsz.message.server.metrics.MessageServiceMetrics;
+import com.njydsz.message.server.metric.MessageMetrics;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +39,8 @@ public class MessageAlertService {
     private final RedisService redisService;
     private final RealtimeStatsService realtimeStatsService;
     private final MessageService messageService;
-    /** OD-2: 延迟分位数统一到 MessageServiceMetrics (Micrometer Timer) */
-    private final MessageServiceMetrics messageServiceMetrics;
+    /** OD-2: 延迟分位数统一到 MessageMetrics (Micrometer Timer) */
+    private final MessageMetrics messageMetrics;
 
     /** 告警去重 key 前缀 */
     private static final String ALERT_DEDUP_PREFIX = "ydsz:alert:dedup:";

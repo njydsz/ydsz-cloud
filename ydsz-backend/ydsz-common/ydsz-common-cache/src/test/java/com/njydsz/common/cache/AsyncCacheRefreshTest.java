@@ -22,6 +22,7 @@ import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.cache.internal.AsyncCacheAdapter;
 import com.njydsz.common.cache.support.AsyncFunction;
 
+import java.util.Collections;
 /**
  * {@link AsyncCache#refresh} / {@link AsyncCache#refreshAll} 主动刷新能力测试
  *
@@ -259,7 +260,7 @@ class AsyncCacheRefreshTest {
         };
 
     CompletableFuture<Map<String, String>> result =
-        asyncCache.refreshAll(java.util.Collections.emptyList(), loader);
+        asyncCache.refreshAll(Collections.emptyList(), loader);
 
     assertThat(result.get()).isEmpty();
     assertThat(loadCount.get()).isZero();

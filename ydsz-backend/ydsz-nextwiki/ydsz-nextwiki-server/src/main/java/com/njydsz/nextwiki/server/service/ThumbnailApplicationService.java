@@ -56,7 +56,7 @@ public class ThumbnailApplicationService {
     public static final int SIZE_LARGE = 256;
 
     /** 支持缩略图生成的图片后缀 */
-    private static final Set<String> IMAGE_SUFFIXES = java.util.Set.of(
+    private static final Set<String> IMAGE_SUFFIXES = Set.of(
             "jpg", "jpeg", "png", "gif", "bmp", "webp"
     );
 

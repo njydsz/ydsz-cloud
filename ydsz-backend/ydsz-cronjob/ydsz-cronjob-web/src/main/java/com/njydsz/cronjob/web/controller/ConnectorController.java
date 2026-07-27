@@ -41,7 +41,7 @@ import com.njydsz.cronjob.domain.vo.StringVO;
 @Slf4j
 @Tag(name = "生态连接器")
 @RestController
-@RequestMapping("/cronjob/connector")
+@RequestMapping("/api/v1/cronjob/connector")
 @RequiredArgsConstructor
 public class ConnectorController {
 

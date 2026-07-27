@@ -53,7 +53,7 @@ import com.njydsz.cronjob.domain.vo.ProcessResultVO;
 @Slf4j
 @Tag(name = "内部任务执行（远程派发接收端）")
 @RestController
-@RequestMapping("/cronjob/internal")
+@RequestMapping("/api/v1/cronjob/internal")
 @RequiredArgsConstructor
 public class InternalJobController {
 

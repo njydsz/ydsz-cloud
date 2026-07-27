@@ -183,7 +183,7 @@ class ExceptionCodeRegistryTest {
     @DisplayName("UnifiedExceptionCode 静态注册：所有枚举值可通过 lookup 查到")
     void testUnifiedExceptionCodeAutoRegistered() {
         for (UnifiedExceptionCode code :
-                com.njydsz.common.exception.code.UnifiedExceptionCode.values()) {
+                UnifiedExceptionCode.values()) {
             ExceptionCode found = ExceptionCodeRegistry.lookup(code.getCode());
             assertNotNull(found, "UnifiedExceptionCode should be auto-registered: " + code.getCode());
             assertEquals(code.getCode(), found.getCode());
@@ -194,11 +194,11 @@ class ExceptionCodeRegistryTest {
     @DisplayName("UnifiedExceptionCode.resolve() 局部查找")
     void testUnifiedExceptionCodeResolve() {
         assertEquals(
-                com.njydsz.common.exception.code.UnifiedExceptionCode.NOT_FOUND,
-                com.njydsz.common.exception.code.UnifiedExceptionCode.resolve("A04051")
+                UnifiedExceptionCode.NOT_FOUND,
+                UnifiedExceptionCode.resolve("A04051")
         );
-        assertNull(com.njydsz.common.exception.code.UnifiedExceptionCode.resolve("INVALID"));
-        assertNull(com.njydsz.common.exception.code.UnifiedExceptionCode.resolve(null));
+        assertNull(UnifiedExceptionCode.resolve("INVALID"));
+        assertNull(UnifiedExceptionCode.resolve(null));
     }
 
     /**

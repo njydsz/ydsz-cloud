@@ -42,7 +42,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/agent/rag")
+@RequestMapping("/api/v1/agent/rag")
 public class RagController {
 
     private static final Logger log = LoggerFactory.getLogger(RagController.class);

@@ -17,6 +17,7 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.health.contributor.Health;
 /**
  * 用户信息中心健康检查指标。
  *
@@ -38,7 +39,7 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
     private final RoleMapper roleMapper;
 
     @Override
-    protected void doHealthCheck(org.springframework.boot.health.contributor.Health.Builder builder) {
+    protected void doHealthCheck(Health.Builder builder) {
         // Redis 连通性
         checkRedis(builder, () -> {
             redisService.hasKey("ydsz:userinfo:health:probe");

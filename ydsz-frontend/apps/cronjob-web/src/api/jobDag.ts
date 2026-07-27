@@ -31,30 +31,30 @@ export function getJobDagPageApi(params: JobDagApi.JobDagPageQuery) {
     current: number;
     size: number;
     items: JobDagApi.JobDagVO[];
-  }>(`/cronjob/dag/page`, { params });
+  }>(`/api/v1/cronjob/dag/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getJobDagListApi() {
-  return requestClient.get<JobDagApi.JobDagVO[]>(`/cronjob/dag/list`);
+  return requestClient.get<JobDagApi.JobDagVO[]>(`/api/v1/cronjob/dag/list`);
 }
 
 /** 根据 ID 查询 */
 export function getJobDagByIdApi(id: string) {
-  return requestClient.get<JobDagApi.JobDagVO>(`/cronjob/dag/${id}`);
+  return requestClient.get<JobDagApi.JobDagVO>(`/api/v1/cronjob/dag/${id}`);
 }
 
 /** 创建 */
 export function createJobDagApi(data: JobDagApi.JobDagDTO) {
-  return requestClient.post<string>(`/cronjob/dag`, data);
+  return requestClient.post<string>(`/api/v1/cronjob/dag`, data);
 }
 
 /** 更新 */
 export function updateJobDagApi(data: JobDagApi.JobDagDTO) {
-  return requestClient.put<boolean>(`/cronjob/dag`, data);
+  return requestClient.put<boolean>(`/api/v1/cronjob/dag`, data);
 }
 
 /** 删除 */
 export function deleteJobDagApi(id: string) {
-  return requestClient.delete<boolean>(`/cronjob/dag/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/cronjob/dag/${id}`);
 }

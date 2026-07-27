@@ -38,7 +38,7 @@ import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
  */
 @Tag(name = "任务告警规则")
 @RestController
-@RequestMapping("/cronjob/alert")
+@RequestMapping("/api/v1/cronjob/alert")
 @RequiredArgsConstructor
 public class AlertController {
 

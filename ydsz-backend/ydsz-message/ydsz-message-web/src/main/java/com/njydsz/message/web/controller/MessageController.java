@@ -52,7 +52,7 @@ import com.njydsz.common.audit.enums.AuditType;
 @Slf4j
 @Tag(name = "消息发送", description = "消息发送与发送日志查询")
 @RestController
-@RequestMapping("/message")
+@RequestMapping("/api/v1/message")
 @RequiredArgsConstructor
 public class MessageController {
 

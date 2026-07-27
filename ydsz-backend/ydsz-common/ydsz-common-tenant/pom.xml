@@ -58,5 +58,11 @@
             <artifactId>spring-boot-starter-web</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- 可选依赖：Health Indicator（Spring Boot 4.x 拆分至 spring-boot-health） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

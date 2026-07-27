@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "DAG 工作流控制")
 @RestController
-@RequestMapping("/cronjob/dag/instance")
+@RequestMapping("/api/v1/cronjob/dag/instance")
 @RequiredArgsConstructor
 public class DagInstanceControlController {
 

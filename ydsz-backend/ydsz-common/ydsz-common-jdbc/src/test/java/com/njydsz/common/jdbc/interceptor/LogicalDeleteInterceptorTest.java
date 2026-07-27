@@ -13,6 +13,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
 import net.sf.jsqlparser.schema.Table;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -72,7 +73,7 @@ class LogicalDeleteInterceptorTest {
     void shouldThrowOnMultiTableDelete() throws JSQLParserException {
         Delete delete = (Delete) CCJSqlParserUtil.parse("DELETE FROM rs_company WHERE id = 1");
         // 模拟多表删除场景
-        delete.setTables(java.util.List.of(new Table("t1")));
+        delete.setTables(List.of(new Table("t1")));
         assertThrows(IllegalStateException.class,
                 () -> interceptor.convertDeleteToLogicalUpdateSql(delete));
     }

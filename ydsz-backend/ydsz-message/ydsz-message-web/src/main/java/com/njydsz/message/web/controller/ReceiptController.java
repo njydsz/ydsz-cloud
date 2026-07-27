@@ -35,7 +35,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "消息回执", description = "服务商回执回调与查询")
 @RestController
-@RequestMapping("/message/receipt")
+@RequestMapping("/api/v1/message/receipt")
 @RequiredArgsConstructor
 public class ReceiptController {
 

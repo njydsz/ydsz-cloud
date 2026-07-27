@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import java.util.concurrent.TimeUnit;
 /**
  * 任务扫描器（P1-7 Leader 模式专用）。
  *
@@ -115,7 +116,7 @@ public class JobScanner {
                     ThreadPoolTaskExecutor threadPool =
                             applicationContext.getBean(
                                     "cronjobDispatchExecutor",
-                                    org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.class);
+                                    ThreadPoolTaskExecutor.class);
                     this.dispatchPool = threadPool.getThreadPoolExecutor();
                     this.useExternalDispatchPool = true;
                     log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true pool=common-thread(cronjobDispatchExecutor)",
@@ -148,7 +149,7 @@ public class JobScanner {
         if (!useExternalDispatchPool && dispatchPool != null) {
             dispatchPool.shutdown();
             try {
-                if (!dispatchPool.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                if (!dispatchPool.awaitTermination(10, TimeUnit.SECONDS)) {
                     dispatchPool.shutdownNow();
                 }
             } catch (InterruptedException e) {

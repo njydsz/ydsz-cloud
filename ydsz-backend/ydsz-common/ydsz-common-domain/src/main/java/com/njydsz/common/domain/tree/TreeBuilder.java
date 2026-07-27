@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 /**
  * 树形结构核心构建器
  *
@@ -619,24 +622,24 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
 
         Map<String, List<T>> parentIdMap = flatList.stream()
-                .collect(java.util.stream.Collectors.groupingBy(item -> {
+                .collect(Collectors.groupingBy(item -> {
                     String pid = parentIdGetter.apply(item);
                     return pid == null ? "0" : pid;
                 }));
 
-        List<T> roots = new ArrayList<>(parentIdMap.getOrDefault("0", java.util.Collections.emptyList()));
+        List<T> roots = new ArrayList<>(parentIdMap.getOrDefault("0", Collections.emptyList()));
         for (T item : flatList) {
             List<T> children = parentIdMap.get(idGetter.apply(item));
             if (children != null) {
                 if (sortGetter != null) {
-                    children.sort(java.util.Comparator.comparingInt(sortGetter::apply));
+                    children.sort(Comparator.comparingInt(sortGetter::apply));
                 }
                 childrenSetter.accept(item, children);
             }
         }
 
         if (sortGetter != null) {
-            roots.sort(java.util.Comparator.comparingInt(sortGetter::apply));
+            roots.sort(Comparator.comparingInt(sortGetter::apply));
         }
 
         return roots;

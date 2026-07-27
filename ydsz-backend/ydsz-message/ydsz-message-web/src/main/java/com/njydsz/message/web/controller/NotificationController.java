@@ -46,7 +46,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
 @RestController
-@RequestMapping("/notifications")
+@RequestMapping("/api/v1/message/notifications")
 @RequiredArgsConstructor
 public class NotificationController {
 

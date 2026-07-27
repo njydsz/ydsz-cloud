@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.message.server.metrics.MessageServiceMetrics;
+import com.njydsz.message.server.metric.MessageMetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -39,18 +39,18 @@ public class MessageAutoConfiguration {
      * 当 classpath 中不存在 MeterRegistry 时不注册。
      *
      * @param meterRegistryProvider Micrometer 指标注册中心（可选注入）
-     * @return MessageServiceMetrics 实例
+     * @return MessageMetrics 实例
      */
     @Bean
-    @ConditionalOnMissingBean(MessageServiceMetrics.class)
+    @ConditionalOnMissingBean(MessageMetrics.class)
     @ConditionalOnClass(MeterRegistry.class)
-    public MessageServiceMetrics messageServiceMetrics(
+    public MessageMetrics messageMetrics(
             ObjectProvider<MeterRegistry> meterRegistryProvider) {
         MeterRegistry registry = meterRegistryProvider.getIfAvailable();
         if (registry == null) {
             // 降级使用 SimpleMeterRegistry（内存版）
             registry = new SimpleMeterRegistry();
         }
-        return new MessageServiceMetrics(registry);
+        return new MessageMetrics(registry);
     }
 }

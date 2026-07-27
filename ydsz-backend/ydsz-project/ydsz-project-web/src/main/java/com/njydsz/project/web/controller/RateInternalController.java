@@ -32,14 +32,14 @@ public class RateInternalController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create RateInternal")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create RateInternal")
     public BaseResponse<Boolean> save(@RequestBody RateInternalPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update RateInternal")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update RateInternal")
     public BaseResponse<Boolean> update(@RequestBody RateInternalPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete RateInternal")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete RateInternal")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

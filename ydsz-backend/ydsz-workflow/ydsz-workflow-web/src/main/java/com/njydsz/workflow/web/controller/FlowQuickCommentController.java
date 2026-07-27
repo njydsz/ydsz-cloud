@@ -34,7 +34,7 @@ import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/api/workflow/quickComments")
+@RequestMapping("/api/v1/workflow/quickComments")
 @RequiredArgsConstructor
 @Tag(name = "审批常用语", description = "常用审批意见管理")
 public class FlowQuickCommentController {

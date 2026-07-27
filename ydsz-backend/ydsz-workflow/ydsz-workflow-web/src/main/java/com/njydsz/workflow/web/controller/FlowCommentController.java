@@ -49,7 +49,7 @@ import com.njydsz.workflow.domain.vo.FlowCommentVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-comment", description = "工作流审批评论接口")
-@RequestMapping("/workflow/comment")
+@RequestMapping("/api/v1/workflow/comment")
 @RequiredArgsConstructor
 public class FlowCommentController {
 

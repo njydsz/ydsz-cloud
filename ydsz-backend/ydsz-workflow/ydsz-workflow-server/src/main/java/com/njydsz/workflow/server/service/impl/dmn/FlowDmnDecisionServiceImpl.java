@@ -19,7 +19,7 @@ import com.njydsz.workflow.domain.entity.FlowDmnDecision;
 import com.njydsz.workflow.domain.entity.FlowDmnRule;
 import com.njydsz.workflow.infra.mapper.FlowDmnDecisionMapper;
 import com.njydsz.workflow.infra.mapper.FlowDmnRuleMapper;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.service.FlowDmnDecisionService;
 
 import lombok.RequiredArgsConstructor;
@@ -396,7 +396,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             List<Map<String, Object>> result = new ArrayList<>();
             for (Object item : list) {
                 if (item instanceof Map<?, ?> m) {
-                    result.add(JsonHelper.toStringObjectMap(m));
+                    result.add(MapUtils.toStringObjectMap(m));
                 }
             }
             return result;

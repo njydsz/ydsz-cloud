@@ -10,6 +10,7 @@ import com.njydsz.workflow.server.engine.FlowEventContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.slf4j.MDC;
 /**
  * 任务事件通知服务
  *
@@ -52,8 +53,8 @@ public class FlowTaskNotificationService {
         ctx.setAction(action);
         ctx.setOperatedAt(LocalDateTime.now());
         // P1-5: 从 MDC 获取分布式追踪 ID（兼容 SkyWalking/Zipkin/Sleuth）
-        String mdcTraceId = org.slf4j.MDC.get("traceId");
-        if (mdcTraceId == null) mdcTraceId = org.slf4j.MDC.get("tid");
+        String mdcTraceId = MDC.get("traceId");
+        if (mdcTraceId == null) mdcTraceId = MDC.get("tid");
         ctx.setTraceId(mdcTraceId);
         support.fireEvent(l -> l.onTaskCompleted(taskId, ctx), taskId);
         // P2-35: 发布 Spring 异步事件

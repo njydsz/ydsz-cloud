@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 
 import com.njydsz.common.cache.support.AsyncFunction;
 
+import java.util.Collections;
 /**
  * 异步缓存接口 — 所有操作返回 CompletableFuture
  *
@@ -123,7 +124,7 @@ public interface AsyncCache<K, V> {
   default CompletableFuture<Map<K, V>> refreshAll(AsyncFunction<Collection<K>, Map<K, V>> loader) {
     Collection<K> allKeys = synchronous().keySet();
     if (allKeys == null || allKeys.isEmpty()) {
-      return CompletableFuture.completedFuture(java.util.Collections.emptyMap());
+      return CompletableFuture.completedFuture(Collections.emptyMap());
     }
     return refreshAll(allKeys, loader);
   }

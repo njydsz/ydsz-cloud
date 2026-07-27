@@ -33,7 +33,7 @@ import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/api/workflow/categories")
+@RequestMapping("/api/v1/workflow/categories")
 @RequiredArgsConstructor
 @Tag(name = "流程分类管理", description = "流程分类的增删改查")
 public class FlowCategoryController {

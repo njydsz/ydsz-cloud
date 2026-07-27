@@ -40,7 +40,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "消息模板", description = "消息模板增删改查与审核")
 @RestController
-@RequestMapping("/message/template")
+@RequestMapping("/api/v1/message/template")
 @RequiredArgsConstructor
 public class TemplateController {
 

@@ -292,7 +292,7 @@ public class DownloadController {
     private String getClientIp(HttpServletRequest request) {
         // 优先使用 common-safe ClientIpResolver（如果 Bean 可用）
         if (clientIpResolver != null) {
-            return com.njydsz.common.safe.util.ClientIpResolver.getClientIp(request);
+            return ClientIpResolver.getClientIp(request);
         }
         // 降级到本地解析
         String ip = request.getHeader("X-Forwarded-For");

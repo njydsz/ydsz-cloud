@@ -136,7 +136,7 @@ public class DictItemServiceImpl implements DictItemService {
             }
             metrics.recordDictCacheMiss();
             List<DictItem> entities = mapper.listEnabledByTypeCode(typeCode);
-            List<DictItemVO> vos = entities.stream().map(this::toVO).collect(Collectors.toList());
+            List<DictItemVO> vos = entities.stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
             redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
             return vos;
         } finally {
@@ -154,7 +154,7 @@ public class DictItemServiceImpl implements DictItemService {
     public List<DictItemVO> listChildren(String parentId) {
         QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
         wrapper.eq("parent_id", parentId).orderByAsc("sort_order");
-        return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
+        return mapper.selectList(wrapper).stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
     }
 
     /**
@@ -182,7 +182,7 @@ public class DictItemServiceImpl implements DictItemService {
         }
         wrapper.orderByDesc("created_at");
         IPage<DictItem> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        List<DictItemVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        List<DictItemVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
         Page<DictItemVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
         return result;
@@ -195,7 +195,7 @@ public class DictItemServiceImpl implements DictItemService {
      */
     @Override
     public List<DictItemVO> list() {
-        return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
+        return mapper.selectList(null).stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
     }
 
     /**

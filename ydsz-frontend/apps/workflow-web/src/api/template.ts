@@ -35,30 +35,30 @@ export function getTemplatePageApi(params: TemplateApi.TemplatePageQuery) {
     current: number;
     size: number;
     items: TemplateApi.TemplateVO[];
-  }>(`/workflow/template/page`, { params });
+  }>(`/api/v1/workflow/template/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getTemplateListApi() {
-  return requestClient.get<TemplateApi.TemplateVO[]>(`/workflow/template/list`);
+  return requestClient.get<TemplateApi.TemplateVO[]>(`/api/v1/workflow/template/list`);
 }
 
 /** 根据 ID 查询 */
 export function getTemplateByIdApi(id: string) {
-  return requestClient.get<TemplateApi.TemplateVO>(`/workflow/template/${id}`);
+  return requestClient.get<TemplateApi.TemplateVO>(`/api/v1/workflow/template/${id}`);
 }
 
 /** 创建 */
 export function createTemplateApi(data: TemplateApi.TemplateDTO) {
-  return requestClient.post<string>(`/workflow/template`, data);
+  return requestClient.post<string>(`/api/v1/workflow/template`, data);
 }
 
 /** 更新 */
 export function updateTemplateApi(data: TemplateApi.TemplateDTO) {
-  return requestClient.put<boolean>(`/workflow/template`, data);
+  return requestClient.put<boolean>(`/api/v1/workflow/template`, data);
 }
 
 /** 删除 */
 export function deleteTemplateApi(id: string) {
-  return requestClient.delete<boolean>(`/workflow/template/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/workflow/template/${id}`);
 }

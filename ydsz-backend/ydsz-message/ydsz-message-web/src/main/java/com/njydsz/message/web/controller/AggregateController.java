@@ -33,7 +33,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "聚合批次", description = "消息聚合批次查询与刷新")
 @RestController
-@RequestMapping("/message/aggregate")
+@RequestMapping("/api/v1/message/aggregate")
 @RequiredArgsConstructor
 public class AggregateController {
 

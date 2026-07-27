@@ -32,14 +32,14 @@ public class ExecutionWbsTaskController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionWbsTask")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionWbsTask")
     public BaseResponse<Boolean> save(@RequestBody ExecutionWbsTaskPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionWbsTask")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionWbsTask")
     public BaseResponse<Boolean> update(@RequestBody ExecutionWbsTaskPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionWbsTask")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionWbsTask")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

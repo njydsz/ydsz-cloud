@@ -3,7 +3,7 @@ package com.njydsz.project.server.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.njydsz.project.domain.dto.ProjectInitiationDTO;
+import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.njydsz.project.domain.dto.ProjectInitiationPageQuery;
 import com.njydsz.project.domain.vo.ProjectInitiationVO;
 
@@ -47,7 +47,7 @@ public interface ProjectInitiationService {
      * @param dto 项目立项 DTO
      * @return 主键 ID
      */
-    String save(ProjectInitiationDTO dto);
+    String save(ProjectInitiation entity);
 
     /**
      * 更新项目立项。
@@ -55,7 +55,7 @@ public interface ProjectInitiationService {
      * @param dto 项目立项 DTO
      * @return 是否成功
      */
-    boolean updateById(ProjectInitiationDTO dto);
+    boolean updateById(ProjectInitiation entity);
 
     /**
      * 删除项目立项（逻辑删除）。

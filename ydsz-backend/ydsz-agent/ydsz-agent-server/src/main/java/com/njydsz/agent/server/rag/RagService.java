@@ -145,6 +145,19 @@ public class RagService {
         return text.length() > maxLen ? text.substring(0, maxLen) + "..." : text;
     }
 
+    /**
+     * 根据文件 ID 索引文档到 RAG 知识库（跨模块事件触发）。
+     *
+     * <p>当 nextwiki 模块发布 FILE_UPLOADED 事件时，Agent 模块监听并调用此方法。
+     * 实际实现需通过 Feign 调用 nextwiki 服务获取文件内容，再做文档解析和向量化。
+     *
+     * @param fileId 文件 ID
+     */
+    public void ingestByFileId(String fileId) {
+        log.info("[RagService] 接收文件索引请求: fileId={}", fileId);
+        // TODO: 通过 Feign 调用 nextwiki 获取文件内容 → 文档解析 → 向量化 → 存入 VectorStore
+    }
+
     public record Citation(int index, String documentId, String documentTitle,
                             String source, String snippet) {}
 }

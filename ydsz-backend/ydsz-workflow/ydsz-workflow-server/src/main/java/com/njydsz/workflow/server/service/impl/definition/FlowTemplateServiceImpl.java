@@ -20,7 +20,7 @@ import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.entity.FlowTemplate;
 import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
 
@@ -562,8 +562,8 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         if (!(defObj instanceof FlowDefinition definition)) {
             throw new SysException(BaseResultCode.INTERNAL_ERROR, "流程定义详情缺少 definition");
         }
-        List<FlowNode> nodes = JsonHelper.safeCastList(detail.get("nodes"), FlowNode.class);
-        List<FlowSkip> skips = JsonHelper.safeCastList(detail.get("skips"), FlowSkip.class);
+        List<FlowNode> nodes = MapUtils.safeCastList(detail.get("nodes"), FlowNode.class);
+        List<FlowSkip> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkip.class);
 
         String processId = definition.getFlowCode();
         String processName = definition.getFlowName();

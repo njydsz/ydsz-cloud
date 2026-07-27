@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.json.annotation.JsonAlias;
 
+import java.nio.charset.StandardCharsets;
 /**
  * YdszJson 序列化/反序列化核心功能测试。
  *
@@ -139,7 +140,7 @@ class JsonCoreTest {
     void testToJsonBytes() {
         byte[] bytes = YdszJson.toJsonBytes(Map.of("key", "value"));
         assertNotNull(bytes);
-        String json = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+        String json = new String(bytes, StandardCharsets.UTF_8);
         assertTrue(json.contains("\"key\":\"value\""));
     }
 

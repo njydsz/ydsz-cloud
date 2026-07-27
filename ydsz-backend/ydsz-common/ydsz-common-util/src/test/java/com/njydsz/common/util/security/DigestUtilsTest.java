@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 /**
  * {@link DigestUtils} 单元测试 — 覆盖 SHA-256 / MD5 / HMAC 等关键摘要算法的稳定性与一致性。
  *
@@ -54,7 +55,7 @@ class DigestUtilsTest {
         for (int i = 0; i < 20; i++) {
             key[i] = 0x0b;
         }
-        byte[] data = "Hi There".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] data = "Hi There".getBytes(StandardCharsets.UTF_8);
         String hmac = DigestUtils.hmacSha256Hex(data, key);
         // RFC 4231 expected: b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7
         assertThat(hmac).isEqualTo("b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7");
@@ -64,7 +65,7 @@ class DigestUtilsTest {
     @DisplayName("字节数组与字符串重载结果一致")
     void byteAndStringOverloadConsistent() {
         String input = "ydsz-digest";
-        byte[] bytes = input.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
         assertThat(DigestUtils.sha256Hex(input)).isEqualTo(DigestUtils.sha256Hex(bytes));
     }
 }

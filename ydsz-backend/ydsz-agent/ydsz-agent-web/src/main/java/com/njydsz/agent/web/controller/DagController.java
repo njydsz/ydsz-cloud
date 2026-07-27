@@ -31,7 +31,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/agent/dag")
+@RequestMapping("/api/v1/agent/dag")
 public class DagController {
 
     private static final Logger log = LoggerFactory.getLogger(DagController.class);

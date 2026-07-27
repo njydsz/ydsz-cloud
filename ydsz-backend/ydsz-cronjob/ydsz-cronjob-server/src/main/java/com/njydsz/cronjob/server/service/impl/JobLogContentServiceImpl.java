@@ -11,6 +11,7 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 /**
  * 任务日志内容 Service 实现（P0-2 在线日志白屏化）。
  *
@@ -62,7 +63,7 @@ public class JobLogContentServiceImpl implements JobLogContentService {
     @Override
     public List<JobLogContent> searchByKeyword(String logId, String keyword, int page, int size) {
         if (logId == null || logId.isBlank() || keyword == null || keyword.isBlank()) {
-            return java.util.Collections.emptyList();
+            return Collections.emptyList();
         }
         int offset = Math.max(0, (page - 1) * size);
         return jobLogContentMapper.selectByLogIdAndKeyword(logId, keyword, offset, size);

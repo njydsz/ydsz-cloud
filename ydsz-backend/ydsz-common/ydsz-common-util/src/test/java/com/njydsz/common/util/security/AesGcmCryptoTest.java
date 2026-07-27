@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.Base64;
 /**
  * {@link AesGcmCrypto} 单元测试 — 覆盖加解密往返、密钥校验、密文篡改检测等关键路径。
  *
@@ -150,7 +151,7 @@ class AesGcmCryptoTest {
             // 27 字节（少 1 字节）即触发校验
             byte[] shortBytes = new byte[27];
             new SecureRandom().nextBytes(shortBytes);
-            String shortCiphertext = java.util.Base64.getEncoder().encodeToString(shortBytes);
+            String shortCiphertext = Base64.getEncoder().encodeToString(shortBytes);
             assertThatThrownBy(() -> crypto.decrypt(shortCiphertext))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Invalid ciphertext length");

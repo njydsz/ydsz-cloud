@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.json.provider.ValueWriter;
 
+import java.util.Optional;
 /**
  * ValueWriter 值写入器测试（类型代码 / 字符串转义 / 小整数缓存 / Optional / UUID）。
  *
@@ -167,21 +168,21 @@ class ValueWriterTest {
     @Test
     void testWriteOptionalPresent() {
         StringBuilder sb = new StringBuilder();
-        ValueWriter.writeValue(java.util.Optional.of("hello"), sb);
+        ValueWriter.writeValue(Optional.of("hello"), sb);
         assertEquals("\"hello\"", sb.toString());
     }
 
     @Test
     void testWriteOptionalEmpty() {
         StringBuilder sb = new StringBuilder();
-        ValueWriter.writeValue(java.util.Optional.empty(), sb);
+        ValueWriter.writeValue(Optional.empty(), sb);
         assertEquals("null", sb.toString());
     }
 
     @Test
     void testWriteOptionalInt() {
         StringBuilder sb = new StringBuilder();
-        ValueWriter.writeValue(java.util.Optional.of(42), sb);
+        ValueWriter.writeValue(Optional.of(42), sb);
         assertEquals("42", sb.toString());
     }
 

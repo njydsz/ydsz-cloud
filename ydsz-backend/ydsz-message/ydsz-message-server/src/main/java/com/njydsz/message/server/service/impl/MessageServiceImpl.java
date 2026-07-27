@@ -46,7 +46,7 @@ import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.metrics.MessageServiceMetrics;
+import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.canary.CanaryService;
@@ -142,7 +142,7 @@ public class MessageServiceImpl implements MessageService {
     /** P2-20: Sender 配额管理 */
     private final SenderQuotaService senderQuotaService;
     /** P3-22~25: 消息服务可观测性指标 */
-    private final MessageServiceMetrics messageServiceMetrics;
+    private final MessageMetrics messageMetrics;
     /** P2-15: 并行批量发送器 */
     private final ParallelBatchSender parallelBatchSender;
     /** P2-14: 时区感知 DND 服务 */
@@ -635,7 +635,7 @@ public class MessageServiceImpl implements MessageService {
                 logDO.setErrorMessage("EMAIL_BOUNCED: " + bounceReason);
                 msgLogMapper.updateById(logDO);
                 messageMetrics.recordSend(channel, "BOUNCED", 0);
-                messageServiceMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
+                messageMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
                         logDO.getTenantId(), "EMAIL_BOUNCED");
                 return MessageResult.fail(channel, "邮件地址在退信黑名单中: " + receiver);
             }
@@ -660,9 +660,9 @@ public class MessageServiceImpl implements MessageService {
             senderQuotaService.recordSend(logDO.getSenderId(), channel);
             messageMetrics.recordSend(channel, "SUCCESS", cost);
             // P3-22: 记录发送耗时（Micrometer Timer P50/P90/P99）
-            messageServiceMetrics.recordSendDuration(channel, Duration.ofMillis(cost));
+            messageMetrics.recordSendDuration(channel, Duration.ofMillis(cost));
             // P3-24: 记录发送成功（Counter）
-            messageServiceMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
+            messageMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
             // P0-2: 记录分发成功轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
                     MsgTrace.Node.DISPATCH_SUCCESS,
@@ -675,9 +675,9 @@ public class MessageServiceImpl implements MessageService {
             logDO.setCostMs(cost);
             logDO.setErrorMessage(e.getMessage());
             // P3-24/P3-25: 记录发送失败 + 异常分类
-            messageServiceMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
+            messageMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
                     logDO.getTenantId(), e.getClass().getSimpleName());
-            messageServiceMetrics.recordException(channel, e.getClass().getSimpleName());
+            messageMetrics.recordException(channel, e.getClass().getSimpleName());
             // P0-4 + P1-8: 多级降级链（优先）→ 单通道降级
             List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
             if (!fallbackChannels.isEmpty()) {

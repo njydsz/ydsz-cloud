@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @Tag(name = "workflow-countersign-history", description = "加签历史独立视图接口")
-@RequestMapping("/workflow/engine/countersign")
+@RequestMapping("/api/v1/workflow/engine/countersign")
 @RequiredArgsConstructor
 @Validated
 public class FlowCountersignHistoryController {

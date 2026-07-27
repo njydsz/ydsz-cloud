@@ -46,12 +46,12 @@ export function getBatchByIdApi(id: string) {
 
 /** 创建 */
 export function createBatchApi(data: BatchApi.BatchDTO) {
-  return requestClient.post<string>(`/batch`, data);
+  return requestClient.post<string>(`/api/v1/message/batch`, data);
 }
 
 /** 更新 */
 export function updateBatchApi(data: BatchApi.BatchDTO) {
-  return requestClient.put<boolean>(`/batch`, data);
+  return requestClient.put<boolean>(`/api/v1/message/batch`, data);
 }
 
 /** 删除 */

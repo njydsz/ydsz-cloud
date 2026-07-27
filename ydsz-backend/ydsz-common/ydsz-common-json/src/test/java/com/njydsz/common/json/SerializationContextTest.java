@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.json.provider.SerializationContext;
 
+import com.njydsz.common.json.provider.SerializationProvider;
 /**
  * SerializationContext 上下文管理测试。
  *
@@ -42,8 +43,8 @@ class SerializationContextTest {
     @Test
     void testCaptureAndApply() {
         // 设置 Provider 值
-        com.njydsz.common.json.provider.SerializationProvider.setWriteNulls(true);
-        com.njydsz.common.json.provider.SerializationProvider.setPrettyPrint(true);
+        SerializationProvider.setWriteNulls(true);
+        SerializationProvider.setPrettyPrint(true);
 
         // 捕获到 context
         SerializationContext ctx = new SerializationContext();
@@ -52,17 +53,17 @@ class SerializationContextTest {
         assertTrue(ctx.prettyPrint);
 
         // 修改 Provider 值
-        com.njydsz.common.json.provider.SerializationProvider.setWriteNulls(false);
-        com.njydsz.common.json.provider.SerializationProvider.setPrettyPrint(false);
+        SerializationProvider.setWriteNulls(false);
+        SerializationProvider.setPrettyPrint(false);
 
         // 从 context 恢复
         ctx.applyToProvider();
-        assertTrue(com.njydsz.common.json.provider.SerializationProvider.isWriteNulls());
-        assertTrue(com.njydsz.common.json.provider.SerializationProvider.isPrettyPrint());
+        assertTrue(SerializationProvider.isWriteNulls());
+        assertTrue(SerializationProvider.isPrettyPrint());
 
         // 清理
-        com.njydsz.common.json.provider.SerializationProvider.setWriteNulls(false);
-        com.njydsz.common.json.provider.SerializationProvider.setPrettyPrint(false);
+        SerializationProvider.setWriteNulls(false);
+        SerializationProvider.setPrettyPrint(false);
     }
 
     @Test

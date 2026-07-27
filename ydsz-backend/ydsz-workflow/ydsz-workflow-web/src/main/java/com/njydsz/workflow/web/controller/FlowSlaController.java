@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @Tag(name = "workflow-sla", description = "工作流 SLA 接口")
-@RequestMapping("/workflow/engine")
+@RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowSlaController {

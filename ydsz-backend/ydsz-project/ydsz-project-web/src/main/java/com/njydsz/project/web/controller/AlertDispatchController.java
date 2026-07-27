@@ -32,14 +32,14 @@ public class AlertDispatchController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create AlertDispatch")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create AlertDispatch")
     public BaseResponse<Boolean> save(@RequestBody AlertDispatchPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update AlertDispatch")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update AlertDispatch")
     public BaseResponse<Boolean> update(@RequestBody AlertDispatchPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete AlertDispatch")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete AlertDispatch")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

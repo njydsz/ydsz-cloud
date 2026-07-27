@@ -21,6 +21,7 @@ import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.annotation.JsonInclude;
 
+import java.lang.reflect.Array;
 /**
  * 字段元数据（用于缓存字段信息，MethodHandle 优化）
  *
@@ -570,7 +571,7 @@ public final class FieldMeta {
                 if (value instanceof String s) return s.isEmpty();
                 if (value instanceof Collection<?> c) return c.isEmpty();
                 if (value instanceof Map<?, ?> m) return m.isEmpty();
-                if (value.getClass().isArray()) return java.lang.reflect.Array.getLength(value) == 0;
+                if (value.getClass().isArray()) return Array.getLength(value) == 0;
                 break;
             case NON_DEFAULT:
                 if (value instanceof Number n && n.doubleValue() == 0.0) return true;

@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
+import java.util.concurrent.TimeUnit;
 /**
  * 审计模块 Micrometer 指标绑定器
  * <p>
@@ -100,7 +101,7 @@ public class AuditMetricsBinder implements MeterBinder {
     public void recordSuccess(long count, long latencyNanos) {
         successCount.addAndGet(count);
         if (writeLatencyTimer != null) {
-            writeLatencyTimer.record(latencyNanos, java.util.concurrent.TimeUnit.NANOSECONDS);
+            writeLatencyTimer.record(latencyNanos, TimeUnit.NANOSECONDS);
         }
     }
 

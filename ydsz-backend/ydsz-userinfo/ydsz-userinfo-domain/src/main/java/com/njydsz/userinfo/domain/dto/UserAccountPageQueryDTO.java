@@ -1,6 +1,6 @@
 package com.njydsz.userinfo.domain.dto;
 
-import com.njydsz.common.core.request.PageRequest;
+import com.njydsz.common.domain.query.PageQuery;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,13 +13,12 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UserAccountPageQueryDTO extends PageRequest {
+public class UserAccountPageQueryDTO extends PageQuery {
 
     private String username;
     private String realName;
     private String phone;
     private String email;
-    private Integer status;
     private String userType;
     private String companyId;
     private String tenantId;

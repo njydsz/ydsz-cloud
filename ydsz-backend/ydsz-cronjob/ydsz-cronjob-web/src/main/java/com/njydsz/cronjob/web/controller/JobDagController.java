@@ -41,7 +41,7 @@ import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
  */
 @Tag(name = "DAG工作流定义")
 @RestController
-@RequestMapping("/cronjob/dag")
+@RequestMapping("/api/v1/cronjob/dag")
 @RequiredArgsConstructor
 public class JobDagController {
 

@@ -32,14 +32,14 @@ public class ExecutionDeliveryStandardController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionDeliveryStandard")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionDeliveryStandard")
     public BaseResponse<Boolean> save(@RequestBody ExecutionDeliveryStandardPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionDeliveryStandard")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionDeliveryStandard")
     public BaseResponse<Boolean> update(@RequestBody ExecutionDeliveryStandardPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionDeliveryStandard")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionDeliveryStandard")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

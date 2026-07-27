@@ -32,14 +32,14 @@ public class ProjectOpportunityFollowController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectOpportunityFollow")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectOpportunityFollow")
     public BaseResponse<Boolean> save(@RequestBody ProjectOpportunityFollowPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectOpportunityFollow")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectOpportunityFollow")
     public BaseResponse<Boolean> update(@RequestBody ProjectOpportunityFollowPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectOpportunityFollow")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectOpportunityFollow")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

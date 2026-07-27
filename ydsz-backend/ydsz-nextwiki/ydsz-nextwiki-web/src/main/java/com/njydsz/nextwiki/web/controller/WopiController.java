@@ -31,6 +31,8 @@ import com.njydsz.common.exception.custom.BusinessException;
 import java.io.IOException;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 /**
  * WOPI 协议接口（P1-4 + P1-R5 + P2-R4）
  * <p>
@@ -236,14 +238,14 @@ public class WopiController {
         if (expectedAccessToken != null && !expectedAccessToken.isEmpty()) {
             if (authToken == null || !authToken.equals(expectedAccessToken)) {
                 throw new BusinessException(
-                        com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode.FILE_NOT_FOUND);
+                        NextwikiExceptionCode.FILE_NOT_FOUND);
             }
         }
     }
 
     private Path writeTempFile(byte[] content) throws IOException {
-        Path tempFile = java.nio.file.Files.createTempFile("wopi-", ".tmp");
-        java.nio.file.Files.write(tempFile, content);
+        Path tempFile = Files.createTempFile("wopi-", ".tmp");
+        Files.write(tempFile, content);
         return tempFile;
     }
 

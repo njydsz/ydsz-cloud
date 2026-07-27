@@ -3,6 +3,11 @@ package com.njydsz.common.excel.columnar;
 import java.util.Locale;
 import java.util.Optional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 /**
  * 列式存储字段类型枚举。
  *
@@ -84,15 +89,15 @@ public enum ColumnarType {
         if (javaType == byte[].class) {
             return Optional.of(BINARY);
         }
-        if (javaType == java.time.LocalDate.class) {
+        if (javaType == LocalDate.class) {
             return Optional.of(DATE);
         }
-        if (javaType == java.time.LocalDateTime.class
-                || javaType == java.util.Date.class
-                || javaType == java.time.Instant.class) {
+        if (javaType == LocalDateTime.class
+                || javaType == Date.class
+                || javaType == Instant.class) {
             return Optional.of(TIMESTAMP);
         }
-        if (javaType == java.math.BigDecimal.class) {
+        if (javaType == BigDecimal.class) {
             return Optional.of(DECIMAL);
         }
         return Optional.empty();

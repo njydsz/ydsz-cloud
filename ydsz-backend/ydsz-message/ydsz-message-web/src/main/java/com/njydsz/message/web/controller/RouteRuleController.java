@@ -41,7 +41,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
 @RestController
-@RequestMapping("/message/routeRule")
+@RequestMapping("/api/v1/message/routeRule")
 @RequiredArgsConstructor
 public class RouteRuleController {
 

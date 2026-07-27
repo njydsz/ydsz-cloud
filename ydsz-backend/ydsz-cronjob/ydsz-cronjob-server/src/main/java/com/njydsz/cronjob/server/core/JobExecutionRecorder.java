@@ -6,6 +6,7 @@ import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 /**
  * P2-1: 任务执行记录器（从 DefaultTaskDispatcher 提取）。
  *
@@ -85,7 +86,7 @@ public class JobExecutionRecorder {
         // P1-2: 执行轨迹 — Handler 结束时间
         logDO.setHandlerEndTime(handlerEndTime);
         if (logDO.getStartTime() != null) {
-            logDO.setDurationMs(java.time.Duration.between(logDO.getStartTime(), now).toMillis());
+            logDO.setDurationMs(Duration.between(logDO.getStartTime(), now).toMillis());
         }
         logDO.setUpdatedAt(now);
     }
@@ -104,7 +105,7 @@ public class JobExecutionRecorder {
         logDO.setErrorMessage(errorMessage);
         logDO.setHandlerEndTime(handlerEndTime);
         if (logDO.getStartTime() != null) {
-            logDO.setDurationMs(java.time.Duration.between(logDO.getStartTime(), now).toMillis());
+            logDO.setDurationMs(Duration.between(logDO.getStartTime(), now).toMillis());
         }
         logDO.setUpdatedAt(now);
     }
@@ -120,7 +121,7 @@ public class JobExecutionRecorder {
         logDO.setEndTime(now);
         logDO.setErrorMessage("任务执行超时");
         if (logDO.getStartTime() != null) {
-            logDO.setDurationMs(java.time.Duration.between(logDO.getStartTime(), now).toMillis());
+            logDO.setDurationMs(Duration.between(logDO.getStartTime(), now).toMillis());
         }
         logDO.setUpdatedAt(now);
     }

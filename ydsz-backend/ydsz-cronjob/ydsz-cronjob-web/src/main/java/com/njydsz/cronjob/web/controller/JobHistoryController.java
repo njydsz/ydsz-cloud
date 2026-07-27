@@ -33,7 +33,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  */
 @Tag(name = "任务配置历史版本")
 @RestController
-@RequestMapping("/cronjob/history")
+@RequestMapping("/api/v1/cronjob/history")
 @RequiredArgsConstructor
 public class JobHistoryController {
 

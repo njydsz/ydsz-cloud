@@ -32,7 +32,7 @@ import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-event", description = "工作流事件接口")
-@RequestMapping("/workflow/engine")
+@RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowEventController {

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.SerializationProvider;
 
+import com.njydsz.common.json.parser.YdszJsonParser;
 /**
  * YdszJson 全局配置类
  *
@@ -317,7 +318,7 @@ public final class YdszJsonConfig implements Serializable {
         SerializationProvider.setPrettyPrint(prettyPrint);
         SerializationProvider.setCircularReferenceStrategy(circularReferenceStrategy.name());
         SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
-        com.njydsz.common.json.parser.YdszJsonParser.setUseBigDecimal(useBigDecimal);
+        YdszJsonParser.setUseBigDecimal(useBigDecimal);
     }
 
     /**

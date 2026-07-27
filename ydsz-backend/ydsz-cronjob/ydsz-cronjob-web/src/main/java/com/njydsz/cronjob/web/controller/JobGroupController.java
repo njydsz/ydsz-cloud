@@ -43,7 +43,7 @@ import java.util.LinkedHashMap;
 @Slf4j
 @Tag(name = "任务分组管理")
 @RestController
-@RequestMapping("/cronjob/group")
+@RequestMapping("/api/v1/cronjob/group")
 @RequiredArgsConstructor
 public class JobGroupController {
 

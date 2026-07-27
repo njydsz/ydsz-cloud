@@ -38,7 +38,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "灰度桶", description = "消息灰度发布配置与命中判定")
 @RestController
-@RequestMapping("/message/canary")
+@RequestMapping("/api/v1/message/canary")
 @RequiredArgsConstructor
 public class CanaryController {
 

@@ -35,30 +35,30 @@ export function getDefinitionPageApi(params: DefinitionApi.DefinitionPageQuery) 
     current: number;
     size: number;
     items: DefinitionApi.DefinitionVO[];
-  }>(`/agent/definitions/page`, { params });
+  }>(`/api/v1/agent/definitions/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getDefinitionListApi() {
-  return requestClient.get<DefinitionApi.DefinitionVO[]>(`/agent/definitions/list`);
+  return requestClient.get<DefinitionApi.DefinitionVO[]>(`/api/v1/agent/definitions/list`);
 }
 
 /** 根据 ID 查询 */
 export function getDefinitionByIdApi(id: string) {
-  return requestClient.get<DefinitionApi.DefinitionVO>(`/agent/definitions/${id}`);
+  return requestClient.get<DefinitionApi.DefinitionVO>(`/api/v1/agent/definitions/${id}`);
 }
 
 /** 创建 */
 export function createDefinitionApi(data: DefinitionApi.DefinitionDTO) {
-  return requestClient.post<string>(`/agent/definitions`, data);
+  return requestClient.post<string>(`/api/v1/agent/definitions`, data);
 }
 
 /** 更新 */
 export function updateDefinitionApi(data: DefinitionApi.DefinitionDTO) {
-  return requestClient.put<boolean>(`/agent/definitions`, data);
+  return requestClient.put<boolean>(`/api/v1/agent/definitions`, data);
 }
 
 /** 删除 */
 export function deleteDefinitionApi(id: string) {
-  return requestClient.delete<boolean>(`/agent/definitions/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/agent/definitions/${id}`);
 }

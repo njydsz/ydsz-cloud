@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.njydsz.common.exception.code.UnifiedExceptionCode;
 /**
  * {@link ExceptionInfo} 单元测试
  *
@@ -42,7 +43,7 @@ class ExceptionInfoTest {
     @DisplayName("of(ExceptionCode) 工厂方法")
     void testOfExceptionCode() {
         ExceptionInfo info = ExceptionInfo.of(
-                com.njydsz.common.exception.code.UnifiedExceptionCode.PARAM_ERROR);
+                UnifiedExceptionCode.PARAM_ERROR);
         assertEquals("A01052", info.getCode());
         assertEquals("param.error", info.getKey());
     }

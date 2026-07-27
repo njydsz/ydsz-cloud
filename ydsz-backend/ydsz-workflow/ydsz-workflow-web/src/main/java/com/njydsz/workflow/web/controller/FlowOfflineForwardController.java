@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/offlineForward")
+@RequestMapping("/api/v1/workflow/offlineForward")
 @RequiredArgsConstructor
 @Tag(name = "离线代理自动转发", description = "离线用户的待办自动转发给代理人")
 public class FlowOfflineForwardController {

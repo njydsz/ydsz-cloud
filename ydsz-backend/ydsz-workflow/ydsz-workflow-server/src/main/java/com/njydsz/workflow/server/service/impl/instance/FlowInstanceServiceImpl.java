@@ -53,7 +53,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
@@ -72,6 +72,7 @@ import com.njydsz.workflow.server.service.FlowTimerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.slf4j.MDC;
 /**
  * 流程实例 Service 实现
  *
@@ -859,7 +860,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * 因此这里的强转是安全的。该方法仅用于抑制 unchecked cast 编译警告。
      */
     private static Map<String, Object> castToStringObjectMap(Map<?, ?> m) {
-        return JsonHelper.toStringObjectMap(m);
+        return MapUtils.toStringObjectMap(m);
     }
 
     // ============================== 内部方法 ==============================
@@ -1367,8 +1368,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             // P1-5: 优先使用实例的 providerTraceId，回退到 MDC 分布式追踪 ID
             String traceId = instance.getProviderTraceId();
             if (traceId == null || traceId.isBlank()) {
-                traceId = org.slf4j.MDC.get("traceId");
-                if (traceId == null) traceId = org.slf4j.MDC.get("tid");
+                traceId = MDC.get("traceId");
+                if (traceId == null) traceId = MDC.get("tid");
             }
             ctx.setTraceId(traceId);
         }

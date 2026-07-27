@@ -49,7 +49,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-instance", description = "工作流流程实例接口")
-@RequestMapping("/workflow/engine")
+@RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowInstanceController {

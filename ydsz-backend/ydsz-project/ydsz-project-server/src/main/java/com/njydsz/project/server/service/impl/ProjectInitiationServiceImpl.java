@@ -12,7 +12,7 @@ import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.project.domain.converter.ProjectConverter;
-import com.njydsz.project.domain.dto.ProjectInitiationDTO;
+import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.njydsz.project.domain.dto.ProjectInitiationPageQuery;
 import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.njydsz.project.domain.repository.project.IProjectInitiationRepository;
@@ -116,8 +116,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String save(ProjectInitiationDTO dto) {
-        ProjectInitiation entity = ProjectConverter.INSTANT.dtoToEntity(dto);
+    public String save(ProjectInitiation entity) {
         entity.setStatus("DRAFT");
         entity.setStage("PRE_INITIATION");
         if (entity.getProjectLevel() == null) {
@@ -132,8 +131,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(ProjectInitiationDTO dto) {
-        ProjectInitiation entity = ProjectConverter.INSTANT.dtoToEntity(dto);
+    public boolean updateById(ProjectInitiation entity) {
         boolean result = repository.updateById(entity);
         if (result) {
             projectMetrics.incInitiationUpdated();

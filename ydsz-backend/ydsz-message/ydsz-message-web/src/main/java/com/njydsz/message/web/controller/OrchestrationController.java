@@ -35,7 +35,7 @@ import com.njydsz.common.audit.enums.AuditType;
 @Slf4j
 @Tag(name = "消息编排", description = "DAG 流程编排引擎")
 @RestController
-@RequestMapping("/orchestration")
+@RequestMapping("/api/v1/message/orchestration")
 @RequiredArgsConstructor
 public class OrchestrationController {
 

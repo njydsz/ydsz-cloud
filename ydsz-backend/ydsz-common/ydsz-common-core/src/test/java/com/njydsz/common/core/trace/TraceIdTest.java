@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import org.assertj.core.api.Assertions;
 /**
  * {@link TraceIdGenerator} 和 {@link SnowflakeTraceIdSupplier} 单元测试。
  *
@@ -159,7 +160,7 @@ class TraceIdTest {
         @Test
         @DisplayName("无效 datacenterId 抛出异常")
         void invalidDatacenterId() {
-            org.assertj.core.api.Assertions.assertThatThrownBy(
+            Assertions.assertThatThrownBy(
                     () -> new SnowflakeTraceIdSupplier(100, 0))
                     .isInstanceOf(IllegalArgumentException.class);
         }

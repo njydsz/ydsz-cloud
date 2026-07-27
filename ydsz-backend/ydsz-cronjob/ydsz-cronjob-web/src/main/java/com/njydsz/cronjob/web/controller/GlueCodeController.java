@@ -53,7 +53,7 @@ import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 @Slf4j
 @Tag(name = "GLUE 在线编码")
 @RestController
-@RequestMapping("/cronjob/glue")
+@RequestMapping("/api/v1/cronjob/glue")
 @RequiredArgsConstructor
 @Validated
 public class GlueCodeController {

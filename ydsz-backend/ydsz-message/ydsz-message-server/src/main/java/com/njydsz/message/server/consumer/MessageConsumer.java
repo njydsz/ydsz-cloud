@@ -32,7 +32,7 @@ import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.metrics.MessageServiceMetrics;
+import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.tracing.MessageTraceContext;
 import com.njydsz.message.server.util.MessageCompressor;
@@ -66,7 +66,7 @@ public class MessageConsumer implements RocketMQListener<String> {
     private final MessageService messageService;
     private final RedisService redisService;
     private final MsgLogMapper msgLogMapper;
-    private final MessageServiceMetrics messageServiceMetrics;
+    private final MessageMetrics messageMetrics;
     private final MessageProperties messageProperties;
     private final MessageMetrics messageMetrics;
 
@@ -169,7 +169,7 @@ public class MessageConsumer implements RocketMQListener<String> {
             // P3-23: 记录消费延迟（从开始消费到消费完成的耗时）
             long consumeDuration = System.currentTimeMillis() - consumeStart;
             String channel = request.getChannel() != null ? request.getChannel() : "UNKNOWN";
-            messageServiceMetrics.recordConsumeDelay(channel, consumeDuration);
+            messageMetrics.recordConsumeDelay(channel, consumeDuration);
             log.info("[MessageConsumer] 消费完成: messageId={} channel={} cost={}ms",
                     request.getMessageId(), request.getChannel(), consumeDuration);
         } catch (SysException e) {

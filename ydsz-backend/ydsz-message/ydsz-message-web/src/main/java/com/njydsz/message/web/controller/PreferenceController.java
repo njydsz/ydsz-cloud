@@ -38,7 +38,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "消息偏好", description = "用户消息偏好管理")
 @RestController
-@RequestMapping("/message/preference")
+@RequestMapping("/api/v1/message/preference")
 @RequiredArgsConstructor
 public class PreferenceController {
 

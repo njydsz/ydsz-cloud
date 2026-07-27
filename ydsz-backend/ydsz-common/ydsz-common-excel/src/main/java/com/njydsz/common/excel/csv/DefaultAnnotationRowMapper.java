@@ -4,21 +4,19 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.tabular.TabularRowMapper;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
-
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.time.LocalTime;
 /**
  * 基于 {@code @ExcelProperty} 注解的默认行映射器。
  *
@@ -45,9 +43,6 @@ import java.util.Date;
  */
 public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
 
-    /** 缓存已解析的 Class → Mapper 实例，避免重复反射 */
-    private static final Map<Class<?>, DefaultAnnotationRowMapper<?>> CACHE = new ConcurrentHashMap<>();
-
     private final Class<T> clazz;
     private final List<String> headers;
     private final List<Field> orderedFields;
@@ -69,11 +64,19 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
     }
 
     /**
-     * 静态工厂方法（带缓存）。
+     * 静态工厂方法。
+     *
+     * <p>每次调用构造一个新的 Mapper 实例。{@code DefaultAnnotationRowMapper}
+     * 不再使用全局缓存，因为泛型类型 {@code Class<T> → DefaultAnnotationRowMapper<T>}
+     * 在 Java 类型系统中无法以类型安全的方式缓存（需要未经检查的强制类型转换）。
+     * 如需复用 Mapper 实例，由调用方自行持有引用。
+     *
+     * @param clazz 目标类型
+     * @param <T>   目标泛型
+     * @return 新构造的 Mapper 实例
      */
-    @SuppressWarnings("unchecked")
     public static <T> DefaultAnnotationRowMapper<T> of(Class<T> clazz) {
-        return (DefaultAnnotationRowMapper<T>) CACHE.computeIfAbsent(clazz, DefaultAnnotationRowMapper::new);
+        return new DefaultAnnotationRowMapper<>(clazz);
     }
 
     @Override
@@ -199,16 +202,16 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
             // BigDecimal/BigInteger/AtomicInteger/AtomicLong 走 Number 接口
             return new BigDecimal(value);
         }
-        if (targetType == java.time.LocalDate.class) {
-            return java.time.LocalDate.parse(value);
+        if (targetType == LocalDate.class) {
+            return LocalDate.parse(value);
         }
-        if (targetType == java.time.LocalDateTime.class) {
-            return java.time.LocalDateTime.parse(value);
+        if (targetType == LocalDateTime.class) {
+            return LocalDateTime.parse(value);
         }
-        if (targetType == java.time.LocalTime.class) {
-            return java.time.LocalTime.parse(value);
+        if (targetType == LocalTime.class) {
+            return LocalTime.parse(value);
         }
-        if (targetType == java.util.Date.class) {
+        if (targetType == Date.class) {
             try {
                 return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value);
             } catch (Exception ex) {

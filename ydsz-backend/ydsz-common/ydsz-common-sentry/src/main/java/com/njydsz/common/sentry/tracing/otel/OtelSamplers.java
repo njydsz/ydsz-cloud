@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.List;
+import io.opentelemetry.api.trace.Span;
 /**
  * YDSZ 采样器工厂
  *
@@ -105,7 +106,7 @@ public final class OtelSamplers {
         private Map<String, Double> grayTagRatios = new HashMap<>();
         /** 健康检查路径前缀（这些路径不采样） */
         @Builder.Default
-        private List<String> healthCheckPaths = java.util.List.of("/actuator", "/health", "/metrics");
+        private List<String> healthCheckPaths = List.of("/actuator", "/health", "/metrics");
     }
 
     // ============================================================================
@@ -137,7 +138,7 @@ public final class OtelSamplers {
             }
 
             // 2) 父 Span 已决策：跟随父
-            if (parentContext != null && io.opentelemetry.api.trace.Span.fromContext(parentContext).getSpanContext().isSampled()) {
+            if (parentContext != null && Span.fromContext(parentContext).getSpanContext().isSampled()) {
                 return SamplingResult.recordAndSample();
             }
 

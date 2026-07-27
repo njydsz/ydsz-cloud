@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.exception.TenantIsolationException;
 
 /**
  * 租户生命周期管理器。

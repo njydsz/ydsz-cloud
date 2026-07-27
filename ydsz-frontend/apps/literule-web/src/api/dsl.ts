@@ -31,30 +31,30 @@ export function getDslPageApi(params: DslApi.DslPageQuery) {
     current: number;
     size: number;
     items: DslApi.DslVO[];
-  }>(`/ruleEngine/dsl/page`, { params });
+  }>(`/api/v1/literule/dsl/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getDslListApi() {
-  return requestClient.get<DslApi.DslVO[]>(`/ruleEngine/dsl/list`);
+  return requestClient.get<DslApi.DslVO[]>(`/api/v1/literule/dsl/list`);
 }
 
 /** 根据 ID 查询 */
 export function getDslByIdApi(id: string) {
-  return requestClient.get<DslApi.DslVO>(`/ruleEngine/dsl/${id}`);
+  return requestClient.get<DslApi.DslVO>(`/api/v1/literule/dsl/${id}`);
 }
 
 /** 创建 */
 export function createDslApi(data: DslApi.DslDTO) {
-  return requestClient.post<string>(`/ruleEngine/dsl`, data);
+  return requestClient.post<string>(`/api/v1/literule/dsl`, data);
 }
 
 /** 更新 */
 export function updateDslApi(data: DslApi.DslDTO) {
-  return requestClient.put<boolean>(`/ruleEngine/dsl`, data);
+  return requestClient.put<boolean>(`/api/v1/literule/dsl`, data);
 }
 
 /** 删除 */
 export function deleteDslApi(id: string) {
-  return requestClient.delete<boolean>(`/ruleEngine/dsl/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/literule/dsl/${id}`);
 }

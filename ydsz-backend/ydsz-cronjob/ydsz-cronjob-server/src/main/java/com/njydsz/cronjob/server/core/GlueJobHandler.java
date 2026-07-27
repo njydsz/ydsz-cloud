@@ -26,6 +26,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
 
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.net.HttpURLConnection;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 /**
  * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。
  *
@@ -223,16 +232,16 @@ public class GlueJobHandler implements JobHandler {
                 ProcessBuilder.class.getName(),
                 Thread.class.getName(),
                 ClassLoader.class.getName(),
-                java.io.File.class.getName(),
-                java.nio.file.Path.class.getName(),
-                java.nio.file.Files.class.getName(),
-                java.net.URL.class.getName(),
-                java.net.Socket.class.getName(),
-                java.net.ServerSocket.class.getName(),
-                java.net.HttpURLConnection.class.getName(),
-                java.lang.reflect.Method.class.getName(),
-                java.lang.reflect.Field.class.getName(),
-                java.lang.reflect.Constructor.class.getName()
+                File.class.getName(),
+                Path.class.getName(),
+                Files.class.getName(),
+                URL.class.getName(),
+                Socket.class.getName(),
+                ServerSocket.class.getName(),
+                HttpURLConnection.class.getName(),
+                Method.class.getName(),
+                Field.class.getName(),
+                Constructor.class.getName()
         ));
 
         CompilerConfiguration config = new CompilerConfiguration();

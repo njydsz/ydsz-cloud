@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.Function;
 
+import java.nio.charset.StandardCharsets;
 /**
  * 布隆过滤器工具类
  *
@@ -91,7 +92,7 @@ public class BloomFilterUtils<T> implements Serializable {
      */
     public static BloomFilterUtils<String> createStringFilter(long expectedElements, double falsePositiveRate) {
         return create(expectedElements, falsePositiveRate,
-                s -> s == null ? new byte[0] : s.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                s -> s == null ? new byte[0] : s.getBytes(StandardCharsets.UTF_8));
     }
 
     /**

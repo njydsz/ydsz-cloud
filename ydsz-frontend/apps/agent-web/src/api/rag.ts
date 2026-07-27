@@ -35,30 +35,30 @@ export function getRagPageApi(params: RagApi.RagPageQuery) {
     current: number;
     size: number;
     items: RagApi.RagVO[];
-  }>(`/agent/rag/page`, { params });
+  }>(`/api/v1/agent/rag/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getRagListApi() {
-  return requestClient.get<RagApi.RagVO[]>(`/agent/rag/list`);
+  return requestClient.get<RagApi.RagVO[]>(`/api/v1/agent/rag/list`);
 }
 
 /** 根据 ID 查询 */
 export function getRagByIdApi(id: string) {
-  return requestClient.get<RagApi.RagVO>(`/agent/rag/${id}`);
+  return requestClient.get<RagApi.RagVO>(`/api/v1/agent/rag/${id}`);
 }
 
 /** 创建 */
 export function createRagApi(data: RagApi.RagDTO) {
-  return requestClient.post<string>(`/agent/rag`, data);
+  return requestClient.post<string>(`/api/v1/agent/rag`, data);
 }
 
 /** 更新 */
 export function updateRagApi(data: RagApi.RagDTO) {
-  return requestClient.put<boolean>(`/agent/rag`, data);
+  return requestClient.put<boolean>(`/api/v1/agent/rag`, data);
 }
 
 /** 删除 */
 export function deleteRagApi(id: string) {
-  return requestClient.delete<boolean>(`/agent/rag/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/agent/rag/${id}`);
 }

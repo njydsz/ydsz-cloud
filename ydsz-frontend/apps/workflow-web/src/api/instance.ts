@@ -33,30 +33,30 @@ export function getInstancePageApi(params: InstanceApi.InstancePageQuery) {
     current: number;
     size: number;
     items: InstanceApi.InstanceVO[];
-  }>(`/workflow/engine/page`, { params });
+  }>(`/api/v1/workflow/engine/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getInstanceListApi() {
-  return requestClient.get<InstanceApi.InstanceVO[]>(`/workflow/engine/list`);
+  return requestClient.get<InstanceApi.InstanceVO[]>(`/api/v1/workflow/engine/list`);
 }
 
 /** 根据 ID 查询 */
 export function getInstanceByIdApi(id: string) {
-  return requestClient.get<InstanceApi.InstanceVO>(`/workflow/engine/${id}`);
+  return requestClient.get<InstanceApi.InstanceVO>(`/api/v1/workflow/engine/${id}`);
 }
 
 /** 创建 */
 export function createInstanceApi(data: InstanceApi.InstanceDTO) {
-  return requestClient.post<string>(`/workflow/engine`, data);
+  return requestClient.post<string>(`/api/v1/workflow/engine`, data);
 }
 
 /** 更新 */
 export function updateInstanceApi(data: InstanceApi.InstanceDTO) {
-  return requestClient.put<boolean>(`/workflow/engine`, data);
+  return requestClient.put<boolean>(`/api/v1/workflow/engine`, data);
 }
 
 /** 删除 */
 export function deleteInstanceApi(id: string) {
-  return requestClient.delete<boolean>(`/workflow/engine/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/workflow/engine/${id}`);
 }

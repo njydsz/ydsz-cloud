@@ -41,6 +41,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.TimeUnit;
 /**
  * 文件应用服务
  * <p>
@@ -773,7 +774,7 @@ public class FileApplicationService {
     private String acquireLock(DistributedLocker locker, String lockKey) {
         String lockValue;
         try {
-            lockValue = locker.tryLock(lockKey, LOCK_WAIT_MS, LOCK_LEASE_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+            lockValue = locker.tryLock(lockKey, LOCK_WAIT_MS, LOCK_LEASE_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw BusinessException.of(NextwikiExceptionCode.LOCK_BUSY).data("lockKey", lockKey);

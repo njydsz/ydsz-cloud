@@ -41,7 +41,6 @@ class RedisStreamMQTest {
     private QueueProperties properties;
     private ExecutorService executor;
 
-    @SuppressWarnings("unchecked")
     @BeforeEach
     void setUp() {
         redisService = mock(RedisService.class);

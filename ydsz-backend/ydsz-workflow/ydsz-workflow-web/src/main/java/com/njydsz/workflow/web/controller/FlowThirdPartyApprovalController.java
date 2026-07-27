@@ -50,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "三方审批回调")
 @RestController
-@RequestMapping("/workflow/thirdParty")
+@RequestMapping("/api/v1/workflow/thirdParty")
 @RequiredArgsConstructor
 @Validated
 public class FlowThirdPartyApprovalController {

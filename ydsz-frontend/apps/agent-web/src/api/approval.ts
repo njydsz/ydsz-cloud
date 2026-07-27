@@ -33,30 +33,30 @@ export function getApprovalPageApi(params: ApprovalApi.ApprovalPageQuery) {
     current: number;
     size: number;
     items: ApprovalApi.ApprovalVO[];
-  }>(`/agent/approvals/page`, { params });
+  }>(`/api/v1/agent/approvals/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getApprovalListApi() {
-  return requestClient.get<ApprovalApi.ApprovalVO[]>(`/agent/approvals/list`);
+  return requestClient.get<ApprovalApi.ApprovalVO[]>(`/api/v1/agent/approvals/list`);
 }
 
 /** 根据 ID 查询 */
 export function getApprovalByIdApi(id: string) {
-  return requestClient.get<ApprovalApi.ApprovalVO>(`/agent/approvals/${id}`);
+  return requestClient.get<ApprovalApi.ApprovalVO>(`/api/v1/agent/approvals/${id}`);
 }
 
 /** 创建 */
 export function createApprovalApi(data: ApprovalApi.ApprovalDTO) {
-  return requestClient.post<string>(`/agent/approvals`, data);
+  return requestClient.post<string>(`/api/v1/agent/approvals`, data);
 }
 
 /** 更新 */
 export function updateApprovalApi(data: ApprovalApi.ApprovalDTO) {
-  return requestClient.put<boolean>(`/agent/approvals`, data);
+  return requestClient.put<boolean>(`/api/v1/agent/approvals`, data);
 }
 
 /** 删除 */
 export function deleteApprovalApi(id: string) {
-  return requestClient.delete<boolean>(`/agent/approvals/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/agent/approvals/${id}`);
 }

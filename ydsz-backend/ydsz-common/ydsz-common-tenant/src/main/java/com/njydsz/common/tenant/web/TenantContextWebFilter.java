@@ -96,8 +96,12 @@ public class TenantContextWebFilter implements Filter {
                     if (entry.getValue() instanceof String s) {
                         builder.field(entry.getKey(), s);
                     } else if (entry.getValue() instanceof List<?> list) {
-                        @SuppressWarnings("unchecked")
-                        List<String> strList = (List<String>) list;
+                        List<String> strList = new ArrayList<>(list.size());
+                        for (Object item : list) {
+                            if (item instanceof String s) {
+                                strList.add(s);
+                            }
+                        }
                         builder.fieldValues(entry.getKey(), strList);
                     }
                 }

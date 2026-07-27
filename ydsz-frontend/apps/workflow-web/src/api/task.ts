@@ -31,30 +31,30 @@ export function getTaskPageApi(params: TaskApi.TaskPageQuery) {
     current: number;
     size: number;
     items: TaskApi.TaskVO[];
-  }>(`/workflow/engine/page`, { params });
+  }>(`/api/v1/workflow/engine/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getTaskListApi() {
-  return requestClient.get<TaskApi.TaskVO[]>(`/workflow/engine/list`);
+  return requestClient.get<TaskApi.TaskVO[]>(`/api/v1/workflow/engine/list`);
 }
 
 /** 根据 ID 查询 */
 export function getTaskByIdApi(id: string) {
-  return requestClient.get<TaskApi.TaskVO>(`/workflow/engine/${id}`);
+  return requestClient.get<TaskApi.TaskVO>(`/api/v1/workflow/engine/${id}`);
 }
 
 /** 创建 */
 export function createTaskApi(data: TaskApi.TaskDTO) {
-  return requestClient.post<string>(`/workflow/engine`, data);
+  return requestClient.post<string>(`/api/v1/workflow/engine`, data);
 }
 
 /** 更新 */
 export function updateTaskApi(data: TaskApi.TaskDTO) {
-  return requestClient.put<boolean>(`/workflow/engine`, data);
+  return requestClient.put<boolean>(`/api/v1/workflow/engine`, data);
 }
 
 /** 删除 */
 export function deleteTaskApi(id: string) {
-  return requestClient.delete<boolean>(`/workflow/engine/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/workflow/engine/${id}`);
 }

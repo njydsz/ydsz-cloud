@@ -11,6 +11,7 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 
+import org.springframework.beans.BeanUtils;
 /**
  * Bean 动态更新工具类。
  *
@@ -66,7 +67,7 @@ public final class BeanUpdateUtil {
             return target;
         }
         String[] combinedIgnore = combineNullPropertyNames(source, ignoreProperties);
-        org.springframework.beans.BeanUtils.copyProperties(source, target, combinedIgnore);
+        BeanUtils.copyProperties(source, target, combinedIgnore);
         return target;
     }
 

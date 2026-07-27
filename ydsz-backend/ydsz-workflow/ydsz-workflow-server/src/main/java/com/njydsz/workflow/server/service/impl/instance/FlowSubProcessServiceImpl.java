@@ -26,7 +26,7 @@ import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventListener;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
@@ -337,7 +337,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             return null;
         }
         try {
-            Map<String, Object> ext = JsonHelper.fromJson(node.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
             if (ext == null) return null;
             Object v = ext.get("callActivityFlowCode");
             if (v == null) {
@@ -358,7 +358,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             return null;
         }
         try {
-            Map<String, Object> ext = JsonHelper.fromJson(node.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
             if (ext == null) return null;
             Object v = ext.get("subProcessTimeout");
             if (v == null) {

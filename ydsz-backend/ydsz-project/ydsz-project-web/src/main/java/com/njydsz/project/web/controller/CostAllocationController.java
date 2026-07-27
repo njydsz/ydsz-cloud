@@ -32,14 +32,14 @@ public class CostAllocationController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create CostAllocation")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create CostAllocation")
     public BaseResponse<Boolean> save(@RequestBody CostAllocationPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update CostAllocation")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update CostAllocation")
     public BaseResponse<Boolean> update(@RequestBody CostAllocationPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete CostAllocation")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete CostAllocation")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

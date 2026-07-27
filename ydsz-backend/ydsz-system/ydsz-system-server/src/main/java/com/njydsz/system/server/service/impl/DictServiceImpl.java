@@ -44,7 +44,7 @@ public class DictServiceImpl implements DictService {
         Page<DictType> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<DictType> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);
         List<DictTypeVO> vos = result.getRecords().stream()
-                .map(this::toVO)
+                .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         return PageResult.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
@@ -84,7 +84,7 @@ public class DictServiceImpl implements DictService {
     @Override
     public List<DictTypeVO> listAll() {
         return dictRepository.getDictTypeMapper().selectList(null).stream()
-                .map(this::toVO)
+                .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
@@ -104,6 +104,8 @@ public class DictServiceImpl implements DictService {
         }
         wrapper.orderByDesc("created_at");
         return wrapper;
+    }
+
     private DictType toEntity(DictTypeDTO dto) {
         if (dto == null) {
             return null;

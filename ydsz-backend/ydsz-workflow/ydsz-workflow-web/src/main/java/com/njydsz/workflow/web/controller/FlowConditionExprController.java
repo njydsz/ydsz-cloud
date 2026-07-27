@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/conditionExpr")
+@RequestMapping("/api/v1/workflow/conditionExpr")
 @RequiredArgsConstructor
 @Tag(name = "条件表达式编辑器", description = "结构化条件 JSON ↔ 表达式字符串双向转换")
 public class FlowConditionExprController {

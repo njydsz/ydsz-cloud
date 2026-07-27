@@ -34,6 +34,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 /**
  * DAG 实例执行器（P2 DAG 增强）。
  *
@@ -126,7 +127,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
 
         // P1-3: DAG 超时检查
         if (dag.getTimeoutMs() != null && dag.getTimeoutMs() > 0 && instance.getStartedAt() != null) {
-            long elapsedMs = java.time.Duration.between(instance.getStartedAt(), LocalDateTime.now()).toMillis();
+            long elapsedMs = Duration.between(instance.getStartedAt(), LocalDateTime.now()).toMillis();
             if (elapsedMs > dag.getTimeoutMs()) {
                 log.warn("[DagInstance] DAG 已超时, 标记为 TIMEOUT: instanceId={} elapsedMs={} timeoutMs={}",
                         dagInstanceId, elapsedMs, dag.getTimeoutMs());

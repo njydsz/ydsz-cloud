@@ -25,6 +25,8 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 import java.util.LinkedHashMap;
 import org.springframework.http.ResponseEntity;
+import java.util.Objects;
+import java.nio.charset.StandardCharsets;
 /**
  * 任务执行日志 Controller（P0-2 在线日志白屏化）。
  *
@@ -37,7 +39,7 @@ import org.springframework.http.ResponseEntity;
 @Slf4j
 @Tag(name = "任务执行日志")
 @RestController
-@RequestMapping("/cronjob/log")
+@RequestMapping("/api/v1/cronjob/log")
 @RequiredArgsConstructor
 public class JobLogController {
 
@@ -139,9 +141,9 @@ public class JobLogController {
         for (JobLogContent line : allLines) {
             sb.append(String.format("[%s] %s%n", line.getLogLevel(), line.getContent()));
         }
-        byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
         String filename = "job-log-" + logId + ".log";
-        return org.springframework.http.ResponseEntity.ok()
+        return ResponseEntity.ok()
                 .header("Content-Disposition",
                         "attachment; filename=\"" + filename + "\"")
                 .header("Content-Type", "text/plain; charset=UTF-8")
@@ -179,12 +181,12 @@ public class JobLogController {
                 "durationMs", log2.getDurationMs() != null ? log2.getDurationMs() : 0,
                 "triggerType", log2.getTriggerType() != null ? log2.getTriggerType() : "",
                 "errorMessage", log2.getErrorMessage() != null ? log2.getErrorMessage() : ""));
-        result.put("statusChanged", !java.util.Objects.equals(log1.getStatus(), log2.getStatus()));
+        result.put("statusChanged", !Objects.equals(log1.getStatus(), log2.getStatus()));
         result.put("durationDiffMs", (log2.getDurationMs() != null ? log2.getDurationMs() : 0)
                 - (log1.getDurationMs() != null ? log1.getDurationMs() : 0));
         result.put("result1Json", log1.getResultJson() != null ? log1.getResultJson() : "");
         result.put("result2Json", log2.getResultJson() != null ? log2.getResultJson() : "");
-        result.put("resultChanged", !java.util.Objects.equals(log1.getResultJson(), log2.getResultJson()));
+        result.put("resultChanged", !Objects.equals(log1.getResultJson(), log2.getResultJson()));
         return BaseResponse.success(result);
     }
 

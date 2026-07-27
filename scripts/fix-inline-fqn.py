@@ -220,8 +220,9 @@ def replace_fqn_in_line(line: str, fqn: str, simple: str) -> str:
             result.append(line[last_end:end])
             last_end = end
             continue
-        # 后一字符不能是 . 或字母数字下划线（表示是更长 FQN 或方法调用的一部分）
-        if end < len(line) and (line[end] == '.' or line[end].isalnum() or line[end] == '_'):
+        # 后一字符若是字母数字下划线：是更长类名的一部分（如 FooBar），跳过
+        # 后一字符若是 '.'：嵌套类/常量/方法 — FQN 仍可替换为简单名
+        if end < len(line) and (line[end].isalnum() or line[end] == '_'):
             result.append(line[last_end:end])
             last_end = end
             continue
@@ -271,11 +272,15 @@ def process_file(file_path: Path, file_violations: list[tuple[int, str]]) -> tup
             # 检查是否在纯注释行内（无 Javadoc 标签）
             if is_pure_comment_line(line) and not is_javadoc_tag_line_with_fqn(line, fqn):
                 continue
-            # 检查 FQN 前后字符，避免替换子串
+            # 检查 FQN 前后的字符，避免替换子串（如 com.xxx.Foo 不应替换 com.xxx.FooBar）
+            # 前一字符不能是 .（表示是更长 FQN 的一部分）
             start, end = m.start(), m.end()
             if start > 0 and line[start - 1] == '.':
                 continue
-            if end < len(line) and (line[end] == '.' or line[end].isalnum() or line[end] == '_'):
+            # 后一字符若是字母数字下划线：是更长类名的一部分（如 FooBar），跳过
+            # 后一字符若是 '.'：可能是嵌套类（Cache.ValueWrapper）或常量（TimeUnit.NANOSECONDS）或方法（Foo.bar()）
+            #   这些情况下 FQN 本身仍可替换为简单名，import 加在外层类即可
+            if end < len(line) and (line[end].isalnum() or line[end] == '_'):
                 continue
             # 这是一处可替换的 FQN
             all_fqns_with_replaceable[fqn] = True
@@ -394,7 +399,7 @@ def main():
                     start, end = m.start(), m.end()
                     if start > 0 and line[start - 1] == '.':
                         continue
-                    if end < len(line) and (line[end] == '.' or line[end].isalnum() or line[end] == '_'):
+                    if end < len(line) and (line[end].isalnum() or line[end] == '_'):
                         continue
                     replaceable_fqns.add(fqn)
             if replaceable_fqns:

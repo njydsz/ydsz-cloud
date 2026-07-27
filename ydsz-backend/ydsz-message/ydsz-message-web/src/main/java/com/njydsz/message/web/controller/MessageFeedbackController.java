@@ -40,7 +40,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "消息反馈", description = "消息质量评分与用户反馈")
 @RestController
-@RequestMapping("/message/feedback")
+@RequestMapping("/api/v1/message/feedback")
 @RequiredArgsConstructor
 public class MessageFeedbackController {
 

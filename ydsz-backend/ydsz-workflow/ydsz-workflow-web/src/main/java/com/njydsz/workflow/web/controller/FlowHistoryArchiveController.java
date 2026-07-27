@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "流程历史归档")
 @RestController
-@RequestMapping("/workflow/history")
+@RequestMapping("/api/v1/workflow/history")
 @RequiredArgsConstructor
 @Validated
 public class FlowHistoryArchiveController {

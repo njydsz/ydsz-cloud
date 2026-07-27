@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -49,7 +50,6 @@ import static org.mockito.Mockito.when;
  */
 class RedisTccTransactionLogStoreTest {
 
-    @SuppressWarnings("unchecked")
     private RedisTemplate<String, Object> redisTemplate;
     private HashOperations<String, Object, Object> hashOps;
 
@@ -59,7 +59,6 @@ class RedisTccTransactionLogStoreTest {
     private final Map<String, Map<Object, Object>> backing = new ConcurrentHashMap<>();
 
     @BeforeEach
-    @SuppressWarnings({"unchecked", "rawtypes"})
     void setUp() {
         redisTemplate = mock(RedisTemplate.class);
         hashOps = mock(HashOperations.class);

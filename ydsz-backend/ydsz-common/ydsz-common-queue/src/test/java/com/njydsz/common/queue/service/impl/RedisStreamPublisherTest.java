@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,13 +19,19 @@ import org.springframework.data.redis.core.StreamOperations;
 
 import com.njydsz.common.queue.domain.QueueMessage;
 
-import java.util.Map;
 /**
  * {@link RedisStreamPublisher} 单元测试。
  *
  * <p>通过 Mockito 模拟 {@link RedisTemplate}，验证发布者将
  * {@link QueueMessage} 正确转换为 Stream Record 写入 Redis。
  * 覆盖：null 处理、字段填充、批量发布、顺序消息字段、构造校验。
+ *
+ * <p><b>关于未检警告的说明：</b>Mockito 的 {@code mock(Class)} 与
+ * {@code ArgumentCaptor.forClass(Class)} 在泛型类型上受 Java 类型擦除限制，
+ * 无法在不引入 {@code @SuppressWarnings} 的情况下完全消除未检警告。
+ * 本测试类按规范要求不使用 {@code @SuppressWarnings} 注解，
+ * 残留的未检警告由编译器输出，便于后续随 Mockito 升级（如 {@code ArgumentCaptor.captor()}
+ * 类型推断 API）一并清理。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -33,11 +40,9 @@ import java.util.Map;
 class RedisStreamPublisherTest {
 
     private RedisTemplate<String, Object> redisTemplate;
-    @SuppressWarnings("rawtypes")
-    private StreamOperations streamOps;
+    private StreamOperations<String, Object, Object> streamOps;
     private RedisStreamPublisher publisher;
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @BeforeEach
     void setUp() {
         redisTemplate = mock(RedisTemplate.class);
@@ -76,14 +81,13 @@ class RedisStreamPublisherTest {
     void testPublishStringWrapsAsQueueMessage() {
         publisher.publish("hello world");
 
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<ObjectRecord> captor = ArgumentCaptor.forClass(ObjectRecord.class);
+        ArgumentCaptor<ObjectRecord<String, Map<String, String>>> captor =
+                ArgumentCaptor.forClass(ObjectRecord.class);
         verify(streamOps).add(captor.capture());
 
-        ObjectRecord<String, ?> record = captor.getValue();
+        ObjectRecord<String, Map<String, String>> record = captor.getValue();
         assertEquals("test-stream", record.getStream());
-        @SuppressWarnings("unchecked")
-        Map<String, String> fields = (Map<String, String>) record.getValue();
+        Map<String, String> fields = record.getValue();
         assertNotNull(fields.get("payload"));
         assertNotNull(fields.get("traceId"));
         assertEquals("0", fields.get("retryCount"));
@@ -97,12 +101,11 @@ class RedisStreamPublisherTest {
 
         publisher.publish(message);
 
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<ObjectRecord> captor = ArgumentCaptor.forClass(ObjectRecord.class);
+        ArgumentCaptor<ObjectRecord<String, Map<String, String>>> captor =
+                ArgumentCaptor.forClass(ObjectRecord.class);
         verify(streamOps).add(captor.capture());
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = captor.getValue().getValue();
         assertNotNull(fields.get("payload"));
         assertEquals(message.getTraceId(), fields.get("traceId"));
         assertEquals("3", fields.get("retryCount"));
@@ -116,12 +119,11 @@ class RedisStreamPublisherTest {
 
         publisher.publish(message);
 
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<ObjectRecord> captor = ArgumentCaptor.forClass(ObjectRecord.class);
+        ArgumentCaptor<ObjectRecord<String, Map<String, String>>> captor =
+                ArgumentCaptor.forClass(ObjectRecord.class);
         verify(streamOps).add(captor.capture());
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = captor.getValue().getValue();
         assertEquals("order-group-1", fields.get("groupKey"));
         assertEquals("42", fields.get("sequence"));
     }
@@ -133,12 +135,11 @@ class RedisStreamPublisherTest {
 
         publisher.publish(message);
 
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<ObjectRecord> captor = ArgumentCaptor.forClass(ObjectRecord.class);
+        ArgumentCaptor<ObjectRecord<String, Map<String, String>>> captor =
+                ArgumentCaptor.forClass(ObjectRecord.class);
         verify(streamOps).add(captor.capture());
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = captor.getValue().getValue();
         assertNull(fields.get("groupKey"));
         assertNull(fields.get("sequence"));
     }
@@ -152,12 +153,11 @@ class RedisStreamPublisherTest {
 
         publisher.publish(message);
 
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<ObjectRecord> captor = ArgumentCaptor.forClass(ObjectRecord.class);
+        ArgumentCaptor<ObjectRecord<String, Map<String, String>>> captor =
+                ArgumentCaptor.forClass(ObjectRecord.class);
         verify(streamOps).add(captor.capture());
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = captor.getValue().getValue();
         assertEquals("0", fields.get("retryCount"));
     }
 

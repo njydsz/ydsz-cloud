@@ -38,7 +38,7 @@ import com.njydsz.agent.domain.vo.ApprovalRequestVO;
  */
 @Slf4j
 @RestController
-@RequestMapping("/agent/approvals")
+@RequestMapping("/api/v1/agent/approvals")
 @RequiredArgsConstructor
 public class HumanApprovalController {
 

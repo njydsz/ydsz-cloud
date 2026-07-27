@@ -14,6 +14,7 @@ import com.njydsz.system.infra.mapper.DictItemMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.health.contributor.Health;
 /**
  * 系统模块健康检查。
  *
@@ -41,7 +42,7 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
     private final DictItemMapper dictItemMapper;
 
     @Override
-    protected void doHealthCheck(org.springframework.boot.health.contributor.Health.Builder builder) {
+    protected void doHealthCheck(Health.Builder builder) {
         checkRedis(builder, () -> redisService.getRedisTemplate().execute((RedisCallback<String>) conn -> conn.ping()));
         checkTableProbe(builder, "config", () -> configMapper.selectByConfigKey("__health_probe__"));
         checkTableProbe(builder, "dict", () -> dictItemMapper.selectByTypeAndCode("__health_probe__", "__health_probe__"));

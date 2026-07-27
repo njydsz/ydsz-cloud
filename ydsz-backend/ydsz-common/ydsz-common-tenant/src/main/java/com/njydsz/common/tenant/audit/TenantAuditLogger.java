@@ -2,6 +2,8 @@ package com.njydsz.common.tenant.audit;
 
 import com.njydsz.common.tenant.TenantContextHolder;
 
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 /**
  * 租户审计工具类。
  *
@@ -33,13 +35,13 @@ public final class TenantAuditLogger {
      */
     public static void log(String action, String message) {
         String tenantId = TenantContextHolder.getTenantId();
-        org.slf4j.MDC.put("tenantId", tenantId != null ? tenantId : "SYSTEM");
-        org.slf4j.MDC.put("auditAction", action);
+        MDC.put("tenantId", tenantId != null ? tenantId : "SYSTEM");
+        MDC.put("auditAction", action);
         try {
-            org.slf4j.LoggerFactory.getLogger("TENANT_AUDIT")
+            LoggerFactory.getLogger("TENANT_AUDIT")
                     .info("[{}] {}", action, message);
         } finally {
-            org.slf4j.MDC.remove("auditAction");
+            MDC.remove("auditAction");
             // tenantId 由 WebFilter 清除
         }
     }
@@ -53,15 +55,15 @@ public final class TenantAuditLogger {
      */
     public static void log(String action, String message, Object resourceId) {
         String tenantId = TenantContextHolder.getTenantId();
-        org.slf4j.MDC.put("tenantId", tenantId != null ? tenantId : "SYSTEM");
-        org.slf4j.MDC.put("auditAction", action);
-        org.slf4j.MDC.put("resourceId", String.valueOf(resourceId));
+        MDC.put("tenantId", tenantId != null ? tenantId : "SYSTEM");
+        MDC.put("auditAction", action);
+        MDC.put("resourceId", String.valueOf(resourceId));
         try {
-            org.slf4j.LoggerFactory.getLogger("TENANT_AUDIT")
+            LoggerFactory.getLogger("TENANT_AUDIT")
                     .info("[{}] {} (resourceId={})", action, message, resourceId);
         } finally {
-            org.slf4j.MDC.remove("auditAction");
-            org.slf4j.MDC.remove("resourceId");
+            MDC.remove("auditAction");
+            MDC.remove("resourceId");
         }
     }
 }

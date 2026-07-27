@@ -43,7 +43,7 @@ import com.njydsz.common.audit.enums.AuditType;
 @Slf4j
 @Tag(name = "死信管理", description = "死信查询与手动重发")
 @RestController
-@RequestMapping("/message/deadLetter")
+@RequestMapping("/api/v1/message/deadLetter")
 @RequiredArgsConstructor
 public class DeadLetterController {
 

@@ -5,7 +5,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.project.domain.dto.ProjectInitiationDTO;
+import com.njydsz.project.domain.dto.post.ProjectInitiationPostDTO;
+import com.njydsz.project.domain.dto.put.ProjectInitiationPutDTO;
 import com.njydsz.project.domain.dto.ProjectInitiationPageQuery;
 import com.njydsz.project.domain.vo.ProjectInitiationVO;
 import com.njydsz.project.server.service.ProjectInitiationService;
@@ -59,25 +60,25 @@ public class ProjectInitiationController {
     }
 
     @PostMapping
-    @Audit(action = AuditAction.CREATE, module = "PROJECT", description = "创建项目立项")
-    public BaseResponse<String> save(@Valid @RequestBody ProjectInitiationDTO dto) {
-        return BaseResponse.success(projectInitiationService.save(dto));
+    @Audit(action = AuditAction.CREATE, module = "PROJECT", content= "创建项目立项")
+    public BaseResponse<String> save(@Valid @RequestBody ProjectInitiationPostDTO dto) {
+        return BaseResponse.success(projectInitiationService.save(ProjectConverter.INSTANT.postDtoToEntity(dto)));
     }
 
     @PutMapping
-    @Audit(action = AuditAction.UPDATE, module = "PROJECT", description = "更新项目立项")
-    public BaseResponse<Boolean> update(@Valid @RequestBody ProjectInitiationDTO dto) {
-        return BaseResponse.success(projectInitiationService.updateById(dto));
+    @Audit(action = AuditAction.UPDATE, module = "PROJECT", content= "更新项目立项")
+    public BaseResponse<Boolean> update(@Valid @RequestBody ProjectInitiationPutDTO dto) {
+        return BaseResponse.success(projectInitiationService.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto)));
     }
 
     @DeleteMapping("/{id}")
-    @Audit(action = AuditAction.DELETE, module = "PROJECT", description = "删除项目立项")
+    @Audit(action = AuditAction.DELETE, module = "PROJECT", content= "删除项目立项")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(projectInitiationService.removeById(id));
     }
 
     @PutMapping("/{id}/stage")
-    @Audit(action = AuditAction.UPDATE, module = "PROJECT", description = "推进项目阶段")
+    @Audit(action = AuditAction.UPDATE, module = "PROJECT", content= "推进项目阶段")
     public BaseResponse<Boolean> advanceStage(@PathVariable String id,
                                                @RequestParam String stage,
                                                @RequestParam(required = false) String gate) {

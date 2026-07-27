@@ -56,7 +56,7 @@ import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/agent")
+@RequestMapping("/api/v1/agent")
 public class AgentController {
 
     private static final Logger log = LoggerFactory.getLogger(AgentController.class);

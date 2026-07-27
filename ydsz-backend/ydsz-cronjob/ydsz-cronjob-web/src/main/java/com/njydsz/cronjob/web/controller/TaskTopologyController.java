@@ -55,7 +55,7 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 @Slf4j
 @Tag(name = "任务执行拓扑图")
 @RestController
-@RequestMapping("/cronjob/topology")
+@RequestMapping("/api/v1/cronjob/topology")
 @RequiredArgsConstructor
 public class TaskTopologyController {
 

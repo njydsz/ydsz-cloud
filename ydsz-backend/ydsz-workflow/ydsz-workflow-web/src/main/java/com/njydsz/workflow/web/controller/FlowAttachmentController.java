@@ -38,7 +38,7 @@ import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-attachment", description = "工作流审批附件接口")
-@RequestMapping("/workflow/engine")
+@RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 public class FlowAttachmentController {
 

@@ -22,7 +22,7 @@ import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTaskService;
@@ -114,7 +114,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTask> list = JsonHelper.safeCastList(pageResult.getData(), FlowRunTask.class);
+        List<FlowRunTask> list = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
     }
 
@@ -124,7 +124,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTask> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTask> list = JsonHelper.safeCastList(pageResult.getData(), FlowRunTask.class);
+        List<FlowRunTask> list = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
     }
 
@@ -145,7 +145,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         PageResponse<FlowInstance> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowInstance> dataList = JsonHelper.safeCastList(pageResult.getData(), FlowInstance.class);
+        List<FlowInstance> dataList = MapUtils.safeCastList(pageResult.getData(), FlowInstance.class);
         List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
         return (PageResponse<Map<String, Object>>) (PageResponse<?>) PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
@@ -224,7 +224,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         PageResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        List<FlowRunTask> todos = JsonHelper.safeCastList(pageResult.getData(), FlowRunTask.class);
+        List<FlowRunTask> todos = MapUtils.safeCastList(pageResult.getData(), FlowRunTask.class);
         if (todos.isEmpty()) {
             return 0;
         }
@@ -260,7 +260,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
             List<Map<String, Object>> nodes = new ArrayList<>();
             for (Object item : rawList) {
                 if (item instanceof Map<?, ?> m) {
-                    Map<String, Object> node = JsonHelper.toStringObjectMap(m);
+                    Map<String, Object> node = MapUtils.toStringObjectMap(m);
                     boolean active = currentNodeCode != null
                             && currentNodeCode.equals(node.get("nodeCode"));
                     node.put("active", active);
@@ -661,7 +661,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
             return Collections.emptyMap();
         }
         List<FlowNode> nodes =
-                JsonHelper.safeCastList(detail.get("nodes"), FlowNode.class);
+                MapUtils.safeCastList(detail.get("nodes"), FlowNode.class);
         if (nodes == null || nodes.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -672,7 +672,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
                 continue;
             }
             try {
-                Map<String, Object> parsed = JsonHelper.fromJson(coord);
+                Map<String, Object> parsed = YdszJson.parseMap(coord);
                 if (parsed != null && !parsed.isEmpty()) {
                     result.put(n.getNodeCode(), parsed);
                 }

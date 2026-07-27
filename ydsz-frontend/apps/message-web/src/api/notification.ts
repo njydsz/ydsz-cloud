@@ -33,30 +33,30 @@ export function getNotificationPageApi(params: NotificationApi.NotificationPageQ
     current: number;
     size: number;
     items: NotificationApi.NotificationVO[];
-  }>(`/notifications/page`, { params });
+  }>(`/api/v1/message/notifications/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getNotificationListApi() {
-  return requestClient.get<NotificationApi.NotificationVO[]>(`/notifications/list`);
+  return requestClient.get<NotificationApi.NotificationVO[]>(`/api/v1/message/notifications/list`);
 }
 
 /** 根据 ID 查询 */
 export function getNotificationByIdApi(id: string) {
-  return requestClient.get<NotificationApi.NotificationVO>(`/notifications/${id}`);
+  return requestClient.get<NotificationApi.NotificationVO>(`/api/v1/message/notifications/${id}`);
 }
 
 /** 创建 */
 export function createNotificationApi(data: NotificationApi.NotificationDTO) {
-  return requestClient.post<string>(`/notifications`, data);
+  return requestClient.post<string>(`/api/v1/message/notifications`, data);
 }
 
 /** 更新 */
 export function updateNotificationApi(data: NotificationApi.NotificationDTO) {
-  return requestClient.put<boolean>(`/notifications`, data);
+  return requestClient.put<boolean>(`/api/v1/message/notifications`, data);
 }
 
 /** 删除 */
 export function deleteNotificationApi(id: string) {
-  return requestClient.delete<boolean>(`/notifications/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/message/notifications/${id}`);
 }

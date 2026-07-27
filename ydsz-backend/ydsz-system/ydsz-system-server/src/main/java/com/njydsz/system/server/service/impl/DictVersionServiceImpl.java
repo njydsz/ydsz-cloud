@@ -31,7 +31,7 @@ public class DictVersionServiceImpl implements DictVersionService {
     @Override
     public List<DictVersionVO> listByTypeCode(String typeCode) {
         return mapper.listByTypeCode(typeCode).stream()
-                .map(this::toVO)
+                .map(SystemConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
     }
 
@@ -46,4 +46,5 @@ public class DictVersionServiceImpl implements DictVersionService {
         entity.setEffectiveDate(LocalDateTime.now());
         mapper.insert(entity);
         return entity.getId();
+    }
 }

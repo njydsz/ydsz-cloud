@@ -32,14 +32,14 @@ public class EvmMeasureController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create EvmMeasure")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create EvmMeasure")
     public BaseResponse<Boolean> save(@RequestBody EvmMeasurePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update EvmMeasure")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update EvmMeasure")
     public BaseResponse<Boolean> update(@RequestBody EvmMeasurePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete EvmMeasure")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete EvmMeasure")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

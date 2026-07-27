@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "消息统计看板", description = "发送/重试/死信/回执聚合指标")
 @RestController
-@RequestMapping("/message/stats")
+@RequestMapping("/api/v1/message/stats")
 @RequiredArgsConstructor
 public class MessageStatsController {
 

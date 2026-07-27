@@ -287,7 +287,7 @@ public class FlowDefinitionCacheService {
         }
         try {
             Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-            return extJson == null ? null : JsonHelper.getString(extJson, "sourceRef");
+            return extJson == null ? null : MapUtils.getString(extJson, "sourceRef");
         } catch (Exception e) {
             log.warn("[FlowCache] 解析 skip.ext 失败: skipId={} err={}",
                     skip.getId(), e.getMessage());

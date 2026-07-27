@@ -32,7 +32,7 @@ import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
  */
 @Tag(name = "DAG工作流实例")
 @RestController
-@RequestMapping("/cronjob/dag/instance")
+@RequestMapping("/api/v1/cronjob/dag/instance")
 @RequiredArgsConstructor
 public class JobDagInstanceController {
 

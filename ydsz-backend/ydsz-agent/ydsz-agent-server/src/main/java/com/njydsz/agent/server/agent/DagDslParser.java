@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.agent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,37 +61,34 @@ public class DagDslParser {
         String name = (String) root.getOrDefault("name", "unnamed-dag");
         Object nodesRaw = root.get("nodes");
         Object edgesRaw = root.get("edges");
-        if (!(nodesRaw instanceof Map<?, ?>) || ((Map<?, ?>) nodesRaw).isEmpty()) {
+        if (!(nodesRaw instanceof Map<?, ?> nodesYaml) || nodesYaml.isEmpty()) {
             throw new IllegalArgumentException("DSL 缺少 nodes 定义");
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> nodesYaml = (Map<String, Object>) nodesRaw;
 
         Map<String, AgentDag.Node> nodes = new HashMap<>();
-        for (Map.Entry<String, Object> entry : nodesYaml.entrySet()) {
-            String nodeId = entry.getKey();
+        for (Map.Entry<?, ?> entry : nodesYaml.entrySet()) {
+            String nodeId = String.valueOf(entry.getKey());
             Object nodeDefRaw = entry.getValue();
-            if (!(nodeDefRaw instanceof Map<?, ?>)) {
+            if (!(nodeDefRaw instanceof Map<?, ?> nodeDef)) {
                 throw new IllegalArgumentException("节点定义格式错误: " + nodeId);
             }
-            @SuppressWarnings("unchecked")
-            Map<String, Object> nodeDef = (Map<String, Object>) nodeDefRaw;
-            String agentType = (String) nodeDef.getOrDefault("agent-type", "CHAT");
-            String prompt = (String) nodeDef.getOrDefault("prompt", "");
-            String inputFrom = (String) nodeDef.get("input-from");
+            String agentType = readString(nodeDef.get("agent-type"), "CHAT");
+            String prompt = readString(nodeDef.get("prompt"), "");
+            String inputFrom = readStringOrNull(nodeDef.get("input-from"));
             Object configRaw = nodeDef.get("config");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> config = configRaw instanceof Map ? (Map<String, Object>) configRaw : null;
+            Map<String, Object> config = toStringKeyedMap(configRaw);
             nodes.put(nodeId, new AgentDag.Node(nodeId, agentType, prompt, inputFrom, config));
         }
 
         Map<String, List<String>> edges = new HashMap<>();
         if (edgesRaw instanceof Map<?, ?> edgesYaml) {
-            for (Map.Entry<String, Object> entry : ((Map<String, Object>) edgesYaml).entrySet()) {
-                String nodeId = entry.getKey();
+            for (Map.Entry<?, ?> entry : edgesYaml.entrySet()) {
+                String nodeId = String.valueOf(entry.getKey());
                 if (entry.getValue() instanceof List<?> deps) {
-                    @SuppressWarnings("unchecked")
-                    List<String> depList = (List<String>) deps;
+                    List<String> depList = new ArrayList<>(deps.size());
+                    for (Object dep : deps) {
+                        depList.add(String.valueOf(dep));
+                    }
                     edges.put(nodeId, depList);
                 }
             }
@@ -99,5 +97,49 @@ public class DagDslParser {
         AgentDag dag = new AgentDag(UUID.randomUUID().toString(), name, nodes, edges);
         log.info("[DagDslParser] 解析完成: name={}, nodes={}", name, nodes.size());
         return dag;
+    }
+
+    /**
+     * 读取字符串值，null 时返回默认值。
+     *
+     * @param value        原始值
+     * @param defaultValue 默认值
+     * @return 字符串值
+     */
+    private static String readString(Object value, String defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        return value.toString();
+    }
+
+    /**
+     * 读取字符串值，null 时返回 null。
+     *
+     * @param value 原始值
+     * @return 字符串值或 null
+     */
+    private static String readStringOrNull(Object value) {
+        return value == null ? null : value.toString();
+    }
+
+    /**
+     * 将 Object（通常来自 YAML 解析）转换为 {@code Map<String, Object>}。
+     *
+     * <p>通过遍历 {@code Map<?, ?>} 并对 key 调用 {@link String#valueOf(Object)}
+     * 来避免未经检查的强制类型转换。
+     *
+     * @param raw 原始对象
+     * @return 字符串键的 Map；输入为 null 或非 Map 时返回 {@link Map#of()}
+     */
+    private static Map<String, Object> toStringKeyedMap(Object raw) {
+        if (!(raw instanceof Map<?, ?> rawMap)) {
+            return Map.of();
+        }
+        Map<String, Object> result = new HashMap<>(rawMap.size());
+        for (Map.Entry<?, ?> e : rawMap.entrySet()) {
+            result.put(String.valueOf(e.getKey()), e.getValue());
+        }
+        return result;
     }
 }

@@ -10,6 +10,7 @@ import com.njydsz.common.seata.config.SeataProperties;
 import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.common.seata.impl.TccTransactionManager;
 
+import com.njydsz.common.seata.api.TransactionType;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -139,7 +140,7 @@ class TccTransactionManagerTest {
 
     @Test
     void testGetCurrentType() {
-        assertEquals(com.njydsz.common.seata.api.TransactionType.TCC, manager.getCurrentType());
+        assertEquals(TransactionType.TCC, manager.getCurrentType());
     }
 
     @Test

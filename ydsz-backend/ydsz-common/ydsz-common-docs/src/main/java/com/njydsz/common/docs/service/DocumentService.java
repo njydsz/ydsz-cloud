@@ -35,6 +35,7 @@ import com.njydsz.common.docs.summary.DocumentSummarizer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.stream.Collectors;
 /**
  * 文档处理统一服务门面
  * <p>
@@ -373,7 +374,7 @@ public class DocumentService {
         DocsMetrics metrics = metricsProvider.getIfAvailable();
         if (metrics != null && findings != null && !findings.isEmpty()) {
             findings.stream()
-                    .collect(java.util.stream.Collectors.groupingBy(PiiFinding::getType))
+                    .collect(Collectors.groupingBy(PiiFinding::getType))
                     .forEach((type, list) -> metrics.recordPiiDetected(type, list.size()));
         }
     }

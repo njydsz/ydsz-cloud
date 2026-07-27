@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
 
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -179,7 +179,7 @@ public class FlowFormValidator {
                         field.getLabel() + " 第 " + (i + 1) + " 行格式不正确"));
                 continue;
             }
-            Map<String, Object> rowData = JsonHelper.toStringObjectMap(rowMap);
+            Map<String, Object> rowData = MapUtils.toStringObjectMap(rowMap);
             for (FlowFormField subField : field.getSubFields()) {
                 validateField(subField, rowData.get(subField.getFieldKey()), rowData,
                         errors, fieldKey + "[" + i + "].");

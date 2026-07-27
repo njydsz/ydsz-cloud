@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import java.util.UUID;
 /**
  * 对话消息值对象（对标 OpenAI Chat Completions message）
  *
@@ -42,29 +43,29 @@ public final class ChatMessage implements Serializable {
     }
 
     public static ChatMessage system(String content) {
-        return new ChatMessage(java.util.UUID.randomUUID().toString(),
+        return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.SYSTEM, content, null, LocalDateTime.now(), null, null, null);
     }
 
     public static ChatMessage user(String content, String conversationId) {
-        return new ChatMessage(java.util.UUID.randomUUID().toString(),
+        return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.USER, content, conversationId, LocalDateTime.now(), null, null, null);
     }
 
     public static ChatMessage assistant(String content, String conversationId, TokenUsage usage) {
-        return new ChatMessage(java.util.UUID.randomUUID().toString(),
+        return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.ASSISTANT, content, conversationId, LocalDateTime.now(), null, null, usage);
     }
 
     public static ChatMessage assistantWithTools(String content, String conversationId,
                                                   List<ToolCall> toolCalls, TokenUsage usage) {
-        return new ChatMessage(java.util.UUID.randomUUID().toString(),
+        return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.ASSISTANT, content, conversationId, LocalDateTime.now(),
                 toolCalls, null, usage);
     }
 
     public static ChatMessage tool(String toolCallId, String content, String conversationId) {
-        return new ChatMessage(java.util.UUID.randomUUID().toString(),
+        return new ChatMessage(UUID.randomUUID().toString(),
                 MessageRole.TOOL, content, conversationId, LocalDateTime.now(), null, toolCallId, null);
     }
 

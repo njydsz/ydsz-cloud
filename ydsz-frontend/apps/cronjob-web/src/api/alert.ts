@@ -35,30 +35,30 @@ export function getAlertPageApi(params: AlertApi.AlertPageQuery) {
     current: number;
     size: number;
     items: AlertApi.AlertVO[];
-  }>(`/cronjob/alert/page`, { params });
+  }>(`/api/v1/cronjob/alert/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getAlertListApi() {
-  return requestClient.get<AlertApi.AlertVO[]>(`/cronjob/alert/list`);
+  return requestClient.get<AlertApi.AlertVO[]>(`/api/v1/cronjob/alert/list`);
 }
 
 /** 根据 ID 查询 */
 export function getAlertByIdApi(id: string) {
-  return requestClient.get<AlertApi.AlertVO>(`/cronjob/alert/${id}`);
+  return requestClient.get<AlertApi.AlertVO>(`/api/v1/cronjob/alert/${id}`);
 }
 
 /** 创建 */
 export function createAlertApi(data: AlertApi.AlertDTO) {
-  return requestClient.post<string>(`/cronjob/alert`, data);
+  return requestClient.post<string>(`/api/v1/cronjob/alert`, data);
 }
 
 /** 更新 */
 export function updateAlertApi(data: AlertApi.AlertDTO) {
-  return requestClient.put<boolean>(`/cronjob/alert`, data);
+  return requestClient.put<boolean>(`/api/v1/cronjob/alert`, data);
 }
 
 /** 删除 */
 export function deleteAlertApi(id: string) {
-  return requestClient.delete<boolean>(`/cronjob/alert/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/cronjob/alert/${id}`);
 }

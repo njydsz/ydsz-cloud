@@ -33,30 +33,30 @@ export function getConnectorPageApi(params: ConnectorApi.ConnectorPageQuery) {
     current: number;
     size: number;
     items: ConnectorApi.ConnectorVO[];
-  }>(`/cronjob/connector/page`, { params });
+  }>(`/api/v1/cronjob/connector/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getConnectorListApi() {
-  return requestClient.get<ConnectorApi.ConnectorVO[]>(`/cronjob/connector/list`);
+  return requestClient.get<ConnectorApi.ConnectorVO[]>(`/api/v1/cronjob/connector/list`);
 }
 
 /** 根据 ID 查询 */
 export function getConnectorByIdApi(id: string) {
-  return requestClient.get<ConnectorApi.ConnectorVO>(`/cronjob/connector/${id}`);
+  return requestClient.get<ConnectorApi.ConnectorVO>(`/api/v1/cronjob/connector/${id}`);
 }
 
 /** 创建 */
 export function createConnectorApi(data: ConnectorApi.ConnectorDTO) {
-  return requestClient.post<string>(`/cronjob/connector`, data);
+  return requestClient.post<string>(`/api/v1/cronjob/connector`, data);
 }
 
 /** 更新 */
 export function updateConnectorApi(data: ConnectorApi.ConnectorDTO) {
-  return requestClient.put<boolean>(`/cronjob/connector`, data);
+  return requestClient.put<boolean>(`/api/v1/cronjob/connector`, data);
 }
 
 /** 删除 */
 export function deleteConnectorApi(id: string) {
-  return requestClient.delete<boolean>(`/cronjob/connector/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/cronjob/connector/${id}`);
 }

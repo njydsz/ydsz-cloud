@@ -5,6 +5,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.Arrays;
 /**
  * 编码工具类（Base64 / Base32 / Base16 / URL 编码统一入口）
  *
@@ -169,7 +172,7 @@ public final class EncodingUtils {
                 out[idx++] = (byte) ((buffer >> bitsLeft) & 0xFF);
             }
         }
-        return (idx == out.length) ? out : java.util.Arrays.copyOf(out, idx);
+        return (idx == out.length) ? out : Arrays.copyOf(out, idx);
     }
 
     // ============== Base16 / Hex ==============
@@ -247,7 +250,7 @@ public final class EncodingUtils {
     public static String encodeUrl(String text, Charset charset) {
         Objects.requireNonNull(text, "text");
         Objects.requireNonNull(charset, "charset");
-        return java.net.URLEncoder.encode(text, charset);
+        return URLEncoder.encode(text, charset);
     }
 
     /**
@@ -270,14 +273,14 @@ public final class EncodingUtils {
     public static String decodeUrl(String text, Charset charset) {
         Objects.requireNonNull(text, "text");
         Objects.requireNonNull(charset, "charset");
-        return java.net.URLDecoder.decode(text, charset);
+        return URLDecoder.decode(text, charset);
     }
 
     // ============== 内部工具 ==============
 
     private static int[] buildBase32DecodeTable() {
         int[] table = new int[128];
-        java.util.Arrays.fill(table, -1);
+        Arrays.fill(table, -1);
         for (int i = 0; i < BASE32_ALPHABET.length; i++) {
             table[BASE32_ALPHABET[i]] = i;
             // 大小写不敏感：小写也写入

@@ -42,7 +42,7 @@ import com.njydsz.cronjob.domain.vo.JobSlaVO;
  */
 @Tag(name = "任务 SLA 管理")
 @RestController
-@RequestMapping("/cronjob/sla")
+@RequestMapping("/api/v1/cronjob/sla")
 @RequiredArgsConstructor
 public class JobSlaController {
 

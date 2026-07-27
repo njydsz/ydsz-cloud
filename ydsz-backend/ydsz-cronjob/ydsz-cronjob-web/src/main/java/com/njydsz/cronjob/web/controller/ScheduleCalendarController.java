@@ -27,7 +27,7 @@ import com.njydsz.cronjob.domain.vo.LocalDateTimeVO;
  */
 @Tag(name = "调度日历")
 @RestController
-@RequestMapping("/cronjob/calendar")
+@RequestMapping("/api/v1/cronjob/calendar")
 @RequiredArgsConstructor
 public class ScheduleCalendarController {
 

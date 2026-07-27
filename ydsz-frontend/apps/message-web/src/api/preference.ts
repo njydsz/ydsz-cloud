@@ -35,30 +35,30 @@ export function getPreferencePageApi(params: PreferenceApi.PreferencePageQuery) 
     current: number;
     size: number;
     items: PreferenceApi.PreferenceVO[];
-  }>(`/message/preference/page`, { params });
+  }>(`/api/v1/message/preference/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getPreferenceListApi() {
-  return requestClient.get<PreferenceApi.PreferenceVO[]>(`/message/preference/list`);
+  return requestClient.get<PreferenceApi.PreferenceVO[]>(`/api/v1/message/preference/list`);
 }
 
 /** 根据 ID 查询 */
 export function getPreferenceByIdApi(id: string) {
-  return requestClient.get<PreferenceApi.PreferenceVO>(`/message/preference/${id}`);
+  return requestClient.get<PreferenceApi.PreferenceVO>(`/api/v1/message/preference/${id}`);
 }
 
 /** 创建 */
 export function createPreferenceApi(data: PreferenceApi.PreferenceDTO) {
-  return requestClient.post<string>(`/message/preference`, data);
+  return requestClient.post<string>(`/api/v1/message/preference`, data);
 }
 
 /** 更新 */
 export function updatePreferenceApi(data: PreferenceApi.PreferenceDTO) {
-  return requestClient.put<boolean>(`/message/preference`, data);
+  return requestClient.put<boolean>(`/api/v1/message/preference`, data);
 }
 
 /** 删除 */
 export function deletePreferenceApi(id: string) {
-  return requestClient.delete<boolean>(`/message/preference/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/message/preference/${id}`);
 }

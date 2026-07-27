@@ -44,7 +44,7 @@ import com.njydsz.common.audit.enums.AuditType;
 @Slf4j
 @Tag(name = "模板版本管理", description = "版本历史、回滚、预览、试发")
 @RestController
-@RequestMapping("/template/version")
+@RequestMapping("/api/v1/message/template/version")
 @RequiredArgsConstructor
 public class TemplateVersionController {
 

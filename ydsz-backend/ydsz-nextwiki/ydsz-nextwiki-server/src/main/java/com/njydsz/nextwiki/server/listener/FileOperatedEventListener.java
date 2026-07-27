@@ -16,6 +16,7 @@ import com.njydsz.nextwiki.domain.entity.AuditLog;
 import com.njydsz.nextwiki.domain.repository.AuditLogRepository;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.util.UUID;
 /**
  * 文件操作事件异步监听器
  * <p>
@@ -91,8 +92,8 @@ public class FileOperatedEventListener {
         if (auditLogRepository != null) {
             try {
                 AuditLog auditLog =
-                        com.njydsz.nextwiki.domain.entity.AuditLog.builder()
-                                .id(java.util.UUID.randomUUID().toString().replace("-", ""))
+                        AuditLog.builder()
+                                .id(UUID.randomUUID().toString().replace("-", ""))
                                 .operation(event.getOperation())
                                 .fileNodeId(event.getFileNodeId())
                                 .fileName(event.getFileName())

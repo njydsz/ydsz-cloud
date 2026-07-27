@@ -114,7 +114,7 @@ public class VariableServiceImpl implements VariableService {
         }
         wrapper.orderByDesc("created_at");
         IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        List<VariableVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        List<VariableVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
         Page<VariableVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
         return result;
@@ -128,7 +128,7 @@ public class VariableServiceImpl implements VariableService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<VariableVO> list() {
-        return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
+        return mapper.selectList(null).stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
     }
 
     /**

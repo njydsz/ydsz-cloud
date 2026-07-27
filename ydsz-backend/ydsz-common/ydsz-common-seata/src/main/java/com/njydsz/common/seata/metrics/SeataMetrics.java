@@ -10,6 +10,7 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.common.seata.api.TransactionType;
 
+import java.time.Duration;
 /**
  * 分布式事务指标采集
  *
@@ -73,7 +74,7 @@ public class SeataMetrics {
             Timer.builder("seata.tx.duration")
                     .tag("type", type.name())
                     .register(registry)
-                    .record(java.time.Duration.ofMillis(durationMs));
+                    .record(Duration.ofMillis(durationMs));
         }
     }
 

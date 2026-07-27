@@ -39,7 +39,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
  */
 @Tag(name = "用户通道绑定", description = "用户通道联系方式绑定/查询/删除")
 @RestController
-@RequestMapping("/user-channels")
+@RequestMapping("/api/v1/message/user-channels")
 @RequiredArgsConstructor
 public class UserChannelBindingController {
 

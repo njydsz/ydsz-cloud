@@ -8,6 +8,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 
+import java.time.Duration;
 /**
  * 项目模块 Micrometer 指标采集。
  *
@@ -54,7 +55,7 @@ public class ProjectMetrics extends AbstractModuleMetrics {
     }
 
     public void recordQueryDuration(long millis) {
-        initiationQueryTimer.record(java.time.Duration.ofMillis(millis));
+        initiationQueryTimer.record(Duration.ofMillis(millis));
     }
 
     public boolean isRegistered() {

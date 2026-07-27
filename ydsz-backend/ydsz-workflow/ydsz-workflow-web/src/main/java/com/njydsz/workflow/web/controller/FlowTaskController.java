@@ -46,7 +46,7 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-task", description = "工作流任务操作接口")
-@RequestMapping("/workflow/engine")
+@RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowTaskController {

@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
 @RestController
-@RequestMapping("/archive/search")
+@RequestMapping("/api/v1/message/archive/search")
 @RequiredArgsConstructor
 public class MessageArchiveController {
 

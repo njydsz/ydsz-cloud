@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
 
+import java.util.Map;
 /**
  * 固定大小分块器（带重叠）
  *
@@ -90,7 +91,7 @@ public class SimpleTextChunker implements TextChunker {
                 source,
                 chunkIndex,
                 estimateTokens(content),
-                java.util.Map.of(),
+                Map.of(),
                 null);
     }
 

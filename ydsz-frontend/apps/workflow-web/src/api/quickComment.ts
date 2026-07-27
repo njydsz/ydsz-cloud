@@ -31,30 +31,30 @@ export function getQuickCommentPageApi(params: QuickCommentApi.QuickCommentPageQ
     current: number;
     size: number;
     items: QuickCommentApi.QuickCommentVO[];
-  }>(`/api/workflow/quickComments/page`, { params });
+  }>(`/api/v1/workflow/quickComments/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getQuickCommentListApi() {
-  return requestClient.get<QuickCommentApi.QuickCommentVO[]>(`/api/workflow/quickComments/list`);
+  return requestClient.get<QuickCommentApi.QuickCommentVO[]>(`/api/v1/workflow/quickComments/list`);
 }
 
 /** 根据 ID 查询 */
 export function getQuickCommentByIdApi(id: string) {
-  return requestClient.get<QuickCommentApi.QuickCommentVO>(`/api/workflow/quickComments/${id}`);
+  return requestClient.get<QuickCommentApi.QuickCommentVO>(`/api/v1/workflow/quickComments/${id}`);
 }
 
 /** 创建 */
 export function createQuickCommentApi(data: QuickCommentApi.QuickCommentDTO) {
-  return requestClient.post<string>(`/api/workflow/quickComments`, data);
+  return requestClient.post<string>(`/api/v1/workflow/quickComments`, data);
 }
 
 /** 更新 */
 export function updateQuickCommentApi(data: QuickCommentApi.QuickCommentDTO) {
-  return requestClient.put<boolean>(`/api/workflow/quickComments`, data);
+  return requestClient.put<boolean>(`/api/v1/workflow/quickComments`, data);
 }
 
 /** 删除 */
 export function deleteQuickCommentApi(id: string) {
-  return requestClient.delete<boolean>(`/api/workflow/quickComments/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/workflow/quickComments/${id}`);
 }

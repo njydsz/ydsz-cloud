@@ -31,7 +31,7 @@ import com.njydsz.workflow.domain.vo.FlowDmnDecisionVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-dmn", description = "DMN 决策表引擎接口")
-@RequestMapping("/workflow/dmn")
+@RequestMapping("/api/v1/workflow/dmn")
 @RequiredArgsConstructor
 public class FlowDmnDecisionController {
 

@@ -32,8 +32,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public String getTraceId() {
         try {
-            // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
-            return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId();
+            return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId(); // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
         } catch (Exception e) {
             return null;
         }
@@ -47,8 +46,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public String getSpanId() {
         try {
-            // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
-            return String.valueOf(org.apache.skywalking.apm.toolkit.trace.TraceContext.spanId());
+            return String.valueOf(org.apache.skywalking.apm.toolkit.trace.TraceContext.spanId()); // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
         } catch (Exception e) {
             return null;
         }
@@ -62,8 +60,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public String getSegmentId() {
         try {
-            // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
-            return org.apache.skywalking.apm.toolkit.trace.TraceContext.segmentId();
+            return org.apache.skywalking.apm.toolkit.trace.TraceContext.segmentId(); // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
         } catch (Exception e) {
             return null;
         }
@@ -77,8 +74,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public boolean isTracing() {
         try {
-            // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
-            return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId() != null;
+            return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId() != null; // FQN-OK: name conflict with com.njydsz.common.sentry.spi.TraceContext
         } catch (Exception e) {
             return false;
         }

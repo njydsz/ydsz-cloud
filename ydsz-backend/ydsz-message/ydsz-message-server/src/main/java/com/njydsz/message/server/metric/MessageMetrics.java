@@ -1,6 +1,9 @@
 package com.njydsz.message.server.metric;
 
 
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
@@ -96,5 +99,51 @@ public class MessageMetrics extends AbstractModuleMetrics {
      */
     public void recordChannelError(String channel, String errorType) {
         incrementCounter("channel.error", "channel", safe(channel), "errorType", safe(errorType));
+    }
+
+    /**
+     * 记录消费延迟（从消息创建到消费完成）。
+     *
+     * @param channel    通道
+     * @param delayMillis 延迟毫秒
+     */
+    public void recordConsumeDelay(String channel, long delayMillis) {
+        recordTimer("consume.delay", delayMillis, "channel", safe(channel));
+    }
+
+    /**
+     * 记录发送成功（按通道/模板/租户维度）。
+     *
+     * @param channel     通道
+     * @param templateCode 模板编码
+     * @param tenantId    租户 ID
+     */
+    public void recordSendSuccess(String channel, String templateCode, String tenantId) {
+        incrementCounter("send.total", "channel", safe(channel), "result", "success",
+                "template", safe(templateCode), "tenant", safe(tenantId));
+    }
+
+    /**
+     * 记录发送失败（按通道/模板/租户/错误类型维度）。
+     *
+     * @param channel     通道
+     * @param templateCode 模板编码
+     * @param tenantId    租户 ID
+     * @param errorType   错误类型
+     */
+    public void recordSendFailure(String channel, String templateCode, String tenantId, String errorType) {
+        incrementCounter("send.total", "channel", safe(channel), "result", "failure",
+                "template", safe(templateCode), "tenant", safe(tenantId));
+        incrementCounter("send.failure", "channel", safe(channel), "error_type", safe(errorType));
+    }
+
+    /**
+     * 记录异常（按通道/异常类型维度）。
+     *
+     * @param channel       通道
+     * @param exceptionType 异常类型
+     */
+    public void recordException(String channel, String exceptionType) {
+        incrementCounter("exception", "channel", safe(channel), "exception", safe(exceptionType));
     }
 }

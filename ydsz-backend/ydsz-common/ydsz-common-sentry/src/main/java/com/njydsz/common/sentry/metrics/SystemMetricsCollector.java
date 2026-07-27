@@ -82,8 +82,7 @@ public class SystemMetricsCollector {
     }
 
     private void collectCpuMetrics() {
-        // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
-        if (osMxBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
+        if (osMxBean instanceof com.sun.management.OperatingSystemMXBean sunOs) { // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
             double cpuUsage = sunOs.getProcessCpuLoad();
             if (cpuUsage >= 0) {
                 metricsCollector.setGauge("ydsz.system.cpu.usage",

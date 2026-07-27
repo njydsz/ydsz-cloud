@@ -33,30 +33,30 @@ export function getSlaPageApi(params: SlaApi.SlaPageQuery) {
     current: number;
     size: number;
     items: SlaApi.SlaVO[];
-  }>(`/workflow/engine/page`, { params });
+  }>(`/api/v1/workflow/engine/page`, { params });
 }
 
 /** 查询全部列表 */
 export function getSlaListApi() {
-  return requestClient.get<SlaApi.SlaVO[]>(`/workflow/engine/list`);
+  return requestClient.get<SlaApi.SlaVO[]>(`/api/v1/workflow/engine/list`);
 }
 
 /** 根据 ID 查询 */
 export function getSlaByIdApi(id: string) {
-  return requestClient.get<SlaApi.SlaVO>(`/workflow/engine/${id}`);
+  return requestClient.get<SlaApi.SlaVO>(`/api/v1/workflow/engine/${id}`);
 }
 
 /** 创建 */
 export function createSlaApi(data: SlaApi.SlaDTO) {
-  return requestClient.post<string>(`/workflow/engine`, data);
+  return requestClient.post<string>(`/api/v1/workflow/engine`, data);
 }
 
 /** 更新 */
 export function updateSlaApi(data: SlaApi.SlaDTO) {
-  return requestClient.put<boolean>(`/workflow/engine`, data);
+  return requestClient.put<boolean>(`/api/v1/workflow/engine`, data);
 }
 
 /** 删除 */
 export function deleteSlaApi(id: string) {
-  return requestClient.delete<boolean>(`/workflow/engine/${id}`);
+  return requestClient.delete<boolean>(`/api/v1/workflow/engine/${id}`);
 }

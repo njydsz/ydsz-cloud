@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import org.springframework.stereotype.Service;
 
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
@@ -184,7 +184,7 @@ public class FlowReportServiceImpl implements FlowReportService {
 
         Object overview = report.get("overview");
         if (overview instanceof Map<?, ?> rawMap) {
-            Map<String, Object> om = JsonHelper.toStringObjectMap(rawMap);
+            Map<String, Object> om = MapUtils.toStringObjectMap(rawMap);
             sb.append("【核心指标】\n");
             for (Map.Entry<String, Object> entry : om.entrySet()) {
                 sb.append("  ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");

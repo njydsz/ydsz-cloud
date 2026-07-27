@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "已读回执", description = "邮件追踪像素与短信短链回调")
 @RestController
-@RequestMapping("/api/readReceipt")
+@RequestMapping("/api/v1/message/readReceipt")
 @RequiredArgsConstructor
 public class ReadReceiptController {
 

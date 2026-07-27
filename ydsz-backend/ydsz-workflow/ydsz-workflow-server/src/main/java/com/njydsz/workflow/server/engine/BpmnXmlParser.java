@@ -234,7 +234,7 @@ public class BpmnXmlParser {
         if ("eventbasedgateway".equals(normalized) || "complexgateway".equals(normalized)) {
             Map<String, Object> extMap = readOrInitExt(node);
             extMap.put("gatewayType", "eventbasedgateway".equals(normalized) ? "EVENT_BASED" : "COMPLEX");
-            node.setExt(JsonHelper.toJson(extMap));
+            node.setExt(YdszJson.toJson(extMap));
             log.info("[BpmnXmlParser] {} 映射为 {} 类型 + ext.gatewayType 标记，nodeCode={}",
                     localName, node.getNodeType() == FlowNodeType.CONDITION.getCode() ? "CONDITION" : "INCLUSIVE",
                     node.getNodeCode());
@@ -392,12 +392,12 @@ public class BpmnXmlParser {
         // P0-4: 通用 extensionElements（用户自定义键值对）
         parseExtensionElements(elem, ext);
 
-        node.setExt(JsonHelper.toJson(ext));
+        node.setExt(YdszJson.toJson(ext));
 
         // 处理 userTask 的多实例特性（会签）
         if ("userTask".equalsIgnoreCase(localName)) {
             parseMultiInstance(elem, node, ext);
-            node.setExt(JsonHelper.toJson(ext));
+            node.setExt(YdszJson.toJson(ext));
         }
         return node;
     }
@@ -588,7 +588,7 @@ public class BpmnXmlParser {
         if (priority != null && !priority.isBlank()) {
             ext.put("priority", priority.trim());
         }
-        skip.setExt(JsonHelper.toJson(ext));
+        skip.setExt(YdszJson.toJson(ext));
         // nextNodeCode 暂存 targetRef，定义模型转换时会再赋
         skip.setNextNodeCode(targetRef);
         // 解析条件表达式
@@ -652,7 +652,7 @@ public class BpmnXmlParser {
         String ext = node.getExt();
         if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {
             try {
-                Map<String, Object> parsed = JsonHelper.fromJson(ext);
+                Map<String, Object> parsed = YdszJson.parseMap(ext);
                 if (parsed != null) {
                     map.putAll(parsed);
                 }

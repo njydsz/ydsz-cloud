@@ -9,6 +9,7 @@ import com.njydsz.common.netty.transport.NativeTransportDetector.TransportType;
 import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.netty.config.NettyProperties;
 /**
  * Netty EventLoopGroup 池化管理器。
  *
@@ -51,7 +52,7 @@ public class NettyEventLoopPool {
      * @param nativeTransportMode        原生传输模式（auto / enabled / disabled）
      */
     public NettyEventLoopPool(long shutdownQuietPeriodSeconds, long shutdownTimeoutSeconds,
-                              com.njydsz.common.netty.config.NettyProperties.NativeTransportMode nativeTransportMode) {
+                              NettyProperties.NativeTransportMode nativeTransportMode) {
         this(shutdownQuietPeriodSeconds, shutdownTimeoutSeconds,
                 NativeTransportDetector.detect(nativeTransportMode.name().toLowerCase()));
     }

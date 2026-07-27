@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
+import java.sql.Types;
 /**
  * 整数列与字符串 Java 属性的类型转换处理器。
  *
@@ -30,7 +31,7 @@ public class IntegerStringTypeHandler extends BaseTypeHandler<String> {
     public void setNonNullParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType)
             throws SQLException {
         if (parameter == null || parameter.isEmpty()) {
-            ps.setObject(i, null, java.sql.Types.INTEGER);
+            ps.setObject(i, null, Types.INTEGER);
             return;
         }
         try {

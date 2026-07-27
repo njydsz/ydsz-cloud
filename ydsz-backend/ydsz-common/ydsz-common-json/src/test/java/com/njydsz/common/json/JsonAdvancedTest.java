@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 /**
  * 高级功能测试：Optional / UUID / YdszJsonObject / YdszJsonArray / isValid / fromJson / streaming。
  *
@@ -178,14 +179,14 @@ class JsonAdvancedTest {
     void testStreamingOutput() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         YdszJson.toJson(Map.of("key", "value"), out);
-        String json = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+        String json = out.toString(StandardCharsets.UTF_8);
         assertNotNull(json);
         assertTrue(json.contains("\"key\":\"value\""));
     }
 
     @Test
     void testStreamingInput() throws Exception {
-        byte[] bytes = "{\"name\":\"Alice\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bytes = "{\"name\":\"Alice\"}".getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream in = new ByteArrayInputStream(bytes);
         User user = YdszJson.toObject(in, User.class);
         assertNotNull(user);
@@ -194,7 +195,7 @@ class JsonAdvancedTest {
 
     @Test
     void testFromJsonBytes() {
-        byte[] bytes = "{\"name\":\"Bob\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bytes = "{\"name\":\"Bob\"}".getBytes(StandardCharsets.UTF_8);
         User user = YdszJson.fromJsonBytes(bytes, User.class);
         assertNotNull(user);
         assertEquals("Bob", user.name);

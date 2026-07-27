@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/analytics")
+@RequestMapping("/api/v1/workflow/analytics")
 @RequiredArgsConstructor
 @Tag(name = "审批数据分析", description = "审批效率/驳回率/办理人排行等分析仪表盘")
 public class FlowAnalyticsController {

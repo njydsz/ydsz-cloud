@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/cronjob/log")
+@RequestMapping("/api/v1/cronjob/log")
 @RequiredArgsConstructor
 public class SseLogController {
 

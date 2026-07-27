@@ -32,14 +32,14 @@ public class ExecutionTimeEntryController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionTimeEntry")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ExecutionTimeEntry")
     public BaseResponse<Boolean> save(@RequestBody ExecutionTimeEntryPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionTimeEntry")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ExecutionTimeEntry")
     public BaseResponse<Boolean> update(@RequestBody ExecutionTimeEntryPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionTimeEntry")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ExecutionTimeEntry")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

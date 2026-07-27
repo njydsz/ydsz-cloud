@@ -12,6 +12,7 @@ import com.njydsz.common.json.asm.AsmSerializer;
 import com.njydsz.common.json.cache.AsmCodecCache;
 import com.njydsz.common.json.number.NumberUtils;
 
+import java.nio.charset.StandardCharsets;
 /**
  * 高性能 JSON 写入器
  * 
@@ -724,7 +725,7 @@ public final class JSONWriter {
      */
     public byte[] toUtf8Bytes() {
         if (externalSb != null) {
-            return externalSb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            return externalSb.toString().getBytes(StandardCharsets.UTF_8);
         }
         if (pos == 0) {
             return new byte[0];
@@ -746,7 +747,7 @@ public final class JSONWriter {
             return bytes;
         }
         // 非 ASCII：回退到标准 UTF-8 编码
-        return new String(buf, 0, pos).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return new String(buf, 0, pos).getBytes(StandardCharsets.UTF_8);
     }
     
     /**

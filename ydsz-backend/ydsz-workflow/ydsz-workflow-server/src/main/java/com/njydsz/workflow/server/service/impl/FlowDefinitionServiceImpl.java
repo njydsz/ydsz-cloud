@@ -46,10 +46,10 @@ import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.engine.BpmnModel;
 import com.njydsz.workflow.server.engine.BpmnXmlParser;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.engine.FlowGraphValidator;
-import com.njydsz.workflow.server.engine.JsonHelper;
+
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 
@@ -171,7 +171,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 for (FlowNode n : nodes) {
                     BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
                     if (coord != null) {
-                        n.setCoordinate(JsonHelper.toJson(Map.of(
+                        n.setCoordinate(YdszJson.toJson(Map.of(
                                 "x", coord.getX(),
                                 "y", coord.getY(),
                                 "width", coord.getWidth(),
@@ -675,12 +675,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 1. 提取 definition 元数据
-        Map<String, Object> defJson = JsonHelper.getMap(root, "definition");
+        Map<String, Object> defJson = MapUtils.getMap(root, "definition");
         if (defJson == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "JSON 缺少 definition 字段");
         }
-        String flowCode = JsonHelper.getString(defJson, "flowCode");
-        String flowName = JsonHelper.getString(defJson, "flowName");
+        String flowCode = MapUtils.getString(defJson, "flowCode");
+        String flowName = MapUtils.getString(defJson, "flowName");
         if (!StringUtils.hasText(flowCode) || !StringUtils.hasText(flowName)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "definition 中 flowCode/flowName 不能为空");
         }
@@ -689,52 +689,52 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
         dto.setFlowCode(flowCode);
         dto.setFlowName(flowName);
-        dto.setVersion(JsonHelper.getString(defJson, "version"));
-        dto.setCategory(JsonHelper.getString(defJson, "category"));
-        dto.setDescription(JsonHelper.getString(defJson, "description"));
-        dto.setFormPath(JsonHelper.getString(defJson, "formPath"));
+        dto.setVersion(MapUtils.getString(defJson, "version"));
+        dto.setCategory(MapUtils.getString(defJson, "category"));
+        dto.setDescription(MapUtils.getString(defJson, "description"));
+        dto.setFormPath(MapUtils.getString(defJson, "formPath"));
         dto.setTenantId(tenantId);
-        dto.setProviderTraceId(JsonHelper.getString(defJson, "providerTraceId"));
+        dto.setProviderTraceId(MapUtils.getString(defJson, "providerTraceId"));
 
         // 3. 提取 nodes
-        List<Object> nodesJson = JsonHelper.getList(root, "nodes");
+        List<Object> nodesJson = MapUtils.getList(root, "nodes");
         if (nodesJson != null && !nodesJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowNodeDTO> nodes = new ArrayList<>();
             for (int i = 0; i < nodesJson.size(); i++) {
-                Map<String, Object> n = JsonHelper.getMapFromList(nodesJson, i);
+                Map<String, Object> n = MapUtils.getMapFromList(nodesJson, i);
                 FlowDeployProcessDTO.FlowNodeDTO node = new FlowDeployProcessDTO.FlowNodeDTO();
-                node.setNodeCode(JsonHelper.getString(n, "nodeCode"));
-                node.setNodeName(JsonHelper.getString(n, "nodeName"));
-                node.setNodeType(JsonHelper.getInteger(n, "nodeType"));
-                node.setPermissionFlag(JsonHelper.getString(n, "permissionFlag"));
-                node.setSkipAnyNode(JsonHelper.getString(n, "skipAnyNode"));
+                node.setNodeCode(MapUtils.getString(n, "nodeCode"));
+                node.setNodeName(MapUtils.getString(n, "nodeName"));
+                node.setNodeType(MapUtils.getInteger(n, "nodeType"));
+                node.setPermissionFlag(MapUtils.getString(n, "permissionFlag"));
+                node.setSkipAnyNode(MapUtils.getString(n, "skipAnyNode"));
                 nodes.add(node);
             }
             dto.setNodes(nodes);
         }
 
         // 4. 提取 skips（从 ext.sourceRef 还原 fromNodeCode）
-        List<Object> skipsJson = JsonHelper.getList(root, "skips");
+        List<Object> skipsJson = MapUtils.getList(root, "skips");
         if (skipsJson != null && !skipsJson.isEmpty()) {
             List<FlowDeployProcessDTO.FlowSkipDTO> skips = new ArrayList<>();
             for (int i = 0; i < skipsJson.size(); i++) {
-                Map<String, Object> s = JsonHelper.getMapFromList(skipsJson, i);
+                Map<String, Object> s = MapUtils.getMapFromList(skipsJson, i);
                 FlowDeployProcessDTO.FlowSkipDTO skip = new FlowDeployProcessDTO.FlowSkipDTO();
-                skip.setSkipName(JsonHelper.getString(s, "skipName"));
-                skip.setSkipType(JsonHelper.getString(s, "skipType"));
-                skip.setSkipCondition(JsonHelper.getString(s, "skipCondition"));
-                skip.setToNodeCode(JsonHelper.getString(s, "nextNodeCode"));
+                skip.setSkipName(MapUtils.getString(s, "skipName"));
+                skip.setSkipType(MapUtils.getString(s, "skipType"));
+                skip.setSkipCondition(MapUtils.getString(s, "skipCondition"));
+                skip.setToNodeCode(MapUtils.getString(s, "nextNodeCode"));
                 // 从 ext 字段还原 fromNodeCode
-                String ext = JsonHelper.getString(s, "ext");
+                String ext = MapUtils.getString(s, "ext");
                 if (StringUtils.hasText(ext)) {
                     try {
                         Map<String, Object> extJson = YdszJson.parseMap(ext);
                         if (extJson != null) {
-                            skip.setFromNodeCode(JsonHelper.getString(extJson, "sourceRef"));
+                            skip.setFromNodeCode(MapUtils.getString(extJson, "sourceRef"));
                         }
                     } catch (Exception e) {
                         log.warn("[Flow] 导入跳转 ext 解析失败: skipName={} err={}",
-                                JsonHelper.getString(s, "skipName"), e.getMessage());
+                                MapUtils.getString(s, "skipName"), e.getMessage());
                     }
                 }
                 skips.add(skip);
@@ -760,7 +760,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         // 在 getDetail 基础上增加 edges 格式（供前端 VueFlow/LogicFlow 直接使用）
         Map<String, Object> result = new LinkedHashMap<>(detail);
-        List<FlowSkip> skips = JsonHelper.safeCastList(detail.get("skips"), FlowSkip.class);
+        List<FlowSkip> skips = MapUtils.safeCastList(detail.get("skips"), FlowSkip.class);
         if (skips != null) {
             List<Map<String, Object>> edges = new ArrayList<>();
             for (FlowSkip skip : skips) {
@@ -771,7 +771,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 if (StringUtils.hasText(skip.getExt())) {
                     try {
                         Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-                        source = JsonHelper.getString(extJson, "sourceRef");
+                        source = MapUtils.getString(extJson, "sourceRef");
                     } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
                 edge.put("source", source);
@@ -798,7 +798,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 1. 批量更新节点坐标 + 属性
-        List<Map<String, Object>> nodes = JsonHelper.getListOfMaps(designerData, "nodes");
+        List<Map<String, Object>> nodes = MapUtils.getListOfMaps(designerData, "nodes");
         if (nodes != null) {
             for (Map<String, Object> nodeData : nodes) {
                 String nodeCode = (String) nodeData.get("nodeCode");
@@ -1127,7 +1127,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (StringUtils.hasText(skip.getExt())) {
             try {
                 Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-                sourceRef = JsonHelper.getString(extJson, "sourceRef");
+                sourceRef = MapUtils.getString(extJson, "sourceRef");
             } catch (Exception ignored) {
                 // ignore parse error
             }
@@ -1146,7 +1146,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (StringUtils.hasText(skip.getExt())) {
             try {
                 Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-                sourceRef = JsonHelper.getString(extJson, "sourceRef");
+                sourceRef = MapUtils.getString(extJson, "sourceRef");
             } catch (Exception ignored) {
                 // ignore
             }
@@ -1471,14 +1471,14 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
         // 4. 识别受影响实例
         // 4.1 卡死实例：当前节点在老版本存在但在新版本被删除
-        Map<String, Object> nodeChanges = JsonHelper.safeCastMap(diff.get("nodeChanges"));
-        List<Map<String, Object>> removedNodes = JsonHelper.getListOfMaps(nodeChanges, "removed");
+        Map<String, Object> nodeChanges = MapUtils.safeCastMap(diff.get("nodeChanges"));
+        List<Map<String, Object>> removedNodes = MapUtils.getListOfMaps(nodeChanges, "removed");
         Set<String> removedNodeCodes = removedNodes != null ? removedNodes.stream()
                 .map(n -> String.valueOf(n.get("nodeCode")))
                 .collect(Collectors.toSet()) : Set.of();
 
         // 4.2 类型/审批人变更节点
-        List<Map<String, Object>> modifiedNodes = JsonHelper.getListOfMaps(nodeChanges, "modified");
+        List<Map<String, Object>> modifiedNodes = MapUtils.getListOfMaps(nodeChanges, "modified");
 
         List<Map<String, Object>> stuckInstances = new ArrayList<>();
         List<Map<String, Object>> affectedInstances = new ArrayList<>();

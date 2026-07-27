@@ -42,7 +42,7 @@ import com.njydsz.common.audit.enums.AuditType;
 @Slf4j
 @Tag(name = "批量发送", description = "异步批量发送与进度查询")
 @RestController
-@RequestMapping("/batch")
+@RequestMapping("/api/v1/message/batch")
 @RequiredArgsConstructor
 public class BatchController {
 

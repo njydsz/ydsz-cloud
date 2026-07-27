@@ -36,7 +36,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
 @Slf4j
 @RestController
 @Tag(name = "workflow-advanced", description = "工作流高级功能接口")
-@RequestMapping("/workflow/advanced")
+@RequestMapping("/api/v1/workflow/advanced")
 @RequiredArgsConstructor
 public class FlowAdvancedController {
 

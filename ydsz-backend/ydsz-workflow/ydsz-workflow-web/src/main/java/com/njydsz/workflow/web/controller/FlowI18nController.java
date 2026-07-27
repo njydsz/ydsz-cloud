@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @Tag(name = "workflow-i18n", description = "工作流国际化接口")
-@RequestMapping("/workflow/i18n")
+@RequestMapping("/api/v1/workflow/i18n")
 @RequiredArgsConstructor
 public class FlowI18nController {
 

@@ -32,14 +32,14 @@ public class ProjectContractController {
     }
 
     @PostMapping
-    @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectContract")
+    @Audit(action=AuditAction.CREATE, module="PROJECT", content="Create ProjectContract")
     public BaseResponse<Boolean> save(@RequestBody ProjectContractPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
-    @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectContract")
+    @Audit(action=AuditAction.UPDATE, module="PROJECT", content="Update ProjectContract")
     public BaseResponse<Boolean> update(@RequestBody ProjectContractPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
-    @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectContract")
+    @Audit(action=AuditAction.DELETE, module="PROJECT", content="Delete ProjectContract")
     public BaseResponse<Boolean> remove(@PathVariable String id) { return BaseResponse.success(service.removeById(id)); }
 }

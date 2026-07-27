@@ -32,7 +32,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
  */
 @Tag(name = "模板预览", description = "模板渲染预览")
 @RestController
-@RequestMapping("/template/preview")
+@RequestMapping("/api/v1/message/template/preview")
 @RequiredArgsConstructor
 public class TemplatePreviewController {
 

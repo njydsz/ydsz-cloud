@@ -38,7 +38,7 @@ import com.njydsz.common.audit.enums.AuditType;
  */
 @Tag(name = "消息订阅", description = "用户主题订阅关系管理")
 @RestController
-@RequestMapping("/message/subscription")
+@RequestMapping("/api/v1/message/subscription")
 @RequiredArgsConstructor
 public class SubscriptionController {
 

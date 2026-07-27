@@ -10,6 +10,7 @@ import org.apache.ibatis.type.JdbcType;
 
 import com.njydsz.common.json.YdszJson;
 
+import java.sql.Types;
 /**
  * JSON 类型转换处理器
  *
@@ -77,7 +78,7 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
         String json = toJsonString(parameter);
         // 使用 Types.OTHER 设置参数，兼容 PostgreSQL JSON/JSONB 列和其他数据库的 VARCHAR/TEXT 列
         // PostgreSQL 驱动会根据列类型自动处理 JSONB 二进制格式
-        ps.setObject(i, json, java.sql.Types.OTHER);
+        ps.setObject(i, json, Types.OTHER);
     }
 
     /**

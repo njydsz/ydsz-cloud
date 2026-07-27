@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
 @RestController
-@RequestMapping("/message/trace")
+@RequestMapping("/api/v1/message/trace")
 @RequiredArgsConstructor
 public class MessageTraceController {
 

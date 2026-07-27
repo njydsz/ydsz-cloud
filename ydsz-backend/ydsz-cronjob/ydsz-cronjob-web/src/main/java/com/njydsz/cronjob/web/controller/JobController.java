@@ -48,7 +48,7 @@ import org.springframework.scheduling.support.CronExpression;
  */
 @Tag(name = "任务调度")
 @RestController
-@RequestMapping("/cronjob")
+@RequestMapping("/api/v1/cronjob")
 @RequiredArgsConstructor
 @Validated
 public class JobController {
@@ -109,10 +109,10 @@ public class JobController {
         Map<String, Object> result = new HashMap<>();
         try {
             CronExpression cron =
-                    org.springframework.scheduling.support.CronExpression.parse(expr);
+                    CronExpression.parse(expr);
             result.put("valid", true);
             List<String> nextFireTimes = new ArrayList<>();
-            LocalDateTime now = java.time.LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now();
             for (int i = 0; i < count; i++) {
                 now = cron.next(now);
                 if (now == null) {
