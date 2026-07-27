@@ -1,0 +1,94 @@
+/**
+ * 共享 RequestClient 工厂 — 统一拦截器配置（successCode=200 + Bearer Token + refreshToken）
+ *
+ * 子应用调用 createSharedRequestClient() 即可获得与主应用一致的请求客户端。
+ */
+import type { RequestClientOptions } from '@ydsz/request';
+
+import { useAppConfig } from '@ydsz/hooks';
+import { preferences } from '@ydsz/preferences';
+import {
+  authenticateResponseInterceptor,
+  defaultResponseInterceptor,
+  errorMessageResponseInterceptor,
+  RequestClient,
+} from '@ydsz/request';
+import { useAccessStore } from '@ydsz/stores';
+
+import { ElMessage } from 'element-plus';
+
+import type { AuthApi } from './types';
+
+/**
+ * 创建与后端对齐的 RequestClient
+ *
+ * @param onReAuthenticate token 失效时的回调（通常由子应用传入 logout 逻辑）
+ * @param onRefreshToken 刷新 token 的回调（通常由子应用传入 refreshToken 逻辑）
+ * @param options 额外的 RequestClientOptions
+ */
+export function createSharedRequestClient(
+  onReAuthenticate: () => Promise<void>,
+  onRefreshToken: () => Promise<null | string>,
+  options?: RequestClientOptions,
+) {
+  const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+
+  const client = new RequestClient({
+    ...options,
+    baseURL: apiURL,
+  });
+
+  function formatToken(token: null | string) {
+    return token ? `Bearer ${token}` : null;
+  }
+
+  // 请求头处理
+  client.addRequestInterceptor({
+    fulfilled: async (config) => {
+      const accessStore = useAccessStore();
+
+      config.headers.Authorization = formatToken(accessStore.accessToken);
+      config.headers['Accept-Language'] = preferences.app.locale;
+      return config;
+    },
+  });
+
+  // 处理返回的响应数据格式（对齐后端 BaseResponse: code=200 为成功）
+  client.addResponseInterceptor(
+    defaultResponseInterceptor({
+      codeField: 'code',
+      dataField: 'data',
+      successCode: 200,
+    }),
+  );
+
+  // token过期的处理
+  client.addResponseInterceptor(
+    authenticateResponseInterceptor({
+      client,
+      doReAuthenticate: onReAuthenticate,
+      doRefreshToken: onRefreshToken,
+      enableRefreshToken: preferences.app.enableRefreshToken,
+      formatToken,
+    }),
+  );
+
+  // 通用的错误处理
+  client.addResponseInterceptor(
+    errorMessageResponseInterceptor((msg: string, error) => {
+      const responseData = error?.response?.data ?? {};
+      const errorMessage = responseData?.error ?? responseData?.message ?? '';
+      ElMessage.error(errorMessage || msg);
+    }),
+  );
+
+  return client;
+}
+
+/**
+ * 创建共享的 baseRequestClient（无拦截器，用于 refresh/logout 等不需拦截的请求）
+ */
+export function createSharedBaseClient() {
+  const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+  return new RequestClient({ baseURL: apiURL });
+}

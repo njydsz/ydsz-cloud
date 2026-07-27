@@ -16,6 +16,8 @@ import com.njydsz.common.cache.support.AsyncFunction;
 
 import io.micrometer.core.instrument.Timer;
 
+import com.njydsz.common.cache.api.CachePolicy;
+import com.njydsz.common.cache.metrics.CacheMeterBinder;
 /**
  * 计时缓存装饰器 — 自动记录 GET/PUT 操作耗时到 Micrometer Timer
  *
@@ -63,7 +65,7 @@ public class TimedCacheDecorator<K, V> implements Cache<K, V> {
    * @param binder Micrometer 绑定器
    */
   public TimedCacheDecorator(
-      Cache<K, V> delegate, com.njydsz.common.cache.metrics.CacheMeterBinder binder) {
+      Cache<K, V> delegate, CacheMeterBinder binder) {
     this.delegate = delegate;
     this.getTimer = binder.getGetTimer();
     this.putTimer = binder.getPutTimer();
@@ -227,7 +229,7 @@ public class TimedCacheDecorator<K, V> implements Cache<K, V> {
   }
 
   @Override
-  public com.njydsz.common.cache.api.CachePolicy policy() {
+  public CachePolicy policy() {
     return delegate.policy();
   }
 

@@ -1,5 +1,7 @@
 package com.njydsz.common.excel.tabular;
 
+import java.util.List;
+
 /**
  * 表格数据读取监听器（流式回调）。
  *
@@ -35,7 +37,7 @@ public interface TabularReadListener<T> {
      *
      * <p>默认实现：遍历批次逐个调用 {@link #onRow}。
      */
-    default void onBatch(TabularReadContext context, java.util.List<T> batch) {
+    default void onBatch(TabularReadContext context, List<T> batch) {
         for (T item : batch) {
             onRow(context, item);
         }

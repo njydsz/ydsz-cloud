@@ -22,6 +22,7 @@ import com.njydsz.common.seata.api.TccBranchStatus;
 import com.njydsz.common.seata.api.TccTransactionLog;
 import com.njydsz.common.seata.impl.RedisTccTransactionLogStore;
 
+import java.util.concurrent.ConcurrentHashMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -55,7 +56,7 @@ class RedisTccTransactionLogStoreTest {
     private RedisTccTransactionLogStore store;
 
     /** 内存模拟存储：key → (field → value) */
-    private final Map<String, Map<Object, Object>> backing = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Map<Object, Object>> backing = new ConcurrentHashMap<>();
 
     @BeforeEach
     @SuppressWarnings({"unchecked", "rawtypes"})

@@ -37,6 +37,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 
 import org.springframework.data.redis.core.RedisTemplate;
 
+import org.springframework.context.annotation.Configuration;
 /**
  * 分布式事务自动配置
  *
@@ -265,7 +266,7 @@ public class SeataAutoConfiguration {
      * <p>当 Seata 在类路径且 {@code seata-at-enabled=true} 时注册
      * {@link SeataGlobalTransactionExecutor} 和 {@link SeataTransactionManager}。
      */
-    @org.springframework.context.annotation.Configuration
+    @Configuration
     @ConditionalOnClass(name = "org.apache.seata.tm.api.GlobalTransactionContext")
     @ConditionalOnProperty(prefix = "ydsz.seata", name = "seata-at-enabled", havingValue = "true", matchIfMissing = true)
     public static class SeataAtConfiguration {

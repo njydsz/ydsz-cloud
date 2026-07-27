@@ -2,6 +2,7 @@ package com.njydsz.agent.domain.rag;
 
 import java.util.List;
 
+import com.njydsz.agent.domain.gateway.LlmException;
 /**
  * Embedding 客户端接口
  *
@@ -18,7 +19,7 @@ public interface EmbeddingClient {
      *
      * @param text 文本
      * @return 嵌入向量（维度取决于模型）
-     * @throws com.njydsz.agent.domain.gateway.LlmException 嵌入调用异常
+     * @throws LlmException 嵌入调用异常
      */
     List<Float> embed(String text);
 
@@ -27,7 +28,7 @@ public interface EmbeddingClient {
      *
      * @param texts 文本列表
      * @return 嵌入向量列表（与输入一一对应）
-     * @throws com.njydsz.agent.domain.gateway.LlmException 嵌入调用异常
+     * @throws LlmException 嵌入调用异常
      */
     List<List<Float>> embedBatch(List<String> texts);
 

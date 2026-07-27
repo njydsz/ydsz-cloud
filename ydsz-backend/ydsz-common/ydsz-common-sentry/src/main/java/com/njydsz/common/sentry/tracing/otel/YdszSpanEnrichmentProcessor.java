@@ -11,6 +11,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.List;
 /**
  * YDSZ Span 属性增强器
  *
@@ -159,9 +161,9 @@ public class YdszSpanEnrichmentProcessor implements SpanProcessor {
         private boolean enabled = true;
         /** 来源：mdc / request-context / env */
         @Builder.Default
-        private java.util.List<String> sources = java.util.List.of("mdc");
+        private List<String> sources = java.util.List.of("mdc");
         /** 环境变量属性映射（envKey -> attrName） */
         @Builder.Default
-        private java.util.Map<String, String> envAttrs = new java.util.HashMap<>();
+        private Map<String, String> envAttrs = new HashMap<>();
     }
 }

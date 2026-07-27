@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.core.annotation.AnnotatedElementUtils;
 /**
  * {@link AppApi} 注解行为验证测试
  *
@@ -54,7 +55,7 @@ class AppApiTest {
     @DisplayName("@AppApi 的 @RestController 元注解可通过 AnnotatedElementUtils 读取")
     void restControllerMetaAnnotationReachable() {
         // 元注解通过 Spring 的 AnnotatedElementUtils.findMergedAnnotation 可读取
-        RestController restController = org.springframework.core.annotation.AnnotatedElementUtils
+        RestController restController = AnnotatedElementUtils
                 .findMergedAnnotation(SampleAppController.class, RestController.class);
         assertThat(restController).isNotNull();
     }

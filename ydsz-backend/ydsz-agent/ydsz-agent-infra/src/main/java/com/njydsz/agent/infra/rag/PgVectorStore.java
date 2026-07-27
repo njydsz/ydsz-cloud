@@ -12,6 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.rag.TextChunk;
 
+import com.njydsz.agent.domain.rag.EmbeddingClient;
+import com.njydsz.agent.domain.rag.VectorStore;
 /**
  * PostgreSQL pgvector 向量存储实现
  *
@@ -39,16 +41,16 @@ import com.njydsz.agent.domain.rag.TextChunk;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class PgVectorStore implements com.njydsz.agent.domain.rag.VectorStore {
+public class PgVectorStore implements VectorStore {
 
     private static final Logger log = LoggerFactory.getLogger(PgVectorStore.class);
 
     private final JdbcTemplate jdbcTemplate;
-    private final com.njydsz.agent.domain.rag.EmbeddingClient embeddingClient;
+    private final EmbeddingClient embeddingClient;
     private final int dimension;
 
     public PgVectorStore(JdbcTemplate jdbcTemplate,
-                         com.njydsz.agent.domain.rag.EmbeddingClient embeddingClient) {
+                         EmbeddingClient embeddingClient) {
         this.jdbcTemplate = jdbcTemplate;
         this.embeddingClient = embeddingClient;
         this.dimension = embeddingClient.getDimension();

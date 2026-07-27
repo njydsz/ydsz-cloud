@@ -5,6 +5,7 @@ import java.util.Base64;
 
 import com.njydsz.common.exception.enums.SubErrorCode;
 
+import java.util.zip.CRC32;
 /**
  * 错误码编码器
  *
@@ -110,7 +111,7 @@ public final class ErrorCodeEncoder {
         if (traceId == null || traceId.isEmpty()) {
             return "0000";
         }
-        java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+        CRC32 crc = new CRC32();
         crc.update(traceId.getBytes(StandardCharsets.UTF_8));
         long value = crc.getValue();
         // 用 Base36 编码

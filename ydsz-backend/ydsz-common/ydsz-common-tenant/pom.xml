@@ -52,5 +52,11 @@
             <artifactId>ydsz-common-thread</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- 可选依赖：Web Filter（jakarta.servlet.Filter） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

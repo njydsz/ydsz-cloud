@@ -20,6 +20,11 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.support.AsyncFunction;
 import com.njydsz.common.cache.support.CacheLoader;
 
+import com.njydsz.common.cache.api.CachePolicy;
+import com.njydsz.common.cache.listener.RemovalListener;
+import com.njydsz.common.cache.stats.CacheStats;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 /**
  * 异步加载缓存实现 — 基于 ConcurrentHashMap+CompletableFuture 防缓存击穿
  *
@@ -308,7 +313,7 @@ public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
     }
 
     @Override
-    public java.util.concurrent.CompletableFuture<V> getAsync(
+    public CompletableFuture<V> getAsync(
         K key, AsyncFunction<K, V> loader) {
       return asyncCache.get(key, loader);
     }
@@ -330,7 +335,7 @@ public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
 
     @Override
     public V compute(
-        K key, java.util.function.BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
       return delegate.compute(key, remappingFunction);
     }
 
@@ -338,7 +343,7 @@ public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
     public V merge(
         K key,
         V value,
-        java.util.function.BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
       return delegate.merge(key, value, remappingFunction);
     }
 
@@ -398,12 +403,12 @@ public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
     }
 
     @Override
-    public com.njydsz.common.cache.stats.CacheStats getStats() {
+    public CacheStats getStats() {
       return delegate.getStats();
     }
 
     @Override
-    public com.njydsz.common.cache.api.CachePolicy policy() {
+    public CachePolicy policy() {
       return delegate.policy();
     }
 
@@ -429,12 +434,12 @@ public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
 
     @Override
     public void addListener(
-        com.njydsz.common.cache.listener.RemovalListener<? super K, ? super V> listener) {
+        RemovalListener<? super K, ? super V> listener) {
       delegate.addListener(listener);
     }
 
     @Override
-    public void forEach(java.util.function.BiConsumer<? super K, ? super V> action) {
+    public void forEach(BiConsumer<? super K, ? super V> action) {
       delegate.forEach(action);
     }
   }

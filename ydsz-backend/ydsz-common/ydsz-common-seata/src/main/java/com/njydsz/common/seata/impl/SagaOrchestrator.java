@@ -13,6 +13,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 
+import com.njydsz.common.seata.api.TransactionType;
+import java.util.concurrent.Callable;
 /**
  * SAGA 事务编排器
  *
@@ -132,7 +134,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
      * @return SAGA 事务类型
      */
     @Override
-    public com.njydsz.common.seata.api.TransactionType getCurrentType() {
+    public TransactionType getCurrentType() {
         return com.njydsz.common.seata.api.TransactionType.SAGA;
     }
 
@@ -147,7 +149,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
      * @throws Exception 事务执行异常
      */
     @Override
-    public <T> T execute(String transactionName, com.njydsz.common.seata.api.TransactionType type, java.util.concurrent.Callable<T> action) throws Exception {
+    public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
         return action.call();
     }
 
@@ -162,7 +164,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
      * @throws Exception 事务执行异常
      */
     @Override
-    public <T> T executeWithCompensation(String transactionName, java.util.concurrent.Callable<T> action, Runnable compensation) throws Exception {
+    public <T> T executeWithCompensation(String transactionName, Callable<T> action, Runnable compensation) throws Exception {
         try { return action.call(); }
         catch (Exception e) { if (compensation != null) { compensation.run(); } throw e; }
     }

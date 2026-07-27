@@ -23,6 +23,7 @@ import com.njydsz.common.safe.ip.IpAccessService;
 import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.util.url.UrlPathUtils;
 
+import java.util.ArrayList;
 /**
  * IP 黑白名单过滤器
  *
@@ -57,7 +58,7 @@ public class IpAccessFilter extends OncePerRequestFilter {
                            List<String> excludes) {
         this.ipAccessService = ipAccessService;
         this.eventPublisher = eventPublisher;
-        this.excludes = excludes != null ? excludes : new java.util.ArrayList<>();
+        this.excludes = excludes != null ? excludes : new ArrayList<>();
     }
 
     @Override

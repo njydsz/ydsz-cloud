@@ -27,6 +27,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
 
+import com.njydsz.common.exception.custom.BusinessException;
+import java.io.IOException;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 /**
  * WOPI 协议接口（P1-4 + P1-R5 + P2-R4）
  * <p>
@@ -130,7 +134,7 @@ public class WopiController {
             @RequestHeader(value = "X-User-Id", required = false) String userId,
             @RequestHeader(value = "X-WOPI-Authorization", required = false) String authToken,
             @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
-            @org.springframework.web.bind.annotation.RequestBody byte[] content) {
+            @RequestBody byte[] content) {
 
         // P1-R5: WOPI Token 验证
         validateWopiToken(authToken);
@@ -154,7 +158,7 @@ public class WopiController {
 
         try {
             String storageKey = fileNode.getStorageKey();
-            org.springframework.web.multipart.MultipartFile multipartFile =
+            MultipartFile multipartFile =
                     NextwikiFileUtils.toMultipartFile(
                             writeTempFile(content), fileNode.getName(), fileNode.getMimeType());
             storage.upload(null, storageKey, multipartFile);
@@ -231,13 +235,13 @@ public class WopiController {
     private void validateWopiToken(String authToken) {
         if (expectedAccessToken != null && !expectedAccessToken.isEmpty()) {
             if (authToken == null || !authToken.equals(expectedAccessToken)) {
-                throw new com.njydsz.common.exception.custom.BusinessException(
+                throw new BusinessException(
                         com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode.FILE_NOT_FOUND);
             }
         }
     }
 
-    private Path writeTempFile(byte[] content) throws java.io.IOException {
+    private Path writeTempFile(byte[] content) throws IOException {
         Path tempFile = java.nio.file.Files.createTempFile("wopi-", ".tmp");
         java.nio.file.Files.write(tempFile, content);
         return tempFile;

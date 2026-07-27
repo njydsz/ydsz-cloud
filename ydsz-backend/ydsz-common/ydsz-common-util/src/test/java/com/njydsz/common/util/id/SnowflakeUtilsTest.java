@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 /**
  * {@link SnowflakeUtils} 单元测试 — 覆盖 ID 唯一性、单调性、参数校验、解析等关键路径。
  *
@@ -29,7 +30,7 @@ class SnowflakeUtilsTest {
 
     /** 通过反射重置单例，便于多次测试。 */
     private static void resetInstance() throws Exception {
-        java.lang.reflect.Field f = SnowflakeUtils.class.getDeclaredField("INSTANCE");
+        Field f = SnowflakeUtils.class.getDeclaredField("INSTANCE");
         f.setAccessible(true);
         f.set(null, null);
     }

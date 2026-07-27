@@ -11,6 +11,8 @@ import com.njydsz.common.exception.model.ProblemDetail;
 
 import java.net.URI;
 
+import java.util.HashSet;
+import java.util.Set;
 /**
  * {@link ProblemDetail} 和 {@link UnifiedExceptionCode} 单元测试
  *
@@ -151,7 +153,7 @@ class ProblemDetailAndErrorCodeTest {
         @Test
         @DisplayName("所有 code 唯一（无重复）")
         void testAllCodesUnique() {
-            java.util.Set<String> codes = new java.util.HashSet<>();
+            Set<String> codes = new HashSet<>();
             for (UnifiedExceptionCode code : UnifiedExceptionCode.values()) {
                 assertTrue(codes.add(code.getCode()),
                         "Duplicate code: " + code.getCode());

@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 /**
  * 消息用户反馈视图对象。
  *
@@ -28,7 +29,7 @@ public class MsgFeedbackVO implements Serializable {
     private String content;
     private String status;
     private String createdBy;
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
     private String updatedBy;
-    private java.time.LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

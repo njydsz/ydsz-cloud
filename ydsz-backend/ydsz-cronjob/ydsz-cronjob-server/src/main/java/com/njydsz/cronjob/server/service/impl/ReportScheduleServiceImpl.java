@@ -27,6 +27,7 @@ import com.njydsz.cronjob.server.service.job.ReportScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.ByteArrayOutputStream;
 /**
  * 报表定时任务服务实现。
  *
@@ -266,7 +267,7 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
      * 使用 EasyExcel 生成 XLSX 字节流。
      */
     private byte[] writeExcel(String reportType, ReportData data) {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ExcelFacade.write(baos)
                 .head(data.headers)
                 .headRowNumber(0)

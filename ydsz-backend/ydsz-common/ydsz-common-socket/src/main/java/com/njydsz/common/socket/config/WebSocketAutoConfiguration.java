@@ -47,6 +47,7 @@ import com.njydsz.common.socket.session.WebSocketSessionEventListener;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.scheduling.annotation.Scheduled;
 /**
  * WebSocket 自动装配配置。
  *
@@ -413,7 +414,7 @@ public class WebSocketAutoConfiguration {
             this.ackService = ackService;
 }
 
-        @org.springframework.scheduling.annotation.Scheduled(fixedDelay = 10000)
+        @Scheduled(fixedDelay = 10000)
         public void flush() {
             pushTemplate.flushRetryMessages();
             if (ackService != null) {

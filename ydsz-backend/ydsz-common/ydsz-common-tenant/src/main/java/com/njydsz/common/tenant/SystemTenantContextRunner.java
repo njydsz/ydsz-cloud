@@ -1,5 +1,7 @@
 package com.njydsz.common.tenant;
 
+import java.util.concurrent.Callable;
+
 /**
  * 系统租户上下文执行器。
  *
@@ -65,7 +67,7 @@ public final class SystemTenantContextRunner {
      * @return 执行结果
      * @throws RuntimeException 包装后的异常
      */
-    public static <T> T call(java.util.concurrent.Callable<T> callable) {
+    public static <T> T call(Callable<T> callable) {
         TenantContextHolder.set(TenantContext.system(systemTenantId));
         try {
             return callable.call();

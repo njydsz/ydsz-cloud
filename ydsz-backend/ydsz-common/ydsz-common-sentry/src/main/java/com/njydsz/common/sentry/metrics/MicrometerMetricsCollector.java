@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  * @see MetricsCollector
  * @see InMemoryMetricsCollector
- * @see io.micrometer.core.instrument.MeterRegistry
+ * @see MeterRegistry
  */
 @Slf4j
 public class MicrometerMetricsCollector implements MetricsCollector {

@@ -3,6 +3,8 @@ package com.njydsz.common.excel.tabular;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.HashMap;
+import java.util.Map;
 /**
  * 表格数据行映射器。
  *
@@ -45,9 +47,9 @@ public interface TabularRowMapper<T> {
     /**
      * 返回列名 → 列索引 映射（便于按列名快速取值）。
      */
-    default java.util.Map<String, Integer> headerIndexMap() {
+    default Map<String, Integer> headerIndexMap() {
         List<String> hs = headers();
-        java.util.Map<String, Integer> map = new java.util.HashMap<>(hs.size() * 2);
+        Map<String, Integer> map = new HashMap<>(hs.size() * 2);
         for (int i = 0; i < hs.size(); i++) {
             map.put(hs.get(i), i);
         }

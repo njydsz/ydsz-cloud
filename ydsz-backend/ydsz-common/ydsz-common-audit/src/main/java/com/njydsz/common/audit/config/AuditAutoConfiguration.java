@@ -41,6 +41,7 @@ import com.njydsz.common.audit.template.AuditTemplateProcessor;
 
 import lombok.RequiredArgsConstructor;
 
+import io.micrometer.core.instrument.MeterRegistry;
 /**
  * 审计模块自动配置
  * <p>
@@ -301,9 +302,9 @@ public class AuditAutoConfiguration {
     @ConditionalOnBean(AuditRecorder.class)
     @ConditionalOnMissingBean(AuditMetricsBinder.class)
     public AuditMetricsBinder auditMetricsBinder(AuditRecorder auditRecorder,
-                                                   ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
+                                                   ObjectProvider<MeterRegistry> meterRegistryProvider) {
         AuditMetricsBinder binder = new AuditMetricsBinder(auditRecorder);
-        io.micrometer.core.instrument.MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
+        MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
         if (meterRegistry != null) {
             binder.bindTo(meterRegistry);
             log.info("初始化审计指标绑定器: AuditMetricsBinder, 已绑定到 MeterRegistry");

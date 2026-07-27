@@ -5,6 +5,7 @@ import java.util.List;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 /**
  * 文件节点仓储接口
  * <p>
@@ -79,7 +80,7 @@ public interface FileNodeRepository {
     /**
      * 更新文件节点（带 revision 乐观锁）
      *
-     * @throws org.springframework.dao.OptimisticLockingFailureException 乐观锁冲突时抛出
+     * @throws OptimisticLockingFailureException 乐观锁冲突时抛出
      */
     void update(FileNode node);
 

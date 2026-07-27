@@ -37,6 +37,8 @@ import com.njydsz.cronjob.server.core.dispatch.RemoteTaskClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 /**
  * MapReduce 任务执行器（P0-4, P0-1 分布式并行执行）。
  *
@@ -107,7 +109,7 @@ public class MapTaskExecutor {
     /** P1-2: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
     private volatile boolean useExternalExecutor = false;
 
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     private void initExecutor() {
         try {
             ThreadPoolTaskExecutor threadPool = applicationContext.getBean(
@@ -127,7 +129,7 @@ public class MapTaskExecutor {
         }
     }
 
-    @jakarta.annotation.PreDestroy
+    @PreDestroy
     private void shutdownExecutor() {
         if (!useExternalExecutor && subTaskExecutor != null) {
             subTaskExecutor.shutdown();

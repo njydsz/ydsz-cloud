@@ -1,13 +1,2 @@
 export * from './core';
-export * from './opportunity';
-export * from './contract';
-export * from './initiation';
-export * from './execution';
-export * from './budget';
-export * from './expense';
-export * from './revenue';
-export * from './invoice';
-export * from './payment';
-export * from './evm';
-export * from './rateCard';
-export * from './risk';
+export { requestClient, baseRequestClient } from './request';

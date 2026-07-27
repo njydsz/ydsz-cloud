@@ -7,6 +7,7 @@ import org.springframework.core.io.buffer.DataBufferFactory;
 
 import com.njydsz.common.json.YdszJson;
 
+import com.njydsz.common.json.provider.SerializationProvider;
 /**
  * YdszJson Reactive 工具类（用于 WebFlux 响应式场景）。
  *
@@ -56,7 +57,7 @@ public final class JsonReactiveUtils {
      */
     public static DataBuffer encodeWithView(Object obj, DataBufferFactory bufferFactory,
             Class<?> viewClass) {
-        String json = com.njydsz.common.json.provider.SerializationProvider
+        String json = SerializationProvider
                 .serializeWithView(obj, viewClass);
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = bufferFactory.allocateBuffer(bytes.length);

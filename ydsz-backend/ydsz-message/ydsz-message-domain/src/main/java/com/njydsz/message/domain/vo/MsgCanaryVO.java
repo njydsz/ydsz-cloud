@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 /**
  * 灰度桶视图对象。
  *
@@ -27,7 +28,7 @@ public class MsgCanaryVO implements Serializable {
     private String status;
     private String description;
     private String createdBy;
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
     private String updatedBy;
-    private java.time.LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

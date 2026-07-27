@@ -13,6 +13,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import io.opentelemetry.sdk.trace.data.LinkData;
+import java.util.List;
 /**
  * YDSZ 采样器工厂
  *
@@ -103,7 +105,7 @@ public final class OtelSamplers {
         private Map<String, Double> grayTagRatios = new HashMap<>();
         /** 健康检查路径前缀（这些路径不采样） */
         @Builder.Default
-        private java.util.List<String> healthCheckPaths = java.util.List.of("/actuator", "/health", "/metrics");
+        private List<String> healthCheckPaths = java.util.List.of("/actuator", "/health", "/metrics");
     }
 
     // ============================================================================
@@ -126,7 +128,7 @@ public final class OtelSamplers {
                                            String name,
                                            SpanKind spanKind,
                                            Attributes attributes,
-                                           java.util.List<io.opentelemetry.sdk.trace.data.LinkData> parentLinks) {
+                                           List<LinkData> parentLinks) {
             // 1) 健康检查路径直接 DROP
             for (String prefix : config.getHealthCheckPaths()) {
                 if (name != null && name.contains(prefix)) {

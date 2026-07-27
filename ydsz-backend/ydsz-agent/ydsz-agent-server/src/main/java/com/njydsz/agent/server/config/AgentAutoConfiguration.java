@@ -49,6 +49,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
+import com.njydsz.agent.server.health.AgentHealthIndicator;
+import org.springframework.beans.factory.ObjectProvider;
 /**
  * Agent 自动配置
  *
@@ -253,13 +255,13 @@ public class AgentAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public com.njydsz.agent.server.health.AgentHealthIndicator agentHealthIndicator(
+    public AgentHealthIndicator agentHealthIndicator(
             LlmClient llmClient, ConversationMemory memory,
-            org.springframework.beans.factory.ObjectProvider<VectorStore> vectorStoreProvider,
-            org.springframework.beans.factory.ObjectProvider<TraceRecorder> traceRecorderProvider,
-            org.springframework.beans.factory.ObjectProvider<CostAnalysisService> costAnalysisServiceProvider,
-            org.springframework.beans.factory.ObjectProvider<AgentMetrics> agentMetricsProvider) {
-        return new com.njydsz.agent.server.health.AgentHealthIndicator(
+            ObjectProvider<VectorStore> vectorStoreProvider,
+            ObjectProvider<TraceRecorder> traceRecorderProvider,
+            ObjectProvider<CostAnalysisService> costAnalysisServiceProvider,
+            ObjectProvider<AgentMetrics> agentMetricsProvider) {
+        return new AgentHealthIndicator(
                 llmClient, memory, vectorStoreProvider, traceRecorderProvider,
                 costAnalysisServiceProvider, agentMetricsProvider);
     }

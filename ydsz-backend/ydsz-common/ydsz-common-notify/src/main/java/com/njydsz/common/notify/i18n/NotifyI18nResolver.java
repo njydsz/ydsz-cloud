@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.notify.preference.NotifyPreference;
 import com.njydsz.common.notify.preference.NotifyPreferenceManager;
 
+import java.util.Map;
 /**
  * 通知国际化语言解析器（P3-3）
  *
@@ -101,7 +102,7 @@ public class NotifyI18nResolver {
      * @return 国际化消息
      */
     public String getMessage(String key, String userId, String acceptLanguage,
-                             java.util.Map<String, Object> params) {
+                             Map<String, Object> params) {
         String lang = resolveLanguage(userId, acceptLanguage);
         return i18nService.getMessage(key, lang, params);
     }

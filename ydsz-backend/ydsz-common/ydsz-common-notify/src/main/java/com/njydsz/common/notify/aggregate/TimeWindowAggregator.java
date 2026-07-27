@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.enums.NotifyPriority;
 
+import java.util.HashMap;
+import java.util.Map;
 /**
  * 时间窗口消息聚合器实现（P2-3）
  *
@@ -104,8 +106,8 @@ public class TimeWindowAggregator implements NotificationAggregator {
      *
      * @return key 到聚合消息的映射
      */
-    public java.util.Map<String, AggregatedMessage> flushAll() {
-        java.util.Map<String, AggregatedMessage> result = new java.util.HashMap<>();
+    public Map<String, AggregatedMessage> flushAll() {
+        Map<String, AggregatedMessage> result = new HashMap<>();
         for (String key : new ArrayList<>(buffer.keySet())) {
             CopyOnWriteArrayList<PendingMessage> list = buffer.remove(key);
             if (list != null && !list.isEmpty()) {

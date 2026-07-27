@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 /**
  * {@link PermissionUtils} 单元测试。
  *
@@ -109,7 +111,7 @@ class PermissionUtilsTest {
 
     @Test
     void testMergeRolePermissions() {
-        java.util.Map<String, Set<String>> rolePerms = new java.util.HashMap<>();
+        Map<String, Set<String>> rolePerms = new HashMap<>();
         rolePerms.put("admin", Set.of("sys:user:add", "sys:user:list"));
         rolePerms.put("manager", Set.of("sys:user:edit", "sys:user:list"));
 
@@ -123,7 +125,7 @@ class PermissionUtilsTest {
     @Test
     void testMergeRolePermissions_null() {
         assertTrue(PermissionUtils.mergeRolePermissions(null, Set.of("admin")).isEmpty());
-        assertTrue(PermissionUtils.mergeRolePermissions(new java.util.HashMap<>(), null).isEmpty());
+        assertTrue(PermissionUtils.mergeRolePermissions(new HashMap<>(), null).isEmpty());
     }
 
     @Test

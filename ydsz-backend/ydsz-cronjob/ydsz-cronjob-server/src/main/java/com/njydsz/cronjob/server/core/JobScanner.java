@@ -34,6 +34,8 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 /**
  * 任务扫描器（P1-7 Leader 模式专用）。
  *
@@ -83,7 +85,7 @@ public class JobScanner {
     /** P0-7b: 日历调度过滤器（可选注入，启用时按工作日/节假日过滤派发） */
     private final ObjectProvider<CalendarScheduleFilter> calendarScheduleFilterProvider;
 
-    private final org.springframework.context.ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
 
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
@@ -110,7 +112,7 @@ public class JobScanner {
             // P1-8: 优先使用 common-thread 统一管理的 cronjobDispatchExecutor 线程池
             if (cronjobProperties.getScanner().isParallelDispatchEnabled()) {
                 try {
-                    org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor threadPool =
+                    ThreadPoolTaskExecutor threadPool =
                             applicationContext.getBean(
                                     "cronjobDispatchExecutor",
                                     org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.class);

@@ -24,6 +24,8 @@ import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 /**
  * 流程定义元数据缓存服务
  *
@@ -242,11 +244,11 @@ public class FlowDefinitionCacheService {
      */
     private Map<String, List<FlowSkip>> loadSkipSourceRefIndex(String cacheKey) {
         List<FlowSkip> skips = loadSkips(cacheKey);
-        Map<String, List<FlowSkip>> index = new java.util.HashMap<>(skips.size());
+        Map<String, List<FlowSkip>> index = new HashMap<>(skips.size());
         for (FlowSkip skip : skips) {
             String sourceRef = extractSourceRef(skip);
             if (sourceRef != null) {
-                index.computeIfAbsent(sourceRef, k -> new java.util.ArrayList<>()).add(skip);
+                index.computeIfAbsent(sourceRef, k -> new ArrayList<>()).add(skip);
             }
         }
         return index;

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 
+import com.njydsz.common.sentry.spi.AlertPublisher;
 /**
  * AlertConverger 单元测试
  *
@@ -83,7 +84,7 @@ class AlertConvergerTest {
         assertThat(p0.dedupKey()).isNotEqualTo(p1.dedupKey());
     }
 
-    static class CountingPublisher implements com.njydsz.common.sentry.spi.AlertPublisher {
+    static class CountingPublisher implements AlertPublisher {
         private int publishCount = 0;
 
         @Override

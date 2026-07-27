@@ -13,6 +13,8 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 
 import lombok.extern.slf4j.Slf4j;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 /**
  * YDSZ OpenTelemetry 全局访问点 + 上下文传播工具
  *
@@ -115,7 +117,7 @@ public final class YdszOpenTelemetry {
     public static <C> void inject(C carrier, TextMapSetter<C> setter) {
         try {
             TextMapPropagator propagator = openTelemetry().getPropagators().getTextMapPropagator();
-            io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
+            Context context = io.opentelemetry.context.Context.current();
             propagator.inject(context, carrier, setter);
         } catch (Exception e) {
             log.debug("[YdszOpenTelemetry] inject 失败: {}", e.getMessage());
@@ -130,7 +132,7 @@ public final class YdszOpenTelemetry {
      * @param <C>     载体类型
      * @return 提取出的 OTel Context
      */
-    public static <C> io.opentelemetry.context.Context extract(C carrier, TextMapGetter<C> getter) {
+    public static <C> Context extract(C carrier, TextMapGetter<C> getter) {
         try {
             TextMapPropagator propagator = openTelemetry().getPropagators().getTextMapPropagator();
             return propagator.extract(io.opentelemetry.context.Context.current(), carrier, getter);
@@ -143,8 +145,8 @@ public final class YdszOpenTelemetry {
     /**
      * 在指定 Context 中执行操作
      */
-    public static <T> T withContext(io.opentelemetry.context.Context context, Supplier<T> action) {
-        try (io.opentelemetry.context.Scope ignored = context.makeCurrent()) {
+    public static <T> T withContext(Context context, Supplier<T> action) {
+        try (Scope ignored = context.makeCurrent()) {
             return action.get();
         }
     }
@@ -152,7 +154,7 @@ public final class YdszOpenTelemetry {
     /**
      * 在指定 Context 中执行无返回值操作
      */
-    public static void withContextVoid(io.opentelemetry.context.Context context, Runnable action) {
+    public static void withContextVoid(Context context, Runnable action) {
         withContext(context, () -> {
             action.run();
             return null;

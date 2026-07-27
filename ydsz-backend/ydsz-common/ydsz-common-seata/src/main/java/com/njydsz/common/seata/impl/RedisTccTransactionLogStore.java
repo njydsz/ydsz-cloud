@@ -21,6 +21,7 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 
+import java.util.ArrayList;
 /**
  * 基于 Redis 的 TCC 事务日志存储
  *
@@ -158,7 +159,7 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
      */
     @Override
     public List<TccTransactionLog> findTimeoutPending(LocalDateTime threshold) {
-        List<TccTransactionLog> result = new java.util.ArrayList<>();
+        List<TccTransactionLog> result = new ArrayList<>();
         String pattern = keyPrefix + "*";
         ScanOptions options = ScanOptions.scanOptions()
                 .match(pattern)

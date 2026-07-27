@@ -27,6 +27,10 @@ import com.njydsz.common.tenant.web.TenantContextWebFilter;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
+import com.njydsz.common.tenant.ratelimit.TenantRateLimiter;
+import io.micrometer.core.instrument.MeterRegistry;
 /**
  * 多租户自动装配。
  *
@@ -135,9 +139,9 @@ public class TenantAutoConfiguration {
     @Bean
     @ConditionalOnClass(name = "org.springframework.data.redis.serializer.RedisSerializer")
     @ConditionalOnMissingBean
-    public com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
+    public TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
         log.info("多租户 Redis Key 隔离已启用");
-        return new com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer(true);
+        return new TenantRedisKeyPrefixer(true);
     }
 
     /**
@@ -151,10 +155,10 @@ public class TenantAutoConfiguration {
     @Bean
     @ConditionalOnClass(name = "com.njydsz.common.redis.service.RedisRateLimiter")
     @ConditionalOnMissingBean
-    public com.njydsz.common.tenant.ratelimit.TenantRateLimiter tenantRateLimiter(
-            ObjectProvider<com.njydsz.common.redis.service.RedisRateLimiter> rateLimiterProvider) {
+    public TenantRateLimiter tenantRateLimiter(
+            ObjectProvider<RedisRateLimiter> rateLimiterProvider) {
         log.info("多租户限流已启用");
-        return new com.njydsz.common.tenant.ratelimit.TenantRateLimiter(rateLimiterProvider.getIfAvailable());
+        return new TenantRateLimiter(rateLimiterProvider.getIfAvailable());
     }
 
     /**
@@ -181,7 +185,7 @@ public class TenantAutoConfiguration {
     @Bean
     @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
     @ConditionalOnMissingBean
-    public TenantMetrics tenantMetrics(ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
+    public TenantMetrics tenantMetrics(ObjectProvider<MeterRegistry> meterRegistryProvider) {
         return new TenantMetrics(meterRegistryProvider.getIfAvailable());
     }
 

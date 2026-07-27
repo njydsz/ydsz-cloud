@@ -23,6 +23,8 @@ import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 
+import java.util.LinkedHashMap;
+import org.springframework.http.ResponseEntity;
 /**
  * 任务执行日志 Controller（P0-2 在线日志白屏化）。
  *
@@ -130,7 +132,7 @@ public class JobLogController {
      */
     @Operation(summary = "下载执行日志")
     @GetMapping("/content/download")
-    public org.springframework.http.ResponseEntity<byte[]> downloadContent(
+    public ResponseEntity<byte[]> downloadContent(
             @RequestParam String logId) {
         List<JobLogContent> allLines = jobLogContentService.pageByLogId(logId, 1, 100000);
         StringBuilder sb = new StringBuilder();
@@ -163,7 +165,7 @@ public class JobLogController {
             @RequestParam String logId2) {
         JobLog log1 = jobLogMapper.selectById(logId1);
         JobLog log2 = jobLogMapper.selectById(logId2);
-        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         if (log1 == null || log2 == null) {
             return BaseResponse.error("404", "执行日志不存在");
         }

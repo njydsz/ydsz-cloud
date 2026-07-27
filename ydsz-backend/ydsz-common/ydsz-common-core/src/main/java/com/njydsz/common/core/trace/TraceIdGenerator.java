@@ -2,6 +2,7 @@ package com.njydsz.common.core.trace;
 
 import java.util.UUID;
 
+import com.njydsz.common.core.config.TraceAutoConfiguration;
 /**
  * TraceId 生成器（统一入口）
  *
@@ -34,7 +35,7 @@ import java.util.UUID;
  * @author ydsz-team
  * @since 1.0.0
  * @see TraceIdSupplier
- * @see com.njydsz.common.core.config.TraceAutoConfiguration
+ * @see TraceAutoConfiguration
  */
 public final class TraceIdGenerator {
 

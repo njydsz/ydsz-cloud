@@ -11,6 +11,8 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Span 错误事件处理器
  *
@@ -30,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ErrorEventSpanProcessor implements SpanProcessor {
 
     private final ErrorEventConfig config;
-    private final java.util.List<ErrorEventListener> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final List<ErrorEventListener> listeners = new CopyOnWriteArrayList<>();
 
     public ErrorEventSpanProcessor(ErrorEventConfig config) {
         this.config = config;

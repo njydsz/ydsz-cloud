@@ -18,6 +18,7 @@ import org.springframework.data.redis.core.StreamOperations;
 
 import com.njydsz.common.queue.domain.QueueMessage;
 
+import java.util.Map;
 /**
  * {@link RedisStreamPublisher} 单元测试。
  *
@@ -82,7 +83,7 @@ class RedisStreamPublisherTest {
         ObjectRecord<String, ?> record = captor.getValue();
         assertEquals("test-stream", record.getStream());
         @SuppressWarnings("unchecked")
-        java.util.Map<String, String> fields = (java.util.Map<String, String>) record.getValue();
+        Map<String, String> fields = (Map<String, String>) record.getValue();
         assertNotNull(fields.get("payload"));
         assertNotNull(fields.get("traceId"));
         assertEquals("0", fields.get("retryCount"));
@@ -101,7 +102,7 @@ class RedisStreamPublisherTest {
         verify(streamOps).add(captor.capture());
 
         @SuppressWarnings("unchecked")
-        java.util.Map<String, String> fields = (java.util.Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
         assertNotNull(fields.get("payload"));
         assertEquals(message.getTraceId(), fields.get("traceId"));
         assertEquals("3", fields.get("retryCount"));
@@ -120,7 +121,7 @@ class RedisStreamPublisherTest {
         verify(streamOps).add(captor.capture());
 
         @SuppressWarnings("unchecked")
-        java.util.Map<String, String> fields = (java.util.Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
         assertEquals("order-group-1", fields.get("groupKey"));
         assertEquals("42", fields.get("sequence"));
     }
@@ -137,7 +138,7 @@ class RedisStreamPublisherTest {
         verify(streamOps).add(captor.capture());
 
         @SuppressWarnings("unchecked")
-        java.util.Map<String, String> fields = (java.util.Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
         assertNull(fields.get("groupKey"));
         assertNull(fields.get("sequence"));
     }
@@ -156,7 +157,7 @@ class RedisStreamPublisherTest {
         verify(streamOps).add(captor.capture());
 
         @SuppressWarnings("unchecked")
-        java.util.Map<String, String> fields = (java.util.Map<String, String>) captor.getValue().getValue();
+        Map<String, String> fields = (Map<String, String>) captor.getValue().getValue();
         assertEquals("0", fields.get("retryCount"));
     }
 

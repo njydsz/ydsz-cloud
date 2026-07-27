@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 /**
  * 消息路由规则视图对象。
  *
@@ -20,7 +21,7 @@ public class MsgRouteRuleVO implements Serializable {
     private String id;
     private String status;
     private String createdBy;
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
     private String updatedBy;
-    private java.time.LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

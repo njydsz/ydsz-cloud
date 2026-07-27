@@ -8,6 +8,8 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 
+import java.util.ArrayList;
+import java.util.List;
 /**
  * 错误码文档生成器
  *
@@ -145,7 +147,7 @@ public final class ErrorCodeDocGenerator {
         sb.append("  \"codes\": [\n");
 
         Map<String, ExceptionCode> all = ExceptionCodeRegistry.allRegistered();
-        java.util.List<String> sortedKeys = new java.util.ArrayList<>(all.keySet());
+        List<String> sortedKeys = new ArrayList<>(all.keySet());
         java.util.Collections.sort(sortedKeys);
 
         boolean first = true;
@@ -191,7 +193,7 @@ public final class ErrorCodeDocGenerator {
         sb.append("// Generated at: ").append(java.time.LocalDateTime.now()).append("\n\n");
 
         Map<String, ExceptionCode> all = ExceptionCodeRegistry.allRegistered();
-        java.util.List<String> sortedKeys = new java.util.ArrayList<>(all.keySet());
+        List<String> sortedKeys = new ArrayList<>(all.keySet());
         java.util.Collections.sort(sortedKeys);
 
         // 枚举定义

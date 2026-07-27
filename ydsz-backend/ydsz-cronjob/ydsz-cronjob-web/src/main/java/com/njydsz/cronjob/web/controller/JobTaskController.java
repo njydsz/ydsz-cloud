@@ -23,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 
+import java.util.HashMap;
+import java.util.Map;
 /**
  * MapReduce 子任务查询 Controller（P0-4）。
  *
@@ -91,9 +93,9 @@ public class JobTaskController {
      */
     @Operation(summary = "查询子任务执行进度")
     @GetMapping("/progress")
-    public BaseResponse<java.util.Map<String, Object>> progress(@RequestParam String logId) {
-        java.util.List<JobTask> all = jobTaskMapper.selectByLogId(logId);
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
+    public BaseResponse<Map<String, Object>> progress(@RequestParam String logId) {
+        List<JobTask> all = jobTaskMapper.selectByLogId(logId);
+        Map<String, Object> result = new HashMap<>();
         int total = all.size();
         int pending = 0, running = 0, success = 0, failed = 0;
         for (JobTask task : all) {

@@ -18,6 +18,7 @@ import com.njydsz.common.util.id.WorkerIdRegistry;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.util.id.SnowflakeAutoConfiguration;
 /**
  * 基于 Redis 的 WorkerId 注册中心实现
  *
@@ -49,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @since 1.0.0
  * @see WorkerIdRegistry
- * @see com.njydsz.common.util.id.SnowflakeAutoConfiguration
+ * @see SnowflakeAutoConfiguration
  */
 @Slf4j
 public class RedisWorkerIdRegistry implements WorkerIdRegistry {

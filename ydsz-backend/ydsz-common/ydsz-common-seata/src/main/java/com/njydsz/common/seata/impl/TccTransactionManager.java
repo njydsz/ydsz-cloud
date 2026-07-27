@@ -18,6 +18,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 /**
  * TCC 事务管理器
  *
@@ -46,7 +48,7 @@ public class TccTransactionManager extends AbstractTransactionManager
 
     private final TccTransactionLogStore logStore;
     private final SeataProperties properties;
-    private final java.util.Map<String, TccAction<?>> registeredActions = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, TccAction<?>> registeredActions = new ConcurrentHashMap<>();
 
     /**
      * 无日志存储模式（向后兼容）

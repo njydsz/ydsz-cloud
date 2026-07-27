@@ -41,6 +41,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 /**
  * 分片上传应用服务
  * <p>
@@ -66,7 +68,7 @@ public class ChunkUploadApplicationService {
     private final QuotaDomainService quotaDomainService;
     private final FileVersionDomainService versionDomainService;
     private final FolderDomainService folderDomainService;
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -90,7 +92,7 @@ public class ChunkUploadApplicationService {
                                           QuotaDomainService quotaDomainService,
                                           FileVersionDomainService versionDomainService,
                                           FolderDomainService folderDomainService,
-                                          org.springframework.context.ApplicationEventPublisher eventPublisher) {
+                                          ApplicationEventPublisher eventPublisher) {
         this.redisService = redisService;
         this.fileNodeRepository = fileNodeRepository;
         this.quotaDomainService = quotaDomainService;
@@ -167,7 +169,7 @@ public class ChunkUploadApplicationService {
     /**
      * 完成分片上传（合并分片并上传到存储）
      */
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public FileNodeVO completeChunkUpload(String uploadId, String userId) {
         ChunkUploadSession session = validateSession(uploadId);
 
@@ -528,7 +530,7 @@ public class ChunkUploadApplicationService {
         public byte[] getBytes() throws IOException { return Files.readAllBytes(filePath); }
 
         @Override
-        public java.io.InputStream getInputStream() throws IOException { return Files.newInputStream(filePath); }
+        public InputStream getInputStream() throws IOException { return Files.newInputStream(filePath); }
 
         @Override
         public void transferTo(File dest) throws IOException, IllegalStateException {

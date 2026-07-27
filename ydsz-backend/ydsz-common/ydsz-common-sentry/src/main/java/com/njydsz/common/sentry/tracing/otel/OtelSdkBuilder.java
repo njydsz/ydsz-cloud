@@ -22,6 +22,7 @@ import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 
 import lombok.extern.slf4j.Slf4j;
 
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 /**
  * YDSZ OpenTelemetry SDK 构建器
  *
@@ -52,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class OtelSdkBuilder {
 
     private Resource resource;
-    private io.opentelemetry.sdk.trace.samplers.Sampler sampler;
+    private Sampler sampler;
     private final List<SpanProcessor> processors = new ArrayList<>();
     private SpanExporter exporter;
     private OtelExporterFactory.BatchConfig batchConfig = OtelExporterFactory.BatchConfig.defaults();
@@ -86,7 +87,7 @@ public final class OtelSdkBuilder {
      * @param sampler OTel Sampler
      * @return 当前构建器
      */
-    public OtelSdkBuilder sampler(io.opentelemetry.sdk.trace.samplers.Sampler sampler) {
+    public OtelSdkBuilder sampler(Sampler sampler) {
         this.sampler = sampler;
         return this;
     }

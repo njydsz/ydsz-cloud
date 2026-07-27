@@ -2,6 +2,7 @@ package com.njydsz.common.tenant.ratelimit;
 
 import com.njydsz.common.tenant.TenantContextHolder;
 
+import com.njydsz.common.redis.service.RedisRateLimiter;
 /**
  * 租户级限流门面。
  *
@@ -26,9 +27,9 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 public class TenantRateLimiter {
 
-    private final com.njydsz.common.redis.service.RedisRateLimiter delegate;
+    private final RedisRateLimiter delegate;
 
-    public TenantRateLimiter(com.njydsz.common.redis.service.RedisRateLimiter delegate) {
+    public TenantRateLimiter(RedisRateLimiter delegate) {
         this.delegate = delegate;
     }
 

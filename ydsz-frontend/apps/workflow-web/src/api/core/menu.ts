@@ -1,19 +1,4 @@
-import type { RouteRecordStringComponent } from '@ydsz/types';
-
-import { requestClient } from '#/api/request';
-
 /**
- * 获取用户可访问的菜单树（动态路由）
+ * Menu API — re-export from @ydsz/shared-auth
  */
-export async function getAllMenusApi() {
-  return requestClient.get<RouteRecordStringComponent[]>(
-    '/api/v1/menu/routes',
-  );
-}
-
-/**
- * 获取全部菜单树（管理用）
- */
-export async function getMenuTreeApi() {
-  return requestClient.get<RouteRecordStringComponent[]>('/api/v1/menu/tree');
-}
+export { getAllMenusApi, getMenuTreeApi } from '@ydsz/shared-auth';

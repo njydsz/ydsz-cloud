@@ -29,6 +29,8 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 /**
  * P1-B4: 任务分组管理 Controller。
  *
@@ -156,14 +158,14 @@ public class JobGroupController {
         LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Job::getDeleted, 0).select(Job::getJobGroup);
         List<Job> all = jobMapper.selectList(wrapper);
-        Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        Map<String, Integer> counts = new LinkedHashMap<>();
         for (Job job : all) {
             String group = job.getJobGroup() != null ? job.getJobGroup() : "default";
             counts.merge(group, 1, Integer::sum);
         }
-        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        List<Map<String, Object>> result = new ArrayList<>();
         counts.forEach((group, count) -> {
-            Map<String, Object> item = new java.util.LinkedHashMap<>();
+            Map<String, Object> item = new LinkedHashMap<>();
             item.put("jobGroup", group);
             item.put("jobCount", count);
             result.add(item);

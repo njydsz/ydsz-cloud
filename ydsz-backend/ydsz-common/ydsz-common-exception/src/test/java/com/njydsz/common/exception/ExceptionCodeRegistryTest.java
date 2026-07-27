@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 
+import com.njydsz.common.exception.code.UnifiedExceptionCode;
 /**
  * {@link ExceptionCodeRegistry} 单元测试
  *
@@ -181,7 +182,7 @@ class ExceptionCodeRegistryTest {
     @Test
     @DisplayName("UnifiedExceptionCode 静态注册：所有枚举值可通过 lookup 查到")
     void testUnifiedExceptionCodeAutoRegistered() {
-        for (com.njydsz.common.exception.code.UnifiedExceptionCode code :
+        for (UnifiedExceptionCode code :
                 com.njydsz.common.exception.code.UnifiedExceptionCode.values()) {
             ExceptionCode found = ExceptionCodeRegistry.lookup(code.getCode());
             assertNotNull(found, "UnifiedExceptionCode should be auto-registered: " + code.getCode());

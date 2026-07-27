@@ -37,6 +37,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
 
+import com.njydsz.nextwiki.server.service.ChunkUploadApplicationService;
+import java.util.Set;
 /**
  * 文件管理 REST API
  *
@@ -53,7 +55,7 @@ public class FileController {
 
     private final FileApplicationService fileApplicationService;
     private final NextwikiHealthIndicator healthIndicator;
-    private final com.njydsz.nextwiki.server.service.ChunkUploadApplicationService chunkUploadService;
+    private final ChunkUploadApplicationService chunkUploadService;
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'upload'")
     @Idempotent(key = "ydsz:nextwiki:FileController:upload:lock", ttlSeconds = 5)
@@ -274,7 +276,7 @@ public class FileController {
     @GetMapping("/chunk/{uploadId}/uploaded-chunks")
     @Operation(summary = "查询已上传分片列表", description = "用于断点续传")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-    public BaseResponse<java.util.Set<Integer>> getUploadedChunks(@PathVariable String uploadId) {
+    public BaseResponse<Set<Integer>> getUploadedChunks(@PathVariable String uploadId) {
         return BaseResponse.success(chunkUploadService.getUploadedChunks(uploadId));
     }
 }

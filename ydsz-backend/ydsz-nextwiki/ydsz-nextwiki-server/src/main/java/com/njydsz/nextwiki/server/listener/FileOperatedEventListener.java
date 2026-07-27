@@ -12,6 +12,10 @@ import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.nextwiki.domain.entity.AuditLog;
+import com.njydsz.nextwiki.domain.repository.AuditLogRepository;
+import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
+import org.springframework.beans.factory.annotation.Autowired;
 /**
  * 文件操作事件异步监听器
  * <p>
@@ -33,10 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 public class FileOperatedEventListener {
 
     private final SearchDomainService searchDomainService;
-    private final com.njydsz.nextwiki.server.service.ContentExtractionApplicationService contentExtractionService;
+    private final ContentExtractionApplicationService contentExtractionService;
 
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private com.njydsz.nextwiki.domain.repository.AuditLogRepository auditLogRepository;
+    @Autowired(required = false)
+    private AuditLogRepository auditLogRepository;
 
     /**
      * 异步处理文件操作事件
@@ -86,7 +90,7 @@ public class FileOperatedEventListener {
         // P2-6: 持久化到数据库（如果 AuditLogRepository 可用）
         if (auditLogRepository != null) {
             try {
-                com.njydsz.nextwiki.domain.entity.AuditLog auditLog =
+                AuditLog auditLog =
                         com.njydsz.nextwiki.domain.entity.AuditLog.builder()
                                 .id(java.util.UUID.randomUUID().toString().replace("-", ""))
                                 .operation(event.getOperation())

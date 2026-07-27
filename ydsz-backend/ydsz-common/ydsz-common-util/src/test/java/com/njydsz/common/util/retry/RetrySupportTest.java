@@ -13,6 +13,8 @@ import java.util.function.Predicate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.util.concurrent.Callable;
 /**
  * {@link RetrySupport} 单元测试 — 覆盖指数退避/固定间隔/抖动/重试谓词/异步重试等关键路径。
  *
@@ -74,7 +76,7 @@ class RetrySupportTest {
         AtomicInteger counter = new AtomicInteger();
         assertThatThrownBy(() ->
                 RetrySupport.withFixedInterval(3, 10)
-                        .retryOn(e -> e instanceof java.io.IOException)
+                        .retryOn(e -> e instanceof IOException)
                         .execute(() -> {
                             counter.incrementAndGet();
                             throw new IllegalStateException("not retryable");
@@ -192,7 +194,7 @@ class RetrySupportTest {
     @Test
     @DisplayName("null 任务抛 IllegalArgumentException")
     void nullTaskShouldThrow() {
-        assertThatThrownBy(() -> RetrySupport.withFixedInterval(1, 1).execute((java.util.concurrent.Callable<String>) null))
+        assertThatThrownBy(() -> RetrySupport.withFixedInterval(1, 1).execute((Callable<String>) null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Task cannot be null");
     }

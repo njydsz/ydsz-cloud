@@ -19,6 +19,7 @@ import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
 import com.njydsz.common.queue.service.impl.RedisStreamSubscriber;
 import com.njydsz.common.redis.service.RedisService;
 
+import java.util.concurrent.ExecutorService;
 /**
  * {@link RedisStreamMQ} 工厂测试。
  *
@@ -38,7 +39,7 @@ class RedisStreamMQTest {
 
     private RedisService redisService;
     private QueueProperties properties;
-    private java.util.concurrent.ExecutorService executor;
+    private ExecutorService executor;
 
     @SuppressWarnings("unchecked")
     @BeforeEach

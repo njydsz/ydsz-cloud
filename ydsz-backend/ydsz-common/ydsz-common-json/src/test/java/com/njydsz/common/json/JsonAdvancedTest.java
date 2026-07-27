@@ -13,6 +13,9 @@ import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.StringWriter;
 /**
  * 高级功能测试：Optional / UUID / YdszJsonObject / YdszJsonArray / isValid / fromJson / streaming。
  *
@@ -173,7 +176,7 @@ class JsonAdvancedTest {
 
     @Test
     void testStreamingOutput() throws Exception {
-        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         YdszJson.toJson(Map.of("key", "value"), out);
         String json = out.toString(java.nio.charset.StandardCharsets.UTF_8);
         assertNotNull(json);
@@ -183,7 +186,7 @@ class JsonAdvancedTest {
     @Test
     void testStreamingInput() throws Exception {
         byte[] bytes = "{\"name\":\"Alice\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        java.io.ByteArrayInputStream in = new java.io.ByteArrayInputStream(bytes);
+        ByteArrayInputStream in = new ByteArrayInputStream(bytes);
         User user = YdszJson.toObject(in, User.class);
         assertNotNull(user);
         assertEquals("Alice", user.name);
@@ -223,7 +226,7 @@ class JsonAdvancedTest {
 
     @Test
     void testCreateGenerator() throws Exception {
-        java.io.StringWriter sw = new java.io.StringWriter();
+        StringWriter sw = new StringWriter();
         try (var gen = YdszJson.createGenerator(sw)) {
             gen.writeStartObject();
             gen.writeName("key");

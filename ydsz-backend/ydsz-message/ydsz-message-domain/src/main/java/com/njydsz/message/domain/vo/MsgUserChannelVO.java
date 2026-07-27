@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 /**
  * 用户通道绑定视图对象。
  *
@@ -26,7 +27,7 @@ public class MsgUserChannelVO implements Serializable {
     private String extra;
     private String status;
     private String createdBy;
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
     private String updatedBy;
-    private java.time.LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

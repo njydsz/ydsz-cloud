@@ -39,6 +39,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
 
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 /**
  * 文件下载 REST API
  * <p>
@@ -56,10 +58,10 @@ public class DownloadController {
 
     private final DownloadApplicationService downloadApplicationService;
     private final NextwikiHealthIndicator healthIndicator;
-    private final com.njydsz.nextwiki.domain.repository.FileNodeRepository fileNodeRepository;
+    private final FileNodeRepository fileNodeRepository;
 
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private com.njydsz.common.safe.util.ClientIpResolver clientIpResolver;
+    @Autowired(required = false)
+    private ClientIpResolver clientIpResolver;
 
     /**
      * P1-3: 文件夹打包下载为 ZIP
@@ -73,7 +75,7 @@ public class DownloadController {
             @RequestHeader("X-User-Id") String userId,
             HttpServletResponse response) {
 
-        com.njydsz.nextwiki.domain.entity.FileNode folder = fileNodeRepository.findById(folderId);
+        FileNode folder = fileNodeRepository.findById(folderId);
         if (folder == null || !folder.isFolder()) {
             throw new BusinessException(NextwikiExceptionCode.FILE_NOT_FOUND);
         }
@@ -97,15 +99,15 @@ public class DownloadController {
     /**
      * 递归打包文件夹内容到 ZipOutputStream
      */
-    private void downloadFolderRecursive(com.njydsz.nextwiki.domain.entity.FileNode folder,
+    private void downloadFolderRecursive(FileNode folder,
                                            ZipOutputStream zos, String userId, String basePath) {
-        List<com.njydsz.nextwiki.domain.entity.FileNode> children =
+        List<FileNode> children =
                 fileNodeRepository.findChildren(folder.getId());
         if (children == null) return;
 
         IFileStorage storage = downloadApplicationService.resolveStorageForDownload();
 
-        for (com.njydsz.nextwiki.domain.entity.FileNode child : children) {
+        for (FileNode child : children) {
             String entryPath = basePath.isEmpty() ? child.getName() : basePath + "/" + child.getName();
             if (child.isFolder()) {
                 try {

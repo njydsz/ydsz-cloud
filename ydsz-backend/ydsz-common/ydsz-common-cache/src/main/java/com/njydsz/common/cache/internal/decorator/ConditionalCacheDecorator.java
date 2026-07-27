@@ -14,6 +14,7 @@ import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.cache.support.AsyncFunction;
 
+import com.njydsz.common.cache.api.CachePolicy;
 /**
  * 条件缓存装饰器 — 通过 Predicate 控制哪些值应该被缓存
  *
@@ -205,7 +206,7 @@ public class ConditionalCacheDecorator<K, V> implements Cache<K, V> {
   }
 
   @Override
-  public com.njydsz.common.cache.api.CachePolicy policy() {
+  public CachePolicy policy() {
     return delegate.policy();
   }
 

@@ -171,8 +171,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         // 密码策略校验
         passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
 
-        UserAccount entity = new UserAccount();
-        BeanUtils.copyProperties(dto, entity);
+        UserAccount entity = UserInfoConverter.INSTANT.createDtoToEntity(dto);
         entity.setPassword(passwordEncoder.encode(dto.getPassword()));
         entity.setStatus("1");
         entity.setLoginFailCount(0);

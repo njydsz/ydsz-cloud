@@ -61,6 +61,11 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
             assetFileNames: '[ext]/[name]-[hash].[ext]',
             chunkFileNames: 'js/[name]-[hash].js',
             entryFileNames: 'jse/index-[name]-[hash].js',
+            manualChunks: {
+              'vue-vendor': ['vue', 'vue-router', 'pinia'],
+              'element-vendor': ['element-plus', '@element-plus/icons-vue'],
+              'vxe-vendor': ['vxe-table', 'vxe-pc-ui'],
+            },
           },
         },
         target: 'es2015',

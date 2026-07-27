@@ -8,6 +8,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCodeRegistry;
 import com.njydsz.common.exception.enums.SubErrorCode;
 
+import java.util.concurrent.ConcurrentHashMap;
 /**
  * 错误码工厂
  *
@@ -39,10 +40,10 @@ import com.njydsz.common.exception.enums.SubErrorCode;
 public final class ErrorCodeFactory {
 
     /** 子错误码注册表：主错误码 → (子错误码 → 国际化 key) */
-    private static final Map<String, Map<String, String>> SUB_CODE_REGISTRY = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<String, Map<String, String>> SUB_CODE_REGISTRY = new ConcurrentHashMap<>();
 
     /** 子错误码描述：主错误码 → (子错误码 → 中文描述) */
-    private static final Map<String, Map<String, String>> SUB_CODE_DESCRIPTIONS = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<String, Map<String, String>> SUB_CODE_DESCRIPTIONS = new ConcurrentHashMap<>();
 
     private ErrorCodeFactory() {
         // 工具类
@@ -94,11 +95,11 @@ public final class ErrorCodeFactory {
             throw new IllegalArgumentException("Invalid subCode: " + subCode);
         }
         SUB_CODE_REGISTRY
-                .computeIfAbsent(mainCode, k -> new java.util.concurrent.ConcurrentHashMap<>())
+                .computeIfAbsent(mainCode, k -> new ConcurrentHashMap<>())
                 .put(subCode, i18nKey);
         if (description != null) {
             SUB_CODE_DESCRIPTIONS
-                    .computeIfAbsent(mainCode, k -> new java.util.concurrent.ConcurrentHashMap<>())
+                    .computeIfAbsent(mainCode, k -> new ConcurrentHashMap<>())
                     .put(subCode, description);
         }
     }

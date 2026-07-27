@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.safe.audit.SecurityAuditLogger;
 import com.njydsz.common.safe.metrics.SafeMetrics;
 
+import org.springframework.context.event.EventListener;
 /**
  * 安全事件监听器
  *
@@ -53,7 +54,7 @@ public class SecurityEventListener {
      *
      * @param event 安全事件
      */
-    @org.springframework.context.event.EventListener
+    @EventListener
     public void onSecurityEvent(SecurityEvent event) {
         if (event == null) {
             return;

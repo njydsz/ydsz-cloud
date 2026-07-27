@@ -33,6 +33,11 @@ import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.springframework.scheduling.support.CronExpression;
 /**
  * 任务调度 Controller
  *
@@ -101,13 +106,13 @@ public class JobController {
     public BaseResponse<Map<String, Object>> validateCron(
             @RequestParam String expr,
             @RequestParam(defaultValue = "5") int count) {
-        Map<String, Object> result = new java.util.HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         try {
-            org.springframework.scheduling.support.CronExpression cron =
+            CronExpression cron =
                     org.springframework.scheduling.support.CronExpression.parse(expr);
             result.put("valid", true);
-            java.util.List<String> nextFireTimes = new java.util.ArrayList<>();
-            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            List<String> nextFireTimes = new ArrayList<>();
+            LocalDateTime now = java.time.LocalDateTime.now();
             for (int i = 0; i < count; i++) {
                 now = cron.next(now);
                 if (now == null) {

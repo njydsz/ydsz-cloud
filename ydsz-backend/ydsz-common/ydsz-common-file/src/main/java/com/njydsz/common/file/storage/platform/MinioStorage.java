@@ -34,6 +34,7 @@ import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 
+import io.minio.MinioClient;
 /**
  * MinIO 对象存储实现。
  *
@@ -55,7 +56,7 @@ import okhttp3.OkHttpClient;
  * @author ydsz-team
  * @since 1.0.0
  * @see AbstractFileStorage
- * @see io.minio.MinioClient
+ * @see MinioClient
  */
 @Slf4j
 public class MinioStorage extends AbstractFileStorage {

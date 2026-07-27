@@ -38,6 +38,8 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
 
+import com.njydsz.common.tenant.metrics.TenantMetrics;
+import net.sf.jsqlparser.JSQLParserException;
 /**
  * 多租户隔离拦截器。
  *
@@ -70,9 +72,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
     private final TenantProperties properties;
     private final Set<String> ignoreTables;
-    private final com.njydsz.common.tenant.metrics.TenantMetrics metrics;
+    private final TenantMetrics metrics;
 
-    public TenantIsolationInterceptor(TenantProperties properties, com.njydsz.common.tenant.metrics.TenantMetrics metrics) {
+    public TenantIsolationInterceptor(TenantProperties properties, TenantMetrics metrics) {
         this.properties = properties;
         this.ignoreTables = properties.getNormalizedIgnoreTables();
         this.metrics = metrics;
@@ -242,7 +244,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                 inClause.append(")");
                 try {
                     condition = net.sf.jsqlparser.parser.CCJSqlParserUtil.parseCondExpression(inClause.toString());
-                } catch (net.sf.jsqlparser.JSQLParserException e) {
+                } catch (JSQLParserException e) {
                     throw new RuntimeException("解析 IN 表达式失败: " + inClause, e);
                 }
             } else {

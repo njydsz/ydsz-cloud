@@ -55,6 +55,7 @@ import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
+import io.micrometer.core.instrument.MeterRegistry;
 /**
  * 认证授权模块配置类。
  *
@@ -377,7 +378,7 @@ public class AuthConfiguration {
     @ConditionalOnMissingBean(AuthMetricsCollector.class)
     @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
     @ConditionalOnBean(type = "io.micrometer.core.instrument.MeterRegistry")
-    public AuthMetricsCollector authMetricsCollector(ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
+    public AuthMetricsCollector authMetricsCollector(ObjectProvider<MeterRegistry> meterRegistryProvider) {
         return new AuthMetricsCollector(meterRegistryProvider.getIfAvailable());
     }
 

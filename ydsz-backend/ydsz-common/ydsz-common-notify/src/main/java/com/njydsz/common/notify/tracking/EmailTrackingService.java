@@ -209,7 +209,7 @@ public class EmailTrackingService {
 	 * @param metadata   附加元数据（可为 null）
 	 */
 	public void recordEvent(String trackingId, TrackingEvent event, String userAgent,
-							java.util.Map<String, String> metadata) {
+							Map<String, String> metadata) {
 		if (trackingId == null || event == null) {
 			return;
 		}

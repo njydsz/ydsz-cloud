@@ -34,6 +34,7 @@ import com.njydsz.common.json.tree.*;
 import com.njydsz.common.json.type.YdszJsonType;
 import com.njydsz.common.json.writer.JSONWriter;
 
+import java.util.Set;
 /**
  * YdszJson v3.5.0 - 超高性能 JSON 工具类（深度优化版）
  *
@@ -1038,7 +1039,7 @@ public class YdszJson {
      *
      * @param fieldNames 需要排除的字段名集合，null 表示清除排除
      */
-    public static void setExcludedFields(java.util.Set<String> fieldNames) {
+    public static void setExcludedFields(Set<String> fieldNames) {
         SerializationProvider.setExcludedFields(fieldNames);
     }
 
@@ -1060,11 +1061,11 @@ public class YdszJson {
      * @param excludedFieldNames 需要排除的字段名集合
      * @return JSON 字符串（排除指定字段后的）
      */
-    public static String toJsonExcludeFields(Object obj, java.util.Set<String> excludedFieldNames) {
+    public static String toJsonExcludeFields(Object obj, Set<String> excludedFieldNames) {
         if (obj == null) {
             return "null";
         }
-        java.util.Set<String> previous = SerializationProvider.getExcludedFields();
+        Set<String> previous = SerializationProvider.getExcludedFields();
         try {
             SerializationProvider.setExcludedFields(excludedFieldNames);
             return recordSerialize(() -> SerializerEngine.serialize(obj));

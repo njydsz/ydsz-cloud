@@ -16,6 +16,7 @@ import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
 import com.njydsz.common.base.health.BaseHealthIndicator;
 
+import org.springframework.core.env.Environment;
 /**
  * Base 模块自动配置
  *
@@ -122,7 +123,7 @@ public class BaseAutoConfiguration {
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public BaseHealthIndicator baseHealthIndicator(BaseSecurityHeadersProperties securityHeadersProperties,
                                                     DocProperties docProperties,
-                                                    org.springframework.core.env.Environment environment) {
+                                                    Environment environment) {
         String timezone = environment.getProperty("ydsz.base.timezone", "Asia/Shanghai");
         return new BaseHealthIndicator(securityHeadersProperties, docProperties, timezone);
     }

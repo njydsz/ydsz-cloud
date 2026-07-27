@@ -24,6 +24,10 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
+import org.springframework.web.multipart.MultipartFile;
 /**
  * 缩略图异步生成服务
  * <p>
@@ -52,7 +56,7 @@ public class ThumbnailApplicationService {
     public static final int SIZE_LARGE = 256;
 
     /** 支持缩略图生成的图片后缀 */
-    private static final java.util.Set<String> IMAGE_SUFFIXES = java.util.Set.of(
+    private static final Set<String> IMAGE_SUFFIXES = java.util.Set.of(
             "jpg", "jpeg", "png", "gif", "bmp", "webp"
     );
 
@@ -108,7 +112,7 @@ public class ThumbnailApplicationService {
                 ImageIO.write(thumbnail, "png", thumbFile.toFile());
 
                 // 上传到存储
-                org.springframework.web.multipart.MultipartFile multipartFile =
+                MultipartFile multipartFile =
                         new PathMultipartFile(thumbFile, fileNodeId + "_thumb.png", "image/png");
                 storage.upload(null, thumbnailKey, multipartFile);
 
@@ -137,13 +141,13 @@ public class ThumbnailApplicationService {
     /**
      * 简单的 Path → MultipartFile 实现
      */
-    private static class PathMultipartFile implements org.springframework.web.multipart.MultipartFile {
+    private static class PathMultipartFile implements MultipartFile {
         private final Path filePath;
         private final String name;
         private final String contentType;
         private final long size;
 
-        PathMultipartFile(Path filePath, String name, String contentType) throws java.io.IOException {
+        PathMultipartFile(Path filePath, String name, String contentType) throws IOException {
             this.filePath = filePath;
             this.name = name;
             this.contentType = contentType;
@@ -155,9 +159,9 @@ public class ThumbnailApplicationService {
         @Override public String getContentType() { return contentType; }
         @Override public boolean isEmpty() { return size == 0; }
         @Override public long getSize() { return size; }
-        @Override public byte[] getBytes() throws java.io.IOException { return Files.readAllBytes(filePath); }
-        @Override public InputStream getInputStream() throws java.io.IOException { return Files.newInputStream(filePath); }
-        @Override public void transferTo(java.io.File dest) throws java.io.IOException, IllegalStateException {
+        @Override public byte[] getBytes() throws IOException { return Files.readAllBytes(filePath); }
+        @Override public InputStream getInputStream() throws IOException { return Files.newInputStream(filePath); }
+        @Override public void transferTo(File dest) throws IOException, IllegalStateException {
             Files.copy(filePath, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
     }

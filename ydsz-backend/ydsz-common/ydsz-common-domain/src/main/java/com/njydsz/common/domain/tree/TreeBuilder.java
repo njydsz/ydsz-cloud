@@ -8,6 +8,9 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.function.BiConsumer;
 /**
  * 树形结构核心构建器
  *
@@ -606,22 +609,22 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      */
     public static <T> List<T> buildSimple(
             List<T> flatList,
-            java.util.function.Function<T, String> idGetter,
-            java.util.function.Function<T, String> parentIdGetter,
-            java.util.function.BiConsumer<T, List<T>> childrenSetter,
-            java.util.function.Function<T, Integer> sortGetter) {
+            Function<T, String> idGetter,
+            Function<T, String> parentIdGetter,
+            BiConsumer<T, List<T>> childrenSetter,
+            Function<T, Integer> sortGetter) {
 
         if (flatList == null || flatList.isEmpty()) {
             return List.of();
         }
 
-        java.util.Map<String, List<T>> parentIdMap = flatList.stream()
+        Map<String, List<T>> parentIdMap = flatList.stream()
                 .collect(java.util.stream.Collectors.groupingBy(item -> {
                     String pid = parentIdGetter.apply(item);
                     return pid == null ? "0" : pid;
                 }));
 
-        List<T> roots = new java.util.ArrayList<>(parentIdMap.getOrDefault("0", java.util.Collections.emptyList()));
+        List<T> roots = new ArrayList<>(parentIdMap.getOrDefault("0", java.util.Collections.emptyList()));
         for (T item : flatList) {
             List<T> children = parentIdMap.get(idGetter.apply(item));
             if (children != null) {

@@ -13,6 +13,8 @@ import com.njydsz.common.json.tree.NumberNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.json.tree.TextNode;
 
+import java.util.HashMap;
+import java.util.Map;
 /**
  * 树模型 (JsonNode / ObjectNode / ArrayNode) 测试。
  *
@@ -130,7 +132,7 @@ class TreeModelTest {
 
     @Test
     void testValueToTree() {
-        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        Map<String, Object> data = new HashMap<>();
         data.put("name", "Bob");
         data.put("age", 25);
         JsonNode tree = YdszJson.valueToTree(data);

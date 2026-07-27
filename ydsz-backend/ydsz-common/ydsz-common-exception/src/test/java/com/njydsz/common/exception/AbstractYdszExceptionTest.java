@@ -22,6 +22,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
+import java.util.Map;
 /**
  * {@link AbstractYdszException} 单元测试
  *
@@ -196,7 +197,7 @@ class AbstractYdszExceptionTest {
                     .data("tenant", "acme");
             assertNotNull(ex.getExtData());
             assertInstanceOf(java.util.Map.class, ex.getExtData());
-            java.util.Map<?, ?> dataMap = (java.util.Map<?, ?>) ex.getExtData();
+            Map<?, ?> dataMap = (Map<?, ?>) ex.getExtData();
             assertEquals(123, dataMap.get("userId"));
             assertEquals("acme", dataMap.get("tenant"));
         }

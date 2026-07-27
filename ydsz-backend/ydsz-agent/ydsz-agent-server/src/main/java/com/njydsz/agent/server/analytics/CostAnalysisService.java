@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.agent.domain.model.TokenUsage;
 
+import java.util.LinkedHashMap;
 /**
  * Token 用量成本分析服务
  *
@@ -141,7 +142,7 @@ public class CostAnalysisService {
 
         public ModelPriceConfig(Map<String, Double> customPrices) {
             if (customPrices != null && !customPrices.isEmpty()) {
-                this.prices = new java.util.LinkedHashMap<>(customPrices);
+                this.prices = new LinkedHashMap<>(customPrices);
             } else {
                 this.prices = Map.of(
                     "gpt-4o", 0.0025,

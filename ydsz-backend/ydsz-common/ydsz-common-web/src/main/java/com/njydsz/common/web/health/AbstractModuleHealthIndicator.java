@@ -9,6 +9,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.Function;
 /**
  * 模块健康检查抽象基类。
  *
@@ -134,7 +135,7 @@ public abstract class AbstractModuleHealthIndicator implements HealthIndicator {
      */
     protected void checkOptionalComponent(
             Health.Builder builder, String componentName, Object component,
-            java.util.function.Function<Object, Map<String, Object>> statusChecker) {
+            Function<Object, Map<String, Object>> statusChecker) {
         if (component == null) {
             builder.withDetail(componentName, "NOT_CONFIGURED");
             return;

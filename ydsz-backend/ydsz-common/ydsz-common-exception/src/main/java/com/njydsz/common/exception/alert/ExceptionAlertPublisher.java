@@ -10,6 +10,7 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 import com.njydsz.common.exception.observability.TraceContext;
 
+import java.util.concurrent.ConcurrentHashMap;
 /**
  * 异常告警发布器
  *
@@ -57,8 +58,8 @@ public class ExceptionAlertPublisher {
     private final long dedupWindowMillis;
 
     /** 上次告警时间（按 errorCode 分组），有界缓存防止无界增长 */
-    private final java.util.concurrent.ConcurrentHashMap<String, Long> lastAlertTime =
-            new java.util.concurrent.ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> lastAlertTime =
+            new ConcurrentHashMap<>();
 
     /** 去重记录最大容量 */
     private static final int MAX_DEDUP_ENTRIES = 10000;

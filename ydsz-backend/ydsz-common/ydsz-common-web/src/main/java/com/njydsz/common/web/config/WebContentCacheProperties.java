@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Data;
 
+import com.njydsz.common.web.filter.ContentCachingFilter;
 /**
  * Web 端请求体缓存配置属性
  *
@@ -18,7 +19,7 @@ import lombok.Data;
  * }</pre>
  *
  * @author ydsz-team
- * @see com.njydsz.common.web.filter.ContentCachingFilter
+ * @see ContentCachingFilter
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.web.content-cache")

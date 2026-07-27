@@ -14,6 +14,7 @@ import org.springframework.core.env.Environment;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
+import org.springframework.beans.factory.annotation.Autowired;
 /**
  * 特性开关自动配置
  *
@@ -98,7 +99,7 @@ public class FeatureFlagAutoConfiguration {
     public static class NacosLifecycleHook {
         private static final Logger hookLog = LoggerFactory.getLogger(NacosLifecycleHook.class);
 
-        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        @Autowired(required = false)
         private NacosFeatureFlagService nacosService;
 
         @PostConstruct

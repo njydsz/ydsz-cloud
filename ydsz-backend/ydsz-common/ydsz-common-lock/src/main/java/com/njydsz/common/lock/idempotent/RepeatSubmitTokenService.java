@@ -11,6 +11,7 @@ import com.njydsz.common.security.LoginUser;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.lock.annotation.RepeatSubmit;
 /**
  * 表单重复提交 Token 服务
  *
@@ -30,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.common.lock.annotation.RepeatSubmit
+ * @see RepeatSubmit
  */
 @Slf4j
 public class RepeatSubmitTokenService {

@@ -13,6 +13,7 @@ import com.njydsz.common.safe.ratelimit.spi.RateLimitRuleProvider;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * 配置式规则提供器
  *
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfigRuleProvider implements RateLimitRuleProvider {
 
     private final Map<String, RateLimitRule> ruleMap = new ConcurrentHashMap<>();
-    private final List<RateLimitRuleListener> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final List<RateLimitRuleListener> listeners = new CopyOnWriteArrayList<>();
 
     public ConfigRuleProvider(RateLimitProperties properties) {
         reload(properties);

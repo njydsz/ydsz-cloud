@@ -10,6 +10,7 @@ import org.slf4j.MDC;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.alert.SecurityEvent;
 
+import java.util.HashMap;
 /**
  * 安全审计日志记录器
  *
@@ -78,7 +79,7 @@ public class SecurityAuditLogger {
     public void log(String action, String sourceIp, String userId, Map<String, Object> details) {
         String traceId = MDC.get("traceId");
 
-        Map<String, Object> logEntry = new java.util.HashMap<>();
+        Map<String, Object> logEntry = new HashMap<>();
         logEntry.put("timestamp", Instant.now().toString());
         logEntry.put("traceId", traceId != null ? traceId : "");
         logEntry.put("action", action);

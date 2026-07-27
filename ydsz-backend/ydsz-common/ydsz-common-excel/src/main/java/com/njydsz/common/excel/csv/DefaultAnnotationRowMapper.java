@@ -14,6 +14,11 @@ import com.njydsz.common.excel.tabular.TabularRowMapper;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 /**
  * 基于 {@code @ExcelProperty} 注解的默认行映射器。
  *
@@ -192,7 +197,7 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
         }
         if (Number.class.isAssignableFrom(targetType)) {
             // BigDecimal/BigInteger/AtomicInteger/AtomicLong 走 Number 接口
-            return new java.math.BigDecimal(value);
+            return new BigDecimal(value);
         }
         if (targetType == java.time.LocalDate.class) {
             return java.time.LocalDate.parse(value);
@@ -205,9 +210,9 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
         }
         if (targetType == java.util.Date.class) {
             try {
-                return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value);
+                return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value);
             } catch (Exception ex) {
-                return new java.util.Date(Long.parseLong(value));
+                return new Date(Long.parseLong(value));
             }
         }
         // 兜底：原样返回字符串
@@ -218,14 +223,14 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
         if (value == null) {
             return "";
         }
-        if (value instanceof java.time.LocalDateTime) {
+        if (value instanceof LocalDateTime) {
             return value.toString();
         }
-        if (value instanceof java.time.LocalDate) {
+        if (value instanceof LocalDate) {
             return value.toString();
         }
-        if (value instanceof java.util.Date) {
-            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value);
+        if (value instanceof Date) {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value);
         }
         return value.toString();
     }

@@ -28,6 +28,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.Executor;
 /**
  * 批量导入应用服务
  * <p>
@@ -53,7 +54,7 @@ public class BatchImportApplicationService {
 
     /** P0-1: 并发上传线程池（由 ydsz-common-thread 统一管理，配置项: ydsz.thread.pools.nextwikiBatchImport） */
     @Resource(name = "nextwikiBatchImportExecutor")
-    private java.util.concurrent.Executor batchImportExecutor;
+    private Executor batchImportExecutor;
 
     /** 最大批量上传数量 */
     private static final int MAX_BATCH_SIZE = 100;

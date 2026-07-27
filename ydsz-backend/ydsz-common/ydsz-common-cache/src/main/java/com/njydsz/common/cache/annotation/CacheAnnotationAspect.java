@@ -105,7 +105,7 @@ public class CacheAnnotationAspect {
       }
     }
 
-    org.springframework.cache.Cache springCache = getOrCreateCache(cached.name());
+    Cache springCache = getOrCreateCache(cached.name());
     if (springCache == null) {
       log.warn("无法获取缓存实例: {}, 直接执行方法", cached.name());
       return joinPoint.proceed();
@@ -160,7 +160,7 @@ public class CacheAnnotationAspect {
     Method method = signature.getMethod();
     Object[] args = joinPoint.getArgs();
 
-    org.springframework.cache.Cache springCache = getOrCreateCache(invalidate.name());
+    Cache springCache = getOrCreateCache(invalidate.name());
     if (springCache == null) {
       log.warn("无法获取缓存实例: {}, 跳过缓存失效", invalidate.name());
       return joinPoint.proceed();
@@ -192,7 +192,7 @@ public class CacheAnnotationAspect {
 
   /** 执行缓存清除操作 */
   private void evictCache(
-      org.springframework.cache.Cache springCache, CacheInvalidate invalidate, Method method, Object[] args) {
+      Cache springCache, CacheInvalidate invalidate, Method method, Object[] args) {
     if (invalidate.allEntries()) {
       springCache.clear();
       log.debug("清除全部缓存: name={}", invalidate.name());
@@ -206,7 +206,7 @@ public class CacheAnnotationAspect {
   }
 
   /** 获取或创建 Spring Cache 实例 */
-  private org.springframework.cache.Cache getOrCreateCache(String cacheName) {
+  private Cache getOrCreateCache(String cacheName) {
     try {
       return cacheManager.getCache(cacheName);
     } catch (Exception e) {
@@ -249,7 +249,7 @@ public class CacheAnnotationAspect {
    */
   private void handleCacheRefresh(
       CacheRefresh cacheRefresh,
-      org.springframework.cache.Cache springCache,
+      Cache springCache,
       String cacheName,
       Object cacheKey,
       ProceedingJoinPoint joinPoint,
