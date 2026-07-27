@@ -305,6 +305,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             }
             result.add(new TenantFieldValue(field.getColumn(), value));
         }
+        if (metrics != null) metrics.recordInterceptPass();
         return result;
     }
 

@@ -1,12 +1,14 @@
 package com.njydsz.common.tenant.datasource;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
 import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,14 +16,10 @@ import lombok.extern.slf4j.Slf4j;
  * 租户数据源路由器。
  *
  * <p>在 ISOLATE_DB 模式下，根据当前租户 ID 动态切换到对应的数据源。
- * 通过查询 {@code ydsz_tenant} 表的 {@code datasource_key} 字段获取数据源标识，
- * 然后调用 {@link DynamicDataSourceContextHolder#push(String)} 切换数据源。
  *
- * <p><b>使用场景：</b>
- * <ul>
- *   <li>SaaS 多租户系统中，不同租户使用独立数据库</li>
- *   <li>数据隔离要求极高的场景（金融、医疗等）</li>
- * </ul>
+ * <p><b>路由缓存：</b>租户 ID → 数据源 Key 的映射缓存在 {@link ConcurrentHashMap} 中，
+ * 避免每次请求都遍历 {@link DynamicRoutingDataSource#getDataSources()}。
+ * 缓存生命周期与 Bean 一致（应用启动时预热，运行时只读）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -31,11 +29,22 @@ public class TenantDataSourceRouter {
 
     private final DynamicRoutingDataSource routingDataSource;
     private final TenantProperties properties;
+    private final TenantMetrics metrics;
+
+    /** 租户 ID → 数据源 Key 缓存（预热后只读） */
+    private final Map<String, String> datasourceKeyCache = new ConcurrentHashMap<>();
 
     public TenantDataSourceRouter(DynamicRoutingDataSource routingDataSource,
                                    TenantProperties properties) {
+        this(routingDataSource, properties, null);
+    }
+
+    public TenantDataSourceRouter(DynamicRoutingDataSource routingDataSource,
+                                   TenantProperties properties,
+                                   TenantMetrics metrics) {
         this.routingDataSource = routingDataSource;
         this.properties = properties;
+        this.metrics = metrics;
     }
 
     /**
@@ -53,19 +62,46 @@ public class TenantDataSourceRouter {
             return;
         }
 
-        // 查找租户对应的数据源 key
-        // 实际场景中需查询 ydsz_tenant 表获取 datasource_key
-        // 此处通过配置映射或运行时注入获取
-        Map<Object, DataSource> dataSources = routingDataSource.getDataSources();
-        String datasourceKey = "tenant_" + tenantId;
+        // 从缓存查找数据源 Key
+        String datasourceKey = datasourceKeyCache.computeIfAbsent(tenantId, this::resolveDatasourceKey);
 
+        if (datasourceKey == null) {
+            log.warn("租户 {} 未配置数据源，使用默认数据源", tenantId);
+            return;
+        }
+
+        // 验证数据源是否存在
+        Map<Object, DataSource> dataSources = routingDataSource.getDataSources();
         if (!dataSources.containsKey(datasourceKey)) {
             log.warn("租户 {} 的数据源 {} 不存在，使用默认数据源", tenantId, datasourceKey);
+            // 移除失效缓存
+            datasourceKeyCache.remove(tenantId);
             return;
         }
 
         DynamicDataSourceContextHolder.push(datasourceKey);
+        if (metrics != null) metrics.recordDatasourceSwitch();
         log.debug("租户 {} 切换到数据源 {}", tenantId, datasourceKey);
+    }
+
+    /**
+     * 解析租户对应的数据源 Key。
+     *
+     * <p>当前实现使用 {@code "tenant_" + tenantId} 约定。
+     * <p>生产环境应从 {@code ydsz_tenant} 表查询 {@code datasource_key} 字段。
+     *
+     * @param tenantId 租户 ID
+     * @return 数据源 Key，不存在返回 null
+     */
+    private String resolveDatasourceKey(String tenantId) {
+        // TODO: 生产环境从 ydsz_tenant 表查询 datasource_key 字段
+        // 此处使用约定命名：tenant_{tenantId}
+        String key = "tenant_" + tenantId;
+        Map<Object, DataSource> dataSources = routingDataSource.getDataSources();
+        if (dataSources.containsKey(key)) {
+            return key;
+        }
+        return null;
     }
 
     /**

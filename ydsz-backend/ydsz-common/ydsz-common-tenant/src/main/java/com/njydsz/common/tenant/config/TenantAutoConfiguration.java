@@ -62,14 +62,16 @@ public class TenantAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public TenantInterceptorProvider tenantInterceptorProvider(TenantProperties properties) {
+    public TenantInterceptorProvider tenantInterceptorProvider(
+            TenantProperties properties,
+            ObjectProvider<TenantMetrics> metricsProvider) {
         log.info("多租户隔离已启用: mode={}, tenantColumn={}, superTenantId={}, systemTenantId={}",
                 properties.getMode(),
                 properties.getTenantColumn(),
                 properties.getSuperTenantId(),
                 properties.getSystemTenantId());
         SystemTenantContextRunner.init(properties.getSystemTenantId());
-        return new TenantInterceptorProvider(properties);
+        return new TenantInterceptorProvider(properties, metricsProvider.getIfAvailable());
     }
 
     /**

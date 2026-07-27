@@ -3,6 +3,7 @@ package com.njydsz.common.tenant.interceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
 import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 /**
  * 租户隔离拦截器 SPI 提供者。
@@ -21,14 +22,20 @@ import com.njydsz.common.tenant.config.TenantProperties;
 public class TenantInterceptorProvider implements InnerInterceptorProvider {
 
     private final TenantProperties properties;
+    private final TenantMetrics metrics;
+
+    public TenantInterceptorProvider(TenantProperties properties, TenantMetrics metrics) {
+        this.properties = properties;
+        this.metrics = metrics;
+    }
 
     public TenantInterceptorProvider(TenantProperties properties) {
-        this.properties = properties;
+        this(properties, null);
     }
 
     @Override
     public InnerInterceptor createInterceptor() {
-        return new TenantIsolationInterceptor(properties);
+        return new TenantIsolationInterceptor(properties, metrics);
     }
 
     @Override

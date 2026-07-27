@@ -17,8 +17,10 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.message.domain.entity.config.MsgFeedback;
+import com.njydsz.message.domain.vo.MsgFeedbackVO;
 import com.njydsz.message.server.service.core.MessageFeedbackService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -92,11 +94,14 @@ public class MessageFeedbackController {
     @Operation(summary = "分页查询反馈记录")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgFeedback>> pageFeedback(@RequestParam(defaultValue = "1") int page,
+    public BaseResponse<Page<MsgFeedbackVO>> pageFeedback(@RequestParam(defaultValue = "1") int page,
                                                       @RequestParam(defaultValue = "20") int size,
                                                       @RequestParam(required = false) String channel,
                                                       @RequestParam(required = false) String userId) {
-        return BaseResponse.success(messageFeedbackService.pageFeedback(page, size, channel, userId));
+        Page<MsgFeedback> result = messageFeedbackService.pageFeedback(page, size, channel, userId);
+        Page<MsgFeedbackVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        voPage.setRecords(MessageConverter.INSTANT.feedbackListToVO(result.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**

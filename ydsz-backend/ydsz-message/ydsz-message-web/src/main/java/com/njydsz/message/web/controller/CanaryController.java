@@ -17,8 +17,10 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.canary.CanaryUpsertDTO;
 import com.njydsz.message.domain.entity.canary.MsgCanary;
+import com.njydsz.message.domain.vo.MsgCanaryVO;
 import com.njydsz.message.server.service.canary.CanaryService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,8 +57,8 @@ public class CanaryController {
     @Audit(module = "灰度管理", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'upsert'")
     @RateLimit(resource = "message.canary.upsert", threshold = 50)
     @PostMapping
-    public BaseResponse<MsgCanary> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
-        return BaseResponse.success(canaryService.upsert(dto));
+    public BaseResponse<MsgCanaryVO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
+        return BaseResponse.success(MessageConverter.INSTANT.entityToVO(canaryService.upsert(dto)));
     }
 
     /**
@@ -68,8 +70,8 @@ public class CanaryController {
     @Operation(summary = "按灰度键查询灰度桶")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/{canaryKey}")
-    public BaseResponse<MsgCanary> getByKey(@PathVariable String canaryKey) {
-        return BaseResponse.success(canaryService.getByKey(canaryKey));
+    public BaseResponse<MsgCanaryVO> getByKey(@PathVariable String canaryKey) {
+        return BaseResponse.success(MessageConverter.INSTANT.entityToVO(canaryService.getByKey(canaryKey)));
     }
 
     /**
@@ -81,8 +83,11 @@ public class CanaryController {
     @Operation(summary = "灰度桶分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgCanary>> page(PageQuery query) {
-        return BaseResponse.success(canaryService.page(query));
+    public BaseResponse<Page<MsgCanaryVO>> page(PageQuery query) {
+        Page<MsgCanary> page = canaryService.page(query);
+        Page<MsgCanaryVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(MessageConverter.INSTANT.canaryListToVO(page.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**

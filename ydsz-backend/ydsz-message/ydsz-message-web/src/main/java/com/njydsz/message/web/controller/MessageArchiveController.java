@@ -13,7 +13,9 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.security.TenantContext;
+import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +39,7 @@ public class MessageArchiveController {
     @Operation(summary = "全文搜索消息日志")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping
-    public BaseResponse<Page<MsgLog>> search(
+    public BaseResponse<Page<MsgLogVO>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String status,
@@ -48,6 +50,8 @@ public class MessageArchiveController {
             @RequestParam(defaultValue = "20") int pageSize) {
         Page<MsgLog> result = messageArchiveService.search(keyword, channel, status, bizType,
                 startTime, endTime, TenantContext.getTenantId(), pageNum, pageSize);
-        return BaseResponse.success(result);
+        Page<MsgLogVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        voPage.setRecords(MessageConverter.INSTANT.logListToVO(result.getRecords()));
+        return BaseResponse.success(voPage);
     }
 }

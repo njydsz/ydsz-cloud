@@ -13,9 +13,11 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.core.MessageLogService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,12 +61,15 @@ public class DeadLetterController {
     @Operation(summary = "分页查询死信列表")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgLog>> page(MessageLogQueryDTO query) {
+    public BaseResponse<Page<MsgLogVO>> page(MessageLogQueryDTO query) {
         if (query == null) {
             query = new MessageLogQueryDTO();
         }
         query.setStatus(MessageStatusEnum.DEAD.name());
-        return BaseResponse.success(messageLogService.page(query));
+        Page<MsgLog> page = messageLogService.page(query);
+        Page<MsgLogVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(MessageConverter.INSTANT.logListToVO(page.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**
