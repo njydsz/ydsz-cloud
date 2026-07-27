@@ -16,11 +16,17 @@ public class LlmException extends InfrastructureException {
 
     /** 错误类型 */
     public enum ErrorType {
+        /** 网络超时 */
         NETWORK_TIMEOUT,
+        /** 认证失败（API Key 无效） */
         AUTH_FAILED,
+        /** 模型不存在 */
         MODEL_NOT_FOUND,
+        /** 触发限流 */
         RATE_LIMITED,
+        /** 响应格式无效 */
         INVALID_RESPONSE,
+        /** Provider 内部错误 */
         PROVIDER_ERROR
     }
 

@@ -17,14 +17,23 @@ public final class TextChunk implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 文本块唯一标识 */
     private final String id;
+    /** 文本内容 */
     private final String content;
+    /** 所属文档 ID */
     private final String documentId;
+    /** 所属文档标题 */
     private final String documentTitle;
+    /** 来源标识（nextwiki/project/contract） */
     private final String source;
+    /** 分块索引（在文档中的序号） */
     private final int chunkIndex;
+    /** Token 数量 */
     private final int tokenCount;
+    /** 元数据（自定义键值对） */
     private final Map<String, Object> metadata;
+    /** 向量嵌入（null 表示未向量化） */
     private final List<Float> embedding;
 
     public TextChunk(String id, String content, String documentId, String documentTitle,

@@ -55,13 +55,21 @@ public interface TraceRecorder {
      * 执行步骤记录
      */
     final class TraceStep {
+        /** 链路 ID */
         private final String traceId;
+        /** 步骤序号 */
         private final int stepIndex;
+        /** 步骤类型（LLM_CALL/TOOL_CALL/THOUGHT/OBSERVATION） */
         private final String stepType;
+        /** 步骤内容描述 */
         private final String content;
+        /** 步骤输入 */
         private final Object input;
+        /** 步骤输出 */
         private final Object output;
+        /** 耗时（毫秒） */
         private final long durationMs;
+        /** 创建时间 */
         private final LocalDateTime createdAt;
 
         public TraceStep(String traceId, int stepIndex, String stepType, String content,

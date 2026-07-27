@@ -17,9 +17,13 @@ public final class ExecutionPlan implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 计划唯一标识 */
     private final String id;
+    /** 执行目标 */
     private final String goal;
+    /** 执行步骤列表 */
     private final List<PlanStep> steps;
+    /** 计划状态 */
     private PlanStatus status;
 
     public ExecutionPlan(String id, String goal, List<PlanStep> steps) {
@@ -67,15 +71,26 @@ public final class ExecutionPlan implements Serializable {
     }
 
     public enum PlanStatus {
-        PENDING, EXECUTING, COMPLETED, FAILED
+        /** 待执行 */
+        PENDING, 
+        /** 执行中 */
+        EXECUTING, 
+        /** 已完成 */
+        COMPLETED, 
+        /** 已失败 */
+        FAILED
     }
 
     public static final class PlanStep implements Serializable {
         private static final long serialVersionUID = 1L;
 
+        /** 步骤索引 */
         private final int index;
+        /** 步骤描述 */
         private final String description;
+        /** 执行动作 */
         private final String action;
+        /** 步骤状态 */
         private StepStatus status;
 
         public PlanStep(int index, String description, String action) {
@@ -95,7 +110,14 @@ public final class ExecutionPlan implements Serializable {
         public void markExecuting() { this.status = StepStatus.EXECUTING; }
 
         public enum StepStatus {
-            PENDING, EXECUTING, COMPLETED, FAILED
+            /** 待执行 */
+            PENDING, 
+            /** 执行中 */
+            EXECUTING, 
+            /** 已完成 */
+            COMPLETED, 
+            /** 已失败 */
+            FAILED
         }
     }
 }

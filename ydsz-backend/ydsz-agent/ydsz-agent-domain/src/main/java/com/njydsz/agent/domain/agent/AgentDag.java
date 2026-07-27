@@ -80,10 +80,15 @@ public final class AgentDag implements Serializable {
     public static final class Node implements Serializable {
         private static final long serialVersionUID = 1L;
 
+        /** 节点 ID */
         private final String id;
+        /** Agent 类型 */
         private final String agentType;
+        /** 节点提示词 */
         private final String prompt;
+        /** 输入来源节点 ID */
         private final String inputFrom;
+        /** 节点额外配置 */
         private final Map<String, Object> config;
 
         public Node(String id, String agentType, String prompt,

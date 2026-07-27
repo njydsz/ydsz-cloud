@@ -46,7 +46,9 @@ public class LlmClientRouter implements LlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(LlmClientRouter.class);
 
+    /** 已注册的 Provider 客户端映射（key=provider name） */
     private final Map<String, LlmClient> clients = new ConcurrentHashMap<>();
+    /** 默认客户端（无匹配 Provider 时使用） */
     private LlmClient defaultClient;
 
     public void register(LlmClient client) {

@@ -16,8 +16,11 @@ public final class ToolCall implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 工具调用 ID */
     private final String id;
+    /** 工具名称 */
     private final String name;
+    /** 工具调用参数（key=参数名, value=参数值） */
     private final Map<String, Object> arguments;
 
     public ToolCall(String id, String name, Map<String, Object> arguments) {

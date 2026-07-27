@@ -26,6 +26,7 @@ public class PromptInjectionGuardrail implements InputGuardrail {
 
     private static final Logger log = LoggerFactory.getLogger(PromptInjectionGuardrail.class);
 
+    /** Prompt 注入检测模式集合 */
     private static final Set<Pattern> INJECTION_PATTERNS = Set.of(
             // English patterns
             Pattern.compile("(?i)ignore\\s+(all\\s+)?previous\\s+(instructions|prompts)"),

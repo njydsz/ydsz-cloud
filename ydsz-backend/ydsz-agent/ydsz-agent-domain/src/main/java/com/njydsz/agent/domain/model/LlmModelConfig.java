@@ -16,15 +16,25 @@ public final class LlmModelConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 模型唯一标识 */
     private final String modelId;
+    /** Provider 标识（openai/deepseek/qwen/ollama 等） */
     private final String provider;
+    /** 模型名称 */
     private final String modelName;
+    /** API Key */
     private final String apiKey;
+    /** API 基础地址 */
     private final String baseUrl;
+    /** 温度参数 */
     private final double temperature;
+    /** 最大生成 Token 数 */
     private final int maxTokens;
+    /** Top-P 采样参数 */
     private final double topP;
+    /** 停止序列列表 */
     private final List<String> stop;
+    /** 调用超时时间（秒） */
     private final int timeoutSeconds;
 
     public LlmModelConfig(String modelId, String provider, String modelName, String apiKey,

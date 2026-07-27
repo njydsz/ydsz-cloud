@@ -16,11 +16,17 @@ public final class ChatResponse implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 响应 ID */
     private final String id;
+    /** 实际使用的模型名称 */
     private final String model;
+    /** 助手回复消息 */
     private final ChatMessage message;
+    /** Token 用量统计 */
     private final TokenUsage usage;
+    /** 结束原因（stop/length/tool_calls/content_filter） */
     private final String finishReason;
+    /** 工具调用列表 */
     private final List<ToolCall> toolCalls;
 
     public ChatResponse(String id, String model, ChatMessage message, TokenUsage usage,

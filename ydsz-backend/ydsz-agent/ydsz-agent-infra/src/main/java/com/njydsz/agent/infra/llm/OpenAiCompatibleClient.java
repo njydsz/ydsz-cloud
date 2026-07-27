@@ -63,17 +63,28 @@ import reactor.netty.resources.ConnectionProvider;
 public class OpenAiCompatibleClient implements LlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleClient.class);
+    /** 默认最大重试次数 */
     private static final int DEFAULT_MAX_RETRIES = 3;
+    /** 重试基础延迟（毫秒，指数退避） */
     private static final long RETRY_DELAY_BASE_MS = 1000L;
+    /** 默认最大并发请求数 */
     private static final int DEFAULT_MAX_CONCURRENT = 50;
 
+    /** Provider 标识 */
     private final String provider;
+    /** API 基础地址 */
     private final String baseUrl;
+    /** API Key */
     private final String apiKey;
+    /** 调用超时时间（秒） */
     private final int timeoutSeconds;
+    /** 同步调用 HTTP 客户端 */
     private final RestClient restClient;
+    /** 流式调用 HTTP 客户端 */
     private final WebClient webClient;
+    /** 并发限流信号量 */
     private final Semaphore concurrencyLimiter;
+    /** 最大重试次数 */
     private final int maxRetries;
 
     public OpenAiCompatibleClient(String provider, String baseUrl, String apiKey, int timeoutSeconds) {

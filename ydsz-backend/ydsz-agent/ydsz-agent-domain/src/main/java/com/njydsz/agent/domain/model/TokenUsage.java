@@ -13,8 +13,11 @@ public final class TokenUsage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /** 输入 Token 数量（prompt 消耗） */
     private final int promptTokens;
+    /** 输出 Token 数量（completion 消耗） */
     private final int completionTokens;
+    /** 总 Token 数量（prompt + completion） */
     private final int totalTokens;
 
     public TokenUsage(int promptTokens, int completionTokens) {

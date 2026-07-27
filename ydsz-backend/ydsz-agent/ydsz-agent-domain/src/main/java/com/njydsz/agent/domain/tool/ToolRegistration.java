@@ -15,7 +15,9 @@ import com.njydsz.agent.domain.model.ToolDefinition;
  */
 public final class ToolRegistration {
 
+    /** 工具定义（元数据） */
     private final ToolDefinition definition;
+    /** 工具执行器 */
     private final ToolExecutor executor;
 
     public ToolRegistration(ToolDefinition definition, ToolExecutor executor) {
