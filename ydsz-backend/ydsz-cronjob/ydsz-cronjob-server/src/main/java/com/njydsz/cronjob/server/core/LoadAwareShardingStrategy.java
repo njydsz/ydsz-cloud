@@ -33,12 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  * </pre>
  * <p>loadScore 越低表示节点越空闲，优先分配分片。
  *
- * <h3>与 WeightedShardingStrategy 的区别</h3>
- * <ul>
- *   <li>WeightedShardingStrategy 仅考虑 CPU 和运行任务数（2 维）</li>
- *   <li>LoadAwareShardingStrategy 扩展到 4 维，并引入历史成功率反馈机制</li>
- *   <li>支持自适应权重调整：节点连续失败时自动降权</li>
- * </ul>
  *
  * <p>启用方式：{@code ydsz.cronjob.sharding-strategy=load_aware}
  *

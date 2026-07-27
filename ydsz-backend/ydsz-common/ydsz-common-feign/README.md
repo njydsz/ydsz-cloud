@@ -31,7 +31,6 @@ YDSZ OpenFeign 增强框架 — 统一编解码、ResponseUnwrapDecoder 自动�
 | `FeignCircuitBreakerMetricsExporter` | 熔断器指标导出 |
 | `DefaultFallbackFactory` | 默认降级工厂 |
 | `NotificationClientFallbackFactory` | 通知客户端降级 |
-| `MessageServiceClientFallbackFactory` | 消息服务客户端降级 |
 
 ### 链路追踪
 
@@ -76,8 +75,7 @@ YDSZ OpenFeign 增强框架 — 统一编解码、ResponseUnwrapDecoder 自动�
 
 | 接口 | 说明 |
 |---|---|
-| `NotificationClient` | 通知服务客户端 |
-| `MessageServiceClient` | 消息服务客户端 |
+| `NotificationClient` | 通知服务客户端（统一入口，支持多通道消息发送） |
 | `MessageRequest` / `MessageResult` | 消息请求 / 响应模型 |
 | `NotificationFeignDTO` / `RealtimePushDTO` | 通知 DTO |
 

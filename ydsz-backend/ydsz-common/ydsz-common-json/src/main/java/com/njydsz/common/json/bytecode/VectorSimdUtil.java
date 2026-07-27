@@ -29,27 +29,8 @@ package com.njydsz.common.json.bytecode;
  */
 public final class VectorSimdUtil {
 
-    /**
-     * Vector API 是否可用 — 始终返回 false
-     *
-     * <p>保留此字段以保持向后兼容性。当前实现不再使用 Vector API，
-     * 依赖 JIT 自动向量化。该字段将在 2.0.0 版本移除。</p>
-     */
-    public static final boolean VECTOR_API_AVAILABLE = false;
-
     private VectorSimdUtil() {
         throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Vector API 是否可用（保留以兼容旧 API，始终返回 false）
-     *
-     * @return 始终返回 false
-     * @deprecated 当前实现依赖 JIT 自动向量化，不再使用 Vector API
-     */
-    @Deprecated(since = "1.0.0")
-    public static boolean isVectorApiAvailable() {
-        return VECTOR_API_AVAILABLE;
     }
 
     /**

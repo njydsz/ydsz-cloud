@@ -120,7 +120,6 @@ ydsz-cronjob/                          # 父 POM
 │   │   │   ├── SelfHealingScanner.java     # 自愈系统
 │   │   │   ├── TimeoutMonitor.java         # 超时监控
 │   │   │   ├── AlertDispatcher.java        # 告警派发
-│   │   │   ├── WeightedShardingStrategy.java # 加权分片
 │   │   │   └── ...                         # 其余 70+ 个类
 │   │   ├── handler/                   # 业务 JobHandler
 │   │   ├── health/                    # CronjobHealthIndicator

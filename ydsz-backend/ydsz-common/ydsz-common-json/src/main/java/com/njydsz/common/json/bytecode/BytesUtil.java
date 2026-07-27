@@ -18,27 +18,8 @@ package com.njydsz.common.json.bytecode;
  */
 public final class BytesUtil {
 
-    /**
-     * SIMD 是否真正启用 — 始终为 false
-     *
-     * <p>保留以兼容旧 API。当前实现依赖 JIT 自动向量化，
-     * 不再使用显式 Vector API 调用。</p>
-     */
-    public static final boolean SIMD_ENABLED = false;
-
     private BytesUtil() {
         throw new UnsupportedOperationException();
-    }
-
-    /**
-     * 检测 SIMD 是否真正启用
-     *
-     * @return 始终返回 false
-     * @deprecated 当前实现依赖 JIT 自动向量化，不再使用 Vector API
-     */
-    @Deprecated(since = "1.0.0")
-    public static boolean isSimdEnabled() {
-        return SIMD_ENABLED;
     }
 
     /**

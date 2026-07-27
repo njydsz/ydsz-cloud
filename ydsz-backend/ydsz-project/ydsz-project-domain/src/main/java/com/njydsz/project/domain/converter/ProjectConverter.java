@@ -1022,15 +1022,4 @@ public interface ProjectConverter {
     @Mapping(target = "actualEndDate", ignore = true)
     ProjectInitiation putDtoToEntity(ProjectInitiationPutDTO dto);
 
-    /**
-     * @deprecated 使用 {@link #postDtoToEntity} 或 {@link #putDtoToEntity}
-     */
-    @Deprecated
-    @Mapping(target = "stage", ignore = true)
-    @Mapping(target = "currentGate", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "actualStartDate", ignore = true)
-    @Mapping(target = "actualEndDate", ignore = true)
-    ProjectInitiation dtoToEntity(ProjectInitiationDTO dto);
-
 }

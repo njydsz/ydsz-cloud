@@ -73,7 +73,7 @@ public class AlertDispatcher {
     private final JobAlertLogMapper jobAlertLogMapper;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
-    /** 统一通知客户端（P1-5: 替代原 MessageServiceClient + NotificationClient 双入口） */
+    /** 统一通知客户端 */
     private final NotificationClient notificationClient;
     /** P0-9: 告警智能降噪管理器（可选注入，仅 ydsz.cronjob.alert-dedup.enabled=true 时启用） */
     private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
@@ -193,9 +193,7 @@ public class AlertDispatcher {
                 rule.getId(), rule.getRuleName(), channels.size(), failedChannels.size(), status, recovery);
 
         // P0-1-fix: 直接广播告警到前端（替代原来发布 UnifiedAlertEvent 导致的重复发送）
-        // 原来既直接调用 MessageServiceClient.send() 又发布 UnifiedAlertEvent，
-        // 而 UnifiedAlertDispatcher 消费事件后再次调用 MessageServiceClient.send()，导致同一告警被发送两次。
-        // 现在移除事件发布，改为直接调用 NotificationClient.broadcast() 实现实时广播。
+        // 通知实时广播，由前端 WebSocket 推送给在线用户。
         broadcastAlert(context, rule, recovery);
     }
 

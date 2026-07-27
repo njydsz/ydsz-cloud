@@ -1719,7 +1719,7 @@ COMMENT ON COLUMN ydsz_flow_run_task.priority IS 'P1-1: 任务优先级（1-100�
 -- ============================================================
 -- 说明：工作流通知已统一迁移到 ydsz-message 模块（ydsz_msg_* 表）。
 --   本表为历史遗留设计，无 Java 实现（无 Mapper/DO/Service），不应再使用。
---   工作流通知请通过 MessageServiceClient (common/feign) 调用 message 服务。
+--   工作流通知请通过 NotificationClient (common/feign) 调用 message 服务。
 -- P4 架构优化：统一通知模板，删除 workflow 废弃通知表。
 -- 保留此 DDL 仅作参考，新部署不执行。实际使用请删除本段。
 -- ============================================================

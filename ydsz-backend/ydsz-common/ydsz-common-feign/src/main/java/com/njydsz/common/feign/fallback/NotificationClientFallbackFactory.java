@@ -15,8 +15,6 @@ import com.njydsz.common.feign.dto.RealtimePushDTO;
  * <p>当 message 服务不可用时，通知发送、消息发送和实时推送降级为记录日志并返回失败响应，
  * 不影响主业务流程。
  *
- * <p>P1-5: 新增 sendMessage 降级方法（由 MessageServiceClient 合并而来）。
- *
  * @author ydsz-team
  * @since 1.0.0
  */
