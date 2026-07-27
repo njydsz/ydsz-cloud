@@ -51,12 +51,6 @@ const routes: RouteRecordRaw[] = [
         meta: { icon: 'lucide:user-plus', title: '委派管理' },
       },
       {
-        name: 'SlaManagement',
-        path: 'sla',
-        component: () => import('#/views/sla/index.vue'),
-        meta: { icon: 'lucide:alarm-clock', title: 'SLA管理' },
-      },
-      {
         name: 'QuickCommentManagement',
         path: 'quick-comment',
         component: () => import('#/views/quickComment/index.vue'),

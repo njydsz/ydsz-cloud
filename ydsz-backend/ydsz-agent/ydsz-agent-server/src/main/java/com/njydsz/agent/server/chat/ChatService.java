@@ -51,13 +51,21 @@ public class ChatService {
 
     private static final Logger log = LoggerFactory.getLogger(ChatService.class);
 
+    /** LLM 客户端 */
     private final LlmClient llmClient;
+    /** 对话记忆 */
     private final ConversationMemory memory;
+    /** Agent 配置属性 */
     private final AgentProperties properties;
+    /** 输入护栏列表（按优先级排序） */
     private final List<InputGuardrail> inputGuardrails;
+    /** 输出护栏列表（按优先级排序） */
     private final List<OutputGuardrail> outputGuardrails;
+    /** Agent 指标采集 */
     private final AgentMetrics metrics;
+    /** 成本分析服务 */
     private final CostAnalysisService costAnalysisService;
+    /** 链路记录器 */
     private final TraceRecorder traceRecorder;
 
     public ChatService(LlmClient llmClient, ConversationMemory memory, AgentProperties properties,

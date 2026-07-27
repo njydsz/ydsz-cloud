@@ -101,7 +101,8 @@ public class Job extends MpBaseEntity<String> {
     /**
      * 慢任务阈值（毫秒，P6-3）。
      *
-     * <p>null 表示不检测慢任务；执行耗时超过此值时记入 ydsz_job_slow_log。
+     * <p>null 表示不检测慢任务；执行耗时超过此值时由 SlowTaskDetector
+     * 标记 {@code ydsz_job_log.is_slow=1}，用于性能趋势分析。
      */
     private Long slowThresholdMs;
 

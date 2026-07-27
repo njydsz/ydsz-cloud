@@ -18,36 +18,56 @@ public interface AgentDefinitionService {
 
     /**
      * 根据 ID 获取 Agent 定义
+     *
+     * @param id 主键 ID
+     * @return Agent 定义 DO
      */
     AgentDefinitionDO getById(String id);
 
     /**
      * 根据 code 获取 Agent 定义
+     *
+     * @param code Agent 编码
+     * @return Agent 定义 DO
      */
     AgentDefinitionDO getByCode(String code);
 
     /**
      * 列出所有活跃 Agent 定义
+     *
+     * @return 活跃 Agent 定义列表
      */
     List<AgentDefinitionDO> listActive();
 
     /**
      * 创建 Agent 定义
+     *
+     * @param entity Agent 定义 DO
+     * @return 创建后的 Agent 定义 DO
      */
     AgentDefinitionDO create(AgentDefinitionDO entity);
 
     /**
      * 更新 Agent 定义
+     *
+     * @param entity Agent 定义 DO
+     * @return 更新后的 Agent 定义 DO
      */
     AgentDefinitionDO update(AgentDefinitionDO entity);
 
     /**
      * 逻辑删除
+     *
+     * @param id 主键 ID
+     * @return true=删除成功
      */
     boolean removeById(String id);
 
     /**
      * 根据 DO 构建领域对象
+     *
+     * @param entity Agent 定义 DO
+     * @return Agent 定义领域对象
      */
     AgentDefinition toDomain(AgentDefinitionDO entity);
 }

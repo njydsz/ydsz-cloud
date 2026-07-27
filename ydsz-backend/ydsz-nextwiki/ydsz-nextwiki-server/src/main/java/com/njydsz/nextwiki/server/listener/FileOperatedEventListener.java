@@ -9,14 +9,16 @@ import org.springframework.stereotype.Component;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.njydsz.nextwiki.domain.entity.AuditLog;
 import com.njydsz.nextwiki.domain.repository.AuditLogRepository;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 /**
  * 文件操作事件异步监听器
  * <p>
@@ -166,7 +168,7 @@ public class FileOperatedEventListener {
         log.info("[FileOperatedEventListener] 分享后处理完成: fileNodeId={}, shareCode={}",
                 event.getFileNodeId(), event.getExtra());
 
-        // P1-8: 通过 WebSocket 推送文件变更通知（如果 ydsz-pmis-common-socket 可用）
+        // P1-8: 通过 WebSocket 推送文件变更通知（如果 ydsz-common-socket 可用）
         // TODO: 注入 WebSocketMessageSender 推送实时通知
     }
 

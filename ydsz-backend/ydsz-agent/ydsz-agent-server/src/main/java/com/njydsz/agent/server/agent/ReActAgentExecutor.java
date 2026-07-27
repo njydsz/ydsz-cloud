@@ -50,13 +50,21 @@ public class ReActAgentExecutor implements AgentExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(ReActAgentExecutor.class);
 
+    /** LLM 客户端 */
     private final LlmClient llmClient;
+    /** 对话记忆 */
     private final ConversationMemory memory;
+    /** 工具注册中心 */
     private final ToolRegistry toolRegistry;
+    /** Agent 配置属性 */
     private final AgentProperties properties;
+    /** 输入护栏列表 */
     private final List<InputGuardrail> inputGuardrails;
+    /** 输出护栏列表 */
     private final List<OutputGuardrail> outputGuardrails;
+    /** 链路记录器 */
     private final TraceRecorder traceRecorder;
+    /** Agent 指标采集 */
     private final AgentMetrics agentMetrics;
     private final CostAnalysisService costAnalysisService;
 

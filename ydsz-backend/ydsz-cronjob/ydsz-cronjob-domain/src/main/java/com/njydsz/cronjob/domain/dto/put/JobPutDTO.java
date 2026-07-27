@@ -70,7 +70,7 @@ public class JobPutDTO implements Serializable {
     private Long timeoutMs;
 
     @Min(value = 1, message = "慢任务阈值必须为正数")
-    @Schema(description = "慢任务阈值（毫秒，P6-3）：null 不检测慢任务；执行耗时超过此值记入 ydsz_job_slow_log")
+    @Schema(description = "慢任务阈值（毫秒，P6-3）：null 不检测慢任务；执行耗时超过此值时由 SlowTaskDetector 标记 JobLog.is_slow=1")
     private Long slowThresholdMs;
 
     @Schema(description = "Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行")

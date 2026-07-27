@@ -79,7 +79,6 @@
 | | `ydsz_job_slow_log` | 慢执行记录 |
 | **告警** | `ydsz_job_alert_log` | 告警日志 |
 | | `ydsz_job_alert_rule` | 告警规则（失败/超时/阻塞） |
-| **SLA** | `ydsz_job_sla` | SLA 规则（P1-P4 + 飞书/钉钉/邮件） |
 | **执行器** | `ydsz_job_node` | 执行器节点（注册/心跳） |
 | **Webhook** | `ydsz_job_webhook` | 任务完成回调 |
 | **产物** | `ydsz_job_artifact` | 任务产物（报表/MinIO） |

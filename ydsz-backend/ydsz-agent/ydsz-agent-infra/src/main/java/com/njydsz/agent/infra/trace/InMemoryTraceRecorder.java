@@ -27,10 +27,15 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 public class InMemoryTraceRecorder implements TraceRecorder {
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryTraceRecorder.class);
+    /** 最大链路存储数 */
     private static final int MAX_TRACES = 1000;
+    /** 链路 TTL（小时） */
     private static final long TTL_HOURS = 24L;
+    /** 链路步骤存储（traceId → steps） */
     private final Map<String, List<TraceStep>> traces = new ConcurrentHashMap<>();
+    /** 链路状态存储 */
     private final Map<String, String> traceStatus = new ConcurrentHashMap<>();
+    /** 链路元数据存储 */
     private final Map<String, TraceMeta> traceMetas = new ConcurrentHashMap<>();
 
     @Override
@@ -169,11 +174,17 @@ public class InMemoryTraceRecorder implements TraceRecorder {
      * 链路元数据
      */
     public static class TraceMeta {
+        /** 链路 ID */
         private final String traceId;
+        /** 对话 ID */
         private final String conversationId;
+        /** Agent ID */
         private final String agentId;
+        /** 开始时间 */
         private final LocalDateTime startedAt;
+        /** 执行状态 */
         private volatile String status;
+        /** 总耗时（毫秒） */
         private volatile long totalDurationMs;
 
         public TraceMeta(String traceId, String conversationId, String agentId, LocalDateTime startedAt) {

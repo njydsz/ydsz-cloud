@@ -38,11 +38,17 @@ public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
 
     private static final Logger log = LoggerFactory.getLogger(AgentHealthIndicator.class);
 
+    /** LLM 客户端 */
     private final LlmClient llmClient;
+    /** 对话记忆 */
     private final ConversationMemory memory;
+    /** 向量存储 Provider */
     private final ObjectProvider<VectorStore> vectorStoreProvider;
+    /** 链路记录器 Provider */
     private final ObjectProvider<TraceRecorder> traceRecorderProvider;
+    /** 成本分析服务 Provider */
     private final ObjectProvider<CostAnalysisService> costAnalysisServiceProvider;
+    /** Agent 指标 Provider */
     private final ObjectProvider<AgentMetrics> agentMetricsProvider;
 
     public AgentHealthIndicator(LlmClient llmClient, ConversationMemory memory,

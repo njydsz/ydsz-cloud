@@ -72,18 +72,6 @@ public final class PermissionCodes {
     /** CRONJOB_JOB_VIEW */
     public static final String CRONJOB_JOB_VIEW = "cronjob:job:view";
 
-    /** CRONJOB_SLA_CREATE */
-    public static final String CRONJOB_SLA_CREATE = "cronjob:sla:create";
-
-    /** CRONJOB_SLA_DELETE */
-    public static final String CRONJOB_SLA_DELETE = "cronjob:sla:delete";
-
-    /** CRONJOB_SLA_UPDATE */
-    public static final String CRONJOB_SLA_UPDATE = "cronjob:sla:update";
-
-    /** CRONJOB_SLA_VIEW */
-    public static final String CRONJOB_SLA_VIEW = "cronjob:sla:view";
-
     /** CRONJOB_STATS_VIEW */
     public static final String CRONJOB_STATS_VIEW = "cronjob:stats:view";
 

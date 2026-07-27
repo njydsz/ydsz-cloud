@@ -28,9 +28,13 @@ import io.micrometer.core.instrument.Timer;
  */
 public class AgentMetrics extends AbstractModuleMetrics {
 
+    /** LLM 调用次数指标名 */
     private static final String METRIC_LLM_CALLS = "agent_llm_calls_total";
+    /** LLM 调用耗时指标名 */
     private static final String METRIC_LLM_DURATION = "agent_llm_call_duration_seconds";
+    /** LLM Token 消耗指标名 */
     private static final String METRIC_LLM_TOKENS = "agent_llm_tokens_total";
+    /** 安全护栏拒绝次数指标名 */
     private static final String METRIC_GUARDRAIL_REJECTIONS = "agent_guardrail_rejections_total";
 
     public AgentMetrics(MeterRegistry meterRegistry) {

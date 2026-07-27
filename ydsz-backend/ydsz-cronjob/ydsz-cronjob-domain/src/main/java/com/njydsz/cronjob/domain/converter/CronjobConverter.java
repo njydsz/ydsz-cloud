@@ -20,7 +20,6 @@ import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
-import com.njydsz.cronjob.domain.entity.alert.JobSla;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 import com.njydsz.cronjob.domain.dto.job.JobSaveDTO;
@@ -38,18 +37,15 @@ import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
-import com.njydsz.cronjob.domain.vo.JobSlaVO;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
-import com.njydsz.cronjob.domain.dto.post.JobSlaPostDTO;
 import com.njydsz.cronjob.domain.dto.post.AlertRulePostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
-import com.njydsz.cronjob.domain.dto.put.JobSlaPutDTO;
 import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
 
 /**
@@ -118,10 +114,6 @@ public interface CronjobConverter {
     // ===== JobNode =====
     JobNodeVO entityToVO(JobNode entity);
     List<JobNodeVO> jobNodeListToVO(List<JobNode> entities);
-
-    // ===== JobSla =====
-    JobSlaVO entityToVO(JobSla entity);
-    List<JobSlaVO> jobSlaListToVO(List<JobSla> entities);
 
     // ===== JobTask =====
     JobTaskVO entityToVO(JobTask entity);
@@ -227,24 +219,5 @@ public interface CronjobConverter {
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     JobDag putDtoToEntity(JobDagPutDTO dto);
-
-    // ===== JobSla PostDTO → Entity =====
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    JobSla postDtoToEntity(JobSlaPostDTO dto);
-
-    // ===== JobSla PutDTO → Entity =====
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    JobSla putDtoToEntity(JobSlaPutDTO dto);
 
 }

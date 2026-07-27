@@ -1306,37 +1306,6 @@ CREATE INDEX IF NOT EXISTS idx_pjds_job_date
     ON ydsz_job_daily_stats (job_id, stats_date DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P2-7] 任务 SLA 管理表 ydsz_job_sla（已废弃 — P2-2-merge 合并到 ydsz_job_alert_rule）
--- ----------------------------------------------------------------------------
--- [DEPRECATED] 本表已废弃，SLA 约束已合并到 ydsz_job_alert_rule（source_type='SLA'）。
--- - max_duration_ms → alert_type='DURATION_P95', threshold=max_duration_ms, time_window_minutes=60
--- - max_fail_rate   → alert_type='FAIL_RATE', threshold=max_fail_rate, time_window_minutes=60
--- - min_success_rate→ alert_type='FAIL_RATE', threshold=100-min_success_rate, time_window_minutes=60
--- 由 AlertScanner 统一扫描 source_type='SLA' 的规则并触发告警，SlaScanner 已移除。
--- 保留本表 DDL 仅用于存量数据迁移参考，新部署可跳过创建。
--- ============================================================================
-CREATE TABLE IF NOT EXISTS ydsz_job_sla(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    job_id          VARCHAR(20)         NOT NULL,
-    job_key         VARCHAR(128)   NOT NULL,
-    max_duration_ms BIGINT,
-    max_fail_rate   DECIMAL(5,2),
-    min_success_rate DECIMAL(5,2),
-    alert_level     VARCHAR(16)    NOT NULL DEFAULT 'WARNING',
-    enabled         SMALLINT       NOT NULL DEFAULT 1,
-    created_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64) DEFAULT 'SYSTEM' NOT NULL,
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT ck_pjs_max_duration_pos CHECK (max_duration_ms IS NULL OR max_duration_ms > 0),
-    CONSTRAINT ck_pjs_fail_rate_range CHECK (max_fail_rate IS NULL OR (max_fail_rate >= 0 AND max_fail_rate <= 100)),
-    CONSTRAINT ck_pjs_success_rate_range CHECK (min_success_rate IS NULL OR (min_success_rate >= 0 AND min_success_rate <= 100)),
-    CONSTRAINT ck_pjs_alert_level_enum CHECK (alert_level IN ('INFO', 'WARNING', 'CRITICAL')),
-    CONSTRAINT ck_pjs_enabled_enum CHECK (enabled IN (0, 1)),
-    CONSTRAINT ck_pjs_deleted_enum CHECK (deleted IN (0, 1)),
-    CONSTRAINT uk_pjs_job_id UNIQUE (job_id, deleted)
-);
 
 COMMENT ON TABLE ydsz_job_sla IS '任务 SLA 管理表: 定义最大执行时长/失败率/成功率约束, 违约时告警';
 

@@ -36,16 +36,27 @@ public class AgentFactory {
 
     private static final Logger log = LoggerFactory.getLogger(AgentFactory.class);
 
+    /** LLM 客户端 */
     private final LlmClient llmClient;
+    /** 对话记忆 */
     private final ConversationMemory memory;
+    /** 工具注册中心 */
     private final ToolRegistry toolRegistry;
+    /** Agent 配置属性 */
     private final AgentProperties properties;
+    /** 输入护栏列表 */
     private final List<InputGuardrail> inputGuardrails;
+    /** 输出护栏列表 */
     private final List<OutputGuardrail> outputGuardrails;
+    /** RAG 服务 */
     private final RagService ragService;
+    /** 链路记录器 */
     private final TraceRecorder traceRecorder;
+    /** Agent 指标采集 */
     private final AgentMetrics agentMetrics;
+    /** 成本分析服务 */
     private final CostAnalysisService costAnalysisService;
+    /** 执行器缓存（key=Agent 类型） */
     private final Map<String, AgentExecutor> executorCache = new ConcurrentHashMap<>();
 
     public AgentFactory(LlmClient llmClient, ConversationMemory memory,

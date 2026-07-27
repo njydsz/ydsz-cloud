@@ -29,10 +29,14 @@ import java.util.Map;
 public class SimpleTextChunker implements TextChunker {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleTextChunker.class);
+    /** 默认分块大小（字符数） */
     private static final int DEFAULT_CHUNK_SIZE = 500;
+    /** 默认重叠大小（字符数） */
     private static final int DEFAULT_OVERLAP = 50;
 
+    /** 分块大小（字符数） */
     private final int chunkSize;
+    /** 重叠大小（字符数） */
     private final int overlap;
 
     public SimpleTextChunker() {
