@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
+import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
 
 /**
  * 公司 Controller。
@@ -56,8 +58,8 @@ public class CompanyController {
     @Idempotent(key = "ydsz:userinfo:CompanyController:create:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "创建公司")
-    public BaseResponse<String> create(@Valid @RequestBody CompanySaveDTO dto) {
-        return BaseResponse.success(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody CompanyPostDTO dto) {
+        return BaseResponse.success(service.create(toSaveDTO(dto)));
     }
 
     @Audit(module = "公司管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
@@ -66,8 +68,8 @@ public class CompanyController {
     @RateLimit(resource = "userinfo.company.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新公司")
-    public BaseResponse<Boolean> update(@Valid @RequestBody CompanySaveDTO dto) {
-        return BaseResponse.success(service.update(dto));
+    public BaseResponse<Boolean> update(@Valid @RequestBody CompanyPutDTO dto) {
+        return BaseResponse.success(service.update(toSaveDTO(dto)));
     }
 
     @Audit(module = "公司管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
@@ -78,5 +80,35 @@ public class CompanyController {
     @Operation(summary = "删除公司")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private CompanySaveDTO toSaveDTO(CompanyPostDTO dto) {
+        CompanySaveDTO saveDTO = new CompanySaveDTO();
+        saveDTO.setCompanyName(dto.getCompanyName());
+        saveDTO.setCompanyCode(dto.getCompanyCode());
+        saveDTO.setParentId(dto.getParentId());
+        saveDTO.setContactPerson(dto.getContactPerson());
+        saveDTO.setContactPhone(dto.getContactPhone());
+        saveDTO.setAddress(dto.getAddress());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private CompanySaveDTO toSaveDTO(CompanyPutDTO dto) {
+        CompanySaveDTO saveDTO = new CompanySaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setCompanyName(dto.getCompanyName());
+        saveDTO.setCompanyCode(dto.getCompanyCode());
+        saveDTO.setParentId(dto.getParentId());
+        saveDTO.setContactPerson(dto.getContactPerson());
+        saveDTO.setContactPhone(dto.getContactPhone());
+        saveDTO.setAddress(dto.getAddress());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
     }
 }

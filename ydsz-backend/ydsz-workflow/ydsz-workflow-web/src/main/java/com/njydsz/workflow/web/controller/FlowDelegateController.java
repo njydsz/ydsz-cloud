@@ -25,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
+import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
+import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 
 /**
  * 长期授权委派 Controller
@@ -67,7 +69,7 @@ public class FlowDelegateController {
     @RateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
     @PostMapping("/delegateAuth/create")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
+    public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthPostDTO dto) {
         FlowDelegateAuth auth = WorkflowConverter.INSTANT.saveDtoToEntity(dto);
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
@@ -167,5 +169,42 @@ public class FlowDelegateController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         String ownerUserId = AuthContext.getUserId();
         return BaseResponse.success(delegateAuthService.listOwnerLog(ownerUserId, page, size));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private FlowDelegateAuthSaveDTO toSaveDTO(FlowDelegateAuthPostDTO dto) {
+        FlowDelegateAuthSaveDTO saveDTO = new FlowDelegateAuthSaveDTO();
+        saveDTO.setOwnerUserId(dto.getOwnerUserId());
+        saveDTO.setOwnerUserName(dto.getOwnerUserName());
+        saveDTO.setDelegateUserId(dto.getDelegateUserId());
+        saveDTO.setDelegateUserName(dto.getDelegateUserName());
+        saveDTO.setScopeType(dto.getScopeType());
+        saveDTO.setFlowCode(dto.getFlowCode());
+        saveDTO.setNodeCode(dto.getNodeCode());
+        saveDTO.setRoleCode(dto.getRoleCode());
+        saveDTO.setStartTime(dto.getStartTime());
+        saveDTO.setEndTime(dto.getEndTime());
+        saveDTO.setReason(dto.getReason());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private FlowDelegateAuthSaveDTO toSaveDTO(FlowDelegateAuthPutDTO dto) {
+        FlowDelegateAuthSaveDTO saveDTO = new FlowDelegateAuthSaveDTO();
+        saveDTO.setOwnerUserId(dto.getOwnerUserId());
+        saveDTO.setOwnerUserName(dto.getOwnerUserName());
+        saveDTO.setDelegateUserId(dto.getDelegateUserId());
+        saveDTO.setDelegateUserName(dto.getDelegateUserName());
+        saveDTO.setScopeType(dto.getScopeType());
+        saveDTO.setFlowCode(dto.getFlowCode());
+        saveDTO.setNodeCode(dto.getNodeCode());
+        saveDTO.setRoleCode(dto.getRoleCode());
+        saveDTO.setStartTime(dto.getStartTime());
+        saveDTO.setEndTime(dto.getEndTime());
+        saveDTO.setReason(dto.getReason());
+        return saveDTO;
     }
 }

@@ -1,17 +1,6 @@
 # YDSZ 调度服务本地配置
-# Nacos 配置中心覆盖以下配置（ydsz-cronjob.yaml）
-
-# MyBatis-Plus
-mybatis-plus:
-  mapper-locations: classpath*:mapper/**/*.xml
-  configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  global-config:
-    db-config:
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
+# 公共配置（mybatis-plus / management / springdoc / datasource / redis）由 Nacos 共享配置
+# ydsz-common.yaml 提供，此处仅保留服务私有配置
 
 # P1-2: 统一线程池配置（common-thread）
 # 注：taskExecutorPool（PriorityBlockingQueue）和 retryScheduler（ScheduledExecutorService）
@@ -34,20 +23,3 @@ ydsz:
         thread-name-prefix: ydsz-job-dispatch-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 15
-
-# Actuator
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: always
-
-# OpenAPI
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html

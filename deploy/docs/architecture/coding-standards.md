@@ -362,9 +362,16 @@ public interface TemplateService {
 ### 6.7 已遵循规范的模块（参考标杆）
 
 - `scm-tm/sdt-mps`：完整的 PostDTO/PutDTO + MapStruct Converter 模式（`RoleConverter`、`MenuConverter` 等）
-- `ydsz-message`：已创建 11 个 VO + MessageConverter，Controller 返回 VO（待补 PostDTO/PutDTO + DTO→Entity 转换）
-- `ydsz-userinfo`：已有 10 个 VO + UserInfoConverter（待补 PostDTO/PutDTO 分包 + 清理 Service toVO）
-- `ydsz-system`：已有 6 个 VO + SystemConverter（待清理 Service toVO 死代码）
+- `ydsz-project`：33 个 Controller 全部 PostDTO/PutDTO 化 + ProjectConverter 66 个转换方法（2026-07-27 完成）
+- `ydsz-userinfo`：6 个 Controller SaveDTO → PostDTO/PutDTO 拆分 + 10 个 VO + UserInfoConverter + Service toVO 清理（2026-07-27 完成）
+- `ydsz-system`：6 个 VO + SystemConverter + Service toVO 死代码清理（2026-07-27 完成）
+- `ydsz-cronjob`：JobWebhook PostDTO/PutDTO + ConnectorConfigPostDTO + 4 个 SaveDTO → PostDTO/PutDTO 拆分（2026-07-27 完成）
+- `ydsz-agent`：AgentDefinitionDO PostDTO/PutDTO + AgentConverter（2026-07-27 完成）
+- `ydsz-literule`：RuleTestCaseDO/DecisionTable/RuleABPolicy 3 个域实体 DTO 化 + LiteruleConverter（2026-07-27 完成）
+- `ydsz-workflow`：FlowDelegateAuthSaveDTO → PostDTO/PutDTO 拆分（2026-07-27 完成）
+- `ydsz-nextwiki`：FileApplicationService toVO 调用替换为 NextwikiConverter（2026-07-27 完成）
+
+**全项目审计结果**：零 `@RequestBody Entity` 违规，零 `XxxSaveDTO` 共用违规，零 Service 层 `toVO` 残留。
 
 ### 6.8 POM 依赖配置
 
@@ -578,3 +585,78 @@ find . -path "*/domain/dto" -type d -exec sh -c 'ls -d "$1/post" "$1/put" 2>/dev
 - [UserInfoResultCode.java](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-userinfo/ydsz-userinfo-domain/src/main/java/com/njydsz/userinfo/domain/enums/UserInfoResultCode.java)
 - [ExceptionCode.java](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-common/ydsz-common-exception/src/main/java/com/njydsz/common/exception/enums/ExceptionCode.java)
 - [ExceptionCategory.java](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-common/ydsz-common-exception/src/main/java/com/njydsz/common/exception/enums/ExceptionCategory.java)
+
+---
+
+## Section 8: 配置管理与 Nacos 共享配置规范
+
+### 8.1 配置分层
+
+YDSZ 微服务配置采用三层结构，优先级从高到低：
+
+| 层级 | 文件 / 来源 | 职责 | 示例 |
+|------|-------------|------|------|
+| 1 (最高) | `application.yml`（本地） | 服务私有配置 + override | `ydsz.thread.pools.*`、`ydsz.literule.*`、`nextwiki.*` |
+| 2 | Nacos `ydsz-{module}.yml`（shared-configs） | 模块私有但需动态刷新的配置 | `ydsz-userinfo.yml`、`ydsz-project.yml` |
+| 3 (最低) | Nacos `ydsz-common.yaml`（shared-configs） | **全集群共享的公共配置** | `mybatis-plus.*`、`management.*`、`springdoc.*`、`spring.datasource.*`、`spring.data.redis.*` |
+
+### 8.2 公共配置下沉清单（ydsz-common.yaml）
+
+以下配置**必须**放在 `deploy/common/nacos/ydsz-common.yaml`，禁止在本地 `application.yml` 重复声明：
+
+| 配置项 | 说明 |
+|--------|------|
+| `spring.datasource.*` | 数据源（Druid 连接池） |
+| `spring.data.redis.*` | Redis 连接 |
+| `spring.dynamic.*` | 动态数据源（读写分离） |
+| `spring.jackson.*` | Jackson 序列化（日期格式 / 时区 / 非空策略） |
+| `spring.cache.type` | Spring Cache 类型（redis） |
+| `mybatis-plus.mapper-locations` | Mapper XML 默认扫描路径（`classpath*:mapper/**/*.xml`） |
+| `mybatis-plus.configuration.*` | MyBatis-Plus 配置（驼峰 / 日志实现） |
+| `mybatis-plus.global-config.*` | MyBatis-Plus 全局配置（逻辑删除 / 主键策略） |
+| `management.*` | Actuator 端点暴露 + health 显示策略 |
+| `springdoc.*` | OpenAPI / Swagger UI 配置 |
+| `knife4j.*` | Knife4j 增强 UI 配置 |
+| `feign.*` | Feign 超时 / 重试 / 压缩 |
+| `spring.cloud.openfeign.*` | OpenFeign + 熔断 |
+| `resilience4j.*` | 重试 / 熔断器 |
+| `logging.*` | 日志级别 / 格式 |
+| `jasypt.*` | 配置加密 |
+| `ydsz.jwt.*` | JWT 密钥 |
+| `ydsz.security.*` | IP 白名单 |
+| `ydsz.kms.*` | 密钥管理 |
+| `ydsz.sentry.*` | 错误监控 |
+
+### 8.3 服务私有配置清单（application.yml）
+
+以下配置**允许**放在本地 `application.yml`：
+
+| 配置项 | 说明 | 示例服务 |
+|--------|------|----------|
+| `ydsz.thread.pools.*` | 服务专属线程池配置 | cronjob / workflow / literule / nextwiki / agent |
+| `ydsz.event.outbox.*` | 事务性 Outbox 事件配置 | workflow |
+| `ydsz.seata.*` | Seata 分布式事务开关 | project / workflow |
+| `ydsz.literule.*` | 规则引擎核心配置 | literule |
+| `nextwiki.*` | 网盘知识库配置 | nextwiki |
+| `ydsz.agent.*` | AI Agent 配置 | agent |
+| `mybatis-plus.mapper-locations`（override） | 追加特殊路径 | workflow（追加 `mapper/flow/**/*.xml`） |
+| `spring.servlet.multipart.*` | 文件上传大小限制 | nextwiki |
+| `server.port`（override） | 端口覆盖 | nextwiki（8800） |
+
+### 8.4 配置治理原则
+
+1. **DRY 原则**：公共配置只在 `ydsz-common.yaml` 声明一次，本地 `application.yml` 禁止重复。
+2. **Override 显式注释**：本地覆盖共享配置时，必须添加注释说明覆盖原因（如 workflow 追加 flow mapper 路径）。
+3. **敏感配置加密**：密码 / 密钥必须使用 Jasypt `ENC()` 加密或通过环境变量注入，禁止明文。
+4. **环境隔离**：通过 `spring.profiles.active` + Nacos group 区分 dev/sit/uat/prod，不在本地文件中硬编码环境差异。
+5. **健康检查策略统一**：`management.endpoint.health.show-details` 在共享配置中统一为 `when-authorized`（需认证），禁止本地降级为 `always`。
+6. **端口一致性**：`server.port` 在 `bootstrap.yml` 与 `application.yml` 中必须一致；如需覆盖，必须同步更新 Nacos 服务注册的 `metadata.port`。
+
+### 8.5 相关文件
+
+- [ydsz-common.yaml](file:///d:/Code/ydsz/ydsz-pmis/deploy/common/nacos/ydsz-common.yaml) — Nacos 共享配置种子文件
+- [cronjob application.yml](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-cronjob/ydsz-cronjob-web/src/main/resources/application.yml)
+- [project application.yml](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-project/ydsz-project-web/src/main/resources/application.yml)
+- [workflow application.yml](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-workflow/ydsz-workflow-web/src/main/resources/application.yml)
+- [literule application.yml](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-literule/ydsz-literule-web/src/main/resources/application.yml)
+- [nextwiki application.yml](file:///d:/Code/ydsz/ydsz-pmis/ydsz-backend/ydsz-nextwiki/ydsz-nextwiki-web/src/main/resources/application.yml)

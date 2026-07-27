@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
+import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;
 
 /**
  * 语言 Controller。
@@ -73,7 +75,7 @@ public class LanguageController {
     @RateLimit(resource = "userinfo.language.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建语言")
-    public BaseResponse<String> save(@Valid @RequestBody LanguageSaveDTO dto) {
+    public BaseResponse<String> save(@Valid @RequestBody LanguagePostDTO dto) {
         return BaseResponse.success(service.save(dto));
     }
 
@@ -83,7 +85,7 @@ public class LanguageController {
     @RateLimit(resource = "userinfo.language.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新语言")
-    public BaseResponse<Boolean> update(@Valid @RequestBody LanguageSaveDTO dto) {
+    public BaseResponse<Boolean> update(@Valid @RequestBody LanguagePutDTO dto) {
         return BaseResponse.success(service.updateById(dto));
     }
 
@@ -95,5 +97,31 @@ public class LanguageController {
     @Operation(summary = "删除语言")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private LanguageSaveDTO toSaveDTO(LanguagePostDTO dto) {
+        LanguageSaveDTO saveDTO = new LanguageSaveDTO();
+        saveDTO.setLanguageCode(dto.getLanguageCode());
+        saveDTO.setLanguageName(dto.getLanguageName());
+        saveDTO.setIsDefault(dto.getIsDefault());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private LanguageSaveDTO toSaveDTO(LanguagePutDTO dto) {
+        LanguageSaveDTO saveDTO = new LanguageSaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setLanguageCode(dto.getLanguageCode());
+        saveDTO.setLanguageName(dto.getLanguageName());
+        saveDTO.setIsDefault(dto.getIsDefault());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
     }
 }

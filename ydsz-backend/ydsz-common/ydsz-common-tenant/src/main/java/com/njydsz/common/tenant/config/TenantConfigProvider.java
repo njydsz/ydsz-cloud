@@ -35,11 +35,9 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 public class TenantConfigProvider {
 
-    private final TenantProperties properties;
     private final Map<String, Map<String, String>> overridesCache = new ConcurrentHashMap<>();
 
-    public TenantConfigProvider(TenantProperties properties) {
-        this.properties = properties;
+    public TenantConfigProvider() {
     }
 
     /**

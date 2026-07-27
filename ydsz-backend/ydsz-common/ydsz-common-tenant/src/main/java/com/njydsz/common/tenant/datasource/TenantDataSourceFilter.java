@@ -3,7 +3,6 @@ package com.njydsz.common.tenant.datasource;
 import java.io.IOException;
 
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.config.TenantProperties;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -26,11 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 public class TenantDataSourceFilter implements Filter {
 
     private final TenantDataSourceRouter router;
-    private final TenantProperties properties;
 
-    public TenantDataSourceFilter(TenantDataSourceRouter router, TenantProperties properties) {
+    public TenantDataSourceFilter(TenantDataSourceRouter router) {
         this.router = router;
-        this.properties = properties;
     }
 
     @Override

@@ -30,6 +30,8 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
+import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
+import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
 
 /**
  * DAG 工作流定义 Controller（P2 DAG 增强）。
@@ -64,8 +66,8 @@ public class JobDagController {
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createDag'")
     @RateLimit(resource = "cronjob.jobdag.createDag", threshold = 50)
     @PostMapping("/")
-    public BaseResponse<String> createDag(@Valid @RequestBody JobDagSaveDTO dto) {
-        return BaseResponse.success(jobDagService.createDag(dto));
+    public BaseResponse<String> createDag(@Valid @RequestBody JobDagPostDTO dto) {
+        return BaseResponse.success(jobDagService.createDag(toSaveDTO(dto)));
     }
 
     /**
@@ -81,8 +83,8 @@ public class JobDagController {
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateDag'")
     @RateLimit(resource = "cronjob.jobdag.updateDag", threshold = 50)
     @PutMapping("/{dagId}")
-    public BaseResponse<Void> updateDag(@PathVariable String dagId, @Valid @RequestBody JobDagSaveDTO dto) {
-        jobDagService.updateDag(dagId, dto);
+    public BaseResponse<Void> updateDag(@PathVariable String dagId, @Valid @RequestBody JobDagPutDTO dto) {
+        jobDagService.updateDag(dagId, toSaveDTO(dto));
         return BaseResponse.success();
     }
 
@@ -244,5 +246,38 @@ public class JobDagController {
     public BaseResponse<JobDagVO> rollbackDag(@PathVariable String dagId,
                                                 @RequestParam Integer version) {
         return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagService.rollbackDag(dagId, version)));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private JobDagSaveDTO toSaveDTO(JobDagPostDTO dto) {
+        JobDagSaveDTO saveDTO = new JobDagSaveDTO();
+        saveDTO.setDagKey(dto.getDagKey());
+        saveDTO.setDagName(dto.getDagName());
+        saveDTO.setDagDefinition(dto.getDagDefinition());
+        saveDTO.setStatus(dto.getStatus());
+        saveDTO.setTriggerType(dto.getTriggerType());
+        saveDTO.setCronExpression(dto.getCronExpression());
+        saveDTO.setMaxConcurrentInstances(dto.getMaxConcurrentInstances());
+        saveDTO.setFailStrategy(dto.getFailStrategy());
+        saveDTO.setDescription(dto.getDescription());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private JobDagSaveDTO toSaveDTO(JobDagPutDTO dto) {
+        JobDagSaveDTO saveDTO = new JobDagSaveDTO();
+        saveDTO.setDagKey(dto.getDagKey());
+        saveDTO.setDagName(dto.getDagName());
+        saveDTO.setDagDefinition(dto.getDagDefinition());
+        saveDTO.setStatus(dto.getStatus());
+        saveDTO.setTriggerType(dto.getTriggerType());
+        saveDTO.setCronExpression(dto.getCronExpression());
+        saveDTO.setMaxConcurrentInstances(dto.getMaxConcurrentInstances());
+        saveDTO.setFailStrategy(dto.getFailStrategy());
+        saveDTO.setDescription(dto.getDescription());
+        return saveDTO;
     }
 }

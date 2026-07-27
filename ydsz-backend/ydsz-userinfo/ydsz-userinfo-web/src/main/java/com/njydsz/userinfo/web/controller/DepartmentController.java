@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
+import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
 
 /**
  * 部门 Controller。
@@ -65,8 +67,8 @@ public class DepartmentController {
     @Idempotent(key = "ydsz:userinfo:DepartmentController:create:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "创建部门")
-    public BaseResponse<String> create(@Valid @RequestBody DepartmentSaveDTO dto) {
-        return BaseResponse.success(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody DepartmentPostDTO dto) {
+        return BaseResponse.success(service.create(toSaveDTO(dto)));
     }
 
     @RateLimit(resource = "userinfo.department.update", threshold = 50)
@@ -75,8 +77,8 @@ public class DepartmentController {
     @Idempotent(key = "ydsz:userinfo:DepartmentController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Operation(summary = "更新部门")
-    public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentSaveDTO dto) {
-        return BaseResponse.success(service.update(dto));
+    public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentPutDTO dto) {
+        return BaseResponse.success(service.update(toSaveDTO(dto)));
     }
 
     @RateLimit(resource = "userinfo.department.remove", threshold = 50)
@@ -85,5 +87,35 @@ public class DepartmentController {
     @Operation(summary = "删除部门")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private DepartmentSaveDTO toSaveDTO(DepartmentPostDTO dto) {
+        DepartmentSaveDTO saveDTO = new DepartmentSaveDTO();
+        saveDTO.setDeptCode(dto.getDeptCode());
+        saveDTO.setDeptName(dto.getDeptName());
+        saveDTO.setParentId(dto.getParentId());
+        saveDTO.setDescription(dto.getDescription());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setStatus(dto.getStatus());
+        saveDTO.setTenantId(dto.getTenantId());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private DepartmentSaveDTO toSaveDTO(DepartmentPutDTO dto) {
+        DepartmentSaveDTO saveDTO = new DepartmentSaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setDeptCode(dto.getDeptCode());
+        saveDTO.setDeptName(dto.getDeptName());
+        saveDTO.setParentId(dto.getParentId());
+        saveDTO.setDescription(dto.getDescription());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setStatus(dto.getStatus());
+        saveDTO.setTenantId(dto.getTenantId());
+        return saveDTO;
     }
 }

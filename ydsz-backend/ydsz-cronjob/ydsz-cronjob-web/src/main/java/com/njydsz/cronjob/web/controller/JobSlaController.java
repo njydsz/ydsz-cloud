@@ -31,6 +31,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobSlaVO;
+import com.njydsz.cronjob.domain.dto.post.JobSlaPostDTO;
+import com.njydsz.cronjob.domain.dto.put.JobSlaPutDTO;
 
 /**
  * SLA 管理 Controller（P2-7 SLA 管理）。
@@ -61,8 +63,8 @@ public class JobSlaController {
     @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @RateLimit(resource = "cronjob.jobsla.create", threshold = 50)
     @PostMapping
-    public BaseResponse<String> create(@Valid @RequestBody JobSlaSaveDTO dto) {
-        return BaseResponse.success(jobSlaService.createSla(dto));
+    public BaseResponse<String> create(@Valid @RequestBody JobSlaPostDTO dto) {
+        return BaseResponse.success(jobSlaService.create(toSaveDTO(dto)));
     }
 
     /**
@@ -78,8 +80,8 @@ public class JobSlaController {
     @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @RateLimit(resource = "cronjob.jobsla.update", threshold = 50)
     @PutMapping("/{id}")
-    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
-        jobSlaService.updateSla(id, dto);
+    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaPutDTO dto) {
+        jobSlaService.updateSla(id, toSaveDTO(dto));
         return BaseResponse.success();
     }
 
@@ -154,5 +156,35 @@ public class JobSlaController {
     @GetMapping("/check")
     public BaseResponse<List<JobSlaService.SlaViolation>> checkViolation(@RequestParam String jobId) {
         return BaseResponse.success(jobSlaService.checkViolation(jobId));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private JobSlaSaveDTO toSaveDTO(JobSlaPostDTO dto) {
+        JobSlaSaveDTO saveDTO = new JobSlaSaveDTO();
+        saveDTO.setJobId(dto.getJobId());
+        saveDTO.setJobKey(dto.getJobKey());
+        saveDTO.setMaxDurationMs(dto.getMaxDurationMs());
+        saveDTO.setMaxFailRate(dto.getMaxFailRate());
+        saveDTO.setMinSuccessRate(dto.getMinSuccessRate());
+        saveDTO.setAlertLevel(dto.getAlertLevel());
+        saveDTO.setEnabled(dto.getEnabled());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private JobSlaSaveDTO toSaveDTO(JobSlaPutDTO dto) {
+        JobSlaSaveDTO saveDTO = new JobSlaSaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setJobId(dto.getJobId());
+        saveDTO.setJobKey(dto.getJobKey());
+        saveDTO.setMaxDurationMs(dto.getMaxDurationMs());
+        saveDTO.setMaxFailRate(dto.getMaxFailRate());
+        saveDTO.setMinSuccessRate(dto.getMinSuccessRate());
+        saveDTO.setAlertLevel(dto.getAlertLevel());
+        saveDTO.setEnabled(dto.getEnabled());
+        return saveDTO;
     }
 }

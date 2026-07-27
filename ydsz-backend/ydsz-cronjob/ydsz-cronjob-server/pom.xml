@@ -113,5 +113,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
         </dependency>
+        <!-- P2-5: 统一 Excel 导入导出 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
 </dependencies>
 </project>

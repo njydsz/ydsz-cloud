@@ -33,6 +33,7 @@
     "@ydsz/icons": "workspace:*",
     "@ydsz/layouts": "workspace:*",
     "@ydsz/locales": "workspace:*",
+    "@ydsz/monitor": "workspace:*",
     "@ydsz/plugins": "workspace:*",
     "@ydsz/preferences": "workspace:*",
     "@ydsz/request": "workspace:*",

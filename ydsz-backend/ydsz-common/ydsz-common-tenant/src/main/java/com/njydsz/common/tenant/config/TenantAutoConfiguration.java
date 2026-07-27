@@ -11,7 +11,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
-import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
@@ -28,7 +27,6 @@ import com.njydsz.common.tenant.web.TenantContextWebFilter;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 import com.njydsz.common.tenant.ratelimit.TenantRateLimiter;
 import io.micrometer.core.instrument.MeterRegistry;
 /**
@@ -172,9 +170,9 @@ public class TenantAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public TenantConfigProvider tenantConfigProvider(TenantProperties properties) {
+    public TenantConfigProvider tenantConfigProvider() {
         log.info("多租户配置隔离已启用");
-        return new TenantConfigProvider(properties);
+        return new TenantConfigProvider();
     }
 
     /**
@@ -274,7 +272,7 @@ public class TenantAutoConfiguration {
             TenantDataSourceRouter router,
             TenantProperties properties) {
         FilterRegistrationBean<TenantDataSourceFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new TenantDataSourceFilter(router, properties));
+        registration.setFilter(new TenantDataSourceFilter(router));
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 90);
         registration.addUrlPatterns("/*");
         registration.setName("tenantDataSourceFilter");

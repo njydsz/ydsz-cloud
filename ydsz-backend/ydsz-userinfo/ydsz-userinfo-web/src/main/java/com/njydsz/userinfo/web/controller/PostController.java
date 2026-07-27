@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
+import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
 
 /**
  * 岗位 Controller。
@@ -58,8 +60,8 @@ public class PostController {
     @RateLimit(resource = "userinfo.post.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建岗位")
-    public BaseResponse<String> create(@Valid @RequestBody PostSaveDTO dto) {
-        return BaseResponse.success(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody PostPostDTO dto) {
+        return BaseResponse.success(service.create(toSaveDTO(dto)));
     }
 
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
@@ -68,8 +70,8 @@ public class PostController {
     @RateLimit(resource = "userinfo.post.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新岗位")
-    public BaseResponse<Boolean> update(@Valid @RequestBody PostSaveDTO dto) {
-        return BaseResponse.success(service.update(dto));
+    public BaseResponse<Boolean> update(@Valid @RequestBody PostPutDTO dto) {
+        return BaseResponse.success(service.update(toSaveDTO(dto)));
     }
 
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
@@ -80,5 +82,31 @@ public class PostController {
     @Operation(summary = "删除岗位")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private PostSaveDTO toSaveDTO(PostPostDTO dto) {
+        PostSaveDTO saveDTO = new PostSaveDTO();
+        saveDTO.setPostName(dto.getPostName());
+        saveDTO.setPostCode(dto.getPostCode());
+        saveDTO.setDescription(dto.getDescription());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private PostSaveDTO toSaveDTO(PostPutDTO dto) {
+        PostSaveDTO saveDTO = new PostSaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setPostName(dto.getPostName());
+        saveDTO.setPostCode(dto.getPostCode());
+        saveDTO.setDescription(dto.getDescription());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
     }
 }

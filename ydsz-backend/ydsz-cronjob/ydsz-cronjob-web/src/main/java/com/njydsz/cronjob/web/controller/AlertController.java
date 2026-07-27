@@ -27,6 +27,8 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
+import com.njydsz.cronjob.domain.dto.post.AlertRulePostDTO;
+import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
 
 /**
  * 告警规则管理 Controller（P5 告警 + 监控）。
@@ -57,8 +59,8 @@ public class AlertController {
     @Audit(module = "告警管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createRule'")
     @RateLimit(resource = "cronjob.alert.createRule", threshold = 50)
     @PostMapping("/rule")
-    public BaseResponse<String> createRule(@Valid @RequestBody AlertRuleSaveDTO dto) {
-        return BaseResponse.success(alertService.createRule(dto));
+    public BaseResponse<String> createRule(@Valid @RequestBody AlertRulePostDTO dto) {
+        return BaseResponse.success(alertService.create(toSaveDTO(dto)));
     }
 
     /**
@@ -74,8 +76,8 @@ public class AlertController {
     @Audit(module = "告警管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateRule'")
     @RateLimit(resource = "cronjob.alert.updateRule", threshold = 50)
     @PutMapping("/rule/{id}")
-    public BaseResponse<Void> updateRule(@PathVariable String id, @Valid @RequestBody AlertRuleSaveDTO dto) {
-        alertService.updateRule(id, dto);
+    public BaseResponse<Void> updateRule(@PathVariable String id, @Valid @RequestBody AlertRulePutDTO dto) {
+        alertService.updateRule(id, toSaveDTO(dto));
         return BaseResponse.success();
     }
 
@@ -154,5 +156,43 @@ public class AlertController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since) {
         return BaseResponse.success(CronjobConverter.INSTANT.jobAlertLogListToVO(alertService.queryAlertLogs(jobId, since)));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private AlertRuleSaveDTO toSaveDTO(AlertRulePostDTO dto) {
+        AlertRuleSaveDTO saveDTO = new AlertRuleSaveDTO();
+        saveDTO.setRuleName(dto.getRuleName());
+        saveDTO.setJobId(dto.getJobId());
+        saveDTO.setJobKey(dto.getJobKey());
+        saveDTO.setAlertType(dto.getAlertType());
+        saveDTO.setAlertLevel(dto.getAlertLevel());
+        saveDTO.setThreshold(dto.getThreshold());
+        saveDTO.setTimeWindowMinutes(dto.getTimeWindowMinutes());
+        saveDTO.setChannels(dto.getChannels());
+        saveDTO.setReceivers(dto.getReceivers());
+        saveDTO.setCooldownMinutes(dto.getCooldownMinutes());
+        saveDTO.setEnabled(dto.getEnabled());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private AlertRuleSaveDTO toSaveDTO(AlertRulePutDTO dto) {
+        AlertRuleSaveDTO saveDTO = new AlertRuleSaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setRuleName(dto.getRuleName());
+        saveDTO.setJobId(dto.getJobId());
+        saveDTO.setJobKey(dto.getJobKey());
+        saveDTO.setAlertType(dto.getAlertType());
+        saveDTO.setAlertLevel(dto.getAlertLevel());
+        saveDTO.setThreshold(dto.getThreshold());
+        saveDTO.setTimeWindowMinutes(dto.getTimeWindowMinutes());
+        saveDTO.setChannels(dto.getChannels());
+        saveDTO.setReceivers(dto.getReceivers());
+        saveDTO.setCooldownMinutes(dto.getCooldownMinutes());
+        saveDTO.setEnabled(dto.getEnabled());
+        return saveDTO;
     }
 }

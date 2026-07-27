@@ -29,6 +29,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
+import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
 
 /**
  * 角色 Controller。
@@ -70,8 +72,8 @@ public class RoleController {
     @RateLimit(resource = "userinfo.role.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建角色")
-    public BaseResponse<String> create(@Valid @RequestBody RoleSaveDTO dto) {
-        return BaseResponse.success(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody RolePostDTO dto) {
+        return BaseResponse.success(service.create(toSaveDTO(dto)));
     }
 
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
@@ -80,8 +82,8 @@ public class RoleController {
     @RateLimit(resource = "userinfo.role.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新角色")
-    public BaseResponse<Boolean> update(@Valid @RequestBody RoleSaveDTO dto) {
-        return BaseResponse.success(service.update(dto));
+    public BaseResponse<Boolean> update(@Valid @RequestBody RolePutDTO dto) {
+        return BaseResponse.success(service.update(toSaveDTO(dto)));
     }
 
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
@@ -110,5 +112,37 @@ public class RoleController {
     @Operation(summary = "查询角色权限 ID 列表")
     public BaseResponse<List<String>> getRolePermissions(@PathVariable String roleId) {
         return BaseResponse.success(service.getRolePermissionIds(roleId));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private RoleSaveDTO toSaveDTO(RolePostDTO dto) {
+        RoleSaveDTO saveDTO = new RoleSaveDTO();
+        saveDTO.setRoleCode(dto.getRoleCode());
+        saveDTO.setRoleName(dto.getRoleName());
+        saveDTO.setDescription(dto.getDescription());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setDataScope(dto.getDataScope());
+        saveDTO.setStatus(dto.getStatus());
+        saveDTO.setBuiltIn(dto.getBuiltIn());
+        saveDTO.setTenantId(dto.getTenantId());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private RoleSaveDTO toSaveDTO(RolePutDTO dto) {
+        RoleSaveDTO saveDTO = new RoleSaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setRoleCode(dto.getRoleCode());
+        saveDTO.setRoleName(dto.getRoleName());
+        saveDTO.setDescription(dto.getDescription());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setDataScope(dto.getDataScope());
+        saveDTO.setStatus(dto.getStatus());
+        saveDTO.setBuiltIn(dto.getBuiltIn());
+        saveDTO.setTenantId(dto.getTenantId());
+        return saveDTO;
     }
 }

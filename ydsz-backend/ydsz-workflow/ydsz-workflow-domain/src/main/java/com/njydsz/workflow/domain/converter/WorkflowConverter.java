@@ -32,6 +32,8 @@ import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.domain.entity.FlowTimer;
 import com.njydsz.workflow.domain.entity.FlowUser;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthSaveDTO;
+import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
+import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
@@ -190,5 +192,32 @@ public interface WorkflowConverter {
     @Mapping(target = "authStatus", ignore = true)
     @Mapping(target = "providerTraceId", ignore = true)
     FlowDelegateAuth saveDtoToEntity(FlowDelegateAuthSaveDTO dto);
+
+    /**
+     * 委派授权 PostDTO → Entity（创建场景）。
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "authStatus", ignore = true)
+    @Mapping(target = "providerTraceId", ignore = true)
+    FlowDelegateAuth postDtoToEntity(FlowDelegateAuthPostDTO dto);
+
+    /**
+     * 委派授权 PutDTO → Entity（更新场景）。
+     */
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "authStatus", ignore = true)
+    @Mapping(target = "providerTraceId", ignore = true)
+    FlowDelegateAuth putDtoToEntity(FlowDelegateAuthPutDTO dto);
 
 }

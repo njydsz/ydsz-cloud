@@ -144,6 +144,8 @@ spring:
 
 # ---------- MyBatis-Plus 共享配置 ----------
 mybatis-plus:
+  # Mapper XML 默认扫描路径（所有服务共用；workflow 在本地 application.yml 覆盖以追加 flow 路径）
+  mapper-locations: classpath*:mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false

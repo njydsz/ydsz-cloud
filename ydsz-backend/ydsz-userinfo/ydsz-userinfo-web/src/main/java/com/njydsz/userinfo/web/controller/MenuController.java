@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
+import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
 
 /**
  * 菜单 Controller。
@@ -65,8 +67,8 @@ public class MenuController {
     @RateLimit(resource = "userinfo.menu.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建菜单")
-    public BaseResponse<String> create(@Valid @RequestBody MenuSaveDTO dto) {
-        return BaseResponse.success(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody MenuPostDTO dto) {
+        return BaseResponse.success(service.create(toSaveDTO(dto)));
     }
 
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
@@ -75,8 +77,8 @@ public class MenuController {
     @RateLimit(resource = "userinfo.menu.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新菜单")
-    public BaseResponse<Boolean> update(@Valid @RequestBody MenuSaveDTO dto) {
-        return BaseResponse.success(service.update(dto));
+    public BaseResponse<Boolean> update(@Valid @RequestBody MenuPutDTO dto) {
+        return BaseResponse.success(service.update(toSaveDTO(dto)));
     }
 
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
@@ -87,5 +89,43 @@ public class MenuController {
     @Operation(summary = "删除菜单")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));
+    }
+    /**
+     * 将 PostDTO 转换为 SaveDTO。
+     */
+    private MenuSaveDTO toSaveDTO(MenuPostDTO dto) {
+        MenuSaveDTO saveDTO = new MenuSaveDTO();
+        saveDTO.setParentId(dto.getParentId());
+        saveDTO.setMenuName(dto.getMenuName());
+        saveDTO.setMenuCode(dto.getMenuCode());
+        saveDTO.setMenuType(dto.getMenuType());
+        saveDTO.setPath(dto.getPath());
+        saveDTO.setComponent(dto.getComponent());
+        saveDTO.setIcon(dto.getIcon());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setPermissionCode(dto.getPermissionCode());
+        saveDTO.setVisible(dto.getVisible());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
+    }
+
+    /**
+     * 将 PutDTO 转换为 SaveDTO。
+     */
+    private MenuSaveDTO toSaveDTO(MenuPutDTO dto) {
+        MenuSaveDTO saveDTO = new MenuSaveDTO();
+        saveDTO.setId(dto.getId());
+        saveDTO.setParentId(dto.getParentId());
+        saveDTO.setMenuName(dto.getMenuName());
+        saveDTO.setMenuCode(dto.getMenuCode());
+        saveDTO.setMenuType(dto.getMenuType());
+        saveDTO.setPath(dto.getPath());
+        saveDTO.setComponent(dto.getComponent());
+        saveDTO.setIcon(dto.getIcon());
+        saveDTO.setSortOrder(dto.getSortOrder());
+        saveDTO.setPermissionCode(dto.getPermissionCode());
+        saveDTO.setVisible(dto.getVisible());
+        saveDTO.setStatus(dto.getStatus());
+        return saveDTO;
     }
 }
