@@ -29,6 +29,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 模板版本管理与可视化 Controller。
@@ -71,6 +74,7 @@ public class TemplateVersionController {
     @Operation(summary = "回滚到指定版本")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "ydsz:message:TemplateVersionController:rollback:lock", ttlSeconds = 5)
+    @Audit(module = "模板版本管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'rollback'")
     @SentinelRateLimit(resource = "message.templateversion.rollback", threshold = 50)
     @PostMapping("/rollback")
     public BaseResponse<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
@@ -105,6 +109,7 @@ public class TemplateVersionController {
     @Operation(summary = "试发模板（向测试接收人发送）")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "ydsz:message:TemplateVersionController:testSend:lock", ttlSeconds = 5)
+    @Audit(module = "模板版本管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'testSend'")
     @SentinelRateLimit(resource = "message.templateversion.testSend", threshold = 50)
     @PostMapping("/testSend")
     public BaseResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {

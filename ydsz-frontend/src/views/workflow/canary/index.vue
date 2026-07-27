@@ -34,10 +34,15 @@ import type {
 } from '@/api/workflow/types'
 
 // ==================== 流程定义列表 ====================
+/** 流程定义列表数据 */
 const definitionList = ref<FlowDefinitionDTO[]>([])
+/** 列表加载状态 */
 const loading = ref(false)
+/** 流程定义列表总数 */
 const total = ref(0)
+/** 当前页码 */
 const currentPage = ref(1)
+/** 每页条数 */
 const pageSize = ref(10)
 const searchForm = reactive({
   flowCode: '',
@@ -46,8 +51,11 @@ const searchForm = reactive({
 })
 
 // ==================== 灰度操作弹窗 ====================
+/** 发布灰度弹窗显隐 */
 const publishDialog = ref(false)
+/** 灰度发布提交状态 */
 const publishing = ref(false)
+/** 当前操作的流程定义 */
 const currentDefinition = ref<FlowDefinitionDTO | null>(null)
 const publishForm = reactive<PublishCanaryDTO>({
   strategy: 'PERCENTAGE',

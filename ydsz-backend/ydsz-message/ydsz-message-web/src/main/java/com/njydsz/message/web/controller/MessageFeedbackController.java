@@ -24,6 +24,9 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * P1-4: 消息质量反馈 Controller。
@@ -50,6 +53,7 @@ public class MessageFeedbackController {
      */
     @Operation(summary = "提交消息反馈")
     @Idempotent(key = "ydsz:message:MessageFeedbackController:submitFeedback:lock", ttlSeconds = 5)
+    @Audit(module = "消息反馈", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'submitFeedback'")
     @SentinelRateLimit(resource = "message.messagefeedback.submitFeedback", threshold = 50)
     @PostMapping
     public BaseResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {

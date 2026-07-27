@@ -61,16 +61,33 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
         this.available = swAvailable;
     }
 
+    /**
+     * 获取追踪器名称。
+     *
+     * @return 追踪器名称（"skywalking"）
+     */
     @Override
     public String getName() {
         return "skywalking";
     }
 
+    /**
+     * 判断 SkyWalking agent 是否可用。
+     *
+     * @return true=SkyWalking agent 已在 classpath 中且初始化成功
+     */
     @Override
     public boolean isEnabled() {
         return available;
     }
 
+    /**
+     * 获取当前追踪上下文中的 traceId。
+     *
+     * <p>优先从 SkyWalking ContextManager 获取，不可用时降级为 TracerUtils。
+     *
+     * @return 追踪 ID
+     */
     @Override
     public String getCurrentTraceId() {
         if (available && getTraceIdMethod != null) {
@@ -86,6 +103,13 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
         return TracerUtils.getTraceId();
     }
 
+    /**
+     * 获取当前追踪上下文中的 spanId。
+     *
+     * <p>优先从 SkyWalking ContextManager 获取，不可用时降级为 TracerUtils。
+     *
+     * @return Span ID
+     */
     @Override
     public String getCurrentSpanId() {
         if (available && getGlobalTraceIdMethod != null) {

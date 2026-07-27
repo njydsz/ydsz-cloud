@@ -21,8 +21,11 @@ import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 参数列表数据 */
 const list = ref<ConfigVO[]>([])
+/** 参数列表总数 */
 const total = ref(0)
 const query = reactive({
   page: 1,

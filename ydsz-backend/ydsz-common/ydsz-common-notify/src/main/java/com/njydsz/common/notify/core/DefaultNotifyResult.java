@@ -15,14 +15,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DefaultNotifyResult implements NotifySendResult {
 
+	/** 是否发送成功 */
 	private boolean success;
 
+	/** 消息ID */
 	private String messageId;
 
+	/** 错误信息 */
 	private String errorMessage;
 
+	/** 发送渠道 */
 	private String channel;
 
+	/** 发送时间戳 */
 	private long sendTime;
 
 	@Override

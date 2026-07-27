@@ -32,6 +32,12 @@ public class SeataGlobalTransactionExecutor  {
     private final Method getXidMethod;
     private final Method getCurrentMethod;
 
+    /**
+     * 构造 Seata 全局事务执行器，通过反射加载 Seata 2.x API
+     *
+     * @throws ClassNotFoundException Seata 类不在类路径时抛出
+     * @throws NoSuchMethodException   Seata API 方法不存在时抛出
+     */
     public SeataGlobalTransactionExecutor() throws ClassNotFoundException, NoSuchMethodException {
         Class<?> globalTxContextClass = Class.forName(SEATA_GLOBAL_TX_CONTEXT);
         Class<?> globalTxClass = Class.forName(SEATA_GLOBAL_TRANSACTION);
@@ -45,6 +51,16 @@ public class SeataGlobalTransactionExecutor  {
         log.info("Seata GlobalTransactionExecutor initialized (Seata 2.x detected)");
     }
 
+    /**
+     * 在 Seata 全局事务中执行业务操作
+     *
+     * <p>自动处理全局事务的 begin/commit/rollback 生命周期。
+     *
+     * @param action 业务操作
+     * @param <T>    返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 业务异常或全局事务异常
+     */
     public <T> T executeInGlobalTransaction(Callable<T> action) throws Exception {
         Object globalTx = getCurrentMethod.invoke(null);
         if (globalTx == null) {
@@ -67,6 +83,11 @@ public class SeataGlobalTransactionExecutor  {
         }
     }
 
+    /**
+     * 获取当前全局事务的 XID
+     *
+     * @return 当前全局事务 ID，无活跃事务时返回 null
+     */
     public String getCurrentGlobalXid() {
         try {
             Object globalTx = getCurrentMethod.invoke(null);

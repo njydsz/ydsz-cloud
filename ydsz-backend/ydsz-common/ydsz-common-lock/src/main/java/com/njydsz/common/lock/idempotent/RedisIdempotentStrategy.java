@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Redis 不可用时 acquire 降级放行（返回非 null token），避免拖垮主流程。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j

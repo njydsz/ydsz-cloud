@@ -31,6 +31,7 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code lock.idempotent.hit.count} - 幂等命中次数（Counter）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class LockMicrometerCollector {

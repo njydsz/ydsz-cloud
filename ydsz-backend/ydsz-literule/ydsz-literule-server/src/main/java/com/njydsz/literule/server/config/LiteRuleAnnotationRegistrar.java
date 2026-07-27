@@ -12,7 +12,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.domain.annotation.LiteRule;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 import lombok.extern.slf4j.Slf4j;

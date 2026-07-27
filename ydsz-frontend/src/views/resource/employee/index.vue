@@ -50,13 +50,20 @@ const {
   return { list: records, total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
 }, { defaultSize: 20 })
 
+/** 新增/编辑弹窗显隐 */
 const dialogVisible = ref(false)
+/** 弹窗模式：新增 / 编辑 */
 const dialogMode = ref<'create' | 'edit'>('create')
+/** 弹窗提交状态 */
 const dialogLoading = ref(false)
+/** 编辑中的员工 ID */
 const editingId = ref('')
 
+/** 职级下拉选项 */
 const ranks = ref<RankVO[]>([])
+/** 兼职费率下拉选项 */
 const partTimeRates = ref<PartTimeRateVO[]>([])
+/** 外包费率下拉选项 */
 const outsourceRates = ref<OutsourceRateVO[]>([])
 
 const employeeTypeMap: Record<string, string> = {

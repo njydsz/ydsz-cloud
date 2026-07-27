@@ -79,8 +79,8 @@ public interface FlowCcService {
      * @param pageSize   每页大小
      * @return 抄送记录分页
      */
-    PageResponse<FlowCcDO> listCcByUser(String userId, String readStatus, String flowCode,
-                                      String tenantId, int pageNo, int pageSize);
+    PageResponse<List<FlowCcDO>> listCcByUser(String userId, String readStatus, String flowCode,
+                                            String tenantId, int pageNo, int pageSize);
 
     /**
      * 标记已读

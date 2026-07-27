@@ -17,8 +17,9 @@ import type { MenuTreeVO, PermissionFormDTO } from '@/api/system/menu/types'
 
 const { t } = useI18n()
 
+/** 菜单树加载状态 */
 const loading = ref(false)
-// 菜单权限树形数据
+/** 菜单权限树形数据 */
 const treeData = ref<MenuTreeVO[]>([])
 
 const dialogVisible = ref(false)

@@ -23,9 +23,13 @@ import { parseUserAgent } from '@/utils/device'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 会话列表数据 */
 const list = ref<UserSessionVO[]>([])
+/** 会话列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({
   page: 1,
   size: 20,

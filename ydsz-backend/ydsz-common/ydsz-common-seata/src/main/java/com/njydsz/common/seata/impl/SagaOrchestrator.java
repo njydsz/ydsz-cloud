@@ -38,6 +38,13 @@ public class SagaOrchestrator extends AbstractTransactionManager {
 
     private final SeataProperties properties;
 
+    /**
+     * 构造 SAGA 事务编排器
+     *
+     * @param properties     Seata 配置属性
+     * @param metricsProvider 指标采集提供者（可选）
+     * @param auditProvider   审计日志提供者（可选）
+     */
     public SagaOrchestrator(SeataProperties properties,
             ObjectProvider<SeataMetrics> metricsProvider,
             ObjectProvider<TransactionAuditLogger> auditProvider) {
@@ -119,16 +126,41 @@ public class SagaOrchestrator extends AbstractTransactionManager {
         log.error("SAGA compensation exhausted retries: step={}, xid={}", step.getName(), xid);
     }
 
+    /**
+     * 获取当前事务类型
+     *
+     * @return SAGA 事务类型
+     */
     @Override
     public com.njydsz.common.seata.api.TransactionType getCurrentType() {
         return com.njydsz.common.seata.api.TransactionType.SAGA;
     }
 
+    /**
+     * 执行 SAGA 事务（单步模式，委托给 action）
+     *
+     * @param transactionName 事务名称
+     * @param type            事务类型
+     * @param action          业务操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T execute(String transactionName, com.njydsz.common.seata.api.TransactionType type, java.util.concurrent.Callable<T> action) throws Exception {
         return action.call();
     }
 
+    /**
+     * 执行 SAGA 事务（带补偿动作的单步模式）
+     *
+     * @param transactionName 事务名称
+     * @param action          正向操作
+     * @param compensation    补偿操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T executeWithCompensation(String transactionName, java.util.concurrent.Callable<T> action, Runnable compensation) throws Exception {
         try { return action.call(); }

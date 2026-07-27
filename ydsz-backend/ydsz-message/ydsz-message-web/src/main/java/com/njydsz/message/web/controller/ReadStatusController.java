@@ -23,6 +23,9 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * P1-3: 消息已读/未读状态同步 Controller。
@@ -51,6 +54,7 @@ public class ReadStatusController {
     @Operation(summary = "标记消息已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:ReadStatusController:markRead:lock", ttlSeconds = 5)
+    @Audit(module = "已读状态", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markRead'")
     @SentinelRateLimit(resource = "message.readstatus.markRead", threshold = 50)
     @PostMapping("/read/{msgId}")
     public BaseResponse<Boolean> markRead(@PathVariable String msgId,
@@ -68,6 +72,7 @@ public class ReadStatusController {
     @Operation(summary = "批量标记消息已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:ReadStatusController:markReadBatch:lock", ttlSeconds = 5)
+    @Audit(module = "已读状态", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markReadBatch'")
     @SentinelRateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
     @PostMapping("/readBatch")
     public BaseResponse<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
@@ -85,6 +90,7 @@ public class ReadStatusController {
     @Operation(summary = "标记站内通知已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:ReadStatusController:markNotificationRead:lock", ttlSeconds = 5)
+    @Audit(module = "已读状态", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markNotificationRead'")
     @SentinelRateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
     @PostMapping("/notification/{notificationId}")
     public BaseResponse<Boolean> markNotificationRead(@PathVariable String notificationId,
@@ -102,6 +108,7 @@ public class ReadStatusController {
     @Operation(summary = "全部通知标记已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:ReadStatusController:markAllNotificationsRead:lock", ttlSeconds = 5)
+    @Audit(module = "已读状态", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markAllNotificationsRead'")
     @PostMapping("/notification/readAll")
     public BaseResponse<Integer> markAllNotificationsRead(@RequestParam String userId,
                                                       @RequestParam(required = false) String bizType) {

@@ -22,6 +22,11 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
 
     private final SnowflakeUtils snowflakeUtils;
 
+    /**
+     * 构造 Snowflake 健康检查指示器
+     *
+     * @param snowflakeUtils Snowflake ID 生成器实例
+     */
     public SnowflakeHealthIndicator(SnowflakeUtils snowflakeUtils) {
         this.snowflakeUtils = snowflakeUtils;
     }

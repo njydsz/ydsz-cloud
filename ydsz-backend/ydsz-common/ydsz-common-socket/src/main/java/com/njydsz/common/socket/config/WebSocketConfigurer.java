@@ -39,6 +39,13 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
     @Autowired(required = false)
     private StompMessageInterceptor stompMessageInterceptor;
 
+    /**
+     * 注册 STOMP 端点。
+     *
+     * <p>配置 WebSocket 端点路径、SockJS 支持、CORS 跨域策略以及认证拦截器。
+     *
+     * @param registry STOMP 端点注册表
+     */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         var registration = registry.addEndpoint(properties.getEndpoint());
@@ -54,6 +61,13 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
         }
     }
 
+    /**
+     * 配置消息代理。
+     *
+     * <p>启用 SimpleBroker，设置心跳间隔和应用目标前缀。
+     *
+     * @param registry 消息代理注册表
+     */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic", "/queue")
@@ -61,12 +75,26 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");
 }
 
+    /**
+     * 配置 WebSocket 传输参数。
+     *
+     * <p>设置消息大小限制和发送超时时间。
+     *
+     * @param registration WebSocket 传输注册表
+     */
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
         registration.setMessageSizeLimit(properties.getMessageSizeLimit());
         registration.setSendTimeLimit((int) properties.getSendTimeoutMs());
 }
 
+    /**
+     * 配置客户端入站通道拦截器。
+     *
+     * <p>注册 STOMP 消息拦截器，用于速率限制和审计日志。
+     *
+     * @param registration 通道注册表
+     */
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         if (stompMessageInterceptor != null) {

@@ -26,6 +26,9 @@ import com.njydsz.cronjob.server.service.alert.JobSlaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * SLA 管理 Controller（P2-7 SLA 管理）。
@@ -53,6 +56,7 @@ public class JobSlaController {
     @Operation(summary = "创建 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_CREATE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:create:lock", ttlSeconds = 5)
+    @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @SentinelRateLimit(resource = "cronjob.jobsla.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSlaSaveDTO dto) {
@@ -69,6 +73,7 @@ public class JobSlaController {
     @Operation(summary = "更新 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:update:lock", ttlSeconds = 5)
+    @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @SentinelRateLimit(resource = "cronjob.jobsla.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
@@ -85,6 +90,7 @@ public class JobSlaController {
     @Operation(summary = "删除 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_DELETE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:delete:lock", ttlSeconds = 5)
+    @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @SentinelRateLimit(resource = "cronjob.jobsla.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -127,6 +133,7 @@ public class JobSlaController {
     @Operation(summary = "启用/禁用 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:toggle:lock", ttlSeconds = 5)
+    @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'toggle'")
     @SentinelRateLimit(resource = "cronjob.jobsla.toggle", threshold = 50)
     @PutMapping("/{id}/toggle")
     public BaseResponse<Void> toggle(@PathVariable String id, @RequestParam Integer enabled) {

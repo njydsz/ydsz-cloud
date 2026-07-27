@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;

@@ -40,6 +40,11 @@ public class EmailSmtpHealthChecker {
 	private volatile int failureStreak = 0;
 	private volatile long lastCheckTime = 0;
 
+	/**
+	 * 构造 SMTP 健康检查器
+	 *
+	 * @param properties 通知配置属性
+	 */
 	public EmailSmtpHealthChecker(NotifyProperties properties) {
 		this.properties = properties;
 	}

@@ -118,13 +118,19 @@ export function useVirtualList<T>(
     return result
   })
 
-  /** 滚动事件处理器 */
+  /**
+   * 滚动事件处理器
+   * 更新 scrollTop 值，触发 visibleData 重算
+   */
   function onScroll(e: Event): void {
     const target = e.target as HTMLElement
     scrollTop.value = target.scrollTop
   }
 
-  /** 滚动到指定索引 */
+  /**
+   * 滚动到指定索引位置
+   * @param index 目标项索引（自动钳制到合法范围）
+   */
   function scrollToIndex(index: number): void {
     const clampedIndex = Math.max(0, Math.min(data.value.length - 1, index))
     scrollTop.value = clampedIndex * itemHeight

@@ -9,8 +9,27 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.listener.ReadListener;
 
 /**
- * Spring template for ExcelFacade operations.
- * Provides a convenient API for common Excel operations in Spring applications.
+ * Excel 操作 Spring 模板类
+ *
+ * <p>为 Spring 应用提供便捷的 Excel 读写 API 封装。
+ * 内部委托 {@link ExcelFacade} 实现核心功能，简化调用方式。</p>
+ *
+ * <h3>使用示例</h3>
+ * <pre>{@code
+ * // 注入模板
+ * @Autowired
+ * private ExcelTemplate excelTemplate;
+ *
+ * // 读取 Excel
+ * excelTemplate.read(inputStream, User.class, listener);
+ *
+ * // 写入 Excel
+ * excelTemplate.write(outputStream, User.class, userList);
+ * }</pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ * @see ExcelFacade
  */
 public class ExcelTemplate {
 

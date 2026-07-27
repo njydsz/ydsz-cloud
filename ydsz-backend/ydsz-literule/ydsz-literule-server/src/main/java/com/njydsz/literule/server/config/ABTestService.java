@@ -6,7 +6,7 @@ import java.util.Map;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 import lombok.extern.slf4j.Slf4j;

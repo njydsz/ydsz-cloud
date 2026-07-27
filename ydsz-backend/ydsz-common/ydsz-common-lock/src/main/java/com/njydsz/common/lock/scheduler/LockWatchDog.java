@@ -50,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>续期失败重试机制（最多 3 次）</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j

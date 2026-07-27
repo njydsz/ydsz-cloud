@@ -30,6 +30,11 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
         return xid + ":" + branchId;
     }
 
+    /**
+     * 保存事务日志（Try 前调用）
+     *
+     * @param txLog 事务日志
+     */
     @Override
     public void save(TccTransactionLog txLog) {
         if (store.size() >= MAX_ENTRIES) {
@@ -38,6 +43,13 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
         store.put(key(txLog.getXid(), txLog.getBranchId()), txLog);
     }
 
+    /**
+     * 更新分支事务状态
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     * @param status   新状态
+     */
     @Override
     public void updateStatus(String xid, String branchId, TccBranchStatus status) {
         TccTransactionLog logEntry = store.get(key(xid, branchId));
@@ -49,11 +61,24 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
         }
     }
 
+    /**
+     * 根据 XID 和分支 ID 查询事务日志
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     * @return 事务日志（Optional）
+     */
     @Override
     public Optional<TccTransactionLog> findByXidAndBranchId(String xid, String branchId) {
         return Optional.ofNullable(store.get(key(xid, branchId)));
     }
 
+    /**
+     * 查询超时未完成的分支事务（用于恢复扫描）
+     *
+     * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复
+     * @return 超时分支列表
+     */
     @Override
     public List<TccTransactionLog> findTimeoutPending(LocalDateTime threshold) {
         return store.values().stream()
@@ -62,11 +87,20 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 删除事务日志
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     */
     @Override
     public void delete(String xid, String branchId) {
         store.remove(key(xid, branchId));
     }
 
+    /**
+     * 清理终态事务日志（超过保留时间的日志自动删除）
+     */
     public void cleanupFinalStateLogs() {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(RETENTION_HOURS);
         store.entrySet().removeIf(entry -> {

@@ -41,9 +41,12 @@ const emit = defineEmits<{
   (e: 'insert', func: FunctionDef): void
 }>()
 
+/** 搜索关键词 */
 const searchText = ref('')
+/** 当前选中的分类 */
 const activeCategory = ref('all')
 
+/** 提取所有可用的分类列表 */
 const categories = computed(() => {
   const cats = new Set<string>()
   for (const f of props.functions) {
@@ -52,6 +55,7 @@ const categories = computed(() => {
   return ['all', ...Array.from(cats)]
 })
 
+/** 分类标签中文映射 */
 const categoryLabels: Record<string, string> = {
   all: '全部',
   math: '数学',
@@ -62,6 +66,7 @@ const categoryLabels: Record<string, string> = {
   utility: '工具'
 }
 
+/** 按分类和关键词过滤后的函数列表 */
 const filteredFunctions = computed(() => {
   let result = props.functions
   if (activeCategory.value !== 'all') {
@@ -78,6 +83,7 @@ const filteredFunctions = computed(() => {
   return result.sort((a, b) => a.name.localeCompare(b.name))
 })
 
+/** 按分类分组的函数列表 */
 const groupedFunctions = computed(() => {
   const groups: Record<string, FunctionDef[]> = {}
   for (const f of filteredFunctions.value) {
@@ -88,10 +94,12 @@ const groupedFunctions = computed(() => {
   return groups
 })
 
+/** 点击函数卡片，触发 insert 事件供表达式编辑器使用 */
 function handleInsert(func: FunctionDef) {
   emit('insert', func)
 }
 
+/** 获取函数引擎标签文本 */
 function getEngineTag(engine?: string): string {
   if (engine === 'liteexpr') return 'LiteExpr'
   return ''
@@ -124,6 +132,7 @@ function getEngineTag(engine?: string): string {
     <div class="function-groups">
       <div v-for="(funcs, cat) in groupedFunctions" :key="cat" class="function-group">
         <h4 class="group-title">{{ categoryLabels[cat] || cat }}</h4>
+        <!-- 函数卡片列表（点击触发 insert 事件供表达式编辑器使用） -->
         <div class="function-cards">
           <div
             v-for="func in funcs"

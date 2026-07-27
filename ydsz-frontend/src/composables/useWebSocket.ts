@@ -245,9 +245,13 @@ export function useWebSocket() {
   })
 
   return {
+    /** 当前 STOMP 连接是否已建立 */
     connected: globalConnected,
+    /** 全局消息列表（容量上限 MAX_MESSAGES，超限时丢弃最早的消息） */
     messages: globalMessages,
+    /** 订阅指定 type 的消息 */
     on,
+    /** 取消订阅指定 type 的消息 */
     off,
   }
 }

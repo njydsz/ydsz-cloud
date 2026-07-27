@@ -15,6 +15,9 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
  * Excel Sheet信息查询工具
  *
  * <p>提供查询Excel文件中Sheet数量、名称等信息的便捷方法。</p>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
  */
 public class ExcelSheetInfo {
 

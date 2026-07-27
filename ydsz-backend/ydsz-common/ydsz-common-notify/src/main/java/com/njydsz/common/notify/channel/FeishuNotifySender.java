@@ -56,6 +56,14 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 		return NotifyChannel.FEISHU;
 	}
 
+	/**
+	 * 发送飞书通知
+	 *
+	 * @param receiver 接收者（飞书 Webhook 模式下可为 null）
+	 * @param title    消息标题
+	 * @param content  消息内容（支持 Lark Markdown 语法）
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
@@ -79,6 +87,14 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 		}
 	}
 
+	/**
+	 * 使用模板发送飞书通知
+	 *
+	 * @param receiver       接收者（可为 null）
+	 * @param templateCode   模板编码
+	 * @param templateParams 模板参数
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
 		Map<String, Object> params = extractParams(templateParams);
@@ -109,6 +125,12 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 		return webhook != null && !webhook.isEmpty();
 	}
 
+	/**
+	 * 从模板参数对象中提取 Map
+	 *
+	 * @param templateParams 模板参数对象
+	 * @return 参数映射
+	 */
 	private Map<String, Object> extractParams(Object templateParams) {
 		if (templateParams instanceof Map<?, ?> rawMap) {
 			Map<String, Object> params = new HashMap<>();

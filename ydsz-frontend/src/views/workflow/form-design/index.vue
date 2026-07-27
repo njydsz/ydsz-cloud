@@ -34,7 +34,9 @@ const editorMode = ref<'design' | 'json'>('design')
 const formDesignerRef = ref<InstanceType<typeof FormDesigner> | null>(null)
 
 // ==================== 状态 ====================
+/** 保存表单提交状态 */
 const saving = ref(false)
+/** 表单加载状态 */
 const loading = ref(false)
 
 // JSON 编辑模式相关

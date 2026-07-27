@@ -142,11 +142,41 @@ public class NotifyServiceImpl implements NotifyService {
 				metrics != null, preferenceManager != null, dedupService != null, aggregator != null);
 	}
 
+	/**
+	 * 发送单条文本通知。
+	 *
+	 * <p>等价于 {@code send(channel, receiver, title, content, null, null, NotifyType.TEXT)}。
+	 *
+	 * @param channel  通知渠道（EMAIL/DINGTALK/FEISHU等）
+	 * @param receiver 接收方（邮箱地址/手机号/用户ID等）
+	 * @param title    消息标题
+	 * @param content  消息内容
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult send(NotifyChannel channel, String receiver, String title, String content) {
 		return doSend(channel, receiver, title, content, null, null, NotifyType.TEXT);
 	}
 
+	/**
+	 * 发送通知（完整上下文）。
+	 *
+	 * <p>支持以下全链路增强：
+	 * <ul>
+	 *   <li>P0-5: 用户偏好检查（免打扰时段、渠道开关、类型开关），P0_CRITICAL 跳过</li>
+	 *   <li>P0-7: 消息聚合检查（低优先级消息在时间窗口内聚合为摘要），P0_CRITICAL 跳过</li>
+	 *   <li>P0-6: 去重检查（相同内容在时间窗口内只发送一次）</li>
+	 *   <li>熔断检查（连续失败超过阈值自动熔断）</li>
+	 *   <li>限流检查（每个渠道独立限流，基于滑动窗口算法）</li>
+	 *   <li>P0-1: 渠道降级（主渠道失败时按降级链尝试备用渠道）</li>
+	 *   <li>P0-4: 指标埋点（所有渠道发送量/失败率/延迟统一上报 Micrometer）</li>
+	 *   <li>P0-2: 审计日志（每条通知发送记录结构化审计日志）</li>
+	 *   <li>P0-8: ACK 待确认注册</li>
+	 * </ul>
+	 *
+	 * @param request 通知请求（包含渠道、接收方、标题、内容、模板信息、优先级等）
+	 * @return 发送结果（aggregated 表示已加入聚合缓冲区，success 表示发送成功，failure 表示发送失败）
+	 */
 	@Override
 	public NotifySendResult send(NotifyRequest request) {
 		if (request == null) {
@@ -190,15 +220,38 @@ public class NotifyServiceImpl implements NotifyService {
 				request.getUserId(), null, NotifyType.TEXT);
 	}
 
+	/**
+	 * 发送模板通知。
+	 *
+	 * <p>等价于 {@code doSendTemplate(channel, receiver, templateCode, templateParams, null)}。
+	 *
+	 * @param channel       通知渠道
+	 * @param receiver      接收方
+	 * @param templateCode  模板编码
+	 * @param templateParams 模板参数
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult sendTemplate(NotifyChannel channel, String receiver,
-										  String templateCode, Object templateParams) {
+								  String templateCode, Object templateParams) {
 		return doSendTemplate(channel, receiver, templateCode, templateParams, null);
 	}
 
+	/**
+	 * 批量发送通知（同步阻塞）。
+	 *
+	 * <p>先进行熔断检查和限流检查，然后调用渠道策略的 {@code batchSend} 方法。
+	 * 批量发送不支持降级（因为批量操作难以确定哪些接收方需要降级）。
+	 *
+	 * @param channel  通知渠道
+	 * @param receivers 接收方列表
+	 * @param title    消息标题
+	 * @param content  消息内容
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult batchSend(NotifyChannel channel, List<String> receivers,
-									   String title, String content) {
+								   String title, String content) {
 		// P1-1: 熔断检查
 		if (!tryAcquireCircuitBreaker(channel)) {
 			return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
@@ -218,9 +271,21 @@ public class NotifyServiceImpl implements NotifyService {
 		return result;
 	}
 
+	/**
+	 * 批量发送通知（异步并行）。
+	 *
+	 * <p>使用线程池并行调用单条发送方法，每个接收方独立处理，
+	 * 最终统计成功/失败数量返回汇总结果。
+	 *
+	 * @param channel   通知渠道
+	 * @param receivers 接收方列表
+	 * @param title     消息标题
+	 * @param content   消息内容
+	 * @return 异步发送结果 Future
+	 */
 	@Override
 	public CompletableFuture<NotifySendResult> parallelBatchSend(NotifyChannel channel, List<String> receivers,
-																  String title, String content) {
+												  String title, String content) {
 		// P1-1: 熔断检查
 		if (!tryAcquireCircuitBreaker(channel)) {
 			return CompletableFuture.completedFuture(
@@ -324,11 +389,20 @@ public class NotifyServiceImpl implements NotifyService {
 	// ==================== 内部发送逻辑 ====================
 
 	/**
-	 * 执行单条通知发送（含去重、熔断、限流、指标、审计、降级全链路）
+	 * 执行单条通知发送（含去重、熔断、限流、指标、审计、降级全链路）。
+	 *
+	 * @param channel       通知渠道
+	 * @param receiver      接收方
+	 * @param title         消息标题
+	 * @param content       消息内容
+	 * @param userId        用户 ID（可选，用于偏好检查和审计）
+	 * @param templateCode  模板编码（可选，用于指标）
+	 * @param notifyType    通知类型（TEXT/TEMPLATE）
+	 * @return 发送结果
 	 */
 	private NotifySendResult doSend(NotifyChannel channel, String receiver, String title,
-									 String content, String userId, String templateCode,
-									 NotifyType notifyType) {
+							 String content, String userId, String templateCode,
+							 NotifyType notifyType) {
 		// P0-6: 去重检查
 		if (isDuplicate(receiver, title, content)) {
 			log.debug("[NotifyServiceImpl] 去重命中，跳过发送: receiver={}, title={}", receiver, title);
@@ -374,11 +448,18 @@ public class NotifyServiceImpl implements NotifyService {
 	}
 
 	/**
-	 * 执行模板通知发送（含熔断、限流、指标、审计、降级全链路）
+	 * 执行模板通知发送（含熔断、限流、指标、审计、降级全链路）。
+	 *
+	 * @param channel       通知渠道
+	 * @param receiver      接收方
+	 * @param templateCode  模板编码
+	 * @param templateParams 模板参数
+	 * @param title         消息标题（可选，用于降级）
+	 * @return 发送结果
 	 */
 	private NotifySendResult doSendTemplate(NotifyChannel channel, String receiver,
-											 String templateCode, Object templateParams,
-											 String title) {
+								 String templateCode, Object templateParams,
+								 String title) {
 		// 熔断检查
 		if (!tryAcquireCircuitBreaker(channel)) {
 			return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
@@ -420,6 +501,12 @@ public class NotifyServiceImpl implements NotifyService {
 
 	// ==================== 辅助方法 ====================
 
+	/**
+	 * 尝试获取限流令牌。
+	 *
+	 * @param channel 通知渠道
+	 * @return 是否获取成功（未配置限流管理器时默认成功）
+	 */
 	private boolean tryAcquireRateLimit(NotifyChannel channel) {
 		if (rateLimiterManager == null) {
 			return true;
@@ -427,6 +514,12 @@ public class NotifyServiceImpl implements NotifyService {
 		return rateLimiterManager.tryAcquire(channel);
 	}
 
+	/**
+	 * 尝试获取熔断器通行证。
+	 *
+	 * @param channel 通知渠道
+	 * @return 是否获取成功（未配置熔断器注册中心时默认成功）
+	 */
 	private boolean tryAcquireCircuitBreaker(NotifyChannel channel) {
 		if (circuitBreakerRegistry == null) {
 			return true;
@@ -434,6 +527,12 @@ public class NotifyServiceImpl implements NotifyService {
 		return circuitBreakerRegistry.tryAcquire(channel);
 	}
 
+	/**
+	 * 记录熔断器结果。
+	 *
+	 * @param channel 通知渠道
+	 * @param success 是否成功
+	 */
 	private void recordCircuitResult(NotifyChannel channel, boolean success) {
 		if (circuitBreakerRegistry == null) {
 			return;
@@ -445,12 +544,22 @@ public class NotifyServiceImpl implements NotifyService {
 		}
 	}
 
+	/**
+	 * 记录熔断器失败。
+	 *
+	 * @param channel 通知渠道
+	 */
 	private void recordCircuitFailure(NotifyChannel channel) {
 		recordCircuitResult(channel, false);
 	}
 
 	/**
-	 * P0-4: 记录渠道发送指标（所有渠道统一）
+	 * P0-4: 记录渠道发送指标（所有渠道统一）。
+	 *
+	 * @param channel       通知渠道
+	 * @param success       是否发送成功
+	 * @param durationNanos 耗时（纳秒）
+	 * @param templateCode  模板编码（可选）
 	 */
 	private void recordMetrics(NotifyChannel channel, boolean success, long durationNanos, String templateCode) {
 		if (metrics == null) {
@@ -467,7 +576,13 @@ public class NotifyServiceImpl implements NotifyService {
 	}
 
 	/**
-	 * P0-2: 审计日志记录
+	 * P0-2: 审计日志记录。
+	 *
+	 * @param channel       通知渠道
+	 * @param receiver      接收方
+	 * @param templateCode  模板编码（可选）
+	 * @param result        发送结果
+	 * @param durationNanos 耗时（纳秒）
 	 */
 	private void auditLog(NotifyChannel channel, String receiver, String templateCode,
 						   NotifySendResult result, long durationNanos) {
@@ -483,7 +598,12 @@ public class NotifyServiceImpl implements NotifyService {
 	}
 
 	/**
-	 * P0-6: 去重检查
+	 * P0-6: 去重检查。
+	 *
+	 * @param receiver 接收方
+	 * @param title   消息标题
+	 * @param content 消息内容
+	 * @return 是否重复（true 表示应跳过发送）
 	 */
 	private boolean isDuplicate(String receiver, String title, String content) {
 		if (dedupService == null) {

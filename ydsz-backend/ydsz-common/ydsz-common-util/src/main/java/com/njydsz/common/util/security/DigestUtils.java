@@ -50,7 +50,10 @@ public class DigestUtils {
 
     /**
      * 生成随机的 byte[] 作为 salt 密钥（线程安全）
- */
+     *
+     * @param numBytes 盐值字节数（≥ 1）
+     * @return 随机生成的盐值字节数组
+     */
     public static byte[] genSalt(int numBytes) {
         if (numBytes <= 0) {
             throw new IllegalArgumentException("numBytes argument must be a positive integer (1 or larger)");
@@ -62,7 +65,10 @@ public class DigestUtils {
 
     /**
      * 生成指定长度的 Hex 格式 salt
- */
+     *
+     * @param numBytes 盐值字节数（≥ 1）
+     * @return Hex 编码的盐值字符串
+     */
     public static String genSaltHex(int numBytes) {
         return HexUtils.bytesToHex(genSalt(numBytes));
     }

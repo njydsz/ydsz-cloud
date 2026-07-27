@@ -19,6 +19,9 @@ import com.njydsz.message.server.service.batch.AggregateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 聚合批次 Controller。
@@ -58,6 +61,7 @@ public class AggregateController {
     @Operation(summary = "按聚合组+接收人强制刷新")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "ydsz:message:AggregateController:flushByGroup:lock", ttlSeconds = 5)
+    @Audit(module = "聚合批次", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'flushByGroup'")
     @SentinelRateLimit(resource = "message.aggregate.flushByGroup", threshold = 50)
     @PostMapping("/flush")
     public BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
@@ -72,6 +76,7 @@ public class AggregateController {
     @Operation(summary = "刷新到期批次")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "ydsz:message:AggregateController:flushDue:lock", ttlSeconds = 5)
+    @Audit(module = "聚合批次", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'flushDue'")
     @SentinelRateLimit(resource = "message.aggregate.flushDue", threshold = 50)
     @PostMapping("/flushDue")
     public BaseResponse<Integer> flushDue() {

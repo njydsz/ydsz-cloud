@@ -23,6 +23,9 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 消息回执 Controller。
@@ -48,6 +51,7 @@ public class ReceiptController {
     @Operation(summary = "回执回调")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
     @Idempotent(key = "ydsz:message:ReceiptController:callback:lock", ttlSeconds = 5)
+    @Audit(module = "消息回执", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'callback'")
     @SentinelRateLimit(resource = "message.receipt.callback", threshold = 50)
     @PostMapping("/callback")
     public BaseResponse<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {

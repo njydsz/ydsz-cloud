@@ -88,6 +88,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P0-2: 熔断降级 ====================
 
+    /**
+     * 创建熔断降级保护器 Bean。
+     *
+     * @param properties WebSocket 配置属性
+     * @return 熔断器实例
+     */
     @Bean
     @ConditionalOnMissingBean(WebSocketCircuitBreaker.class)
     public WebSocketCircuitBreaker webSocketCircuitBreaker(WebSocketProperties properties) {
@@ -99,6 +105,11 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P2-5: 审计日志 ====================
 
+    /**
+     * 创建审计日志服务 Bean。
+     *
+     * @return 审计日志服务实例
+     */
     @Bean
     @ConditionalOnMissingBean(WebSocketAuditService.class)
     public WebSocketAuditService webSocketAuditService() {
@@ -108,6 +119,11 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P3-5: 消息序列化扩展点 ====================
 
+    /**
+     * 创建消息序列化器 Bean。
+     *
+     * @return JSON 消息序列化器实例
+     */
     @Bean
     @ConditionalOnMissingBean(MessageSerializer.class)
     public MessageSerializer messageSerializer() {
@@ -117,6 +133,12 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P2-3: 消息压缩 ====================
 
+    /**
+     * 创建消息压缩器 Bean。
+     *
+     * @param properties WebSocket 配置属性
+     * @return 消息压缩器实例
+     */
     @Bean
     @ConditionalOnMissingBean(MessageCompressor.class)
     public MessageCompressor messageCompressor(WebSocketProperties properties) {

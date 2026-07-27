@@ -28,10 +28,20 @@ public class FeignXidRequestInterceptor implements RequestInterceptor {
 
     private final XidPropagator xidPropagator;
 
+    /**
+     * 构造 Feign XID 请求拦截器
+     *
+     * @param xidPropagator XID 传播器，用于获取当前线程 XID
+     */
     public FeignXidRequestInterceptor(XidPropagator xidPropagator) {
         this.xidPropagator = xidPropagator;
     }
 
+    /**
+     * 在 Feign 请求发出前，将 XID 写入请求头
+     *
+     * @param template Feign 请求模板
+     */
     @Override
     public void apply(RequestTemplate template) {
         String xid = xidPropagator.currentXid();

@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.util.Assert;
 
+import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.JobDO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
@@ -264,7 +265,7 @@ public class JobScanner {
             return;
         }
         // P6-1: 为每个任务派发生成独立 traceId，保证任务间链路隔离
-        TracerUtils.getOrCreate();
+        TracerUtils.getOrCreateTraceId();
         try {
             // P0-7b: 日历调度过滤 — 按工作日/节假日过滤派发
             CalendarScheduleFilter calendarFilter = calendarScheduleFilterProvider.getIfAvailable();
@@ -330,7 +331,7 @@ public class JobScanner {
                         job.getJobKey(), triggerType);
             } else {
                 log.info("[JobScanner] 任务派发成功: key={} logId={} triggerType={} traceId={}",
-                        job.getJobKey(), logId, triggerType, TracerUtils.get());
+                        job.getJobKey(), logId, triggerType, TracerUtils.getTraceId());
             }
             if (successCount != null) successCount.incrementAndGet();
         } catch (Exception e) {

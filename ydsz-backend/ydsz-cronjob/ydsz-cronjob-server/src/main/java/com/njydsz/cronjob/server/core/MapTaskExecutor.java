@@ -400,7 +400,7 @@ public class MapTaskExecutor {
                 result = ProcessResult.failed("远程派发失败: 响应为空");
             } else {
                 // ProcessResult 使用 final 字段，手动解析避免反射问题
-                Map<String, Object> jsonObj = YdszJson.parseMap(responseJson);
+                YdszJsonObject jsonObj = YdszJson.parseObjectToJsonObject(responseJson);
                 boolean success = jsonObj.getBooleanValue("success");
                 String res = jsonObj.getString("result");
                 String errMsg = jsonObj.getString("errorMessage");
@@ -619,7 +619,7 @@ public class MapTaskExecutor {
         context.setTaskParams(taskDO.getTaskParams());
         context.setRoot(false);
         log.info("[MapTaskRetry] 开始重试子任务: taskId={} retryCount={}", taskId, currentRetryCount + 1);
-        ProcessResult result = executeSingleTask(processor, context, taskDO, jobDO.getJobKey(), logId);
+        ProcessResult result = executeTask(processor, context, taskDO, jobDO.getJobKey(), logId);
         log.info("[MapTaskRetry] 重试完成: taskId={} success={}", taskId, result.isSuccess());
         return result.isSuccess();
     }

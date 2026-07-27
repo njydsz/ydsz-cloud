@@ -65,6 +65,14 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 	private final ExecutorService virtualThreadExecutor;
 	private final SmsProvider smsProvider;
 
+	/**
+	 * 构造短信通知发送器
+	 *
+	 * @param notifyProperties       通知配置属性
+	 * @param restTemplate           HTTP 请求客户端
+	 * @param virtualThreadExecutor  虚拟线程池
+	 * @param smsProviderProvider    短信服务提供商（可选）
+	 */
 	public SmsNotifySender(
 			NotifyProperties notifyProperties,
 			RestTemplate restTemplate,
@@ -84,6 +92,14 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 		return NotifyChannel.SMS;
 	}
 
+	/**
+	 * 发送短信通知
+	 *
+	 * @param receiver 手机号
+	 * @param title    消息标题
+	 * @param content  消息内容
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
@@ -98,6 +114,14 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 		return doSend(receiver, smsConfig.getTemplateCode(), templateParam);
 	}
 
+	/**
+	 * 使用模板发送短信通知
+	 *
+	 * @param receiver       手机号
+	 * @param templateCode   模板编码
+	 * @param templateParams 模板参数
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
 		if (!isEnabled()) {
@@ -110,6 +134,14 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 		return doSend(receiver, templateCode, params);
 	}
 
+	/**
+	 * 批量发送短信通知
+	 *
+	 * @param receivers 手机号列表
+	 * @param title     消息标题
+	 * @param content   消息内容
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult batchSend(List<String> receivers, String title, String content) {
 		if (!isEnabled()) {
@@ -143,6 +175,11 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 				"部分发送失败: 成功" + successCount + "/" + receivers.size(), getChannel().getName());
 	}
 
+	/**
+	 * 判断短信渠道是否启用
+	 *
+	 * @return 启用返回 true，否则返回 false
+	 */
 	@Override
 	public boolean isEnabled() {
 		return smsConfig != null && smsConfig.isEnabled()
@@ -153,6 +190,11 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 执行短信发送：优先委托 SmsProvider，降级使用内置 REST 调用
+	 *
+	 * @param receiver       手机号
+	 * @param templateCode   模板编码
+	 * @param templateParam  模板参数
+	 * @return 发送结果
 	 */
 	private NotifySendResult doSend(String receiver, String templateCode, Map<String, Object> templateParam) {
 		// P2-1: 委托给 SmsProvider
@@ -195,6 +237,9 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 转换 SmsProvider 结果为 NotifySendResult
+	 *
+	 * @param result SmsProvider 发送结果
+	 * @return NotifySendResult
 	 */
 	private NotifySendResult convertResult(SmsProvider.SmsSendResult result) {
 		if (result.isSuccess()) {
@@ -205,6 +250,9 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 从模板参数对象中提取 Map（P3-2: 安全类型检查）
+	 *
+	 * @param templateParams 模板参数对象
+	 * @return 参数映射
 	 */
 	private Map<String, Object> extractParams(Object templateParams) {
 		if (templateParams instanceof Map<?, ?> rawMap) {
@@ -219,6 +267,9 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 构建授权签名（降级模式使用）
+	 *
+	 * @param payload 签名负载
+	 * @return 授权头字符串
 	 */
 	private String buildAuthorization(String payload) {
 		String accessKey = smsConfig.getAccessKeyId();
@@ -241,6 +292,9 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 解析短信服务商响应（降级模式使用）
+	 *
+	 * @param response 短信服务商返回的 JSON 字符串
+	 * @return 发送结果
 	 */
 	private NotifySendResult parseSmsResponse(String response) {
 		if (response == null || response.isEmpty()) {
@@ -263,10 +317,26 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	// ==================== 异步发送 ====================
 
+	/**
+	 * 异步发送短信通知
+	 *
+	 * @param receiver 手机号
+	 * @param title    消息标题
+	 * @param content  消息内容
+	 * @return 异步发送结果
+	 */
 	public CompletableFuture<NotifySendResult> sendSmsAsync(String receiver, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> send(receiver, title, content), virtualThreadExecutor);
 	}
 
+	/**
+	 * 异步批量发送短信通知
+	 *
+	 * @param receivers 手机号列表
+	 * @param title     消息标题
+	 * @param content   消息内容
+	 * @return 异步发送结果
+	 */
 	public CompletableFuture<NotifySendResult> batchSendSmsAsync(List<String> receivers, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> batchSend(receivers, title, content), virtualThreadExecutor);
 	}

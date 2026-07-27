@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>后端校验 Token 有效性，成功后自动删除（一次性使用）</li>
  * </ol>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see RepeatSubmitTokenService
  */

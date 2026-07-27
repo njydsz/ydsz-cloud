@@ -58,6 +58,12 @@ final class DataPermissionHelper {
     private DataPermissionHelper() {
     }
 
+    /**
+     * 规范化表名集合（转小写 + 去空）。
+     *
+     * @param config 数据权限配置
+     * @return 规范化后的表名集合（配置为空时返回空集合）
+     */
     static Set<String> normalizeTableSet(DataPermissionConfiguration config) {
         if (config == null || config.getTables() == null) {
             return Collections.emptySet();
@@ -69,6 +75,14 @@ final class DataPermissionHelper {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * 判断表是否应应用数据权限。
+     *
+     * @param table            SQL 表对象
+     * @param config           数据权限配置
+     * @param normalizedTables 规范化后的表名集合
+     * @return 是否应应用数据权限
+     */
     static boolean shouldApply(Table table, DataPermissionConfiguration config, Set<String> normalizedTables) {
         if (table == null) {
             return false;
@@ -83,6 +97,12 @@ final class DataPermissionHelper {
         return !normalizedTables.contains(name);
     }
 
+    /**
+     * 规范化表名（去点号后缀 + 转小写）。
+     *
+     * @param table SQL 表对象
+     * @return 规范化后的表名（空输入时返回空字符串）
+     */
     static String normalizeTableName(Table table) {
         String name = table.getName();
         if (StringUtils.isBlank(name)) {
@@ -94,6 +114,14 @@ final class DataPermissionHelper {
         return name.toLowerCase();
     }
 
+    /**
+     * 检查 Mapper 方法是否标注了 {@link DataPermissionIgnore} 注解。
+     *
+     * <p>使用 LRU 缓存（最大 10000 条）避免重复反射扫描。
+     *
+     * @param ms MyBatis MappedStatement
+     * @return 是否应忽略数据权限拦截
+     */
     static boolean isDataPermissionIgnored(MappedStatement ms) {
         if (ms == null || ms.getId() == null) {
             return false;
@@ -108,6 +136,12 @@ final class DataPermissionHelper {
         return result;
     }
 
+    /**
+     * 检查 Mapper 方法是否标注了 {@link DataPermissionIgnore} 注解（反射扫描）。
+     *
+     * @param msId MappedStatement ID（格式：{@code package.ClassName.methodName}）
+     * @return 是否应忽略数据权限拦截
+     */
     private static boolean checkDataPermissionIgnored(String msId) {
         try {
             int lastDot = msId.lastIndexOf('.');

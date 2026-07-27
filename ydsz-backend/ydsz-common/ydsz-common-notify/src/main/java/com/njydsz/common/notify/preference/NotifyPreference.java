@@ -62,6 +62,9 @@ public class NotifyPreference {
 
 	/**
 	 * 判断指定渠道是否启用
+	 *
+	 * @param channel 通知渠道
+	 * @return true 表示该渠道已启用
 	 */
 	public boolean isChannelEnabled(NotifyChannel channel) {
 		return enabledChannels.contains(channel);
@@ -69,6 +72,9 @@ public class NotifyPreference {
 
 	/**
 	 * 判断指定通知类型是否启用
+	 *
+	 * @param type 通知类型
+	 * @return true 表示该类型已启用
 	 */
 	public boolean isTypeEnabled(NotifyType type) {
 		return enabledTypes.contains(type);
@@ -76,6 +82,10 @@ public class NotifyPreference {
 
 	/**
 	 * 判断指定渠道+类型组合是否允许发送
+	 *
+	 * @param channel 通知渠道
+	 * @param type    通知类型
+	 * @return true 表示允许发送
 	 */
 	public boolean isAllowed(NotifyChannel channel, NotifyType type) {
 		if (!isChannelEnabled(channel) || !isTypeEnabled(type)) {
@@ -90,6 +100,8 @@ public class NotifyPreference {
 
 	/**
 	 * 判断当前时间是否在免打扰时段
+	 *
+	 * @return true 表示当前处于免打扰时段
 	 */
 	public boolean isDoNotDisturb() {
 		if (dndStartHour < 0 || dndEndHour < 0) {
@@ -106,6 +118,9 @@ public class NotifyPreference {
 
 	/**
 	 * 启用/禁用渠道
+	 *
+	 * @param channel 通知渠道
+	 * @param enabled 是否启用
 	 */
 	public void setChannelEnabled(NotifyChannel channel, boolean enabled) {
 		if (enabled) {
@@ -117,6 +132,9 @@ public class NotifyPreference {
 
 	/**
 	 * 启用/禁用通知类型
+	 *
+	 * @param type    通知类型
+	 * @param enabled 是否启用
 	 */
 	public void setTypeEnabled(NotifyType type, boolean enabled) {
 		if (enabled) {

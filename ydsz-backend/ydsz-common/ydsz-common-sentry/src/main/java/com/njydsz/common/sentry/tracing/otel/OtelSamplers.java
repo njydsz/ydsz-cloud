@@ -37,14 +37,30 @@ public final class OtelSamplers {
         throw new UnsupportedOperationException("OtelSamplers is a utility class");
     }
 
+    /**
+     * 创建始终采样的采样器（100% 采集，适用于开发/调试环境）
+     *
+     * @return AlwaysOn Sampler
+     */
     public static Sampler alwaysOn() {
         return Sampler.alwaysOn();
     }
 
+    /**
+     * 创建始终不采样的采样器（0% 采集，用于关闭追踪）
+     *
+     * @return AlwaysOff Sampler
+     */
     public static Sampler alwaysOff() {
         return Sampler.alwaysOff();
     }
 
+    /**
+     * 创建按比例采样的采样器
+     *
+     * @param ratio 采样比例（0.0~1.0）
+     * @return 比例采样器
+     */
     public static Sampler ratio(double ratio) {
         if (ratio < 0.0 || ratio > 1.0) {
             throw new IllegalArgumentException("ratio must be in [0.0, 1.0], got: " + ratio);

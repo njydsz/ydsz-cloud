@@ -326,10 +326,14 @@ public class OutboxRepository {
     }
 
     /**
-     * Outbox 消息行映射器（静态，复用实例，使用 ResultSetMetaData 避免异常开销）
+     * Outbox 消息行映射器
+     *
+     * <p>静态内部类，复用单一实例，使用 ResultSetMetaData 一次性检查列是否存在，
+     * 避免逐列 try-catch SQLException 的性能开销。
      */
     static final class OutboxRowMapper implements RowMapper<OutboxMessage> {
 
+        /** 单例实例 */
         static final OutboxRowMapper INSTANCE = new OutboxRowMapper();
 
         /**

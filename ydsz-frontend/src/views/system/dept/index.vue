@@ -13,9 +13,11 @@ import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
-// 树形数据与当前选中节点
+/** 树形数据加载状态 */
 const loading = ref(false)
+/** 部门树形数据 */
 const treeData = ref<DeptVO[]>([])
+/** 当前选中的部门节点 */
 const currentNode = ref<DeptVO | null>(null)
 
 // 新增/编辑弹窗状态（dialogMode 区分新建与编辑）

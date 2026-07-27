@@ -2,7 +2,7 @@ package com.njydsz.literule.server.sdk;
 
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
 import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
 
 /**

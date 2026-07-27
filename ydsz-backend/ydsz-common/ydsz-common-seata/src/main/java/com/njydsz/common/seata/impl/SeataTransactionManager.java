@@ -43,10 +43,22 @@ public class SeataTransactionManager extends AbstractTransactionManager {
 
     private final SeataGlobalTransactionExecutor globalExecutor;
 
+    /**
+     * 构造 Seata AT 模式事务管理器
+     *
+     * @param globalExecutor Seata 全局事务执行器
+     */
     public SeataTransactionManager(SeataGlobalTransactionExecutor globalExecutor) {
         this.globalExecutor = globalExecutor;
     }
 
+    /**
+     * 构造 Seata AT 模式事务管理器（带指标和审计）
+     *
+     * @param globalExecutor Seata 全局事务执行器
+     * @param metricsProvider 指标采集提供者（可选）
+     * @param auditProvider   审计日志提供者（可选）
+     */
     public SeataTransactionManager(SeataGlobalTransactionExecutor globalExecutor,
             ObjectProvider<SeataMetrics> metricsProvider,
             ObjectProvider<TransactionAuditLogger> auditProvider) {
@@ -54,6 +66,16 @@ public class SeataTransactionManager extends AbstractTransactionManager {
         this.globalExecutor = globalExecutor;
     }
 
+    /**
+     * 执行 Seata AT 分布式事务
+     *
+     * @param transactionName 事务名称（用于日志和监控）
+     * @param type            事务类型
+     * @param action          业务操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
         String xid = beginXid(transactionName);
@@ -70,6 +92,16 @@ public class SeataTransactionManager extends AbstractTransactionManager {
         }
     }
 
+    /**
+     * 执行 Seata SAGA 分布式事务（带补偿动作）
+     *
+     * @param transactionName 事务名称
+     * @param action          正向操作
+     * @param compensation    补偿操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T executeWithCompensation(String transactionName,
                                           Callable<T> action,
@@ -94,6 +126,11 @@ public class SeataTransactionManager extends AbstractTransactionManager {
         }
     }
 
+    /**
+     * 获取当前事务类型
+     *
+     * @return Seata AT 事务类型
+     */
     @Override
     public TransactionType getCurrentType() {
         return TransactionType.SEATA_AT;

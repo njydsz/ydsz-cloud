@@ -36,12 +36,25 @@ public class FeignHealthIndicator implements HealthIndicator {
 
     private final FeignCircuitBreakerStrategy circuitBreakerStrategy;
 
+    /**
+     * 构造 Feign 健康检查指示器。
+     *
+     * @param feignProperties              Feign 配置属性
+     * @param circuitBreakerStrategyProvider 熔断器策略提供者（可选）
+     */
     public FeignHealthIndicator(FeignProperties feignProperties,
                                 ObjectProvider<FeignCircuitBreakerStrategy> circuitBreakerStrategyProvider) {
         this.feignProperties = feignProperties;
         this.circuitBreakerStrategy = circuitBreakerStrategyProvider.getIfAvailable();
     }
 
+    /**
+     * 执行健康检查，返回 Feign 模块状态。
+     *
+     * <p>检查内容包括：熔断器启用状态、重试策略、超时配置、熔断器策略等。
+     *
+     * @return 健康检查结果
+     */
     @Override
     public Health health() {
         try {

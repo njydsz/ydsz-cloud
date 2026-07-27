@@ -1,7 +1,15 @@
 package com.njydsz.common.excel.spring;
 
 /**
- * ThreadLocal context for Excel download operations in Spring web environment.
+ * Excel 下载操作 ThreadLocal 上下文
+ *
+ * <p>在 Spring Web 环境中，用于在当前线程传递 Excel 下载相关上下文信息，
+ * 包括文件名和 Sheet 名称。请求结束后必须调用 {@link #clear()} 清理上下文，
+ * 防止线程池内存泄漏。</p>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ * @see ExcelWebSupport
  */
 public final class DownloadContext {
 

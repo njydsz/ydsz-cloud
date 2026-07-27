@@ -30,12 +30,28 @@ public class InMemoryMetricsCollector implements MetricsCollector {
     private final ConcurrentHashMap<String, LongAdder> histogramCounts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, DoubleAdder> histogramTotals = new ConcurrentHashMap<>();
 
+    /**
+     * 递增 Counter 指标
+     *
+     * @param name        指标名称
+     * @param description 指标描述
+     * @param tags        指标标签
+     * @param amount      递增量
+     */
     @Override
     public void incrementCounter(String name, String description, Map<String, String> tags, double amount) {
         String key = buildKey(name, tags);
         counters.computeIfAbsent(key, k -> new DoubleAdder()).add(amount);
     }
 
+    /**
+     * 设置 Gauge 指标值
+     *
+     * @param name        指标名称
+     * @param description 指标描述
+     * @param tags        指标标签
+     * @param value       指标值
+     */
     @Override
     public void setGauge(String name, String description, Map<String, String> tags, double value) {
         String key = buildKey(name, tags);
@@ -43,6 +59,14 @@ public class InMemoryMetricsCollector implements MetricsCollector {
         ref.set(value);
     }
 
+    /**
+     * 记录 Timer 耗时指标
+     *
+     * @param name        指标名称
+     * @param description 指标描述
+     * @param tags        指标标签
+     * @param duration    耗时值
+     */
     @Override
     public void recordTimer(String name, String description, Map<String, String> tags, Duration duration) {
         String key = buildKey(name, tags);
@@ -50,6 +74,14 @@ public class InMemoryMetricsCollector implements MetricsCollector {
         timerTotals.computeIfAbsent(key, k -> new LongAdder()).add(duration.toMillis());
     }
 
+    /**
+     * 记录 Histogram 分布指标
+     *
+     * @param name        指标名称
+     * @param description 指标描述
+     * @param tags        指标标签
+     * @param value       分布值
+     */
     @Override
     public void recordHistogram(String name, String description, Map<String, String> tags, double value) {
         String key = buildKey(name, tags);
@@ -57,11 +89,21 @@ public class InMemoryMetricsCollector implements MetricsCollector {
         histogramTotals.computeIfAbsent(key, k -> new DoubleAdder()).add(value);
     }
 
+    /**
+     * 判断采集器是否可用（内存采集器始终可用）
+     *
+     * @return 固定返回 true
+     */
     @Override
     public boolean isAvailable() {
         return true;
     }
 
+    /**
+     * 获取采集器名称
+     *
+     * @return 固定返回 "in-memory"
+     */
     @Override
     public String getName() {
         return "in-memory";

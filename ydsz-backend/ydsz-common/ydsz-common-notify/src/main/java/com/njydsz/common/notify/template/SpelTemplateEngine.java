@@ -116,6 +116,11 @@ public class SpelTemplateEngine implements TemplateEngine {
         }
     }
 
+    /**
+     * 注册模板
+     *
+     * @param template 模板定义
+     */
     @Override
     public void register(NotifyTemplate template) {
         if (template == null || template.getTemplateId() == null) {
@@ -124,22 +129,44 @@ public class SpelTemplateEngine implements TemplateEngine {
         templates.put(template.getTemplateId(), template);
     }
 
+    /**
+     * 判断是否包含指定模板
+     *
+     * @param templateId 模板 ID
+     * @return 是否存在
+     */
     @Override
     public boolean hasTemplate(String templateId) {
         return templates.containsKey(templateId);
     }
 
+    /**
+     * 获取模板定义
+     *
+     * @param templateId 模板 ID
+     * @return 模板定义，不存在时返回 null
+     */
     @Override
     public NotifyTemplate getTemplate(String templateId) {
         return templates.get(templateId);
     }
 
+    /**
+     * 移除模板
+     *
+     * @param templateId 模板 ID
+     */
     @Override
     public void unregister(String templateId) {
         templates.remove(templateId);
         log.info("[SpelTemplateEngine] 模板已移除: {}", templateId);
     }
 
+    /**
+     * 获取所有已注册的模板
+     *
+     * @return 模板 Map
+     */
     @Override
     public Map<String, NotifyTemplate> getAllTemplates() {
         return Collections.unmodifiableMap(templates);

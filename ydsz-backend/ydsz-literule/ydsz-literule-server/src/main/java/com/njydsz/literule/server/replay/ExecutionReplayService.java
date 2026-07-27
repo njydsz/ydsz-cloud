@@ -17,7 +17,7 @@ import com.njydsz.literule.api.RuleExecutionTrace;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.server.config.RuleAdminService;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleVersionRepository;
 import com.njydsz.literule.server.spi.TraceRecorder;

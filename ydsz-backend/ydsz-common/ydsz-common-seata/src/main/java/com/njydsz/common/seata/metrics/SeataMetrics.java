@@ -34,19 +34,30 @@ public class SeataMetrics {
 
     private final AtomicLong activeTxCount = new AtomicLong(0);
 
+    /**
+     * 构造分布式事务指标采集器
+     *
+     * @param registryProvider Micrometer MeterRegistry 提供者（可选，不可用时降级为内存计数器）
+     */
     public SeataMetrics(ObjectProvider<MeterRegistry> registryProvider) {
         this.registryProvider = registryProvider;
     }
 
     /**
-     * 记录事务开始
+     * 记录事务开始，活跃事务数加一
+     *
+     * @param type 事务类型（LOCAL/TCC/SEATA_AT/SAGA）
      */
     public void recordTxStart(TransactionType type) {
         activeTxCount.incrementAndGet();
     }
 
     /**
-     * 记录事务完成
+     * 记录事务完成，活跃事务数减一，并上报计数和耗时指标
+     *
+     * @param type       事务类型
+     * @param result     执行结果（如 "success"、"fail"）
+     * @param durationMs 事务执行耗时（毫秒）
      */
     public void recordTxComplete(TransactionType type, String result, long durationMs) {
         activeTxCount.decrementAndGet();
@@ -66,8 +77,11 @@ public class SeataMetrics {
         }
     }
 
+    /**
+     * 记录 TCC Confirm 重试次数
+     */
     public void recordConfirmRetry() {
-MeterRegistry registry = registryProvider.getIfAvailable();
+        MeterRegistry registry = registryProvider.getIfAvailable();
         if (registry != null) {
             Counter.builder("seata.tcc.confirm.retry")
                     .register(registry)
@@ -75,8 +89,11 @@ MeterRegistry registry = registryProvider.getIfAvailable();
         }
     }
 
+    /**
+     * 记录 TCC Cancel 重试次数
+     */
     public void recordCancelRetry() {
-MeterRegistry registry = registryProvider.getIfAvailable();
+        MeterRegistry registry = registryProvider.getIfAvailable();
         if (registry != null) {
             Counter.builder("seata.tcc.cancel.retry")
                     .register(registry)
@@ -84,8 +101,11 @@ MeterRegistry registry = registryProvider.getIfAvailable();
         }
     }
 
+    /**
+     * 记录 SAGA 补偿执行次数
+     */
     public void recordSagaCompensation() {
-MeterRegistry registry = registryProvider.getIfAvailable();
+        MeterRegistry registry = registryProvider.getIfAvailable();
         if (registry != null) {
             Counter.builder("seata.saga.compensation.count")
                     .register(registry)
@@ -93,6 +113,11 @@ MeterRegistry registry = registryProvider.getIfAvailable();
         }
     }
 
+    /**
+     * 获取当前活跃事务数
+     *
+     * @return 活跃事务数
+     */
     public long getActiveTxCount() {
         return activeTxCount.get();
     }

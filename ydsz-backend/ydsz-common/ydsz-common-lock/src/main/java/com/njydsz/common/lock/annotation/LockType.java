@@ -5,6 +5,7 @@ package com.njydsz.common.lock.annotation;
  *
  * <p>定义支持的分布式锁类型，不同锁类型适用于不同场景。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public enum LockType {

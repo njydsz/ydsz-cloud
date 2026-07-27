@@ -89,13 +89,40 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         this.messageFilters = messageFilters != null ? messageFilters : List.of();
     }
 
-    // ==================== 原有接口方法 ====================
+    // ==================== 接口方法实现 ====================
 
+    /**
+     * 推送消息到指定用户（默认优先级）。
+     *
+     * @param userId  用户 ID
+     * @param type    消息类型
+     * @param payload 消息负载（将被序列化为 JSON）
+     */
     @Override
     public void pushToUser(String userId, String type, Object payload) {
         pushToUser(userId, type, payload, MessagePriority.NORMAL.name());
     }
 
+    /**
+     * 推送消息到指定用户（指定优先级）。
+     *
+     * <p>推送流程：
+     * <ol>
+     *   <li>消息过滤器链检查（拦截黑名单/敏感内容）</li>
+     *   <li>序列化 + 压缩（超过阈值自动 GZIP）</li>
+     *   <li>注入 traceId（链路追踪）</li>
+     *   <li>通过集群广播发布（熔断保护）</li>
+     *   <li>Redis 发布失败时降级为本地直接推送</li>
+     *   <li>本地推送失败时入重试队列</li>
+     *   <li>注册 ACK 待确认记录</li>
+     *   <li>记录审计日志 + 指标 + 慢连接检测</li>
+     * </ol>
+     *
+     * @param userId   用户 ID（为 null 时直接返回）
+     * @param type     消息类型
+     * @param payload  消息负载
+     * @param priority 消息优先级（影响重试队列排序）
+     */
     @Override
     public void pushToUser(String userId, String type, Object payload, String priority) {
         if (userId == null) {
@@ -138,6 +165,16 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
+    /**
+     * 推送消息到指定用户（用户离线时缓存到离线存储）。
+     *
+     * <p>若用户在线则直接推送，否则缓存到离线存储（用户上线后拉取）。
+     * 在线检查失败时降级为直接推送。
+     *
+     * @param userId   用户 ID（为 null 时直接返回）
+     * @param type     消息类型
+     * @param payload  消息负载
+     */
     @Override
     public void pushToUserWithOffline(String userId, String type, Object payload) {
         if (userId == null) {
@@ -156,11 +193,25 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
+    /**
+     * 广播消息到所有在线用户（默认类型）。
+     *
+     * @param payload 消息负载（将被序列化为 JSON）
+     */
     @Override
     public void broadcast(Object payload) {
         broadcast("BROADCAST", payload);
     }
 
+    /**
+     * 广播指定类型的消息到所有在线用户。
+     *
+     * <p>推送流程与 {@link #pushToUser} 类似，但不指定用户 ID，
+     * 目标为所有订阅了广播主题的连接。
+     *
+     * @param type     消息类型
+     * @param payload  消息负载
+     */
     @Override
     public void broadcast(String type, Object payload) {
         String payloadJson = serializeAndCompress(payload);
@@ -191,6 +242,15 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
+    /**
+     * 推送消息到指定主题（Topic）。
+     *
+     * <p>适用于发布-订阅模式，消息推送到指定 Topic，
+     * 只有订阅了该 Topic 的连接才会收到。
+     *
+     * @param topic    主题名称（如 {@code "order.created"}）
+     * @param payload  消息负载
+     */
     @Override
     public void pushToTopic(String topic, Object payload) {
         String payloadJson = serializeAndCompress(payload);
@@ -223,6 +283,17 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
 
     // ==================== 新增接口方法 ====================
 
+    /**
+     * 推送带 TTL 的消息到指定用户。
+     *
+     * <p>消息在客户端有有效期，超过 TTL 后客户端应忽略该消息。
+     * TTL 信息包装在 payload 外层，格式为 {@code {"_ttlSeconds": N, "_expireAt": timestamp, "data": originalPayload}}。
+     *
+     * @param userId     用户 ID
+     * @param type       消息类型
+     * @param payload    消息负载
+     * @param ttlSeconds 有效期（秒），≤ 0 时不包装 TTL
+     */
     @Override
     public void pushToUserWithTtl(String userId, String type, Object payload, long ttlSeconds) {
         if (userId == null) {
@@ -238,6 +309,15 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         pushToUser(userId, type, wrappedJson);
     }
 
+    /**
+     * 刷新重试队列（由定时任务调用）。
+     *
+     * <p>从重试队列中取出到期的重试消息，最多 100 条，
+     * 重新尝试推送。重试成功后标记为成功，失败后重试次数+1（最大 3 次），
+     * 超过最大重试次数则标记为失败。
+     *
+     * @return 本次刷新处理的消息数量
+     */
     @Override
     public void flushRetryMessages() {
         if (retryQueue == null) {
@@ -266,8 +346,17 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
-    // ==================== 内部方法 ====================
+    // ==================== 内部辅助方法 ====================
 
+    /**
+     * 序列化并压缩消息负载。
+     *
+     * <p>先使用 {@link MessageSerializer} 序列化为 JSON，
+     * 然后使用 {@link MessageCompressor} 判断是否需要 GZIP 压缩。
+     *
+     * @param payload 原始消息对象
+     * @return 序列化并（可选）压缩后的 JSON 字符串
+     */
     private String serializeAndCompress(Object payload) {
         String json = messageSerializer.serialize(payload);
         if (messageCompressor != null) {
@@ -276,6 +365,16 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         return json;
     }
 
+    /**
+     * 应用消息过滤器链。
+     *
+     * <p>按顺序调用所有过滤器，任一过滤器返回 false 则拦截消息。
+     *
+     * @param userId      用户 ID（可能为 null）
+     * @param pushType    推送类型（USER/BROADCAST/TOPIC）
+     * @param payloadJson 序列化后的消息 JSON
+     * @return 是否通过所有过滤器
+     */
     private boolean applyFilters(String userId, String pushType, String payloadJson) {
         for (MessageFilter filter : messageFilters) {
             if (!filter.shouldSend(userId, pushType, payloadJson)) {
@@ -287,6 +386,16 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         return true;
     }
 
+    /**
+     * 本地降级推送到指定用户。
+     *
+     * <p>当集群广播失败时降级为本地 STOMP 推送，
+     * 仅能推送到当前实例的 WebSocket 连接。
+     *
+     * @param userId      用户 ID
+     * @param payloadJson 序列化后的消息 JSON
+     * @return 是否推送成功
+     */
     private boolean localPushToUser(String userId, String payloadJson) {
         try {
             String destination = WebSocketConstants.WS_USER_DESTINATION_PREFIX + userId + "/notifications";
@@ -300,6 +409,15 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
+    /**
+     * 本地降级广播消息。
+     *
+     * <p>当集群广播失败时降级为本地 STOMP 广播，
+     * 仅能推送到当前实例的 WebSocket 连接。
+     *
+     * @param payloadJson 序列化后的消息 JSON
+     * @return 是否推送成功
+     */
     private boolean localBroadcast(String payloadJson) {
         try {
             messagingTemplate.convertAndSend(WebSocketConstants.WS_BROADCAST_DESTINATION, payloadJson);
@@ -311,6 +429,16 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
+    /**
+     * 本地降级推送到指定主题。
+     *
+     * <p>当集群广播失败时降级为本地 STOMP 主题推送，
+     * 仅能推送到当前实例的 WebSocket 连接。
+     *
+     * @param topic       主题名称
+     * @param payloadJson 序列化后的消息 JSON
+     * @return 是否推送成功
+     */
     private boolean localPushToTopic(String topic, String payloadJson) {
         try {
             messagingTemplate.convertAndSend(
@@ -323,6 +451,14 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
+    /**
+     * 将消息加入重试队列。
+     *
+     * @param messageId   消息 ID
+     * @param userId      用户 ID
+     * @param type        消息类型
+     * @param payloadJson 序列化后的消息 JSON
+     */
     private void enqueueRetry(String messageId, String userId, String type, String payloadJson) {
         if (retryQueue == null) {
             return;
@@ -337,6 +473,14 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
     }
 
+    /**
+     * 重试推送消息。
+     *
+     * <p>根据消息的推送类型（USER/BROADCAST/TOPIC）选择对应的重试方法。
+     *
+     * @param msg 重试消息
+     * @return 是否推送成功
+     */
     private boolean retryPush(RetryableMessage msg) {
         try {
             if ("USER".equals(msg.getPushType()) && msg.getUserId() != null) {
@@ -352,6 +496,22 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         return false;
     }
 
+    /**
+     * 包装消息添加 TTL 信息。
+     *
+     * <p>在原始 payload 外层包裹 TTL 字段：
+     * <pre>
+     * {
+     *   "_ttlSeconds": N,
+     *   "_expireAt": timestamp,
+     *   "data": originalPayloadJson
+     * }
+     * </pre>
+     *
+     * @param payloadJson 原始序列化后的消息 JSON
+     * @param ttlSeconds  有效期（秒）
+     * @return 包装后的 JSON 字符串（ttlSeconds ≤ 0 时返回原始值）
+     */
     private String wrapWithTtl(String payloadJson, long ttlSeconds) {
         if (ttlSeconds <= 0) {
             return payloadJson;
@@ -361,6 +521,11 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
                 "data", payloadJson));
     }
 
+    /**
+     * 生成唯一消息 ID。
+     *
+     * @return 去除连字符的 UUID 字符串（32 位十六进制）
+     */
     private String generateMessageId() {
         return UUID.randomUUID().toString().replace("-", "");
     }

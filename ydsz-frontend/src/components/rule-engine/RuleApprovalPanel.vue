@@ -34,9 +34,10 @@ const props = withDefaults(defineProps<Props>(), {
 // ===== 状态 =====
 const loading = ref(false)
 const records = ref<ApprovalRecord[]>([])
+/** 当前选中的 tab（pending/approved/rejected/all） */
 const activeTab = ref('pending')
 
-// 审批对话框
+/** 审批对话框状态 */
 const approvalDialog = reactive({
   visible: false,
   type: '' as 'approve' | 'reject' | 'delegate',
@@ -46,12 +47,14 @@ const approvalDialog = reactive({
 })
 
 // ===== 计算属性 =====
+/** 根据当前 tab 过滤后的审批记录 */
 const filteredRecords = computed(() => {
   if (activeTab.value === 'all') return records.value
   return records.value.filter((r: ApprovalRecord) => r.status === activeTab.value.toUpperCase())
 })
 
 // ===== 方法 =====
+/** 拉取审批记录列表 */
 async function loadRecords() {
   loading.value = true
   try {
@@ -64,6 +67,7 @@ async function loadRecords() {
   }
 }
 
+/** 打开审批对话框 */
 function openApproval(record: ApprovalRecord | Record<string, any>, type: 'approve' | 'reject' | 'delegate') {
   approvalDialog.record = record as ApprovalRecord
   approvalDialog.type = type
@@ -72,6 +76,7 @@ function openApproval(record: ApprovalRecord | Record<string, any>, type: 'appro
   approvalDialog.visible = true
 }
 
+/** 提交审批操作（通过/驳回/转委托） */
 async function submitApproval() {
   if (!approvalDialog.record) return
   if (approvalDialog.type !== 'approve' && !approvalDialog.comment) {
@@ -104,6 +109,7 @@ async function submitApproval() {
 
 type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
 
+/** 根据审批状态返回对应的标签类型与文案 */
 function getStatusTag(status: string): { type: TagType; label: string } {
   switch (status) {
     case 'PENDING': return { type: 'warning', label: '待审批' }
@@ -135,7 +141,7 @@ onMounted(() => {
       <el-tab-pane label="全部" name="all" />
     </el-tabs>
 
-    <!-- 操作栏 -->
+    <!-- 刷新操作栏 -->
     <div class="toolbar">
       <el-button :icon="Refresh" link @click="loadRecords">刷新</el-button>
     </div>

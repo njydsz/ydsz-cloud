@@ -203,6 +203,9 @@ public class CronjobProperties {
          */
         private int batchSize = 500;
 
+        /** 扫描锁 TTL（秒，默认 30s） */
+        private int lockTtlSeconds = 30;
+
         /** Misfire 宽容窗口（分钟，超过此窗口的任务按 misfire_policy 处理） */
         private int misfireGraceMinutes = 30;
 
@@ -252,6 +255,24 @@ public class CronjobProperties {
 
         /** P1-7: 线程名前缀 */
         private String threadNamePrefix = "job-exec-";
+
+        /**
+         * 获取执行线程池队列容量（兼容旧方法名）。
+         *
+         * @return 队列容量
+         */
+        public int getExecutorQueueCapacity() {
+            return queueCapacity;
+        }
+
+        /**
+         * 设置执行线程池队列容量（兼容旧方法名）。
+         *
+         * @param capacity 队列容量
+         */
+        public void setExecutorQueueCapacity(int capacity) {
+            this.queueCapacity = capacity;
+        }
 
         /**
          * P2-5: 线程池隔离策略。

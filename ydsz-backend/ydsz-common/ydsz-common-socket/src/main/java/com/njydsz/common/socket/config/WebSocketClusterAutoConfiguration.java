@@ -39,6 +39,14 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "ydsz.websocket.cluster", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSocketClusterAutoConfiguration {
 
+    /**
+     * 创建集群广播发布者 Bean。
+     *
+     * @param redisTemplate Redis 模板
+     * @param properties    WebSocket 配置属性
+     * @param circuitBreaker 熔断器
+     * @return 集群广播发布者实例
+     */
     @Bean
     @ConditionalOnBean(StringRedisTemplate.class)
     public WebSocketClusterPublisher webSocketClusterPublisher(
@@ -49,6 +57,13 @@ public class WebSocketClusterAutoConfiguration {
         return new WebSocketClusterPublisher(redisTemplate, properties, circuitBreaker);
     }
 
+    /**
+     * 创建集群广播订阅者 Bean。
+     *
+     * @param messagingTemplate STOMP 消息模板
+     * @param messageCompressor 消息压缩器
+     * @return 集群广播订阅者实例
+     */
     @Bean
     public WebSocketClusterSubscriber webSocketClusterSubscriber(
             SimpMessagingTemplate messagingTemplate,
@@ -57,6 +72,14 @@ public class WebSocketClusterAutoConfiguration {
         return new WebSocketClusterSubscriber(messagingTemplate, messageCompressor);
     }
 
+    /**
+     * 创建 Redis 消息监听容器 Bean。
+     *
+     * @param connectionFactory Redis 连接工厂
+     * @param subscriber        集群广播订阅者
+     * @param properties        WebSocket 配置属性
+     * @return Redis 消息监听容器实例
+     */
     @Bean
     @ConditionalOnBean(RedisConnectionFactory.class)
     public RedisMessageListenerContainer wsClusterListenerContainer(

@@ -43,6 +43,7 @@ const autoRefresh = ref(false)
 let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 // ===== 计算属性 =====
+/** 触发率对应的颜色（>50% 绿，>20% 橙，其他灰） */
 const triggerRateColor = computed(() => {
   const rate = overview.value.triggerRate
   if (rate > 50) return '#67c23a'
@@ -50,6 +51,7 @@ const triggerRateColor = computed(() => {
   return '#909399'
 })
 
+/** 异常率对应的颜色（<1% 绿，<5% 橙，>=5% 红） */
 const errorRateColor = computed(() => {
   const rate = overview.value.errorRate
   if (rate < 1) return '#67c23a'
@@ -58,6 +60,7 @@ const errorRateColor = computed(() => {
 })
 
 // ===== 方法 =====
+/** 加载监控大盘数据（概览 + TOP 排行 + 趋势） */
 async function loadData() {
   loading.value = true
   try {
@@ -86,11 +89,13 @@ async function loadData() {
   }
 }
 
+/** 渲染所有图表 */
 function renderCharts() {
   renderTrendChart()
   renderHealthChart()
 }
 
+/** 渲染执行趋势折线图 */
 function renderTrendChart() {
   if (!trendChartRef.value) return
   if (!trendChart) {
@@ -131,6 +136,7 @@ function renderTrendChart() {
   })
 }
 
+/** 渲染规则健康度 TOP 10 横向柱状图 */
 function renderHealthChart() {
   if (!healthChartRef.value) return
   if (!healthChart) {
@@ -161,6 +167,7 @@ function renderHealthChart() {
   })
 }
 
+/** 切换自动刷新（开启时每 5s 轮询一次） */
 function toggleAutoRefresh() {
   if (autoRefresh.value) {
     refreshTimer = setInterval(loadData, 5000)
@@ -172,6 +179,7 @@ function toggleAutoRefresh() {
   }
 }
 
+/** 窗口尺寸变化时自适应图表 */
 function handleResize() {
   trendChart?.resize()
   healthChart?.resize()
@@ -192,7 +200,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="monitor-dashboard" v-loading="loading">
-    <!-- 概览卡片 -->
+    <!-- 指标概览卡片 -->
     <el-row :gutter="16" class="overview-row">
       <el-col :span="4">
         <el-card shadow="hover" class="metric-card">

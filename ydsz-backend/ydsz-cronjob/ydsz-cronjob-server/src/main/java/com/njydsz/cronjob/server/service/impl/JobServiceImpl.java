@@ -356,7 +356,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (StringUtils.hasText(job.getJobGroup())) exists.setJobGroup(job.getJobGroup());
         if (job.getParamsJson() != null) exists.setParamsJson(job.getParamsJson());
         if (StringUtils.hasText(job.getStatus())) exists.setStatus(job.getStatus());
-        if (job.getRemark() != null) exists.setRemark(job.getRemark());
+        if (job.getJobRemark() != null) exists.setJobRemark(job.getJobRemark());
         // P0/P2/P3 收尾: 同步 lockTtlMs/timeoutMs/misfirePolicy/shardTotal
         if (job.getLockTtlMs() != null) exists.setLockTtlMs(job.getLockTtlMs());
         if (job.getTimeoutMs() != null) exists.setTimeoutMs(job.getTimeoutMs());
@@ -858,7 +858,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (!manual) {
             lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
             Duration ttl = resolveLockTtl(job);
-            Boolean acquired = redisService.opsForValue()
+            Boolean acquired = redisService.getRedisTemplate().opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);
             if (!Boolean.TRUE.equals(acquired)) {
                 log.info("[Cronjob] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());

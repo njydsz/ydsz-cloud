@@ -30,6 +30,11 @@ public class NotifyPreferenceManager {
 	private final StringRedisTemplate redisTemplate;
 	private final ConcurrentMap<String, NotifyPreference> localCache = new ConcurrentHashMap<>();
 
+	/**
+	 * 构造通知偏好管理器
+	 *
+	 * @param redisTemplate Redis 模板（可为 null，降级为本地缓存）
+	 */
 	public NotifyPreferenceManager(StringRedisTemplate redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}

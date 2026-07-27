@@ -70,6 +70,16 @@ public class TccTransactionManager extends AbstractTransactionManager
         this.properties = properties;
     }
 
+    /**
+     * 执行分布式事务（TCC 模式下走 executeTcc，其他模式降级为本地事务）
+     *
+     * @param transactionName 事务名称
+     * @param type            事务类型
+     * @param action          业务操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
         if (type == TransactionType.TCC && action instanceof TccAction) {
@@ -89,6 +99,16 @@ public class TccTransactionManager extends AbstractTransactionManager
         }
     }
 
+    /**
+     * 执行分布式事务（带补偿动作，TCC+SAGA 混合模式）
+     *
+     * @param transactionName 事务名称
+     * @param action          正向操作
+     * @param compensation    补偿操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T executeWithCompensation(String transactionName,
                                           Callable<T> action,
@@ -303,6 +323,12 @@ public class TccTransactionManager extends AbstractTransactionManager
 
     // ============= 恢复回调（P0-11） =============
 
+    /**
+     * 恢复时执行 Cancel（由恢复扫描器回调）
+     *
+     * @param txLog 超时事务日志
+     * @throws Exception Cancel 执行异常
+     */
     @Override
     public void recoverCancel(TccTransactionLog txLog) throws Exception {
         log.info("TCC recovery Cancel: xid={}, branch={}", txLog.getXid(), txLog.getBranchId());
@@ -353,6 +379,11 @@ public class TccTransactionManager extends AbstractTransactionManager
         }
     }
 
+    /**
+     * 获取当前事务类型
+     *
+     * @return TCC 事务类型
+     */
     @Override
     public TransactionType getCurrentType() {
         return TransactionType.TCC;

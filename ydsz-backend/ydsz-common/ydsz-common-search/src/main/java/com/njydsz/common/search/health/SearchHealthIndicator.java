@@ -36,6 +36,13 @@ public class SearchHealthIndicator implements HealthIndicator {
         this(searchEngine, null, null);
     }
 
+    /**
+     * 执行健康检查
+     * <p>
+     * 检查搜索引擎可用性，返回引擎名称、缓存大小和指标摘要。
+     *
+     * @return 健康状态信息
+     */
     @Override
     public Health health() {
         if (searchEngine == null) {

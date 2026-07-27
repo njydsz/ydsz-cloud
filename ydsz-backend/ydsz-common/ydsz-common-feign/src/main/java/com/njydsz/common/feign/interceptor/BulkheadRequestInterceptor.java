@@ -124,6 +124,14 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
              config.getClientConfig());
     }
 
+    /**
+     * 在 Feign 请求发起前获取信号量许可，实现请求并发隔离。
+     *
+     * <p>按服务维度获取信号量，超过最大并发数时快速失败。
+     * 成功获取许可后，将服务名写入 ThreadLocal 供后续释放。
+     *
+     * @param requestTemplate Feign 请求模板
+     */
     @Override
     public void apply(RequestTemplate requestTemplate) {
         String serviceName = extractServiceName(requestTemplate);

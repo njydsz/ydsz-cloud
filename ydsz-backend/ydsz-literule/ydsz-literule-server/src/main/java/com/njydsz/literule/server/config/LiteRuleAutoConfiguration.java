@@ -45,7 +45,7 @@ import com.njydsz.literule.server.core.RuleLifecycleService;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.core.RuleTimeoutExecutor;
 import com.njydsz.literule.server.expr.EmptyVariableRegistry;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
 import com.njydsz.literule.server.expr.ExpressionValidationService;
 import com.njydsz.literule.server.expr.VariableRegistry;
 import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;

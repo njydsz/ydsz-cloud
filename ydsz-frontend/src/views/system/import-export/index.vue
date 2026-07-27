@@ -201,13 +201,21 @@ const bizTypes = computed<BizType[]>(() => [
   },
 ])
 
+/** 当前选中的业务类型 */
 const selectedBiz = ref<typeof bizTypes.value[number]['code'] | null>(null)
+/** 当前选中的业务类型对象 */
 const currentBiz = computed(() => bizTypes.value.find((b) => b.code === selectedBiz.value))
+/** 模板下载中状态 */
 const downloading = ref(false)
+/** 导入执行中状态 */
 const importing = ref(false)
+/** 导入进度百分比 */
 const importProgress = ref(0)
+/** 导入进度文案 */
 const progressText = ref('')
+/** 上传文件列表 */
 const fileList = ref<UploadUserFile[]>([])
+/** 导入结果数据 */
 const importResult = ref<ImportResult | null>(null)
 
 /** 导入错误明细列配置 */

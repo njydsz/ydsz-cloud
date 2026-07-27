@@ -36,7 +36,9 @@ const myQuery = reactive({
   flowCode: undefined as string | undefined,
   status: undefined as string | undefined,
 })
+/** 我发起的实例列表数据 */
 const myList = ref<FlowInstanceDTO[]>([])
+/** 我发起的列表总数 */
 const myTotal = ref(0)
 const myLoading = ref(false)
 

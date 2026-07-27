@@ -83,7 +83,6 @@ public class ConfigController {
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建配置: ' + #dto.configKey")
     @Operation(summary = "创建配置")
-    @Idempotent(key = 'system:config:save', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.config.save", threshold = 50)
     @Idempotent(key = "ydsz:system:ConfigController:save:lock", ttlSeconds = 5)
     @PostMapping
@@ -94,7 +93,6 @@ public class ConfigController {
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新配置: ' + #dto.configKey")
     @Operation(summary = "更新配置")
-    @Idempotent(key = 'system:config:update', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.config.update", threshold = 50)
     @Idempotent(key = "ydsz:system:ConfigController:update:lock", ttlSeconds = 5)
     @PutMapping
@@ -105,7 +103,6 @@ public class ConfigController {
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除配置: ' + #id")
     @Operation(summary = "删除配置")
-    @Idempotent(key = 'system:config:remove', ttlSeconds = 5, message = "请勿重复提交")
     @SentinelRateLimit(resource = "system.config.remove", threshold = 50)
     @Idempotent(key = "ydsz:system:ConfigController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")

@@ -36,9 +36,13 @@ const visible = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
+/** 执行测试提交状态 */
 const executing = ref(false)
+/** 输入参数 JSON 字符串 */
 const contextJson = ref('')
+/** 执行结果数据 */
 const result = ref<Record<string, unknown>[] | null>(null)
+/** 执行错误信息 */
 const resultError = ref('')
 
 /** 输入列定义（用于生成示例 context） */
@@ -91,6 +95,7 @@ function parseContext(): Record<string, unknown> | null {
   }
 }
 
+/** 执行决策表测试 */
 async function handleExecute() {
   if (!props.data?.tableKey) {
     ElMessage.warning(t('workflow.dmn.execute.noTableKey'))
@@ -117,6 +122,7 @@ async function handleExecute() {
   }
 }
 
+/** 关闭弹窗 */
 function handleClose() {
   visible.value = false
 }

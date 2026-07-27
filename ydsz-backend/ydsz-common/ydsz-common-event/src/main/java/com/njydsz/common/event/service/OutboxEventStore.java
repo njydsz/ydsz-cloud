@@ -28,6 +28,7 @@ import com.njydsz.common.domain.event.EventStore;
  */
 public class OutboxEventStore implements EventStore {
 
+    /** Outbox 写入服务 */
     private final OutboxService outboxService;
 
     /**

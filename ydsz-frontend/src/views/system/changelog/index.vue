@@ -13,11 +13,14 @@ import { isHandledError } from '@/utils/error'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 变更日志条目列表 */
 const entries = ref<ChangelogEntry[]>([])
 
-// 筛选
+/** 按类型筛选 */
 const filterType = ref<string>('')
+/** 按分类筛选 */
 const filterCategory = ref<string>('')
 
 // 类型配置

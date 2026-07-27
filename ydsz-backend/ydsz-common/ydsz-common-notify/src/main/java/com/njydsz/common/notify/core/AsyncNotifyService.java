@@ -30,21 +30,40 @@ public class AsyncNotifyService {
     private final NotifyService notifyService;
     private final NotifyRetryQueue retryQueue;
 
-    public AsyncNotifyService(NotifyService notifyService,
+	/**
+	 * 构造异步通知发送服务（无重试队列）
+	 *
+	 * @param notifyService 通知服务
+	 * @param executor      虚拟线程池
+	 */
+	public AsyncNotifyService(NotifyService notifyService,
                               @Qualifier("notifyVirtualThreadExecutor") ExecutorService executor) {
         this(notifyService, null, executor);
     }
 
-    public AsyncNotifyService(NotifyService notifyService, NotifyRetryQueue retryQueue,
+	/**
+	 * 构造异步通知发送服务
+	 *
+	 * @param notifyService 通知服务
+	 * @param retryQueue    重试队列（可为 null）
+	 * @param executor      虚拟线程池
+	 */
+	public AsyncNotifyService(NotifyService notifyService, NotifyRetryQueue retryQueue,
                               @Qualifier("notifyVirtualThreadExecutor") ExecutorService executor) {
         this.notifyService = notifyService;
         this.retryQueue = retryQueue;
         this.executor = executor;
     }
 
-    /**
-     * 异步发送通知
-     */
+	/**
+	 * 异步发送通知
+	 *
+	 * @param channel  通知渠道
+	 * @param receiver 接收者
+	 * @param title    标题
+	 * @param content  内容
+	 * @return 异步发送结果
+	 */
     public CompletableFuture<NotifySendResult> sendAsync(NotifyChannel channel, String receiver,
                                                           String title, String content) {
         String traceId = MDC.get(NotifyTraceContext.TRACE_ID_KEY);
@@ -81,9 +100,15 @@ public class AsyncNotifyService {
                 });
     }
 
-    /**
-     * 异步批量发送通知
-     */
+	/**
+	 * 异步批量发送通知
+	 *
+	 * @param channel   通知渠道
+	 * @param receivers 接收者列表
+	 * @param title     标题
+	 * @param content   内容
+	 * @return 异步发送结果
+	 */
     public CompletableFuture<NotifySendResult> batchSendAsync(NotifyChannel channel,
                                                                List<String> receivers, String title, String content) {
         String traceId = MDC.get(NotifyTraceContext.TRACE_ID_KEY);

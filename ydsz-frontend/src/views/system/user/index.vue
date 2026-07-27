@@ -30,10 +30,13 @@ import type { RoleVO } from '@/api/system/role/types'
 const { t } = useI18n()
 const { isMobile } = useResponsive()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 用户列表数据 */
 const list = ref<UserVO[]>([])
+/** 用户列表总数 */
 const total = ref(0)
-// 用户分页查询条件
+/** 分页查询参数 */
 const query = reactive({
   page: 1,
   size: 10,

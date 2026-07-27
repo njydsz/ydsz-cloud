@@ -41,13 +41,21 @@ import type { UserVO } from '@/api/system/user/types'
 const activeTab = ref<'mine' | 'toMe' | 'delegateLog' | 'ownerLog'>('mine')
 
 // ==================== 列表数据 ====================
+/** "我设置的"授权列表 */
 const myList = ref<DelegateAuthDTO[]>([])
+/** "代理给我的"授权列表 */
 const toMeList = ref<DelegateAuthDTO[]>([])
+/** 代理处理记录列表 */
 const delegateLogList = ref<DelegateLogDTO[]>([])
+/** 被代理记录列表 */
 const ownerLogList = ref<DelegateLogDTO[]>([])
+/** 列表加载状态 */
 const loading = ref(false)
+/** 列表数据总数 */
 const total = ref(0)
+/** 当前页码 */
 const currentPage = ref(1)
+/** 每页条数 */
 const pageSize = ref(10)
 
 // ==================== 创建授权弹窗 ====================

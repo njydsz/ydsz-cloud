@@ -47,6 +47,12 @@ public class ElasticsearchSearchEngine implements SearchEngine {
         // this.available = pingElasticsearch(host, port);
     }
 
+    /**
+     * 执行搜索
+     *
+     * @param request 搜索请求
+     * @return 搜索响应
+     */
     @Override
     public SearchResponse search(SearchRequest request) {
         log.debug("[ElasticsearchSearchEngine] search: keyword={}", request.getKeyword());
@@ -54,6 +60,11 @@ public class ElasticsearchSearchEngine implements SearchEngine {
         return SearchResponse.empty(request.getPage(), request.getPageSize());
     }
 
+    /**
+     * 索引单文档
+     *
+     * @param document 索引文档
+     */
     @Override
     public void index(IndexDocument document) {
         if (document == null) return;
@@ -62,6 +73,11 @@ public class ElasticsearchSearchEngine implements SearchEngine {
         // TODO: 构建 IndexRequest 并执行
     }
 
+    /**
+     * 批量索引
+     *
+     * @param documents 索引文档列表
+     */
     @Override
     public void bulkIndex(List<IndexDocument> documents) {
         if (documents == null || documents.isEmpty()) return;

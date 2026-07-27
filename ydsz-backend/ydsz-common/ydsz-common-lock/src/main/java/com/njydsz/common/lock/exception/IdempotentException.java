@@ -13,6 +13,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *
  * <p>错误码：{@code IDEMPOTENT_REJECT}，消息键同错误码，前端可直接展示 message。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class IdempotentException extends BusinessException {

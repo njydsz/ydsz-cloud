@@ -634,6 +634,12 @@ public class AuthColPermissionAspect {
 
     private static final ConcurrentHashMap<Class<?>, List<Field>> fieldListCache = new ConcurrentHashMap<>();
 
+    /**
+     * 获取类的所有字段（含父类），使用缓存避免重复反射扫描。
+     *
+     * @param clazz 目标类
+     * @return 字段列表（不可变）
+     */
     private List<Field> listAllFields(Class<?> clazz) {
         return fieldListCache.computeIfAbsent(clazz, k -> {
             List<Field> fields = new ArrayList<>();
@@ -646,10 +652,25 @@ public class AuthColPermissionAspect {
         });
     }
 
+    /**
+     * 解析字符串（优先使用主值，其次使用次值）。
+     *
+     * @param primary   主值
+     * @param secondary 次值
+     * @return 解析后的字符串（优先主值，其次次值，都为空时返回空字符串）
+     */
     private String resolveString(String primary, String secondary) {
         return resolveString(primary, secondary, "");
     }
 
+    /**
+     * 解析字符串（支持默认值）。
+     *
+     * @param primary       主值
+     * @param secondary     次值
+     * @param defaultValue  默认值
+     * @return 解析后的字符串（优先主值，其次次值，都为空时返回默认值）
+     */
     private String resolveString(String primary, String secondary, String defaultValue) {
         if (StringUtils.isNotBlank(primary)) {
             return primary.trim();
@@ -684,6 +705,15 @@ public class AuthColPermissionAspect {
         }
     }
 
+    /**
+     * 安全地向 Map 参数注入列权限。
+     *
+     * <p>使用反射调用 {@code Map.put}，避免 unchecked cast 警告。
+     *
+     * @param mapObj Map 对象
+     * @param key    注入的 key
+     * @param value  注入的 value
+     */
     private static void safeMapPut(Object mapObj, String key, Object value) {
         if (mapObj instanceof Map<?, ?> map) {
             // 使用反射调用 Map.put，避免 unchecked cast 警告

@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 
 import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.literule.server.expr.ExpressionFunctionDef;
-import com.njydsz.literule.server.expr.ExpressionTraceNode;
-import com.njydsz.literule.server.expr.ExpressionValidationResult;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expr.ExpressionFunctionDef;
+import com.njydsz.literule.api.expr.ExpressionTraceNode;
+import com.njydsz.literule.api.expr.ExpressionValidationResult;
 
 import lombok.extern.slf4j.Slf4j;
 

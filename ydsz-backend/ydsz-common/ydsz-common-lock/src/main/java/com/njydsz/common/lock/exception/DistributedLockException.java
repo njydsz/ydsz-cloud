@@ -14,6 +14,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *   <li>锁续期失败</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public class DistributedLockException extends BusinessException {

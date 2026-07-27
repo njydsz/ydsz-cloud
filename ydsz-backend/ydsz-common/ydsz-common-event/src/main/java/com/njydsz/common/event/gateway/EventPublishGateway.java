@@ -37,6 +37,13 @@ public interface EventPublishGateway {
      * @return 每条消息的投递结果（true=成功，false=失败），顺序与输入一致
      * @throws Exception 投递异常
      */
+    /**
+     * 批量投递消息到消息队列（默认逐条调用 publish）
+     *
+     * @param messages Outbox 消息列表
+     * @return 每条消息的投递结果（true=成功，false=失败），顺序与输入一致
+     * @throws Exception 投递异常
+     */
     default List<Boolean> publishBatch(List<OutboxMessage> messages) throws Exception {
         return messages.stream()
                 .map(msg -> {

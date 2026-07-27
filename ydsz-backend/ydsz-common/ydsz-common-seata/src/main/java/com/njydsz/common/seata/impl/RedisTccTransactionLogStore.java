@@ -95,6 +95,11 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
                 ? Duration.ofHours(24) : retention;
     }
 
+    /**
+     * 保存事务日志到 Redis Hash
+     *
+     * @param txLog 事务日志
+     */
     @Override
     public void save(TccTransactionLog txLog) {
         String key = buildKey(txLog.getXid(), txLog.getBranchId());
@@ -106,6 +111,13 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
         }
     }
 
+    /**
+     * 更新分支事务状态
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     * @param status   新状态
+     */
     @Override
     public void updateStatus(String xid, String branchId, TccBranchStatus status) {
         String key = buildKey(xid, branchId);
@@ -121,6 +133,13 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
         }
     }
 
+    /**
+     * 根据 XID 和分支 ID 从 Redis 查询事务日志
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     * @return 事务日志（Optional）
+     */
     @Override
     public Optional<TccTransactionLog> findByXidAndBranchId(String xid, String branchId) {
         String key = buildKey(xid, branchId);
@@ -131,6 +150,12 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
         return Optional.ofNullable(fromHash(raw));
     }
 
+    /**
+     * 使用 SCAN 命令遍历 Redis，查询超时未完成的分支事务
+     *
+     * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复
+     * @return 超时分支列表
+     */
     @Override
     public List<TccTransactionLog> findTimeoutPending(LocalDateTime threshold) {
         List<TccTransactionLog> result = new java.util.ArrayList<>();
@@ -166,6 +191,12 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
         return result;
     }
 
+    /**
+     * 删除 Redis 中的事务日志
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     */
     @Override
     public void delete(String xid, String branchId) {
         String key = buildKey(xid, branchId);

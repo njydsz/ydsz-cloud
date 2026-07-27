@@ -22,9 +22,13 @@ import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
+/** 字典类型列表 */
 const types = ref<DictTypeVO[]>([])
+/** 当前选中类型的字典项列表 */
 const items = ref<DictItemVO[]>([])
+/** 当前选中的字典类型 */
 const currentType = ref<DictTypeVO | null>(null)
+/** 字典项加载状态 */
 const itemsLoading = ref(false)
 
 // 字典类型表单

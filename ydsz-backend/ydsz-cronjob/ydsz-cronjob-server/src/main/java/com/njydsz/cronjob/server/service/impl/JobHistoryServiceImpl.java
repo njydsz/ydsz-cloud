@@ -156,7 +156,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
         }
         // 反序列化快照为 JobDO
-        JobDO snapshotJob = YdszJson.parseMap(targetHistory.getSnapshot(), JobDO.class);
+        JobDO snapshotJob = YdszJson.toObject(targetHistory.getSnapshot(), JobDO.class);
         // 查询当前任务（用于保留统计字段等）
         JobDO currentJob = jobMapper.selectById(jobId);
         if (currentJob == null) {
@@ -198,8 +198,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         if (h1 == null || h2 == null) {
             return Collections.emptyList();
         }
-        JobDO job1 = YdszJson.parseMap(h1.getSnapshot(), JobDO.class);
-        JobDO job2 = YdszJson.parseMap(h2.getSnapshot(), JobDO.class);
+        JobDO job1 = YdszJson.toObject(h1.getSnapshot(), JobDO.class);
+        JobDO job2 = YdszJson.toObject(h2.getSnapshot(), JobDO.class);
         return diffFields(job1, job2);
     }
 

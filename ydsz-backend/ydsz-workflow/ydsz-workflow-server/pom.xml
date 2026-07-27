@@ -83,7 +83,7 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-server</artifactId>
+            <artifactId>ydsz-literule-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

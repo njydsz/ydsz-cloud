@@ -170,11 +170,21 @@ public class IpInfoUtils {
         log.info("IP info cache cleared");
     }
 
+    /**
+     * 设置是否启用缓存
+     *
+     * @param enabled true 启用缓存，false 禁用缓存
+     */
     public static void setCacheEnabled(boolean enabled) {
         CACHE_ENABLED = enabled;
         log.info("IP info cache {}", enabled ? "enabled" : "disabled");
     }
 
+    /**
+     * 获取缓存统计信息
+     *
+     * @return 缓存统计信息，包含大小、命中次数、未命中次数、命中率
+     */
     public static CacheStats getCacheStats() {
         long hits = cacheHits.get();
         long misses = cacheMisses.get();

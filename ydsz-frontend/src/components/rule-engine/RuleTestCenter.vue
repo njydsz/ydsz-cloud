@@ -41,10 +41,12 @@ const emit = defineEmits<{
 // ===== 状态 =====
 const loading = ref(false)
 const testCases = ref<RuleTestCase[]>([])
+/** 选中的测试用例 ID 列表 */
 const selectedIds = ref<string[]>([])
+/** 最近一次回归测试报告 */
 const lastReport = ref<RegressionReport | null>(null)
 
-// 编辑对话框
+/** 编辑/新建测试用例对话框 */
 const editDialog = reactive({
   visible: false,
   isEdit: false,
@@ -59,12 +61,14 @@ const editDialog = reactive({
 })
 
 // ===== 计算属性 =====
+/** 回归测试通过率（百分比） */
 const passRate = computed(() => {
   if (!lastReport.value) return 0
   const { passed, total } = lastReport.value
   return total === 0 ? 100 : Math.round((passed / total) * 1000) / 10
 })
 
+/** 通过率对应颜色：100% 绿，>=80% 橙，<80% 红 */
 const passRateColor = computed(() => {
   if (passRate.value === 100) return '#67c23a'
   if (passRate.value >= 80) return '#e6a23c'
@@ -72,6 +76,7 @@ const passRateColor = computed(() => {
 })
 
 // ===== 方法 =====
+/** 加载测试用例列表 */
 async function loadTestCases() {
   loading.value = true
   try {
@@ -85,6 +90,7 @@ async function loadTestCases() {
   }
 }
 
+/** 批量执行选中的测试用例 */
 async function batchRun() {
   if (selectedIds.value.length === 0 && testCases.value.length === 0) {
     ElMessage.warning('请先选择测试用例')
@@ -113,6 +119,7 @@ async function batchRun() {
   }
 }
 
+/** 打开新建测试用例对话框 */
 function openCreateDialog() {
   editDialog.isEdit = false
   editDialog.form = {
@@ -126,6 +133,7 @@ function openCreateDialog() {
   editDialog.visible = true
 }
 
+/** 打开编辑测试用例对话框 */
 function openEditDialog(tc: RuleTestCase) {
   editDialog.isEdit = true
   editDialog.form = {
@@ -139,6 +147,7 @@ function openEditDialog(tc: RuleTestCase) {
   editDialog.visible = true
 }
 
+/** 保存测试用例（新建/更新） */
 async function saveTestCase() {
   try {
     const facts = JSON.parse(editDialog.form.factsData)
@@ -163,6 +172,7 @@ async function saveTestCase() {
   }
 }
 
+/** 删除指定测试用例 */
 async function deleteTestCase(id: string) {
   try {
     await ElMessageBox.confirm('确定删除该测试用例?', '提示', { type: 'warning' })
@@ -205,7 +215,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- 测试用例列表 -->
+    <!-- 测试用例表格列表 -->
     <el-table
       :data="testCases"
       v-loading="loading"

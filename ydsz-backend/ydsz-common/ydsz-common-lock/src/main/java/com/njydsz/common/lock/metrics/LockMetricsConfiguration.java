@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <p>当 classpath 中存在 MeterRegistry 时，自动绑定到 LockMetrics，
  * 启用 Prometheus 指标采集。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @AutoConfiguration

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.object.YdszJsonObject;
 
 import org.springframework.stereotype.Component;
 
@@ -86,7 +87,7 @@ public class ReportScheduleJobHandler implements JobHandler {
         // 尝试 JSON 解析 {"type":"DAILY"}
         if (trimmed.startsWith("{")) {
             try {
-                Map<String, Object> obj = YdszJson.parseMap(trimmed);
+                YdszJsonObject obj = YdszJson.parseObjectToJsonObject(trimmed);
                 if (obj != null && obj.containsKey("type")) {
                     return obj.getString("type");
                 }

@@ -52,38 +52,83 @@ public class NotifyRequest {
         this.traceId = builder.traceId;
     }
 
+    /**
+     * 获取通知渠道
+     *
+     * @return 通知渠道
+     */
     public NotifyChannel getChannel() {
         return channel;
     }
 
+    /**
+     * 获取接收者标识
+     *
+     * @return 接收者
+     */
     public String getReceiver() {
         return receiver;
     }
 
+    /**
+     * 获取消息标题
+     *
+     * @return 标题
+     */
     public String getTitle() {
         return title;
     }
 
+    /**
+     * 获取消息内容
+     *
+     * @return 内容
+     */
     public String getContent() {
         return content;
     }
 
+    /**
+     * 获取模板编码
+     *
+     * @return 模板编码，非模板请求时返回 null
+     */
     public String getTemplateCode() {
         return templateCode;
     }
 
+    /**
+     * 获取模板参数
+     *
+     * @return 模板参数对象
+     */
     public Object getTemplateParams() {
         return templateParams;
     }
 
+    /**
+     * 获取消息优先级
+     *
+     * @return 优先级
+     */
     public NotifyPriority getPriority() {
         return priority;
     }
 
+    /**
+     * 获取用户ID
+     *
+     * @return 用户ID，未设置时返回 null
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * 获取链路追踪ID
+     *
+     * @return traceId，未设置时返回 null
+     */
     public String getTraceId() {
         return traceId;
     }
@@ -112,6 +157,9 @@ public class NotifyRequest {
 
     /**
      * NotifyRequest 构建器
+     *
+     * @author ydsz-team
+     * @since 1.0.0
      */
     public static class Builder {
 

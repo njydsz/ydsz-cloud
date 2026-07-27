@@ -23,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- * @since 2026-06-16
  */
 @Slf4j
 public class NotifyRateLimiterManager {
@@ -38,7 +36,12 @@ public class NotifyRateLimiterManager {
     private static final int DEFAULT_MAX_REQUESTS = 100;
     private static final long DEFAULT_WINDOW_MILLIS = 60_000L;
 
-    public NotifyRateLimiterManager(NotifyProperties.RateLimit rateLimitConfig) {
+	/**
+	 * 构造限流管理器
+	 *
+	 * @param rateLimitConfig 限流配置
+	 */
+	public NotifyRateLimiterManager(NotifyProperties.RateLimit rateLimitConfig) {
         this.rateLimitConfig = rateLimitConfig;
         initializeLimiters();
     }

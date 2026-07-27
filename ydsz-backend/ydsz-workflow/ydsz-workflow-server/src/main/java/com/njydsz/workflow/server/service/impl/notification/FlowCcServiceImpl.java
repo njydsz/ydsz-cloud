@@ -158,8 +158,8 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<FlowCcDO> listCcByUser(String userId, String readStatus, String flowCode,
-                                             String tenantId, int pageNo, int pageSize) {
+    public PageResponse<List<FlowCcDO>> listCcByUser(String userId, String readStatus, String flowCode,
+                                                   String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
                 return PageResponse.empty();

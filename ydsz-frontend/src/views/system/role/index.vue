@@ -23,10 +23,13 @@ import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 角色列表数据 */
 const list = ref<RoleVO[]>([])
+/** 角色列表总数 */
 const total = ref(0)
-// 角色分页查询条件
+/** 分页查询参数 */
 const query = reactive({
   page: 1,
   size: 10,

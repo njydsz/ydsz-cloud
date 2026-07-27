@@ -20,6 +20,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 消息编排引擎 Controller。
@@ -48,6 +51,7 @@ public class OrchestrationController {
     @Operation(summary = "执行编排流程")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:OrchestrationController:execute:lock", ttlSeconds = 5)
+    @Audit(module = "消息编排", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
     @SentinelRateLimit(resource = "message.orchestration.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {

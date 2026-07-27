@@ -25,28 +25,63 @@ public class TccContext {
     private final String branchId;
     private final Map<String, Object> data = new ConcurrentHashMap<>();
 
+    /**
+     * 构造 TCC 事务上下文
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     */
     public TccContext(String xid, String branchId) {
         this.xid = xid;
         this.branchId = branchId;
     }
 
+    /**
+     * 获取全局事务 ID
+     *
+     * @return 全局事务 ID
+     */
     public String getXid() {
         return xid;
     }
 
+    /**
+     * 获取分支事务 ID
+     *
+     * @return 分支事务 ID
+     */
     public String getBranchId() {
         return branchId;
     }
 
+    /**
+     * 存入业务数据
+     *
+     * @param key   键
+     * @param value 值
+     * @return 当前上下文（支持链式调用）
+     */
     public TccContext put(String key, Object value) {
         data.put(key, value);
         return this;
     }
 
+    /**
+     * 获取业务数据
+     *
+     * @param key 键
+     * @return 值，不存在时返回 null
+     */
     public Object get(String key) {
         return data.get(key);
     }
 
+    /**
+     * 获取 String 类型值
+     *
+     * @param key 键
+     * @return String 值，不存在时返回 null
+     */
     public String getString(String key) {
         Object val = data.get(key);
         return val != null ? val.toString() : null;

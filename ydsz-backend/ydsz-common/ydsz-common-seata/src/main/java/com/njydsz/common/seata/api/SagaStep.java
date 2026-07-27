@@ -49,18 +49,38 @@ public class SagaStep<T> {
         return new SagaStep<>(name, forwardAction, null);
     }
 
+    /**
+     * 获取步骤名称
+     *
+     * @return 步骤名称
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * 获取正向操作
+     *
+     * @return 正向操作 Callable
+     */
     public Callable<T> getForwardAction() {
         return forwardAction;
     }
 
+    /**
+     * 获取补偿操作
+     *
+     * @return 补偿操作 Runnable，无补偿时返回 null
+     */
     public Runnable getCompensation() {
         return compensation;
     }
 
+    /**
+     * 判断是否有补偿操作
+     *
+     * @return 有补偿返回 true，否则返回 false
+     */
     public boolean hasCompensation() {
         return compensation != null;
     }

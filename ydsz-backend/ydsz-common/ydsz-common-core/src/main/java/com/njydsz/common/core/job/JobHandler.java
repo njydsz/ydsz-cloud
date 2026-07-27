@@ -37,4 +37,20 @@ public interface JobHandler {
      * @throws Exception 执行异常（调度器捕获后标记任务失败）
      */
     Object execute(String paramsJson) throws Exception;
+
+    /**
+     * 执行分片任务。
+     *
+     * <p>调度器在分片任务触发时调用本方法，传入任务参数和分片上下文。
+     * 默认实现忽略分片上下文，委托给 {@link #execute(String)}。
+     * 需要感知分片信息的处理器应覆盖此方法。
+     *
+     * @param paramsJson 任务参数 JSON 字符串（可空）
+     * @param ctx        分片上下文（包含 shardTotal / shardIndex 等信息）
+     * @return 执行结果（可空）
+     * @throws Exception 执行异常
+     */
+    default Object execute(String paramsJson, ShardingContext ctx) throws Exception {
+        return execute(paramsJson);
+    }
 }

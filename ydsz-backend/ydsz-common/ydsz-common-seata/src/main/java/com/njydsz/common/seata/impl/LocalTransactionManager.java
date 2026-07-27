@@ -41,6 +41,14 @@ public class LocalTransactionManager extends AbstractTransactionManager {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
+    /**
+     * 构造本地事务管理器（带指标和审计）
+     *
+     * @param transactionManager Spring 事务管理器（由 Spring 容器注入，
+     *                           在单数据源场景下为 {@code DataSourceTransactionManager}）
+     * @param metricsProvider    指标采集提供者（可选）
+     * @param auditProvider      审计日志提供者（可选）
+     */
     public LocalTransactionManager(PlatformTransactionManager transactionManager,
             ObjectProvider<SeataMetrics> metricsProvider,
             ObjectProvider<TransactionAuditLogger> auditProvider) {
@@ -48,6 +56,16 @@ public class LocalTransactionManager extends AbstractTransactionManager {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
+    /**
+     * 执行本地事务
+     *
+     * @param transactionName 事务名称（用于日志和监控）
+     * @param type            事务类型
+     * @param action          业务操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
         String xid = beginXid(transactionName);
@@ -76,6 +94,16 @@ public class LocalTransactionManager extends AbstractTransactionManager {
         }
     }
 
+    /**
+     * 执行本地事务（带补偿动作）
+     *
+     * @param transactionName 事务名称
+     * @param action          正向操作
+     * @param compensation    补偿操作
+     * @param <T>             返回值类型
+     * @return 业务操作返回值
+     * @throws Exception 事务执行异常
+     */
     @Override
     public <T> T executeWithCompensation(String transactionName,
                                           Callable<T> action,
@@ -128,6 +156,11 @@ public class LocalTransactionManager extends AbstractTransactionManager {
         }
     }
 
+    /**
+     * 获取当前事务类型
+     *
+     * @return 本地事务类型
+     */
     @Override
     public TransactionType getCurrentType() {
         return TransactionType.LOCAL;

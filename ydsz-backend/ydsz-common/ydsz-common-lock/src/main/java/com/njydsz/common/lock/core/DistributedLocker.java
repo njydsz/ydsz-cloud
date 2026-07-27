@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
  *   <li>高性能：基于 Lua 脚本保证操作原子性，减少网络往返</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 public interface DistributedLocker {

@@ -17,10 +17,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SkyWalkingTraceContext implements TraceContext {
 
+    /**
+     * 构造函数，初始化 SkyWalking 追踪上下文
+     */
     public SkyWalkingTraceContext() {
         log.info("[Sentry] SkyWalkingTraceContext 初始化完成");
     }
 
+    /**
+     * 获取当前 TraceId
+     *
+     * @return TraceId，若 SkyWalking 不可用则返回 null
+     */
     @Override
     public String getTraceId() {
         try {
@@ -31,6 +39,11 @@ public class SkyWalkingTraceContext implements TraceContext {
         }
     }
 
+    /**
+     * 获取当前 SpanId
+     *
+     * @return SpanId，若 SkyWalking 不可用则返回 null
+     */
     @Override
     public String getSpanId() {
         try {
@@ -41,6 +54,11 @@ public class SkyWalkingTraceContext implements TraceContext {
         }
     }
 
+    /**
+     * 获取当前 SegmentId（SkyWalking 专用概念）
+     *
+     * @return SegmentId，若 SkyWalking 不可用则返回 null
+     */
     @Override
     public String getSegmentId() {
         try {
@@ -51,6 +69,11 @@ public class SkyWalkingTraceContext implements TraceContext {
         }
     }
 
+    /**
+     * 判断是否在 SkyWalking 追踪链路中
+     *
+     * @return 是否在追踪链路中
+     */
     @Override
     public boolean isTracing() {
         try {
@@ -61,6 +84,12 @@ public class SkyWalkingTraceContext implements TraceContext {
         }
     }
 
+    /**
+     * 注入自定义标签到当前 Span
+     *
+     * @param key   标签键
+     * @param value 标签值
+     */
     @Override
     public void tag(String key, String value) {
         try {
@@ -70,6 +99,11 @@ public class SkyWalkingTraceContext implements TraceContext {
         }
     }
 
+    /**
+     * 获取追踪系统名称
+     *
+     * @return 固定返回 "skywalking"
+     */
     @Override
     public String getTracerName() {
         return "skywalking";

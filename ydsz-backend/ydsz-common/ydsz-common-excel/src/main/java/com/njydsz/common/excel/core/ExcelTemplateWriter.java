@@ -24,6 +24,9 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  * <p>支持将数据写入已有的Excel模板文件，保留模板中的样式、格式、公式等设置。
  * 参照EasyExcel的模板写入功能设计。</p>
  *
+ * @author ydsz-team
+ * @since 1.0.0
+ *
  * <h3>使用示例</h3>
  * <pre>{@code
  * ExcelFacade.writeWithTemplate("template.xlsx", "output.xlsx", User.class)

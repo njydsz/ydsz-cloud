@@ -12,6 +12,8 @@ import com.njydsz.common.excel.support.cache.LRUCache;
  * <p>使用LRU策略缓存单元格样式，避免相同样式重复创建，
  * 同时限制缓存大小防止内存无限增长。</p>
  *
+ * @author ydsz-team
+ * @since 1.0.0
  * @see ExcelWriter
  * @see WriteStyleHandler
  */

@@ -54,6 +54,12 @@ public class InMemorySearchEngine implements SearchEngine {
         }
     });
 
+    /**
+     * 执行内存搜索
+     *
+     * @param request 搜索请求
+     * @return 搜索响应
+     */
     @Override
     public SearchResponse search(SearchRequest request) {
         long start = System.currentTimeMillis();
@@ -112,6 +118,11 @@ public class InMemorySearchEngine implements SearchEngine {
                 .build();
     }
 
+    /**
+     * 索引单文档
+     *
+     * @param document 索引文档
+     */
     @Override
     public void index(IndexDocument document) {
         if (document != null && document.getId() != null) {
@@ -119,6 +130,11 @@ public class InMemorySearchEngine implements SearchEngine {
         }
     }
 
+    /**
+     * 批量索引
+     *
+     * @param documents 索引文档列表
+     */
     @Override
     public void bulkIndex(List<IndexDocument> documents) {
         if (documents != null) {
@@ -126,11 +142,24 @@ public class InMemorySearchEngine implements SearchEngine {
         }
     }
 
+    /**
+     * 删除索引
+     *
+     * @param type       实体类型
+     * @param documentId 文档 ID
+     */
     @Override
     public void deleteIndex(String type, String documentId) {
         index.remove(type + ":" + documentId);
     }
 
+    /**
+     * 搜索建议
+     *
+     * @param prefix 前缀
+     * @param limit  最大返回数
+     * @return 搜索建议
+     */
     @Override
     public SearchSuggestion suggest(String prefix, int limit) {
         if (prefix == null || prefix.isBlank()) {
@@ -153,6 +182,11 @@ public class InMemorySearchEngine implements SearchEngine {
                 .build();
     }
 
+    /**
+     * 删除指定类型的全部索引
+     *
+     * @param type 实体类型
+     */
     @Override
     public void deleteAllIndices(String type) {
         if (type == null) {
@@ -162,11 +196,21 @@ public class InMemorySearchEngine implements SearchEngine {
         }
     }
 
+    /**
+     * 获取引擎名称
+     *
+     * @return 引擎名称
+     */
     @Override
     public String getName() {
         return ENGINE_NAME;
     }
 
+    /**
+     * 检查引擎是否可用
+     *
+     * @return 可用返回 true
+     */
     @Override
     public boolean isAvailable() {
         return true;

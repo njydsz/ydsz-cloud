@@ -48,7 +48,6 @@ public class InternalApiController {
      * @return 配置值，不存在返回 null
      */
     @SentinelRateLimit(resource = "system.internalapi.getConfig", threshold = 50)
-    @Idempotent(key = 'system:internalapi:getConfig', ttlSeconds = 5, message = "请勿重复提交")
     @Idempotent(key = "ydsz:system:InternalApiController:getConfig:lock", ttlSeconds = 5)
     @PostMapping("/config/get")
     public String getConfig(@RequestBody Map<String, String> request) {
@@ -62,7 +61,6 @@ public class InternalApiController {
      * @return 字典项 VO
      */
     @SentinelRateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
-    @Idempotent(key = 'system:internalapi:getDictItem', ttlSeconds = 5, message = "请勿重复提交")
     @Idempotent(key = "ydsz:system:InternalApiController:getDictItem:lock", ttlSeconds = 5)
     @PostMapping("/dict/item")
     public DictItemVO getDictItem(@RequestBody Map<String, String> request) {
@@ -76,7 +74,6 @@ public class InternalApiController {
      * @return 校验通过返回 true
      */
     @SentinelRateLimit(resource = "system.internalapi.validateClient", threshold = 50)
-    @Idempotent(key = 'system:internalapi:validateClient', ttlSeconds = 5, message = "请勿重复提交")
     @Idempotent(key = "ydsz:system:InternalApiController:validateClient:lock", ttlSeconds = 5)
     @PostMapping("/app/validate")
     public boolean validateClient(@RequestBody Map<String, String> request) {

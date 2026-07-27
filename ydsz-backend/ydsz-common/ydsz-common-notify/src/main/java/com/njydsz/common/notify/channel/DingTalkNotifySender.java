@@ -50,6 +50,12 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 	private final RestTemplate restTemplate;
 	private final TemplateEngine templateEngine;
 
+	/**
+	 * 构造钉钉通知发送器
+	 *
+	 * @param restTemplate    HTTP 请求客户端
+	 * @param templateEngine  模板引擎
+	 */
 	public DingTalkNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
 		this.restTemplate = restTemplate;
 		this.templateEngine = templateEngine;
@@ -60,6 +66,14 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 		return NotifyChannel.DINGTALK;
 	}
 
+	/**
+	 * 发送钉钉通知
+	 *
+	 * @param receiver 接收者（钉钉 Webhook 模式下可为 null）
+	 * @param title    消息标题
+	 * @param content  消息内容
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
@@ -109,6 +123,14 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 		}
 	}
 
+	/**
+	 * 使用模板发送钉钉通知
+	 *
+	 * @param receiver       接收者（可为 null）
+	 * @param templateCode   模板编码
+	 * @param templateParams 模板参数
+	 * @return 发送结果
+	 */
 	@Override
 	public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
 		Map<String, Object> params = extractParams(templateParams);
@@ -139,6 +161,12 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 		return webhook != null && !webhook.isEmpty();
 	}
 
+	/**
+	 * 从模板参数对象中提取 Map
+	 *
+	 * @param templateParams 模板参数对象
+	 * @return 参数映射
+	 */
 	private Map<String, Object> extractParams(Object templateParams) {
 		if (templateParams instanceof Map<?, ?> rawMap) {
 			Map<String, Object> params = new HashMap<>();

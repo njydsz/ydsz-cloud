@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleEngine;
-import com.njydsz.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.literule.server.spi.DecisionTableEvalProvider;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.spi.DecisionTableEvalProvider;
 import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.domain.entity.FlowRunTaskDO;

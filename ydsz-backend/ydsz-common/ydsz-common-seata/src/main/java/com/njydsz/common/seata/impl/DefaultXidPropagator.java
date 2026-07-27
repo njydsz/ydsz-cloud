@@ -19,11 +19,23 @@ public class DefaultXidPropagator implements XidPropagator {
 
     // P0-F5: 委托 AbstractTransactionManager 的统一 ThreadLocal
 
+    /**
+     * 将 XID 序列化为传输格式（直接返回原值）
+     *
+     * @param xid 全局事务 ID
+     * @return 序列化后的字符串
+     */
     @Override
     public String serialize(String xid) {
         return xid;
     }
 
+    /**
+     * 从传输格式反序列化 XID（去除首尾空白）
+     *
+     * @param header 传输内容
+     * @return 解析出的 XID，无效时返回 null
+     */
     @Override
     public String deserialize(String header) {
         if (header == null || header.isBlank()) {
@@ -32,6 +44,11 @@ public class DefaultXidPropagator implements XidPropagator {
         return header.trim();
     }
 
+    /**
+     * 将 XID 绑定到当前线程（委托给 AbstractTransactionManager 的 ThreadLocal）
+     *
+     * @param xid 全局事务 ID
+     */
     @Override
     public void bind(String xid) {
         if (xid != null) {
@@ -40,11 +57,19 @@ public class DefaultXidPropagator implements XidPropagator {
         }
     }
 
+    /**
+     * 从当前线程获取 XID
+     *
+     * @return 当前线程的 XID，无事务上下文时返回 null
+     */
     @Override
     public String currentXid() {
         return AbstractTransactionManager.getXidFromHolder();
     }
 
+    /**
+     * 清除当前线程的 XID 绑定
+     */
     @Override
     public void unbind() {
         AbstractTransactionManager.removeXidFromHolder();

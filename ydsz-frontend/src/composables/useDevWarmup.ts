@@ -31,11 +31,6 @@ export interface WarmupResult {
  * 开发环境预热 composable
  *
  * 仅在 import.meta.env.DEV 为 true 时自动执行预热。
- */
-/**
- * 开发环境预热 composable
- *
- * 仅在 import.meta.env.DEV 为 true 时自动执行预热。
  *
  * @returns `{ isWarmupComplete, warmupResult, warmup }`
  *   - isWarmupComplete: 预热是否已完成（失败也算完成）

@@ -45,13 +45,16 @@ import type {
 import { useFormGuard } from '@/composables/useFormGuard'
 
 // ==================== 设计器模式 ====================
+/** 当前设计器模式：BPMN 专业模式 / 经典模式 */
 const designerMode = ref<'bpmn' | 'classic'>('bpmn')
 
 // ==================== 表单防误关闭守卫 ====================
 const { setDirty } = useFormGuard({ message: '流程设计器内容未保存，确定离开？' })
 
 // ==================== 流程定义选择 ====================
+/** 流程定义列表 */
 const definitionList = ref<FlowDefinitionDTO[]>([])
+/** 流程定义加载状态 */
 const definitionLoading = ref(false)
 const selectedDefinitionId = ref<string | undefined>(undefined)
 const selectedDefinition = ref<FlowDefinitionDTO | undefined>(undefined)

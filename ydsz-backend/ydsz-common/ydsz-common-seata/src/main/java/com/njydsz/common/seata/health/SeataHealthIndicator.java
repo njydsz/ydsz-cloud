@@ -35,6 +35,13 @@ public class SeataHealthIndicator implements HealthIndicator {
     private final ObjectProvider<SeataGlobalTransactionExecutor> globalExecutorProvider;
     private final ObjectProvider<TccTransactionLogStore> logStoreProvider;
 
+    /**
+     * 构造分布式事务健康检查指示器
+     *
+     * @param properties             Seata 配置属性
+     * @param globalExecutorProvider 全局事务执行器提供者（可选）
+     * @param logStoreProvider       TCC 事务日志存储提供者（可选）
+     */
     public SeataHealthIndicator(SeataProperties properties,
                                 ObjectProvider<SeataGlobalTransactionExecutor> globalExecutorProvider,
                                 ObjectProvider<TccTransactionLogStore> logStoreProvider) {
@@ -43,6 +50,11 @@ public class SeataHealthIndicator implements HealthIndicator {
         this.logStoreProvider = logStoreProvider;
     }
 
+    /**
+     * 执行健康检查，检测事务模式、Seata TC 连通性和 TCC 挂起事务数
+     *
+     * @return 健康检查结果
+     */
     @Override
     public Health health() {
         Health.Builder builder = Health.up();

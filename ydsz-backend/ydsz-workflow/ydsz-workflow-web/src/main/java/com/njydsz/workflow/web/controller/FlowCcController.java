@@ -1,5 +1,7 @@
 package com.njydsz.workflow.web.controller.notification;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
@@ -51,7 +53,7 @@ public class FlowCcController {
     @Idempotent(key = "ydsz:workflow:FlowCcController:pageCc:lock", ttlSeconds = 5)
     @PostMapping("/cc/page")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
-    public BaseResponse<PageResponse<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
+    public BaseResponse<PageResponse<List<FlowCcDO>>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
         int pageNo = query.getPageNum();

@@ -35,21 +35,51 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
     private final FeignCircuitBreakerStrategy circuitBreaker;
     private final BulkheadRequestInterceptor bulkhead;
 
+    /**
+     * 使用指标和日志配置构造响应拦截器。
+     *
+     * @param metrics    Feign 响应指标采集器（可为 null）
+     * @param logEnabled 是否启用响应日志记录
+     */
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled) {
         this(metrics, logEnabled, 0, null, null);
     }
 
+    /**
+     * 使用指标、日志和慢调用阈值构造响应拦截器。
+     *
+     * @param metrics                Feign 响应指标采集器（可为 null）
+     * @param logEnabled             是否启用响应日志记录
+     * @param slowCallThresholdMillis 慢调用阈值（毫秒），0 表示禁用
+     */
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
                                     long slowCallThresholdMillis) {
         this(metrics, logEnabled, slowCallThresholdMillis, null, null);
     }
 
+    /**
+     * 使用指标、日志、慢调用阈值和熔断器策略构造响应拦截器。
+     *
+     * @param metrics                Feign 响应指标采集器（可为 null）
+     * @param logEnabled             是否启用响应日志记录
+     * @param slowCallThresholdMillis 慢调用阈值（毫秒），0 表示禁用
+     * @param circuitBreaker         熔断器策略（可为 null）
+     */
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
                                     long slowCallThresholdMillis,
                                     @Nullable FeignCircuitBreakerStrategy circuitBreaker) {
         this(metrics, logEnabled, slowCallThresholdMillis, circuitBreaker, null);
     }
 
+    /**
+     * 使用完整参数构造响应拦截器。
+     *
+     * @param metrics                Feign 响应指标采集器（可为 null）
+     * @param logEnabled             是否启用响应日志记录
+     * @param slowCallThresholdMillis 慢调用阈值（毫秒），0 表示禁用
+     * @param circuitBreaker         熔断器策略（可为 null）
+     * @param bulkhead               Bulkhead 请求隔离拦截器（可为 null，启用后用于在 finally 中释放许可）
+     */
     public FeignResponseInterceptor(@Nullable FeignResponseMetrics metrics, boolean logEnabled,
                                     long slowCallThresholdMillis,
                                     @Nullable FeignCircuitBreakerStrategy circuitBreaker,
@@ -61,6 +91,22 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
         this.bulkhead = bulkhead;
     }
 
+    /**
+     * 拦截 Feign 调用，执行熔断检查、响应记录和许可释放。
+     *
+     * <p>执行流程：
+     * <ol>
+     *   <li>调用前检查熔断器是否允许请求</li>
+     *   <li>执行实际 Feign 调用</li>
+     *   <li>调用后记录成功/失败指标和慢调用告警</li>
+     *   <li>finally 块中释放 Bulkhead 信号量许可</li>
+     * </ol>
+     *
+     * @param context Feign 调用上下文
+     * @param chain   调用链
+     * @return 调用结果
+     * @throws Exception 调用过程中可能抛出的异常
+     */
     @Override
     public Object intercept(InvocationContext context, Chain chain) throws Exception {
         long startTime = System.currentTimeMillis();

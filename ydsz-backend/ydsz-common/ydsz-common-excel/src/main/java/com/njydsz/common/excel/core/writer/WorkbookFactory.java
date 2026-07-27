@@ -25,6 +25,8 @@ import com.njydsz.common.excel.core.style.WriteStyleHandler;
  * <p>根据文件扩展名判断格式(.xlsx/.xls)，支持追加模式打开已有文件。
  * 追加模式时会读取已有文件并定位到数据末尾。</p>
  *
+ * @author ydsz-team
+ * @since 1.0.0
  * @see ExcelWriter
  */
 public class WorkbookFactory {

@@ -26,6 +26,7 @@ import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
 @ConditionalOnBean(type = "org.apache.rocketmq.spring.core.RocketMQTemplate")
 public class RocketMqGatewayConfiguration {
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(RocketMqGatewayConfiguration.class);
 
     /**

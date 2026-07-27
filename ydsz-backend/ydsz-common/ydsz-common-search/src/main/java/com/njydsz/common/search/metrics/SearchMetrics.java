@@ -154,18 +154,38 @@ public class SearchMetrics {
         return (double) failedIndexOps.get() / total;
     }
 
+    /**
+     * 获取总搜索次数
+     *
+     * @return 总搜索次数
+     */
     public long getTotalSearches() {
         return totalSearches.get();
     }
 
+    /**
+     * 获取零结果搜索次数
+     *
+     * @return 零结果搜索次数
+     */
     public long getZeroResultSearches() {
         return zeroResultSearches.get();
     }
 
+    /**
+     * 获取总索引操作次数
+     *
+     * @return 总索引操作次数
+     */
     public long getTotalIndexOps() {
         return totalIndexOps.get();
     }
 
+    /**
+     * 获取失败索引操作次数
+     *
+     * @return 失败索引操作次数
+     */
     public long getFailedIndexOps() {
         return failedIndexOps.get();
     }

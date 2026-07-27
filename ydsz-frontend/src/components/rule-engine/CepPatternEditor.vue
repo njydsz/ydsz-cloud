@@ -78,17 +78,20 @@ function removeEvent(idx: number) {
   update()
 }
 
+/** 窗口类型选项 */
 const windowTypes = [
   { label: '时间窗口', value: 'TIME' },
   { label: '数量窗口', value: 'COUNT' }
 ]
 
+/** 时间单位选项 */
 const timeUnits = [
   { label: '秒', value: 'SECONDS' },
   { label: '分钟', value: 'MINUTES' },
   { label: '小时', value: 'HOURS' }
 ]
 
+/** 聚合函数选项 */
 const aggregations = [
   { label: '计数 (COUNT)', value: 'COUNT(*)' },
   { label: '求和 (SUM)', value: 'SUM(amount)' },
@@ -97,7 +100,7 @@ const aggregations = [
   { label: '最小 (MIN)', value: 'MIN(amount)' }
 ]
 
-// 预览文本
+/** 模式预览文本 */
 const previewText = computed(() => {
   const p = localPattern.value
   const events = p.events.map(e => `${e.name}(${e.eventType})`).join(' → ')
@@ -150,7 +153,7 @@ const previewText = computed(() => {
         </el-col>
       </el-row>
 
-      <!-- 事件流 -->
+      <!-- 事件流配置 -->
       <el-divider content-position="left">
         <span>事件序列</span>
         <el-button :icon="Plus" link type="primary" @click="addEvent">添加事件</el-button>

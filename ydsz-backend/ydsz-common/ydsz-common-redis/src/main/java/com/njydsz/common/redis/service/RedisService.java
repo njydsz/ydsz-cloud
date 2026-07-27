@@ -87,6 +87,26 @@ public class RedisService implements BatchRedisOperations {
     }
 
     /**
+     * 获取 Spring Data Redis 的 ValueOperations（向后兼容）。
+     *
+     * <p>用于需要调用 {@code setIfAbsent}/{@code decrement} 等高级 String 操作的场景。
+     * 注意：返回的操作对象不经过 RedisService 的 keyPrefix 二次拼接。
+     */
+    public ValueOperations<String, Object> opsForValue() {
+        return redisTemplate.opsForValue();
+    }
+
+    /**
+     * 获取 Spring Data Redis 的 HashOperations（向后兼容）。
+     *
+     * <p>用于需要直接调用 {@code putAll}/{@code entries} 等 Hash 操作的场景。
+     * 注意：返回的操作对象不经过 RedisService 的 keyPrefix 二次拼接。
+     */
+    public HashOperations<String, Object, Object> opsForHash() {
+        return redisTemplate.opsForHash();
+    }
+
+    /**
      * 格式化 Key，添加统一前缀
      */
     private String formatKey(String key) {

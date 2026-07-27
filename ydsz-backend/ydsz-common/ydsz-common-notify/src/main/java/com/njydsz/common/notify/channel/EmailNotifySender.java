@@ -329,6 +329,11 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 异步发送邮件
+	 *
+	 * @param receiver 收件人邮箱
+	 * @param title    邮件标题
+	 * @param content  邮件内容
+	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> sendEmailAsync(String receiver, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> send(receiver, title, content), virtualThreadExecutor);
@@ -336,6 +341,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 异步发送复杂邮件
+	 *
+	 * @param message 邮件消息体
+	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> sendEmailAsync(EmailMessage message) {
 		return CompletableFuture.supplyAsync(() -> sendEmail(message), virtualThreadExecutor);
@@ -343,6 +351,11 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 批量异步发送邮件
+	 *
+	 * @param receivers 收件人列表
+	 * @param title     邮件标题
+	 * @param content   邮件内容
+	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> batchSendEmailAsync(List<String> receivers, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> batchSend(receivers, title, content), virtualThreadExecutor);
@@ -352,6 +365,11 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * P3-13：检查是否为重复邮件
+	 *
+	 * @param receiver 接收者
+	 * @param title    标题
+	 * @param content  内容
+	 * @return true 表示是重复消息
 	 */
 	private boolean isDuplicate(String receiver, String title, String content) {
 		NotifyDedupService dedupService = dedupServiceProvider.getIfAvailable();
@@ -360,6 +378,8 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * P0-2：检查 SMTP 是否健康
+	 *
+	 * @return true 表示 SMTP 服务健康
 	 */
 	private boolean isSmtpHealthy() {
 		EmailSmtpHealthChecker healthChecker = healthCheckerProvider.getIfAvailable();
@@ -371,6 +391,10 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * P0-3：HTML 内容 XSS 清洗
+	 *
+	 * @param content 原始内容
+	 * @param isHtml  是否 HTML 格式
+	 * @return 清洗后的内容
 	 */
 	private String sanitizeIfNeeded(String content, boolean isHtml) {
 		if (!isHtml || !StringUtils.hasText(content)) {
@@ -388,6 +412,11 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * P1-5：注入追踪像素
+	 *
+	 * @param content   原始 HTML 内容
+	 * @param messageId 邮件消息 ID
+	 * @param isHtml    是否 HTML 格式
+	 * @return 注入追踪像素后的内容
 	 */
 	private String injectTrackingPixel(String content, String messageId, boolean isHtml) {
 		if (!isHtml || !StringUtils.hasText(content)) {
@@ -402,6 +431,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * P1-4：记录发送指标
+	 *
+	 * @param success        是否成功
+	 * @param durationNanos  耗时（纳秒）
 	 */
 	private void recordMetrics(boolean success, long durationNanos) {
 		NotifyMetrics metrics = metricsProvider.getIfAvailable();
@@ -415,6 +447,8 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * P1-4：记录发送失败
+	 *
+	 * @param e 异常信息
 	 */
 	private void recordFailure(Exception e) {
 		NotifyMetrics metrics = metricsProvider.getIfAvailable();
@@ -425,6 +459,8 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 生成邮件消息 ID
+	 *
+	 * @return UUID 格式的消息 ID
 	 */
 	private String generateMessageId() {
 		return UUID.randomUUID().toString().replace("-", "");
@@ -434,6 +470,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 构建邮件主题（添加默认前缀）
+	 *
+	 * @param subject 原始主题
+	 * @return 添加前缀后的主题
 	 */
 	private String buildSubject(String subject) {
 		if (subject == null || subject.isEmpty()) {
@@ -448,6 +487,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 判断内容是否为 HTML 格式
+	 *
+	 * @param content 邮件内容
+	 * @return true 表示内容为 HTML 格式
 	 */
 	private boolean isHtmlContent(String content) {
 		return content != null && content.contains("<") && content.contains(">");
@@ -455,6 +497,8 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 检查是否配置了默认抄送/密送
+	 *
+	 * @return true 表示已配置默认抄送或密送
 	 */
 	private boolean hasDefaultCcBcc() {
 		return StringUtils.hasText(emailConfig().getCc()) || StringUtils.hasText(emailConfig().getBcc());
@@ -462,6 +506,10 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 发送简单纯文本邮件（无附件、无抄送）
+	 *
+	 * @param to      收件人
+	 * @param subject 主题
+	 * @param content 内容
 	 */
 	private void sendSimpleMail(String to, String subject, String content) {
 		SimpleMailMessage msg = new SimpleMailMessage();
@@ -570,6 +618,8 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 构建发件人地址（含显示名称）
+	 *
+	 * @return 发件人地址字符串
 	 */
 	private String buildFromAddress() {
 		String fromName = emailConfig().getFromName();
@@ -582,6 +632,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 解析逗号分隔的邮箱地址列表
+	 *
+	 * @param addresses 逗号或分号分隔的地址字符串
+	 * @return 地址数组
 	 */
 	private String[] parseAddresses(String addresses) {
 		return addresses.split("[,;]\\s*");
@@ -589,6 +642,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 校验邮箱地址格式
+	 *
+	 * @param email 邮箱地址
+	 * @return true 表示格式有效
 	 */
 	private boolean isValidEmail(String email) {
 		if (email == null || email.isBlank()) {
@@ -599,6 +655,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 校验多个邮箱地址格式（逗号分隔）
+	 *
+	 * @param emails 逗号分隔的邮箱地址
+	 * @return true 表示所有地址格式有效
 	 */
 	private boolean isValidEmailList(String emails) {
 		if (!StringUtils.hasText(emails)) {
@@ -614,6 +673,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 校验附件总大小是否超过限制
+	 *
+	 * @param message 邮件消息体
+	 * @throws IllegalArgumentException 附件大小超过限制时抛出
 	 */
 	private void validateAttachmentSize(EmailMessage message) {
 		if (message == null || message.getAttachments() == null) {

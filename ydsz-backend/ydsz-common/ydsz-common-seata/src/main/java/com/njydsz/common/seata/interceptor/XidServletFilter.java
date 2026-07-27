@@ -31,10 +31,24 @@ public class XidServletFilter extends OncePerRequestFilter {
 
     private final XidPropagator xidPropagator;
 
+    /**
+     * 构造 XID 接收过滤器
+     *
+     * @param xidPropagator XID 传播器，用于绑定/解绑线程 XID
+     */
     public XidServletFilter(XidPropagator xidPropagator) {
         this.xidPropagator = xidPropagator;
     }
 
+    /**
+     * 过滤请求，从请求头提取 XID 并绑定到当前线程
+     *
+     * @param request     HTTP 请求
+     * @param response    HTTP 响应
+     * @param filterChain 过滤器链
+     * @throws ServletException Servlet 异常
+     * @throws IOException      IO 异常
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

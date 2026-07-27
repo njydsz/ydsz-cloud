@@ -21,10 +21,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OpenTelemetryTraceContext implements TraceContext {
 
+    /**
+     * 构造函数，初始化 OpenTelemetry 追踪上下文
+     */
     public OpenTelemetryTraceContext() {
         log.info("[Sentry] OpenTelemetryTraceContext 初始化完成");
     }
 
+    /**
+     * 获取当前 TraceId
+     *
+     * @return TraceId，若 OpenTelemetry SDK 不可用则返回 null
+     */
     @Override
     public String getTraceId() {
         try {
@@ -39,6 +47,11 @@ public class OpenTelemetryTraceContext implements TraceContext {
         return null;
     }
 
+    /**
+     * 获取当前 SpanId
+     *
+     * @return SpanId，若 OpenTelemetry SDK 不可用则返回 null
+     */
     @Override
     public String getSpanId() {
         try {
@@ -53,6 +66,11 @@ public class OpenTelemetryTraceContext implements TraceContext {
         return null;
     }
 
+    /**
+     * 判断是否在 OpenTelemetry 追踪链路中
+     *
+     * @return 是否在追踪链路中
+     */
     @Override
     public boolean isTracing() {
         try {
@@ -63,6 +81,12 @@ public class OpenTelemetryTraceContext implements TraceContext {
         }
     }
 
+    /**
+     * 注入自定义标签到当前 Span
+     *
+     * @param key   标签键
+     * @param value 标签值
+     */
     @Override
     public void tag(String key, String value) {
         try {
@@ -73,6 +97,11 @@ public class OpenTelemetryTraceContext implements TraceContext {
         }
     }
 
+    /**
+     * 获取追踪系统名称
+     *
+     * @return 固定返回 "opentelemetry"
+     */
     @Override
     public String getTracerName() {
         return "opentelemetry";

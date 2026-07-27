@@ -28,7 +28,10 @@ import com.njydsz.common.event.repository.OutboxRepository;
  */
 public class OutboxHealthIndicator implements HealthIndicator {
 
+    /** Outbox 仓储 */
     private final OutboxRepository outboxRepository;
+
+    /** 事件配置属性 */
     private final EventProperties properties;
 
     /**

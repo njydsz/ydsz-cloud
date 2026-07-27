@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>内存安全：</b>使用 Caffeine 缓存替代 ThreadLocal，通过 TTL（30 分钟）和最大容量（10000）自动清理，
  * 彻底避免线程池复用场景下的 ThreadLocal 内存泄漏。
  *
+ * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j

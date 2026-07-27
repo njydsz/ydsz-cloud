@@ -60,20 +60,43 @@ public final class OtelSdkBuilder {
 
     private OtelSdkBuilder() {}
 
+    /**
+     * 创建 SDK 构建器实例
+     *
+     * @return 新的 OtelSdkBuilder 实例
+     */
     public static OtelSdkBuilder create() {
         return new OtelSdkBuilder();
     }
 
+    /**
+     * 设置 Resource（服务元信息）
+     *
+     * @param resource OTel Resource
+     * @return 当前构建器
+     */
     public OtelSdkBuilder resource(Resource resource) {
         this.resource = resource;
         return this;
     }
 
+    /**
+     * 设置采样器
+     *
+     * @param sampler OTel Sampler
+     * @return 当前构建器
+     */
     public OtelSdkBuilder sampler(io.opentelemetry.sdk.trace.samplers.Sampler sampler) {
         this.sampler = sampler;
         return this;
     }
 
+    /**
+     * 添加 SpanProcessor
+     *
+     * @param processor SpanProcessor 实例
+     * @return 当前构建器
+     */
     public OtelSdkBuilder addProcessor(SpanProcessor processor) {
         if (processor != null) {
             this.processors.add(processor);
@@ -81,11 +104,23 @@ public final class OtelSdkBuilder {
         return this;
     }
 
+    /**
+     * 设置 SpanExporter
+     *
+     * @param exporter SpanExporter 实例
+     * @return 当前构建器
+     */
     public OtelSdkBuilder exporter(SpanExporter exporter) {
         this.exporter = exporter;
         return this;
     }
 
+    /**
+     * 设置批处理配置
+     *
+     * @param batchConfig 批处理配置
+     * @return 当前构建器
+     */
     public OtelSdkBuilder batchConfig(OtelExporterFactory.BatchConfig batchConfig) {
         if (batchConfig != null) {
             this.batchConfig = batchConfig;
@@ -114,6 +149,8 @@ public final class OtelSdkBuilder {
 
     /**
      * 构建 OTel SDK 并注册到 GlobalOpenTelemetry
+     *
+     * @return 构建完成的 OpenTelemetrySdk 实例
      */
     public OpenTelemetrySdk build() {
         // 1) TracerProvider
@@ -183,6 +220,9 @@ public final class OtelSdkBuilder {
 
     /**
      * 通过 SPI 自动发现 SpanExporter
+     *
+     * @param type Exporter 类型标识（如 otlp-grpc、zipkin 等）
+     * @return 当前构建器
      */
     public OtelSdkBuilder exporterFromSpi(String type) {
         ServiceLoader<OtelExporterFactory.SpanExporterProvider> loader =

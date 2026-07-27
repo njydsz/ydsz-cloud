@@ -29,6 +29,16 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
     private final ConcurrentLinkedQueue<DeadLetterEntry> deadLetterQueue = new ConcurrentLinkedQueue<>();
     private final AtomicInteger count = new AtomicInteger(0);
 
+    /**
+     * 将消息移入内存死信队列
+     *
+     * @param channel        通知渠道
+     * @param receiver       接收者
+     * @param title          标题
+     * @param content        内容
+     * @param failedAttempts 失败尝试次数
+     * @param lastError      最后错误信息
+     */
     @Override
     public void moveToDeadLetter(NotifyChannel channel, String receiver, String title,
                                  String content, int failedAttempts, String lastError) {
@@ -49,6 +59,12 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
                 messageId, channel.getName(), receiver, failedAttempts, lastError);
     }
 
+    /**
+     * 获取死信队列中的消息列表
+     *
+     * @param maxCount 最大返回数量
+     * @return 死信消息列表
+     */
     @Override
     public List<DeadLetterEntry> getDeadLetters(int maxCount) {
         int limit = maxCount > 0 ? maxCount : 100;
@@ -62,6 +78,12 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
         return result;
     }
 
+    /**
+     * 重试死信队列中的指定消息
+     *
+     * @param messageId 消息 ID
+     * @return true 表示重试成功
+     */
     @Override
     public boolean retryDeadLetter(String messageId) {
         DeadLetterEntry toRemove = null;
@@ -80,6 +102,11 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
         return false;
     }
 
+    /**
+     * 获取死信队列大小
+     *
+     * @return 死信队列中消息数量
+     */
     @Override
     public int getDeadLetterCount() {
         return count.get();

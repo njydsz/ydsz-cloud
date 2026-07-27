@@ -49,9 +49,12 @@ const visible = computed({
 const isEdit = computed(() => !!props.data?.id)
 
 // ==================== 表单状态 ====================
+/** 编辑表单引用 */
 const formRef = ref<FormInstance>()
+/** 表单提交状态 */
 const submitting = ref(false)
 
+/** 决策表编辑表单数据 */
 const form = reactive({
   id: undefined as string | undefined,
   tableKey: '',
@@ -95,22 +98,26 @@ const columnTypeOptions = ['string', 'number', 'boolean', 'date']
 const inputColumns = ref<DmnColumn[]>([])
 const outputColumns = ref<DmnColumn[]>([])
 
+/** 新增输入列定义 */
 function addInputColumn() {
   inputColumns.value.push({ id: `in_${Date.now()}`, name: '', type: 'string' })
   // 同步已有规则的输入条件长度
   ruleList.value.forEach((r) => r.inputEntries.push(''))
 }
 
+/** 删除输入列定义 */
 function removeInputColumn(idx: number) {
   inputColumns.value.splice(idx, 1)
   ruleList.value.forEach((r) => r.inputEntries.splice(idx, 1))
 }
 
+/** 新增输出列定义 */
 function addOutputColumn() {
   outputColumns.value.push({ id: `out_${Date.now()}`, name: '', type: 'string' })
   ruleList.value.forEach((r) => r.outputEntries.push(''))
 }
 
+/** 删除输出列定义 */
 function removeOutputColumn(idx: number) {
   outputColumns.value.splice(idx, 1)
   ruleList.value.forEach((r) => r.outputEntries.splice(idx, 1))
@@ -119,6 +126,7 @@ function removeOutputColumn(idx: number) {
 // ==================== 规则列表 ====================
 const ruleList = ref<DmnRule[]>([])
 
+/** 新增规则行 */
 function addRule() {
   ruleList.value.push({
     id: `rule_${Date.now()}`,
@@ -128,6 +136,7 @@ function addRule() {
   })
 }
 
+/** 删除规则行 */
 function removeRule(idx: number) {
   ruleList.value.splice(idx, 1)
 }
@@ -162,6 +171,7 @@ watch(
 )
 
 // ==================== 保存 ====================
+/** 保存决策表 */
 async function handleSave() {
   if (!formRef.value) return
   try {
@@ -195,6 +205,7 @@ async function handleSave() {
   }
 }
 
+/** 关闭弹窗 */
 function handleClose() {
   visible.value = false
 }

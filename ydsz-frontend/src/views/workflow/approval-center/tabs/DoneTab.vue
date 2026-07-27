@@ -30,8 +30,11 @@ const doneQuery = reactive<FlowTaskQuery>({
   pageNum: 1,
   pageSize: 20,
 })
+/** 已办任务列表数据 */
 const doneList = ref<FlowTaskDTO[]>([])
+/** 已办任务列表总数 */
 const doneTotal = ref(0)
+/** 已办任务加载状态 */
 const doneLoading = ref(false)
 
 const columns = computed<ProTableColumn<FlowTaskDTO>[]>(() => [

@@ -193,7 +193,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         }
         try {
             int total = readTotal(instanceId, joinNodeCode);
-            String arrivedStr = redisService.get(buildArrivedKey(instanceId, joinNodeCode, String.class));
+            String arrivedStr = redisService.get(buildArrivedKey(instanceId, joinNodeCode), String.class);
             if (arrivedStr == null) {
                 return false;
             }

@@ -10,10 +10,24 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 
 /**
- * Excel module health indicator.
+ * Excel 模块健康检查指示器
+ *
+ * <p>用于 Spring Boot Actuator 的健康检查端点，展示 Excel 模块的运行状态和关键配置信息。</p>
+ *
+ * <h3>检查项</h3>
+ * <ul>
+ *   <li>快速读取器是否启用</li>
+ *   <li>快速写入器是否启用</li>
+ *   <li>公式注入防护是否启用</li>
+ *   <li>最大读取/写入文件大小限制</li>
+ *   <li>流式解析阈值</li>
+ *   <li>临时目录是否可写</li>
+ *   <li>ZIP 压缩级别</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see ExcelConfig
  */
 public class ExcelHealthIndicator implements HealthIndicator {
 

@@ -17,8 +17,11 @@ import type { FeatureFlagSnapshot } from '@/api/feature-flag/types'
 
 const { t } = useI18n()
 
+/** 特性开关加载状态 */
 const loading = ref(false)
+/** 特性开关快照列表 */
 const snapshots = ref<FeatureFlagSnapshot[]>([])
+/** 搜索关键字 */
 const search = ref('')
 
 /** 分类中文标签 */

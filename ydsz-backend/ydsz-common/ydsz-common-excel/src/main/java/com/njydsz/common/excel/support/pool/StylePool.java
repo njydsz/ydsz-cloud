@@ -12,6 +12,9 @@ import org.apache.poi.ss.usermodel.*;
  * <p>提供单元格样式的创建、缓存和管理功能。
  * 通过缓存机制避免相同配置的样式重复创建，减少内存占用。</p>
  *
+ * @author ydsz-team
+ * @since 1.0.0
+ *
  * <h3>LRU 缓存策略</h3>
  * <ul>
  *   <li>使用 LinkedHashMap(accessOrder=true) 实现 LRU 淘汰</li>

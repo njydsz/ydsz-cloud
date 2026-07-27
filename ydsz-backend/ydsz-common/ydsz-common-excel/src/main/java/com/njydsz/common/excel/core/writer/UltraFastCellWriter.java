@@ -18,6 +18,9 @@ import org.apache.poi.ss.usermodel.*;
  * <p>通过预编译的类型处理路径和内联优化，
  * 最小化方法调用和对象创建开销。</p>
  *
+ * @author ydsz-team
+ * @since 1.0.0
+ *
  * <h3>优化策略</h3>
  * <ul>
  *   <li>类型特化 - 针对常见类型提供专用写入路径</li>

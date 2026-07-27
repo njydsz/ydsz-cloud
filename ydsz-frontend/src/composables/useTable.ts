@@ -45,7 +45,11 @@ export interface UseTableOptions<Q extends UseTableQuery> {
 /** localStorage 中 pageSize 持久化的统一前缀，便于清理与避免冲突 */
 const PAGE_SIZE_KEY_PREFIX = 'ydsz-pageSize-'
 
-/** 读取持久化的每页条数 */
+/**
+ * 从 localStorage 读取持久化的每页条数
+ * @param key localStorage key 后缀（如路由名）
+ * @returns 持久化的条数值（不存在或无效时返回 null）
+ */
 function loadPersistedSize(key?: string): number | null {
   if (!key) return null
   try {
@@ -58,7 +62,11 @@ function loadPersistedSize(key?: string): number | null {
   }
 }
 
-/** 写入持久化的每页条数 */
+/**
+ * 写入持久化的每页条数到 localStorage
+ * @param key localStorage key 后缀
+ * @param size 当前每页条数
+ */
 function savePersistedSize(key: string | undefined, size: number): void {
   if (!key) return
   try {

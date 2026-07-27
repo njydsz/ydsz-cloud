@@ -133,8 +133,8 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
 
         // 5. 调度器配置摘要
         Map<String, Object> schedulerInfo = new LinkedHashMap<>();
-        schedulerInfo.put("scanIntervalMs", cronjobProperties.getScanner().getScanIntervalMs());
-        schedulerInfo.put("maxBatchSize", cronjobProperties.getScanner().getMaxBatchSize());
+        schedulerInfo.put("scanIntervalMs", cronjobProperties.getScanner().getIntervalMs());
+        schedulerInfo.put("maxBatchSize", cronjobProperties.getScanner().getBatchSize());
         schedulerInfo.put("lockTtlSeconds", cronjobProperties.getScanner().getLockTtlSeconds());
         schedulerInfo.put("failoverEnabled", cronjobProperties.getFailover().isEnabled());
         schedulerInfo.put("timeoutMonitorEnabled", cronjobProperties.getLeader().isEnabled());

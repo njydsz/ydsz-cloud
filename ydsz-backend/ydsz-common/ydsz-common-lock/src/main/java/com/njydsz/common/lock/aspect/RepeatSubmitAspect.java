@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>本切面：基于前端 Token 的防重复提交，适用于表单提交场景</li>
  * </ul>
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see RepeatSubmit
  * @see RepeatSubmitTokenService

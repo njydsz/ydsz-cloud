@@ -39,16 +39,21 @@ const newVersion = ref<number>()
 const diffResult = ref<any>(null)
 
 // ===== 计算属性 =====
+/** 有变更的 diff 条目（过滤掉 UNCHANGED） */
 const diffEntries = computed(() => {
   if (!diffResult.value?.entries) return []
   return diffResult.value.entries.filter((e: any) => e.type !== 'UNCHANGED')
 })
 
+/** 新增条目数 */
 const addedCount = computed(() => diffEntries.value.filter((e: any) => e.type === 'ADDED').length)
+/** 修改条目数 */
 const modifiedCount = computed(() => diffEntries.value.filter((e: any) => e.type === 'MODIFIED').length)
+/** 删除条目数 */
 const removedCount = computed(() => diffEntries.value.filter((e: any) => e.type === 'REMOVED').length)
 
 // ===== 方法 =====
+/** 加载版本列表，默认选中最后两个版本进行对比 */
 async function loadVersions() {
   if (!props.ruleCode) return
   loading.value = true
@@ -68,6 +73,7 @@ async function loadVersions() {
   }
 }
 
+/** 加载选中版本的 diff 数据 */
 async function loadDiff() {
   if (!oldVersion.value || !newVersion.value) return
   loading.value = true

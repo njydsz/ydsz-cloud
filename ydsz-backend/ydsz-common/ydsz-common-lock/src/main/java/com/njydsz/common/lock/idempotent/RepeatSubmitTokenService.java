@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>Redis Key 格式：</b>
  * {@code ydsz:repeat:token:{userId}:{token}}
  *
+ * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.common.lock.annotation.RepeatSubmit
  */

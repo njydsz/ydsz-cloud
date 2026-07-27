@@ -36,15 +36,20 @@ import DmnExecuteDialog from './components/DmnExecuteDialog.vue'
 const { t } = useI18n()
 
 // ==================== 列表查询 ====================
+/** 列表加载状态 */
 const loading = ref(false)
+/** 决策表列表数据 */
 const list = ref<FlowDmnTableDTO[]>([])
+/** 决策表列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({
   page: 1,
   size: 10,
   tableName: '',
 })
 
+/** 拉取决策表分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -66,11 +71,13 @@ async function fetchList() {
   }
 }
 
+/** 搜索查询（重置页码为 1） */
 function onQuery() {
   query.page = 1
   fetchList()
 }
 
+/** 重置查询条件 */
 function onReset() {
   query.page = 1
   query.size = 10
@@ -78,10 +85,12 @@ function onReset() {
   fetchList()
 }
 
+/** 分页切换回调 */
 function onPageChange() {
   fetchList()
 }
 
+/** 刷新列表 */
 async function onRefresh() {
   await fetchList()
 }

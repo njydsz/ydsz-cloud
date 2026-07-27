@@ -92,7 +92,7 @@ public class GlobalConcurrencyController {
      */
     public void release() {
         try {
-            Long current = redisService.opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
+            Long current = redisService.getRedisTemplate().opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
             if (current != null && current < 0) {
                 // 计数器为负，修正为 0
                 redisService.set(GLOBAL_CONCURRENT_KEY, "0");

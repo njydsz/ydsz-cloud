@@ -115,6 +115,12 @@ public class MessageAckService {
         }
     }
 
+    /**
+     * 清理过期的本地 ACK 记录。
+     *
+     * <p>定时调用此方法，清空本地降级存储中所有待确认记录，
+     * 防止内存无限增长。
+     */
     public void cleanupExpiredLocalAcks() {
         localPendingAcks.clear();
 }
