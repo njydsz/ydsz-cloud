@@ -1,11 +1,13 @@
 package com.njydsz.common.notify.event;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.domain.event.DomainEvent;
+import com.njydsz.common.domain.event.ModuleEventTypes;
+
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
 /**
  * 统一告警事件 — 全局告警事件总线的标准事件载体。
@@ -22,63 +24,81 @@ import lombok.Data;
  *   <li><b>幂等键</b>：{@link #alertCode} 作为业务幂等键，相同 code 的告警不会重复分发</li>
  * </ul>
  *
+ * <p><b>P2-1</b>：现在继承 {@link DomainEvent}（→ {@code ApplicationEvent}），
+ * 可直接通过 {@code DomainEventPublisher} 发布并由 {@code @EventListener} 消费。
+ *
  * <p><b>2026-07-12 迁移</b>：从 ydsz-common-infra 迁移到 ydsz-common-notify，
  * 与通知中心紧耦合（事件最终通过 notify 通道发送），降低跨模块耦合度。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Data
-@Builder
-public class UnifiedAlertEvent implements Serializable {
+@Getter
+public class UnifiedAlertEvent extends DomainEvent {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     /** 告警编码（业务幂等键），相同 code 不会重复分发 */
-    private String alertCode;
+    private final String alertCode;
 
     /** 告警类型: BUDGET/RISK/EVM/SLA/BENCH/UTILIZATION/QUALITY/JOB_TIMEOUT/JOB_FAILED/OTHER */
-    private String alertType;
+    private final String alertType;
 
     /** 告警等级: YELLOW/RED/NORMAL/INFO */
-    private String alertLevel;
+    private final String alertLevel;
 
     /** 来源模块: project/cronjob/agent/workflow/literule */
-    private String sourceModule;
+    private final String sourceModule;
 
     /** 来源业务主键（项目 ID / 任务 ID 等） */
-    private String sourceId;
+    private final String sourceId;
 
     /** 来源业务引用（如项目编号） */
-    private String sourceRef;
+    private final String sourceRef;
 
     /** 告警标题 */
-    private String title;
+    private final String title;
 
     /** 告警内容 */
-    private String content;
+    private final String content;
 
     /** 目标角色: PM/PMO/GM/CFO/ALL（逗号分隔，可空 → 根据 level 自动解析） */
-    private String targetRole;
+    private final String targetRole;
 
     /** 指定接收人 ID 列表（逗号分隔，优先于 targetRole） */
-    private String targetUserIds;
+    private final String targetUserIds;
 
     /** 推送渠道: INAPP/EMAIL/SMS（逗号分隔，可空 → 根据 level 自动解析） */
-    private String pushChannels;
+    private final String pushChannels;
 
     /** 触发时间 */
-    private LocalDateTime triggeredAt;
-
-    /** 租户 ID */
-    private String tenantId;
-
-    /** 链路追踪 ID */
-    private String traceId;
+    private final LocalDateTime triggeredAt;
 
     /** 是否为恢复通知（true=告警恢复，false=正常告警） */
-    private boolean recovery;
+    private final boolean recovery;
+
+    public UnifiedAlertEvent(String alertCode, String alertType, String alertLevel,
+                             String sourceModule, String sourceId, String sourceRef,
+                             String title, String content, String targetRole,
+                             String targetUserIds, String pushChannels,
+                             LocalDateTime triggeredAt, String tenantId, String traceId,
+                             boolean recovery) {
+        super(ModuleEventTypes.UNIFIED_ALERT, sourceId, sourceModule);
+        this.alertCode = alertCode;
+        this.alertType = alertType;
+        this.alertLevel = alertLevel;
+        this.sourceModule = sourceModule;
+        this.sourceId = sourceId;
+        this.sourceRef = sourceRef;
+        this.title = title;
+        this.content = content;
+        this.targetRole = targetRole;
+        this.targetUserIds = targetUserIds;
+        this.pushChannels = pushChannels;
+        this.triggeredAt = triggeredAt;
+        this.recovery = recovery;
+    }
 
     /**
      * 构建默认的告警编码

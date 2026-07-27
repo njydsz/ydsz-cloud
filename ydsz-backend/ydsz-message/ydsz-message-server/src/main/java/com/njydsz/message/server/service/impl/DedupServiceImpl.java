@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 智能去重服务实现（P2-1）。
  *
- * <p>使用 Redis {@code SET NX EX}（{@link StringRedisTemplate#opsForValue()
- * #setIfAbsent(key, value, timeout, unit)}）实现原子去重：
+ * <p>使用 Redis {@code SET NX EX}（{@link RedisService#opsForValue()
+ * #setIfAbsent(key, value, Duration)}）实现原子去重：
  * <ul>
  *   <li>首次写入成功 → 返回 true（允许发送）</li>
  *   <li>窗口内重复写入失败 → 返回 false（跳过发送）</li>

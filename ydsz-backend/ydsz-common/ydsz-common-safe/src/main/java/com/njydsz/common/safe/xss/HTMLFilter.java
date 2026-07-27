@@ -8,15 +8,35 @@ import java.util.regex.Pattern;
 
 /**
  * HTML 过滤器，用于去除 XSS 漏洞隐患。
- * <p>
- * 基于 OWASP 最佳实践设计，支持白名单机制、协议验证、属性过滤等功能。
- * 相比互联网大厂工具类的优势：
- * 1. 零第三方依赖，纯 JDK 实现
- * 2. 支持完全自定义的白名单配置
- * 3. 内置多种安全策略（宽松、标准、严格）
- * 4. 支持协议级别的URL 验证
- * 5. 高性能正则匹配和缓存机制
- * </p>
+ *
+ * <p>基于 OWASP 最佳实践设计，支持白名单机制、协议验证、属性过滤等功能。
+ *
+ * <h3>核心特性</h3>
+ * <ul>
+ *   <li>零第三方依赖，纯 JDK 实现</li>
+ *   <li>支持完全自定义的白名单配置（允许的标签、属性、协议）</li>
+ *   <li>内置多种安全策略（宽松、标准、严格）</li>
+ *   <li>支持协议级别的 URL 验证（http/https/mailto 等）</li>
+ *   <li>高性能正则匹配和缓存机制（{@link ConcurrentHashMap} 缓存已编译正则）</li>
+ *   <li>HTML 实体编码（&amp; &lt; &gt; &quot;）防止 XSS 注入</li>
+ *   <li>嵌套标签处理（递归解析标签栈）</li>
+ * </ul>
+ *
+ * <h3>过滤流程</h3>
+ * <ol>
+ *   <li>移除 HTML 注释（{@code <!-- -->}）</li>
+ *   <li>逐标签解析，白名单内的标签保留，其他标签移除</li>
+ *   <li>对保留的标签，过滤属性（白名单属性 + 协议验证）</li>
+ *   <li>对 URL 属性执行协议白名单校验（防止 {@code javascript:} 等危险协议）</li>
+ *   <li>对文本内容执行 HTML 实体编码</li>
+ * </ol>
+ *
+ * <h3>使用方式</h3>
+ * <pre>{@code
+ * HTMLFilter filter = new HTMLFilter();
+ * String clean = filter.filter("<script>alert(1)</script><b>text</b>");
+ * // 结果：<b>text</b>
+ * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0

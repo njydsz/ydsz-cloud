@@ -28,19 +28,39 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WikiSearchProvider implements SearchProvider<FileNode> {
 
+    /** 文件节点仓储 */
     private final FileNodeRepository fileNodeRepository;
+    /** 搜索索引仓储 */
     private final SearchIndexRepository searchIndexRepository;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return "wiki"
+     */
     @Override
     public String getType() {
         return "wiki";
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return "知识库"
+     */
     @Override
     public String getTypeLabel() {
         return "知识库";
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>将文件节点的 name、path 组合为可搜索文本，
+     * 并按字段权重（title=A, content=C）构建索引文档。
+     *
+     * @param node 文件节点
+     * @return 索引文档，node 为 null 或 id 为 null 时返回 null
+     */
     @Override
     public IndexDocument toIndexDocument(FileNode node) {
         if (node == null || node.getId() == null) {

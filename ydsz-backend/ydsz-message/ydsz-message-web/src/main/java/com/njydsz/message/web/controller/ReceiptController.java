@@ -47,8 +47,7 @@ public class ReceiptController {
      */
     @Operation(summary = "回执回调")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
-    @Idempotent(key = "receipt:callback", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.receipt.callback", threshold = 50)
+    @Idempotent(key = "ydsz:message:ReceiptController:callback:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.receipt.callback", threshold = 50)
     @PostMapping("/callback")
     public BaseResponse<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {

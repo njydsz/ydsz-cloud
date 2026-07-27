@@ -12,12 +12,27 @@ import com.njydsz.common.sentry.spi.SlaCollector;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * SLA 指标采集器实现
+ * SLA 指标采集器实现。
  *
- * <p>基于 Micrometer 采集 SLA 指标，包括步骤耗时、总耗时、违反次数。
+ * <p>基于 {@link MetricsCollector} 采集 SLA（Service Level Agreement）指标，
+ * 包括步骤耗时、总耗时和违反次数。配合 {@link SlaMetricAspect} AOP 切面使用，
+ * 在标注了 {@code @SlaMetric} 的方法上自动采集 SLA 数据。
+ *
+ * <h3>采集的指标</h3>
+ * <ul>
+ *   <li>{@code sla.<name>.step.<step>.duration}：各步骤耗时</li>
+ *   <li>{@code sla.<name>.total.duration}：总耗时</li>
+ *   <li>{@code sla.<name>.violation.count}：SLA 违反次数（超时）</li>
+ * </ul>
+ *
+ * <h3>线程安全</h3>
+ * <p>使用 {@link ConcurrentHashMap} 存储运行中的 SLA 上下文，支持并发采集。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see SlaCollector
+ * @see SlaMetricAspect
+ * @see SlaDefinition
  */
 @Slf4j
 public class DefaultSlaCollector implements SlaCollector {

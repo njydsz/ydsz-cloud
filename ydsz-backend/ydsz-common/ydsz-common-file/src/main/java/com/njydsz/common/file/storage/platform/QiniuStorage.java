@@ -44,16 +44,29 @@ import com.qiniu.util.Auth;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 七牛云 Kodo 对象存储实现
- * <p>继承 {@link AbstractFileStorage}，
- * 将操作翻译为七牛云 Java SDK 的原生 API 调用。
+ * 七牛云 Kodo 对象存储实现。
  *
- * <p>分片上传使用 Upload V2 协议：
- * ApiUploadV2InitUpload / ApiUploadV2UploadPart / ApiUploadV2CompleteUpload / ApiUploadV2AbortUpload
+ * <p>继承 {@link AbstractFileStorage}，将操作翻译为七牛云 Java SDK 的原生 API 调用。
+ *
+ * <h3>分片上传协议</h3>
+ * <p>使用七牛云 Upload V2 协议（不同于 S3 multipart upload），完整支持分片上传生命周期：
+ * <ol>
+ *   <li>{@code ApiUploadV2InitUpload}：初始化分片上传，获取 uploadId</li>
+ *   <li>{@code ApiUploadV2UploadPart}：上传单个分片</li>
+ *   <li>{@code ApiUploadV2CompleteUpload}：合并所有分片为最终对象</li>
+ *   <li>{@code ApiUploadV2AbortUpload}：取消上传并清理已上传分片</li>
+ * </ol>
+ *
+ * <h3>私有空间下载</h3>
+ * <p>通过 {@link Auth#privateDownloadUrl(String, long)} 生成临时下载链接，
+ * 支持自定义过期时间。公开空间可直接通过 CDN 域名访问。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @see AbstractFileStorage
+ * @see Auth
+ * @see UploadManager
+ * @see BucketManager
  */
 @Slf4j
 public class QiniuStorage extends AbstractFileStorage {

@@ -2,10 +2,12 @@ package com.njydsz.agent.server.config;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -43,6 +45,8 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.redis.service.RedisService;
 
+import lombok.extern.slf4j.Slf4j;
+
 import io.micrometer.core.instrument.MeterRegistry;
 
 /**
@@ -71,6 +75,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 @Configuration
 @EnableConfigurationProperties(AgentProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.agent", name = "enabled", havingValue = "true", matchIfMissing = true)
+@Slf4j
 public class AgentAutoConfiguration {
 
     @Bean
@@ -108,11 +113,11 @@ public class AgentAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ConversationMemory.class)
-    public ConversationMemory conversationMemory(StringRedisTemplate redisTemplate,
+    public ConversationMemory conversationMemory(RedisService redisService,
                                                    AgentProperties properties) {
         int maxMessages = properties.getMemory().getMaxMessages();
         int maxListSize = Math.max(maxMessages * 2, 50);
-        return new RedisConversationMemory(redisTemplate,
+        return new RedisConversationMemory(redisService,
                 properties.getMemory().getTtlHours(), maxListSize);
     }
 
@@ -226,8 +231,18 @@ public class AgentAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(DagOrchestrationExecutor.class)
     public DagOrchestrationExecutor dagOrchestrationExecutor(
-            LlmClient llmClient, AgentProperties properties, AgentFactory agentFactory) {
-        return new DagOrchestrationExecutor(llmClient, properties, agentFactory);
+            LlmClient llmClient, AgentProperties properties, AgentFactory agentFactory,
+            ApplicationContext applicationContext) {
+        // P0-1: 优先使用 common-thread 统一线程池（agentDagExecutor, type=VIRTUAL）
+        try {
+            ExecutorService dagExecutor =
+                    applicationContext.getBean("agentDagExecutor", ExecutorService.class);
+            log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor");
+            return new DagOrchestrationExecutor(llmClient, properties, agentFactory, dagExecutor);
+        } catch (Exception e) {
+            log.warn("[Agent] agentDagExecutor 未注入, DagOrchestrationExecutor 使用本地虚拟线程池");
+            return new DagOrchestrationExecutor(llmClient, properties, agentFactory);
+        }
     }
 
     @Bean

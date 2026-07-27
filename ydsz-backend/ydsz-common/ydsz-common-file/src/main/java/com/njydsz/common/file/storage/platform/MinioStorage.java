@@ -35,16 +35,27 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 
 /**
- * MinIO 对象存储实现
- * <p>继承 {@link AbstractFileStorage}，
- * 将操作翻译为 MinIO Java SDK 的原生 API 调用。
+ * MinIO 对象存储实现。
  *
- * <p>分片上传使用分片对象暂存 + composeObject 合并策略，
- * 失败时清理临时分片对象。
+ * <p>继承 {@link AbstractFileStorage}，将操作翻译为 MinIO Java SDK 的原生 API 调用。
+ * MinIO 兼容 S3 协议，但使用独立的 Java SDK，API 更为简洁。
+ *
+ * <h3>分片上传策略</h3>
+ * <p>MinIO SDK 不直接暴露 S3 multipart upload 协议，本实现采用「分片对象暂存 + composeObject 合并」策略：
+ * <ol>
+ *   <li>每个分片作为独立对象上传到临时前缀目录</li>
+ *   <li>所有分片上传完成后，调用 {@code composeObject} 将分片合并为目标对象</li>
+ *   <li>合并成功后清理临时分片对象</li>
+ *   <li>失败时调用 {@code abortChunkedUpload} 清理已上传的分片</li>
+ * </ol>
+ *
+ * <h3>预签名 URL</h3>
+ * <p>通过 {@code getPresignedObjectUrl} 生成临时下载链接，支持过期时间配置。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @see AbstractFileStorage
+ * @see io.minio.MinioClient
  */
 @Slf4j
 public class MinioStorage extends AbstractFileStorage {

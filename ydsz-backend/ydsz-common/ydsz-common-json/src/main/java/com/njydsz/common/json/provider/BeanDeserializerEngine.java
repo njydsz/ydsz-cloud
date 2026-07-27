@@ -16,13 +16,33 @@ import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.reader.JSONReader;
 
 /**
- * Bean 反序列化策略引擎
+ * Bean 反序列化策略引擎。
  *
- * <p>负责 Bean 对象的反序列化策略选择与执行，包括零拷贝、ASM、
- * BeanReader 等多种优化路径。</p>
+ * <p>负责 Bean 对象的反序列化策略选择与执行，内部实现了多级降级的反序列化路径，
+ * 按性能从高到低依次尝试：
+ *
+ * <h3>反序列化路径（优先级从高到低）</h3>
+ * <ol>
+ *   <li><b>ASM 字节码路径</b>：通过 {@link AsmCodecCache} 动态生成反序列化器，
+ *       直接操作字段偏移量，无反射开销</li>
+ *   <li><b>BeanReader 路径</b>：针对简单 Bean（字段全为基本类型）的轻量级反射读取</li>
+ *   <li><b>@YdszJsonCreator 路径</b>：通过注解标记的构造函数创建实例</li>
+ *   <li><b>Builder 模式路径</b>：通过 {@code @YdszJsonBuilder} 或自动检测内部 Builder</li>
+ *   <li><b>ZeroCopyDeserializer 路径</b>：零拷贝 char[] 直接解析</li>
+ *   <li><b>降级路径</b>：解析为 Map 或 List 返回</li>
+ * </ol>
+ *
+ * <h3>列表反序列化</h3>
+ * <p>列表场景额外提供基于 ASM 和 ZeroCopy 的批量反序列化，
+ * 通过预估容量和跳过异常元素保证吞吐量。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see AsmCodecCache
+ * @see BeanReader
+ * @see CreatorResolver
+ * @see BuilderResolver
+ * @see ZeroCopyDeserializer
  */
 final class BeanDeserializerEngine {
 
@@ -30,10 +50,30 @@ final class BeanDeserializerEngine {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 零拷贝 Bean 反序列化（返回 Object）。
+     *
+     * <p>委托给 {@link #deserializeBeanZeroCopy(String, Class)} 的便捷方法。
+     *
+     * @param json  JSON 字符串
+     * @param clazz 目标类
+     * @return 反序列化后的实例
+     */
     static Object deserializeBeanZeroCopyAsObject(String json, Class<?> clazz) {
         return deserializeBeanZeroCopy(json, clazz);
     }
 
+    /**
+     * 零拷贝 Bean 反序列化（泛型版）。
+     *
+     * <p>按多级降级策略依次尝试 ASM → BeanReader → Creator → Builder → ZeroCopy → Map 降级。
+     * 每条路径失败后自动回退到下一条，确保最终能返回结果。
+     *
+     * @param json  JSON 字符串
+     * @param clazz 目标类
+     * @param <T>   目标类型
+     * @return 反序列化后的实例
+     */
     static <T> T deserializeBeanZeroCopy(String json, Class<T> clazz) {
         // ASM 优化路径：使用字节码生成的反序列化器
         if (json.trim().startsWith("{") &&
@@ -106,6 +146,16 @@ final class BeanDeserializerEngine {
         }
     }
 
+    /**
+     * 快速反序列化 Bean 列表。
+     *
+     * <p>优先使用 ASM 反序列化器（批量解析性能最佳），失败时降级为 ZeroCopy 路径。
+     *
+     * @param json          JSON 数组字符串
+     * @param elementClass  列表元素类型
+     * @param <E>           元素类型
+     * @return 反序列化后的列表
+     */
     static <E> List<E> deserializeBeanListFast(String json, Class<E> elementClass) {
         // 优先使用 ASM 反序列化器
         AsmDeserializer<E> asmDeserializer = null;
@@ -121,6 +171,18 @@ final class BeanDeserializerEngine {
         return deserializeBeanListWithZeroCopy(json, elementClass);
     }
 
+    /**
+     * 使用 ASM 反序列化器批量解析 JSON 数组。
+     *
+     * <p>使用 {@link JSONReader} 池化读取器，预估列表容量减少 ArrayList 扩容。
+     * 单个元素解析失败时跳过并填充 null，不中断整体解析。
+     *
+     * @param json            JSON 数组字符串
+     * @param elementClass    元素类型
+     * @param asmDeserializer ASM 反序列化器
+     * @param <E>             元素类型
+     * @return 反序列化后的列表
+     */
     static <E> List<E> deserializeBeanListWithAsm(String json, Class<E> elementClass,
             AsmDeserializer<E> asmDeserializer) {
         JSONReader reader =
@@ -171,6 +233,17 @@ final class BeanDeserializerEngine {
         }
     }
 
+    /**
+     * 使用 ZeroCopyDeserializer 批量解析 JSON 数组。
+     *
+     * <p>直接操作 char[] 避免字符串拷贝，通过大括号深度跟踪定位每个对象边界。
+     * ASM 不可用时的降级路径。
+     *
+     * @param json          JSON 数组字符串
+     * @param elementClass  元素类型
+     * @param <E>           元素类型
+     * @return 反序列化后的列表
+     */
     static <E> List<E> deserializeBeanListWithZeroCopy(String json, Class<E> elementClass) {
         char[] chars = json.toCharArray();
         int len = chars.length;
@@ -251,6 +324,15 @@ final class BeanDeserializerEngine {
         return result;
     }
 
+    /**
+     * 零拷贝解析 JSON 数组为 Object 列表。
+     *
+     * <p>委托给 {@link ZeroCopyDeserializer#parseArrayChars}，失败时降级为 {@link YdszJsonParser#parseArray}。
+     *
+     * @param json          JSON 数组字符串
+     * @param elementClass  元素类型（用于 ZeroCopy 类型推断）
+     * @return 解析后的列表
+     */
     static List<Object> deserializeArrayZeroCopy(String json, Class<?> elementClass) {
         try {
             char[] chars = json.toCharArray();
@@ -260,6 +342,15 @@ final class BeanDeserializerEngine {
         }
     }
 
+    /**
+     * 判断一个类是否为「简单 Bean」。
+     *
+     * <p>简单 Bean 的所有非 static、非 transient 字段均为基本类型或其包装类、String。
+     * 简单 Bean 可使用高性能的 {@link BeanReader} 路径，避免递归嵌套解析。
+     *
+     * @param clazz 待判断的类
+     * @return 是简单 Bean 返回 true
+     */
     static boolean isSimpleBean(Class<?> clazz) {
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
@@ -275,6 +366,12 @@ final class BeanDeserializerEngine {
         return true;
     }
 
+    /**
+     * 判断一个类型是否为基本类型或其包装类、String。
+     *
+     * @param type 待判断的类型
+     * @return 是基本类型返回 true
+     */
     static boolean isSimpleType(Class<?> type) {
         return type.isPrimitive() ||
                type == String.class ||

@@ -7,7 +7,7 @@
 
 export interface PurchaseVO {
   /** 采购申请 ID */
-  id: number
+  id: string
   /** 采购申请编码 */
   purchaseCode: string
   /** 所属立项 ID */
@@ -69,7 +69,7 @@ export interface PurchaseCreateDTO {
 
 export interface ApprovalDTO {
   /** 采购申请 ID */
-  id: number
+  id: string
   /** 目标状态 */
   targetStatus: string
   /** 审批人 ID */

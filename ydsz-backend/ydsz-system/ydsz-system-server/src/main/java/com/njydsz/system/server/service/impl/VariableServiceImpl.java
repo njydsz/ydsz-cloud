@@ -21,6 +21,7 @@ import com.njydsz.system.server.service.VariableService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 系统变量 Service 实现。
@@ -101,6 +102,7 @@ public class VariableServiceImpl implements VariableService {
      * <p>支持按 variableKey 模糊匹配、status 精确匹配过滤。
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public IPage<VariableVO> page(int pageNum, int pageSize, String variableKey, String status) {
         QueryWrapper<VariableDO> wrapper = new QueryWrapper<>();
         if (variableKey != null && !variableKey.isBlank()) {
@@ -117,11 +119,21 @@ public class VariableServiceImpl implements VariableService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部变量列表（不区分状态）
+     */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<VariableVO> list() {
         return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>插入后清除变量键对应的缓存。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(VariableDTO dto) {
@@ -131,6 +143,10 @@ public class VariableServiceImpl implements VariableService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>更新成功后清除变量键对应的缓存。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(VariableDTO dto) {
@@ -142,6 +158,10 @@ public class VariableServiceImpl implements VariableService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>删除成功后清除变量键对应的缓存。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -153,17 +173,34 @@ public class VariableServiceImpl implements VariableService {
         return result;
     }
 
+    /**
+     * 清除指定变量键的缓存。
+     *
+     * @param variableKey 变量键
+     */
     private void evictCache(String variableKey) {
         if (variableKey != null) {
             redisService.delete(CACHE_KEY_PREFIX + variableKey);
         }
     }
 
+    /**
+     * 获取变量缓存 TTL，从 {@link SystemProperties.Variable#getCacheTtlMinutes()} 读取，
+     * 默认 5 分钟。
+     *
+     * @return 缓存 TTL
+     */
     private Duration getCacheTtl() {
         int minutes = properties.getVariable().getCacheTtlMinutes();
         return Duration.ofMinutes(minutes > 0 ? minutes : 5);
     }
 
+    /**
+     * 将 DO 转换为 VO。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象，entity 为 null 时返回 null
+     */
     private VariableVO toVO(VariableDO entity) {
         if (entity == null) {
             return null;
@@ -178,6 +215,12 @@ public class VariableServiceImpl implements VariableService {
         return vo;
     }
 
+    /**
+     * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
+     *
+     * @param dto 数据传输对象
+     * @return 数据库实体
+     */
     private VariableDO toEntity(VariableDTO dto) {
         VariableDO entity = new VariableDO();
         entity.setId(dto.getId());

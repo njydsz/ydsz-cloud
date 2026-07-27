@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 用户通道绑定 Controller。
@@ -46,7 +47,7 @@ public class UserChannelBindingController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
     @SentinelRateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
-    @SentinelRateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
+    @Idempotent(key = "ydsz:message:UserChannelBindingController:upsert:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<MsgUserChannelDO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
         return BaseResponse.success(userChannelBindingService.upsert(dto));
@@ -70,7 +71,7 @@ public class UserChannelBindingController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @SentinelRateLimit(resource = "message.userchannelbinding.delete", threshold = 50)
-    @SentinelRateLimit(resource = "message.userchannelbinding.delete", threshold = 50)
+    @Idempotent(key = "ydsz:message:UserChannelBindingController:delete:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         userChannelBindingService.delete(id);

@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.common.json.YdszJson;
 
 import jakarta.validation.Valid;
@@ -161,8 +160,7 @@ public class RuleAdminController {
     private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
     /** 决策表 Mapper */
     private final DecisionTableMapper decisionTableMapper;
-    /** JSON 序列化器 */
-    private final ObjectMapper objectMapper;
+    /** JSON 序列化器（P0-2: 迁移到 YdszJson，移除 Jackson 依赖） */
     /** 决策表评估服务（SPI，由 project 模块提供实现） */
     private final DecisionTableEvalProvider decisionTableEvalProvider;
     /** 表达式校验服务 */
@@ -1598,7 +1596,7 @@ public class RuleAdminController {
                     skipped++;
                     continue;
                 }
-                RuleDefinition def = objectMapper.convertValue(ruleMap, RuleDefinition.class);
+                RuleDefinition def = YdszJson.fromJson(YdszJson.toJson(ruleMap), RuleDefinition.class);
                 // 导入时重置版本和状态
                 def.setVersion(1);
                 def.setStatus("DRAFT");

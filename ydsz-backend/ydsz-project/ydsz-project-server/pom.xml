@@ -70,6 +70,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
+        <!-- P0-2: 分布式事务（Seata AT 模式，跨服务事务场景启用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-seata</artifactId>
+        </dependency>
+        <!-- P1-4: 搜索 Provider SPI（项目立项/合同搜索） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-search</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
@@ -82,6 +92,11 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <!-- P2-3: 统一文件存储接入 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-file</artifactId>
         </dependency>
     </dependencies>
 </project>

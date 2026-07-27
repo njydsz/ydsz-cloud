@@ -35,8 +35,7 @@ public class FlowOfflineForwardController {
      * @param authId 代理授权记录 ID
      * @return 成功转发的任务数
      */
-    @Idempotent(key = "flowOfflineForward:autoForward", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowofflineforward.autoForward", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowOfflineForwardController:autoForward:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowofflineforward.autoForward", threshold = 50)
     @PostMapping("/auto")
     @Operation(summary = "按代理授权规则自动转发已有待办")
@@ -51,8 +50,7 @@ public class FlowOfflineForwardController {
      * @param delegateUserId 代理人 ID
      * @return 成功转发的任务数
      */
-    @Idempotent(key = "flowOfflineForward:manualForward", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowofflineforward.manualForward", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowOfflineForwardController:manualForward:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowofflineforward.manualForward", threshold = 50)
     @PostMapping("/manual")
     @Operation(summary = "手动触发离线转发")

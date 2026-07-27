@@ -65,9 +65,8 @@ public class MessageController {
      */
     @Operation(summary = "发送消息(基于共享请求)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:MessageController:send:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'send'")
-    @SentinelRateLimit(resource = "message.message.send", threshold = 50)
     @SentinelRateLimit(resource = "message.message.send", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
@@ -82,9 +81,8 @@ public class MessageController {
      */
     @Operation(summary = "直接发送消息(本模块 DTO)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:MessageController:sendDirect:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendDirect'")
-    @SentinelRateLimit(resource = "message.message.sendDirect", threshold = 50)
     @SentinelRateLimit(resource = "message.message.sendDirect", threshold = 50)
     @PostMapping("/sendDirect")
     public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
@@ -100,9 +98,8 @@ public class MessageController {
      */
     @Operation(summary = "异步发送消息(先落库再投递 MQ)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:MessageController:sendAsync:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendAsync'")
-    @SentinelRateLimit(resource = "message.message.sendAsync", threshold = 50)
     @SentinelRateLimit(resource = "message.message.sendAsync", threshold = 50)
     @PostMapping("/sendAsync")
     public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
@@ -140,9 +137,8 @@ public class MessageController {
      */
     @Operation(summary = "事务消息发送(RocketMQ 半消息)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:sendTransactionally", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:MessageController:sendTransactionally:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendTransactionally'")
-    @SentinelRateLimit(resource = "message.message.sendTransactionally", threshold = 50)
     @SentinelRateLimit(resource = "message.message.sendTransactionally", threshold = 50)
     @PostMapping("/sendTransactional")
     public BaseResponse<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
@@ -158,9 +154,8 @@ public class MessageController {
      */
     @Operation(summary = "批量发送消息(限制 100 条/批)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:batchSend", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:MessageController:batchSend:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchSend'")
-    @SentinelRateLimit(resource = "message.message.batchSend", threshold = 50)
     @SentinelRateLimit(resource = "message.message.batchSend", threshold = 50)
     @PostMapping("/batchSend")
     public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,

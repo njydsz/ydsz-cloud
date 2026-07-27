@@ -5,7 +5,7 @@
  */
 export interface EmployeeTagVO {
   /** 标签 ID */
-  id: number
+  id: string
   /** 员工 ID */
   employeeId: number
   /** 标签类型：SKILL / TECH / INDUSTRY / AVAILABILITY */

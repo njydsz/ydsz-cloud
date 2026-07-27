@@ -101,8 +101,7 @@ public class AgentController {
      * 执行 Agent（同步）
      */
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
-    @Idempotent(key = "agent:execute", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "agent.agent.execute", threshold = 50)
+    @Idempotent(key = "ydsz:agent:AgentController:execute:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "agent.agent.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<ChatResponseDTO> execute(
@@ -127,8 +126,7 @@ public class AgentController {
      * 客户端断开后自动中断执行，避免资源浪费。
      */
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'executeStream'")
-    @Idempotent(key = "agent:executeStream", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "agent.agent.executeStream", threshold = 50)
+    @Idempotent(key = "ydsz:agent:AgentController:executeStream:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "agent.agent.executeStream", threshold = 50)
     @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {

@@ -71,8 +71,7 @@ public class JobHistoryController {
      * @return 统一响应结果，包含回滚后的任务定义
      */
     @Operation(summary = "回滚到指定版本")
-    @Idempotent(key = "jobHistory:rollback", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobHistoryController:rollback:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
     @PostMapping("/rollback")
     public BaseResponse<JobDO> rollback(@RequestParam String jobId,

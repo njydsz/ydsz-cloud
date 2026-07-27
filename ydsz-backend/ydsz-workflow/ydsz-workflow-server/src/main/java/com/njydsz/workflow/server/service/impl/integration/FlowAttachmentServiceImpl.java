@@ -21,6 +21,7 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 自建工作流引擎 - 审批附件服务实现
@@ -101,11 +102,13 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<FlowAttachmentDO> listByTask(String taskId) {
         return attachmentMapper.selectByTask(taskId);
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<FlowAttachmentDO> listByInstance(String instanceId) {
         return attachmentMapper.selectByInstance(instanceId);
     }

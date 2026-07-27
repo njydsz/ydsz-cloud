@@ -14,19 +14,31 @@ import {
 } from '@/api/resource/part-time-rate'
 import type { PartTimeRateVO, PartTimeRateCreateDTO } from '@/api/resource/part-time-rate/types'
 
+/** 费率加载状态 */
 const loading = ref(false)
+/** 兼职费率列表数据 */
 const rateList = ref<PartTimeRateVO[]>([])
+/** 费率列表总数 */
 const total = ref(0)
+/** 当前页码 */
 const currentPage = ref(1)
+/** 每页条数 */
 const pageSize = ref(20)
 
+/** 新增/编辑弹窗显隐 */
 const dialogVisible = ref(false)
+/** 弹窗模式：新增 / 编辑 */
 const dialogMode = ref<'create' | 'edit'>('create')
+/** 弹窗提交状态 */
 const dialogLoading = ref(false)
+/** 编辑中的费率 ID */
 const editingId = ref('')
 
+/** 段位筛选 */
 const segmentFilter = ref('')
+/** 状态筛选 */
 const statusFilter = ref('')
+/** 搜索关键字 */
 const keyword = ref('')
 
 const segmentMap: Record<string, string> = {

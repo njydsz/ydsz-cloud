@@ -2,6 +2,7 @@ package com.njydsz.gateway.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import jakarta.annotation.PostConstruct;
 
@@ -190,16 +191,20 @@ public class GatewaySentinelRulesConfig {
         String namespace = System.getProperty(PropertyKeyConst.NAMESPACE,
                 System.getenv().getOrDefault("NACOS_NAMESPACE", "ydsz"));
 
+        Properties nacosProps = new Properties();
+        nacosProps.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
+        nacosProps.put(PropertyKeyConst.NAMESPACE, namespace);
+
         // 熔断降级规则数据源
         Converter<String, List<DegradeRule>> degradeConverter = source -> YdszJson.parseArray(source, DegradeRule.class);
         ReadableDataSource<String, List<DegradeRule>> degradeDs = new NacosDataSource<>(
-                serverAddr, namespace, ruleGroup, degradeRuleDataId, degradeConverter);
+                nacosProps, ruleGroup, degradeRuleDataId, degradeConverter);
         DegradeRuleManager.register2Property(degradeDs.getProperty());
 
         // 系统保护规则数据源
         Converter<String, List<SystemRule>> systemConverter = source -> YdszJson.parseArray(source, SystemRule.class);
         ReadableDataSource<String, List<SystemRule>> systemDs = new NacosDataSource<>(
-                serverAddr, namespace, ruleGroup, systemRuleDataId, systemConverter);
+                nacosProps, ruleGroup, systemRuleDataId, systemConverter);
         SystemRuleManager.register2Property(systemDs.getProperty());
 
         log.info("[SentinelRules] Nacos 数据源已注册 (P0-阶段二-4: degrade={}, system={}, group={}, addr={})",

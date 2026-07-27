@@ -34,8 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MenuServiceImpl implements MenuService {
 
+    /** 菜单 Mapper */
     private final MenuMapper mapper;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当菜单不存在或已删除时抛出
+     */
     @Override
     public MenuVO getById(String id) {
         MenuDO entity = mapper.selectById(id);
@@ -45,6 +51,11 @@ public class MenuServiceImpl implements MenuService {
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部未删除菜单列表（按 sortOrder 降序）
+     */
     @Override
     public List<MenuVO> list() {
         LambdaQueryWrapper<MenuDO> wrapper = new LambdaQueryWrapper<>();
@@ -55,6 +66,10 @@ public class MenuServiceImpl implements MenuService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>status 默认 ENABLED，parentId 为空时默认 "0"（根节点）。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(MenuSaveDTO dto) {
@@ -71,6 +86,12 @@ public class MenuServiceImpl implements MenuService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id。
+     *
+     * @throws BusinessException 当菜单不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(MenuSaveDTO dto) {
@@ -82,6 +103,12 @@ public class MenuServiceImpl implements MenuService {
         return mapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>删除前检查：有子菜单不可删除。
+     *
+     * @throws BusinessException 当菜单不存在、或有子菜单时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -99,6 +126,12 @@ public class MenuServiceImpl implements MenuService {
         return mapper.deleteById(id) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>查询全部未删除菜单，通过 {@link TreeBuilder#buildSimple} 构建树形结构。
+     *
+     * @return 菜单树形结构列表，空数据返回空列表
+     */
     @Override
     public List<MenuTreeVO> tree() {
         List<MenuDO> all = mapper.selectList(
@@ -121,6 +154,12 @@ public class MenuServiceImpl implements MenuService {
                 MenuTreeVO::getSortOrder);
     }
 
+    /**
+     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象
+     */
     private MenuVO toVO(MenuDO entity) {
         MenuVO vo = new MenuVO();
         BeanUtils.copyProperties(entity, vo);

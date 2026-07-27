@@ -66,8 +66,7 @@ public class AnalysisController {
         return BaseResponse.success(storageAnalysisService.topLargeFiles(userId, limit));
     }
 
-    @Idempotent(key = "nextwiki:analysis:analyze", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "nextwiki.analysis.analyze", threshold = 50)
+    @Idempotent(key = "ydsz:nextwiki:AnalysisController:analyze:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "nextwiki.analysis.analyze", threshold = 50)
     @PostMapping("/summary")
     @Operation(summary = "生成文档摘要")

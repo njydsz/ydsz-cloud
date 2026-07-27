@@ -20,7 +20,22 @@ import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 文档处理模块 Micrometer 指标采集
+ * 文档处理模块 Micrometer 指标采集。
+ *
+ * <p>采集文档解析、PII 检测、安全扫描和预处理等关键路径的指标，
+ * 通过 {@link MeterRegistry} 暴露到 Prometheus 供 Grafana 仪表盘展示。
+ *
+ * <h3>指标列表</h3>
+ * <ul>
+ *   <li>{@code docs.parse.total}（Counter）：文档解析次数（按格式/状态标签）</li>
+ *   <li>{@code docs.parse.duration}（Timer）：文档解析耗时</li>
+ *   <li>{@code docs.pii.detected}（Counter）：PII 检测命中次数（按类型标签）</li>
+ *   <li>{@code docs.security.scan}（Counter）：安全扫描次数（按级别标签）</li>
+ *   <li>{@code docs.preprocess.duration}（Timer）：预处理耗时</li>
+ *   <li>{@code docs.async.queue.size}（Gauge）：异步解析队列大小</li>
+ * </ul>
+ *
+ * <p>当 {@link MeterRegistry} 不在 Classpath 时，指标采集静默降级为空操作。
  *
  * @author ydsz-team
  * @since 1.0.0

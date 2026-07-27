@@ -4,8 +4,16 @@
   - Props: modelValue（v-model 弹窗显隐）、fileNodeId（文件 ID）、fileName（文件名）
   - Emits: update:modelValue、created（分享创建成功回调）
   @module components/common/ShareLinkDialog
+  @author ydsz-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
+/**
+ * 分享链接生成弹窗
+ *
+ * 提供文件分享配置表单（分享类型、有效期、访问次数、密码），
+ * 生成分享链接后可一键复制到剪贴板。
+ */
 import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
@@ -36,7 +44,7 @@ const visible = computed({
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
-/** 已生成的分享链接 */
+/** 已生成的分享链接结果 */
 const shareLink = ref<ShareLinkVO | null>(null)
 
 const form = reactive({
@@ -46,7 +54,7 @@ const form = reactive({
   password: '',
 })
 
-/** 有效期选项 */
+/** 有效期选项（长期/1天/7天/30天） */
 const expireOptions = [
   { label: t('nextwiki.shares.forever'), value: 0 },
   { label: `1 ${t('nextwiki.shares.days')}`, value: 1 },
@@ -54,21 +62,21 @@ const expireOptions = [
   { label: `30 ${t('nextwiki.shares.days')}`, value: 30 },
 ]
 
-/** 分享类型选项 */
+/** 分享类型选项（查看/下载/编辑） */
 const shareTypeOptions = computed(() => [
   { label: t('nextwiki.shares.view'), value: 'view' },
   { label: t('nextwiki.shares.download'), value: 'download' },
   { label: t('nextwiki.shares.edit'), value: 'edit' },
 ])
 
-/** 完整分享链接 */
+/** 完整分享链接（基于当前域名拼接） */
 const fullLink = computed(() => {
   if (!shareLink.value) return ''
   const base = window.location.origin
   return `${base}/s/${shareLink.value.shareCode}`
 })
 
-/** 弹窗打开时重置表单 */
+/** 弹窗打开时重置表单与分享结果 */
 watch(visible, (val) => {
   if (val) {
     Object.assign(form, { shareType: 'view', expireDays: 7, maxAccessCount: 0, password: '' })
@@ -98,7 +106,7 @@ async function handleSubmit() {
   }
 }
 
-/** 复制链接到剪贴板 */
+/** 复制分享链接到剪贴板 */
 async function copyLink() {
   if (!fullLink.value) return
   try {

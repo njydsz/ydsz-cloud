@@ -18,9 +18,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 安全响应头过滤器（Web/App 共享抽象基类）
+ * 安全响应头过滤器（Web / App 共享抽象基类）。
+ *
+ * <p>继承 {@link OncePerRequestFilter}，在 HTTP 响应中注入标准安全响应头，
+ * 防止常见的 Web 安全攻击（XSS、点击劫持、MIME 嗅探等）。
+ *
+ * <h3>注入的安全头</h3>
+ * <ul>
+ *   <li>{@code X-Content-Type-Options: nosniff}：禁止浏览器 MIME 嗅探</li>
+ *   <li>{@code X-Frame-Options: DENY/SAMEORIGIN}：防止点击劫持（可配置）</li>
+ *   <li>{@code X-XSS-Protection: 1; mode=block}：启用浏览器 XSS 过滤器</li>
+ *   <li>{@code Strict-Transport-Security}：强制 HTTPS（仅 HTTPS 响应）</li>
+ *   <li>{@code Content-Security-Policy}：内容安全策略（可配置）</li>
+ * </ul>
+ *
+ * <h3>配置</h3>
+ * <p>通过 {@link SecurityHeaderProperties} 配置开关、排除路径和各安全头值。
  *
  * @author ydsz-team
+ * @since 1.0.0
+ * @see SecurityHeaderProperties
+ * @see OncePerRequestFilter
  */
 @Slf4j
 @RequiredArgsConstructor

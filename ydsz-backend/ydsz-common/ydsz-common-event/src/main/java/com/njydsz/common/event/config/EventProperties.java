@@ -60,16 +60,16 @@ public class EventProperties {
     /** 默认最大重试次数 */
     private int maxRetries = 5;
 
-    /** 基础退避秒数 */
+    /** 基础退避秒数（用于指数退避计算） */
     private long baseBackoffSeconds = 10;
 
-    /** 最大退避秒数 */
+    /** 最大退避秒数（退避上限） */
     private long maxBackoffSeconds = 3600;
 
     /** 已投递消息保留天数（0=不清理） */
     private int sentRetentionDays = 7;
 
-    /** 是否启用自动清理 */
+    /** 是否启用自动清理已投递消息 */
     private boolean autoCleanup = true;
 
     /** 清理间隔（小时） */

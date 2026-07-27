@@ -4,8 +4,16 @@
   - Props: parentId（父目录 ID）、visible（v-model 控制弹窗显隐）、accept（接受的文件类型）
   - Emits: success（上传成功回调）、update:visible
   @module components/common/FileUploader
+  @author ydsz-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
+/**
+ * 文件上传组件
+ *
+ * 基于 el-upload drag 模式，支持拖拽上传、多文件、进度条展示。
+ * 上传成功后 emit success 事件，调用方可根据需要刷新文件列表。
+ */
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
@@ -33,12 +41,15 @@ const visible = computed({
   set: (val) => emit('update:modelValue', val),
 })
 
-/** 已上传文件数 */
+/** 已上传成功文件数 */
 const uploadedCount = ref(0)
-/** 总文件数 */
+/** 待上传总文件数 */
 const totalCount = ref(0)
 
-/** 自定义上传逻辑 */
+/**
+ * 自定义上传逻辑
+ * 构造 FormData 调用 uploadFile API，逐文件上传并计数。
+ */
 async function handleUpload(options: { file: File }) {
   const formData = new FormData()
   formData.append('file', options.file)

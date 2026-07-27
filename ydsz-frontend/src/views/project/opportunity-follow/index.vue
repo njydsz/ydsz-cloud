@@ -29,8 +29,11 @@ const query = reactive({
   followMethod: '',
 })
 
+/** 新增跟进弹窗显隐 */
 const dialogVisible = ref(false)
+/** 跟进表单引用 */
 const formRef = ref<FormInstance>()
+/** 跟进表单数据 */
 const form = reactive({
   opportunityId: undefined as number | undefined,
   followMethod: '',
@@ -46,6 +49,7 @@ const followMethodMap: Record<string, { label: string; type: string }> = {
   OTHER: { label: '其他', type: 'info' },
 }
 
+/** 拉取跟进记录数据 */
 async function loadData() {
   loading.value = true
   try {
@@ -57,10 +61,12 @@ async function loadData() {
   }
 }
 
+/** 打开新增跟进弹窗 */
 function handleAdd() {
   dialogVisible.value = true
 }
 
+/** 提交新增跟进记录 */
 async function handleSubmit() {
   if (!formRef.value) return
   await formRef.value.validate()
@@ -69,6 +75,7 @@ async function handleSubmit() {
   loadData()
 }
 
+/** 分页切换回调 */
 function handlePageChange(page: number) {
   query.page = page
   loadData()

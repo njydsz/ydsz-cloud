@@ -35,6 +35,15 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     /** 常用语 Mapper，负责 ydsz_flow_quick_comment 表的增删改查（含用户自定义 + 系统预设） */
     private final FlowQuickCommentMapper quickCommentMapper;
 
+    /**
+     * {@inheritDoc}
+     * <p>查询用户自定义常用语 + 系统预设常用语（isSystem=1），
+     * 结果按 sortNum 升序、useCount 降序排列。
+     *
+     * @param userId   用户 ID
+     * @param tenantId 租户 ID（为空时从 TenantContext 获取）
+     * @return 常用语列表
+     */
     @Override
     public List<FlowQuickCommentDO> listByUser(String userId, String tenantId) {
         if (!StringUtils.hasText(userId)) {
@@ -63,6 +72,12 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         return list;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>创建用户自定义常用语（isSystem=0），useCount 初始为 0。
+     *
+     * @throws SysException 当 userId 为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(FlowQuickCommentDTO dto, String userId, String tenantId) {
@@ -84,6 +99,12 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         return comment.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>仅允许创建者本人更新，系统预设不可更新。
+     *
+     * @throws SysException 当 id 为空、常用语不存在或无权限时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(FlowQuickCommentDTO dto, String userId) {
@@ -108,6 +129,12 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         quickCommentMapper.updateById(existing);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>仅允许创建者本人删除，系统预设不可删除（抛 BAD_REQUEST）。
+     *
+     * @throws SysException 当系统预设常用语不可删除或无权限时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id, String userId) {
@@ -127,6 +154,12 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         quickCommentMapper.updateById(existing);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>异步调用，异常不传播（try-catch 吞异常记 WARN）。
+     *
+     * @param id 常用语 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void incrementUseCount(String id) {

@@ -50,8 +50,7 @@ public class ReadStatusController {
      */
     @Operation(summary = "标记消息已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "readStatus:markRead", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.readstatus.markRead", threshold = 50)
+    @Idempotent(key = "ydsz:message:ReadStatusController:markRead:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.readstatus.markRead", threshold = 50)
     @PostMapping("/read/{msgId}")
     public BaseResponse<Boolean> markRead(@PathVariable String msgId,
@@ -68,8 +67,7 @@ public class ReadStatusController {
      */
     @Operation(summary = "批量标记消息已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "readStatus:markReadBatch", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
+    @Idempotent(key = "ydsz:message:ReadStatusController:markReadBatch:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
     @PostMapping("/readBatch")
     public BaseResponse<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
@@ -86,8 +84,7 @@ public class ReadStatusController {
      */
     @Operation(summary = "标记站内通知已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "readStatus:markNotificationRead", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
+    @Idempotent(key = "ydsz:message:ReadStatusController:markNotificationRead:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
     @PostMapping("/notification/{notificationId}")
     public BaseResponse<Boolean> markNotificationRead(@PathVariable String notificationId,
@@ -104,7 +101,7 @@ public class ReadStatusController {
      */
     @Operation(summary = "全部通知标记已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "readStatus:markAllNotificationsRead", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:ReadStatusController:markAllNotificationsRead:lock", ttlSeconds = 5)
     @PostMapping("/notification/readAll")
     public BaseResponse<Integer> markAllNotificationsRead(@RequestParam String userId,
                                                       @RequestParam(required = false) String bizType) {

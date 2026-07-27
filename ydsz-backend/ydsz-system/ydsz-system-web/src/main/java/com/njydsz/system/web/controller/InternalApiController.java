@@ -49,7 +49,7 @@ public class InternalApiController {
      */
     @SentinelRateLimit(resource = "system.internalapi.getConfig", threshold = 50)
     @Idempotent(key = 'system:internalapi:getConfig', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.internalapi.getConfig", threshold = 50)
+    @Idempotent(key = "ydsz:system:InternalApiController:getConfig:lock", ttlSeconds = 5)
     @PostMapping("/config/get")
     public String getConfig(@RequestBody Map<String, String> request) {
         return configService.getConfigValue(request.get("key"));
@@ -63,7 +63,7 @@ public class InternalApiController {
      */
     @SentinelRateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
     @Idempotent(key = 'system:internalapi:getDictItem', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
+    @Idempotent(key = "ydsz:system:InternalApiController:getDictItem:lock", ttlSeconds = 5)
     @PostMapping("/dict/item")
     public DictItemVO getDictItem(@RequestBody Map<String, String> request) {
         return dictItemService.getByTypeAndCode(request.get("typeCode"), request.get("itemCode"));
@@ -77,7 +77,7 @@ public class InternalApiController {
      */
     @SentinelRateLimit(resource = "system.internalapi.validateClient", threshold = 50)
     @Idempotent(key = 'system:internalapi:validateClient', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.internalapi.validateClient", threshold = 50)
+    @Idempotent(key = "ydsz:system:InternalApiController:validateClient:lock", ttlSeconds = 5)
     @PostMapping("/app/validate")
     public boolean validateClient(@RequestBody Map<String, String> request) {
         return appInfoService.validateClient(request.get("appKey"), request.get("appSecret"));

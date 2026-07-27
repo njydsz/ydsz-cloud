@@ -11,11 +11,14 @@ import com.njydsz.common.feign.dto.RealtimePushDTO;
 import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
 
 /**
- * 通知服务 Feign 客户端（兼容旧 com.njydsz.common.feign.NotificationClient）。
+ * 通知服务 Feign 客户端 — 统一通知发送入口。
  *
- * <p>调用 message 服务提供的通知发送和实时推送接口。
+ * <p>调用 message 服务提供的通知发送、多通道消息发送和实时推送接口。
  * 通过 Feign 声明式调用，配合 Resilience4j 熔断降级（启用方式：
  * {@code ydsz.feign.circuit-breaker.enabled=true}）。
+ *
+ * <p><b>P1-5</b>：已将 {@link MessageServiceClient} 的多通道消息发送能力合并至此，
+ * 统一为单一通知入口。原 {@code MessageServiceClient} 已标记为 {@code @Deprecated}。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -32,6 +35,18 @@ public interface NotificationClient {
      */
     @PostMapping(FeignClientConstants.MESSAGE_PATH_NOTIFICATION_SEND)
     BaseResponse<Void> send(@RequestBody NotificationFeignDTO dto);
+
+    /**
+     * 发送多通道消息（邮件 / 短信 / Webhook / 站内信等）。
+     *
+     * <p>P1-5: 由原 {@link MessageServiceClient#send(MessageRequest)} 合并而来。
+     * 通过 message 模块路由到具体通道实现，支持所有渠道。
+     *
+     * @param request 消息请求
+     * @return 发送结果
+     */
+    @PostMapping(FeignClientConstants.MESSAGE_PATH_SEND)
+    BaseResponse<MessageResult> sendMessage(@RequestBody MessageRequest request);
 
     /**
      * 推送实时消息（WebSocket）。

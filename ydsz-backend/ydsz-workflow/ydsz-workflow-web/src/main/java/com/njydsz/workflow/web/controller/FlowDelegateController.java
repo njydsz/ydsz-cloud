@@ -62,8 +62,7 @@ public class FlowDelegateController {
      * }
      * </pre>
      */
-    @Idempotent(key = "flowDelegate:createDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDelegateController:createDelegateAuth:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdelegate.createDelegateAuth", threshold = 50)
     @PostMapping("/delegateAuth/create")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
@@ -84,8 +83,7 @@ public class FlowDelegateController {
      * @param id 授权记录 ID
      * @return 空响应
      */
-    @Idempotent(key = "flowDelegate:revokeDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdelegate.revokeDelegateAuth", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDelegateController:revokeDelegateAuth:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdelegate.revokeDelegateAuth", threshold = 50)
     @PostMapping("/delegateAuth/{id}/revoke")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
@@ -102,8 +100,7 @@ public class FlowDelegateController {
      * @param status 目标状态
      * @return 空响应
      */
-    @Idempotent(key = "flowDelegate:updateDelegateAuthStatus", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdelegate.updateDelegateAuthStatus", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDelegateController:updateDelegateAuthStatus:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdelegate.updateDelegateAuthStatus", threshold = 50)
     @PostMapping("/delegateAuth/{id}/status")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)

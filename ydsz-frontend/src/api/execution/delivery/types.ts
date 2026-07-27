@@ -8,7 +8,7 @@
 /** 交付物视图对象 */
 export interface DeliveryItemVO {
   /** 交付物ID */
-  id: number
+  id: string
   /** 立项ID */
   initiationId: number
   /** 立项名称 */
@@ -58,7 +58,7 @@ export interface DeliveryItemCreateDTO {
 /** 交付物状态变更 DTO */
 export interface DeliveryItemStatusDTO {
   /** 交付物ID */
-  id: number
+  id: string
   /** 目标状态：PENDING/SUBMITTED/ACCEPTED/REJECTED/WAIVED */
   targetStatus: string
   /** 变更原因（驳回/豁免时填写） */

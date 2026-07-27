@@ -46,26 +46,46 @@ import io.micrometer.core.instrument.Timer;
  */
 public class OutboxProcessor {
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(OutboxProcessor.class);
 
     /** 位移量上限，防止 1L << retryCount 整数溢出 */
     private static final int MAX_SHIFT = 30;
 
+    /** Outbox 仓储 */
     private final OutboxRepository outboxRepository;
+
+    /** 事件投递网关 */
     private final EventPublishGateway publishGateway;
+
+    /** 事件配置属性 */
     private final EventProperties properties;
+
+    /** 调度线程池（单线程，仅负责轮询和 claim） */
     private final ScheduledExecutorService scheduler;
+
+    /** 投递线程池（可配置线程数，负责实际 MQ 发送） */
     private final ThreadPoolExecutor publishExecutor;
 
+    /** 投递成功计数器 */
     private final Counter publishSuccessCounter;
+
+    /** 投递失败计数器 */
     private final Counter publishFailureCounter;
+
+    /** 死信计数器 */
     private final Counter deadLetterCounter;
+
+    /** 单条投递耗时计时器 */
     private final Timer singlePublishTimer;
+
+    /** 批量投递耗时计时器 */
     private final Timer batchPublishTimer;
 
     /** 缓存的队列深度（每次轮询后更新，供 Gauge 读取） */
     private volatile Map<String, Long> cachedStatusCounts = Map.of();
 
+    /** 运行状态标志 */
     private volatile boolean running = false;
 
     /**

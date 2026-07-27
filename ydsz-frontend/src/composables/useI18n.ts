@@ -35,7 +35,10 @@ export function useI18n() {
 /** @deprecated 请从 @/locales 导入 */
 export { setLocale, getLocale }
 
-/** @deprecated 请使用 vue-i18n 的 locale */
+/**
+ * @deprecated 请使用 vue-i18n 的 locale
+ * 向后兼容的 locale 访问器
+ */
 export const locale = {
   get value() {
     return getLocale()

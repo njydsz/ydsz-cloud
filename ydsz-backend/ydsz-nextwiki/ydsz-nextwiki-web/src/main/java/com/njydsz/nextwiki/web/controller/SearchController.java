@@ -36,7 +36,7 @@ public class SearchController {
 
     private final SearchApplicationService searchApplicationService;
 
-    @Idempotent(key = "nextwiki:search:search", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:SearchController:search:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "综合搜索")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
@@ -53,7 +53,7 @@ public class SearchController {
         return BaseResponse.success(result);
     }
 
-    @Idempotent(key = "nextwiki:search:rebuildIndices", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:SearchController:rebuildIndices:lock", ttlSeconds = 5)
     @PostMapping("/rebuild")
     @Operation(summary = "重建全量索引")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH_REBUILD)

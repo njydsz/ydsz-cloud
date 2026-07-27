@@ -25,7 +25,9 @@ import { isHandledError } from '@/utils/error'
 const { t } = useI18n()
 
 // ===== 状态 =====
+/** 订阅列表加载状态 */
 const loading = ref(false)
+/** 订阅列表数据 */
 const list = ref<ReportSubscription[]>([])
 
 // 创建对话框

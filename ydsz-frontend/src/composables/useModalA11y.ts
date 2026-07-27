@@ -65,6 +65,8 @@ const LIVE_REGION_ID = '__modal_a11y_live_region__'
 /**
  * 获取或创建全局 aria-live 公告区域。
  * 该区域视觉不可见，但屏幕阅读器会朗读其内容变更。
+ *
+ * @returns aria-live region DOM 元素
  */
 function getLiveRegion(): HTMLElement {
   let region = document.getElementById(LIVE_REGION_ID)
@@ -84,6 +86,8 @@ function getLiveRegion(): HTMLElement {
 
 /**
  * 向屏幕阅读器发送公告。
+ * 先清空再设置，确保内容变更触发朗读。
+ *
  * @param message 公告内容
  */
 function announce(message: string): void {

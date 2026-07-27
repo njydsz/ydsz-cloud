@@ -9,7 +9,7 @@
  */
 export interface MenuTreeNode {
   /** 节点 ID */
-  id: number
+  id: string
   /** 父节点 ID（根节点为 0 或 -1） */
   parentId: number
   /** 权限编码（角色绑定用） */

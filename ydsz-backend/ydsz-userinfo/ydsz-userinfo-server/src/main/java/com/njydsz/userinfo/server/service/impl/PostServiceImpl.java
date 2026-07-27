@@ -34,8 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
+    /** 岗位 Mapper */
     private final PostMapper mapper;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当岗位不存在或已删除时抛出
+     */
     @Override
     public PostVO getById(String id) {
         PostDO entity = mapper.selectById(id);
@@ -45,6 +51,11 @@ public class PostServiceImpl implements PostService {
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部未删除岗位列表（按 sortOrder 降序）
+     */
     @Override
     public List<PostVO> list() {
         LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
@@ -55,6 +66,12 @@ public class PostServiceImpl implements PostService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 postCode 唯一性校验后插入，status 默认 ENABLED。
+     *
+     * @throws BusinessException 当 postCode 已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(PostSaveDTO dto) {
@@ -76,6 +93,12 @@ public class PostServiceImpl implements PostService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id。
+     *
+     * @throws BusinessException 当岗位不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(PostSaveDTO dto) {
@@ -87,6 +110,11 @@ public class PostServiceImpl implements PostService {
         return mapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当岗位不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -97,6 +125,37 @@ public class PostServiceImpl implements PostService {
         return mapper.deleteById(id) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return postId → postName 映射；未命中的 postId 不出现在 Map 中
+     */
+    @Override
+    public Map<String, String> batchNamesByIds(Collection<String> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(PostDO::getId, postIds);
+        wrapper.eq(PostDO::getDeleted, 0);
+        wrapper.select(PostDO::getId, PostDO::getPostName);
+
+        return mapper.selectList(wrapper).stream()
+                .collect(Collectors.toMap(
+                        PostDO::getId,
+                        PostDO::getPostName,
+                        (v1, v2) -> v1,
+                        LinkedHashMap::new
+                ));
+    }
+
+    /**
+     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象
+     */
     private PostVO toVO(PostDO entity) {
         PostVO vo = new PostVO();
         BeanUtils.copyProperties(entity, vo);

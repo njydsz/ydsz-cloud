@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * 定时任务模块通知助手
  *
  * <p>基于 common-notify 的 {@link AsyncNotifyService} 实现任务相关通知的本地直发，
- * 作为现有 Feign 调用（MessageServiceClient）的补充路径。
+ * 作为现有 Feign 调用（NotificationClient）的补充路径。
  *
  * <p><b>设计说明：</b>
  * <ul>

@@ -47,7 +47,7 @@ public class QuotaController {
         return BaseResponse.success(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
     }
 
-    @Idempotent(key = "nextwiki:quota:setQuota", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:QuotaController:setQuota:lock", ttlSeconds = 5)
     @PostMapping("/set")
     @Operation(summary = "设置配额（管理员）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)

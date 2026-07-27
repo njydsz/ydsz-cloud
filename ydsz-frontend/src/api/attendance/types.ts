@@ -10,7 +10,7 @@
  */
 export interface AttendanceVO {
   /** 记录 ID */
-  id: number
+  id: string
   /** 员工 ID */
   employeeId: number
   /** 员工姓名 */
@@ -64,7 +64,7 @@ export interface AttendanceCreateDTO {
  */
 export interface OvertimeVO {
   /** 申请 ID */
-  id: number
+  id: string
   /** 加班单号 */
   overtimeCode: string
   /** 员工 ID */
@@ -126,7 +126,7 @@ export interface OvertimeCreateDTO {
  */
 export interface LeaveVO {
   /** 申请 ID */
-  id: number
+  id: string
   /** 请假单号 */
   leaveCode: string
   /** 员工 ID */

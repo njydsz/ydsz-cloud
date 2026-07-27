@@ -10,8 +10,11 @@ import PageLayout from '@/components/common/PageLayout.vue'
 
 const { t } = useI18n()
 
+/** 驾驶舱加载状态 */
 const loading = ref(false)
+/** 当前激活的 Tab 名称 */
 const activeTab = ref('overview')
+/** KPI 概览数据 */
 const kpiData = ref({
   totalRevenue: 0,
   totalCost: 0,
@@ -23,8 +26,10 @@ const kpiData = ref({
   riskCount: 0,
 })
 
+/** 趋势图数据 */
 const trendData = ref<any[]>([])
 
+/** 加载驾驶舱数据 */
 async function loadData() {
   loading.value = true
   try {

@@ -132,7 +132,10 @@ function handleKeydown(event: KeyboardEvent): void {
 /** 是否已初始化全局监听 */
 let initialized = false
 
-/** 初始化全局键盘监听 */
+/**
+ * 初始化全局键盘监听（幂等，重复调用不会叠加多个监听器）
+ * 首次调用时向 window 注册 keydown capture 监听
+ */
 function initGlobalListener(): void {
   if (initialized) return
   window.addEventListener('keydown', handleKeydown, { capture: true })
@@ -151,6 +154,13 @@ export function destroyGlobalListener(): void {
  *
  * 在组件 setup 中调用，自动管理 page 作用域快捷键的生命周期。
  * global 作用域的快捷键在注册后持续生效，需手动 unregister。
+ *
+ * @returns `{ register, unregister, shortcuts, helpVisible, toggleHelp }`
+ *   - register: 注册快捷键，返回注销函数
+ *   - unregister: 注销快捷键
+ *   - shortcuts: 所有已注册快捷键列表（只读）
+ *   - helpVisible: 快捷键帮助面板可见性
+ *   - toggleHelp: 切换帮助面板
  */
 export function useKeyboardShortcuts() {
   /** 页面级快捷键列表（组件卸载时自动清理） */
@@ -158,7 +168,9 @@ export function useKeyboardShortcuts() {
 
   /**
    * 注册快捷键
-   * @returns 注销函数
+   *
+   * @param def 快捷键定义
+   * @returns 注销函数（调用后该快捷键不再生效）
    */
   function register(def: ShortcutDef): () => void {
     const scope = def.scope || 'global'
@@ -173,7 +185,10 @@ export function useKeyboardShortcuts() {
     return () => unregister(fullDef)
   }
 
-  /** 注销快捷键 */
+  /**
+   * 注销指定快捷键
+   * @param def 先前注册的快捷键定义
+   */
   function unregister(def: ShortcutDef): void {
     const idx = shortcuts.value.indexOf(def)
     if (idx > -1) {
@@ -185,7 +200,7 @@ export function useKeyboardShortcuts() {
     }
   }
 
-  /** 注销所有页面级快捷键 */
+  /** 注销所有页面级快捷键（组件卸载时自动调用） */
   function unregisterAllPage(): void {
     pageShortcuts.forEach((s) => {
       const idx = shortcuts.value.indexOf(s)

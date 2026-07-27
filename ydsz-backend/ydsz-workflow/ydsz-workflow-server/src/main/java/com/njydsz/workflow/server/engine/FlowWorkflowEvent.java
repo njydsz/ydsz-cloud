@@ -2,15 +2,19 @@ package com.njydsz.workflow.server.engine;
 
 import java.util.Map;
 
-import org.springframework.context.ApplicationEvent;
+import com.njydsz.common.domain.event.DomainEvent;
 
 import lombok.Getter;
 
 /**
- * 工作流事件（Spring ApplicationEvent 封装）
+ * 工作流事件（领域事件封装）。
  *
- * <p>P2-35: 用于异步事件机制，通过 ApplicationEventPublisher 发布，
- * 监听方使用 @EventListener + @Async 异步处理，解耦主流程事务。
+ * <p>继承 {@link DomainEvent}（→ {@link org.springframework.context.ApplicationEvent}），
+ * 通过 {@code ApplicationEventPublisher} 或 {@link com.njydsz.common.domain.event.DomainEventPublisher}
+ * 发布，监听方使用 {@code @EventListener} + {@code @Async} 异步处理，解耦主流程事务。
+ *
+ * <p><b>P2-1</b>：现在继承 {@link DomainEvent}，复用统一的元数据字段（tenantId/userId/traceId），
+ * 事件类型常量定义在 {@link com.njydsz.common.domain.event.ModuleEventTypes}。
  *
  * <p>事件类型（eventType）枚举：
  * <ul>
@@ -21,23 +25,36 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-public class FlowWorkflowEvent extends ApplicationEvent {
+public class FlowWorkflowEvent extends DomainEvent {
 
-    /** 事件类型 */
-    private final String eventType;
-    /** 流程实例 ID */
-    private final String instanceId;
+    private static final long serialVersionUID = 1L;
+
     /** 任务 ID */
     private final String taskId;
     /** 附加数据 */
     private final Map<String, Object> data;
 
-    public FlowWorkflowEvent(Object source, String eventType, String instanceId,
+    /**
+     * 构造工作流事件。
+     *
+     * @param eventType   事件类型
+     * @param instanceId  流程实例 ID（映射为 aggregateId）
+     * @param taskId      任务 ID
+     * @param data        附加数据
+     */
+    public FlowWorkflowEvent(String eventType, String instanceId,
                              String taskId, Map<String, Object> data) {
-        super(source);
-        this.eventType = eventType;
-        this.instanceId = instanceId;
+        super(eventType, instanceId, "FlowInstance");
         this.taskId = taskId;
         this.data = data;
+    }
+
+    /**
+     * 获取流程实例 ID（即 aggregateId，语义别名）。
+     *
+     * @return 流程实例 ID
+     */
+    public String getInstanceId() {
+        return getAggregateId();
     }
 }

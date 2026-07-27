@@ -49,8 +49,7 @@ public class MessageFeedbackController {
      * @return 统一响应结果，包含反馈记录 ID
      */
     @Operation(summary = "提交消息反馈")
-    @Idempotent(key = "messageFeedback:submitFeedback", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.messagefeedback.submitFeedback", threshold = 50)
+    @Idempotent(key = "ydsz:message:MessageFeedbackController:submitFeedback:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.messagefeedback.submitFeedback", threshold = 50)
     @PostMapping
     public BaseResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {

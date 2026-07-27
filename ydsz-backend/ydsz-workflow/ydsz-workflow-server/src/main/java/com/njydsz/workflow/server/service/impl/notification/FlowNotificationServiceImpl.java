@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.feign.MessageServiceClient;
 import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>INAPP  — 通过 NotificationClient Feign 调用 notification 服务写入站内信（channel=PUSH）</li>
  *   <li>EMAIL   — 同样通过 NotificationClient 投递（channel=EMAIL），由 notification 服务负责实际邮件发送</li>
- *   <li>WEBHOOK — 通过 {@link MessageServiceClient} 委托消息中心发送到 extra.webhookUrl 指定的企业微信/钉钉机器人</li>
+ *   <li>WEBHOOK — 通过 NotificationClient.sendMessage 委托消息中心发送到 extra.webhookUrl 指定的企业微信/钉钉机器人</li>
  * </ul>
  *
  * @since 1.0.0
@@ -47,11 +46,8 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     private static final String CHANNEL_EMAIL = "EMAIL";
     private static final String CHANNEL_WEBHOOK = "WEBHOOK";
 
-    /** Feign 通知客户端（INAPP / EMAIL 通道），由 @RequiredArgsConstructor 注入 */
+    /** 统一通知客户端（P1-5: INAPP / EMAIL / WEBHOOK 通道统一入口） */
     private final NotificationClient notificationClient;
-
-    /** 消息中心客户端（WEBHOOK 通道），由 @RequiredArgsConstructor 注入 */
-    private final MessageServiceClient messageServiceClient;
 
     /** P1-5: 敏感字段脱敏器（原 FlowNotificationHelper 功能合并） */
     private final FlowSensitiveMasker sensitiveMasker;
@@ -262,7 +258,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     /**
-     * WEBHOOK 通道：通过 {@link MessageServiceClient} 委托消息中心发送到 extra.webhookUrl 指定的机器人地址。
+     * WEBHOOK 通道：通过 {@link NotificationClient#sendMessage} 委托消息中心发送到 extra.webhookUrl 指定的机器人地址。
      * webhookUrl 未配置时直接跳过（不算异常）。
      */
     private void sendWebhook(String userId, String title, String content, Map<String, Object> extra) {
@@ -285,7 +281,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         params.put("webhookUrl", webhookUrl);
         request.setParams(params);
         try {
-            BaseResponse<MessageResult> result = messageServiceClient.send(request);
+            BaseResponse<MessageResult> result = notificationClient.sendMessage(request);
             if (result != null && result.getData() != null && !result.getData().isSuccess()) {
                 log.warn("[FlowNotify][WEBHOOK] 发送失败: userId={} url={} err={}",
                         userId, webhookUrl, result.getData().getErrorMessage());

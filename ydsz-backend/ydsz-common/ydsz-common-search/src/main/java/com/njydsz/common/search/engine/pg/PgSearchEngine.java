@@ -30,18 +30,37 @@ import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchEngine;
 
-import com.njydsz.common.json.YdszJson;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 基于 PostgreSQL tsvector 的搜索引擎实现
- * <p>
- * 利用 PG 原生全文检索能力，支持中文分词（zhparser/jieba）、高亮、相关性排序、模糊匹配。
- * 支持降级自动恢复探测、内存索引有界化。
+ * 基于 PostgreSQL tsvector 的搜索引擎实现。
+ *
+ * <p>利用 PostgreSQL 原生全文检索能力（tsvector / tsquery / GIN 索引），
+ * 支持中文分词（zhparser/jieba）、高亮、相关性排序和时间衰减。
+ *
+ * <h3>核心 SQL 结构</h3>
+ * <p>搜索索引表 {@code ydsz_search_index} 包含 tsvector 列，通过 GIN 索引加速全文检索。
+ * 搜索 SQL 使用 {@code ts_rank} 计算相关性分数，配合 {@code setweight} 对标题/副标题/内容/标签加权。
+ *
+ * <h3>搜索配置</h3>
+ * <ul>
+ *   <li>默认使用 {@code search_zh} 配置（需安装 zhparser 扩展）</li>
+ *   <li>降级使用 {@code simple} 配置（按空格分词，无中文支持）</li>
+ * </ul>
+ *
+ * <h3>高级特性</h3>
+ * <ul>
+ *   <li><b>时间衰减</b>：通过 {@code rank * EXP(-age/halflife*ln2)} 降低旧文档排名</li>
+ *   <li><b>模糊匹配</b>：tsquery 无结果时降级为 LIKE 模糊匹配</li>
+ *   <li><b>搜索建议</b>：基于前缀匹配的自动补全</li>
+ *   <li><b>SQL 注入防护</b>：排序列白名单（{@link #ALLOWED_COLUMNS}）</li>
+ *   <li><b>PG 降级探测</b>：定时 ping 检测 PG 可用性</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see SearchEngine
+ * @see InMemorySearchEngine
  */
 @Slf4j
 public class PgSearchEngine implements SearchEngine {

@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.feign.MessageServiceClient;
 import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
@@ -41,16 +40,16 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><b>冷却去重</b>：通过 CAS 更新 {@code ydsz_job_alert_rule.last_alert_at}，
  *       仅当上次告警时间早于冷却窗口起点时才更新成功（分布式环境下保证同一规则不重复告警）</li>
  *   <li><b>通道路由</b>：解析规则配置的 channels JSON，逐通道构建 MessageRequest</li>
- *   <li><b>统一派发</b>：通过 MessageServiceClient Feign 委托到 message 模块，
+ *   <li><b>统一派发</b>：通过 NotificationClient Feign 委托到 message 模块，
  *       由 message 模块路由到具体通道实现，单个通道失败不影响其他通道（status=PARTIAL）</li>
  *   <li><b>日志持久化</b>：将告警派发结果记录到 {@code ydsz_job_alert_log}，便于审计与效果统计</li>
  *   <li><b>实时广播</b>：通过 NotificationClient Feign 广播告警到前端 WebSocket</li>
  * </ol>
  *
  * <p><b>P0-1-fix</b>：移除了原来发布 {@code UnifiedAlertEvent} 的逻辑。
- * 原实现既直接调用 {@code MessageServiceClient.send()} 发送告警消息，
+ * 原实现既直接调用 {@code NotificationClient.sendMessage()} 发送告警消息，
  * 又发布 {@code UnifiedAlertEvent} 事件，而 {@code UnifiedAlertDispatcher} 消费该事件后
- * 会再次调用 {@code MessageServiceClient.send()}，导致同一告警被发送两次。
+ * 会再次调用 {@code NotificationClient.sendMessage()}，导致同一告警被发送两次。
  * 现在改为直接调用 {@code NotificationClient.broadcast()} 实现实时广播，
  * 消息发送仅由本类执行一次。
  *
@@ -72,10 +71,9 @@ public class AlertDispatcher {
 
     private final JobAlertRuleMapper jobAlertRuleMapper;
     private final JobAlertLogMapper jobAlertLogMapper;
-    private final MessageServiceClient messageServiceClient;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
-    /** 实时推送客户端（WebSocket 广播告警到前端） */
+    /** 统一通知客户端（P1-5: 替代原 MessageServiceClient + NotificationClient 双入口） */
     private final NotificationClient notificationClient;
     /** P0-9: 告警智能降噪管理器（可选注入，仅 ydsz.cronjob.alert-dedup.enabled=true 时启用） */
     private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
@@ -308,7 +306,7 @@ public class AlertDispatcher {
 
     /**
      * Dispatch alert via message module using Feign.
-     * <p>Builds MessageRequest and calls MessageServiceClient.send(),
+     * <p>Builds MessageRequest and calls NotificationClient.sendMessage(),
      * message module routes to specific channel implementation.
      */
     private void sendViaMessageCenter(AlertChannel channel, AlertContext context,
@@ -340,7 +338,7 @@ public class AlertDispatcher {
         params.put("receivers", receivers);
         request.setParams(params);
         try {
-            BaseResponse<MessageResult> result = messageServiceClient.send(request);
+            BaseResponse<MessageResult> result = notificationClient.sendMessage(request);
             if (result == null || !result.isSuccess()) {
                 String reason = result != null && result.getMessage() != null
                          ? result.getMessage() : "unknown";

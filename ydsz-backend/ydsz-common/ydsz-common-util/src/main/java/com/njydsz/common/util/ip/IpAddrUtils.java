@@ -25,11 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class IpAddrUtils {
+    /** 未知 IP 标识 */
     private static final String UNKNOWN = "unknown";
+    /** IPv6 本地回环地址 */
     private static final String LOCALHOST_IPV6 = "0:0:0:0:0:0:0:1";
+    /** IPv4 本地回环地址 */
     private static final String LOCALHOST_IPV4 = "127.0.0.1";
+    /** IPv4 正则校验模式 */
     private static final Pattern IPV4_PATTERN = Pattern.compile(
             "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$");
+    /** IPv6 正则校验模式（支持缩写、IPv4 映射、链路本地等格式） */
     private static final Pattern IPV6_PATTERN = Pattern.compile(
             "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|" +
             "^([0-9a-fA-F]{1,4}:){1,7}:$|^([0-9a-fA-F]{1,4}:){0,5}(:[0-9a-fA-F]{1,4}){1,2}$|" +
@@ -39,16 +44,26 @@ public class IpAddrUtils {
             "^::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1\\d|[1-9]?|)\\d)\\.?\\b){4}$|" +
             "^([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1\\d|[1-9]?|)\\d)\\.?\\b){4}$");
 
+    /** IPv4 私有地址前缀（RFC 1918 + 回环） */
     private static final String[] PRIVATE_IPV4_PREFIXES = {
             "10.", "172.16.", "172.17.", "172.18.", "172.19.", "172.20.", "172.21.", "172.22.", "172.23.",
             "172.24.", "172.25.", "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
             "192.168.", "127."
     };
 
+    /** IPv6 私有/链路本地地址前缀 */
     private static final String[] PRIVATE_IPV6_PREFIXES = {
             "fe80:", "fc", "fd", "::1", "::ffff:"
     };
 
+    /**
+     * 从 HTTP 请求中获取客户端真实 IP 地址。
+     * <p>依次检查 X-Forwarded-For、Proxy-Client-IP、WL-Proxy-Client-IP、X-Real-IP 等
+     * 代理头，取第一个非 unknown 的 IP。IPv6 本地回环自动转换为 IPv4。
+     *
+     * @param request HTTP 请求
+     * @return 客户端 IP 地址，request 为 null 时返回 "unknown"
+     */
     public static String getIpAddr(HttpServletRequest request) {
         if (request == null) {
             return UNKNOWN;
@@ -92,10 +107,22 @@ public class IpAddrUtils {
         return getMultistageReverseProxyIp(ip);
     }
 
+    /**
+     * 判断 IP 是否为内网地址（委托 {@link #isInternalIp}）。
+     *
+     * @param ip IP 地址
+     * @return true 表示为内网地址
+     */
     public static boolean internalIp(String ip) {
         return isInternalIp(ip);
     }
 
+    /**
+     * 判断 IP 是否为内网地址（通过 {@link InetAddress#isSiteLocalAddress()} 判断）。
+     *
+     * @param ip IP 地址
+     * @return true 表示为内网地址或回环地址
+     */
     public static boolean isInternalIp(String ip) {
         if (isUnknown(ip) || LOCALHOST_IPV4.equals(ip)) {
             return true;
@@ -108,6 +135,12 @@ public class IpAddrUtils {
         }
     }
 
+    /**
+     * 判断 IP 是否为私有地址（前缀匹配 RFC 1918 IPv4 和 IPv6 ULA/链路本地）。
+     *
+     * @param ip IP 地址
+     * @return true 表示为私有地址
+     */
     public static boolean isPrivateIp(String ip) {
         if (isUnknown(ip)) {
             return false;
@@ -126,6 +159,11 @@ public class IpAddrUtils {
         return isInternalIp(ip);
     }
 
+    /**
+     * 获取本机 IP 地址。
+     *
+     * @return 本机 IP，获取失败时返回 127.0.0.1
+     */
     public static String getHostIp() {
         try {
             return InetAddress.getLocalHost().getHostAddress();
@@ -134,6 +172,11 @@ public class IpAddrUtils {
         }
     }
 
+    /**
+     * 获取本机主机名。
+     *
+     * @return 主机名，获取失败时返回 "UnknownHost"
+     */
     public static String getHostName() {
         try {
             return InetAddress.getLocalHost().getHostName();
@@ -142,10 +185,22 @@ public class IpAddrUtils {
         }
     }
 
+    /**
+     * 校验 IP 地址格式（IPv4 或 IPv6）。
+     *
+     * @param ip IP 地址字符串
+     * @return true 表示格式合法
+     */
     public static boolean validIp(String ip) {
         return validIpv4(ip) || validIpv6(ip);
     }
 
+    /**
+     * 校验 IPv4 地址格式。
+     *
+     * @param ip IP 地址字符串
+     * @return true 表示为合法的 IPv4 地址
+     */
     public static boolean validIpv4(String ip) {
         if (StringUtils.isEmpty(ip)) {
             return false;

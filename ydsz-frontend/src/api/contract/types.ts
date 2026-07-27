@@ -7,7 +7,7 @@
 /** 合同 VO */
 export interface ContractVO {
   /** 主键 ID */
-  id: number
+  id: string
   /** 合同编码 */
   contractCode: string
   /** 合同名称 */
@@ -75,7 +75,7 @@ export interface ContractCreateDTO {
 /** 合同状态变更 DTO */
 export interface ContractStatusDTO {
   /** 合同 ID */
-  id: number
+  id: string
   /** 目标状态 */
   targetStatus: string
   /** 变更原因 */

@@ -173,10 +173,22 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     @Value("${server.port:0}")
     private int serverPort;
 
-    /** P1-1: 重试调度线程池（延迟调度失败重试） */
+    /**
+     * P1-1: 重试调度线程池（延迟调度失败重试）。
+     *
+     * <p>保留手动创建原因：{@link ScheduledExecutorService} 支持延迟/周期调度，
+     * common-thread 的 {@code ThreadPoolTaskExecutor} 不支持 scheduled 语义。
+     * 线程池大小和线程名通过硬编码配置（2 线程 + ydsz-job-retry 前缀）。
+     */
     private ScheduledExecutorService retryScheduler;
 
-    /** P1-7: 任务执行线程池（隔离调度线程与执行线程，限制并发） */
+    /**
+     * P1-7: 任务执行线程池（隔离调度线程与执行线程，限制并发）。
+     *
+     * <p>保留手动创建原因：使用 {@link PriorityBlockingQueue} 实现优先级调度，
+     * common-thread 的 {@code ThreadPoolTaskExecutor} 默认使用 {@code LinkedBlockingQueue}
+     * 不支持优先级队列。线程池参数通过 {@link CronjobProperties.Executor} 配置化。
+     */
     private ThreadPoolExecutor taskExecutorPool;
 
     /** P2-6: COVER 策略防递归标记（ThreadLocal），避免重新派发时锁仍被持有导致无限递归 */

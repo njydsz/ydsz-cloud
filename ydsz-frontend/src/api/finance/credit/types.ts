@@ -7,7 +7,7 @@
 /** 客户信用 VO */
 export interface CustomerCreditVO {
   /** 主键 ID */
-  id: number
+  id: string
   /** 客户 ID */
   customerId: number
   /** 客户名称 */

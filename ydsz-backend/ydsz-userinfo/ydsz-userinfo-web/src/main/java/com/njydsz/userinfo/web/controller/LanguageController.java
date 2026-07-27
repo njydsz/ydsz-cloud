@@ -54,8 +54,7 @@ public class LanguageController {
 
     @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建语言: ' + #dto.languageName")
-    @Idempotent(key = "language:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.language.create", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:LanguageController:create:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.language.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建语言")
@@ -65,8 +64,7 @@ public class LanguageController {
 
     @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新语言: ' + #dto.id")
-    @Idempotent(key = "language:update", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.language.update", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:LanguageController:update:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.language.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新语言")
@@ -77,7 +75,7 @@ public class LanguageController {
     @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除语言: ' + #id")
     @SentinelRateLimit(resource = "userinfo.language.remove", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.language.remove", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:LanguageController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除语言")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

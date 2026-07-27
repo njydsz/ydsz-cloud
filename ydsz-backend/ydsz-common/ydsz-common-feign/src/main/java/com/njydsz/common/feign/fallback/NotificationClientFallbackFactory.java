@@ -3,6 +3,8 @@ package com.njydsz.common.feign.fallback;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
@@ -10,8 +12,10 @@ import com.njydsz.common.feign.dto.RealtimePushDTO;
 /**
  * NotificationClient 降级工厂。
  *
- * <p>当 message 服务不可用时，通知发送和实时推送降级为记录日志并返回失败响应，
+ * <p>当 message 服务不可用时，通知发送、消息发送和实时推送降级为记录日志并返回失败响应，
  * 不影响主业务流程。
+ *
+ * <p>P1-5: 新增 sendMessage 降级方法（由 MessageServiceClient 合并而来）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -26,6 +30,13 @@ public class NotificationClientFallbackFactory extends DefaultFallbackFactory<No
             public BaseResponse<Void> send(NotificationFeignDTO dto) {
                 log.warn("NotificationClient.send 降级: dto={}, cause={}", dto, cause.getMessage());
                 return BaseResponse.error("B01004", "通知服务暂时不可用");
+            }
+
+            @Override
+            public BaseResponse<MessageResult> sendMessage(MessageRequest request) {
+                log.warn("NotificationClient.sendMessage 降级: bizId={}, cause={}",
+                        request.getBizId(), cause.getMessage());
+                return BaseResponse.error("B01004", "消息服务暂时不可用");
             }
 
             @Override

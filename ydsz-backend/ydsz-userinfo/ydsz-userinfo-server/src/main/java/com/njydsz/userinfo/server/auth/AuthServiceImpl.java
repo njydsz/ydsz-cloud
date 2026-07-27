@@ -56,17 +56,29 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    /** 用户账号 Mapper */
     private final UserAccountMapper userAccountMapper;
+    /** 角色 Mapper */
     private final RoleMapper roleMapper;
+    /** 用户-角色关联 Mapper */
     private final UserRoleMapper userRoleMapper;
+    /** JWT Token 服务（签发/刷新/解析） */
     private final TokenService tokenService;
+    /** Token 黑名单服务（登出时主动失效） */
     private final TokenBlacklistService tokenBlacklistService;
+    /** Redis Hash 操作（用于会话信息存储） */
     private final RedisHashOps redisHashOps;
+    /** Redis 基础服务（用于会话 key 过期等操作） */
     private final RedisService redisService;
+    /** 密码编码器（BCrypt） */
     private final PasswordEncoder passwordEncoder;
+    /** 用户中心监控指标采集器 */
     private final UserInfoMetrics userInfoMetrics;
+    /** 用户中心配置属性 */
     private final UserInfoProperties properties;
+    /** 验证码服务 */
     private final CaptchaService captchaService;
+    /** LDAP 认证提供者（可选依赖，未配置时为 null） */
     private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
 
     public AuthServiceImpl(UserAccountMapper userAccountMapper,
@@ -95,6 +107,16 @@ public class AuthServiceImpl implements AuthService {
         this.ldapProviderProvider = ldapProviderProvider;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>认证流程：验证码校验 → 用户查询 → 状态/锁定检查 → 密码校验（本地优先，失败回退 LDAP）
+     * → 角色加载 → JWT 签发 → Redis 会话存储 → 登录信息更新。
+     * <p>失败计数达到阈值时自动锁定账号，所有步骤均埋点 Micrometer 指标。
+     *
+     * @param loginDTO 登录请求（用户名、密码、可选验证码）
+     * @return 登录响应（含 accessToken、refreshToken、用户信息）
+     * @throws BusinessException 当验证码缺失、用户不存在、账号禁用/锁定、密码错误时抛出
+     */
     @Override
     public LoginVO login(LoginDTO loginDTO) {
         Timer.Sample sample = userInfoMetrics.startTimer();
@@ -206,6 +228,12 @@ public class AuthServiceImpl implements AuthService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>将 Token 加入黑名单并删除 Redis 会话，实现主动失效。
+     *
+     * @param accessToken 访问令牌，为空时直接返回
+     */
     @Override
     public void logout(String accessToken) {
         if (accessToken == null || accessToken.isBlank()) {
@@ -217,6 +245,14 @@ public class AuthServiceImpl implements AuthService {
         log.info("User logged out, token blacklisted");
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>通过 refreshToken 换取新的 accessToken，refreshToken 本身不变。
+     *
+     * @param refreshToken 刷新令牌
+     * @return 新的登录响应（含新 accessToken）
+     * @throws BusinessException 当 refreshToken 无效或过期时抛出
+     */
     @Override
     public LoginVO refresh(String refreshToken) {
         String newAccessToken = tokenService.refreshAccessToken(refreshToken);

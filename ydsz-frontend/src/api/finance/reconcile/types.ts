@@ -8,7 +8,7 @@
 /** 每日对账 VO */
 export interface DailyReconcileVO {
   /** 主键 ID */
-  id: number
+  id: string
   /** 对账日期 YYYY-MM-DD */
   reconcileDate: string
   /** 对账类型：COST/REVENUE/PAYMENT/INVOICE/PROFIT/LABOR */

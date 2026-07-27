@@ -15,6 +15,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.service.FilePermissionService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,10 +44,10 @@ import com.njydsz.common.lock.annotation.Idempotent;
 public class FileLockController {
 
     private final FileNodeRepository fileNodeRepository;
-    private final com.njydsz.nextwiki.domain.service.FilePermissionService permissionService;
+    private final FilePermissionService permissionService;
 
     @Audit(module = "文件锁定", type = AuditType.FILE, action = AuditAction.CREATE, content = "'lock'")
-    @Idempotent(key = "nextwiki:filelock:lock", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileLockController:filelock:lock", ttlSeconds = 5)
     @PostMapping("/{nodeId}/lock")
     @Operation(summary = "锁定文件（Check-out）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -77,7 +78,7 @@ public class FileLockController {
     }
 
     @Audit(module = "文件锁定", type = AuditType.FILE, action = AuditAction.CREATE, content = "'unlock'")
-    @Idempotent(key = "nextwiki:filelock:unlock", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileLockController:unlock:lock", ttlSeconds = 5)
     @PostMapping("/{nodeId}/unlock")
     @Operation(summary = "解锁文件（Check-in）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)

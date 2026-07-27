@@ -47,8 +47,7 @@ public class OrchestrationController {
      */
     @Operation(summary = "执行编排流程")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "orchestration:execute", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.orchestration.execute", threshold = 50)
+    @Idempotent(key = "ydsz:message:OrchestrationController:execute:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.orchestration.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {

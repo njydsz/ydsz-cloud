@@ -56,7 +56,7 @@ public class FileController {
     private final com.njydsz.nextwiki.server.service.ChunkUploadApplicationService chunkUploadService;
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'upload'")
-    @Idempotent(key = "nextwiki:file:upload", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:upload:lock", ttlSeconds = 5)
     @PostMapping("/upload")
     @Operation(summary = "上传文件", description = "支持单文件上传，自动创建版本记录")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -73,7 +73,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'createFolder'")
-    @Idempotent(key = "nextwiki:file:createFolder", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:createFolder:lock", ttlSeconds = 5)
     @PostMapping("/folders")
     @Operation(summary = "创建目录")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FOLDER_CREATE)
@@ -104,7 +104,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.UPDATE, content = "'move'")
-    @Idempotent(key = "nextwiki:file:move", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:move:lock", ttlSeconds = 5)
     @PutMapping("/{nodeId}/move")
     @Operation(summary = "移动文件/文件夹")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
@@ -118,7 +118,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.UPDATE, content = "'rename'")
-    @Idempotent(key = "nextwiki:file:rename", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:rename:lock", ttlSeconds = 5)
     @PutMapping("/{nodeId}/rename")
     @Operation(summary = "重命名文件/文件夹")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
@@ -132,7 +132,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.DELETE, content = "'delete'")
-    @Idempotent(key = "nextwiki:file:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:delete:lock", ttlSeconds = 5)
     @DeleteMapping("/{nodeId}")
     @Operation(summary = "删除文件/文件夹（移入回收站）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
@@ -146,7 +146,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'batchDelete'")
-    @Idempotent(key = "nextwiki:file:batchDelete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:batchDelete:lock", ttlSeconds = 5)
     @PostMapping("/batch/delete")
     @Operation(summary = "批量删除")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
@@ -159,7 +159,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'batchMove'")
-    @Idempotent(key = "nextwiki:file:batchMove", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:batchMove:lock", ttlSeconds = 5)
     @PostMapping("/batch/move")
     @Operation(summary = "批量移动")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
@@ -173,7 +173,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'copy'")
-    @Idempotent(key = "nextwiki:file:copy", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:copy:lock", ttlSeconds = 5)
     @PostMapping("/{nodeId}/copy")
     @Operation(summary = "复制文件")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_COPY)
@@ -194,7 +194,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'rollbackVersion'")
-    @Idempotent(key = "nextwiki:file:rollbackVersion", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:rollbackVersion:lock", ttlSeconds = 5)
     @PostMapping("/{nodeId}/versions/{version}/rollback")
     @Operation(summary = "回滚到指定版本")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_ROLLBACK)
@@ -208,7 +208,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.UPDATE, content = "'toggleStar'")
-    @Idempotent(key = "nextwiki:file:toggleStar", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:toggleStar:lock", ttlSeconds = 5)
     @PutMapping("/{nodeId}/star")
     @Operation(summary = "切换星标状态")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_STAR)
@@ -223,7 +223,7 @@ public class FileController {
     // ==================== P1-1: 分片上传 ====================
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'initChunkUpload'")
-    @Idempotent(key = "nextwiki:file:initChunkUpload", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:initChunkUpload:lock", ttlSeconds = 5)
     @PostMapping("/chunk/init")
     @Operation(summary = "初始化分片上传", description = "大文件分片上传，支持断点续传")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -238,7 +238,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'uploadChunk'")
-    @Idempotent(key = "nextwiki:file:uploadChunk", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:uploadChunk:lock", ttlSeconds = 5)
     @PostMapping("/chunk/{uploadId}/{chunkNumber}")
     @Operation(summary = "上传单个分片")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -251,7 +251,7 @@ public class FileController {
     }
 
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'completeChunkUpload'")
-    @Idempotent(key = "nextwiki:file:completeChunkUpload", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileController:completeChunkUpload:lock", ttlSeconds = 5)
     @PostMapping("/chunk/{uploadId}/complete")
     @Operation(summary = "完成分片上传", description = "合并分片并上传到存储")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -262,7 +262,7 @@ public class FileController {
     }
 
     @SentinelRateLimit(resource = "nextwiki.file.abortChunkUpload", threshold = 50)
-    @SentinelRateLimit(resource = "nextwiki.file.abortChunkUpload", threshold = 50)
+    @Idempotent(key = "ydsz:nextwiki:FileController:abortChunkUpload:lock", ttlSeconds = 5)
     @DeleteMapping("/chunk/{uploadId}")
     @Operation(summary = "取消分片上传")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)

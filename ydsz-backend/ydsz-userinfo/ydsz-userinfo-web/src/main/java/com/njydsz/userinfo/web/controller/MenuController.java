@@ -61,8 +61,7 @@ public class MenuController {
 
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建菜单: ' + #dto.menuName")
-    @Idempotent(key = "menu:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.menu.create", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:MenuController:create:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.menu.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建菜单")
@@ -72,8 +71,7 @@ public class MenuController {
 
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新菜单: ' + #dto.id")
-    @Idempotent(key = "menu:update", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.menu.update", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:MenuController:update:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.menu.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新菜单")
@@ -84,7 +82,7 @@ public class MenuController {
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除菜单: ' + #id")
     @SentinelRateLimit(resource = "userinfo.menu.remove", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.menu.remove", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:MenuController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除菜单")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

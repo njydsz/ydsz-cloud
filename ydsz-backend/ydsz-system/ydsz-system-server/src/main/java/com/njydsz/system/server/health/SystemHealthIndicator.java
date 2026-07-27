@@ -3,6 +3,7 @@ package com.njydsz.system.server.health;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
@@ -41,7 +42,7 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
 
     @Override
     protected void doHealthCheck(org.springframework.boot.health.contributor.Health.Builder builder) {
-        checkRedis(builder, () -> redisService.execute(conn -> conn.ping(), true));
+        checkRedis(builder, () -> redisService.getRedisTemplate().execute((RedisCallback<String>) conn -> conn.ping()));
         checkTableProbe(builder, "config", () -> configMapper.selectByConfigKey("__health_probe__"));
         checkTableProbe(builder, "dict", () -> dictItemMapper.selectByTypeAndCode("__health_probe__", "__health_probe__"));
     }

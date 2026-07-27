@@ -8,7 +8,7 @@
 /** 对外报价费率视图对象 */
 export interface RateCardVO {
   /** 费率记录ID */
-  id?: number
+  id?: string
   /** 费率编码 */
   rateCode: string
   /** 职级编码 */

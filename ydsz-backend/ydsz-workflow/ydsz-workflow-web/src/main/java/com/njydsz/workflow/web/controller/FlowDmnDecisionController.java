@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * P0-1: DMN 决策表 Controller
@@ -35,7 +36,7 @@ public class FlowDmnDecisionController {
     private final FlowDmnDecisionService dmnDecisionService;
 
     @SentinelRateLimit(resource = "workflow.flowdmndecision.createDecision", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.createDecision", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:createDecision:lock", ttlSeconds = 5)
     @PostMapping("/decision")
     @Operation(summary = "创建决策表")
     public BaseResponse<String> createDecision(@RequestBody CreateDecisionRequest request) {
@@ -46,7 +47,7 @@ public class FlowDmnDecisionController {
     }
 
     @SentinelRateLimit(resource = "workflow.flowdmndecision.updateDecision", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.updateDecision", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:updateDecision:lock", ttlSeconds = 5)
     @PutMapping("/decision/{decisionId}")
     @Operation(summary = "更新决策表（仅草稿状态）")
     public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
@@ -57,7 +58,7 @@ public class FlowDmnDecisionController {
     }
 
     @SentinelRateLimit(resource = "workflow.flowdmndecision.publish", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.publish", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:publish:lock", ttlSeconds = 5)
     @PostMapping("/decision/{decisionId}/publish")
     @Operation(summary = "发布决策表")
     public BaseResponse<Void> publish(@PathVariable String decisionId) {
@@ -66,7 +67,7 @@ public class FlowDmnDecisionController {
     }
 
     @SentinelRateLimit(resource = "workflow.flowdmndecision.deprecate", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.deprecate", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:deprecate:lock", ttlSeconds = 5)
     @PostMapping("/decision/{decisionId}/deprecate")
     @Operation(summary = "停用决策表")
     public BaseResponse<Void> deprecate(@PathVariable String decisionId) {

@@ -28,14 +28,22 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DictServiceImpl implements DictService {
 
+    /** 字典类型 Mapper */
     private final DictTypeMapper mapper;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DictTypeVO getById(String id) {
         DictTypeDO entity = mapper.selectById(id);
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持按 typeName 模糊匹配、status 精确匹配过滤。
+     */
     @Override
     public IPage<DictTypeVO> page(int pageNum, int pageSize, String typeName, String status) {
         QueryWrapper<DictTypeDO> wrapper = new QueryWrapper<>();
@@ -53,11 +61,22 @@ public class DictServiceImpl implements DictService {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部字典类型列表（不区分状态）
+     */
     @Override
     public List<DictTypeVO> list() {
         return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 typeCode 唯一性校验后插入。
+     *
+     * @throws IllegalArgumentException 当 typeCode 已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(DictTypeDTO dto) {
@@ -72,6 +91,9 @@ public class DictServiceImpl implements DictService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(DictTypeDTO dto) {
@@ -79,12 +101,21 @@ public class DictServiceImpl implements DictService {
         return mapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
         return mapper.deleteById(id) > 0;
     }
 
+    /**
+     * 将 DO 转换为 VO。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象，entity 为 null 时返回 null
+     */
     private DictTypeVO toVO(DictTypeDO entity) {
         if (entity == null) {
             return null;
@@ -98,6 +129,12 @@ public class DictServiceImpl implements DictService {
         return vo;
     }
 
+    /**
+     * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
+     *
+     * @param dto 数据传输对象
+     * @return 数据库实体
+     */
     private DictTypeDO toEntity(DictTypeDTO dto) {
         DictTypeDO entity = new DictTypeDO();
         entity.setId(dto.getId());

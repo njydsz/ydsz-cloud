@@ -429,7 +429,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             Map<String, Object> data = new HashMap<>();
             data.put("childInstanceId", childInstanceId);
             data.put("parentInstanceId", parentInstanceId);
-            eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, parentInstanceId, null, data));
+            eventPublisher.publishEvent(new FlowWorkflowEvent(eventType, parentInstanceId, null, data));
         } catch (Exception e) {
             log.warn("[SubProcess] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
         }

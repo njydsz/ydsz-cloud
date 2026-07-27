@@ -48,7 +48,7 @@ public class FlowCcController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @SentinelRateLimit(resource = "workflow.flowcc.pageCc", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowcc.pageCc", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCcController:pageCc:lock", ttlSeconds = 5)
     @PostMapping("/cc/page")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
     public BaseResponse<PageResponse<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
@@ -78,8 +78,7 @@ public class FlowCcController {
      * @param id 抄送记录 ID
      * @return 操作结果
      */
-    @Idempotent(key = "flowCc:ccMarkRead", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcc.ccMarkRead", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCcController:ccMarkRead:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcc.ccMarkRead", threshold = 50)
     @PostMapping("/cc/{id}/read")
     public BaseResponse<Boolean> ccMarkRead(@PathVariable String id) {
@@ -94,8 +93,7 @@ public class FlowCcController {
      *
      * @return 已标记已读的记录数
      */
-    @Idempotent(key = "flowCc:ccMarkAllRead", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcc.ccMarkAllRead", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCcController:ccMarkAllRead:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcc.ccMarkAllRead", threshold = 50)
     @PostMapping("/cc/readAll")
     public BaseResponse<Integer> ccMarkAllRead() {

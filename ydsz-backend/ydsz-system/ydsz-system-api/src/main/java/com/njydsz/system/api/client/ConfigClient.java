@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author ydsz-team
  */
 @FeignClient(name = "ydsz-system", contextId = "configClient",
-        fallbackFactory = ConfigClientFallback.class)
+        fallback = ConfigClientFallback.class)
 public interface ConfigClient {
 
     /**

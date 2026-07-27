@@ -12,7 +12,7 @@ import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
  * <ol>
  *   <li>匹配规则（{@link #rule}）</li>
  *   <li>冷却窗口去重判断（CAS 更新 {@code last_alert_at}）</li>
- *   <li>调用 {@link com.njydsz.common.feign.MessageServiceClient} 派发多通道通知</li>
+ *   <li>调用 {@link com.njydsz.common.feign.NotificationClient} 派发多通道通知</li>
  *   <li>记录 {@code ydsz_job_alert_log} 日志</li>
  * </ol>
  *

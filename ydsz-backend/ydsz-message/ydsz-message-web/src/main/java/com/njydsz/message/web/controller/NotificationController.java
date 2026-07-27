@@ -63,9 +63,8 @@ public class NotificationController {
      */
     @Operation(summary = "发送站内通知")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "notification:send", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:NotificationController:send:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'send'")
-    @SentinelRateLimit(resource = "message.notification.send", threshold = 50)
     @SentinelRateLimit(resource = "message.notification.send", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
@@ -105,9 +104,8 @@ public class NotificationController {
      */
     @Operation(summary = "标记单条已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "notification:markRead", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:NotificationController:markRead:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markRead'")
-    @SentinelRateLimit(resource = "message.notification.markRead", threshold = 50)
     @SentinelRateLimit(resource = "message.notification.markRead", threshold = 50)
     @PostMapping("/{id}/read")
     public BaseResponse<Boolean> markRead(@PathVariable String id) {
@@ -121,9 +119,8 @@ public class NotificationController {
      */
     @Operation(summary = "全部标记已读")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "notification:markAllRead", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:NotificationController:markAllRead:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markAllRead'")
-    @SentinelRateLimit(resource = "message.notification.markAllRead", threshold = 50)
     @SentinelRateLimit(resource = "message.notification.markAllRead", threshold = 50)
     @PostMapping("/readAll")
     public BaseResponse<Integer> markAllRead() {
@@ -138,9 +135,8 @@ public class NotificationController {
      */
     @Operation(summary = "删除通知(仅删自己的)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_DELETE)
-    @Idempotent(key = "notification:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:NotificationController:delete:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.notification.delete", threshold = 50)
     @SentinelRateLimit(resource = "message.notification.delete", threshold = 50)
     @DeleteMapping
     public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
@@ -156,9 +152,8 @@ public class NotificationController {
      */
     @Operation(summary = "撤回通知")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_RECALL)
-    @Idempotent(key = "notification:recall", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:NotificationController:recall:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recall'")
-    @SentinelRateLimit(resource = "message.notification.recall", threshold = 50)
     @SentinelRateLimit(resource = "message.notification.recall", threshold = 50)
     @PostMapping("/{id}/recall")
     public BaseResponse<Boolean> recall(@PathVariable String id) {
@@ -175,7 +170,7 @@ public class NotificationController {
      */
     @Operation(summary = "单推(实时推送指定用户)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_PUSH)
-    @Idempotent(key = "notification:push", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:NotificationController:push:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/push")
     public BaseResponse<Map<String, Object>> push(
@@ -196,7 +191,7 @@ public class NotificationController {
      */
     @Operation(summary = "广播(实时推送所有在线用户)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_BROADCAST)
-    @Idempotent(key = "notification:broadcast", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:NotificationController:broadcast:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/broadcast")
     public BaseResponse<Map<String, Object>> broadcast(

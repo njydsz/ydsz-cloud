@@ -19,18 +19,27 @@ import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()
 
+/** 当前激活的 Tab（按员工查询 / 按标签筛选） */
 const tab = ref<'byEmployee' | 'candidates'>('byEmployee')
+/** 选中的员工 ID */
 const employeeId = ref<number | null>(null)
+/** 员工标签列表 */
 const tags = ref<EmployeeTagVO[]>([])
+/** 标签查询加载状态 */
 const tagsLoading = ref(false)
 
+/** 候选人查询表单 */
 const candidateForm = reactive({
   tagType: 'SKILL',
   tagCode: '',
 })
+/** 候选人列表 */
 const candidates = ref<EmployeeTagVO[]>([])
+/** 候选人查询加载状态 */
 const candidatesLoading = ref(false)
+/** 新增标签提交状态 */
 const submitting = ref(false)
+/** 删除标签提交状态 */
 const deleting = ref(false)
 
 const tagTypeMap = computed<Record<string, string>>(() => ({

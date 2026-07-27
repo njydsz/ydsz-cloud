@@ -10,7 +10,7 @@
 /** 项目变更主表 VO */
 export interface ProjectChangeVO {
   /** 变更记录 ID */
-  id: number
+  id: string
   /** 变更编号，唯一索引 */
   changeCode: string
   /** 关联立项 ID */
@@ -130,7 +130,7 @@ export interface ProjectChangeCreateDTO {
 /** 状态迁移 DTO */
 export interface ProjectChangeStatusDTO {
   /** 变更记录 ID */
-  id: number
+  id: string
   /** 目标状态 */
   targetStatus: string
 }

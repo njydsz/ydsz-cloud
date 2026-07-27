@@ -1,11 +1,41 @@
 package com.njydsz.common.excel.core.reader;
 
 /**
- * ExcelXmlParser 类
+ * Excel XML 手工解析器。
+ *
+ * <p>直接操作 byte[] 解析 Excel .xlsx 文件中的 sheet XML，
+ * 绕过 Apache POI 的 DOM/SAX 解析器，以极低的内存开销实现高性能读取。
+ *
+ * <h3>解析原理</h3>
+ * <p>Excel .xlsx 文件中的 sheet XML 结构为：
+ * <pre>{@code
+ * <row r="1">
+ *   <c r="A1" t="s" s="0">
+ *     <v>0</v>
+ *   </c>
+ * </row>
+ * }</pre>
+ * 本解析器通过逐字节扫描 XML 标签前缀（如 {@code <row}, {@code <c}, {@code <v>}），
+ * 定位行、单元格、值的位置，然后提取属性和文本内容。
+ *
+ * <h3>回调接口</h3>
+ * <ul>
+ *   <li>{@link RowHandler}：行开始/结束回调</li>
+ *   <li>{@link CellHandler}：单元格开始/值/结束回调</li>
+ * </ul>
+ *
+ * <h3>支持的单元格类型</h3>
+ * <ul>
+ *   <li>{@code s}：共享字符串（需通过 SST 索引查表）</li>
+ *   <li>{@code inlineStr}：内联字符串</li>
+ *   <li>{@code str}：公式结果字符串</li>
+ *   <li>{@code n}：数值</li>
+ *   <li>{@code b}：布尔值</li>
+ *   <li>{@code e}：错误值</li>
+ * </ul>
  *
  * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
+ * @since 1.0.0
  */
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -13,45 +43,111 @@ import java.util.List;
 
 public class ExcelXmlParser {
 
+    /** XML 标签前缀：<row */
     private static final byte[] ROW_START = "<row".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：</row> */
     private static final byte[] ROW_END = "</row>".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签前缀：<c */
     private static final byte[] CELL_START = "<c".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：<v>（单元格值） */
     private static final byte[] VALUE_START = "<v>".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：</v> */
     private static final byte[] VALUE_END = "</v>".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：<is>（内联字符串） */
     private static final byte[] IS_TAG = "<is>".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：<t>（文本） */
     private static final byte[] T_TAG = "<t>".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：</t> */
     private static final byte[] T_CLOSE = "</t>".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：<f>（公式） */
     private static final byte[] FORMULA_START = "<f>".getBytes(StandardCharsets.UTF_8);
+    /** XML 标签：</f> */
     private static final byte[] FORMULA_END = "</f>".getBytes(StandardCharsets.UTF_8);
+    /** XML 属性名：r="（单元格引用，如 A1） */
     private static final byte[] ATTR_R = " r=\"".getBytes(StandardCharsets.UTF_8);
+    /** XML 属性名：t="（单元格类型） */
     private static final byte[] ATTR_T = " t=\"".getBytes(StandardCharsets.UTF_8);
+    /** XML 属性名：s="（单元格样式索引） */
     private static final byte[] ATTR_S = " s=\"".getBytes(StandardCharsets.UTF_8);
 
+    /** 当前解析位置 */
     private int pos;
+    /** 数据长度限制 */
     private int limit;
+    /** 当前行号 */
     private int currentRow;
+    /** 当前列号（0-based） */
     private int currentCol;
+    /** 当前单元格引用（如 "A1"） */
     private String cellRef;
+    /** 当前单元格类型（s/n/b/e/inlineStr/str） */
     private String cellType;
+    /** 当前单元格样式索引 */
     private int cellStyle;
 
+    /** 行回调处理器 */
     private RowHandler rowHandler;
+    /** 单元格回调处理器 */
     private CellHandler cellHandler;
 
+    /**
+     * 行回调接口。
+     *
+     * <p>在解析到 {@code <row>} 开始和 {@code </row>} 结束时触发。
+     */
     public interface RowHandler {
+        /** 行开始时回调 */
         void onRowStart(int rowNum);
+        /** 行结束时回调 */
         void onRowEnd(int rowNum);
     }
 
+    /**
+     * 单元格回调接口。
+     *
+     * <p>在解析到 {@code <c>} 标签、{@code <v>} 值标签和 {@code </c>} 结束标签时触发。
+     */
     public interface CellHandler {
+        /**
+         * 单元格开始时回调。
+         *
+         * @param row   行号（1-based）
+         * @param col   列号（0-based）
+         * @param ref   单元格引用（如 "A1"）
+         * @param type  单元格类型（s/n/b/e/inlineStr/str）
+         * @param style 样式索引
+         */
         void onCellStart(int row, int col, String ref, String type, int style);
+        /**
+         * 单元格值回调。
+         *
+         * @param row   行号
+         * @param col   列号
+         * @param value 值字符串（数值/布尔/字符串/公式结果）
+         */
         void onCellValue(int row, int col, String value);
+        /** 单元格结束时回调 */
         void onCellEnd(int row, int col);
     }
 
+    /**
+     * 构造解析器。
+     *
+     * @param bufferSize 缓冲区大小（当前实现为全量读取，此参数保留兼容）
+     */
     public ExcelXmlParser(int bufferSize) {
     }
 
+    /**
+     * 解析 Excel sheet XML 字节数据。
+     *
+     * <p>主解析循环：逐字节扫描 XML，匹配标签前缀后分发到对应的解析方法。
+     * 解析顺序：{@code <row>} → {@code <c>} → {@code <v>} / {@code <is>} → 值回调。
+     *
+     * @param data         XML 字节数据
+     * @param rowHandler   行回调处理器
+     * @param cellHandler  单元格回调处理器
+     */
     public void parse(byte[] data, RowHandler rowHandler, CellHandler cellHandler) {
         this.rowHandler = rowHandler;
         this.cellHandler = cellHandler;
@@ -77,6 +173,13 @@ public class ExcelXmlParser {
         }
     }
 
+    /**
+     * 检查当前位置是否匹配指定标签。
+     *
+     * @param data 原始字节数据
+     * @param tag  目标标签字节数组
+     * @return 匹配返回 true
+     */
     private boolean matchTag(byte[] data, byte[] tag) {
         if (pos + tag.length > limit) {
             return false;
@@ -89,6 +192,11 @@ public class ExcelXmlParser {
         return true;
     }
 
+    /**
+     * 解析 {@code <row>} 标签，提取行号并触发行开始/结束回调。
+     *
+     * @param data XML 字节数据
+     */
     private void parseRowTag(byte[] data) {
         int tagEnd = findChar(data, '>', pos);
         if (tagEnd == -1) {
@@ -120,6 +228,13 @@ public class ExcelXmlParser {
         }
     }
 
+    /**
+     * 从 {@code <row r="N">} 标签中解析行号。
+     *
+     * @param data  原始字节数据
+     * @param start 标签起始位置
+     * @return 行号（1-based），解析失败返回 -1
+     */
     private int parseRowNumber(byte[] data, int start) {
         int pos = start + 4;
         while (pos < limit && data[pos] != 'r') {
@@ -150,6 +265,14 @@ public class ExcelXmlParser {
         }
     }
 
+    /**
+     * 解析 {@code <c>} 单元格标签。
+     *
+     * <p>提取单元格引用（r）、类型（t）、样式（s）属性，
+     * 然后根据类型从 {@code <v>} 或 {@code <is>/<t>} 中提取值。
+     *
+     * @param data XML 字节数据
+     */
     private void parseCellTag(byte[] data) {
         int tagEnd = findChar(data, '>', pos);
         if (tagEnd == -1) {
@@ -221,6 +344,11 @@ public class ExcelXmlParser {
         pos = tagEnd + 1;
     }
 
+    /**
+     * 解析独立的 {@code <v>} 值标签（不在 {@code <c>} 内部时）。
+     *
+     * @param data XML 字节数据
+     */
     private void parseValueTag(byte[] data) {
         int valueStart = pos + VALUE_START.length;
         int valueEnd = findBytes(data, VALUE_END, valueStart, limit);
@@ -236,6 +364,16 @@ public class ExcelXmlParser {
         pos = valueEnd > 0 ? valueEnd + VALUE_END.length : pos + 1;
     }
 
+    /**
+     * 从当前位置解析指定属性的值。
+     *
+     * <p>属性格式为 {@code name="value"}，此方法从 pos 位置开始搜索属性名，
+     * 然后提取引号内的值。
+     *
+     * @param data     原始字节数据
+     * @param attrName 属性名（含等号和引号前缀，如 {@code  r="}）
+     * @return 属性值字符串，未找到返回 null
+     */
     private String parseAttribute(byte[] data, byte[] attrName) {
         int attrPos = findBytes(data, attrName, pos, limit);
         if (attrPos == -1) {
@@ -254,6 +392,14 @@ public class ExcelXmlParser {
         return "";
     }
 
+    /**
+     * 从单元格引用（如 "A1"、"B23"）中解析列号。
+     *
+     * <p>列号转换：A=0, B=1, ..., Z=25, AA=26, ...
+     *
+     * @param ref 单元格引用字符串
+     * @return 列号（0-based），解析失败返回 -1
+     */
     private int parseCellRef(String ref) {
         if (ref == null || ref.isEmpty()) {
             return -1;
@@ -271,6 +417,14 @@ public class ExcelXmlParser {
         return col - 1;
     }
 
+    /**
+     * 从指定位置开始查找字符。
+     *
+     * @param data  原始字节数据
+     * @param c     目标字符
+     * @param start 起始位置
+     * @return 字符位置，未找到返回 -1
+     */
     private int findChar(byte[] data, char c, int start) {
         for (int i = start; i < limit && i < data.length; i++) {
             if (data[i] == c) {
@@ -280,6 +434,15 @@ public class ExcelXmlParser {
         return -1;
     }
 
+    /**
+     * 在字节数组中查找目标字节序列。
+     *
+     * @param data   原始字节数据
+     * @param target 目标字节序列
+     * @param start  搜索起始位置
+     * @param end    搜索结束位置（不含）
+     * @return 匹配位置，未找到返回 -1
+     */
     private int findBytes(byte[] data, byte[] target, int start, int end) {
         if (end > data.length) {
             end = data.length;
@@ -296,6 +459,15 @@ public class ExcelXmlParser {
         return -1;
     }
 
+    /**
+     * 在字节数组中查找目标字符串（UTF-8 编码）。
+     *
+     * @param data   原始字节数据
+     * @param target 目标字符串
+     * @param start  搜索起始位置
+     * @param end    搜索结束位置（不含）
+     * @return 匹配位置，未找到返回 -1
+     */
     private int findBytes(byte[] data, String target, int start, int end) {
         byte[] targetBytes = target.getBytes(StandardCharsets.UTF_8);
         return findBytes(data, targetBytes, start, end);

@@ -8,7 +8,7 @@
 /** 对内职级成本费率视图对象 */
 export interface RateInternalVO {
   /** 费率记录ID */
-  id?: number
+  id?: string
   /** 费率编码 */
   rateCode: string
   /** 职级编码 */

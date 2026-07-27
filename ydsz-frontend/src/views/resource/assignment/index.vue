@@ -18,9 +18,13 @@ import type { ResourceAssignmentVO, ResourceAssignmentCreateDTO } from '@/api/re
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 表单/操作提交状态 */
 const submitting = ref(false)
+/** 分配记录列表数据 */
 const list = ref<ResourceAssignmentVO[]>([])
+/** 分配记录总数 */
 const total = ref(0)
 // 分页查询条件：员工 ID / 项目 initiation ID / 分配状态
 const query = reactive({ page: 1, size: 10, employeeId: undefined as number | undefined, initiationId: undefined as number | undefined, status: '' })

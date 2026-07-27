@@ -1,7 +1,7 @@
 package com.njydsz.project.api.client;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.feign.constant.FeignClientConstants;
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.project.api.fallback.FinanceClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @FeignClient(
     name = "ydsz-project",
     contextId = "financeClient",
-    path = FeignClientConstants.BASE_PATH,
     fallbackFactory = FinanceClientFallback.class)
 public interface FinanceClient {
 

@@ -4,8 +4,15 @@
   - Props: modelValue（v-model 弹窗显隐）、preview（FilePreviewVO 预览信息）、fileName（文件名）
   - Emits: update:modelValue、download
   @module components/common/FilePreviewer
+  @author ydsz-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
+/**
+ * 文件预览器组件
+ *
+ * 支持图片 / PDF / 文本 / 视频预览，其他类型显示下载按钮及原始文件下载入口。
+ */
 import { computed } from 'vue'
 import type { FilePreviewVO } from '@/api/nextwiki/types'
 

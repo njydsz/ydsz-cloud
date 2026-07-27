@@ -5,7 +5,7 @@
  */
 export interface RankVO {
   /** 职级 ID */
-  id: number
+  id: string
   /** 职级编码（L1-L18） */
   levelCode: string
   /** 职级名称 */
@@ -22,7 +22,7 @@ export interface RankVO {
 
 export interface RankRateVO {
   /** 费率 ID */
-  id: number
+  id: string
   /** 职级编码 */
   levelCode: string
   /** 外部人天单价 */

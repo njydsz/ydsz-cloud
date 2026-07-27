@@ -5,7 +5,7 @@
  */
 export interface ResourcePoolVO {
   /** 资源池 ID */
-  id: number
+  id: string
   /** 资源池编码 */
   poolCode: string
   /** 资源池名称 */

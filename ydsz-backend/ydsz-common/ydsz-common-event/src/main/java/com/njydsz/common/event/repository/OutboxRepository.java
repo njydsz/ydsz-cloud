@@ -38,15 +38,22 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
  */
 public class OutboxRepository {
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(OutboxRepository.class);
 
+    /** headers 字段 JSON 反序列化类型 */
     private static final YdszJsonType<Map<String, String>> MAP_TYPE = new YdszJsonType<>() {};
 
     /** 表名合法字符校验正则（防 SQL 注入） */
     private static final String TABLE_NAME_PATTERN = "^[a-zA-Z_][a-zA-Z0-9_]*$";
 
+    /** JDBC 模板 */
     private final JdbcTemplate jdbcTemplate;
+
+    /** Outbox 表名 */
     private final String tableName;
+
+    /** 数据库方言 */
     private final DatabaseDialect dialect;
 
     /** 缓存 SimpleJdbcInsert 实例，避免每次 save 都查数据库元数据 */

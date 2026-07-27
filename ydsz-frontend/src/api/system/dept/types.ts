@@ -10,7 +10,7 @@ import type { BaseVO } from '@/types/api'
 /** 部门视图对象 */
 export interface DeptVO extends BaseVO {
   /** 部门 ID */
-  id: number
+  id: string
   /** 父部门 ID（顶级部门为 0） */
   parentId: number
   /** 部门编码 */
@@ -38,7 +38,7 @@ export interface DeptVO extends BaseVO {
 /** 部门表单 DTO（新增/编辑共用） */
 export interface DeptFormDTO {
   /** 部门 ID（编辑时必填） */
-  id?: number
+  id?: string
   /** 父部门 ID（顶级部门为 0） */
   parentId: number
   /** 部门编码 */

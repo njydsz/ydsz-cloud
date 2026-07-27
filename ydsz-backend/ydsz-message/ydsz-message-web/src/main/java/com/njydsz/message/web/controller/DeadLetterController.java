@@ -78,9 +78,8 @@ public class DeadLetterController {
      */
     @Operation(summary = "手动重发死信")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
-    @Idempotent(key = "deadLetter:resend", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:DeadLetterController:resend:lock", ttlSeconds = 5)
     @Audit(module = "死信管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resend'")
-    @SentinelRateLimit(resource = "message.deadletter.resend", threshold = 50)
     @SentinelRateLimit(resource = "message.deadletter.resend", threshold = 50)
     @PostMapping("/{logId}/resend")
     public BaseResponse<Void> resend(@PathVariable String logId) {

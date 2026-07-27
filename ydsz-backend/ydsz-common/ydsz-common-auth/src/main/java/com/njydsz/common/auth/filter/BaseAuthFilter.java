@@ -23,13 +23,24 @@ import com.njydsz.common.util.url.UrlPathUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 认证过滤器抽象基类
+ * 认证过滤器抽象基类。
  *
- * <p>提取 Web 端和 App 端认证过滤器的公共逻辑。</p>
+ * <p>提取 Web 端和 App 端认证过滤器的公共逻辑，包括：
+ * <ul>
+ *   <li>请求路径排除判断（白名单路径直接放行）</li>
+ *   <li>限流检查（通过 {@link RateLimiter} 防止暴力请求）</li>
+ *   <li>CSRF Token 校验（通过 {@link CsrfTokenValidator}）</li>
+ *   <li>认证上下文 {@link AuthContext} 初始化和清理</li>
+ * </ul>
+ *
+ * <p>子类需实现 {@code doAuthFilter} 方法完成具体的 Token 解析和认证逻辑。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @see OncePerRequestFilter
+ * @see AuthFilterConfiguration
+ * @see RateLimiter
+ * @see CsrfTokenValidator
  */
 @Slf4j
 public abstract class BaseAuthFilter extends OncePerRequestFilter {

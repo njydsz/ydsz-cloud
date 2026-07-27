@@ -59,7 +59,7 @@ export interface LoginResult {
  */
 export interface UserInfo {
   /** 用户 ID */
-  id: number
+  id: string
   /** 用户名（登录账号） */
   username: string
   /** 真实姓名 */

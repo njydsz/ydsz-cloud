@@ -5,7 +5,7 @@
  */
 export interface ResourceAssignmentVO {
   /** 分配记录 ID */
-  id: number
+  id: string
   /** 员工 ID */
   employeeId: number
   /** 员工姓名 */

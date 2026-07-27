@@ -85,13 +85,13 @@ public class CaptchaService {
 
         String storedCode = redisStringOps.get(CAPTCHA_KEY_PREFIX + captchaKey, String.class);
         if (storedCode == null) {
-            throw new BusinessException(UserInfoResultCode.CAPTCHA_INVALID, "验证码已过期");
+            throw new BusinessException(UserInfoResultCode.CAPTCHA_INVALID, new Object[]{"验证码已过期"});
         }
 
         redisStringOps.del(CAPTCHA_KEY_PREFIX + captchaKey);
 
         if (!storedCode.equalsIgnoreCase(userInput)) {
-            throw new BusinessException(UserInfoResultCode.CAPTCHA_INVALID, "验证码错误");
+            throw new BusinessException(UserInfoResultCode.CAPTCHA_INVALID, new Object[]{"验证码错误"});
         }
 
         return true;

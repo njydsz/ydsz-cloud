@@ -27,8 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AgentDefinitionServiceImpl implements AgentDefinitionService {
 
+    /** Agent 定义 Mapper */
     private final AgentDefinitionMapper mapper;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return Agent 定义 DO，不存在或已删除时返回 null
+     */
     @Override
     public AgentDefinitionDO getById(String id) {
         AgentDefinitionDO entity = mapper.selectById(id);
@@ -38,6 +44,12 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param code Agent 编码
+     * @return Agent 定义 DO，不存在时返回 null
+     */
     @Override
     public AgentDefinitionDO getByCode(String code) {
         return mapper.selectOne(new QueryWrapper<AgentDefinitionDO>()
@@ -46,6 +58,11 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
                 .last("LIMIT 1"));
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 状态为 ACTIVE 的 Agent 列表（按创建时间降序）
+     */
     @Override
     public List<AgentDefinitionDO> listActive() {
         return mapper.selectList(new QueryWrapper<AgentDefinitionDO>()
@@ -54,6 +71,12 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
                 .orderByDesc("created_at"));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 agentCode 唯一性校验后插入。
+     *
+     * @throws IllegalArgumentException 当 agentCode 已存在时抛出
+     */
     @Override
     @Transactional
     public AgentDefinitionDO create(AgentDefinitionDO entity) {
@@ -67,6 +90,11 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IllegalArgumentException 当 Agent 不存在或已删除时抛出
+     */
     @Override
     @Transactional
     public AgentDefinitionDO update(AgentDefinitionDO entity) {
@@ -85,6 +113,14 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         return mapper.deleteById(id) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>将 DO 转换为领域 AgentDefinition，解析 toolNames（JSON 数组）和 modelConfig（JSON 对象），
+     * agentType 解析失败时降级为 CHAT。
+     *
+     * @param entity 数据库实体
+     * @return 领域定义对象，entity 为 null 时返回 null
+     */
     @Override
     public AgentDefinition toDomain(AgentDefinitionDO entity) {
         if (entity == null) {

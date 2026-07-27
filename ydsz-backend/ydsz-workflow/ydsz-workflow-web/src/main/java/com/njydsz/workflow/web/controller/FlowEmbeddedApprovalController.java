@@ -94,8 +94,7 @@ public class FlowEmbeddedApprovalController {
      * @param dto 嵌入式快捷操作参数
      */
     @Operation(summary = "嵌入式快捷操作")
-    @Idempotent(key = "flowEmbeddedApproval:quickAction", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickAction:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
     @PostMapping("/action")
     public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
@@ -121,8 +120,7 @@ public class FlowEmbeddedApprovalController {
      * @return 空响应
      */
     @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
-    @Idempotent(key = "flowEmbeddedApproval:quickActionByPath", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickActionByPath", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickActionByPath:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowembeddedapproval.quickActionByPath", threshold = 50)
     @PostMapping("/{businessType}/{businessId}/action")
     public BaseResponse<Void> quickActionByPath(@PathVariable String businessType,

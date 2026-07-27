@@ -56,8 +56,7 @@ public class FlowCategoryController {
      * @param dto 分类信息
      * @return 新建分类 ID
      */
-    @Idempotent(key = "flowCategory:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcategory.create", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCategoryController:create:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcategory.create", threshold = 50)
     @PostMapping
     @Operation(summary = "新增分类")
@@ -71,8 +70,7 @@ public class FlowCategoryController {
      * @param dto 分类信息
      * @return 空响应
      */
-    @Idempotent(key = "flowCategory:update", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcategory.update", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCategoryController:update:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcategory.update", threshold = 50)
     @PutMapping
     @Operation(summary = "编辑分类")
@@ -87,8 +85,7 @@ public class FlowCategoryController {
      * @param id 分类 ID
      * @return 空响应
      */
-    @Idempotent(key = "flowCategory:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcategory.delete", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCategoryController:delete:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcategory.delete", threshold = 50)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")

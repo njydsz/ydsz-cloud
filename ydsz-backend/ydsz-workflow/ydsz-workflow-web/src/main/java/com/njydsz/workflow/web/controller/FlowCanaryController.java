@@ -49,7 +49,7 @@ public class FlowCanaryController {
      * @param note           备注
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowCanary:publishCanary", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowCanaryController:publishCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/publish")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> publishCanary(
@@ -72,7 +72,7 @@ public class FlowCanaryController {
      * @param note         备注
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowCanary:adjustCanary", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowCanaryController:adjustCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/adjust")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> adjustCanary(
@@ -93,7 +93,7 @@ public class FlowCanaryController {
      * @param note         备注
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowCanary:promoteCanary", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowCanaryController:promoteCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/promote")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> promoteCanary(
@@ -113,7 +113,7 @@ public class FlowCanaryController {
      * @param note         备注（含回滚原因）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowCanary:rollbackCanary", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowCanaryController:rollbackCanary:lock", ttlSeconds = 5)
     @PostMapping("/canary/{definitionId}/rollback")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> rollbackCanary(

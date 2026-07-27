@@ -59,7 +59,7 @@ public class RagController {
      * 摄入文档
      */
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
-    @Idempotent(key = "agent:rag:write", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:agent:RagController:write:lock", ttlSeconds = 5)
     @PostMapping("/ingest")
     public BaseResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
         log.info("[RAG-API] 摄入文档: docId={}, title={}",
@@ -79,7 +79,6 @@ public class RagController {
      * 向量相似度检索
      */
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
-    @Idempotent(key = "agent:rag:write", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/search")
     public BaseResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
         int topK = request.getTopK() != null ? request.getTopK() : 5;
@@ -101,8 +100,7 @@ public class RagController {
      * 删除文档索引
      */
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDocument'")
-    @Idempotent(key = "agent:rag:deleteDocument", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
+    @Idempotent(key = "ydsz:agent:RagController:deleteDocument:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
     @DeleteMapping("/documents/{documentId}")
     public BaseResponse<Void> deleteDocument(@PathVariable String documentId) {

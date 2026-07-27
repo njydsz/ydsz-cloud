@@ -34,7 +34,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * @since 1.0.0
  */
 @FeignClient(name = "ydsz-userinfo", contextId = "orgQueryClient",
-        fallbackFactory = OrgQueryClientFallback.class)
+        fallback = OrgQueryClientFallback.class)
 public interface OrgQueryClient {
 
     @GetMapping("/api/internal/user/info")

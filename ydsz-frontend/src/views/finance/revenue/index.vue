@@ -13,9 +13,13 @@ import PageLayout from '@/components/common/PageLayout.vue'
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 收入确认记录列表 */
 const list = ref<any[]>([])
+/** 记录总数（分页用） */
 const total = ref(0)
+/** 查询条件：合同 ID + 确认方式 */
 const query = reactive({
   page: 1,
   size: 10,
@@ -23,8 +27,11 @@ const query = reactive({
   recognitionMethod: '',
 })
 
+/** 新增弹窗可见 */
 const dialogVisible = ref(false)
+/** 表单引用 */
 const formRef = ref<FormInstance>()
+/** 表单数据 */
 const form = reactive({
   contractId: undefined as number | undefined,
   recognitionDate: '',
@@ -33,6 +40,7 @@ const form = reactive({
   description: '',
 })
 
+/** 确认方式 → 标签/样式映射 */
 const methodMap: Record<string, { label: string; type: string }> = {
   OVER_TIME: { label: '按时间确认', type: 'primary' },
   MILESTONE: { label: '按里程碑', type: 'warning' },
@@ -40,12 +48,14 @@ const methodMap: Record<string, { label: string; type: string }> = {
   PERCENTAGE: { label: '按比例', type: 'info' },
 }
 
+/** 状态 → 标签/样式映射 */
 const statusMap: Record<string, { label: string; type: string }> = {
   PENDING: { label: '待确认', type: 'info' },
   CONFIRMED: { label: '已确认', type: 'success' },
   REVERSED: { label: '已冲回', type: 'danger' },
 }
 
+/** 拉取收入确认列表 */
 async function loadData() {
   loading.value = true
   try {
@@ -56,10 +66,12 @@ async function loadData() {
   }
 }
 
+/** 打开新增弹窗 */
 function handleAdd() {
   dialogVisible.value = true
 }
 
+/** 提交表单：校验通过后保存收入确认 */
 async function handleSubmit() {
   if (!formRef.value) return
   await formRef.value.validate()
@@ -75,6 +87,7 @@ onMounted(() => {
 
 <template>
   <PageLayout>
+    <!-- 顶部操作栏 -->
     <template #header>
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">{{ t('common.revenueRecognition') }}</h2>
@@ -85,6 +98,7 @@ onMounted(() => {
       </div>
     </template>
 
+    <!-- 筛选条件区 -->
     <div class="mb-4 flex gap-3">
       <el-input v-model="query.contractId" placeholder="合同ID" clearable style="width: 140px" />
       <el-select v-model="query.recognitionMethod" placeholder="确认方式" clearable style="width: 160px">
@@ -93,6 +107,7 @@ onMounted(() => {
       <el-button type="primary" @click="loadData">查询</el-button>
     </div>
 
+    <!-- 收入确认列表 -->
     <el-table v-loading="loading" :data="list" border stripe>
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="contractCode" label="合同编号" width="150" />

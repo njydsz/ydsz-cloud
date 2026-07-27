@@ -41,6 +41,18 @@ export interface OptimisticOptions<T = unknown> {
   onSuccess?: () => void
 }
 
+/**
+ * 乐观更新 composable
+ *
+ * 为审批/状态流转/删除等操作提供乐观更新能力：
+ * 1. 先修改本地状态（UI 立即响应）
+ * 2. 再调用后端 API
+ * 3. 失败时自动回滚
+ *
+ * @returns `{ optimistic, loading }`
+ *   - optimistic: 执行乐观更新
+ *   - loading: 操作中标志
+ */
 export function useOptimisticUpdate() {
   const { t } = useI18n()
   /** 操作中标志 */

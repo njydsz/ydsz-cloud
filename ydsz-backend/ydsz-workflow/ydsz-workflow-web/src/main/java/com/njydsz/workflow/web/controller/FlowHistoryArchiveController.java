@@ -71,7 +71,7 @@ public class FlowHistoryArchiveController {
      * @return 执行结果摘要
      */
     @Operation(summary = "手动触发归档")
-    @Idempotent(key = "flowHistoryArchive:archive", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowHistoryArchiveController:archive:lock", ttlSeconds = 5)
     @PostMapping("/archive")
     public BaseResponse<Map<String, Object>> archive(@RequestParam(required = false) @Min(1) Integer retentionDays,
                                                   @RequestParam(required = false) @Min(1) @Max(1000) Integer batchSize,
@@ -91,7 +91,7 @@ public class FlowHistoryArchiveController {
      * @return 执行结果摘要
      */
     @Operation(summary = "手动触发清理（purge）")
-    @Idempotent(key = "flowHistoryArchive:purge", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowHistoryArchiveController:purge:lock", ttlSeconds = 5)
     @PostMapping("/purge")
     public BaseResponse<Map<String, Object>> purge(@RequestParam(required = false) Integer purgeDays) {
         log.info("[FlowHistoryArchiveController] 手动触发清理 purgeDays={}", purgeDays);

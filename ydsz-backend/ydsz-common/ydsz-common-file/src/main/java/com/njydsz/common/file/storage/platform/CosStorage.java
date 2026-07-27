@@ -32,16 +32,27 @@ import com.qcloud.cos.region.Region;
 
 import lombok.extern.slf4j.Slf4j;
 /**
- * 腾讯云 COS 对象存储实现
- * <p>继承 {@link AbstractFileStorage}，
- * 将操作翻译为腾讯云 COS Java SDK 的原生 API 调用。
+ * 腾讯云 COS 对象存储实现。
  *
- * <p>分片上传使用原生 multipart upload 协议：
- * InitiateMultipartUpload / UploadPart / ListParts / CompleteMultipartUpload / AbortMultipartUpload
+ * <p>继承 {@link AbstractFileStorage}，将操作翻译为腾讯云 COS Java SDK 的原生 API 调用。
+ *
+ * <h3>分片上传协议</h3>
+ * <p>使用 COS 原生 multipart upload 协议，完整支持分片上传生命周期：
+ * <ol>
+ *   <li>{@code InitiateMultipartUpload}：初始化分片上传，获取 uploadId</li>
+ *   <li>{@code UploadPart}：上传单个分片，返回分片 ETag</li>
+ *   <li>{@code ListParts}：列出已上传的分片</li>
+ *   <li>{@code CompleteMultipartUpload}：合并所有分片为最终对象</li>
+ *   <li>{@code AbortMultipartUpload}：取消上传并清理已上传分片</li>
+ * </ol>
+ *
+ * <h3>预签名 URL</h3>
+ * <p>通过 {@code generatePresignedUrl} 生成临时下载/上传链接，支持自定义 HTTP 方法和过期时间。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @see AbstractFileStorage
+ * @see COSClient
  */
 @Slf4j
 public class CosStorage extends AbstractFileStorage {

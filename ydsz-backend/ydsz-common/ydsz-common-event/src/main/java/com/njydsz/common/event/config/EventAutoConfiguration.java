@@ -53,6 +53,7 @@ import javax.sql.DataSource;
 @Import(RocketMqGatewayConfiguration.class)
 public class EventAutoConfiguration {
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(EventAutoConfiguration.class);
 
     private OutboxProcessor outboxProcessor;

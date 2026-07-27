@@ -95,6 +95,7 @@ const getChangeTypeLabel = (type: string) => {
   }
 }
 
+/** 弹窗打开时自动加载变更历史 */
 watch(() => props.visible, (val) => {
   if (val) fetchHistory()
 })
@@ -107,6 +108,7 @@ watch(() => props.visible, (val) => {
     size="50%"
     @update:model-value="emit('update:visible', $event)"
   >
+    <!-- 操作日志列表 -->
     <el-table v-loading="loading" :data="logs" stripe>
       <el-table-column prop="createdAt" :label="t('common.entityHistory.colTime')" width="180" />
       <el-table-column prop="username" :label="t('common.entityHistory.colOperator')" width="120" />
@@ -119,6 +121,7 @@ watch(() => props.visible, (val) => {
       </el-table-column>
     </el-table>
 
+    <!-- 字段级 Diff 弹窗 -->
     <el-dialog v-model="diffVisible" :title="t('common.entityHistory.diffTitle')" width="700px" append-to-body>
       <el-table :data="currentDiff" stripe>
         <el-table-column prop="field" :label="t('common.entityHistory.colField')" width="150" />

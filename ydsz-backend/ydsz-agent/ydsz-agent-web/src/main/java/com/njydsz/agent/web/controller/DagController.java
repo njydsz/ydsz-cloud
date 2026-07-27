@@ -48,8 +48,7 @@ public class DagController {
      * 执行 DAG 编排
      */
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
-    @Idempotent(key = "agent:dag:execute", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "agent.dag.execute", threshold = 50)
+    @Idempotent(key = "ydsz:agent:DagController:execute:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "agent.dag.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
@@ -67,7 +66,7 @@ public class DagController {
      * 验证 DSL（不执行）
      */
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
-    @Idempotent(key = "agent:dag:write", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:agent:DagController:write:lock", ttlSeconds = 5)
     @PostMapping("/validate")
     public BaseResponse<Map<String, Object>> validate(@RequestBody DagExecutionDTO request) {
         try {

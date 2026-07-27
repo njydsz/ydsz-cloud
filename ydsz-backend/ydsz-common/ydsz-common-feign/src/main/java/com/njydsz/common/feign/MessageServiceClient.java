@@ -12,9 +12,12 @@ import com.njydsz.common.feign.fallback.MessageServiceClientFallbackFactory;
  *
  * <p>调用 message 服务提供的消息发送接口，支持多通道（站内信/邮件/Webhook/短信）。
  *
+ * @deprecated P1-5: 已合并至 {@link NotificationClient#sendMessage(MessageRequest)}，
+ * 请使用 {@link NotificationClient} 统一发送通知。本接口将在后续版本中移除。
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated
 @FeignClient(name = FeignClientConstants.MESSAGE, contextId = "messageServiceClient",
         fallbackFactory = MessageServiceClientFallbackFactory.class)
 public interface MessageServiceClient {

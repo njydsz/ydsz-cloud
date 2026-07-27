@@ -58,8 +58,7 @@ public class FlowDefinitionController {
      * @param dto 流程部署参数
      * @return 统一响应结果，包含流程定义 ID
      */
-    @Idempotent(key = "flowDefinition:deploy", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdefinition.deploy", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deploy:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdefinition.deploy", threshold = 50)
     @PostMapping("/definition/deploy")
     @Operation(summary = "部署流程定义")
@@ -78,7 +77,7 @@ public class FlowDefinitionController {
      * @param file     zip 文件（multipart/form-data）
      * @return 统一响应结果，包含 successCount / failedItems
      */
-    @Idempotent(key = "flowDefinition:batchDeployFromZip", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:batchDeployFromZip:lock", ttlSeconds = 5)
     @PostMapping(value = "/definition/batchDeployZip", consumes = "multipart/form-data")
     @Operation(summary = "BPMN 部署包 .zip 批量导入")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
@@ -105,7 +104,7 @@ public class FlowDefinitionController {
      * @param force 是否强制发布（跳过 HIGH 风险阻断），默认 false
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDefinition:publish", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:publish:lock", ttlSeconds = 5)
     @PostMapping("/definition/{id}/publish")
     @Operation(summary = "发布流程定义（带版本兼容性校验）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -121,8 +120,7 @@ public class FlowDefinitionController {
      * @param id 流程定义 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDefinition:deprecate", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdefinition.deprecate", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:deprecate:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdefinition.deprecate", threshold = 50)
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
@@ -200,7 +198,7 @@ public class FlowDefinitionController {
      * @param tenantId     租户 ID（可选）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDefinition:switchVersion", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:switchVersion:lock", ttlSeconds = 5)
     @PostMapping("/definition/{code}/switchVersion")
     @Operation(summary = "切换流程定义的激活版本")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -217,8 +215,7 @@ public class FlowDefinitionController {
      * @param id 流程定义 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDefinition:enable", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdefinition.enable", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:enable:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdefinition.enable", threshold = 50)
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
@@ -234,8 +231,7 @@ public class FlowDefinitionController {
      * @param id 流程定义 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDefinition:disable", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdefinition.disable", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:disable:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdefinition.disable", threshold = 50)
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
@@ -253,8 +249,7 @@ public class FlowDefinitionController {
      * @param coordinate   坐标 JSON 字符串
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDefinition:updateNodeCoordinate", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdefinition.updateNodeCoordinate", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:updateNodeCoordinate:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdefinition.updateNodeCoordinate", threshold = 50)
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
@@ -273,8 +268,7 @@ public class FlowDefinitionController {
      * @param dto 部署参数（含更新后的元数据与节点/跳转）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDefinition:updateDefinition", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdefinition.updateDefinition", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:updateDefinition:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdefinition.updateDefinition", threshold = 50)
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
@@ -304,7 +298,7 @@ public class FlowDefinitionController {
      * @param tenantId 租户 ID（可选，默认从上下文获取）
      * @return 统一响应结果，包含新创建的流程定义 ID
      */
-    @Idempotent(key = "flowDefinition:importDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowDefinitionController:importDefinition:lock", ttlSeconds = 5)
     @PostMapping("/definition/import")
     @Operation(summary = "从 JSON 导入流程定义")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_IMPORT)

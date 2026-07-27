@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.literule.api.RuleContext;
@@ -68,8 +68,7 @@ public class CEPController {
     private static final int MAX_RECENT_HITS = 200;
     private final List<CEPHit> recentHits = new ArrayList<>();
 
-    /** ObjectMapper 用于 CEP 模式反序列化（P2-7 测试模式端点使用） */
-    private final ObjectMapper objectMapper;
+    /** P0-2: 迁移到 YdszJson，移除 Jackson ObjectMapper 依赖 */
 
     /**
      * 启动时注册 CEP 命中监听器
@@ -324,7 +323,7 @@ public class CEPController {
             if (patternObj == null) {
                 return BaseResponse.error("pattern 不能为空");
             }
-            CEPPattern pattern = objectMapper.convertValue(patternObj, CEPPattern.class);
+            CEPPattern pattern = YdszJson.fromJson(YdszJson.toJson(patternObj), CEPPattern.class);
             if (pattern.getId() == null || pattern.getId().isBlank()) {
                 pattern.setId("TEST_TMP_" + System.nanoTime());
             }

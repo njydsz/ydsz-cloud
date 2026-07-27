@@ -7,12 +7,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Map;
 
 import com.njydsz.common.json.YdszJson;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.job.JobLogger;
@@ -95,18 +97,50 @@ public class MapTaskExecutor {
     private final RemoteTaskClient remoteTaskClient;
 
     /**
-     * P0-1: 子任务并行执行线程池。
+     * P1-2: 子任务并行执行线程池。
      *
-     * <p>使用固定大小线程池控制并行度，避免子任务过多时创建过多线程。
-     * 线程池大小由 {@code ydsz.cronjob.map-reduce.max-parallel-sub-tasks} 控制。
+     * <p>优先使用 common-thread 统一管理的 {@code cronjobMapReduceExecutor} 线程池；
+     * 未配置时 fallback 到手动创建的固定线程池。
      */
-    private final ExecutorService subTaskExecutor = Executors.newFixedThreadPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors() * 2),
-            r -> {
+    private volatile ExecutorService subTaskExecutor;
+
+    /** P1-2: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
+    private volatile boolean useExternalExecutor = false;
+
+    @jakarta.annotation.PostConstruct
+    private void initExecutor() {
+        try {
+            ThreadPoolTaskExecutor threadPool = applicationContext.getBean(
+                    "cronjobMapReduceExecutor", ThreadPoolTaskExecutor.class);
+            this.subTaskExecutor = threadPool.getThreadPoolExecutor();
+            this.useExternalExecutor = true;
+            log.info("[MapTaskExecutor] 使用 common-thread 线程池: cronjobMapReduceExecutor");
+        } catch (Exception e) {
+            int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
+            this.subTaskExecutor = Executors.newFixedThreadPool(poolSize, r -> {
                 Thread t = new Thread(r, "mapreduce-subtask");
                 t.setDaemon(true);
                 return t;
             });
+            this.useExternalExecutor = false;
+            log.info("[MapTaskExecutor] 使用手动线程池: poolSize={}", poolSize);
+        }
+    }
+
+    @jakarta.annotation.PreDestroy
+    private void shutdownExecutor() {
+        if (!useExternalExecutor && subTaskExecutor != null) {
+            subTaskExecutor.shutdown();
+            try {
+                if (!subTaskExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    subTaskExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                subTaskExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     /**
      * 执行 MapReduce 任务。

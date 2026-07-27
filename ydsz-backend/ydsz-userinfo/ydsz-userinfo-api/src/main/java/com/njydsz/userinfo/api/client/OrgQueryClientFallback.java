@@ -2,6 +2,7 @@ package com.njydsz.userinfo.api.client;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Component;
 

@@ -19,6 +19,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <!--common-json-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!-- Jackson 由 ydsz-common-util 传递依赖引入，无需显式声明 -->
         <!--common-util-->
         <dependency>

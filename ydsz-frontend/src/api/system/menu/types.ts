@@ -12,7 +12,7 @@ import type { BaseVO } from '@/types/api'
  */
 export interface MenuTreeVO extends BaseVO {
   /** 权限 ID */
-  id: number
+  id: string
   /** 父权限 ID（顶级为 0） */
   parentId: number
   /** 权限编码 */
@@ -40,7 +40,7 @@ export interface MenuTreeVO extends BaseVO {
  */
 export interface PermissionFormDTO {
   /** 权限 ID（编辑时必填） */
-  id?: number
+  id?: string
   /** 父权限 ID（顶级为 0） */
   parentId?: number
   /** 权限编码 */

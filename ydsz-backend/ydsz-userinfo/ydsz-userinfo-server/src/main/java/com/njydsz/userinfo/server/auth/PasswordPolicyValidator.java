@@ -52,11 +52,11 @@ public class PasswordPolicyValidator {
 
         if (password == null || password.length() < minLength) {
             throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
-                    "密码长度不能少于 " + minLength + " 个字符");
+                    new Object[]{"密码长度不能少于 " + minLength + " 个字符"});
         }
         if (password.length() > maxLength) {
             throw new BusinessException(UserInfoResultCode.PASSWORD_TOO_WEAK,
-                    "密码长度不能超过 " + maxLength + " 个字符");
+                    new Object[]{"密码长度不能超过 " + maxLength + " 个字符"});
         }
 
         int categoryCount = 0;

@@ -89,13 +89,16 @@ export const vA11yClick: Directive<HTMLElement, (e: Event) => void> = {
   },
 }
 
-// 扩展 HTMLElement 类型以存储 keydown 处理器引用
+/**
+ * 扩展 Vue 组件自定义属性类型，使 v-a11y-click 可在模板中识别
+ */
 declare module 'vue' {
   interface ComponentCustomProperties {
     vA11yClick: typeof vA11yClick
   }
 }
 
+/** 扩展 HTMLElement 类型以存储 keydown 处理器引用 */
 declare global {
   interface HTMLElement {
     __a11yKeyHandler__?: (e: KeyboardEvent) => void

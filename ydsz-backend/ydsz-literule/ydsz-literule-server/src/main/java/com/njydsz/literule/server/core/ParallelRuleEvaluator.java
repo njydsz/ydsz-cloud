@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -76,7 +77,7 @@ public class ParallelRuleEvaluator {
     private static final int DEFAULT_POOL_SIZE = Math.max(2, Runtime.getRuntime().availableProcessors());
 
     /** 线程池 */
-    private final ExecutorService executor;
+    private final Executor executor;
 
     /** 是否使用内部线程池（外部传入时为 false，不负责关闭） */
     private final boolean internalExecutor;
@@ -107,11 +108,11 @@ public class ParallelRuleEvaluator {
     }
 
     /**
-     * 使用外部线程池创建评估器
+     * 使用外部线程池创建评估器（common-thread 注入入口）
      *
      * @param executor 外部线程池（调用方负责关闭）
      */
-    public ParallelRuleEvaluator(ExecutorService executor) {
+    public ParallelRuleEvaluator(Executor executor) {
         this.executor = Objects.requireNonNull(executor, "executor 不能为 null");
         this.internalExecutor = false;
         log.info("[ParallelEval] 规则并行评估器已初始化（external executor）");
@@ -275,14 +276,14 @@ public class ParallelRuleEvaluator {
      * 关闭线程池（仅内部线程池）
      */
     public void shutdown() {
-        if (internalExecutor) {
-            executor.shutdown();
+        if (internalExecutor && executor instanceof ExecutorService es) {
+            es.shutdown();
             try {
-                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    executor.shutdownNow();
+                if (!es.awaitTermination(5, TimeUnit.SECONDS)) {
+                    es.shutdownNow();
                 }
             } catch (InterruptedException e) {
-                executor.shutdownNow();
+                es.shutdownNow();
                 Thread.currentThread().interrupt();
             }
             log.info("[ParallelEval] 线程池已关闭");

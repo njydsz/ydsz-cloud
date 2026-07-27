@@ -49,7 +49,7 @@ public class TrashController {
     }
 
     @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'restore'")
-    @Idempotent(key = "nextwiki:trash:restore", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:TrashController:restore:lock", ttlSeconds = 5)
     @PostMapping("/{trashItemId}/restore")
     @Operation(summary = "从回收站恢复")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
@@ -61,7 +61,7 @@ public class TrashController {
     }
 
     @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchRestore'")
-    @Idempotent(key = "nextwiki:trash:batchRestore", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:TrashController:batchRestore:lock", ttlSeconds = 5)
     @PostMapping("/batch-restore")
     @Operation(summary = "批量恢复")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
@@ -73,7 +73,7 @@ public class TrashController {
     }
 
     @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'purge'")
-    @Idempotent(key = "nextwiki:trash:purge", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:TrashController:purge:lock", ttlSeconds = 5)
     @DeleteMapping("/{trashItemId}")
     @Operation(summary = "永久删除")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_PURGE)
@@ -85,7 +85,7 @@ public class TrashController {
     }
 
     @Audit(module = "回收站", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'emptyTrash'")
-    @Idempotent(key = "nextwiki:trash:emptyTrash", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:TrashController:emptyTrash:lock", ttlSeconds = 5)
     @DeleteMapping("/empty")
     @Operation(summary = "清空回收站")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_EMPTY)

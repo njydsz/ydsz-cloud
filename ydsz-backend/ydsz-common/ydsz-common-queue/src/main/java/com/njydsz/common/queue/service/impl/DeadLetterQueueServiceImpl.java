@@ -20,11 +20,30 @@ import com.njydsz.common.json.YdszJson;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 死信队列服务实现类
- * <p>基于 Redis Hash 存储死信消息，提供重试、查询和统计能力
+ * 死信队列服务实现类。
+ *
+ * <p>基于 Redis Hash 存储死信消息，提供消息重试、查询和统计能力。
+ * 当消息消费失败超过最大重试次数后，由 {@link RedisStreamSubscriber#handleFailedMessage}
+ * 将消息转入死信队列，供后续人工排查或自动重试。
+ *
+ * <h3>存储结构</h3>
+ * <ul>
+ *   <li>死信消息：Redis Hash {@code ydsz:queue:dlq:{channel}}，field 为消息 ID，value 为 JSON</li>
+ *   <li>重试队列：Redis Hash {@code ydsz:queue:dlq:retry:{channel}}，存储待重试的死信消息</li>
+ * </ul>
+ *
+ * <h3>核心功能</h3>
+ * <ul>
+ *   <li>{@code sendToDeadLetter}：将失败消息写入死信队列</li>
+ *   <li>{@code retryMessage}：从死信队列取出消息重新投递到原队列</li>
+ *   <li>{@code queryDeadLetters}：分页查询死信消息（供管理后台使用）</li>
+ *   <li>{@code getStatistics}：统计死信消息数量、按通道分组</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see DeadLetterQueueService
+ * @see RedisStreamSubscriber
  */
 @Slf4j
 public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {

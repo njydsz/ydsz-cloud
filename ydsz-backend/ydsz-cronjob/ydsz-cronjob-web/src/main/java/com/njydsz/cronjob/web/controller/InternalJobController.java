@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 内部任务执行接口（P1-4 远程派发接收端）。
@@ -75,7 +76,7 @@ public class InternalJobController {
     @Operation(summary = "接收远程派发请求并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
     @SentinelRateLimit(resource = "cronjob.internaljob.execute", threshold = 50)
-    @SentinelRateLimit(resource = "cronjob.internaljob.execute", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:InternalJobController:execute:lock", ttlSeconds = 5)
     @PostMapping("/execute")
     public BaseResponse<String> execute(@RequestBody RemoteTaskRequest request) {
         if (request == null || request.getJob() == null) {
@@ -128,7 +129,7 @@ public class InternalJobController {
     @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
     @SentinelRateLimit(resource = "cronjob.internaljob.executeSubTask", threshold = 50)
-    @SentinelRateLimit(resource = "cronjob.internaljob.executeSubTask", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:InternalJobController:executeSubTask:lock", ttlSeconds = 5)
     @PostMapping("/executeSubTask")
     public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {

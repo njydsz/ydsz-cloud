@@ -40,20 +40,26 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class RateLimitServiceImpl implements RateLimitService {
 
+    /** 小时频率计数器 key 时间格式 */
     private static final DateTimeFormatter HOUR_FMT = DateTimeFormatter.ofPattern("yyyyMMddHH");
+    /** 日频率计数器 key 时间格式 */
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
+    /** Redis 令牌桶限流器（可选依赖，不可用时降级放行） */
     private final RedisRateLimiter rateLimiter;
+    /** Redis 基础服务（用于 INCR/EXPIRE 频率计数） */
     private final RedisService redisService;
+    /** 用户偏好服务（读取 hourlyLimit/dailyLimit） */
     private final PreferenceService preferenceService;
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
     public RateLimitServiceImpl(ObjectProvider<RedisRateLimiter> rateLimiterProvider,
-                                StringRedisTemplate stringRedisTemplate,
+                                RedisService redisService,
                                 PreferenceService preferenceService,
                                 MessageProperties messageProperties) {
         this.rateLimiter = rateLimiterProvider.getIfAvailable();
-        this.stringRedisTemplate = stringRedisTemplate;
+        this.redisService = redisService;
         this.preferenceService = preferenceService;
         this.messageProperties = messageProperties;
         if (this.rateLimiter == null) {
@@ -61,6 +67,15 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>委托 {@link RedisRateLimiter#tryAcquireTokenBucket} 令牌桶限流，
+     * rateLimiter 不可用或异常时降级放行（返回 true）。
+     *
+     * @param key     限流 key
+     * @param permits 请求令牌数
+     * @return true 表示获取令牌成功（允许发送），false 表示被限流
+     */
     @Override
     public boolean tryAcquire(String key, int permits) {
         if (key == null || key.isBlank() || permits <= 0) {
@@ -78,6 +93,16 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>从用户偏好读取 hourlyLimit/dailyLimit，使用 Redis INCR + EXPIRE 计数，
+     * 任一维度超限即返回 false。偏好未配置或 enabled=0 时跳过频率检查。
+     *
+     * @param userId  用户 ID
+     * @param channel 通道类型
+     * @param bizType 业务类型
+     * @return true 表示未超频（允许发送），false 表示频率超限
+     */
     @Override
     public boolean checkFrequency(String userId, String channel, String bizType) {
         if (userId == null || userId.isBlank()) {
@@ -112,6 +137,14 @@ public class RateLimitServiceImpl implements RateLimitService {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>同时递增小时和日频率计数器（Redis INCR + EXPIRE）。
+     *
+     * @param userId  用户 ID
+     * @param channel 通道类型
+     * @param bizType 业务类型
+     */
     @Override
     public void recordFrequency(String userId, String channel, String bizType) {
         if (userId == null || userId.isBlank()) {

@@ -30,8 +30,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class LanguageServiceImpl implements LanguageService {
 
+    /** 语言 Mapper */
     private final LanguageMapper mapper;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当语言不存在或已删除时抛出
+     */
     @Override
     public LanguageVO getById(String id) {
         LanguageDO entity = mapper.selectById(id);
@@ -41,6 +47,11 @@ public class LanguageServiceImpl implements LanguageService {
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部未删除语言列表（按 sortOrder 降序）
+     */
     @Override
     public List<LanguageVO> list() {
         LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
@@ -51,6 +62,10 @@ public class LanguageServiceImpl implements LanguageService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>status 默认 ENABLED。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(LanguageSaveDTO dto) {
@@ -64,6 +79,12 @@ public class LanguageServiceImpl implements LanguageService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id。
+     *
+     * @throws BusinessException 当语言不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(LanguageSaveDTO dto) {
@@ -75,6 +96,11 @@ public class LanguageServiceImpl implements LanguageService {
         return mapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当语言不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -85,6 +111,12 @@ public class LanguageServiceImpl implements LanguageService {
         return mapper.deleteById(id) > 0;
     }
 
+    /**
+     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象
+     */
     private LanguageVO toVO(LanguageDO entity) {
         LanguageVO vo = new LanguageVO();
         BeanUtils.copyProperties(entity, vo);

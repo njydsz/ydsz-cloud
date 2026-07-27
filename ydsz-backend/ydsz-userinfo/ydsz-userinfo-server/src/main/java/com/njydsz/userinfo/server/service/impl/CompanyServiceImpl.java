@@ -34,8 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
 
+    /** 公司 Mapper */
     private final CompanyMapper mapper;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当公司不存在或已删除时抛出
+     */
     @Override
     public CompanyVO getById(String id) {
         CompanyDO entity = mapper.selectById(id);
@@ -45,6 +51,11 @@ public class CompanyServiceImpl implements CompanyService {
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部未删除公司列表（按创建时间降序）
+     */
     @Override
     public List<CompanyVO> list() {
         LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
@@ -55,6 +66,12 @@ public class CompanyServiceImpl implements CompanyService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 companyCode 唯一性校验后插入，status 默认 ENABLED。
+     *
+     * @throws BusinessException 当 companyCode 已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(CompanySaveDTO dto) {
@@ -76,6 +93,12 @@ public class CompanyServiceImpl implements CompanyService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id。
+     *
+     * @throws BusinessException 当公司不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(CompanySaveDTO dto) {
@@ -87,6 +110,11 @@ public class CompanyServiceImpl implements CompanyService {
         return mapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当公司不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -125,6 +153,12 @@ public class CompanyServiceImpl implements CompanyService {
         return result;
     }
 
+    /**
+     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象
+     */
     private CompanyVO toVO(CompanyDO entity) {
         CompanyVO vo = new CompanyVO();
         BeanUtils.copyProperties(entity, vo);

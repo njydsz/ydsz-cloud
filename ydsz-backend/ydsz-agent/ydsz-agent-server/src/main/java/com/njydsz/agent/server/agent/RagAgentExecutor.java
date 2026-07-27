@@ -38,16 +38,26 @@ import com.njydsz.agent.server.rag.RagService;
  */
 public class RagAgentExecutor implements AgentExecutor {
 
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(RagAgentExecutor.class);
 
+    /** LLM 客户端 */
     private final LlmClient llmClient;
+    /** 对话记忆（历史消息加载/保存） */
     private final ConversationMemory memory;
+    /** Agent 配置属性 */
     private final AgentProperties properties;
+    /** RAG 检索服务（向量检索 + 全文检索 + RRF 融合） */
     private final RagService ragService;
+    /** 输入护栏列表 */
     private final List<InputGuardrail> inputGuardrails;
+    /** 输出护栏列表 */
     private final List<OutputGuardrail> outputGuardrails;
+    /** 链路追踪记录器 */
     private final TraceRecorder traceRecorder;
+    /** Agent 监控指标采集器 */
     private final AgentMetrics agentMetrics;
+    /** 成本分析服务（Token 用量核算） */
     private final CostAnalysisService costAnalysisService;
 
     public RagAgentExecutor(LlmClient llmClient, ConversationMemory memory,
@@ -68,6 +78,11 @@ public class RagAgentExecutor implements AgentExecutor {
         this.costAnalysisService = costAnalysisService;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>RAG 执行流程：输入护栏 → RAG 知识检索 → 构建增强 prompt（检索上下文 + System + 历史 + 用户）→
+     * LLM 调用 → 指标/成本/追踪埋点 → 输出护栏 → 保存对话记忆 → 返回响应。
+     */
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
@@ -148,6 +163,11 @@ public class RagAgentExecutor implements AgentExecutor {
                 response.getUsage(), response.getFinishReason(), List.of());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>RAG 流式执行流程：输入护栏 → RAG 知识检索 → 构建增强 prompt → LLM 流式调用（逐 chunk 推送）→
+     * 累积内容 → 输出护栏 → 保存对话记忆 → 追踪记录。
+     */
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
         String convId = request.getConversationId() != null

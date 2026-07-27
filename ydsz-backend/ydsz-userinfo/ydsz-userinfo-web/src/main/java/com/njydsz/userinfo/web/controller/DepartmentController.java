@@ -62,8 +62,7 @@ public class DepartmentController {
     @SentinelRateLimit(resource = "userinfo.department.create", threshold = 50)
     @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建部门: ' + #dto.deptName")
-    @Idempotent(key = "department:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.department.create", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:DepartmentController:create:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "创建部门")
     public BaseResponse<String> create(@Valid @RequestBody DepartmentSaveDTO dto) {
@@ -71,10 +70,9 @@ public class DepartmentController {
     }
 
     @SentinelRateLimit(resource = "userinfo.department.update", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.department.update", threshold = 50)
     @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新部门: ' + #dto.id")
-    @Idempotent(key = "department:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:userinfo:DepartmentController:update:lock", ttlSeconds = 5)
     @PutMapping
     @Operation(summary = "更新部门")
     public BaseResponse<Boolean> update(@Valid @RequestBody DepartmentSaveDTO dto) {
@@ -82,7 +80,7 @@ public class DepartmentController {
     }
 
     @SentinelRateLimit(resource = "userinfo.department.remove", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.department.remove", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:DepartmentController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除部门")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

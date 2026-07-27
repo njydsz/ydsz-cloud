@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 认证 Controller - 登录/登出/刷新 Token。
@@ -33,7 +34,7 @@ public class AuthController {
     private final AuthService authService;
 
     @SentinelRateLimit(resource = "userinfo.auth.login", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.auth.login", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:AuthController:login:lock", ttlSeconds = 5)
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "账号密码登录，返回 access_token 和 refresh_token")
     public BaseResponse<LoginVO> login(@Valid @RequestBody LoginDTO request) {
@@ -51,7 +52,7 @@ public class AuthController {
     }
 
     @SentinelRateLimit(resource = "userinfo.auth.refresh", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.auth.refresh", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:AuthController:refresh:lock", ttlSeconds = 5)
     @PostMapping("/refresh")
     @Operation(summary = "刷新 Token", description = "使用 refresh_token 获取新的 access_token")
     public BaseResponse<LoginVO> refresh(@RequestBody RefreshRequest request) {

@@ -10,6 +10,7 @@ import PageLayout from '@/components/common/PageLayout.vue'
 
 const { t } = useI18n()
 
+/** 报表加载状态 */
 const loading = ref(false)
 const dimensionOptions = [
   { label: '部门', value: 'DEPT' },
@@ -35,8 +36,10 @@ const query = reactive({
   metrics: [] as string[],
 })
 
+/** 图表数据 */
 const chartData = ref<any[]>([])
 
+/** 加载报表数据 */
 async function loadData() {
   loading.value = true
   try {

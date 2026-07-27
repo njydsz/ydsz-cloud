@@ -9,12 +9,23 @@ import com.njydsz.common.json.annotation.YdszJsonField;
 import com.njydsz.common.json.parser.YdszJsonParser;
 
 /**
- * @YdszJsonCreator 注解处理器
+ * {@link YdszJsonCreator} 注解处理器。
  *
- * <p>负责处理带 @YdszJsonCreator 注解的构造函数反序列化逻辑。</p>
+ * <p>负责处理带 {@code @YdszJsonCreator} 注解的构造函数反序列化逻辑。
+ * 当目标类没有默认无参构造函数时，通过注解标记的构造函数进行反序列化，
+ * 类似 Jackson 的 {@code @JsonCreator} 和 Gson 的 {@code @SerializedName} 机制。
+ *
+ * <h3>参数名解析策略</h3>
+ * <ol>
+ *   <li>优先使用 {@code @YdszJsonCreator(parameterNames=...)} 显式指定的参数名数组</li>
+ *   <li>降级为通过类字段名 + {@code @YdszJsonField} 注解映射 JSON 字段名</li>
+ * </ol>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see YdszJsonCreator
+ * @see BuilderResolver
+ * @see TypeConverter
  */
 final class CreatorResolver {
 
@@ -22,6 +33,15 @@ final class CreatorResolver {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 查找类上带 {@code @YdszJsonCreator} 注解的构造函数。
+     *
+     * <p>如果多个构造函数都标注了该注解，优先选择 {@code defaultCreator=true} 的构造函数。
+     * 其次选择最后遍历到的已标注构造函数。
+     *
+     * @param clazz 目标类
+     * @return 标注了 {@code @YdszJsonCreator} 且 {@code enable=true} 的构造函数，未找到返回 {@code null}
+     */
     static Constructor<?> findCreatorConstructor(Class<?> clazz) {
         Constructor<?>[] constructors = clazz.getDeclaredConstructors();
         Constructor<?> annotatedConstructor = null;
@@ -38,6 +58,21 @@ final class CreatorResolver {
         return annotatedConstructor;
     }
 
+    /**
+     * 使用带 {@code @YdszJsonCreator} 的构造函数进行反序列化。
+     *
+     * <p>解析流程：
+     * <ol>
+     *   <li>将 JSON 解析为 Map</li>
+     *   <li>如果注解指定了 {@code parameterNames}，按名称从 Map 中取值并转换类型后传参</li>
+     *   <li>否则降级为字段反射赋值 + Setter 方式创建实例</li>
+     *   <li>通过反射调用构造函数创建实例</li>
+     * </ol>
+     *
+     * @param json        JSON 字符串
+     * @param constructor 带注解的构造函数
+     * @return 反序列化后的实例，创建失败返回 {@code null}
+     */
     static Object deserializeWithCreator(String json, Constructor<?> constructor) {
         Map<String, Object> map = YdszJsonParser.parseObject(json);
         if (map == null || map.isEmpty()) {
@@ -93,6 +128,17 @@ final class CreatorResolver {
         }
     }
 
+    /**
+     * 通过无参构造函数创建实例，再通过字段反射逐个赋值。
+     *
+     * <p>字段名映射优先级：{@code @YdszJsonField(name)} > {@code @YdszJsonField(value)} > Java 字段名。
+     * 值通过 {@link TypeConverter#convertValue} 进行类型转换。
+     *
+     * @param map   JSON 解析后的字段 Map
+     * @param clazz 目标类
+     * @param <T>   目标类型
+     * @return 反序列化后的实例，创建失败返回 {@code null}
+     */
     static <T> T createInstanceWithSetters(Map<String, Object> map, Class<T> clazz) {
         try {
             Field[] fields = clazz.getDeclaredFields();
@@ -142,6 +188,15 @@ final class CreatorResolver {
         }
     }
 
+    /**
+     * 通过默认无参构造函数创建实例。
+     *
+     * <p>用于 JSON 为空或降级场景。构造函数通过反射调用，包含 {@code setAccessible(true)}。
+     *
+     * @param clazz 目标类
+     * @param <T>   目标类型
+     * @return 新实例，创建失败返回 {@code null}
+     */
     static <T> T createInstanceWithDefaultConstructor(Class<T> clazz) {
         try {
             Constructor<T> constructor = clazz.getDeclaredConstructor();

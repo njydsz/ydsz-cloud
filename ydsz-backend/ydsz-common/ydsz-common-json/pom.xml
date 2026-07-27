@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>ydsz-common-json</artifactId>
+    <packaging>jar</packaging>
     <name>ydsz-common-json</name>
     <description>YDSZ 公共依赖 - 高性能 JSON 序列化/反序列化引擎（YdszJson，零外部 JSON 库依赖）</description>
 

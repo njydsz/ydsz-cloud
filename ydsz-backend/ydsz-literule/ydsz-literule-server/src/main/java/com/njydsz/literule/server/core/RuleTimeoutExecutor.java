@@ -3,6 +3,7 @@ package com.njydsz.literule.server.core;
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +29,10 @@ public class RuleTimeoutExecutor {
     private final long defaultTimeoutMs;
 
     /** 独立的执行器线程池（避免拖垮主线程池） */
-    private final ExecutorService executor;
+    private final Executor executor;
+
+    /** 是否由本实例管理线程池生命周期（外部传入时不负责关闭） */
+    private final boolean ownsExecutor;
 
     /**
      * 构造超时执行器
@@ -38,13 +42,24 @@ public class RuleTimeoutExecutor {
      */
     public RuleTimeoutExecutor(long defaultTimeoutMs, int threadPoolSize) {
         this.defaultTimeoutMs = defaultTimeoutMs;
-        // P0-1 TODO: 迁移到 common-thread 统一管理（ydsz.thread.pools.ruleTimeout）
-        // 当前保留手动创建是因为 RuleTimeoutExecutor 非 Spring Bean，由 DefaultRuleEngine 编程式创建
         this.executor = Executors.newFixedThreadPool(Math.max(2, threadPoolSize), r -> {
             Thread t = new Thread(r, "literule-timeout-exec");
             t.setDaemon(true);
             return t;
         });
+        this.ownsExecutor = true;
+    }
+
+    /**
+     * 使用外部线程池构造超时执行器（common-thread 注入入口）
+     *
+     * @param defaultTimeoutMs 默认超时（毫秒）；0 表示不限制
+     * @param executor        外部线程池（由调用方管理生命周期）
+     */
+    public RuleTimeoutExecutor(long defaultTimeoutMs, Executor executor) {
+        this.defaultTimeoutMs = defaultTimeoutMs;
+        this.executor = java.util.Objects.requireNonNull(executor, "executor 不能为 null");
+        this.ownsExecutor = false;
     }
 
     /**
@@ -100,14 +115,19 @@ public class RuleTimeoutExecutor {
      * 关闭线程池
      */
     public void shutdown() {
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
+        if (!ownsExecutor) {
+            return;
+        }
+        if (executor instanceof ExecutorService es) {
+            es.shutdown();
+            try {
+                if (!es.awaitTermination(5, TimeUnit.SECONDS)) {
+                    es.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                es.shutdownNow();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            executor.shutdownNow();
         }
         log.info("[LiteRule-Timeout] 超时执行器已关闭");
     }

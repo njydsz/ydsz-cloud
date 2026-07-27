@@ -60,8 +60,7 @@ public class FlowCommentController {
      * @param dto 评论参数
      * @return 统一响应结果，包含新评论 ID
      */
-    @Idempotent(key = "flowComment:addComment", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcomment.addComment", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCommentController:addComment:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcomment.addComment", threshold = 50)
     @PostMapping
     @Operation(summary = "发表评论/回复")
@@ -117,8 +116,7 @@ public class FlowCommentController {
      * @param commentId 评论 ID
      * @return 统一响应结果，包含是否删除成功
      */
-    @Idempotent(key = "flowComment:deleteComment", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcomment.deleteComment", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCommentController:deleteComment:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcomment.deleteComment", threshold = 50)
     @DeleteMapping("/{commentId}")
     @Operation(summary = "删除评论（仅本人）")

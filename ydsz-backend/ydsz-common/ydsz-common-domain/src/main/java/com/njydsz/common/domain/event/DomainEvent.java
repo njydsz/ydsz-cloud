@@ -8,14 +8,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEvent;
+
 import com.njydsz.common.core.context.RequestContext;
 
 /**
- * 领域事件基类
+ * 领域事件基类 — 模块间事件契约的基础。
  *
- * <p>在领域驱动设计（DDD）中，领域事件（Domain Event）表示领域中已经发生的事情，
- * 具有业务含义的重要事情。领域事件用于实现聚合之间的解耦通信，
- * 以及将副作用从核心业务逻辑中分离出来。
+ * <p>继承 Spring {@link ApplicationEvent}，可直接通过 {@code ApplicationEventPublisher}
+ * 发布并由 {@code @EventListener} 消费。在领域驱动设计（DDD）中，领域事件表示
+ * 领域中已经发生、具有业务含义的重要事情，用于实现聚合之间的解耦通信。
  *
  * <p><b>核心语义：</b>
  * <ul>
@@ -23,7 +25,11 @@ import com.njydsz.common.core.context.RequestContext;
  *   <li><b>不可变性：</b>领域事件一旦创建，其状态不可改变</li>
  *   <li><b>业务含义：</b>领域事件应表达明确的业务语义，而非技术细节</li>
  *   <li><b>上下文感知：</b>自动携带租户、用户、追踪等上下文元数据</li>
+ *   <li><b>跨模块契约：</b>所有跨模块事件均应继承本类，确保统一的元数据字段</li>
  * </ul>
+ *
+ * <p><b>P2-1</b>：本类现在继承 {@link ApplicationEvent}，使所有领域事件可直接被
+ * Spring 事件系统消费。跨模块事件类型常量定义在 {@link ModuleEventTypes}。
  *
  * <p><b>创建方式：</b>
  * 推荐使用 Builder 模式创建领域事件，自动填充 eventId、occurredAt 和上下文元数据：
@@ -55,7 +61,7 @@ import com.njydsz.common.core.context.RequestContext;
  * @since 1.0.0
  *
  */
-public class DomainEvent implements Serializable {
+public class DomainEvent extends ApplicationEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -157,6 +163,7 @@ public class DomainEvent implements Serializable {
                        String aggregateId, String aggregateType, int version,
                        String tenantId, String userId, String traceId,
                        Map<String, Object> metadata) {
+        super(eventType);
         this.eventId = eventId;
         this.occurredAt = occurredAt;
         this.eventType = eventType;

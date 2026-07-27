@@ -36,7 +36,7 @@ export interface RoleQuery extends PageQuery {
 /** 角色表单 DTO（新增/编辑共用） */
 export interface RoleFormDTO {
   /** 角色 ID（编辑时必填） */
-  id?: number
+  id?: string
   /** 角色编码 */
   roleCode: string
   /** 角色名称 */

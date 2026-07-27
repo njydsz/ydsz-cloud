@@ -18,6 +18,10 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
         <dependency>
@@ -44,6 +48,11 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -55,8 +55,7 @@ public class FlowCustomButtonController {
      * @param buttons      按钮配置列表
      * @return 空响应
      */
-    @Idempotent(key = "flowCustomButton:save", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowcustombutton.save", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowCustomButtonController:save:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowcustombutton.save", threshold = 50)
     @PostMapping
     @Operation(summary = "保存节点的自定义按钮配置")
@@ -77,7 +76,7 @@ public class FlowCustomButtonController {
      * @param variables 流程变量（可选）
      * @return 按钮执行结果
      */
-    @Idempotent(key = "flowCustomButton:execute", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowCustomButtonController:execute:lock", ttlSeconds = 5)
     @PostMapping("/execute")
     @Operation(summary = "执行自定义按钮操作")
     public BaseResponse<Map<String, Object>> execute(

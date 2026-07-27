@@ -46,9 +46,8 @@ public class JobWebhookController {
      */
     @Operation(summary = "新增 WebHook 订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @Idempotent(key = "jobWebhook:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:cronjob:JobWebhookController:create:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
     @SentinelRateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@RequestBody JobWebhookDO webhook) {
@@ -71,9 +70,8 @@ public class JobWebhookController {
      */
     @Operation(summary = "更新 WebHook 订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @Idempotent(key = "jobWebhook:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:cronjob:JobWebhookController:update:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
     @SentinelRateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
     @PutMapping
     public BaseResponse<Void> update(@RequestBody JobWebhookDO webhook) {
@@ -90,9 +88,8 @@ public class JobWebhookController {
      */
     @Operation(summary = "删除 WebHook 订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @Idempotent(key = "jobWebhook:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:cronjob:JobWebhookController:delete:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.delete", threshold = 50)
     @SentinelRateLimit(resource = "cronjob.jobwebhook.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -150,9 +147,8 @@ public class JobWebhookController {
      */
     @Operation(summary = "测试 WebHook 推送")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
-    @Idempotent(key = "jobWebhook:testWebhook", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:cronjob:JobWebhookController:testWebhook:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'testWebhook'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.testWebhook", threshold = 50)
     @SentinelRateLimit(resource = "cronjob.jobwebhook.testWebhook", threshold = 50)
     @PostMapping("/{id}/test")
     public BaseResponse<Void> testWebhook(@PathVariable String id) {

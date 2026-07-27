@@ -19,6 +19,7 @@ import com.njydsz.system.server.service.AppInfoService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 应用注册 Service 实现。
@@ -33,16 +34,31 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AppInfoServiceImpl implements AppInfoService {
 
+    /** 应用注册 Mapper */
     private final AppInfoMapper mapper;
+    /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
+    /** BCrypt 密码编码器，用于 appSecret 加密存储 */
     private final BCryptPasswordEncoder passwordEncoder;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public AppInfoVO getById(String id) {
         AppInfoDO entity = mapper.selectById(id);
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>通过 BCrypt 校验 appSecret 与数据库存储的密钥哈希是否匹配。
+     * 校验结果同时上报 Micrometer 指标（成功/失败计数）。
+     *
+     * @param appKey   应用 Key
+     * @param appSecret 应用密钥明文
+     * @return true 表示校验通过
+     */
     @Override
     public boolean validateClient(String appKey, String appSecret) {
         AppInfoDO app = mapper.selectEnabledByAppKey(appKey);
@@ -67,6 +83,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public IPage<AppInfoVO> page(int pageNum, int pageSize, String appName, String status) {
         QueryWrapper<AppInfoDO> wrapper = new QueryWrapper<>();
         if (appName != null && !appName.isBlank()) {
@@ -84,10 +101,17 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<AppInfoVO> list() {
         return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 appKey 唯一性校验，appSecret 非空时自动 BCrypt 加密后存储。
+     *
+     * @throws IllegalArgumentException 当 appKey 已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(AppInfoDTO dto) {
@@ -105,6 +129,11 @@ public class AppInfoServiceImpl implements AppInfoService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>appSecret 非空时 BCrypt 加密后更新；为空时跳过密钥字段（设为 null，
+     * MyBatis-Plus NOT_NULL 策略自动跳过），保持原密钥不变。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(AppInfoDTO dto) {

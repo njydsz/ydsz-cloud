@@ -85,5 +85,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
+        <!-- P2-3: 统一文件存储接入 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-file</artifactId>
+        </dependency>
 </dependencies>
 </project>

@@ -110,8 +110,7 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "暂停 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @Idempotent(key = "jobDagInstance:pauseInstance", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.pauseInstance", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:pauseInstance:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.jobdaginstance.pauseInstance", threshold = 50)
     @PutMapping("/{instanceId}/pause")
     public BaseResponse<Void> pauseInstance(@PathVariable String instanceId) {
@@ -127,8 +126,7 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "恢复 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @Idempotent(key = "jobDagInstance:resumeInstance", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.resumeInstance", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:resumeInstance:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.jobdaginstance.resumeInstance", threshold = 50)
     @PutMapping("/{instanceId}/resume")
     public BaseResponse<Void> resumeInstance(@PathVariable String instanceId) {
@@ -144,8 +142,7 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "取消 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @Idempotent(key = "jobDagInstance:cancelInstance", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.cancelInstance", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:cancelInstance:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.jobdaginstance.cancelInstance", threshold = 50)
     @PutMapping("/{instanceId}/cancel")
     public BaseResponse<Void> cancelInstance(@PathVariable String instanceId) {
@@ -162,8 +159,7 @@ public class JobDagInstanceController {
      */
     @Operation(summary = "更新 DAG 实例上下文")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
-    @Idempotent(key = "jobDagInstance:updateContext", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.updateContext", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:updateContext:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.jobdaginstance.updateContext", threshold = 50)
     @PutMapping("/{instanceId}/context")
     public BaseResponse<Void> updateContext(@PathVariable String instanceId, @RequestBody String contextJson) {

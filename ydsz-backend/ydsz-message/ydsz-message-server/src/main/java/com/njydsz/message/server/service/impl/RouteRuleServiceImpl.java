@@ -54,6 +54,12 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     /** Redis 模板（路由规则缓存） */
     private final RedisService redisService;
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 ruleCode 唯一性校验后插入，并清除路由规则缓存。
+     *
+     * @throws SysException 当 ruleCode 为空或已存在时抛出
+     */
     @Override
     public MsgRouteRuleDO create(RouteRuleUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getRuleCode())) {
@@ -73,6 +79,12 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>仅更新非 null 字段（动态更新），更新后清除路由规则缓存。
+     *
+     * @throws SysException 当 id 或 dto 为空时抛出
+     */
     @Override
     public MsgRouteRuleDO update(String id, RouteRuleUpsertDTO dto) {
         if (!StringUtils.hasText(id) || dto == null) {
@@ -114,6 +126,12 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>删除后清除路由规则缓存。
+     *
+     * @throws SysException 当 id 为空时抛出
+     */
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
@@ -123,6 +141,11 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         evictCache();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws SysException 当 id 为空时抛出
+     */
     @Override
     public MsgRouteRuleDO getById(String id) {
         if (!StringUtils.hasText(id)) {

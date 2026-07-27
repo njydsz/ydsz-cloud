@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author ydsz-team
  */
 @FeignClient(name = "ydsz-system", contextId = "appInfoClient",
-        fallbackFactory = AppInfoClientFallback.class)
+        fallback = AppInfoClientFallback.class)
 public interface AppInfoClient {
 
     @PostMapping("/api/internal/app/validate")

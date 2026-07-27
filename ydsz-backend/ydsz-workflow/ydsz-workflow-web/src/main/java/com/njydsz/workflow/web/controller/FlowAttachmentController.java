@@ -71,8 +71,7 @@ public class FlowAttachmentController {
      * @param operatorId   操作人 ID
      * @return 空响应
      */
-    @Idempotent(key = "flowAttachment:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowattachment.delete", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAttachmentController:delete:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowattachment.delete", threshold = 50)
     @DeleteMapping("/attachment/{attachmentId}")
     public BaseResponse<Void> delete(@PathVariable String attachmentId,

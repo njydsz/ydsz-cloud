@@ -7,7 +7,7 @@
 
 export interface TimeEntryVO {
   /** 工时记录 ID */
-  id: number
+  id: string
   /** 填报日期（YYYY-MM-DD） */
   entryDate: string
   /** 员工 ID */
@@ -79,7 +79,7 @@ export interface TimeEntryCreateDTO {
 
 export interface TimeEntryApprovalDTO {
   /** 工时记录 ID */
-  id: number
+  id: string
   /** 审批人 ID */
   approverId: number
   /** 审批人姓名 */

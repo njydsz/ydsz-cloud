@@ -103,6 +103,12 @@ public class CookieUtils {
 
     /**
      * 添加会话 cookie（浏览器关闭即失效）
+     *
+     * @param name     Cookie 名称
+     * @param value    Cookie 值
+     * @param path     路径
+     * @param request  HTTP 请求
+     * @param response HTTP 响应
      */
     public static void addSessionCookie(String name, String value, String path,
                                         HttpServletRequest request, HttpServletResponse response) {
@@ -116,7 +122,11 @@ public class CookieUtils {
     }
 
     /**
-     * 清除 cookie
+     * 清除指定名称的 cookie
+     *
+     * @param name     Cookie 名称
+     * @param path     路径
+     * @param response HTTP 响应
      */
     public static void removeCookie(String name, String path, HttpServletResponse response) {
         if (StringUtils.isEmpty(name) || response == null) {
@@ -131,6 +141,9 @@ public class CookieUtils {
 
     /**
      * 清除所有 cookie
+     *
+     * @param request  HTTP 请求
+     * @param response HTTP 响应
      */
     public static void removeAllCookies(HttpServletRequest request, HttpServletResponse response) {
         if (request == null || response == null) {

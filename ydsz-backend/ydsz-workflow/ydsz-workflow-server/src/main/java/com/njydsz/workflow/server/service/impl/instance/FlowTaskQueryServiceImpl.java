@@ -25,6 +25,7 @@ import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 待办任务 — 查询类 Service 实现
@@ -84,6 +85,7 @@ public class FlowTaskQueryServiceImpl {
     /**
      * 查用户的待办
      */
+    @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
     public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
@@ -98,6 +100,7 @@ public class FlowTaskQueryServiceImpl {
      * @param deptIds   用户所属部门 ID（字符串形式，可空）
      * @param tenantId  租户 ID（可空，默认 "1"）
      */
+    @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
     public List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
                                             List<String> deptIds, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
@@ -133,6 +136,7 @@ public class FlowTaskQueryServiceImpl {
     /**
      * 查用户的已办
      */
+    @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
     public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
         // P0-3: 改查历史表
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取

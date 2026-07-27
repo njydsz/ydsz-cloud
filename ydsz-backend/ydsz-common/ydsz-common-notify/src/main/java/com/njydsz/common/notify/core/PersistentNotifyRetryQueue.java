@@ -10,13 +10,28 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
- * 持久化重试队列（优先 Redis，自动降级内存）
+ * 持久化重试队列（优先 Redis，自动降级内存）。
  *
- * <p>内部优先使用 Redis；当 Redis 不可用时自动降级到内置内存队列，保障服务可用性。
- * <p>超过最大重试次数的消息自动移入死信队列（P0-2）。
+ * <p>内部优先使用 Redis List 存储待重试消息；当 Redis 不可用时自动降级到
+ * 内置 {@link ArrayBlockingQueue} 内存队列，保障服务可用性。
+ * 超过最大重试次数的消息自动移入死信队列。
+ *
+ * <h3>重试流程</h3>
+ * <ol>
+ *   <li>消息发送失败后调用 {@code enqueue} 加入重试队列</li>
+ *   <li>后台定时线程以固定间隔 {@code poll} 取出消息重新发送</li>
+ *   <li>发送成功则移除；失败则重试次数 +1 后重新入队</li>
+ *   <li>重试次数超过 {@code maxRetries} 后移入死信队列</li>
+ * </ol>
+ *
+ * <h3>Redis 降级探测</h3>
+ * <p>Redis 操作异常后，进入降级模式使用内存队列。定时（30s）探测 Redis 恢复，
+ * 恢复后将内存队列中的消息刷回 Redis。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see NotifyRetryQueue
+ * @see InMemoryDeadLetterHandler
  */
 public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
 

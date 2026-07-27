@@ -52,13 +52,46 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Sentry 自动配置
+ * Sentry 可观测性模块自动配置。
  *
- * <p>自动装配指标采集、日志发布、链路追踪、告警收敛、SLA 框架等组件。
- * 支持通过配置快速切换 ELK / Loki 双方案。
+ * <p>自动装配以下核心组件（均通过 {@code @ConditionalOnMissingBean} 支持覆盖）：
+ *
+ * <h3>指标采集层</h3>
+ * <ul>
+ *   <li>{@link MicrometerMetricsCollector}：Micrometer 指标采集（优先）</li>
+ *   <li>{@link InMemoryMetricsCollector}：内存指标采集（降级）</li>
+ *   <li>{@link SystemMetricsCollector}：系统资源指标（CPU/内存/磁盘/GC）</li>
+ * </ul>
+ *
+ * <h3>日志发布层</h3>
+ * <ul>
+ *   <li>{@link ElkLogPublisher}：ELK + Logstash TCP/UDP 推送</li>
+ *   <li>{@link LokiLogPublisher}：Loki HTTP 推送</li>
+ *   <li>{@link DualLogPublisher}：双发模式（ELK + Loki 同时推送）</li>
+ *   <li>{@link AsyncLogPublisher}：异步发布包装器（有界队列 + 降级）</li>
+ * </ul>
+ *
+ * <h3>链路追踪层</h3>
+ * <ul>
+ *   <li>{@link SkyWalkingTraceContext}：SkyWalking 链路追踪（优先）</li>
+ *   <li>{@link OpenTelemetryTraceContext}：OpenTelemetry 链路追踪</li>
+ *   <li>{@link DefaultTraceContext}：默认 MDC 链路追踪（降级）</li>
+ *   <li>{@link SlowTraceDetector}：慢追踪检测与告警</li>
+ * </ul>
+ *
+ * <h3>告警与 SLA 层</h3>
+ * <ul>
+ *   <li>{@link AlertConverger}：告警收敛（时间窗口 + 去重 + 静默期）</li>
+ *   <li>{@link DefaultAlertPublisher}：告警发布</li>
+ *   <li>{@link NotifyAlertHandler}：告警 → IM 通知桥接</li>
+ *   <li>{@link DefaultSlaCollector} + {@link SlaMetricAspect}：SLA 指标采集 AOP</li>
+ * </ul>
+ *
+ * <p>支持通过 {@code ydsz.sentry.*} 配置快速切换 ELK / Loki 双方案。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see SentryProperties
  */
 @Slf4j
 @AutoConfiguration

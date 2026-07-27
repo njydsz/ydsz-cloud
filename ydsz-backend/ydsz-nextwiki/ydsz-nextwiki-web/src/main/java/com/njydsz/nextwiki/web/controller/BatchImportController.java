@@ -37,7 +37,7 @@ public class BatchImportController {
     private final BatchImportApplicationService batchImportService;
 
     @Audit(module = "批量导入", type = AuditType.DATA, action = AuditAction.CREATE, content = "'batchUpload'")
-    @Idempotent(key = "nextwiki:import:batchUpload", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:BatchImportController:batchUpload:lock", ttlSeconds = 5)
     @PostMapping("/batch-upload")
     @Operation(summary = "批量上传文件")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)
@@ -49,7 +49,7 @@ public class BatchImportController {
     }
 
     @Audit(module = "批量导入", type = AuditType.DATA, action = AuditAction.CREATE, content = "'importZip'")
-    @Idempotent(key = "nextwiki:import:importZip", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:BatchImportController:importZip:lock", ttlSeconds = 5)
     @PostMapping("/zip")
     @Operation(summary = "从 ZIP 压缩包导入")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)

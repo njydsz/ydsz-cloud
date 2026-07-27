@@ -44,7 +44,7 @@ public class ShareController {
     private final ShareApplicationService shareApplicationService;
 
     @Audit(module = "分享管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createShare'")
-    @Idempotent(key = "nextwiki:share:createShare", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:ShareController:createShare:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "创建分享链接")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
@@ -63,8 +63,7 @@ public class ShareController {
     }
 
     @Audit(module = "分享管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'verifyAccess'")
-    @Idempotent(key = "nextwiki:share:verifyAccess", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "nextwiki.share.verifyAccess", threshold = 50)
+    @Idempotent(key = "ydsz:nextwiki:ShareController:verifyAccess:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "nextwiki.share.verifyAccess", threshold = 50)
     @PostMapping("/verify")
     @Operation(summary = "验证分享链接访问权限")
@@ -78,7 +77,7 @@ public class ShareController {
     }
 
     @Audit(module = "分享管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'revoke'")
-    @Idempotent(key = "nextwiki:share:revoke", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:ShareController:revoke:lock", ttlSeconds = 5)
     @DeleteMapping("/{shareId}")
     @Operation(summary = "撤销分享")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_REVOKE)

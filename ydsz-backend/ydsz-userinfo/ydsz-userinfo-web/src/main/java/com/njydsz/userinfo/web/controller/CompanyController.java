@@ -2,6 +2,9 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 公司 Controller。
@@ -49,7 +53,7 @@ public class CompanyController {
     }
 
     @SentinelRateLimit(resource = "userinfo.company.create", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.company.create", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:CompanyController:create:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "创建公司")
     public BaseResponse<String> create(@Valid @RequestBody CompanySaveDTO dto) {
@@ -58,8 +62,7 @@ public class CompanyController {
 
     @Audit(module = "公司管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新公司: ' + #dto.id")
-    @Idempotent(key = "company:update", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.company.update", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:CompanyController:update:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.company.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新公司")
@@ -70,7 +73,7 @@ public class CompanyController {
     @Audit(module = "公司管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除公司: ' + #id")
     @SentinelRateLimit(resource = "userinfo.company.remove", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.company.remove", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:CompanyController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除公司")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

@@ -5,17 +5,31 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 /**
- * Pipeline 操作实现类
+ * Pipeline 操作实现类。
  *
- * <p>基于底层 RedisConnection 实现 RedisPipelineOps 接口，
+ * <p>基于底层 {@link RedisConnection} 实现 {@link RedisPipelineOps} 接口，
  * 提供 Pipeline 模式下的简化操作。
+ *
+ * <h3>设计说明</h3>
+ * <p>在 Redis Pipeline 模式下，所有命令通过同一个 {@link RedisConnection} 发送，
+ * 不等待单个命令的响应，而是批量发送后统一接收结果。
+ * 本类将 RedisTemplate 的序列化器与底层 Connection 的 byte[] 操作桥接，
+ * 确保序列化行为与 RedisTemplate 一致。
+ *
+ * <h3>使用方式</h3>
+ * <p>必须在 {@code RedisTemplate.executePipelined()} 回调内使用，
+ * 构造时传入回调中的 {@link RedisConnection}。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see RedisPipelineOps
+ * @see RedisTemplate#executePipelined(org.springframework.data.redis.core.RedisCallback)
  */
 public class RedisPipelineOpsImpl implements RedisPipelineOps {
 
+    /** Redis 模板，提供序列化器 */
     private final RedisTemplate<String, Object> redisTemplate;
+    /** Pipeline 模式下的底层 Redis 连接 */
     private final RedisConnection connection;
 
     public RedisPipelineOpsImpl(RedisTemplate<String, Object> redisTemplate, RedisConnection connection) {

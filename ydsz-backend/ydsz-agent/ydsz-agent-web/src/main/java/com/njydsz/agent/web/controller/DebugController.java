@@ -19,6 +19,9 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.trace.TraceRecorder.TraceStep;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder.TraceMeta;
 import com.njydsz.agent.server.debug.AgentDebuggerService;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 
@@ -99,8 +102,9 @@ public class DebugController {
      * @param traceId 链路 ID
      * @return 重放结果内容
      */
-    @Idempotent(key = "agent:debug:replayTrace", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "agent.debug.replayTrace", threshold = 50)
+    @Audit(module = "调试管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
+            content = "'replayTrace: ' + #traceId")
+    @Idempotent(key = "ydsz:agent:DebugController:replayTrace:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "agent.debug.replayTrace", threshold = 50)
     @PostMapping("/trace/{traceId}/replay")
     public BaseResponse<String> replayTrace(@PathVariable String traceId) {

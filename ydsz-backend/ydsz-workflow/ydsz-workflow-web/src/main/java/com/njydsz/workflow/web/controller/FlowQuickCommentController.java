@@ -59,8 +59,7 @@ public class FlowQuickCommentController {
      * @param dto 常用语信息
      * @return 新建常用语 ID
      */
-    @Idempotent(key = "flowQuickComment:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.create", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:create:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowquickcomment.create", threshold = 50)
     @PostMapping
     @Operation(summary = "新增常用语")
@@ -76,8 +75,7 @@ public class FlowQuickCommentController {
      * @param dto 常用语信息
      * @return 空响应
      */
-    @Idempotent(key = "flowQuickComment:update", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.update", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:update:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowquickcomment.update", threshold = 50)
     @PutMapping
     @Operation(summary = "编辑常用语")
@@ -93,8 +91,7 @@ public class FlowQuickCommentController {
      * @param id 常用语 ID
      * @return 空响应
      */
-    @Idempotent(key = "flowQuickComment:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.delete", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:delete:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowquickcomment.delete", threshold = 50)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除常用语")
@@ -110,8 +107,7 @@ public class FlowQuickCommentController {
      * @param id 常用语 ID
      * @return 空响应
      */
-    @Idempotent(key = "flowQuickComment:incrementUseCount", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.incrementUseCount", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:incrementUseCount:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowquickcomment.incrementUseCount", threshold = 50)
     @PostMapping("/{id}/use")
     @Operation(summary = "增加使用次数（审批时调用）")

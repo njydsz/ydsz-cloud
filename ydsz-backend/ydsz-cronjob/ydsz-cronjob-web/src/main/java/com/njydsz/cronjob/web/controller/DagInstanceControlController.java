@@ -47,8 +47,7 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示暂停成功
      */
     @Operation(summary = "暂停 DAG 实例")
-    @Idempotent(key = "dagInstanceControl:pause", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.pause", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:pause:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.daginstancecontrol.pause", threshold = 50)
     @PostMapping("/{instanceId}/pause")
     public BaseResponse<Boolean> pause(@PathVariable String instanceId) {
@@ -63,8 +62,7 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示恢复成功
      */
     @Operation(summary = "恢复 DAG 实例")
-    @Idempotent(key = "dagInstanceControl:resume", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.resume", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:resume:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.daginstancecontrol.resume", threshold = 50)
     @PostMapping("/{instanceId}/resume")
     public BaseResponse<Boolean> resume(@PathVariable String instanceId) {
@@ -79,8 +77,7 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示取消成功
      */
     @Operation(summary = "取消 DAG 实例")
-    @Idempotent(key = "dagInstanceControl:cancel", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.cancel", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:cancel:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.daginstancecontrol.cancel", threshold = 50)
     @PostMapping("/{instanceId}/cancel")
     public BaseResponse<Boolean> cancel(@PathVariable String instanceId) {
@@ -96,8 +93,7 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示重试成功
      */
     @Operation(summary = "手动重试指定失败节点")
-    @Idempotent(key = "dagInstanceControl:retryNode", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.retryNode", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:retryNode:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "cronjob.daginstancecontrol.retryNode", threshold = 50)
     @PostMapping("/{instanceId}/retryNode")
     public BaseResponse<Boolean> retryNode(@PathVariable String instanceId,

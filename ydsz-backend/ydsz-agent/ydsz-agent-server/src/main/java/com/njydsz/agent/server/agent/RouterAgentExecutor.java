@@ -29,12 +29,18 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  */
 public class RouterAgentExecutor implements AgentExecutor {
 
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(RouterAgentExecutor.class);
 
+    /** LLM 客户端（用于意图分类） */
     private final LlmClient llmClient;
+    /** Agent 配置属性 */
     private final AgentProperties properties;
+    /** Agent 工厂（用于创建路由到的子执行器） */
     private final AgentFactory agentFactory;
+    /** 链路追踪记录器 */
     private final TraceRecorder traceRecorder;
+    /** Agent 监控指标采集器 */
     private final AgentMetrics agentMetrics;
 
     public RouterAgentExecutor(LlmClient llmClient, AgentProperties properties,
@@ -48,6 +54,11 @@ public class RouterAgentExecutor implements AgentExecutor {
         this.agentMetrics = agentMetrics;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>路由流程：LLM 意图分类 → 创建子 Agent 执行器 → 委托执行 → 追踪记录。
+     * 意图分类失败时降级到 CHAT 类型。
+     */
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
@@ -79,6 +90,11 @@ public class RouterAgentExecutor implements AgentExecutor {
         return response;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>流式路由流程：LLM 意图分类 → 创建子 Agent 执行器 → 委托流式执行 → 追踪记录。
+     * 委托给路由到的子执行器的 executeStream 方法，实现真正的流式输出。
+     */
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
         String convId = request.getConversationId() != null
@@ -109,16 +125,32 @@ public class RouterAgentExecutor implements AgentExecutor {
         traceRecorder.endTrace(traceId, "SUCCESS");
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return "router"
+     */
     @Override
     public String getType() {
         return "router";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean supports(String type) {
         return "router".equalsIgnoreCase(type);
     }
 
+    /**
+     * 使用 LLM 分析用户输入意图，返回最适合的 Agent 类型。
+     * <p>构造意图分类 prompt（CHAT/REACT/RAG/PLAN_EXECUTE），设置 temperature=0 确保确定性输出。
+     * LLM 调用失败时降级返回 "CHAT"。
+     *
+     * @param userInput 用户输入文本
+     * @return Agent 类型名称（CHAT / REACT / RAG / PLAN_EXECUTE）
+     */
     private String routeIntent(String userInput) {
         String routingPrompt = """
                 你是 YDSZ 智能助手的路由器。请分析用户意图，选择最合适的 Agent 类型。

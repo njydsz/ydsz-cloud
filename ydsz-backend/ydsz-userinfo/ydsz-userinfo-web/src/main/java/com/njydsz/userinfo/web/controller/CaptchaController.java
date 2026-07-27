@@ -16,6 +16,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 验证码 Controller。
@@ -43,7 +44,7 @@ public class CaptchaController {
     }
 
     @SentinelRateLimit(resource = "userinfo.captcha.validate", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.captcha.validate", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:CaptchaController:validate:lock", ttlSeconds = 5)
     @PostMapping("/validate")
     @Operation(summary = "校验验证码", description = "校验用户输入的验证码")
     public BaseResponse<Boolean> validate(

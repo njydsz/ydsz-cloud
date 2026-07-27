@@ -72,7 +72,7 @@ public class FlowEventController {
      * @param tenantId       租户 ID（可选）
      * @return 触发的订阅数量
      */
-    @Idempotent(key = "flowEvent:correlateMessage", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowEventController:correlateMessage:lock", ttlSeconds = 5)
     @PostMapping("/event/correlateMessage")
     public BaseResponse<Integer> correlateMessage(
             @RequestParam String messageName,
@@ -95,7 +95,7 @@ public class FlowEventController {
      * @param tenantId   租户 ID（可选）
      * @return 触发的订阅数量
      */
-    @Idempotent(key = "flowEvent:throwError", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowEventController:throwError:lock", ttlSeconds = 5)
     @PostMapping("/event/throwError")
     public BaseResponse<Integer> throwError(
             @RequestParam String errorCode,

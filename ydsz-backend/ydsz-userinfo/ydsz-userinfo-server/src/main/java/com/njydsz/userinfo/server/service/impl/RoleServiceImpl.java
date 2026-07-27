@@ -30,6 +30,7 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 角色 Service 实现。
@@ -44,10 +45,18 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
+    /** 角色 Mapper */
     private final RoleMapper roleMapper;
+    /** 角色-权限关联 Mapper */
     private final RolePermissionMapper rolePermissionMapper;
+    /** 用户-角色关联 Mapper（用于删除前检查是否有用户关联） */
     private final UserRoleMapper userRoleMapper;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当角色不存在或已删除时抛出
+     */
     @Override
     public RoleVO getById(String id) {
         RoleDO entity = roleMapper.selectById(id);
@@ -57,7 +66,12 @@ public class RoleServiceImpl implements RoleService {
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持按 roleCode/roleName 模糊匹配、status 精确匹配过滤，结果按 sortOrder 升序。
+     */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public Page<RoleVO> page(RolePageQueryDTO query) {
         Page<RoleDO> page = new Page<>(query.getSafePageNum(), query.getSafePageSize());
         LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
@@ -81,7 +95,13 @@ public class RoleServiceImpl implements RoleService {
         return voPage;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部未删除角色列表（按 sortOrder 升序）
+     */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<RoleVO> list() {
         LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RoleDO::getDeleted, 0);
@@ -91,6 +111,12 @@ public class RoleServiceImpl implements RoleService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 roleCode 唯一性校验后插入，status 默认 ENABLED，builtIn 默认 false。
+     *
+     * @throws BusinessException 当 roleCode 已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(RoleSaveDTO dto) {
@@ -114,6 +140,12 @@ public class RoleServiceImpl implements RoleService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id 和 builtIn（内置标记不可通过更新修改）。
+     *
+     * @throws BusinessException 当角色不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(RoleSaveDTO dto) {
@@ -125,6 +157,13 @@ public class RoleServiceImpl implements RoleService {
         return roleMapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>删除前检查：内置角色不可删除、有用户关联的角色不可删除。
+     * 删除时同时清除角色-权限关联记录。
+     *
+     * @throws BusinessException 当角色不存在、为内置角色、或仍有用户关联时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -151,6 +190,12 @@ public class RoleServiceImpl implements RoleService {
         return roleMapper.deleteById(id) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>先删除旧的角色-权限关联，再批量插入新关联（全量覆盖模式）。
+     *
+     * @throws BusinessException 当角色不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean assignPermissions(String roleId, List<String> permissionIds) {
@@ -181,6 +226,12 @@ public class RoleServiceImpl implements RoleService {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param roleId 角色 ID
+     * @return 权限 ID 列表
+     */
     @Override
     public List<String> getRolePermissionIds(String roleId) {
         LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
@@ -219,6 +270,12 @@ public class RoleServiceImpl implements RoleService {
         return result;
     }
 
+    /**
+     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象
+     */
     private RoleVO toVO(RoleDO entity) {
         RoleVO vo = new RoleVO();
         BeanUtils.copyProperties(entity, vo);

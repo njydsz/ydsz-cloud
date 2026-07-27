@@ -53,7 +53,7 @@ public class FileCommentController {
     }
 
     @Audit(module = "文件评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'addComment'")
-    @Idempotent(key = "nextwiki:comment:addComment", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileCommentController:addComment:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "添加评论/回复")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -84,7 +84,7 @@ public class FileCommentController {
     }
 
     @Audit(module = "文件评论", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteComment'")
-    @Idempotent(key = "nextwiki:comment:deleteComment", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileCommentController:deleteComment:lock", ttlSeconds = 5)
     @DeleteMapping("/{commentId}")
     @Operation(summary = "删除评论")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
@@ -96,7 +96,7 @@ public class FileCommentController {
     }
 
     @Audit(module = "文件评论", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resolveComment'")
-    @Idempotent(key = "nextwiki:comment:resolveComment", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:FileCommentController:resolveComment:lock", ttlSeconds = 5)
     @PostMapping("/{commentId}/resolve")
     @Operation(summary = "标记评论已解决")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)

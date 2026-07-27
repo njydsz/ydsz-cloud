@@ -37,6 +37,12 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     /** 降频阈值：平均分低于此值则建议降频 */
     private static final double FREQ_REDUCTION_THRESHOLD = 2.5;
 
+    /**
+     * {@inheritDoc}
+     * <p>校验 msgId/notificationId、userId、rating（1-5）后落库，tenantId 从 {@link TenantContext} 获取。
+     *
+     * @throws SysException 当 dto 为空、消息 ID 为空、用户 ID 为空或评分不在 1-5 范围时抛出
+     */
     @Override
     public String submitFeedback(MessageFeedbackDTO dto) {
         if (dto == null) {
@@ -69,6 +75,13 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         return feedback.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>查询用户最近 100 条反馈的平均评分，无数据时返回 0。
+     *
+     * @param userId 用户 ID
+     * @return 平均评分（0-5），无反馈时返回 0
+     */
     @Override
     public double getAverageRating(String userId) {
         if (!StringUtils.hasText(userId)) {
@@ -89,6 +102,13 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
                 .orElse(0);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>查询指定通道最近 1000 条反馈的平均评分，无数据时返回 0。
+     *
+     * @param channel 通道类型
+     * @return 平均评分（0-5），无反馈时返回 0
+     */
     @Override
     public double getAverageRatingByChannel(String channel) {
         if (!StringUtils.hasText(channel)) {
@@ -109,6 +129,10 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
                 .orElse(0);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持按 channel 和 userId 过滤，按创建时间降序排列。
+     */
     @Override
     public Page<MsgFeedbackDO> pageFeedback(int page, int size, String channel, String userId) {
         Page<MsgFeedbackDO> p = new Page<>(page, size);
@@ -123,6 +147,14 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         return msgFeedbackMapper.selectPage(p, wrapper);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>取用户最近 {@value #FREQ_CHECK_WINDOW} 条反馈，平均分低于 {@value #FREQ_REDUCTION_THRESHOLD} 时返回 true。
+     * 反馈条数不足窗口值时不降频。
+     *
+     * @param userId 用户 ID
+     * @return true 表示建议降低对该用户的消息发送频率
+     */
     @Override
     public boolean shouldReduceFrequency(String userId) {
         if (!StringUtils.hasText(userId)) {

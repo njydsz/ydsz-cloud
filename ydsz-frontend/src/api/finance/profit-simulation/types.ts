@@ -8,7 +8,7 @@
 /** 利润测算方案视图对象 */
 export interface ProfitSimulationVO {
   /** 测算方案ID */
-  id?: number
+  id?: string
   /** 测算方案编码 */
   simulationCode: string
   /** 测算方案名称 */
@@ -86,7 +86,7 @@ export interface ProfitSimulationCreateDTO {
 /** 利润测算方案状态变更 DTO */
 export interface SimulationStatusDTO {
   /** 测算方案ID */
-  id: number
+  id: string
   /** DRAFT/SUBMITTED/APPROVED/REJECTED */
   targetStatus: string
   /** 审批意见 */

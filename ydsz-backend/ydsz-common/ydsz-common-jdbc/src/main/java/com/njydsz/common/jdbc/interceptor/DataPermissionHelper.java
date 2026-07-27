@@ -19,9 +19,24 @@ import com.njydsz.common.util.string.StringUtils;
 import net.sf.jsqlparser.schema.Table;
 
 /**
+ * 数据权限辅助工具类。
+ *
+ * <p>为 {@link DataPermissionInnerInterceptor} 和 {@link RowPermissionInnerInterceptor}
+ * 提供共享的数据权限判断逻辑，包括：
+ * <ul>
+ *   <li>检测 Mapper 方法是否标注了 {@link DataPermissionIgnore}（跳过数据权限拦截）</li>
+ *   <li>解析 SQL 中的表名与数据权限规则匹配</li>
+ *   <li>缓存忽略标记结果（有界 LRU 10000 条），避免重复反射扫描</li>
+ * </ul>
+ *
+ * <h3>缓存设计</h3>
+ * <p>使用 {@link LinkedHashMap} LRU 模式缓存方法级忽略标记，
+ * 最大容量 10000 条，防止内存泄漏。同步包装保证线程安全。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see DataPermissionInnerInterceptor
+ * @see DataPermissionIgnore
  */
 final class DataPermissionHelper {
 

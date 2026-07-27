@@ -38,8 +38,7 @@ public class FlowConditionExprController {
      * @param body 请求体，需包含 conditionJson 和可选的 engine（默认 AVIATOR）
      * @return 转换后的表达式字符串
      */
-    @Idempotent(key = "flowConditionExpr:build", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowconditionexpr.build", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowConditionExprController:build:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowconditionexpr.build", threshold = 50)
     @PostMapping("/build")
     @Operation(summary = "结构化条件 JSON → 表达式字符串")
@@ -55,8 +54,7 @@ public class FlowConditionExprController {
      * @param body 请求体，需包含 expression 和可选的 engine（默认 AVIATOR）
      * @return 转换后的结构化条件 JSON 字符串
      */
-    @Idempotent(key = "flowConditionExpr:parse", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowconditionexpr.parse", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowConditionExprController:parse:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowconditionexpr.parse", threshold = 50)
     @PostMapping("/parse")
     @Operation(summary = "表达式字符串 → 结构化条件 JSON")
@@ -72,7 +70,7 @@ public class FlowConditionExprController {
      * @param body 请求体，需包含 expression 和可选的 engine（默认 AVIATOR）
      * @return 校验结果（valid / errors 等字段）
      */
-    @Idempotent(key = "flowConditionExpr:validate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowConditionExprController:validate:lock", ttlSeconds = 5)
     @PostMapping("/validate")
     @Operation(summary = "校验表达式语法")
     public BaseResponse<Map<String, Object>> validate(@RequestBody Map<String, String> body) {

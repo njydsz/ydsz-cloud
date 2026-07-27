@@ -282,14 +282,14 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         }
         try {
             String requiredStr = redisService.get(
-                    buildRequiredKey(instanceId, joinNodeCode, String.class));
+                    buildRequiredKey(instanceId, joinNodeCode), String.class);
             if (requiredStr == null) {
                 // 未设置 required，回退到全部分支到达语义
                 return allArrived(instanceId, joinNodeCode);
             }
             int required = Integer.parseInt(requiredStr);
             String arrivedStr = redisService.get(
-                    buildArrivedKey(instanceId, joinNodeCode, String.class));
+                    buildArrivedKey(instanceId, joinNodeCode), String.class);
             if (arrivedStr == null) {
                 return false;
             }
@@ -347,7 +347,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     /** 读取分支总数，未初始化时返回 Integer.MAX_VALUE（避免误判为已全部到达） */
     private int readTotal(String instanceId, String joinNodeCode) {
         try {
-            String totalStr = redisService.get(buildTotalKey(instanceId, joinNodeCode, String.class));
+            String totalStr = redisService.get(buildTotalKey(instanceId, joinNodeCode), String.class);
             if (totalStr == null) {
                 // 未初始化：返回最大值，确保 allArrived 返回 false（fail-safe）
                 log.warn("[FlowJoinToken] 分支总数未初始化 instanceId={} node={}",

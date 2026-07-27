@@ -7,7 +7,7 @@
 
 export interface RiskVO {
   /** 风险 ID */
-  id: number
+  id: string
   /** 所属立项 ID */
   initiationId: number
   /** 所属立项名称 */
@@ -63,7 +63,7 @@ export interface RiskCreateDTO {
 
 export interface RiskStatusDTO {
   /** 风险 ID */
-  id: number
+  id: string
   /** 目标状态 */
   targetStatus: string
   /** 状态变更原因/备注 */

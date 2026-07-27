@@ -11,6 +11,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.data.redis.domain.geo.Metrics;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
@@ -795,6 +796,35 @@ public class RedisService implements BatchRedisOperations {
             log.error("【Redis】Pipeline 批量 DELETE 失败 | keyCount={} | error={}", keys.size(), e.getMessage());
             return Collections.emptyList();
         }
+    }
+
+    // ============================ 底层 execute 操作 =============================
+
+    /**
+     * 执行底层 Redis 回调操作。
+     *
+     * <p>用于需要直接操作 {@link org.springframework.data.redis.connection.RedisConnection}
+     * 的高级场景，返回结果由调用方自行处理。
+     *
+     * @param action Redis 回调
+     * @param <T>    返回类型
+     * @return 回调执行结果
+     */
+    public <T> T execute(RedisCallback<T> action) {
+        return redisTemplate.execute(action);
+    }
+
+    /**
+     * 执行 Redis Lua 脚本。
+     *
+     * @param script Lua 脚本对象
+     * @param keys   Redis Key 列表（会自动添加统一前缀）
+     * @param args   脚本参数
+     * @param <T>    返回类型
+     * @return 脚本执行结果
+     */
+    public <T> T execute(RedisScript<T> script, List<String> keys, Object... args) {
+        return redisTemplate.execute(script, formatKeys(keys), args);
     }
 
     // ============================ Lua 脚本操作（委托 RedisAdvancedOps）=============================

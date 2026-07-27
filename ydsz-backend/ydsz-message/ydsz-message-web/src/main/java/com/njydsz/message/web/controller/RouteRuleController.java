@@ -54,9 +54,8 @@ public class RouteRuleController {
      */
     @Operation(summary = "创建路由规则")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
-    @Idempotent(key = "routeRule:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:RouteRuleController:create:lock", ttlSeconds = 5)
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'create'")
-    @SentinelRateLimit(resource = "message.routerule.create", threshold = 50)
     @SentinelRateLimit(resource = "message.routerule.create", threshold = 50)
     @PostMapping
     public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
@@ -72,9 +71,8 @@ public class RouteRuleController {
      */
     @Operation(summary = "更新路由规则")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
-    @Idempotent(key = "routeRule:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:RouteRuleController:update:lock", ttlSeconds = 5)
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "message.routerule.update", threshold = 50)
     @SentinelRateLimit(resource = "message.routerule.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
@@ -89,9 +87,8 @@ public class RouteRuleController {
      */
     @Operation(summary = "删除路由规则")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
-    @Idempotent(key = "routeRule:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:RouteRuleController:delete:lock", ttlSeconds = 5)
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.routerule.delete", threshold = 50)
     @SentinelRateLimit(resource = "message.routerule.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {

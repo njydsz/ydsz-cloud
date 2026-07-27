@@ -66,9 +66,13 @@ import com.njydsz.common.json.YdszJson;
  */
 public class OutboxService {
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(OutboxService.class);
 
+    /** Outbox 仓储 */
     private final OutboxRepository outboxRepository;
+
+    /** 事件配置属性 */
     private final EventProperties properties;
 
     /** 同步投递网关（可选，仅 enableSyncPublish=true 时注入） */

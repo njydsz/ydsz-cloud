@@ -51,9 +51,8 @@ public class PreferenceController {
      */
     @Operation(summary = "新增/更新偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
-    @Idempotent(key = "preference:upsert", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:PreferenceController:upsert:lock", ttlSeconds = 5)
     @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
-    @SentinelRateLimit(resource = "message.preference.upsert", threshold = 50)
     @SentinelRateLimit(resource = "message.preference.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
@@ -98,9 +97,8 @@ public class PreferenceController {
      */
     @Operation(summary = "删除偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_DELETE)
-    @Idempotent(key = "preference:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:PreferenceController:delete:lock", ttlSeconds = 5)
     @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.preference.delete", threshold = 50)
     @SentinelRateLimit(resource = "message.preference.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {

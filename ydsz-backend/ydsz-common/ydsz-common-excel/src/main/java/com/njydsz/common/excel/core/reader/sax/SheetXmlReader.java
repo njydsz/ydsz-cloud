@@ -14,25 +14,73 @@ import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.core.reader.SimpleCell;
 
 /**
- * Sheet数据读取器 - 纯手工XML解析
+ * Sheet XML 数据读取器 — 纯手工 XML 解析。
+ *
+ * <p>用于高性能读取 Excel .xlsx 文件中单个 Sheet 的 XML 数据。
+ * 与 {@link ExcelXmlParser} 类似，但集成了 {@link SharedStringsReader}（SST 共享字符串表）、
+ * {@link DataValidator}（数据校验）和 {@link ReadListener}（读取监听器），
+ * 是 {@link SuperFastExcelReader} 的核心内部组件。
+ *
+ * <h3>解析流程</h3>
+ * <ol>
+ *   <li>将 InputStream 全量读入 byte[]</li>
+ *   <li>逐行扫描 {@code <row>} 标签，解析行属性（行号等）</li>
+ *   <li>通过 {@code reader.instantiator} 创建目标对象实例</li>
+ *   <li>逐单元格解析 {@code <c>} 标签，提取值并填充到目标对象</li>
+ *   <li>每行解析后执行 {@link DataValidator#validate(Object, int)} 校验</li>
+ *   <li>校验通过则通知 {@link ReadListener#onRow(AnalysisContext, Object)}
+ *       校验失败则通知 {@link ReadListener#onError(AnalysisContext, Exception)}</li>
+ * </ol>
+ *
+ * <h3>空行处理</h3>
+ * <p>当 {@code reader.skipEmptyRows=true} 时，无单元格数据的行将被跳过。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ * @see SuperFastExcelReader
+ * @see SharedStringsReader
+ * @see DataValidator
  */
 public class SheetXmlReader {
 
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(SheetXmlReader.class);
 
+    /** 共享字符串表读取器，用于解析 t="s" 类型的单元格 */
     private final SharedStringsReader ssReader;
+    /** 父级读取器，提供配置、监听器和上下文 */
     private final SuperFastExcelReader reader;
+    /** 当前行对应的业务对象实例 */
     private Object rowData;
+    /** 当前行号（1-based） */
     private int currentRow = -1;
+    /** 当前列号（0-based） */
     private int currentCol = -1;
+    /** 当前单元格类型 */
     private String cellType;
+    /** 当前行是否有数据（用于空行跳过） */
     private boolean rowHasData;
 
+    /**
+     * 构造 Sheet 读取器。
+     *
+     * @param reader   父级读取器
+     * @param ssReader 共享字符串表读取器
+     */
     SheetXmlReader(SuperFastExcelReader reader, SharedStringsReader ssReader) {
         this.reader = reader;
         this.ssReader = ssReader;
     }
 
+    /**
+     * 解析 Sheet XML 输入流。
+     *
+     * <p>主解析循环：逐行扫描 XML，对每行解析属性 → 创建业务对象 → 解析单元格 → 校验 → 通知监听器。
+     * 支持 {@code skipEmptyRows} 空行跳过和 {@code maxRows} 最大行数限制。
+     *
+     * @param is Sheet XML 输入流
+     * @throws IOException 读取异常
+     */
     void parse(InputStream is) throws IOException {
         byte[] data = readAllBytesDirect(is);
         int pos = 0;

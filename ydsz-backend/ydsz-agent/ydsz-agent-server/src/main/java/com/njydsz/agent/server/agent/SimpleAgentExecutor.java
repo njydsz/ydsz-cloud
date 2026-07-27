@@ -36,15 +36,24 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  */
 public class SimpleAgentExecutor implements AgentExecutor {
 
+    /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(SimpleAgentExecutor.class);
 
+    /** LLM 客户端 */
     private final LlmClient llmClient;
+    /** 对话记忆（历史消息加载/保存） */
     private final ConversationMemory memory;
+    /** Agent 配置属性 */
     private final AgentProperties properties;
+    /** 输入护栏列表（Prompt 注入检测等） */
     private final List<InputGuardrail> inputGuardrails;
+    /** 输出护栏列表（PII 脱敏等） */
     private final List<OutputGuardrail> outputGuardrails;
+    /** 链路追踪记录器 */
     private final TraceRecorder traceRecorder;
+    /** Agent 监控指标采集器 */
     private final AgentMetrics agentMetrics;
+    /** 成本分析服务（Token 用量核算） */
     private final CostAnalysisService costAnalysisService;
 
     public SimpleAgentExecutor(LlmClient llmClient, ConversationMemory memory,
@@ -64,6 +73,12 @@ public class SimpleAgentExecutor implements AgentExecutor {
         this.costAnalysisService = costAnalysisService;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行流程：输入护栏 → 构建消息（System + 历史 + 用户）→ LLM 调用 → 指标/成本/追踪埋点 →
+     * 输出护栏 → 保存对话记忆 → 返回响应。
+     * 输入护栏拒绝时返回 guardrail_rejected 响应，LLM 调用失败时抛出原始异常。
+     */
     @Override
     public ChatResponse execute(AgentExecutionRequest request) {
         String convId = request.getConversationId() != null
@@ -139,6 +154,12 @@ public class SimpleAgentExecutor implements AgentExecutor {
                 response.getUsage(), response.getFinishReason(), List.of());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>流式执行流程：输入护栏 → 构建消息 → LLM 流式调用（逐 chunk 推送）→
+     * 累积内容 → 输出护栏 → 保存对话记忆 → 追踪记录。
+     * 输入护栏拒绝时推送拒绝消息并结束流。
+     */
     @Override
     public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
         String convId = request.getConversationId() != null

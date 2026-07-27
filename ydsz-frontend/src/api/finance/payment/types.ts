@@ -8,7 +8,7 @@
 /** 回款 VO */
 export interface PaymentVO {
   /** 主键 ID */
-  id: number
+  id: string
   /** 回款编码 */
   paymentCode: string
   /** 客户 ID */
@@ -80,7 +80,7 @@ export interface PaymentAllocationDTO {
 /** 回款核销明细 VO */
 export interface PaymentAllocationVO {
   /** 主键 ID */
-  id: number
+  id: string
   /** 回款 ID */
   paymentId: number
   /** 发票 ID */

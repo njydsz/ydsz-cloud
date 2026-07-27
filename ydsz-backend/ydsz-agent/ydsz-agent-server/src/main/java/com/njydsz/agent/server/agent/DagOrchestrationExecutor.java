@@ -53,6 +53,7 @@ public class DagOrchestrationExecutor {
     private final AgentProperties properties;
     private final AgentFactory agentFactory;
     private final ExecutorService executor;
+    private final boolean ownsExecutor;
 
     public DagOrchestrationExecutor(LlmClient llmClient, AgentProperties properties,
                                      AgentFactory agentFactory) {
@@ -60,6 +61,16 @@ public class DagOrchestrationExecutor {
         this.properties = properties;
         this.agentFactory = agentFactory;
         this.executor = Executors.newVirtualThreadPerTaskExecutor();
+        this.ownsExecutor = true;
+    }
+
+    public DagOrchestrationExecutor(LlmClient llmClient, AgentProperties properties,
+                                     AgentFactory agentFactory, ExecutorService executor) {
+        this.llmClient = llmClient;
+        this.properties = properties;
+        this.agentFactory = agentFactory;
+        this.executor = executor;
+        this.ownsExecutor = false;
     }
 
     /**
@@ -354,6 +365,10 @@ public class DagOrchestrationExecutor {
 
     @PreDestroy
     public void shutdown() {
+        // P0-1: 仅当 ownsExecutor=true 时关闭（外部线程池由 common-thread 管理生命周期）
+        if (!ownsExecutor) {
+            return;
+        }
         executor.shutdown();
         try {
             if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {

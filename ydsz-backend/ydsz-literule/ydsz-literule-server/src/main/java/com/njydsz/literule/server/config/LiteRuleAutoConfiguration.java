@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.cronjob.api.client.CronjobServiceClient;
 import com.njydsz.literule.api.RuleEngine;
@@ -153,7 +154,8 @@ public class LiteRuleAutoConfiguration {
                                   ObjectProvider<FactProviderRegistry> factRegistryProvider,
                                   ObjectProvider<RuleActionDispatcher> actionDispatcherProvider,
                                   ObjectProvider<ParallelRuleEvaluator> parallelEvaluatorProvider,
-                                  ObjectProvider<MeterRegistry> meterRegistryProvider) {
+                                  ObjectProvider<MeterRegistry> meterRegistryProvider,
+                                  ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
 
@@ -161,7 +163,7 @@ public class LiteRuleAutoConfiguration {
         configureOptionalDependencies(engine, breakpointHookProvider, factRegistryProvider,
                 actionDispatcherProvider, parallelEvaluatorProvider, modelRegistryProvider, properties);
         configureTraceRecorder(engine, properties, traceDelegateProvider);
-        configureTimeoutExecutor(engine, properties);
+        configureTimeoutExecutor(engine, properties, applicationContext);
         configureCircuitBreaker(engine, properties);
         configureCanaryRouting(engine, properties, evaluatorProvider);
 
@@ -254,13 +256,38 @@ public class LiteRuleAutoConfiguration {
     /**
      * 配置超时执行器（P3-3 提取）
      */
-    private void configureTimeoutExecutor(DefaultRuleEngine engine, LiteRuleProperties properties) {
+    private void configureTimeoutExecutor(DefaultRuleEngine engine, LiteRuleProperties properties,
+                                            ApplicationContext applicationContext) {
         if (properties.getRuleTimeoutMs() <= 0) return;
-        int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
-        RuleTimeoutExecutor timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(), poolSize);
+        // P1-2: 优先使用 common-thread 统一管理的线程池
+        ThreadPoolTaskExecutor threadPool = lookupExecutor(applicationContext, "ruleTimeoutExecutor");
+        RuleTimeoutExecutor timeoutExecutor;
+        if (threadPool != null) {
+            timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(), threadPool);
+            log.info("[LiteRule] 单规则超时控制已启用 (timeoutMs={}, executor=common-thread:ruleTimeout)",
+                    properties.getRuleTimeoutMs());
+        } else {
+            int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
+            timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(), poolSize);
+            log.info("[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, executor=manual)",
+                    properties.getRuleTimeoutMs(), poolSize);
+        }
         engine.setTimeoutExecutor(timeoutExecutor);
-        log.info("[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={})",
-                properties.getRuleTimeoutMs(), poolSize);
+    }
+
+    /**
+     * P1-2: 从 Spring 容器中查找 common-thread 注册的线程池 Bean
+     *
+     * @param applicationContext Spring 上下文
+     * @param beanName           Bean 名称（key + "Executor"）
+     * @return 线程池实例；不存在时返回 null
+     */
+    private ThreadPoolTaskExecutor lookupExecutor(ApplicationContext applicationContext, String beanName) {
+        try {
+            return applicationContext.getBean(beanName, ThreadPoolTaskExecutor.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
@@ -811,9 +838,18 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "ydsz.literule.model", name = "enabled", havingValue = "true")
     public ModelInputRegistry modelInputRegistry(LiteRuleProperties properties,
-                                                  ObjectProvider<ModelInputProvider> providersProvider) {
+                                                  ObjectProvider<ModelInputProvider> providersProvider,
+                                                  ApplicationContext applicationContext) {
         LiteRuleProperties.ModelConfig cfg = properties.getModel();
-        ModelInputRegistry registry = new ModelInputRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        // P1-2: 优先使用 common-thread 统一管理的线程池
+        ThreadPoolTaskExecutor threadPool = lookupExecutor(applicationContext, "modelInputExecutor");
+        ModelInputRegistry registry;
+        if (threadPool != null) {
+            registry = new ModelInputRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError(),
+                    threadPool.getThreadPoolExecutor());
+        } else {
+            registry = new ModelInputRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        }
         // 注册所有 ModelInputProvider Bean（包括 MockModelInputProvider）
         List<ModelInputProvider> providers = providersProvider.orderedStream().toList();
         for (ModelInputProvider provider : providers) {
@@ -887,9 +923,18 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "ydsz.literule.fact", name = "enabled", havingValue = "true")
     public FactProviderRegistry factProviderRegistry(LiteRuleProperties properties,
-                                                       ObjectProvider<FactProvider> providersProvider) {
+                                                       ObjectProvider<FactProvider> providersProvider,
+                                                       ApplicationContext applicationContext) {
         LiteRuleProperties.FactConfig cfg = properties.getFact();
-        FactProviderRegistry registry = new FactProviderRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        // P1-2: 优先使用 common-thread 统一管理的线程池
+        ThreadPoolTaskExecutor threadPool = lookupExecutor(applicationContext, "factProviderExecutor");
+        FactProviderRegistry registry;
+        if (threadPool != null) {
+            registry = new FactProviderRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError(),
+                    threadPool.getThreadPoolExecutor());
+        } else {
+            registry = new FactProviderRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        }
         // 注册所有 FactProvider Bean
         List<FactProvider> providers = providersProvider.orderedStream().toList();
         for (FactProvider provider : providers) {
@@ -1039,11 +1084,20 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "ydsz.literule.performance", name = "parallel-enabled", havingValue = "true")
-    public ParallelRuleEvaluator parallelRuleEvaluator(LiteRuleProperties properties) {
+    public ParallelRuleEvaluator parallelRuleEvaluator(LiteRuleProperties properties,
+                                                        ApplicationContext applicationContext) {
         LiteRuleProperties.PerformanceConfig cfg = properties.getPerformance();
-        ParallelRuleEvaluator evaluator = new ParallelRuleEvaluator(cfg.getParallelPoolSize());
-        log.info("[LiteRule-Performance] 规则并行评估器已初始化（poolSize={})",
-                cfg.getParallelPoolSize());
+        // P1-2: 优先使用 common-thread 统一管理的线程池
+        ThreadPoolTaskExecutor threadPool = lookupExecutor(applicationContext, "ruleParallelExecutor");
+        ParallelRuleEvaluator evaluator;
+        if (threadPool != null) {
+            evaluator = new ParallelRuleEvaluator(threadPool);
+            log.info("[LiteRule-Performance] 规则并行评估器已初始化（executor=common-thread:ruleParallel)");
+        } else {
+            evaluator = new ParallelRuleEvaluator(cfg.getParallelPoolSize());
+            log.info("[LiteRule-Performance] 规则并行评估器已初始化（poolSize={}, executor=manual)",
+                    cfg.getParallelPoolSize());
+        }
         return evaluator;
     }
 

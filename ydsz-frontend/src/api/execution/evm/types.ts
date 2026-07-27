@@ -8,7 +8,7 @@
 /** EVM 测量记录视图对象 */
 export interface EvmMeasureVO {
   /** 测量记录ID */
-  id?: number
+  id?: string
   /** 立项ID */
   initiationId: number
   /** WBS 任务ID */

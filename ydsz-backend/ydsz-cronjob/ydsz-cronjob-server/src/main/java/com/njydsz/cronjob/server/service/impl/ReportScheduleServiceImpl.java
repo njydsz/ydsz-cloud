@@ -18,7 +18,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.feign.MessageServiceClient;
+import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
@@ -61,8 +61,8 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
     private final JdbcTemplate jdbcTemplate;
     /** P1-9: 公共文件存储提供者（替代直接依赖 MinioClient） */
     private final IFileStorageProvider fileStorageProvider;
-    /** P1-8: 报表分发邮件通知（Feign 调用 message 模块） */
-    private final MessageServiceClient messageServiceClient;
+    /** P1-8: 报表分发邮件通知（Feign 调用 message 模块，P1-5 统一为 NotificationClient） */
+    private final NotificationClient notificationClient;
 
     @Override
     public void executeDailyReports() {
@@ -321,7 +321,7 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
             request.setContent("您好，您订阅的 " + reportType + " 报表已生成，下载链接：" + fileKey);
             request.setBizType("REPORT");
             request.setBizId(String.valueOf(subId));
-            BaseResponse<MessageResult> result = messageServiceClient.send(request);
+            BaseResponse<MessageResult> result = notificationClient.sendMessage(request);
             if (result != null && result.isSuccess()) {
                 log.info("[ReportSchedule] 报表邮件通知发送成功: subId={}, recipients={}", subId, recipients);
             } else {

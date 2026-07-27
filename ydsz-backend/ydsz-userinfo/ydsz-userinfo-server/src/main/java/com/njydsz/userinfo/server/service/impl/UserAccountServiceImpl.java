@@ -40,6 +40,7 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 用户账号 Service 实现。
@@ -62,13 +63,24 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserAccountServiceImpl implements UserAccountService {
 
+    /** 用户账号 Mapper */
     private final UserAccountMapper userAccountMapper;
+    /** 用户-角色关联 Mapper */
     private final UserRoleMapper userRoleMapper;
+    /** 角色 Mapper（用于角色编码查询） */
     private final RoleMapper roleMapper;
+    /** 用户-部门关联 Mapper */
     private final UserDeptMapper userDeptMapper;
+    /** 密码编码器（BCrypt） */
     private final PasswordEncoder passwordEncoder;
+    /** 密码策略校验器 */
     private final PasswordPolicyValidator passwordPolicyValidator;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当用户不存在时抛出
+     */
     @Override
     public UserAccountVO getById(String id) {
         UserAccountDO entity = userAccountMapper.selectById(id);
@@ -78,7 +90,15 @@ public class UserAccountServiceImpl implements UserAccountService {
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>支持按 username/realName/phone/email 模糊匹配、status/userType/companyId 精确匹配过滤。
+     *
+     * @param query 分页查询参数
+     * @return 分页结果
+     */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "id")
     public Page<UserAccountVO> page(UserAccountPageQueryDTO query) {
         Page<UserAccountDO> page = new Page<>(
                 query.getSafePageNum(), query.getSafePageSize());
@@ -117,7 +137,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         return voPage;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部未删除用户列表（按创建时间降序）
+     */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "id")
     public List<UserAccountVO> list() {
         LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccountDO::getDeleted, 0);
@@ -127,6 +153,13 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 username 唯一性校验 + 密码策略校验，BCrypt 加密存储密码，
+     * status 默认 "1"（启用），tenantId 为空时默认 "1"。
+     *
+     * @throws BusinessException 当 username 已存在或密码不符合策略时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(UserAccountCreateDTO dto) {
@@ -153,6 +186,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>使用 BeanUtils.copyProperties 更新字段，仅复制非 null 属性（避免覆盖已有值），
+     * status 字段从 Integer 转为 String 存储。
+     *
+     * @throws BusinessException 当用户不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(UserAccountUpdateDTO dto) {
@@ -168,6 +208,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccountMapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当用户不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -178,6 +223,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccountMapper.deleteById(id) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>校验旧密码 → 新旧密码不能相同 → 密码策略校验 → BCrypt 加密存储。
+     *
+     * @throws BusinessException 当用户不存在、旧密码错误、新旧密码相同或密码不符合策略时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean changePassword(ChangePasswordDTO dto) {
@@ -199,6 +250,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccountMapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>密码策略校验 → BCrypt 加密存储 → 重置失败计数和锁定状态。
+     *
+     * @throws BusinessException 当用户不存在或密码不符合策略时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean resetPassword(ResetPasswordDTO dto) {
@@ -216,6 +273,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccountMapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>先删除旧的用户-角色关联，再批量插入新关联（全量覆盖模式）。
+     *
+     * @throws BusinessException 当用户不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean assignRoles(String userId, List<String> roleIds) {
@@ -246,6 +309,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param userId 用户 ID
+     * @return 角色 ID 列表
+     */
     @Override
     public List<String> getUserRoleIds(String userId) {
         LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
@@ -398,6 +467,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         return result;
     }
 
+    /**
+     * 将 DO 转换为 VO，status 字段从 String 转换为 Integer。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象（不含密码等敏感字段）
+     */
     private UserAccountVO toVO(UserAccountDO entity) {
         UserAccountVO vo = new UserAccountVO();
         BeanUtils.copyProperties(entity, vo);

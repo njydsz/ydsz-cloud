@@ -5,9 +5,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
@@ -39,22 +39,25 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
 
     private final FlowInstanceMapper instanceMapper;
     private final FlowRunTaskMapper runTaskMapper;
-    private final ObjectProvider<StringRedisTemplate> redisTemplateProvider;
+    private final ObjectProvider<RedisService> redisServiceProvider;
 
     public FlowHealthIndicator(FlowInstanceMapper instanceMapper,
                                 FlowRunTaskMapper runTaskMapper,
-                                ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+                                ObjectProvider<RedisService> redisServiceProvider) {
         this.instanceMapper = instanceMapper;
         this.runTaskMapper = runTaskMapper;
-        this.redisTemplateProvider = redisTemplateProvider;
+        this.redisServiceProvider = redisServiceProvider;
     }
 
     @Override
     protected void doHealthCheck(Health.Builder builder) {
         // Redis 可选
-        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
-        if (redisTemplate != null) {
-            checkRedis(builder, () -> redisTemplate.execute(conn -> conn.ping(), true));
+        RedisService redisService = redisServiceProvider.getIfAvailable();
+        if (redisService != null) {
+            checkRedis(builder, () -> {
+                redisService.hasKey("__flow_health_check__");
+                return "PONG";
+            });
         } else {
             checkRedisNotConfigured(builder);
         }

@@ -17,10 +17,28 @@ import com.njydsz.common.search.core.SearchEngine;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 内存搜索引擎（测试/降级用）
+ * 内存搜索引擎（测试 / 降级用）。
+ *
+ * <p>基于 {@link LinkedHashMap} LRU 缓存实现的轻量级搜索引擎，无需外部依赖。
+ * 适用于以下场景：
+ * <ul>
+ *   <li>单元测试和集成测试（不依赖 PostgreSQL）</li>
+ *   <li>PG 搜索引擎不可用时的自动降级</li>
+ *   <li>小规模数据的快速检索</li>
+ * </ul>
+ *
+ * <h3>实现细节</h3>
+ * <ul>
+ *   <li>索引容量上限 10000 条（LRU 淘汰最久未访问的文档）</li>
+ *   <li>搜索为简单的 {@code toLowerCase().contains()} 子串匹配</li>
+ *   <li>支持类型过滤、租户隔离和仅标题搜索模式</li>
+ *   <li>线程安全：通过 {@code synchronizedMap} 包装</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see SearchEngine
+ * @see PgSearchEngine
  */
 @Slf4j
 public class InMemorySearchEngine implements SearchEngine {

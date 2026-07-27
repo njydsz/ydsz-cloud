@@ -29,16 +29,28 @@ import com.njydsz.common.util.string.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 阿里云 OSS 对象存储实现
- * <p>继承 {@link AbstractFileStorage}，
- * 将操作翻译为阿里云 OSS Java SDK 的原生 API 调用。
+ * 阿里云 OSS 对象存储实现。
  *
- * <p>分片上传使用原生 multipart upload 协议：
- * InitiateMultipartUpload / UploadPart / ListParts / CompleteMultipartUpload / AbortMultipartUpload
+ * <p>继承 {@link AbstractFileStorage}，将操作翻译为阿里云 OSS Java SDK 的原生 API 调用。
+ *
+ * <h3>分片上传协议</h3>
+ * <p>使用 OSS 原生 multipart upload 协议，完整支持分片上传生命周期：
+ * <ol>
+ *   <li>{@code InitiateMultipartUpload}：初始化分片上传，获取 uploadId</li>
+ *   <li>{@code UploadPart}：上传单个分片，返回分片 ETag</li>
+ *   <li>{@code ListParts}：列出已上传的分片</li>
+ *   <li>{@code CompleteMultipartUpload}：合并所有分片为最终对象</li>
+ *   <li>{@code AbortMultipartUpload}：取消上传并清理已上传分片</li>
+ * </ol>
+ *
+ * <h3>STS 临时凭证</h3>
+ * <p>通过 {@code generateUploadPolicy} 生成前端直传策略（基于 STS Token），
+ * 支持回调 URL 和文件大小限制。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @see AbstractFileStorage
+ * @see OSS
  */
 @Slf4j
 public class OssStorage extends AbstractFileStorage {

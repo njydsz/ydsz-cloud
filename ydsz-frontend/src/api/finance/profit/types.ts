@@ -7,7 +7,7 @@
 
 export interface RevenueVO {
   /** 收入确认记录 ID */
-  id: number
+  id: string
   /** 所属立项 ID */
   initiationId: number
   /** 所属立项名称 */
@@ -51,7 +51,7 @@ export interface RevenueCreateDTO {
 
 export interface ProfitSnapshotVO {
   /** 利润快照 ID */
-  id: number
+  id: string
   /** 所属立项 ID */
   initiationId: number
   /** 所属立项名称 */

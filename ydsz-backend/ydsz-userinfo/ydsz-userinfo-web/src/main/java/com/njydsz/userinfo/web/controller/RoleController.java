@@ -66,8 +66,7 @@ public class RoleController {
 
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建角色: ' + #dto.roleName")
-    @Idempotent(key = "role:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.role.create", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:RoleController:create:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.role.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建角色")
@@ -77,8 +76,7 @@ public class RoleController {
 
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新角色: ' + #dto.id")
-    @Idempotent(key = "role:update", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.role.update", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:RoleController:update:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.role.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新角色")
@@ -89,7 +87,7 @@ public class RoleController {
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除角色: ' + #id")
     @SentinelRateLimit(resource = "userinfo.role.remove", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.role.remove", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:RoleController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除角色")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
@@ -98,8 +96,7 @@ public class RoleController {
 
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'分配角色权限: ' + #roleId")
-    @Idempotent(key = "role:assignPermissions", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.role.assignPermissions", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:RoleController:assignPermissions:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.role.assignPermissions", threshold = 50)
     @PostMapping("/{roleId}/permissions")
     @Operation(summary = "分配角色权限")

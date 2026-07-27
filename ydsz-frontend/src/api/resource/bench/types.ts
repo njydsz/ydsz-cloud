@@ -5,7 +5,7 @@
  */
 export interface BenchRecordVO {
   /** Bench 记录 ID */
-  id?: number
+  id?: string
   /** Bench 编码 */
   benchCode: string
   /** 员工 ID */

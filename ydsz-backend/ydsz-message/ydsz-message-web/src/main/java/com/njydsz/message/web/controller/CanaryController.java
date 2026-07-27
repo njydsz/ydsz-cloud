@@ -51,9 +51,8 @@ public class CanaryController {
      */
     @Operation(summary = "新增/更新灰度桶")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_UPDATE)
-    @Idempotent(key = "canary:upsert", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:CanaryController:upsert:lock", ttlSeconds = 5)
     @Audit(module = "灰度管理", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'upsert'")
-    @SentinelRateLimit(resource = "message.canary.upsert", threshold = 50)
     @SentinelRateLimit(resource = "message.canary.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {

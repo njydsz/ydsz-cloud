@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * P1-B4: 任务分组管理 Controller。
@@ -76,7 +77,7 @@ public class JobGroupController {
     @Operation(summary = "按分组批量暂停任务")
     @Audit(module = "任务分组", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pauseByGroup'")
     @SentinelRateLimit(resource = "cronjob.jobgroup.pauseByGroup", threshold = 50)
-    @SentinelRateLimit(resource = "cronjob.jobgroup.pauseByGroup", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobGroupController:pauseByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/pause")
     public BaseResponse<Integer> pauseByGroup(@PathVariable String jobGroup) {
         LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();
@@ -100,7 +101,7 @@ public class JobGroupController {
     @Operation(summary = "按分组批量恢复任务")
     @Audit(module = "任务分组", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resumeByGroup'")
     @SentinelRateLimit(resource = "cronjob.jobgroup.resumeByGroup", threshold = 50)
-    @SentinelRateLimit(resource = "cronjob.jobgroup.resumeByGroup", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobGroupController:resumeByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/resume")
     public BaseResponse<Integer> resumeByGroup(@PathVariable String jobGroup) {
         LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();
@@ -124,7 +125,7 @@ public class JobGroupController {
     @Operation(summary = "按分组批量触发任务")
     @Audit(module = "任务分组", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'triggerByGroup'")
     @SentinelRateLimit(resource = "cronjob.jobgroup.triggerByGroup", threshold = 50)
-    @SentinelRateLimit(resource = "cronjob.jobgroup.triggerByGroup", threshold = 50)
+    @Idempotent(key = "ydsz:cronjob:JobGroupController:triggerByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/trigger")
     public BaseResponse<Integer> triggerByGroup(@PathVariable String jobGroup) {
         LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();

@@ -90,6 +90,20 @@ public class BusinessException extends AbstractYdszException {
     }
 
     /**
+     * 使用异常码枚举和自定义消息构造业务异常
+     *
+     * @param exceptionCode 异常码枚举
+     * @param message       自定义异常消息
+     */
+    public BusinessException(ExceptionCode exceptionCode, String message) {
+        super(message);
+        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        initFields(exceptionCode.getCode(), exceptionCode.getKey(), new Object[]{});
+        this.message = message;
+        this.messageResolved = true;
+    }
+
+    /**
      * 使用统一结果码构造业务异常（兼容 {@link ResultCode} 体系）
      *
      * <p>用于业务模块尚未迁移到 {@link ExceptionCode}，但已实现 {@link ResultCode} 的场景。

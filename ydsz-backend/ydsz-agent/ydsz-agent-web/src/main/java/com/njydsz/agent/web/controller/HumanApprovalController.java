@@ -57,7 +57,7 @@ public class HumanApprovalController {
     }
 
     @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'approve'")
-    @Idempotent(key = "agent:approval:approve", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:agent:HumanApprovalController:approve:lock", ttlSeconds = 5)
     @PostMapping("/{id}/approve")
     public BaseResponse<Boolean> approve(@PathVariable String id,
                                           @RequestParam(required = false) String approver,
@@ -70,7 +70,7 @@ public class HumanApprovalController {
     }
 
     @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'reject'")
-    @Idempotent(key = "agent:approval:reject", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:agent:HumanApprovalController:reject:lock", ttlSeconds = 5)
     @PostMapping("/{id}/reject")
     public BaseResponse<Boolean> reject(@PathVariable String id,
                                          @RequestParam(required = false) String approver,

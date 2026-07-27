@@ -91,7 +91,7 @@ public class FlowTemplateController {
      * @return 新创建的流程定义 ID
      */
     @Operation(summary = "导入模板")
-    @Idempotent(key = "flowTemplate:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowTemplateController:importTemplate:lock", ttlSeconds = 5)
     @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'导入模板:' + #templateCode")
     @PostMapping("/{templateCode}/import")
@@ -161,7 +161,7 @@ public class FlowTemplateController {
      * @return 新版本号
      */
     @Operation(summary = "P2-9: 创建模板新版本")
-    @Idempotent(key = "flowTemplate:createNewVersion", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowTemplateController:createNewVersion:lock", ttlSeconds = 5)
     @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建模板新版本:' + #templateCode")
     @PostMapping("/{templateCode}/newVersion")
@@ -182,7 +182,7 @@ public class FlowTemplateController {
      * @return 新模板编码
      */
     @Operation(summary = "P2-9: 克隆模板为独立新模板")
-    @Idempotent(key = "flowTemplate:cloneTemplate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowTemplateController:cloneTemplate:lock", ttlSeconds = 5)
     @Audit(module = "流程模板", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'克隆模板:' + #templateCode + ' -> ' + #newTemplateCode")
     @PostMapping("/{templateCode}/clone")
@@ -206,7 +206,7 @@ public class FlowTemplateController {
      * @return 新模板编码
      */
     @Operation(summary = "P2-9: 从父模板继承创建子模板")
-    @Idempotent(key = "flowTemplate:inheritFromParent", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowTemplateController:inheritFromParent:lock", ttlSeconds = 5)
     @PostMapping("/{parentTemplateCode}/inherit")
     public BaseResponse<String> inheritFromParent(@PathVariable String parentTemplateCode,
                                             @RequestParam String newTemplateCode,
@@ -239,8 +239,7 @@ public class FlowTemplateController {
      * @return 同步后的新版本号
      */
     @Operation(summary = "P2-9: 子模板同步父模板最新版本")
-    @Idempotent(key = "flowTemplate:syncFromParent", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowtemplate.syncFromParent", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowTemplateController:syncFromParent:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowtemplate.syncFromParent", threshold = 50)
     @PostMapping("/{childTemplateCode}/sync")
     public BaseResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {

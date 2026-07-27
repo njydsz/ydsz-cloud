@@ -58,8 +58,7 @@ public class FlowAutoTriggerController {
      * @return 创建结果
      */
     @Operation(summary = "创建触发规则")
-    @Idempotent(key = "flowAutoTrigger:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowautotrigger.create", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAutoTriggerController:create:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowautotrigger.create", threshold = 50)
     @PostMapping
     public BaseResponse<Void> create(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
@@ -77,8 +76,7 @@ public class FlowAutoTriggerController {
      * @return 删除结果
      */
     @Operation(summary = "删除触发规则")
-    @Idempotent(key = "flowAutoTrigger:delete", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowautotrigger.delete", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAutoTriggerController:delete:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowautotrigger.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -93,7 +91,7 @@ public class FlowAutoTriggerController {
      * @return 切换后的状态
      */
     @Operation(summary = "启用/禁用触发规则")
-    @Idempotent(key = "flowAutoTrigger:toggle", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowAutoTriggerController:toggle:lock", ttlSeconds = 5)
     @PutMapping("/{id}/toggle")
     public BaseResponse<Map<String, Object>> toggle(@PathVariable String id) {
         boolean enabled = autoTriggerService.toggleEnabled(id);

@@ -15,6 +15,7 @@ import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 流程实例迁移 Controller
@@ -51,7 +52,7 @@ public class FlowMigrationController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @SentinelRateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowMigrationController:migrateInstances:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate")
     public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
         return BaseResponse.success(instanceMigrationService.migrate(dto));
@@ -65,7 +66,7 @@ public class FlowMigrationController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @SentinelRateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowMigrationController:previewMigration:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate/preview")
     public BaseResponse<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
         return BaseResponse.success(instanceMigrationService.previewMigration(dto));

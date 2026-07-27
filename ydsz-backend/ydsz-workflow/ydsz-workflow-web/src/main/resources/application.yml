@@ -51,3 +51,22 @@ ydsz:
       batch-size: 100
       max-retries: 5
       fail-on-noop: false
+  # P0-2: 分布式事务配置（Seata AT 模式，默认关闭，TC 就绪后开启）
+  seata:
+    enabled: false
+    default-type: SEATA_AT
+
+# Seata 客户端配置（TC 就绪后设置 seata.enabled=true 并取消注释）
+# seata:
+#   enabled: true
+#   application-id: ${spring.application.name}
+#   tx-service-group: ydsz_tx_group
+#   service:
+#     vgroup-mapping:
+#       ydsz_tx_group: default
+#     grouplist:
+#       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
+#   config:
+#     type: file
+#   registry:
+#     type: file

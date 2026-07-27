@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import com.njydsz.common.json.YdszJson;
 
@@ -43,16 +42,16 @@ public class RedisConversationMemory implements ConversationMemory {
     private final int ttlHours;
     private final int maxListSize;
 
-    public RedisConversationMemory(StringRedisTemplate redisTemplate) {
-        this(redisTemplate, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
+    public RedisConversationMemory(RedisService redisService) {
+        this(redisService, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
     }
 
-    public RedisConversationMemory(StringRedisTemplate redisTemplate, int ttlHours) {
-        this(redisTemplate, ttlHours, DEFAULT_MAX_LIST_SIZE);
+    public RedisConversationMemory(RedisService redisService, int ttlHours) {
+        this(redisService, ttlHours, DEFAULT_MAX_LIST_SIZE);
     }
 
-    public RedisConversationMemory(StringRedisTemplate redisTemplate, int ttlHours, int maxListSize) {
-        this.redisTemplate = redisTemplate;
+    public RedisConversationMemory(RedisService redisService, int ttlHours, int maxListSize) {
+        this.redisService = redisService;
         this.ttlHours = ttlHours > 0 ? ttlHours : DEFAULT_TTL_HOURS;
         this.maxListSize = maxListSize > 0 ? maxListSize : DEFAULT_MAX_LIST_SIZE;
     }
@@ -61,20 +60,20 @@ public class RedisConversationMemory implements ConversationMemory {
     public void save(String conversationId, ChatMessage message) {
         String key = KEY_PREFIX + conversationId;
         String json = serializeMessage(message);
-        redisService.opsForList().rightPush(key, json);
-        redisService.opsForList().trim(key, -maxListSize, -1);
-        redisService.expire(key, ttlHours, TimeUnit.HOURS);
+        redisService.rPush(key, json);
+        redisService.lTrim(key, -maxListSize, -1);
+        redisService.expire(key, ttlHours * 3600L);
     }
 
     @Override
     public List<ChatMessage> load(String conversationId, int maxMessages) {
         String key = KEY_PREFIX + conversationId;
-        Long size = redisService.opsForList().size(key);
-        if (size == null || size == 0) {
+        long size = redisService.lSize(key);
+        if (size == 0) {
             return Collections.emptyList();
         }
         long start = Math.max(0, size - maxMessages);
-        List<String> rawList = redisService.opsForList().range(key, start, size - 1);
+        List<String> rawList = redisService.lRange(key, start, size - 1, String.class);
         if (rawList == null || rawList.isEmpty()) {
             return Collections.emptyList();
         }
@@ -95,8 +94,7 @@ public class RedisConversationMemory implements ConversationMemory {
 
     @Override
     public long count(String conversationId) {
-        Long size = redisService.opsForList().size(KEY_PREFIX + conversationId);
-        return size != null ? size : 0;
+        return redisService.lSize(KEY_PREFIX + conversationId);
     }
 
     /**

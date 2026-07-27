@@ -67,9 +67,8 @@ public class GlueCodeController {
      */
     @Operation(summary = "保存 GLUE 代码（新版本）")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
-    @Idempotent(key = "glueCode:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:cronjob:GlueCodeController:save:lock", ttlSeconds = 5)
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
-    @SentinelRateLimit(resource = "cronjob.gluecode.save", threshold = 50)
     @SentinelRateLimit(resource = "cronjob.gluecode.save", threshold = 50)
     @PostMapping("/save")
     public BaseResponse<GlueCodeDO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
@@ -114,9 +113,8 @@ public class GlueCodeController {
      */
     @Operation(summary = "回滚到指定版本")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
-    @Idempotent(key = "glueCode:rollback", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:cronjob:GlueCodeController:rollback:lock", ttlSeconds = 5)
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollback'")
-    @SentinelRateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
     @SentinelRateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
     @PostMapping("/rollback")
     public BaseResponse<GlueCodeDO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {

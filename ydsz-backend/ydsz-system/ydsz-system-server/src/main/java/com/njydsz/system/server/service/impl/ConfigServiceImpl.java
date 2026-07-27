@@ -23,6 +23,7 @@ import com.njydsz.system.server.service.ConfigService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 系统配置 Service 实现。
@@ -110,6 +111,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return 该组下所有启用配置列表（按 sortOrder 升序）
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<ConfigVO> getConfigsByGroup(String configGroup) {
         String cacheKey = CACHE_GROUP_PREFIX + configGroup;
         String cached = redisService.get(cacheKey, String.class);
@@ -133,6 +135,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return 公开配置列表（按 sortOrder 升序）
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<ConfigVO> listPublicConfigs() {
         String cached = redisService.get(CACHE_PUBLIC_KEY, String.class);
         if (cached != null) {
@@ -159,6 +162,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return 分页结果
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public IPage<ConfigVO> page(int pageNum, int pageSize, String configGroup, String configKey, String status) {
         QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
         if (configGroup != null && !configGroup.isBlank()) {
@@ -184,6 +188,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return 全部配置列表（不区分状态）
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<ConfigVO> list() {
         return mapper.selectList(null).stream().map(this::toVO).collect(Collectors.toList());
     }

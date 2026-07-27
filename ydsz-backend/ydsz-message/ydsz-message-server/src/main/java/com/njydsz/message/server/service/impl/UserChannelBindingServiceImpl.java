@@ -28,8 +28,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserChannelBindingServiceImpl implements UserChannelBindingService {
 
+    /** 用户-通道绑定 Mapper */
     private final MsgUserChannelMapper msgUserChannelMapper;
 
+    /**
+     * {@inheritDoc}
+     * <p>按 userId + channelType 查找已有绑定：存在则更新 channelUserId/verified/isPrimary/extra，
+     * 不存在则新建。channelType 统一转大写存储，tenantId 从 {@link TenantContext} 获取。
+     *
+     * @throws SysException 当 userId 或 channelType 为空时抛出
+     */
     @Override
     public MsgUserChannelDO upsert(UserChannelBindingDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannelType())) {
@@ -71,6 +79,10 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>按 ID 逻辑删除绑定记录，id 为空时直接返回。
+     */
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
@@ -79,6 +91,13 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
         msgUserChannelMapper.deleteById(id);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>按 tenantId 隔离，结果按 isPrimary 降序、createdAt 降序排列。
+     *
+     * @param userId 用户 ID
+     * @return 绑定列表，userId 为空时返回空列表
+     */
     @Override
     public List<MsgUserChannelDO> listByUser(String userId) {
         if (!StringUtils.hasText(userId)) {
@@ -91,6 +110,14 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
                 .orderByDesc(MsgUserChannelDO::getCreatedAt));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>channelType 统一转大写查询，按 tenantId 隔离，优先返回 isPrimary=1 的记录。
+     *
+     * @param userId      用户 ID
+     * @param channelType 通道类型（不区分大小写）
+     * @return 绑定记录，不存在时返回 null
+     */
     @Override
     public MsgUserChannelDO getByUserAndChannel(String userId, String channelType) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(channelType)) {
@@ -104,6 +131,15 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
                 .last("LIMIT 1"));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>查询用户的通道绑定 channelUserId，无绑定时返回 null（降级使用原 receiver），
+     * 绑定未验证时记 WARN 日志但仍返回。
+     *
+     * @param userId      用户 ID
+     * @param channelType 通道类型
+     * @return 通道用户 ID，无绑定时返回 null
+     */
     @Override
     public String resolveChannelUserId(String userId, String channelType) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(channelType)) {

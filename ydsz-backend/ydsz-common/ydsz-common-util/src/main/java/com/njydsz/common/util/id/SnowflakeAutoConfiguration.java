@@ -36,6 +36,16 @@ public class SnowflakeAutoConfiguration {
     private static final long MAX_WORKER_ID = SnowflakeUtils.MAX_WORKER_ID_PUBLIC;
     private static final long MAX_DATACENTER_ID = SnowflakeUtils.MAX_DATACENTER_ID_PUBLIC;
 
+    /**
+     * 自动配置 Snowflake ID 生成器
+     *
+     * <p>根据配置自动解析 workerId 和 datacenterId，并初始化 SnowflakeUtils。
+     * 支持多种 workerId 来源策略：分布式注册中心 > 环境变量 > 配置文件 > 实例索引。
+     *
+     * @param properties Snowflake 配置属性
+     * @param environment Spring 环境
+     * @param workerIdRegistryProvider WorkerId 注册中心（可选）
+     */
     public SnowflakeAutoConfiguration(SnowflakeProperties properties, Environment environment,
                                       ObjectProvider<WorkerIdRegistry> workerIdRegistryProvider) {
         try {

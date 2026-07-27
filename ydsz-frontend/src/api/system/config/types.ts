@@ -10,7 +10,7 @@ import type { PageQuery } from '@/types/api'
 /** 系统参数配置视图对象 */
 export interface ConfigVO {
   /** 主键 ID */
-  id: number
+  id: string
   /** 配置分组 */
   configGroup: string
   /** 配置键 */
@@ -52,7 +52,7 @@ export interface ConfigQuery extends PageQuery {
 /** 系统参数配置表单 DTO（新增/编辑共用） */
 export interface ConfigFormDTO {
   /** 主键 ID（编辑时必填） */
-  id?: number
+  id?: string
   /** 配置分组 */
   configGroup: string
   /** 配置键 */

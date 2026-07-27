@@ -61,8 +61,7 @@ public class UnsubscribeController {
      */
     @Operation(summary = "token 一键退订")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
-    @Idempotent(key = "unsubscribe:oneClick", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.unsubscribe.oneClick", threshold = 50)
+    @Idempotent(key = "ydsz:message:UnsubscribeController:oneClick:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.unsubscribe.oneClick", threshold = 50)
     @PostMapping("/oneClick")
     public BaseResponse<MsgSubscriptionDO> oneClick(@RequestParam String token) {
@@ -114,8 +113,7 @@ public class UnsubscribeController {
      */
     @Operation(summary = "恢复订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
-    @Idempotent(key = "unsubscribe:resubscribe", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.unsubscribe.resubscribe", threshold = 50)
+    @Idempotent(key = "ydsz:message:UnsubscribeController:resubscribe:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.unsubscribe.resubscribe", threshold = 50)
     @PostMapping("/resubscribe")
     public BaseResponse<Void> resubscribe(@RequestParam String userId,

@@ -26,9 +26,13 @@ const { t } = useI18n()
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 表单/操作提交状态 */
 const submitting = ref(false)
+/** Bench 记录列表 */
 const list = ref<BenchRecordVO[]>([])
+/** Bench 记录总数 */
 const total = ref(0)
 const query = reactive({
   page: 1,

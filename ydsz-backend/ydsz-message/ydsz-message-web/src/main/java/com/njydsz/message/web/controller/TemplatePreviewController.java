@@ -20,6 +20,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.lock.annotation.Idempotent;
 
 /**
  * 模板预览 Controller（P1-4）。
@@ -73,7 +74,7 @@ public class TemplatePreviewController {
 
     @Operation(summary = "预览自定义模板内容")
     @SentinelRateLimit(resource = "message.templatepreview.previewRaw", threshold = 50)
-    @SentinelRateLimit(resource = "message.templatepreview.previewRaw", threshold = 50)
+    @Idempotent(key = "ydsz:message:TemplatePreviewController:previewRaw:lock", ttlSeconds = 5)
     @PostMapping("/raw")
     public BaseResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplate())) {

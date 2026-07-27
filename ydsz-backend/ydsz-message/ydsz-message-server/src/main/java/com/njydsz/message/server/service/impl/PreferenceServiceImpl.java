@@ -34,6 +34,13 @@ public class PreferenceServiceImpl implements PreferenceService {
     /** 用户消息偏好 Mapper */
     private final MsgPreferenceMapper msgPreferenceMapper;
 
+    /**
+     * {@inheritDoc}
+     * <p>按 (userId, channel, bizType) 查找已有偏好：存在则更新，不存在则新建。
+     * bizType 为空时默认 {@link MessageConstants#DEFAULT_BIZ_TYPE}。
+     *
+     * @throws SysException 当 userId 或 channel 为空时抛出
+     */
     @Override
     public MsgPreferenceDO upsert(PreferenceUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannel())) {
@@ -79,6 +86,15 @@ public class PreferenceServiceImpl implements PreferenceService {
         return existing;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>优先按精确 bizType 查询，未命中时回退 {@link MessageConstants#DEFAULT_BIZ_TYPE} 默认偏好。
+     *
+     * @param userId   用户 ID
+     * @param channel  通道类型
+     * @param bizType  业务类型（可选，为空时使用默认）
+     * @return 偏好记录，不存在时返回 null
+     */
     @Override
     public MsgPreferenceDO getByUser(String userId, String channel, String bizType) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(channel)) {
@@ -105,6 +121,12 @@ public class PreferenceServiceImpl implements PreferenceService {
         return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param userId 用户 ID
+     * @return 偏好列表，按 channel 升序排列
+     */
     @Override
     public List<MsgPreferenceDO> listByUser(String userId) {
         if (!StringUtils.hasText(userId)) {
@@ -115,6 +137,11 @@ public class PreferenceServiceImpl implements PreferenceService {
                 .orderByAsc(MsgPreferenceDO::getChannel));
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws SysException 当 id 为空时抛出
+     */
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {

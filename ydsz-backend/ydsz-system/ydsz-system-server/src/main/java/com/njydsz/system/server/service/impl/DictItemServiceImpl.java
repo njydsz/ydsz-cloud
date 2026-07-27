@@ -287,33 +287,13 @@ public class DictItemServiceImpl implements DictItemService {
         if (typeCode == null) {
             return;
         }
-        redisService.delete(CACHE_LIST_PREFIX + typeCode);
+        redisService.del(CACHE_LIST_PREFIX + typeCode);
         // 使用 SCAN 替代 KEYS，避免 Redis 阻塞
         String pattern = CACHE_ITEM_PREFIX + typeCode + ":*";
-        Set<String> keys = scanKeys(pattern);
+        Set<String> keys = redisService.scan(pattern);
         if (!keys.isEmpty()) {
-            redisService.delete(keys);
+            redisService.del(keys);
         }
-    }
-
-    /**
-     * 使用 SCAN 迭代收集匹配的 key，避免 KEYS 命令阻塞 Redis。
-     *
-     * @param pattern key 匹配模式
-     * @return 匹配的 key 集合
-     */
-    private Set<String> scanKeys(String pattern) {
-        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
-        Set<String> keys = new HashSet<>();
-        redisService.execute((RedisCallback<Void>) connection -> {
-            try (Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
-                while (cursor.hasNext()) {
-                    keys.add(new String(cursor.next()));
-                }
-            }
-            return null;
-        });
-        return keys;
     }
 
     /**

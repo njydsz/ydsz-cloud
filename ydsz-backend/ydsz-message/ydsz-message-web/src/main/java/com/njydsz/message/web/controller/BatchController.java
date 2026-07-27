@@ -56,8 +56,7 @@ public class BatchController {
      */
     @Operation(summary = "异步批量发送消息")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "batch:submitBatch", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.batch.submitBatch", threshold = 50)
+    @Idempotent(key = "ydsz:message:BatchController:submitBatch:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.batch.submitBatch", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {

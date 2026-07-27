@@ -51,9 +51,8 @@ public class SubscriptionController {
      */
     @Operation(summary = "新增/更新订阅")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
-    @Idempotent(key = "subscription:upsert", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:SubscriptionController:upsert:lock", ttlSeconds = 5)
     @Audit(module = "订阅管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
-    @SentinelRateLimit(resource = "message.subscription.upsert", threshold = 50)
     @SentinelRateLimit(resource = "message.subscription.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
@@ -98,9 +97,8 @@ public class SubscriptionController {
      */
     @Operation(summary = "退订")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
-    @Idempotent(key = "subscription:unsubscribe", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:SubscriptionController:unsubscribe:lock", ttlSeconds = 5)
     @Audit(module = "订阅管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'unsubscribe'")
-    @SentinelRateLimit(resource = "message.subscription.unsubscribe", threshold = 50)
     @SentinelRateLimit(resource = "message.subscription.unsubscribe", threshold = 50)
     @PostMapping("/unsubscribe")
     public BaseResponse<Void> unsubscribe(@RequestParam String userId,

@@ -7,7 +7,7 @@
 
 export interface ExpenseVO {
   /** 费用报销 ID */
-  id: number
+  id: string
   /** 费用报销编码 */
   expenseCode: string
   /** 所属立项 ID */
@@ -61,7 +61,7 @@ export interface ExpenseCreateDTO {
 
 export interface ApprovalDTO {
   /** 费用报销 ID */
-  id: number
+  id: string
   /** 目标状态 */
   targetStatus: string
   /** 审批人 ID */

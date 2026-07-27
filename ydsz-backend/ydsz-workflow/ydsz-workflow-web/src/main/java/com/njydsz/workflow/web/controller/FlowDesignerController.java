@@ -71,8 +71,7 @@ public class FlowDesignerController {
      * @param dto 设计器数据 DTO（designerData 为 JSON 字符串，含 nodes + edges）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDesigner:saveDesignerData", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdesigner.saveDesignerData", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDesignerController:saveDesignerData:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdesigner.saveDesignerData", threshold = 50)
     @PostMapping("/definition/{id}/designer")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -102,8 +101,7 @@ public class FlowDesignerController {
      * @param id 流程定义 ID
      * @return 统一响应结果，true=加锁成功
      */
-    @Idempotent(key = "flowDesigner:lockDefinition", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdesigner.lockDefinition", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDesignerController:lockDefinition:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdesigner.lockDefinition", threshold = 50)
     @PostMapping("/definition/{id}/lock")
     @Operation(summary = "加锁流程定义（设计器协同编辑）")
@@ -121,8 +119,7 @@ public class FlowDesignerController {
      * @param id 流程定义 ID
      * @return 统一响应结果，true=解锁成功
      */
-    @Idempotent(key = "flowDesigner:unlockDefinition", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdesigner.unlockDefinition", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDesignerController:unlockDefinition:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdesigner.unlockDefinition", threshold = 50)
     @PostMapping("/definition/{id}/unlock")
     @Operation(summary = "解锁流程定义（设计器协同编辑）")
@@ -177,8 +174,7 @@ public class FlowDesignerController {
      * @param formFieldsConfig 字段权限 JSON 字符串
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDesigner:saveFormConfig", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdesigner.saveFormConfig", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDesignerController:saveFormConfig:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdesigner.saveFormConfig", threshold = 50)
     @PostMapping("/definition/{id}/formConfig/{nodeCode}")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -213,8 +209,7 @@ public class FlowDesignerController {
      * @param slaConfig  SLA 配置（JSON 对象，由 controller 序列化为字符串存储）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDesigner:saveSlaConfig", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowdesigner.saveSlaConfig", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowDesignerController:saveSlaConfig:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowdesigner.saveSlaConfig", threshold = 50)
     @PostMapping("/definition/{id}/slaConfig/{nodeCode}")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
@@ -247,7 +242,7 @@ public class FlowDesignerController {
      * @param flowName     自定义流程名称（可选，为空则使用模板名称）
      * @return 新创建的流程定义 ID
      */
-    @Idempotent(key = "flowDesigner:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowDesignerController:importTemplate:lock", ttlSeconds = 5)
     @PostMapping("/template/{templateCode}/import")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
     public BaseResponse<String> importTemplate(@PathVariable String templateCode,

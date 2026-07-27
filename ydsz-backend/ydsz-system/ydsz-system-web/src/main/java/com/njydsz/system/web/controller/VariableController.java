@@ -72,7 +72,7 @@ public class VariableController {
     @Operation(summary = "创建系统变量")
     @SentinelRateLimit(resource = "system.variable.save", threshold = 50)
     @Idempotent(key = 'system:variable:save', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.variable.save", threshold = 50)
+    @Idempotent(key = "ydsz:system:VariableController:save:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody VariableDTO dto) {
         return BaseResponse.success(service.save(dto));
@@ -83,7 +83,7 @@ public class VariableController {
     @Operation(summary = "更新系统变量")
     @SentinelRateLimit(resource = "system.variable.update", threshold = 50)
     @Idempotent(key = 'system:variable:update', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.variable.update", threshold = 50)
+    @Idempotent(key = "ydsz:system:VariableController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody VariableDTO dto) {
         return BaseResponse.success(service.updateById(dto));
@@ -94,7 +94,7 @@ public class VariableController {
     @Operation(summary = "删除系统变量")
     @SentinelRateLimit(resource = "system.variable.remove", threshold = 50)
     @Idempotent(key = 'system:variable:remove', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.variable.remove", threshold = 50)
+    @Idempotent(key = "ydsz:system:VariableController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));

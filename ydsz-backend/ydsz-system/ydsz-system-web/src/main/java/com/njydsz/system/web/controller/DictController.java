@@ -66,7 +66,7 @@ public class DictController {
     @Operation(summary = "创建字典类型")
     @SentinelRateLimit(resource = "system.dict.save", threshold = 50)
     @Idempotent(key = 'system:dict:save', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.dict.save", threshold = 50)
+    @Idempotent(key = "ydsz:system:DictController:save:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody DictTypeDTO dto) {
         return BaseResponse.success(service.save(dto));
@@ -77,7 +77,7 @@ public class DictController {
     @Operation(summary = "更新字典类型")
     @SentinelRateLimit(resource = "system.dict.update", threshold = 50)
     @Idempotent(key = 'system:dict:update', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.dict.update", threshold = 50)
+    @Idempotent(key = "ydsz:system:DictController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody DictTypeDTO dto) {
         return BaseResponse.success(service.updateById(dto));
@@ -88,7 +88,7 @@ public class DictController {
     @Operation(summary = "删除字典类型")
     @SentinelRateLimit(resource = "system.dict.remove", threshold = 50)
     @Idempotent(key = 'system:dict:remove', ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "system.dict.remove", threshold = 50)
+    @Idempotent(key = "ydsz:system:DictController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
         return BaseResponse.success(service.removeById(id));

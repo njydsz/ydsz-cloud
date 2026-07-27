@@ -15,6 +15,7 @@ import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
 import lombok.RequiredArgsConstructor;
+import com.njydsz.common.auth.annotation.DataScope;
 
 /**
  * 待办任务 Service 门面（Facade）
@@ -141,6 +142,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
     public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
         return queryService.listTodoByAssignee(assigneeId, tenantId);
     }
@@ -152,6 +154,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
     public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
         return queryService.listDoneByAssignee(assigneeId, tenantId);
     }
@@ -163,6 +166,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
     public List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
                                             List<String> deptIds, String tenantId) {
         return queryService.listTodoByUser(userId, roleCodes, deptIds, tenantId);

@@ -46,16 +46,29 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 /**
- * AWS S3 / S3 兼容对象存储实现
- * <p>继承 {@link AbstractFileStorage}，
- * 将操作翻译为 AWS S3 SDK v2 的原生 API 调用。
+ * AWS S3 / S3 兼容对象存储实现。
  *
- * <p>分片上传使用原生 multipart upload 协议：
- * CreateMultipartUpload / UploadPart / ListParts / CompleteMultipartUpload / AbortMultipartUpload
+ * <p>继承 {@link AbstractFileStorage}，将操作翻译为 AWS S3 SDK v2 的原生 API 调用。
+ * 支持所有 S3 兼容存储服务（AWS S3、MinIO、Ceph、Cloudflare R2 等）。
+ *
+ * <h3>分片上传协议</h3>
+ * <p>使用 S3 原生 multipart upload 协议，完整支持分片上传生命周期：
+ * <ol>
+ *   <li>{@code CreateMultipartUpload}：初始化分片上传，获取 uploadId</li>
+ *   <li>{@code UploadPart}：上传单个分片，返回 ETag</li>
+ *   <li>{@code ListParts}：列出已上传的分片及 ETag</li>
+ *   <li>{@code CompleteMultipartUpload}：合并所有分片为最终对象</li>
+ *   <li>{@code AbortMultipartUpload}：取消上传并清理已上传分片</li>
+ * </ol>
+ *
+ * <h3>预签名 URL</h3>
+ * <p>通过 {@link S3Presigner} 生成预签名下载 URL，支持自定义过期时间。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @see AbstractFileStorage
+ * @see S3Client
+ * @see S3Presigner
  */
 @Slf4j
 public class S3Storage extends AbstractFileStorage {

@@ -46,7 +46,7 @@ export interface DictTypeFormDTO {
 /** 字典项表单 DTO（新增/编辑共用） */
 export interface DictItemFormDTO {
   /** 字典项 ID（编辑时必填） */
-  id?: number
+  id?: string
   /** 所属字典类型编码 */
   typeCode: string
   /** 字典项编码 */

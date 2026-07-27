@@ -40,9 +40,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
+    /** 部门 Mapper */
     private final DepartmentMapper departmentMapper;
+    /** 用户-部门关联 Mapper（用于删除前检查是否有人员关联） */
     private final UserDeptMapper userDeptMapper;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BusinessException 当部门不存在或已删除时抛出
+     */
     @Override
     public DepartmentVO getById(String id) {
         DepartmentDO entity = departmentMapper.selectById(id);
@@ -52,6 +59,11 @@ public class DepartmentServiceImpl implements DepartmentService {
         return toVO(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全部未删除部门列表（按 sortOrder 降序）
+     */
     @Override
     public List<DepartmentVO> list() {
         LambdaQueryWrapper<DepartmentDO> wrapper = new LambdaQueryWrapper<>();
@@ -62,6 +74,12 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>执行 deptCode 唯一性校验后插入，status 默认 ENABLED，parentId 为空时默认 "0"（根节点）。
+     *
+     * @throws BusinessException 当 deptCode 已存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(DepartmentSaveDTO dto) {
@@ -85,6 +103,12 @@ public class DepartmentServiceImpl implements DepartmentService {
         return entity.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id。
+     *
+     * @throws BusinessException 当部门不存在或已删除时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(DepartmentSaveDTO dto) {
@@ -96,6 +120,12 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departmentMapper.updateById(entity) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>删除前检查：有子部门不可删除、有人员关联不可删除。
+     *
+     * @throws BusinessException 当部门不存在、有子部门、或仍有人员关联时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -121,6 +151,12 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departmentMapper.deleteById(id) > 0;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>查询全部未删除部门，通过 {@link TreeBuilder#buildSimple} 构建树形结构。
+     *
+     * @return 部门树形结构列表，空数据返回空列表
+     */
     @Override
     public List<DepartmentTreeVO> tree() {
         List<DepartmentDO> all = departmentMapper.selectList(
@@ -209,6 +245,12 @@ public class DepartmentServiceImpl implements DepartmentService {
         return result;
     }
 
+    /**
+     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
+     *
+     * @param entity 数据库实体
+     * @return 视图对象
+     */
     private DepartmentVO toVO(DepartmentDO entity) {
         DepartmentVO vo = new DepartmentVO();
         BeanUtils.copyProperties(entity, vo);

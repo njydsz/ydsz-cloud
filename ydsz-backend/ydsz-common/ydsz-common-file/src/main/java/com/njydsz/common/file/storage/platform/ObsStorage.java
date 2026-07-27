@@ -25,16 +25,28 @@ import com.obs.services.model.*;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 华为云 OBS 对象存储实现
- * <p>继承 {@link AbstractFileStorage}，
- * 将操作翻译为华为云 OBS Java SDK 的原生 API 调用。
+ * 华为云 OBS 对象存储实现。
  *
- * <p>分片上传使用原生 multipart upload 协议：
- * initiateMultipartUpload / uploadPart / listParts / completeMultipartUpload / abortMultipartUpload
+ * <p>继承 {@link AbstractFileStorage}，将操作翻译为华为云 OBS Java SDK 的原生 API 调用。
+ * 实现 {@link AutoCloseable} 以在应用关闭时释放 OBS 客户端资源。
+ *
+ * <h3>分片上传协议</h3>
+ * <p>使用 OBS 原生 multipart upload 协议，完整支持分片上传生命周期：
+ * <ol>
+ *   <li>{@code initiateMultipartUpload}：初始化分片上传，获取 uploadId</li>
+ *   <li>{@code uploadPart}：上传单个分片，返回分片 ETag</li>
+ *   <li>{@code listParts}：列出已上传的分片</li>
+ *   <li>{@code completeMultipartUpload}：合并所有分片为最终对象</li>
+ *   <li>{@code abortMultipartUpload}：取消上传并清理已上传分片</li>
+ * </ol>
+ *
+ * <h3>临时授权</h3>
+ * <p>通过 {@code generatePresignedUrl} 生成临时下载链接，支持自定义过期时间和 HTTP 方法。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
+ * @see AbstractFileStorage
+ * @see ObsClient
  */
 @Slf4j
 public class ObsStorage extends AbstractFileStorage implements AutoCloseable {

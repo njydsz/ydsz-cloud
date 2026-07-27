@@ -1,11 +1,37 @@
 package com.njydsz.common.excel.core.writer;
 
 /**
- * SuperFastExcelWriter 类
+ * 高性能 Excel 写入器 — 纯手工 XML 序列化。
+ *
+ * <p>直接生成 OOXML（.xlsx）格式的 XML 字节流并写入 ZIP 包，
+ * 绕过 Apache POI 的对象模型，以极低的内存开销实现高性能写入。
+ *
+ * <h3>写入原理</h3>
+ * <p>.xlsx 文件本质上是一个 ZIP 包，包含以下 XML 文件：
+ * <ul>
+ *   <li>{@code [Content_Types].xml}：内容类型声明</li>
+ *   <li>{@code _rels/.rels}：根关系文件</li>
+ *   <li>{@code xl/workbook.xml}：工作簿定义</li>
+ *   <li>{@code xl/worksheets/sheet1.xml}：Sheet 数据</li>
+ *   <li>{@code xl/sharedStrings.xml}：共享字符串表</li>
+ * </ul>
+ * 本写入器预生成固定模板的 XML（ContentTypes/Rels/Workbook），
+ * 仅动态生成 Sheet 数据和 SST 部分。
+ *
+ * <h3>性能优化</h3>
+ * <ul>
+ *   <li>使用 {@link ASMFieldAccessor} 替代反射获取字段值</li>
+ *   <li>行级缓冲（1MB），减少 ZIP 写入次数</li>
+ *   <li>公式注入防护（{@link FormulaInjectionGuard}）</li>
+ *   <li>支持 {@code @ExcelProperty.order()} 列序排序</li>
+ *   <li>支持 {@code excludeColumnFiledNames} / {@code includeColumnFiledNames} 列过滤</li>
+ * </ul>
  *
  * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
+ * @since 1.0.0
+ * @see ConcurrentExcelWriter
+ * @see FormulaInjectionGuard
+ * @see ASMFieldAccessor
  */
 import java.io.*;
 import java.lang.reflect.Field;

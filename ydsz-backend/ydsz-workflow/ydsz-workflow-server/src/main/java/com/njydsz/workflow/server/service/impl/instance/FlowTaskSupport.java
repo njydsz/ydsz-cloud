@@ -144,7 +144,7 @@ public class FlowTaskSupport {
     public void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
         if (eventPublisher == null) return;
         try {
-            eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));
+            eventPublisher.publishEvent(new FlowWorkflowEvent(eventType, instanceId, taskId, null));
         } catch (Exception e) {
             log.warn("[Flow] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
         }

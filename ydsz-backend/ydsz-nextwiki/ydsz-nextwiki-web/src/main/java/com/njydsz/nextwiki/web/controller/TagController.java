@@ -42,7 +42,7 @@ public class TagController {
     private final TagApplicationService tagApplicationService;
 
     @Audit(module = "标签管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createTag'")
-    @Idempotent(key = "nextwiki:tag:createTag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:TagController:createTag:lock", ttlSeconds = 5)
     @PostMapping
     @Operation(summary = "创建标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
@@ -61,7 +61,7 @@ public class TagController {
     }
 
     @Audit(module = "标签管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'bindTag'")
-    @Idempotent(key = "nextwiki:tag:bindTag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:nextwiki:TagController:bindTag:lock", ttlSeconds = 5)
     @PostMapping("/bind")
     @Operation(summary = "为文件绑定标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_BIND)

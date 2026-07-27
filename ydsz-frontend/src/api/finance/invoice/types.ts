@@ -7,7 +7,7 @@
 /** 发票 VO */
 export interface InvoiceVO {
   /** 主键 ID */
-  id: number
+  id: string
   /** 发票编码（系统生成） */
   invoiceCode: string
   /** 发票号码（税务编号） */
@@ -83,7 +83,7 @@ export interface InvoiceCreateDTO {
 /** 发票审批/开具/红冲 DTO */
 export interface InvoiceApprovalDTO {
   /** 发票 ID */
-  id: number
+  id: string
   /** 审批人 ID */
   approverId?: number
   /** 审批人姓名 */

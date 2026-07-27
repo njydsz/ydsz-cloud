@@ -43,8 +43,7 @@ public class FlowSlaController {
      *
      * @return 本轮扫描处理的任务数
      */
-    @Idempotent(key = "flowSla:slaScan", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowsla.slaScan", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowSlaController:slaScan:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowsla.slaScan", threshold = 50)
     @PostMapping("/sla/scan")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
@@ -59,8 +58,7 @@ public class FlowSlaController {
      * @param taskId 任务 ID
      * @return 是否处理成功
      */
-    @Idempotent(key = "flowSla:slaProcess", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowsla.slaProcess", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowSlaController:slaProcess:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowsla.slaProcess", threshold = 50)
     @PostMapping("/sla/process/{taskId}")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)

@@ -48,9 +48,8 @@ public class RecallController {
      */
     @Operation(summary = "撤回站内通知")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recallNotification", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:RecallController:recallNotification:lock", ttlSeconds = 5)
     @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallNotification'")
-    @SentinelRateLimit(resource = "message.recall.recallNotification", threshold = 50)
     @SentinelRateLimit(resource = "message.recall.recallNotification", threshold = 50)
     @PostMapping("/notification")
     public BaseResponse<Boolean> recallNotification(@RequestParam String userId,
@@ -66,9 +65,8 @@ public class RecallController {
      */
     @Operation(summary = "撤回已发送消息")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recallMessage", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:RecallController:recallMessage:lock", ttlSeconds = 5)
     @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallMessage'")
-    @SentinelRateLimit(resource = "message.recall.recallMessage", threshold = 50)
     @SentinelRateLimit(resource = "message.recall.recallMessage", threshold = 50)
     @PostMapping("/message/{logId}")
     public BaseResponse<Boolean> recallMessage(@PathVariable String logId) {
@@ -85,9 +83,8 @@ public class RecallController {
      */
     @Operation(summary = "按消息 ID 撤回消息")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recallByMsgId", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:RecallController:recallByMsgId:lock", ttlSeconds = 5)
     @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallByMsgId'")
-    @SentinelRateLimit(resource = "message.recall.recallByMsgId", threshold = 50)
     @SentinelRateLimit(resource = "message.recall.recallByMsgId", threshold = 50)
     @PostMapping("/msg/{msgId}")
     public BaseResponse<Boolean> recallByMsgId(@PathVariable String msgId) {
@@ -102,9 +99,8 @@ public class RecallController {
      */
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recallBatch", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:message:RecallController:recallBatch:lock", ttlSeconds = 5)
     @Audit(module = "消息撤回", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recallBatch'")
-    @SentinelRateLimit(resource = "message.recall.recallBatch", threshold = 50)
     @SentinelRateLimit(resource = "message.recall.recallBatch", threshold = 50)
     @PostMapping("/batch")
     public BaseResponse<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {

@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.server.service.PreviewApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,8 +34,7 @@ public class PreviewController {
 
     private final PreviewApplicationService previewService;
 
-    @Idempotent(key = "nextwiki:preview:generatePreview", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "nextwiki.preview.generatePreview", threshold = 50)
+    @Idempotent(key = "ydsz:nextwiki:PreviewController:generatePreview:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "nextwiki.preview.generatePreview", threshold = 50)
     @PostMapping("/{fileNodeId}/generate")
     @Operation(summary = "生成预览（异步）")

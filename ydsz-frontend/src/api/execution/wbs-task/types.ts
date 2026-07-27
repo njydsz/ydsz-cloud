@@ -7,7 +7,7 @@
 
 export interface WbsTaskVO {
   /** 任务 ID */
-  id: number
+  id: string
   /** 任务编码（唯一） */
   taskCode: string
   /** 任务名称 */
@@ -99,7 +99,7 @@ export interface WbsTaskCreateDTO {
 
 export interface WbsTaskStatusDTO {
   /** 任务 ID */
-  id: number
+  id: string
   /** 目标状态 */
   targetStatus: string
   /** 进度百分比 */

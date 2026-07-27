@@ -60,8 +60,7 @@ public class FlowAdvancedController {
         return BaseResponse.success(reportService.generateMonthlyReport(tenantId));
     }
 
-    @Idempotent(key = "flowAdvanced:sendWeekly", ttlSeconds = 10, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowadvanced.sendWeekly", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:sendWeekly:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowadvanced.sendWeekly", threshold = 50)
     @PostMapping("/report/weekly/send")
     @Operation(summary = "P2-4: 推送周报")
@@ -71,8 +70,7 @@ public class FlowAdvancedController {
         return BaseResponse.success(reportService.sendWeeklyReport(tenantId));
     }
 
-    @Idempotent(key = "flowAdvanced:sendMonthly", ttlSeconds = 10, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowadvanced.sendMonthly", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:sendMonthly:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowadvanced.sendMonthly", threshold = 50)
     @PostMapping("/report/monthly/send")
     @Operation(summary = "P2-4: 推送月报")
@@ -84,8 +82,7 @@ public class FlowAdvancedController {
 
     // ==================== P2-5: 多实例合并审批 ====================
 
-    @Idempotent(key = "flowAdvanced:merge", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowadvanced.merge", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:merge:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowadvanced.merge", threshold = 50)
     @PostMapping("/merge")
     @Operation(summary = "P2-5: 合并多个流程实例")
@@ -102,7 +99,7 @@ public class FlowAdvancedController {
         return BaseResponse.success(mergeService.getMergeGroup(mergeGroupId));
     }
 
-    @Idempotent(key = "flowAdvanced:mergePass", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:mergePass:lock", ttlSeconds = 5)
     @PostMapping("/merge/{mergeGroupId}/pass")
     @Operation(summary = "P2-5: 批量通过合并组")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -112,7 +109,7 @@ public class FlowAdvancedController {
         return BaseResponse.success(mergeService.batchPassMerged(mergeGroupId, userId, comment));
     }
 
-    @Idempotent(key = "flowAdvanced:mergeReject", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:mergeReject:lock", ttlSeconds = 5)
     @PostMapping("/merge/{mergeGroupId}/reject")
     @Operation(summary = "P2-5: 批量驳回合并组")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -132,9 +129,9 @@ public class FlowAdvancedController {
 
     // ==================== P2-6: 会签动态完成条件 ====================
 
-    @Idempotent(key = "flowAdvanced:updateCondition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:updateCondition:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowadvanced.updateVotePassRate", threshold = 50)
-    @SentinelRateLimit(resource = "workflow.flowadvanced.updateVotePassRate", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:updateVotePassRate:lock", ttlSeconds = 5)
     @PostMapping("/countersign/{taskId}/votePassRate")
     @Operation(summary = "P2-6: 动态修改会签通过率阈值")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
@@ -145,8 +142,7 @@ public class FlowAdvancedController {
         return BaseResponse.success();
     }
 
-    @Idempotent(key = "flowAdvanced:updateApproveCount", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowadvanced.updateApproveCount", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowAdvancedController:updateApproveCount:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowadvanced.updateApproveCount", threshold = 50)
     @PostMapping("/countersign/{taskId}/approveCount")
     @Operation(summary = "P2-6: 动态修改会签所需通过人数")

@@ -57,8 +57,7 @@ public class AggregateController {
      */
     @Operation(summary = "按聚合组+接收人强制刷新")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
-    @Idempotent(key = "aggregate:flushByGroup", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.aggregate.flushByGroup", threshold = 50)
+    @Idempotent(key = "ydsz:message:AggregateController:flushByGroup:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.aggregate.flushByGroup", threshold = 50)
     @PostMapping("/flush")
     public BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
@@ -72,8 +71,7 @@ public class AggregateController {
      */
     @Operation(summary = "刷新到期批次")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
-    @Idempotent(key = "aggregate:flushDue", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "message.aggregate.flushDue", threshold = 50)
+    @Idempotent(key = "ydsz:message:AggregateController:flushDue:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "message.aggregate.flushDue", threshold = 50)
     @PostMapping("/flushDue")
     public BaseResponse<Integer> flushDue() {

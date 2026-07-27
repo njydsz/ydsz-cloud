@@ -54,8 +54,7 @@ public class PostController {
 
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建岗位: ' + #dto.postName")
-    @Idempotent(key = "post:create", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.post.create", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:PostController:create:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.post.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建岗位")
@@ -65,8 +64,7 @@ public class PostController {
 
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新岗位: ' + #dto.id")
-    @Idempotent(key = "post:update", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "userinfo.post.update", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:PostController:update:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "userinfo.post.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新岗位")
@@ -77,7 +75,7 @@ public class PostController {
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除岗位: ' + #id")
     @SentinelRateLimit(resource = "userinfo.post.remove", threshold = 50)
-    @SentinelRateLimit(resource = "userinfo.post.remove", threshold = 50)
+    @Idempotent(key = "ydsz:userinfo:PostController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除岗位")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

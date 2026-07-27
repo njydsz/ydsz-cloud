@@ -1,11 +1,27 @@
 package com.njydsz.common.excel.core.reader;
 
 /**
- * ChunkedSSTTable 类
+ * 分块加载的 SST（Shared Strings Table）缓存表。
+ *
+ * <p>Excel .xlsx 文件中的 SharedStrings.xml 存储了所有共享字符串，
+ * 单元格类型为 {@code t="s"} 时通过索引引用此表。当 Excel 文件包含大量字符串时，
+ * 全量加载 SST 会消耗大量内存，本类实现了两种加载策略：
+ *
+ * <h3>加载策略</h3>
+ * <ul>
+ *   <li><b>简单模式</b>（totalSize < 5MB）：全量读入 byte[]，直接在内存中按索引查找</li>
+ *   <li><b>分块模式</b>（totalSize ≥ 5MB）：使用 {@link RandomAccessFile} 随机访问，
+ *       按需加载单个字符串，配合 LRU 缓存（2000 条）减少磁盘 I/O</li>
+ * </ul>
+ *
+ * <h3>实例管理</h3>
+ * <p>通过 {@link ConcurrentHashMap} 按文件路径缓存实例，避免重复解析同一文件的 SST。
+ * 可通过 {@link #clearCache(String)} 或 {@link #clearAllCache()} 释放缓存。
  *
  * @author ydsz-team
- * @email ydsz-dev@njydsz.com
- * @version 1.0.0
+ * @since 1.0.0
+ * @see SharedStringsReader
+ * @see LRUCache
  */
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -21,27 +37,51 @@ public class ChunkedSSTTable {
 
     private static final Logger log = LoggerFactory.getLogger(ChunkedSSTTable.class);
 
+    /** 分块模式阈值：SST 数据超过 5MB 时启用分块加载 */
     private static final int CHUNK_THRESHOLD = 5 * 1024 * 1024;
+    /** LRU 缓存容量：缓存最近访问的 2000 个字符串 */
     private static final int CACHE_SIZE = 2000;
 
+    /** LRU 缓存：字符串索引 → 字符串值 */
     private final LRUCache<Integer, String> cache;
+    /** 每个字符串在文件中的偏移量（分块模式使用） */
     private long[] offsets;
+    /** 每个字符串的字节长度（分块模式使用） */
     private int[] lengths;
+    /** 随机访问文件句柄（分块模式使用） */
     private RandomAccessFile raf;
+    /** SST 中的字符串总数 */
     private int totalStrings;
+    /** 是否为简单模式（全量内存） */
     private boolean isSimpleMode;
+    /** 简单模式下的完整 SST 字节数据 */
     private byte[] simpleStrings;
 
+    /** 按文件路径缓存的实例表 */
     private static final ConcurrentHashMap<String, ChunkedSSTTable> instances = new ConcurrentHashMap<>();
 
+    /**
+     * 获取指定文件路径的 SST 实例（单例模式）。
+     *
+     * @param filePath SST 文件路径
+     * @return 缓存或新建的 ChunkedSSTTable 实例
+     */
     public static ChunkedSSTTable getInstance(String filePath) {
         return instances.computeIfAbsent(filePath, k -> new ChunkedSSTTable());
     }
 
+    /**
+     * 清除指定文件路径的 SST 实例缓存。
+     *
+     * @param filePath SST 文件路径
+     */
     public static void clearCache(String filePath) {
         instances.remove(filePath);
     }
 
+    /**
+     * 清除所有 SST 实例缓存。
+     */
     public static void clearAllCache() {
         instances.clear();
     }
@@ -50,6 +90,19 @@ public class ChunkedSSTTable {
         this.cache = new LRUCache<>(CACHE_SIZE);
     }
 
+    /**
+     * 解析 SST 输入流。
+     *
+     * <p>根据数据大小自动选择加载策略：
+     * <ul>
+     *   <li>totalSize < {@value #CHUNK_THRESHOLD} → {@link #parseSimpleMode}（全量内存）</li>
+     *   <li>totalSize ≥ {@value #CHUNK_THRESHOLD} → {@link #parseChunkedMode}（分块随机访问）</li>
+     * </ul>
+     *
+     * @param sstStream SST XML 输入流
+     * @param totalSize SST 数据总大小（字节）
+     * @throws IOException 读取异常
+     */
     public void parse(InputStream sstStream, long totalSize) throws IOException {
         if (totalSize < CHUNK_THRESHOLD) {
             parseSimpleMode(sstStream);
@@ -58,6 +111,15 @@ public class ChunkedSSTTable {
         }
     }
 
+    /**
+     * 简单模式：全量读入内存。
+     *
+     * <p>将 SST XML 全量读入 byte[]，预扫描所有 {@code <si>} 标签建立偏移量索引。
+     * 后续查询直接在内存中按索引定位。
+     *
+     * @param sstStream SST XML 输入流
+     * @throws IOException 读取异常
+     */
     private void parseSimpleMode(InputStream sstStream) throws IOException {
         isSimpleMode = true;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

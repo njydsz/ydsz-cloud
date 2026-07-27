@@ -63,10 +63,9 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含流程实例 ID
      */
     @RateLimit(key = "flowInstance:start", qps = 5, windowSeconds = 60, message = "流程启动过于频繁，请稍后重试")
-    @Idempotent(key = "flowInstance:startProcess", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:startProcess:lock", ttlSeconds = 5)
     @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'启动流程:' + #dto.flowCode")
-    @SentinelRateLimit(resource = "workflow.flowinstance.startProcess", threshold = 50)
     @SentinelRateLimit(resource = "workflow.flowinstance.startProcess", threshold = 50)
     @PostMapping("/instance/start")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
@@ -120,7 +119,7 @@ public class FlowInstanceController {
      * @param reason 终止原因（可选）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowInstance:terminate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:terminate:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/terminate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
@@ -134,8 +133,7 @@ public class FlowInstanceController {
      * @param id 流程实例 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowInstance:suspend", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowinstance.suspend", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:suspend:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowinstance.suspend", threshold = 50)
     @PostMapping("/instance/{id}/suspend")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
@@ -150,8 +148,7 @@ public class FlowInstanceController {
      * @param id 流程实例 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowInstance:activate", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowinstance.activate", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:activate:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowinstance.activate", threshold = 50)
     @PostMapping("/instance/{id}/activate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
@@ -171,7 +168,7 @@ public class FlowInstanceController {
      * @param targetNodeCode  目标节点编码（可选，为空时撤回到开始节点下游第一节点）
      * @return 统一响应结果，包含是否撤回成功
      */
-    @Idempotent(key = "flowInstance:recall", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:recall:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/recall")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
     public BaseResponse<Boolean> recall(@PathVariable String id,
@@ -206,7 +203,7 @@ public class FlowInstanceController {
      * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
      * @return 统一响应结果，包含是否回滚成功
      */
-    @Idempotent(key = "flowInstance:rollback", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:rollback:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/rollback")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_ROLLBACK)
     public BaseResponse<Boolean> rollback(@PathVariable String id,
@@ -227,7 +224,7 @@ public class FlowInstanceController {
      *       创建全新实例，复用原实例的 flowCode/businessType/businessId/initiator，合并变量。</li>
      * </ul>
      */
-    @Idempotent(key = "flowInstance:resubmit", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:resubmit:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/resubmit")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
     public BaseResponse<String> resubmit(@PathVariable String id,
@@ -397,8 +394,7 @@ public class FlowInstanceController {
      * @param dto 变量 DTO
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowInstance:setVariables", ttlSeconds = 5, message = "请勿重复提交")
-    @SentinelRateLimit(resource = "workflow.flowinstance.setVariables", threshold = 50)
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:setVariables:lock", ttlSeconds = 5)
     @SentinelRateLimit(resource = "workflow.flowinstance.setVariables", threshold = 50)
     @PostMapping("/instance/{id}/variables")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
@@ -417,7 +413,7 @@ public class FlowInstanceController {
      * @param comment 催办备注（可选）
      * @return 统一响应结果，包含被催办人列表
      */
-    @Idempotent(key = "flowInstance:urge", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:urge:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/urge")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public BaseResponse<List<String>> urge(@PathVariable String id,
@@ -430,7 +426,7 @@ public class FlowInstanceController {
      *
      * <p>nodeCode 不传时退化为实例级催办。
      */
-    @Idempotent(key = "flowInstance:urgeByNode", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ydsz:workflow:FlowInstanceController:urgeByNode:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/urge/node")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public BaseResponse<List<String>> urgeByNode(@PathVariable String id,
