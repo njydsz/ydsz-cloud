@@ -116,25 +116,26 @@ check_fqn() {
   if [[ ! -x "${SCRIPT_DIR}/check-inline-fqn.sh" ]]; then
     chmod +x "${SCRIPT_DIR}/check-inline-fqn.sh" 2>/dev/null || true
   fi
-  # 非严格模式下，子脚本不会 exit 1；严格模式下会
+  # 严格模式下，子脚本 exit 1 即视为本项失败
+  # 非严格模式下，子脚本 exit 0 即通过，exit 1 仅警告
+  local sub_output
   if [[ "$STRICT" == "true" ]]; then
-    if bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" --strict > /tmp/ydsz-fqn-$$.log 2>&1; then
+    sub_output=$(bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" --strict 2>&1) || true
+    if bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" --strict > /dev/null 2>&1; then
       echo -e "${GREEN}  ✓ PASS${NC}"
       return 0
     else
-      tail -30 /tmp/ydsz-fqn-$$.log | sed 's/^/    /'
-      rm -f /tmp/ydsz-fqn-$$.log
+      echo "$sub_output" | sed 's/^/    /' | tail -30
       echo -e "${RED}  ✗ FAIL${NC}"
       return 1
     fi
   else
-    bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" > /tmp/ydsz-fqn-$$.log 2>&1 || true
-    local count
-    count=$(grep -cE '^\s+[a-zA-Z]' /tmp/ydsz-fqn-$$.log 2>/dev/null || echo 0)
-    if [[ "$count" -eq 0 ]]; then
+    if bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" > /dev/null 2>&1; then
       echo -e "${GREEN}  ✓ PASS${NC}"
       return 0
     else
+      local count
+      count=$(echo "$sub_output" | grep -cE '^\s+[a-zA-Z]' 2>/dev/null || echo 0)
       echo -e "${YELLOW}  ⚠ WARN${NC}（非严格模式，不阻断）：$count 处违规"
       return 0
     fi

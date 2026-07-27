@@ -114,6 +114,9 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.post.RuleTestCaseDOPostDTO;
+import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.domain.vo.CategoryNodeVO;
@@ -557,7 +560,8 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveTestCase'")
     @PostMapping("/testCases")
-    public BaseResponse<RuleTestCaseDOVO> saveTestCase(@RequestBody RuleTestCaseDO testCase) {
+    public BaseResponse<RuleTestCaseDOVO> saveTestCase(@RequestBody RuleTestCaseDOPostDTO dto) {
+        RuleTestCaseDO testCase = LiteruleConverter.INSTANT.postDtoToEntity(dto);
         if (testCase.getId() != null) {
             ruleTestCaseMapper.updateById(testCase);
         } else {
@@ -1382,7 +1386,8 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDecisionTable'")
     @PostMapping("/decisionTables")
-    public BaseResponse<DecisionTableVO> saveDecisionTable(@RequestBody DecisionTable decisionTable) {
+    public BaseResponse<DecisionTableVO> saveDecisionTable(@RequestBody DecisionTablePostDTO dto) {
+        DecisionTable decisionTable = LiteruleConverter.INSTANT.postDtoToEntity(dto);
         if (decisionTable.getId() != null) {
             decisionTableMapper.updateById(decisionTable);
         } else {
@@ -2088,8 +2093,9 @@ public class RuleAdminController {
     @PutMapping("/{ruleCode}/abPolicy")
     public BaseResponse<Void> updateABPolicy(
             @PathVariable String ruleCode,
-            @Valid @RequestBody RuleABPolicy policy,
+            @Valid @RequestBody RuleABPolicyPutDTO dto,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleABPolicy policy = LiteruleConverter.INSTANT.putDtoToEntity(dto);
         policy.setRuleCode(ruleCode);
         abTestAutoRollbackProvider.savePolicy(policy, operator);
         return BaseResponse.success();
