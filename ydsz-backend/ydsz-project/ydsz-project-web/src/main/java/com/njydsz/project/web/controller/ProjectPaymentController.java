@@ -21,12 +21,12 @@ public class ProjectPaymentController {
     private final ProjectPaymentService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectPaymentVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectPaymentVO> getById(@PathVariable String id) { return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(service.getById(id))); }
 
     @GetMapping("/page")
     public PageResponse<ProjectPaymentVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectPayment> r = service.page(p, s);
-        return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
+        return PageResponse.success(ProjectConverter.INSTANT.projectPaymentListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
     @PostMapping

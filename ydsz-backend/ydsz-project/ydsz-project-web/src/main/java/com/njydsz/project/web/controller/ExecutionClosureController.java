@@ -21,12 +21,12 @@ public class ExecutionClosureController {
     private final ExecutionClosureService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ExecutionClosureVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ExecutionClosureVO> getById(@PathVariable String id) { return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(service.getById(id))); }
 
     @GetMapping("/page")
     public PageResponse<ExecutionClosureVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionClosure> r = service.page(p, s);
-        return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
+        return PageResponse.success(ProjectConverter.INSTANT.executionClosureListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
     @PostMapping

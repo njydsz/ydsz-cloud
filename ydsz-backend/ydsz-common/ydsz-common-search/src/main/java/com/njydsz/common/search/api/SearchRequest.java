@@ -103,6 +103,20 @@ public class SearchRequest implements Serializable {
     @Schema(description = "操作人ID")
     private String userId;
 
+    /** 操作人角色列表（权限过滤） */
+    @Schema(description = "操作人角色列表")
+    @Builder.Default
+    private List<String> roles = new ArrayList<>();
+
+    /** 操作人部门 ID（权限过滤） */
+    @Schema(description = "操作人部门ID")
+    private String deptId;
+
+    /** 是否管理员（跳过权限过滤） */
+    @Schema(description = "是否管理员")
+    @Builder.Default
+    private boolean admin = false;
+
     /** 是否仅搜索标题字段（不含内容） */
     @Schema(description = "是否仅搜索标题")
     @Builder.Default

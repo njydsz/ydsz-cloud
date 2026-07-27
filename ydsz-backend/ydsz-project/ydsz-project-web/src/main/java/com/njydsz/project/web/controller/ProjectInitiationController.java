@@ -54,7 +54,7 @@ public class ProjectInitiationController {
     @GetMapping("/page")
     public PageResponse<ProjectInitiationVOVO> page(@Valid ProjectInitiationPageQuery query) {
         IPage<ProjectInitiationVO> result = projectInitiationService.page(query);
-        return PageResponse.success(result.getRecords(), result.getTotal(),
+        return PageResponse.success(ProjectConverter.INSTANT.projectInitiationListToVO(result.getRecords()), result.getTotal(),
                 (int) result.getCurrent(), (int) result.getSize());
     }
 

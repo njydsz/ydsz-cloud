@@ -21,12 +21,12 @@ public class ProjectReconcileDailyController {
     private final ProjectReconcileDailyService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectReconcileDailyVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectReconcileDailyVO> getById(@PathVariable String id) { return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(service.getById(id))); }
 
     @GetMapping("/page")
     public PageResponse<ProjectReconcileDailyVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectReconcileDaily> r = service.page(p, s);
-        return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
+        return PageResponse.success(ProjectConverter.INSTANT.projectReconcileDailyListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
     @PostMapping

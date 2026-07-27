@@ -21,12 +21,12 @@ public class ProjectContractSupplementController {
     private final ProjectContractSupplementService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectContractSupplementVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectContractSupplementVO> getById(@PathVariable String id) { return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(service.getById(id))); }
 
     @GetMapping("/page")
     public PageResponse<ProjectContractSupplementVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectContractSupplement> r = service.page(p, s);
-        return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
+        return PageResponse.success(ProjectConverter.INSTANT.projectContractSupplementListToVO(r.getRecords()), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
     @PostMapping

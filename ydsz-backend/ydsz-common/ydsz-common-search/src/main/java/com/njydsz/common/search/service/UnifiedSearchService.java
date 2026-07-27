@@ -208,6 +208,9 @@ public class UnifiedSearchService {
         SearchProviderContext context = SearchProviderContext.builder()
                 .userId(request.getUserId())
                 .tenantId(request.getTenantId())
+                .roles(request.getRoles())
+                .deptId(request.getDeptId())
+                .admin(request.isAdmin())
                 .build();
 
         List<SearchFilter> allFilters = new ArrayList<>(request.getFilters());
@@ -333,6 +336,9 @@ public class UnifiedSearchService {
                 .aggregations(original.getAggregations())
                 .tenantId(original.getTenantId())
                 .userId(original.getUserId())
+                .roles(original.getRoles())
+                .deptId(original.getDeptId())
+                .admin(original.isAdmin())
                 .titleOnly(original.isTitleOnly())
                 .build();
     }

@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,6 +26,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -68,6 +70,7 @@ public class FileApplicationService {
     private final FilePermissionService permissionService;
     private final LockStrategy lockStrategy;
     private final VirusScanApplicationService virusScanApplicationService;
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
     private static final String LOCK_PREFIX = "nextwiki:lock:folder:";
     private static final long LOCK_LEASE_MS = 30_000L;
@@ -170,6 +173,7 @@ public class FileApplicationService {
                 FileNode dedupedNode = buildDedupedFileNode(resolvedParentId, fileName, suffix,
                         existing, fileHash, path, level, userId);
                 FileNode saved = fileNodeRepository.save(dedupedNode);
+        indexUpsert(saved);
                 versionDomainService.createVersion(saved.getId(), existing.getStorageKey(),
                         existing.getSize(), fileHash, existing.getMimeType(), "秒传", userId);
                 quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
@@ -208,6 +212,7 @@ public class FileApplicationService {
         FileNode fileNode = buildFileNode(resolvedParentId, fileName, suffix, uploaded,
                 storageKey, fileHash, path, level, userId);
         FileNode saved = fileNodeRepository.save(fileNode);
+        indexUpsert(saved);
 
         // 8. 创建版本记录
         versionDomainService.createVersion(saved.getId(), storageKey, file.getSize(),
@@ -323,6 +328,7 @@ public class FileApplicationService {
         }
 
         log.info("[FileApplicationService] 删除文件: nodeId={}, name={}", nodeId, node.getName());
+        indexDelete(nodeId);
     }
 
     /**
@@ -551,6 +557,20 @@ public class FileApplicationService {
             case "name", "size", "time" -> sortBy;
             default -> "time";
         };
+    }
+
+    private void indexUpsert(FileNode entity) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexUpsert("wiki", entity);
+        }
+    }
+
+    private void indexDelete(String id) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexDelete("wiki", id);
+        }
     }
 
     /**

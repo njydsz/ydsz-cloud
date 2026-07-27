@@ -1,5 +1,6 @@
 package com.njydsz.project.web.controller;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.njydsz.common.core.response.BaseResponse;
@@ -45,7 +46,10 @@ public class ProjectSearchController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize,
             @RequestHeader(value = "X-User-Id", required = false) String userId,
-            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId) {
+            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
+            @RequestHeader(value = "X-User-Dept", required = false) String deptId,
+            @RequestHeader(value = "X-User-Admin", required = false) String adminHeader) {
 
         SearchRequest request = SearchRequest.builder()
                 .keyword(keyword)
@@ -54,6 +58,9 @@ public class ProjectSearchController {
                 .pageSize(pageSize)
                 .userId(userId)
                 .tenantId(tenantId)
+                .roles(rolesHeader != null ? Arrays.asList(rolesHeader.split(",")) : List.of())
+                .deptId(deptId)
+                .admin("true".equalsIgnoreCase(adminHeader))
                 .highlight(true)
                 .fuzzy(true)
                 .build();
