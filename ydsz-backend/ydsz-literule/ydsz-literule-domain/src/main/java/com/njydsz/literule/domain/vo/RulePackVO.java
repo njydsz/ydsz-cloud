@@ -7,13 +7,13 @@ import java.io.Serializable;
 import lombok.Data;
 
 /**
- * RulePackDO 视图对象。
+ * RulePack 视图对象。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class RulePackDOVO implements Serializable {
+public class RulePackVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

@@ -22,6 +22,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.StringVO;
 
 /**
  * 工作流高级功能 Controller
@@ -87,10 +89,10 @@ public class FlowAdvancedController {
     @PostMapping("/merge")
     @Operation(summary = "P2-5: 合并多个流程实例")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<String> merge(@RequestParam List<String> instanceIds) {
+    public BaseResponse<StringVO> merge(@RequestParam List<String> instanceIds) {
         String userId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(mergeService.mergeInstances(instanceIds, userId, tenantId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(mergeService.mergeInstances(instanceIds, userId, tenantId)));
     }
 
     @GetMapping("/merge/{mergeGroupId}")
@@ -165,8 +167,8 @@ public class FlowAdvancedController {
 
     @GetMapping("/dedup/{instanceId}/approvedUsers")
     @Operation(summary = "P2-7: 获取实例已审批人列表")
-    public BaseResponse<List<String>> approvedUsers(@PathVariable String instanceId) {
-        return BaseResponse.success(dedupService.getApprovedUserIds(instanceId).stream().toList());
+    public BaseResponse<List<StringVO>> approvedUsers(@PathVariable String instanceId) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.stringListToVO(dedupService.getApprovedUserIds(instanceId).stream().toList()));
     }
 
     // ==================== P2-8: 催办限流可视化 ====================

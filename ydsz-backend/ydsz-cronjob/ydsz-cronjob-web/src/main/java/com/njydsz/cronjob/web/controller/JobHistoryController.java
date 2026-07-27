@@ -19,6 +19,9 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobHistoryVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 任务配置历史版本 Controller（P1-6 任务版本管理）。
@@ -45,8 +48,8 @@ public class JobHistoryController {
      */
     @Operation(summary = "获取任务版本列表")
     @GetMapping("/versions")
-    public BaseResponse<List<JobHistory>> versions(@RequestParam String jobId) {
-        return BaseResponse.success(jobHistoryService.listVersions(jobId));
+    public BaseResponse<List<JobHistoryVO>> versions(@RequestParam String jobId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobHistoryListToVO(jobHistoryService.listVersions(jobId)));
     }
 
     /**
@@ -58,9 +61,9 @@ public class JobHistoryController {
      */
     @Operation(summary = "获取指定版本详情")
     @GetMapping("/detail")
-    public BaseResponse<JobHistory> detail(@RequestParam String jobId,
+    public BaseResponse<JobHistoryVO> detail(@RequestParam String jobId,
                                         @RequestParam Integer version) {
-        return BaseResponse.success(jobHistoryService.getVersion(jobId, version));
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobHistoryService.getVersion(jobId, version)));
     }
 
     /**
@@ -74,9 +77,9 @@ public class JobHistoryController {
     @Idempotent(key = "ydsz:cronjob:JobHistoryController:rollback:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
     @PostMapping("/rollback")
-    public BaseResponse<Job> rollback(@RequestParam String jobId,
+    public BaseResponse<JobVO> rollback(@RequestParam String jobId,
                                    @RequestParam Integer version) {
-        return BaseResponse.success(jobHistoryService.rollback(jobId, version));
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobHistoryService.rollback(jobId, version)));
     }
 
     /**

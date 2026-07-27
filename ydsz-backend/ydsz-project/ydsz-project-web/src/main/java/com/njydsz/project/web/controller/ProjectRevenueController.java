@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ProjectRevenueService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ProjectRevenueVO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/revenue")
@@ -19,10 +21,10 @@ public class ProjectRevenueController {
     private final ProjectRevenueService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectRevenue> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectRevenueVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ProjectRevenue> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ProjectRevenueVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectRevenue> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

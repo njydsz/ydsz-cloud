@@ -20,6 +20,7 @@ import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
@@ -66,6 +67,7 @@ public class ConfigServiceImpl implements ConfigService {
     private final SystemProperties properties;
     /** Outbox 服务（可选依赖，用于发布配置变更事件） */
     private final ObjectProvider<OutboxService> outboxServiceProvider;
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
     // ============================== CRUD ==============================
 
@@ -95,6 +97,7 @@ public class ConfigServiceImpl implements ConfigService {
         checkDuplicateKey(entity);
         configRepository.getConfigMapper().insert(entity);
         evictCache(entity.getConfigKey(), entity.getConfigGroup());
+        indexUpsert(entity);
         return entity.getId();
     }
 
@@ -106,6 +109,7 @@ public class ConfigServiceImpl implements ConfigService {
         boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
         if (updated) {
             evictCache(entity.getConfigKey(), entity.getConfigGroup());
+            indexUpsert(entity);
         }
         return updated;
     }
@@ -117,8 +121,23 @@ public class ConfigServiceImpl implements ConfigService {
         boolean removed = configRepository.getConfigMapper().deleteById(id) > 0;
         if (removed && entity != null) {
             evictCache(entity.getConfigKey(), entity.getConfigGroup());
+            indexDelete(id);
         }
         return removed;
+    }
+
+    private void indexUpsert(Config entity) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexUpsert("config", entity);
+        }
+    }
+
+    private void indexDelete(String id) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexDelete("config", id);
+        }
     }
 
     // ============================== 业务查询 ==============================

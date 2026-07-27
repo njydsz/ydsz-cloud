@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.RateInternalService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.RateInternalVO;
 
 @RestController
 @RequestMapping("/api/v1/project/rate/internal")
@@ -19,10 +21,10 @@ public class RateInternalController {
     private final RateInternalService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<RateInternal> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<RateInternalVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<RateInternal> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<RateInternalVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<RateInternal> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

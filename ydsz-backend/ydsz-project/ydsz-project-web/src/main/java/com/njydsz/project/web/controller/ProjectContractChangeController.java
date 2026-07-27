@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ProjectContractChangeService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ProjectContractChangeVO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/contract/change")
@@ -19,10 +21,10 @@ public class ProjectContractChangeController {
     private final ProjectContractChangeService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectContractChange> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectContractChangeVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ProjectContractChange> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ProjectContractChangeVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectContractChange> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

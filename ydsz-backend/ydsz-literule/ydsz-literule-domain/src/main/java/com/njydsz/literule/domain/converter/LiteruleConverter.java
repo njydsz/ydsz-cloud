@@ -25,16 +25,16 @@ import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.domain.vo.RuleCanaryBucketVO;
-import com.njydsz.literule.domain.vo.RuleChainGraphDOVO;
+import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleDecisionTreeVO;
-import com.njydsz.literule.domain.vo.RuleDefinitionDOVO;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
-import com.njydsz.literule.domain.vo.RuleExecutionTraceDOVO;
-import com.njydsz.literule.domain.vo.RulePackDOVO;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
+import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleScorecardVO;
 import com.njydsz.literule.domain.vo.RuleScriptVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
-import com.njydsz.literule.domain.vo.RuleTestCaseDOVO;
+import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
 
@@ -66,28 +66,28 @@ public interface LiteruleConverter {
     List<RuleCanaryBucketVO> ruleCanaryBucketListToVO(List<RuleCanaryBucket> entities);
 
     // ===== RuleChainGraphDO =====
-    RuleChainGraphDOVO entityToVO(RuleChainGraphDO entity);
-    List<RuleChainGraphDOVO> ruleChainGraphDOListToVO(List<RuleChainGraphDO> entities);
+    RuleChainGraphVO entityToVO(RuleChainGraphDO entity);
+    List<RuleChainGraphVO> ruleChainGraphDOListToVO(List<RuleChainGraphDO> entities);
 
     // ===== RuleDecisionTree =====
     RuleDecisionTreeVO entityToVO(RuleDecisionTree entity);
     List<RuleDecisionTreeVO> ruleDecisionTreeListToVO(List<RuleDecisionTree> entities);
 
     // ===== RuleDefinitionDO =====
-    RuleDefinitionDOVO entityToVO(RuleDefinitionDO entity);
-    List<RuleDefinitionDOVO> ruleDefinitionDOListToVO(List<RuleDefinitionDO> entities);
+    RuleDefinitionVO entityToVO(RuleDefinitionDO entity);
+    List<RuleDefinitionVO> ruleDefinitionDOListToVO(List<RuleDefinitionDO> entities);
 
     // ===== RuleDependency =====
     RuleDependencyVO entityToVO(RuleDependency entity);
     List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities);
 
     // ===== RuleExecutionTraceDO =====
-    RuleExecutionTraceDOVO entityToVO(RuleExecutionTraceDO entity);
-    List<RuleExecutionTraceDOVO> ruleExecutionTraceDOListToVO(List<RuleExecutionTraceDO> entities);
+    RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity);
+    List<RuleExecutionTraceVO> ruleExecutionTraceDOListToVO(List<RuleExecutionTraceDO> entities);
 
     // ===== RulePackDO =====
-    RulePackDOVO entityToVO(RulePackDO entity);
-    List<RulePackDOVO> rulePackDOListToVO(List<RulePackDO> entities);
+    RulePackVO entityToVO(RulePackDO entity);
+    List<RulePackVO> rulePackDOListToVO(List<RulePackDO> entities);
 
     // ===== RuleScorecard =====
     RuleScorecardVO entityToVO(RuleScorecard entity);
@@ -102,8 +102,8 @@ public interface LiteruleConverter {
     List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplate> entities);
 
     // ===== RuleTestCaseDO =====
-    RuleTestCaseDOVO entityToVO(RuleTestCaseDO entity);
-    List<RuleTestCaseDOVO> ruleTestCaseDOListToVO(List<RuleTestCaseDO> entities);
+    RuleTestCaseVO entityToVO(RuleTestCaseDO entity);
+    List<RuleTestCaseVO> ruleTestCaseDOListToVO(List<RuleTestCaseDO> entities);
 
     // ===== RuleVariableDef =====
     RuleVariableDefVO entityToVO(RuleVariableDef entity);

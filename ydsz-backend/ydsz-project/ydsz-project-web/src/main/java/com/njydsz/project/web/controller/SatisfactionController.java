@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.SatisfactionService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.SatisfactionVO;
 
 @RestController
 @RequestMapping("/api/v1/project/satisfaction")
@@ -19,10 +21,10 @@ public class SatisfactionController {
     private final SatisfactionService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<Satisfaction> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<SatisfactionVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<Satisfaction> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<SatisfactionVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<Satisfaction> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

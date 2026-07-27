@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowDmnDecisionVO;
 
 /**
  * P0-1: DMN 决策表 Controller
@@ -83,10 +85,10 @@ public class FlowDmnDecisionController {
 
     @GetMapping("/decisions")
     @Operation(summary = "分页查询决策表列表")
-    public BaseResponse<List<FlowDmnDecision>> listDecisions(
+    public BaseResponse<List<FlowDmnDecisionVO>> listDecisions(
             @RequestParam(required = false) String decisionCode) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(dmnDecisionService.listDecisions(decisionCode, tenantId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowDmnDecisionListToVO(dmnDecisionService.listDecisions(decisionCode, tenantId)));
     }
 
     @PostMapping("/evaluate")

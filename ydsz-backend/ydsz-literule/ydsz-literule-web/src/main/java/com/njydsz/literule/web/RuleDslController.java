@@ -34,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.domain.vo.RuleDslVO;
 
 /**
  * 规则 DSL 管理接口（P3-6 DSL 语言支持）
@@ -143,7 +145,7 @@ public class RuleDslController {
     @Audit(module = "DSL管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'parse'")
     @PostMapping("/parse")
     @Operation(summary = "解析DSL", description = "将 YAML/JSON DSL 文本解析为结构化模型")
-    public BaseResponse<RuleDsl> parse(@RequestBody Map<String, Object> request) {
+    public BaseResponse<RuleDslVO> parse(@RequestBody Map<String, Object> request) {
         String content = (String) request.get("content");
         String format = (String) request.getOrDefault("format", "yaml");
 

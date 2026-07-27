@@ -38,6 +38,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
 
 /**
  * Agent REST API
@@ -104,7 +106,7 @@ public class AgentController {
     @Idempotent(key = "ydsz:agent:AgentController:execute:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.execute", threshold = 50)
     @PostMapping("/execute")
-    public BaseResponse<ChatResponseDTO> execute(
+    public BaseResponse<ChatResponseDTOVO> execute(
             @Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 执行请求: agentCode={}, stream={}",
                 request.getAgentCode(), request.isStream());
@@ -112,7 +114,7 @@ public class AgentController {
         AgentExecutionRequest execReq = toExecutionRequest(request);
         try {
             ChatResponse response = agentFactory.getDefaultExecutor().execute(execReq);
-            return BaseResponse.success(toDTO(response));
+            return BaseResponse.success(AgentConverter.INSTANT.entityToVO(toDTO(response)));
         } catch (Exception e) {
             requestGuard.releaseIdempotent(request.getRequestId());
             throw e;

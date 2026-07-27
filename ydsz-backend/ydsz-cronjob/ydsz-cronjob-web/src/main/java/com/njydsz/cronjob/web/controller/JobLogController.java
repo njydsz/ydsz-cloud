@@ -19,6 +19,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobLogContentVO;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
  * 任务执行日志 Controller（P0-2 在线日志白屏化）。
@@ -58,11 +61,11 @@ public class JobLogController {
      */
     @Operation(summary = "分页查询日志内容")
     @GetMapping("/content/page")
-    public BaseResponse<List<JobLogContent>> pageContent(
+    public BaseResponse<List<JobLogContentVO>> pageContent(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "100") int size) {
-        return BaseResponse.success(jobLogContentService.pageByLogId(logId, page, size));
+        return BaseResponse.success(CronjobConverter.INSTANT.jobLogContentListToVO(jobLogContentService.pageByLogId(logId, page, size)));
     }
 
     /**
@@ -108,12 +111,12 @@ public class JobLogController {
      */
     @Operation(summary = "搜索日志内容")
     @GetMapping("/content/search")
-    public BaseResponse<List<JobLogContent>> searchContent(
+    public BaseResponse<List<JobLogContentVO>> searchContent(
             @RequestParam String logId,
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "100") int size) {
-        return BaseResponse.success(jobLogContentService.searchByKeyword(logId, keyword, page, size));
+        return BaseResponse.success(CronjobConverter.INSTANT.jobLogContentListToVO(jobLogContentService.searchByKeyword(logId, keyword, page, size)));
     }
 
     /**
@@ -200,7 +203,7 @@ public class JobLogController {
      */
     @Operation(summary = "获取执行轨迹")
     @GetMapping("/trace")
-    public BaseResponse<JobLog> getExecutionTrace(@RequestParam String logId) {
+    public BaseResponse<JobLogVO> getExecutionTrace(@RequestParam String logId) {
         JobLog log = jobLogMapper.selectById(logId);
         if (log == null) {
             return BaseResponse.error("404", "执行日志不存在: " + logId);

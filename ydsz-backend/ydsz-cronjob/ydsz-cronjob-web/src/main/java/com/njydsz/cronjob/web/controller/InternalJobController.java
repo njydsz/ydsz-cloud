@@ -22,6 +22,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.ProcessResultVO;
 
 /**
  * 内部任务执行接口（P1-4 远程派发接收端）。
@@ -131,7 +133,7 @@ public class InternalJobController {
     @RateLimit(resource = "cronjob.internaljob.executeSubTask", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:InternalJobController:executeSubTask:lock", ttlSeconds = 5)
     @PostMapping("/executeSubTask")
-    public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
+    public BaseResponse<ProcessResultVO> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {
             log.warn("[InternalJob] 子任务请求参数为空");
             return BaseResponse.error("400", "请求参数为空");

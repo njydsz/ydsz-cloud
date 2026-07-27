@@ -20,6 +20,8 @@ import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobTaskVO;
 
 /**
  * MapReduce 子任务查询 Controller（P0-4）。
@@ -48,8 +50,8 @@ public class JobTaskController {
      */
     @Operation(summary = "查询子任务列表")
     @GetMapping("/list")
-    public BaseResponse<List<JobTask>> list(@RequestParam String logId) {
-        return BaseResponse.success(jobTaskMapper.selectByLogId(logId));
+    public BaseResponse<List<JobTaskVO>> list(@RequestParam String logId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobTaskListToVO(jobTaskMapper.selectByLogId(logId)));
     }
 
     /**
@@ -62,7 +64,7 @@ public class JobTaskController {
      */
     @Operation(summary = "分页查询子任务")
     @GetMapping("/page")
-    public BaseResponse<Page<JobTask>> page(
+    public BaseResponse<Page<JobTaskVO>> page(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size) {
@@ -72,7 +74,10 @@ public class JobTaskController {
         wrapper.eq(JobTask::getLogId, logId)
                 .eq(JobTask::getDeleted, 0)
                 .orderByAsc(JobTask::getCreatedAt);
-        return BaseResponse.success(jobTaskMapper.selectPage(pageObj, wrapper));
+        Page<JobTask> page = jobTaskMapper.selectPage(pageObj, wrapper);
+        Page<JobTaskVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(CronjobConverter.INSTANT.jobTaskListToVO(page.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**

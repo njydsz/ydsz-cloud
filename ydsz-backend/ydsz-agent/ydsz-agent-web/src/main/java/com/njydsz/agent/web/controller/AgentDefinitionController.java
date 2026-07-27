@@ -25,6 +25,9 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.vo.AgentDefinitionDOVO;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
 /**
  * Agent 定义 REST API
@@ -51,12 +54,12 @@ public class AgentDefinitionController {
     private final AgentDefinitionService agentDefinitionService;
 
     @GetMapping
-    public BaseResponse<List<AgentDefinitionDO>> list() {
-        return BaseResponse.success(agentDefinitionService.listActive());
+    public BaseResponse<List<AgentDefinitionDOVO>> list() {
+        return BaseResponse.success(AgentConverter.INSTANT.agentDefinitionListToVO(agentDefinitionService.listActive()));
     }
 
     @GetMapping("/{id}")
-    public BaseResponse<AgentDefinitionDO> getById(@PathVariable String id) {
+    public BaseResponse<AgentDefinitionDOVO> getById(@PathVariable String id) {
         AgentDefinitionDO entity = agentDefinitionService.getById(id);
         if (entity == null) {
             return BaseResponse.error("Agent not found: " + id);
@@ -65,7 +68,7 @@ public class AgentDefinitionController {
     }
 
     @GetMapping("/code/{code}")
-    public BaseResponse<AgentDefinition> getByCode(@PathVariable String code) {
+    public BaseResponse<AgentDefinitionVO> getByCode(@PathVariable String code) {
         AgentDefinitionDO entity = agentDefinitionService.getByCode(code);
         if (entity == null) {
             return BaseResponse.error("Agent not found: " + code);
@@ -77,16 +80,16 @@ public class AgentDefinitionController {
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:create:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
     @PostMapping
-    public BaseResponse<AgentDefinitionDO> create(@Valid @RequestBody AgentDefinitionDO entity) {
-        return BaseResponse.success(agentDefinitionService.create(entity));
+    public BaseResponse<AgentDefinitionDOVO> create(@Valid @RequestBody AgentDefinitionDO entity) {
+        return BaseResponse.success(AgentConverter.INSTANT.entityToVO(agentDefinitionService.create(entity)));
     }
 
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @RateLimit(resource = "agent.agentdefinition.update", threshold = 50)
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
     @PutMapping
-    public BaseResponse<AgentDefinitionDO> update(@Valid @RequestBody AgentDefinitionDO entity) {
-        return BaseResponse.success(agentDefinitionService.update(entity));
+    public BaseResponse<AgentDefinitionDOVO> update(@Valid @RequestBody AgentDefinitionDO entity) {
+        return BaseResponse.success(AgentConverter.INSTANT.entityToVO(agentDefinitionService.update(entity)));
     }
 
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")

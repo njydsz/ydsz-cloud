@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO;
 
 /**
  * 事件 Controller
@@ -113,8 +115,8 @@ public class FlowEventController {
      * @return 订阅列表（含 WAITING / COMPLETED / CANCELLED 状态）
      */
     @GetMapping("/instance/{instanceId}/eventSubscriptions")
-    public BaseResponse<List<FlowEventSubscription>> listEventSubscriptions(
+    public BaseResponse<List<FlowEventSubscriptionVO>> listEventSubscriptions(
             @PathVariable String instanceId) {
-        return BaseResponse.success(eventSubscriptionService.listByInstance(instanceId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowEventSubscriptionListToVO(eventSubscriptionService.listByInstance(instanceId)));
     }
 }

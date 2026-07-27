@@ -29,6 +29,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 
 /**
  * 流程定义管理 Controller
@@ -140,10 +142,10 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/code/{code}")
     @Operation(summary = "按编码查询已发布流程定义")
-    public BaseResponse<FlowDefinition> getByCode(@PathVariable String code,
+    public BaseResponse<FlowDefinitionVO> getByCode(@PathVariable String code,
                                           @RequestParam(required = false) String version,
                                           @RequestParam(required = false) String tenantId) {
-        return BaseResponse.success(definitionService.getPublished(code, version, tenantId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(definitionService.getPublished(code, version, tenantId)));
     }
 
     /**
@@ -157,11 +159,11 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/page")
     @Operation(summary = "分页查询流程定义")
-    public BaseResponse<List<FlowDefinition>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
+    public BaseResponse<List<FlowDefinitionVO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
                                           @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
                                           @RequestParam(required = false) String category,
                                           @RequestParam(required = false) String flowCode) {
-        return BaseResponse.success(definitionService.page(pageNo, pageSize, category, flowCode));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowDefinitionListToVO(definitionService.page(pageNo, pageSize, category, flowCode)));
     }
 
     /**

@@ -30,6 +30,9 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * 任务调度 Controller
@@ -265,8 +268,8 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public BaseResponse<Job> getById(@PathVariable String id) {
-        return BaseResponse.success(jobService.getById(id));
+    public BaseResponse<JobVO> getById(@PathVariable String id) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobService.getById(id)));
     }
 
     /**
@@ -281,13 +284,16 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
-    public BaseResponse<Page<Job>> page(
+    public BaseResponse<Page<JobVO>> page(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
-        return BaseResponse.success(jobService.page(page, size, keyword, status, group));
+        Page<Job> page = jobService.page(page, size, keyword, status, group);
+        Page<JobVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(CronjobConverter.INSTANT.jobListToVO(page.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**
@@ -301,12 +307,15 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
-    public BaseResponse<Page<JobLog>> pageLog(
+    public BaseResponse<Page<JobLogVO>> pageLog(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
-        return BaseResponse.success(jobService.pageLog(page, size, jobKey, status));
+        Page<JobLog> page = jobService.pageLog(page, size, jobKey, status);
+        Page<JobLogVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(CronjobConverter.INSTANT.jobLogListToVO(page.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**

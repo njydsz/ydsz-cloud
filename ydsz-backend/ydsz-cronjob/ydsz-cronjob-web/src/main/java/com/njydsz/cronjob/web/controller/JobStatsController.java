@@ -29,6 +29,9 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
  * 任务执行统计 Controller（P2-3 执行历史趋势可视化）。
@@ -64,11 +67,11 @@ public class JobStatsController {
     @Operation(summary = "查询每日执行统计趋势")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/daily")
-    public BaseResponse<List<JobDailyStats>> daily(
+    public BaseResponse<List<JobDailyStatsVO>> daily(
             @RequestParam String jobId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return BaseResponse.success(jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate));
+        return BaseResponse.success(CronjobConverter.INSTANT.jobDailyStatsListToVO(jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate)));
     }
 
     /**
@@ -189,7 +192,7 @@ public class JobStatsController {
     @Operation(summary = "最近失败任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/recent-failures")
-    public BaseResponse<List<JobLog>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
+    public BaseResponse<List<JobLogVO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
         return BaseResponse.success(jobLogMapper.selectList(
                 new LambdaQueryWrapper<JobLog>()
                         .eq(JobLog::getStatus, "FAILED")

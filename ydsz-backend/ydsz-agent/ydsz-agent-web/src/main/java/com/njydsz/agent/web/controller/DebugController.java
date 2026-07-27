@@ -24,6 +24,9 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.vo.AgentTraceDetailDTOVO;
+import com.njydsz.agent.domain.vo.AgentTraceListDTOVO;
 
 /**
  * Agent 调试 REST API
@@ -57,7 +60,7 @@ public class DebugController {
      * @return 链路列表
      */
     @GetMapping("/traces")
-    public BaseResponse<List<AgentTraceListDTO>> listTraces(
+    public BaseResponse<List<AgentTraceListDTOVO>> listTraces(
             @RequestParam(defaultValue = "20") int limit) {
         List<TraceMeta> metas = agentDebuggerService.listTraceMetas(limit);
         List<AgentTraceListDTO> dtos = metas.stream()
@@ -73,7 +76,7 @@ public class DebugController {
                             stepCount);
                 })
                 .collect(Collectors.toList());
-        return BaseResponse.success(dtos);
+        return BaseResponse.success(AgentConverter.INSTANT.agentTraceListDTOListToVO(dtos));
     }
 
     /**
@@ -83,14 +86,14 @@ public class DebugController {
      * @return 链路详情（含步骤摘要）
      */
     @GetMapping("/trace/{traceId}")
-    public BaseResponse<AgentTraceDetailDTO> getTrace(@PathVariable String traceId) {
+    public BaseResponse<AgentTraceDetailDTOVO> getTrace(@PathVariable String traceId) {
         TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
         String agentType = meta != null ? meta.getAgentId() : "UNKNOWN";
         List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
         String plan = steps.stream()
                 .map(step -> "[" + step.getStepIndex() + "] " + step.getStepType() + ": " + step.getContent())
                 .collect(Collectors.joining("\n"));
-        return BaseResponse.success(new AgentTraceDetailDTO(traceId, agentType, plan));
+        return BaseResponse.success(AgentConverter.INSTANT.entityToVO(new AgentTraceDetailDTO(traceId, agentType, plan)));
     }
 
     /**

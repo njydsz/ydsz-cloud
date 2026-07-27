@@ -20,6 +20,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 
 /**
  * 审批常用语 Controller
@@ -47,10 +49,10 @@ public class FlowQuickCommentController {
      */
     @GetMapping
     @Operation(summary = "查询当前用户的常用语列表")
-    public BaseResponse<List<FlowQuickComment>> list() {
+    public BaseResponse<List<FlowQuickCommentVO>> list() {
         String userId = AuthContext.getUserId();
         String tenantId = TenantContext.getTenantId();
-        return BaseResponse.success(quickCommentService.listByUser(userId, tenantId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowQuickCommentListToVO(quickCommentService.listByUser(userId, tenantId)));
     }
 
     /**

@@ -17,6 +17,10 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.DagInstanceVisualizationVOVO;
+import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 
 /**
  * DAG 工作流实例 Controller（P2 DAG 增强）。
@@ -44,8 +48,8 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 实例详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}")
-    public BaseResponse<JobDagInstance> getInstanceById(@PathVariable String instanceId) {
-        return BaseResponse.success(jobDagInstanceService.getInstanceById(instanceId));
+    public BaseResponse<JobDagInstanceVO> getInstanceById(@PathVariable String instanceId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagInstanceService.getInstanceById(instanceId)));
     }
 
     /**
@@ -58,9 +62,9 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 的实例列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/dag/{dagId}")
-    public BaseResponse<List<JobDagInstance>> listByDagId(@PathVariable String dagId,
+    public BaseResponse<List<JobDagInstanceVO>> listByDagId(@PathVariable String dagId,
                                                        @RequestParam(defaultValue = "20") int limit) {
-        return BaseResponse.success(jobDagInstanceService.listByDagId(dagId, limit));
+        return BaseResponse.success(CronjobConverter.INSTANT.jobDagInstanceListToVO(jobDagInstanceService.listByDagId(dagId, limit)));
     }
 
     /**
@@ -72,8 +76,8 @@ public class JobDagInstanceController {
     @Operation(summary = "按状态查询 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/status/{status}")
-    public BaseResponse<List<JobDagInstance>> listByStatus(@PathVariable String status) {
-        return BaseResponse.success(jobDagInstanceService.listByStatus(status));
+    public BaseResponse<List<JobDagInstanceVO>> listByStatus(@PathVariable String status) {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobDagInstanceListToVO(jobDagInstanceService.listByStatus(status)));
     }
 
     /**
@@ -85,8 +89,8 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 实例的节点列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/nodes")
-    public BaseResponse<List<JobDagNodeInstance>> listNodes(@PathVariable String instanceId) {
-        return BaseResponse.success(jobDagInstanceService.listNodes(instanceId));
+    public BaseResponse<List<JobDagNodeInstanceVO>> listNodes(@PathVariable String instanceId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobDagNodeInstanceListToVO(jobDagInstanceService.listNodes(instanceId)));
     }
 
     /**
@@ -98,8 +102,8 @@ public class JobDagInstanceController {
     @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/visualization")
-    public BaseResponse<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
-        return BaseResponse.success(jobDagInstanceService.getVisualization(instanceId));
+    public BaseResponse<DagInstanceVisualizationVOVO> getVisualization(@PathVariable String instanceId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagInstanceService.getVisualization(instanceId)));
     }
 
     /**

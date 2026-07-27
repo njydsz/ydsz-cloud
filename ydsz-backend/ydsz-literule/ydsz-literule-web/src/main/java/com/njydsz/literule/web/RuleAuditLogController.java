@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 
 /**
  * 规则审计日志查询接口（P3-5）
@@ -56,7 +58,7 @@ public class RuleAuditLogController {
      */
     @GetMapping("/recent")
     @Operation(summary = "查询最近审计日志", description = "返回最近 N 条审计日志，按时间倒序排列")
-    public BaseResponse<List<AuditLogEntry>> recent(
+    public BaseResponse<List<AuditLogEntryVO>> recent(
             @RequestParam(value = "limit", defaultValue = "50") int limit) {
         if (limit <= 0 || limit > 200) {
             limit = 50;
@@ -73,7 +75,7 @@ public class RuleAuditLogController {
      */
     @GetMapping("/byRule/{ruleCode}")
     @Operation(summary = "按规则编码查询审计日志", description = "返回指定规则的全生命周期操作记录")
-    public BaseResponse<List<AuditLogEntry>> byRuleCode(
+    public BaseResponse<List<AuditLogEntryVO>> byRuleCode(
             @PathVariable String ruleCode,
             @RequestParam(value = "limit", defaultValue = "50") int limit) {
         if (limit <= 0 || limit > 200) {
@@ -91,7 +93,7 @@ public class RuleAuditLogController {
      */
     @GetMapping("/byOperator")
     @Operation(summary = "按操作人查询审计日志", description = "返回指定操作人的审计日志")
-    public BaseResponse<List<AuditLogEntry>> byOperator(
+    public BaseResponse<List<AuditLogEntryVO>> byOperator(
             @RequestParam("operator") String operator,
             @RequestParam(value = "limit", defaultValue = "50") int limit) {
         if (limit <= 0 || limit > 200) {
@@ -109,7 +111,7 @@ public class RuleAuditLogController {
      */
     @GetMapping("/byAction")
     @Operation(summary = "按操作类型查询审计日志", description = "返回指定操作类型的审计日志")
-    public BaseResponse<List<AuditLogEntry>> byAction(
+    public BaseResponse<List<AuditLogEntryVO>> byAction(
             @RequestParam("action") String action,
             @RequestParam(value = "limit", defaultValue = "50") int limit) {
         if (limit <= 0 || limit > 200) {
@@ -134,7 +136,7 @@ public class RuleAuditLogController {
      */
     @GetMapping("/byTimeRange")
     @Operation(summary = "按时间范围查询审计日志", description = "返回指定时间范围内的审计日志")
-    public BaseResponse<List<AuditLogEntry>> byTimeRange(
+    public BaseResponse<List<AuditLogEntryVO>> byTimeRange(
             @RequestParam("startTime") String startTime,
             @RequestParam("endTime") String endTime,
             @RequestParam(value = "limit", defaultValue = "50") int limit) {

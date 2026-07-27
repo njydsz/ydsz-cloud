@@ -24,6 +24,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
  * P2-11: 任务执行拓扑图后端 API。
@@ -108,12 +110,12 @@ public class TaskTopologyController {
      */
     @Operation(summary = "查询任务执行历史")
     @GetMapping("/jobHistory/{jobKey}")
-    public BaseResponse<List<JobLog>> getJobExecutionHistory(@PathVariable String jobKey) {
+    public BaseResponse<List<JobLogVO>> getJobExecutionHistory(@PathVariable String jobKey) {
         LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(JobLog::getJobKey, jobKey)
                 .eq(JobLog::getDeleted, 0)
                 .orderByDesc(JobLog::getCreatedAt)
                 .last("LIMIT 20");
-        return BaseResponse.success(jobLogMapper.selectList(wrapper));
+        return BaseResponse.success(CronjobConverter.INSTANT.jobLogListToVO(jobLogMapper.selectList(wrapper)));
     }
 }

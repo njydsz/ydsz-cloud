@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ExecutionWbsTaskService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ExecutionWbsTaskVO;
 
 @RestController
 @RequestMapping("/api/v1/project/execution/wbs/task")
@@ -19,10 +21,10 @@ public class ExecutionWbsTaskController {
     private final ExecutionWbsTaskService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ExecutionWbsTask> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ExecutionWbsTaskVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ExecutionWbsTask> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ExecutionWbsTaskVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionWbsTask> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

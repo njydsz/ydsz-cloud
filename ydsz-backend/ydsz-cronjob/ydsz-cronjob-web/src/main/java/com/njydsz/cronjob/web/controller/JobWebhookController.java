@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 
 /**
  * WebHook 事件订阅管理 Controller（P3-13）。
@@ -112,7 +114,7 @@ public class JobWebhookController {
      */
     @Operation(summary = "分页查询 WebHook 订阅")
     @GetMapping("/page")
-    public BaseResponse<Page<JobWebhook>> page(
+    public BaseResponse<Page<JobWebhookVO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String eventType,
@@ -124,7 +126,10 @@ public class JobWebhookController {
                 .eq(jobKey != null && !jobKey.isBlank(),
                         w -> w.getJobKey(), jobKey)
                 .orderByDesc(w -> w.getCreatedAt());
-        return BaseResponse.success(webhookMapper.selectPage(new Page<>(page, size), wrapper));
+        Page<JobWebhook> page = webhookMapper.selectPage(new Page<>(page, size), wrapper);
+        Page<JobWebhookVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(CronjobConverter.INSTANT.jobWebhookListToVO(page.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**
@@ -135,8 +140,8 @@ public class JobWebhookController {
      */
     @Operation(summary = "查询 WebHook 详情")
     @GetMapping("/{id}")
-    public BaseResponse<JobWebhook> getById(@PathVariable String id) {
-        return BaseResponse.success(webhookMapper.selectById(id));
+    public BaseResponse<JobWebhookVO> getById(@PathVariable String id) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(webhookMapper.selectById(id)));
     }
 
     /**

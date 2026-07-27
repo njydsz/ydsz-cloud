@@ -26,6 +26,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
  * P1-B4: 任务分组管理 Controller。
@@ -56,7 +58,7 @@ public class JobGroupController {
      */
     @Operation(summary = "按分组分页查询任务")
     @GetMapping("/{jobGroup}/page")
-    public BaseResponse<Page<Job>> pageByGroup(
+    public BaseResponse<Page<JobVO>> pageByGroup(
             @PathVariable String jobGroup,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -65,7 +67,10 @@ public class JobGroupController {
         wrapper.eq(Job::getJobGroup, jobGroup)
                 .eq(Job::getDeleted, 0)
                 .orderByDesc(Job::getCreatedAt);
-        return BaseResponse.success(jobMapper.selectPage(pageObj, wrapper));
+        Page<Job> page = jobMapper.selectPage(pageObj, wrapper);
+        Page<JobVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(CronjobConverter.INSTANT.jobListToVO(page.getRecords()));
+        return BaseResponse.success(voPage);
     }
 
     /**

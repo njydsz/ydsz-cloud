@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.InstanceMigrationResultDTOVO;
 
 /**
  * 流程实例迁移 Controller
@@ -54,8 +56,8 @@ public class FlowMigrationController {
     @RateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:migrateInstances:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate")
-    public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
-        return BaseResponse.success(instanceMigrationService.migrate(dto));
+    public BaseResponse<InstanceMigrationResultDTOVO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(instanceMigrationService.migrate(dto)));
     }
 
     /**
@@ -68,8 +70,8 @@ public class FlowMigrationController {
     @RateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:previewMigration:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate/preview")
-    public BaseResponse<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
-        return BaseResponse.success(instanceMigrationService.previewMigration(dto));
+    public BaseResponse<InstanceMigrationResultDTOVO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(instanceMigrationService.previewMigration(dto)));
     }
 
     /**

@@ -37,6 +37,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.vo.ChatResponseDTOVO;
 
 /**
  * 对话 REST API
@@ -82,7 +84,7 @@ public class ChatController {
     @Idempotent(key = "ydsz:agent:ChatController:chat:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.chat.chat", threshold = 50)
     @PostMapping("/chat")
-    public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
+    public BaseResponse<ChatResponseDTOVO> chat(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 同步对话请求: convId={}, msgLen={}",
                 request.getConversationId(), request.getMessage().length());
         requestGuard.check(request.getRequestId(), null);
@@ -92,7 +94,7 @@ public class ChatController {
                     request.getMessage(),
                     request.getSystemPrompt());
             ChatResponseDTO dto = toDTO(response);
-            return BaseResponse.success(dto);
+            return BaseResponse.success(AgentConverter.INSTANT.entityToVO(dto));
         } catch (Exception e) {
             requestGuard.releaseIdempotent(request.getRequestId());
             throw e;

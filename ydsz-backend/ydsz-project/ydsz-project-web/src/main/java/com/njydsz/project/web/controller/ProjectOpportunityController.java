@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ProjectOpportunityService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ProjectOpportunityVO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/opportunity")
@@ -19,10 +21,10 @@ public class ProjectOpportunityController {
     private final ProjectOpportunityService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectOpportunity> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectOpportunityVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ProjectOpportunity> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ProjectOpportunityVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectOpportunity> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

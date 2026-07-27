@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobSlaVO;
 
 /**
  * SLA 管理 Controller（P2-7 SLA 管理）。
@@ -107,8 +109,8 @@ public class JobSlaController {
     @Operation(summary = "查询 SLA 规则详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/{id}")
-    public BaseResponse<JobSla> getById(@PathVariable String id) {
-        return BaseResponse.success(jobSlaService.getSlaById(id));
+    public BaseResponse<JobSlaVO> getById(@PathVariable String id) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobSlaService.getSlaById(id)));
     }
 
     /**
@@ -119,8 +121,8 @@ public class JobSlaController {
     @Operation(summary = "查询全部 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/list")
-    public BaseResponse<List<JobSla>> list() {
-        return BaseResponse.success(jobSlaService.listSla());
+    public BaseResponse<List<JobSlaVO>> list() {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobSlaListToVO(jobSlaService.listSla()));
     }
 
     /**

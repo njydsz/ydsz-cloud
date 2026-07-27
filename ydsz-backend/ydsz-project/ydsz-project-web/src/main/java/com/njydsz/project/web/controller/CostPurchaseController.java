@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.CostPurchaseService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.CostPurchaseVO;
 
 @RestController
 @RequestMapping("/api/v1/project/cost/purchase")
@@ -19,10 +21,10 @@ public class CostPurchaseController {
     private final CostPurchaseService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<CostPurchase> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<CostPurchaseVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<CostPurchase> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<CostPurchaseVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<CostPurchase> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

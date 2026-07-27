@@ -24,6 +24,9 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
+import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 
 /**
  * 告警规则管理 Controller（P5 告警 + 监控）。
@@ -102,8 +105,8 @@ public class AlertController {
     @Operation(summary = "查询告警规则详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rule/{id}")
-    public BaseResponse<JobAlertRule> getRuleById(@PathVariable String id) {
-        return BaseResponse.success(alertService.getRuleById(id));
+    public BaseResponse<JobAlertRuleVO> getRuleById(@PathVariable String id) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(alertService.getRuleById(id)));
     }
 
     /**
@@ -114,8 +117,8 @@ public class AlertController {
     @Operation(summary = "查询全部告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rules")
-    public BaseResponse<List<JobAlertRule>> listRules() {
-        return BaseResponse.success(alertService.listRules());
+    public BaseResponse<List<JobAlertRuleVO>> listRules() {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobAlertRuleListToVO(alertService.listRules()));
     }
 
     /**
@@ -146,10 +149,10 @@ public class AlertController {
     @Operation(summary = "查询任务告警历史")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/logs/{jobId}")
-    public BaseResponse<List<JobAlertLog>> queryAlertLogs(
+    public BaseResponse<List<JobAlertLogVO>> queryAlertLogs(
             @PathVariable String jobId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since) {
-        return BaseResponse.success(alertService.queryAlertLogs(jobId, since));
+        return BaseResponse.success(CronjobConverter.INSTANT.jobAlertLogListToVO(alertService.queryAlertLogs(jobId, since)));
     }
 }

@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ExecutionDeliveryItemService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ExecutionDeliveryItemVO;
 
 @RestController
 @RequestMapping("/api/v1/project/execution/delivery/item")
@@ -19,10 +21,10 @@ public class ExecutionDeliveryItemController {
     private final ExecutionDeliveryItemService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ExecutionDeliveryItem> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ExecutionDeliveryItemVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ExecutionDeliveryItem> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ExecutionDeliveryItemVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionDeliveryItem> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

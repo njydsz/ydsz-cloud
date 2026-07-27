@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.AlertDispatchService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.AlertDispatchVO;
 
 @RestController
 @RequestMapping("/api/v1/project/alert/dispatch")
@@ -19,10 +21,10 @@ public class AlertDispatchController {
     private final AlertDispatchService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<AlertDispatch> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<AlertDispatchVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<AlertDispatch> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<AlertDispatchVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<AlertDispatch> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

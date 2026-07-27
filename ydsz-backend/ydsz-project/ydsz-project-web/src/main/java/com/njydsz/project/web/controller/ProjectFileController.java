@@ -22,6 +22,8 @@ import com.njydsz.common.file.storage.IFileStorageProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.FileStorageVO;
 
 /**
  * 项目附件文件管理 Controller。
@@ -56,7 +58,7 @@ public class ProjectFileController {
      */
     @Operation(summary = "上传项目附件")
     @PostMapping("/upload")
-    public BaseResponse<FileStorage> upload(
+    public BaseResponse<FileStorageVO> upload(
             @RequestParam String projectId,
             @RequestParam(defaultValue = "other") String category,
             @RequestParam("file") MultipartFile file) {

@@ -19,6 +19,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.vo.ApprovalRequestVO;
 
 /**
  * Human-in-the-Loop 审批 REST API
@@ -43,12 +45,12 @@ public class HumanApprovalController {
     private final HumanApprovalService approvalService;
 
     @GetMapping("/pending")
-    public BaseResponse<List<ApprovalRequest>> listPending() {
-        return BaseResponse.success(approvalService.listPending());
+    public BaseResponse<List<ApprovalRequestVO>> listPending() {
+        return BaseResponse.success(AgentConverter.INSTANT.approvalRequestListToVO(approvalService.listPending()));
     }
 
     @GetMapping("/{id}")
-    public BaseResponse<ApprovalRequest> getApproval(@PathVariable String id) {
+    public BaseResponse<ApprovalRequestVO> getApproval(@PathVariable String id) {
         ApprovalRequest request = approvalService.getApproval(id);
         if (request == null) {
             return BaseResponse.error("Approval not found: " + id);

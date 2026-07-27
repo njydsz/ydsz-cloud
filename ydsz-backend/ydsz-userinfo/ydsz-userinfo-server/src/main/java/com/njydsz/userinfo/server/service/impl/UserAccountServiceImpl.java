@@ -22,6 +22,7 @@ import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.entity.UserRole;
@@ -75,6 +76,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final PasswordEncoder passwordEncoder;
     /** 密码策略校验器 */
     private final PasswordPolicyValidator passwordPolicyValidator;
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
     /**
      * {@inheritDoc}
@@ -183,6 +185,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         userAccountMapper.insert(entity);
         log.info("User created: username={}, id={}", entity.getUsername(), entity.getId());
+        indexUpsert(entity);
         return entity.getId();
     }
 
@@ -205,7 +208,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (dto.getStatus() != null) {
             entity.setStatus(String.valueOf(dto.getStatus()));
         }
-        return userAccountMapper.updateById(entity) > 0;
+        boolean result = userAccountMapper.updateById(entity) > 0;
+        if (result) {
+            indexUpsert(entity);
+        }
+        return result;
     }
 
     /**
@@ -220,7 +227,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
-        return userAccountMapper.deleteById(id) > 0;
+        boolean result = userAccountMapper.deleteById(id) > 0;
+        if (result) {
+            indexDelete(id);
+        }
+        return result;
     }
 
     /**
@@ -465,6 +476,20 @@ public class UserAccountServiceImpl implements UserAccountService {
             }
         }
         return result;
+    }
+
+    private void indexUpsert(UserAccount entity) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexUpsert("user", entity);
+        }
+    }
+
+    private void indexDelete(String id) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexDelete("user", id);
+        }
     }
 
     /**

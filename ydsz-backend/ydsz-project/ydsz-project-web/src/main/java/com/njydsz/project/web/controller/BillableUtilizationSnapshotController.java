@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.BillableUtilizationSnapshotService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.BillableUtilizationSnapshotVO;
 
 @RestController
 @RequestMapping("/api/v1/project/billable/utilization/snapshot")
@@ -19,10 +21,10 @@ public class BillableUtilizationSnapshotController {
     private final BillableUtilizationSnapshotService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<BillableUtilizationSnapshot> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<BillableUtilizationSnapshotVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<BillableUtilizationSnapshot> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<BillableUtilizationSnapshotVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<BillableUtilizationSnapshot> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.domain.vo.VariableDefinitionVO;
 
 /**
  * 规则变量管理 Controller
@@ -48,10 +50,10 @@ public class RuleVariableAdminController {
      * @return 变量定义列表
      */
     @GetMapping
-    public BaseResponse<List<VariableDefinition>> list(@RequestParam(required = false) String category) {
+    public BaseResponse<List<VariableDefinitionVO>> list(@RequestParam(required = false) String category) {
         List<VariableDefinition> all = variableRegistry.listAll();
         if (category == null || category.isBlank()) {
-            return BaseResponse.success(all);
+            return BaseResponse.success(LiteruleConverter.INSTANT.variableDefinitionListToVO(all));
         }
         return BaseResponse.success(all.stream()
                 .filter(v -> category.equals(v.getCategory()))
@@ -65,7 +67,7 @@ public class RuleVariableAdminController {
      * @return 变量定义
      */
     @GetMapping("/{varName}")
-    public BaseResponse<VariableDefinition> get(@PathVariable String varName) {
+    public BaseResponse<VariableDefinitionVO> get(@PathVariable String varName) {
         VariableDefinition def = variableRegistry.lookup(varName);
         if (def == null) {
             return BaseResponse.error("变量不存在: " + varName);
@@ -82,7 +84,7 @@ public class RuleVariableAdminController {
     @Idempotent(key = "ruleVariableAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "变量管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
     @PostMapping
-    public BaseResponse<VariableDefinition> save(@RequestBody VariableDefinition definition) {
+    public BaseResponse<VariableDefinitionVO> save(@RequestBody VariableDefinition definition) {
         if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
             return BaseResponse.error("变量定义及 name 不能为空");
         }
@@ -128,7 +130,7 @@ public class RuleVariableAdminController {
      * @return 可用变量定义列表
      */
     @GetMapping("/available")
-    public BaseResponse<List<VariableDefinition>> listAvailable() {
-        return BaseResponse.success(expressionValidationService.listAvailableVariables());
+    public BaseResponse<List<VariableDefinitionVO>> listAvailable() {
+        return BaseResponse.success(LiteruleConverter.INSTANT.variableDefinitionListToVO(expressionValidationService.listAvailableVariables()));
     }
 }

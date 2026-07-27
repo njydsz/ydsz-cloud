@@ -27,6 +27,9 @@ import lombok.RequiredArgsConstructor;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
+import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
 
 /**
  * DAG 工作流定义 Controller（P2 DAG 增强）。
@@ -143,8 +146,8 @@ public class JobDagController {
     @Operation(summary = "查询 DAG 工作流详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{dagId}")
-    public BaseResponse<JobDag> getDagById(@PathVariable String dagId) {
-        return BaseResponse.success(jobDagService.getDagById(dagId));
+    public BaseResponse<JobDagVO> getDagById(@PathVariable String dagId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagService.getDagById(dagId)));
     }
 
     /**
@@ -156,8 +159,8 @@ public class JobDagController {
     @Operation(summary = "根据 KEY 查询 DAG 工作流")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/key/{dagKey}")
-    public BaseResponse<JobDag> getDagByKey(@PathVariable String dagKey) {
-        return BaseResponse.success(jobDagService.getDagByKey(dagKey));
+    public BaseResponse<JobDagVO> getDagByKey(@PathVariable String dagKey) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagService.getDagByKey(dagKey)));
     }
 
     /**
@@ -168,8 +171,8 @@ public class JobDagController {
     @Operation(summary = "查询所有启用的 DAG 工作流")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/enabled")
-    public BaseResponse<List<JobDag>> listEnabledDags() {
-        return BaseResponse.success(jobDagService.listEnabledDags());
+    public BaseResponse<List<JobDagVO>> listEnabledDags() {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobDagListToVO(jobDagService.listEnabledDags()));
     }
 
     /**
@@ -221,8 +224,8 @@ public class JobDagController {
     @Operation(summary = "查询 DAG 版本历史")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{dagId}/versions")
-    public BaseResponse<List<JobDagVersion>> listDagVersions(@PathVariable String dagId) {
-        return BaseResponse.success(jobDagService.listDagVersions(dagId, 50));
+    public BaseResponse<List<JobDagVersionVO>> listDagVersions(@PathVariable String dagId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.jobDagVersionListToVO(jobDagService.listDagVersions(dagId, 50)));
     }
 
     /**
@@ -238,8 +241,8 @@ public class JobDagController {
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollbackDag'")
     @RateLimit(resource = "cronjob.jobdag.rollbackDag", threshold = 50)
     @PostMapping("/{dagId}/rollback")
-    public BaseResponse<JobDag> rollbackDag(@PathVariable String dagId,
+    public BaseResponse<JobDagVO> rollbackDag(@PathVariable String dagId,
                                                 @RequestParam Integer version) {
-        return BaseResponse.success(jobDagService.rollbackDag(dagId, version));
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(jobDagService.rollbackDag(dagId, version)));
     }
 }

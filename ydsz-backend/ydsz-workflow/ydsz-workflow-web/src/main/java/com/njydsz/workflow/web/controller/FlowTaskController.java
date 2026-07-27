@@ -29,6 +29,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 
 /**
  * 任务操作 Controller
@@ -394,10 +396,10 @@ public class FlowTaskController {
      * @return 统一响应结果，包含超期任务列表
      */
     @GetMapping("/task/overdue")
-    public BaseResponse<List<FlowRunTask>> overdue(@RequestParam(required = false) String assigneeId,
+    public BaseResponse<List<FlowRunTaskVO>> overdue(@RequestParam(required = false) String assigneeId,
                                          @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(taskService.listOverdue(assigneeId, tid));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tid)));
     }
 
     /**
@@ -429,7 +431,7 @@ public class FlowTaskController {
      * @return 统一响应结果，包含分页已办列表
      */
     @GetMapping("/task/done/search")
-    public BaseResponse<PageResponse<FlowRunTask>> doneSearch(
+    public BaseResponse<PageResponse<FlowRunTaskVO>> doneSearch(
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowCode,
@@ -644,9 +646,9 @@ public class FlowTaskController {
      * @return 超期任务列表
      */
     @GetMapping("/stats/overdue")
-    public BaseResponse<List<FlowRunTask>> statsOverdue(
+    public BaseResponse<List<FlowRunTaskVO>> statsOverdue(
             @RequestParam(required = false) String assigneeId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(taskService.listOverdue(assigneeId, tenantId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tenantId)));
     }
 }

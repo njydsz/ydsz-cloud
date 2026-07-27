@@ -24,6 +24,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.ConnectorExportResultVO;
+import com.njydsz.cronjob.domain.vo.ConnectorTaskInfoVO;
+import com.njydsz.cronjob.domain.vo.StringVO;
 
 /**
  * 生态连接器 Controller（P2-3）。
@@ -48,8 +52,8 @@ public class ConnectorController {
     @Operation(summary = "查询已注册连接器类型")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/types")
-    public BaseResponse<List<String>> types() {
-        return BaseResponse.success(connectorManager.getRegisteredTypes());
+    public BaseResponse<List<StringVO>> types() {
+        return BaseResponse.success(CronjobConverter.INSTANT.stringListToVO(connectorManager.getRegisteredTypes()));
     }
 
     /**
@@ -77,7 +81,7 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.listRemoteTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:listRemoteTasks:lock", ttlSeconds = 5)
     @PostMapping("/remote-tasks")
-    public BaseResponse<List<ConnectorTaskInfo>> listRemoteTasks(@RequestBody ConnectorConfig config,
+    public BaseResponse<List<ConnectorTaskInfoVO>> listRemoteTasks(@RequestBody ConnectorConfig config,
                                                             @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
@@ -94,7 +98,7 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.importTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:importTasks:lock", ttlSeconds = 5)
     @PostMapping("/import")
-    public BaseResponse<List<ConnectorTaskInfo>> importTasks(@RequestBody ConnectorConfig config,
+    public BaseResponse<List<ConnectorTaskInfoVO>> importTasks(@RequestBody ConnectorConfig config,
                                                         @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
@@ -111,7 +115,7 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.exportTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:exportTasks:lock", ttlSeconds = 5)
     @PostMapping("/export")
-    public BaseResponse<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {
+    public BaseResponse<ConnectorExportResultVO> exportTasks(@RequestBody ExportRequest request) {
         JobConnector connector = connectorManager.getConnector(request.getType());
         if (connector == null) {
             return BaseResponse.error("不支持的连接器类型: " + request.getType());

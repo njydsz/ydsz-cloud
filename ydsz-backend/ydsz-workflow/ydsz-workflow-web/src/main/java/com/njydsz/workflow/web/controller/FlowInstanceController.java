@@ -32,6 +32,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.domain.vo.FlowInstanceViewDTOVO;
+import com.njydsz.workflow.domain.vo.StringVO;
 
 /**
  * 流程实例 Controller
@@ -67,8 +71,8 @@ public class FlowInstanceController {
     @RateLimit(resource = "workflow.flowinstance.startProcess", threshold = 50)
     @PostMapping("/instance/start")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)
-    public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
-        return BaseResponse.success(workflowFacade.startProcess(dto));
+    public BaseResponse<StringVO> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(workflowFacade.startProcess(dto)));
     }
 
     /**
@@ -105,9 +109,9 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含流程实例视图
      */
     @GetMapping("/instance/byBusiness")
-    public BaseResponse<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
+    public BaseResponse<FlowInstanceViewDTOVO> getByBusiness(@RequestParam String businessType,
                                                  @RequestParam String businessId) {
-        return BaseResponse.success(workflowFacade.getByBusiness(businessType, businessId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(workflowFacade.getByBusiness(businessType, businessId)));
     }
 
     /**
@@ -225,7 +229,7 @@ public class FlowInstanceController {
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:resubmit:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/resubmit")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
-    public BaseResponse<String> resubmit(@PathVariable String id,
+    public BaseResponse<StringVO> resubmit(@PathVariable String id,
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
                                     @RequestBody(required = false) Map<String, Object> variables) {
@@ -294,7 +298,7 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/page")
-    public BaseResponse<PageResponse<FlowInstance>> instancePage(
+    public BaseResponse<PageResponse<FlowInstanceVO>> instancePage(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
@@ -328,7 +332,7 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/my")
-    public BaseResponse<PageResponse<FlowInstance>> instanceMy(
+    public BaseResponse<PageResponse<FlowInstanceVO>> instanceMy(
             @RequestParam(required = false) String flowCode,
             @RequestParam(required = false) String flowName,
             @RequestParam(required = false) String status,
@@ -414,9 +418,9 @@ public class FlowInstanceController {
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:urge:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/urge")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-    public BaseResponse<List<String>> urge(@PathVariable String id,
+    public BaseResponse<List<StringVO>> urge(@PathVariable String id,
                                  @RequestParam(required = false) String comment) {
-        return BaseResponse.success(workflowFacade.urgeTask(id, AuthContext.getUserId(), comment));
+        return BaseResponse.success(WorkflowConverter.INSTANT.stringListToVO(workflowFacade.urgeTask(id, AuthContext.getUserId(), comment)));
     }
 
     /**
@@ -427,10 +431,10 @@ public class FlowInstanceController {
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:urgeByNode:lock", ttlSeconds = 5)
     @PostMapping("/instance/{id}/urge/node")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-    public BaseResponse<List<String>> urgeByNode(@PathVariable String id,
+    public BaseResponse<List<StringVO>> urgeByNode(@PathVariable String id,
                                            @RequestParam(required = false) String nodeCode,
                                            @RequestParam(required = false) String comment) {
-        return BaseResponse.success(workflowFacade.urgeNodeTask(id, nodeCode, AuthContext.getUserId(), comment));
+        return BaseResponse.success(WorkflowConverter.INSTANT.stringListToVO(workflowFacade.urgeNodeTask(id, nodeCode, AuthContext.getUserId(), comment)));
     }
 
     /**

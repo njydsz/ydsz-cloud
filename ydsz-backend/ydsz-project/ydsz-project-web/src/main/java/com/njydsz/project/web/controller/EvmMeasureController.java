@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.EvmMeasureService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.EvmMeasureVO;
 
 @RestController
 @RequestMapping("/api/v1/project/evm/measure")
@@ -19,10 +21,10 @@ public class EvmMeasureController {
     private final EvmMeasureService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<EvmMeasure> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<EvmMeasureVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<EvmMeasure> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<EvmMeasureVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<EvmMeasure> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

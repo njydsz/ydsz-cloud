@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ProjectExpenseService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ProjectExpenseVO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/expense")
@@ -19,10 +21,10 @@ public class ProjectExpenseController {
     private final ProjectExpenseService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectExpense> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectExpenseVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ProjectExpense> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ProjectExpenseVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectExpense> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

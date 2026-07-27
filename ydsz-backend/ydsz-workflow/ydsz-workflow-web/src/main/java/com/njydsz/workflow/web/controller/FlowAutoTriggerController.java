@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 
 /**
  * 流程自动触发规则 HTTP API
@@ -47,8 +49,8 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "列出所有触发规则")
     @GetMapping("/list")
-    public BaseResponse<List<FlowAutoTrigger>> list() {
-        return BaseResponse.success(autoTriggerService.listAll());
+    public BaseResponse<List<FlowAutoTriggerVO>> list() {
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowAutoTriggerListToVO(autoTriggerService.listAll()));
     }
 
     /**

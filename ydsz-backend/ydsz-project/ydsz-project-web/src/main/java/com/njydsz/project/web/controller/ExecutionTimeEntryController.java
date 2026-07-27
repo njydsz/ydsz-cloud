@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ExecutionTimeEntryService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ExecutionTimeEntryVO;
 
 @RestController
 @RequestMapping("/api/v1/project/execution/time/entry")
@@ -19,10 +21,10 @@ public class ExecutionTimeEntryController {
     private final ExecutionTimeEntryService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ExecutionTimeEntry> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ExecutionTimeEntryVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ExecutionTimeEntry> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ExecutionTimeEntryVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ExecutionTimeEntry> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.EmbeddedApprovalViewDTOVO;
 
 /**
  * P2-2 嵌入式审批 Controller
@@ -64,7 +66,7 @@ public class FlowEmbeddedApprovalController {
      */
     @Operation(summary = "加载嵌入式审批面板")
     @GetMapping("/panel")
-    public BaseResponse<EmbeddedApprovalViewDTO> loadPanel(@RequestParam String businessType,
+    public BaseResponse<EmbeddedApprovalViewDTOVO> loadPanel(@RequestParam String businessType,
                                                      @RequestParam String businessId,
                                                      @RequestParam(required = false) String userId) {
         String uid = userId;

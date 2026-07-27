@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowCommentVO;
 
 /**
  * P2-2: 流程评论 Controller
@@ -80,9 +82,9 @@ public class FlowCommentController {
      */
     @GetMapping("/instance/{instanceId}")
     @Operation(summary = "查询实例全部评论（树结构）")
-    public BaseResponse<List<FlowComment>> listByInstance(@PathVariable String instanceId) {
+    public BaseResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(commentService.listByInstance(tenantId, instanceId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listByInstance(tenantId, instanceId)));
     }
 
     /**
@@ -93,9 +95,9 @@ public class FlowCommentController {
      */
     @GetMapping("/root/{instanceId}")
     @Operation(summary = "查询实例一级评论")
-    public BaseResponse<List<FlowComment>> listRootComments(@PathVariable String instanceId) {
+    public BaseResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(commentService.listRootComments(tenantId, instanceId));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listRootComments(tenantId, instanceId)));
     }
 
     /**
@@ -106,8 +108,8 @@ public class FlowCommentController {
      */
     @GetMapping("/replies/{parentCommentId}")
     @Operation(summary = "查询父评论下的回复")
-    public BaseResponse<List<FlowComment>> listReplies(@PathVariable String parentCommentId) {
-        return BaseResponse.success(commentService.listReplies(parentCommentId));
+    public BaseResponse<List<FlowCommentVO>> listReplies(@PathVariable String parentCommentId) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listReplies(parentCommentId)));
     }
 
     /**

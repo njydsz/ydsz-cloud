@@ -35,6 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.literule.domain.converter.LiteruleConverter;
+import com.njydsz.literule.domain.vo.CEPHitVO;
+import com.njydsz.literule.domain.vo.CEPPatternVO;
 
 /**
  * CEP 复杂事件处理 Controller（P0-2）
@@ -125,7 +128,7 @@ public class CEPController {
      * @return 模式列表
      */
     @GetMapping("/patterns")
-    public BaseResponse<List<CEPPattern>> listPatterns() {
+    public BaseResponse<List<CEPPatternVO>> listPatterns() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
             return BaseResponse.error("CEP 引擎未启用");
@@ -238,9 +241,9 @@ public class CEPController {
      * @return 命中记录列表（最多 200 条）
      */
     @GetMapping("/hits")
-    public BaseResponse<List<CEPHit>> recentHits() {
+    public BaseResponse<List<CEPHitVO>> recentHits() {
         synchronized (recentHits) {
-            return BaseResponse.success(new ArrayList<>(recentHits));
+            return BaseResponse.success(LiteruleConverter.INSTANT.cEPHitListToVO(new ArrayList<>(recentHits)));
         }
     }
 

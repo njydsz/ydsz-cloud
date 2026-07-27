@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 
 /**
  * 流程分类管理 Controller
@@ -46,8 +48,8 @@ public class FlowCategoryController {
      */
     @GetMapping
     @Operation(summary = "查询全部分类")
-    public BaseResponse<List<FlowCategory>> list() {
-        return BaseResponse.success(categoryService.listAll(TenantContext.getTenantId()));
+    public BaseResponse<List<FlowCategoryVO>> list() {
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowCategoryListToVO(categoryService.listAll(TenantContext.getTenantId())));
     }
 
     /**

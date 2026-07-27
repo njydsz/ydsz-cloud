@@ -24,6 +24,8 @@ import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 
 /**
  * 长期授权委派 Controller
@@ -118,11 +120,11 @@ public class FlowDelegateController {
      * @return 授权列表
      */
     @GetMapping("/delegateAuth/mine")
-    public BaseResponse<List<FlowDelegateAuth>> listMyDelegateAuths(
+    public BaseResponse<List<FlowDelegateAuthVO>> listMyDelegateAuths(
             @RequestParam(required = false) String status) {
         String ownerId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(delegateAuthService.listMine(ownerId, tenantId, status));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowDelegateAuthListToVO(delegateAuthService.listMine(ownerId, tenantId, status)));
     }
 
     /**
@@ -132,11 +134,11 @@ public class FlowDelegateController {
      * @return 授权列表
      */
     @GetMapping("/delegateAuth/asDelegate")
-    public BaseResponse<List<FlowDelegateAuth>> listAsDelegate(
+    public BaseResponse<List<FlowDelegateAuthVO>> listAsDelegate(
             @RequestParam(required = false) String status) {
         String delegateUserId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.success(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowDelegateAuthListToVO(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status)));
     }
 
     /**

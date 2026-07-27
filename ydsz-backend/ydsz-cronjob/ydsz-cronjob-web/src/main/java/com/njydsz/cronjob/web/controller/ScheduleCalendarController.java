@@ -14,6 +14,8 @@ import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.LocalDateTimeVO;
 
 /**
  * 调度日历 Controller（P2-10）。
@@ -42,7 +44,7 @@ public class ScheduleCalendarController {
      */
     @Operation(summary = "查询任务未来触发时间")
     @GetMapping("/fireTimes")
-    public BaseResponse<List<LocalDateTime>> getUpcomingFireTimes(
+    public BaseResponse<List<LocalDateTimeVO>> getUpcomingFireTimes(
             @RequestParam String jobKey,
             @RequestParam(defaultValue = "24") int hours,
             @RequestParam(defaultValue = "100") int maxCount) {

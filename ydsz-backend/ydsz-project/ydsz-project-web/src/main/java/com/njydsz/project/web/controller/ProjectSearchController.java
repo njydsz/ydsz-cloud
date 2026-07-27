@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.SearchResponseVO;
 
 /**
  * 项目搜索 Controller
@@ -38,7 +40,7 @@ public class ProjectSearchController {
 
     @GetMapping
     @Operation(summary = "搜索项目")
-    public BaseResponse<SearchResponse> search(
+    public BaseResponse<SearchResponseVO> search(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize,
@@ -56,7 +58,7 @@ public class ProjectSearchController {
                 .fuzzy(true)
                 .build();
 
-        return BaseResponse.success(unifiedSearchService.search(request));
+        return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(unifiedSearchService.search(request)));
     }
 
     @PostMapping("/rebuild")

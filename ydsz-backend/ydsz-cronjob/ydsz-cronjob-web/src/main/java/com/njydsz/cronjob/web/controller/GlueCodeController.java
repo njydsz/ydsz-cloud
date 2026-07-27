@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 
 /**
  * GLUE 在线编码 Controller（P1-2 GLUE 在线编码）。
@@ -71,7 +73,7 @@ public class GlueCodeController {
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
     @RateLimit(resource = "cronjob.gluecode.save", threshold = 50)
     @PostMapping("/save")
-    public BaseResponse<GlueCode> save(@Valid @RequestBody GlueCodeSaveRequest request) {
+    public BaseResponse<GlueCodeVO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
         return BaseResponse.success(glueCodeService.save(
                 request.getJobId(),
                 request.getSourceCode(),
@@ -88,8 +90,8 @@ public class GlueCodeController {
     @Operation(summary = "获取最新版本 GLUE 代码")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/latest")
-    public BaseResponse<GlueCode> latest(@RequestParam String jobId) {
-        return BaseResponse.success(glueCodeService.getLatest(jobId));
+    public BaseResponse<GlueCodeVO> latest(@RequestParam String jobId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(glueCodeService.getLatest(jobId)));
     }
 
     /**
@@ -101,8 +103,8 @@ public class GlueCodeController {
     @Operation(summary = "获取 GLUE 代码版本列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/versions")
-    public BaseResponse<List<GlueCode>> versions(@RequestParam String jobId) {
-        return BaseResponse.success(glueCodeService.listVersions(jobId));
+    public BaseResponse<List<GlueCodeVO>> versions(@RequestParam String jobId) {
+        return BaseResponse.success(CronjobConverter.INSTANT.glueCodeListToVO(glueCodeService.listVersions(jobId)));
     }
 
     /**
@@ -117,8 +119,8 @@ public class GlueCodeController {
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollback'")
     @RateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
     @PostMapping("/rollback")
-    public BaseResponse<GlueCode> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
-        return BaseResponse.success(glueCodeService.rollback(request.getJobId(), request.getVersion()));
+    public BaseResponse<GlueCodeVO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
+        return BaseResponse.success(CronjobConverter.INSTANT.entityToVO(glueCodeService.rollback(request.getJobId(), request.getVersion())));
     }
 
     /**

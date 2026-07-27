@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.CostAllocationService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.CostAllocationVO;
 
 @RestController
 @RequestMapping("/api/v1/project/cost/allocation")
@@ -19,10 +21,10 @@ public class CostAllocationController {
     private final CostAllocationService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<CostAllocation> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<CostAllocationVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<CostAllocation> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<CostAllocationVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<CostAllocation> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

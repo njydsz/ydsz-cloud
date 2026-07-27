@@ -11,6 +11,8 @@ import com.njydsz.project.server.service.ProjectReconcileDailyService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
+import com.njydsz.project.domain.converter.ProjectConverter;
+import com.njydsz.project.domain.vo.ProjectReconcileDailyVO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/reconcile/daily")
@@ -19,10 +21,10 @@ public class ProjectReconcileDailyController {
     private final ProjectReconcileDailyService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectReconcileDaily> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectReconcileDailyVO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ProjectReconcileDaily> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+    public PageResponse<ProjectReconcileDailyVO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
         IPage<ProjectReconcileDaily> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }

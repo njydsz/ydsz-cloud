@@ -20,6 +20,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.vo.FlowAttachmentPreviewVOVO;
+import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 
 /**
  * 审批附件 Controller
@@ -49,8 +52,8 @@ public class FlowAttachmentController {
      * @return 附件列表
      */
     @GetMapping("/attachment/task/{taskId}")
-    public BaseResponse<List<FlowAttachment>> listByTask(@PathVariable String taskId) {
-        return BaseResponse.success(attachmentService.listByTask(taskId));
+    public BaseResponse<List<FlowAttachmentVO>> listByTask(@PathVariable String taskId) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowAttachmentListToVO(attachmentService.listByTask(taskId)));
     }
 
     /**
@@ -60,8 +63,8 @@ public class FlowAttachmentController {
      * @return 附件列表
      */
     @GetMapping("/attachment/instance/{instanceId}")
-    public BaseResponse<List<FlowAttachment>> listByInstance(@PathVariable String instanceId) {
-        return BaseResponse.success(attachmentService.listByInstance(instanceId));
+    public BaseResponse<List<FlowAttachmentVO>> listByInstance(@PathVariable String instanceId) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowAttachmentListToVO(attachmentService.listByInstance(instanceId)));
     }
 
     /**
@@ -98,7 +101,7 @@ public class FlowAttachmentController {
      */
     @GetMapping("/attachment/{attachmentId}/preview")
     @Operation(summary = "附件在线预览（根据文件类型返回预览策略）")
-    public BaseResponse<FlowAttachmentPreviewVO> preview(@PathVariable String attachmentId) {
-        return BaseResponse.success(attachmentService.previewAttachment(attachmentId));
+    public BaseResponse<FlowAttachmentPreviewVOVO> preview(@PathVariable String attachmentId) {
+        return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(attachmentService.previewAttachment(attachmentId)));
     }
 }
