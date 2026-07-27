@@ -90,7 +90,7 @@ public class RoleServiceImpl implements RoleService {
         Page<Role> result = roleMapper.selectPage(page, wrapper);
         Page<RoleVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
         List<RoleVO> voList = result.getRecords().stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
         voPage.setRecords(voList);
         return voPage;
@@ -107,7 +107,7 @@ public class RoleServiceImpl implements RoleService {
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByAsc(Role::getSortOrder);
         return roleMapper.selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
     }
 

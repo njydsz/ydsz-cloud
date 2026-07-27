@@ -141,14 +141,8 @@ public class TenantAutoConfiguration {
     @ConditionalOnMissingBean
     public com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
         log.info("多租户 Redis Key 隔离已启用");
-        // 使用非废弃构造器，传入 TenantContextHolder
         return new com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer(
-                new com.njydsz.common.redis.tenant.TenantContextHolder() {
-                    @Override
-                    public String getTenantId() {
-                        return com.njydsz.common.tenant.TenantContextHolder.getTenantId();
-                    }
-                }, true);
+                com.njydsz.common.tenant.TenantContextHolder::getTenantId, true);
     }
 
     /**

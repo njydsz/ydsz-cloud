@@ -63,7 +63,7 @@ public class MenuServiceImpl implements MenuService {
         LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(Menu::getSortOrder);
         return mapper.selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
     }
 

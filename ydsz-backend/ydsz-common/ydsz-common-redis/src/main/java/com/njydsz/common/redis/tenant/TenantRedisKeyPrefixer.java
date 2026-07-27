@@ -1,9 +1,9 @@
 package com.njydsz.common.redis.tenant;
 
+import java.util.function.Supplier;
+
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import com.njydsz.common.core.context.TenantContextHolder;
 
 /**
  * 租户级 Redis Key 前缀器。
@@ -20,45 +20,30 @@ import com.njydsz.common.core.context.TenantContextHolder;
  *
  * <p><b>实现方式：</b>
  * 通过包装 {@link RedisSerializer} 实现，在序列化 key 时自动添加租户前缀。
+ * 租户 ID 通过 {@link Supplier} 注入，由调用方提供。
  *
  * <p><b>注意事项：</b>
  * <ul>
- *   <li>超级管理员 / 无上下文时不添加前缀</li>
+ *   <li>超级管理员（tenantId = null 或 "0"）不添加前缀</li>
  *   <li>仅对 key 序列化生效，value 不受影响</li>
- *   <li>需要配合 {@link TenantContextHolder} Bean 使用</li>
  * </ul>
- *
- * <p><b>依赖说明：</b>
- * 仅依赖 {@code ydsz-common-core} 中的 {@link TenantContextHolder} 接口，
- * 不直接依赖 {@code ydsz-common-tenant}，避免循环依赖。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public class TenantRedisKeyPrefixer {
 
-    private final TenantContextHolder tenantContextHolder;
     private final boolean enabled;
-
-    /**
-     * 兼容旧签名：无 TenantContextHolder 时仅按 enabled 标志判断（不读取上下文）。
-     *
-     * @param enabled 是否启用前缀
-     * @deprecated 推荐使用 {@link #TenantRedisKeyPrefixer(TenantContextHolder, boolean)}
-     */
-    @Deprecated(since = "1.0.0")
-    public TenantRedisKeyPrefixer(boolean enabled) {
-        this(null, enabled);
-    }
+    private final Supplier<String> tenantIdSupplier;
 
     /**
      * 构造租户级 Redis Key 前缀器。
      *
-     * @param tenantContextHolder 租户上下文持有者（不可为 null）
-     * @param enabled             是否启用前缀
+     * @param tenantIdSupplier 租户 ID 提供者（通常为 () -> TenantContextHolder.getTenantId()）
+     * @param enabled           是否启用前缀
      */
-    public TenantRedisKeyPrefixer(TenantContextHolder tenantContextHolder, boolean enabled) {
-        this.tenantContextHolder = tenantContextHolder;
+    public TenantRedisKeyPrefixer(Supplier<String> tenantIdSupplier, boolean enabled) {
+        this.tenantIdSupplier = tenantIdSupplier;
         this.enabled = enabled;
     }
 
@@ -69,12 +54,12 @@ public class TenantRedisKeyPrefixer {
      * @return 带租户前缀的 key，如果未启用或为超级管理员则返回原 key
      */
     public String prefixKey(String key) {
-        if (!enabled || key == null || tenantContextHolder == null) {
+        if (!enabled || key == null) {
             return key;
         }
 
-        String tenantId = tenantContextHolder.getTenantId();
-        if (tenantId == null || tenantContextHolder.isSuperTenant()) {
+        String tenantId = tenantIdSupplier != null ? tenantIdSupplier.get() : null;
+        if (tenantId == null || "0".equals(tenantId)) {
             return key;
         }
 
@@ -119,7 +104,6 @@ public class TenantRedisKeyPrefixer {
             int colonIndex = key.indexOf(':');
             if (colonIndex > 0 && colonIndex < key.length() - 1) {
                 String possibleTenantId = key.substring(0, colonIndex);
-                // 简单判断：如果前缀是数字或字母组合且长度合理，认为是租户 ID
                 if (possibleTenantId.matches("[a-zA-Z0-9_-]+")
                         && possibleTenantId.length() <= 20) {
                     return key.substring(colonIndex + 1);

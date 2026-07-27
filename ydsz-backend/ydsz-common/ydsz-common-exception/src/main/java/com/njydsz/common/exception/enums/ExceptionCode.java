@@ -131,6 +131,19 @@ public interface ExceptionCode {
                 return ExceptionCategory.TIMEOUT;
             case 'R':
                 return ExceptionCategory.RATE_LIMIT;
+            // 模块专属段位：映射到主分类
+            case 'F':
+                // FileExceptionCode - 文件存储属于基础设施异常
+                return ExceptionCategory.INFRASTRUCTURE;
+            case 'G':
+                // DocumentExceptionCode - 文档处理属于业务异常
+                return ExceptionCategory.BUSINESS;
+            case 'H':
+                // ExcelExceptionCode - Excel 处理属于业务异常
+                return ExceptionCategory.BUSINESS;
+            case 'W':
+                // NextwikiExceptionCode - 知识库属于业务异常
+                return ExceptionCategory.BUSINESS;
             default:
                 return ExceptionCategory.BUSINESS;
         }

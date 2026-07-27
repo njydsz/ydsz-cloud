@@ -2,6 +2,9 @@ package com.njydsz.literule.domain.dto.post;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import lombok.Data;
 
 /**
@@ -20,6 +23,10 @@ public class DecisionTablePostDTO implements Serializable {
     private String tableName;
     private String description;
     private String category;
+    private List<Map<String, Object>> conditionColumns;
+    private List<Map<String, Object>> actionColumns;
+    private List<Map<String, Object>> rows;
+    private Map<String, Object> defaultActions;
     private String hitPolicy;
     private Boolean enabled;
     private Integer priority;

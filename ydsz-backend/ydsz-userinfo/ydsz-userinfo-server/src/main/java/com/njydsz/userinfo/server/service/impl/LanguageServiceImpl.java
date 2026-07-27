@@ -48,7 +48,7 @@ public class LanguageServiceImpl implements LanguageService {
         Page<Language> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<Language> result = mapper.selectPage(mpPage, wrapper);
         List<LanguageVO> vos = result.getRecords().stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
         return PageResult.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
     }
@@ -97,7 +97,7 @@ public class LanguageServiceImpl implements LanguageService {
         LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(Language::getSortOrder);
         return mapper.selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
     }
 

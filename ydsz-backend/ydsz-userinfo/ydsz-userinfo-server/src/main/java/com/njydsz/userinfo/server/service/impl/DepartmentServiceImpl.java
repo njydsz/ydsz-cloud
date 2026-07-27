@@ -71,7 +71,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(Department::getSortOrder);
         return departmentMapper.selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
     }
 

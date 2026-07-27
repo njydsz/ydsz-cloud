@@ -1,8 +1,11 @@
 package com.njydsz.common.tenant.ratelimit;
 
+import java.time.Duration;
+
 import com.njydsz.common.tenant.TenantContextHolder;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
+
 /**
  * 租户级限流门面。
  *
@@ -12,13 +15,13 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
  * <p><b>使用示例：</b>
  * <pre>{@code
  * // 检查租户 API 调用配额
- * if (!tenantRateLimiter.tryAcquire("api:invoke", 100, 60)) {
- *     throw new TenantRateLimitExceededException("API 调用配额已用尽");
+ * if (!tenantRateLimiter.tryAcquireTokenBucket("api:invoke", 100, 10, Duration.ofSeconds(60))) {
+ *     throw new RuntimeException("API 调用配额已用尽");
  * }
  *
- * // 检查租户存储配额
- * if (!tenantRateLimiter.tryAcquire("storage:upload", 1000, 3600)) {
- *     throw new TenantRateLimitExceededException("存储配额已用尽");
+ * // 检查租户存储配额（固定窗口）
+ * if (!tenantRateLimiter.tryAcquireFixedWindow("storage:upload", 1000, Duration.ofHours(1))) {
+ *     throw new RuntimeException("存储配额已用尽");
  * }
  * }</pre>
  *
@@ -36,35 +39,49 @@ public class TenantRateLimiter {
     /**
      * 尝试获取令牌桶令牌（按租户维度限流）。
      *
-     * @param ruleName     限流规则名称
-     * @param capacity     桶容量
-     * @param refillSeconds 补充间隔（秒）
+     * @param ruleName 限流规则名称
+     * @param rate     令牌生成速率（每秒令牌数）
+     * @param capacity 桶容量
      * @return true=获取成功，false=被限流
      */
-    public boolean tryAcquire(String ruleName, int capacity, int refillSeconds) {
+    public boolean tryAcquireTokenBucket(String ruleName, int rate, int capacity) {
         String tenantId = TenantContextHolder.getTenantId();
-        if (tenantId == null) {
-            // 无租户上下文 → 全局限流
-            return delegate.tryAcquireTokenBucket(ruleName, capacity, refillSeconds);
-        }
-        String tenantKey = "tenant:" + tenantId + ":" + ruleName;
-        return delegate.tryAcquireTokenBucket(tenantKey, capacity, refillSeconds);
+        String key = tenantId != null
+                ? "tenant:" + tenantId + ":" + ruleName
+                : ruleName;
+        return delegate.tryAcquireTokenBucket(key, rate, capacity);
+    }
+
+    /**
+     * 尝试获取令牌桶令牌（按租户维度限流，自定义周期）。
+     *
+     * @param ruleName 限流规则名称
+     * @param rate     令牌生成速率
+     * @param capacity 桶容量
+     * @param period   补充周期
+     * @return true=获取成功，false=被限流
+     */
+    public boolean tryAcquireTokenBucket(String ruleName, int rate, int capacity, Duration period) {
+        String tenantId = TenantContextHolder.getTenantId();
+        String key = tenantId != null
+                ? "tenant:" + tenantId + ":" + ruleName
+                : ruleName;
+        return delegate.tryAcquireTokenBucket(key, rate, capacity, period);
     }
 
     /**
      * 尝试获取固定窗口限流（按租户维度）。
      *
      * @param ruleName   限流规则名称
-     * @param maxCount   窗口内最大请求数
-     * @param windowSeconds 窗口大小（秒）
+     * @param limit      窗口内最大请求数
+     * @param window     窗口大小
      * @return true=允许，false=被限流
      */
-    public boolean tryAcquireFixedWindow(String ruleName, int maxCount, int windowSeconds) {
+    public boolean tryAcquireFixedWindow(String ruleName, int limit, Duration window) {
         String tenantId = TenantContextHolder.getTenantId();
-        if (tenantId == null) {
-            return delegate.tryAcquireFixedWindow(ruleName, maxCount, windowSeconds);
-        }
-        String tenantKey = "tenant:" + tenantId + ":" + ruleName;
-        return delegate.tryAcquireFixedWindow(tenantKey, maxCount, windowSeconds);
+        String key = tenantId != null
+                ? "tenant:" + tenantId + ":" + ruleName
+                : ruleName;
+        return delegate.tryAcquireFixedWindow(key, limit, window);
     }
 }

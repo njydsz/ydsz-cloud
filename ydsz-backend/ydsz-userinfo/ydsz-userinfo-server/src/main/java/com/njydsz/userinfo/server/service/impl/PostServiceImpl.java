@@ -63,7 +63,7 @@ public class PostServiceImpl implements PostService {
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(Post::getSortOrder);
         return mapper.selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
     }
 

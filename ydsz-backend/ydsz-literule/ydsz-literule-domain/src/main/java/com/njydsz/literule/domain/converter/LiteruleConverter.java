@@ -148,6 +148,8 @@ public interface LiteruleConverter {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "lastEvaluatedAt", ignore = true)
+    @Mapping(target = "lastRollbackAt", ignore = true)
     RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto);
 
 }

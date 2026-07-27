@@ -131,7 +131,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         Page<UserAccount> result = userAccountMapper.selectPage(page, wrapper);
         Page<UserAccountVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
         List<UserAccountVO> voList = result.getRecords().stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
         voPage.setRecords(voList);
         return voPage;
@@ -148,7 +148,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(UserAccount::getCreatedAt);
         return userAccountMapper.selectList(wrapper).stream()
-                .map(this::toVO)
+                .map(UserInfoConverter.INSTANT::entityToVO)
                 .collect(Collectors.toList());
     }
 

@@ -1,10 +1,9 @@
 package com.njydsz.literule.domain.dto.put;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 /**
@@ -28,6 +27,4 @@ public class RuleABPolicyPutDTO implements Serializable {
     private Integer checkWindowMinutes;
     private String notifyChannels;
     private String description;
-    private LocalDateTime lastEvaluatedAt;
-    private LocalDateTime lastRollbackAt;
 }
