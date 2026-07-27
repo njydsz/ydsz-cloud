@@ -1,11 +1,13 @@
 package com.njydsz.common.redis.tenant;
 
-import com.njydsz.common.core.context.TenantContextHolder;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
+
 /**
- * 租户级 Redis Key 前缀器
+ * 租户级 Redis Key 前缀器。
  *
  * <p>为所有 Redis key 自动添加租户前缀，实现租户级数据隔离。
  * 格式：{@code {tenantId}:{originalKey}}
@@ -22,7 +24,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *
  * <p><b>注意事项：</b>
  * <ul>
- *   <li>超级管理员（tenantId = "0" 或 null）不添加前缀</li>
+ *   <li>超级管理员 / 跳过隔离 / 无上下文时不添加前缀</li>
  *   <li>仅对 key 序列化生效，value 不受影响</li>
  *   <li>需要配合 {@link TenantContextHolder} 使用</li>
  * </ul>
@@ -32,16 +34,14 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  */
 public class TenantRedisKeyPrefixer {
 
-    private final TenantContextHolder tenantContextHolder;
     private final boolean enabled;
 
-    public TenantRedisKeyPrefixer(TenantContextHolder tenantContextHolder, boolean enabled) {
-        this.tenantContextHolder = tenantContextHolder;
+    public TenantRedisKeyPrefixer(boolean enabled) {
         this.enabled = enabled;
     }
 
     /**
-     * 为 key 添加租户前缀
+     * 为 key 添加租户前缀。
      *
      * @param key 原始 key
      * @return 带租户前缀的 key，如果未启用或为超级管理员则返回原 key
@@ -51,17 +51,17 @@ public class TenantRedisKeyPrefixer {
             return key;
         }
 
-        String tenantId = tenantContextHolder.getTenantId();
-        if (tenantId == null || "0".equals(tenantId)) {
-            // 超级管理员不添加前缀
+        TenantContext context = TenantContextHolder.get();
+        if (context == null || context.isSkipIsolation()
+                || context.isSuperAdmin() || context.getTenantId() == null) {
             return key;
         }
 
-        return tenantId + ":" + key;
+        return context.getTenantId() + ":" + key;
     }
 
     /**
-     * 创建租户感知的 Redis Key 序列化器
+     * 创建租户感知的 Redis Key 序列化器。
      *
      * @return 包装后的 RedisSerializer
      */
@@ -70,7 +70,7 @@ public class TenantRedisKeyPrefixer {
     }
 
     /**
-     * 租户感知的 Redis Key 序列化器
+     * 租户感知的 Redis Key 序列化器。
      */
     private static class TenantAwareKeySerializer implements RedisSerializer<String> {
 
@@ -98,8 +98,9 @@ public class TenantRedisKeyPrefixer {
             int colonIndex = key.indexOf(':');
             if (colonIndex > 0 && colonIndex < key.length() - 1) {
                 String possibleTenantId = key.substring(0, colonIndex);
-                // 简单判断：如果前缀是数字且长度合理，认为是租户 ID
-                if (possibleTenantId.matches("\\d+") && possibleTenantId.length() <= 20) {
+                // 简单判断：如果前缀是数字或字母组合且长度合理，认为是租户 ID
+                if (possibleTenantId.matches("[a-zA-Z0-9_-]+")
+                        && possibleTenantId.length() <= 20) {
                     return key.substring(colonIndex + 1);
                 }
             }

@@ -107,8 +107,8 @@ public class UnsubscribeController {
     @GetMapping("/page")
     public BaseResponse<PageResponse<MsgSubscriptionVO>> page(UnsubscribeQueryDTO query) {
         PageResponse<MsgSubscription> page = unsubscribeService.pageUnsubscribed(query);
-        PageResponse<MsgSubscriptionVO> voPage = new PageResponse<>(
-                page.getTotal(), page.getCurrent(), page.getSize(),
+        PageResponse<MsgSubscriptionVO> voPage = PageResponse.success(
+                page.getTotal(), page.getPageNum(), page.getPageSize(),
                 MessageConverter.INSTANT.subscriptionListToVO(page.getRecords()));
         return BaseResponse.success(voPage);
     }

@@ -46,7 +46,6 @@
     "dev:nextwiki": "pnpm -F @ydsz/nextwiki-web run dev",
     "dev:literule": "pnpm -F @ydsz/literule-web run dev",
     "dev:agent": "pnpm -F @ydsz/agent-web run dev",
-    "dev:mock": "pnpm -F @ydsz/mock-api run dev",
     "format": "vsh lint --format",
     "lint": "vsh lint",
     "postinstall": "pnpm -r run stub --if-present",

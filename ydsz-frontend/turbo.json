@@ -29,10 +29,6 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "@ydsz/mock-api#build": {
-      "dependsOn": ["^build"],
-      "outputs": [".nitro/**", ".output/**"]
-    },
     "test:e2e": {},
     "dev": {
       "dependsOn": [],

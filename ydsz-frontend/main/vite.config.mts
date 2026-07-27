@@ -15,7 +15,6 @@ export default defineConfig(async () => {
             changeOrigin: true,
             rewrite: (path) => path.replace(/^\/api/, ''),
             // 开发环境通过 Gateway 9000 端口统一路由到各后端服务
-            // 也可切换为 mock-api: http://localhost:5320/api
             target: 'http://localhost:9000',
             ws: true,
           },
