@@ -1,5 +1,8 @@
 package com.njydsz.project.api.fallback;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +12,7 @@ import com.njydsz.project.api.client.RateCardClient;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * RateCardClient 降级工厂
+ * RateCardClient 降级工厂。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -23,14 +26,12 @@ public class RateCardClientFallback implements FallbackFactory<RateCardClient> {
         log.warn("[RateCardClient] 降级触发：{}", cause.getMessage());
         return new RateCardClient() {
             @Override
-            public BaseResponse<?> getByLevel(String levelCode) {
-                log.warn("[RateCardClient] getByLevel 降级：levelCode={}, reason=project 服务不可用", levelCode);
+            public BaseResponse<Map<String, Object>> getById(String id) {
                 return BaseResponse.error("费率卡服务不可用");
             }
 
             @Override
-            public BaseResponse<?> listAll() {
-                log.warn("[RateCardClient] listAll 降级：reason=project 服务不可用");
+            public BaseResponse<List<Map<String, Object>>> listAll() {
                 return BaseResponse.error("费率卡服务不可用");
             }
         };

@@ -1,5 +1,8 @@
 package com.njydsz.project.api.fallback;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +12,7 @@ import com.njydsz.project.api.client.EvmMeasureClient;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * EvmMeasureClient 降级工厂
+ * EvmMeasureClient 降级工厂。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -23,15 +26,12 @@ public class EvmMeasureClientFallback implements FallbackFactory<EvmMeasureClien
         log.warn("[EvmMeasureClient] 降级触发：{}", cause.getMessage());
         return new EvmMeasureClient() {
             @Override
-            public BaseResponse<?> getByInitiationId(String initiationId) {
-                log.warn("[EvmMeasureClient] getByInitiationId 降级：initiationId={}, reason=project 服务不可用",
-                        initiationId);
+            public BaseResponse<Map<String, Object>> getById(String id) {
                 return BaseResponse.error("EVM 服务不可用");
             }
 
             @Override
-            public BaseResponse<?> getLatestSnapshot() {
-                log.warn("[EvmMeasureClient] getLatestSnapshot 降级：reason=project 服务不可用");
+            public BaseResponse<List<Map<String, Object>>> listByInitiationId(String initiationId) {
                 return BaseResponse.error("EVM 服务不可用");
             }
         };

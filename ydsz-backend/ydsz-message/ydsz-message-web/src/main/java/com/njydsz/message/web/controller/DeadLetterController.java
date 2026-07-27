@@ -1,7 +1,7 @@
 package com.njydsz.message.web.controller.config;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -80,7 +80,7 @@ public class DeadLetterController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
     @Idempotent(key = "ydsz:message:DeadLetterController:resend:lock", ttlSeconds = 5)
     @Audit(module = "死信管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resend'")
-    @SentinelRateLimit(resource = "message.deadletter.resend", threshold = 50)
+    @RateLimit(resource = "message.deadletter.resend", threshold = 50)
     @PostMapping("/{logId}/resend")
     public BaseResponse<Void> resend(@PathVariable String logId) {
         if (logId == null || logId.isBlank()) {

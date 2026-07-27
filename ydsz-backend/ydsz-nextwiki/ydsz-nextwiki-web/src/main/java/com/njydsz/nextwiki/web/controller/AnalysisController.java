@@ -1,7 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,7 +67,7 @@ public class AnalysisController {
     }
 
     @Idempotent(key = "ydsz:nextwiki:AnalysisController:analyze:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "nextwiki.analysis.analyze", threshold = 50)
+    @RateLimit(resource = "nextwiki.analysis.analyze", threshold = 50)
     @PostMapping("/summary")
     @Operation(summary = "生成文档摘要")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)

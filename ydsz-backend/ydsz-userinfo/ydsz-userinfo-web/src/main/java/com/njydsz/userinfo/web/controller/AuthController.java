@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.web.controller;
 
 import org.springframework.web.bind.annotation.PostMapping;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,7 +33,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @SentinelRateLimit(resource = "userinfo.auth.login", threshold = 50)
+    @RateLimit(resource = "userinfo.auth.login", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:AuthController:login:lock", ttlSeconds = 5)
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "账号密码登录，返回 access_token 和 refresh_token")
@@ -51,7 +51,7 @@ public class AuthController {
         return BaseResponse.success();
     }
 
-    @SentinelRateLimit(resource = "userinfo.auth.refresh", threshold = 50)
+    @RateLimit(resource = "userinfo.auth.refresh", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:AuthController:refresh:lock", ttlSeconds = 5)
     @PostMapping("/refresh")
     @Operation(summary = "刷新 Token", description = "使用 refresh_token 获取新的 access_token")

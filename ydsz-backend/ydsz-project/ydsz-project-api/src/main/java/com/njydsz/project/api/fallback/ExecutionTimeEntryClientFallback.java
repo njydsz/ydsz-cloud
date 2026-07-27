@@ -1,5 +1,8 @@
 package com.njydsz.project.api.fallback;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +12,7 @@ import com.njydsz.project.api.client.ExecutionTimeEntryClient;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * ExecutionTimeEntryClient 降级工厂
+ * ExecutionTimeEntryClient 降级工厂。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -23,15 +26,12 @@ public class ExecutionTimeEntryClientFallback implements FallbackFactory<Executi
         log.warn("[ExecutionTimeEntryClient] 降级触发：{}", cause.getMessage());
         return new ExecutionTimeEntryClient() {
             @Override
-            public BaseResponse<?> page(Object query) {
-                log.warn("[ExecutionTimeEntryClient] page 降级：reason=project 服务不可用");
+            public BaseResponse<Map<String, Object>> getById(String id) {
                 return BaseResponse.error("工时服务不可用");
             }
 
             @Override
-            public BaseResponse<?> getByEmployeeAndDate(String employeeId, String date) {
-                log.warn("[ExecutionTimeEntryClient] getByEmployeeAndDate 降级：employeeId={}, date={}, reason=project 服务不可用",
-                        employeeId, date);
+            public BaseResponse<List<Map<String, Object>>> listByEmployeeAndDate(String employeeId, String date) {
                 return BaseResponse.error("工时服务不可用");
             }
         };

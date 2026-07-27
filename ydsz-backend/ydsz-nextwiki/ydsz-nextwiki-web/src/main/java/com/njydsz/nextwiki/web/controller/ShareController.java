@@ -2,7 +2,7 @@ package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,7 +64,7 @@ public class ShareController {
 
     @Audit(module = "分享管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'verifyAccess'")
     @Idempotent(key = "ydsz:nextwiki:ShareController:verifyAccess:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "nextwiki.share.verifyAccess", threshold = 50)
+    @RateLimit(resource = "nextwiki.share.verifyAccess", threshold = 50)
     @PostMapping("/verify")
     @Operation(summary = "验证分享链接访问权限")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)

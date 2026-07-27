@@ -2,7 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,7 +62,7 @@ public class MenuController {
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建菜单: ' + #dto.menuName")
     @Idempotent(key = "ydsz:userinfo:MenuController:create:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.menu.create", threshold = 50)
+    @RateLimit(resource = "userinfo.menu.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建菜单")
     public BaseResponse<String> create(@Valid @RequestBody MenuSaveDTO dto) {
@@ -72,7 +72,7 @@ public class MenuController {
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新菜单: ' + #dto.id")
     @Idempotent(key = "ydsz:userinfo:MenuController:update:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.menu.update", threshold = 50)
+    @RateLimit(resource = "userinfo.menu.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新菜单")
     public BaseResponse<Boolean> update(@Valid @RequestBody MenuSaveDTO dto) {
@@ -81,7 +81,7 @@ public class MenuController {
 
     @Audit(module = "菜单管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除菜单: ' + #id")
-    @SentinelRateLimit(resource = "userinfo.menu.remove", threshold = 50)
+    @RateLimit(resource = "userinfo.menu.remove", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:MenuController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除菜单")

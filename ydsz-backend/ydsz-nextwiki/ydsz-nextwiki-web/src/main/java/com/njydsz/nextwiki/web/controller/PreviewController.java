@@ -1,7 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +35,7 @@ public class PreviewController {
     private final PreviewApplicationService previewService;
 
     @Idempotent(key = "ydsz:nextwiki:PreviewController:generatePreview:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "nextwiki.preview.generatePreview", threshold = 50)
+    @RateLimit(resource = "nextwiki.preview.generatePreview", threshold = 50)
     @PostMapping("/{fileNodeId}/generate")
     @Operation(summary = "生成预览（异步）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_GENERATE)

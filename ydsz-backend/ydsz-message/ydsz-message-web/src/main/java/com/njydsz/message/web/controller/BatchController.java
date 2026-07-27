@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.batch;
 
 import jakarta.validation.Valid;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -61,7 +61,7 @@ public class BatchController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:BatchController:submitBatch:lock", ttlSeconds = 5)
     @Audit(module = "批量发送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'submitBatch'")
-    @SentinelRateLimit(resource = "message.batch.submitBatch", threshold = 50)
+    @RateLimit(resource = "message.batch.submitBatch", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {

@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.web.controller;
 
 import java.util.Map;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.UUID;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +43,7 @@ public class CaptchaController {
         ));
     }
 
-    @SentinelRateLimit(resource = "userinfo.captcha.validate", threshold = 50)
+    @RateLimit(resource = "userinfo.captcha.validate", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:CaptchaController:validate:lock", ttlSeconds = 5)
     @PostMapping("/validate")
     @Operation(summary = "校验验证码", description = "校验用户输入的验证码")

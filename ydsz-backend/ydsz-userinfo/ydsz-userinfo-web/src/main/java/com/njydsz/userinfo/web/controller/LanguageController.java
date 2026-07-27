@@ -8,7 +8,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.controller.BaseCrudController;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
 import com.njydsz.userinfo.domain.entity.LanguageDO;
@@ -60,7 +60,7 @@ public class LanguageController extends BaseCrudController<LanguageDO, LanguageS
     @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建语言: ' + #dto.languageName")
     @Idempotent(key = "ydsz:userinfo:LanguageController:create:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.language.create", threshold = 50)
+    @RateLimit(resource = "userinfo.language.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建语言")
     public BaseResponse<String> save(@Valid @RequestBody LanguageSaveDTO dto) {
@@ -71,7 +71,7 @@ public class LanguageController extends BaseCrudController<LanguageDO, LanguageS
     @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新语言: ' + #dto.id")
     @Idempotent(key = "ydsz:userinfo:LanguageController:update:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.language.update", threshold = 50)
+    @RateLimit(resource = "userinfo.language.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新语言")
     public BaseResponse<Boolean> update(@Valid @RequestBody LanguageSaveDTO dto) {
@@ -81,7 +81,7 @@ public class LanguageController extends BaseCrudController<LanguageDO, LanguageS
     @Override
     @Audit(module = "语言管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除语言: ' + #id")
-    @SentinelRateLimit(resource = "userinfo.language.remove", threshold = 50)
+    @RateLimit(resource = "userinfo.language.remove", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:LanguageController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除语言")

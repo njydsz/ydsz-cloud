@@ -2,7 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,7 +59,7 @@ public class DepartmentController {
         return BaseResponse.success(service.getById(id));
     }
 
-    @SentinelRateLimit(resource = "userinfo.department.create", threshold = 50)
+    @RateLimit(resource = "userinfo.department.create", threshold = 50)
     @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建部门: ' + #dto.deptName")
     @Idempotent(key = "ydsz:userinfo:DepartmentController:create:lock", ttlSeconds = 5)
@@ -69,7 +69,7 @@ public class DepartmentController {
         return BaseResponse.success(service.create(dto));
     }
 
-    @SentinelRateLimit(resource = "userinfo.department.update", threshold = 50)
+    @RateLimit(resource = "userinfo.department.update", threshold = 50)
     @Audit(module = "部门管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新部门: ' + #dto.id")
     @Idempotent(key = "ydsz:userinfo:DepartmentController:update:lock", ttlSeconds = 5)
@@ -79,7 +79,7 @@ public class DepartmentController {
         return BaseResponse.success(service.update(dto));
     }
 
-    @SentinelRateLimit(resource = "userinfo.department.remove", threshold = 50)
+    @RateLimit(resource = "userinfo.department.remove", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:DepartmentController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除部门")

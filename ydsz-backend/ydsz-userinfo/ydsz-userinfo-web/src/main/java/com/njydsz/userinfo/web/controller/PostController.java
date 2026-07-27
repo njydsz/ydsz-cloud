@@ -2,7 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,7 +55,7 @@ public class PostController {
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建岗位: ' + #dto.postName")
     @Idempotent(key = "ydsz:userinfo:PostController:create:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.post.create", threshold = 50)
+    @RateLimit(resource = "userinfo.post.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建岗位")
     public BaseResponse<String> create(@Valid @RequestBody PostSaveDTO dto) {
@@ -65,7 +65,7 @@ public class PostController {
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新岗位: ' + #dto.id")
     @Idempotent(key = "ydsz:userinfo:PostController:update:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.post.update", threshold = 50)
+    @RateLimit(resource = "userinfo.post.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新岗位")
     public BaseResponse<Boolean> update(@Valid @RequestBody PostSaveDTO dto) {
@@ -74,7 +74,7 @@ public class PostController {
 
     @Audit(module = "岗位管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除岗位: ' + #id")
-    @SentinelRateLimit(resource = "userinfo.post.remove", threshold = 50)
+    @RateLimit(resource = "userinfo.post.remove", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:PostController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除岗位")

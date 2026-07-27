@@ -32,7 +32,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAudit
 @EnableYdszAuth
 @EnableYdszSafe
-@EnableYdszFeign(basePackages = {"com.njydsz.workflow.api", "com.njydsz.common.feign", "com.njydsz.userinfo.api"})
+@EnableYdszFeign(basePackages = {"com.njydsz.workflow.api", "com.njydsz.common.feign", "com.njydsz.userinfo.api", "com.njydsz.literule.api"})
 @MapperScan({"com.njydsz.workflow.infra.mapper", "com.njydsz.literule.infra.mapper"})
 @EnableScheduling
 public class WorkflowApplication {

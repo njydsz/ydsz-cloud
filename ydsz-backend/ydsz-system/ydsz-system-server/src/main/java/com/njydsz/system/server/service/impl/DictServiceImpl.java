@@ -5,11 +5,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.njydsz.common.domain.service.impl.AbstractCrudService;
-import com.njydsz.common.domain.specification.Specification;
-import com.njydsz.common.jdbc.specification.MyBatisSpecification;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.entity.DictTypeDO;
 import com.njydsz.system.domain.query.DictPageQuery;
@@ -23,32 +24,88 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 字典类型 Service 实现。
  *
- * <p>基于 {@link AbstractCrudService} 复用通用 CRUD 能力，
- * 通过生命周期钩子集成 typeCode 唯一性校验。
+ * <p>集成 typeCode 唯一性校验。
  *
  * @author ydsz-team
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DictServiceImpl
-        extends AbstractCrudService<DictTypeDO, DictTypeDTO, DictTypeVO, DictPageQuery, String>
-        implements DictService {
+public class DictServiceImpl implements DictService {
 
     private final DictRepository dictRepository;
 
+    // ============================== CRUD ==============================
+
     @Override
-    protected DictRepository getRepository() {
-        return dictRepository;
+    public PageResult<DictTypeVO> page(DictPageQuery query) {
+        QueryWrapper<DictTypeDO> wrapper = buildQueryWrapper(query);
+        Page<DictTypeDO> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+        IPage<DictTypeDO> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);
+        List<DictTypeVO> vos = result.getRecords().stream()
+                .map(this::toVO)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return PageResult.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
     }
 
     @Override
-    protected String getId(DictTypeDTO dto) {
-        return dto != null ? dto.getId() : null;
+    public DictTypeVO getById(String id) {
+        DictTypeDO entity = dictRepository.getDictTypeMapper().selectById(id);
+        return toVO(entity);
     }
 
     @Override
-    protected DictTypeVO toVO(DictTypeDO entity) {
+    @Transactional(rollbackFor = Exception.class)
+    public String save(DictTypeDTO dto) {
+        DictTypeDO entity = toEntity(dto);
+        checkDuplicateTypeCode(entity);
+        dictRepository.getDictTypeMapper().insert(entity);
+        return entity.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateById(DictTypeDTO dto) {
+        DictTypeDO entity = toEntity(dto);
+        checkDuplicateTypeCode(entity);
+        return dictRepository.getDictTypeMapper().updateById(entity) > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeById(String id) {
+        return dictRepository.getDictTypeMapper().deleteById(id) > 0;
+    }
+
+    // ============================== 业务查询 ==============================
+
+    @Override
+    public List<DictTypeVO> listAll() {
+        return dictRepository.getDictTypeMapper().selectList(null).stream()
+                .map(this::toVO)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    // ============================== 私有方法 ==============================
+
+    private QueryWrapper<DictTypeDO> buildQueryWrapper(DictPageQuery query) {
+        QueryWrapper<DictTypeDO> wrapper = new QueryWrapper<>();
+        if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
+            wrapper.eq("type_code", query.getTypeCode());
+        }
+        if (query.getTypeName() != null && !query.getTypeName().isBlank()) {
+            wrapper.like("type_name", query.getTypeName());
+        }
+        if (query.getStatus() != null && !query.getStatus().isBlank()) {
+            wrapper.eq("status", query.getStatus());
+        }
+        wrapper.orderByDesc("created_at");
+        return wrapper;
+    }
+
+    private DictTypeVO toVO(DictTypeDO entity) {
         if (entity == null) {
             return null;
         }
@@ -61,8 +118,7 @@ public class DictServiceImpl
         return vo;
     }
 
-    @Override
-    protected DictTypeDO toEntity(DictTypeDTO dto) {
+    private DictTypeDO toEntity(DictTypeDTO dto) {
         if (dto == null) {
             return null;
         }
@@ -75,57 +131,6 @@ public class DictServiceImpl
         return entity;
     }
 
-    @Override
-    protected Specification<DictTypeDO> getPageSpecification(DictPageQuery query) {
-        return new MyBatisSpecification<DictTypeDO>() {
-            @Override
-            public void apply(QueryWrapper<DictTypeDO> wrapper) {
-                if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
-                    wrapper.eq("type_code", query.getTypeCode());
-                }
-                if (query.getTypeName() != null && !query.getTypeName().isBlank()) {
-                    wrapper.like("type_name", query.getTypeName());
-                }
-                if (query.getStatus() != null && !query.getStatus().isBlank()) {
-                    wrapper.eq("status", query.getStatus());
-                }
-                wrapper.orderByDesc("created_at");
-            }
-
-            @Override
-            public boolean isSatisfiedBy(DictTypeDO candidate) {
-                return true;
-            }
-        };
-    }
-
-    @Override
-    protected void doBeforeSave(DictTypeDTO dto, DictTypeDO entity) {
-        checkDuplicateTypeCode(entity);
-    }
-
-    @Override
-    protected void doBeforeUpdate(DictTypeDTO dto, DictTypeDO entity) {
-        checkDuplicateTypeCode(entity);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>查询全部字典类型（不区分状态）。
-     */
-    @Override
-    public List<DictTypeVO> listAll() {
-        return dictRepository.getDictTypeMapper().selectList(null).stream()
-                .map(this::toVO)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 唯一性校验：typeCode 不能重复。
-     *
-     * @param entity 字典类型实体
-     */
     private void checkDuplicateTypeCode(DictTypeDO entity) {
         QueryWrapper<DictTypeDO> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("type_code", entity.getTypeCode());

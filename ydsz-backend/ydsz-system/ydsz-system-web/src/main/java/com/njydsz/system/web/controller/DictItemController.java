@@ -3,7 +3,7 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -85,7 +85,7 @@ public class DictItemController {
     @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
     @Operation(summary = "创建字典项")
-    @SentinelRateLimit(resource = "system.dictitem.save", threshold = 50)
+    @RateLimit(resource = "system.dictitem.save", threshold = 50)
     @Idempotent(key = "ydsz:system:DictItemController:save:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody DictItemDTO dto) {
@@ -95,7 +95,7 @@ public class DictItemController {
     @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新字典项: ' + #dto.typeCode + '/' + #dto.itemCode")
     @Operation(summary = "更新字典项")
-    @SentinelRateLimit(resource = "system.dictitem.update", threshold = 50)
+    @RateLimit(resource = "system.dictitem.update", threshold = 50)
     @Idempotent(key = "ydsz:system:DictItemController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody DictItemDTO dto) {
@@ -105,7 +105,7 @@ public class DictItemController {
     @Audit(module = "字典管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除字典项: ' + #id")
     @Operation(summary = "删除字典项")
-    @SentinelRateLimit(resource = "system.dictitem.remove", threshold = 50)
+    @RateLimit(resource = "system.dictitem.remove", threshold = 50)
     @Idempotent(key = "ydsz:system:DictItemController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

@@ -1,7 +1,7 @@
 package com.njydsz.message.web.controller.batch;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,7 +62,7 @@ public class AggregateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "ydsz:message:AggregateController:flushByGroup:lock", ttlSeconds = 5)
     @Audit(module = "聚合批次", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'flushByGroup'")
-    @SentinelRateLimit(resource = "message.aggregate.flushByGroup", threshold = 50)
+    @RateLimit(resource = "message.aggregate.flushByGroup", threshold = 50)
     @PostMapping("/flush")
     public BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
         return BaseResponse.success(aggregateService.flushByGroup(group, receiver));
@@ -77,7 +77,7 @@ public class AggregateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "ydsz:message:AggregateController:flushDue:lock", ttlSeconds = 5)
     @Audit(module = "聚合批次", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'flushDue'")
-    @SentinelRateLimit(resource = "message.aggregate.flushDue", threshold = 50)
+    @RateLimit(resource = "message.aggregate.flushDue", threshold = 50)
     @PostMapping("/flushDue")
     public BaseResponse<Integer> flushDue() {
         return BaseResponse.success(aggregateService.flushDue());

@@ -1,7 +1,7 @@
 package com.njydsz.message.web.controller.receipt;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -55,7 +55,7 @@ public class ReadStatusController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:ReadStatusController:markRead:lock", ttlSeconds = 5)
     @Audit(module = "已读状态", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markRead'")
-    @SentinelRateLimit(resource = "message.readstatus.markRead", threshold = 50)
+    @RateLimit(resource = "message.readstatus.markRead", threshold = 50)
     @PostMapping("/read/{msgId}")
     public BaseResponse<Boolean> markRead(@PathVariable String msgId,
                                      @RequestParam String userId) {
@@ -73,7 +73,7 @@ public class ReadStatusController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:ReadStatusController:markReadBatch:lock", ttlSeconds = 5)
     @Audit(module = "已读状态", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markReadBatch'")
-    @SentinelRateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
+    @RateLimit(resource = "message.readstatus.markReadBatch", threshold = 50)
     @PostMapping("/readBatch")
     public BaseResponse<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
                                           @RequestParam String userId) {
@@ -91,7 +91,7 @@ public class ReadStatusController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:ReadStatusController:markNotificationRead:lock", ttlSeconds = 5)
     @Audit(module = "已读状态", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'markNotificationRead'")
-    @SentinelRateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
+    @RateLimit(resource = "message.readstatus.markNotificationRead", threshold = 50)
     @PostMapping("/notification/{notificationId}")
     public BaseResponse<Boolean> markNotificationRead(@PathVariable String notificationId,
                                                   @RequestParam String userId) {

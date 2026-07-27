@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,7 +67,7 @@ public class MessageController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:MessageController:send:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'send'")
-    @SentinelRateLimit(resource = "message.message.send", threshold = 50)
+    @RateLimit(resource = "message.message.send", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
         return BaseResponse.success(messageService.send(request));
@@ -83,7 +83,7 @@ public class MessageController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:MessageController:sendDirect:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendDirect'")
-    @SentinelRateLimit(resource = "message.message.sendDirect", threshold = 50)
+    @RateLimit(resource = "message.message.sendDirect", threshold = 50)
     @PostMapping("/sendDirect")
     public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
         return BaseResponse.success(messageService.sendDirect(dto));
@@ -100,7 +100,7 @@ public class MessageController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:MessageController:sendAsync:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendAsync'")
-    @SentinelRateLimit(resource = "message.message.sendAsync", threshold = 50)
+    @RateLimit(resource = "message.message.sendAsync", threshold = 50)
     @PostMapping("/sendAsync")
     public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
@@ -139,7 +139,7 @@ public class MessageController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:MessageController:sendTransactionally:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'sendTransactionally'")
-    @SentinelRateLimit(resource = "message.message.sendTransactionally", threshold = 50)
+    @RateLimit(resource = "message.message.sendTransactionally", threshold = 50)
     @PostMapping("/sendTransactional")
     public BaseResponse<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
         return BaseResponse.success(messageService.sendTransactionally(request));
@@ -156,7 +156,7 @@ public class MessageController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:MessageController:batchSend:lock", ttlSeconds = 5)
     @Audit(module = "消息管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchSend'")
-    @SentinelRateLimit(resource = "message.message.batchSend", threshold = 50)
+    @RateLimit(resource = "message.message.batchSend", threshold = 50)
     @PostMapping("/batchSend")
     public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {

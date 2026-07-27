@@ -2,7 +2,7 @@ package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.validation.annotation.Validated;
@@ -261,7 +261,7 @@ public class FileController {
         return BaseResponse.success(chunkUploadService.completeChunkUpload(uploadId, userId));
     }
 
-    @SentinelRateLimit(resource = "nextwiki.file.abortChunkUpload", threshold = 50)
+    @RateLimit(resource = "nextwiki.file.abortChunkUpload", threshold = 50)
     @Idempotent(key = "ydsz:nextwiki:FileController:abortChunkUpload:lock", ttlSeconds = 5)
     @DeleteMapping("/chunk/{uploadId}")
     @Operation(summary = "取消分片上传")

@@ -2,7 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,7 +67,7 @@ public class RoleController {
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建角色: ' + #dto.roleName")
     @Idempotent(key = "ydsz:userinfo:RoleController:create:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.role.create", threshold = 50)
+    @RateLimit(resource = "userinfo.role.create", threshold = 50)
     @PostMapping
     @Operation(summary = "创建角色")
     public BaseResponse<String> create(@Valid @RequestBody RoleSaveDTO dto) {
@@ -77,7 +77,7 @@ public class RoleController {
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新角色: ' + #dto.id")
     @Idempotent(key = "ydsz:userinfo:RoleController:update:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.role.update", threshold = 50)
+    @RateLimit(resource = "userinfo.role.update", threshold = 50)
     @PutMapping
     @Operation(summary = "更新角色")
     public BaseResponse<Boolean> update(@Valid @RequestBody RoleSaveDTO dto) {
@@ -86,7 +86,7 @@ public class RoleController {
 
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除角色: ' + #id")
-    @SentinelRateLimit(resource = "userinfo.role.remove", threshold = 50)
+    @RateLimit(resource = "userinfo.role.remove", threshold = 50)
     @Idempotent(key = "ydsz:userinfo:RoleController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除角色")
@@ -97,7 +97,7 @@ public class RoleController {
     @Audit(module = "角色管理", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'分配角色权限: ' + #roleId")
     @Idempotent(key = "ydsz:userinfo:RoleController:assignPermissions:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "userinfo.role.assignPermissions", threshold = 50)
+    @RateLimit(resource = "userinfo.role.assignPermissions", threshold = 50)
     @PostMapping("/{roleId}/permissions")
     @Operation(summary = "分配角色权限")
     public BaseResponse<Boolean> assignPermissions(

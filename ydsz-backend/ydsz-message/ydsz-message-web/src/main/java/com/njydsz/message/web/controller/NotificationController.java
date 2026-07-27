@@ -1,7 +1,7 @@
 package com.njydsz.message.web.controller.core;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -65,7 +65,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:NotificationController:send:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'send'")
-    @SentinelRateLimit(resource = "message.notification.send", threshold = 50)
+    @RateLimit(resource = "message.notification.send", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
         return BaseResponse.success(notificationService.send(dto));
@@ -106,7 +106,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:NotificationController:markRead:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markRead'")
-    @SentinelRateLimit(resource = "message.notification.markRead", threshold = 50)
+    @RateLimit(resource = "message.notification.markRead", threshold = 50)
     @PostMapping("/{id}/read")
     public BaseResponse<Boolean> markRead(@PathVariable String id) {
         return BaseResponse.success(notificationService.markRead(AuthContext.getUserId(), id));
@@ -121,7 +121,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "ydsz:message:NotificationController:markAllRead:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'markAllRead'")
-    @SentinelRateLimit(resource = "message.notification.markAllRead", threshold = 50)
+    @RateLimit(resource = "message.notification.markAllRead", threshold = 50)
     @PostMapping("/readAll")
     public BaseResponse<Integer> markAllRead() {
         return BaseResponse.success(notificationService.markAllRead(AuthContext.getUserId()));
@@ -137,7 +137,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_DELETE)
     @Idempotent(key = "ydsz:message:NotificationController:delete:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.notification.delete", threshold = 50)
+    @RateLimit(resource = "message.notification.delete", threshold = 50)
     @DeleteMapping
     public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
         notificationService.delete(AuthContext.getUserId(), ids);
@@ -154,7 +154,7 @@ public class NotificationController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_RECALL)
     @Idempotent(key = "ydsz:message:NotificationController:recall:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'recall'")
-    @SentinelRateLimit(resource = "message.notification.recall", threshold = 50)
+    @RateLimit(resource = "message.notification.recall", threshold = 50)
     @PostMapping("/{id}/recall")
     public BaseResponse<Boolean> recall(@PathVariable String id) {
         return BaseResponse.success(recallService.recallNotification(AuthContext.getUserId(), id));

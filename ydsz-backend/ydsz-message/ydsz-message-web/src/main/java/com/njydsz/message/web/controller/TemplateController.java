@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.template;
 
 import jakarta.validation.Valid;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,7 +55,7 @@ public class TemplateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_CREATE)
     @Idempotent(key = "ydsz:message:TemplateController:create:lock", ttlSeconds = 5)
     @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
-    @SentinelRateLimit(resource = "message.template.create", threshold = 50)
+    @RateLimit(resource = "message.template.create", threshold = 50)
     @PostMapping
     public BaseResponse<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
         return BaseResponse.success(templateService.create(dto));
@@ -72,7 +72,7 @@ public class TemplateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
     @Idempotent(key = "ydsz:message:TemplateController:update:lock", ttlSeconds = 5)
     @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "message.template.update", threshold = 50)
+    @RateLimit(resource = "message.template.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
         return BaseResponse.success(templateService.update(id, dto));
@@ -88,7 +88,7 @@ public class TemplateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_DELETE)
     @Idempotent(key = "ydsz:message:TemplateController:delete:lock", ttlSeconds = 5)
     @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.template.delete", threshold = 50)
+    @RateLimit(resource = "message.template.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         templateService.delete(id);
@@ -132,7 +132,7 @@ public class TemplateController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
     @Idempotent(key = "ydsz:message:TemplateController:audit:lock", ttlSeconds = 5)
     @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'audit'")
-    @SentinelRateLimit(resource = "message.template.audit", threshold = 50)
+    @RateLimit(resource = "message.template.audit", threshold = 50)
     @PostMapping("/{id}/audit")
     public BaseResponse<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
         dto.setId(id);

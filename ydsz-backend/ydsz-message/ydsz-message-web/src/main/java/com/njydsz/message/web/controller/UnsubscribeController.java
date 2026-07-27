@@ -1,7 +1,7 @@
 package com.njydsz.message.web.controller.config;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,7 +66,7 @@ public class UnsubscribeController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @Idempotent(key = "ydsz:message:UnsubscribeController:oneClick:lock", ttlSeconds = 5)
     @Audit(module = "退订管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'oneClick'")
-    @SentinelRateLimit(resource = "message.unsubscribe.oneClick", threshold = 50)
+    @RateLimit(resource = "message.unsubscribe.oneClick", threshold = 50)
     @PostMapping("/oneClick")
     public BaseResponse<MsgSubscriptionDO> oneClick(@RequestParam String token) {
         if (token == null || token.isBlank()) {
@@ -119,7 +119,7 @@ public class UnsubscribeController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @Idempotent(key = "ydsz:message:UnsubscribeController:resubscribe:lock", ttlSeconds = 5)
     @Audit(module = "退订管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resubscribe'")
-    @SentinelRateLimit(resource = "message.unsubscribe.resubscribe", threshold = 50)
+    @RateLimit(resource = "message.unsubscribe.resubscribe", threshold = 50)
     @PostMapping("/resubscribe")
     public BaseResponse<Void> resubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,

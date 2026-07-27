@@ -9,9 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.service.AbstractMpCrudService;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
 import com.njydsz.userinfo.domain.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
@@ -30,8 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
-public class LanguageServiceImpl extends AbstractMpCrudService<LanguageDO, LanguageSaveDTO, LanguageVO, LanguagePageQuery, String>
-        implements LanguageService {
+public class LanguageServiceImpl implements LanguageService {
 
     private final LanguageMapper mapper;
 
@@ -39,54 +39,33 @@ public class LanguageServiceImpl extends AbstractMpCrudService<LanguageDO, Langu
         this.mapper = mapper;
     }
 
+    // ============================== CRUD ==============================
+
     @Override
-    protected BaseMapper<LanguageDO> getMapper() {
-        return mapper;
+    public PageResult<LanguageVO> page(LanguagePageQuery query) {
+        QueryWrapper<LanguageDO> wrapper = buildQueryWrapper(query);
+        Page<LanguageDO> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+        IPage<LanguageDO> result = mapper.selectPage(mpPage, wrapper);
+        List<LanguageVO> vos = result.getRecords().stream()
+                .map(this::toVO)
+                .collect(Collectors.toList());
+        return PageResult.of(vos, result.getTotal(), query.getEffectivePageNum(), query.getEffectivePageSize());
     }
 
     @Override
-    protected LanguageVO toVO(LanguageDO entity) {
-        if (entity == null) {
-            return null;
-        }
-        LanguageVO vo = new LanguageVO();
-        BeanUtils.copyProperties(entity, vo);
-        return vo;
+    public LanguageVO getById(String id) {
+        return toVO(mapper.selectById(id));
     }
 
     @Override
-    protected LanguageDO toEntity(LanguageSaveDTO dto) {
-        LanguageDO entity = new LanguageDO();
-        BeanUtils.copyProperties(dto, entity);
-        return entity;
-    }
-
-    @Override
-    protected String getId(LanguageSaveDTO dto) {
-        return dto.getId();
-    }
-
-    @Override
-    protected QueryWrapper<LanguageDO> buildQueryWrapper(LanguagePageQuery query) {
-        QueryWrapper<LanguageDO> wrapper = new QueryWrapper<>();
-        if (query.getLanguageCode() != null && !query.getLanguageCode().isBlank()) {
-            wrapper.like("language_code", query.getLanguageCode());
-        }
-        if (query.getLanguageName() != null && !query.getLanguageName().isBlank()) {
-            wrapper.like("language_name", query.getLanguageName());
-        }
-        if (query.getStatus() != null && !query.getStatus().isBlank()) {
-            wrapper.eq("status", query.getStatus());
-        }
-        wrapper.orderByDesc("sort_order");
-        return wrapper;
-    }
-
-    @Override
-    protected void doBeforeSave(LanguageSaveDTO dto, LanguageDO entity) {
+    @Transactional(rollbackFor = Exception.class)
+    public String save(LanguageSaveDTO dto) {
+        LanguageDO entity = toEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
+        mapper.insert(entity);
+        return entity.getId();
     }
 
     @Override
@@ -110,6 +89,8 @@ public class LanguageServiceImpl extends AbstractMpCrudService<LanguageDO, Langu
         return mapper.deleteById(id) > 0;
     }
 
+    // ============================== 业务查询 ==============================
+
     @Override
     public List<LanguageVO> list() {
         LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
@@ -118,5 +99,37 @@ public class LanguageServiceImpl extends AbstractMpCrudService<LanguageDO, Langu
         return mapper.selectList(wrapper).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
+    }
+
+    // ============================== 私有方法 ==============================
+
+    private QueryWrapper<LanguageDO> buildQueryWrapper(LanguagePageQuery query) {
+        QueryWrapper<LanguageDO> wrapper = new QueryWrapper<>();
+        if (query.getLanguageCode() != null && !query.getLanguageCode().isBlank()) {
+            wrapper.like("language_code", query.getLanguageCode());
+        }
+        if (query.getLanguageName() != null && !query.getLanguageName().isBlank()) {
+            wrapper.like("language_name", query.getLanguageName());
+        }
+        if (query.getStatus() != null && !query.getStatus().isBlank()) {
+            wrapper.eq("status", query.getStatus());
+        }
+        wrapper.orderByDesc("sort_order");
+        return wrapper;
+    }
+
+    private LanguageVO toVO(LanguageDO entity) {
+        if (entity == null) {
+            return null;
+        }
+        LanguageVO vo = new LanguageVO();
+        BeanUtils.copyProperties(entity, vo);
+        return vo;
+    }
+
+    private LanguageDO toEntity(LanguageSaveDTO dto) {
+        LanguageDO entity = new LanguageDO();
+        BeanUtils.copyProperties(dto, entity);
+        return entity;
     }
 }

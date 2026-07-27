@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.receipt;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,7 +52,7 @@ public class ReceiptController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
     @Idempotent(key = "ydsz:message:ReceiptController:callback:lock", ttlSeconds = 5)
     @Audit(module = "消息回执", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'callback'")
-    @SentinelRateLimit(resource = "message.receipt.callback", threshold = 50)
+    @RateLimit(resource = "message.receipt.callback", threshold = 50)
     @PostMapping("/callback")
     public BaseResponse<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
         receiptService.callback(dto);

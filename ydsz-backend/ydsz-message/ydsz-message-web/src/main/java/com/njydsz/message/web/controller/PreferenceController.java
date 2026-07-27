@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,7 +53,7 @@ public class PreferenceController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
     @Idempotent(key = "ydsz:message:PreferenceController:upsert:lock", ttlSeconds = 5)
     @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
-    @SentinelRateLimit(resource = "message.preference.upsert", threshold = 50)
+    @RateLimit(resource = "message.preference.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
         return BaseResponse.success(preferenceService.upsert(dto));
@@ -99,7 +99,7 @@ public class PreferenceController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_DELETE)
     @Idempotent(key = "ydsz:message:PreferenceController:delete:lock", ttlSeconds = 5)
     @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.preference.delete", threshold = 50)
+    @RateLimit(resource = "message.preference.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         preferenceService.delete(id);

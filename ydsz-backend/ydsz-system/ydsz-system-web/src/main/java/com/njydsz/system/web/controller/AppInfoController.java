@@ -3,7 +3,7 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -64,7 +64,7 @@ public class AppInfoController {
     @Audit(module = "应用注册", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建应用: ' + #dto.appCode", excludeParams = {"appSecret"})
     @Operation(summary = "创建应用")
-    @SentinelRateLimit(resource = "system.appinfo.save", threshold = 50)
+    @RateLimit(resource = "system.appinfo.save", threshold = 50)
     @Idempotent(key = "ydsz:system:AppInfoController:save:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody AppInfoDTO dto) {
@@ -74,7 +74,7 @@ public class AppInfoController {
     @Audit(module = "应用注册", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新应用: ' + #dto.appCode", excludeParams = {"appSecret"})
     @Operation(summary = "更新应用")
-    @SentinelRateLimit(resource = "system.appinfo.update", threshold = 50)
+    @RateLimit(resource = "system.appinfo.update", threshold = 50)
     @Idempotent(key = "ydsz:system:AppInfoController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody AppInfoDTO dto) {
@@ -84,7 +84,7 @@ public class AppInfoController {
     @Audit(module = "应用注册", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除应用: ' + #id")
     @Operation(summary = "删除应用")
-    @SentinelRateLimit(resource = "system.appinfo.remove", threshold = 50)
+    @RateLimit(resource = "system.appinfo.remove", threshold = 50)
     @Idempotent(key = "ydsz:system:AppInfoController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

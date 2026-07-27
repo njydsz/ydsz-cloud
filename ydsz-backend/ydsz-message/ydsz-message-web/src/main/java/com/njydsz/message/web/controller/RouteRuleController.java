@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,7 +56,7 @@ public class RouteRuleController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
     @Idempotent(key = "ydsz:message:RouteRuleController:create:lock", ttlSeconds = 5)
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'create'")
-    @SentinelRateLimit(resource = "message.routerule.create", threshold = 50)
+    @RateLimit(resource = "message.routerule.create", threshold = 50)
     @PostMapping
     public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
         return BaseResponse.success(routeRuleService.create(dto));
@@ -73,7 +73,7 @@ public class RouteRuleController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
     @Idempotent(key = "ydsz:message:RouteRuleController:update:lock", ttlSeconds = 5)
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "message.routerule.update", threshold = 50)
+    @RateLimit(resource = "message.routerule.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
         return BaseResponse.success(routeRuleService.update(id, dto));
@@ -89,7 +89,7 @@ public class RouteRuleController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
     @Idempotent(key = "ydsz:message:RouteRuleController:delete:lock", ttlSeconds = 5)
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.routerule.delete", threshold = 50)
+    @RateLimit(resource = "message.routerule.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         routeRuleService.delete(id);

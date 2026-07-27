@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -46,7 +46,7 @@ public class UserChannelBindingController {
     @Operation(summary = "新增或更新通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
-    @SentinelRateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
+    @RateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
     @Idempotent(key = "ydsz:message:UserChannelBindingController:upsert:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<MsgUserChannelDO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
@@ -70,7 +70,7 @@ public class UserChannelBindingController {
     @Operation(summary = "删除通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Audit(module = "通道绑定", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "message.userchannelbinding.delete", threshold = 50)
+    @RateLimit(resource = "message.userchannelbinding.delete", threshold = 50)
     @Idempotent(key = "ydsz:message:UserChannelBindingController:delete:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {

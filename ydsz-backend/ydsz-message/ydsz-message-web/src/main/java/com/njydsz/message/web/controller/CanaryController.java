@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.canary;
 
 import jakarta.validation.Valid;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,7 +53,7 @@ public class CanaryController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_UPDATE)
     @Idempotent(key = "ydsz:message:CanaryController:upsert:lock", ttlSeconds = 5)
     @Audit(module = "灰度管理", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'upsert'")
-    @SentinelRateLimit(resource = "message.canary.upsert", threshold = 50)
+    @RateLimit(resource = "message.canary.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
         return BaseResponse.success(canaryService.upsert(dto));

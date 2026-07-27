@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,7 +53,7 @@ public class SubscriptionController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
     @Idempotent(key = "ydsz:message:SubscriptionController:upsert:lock", ttlSeconds = 5)
     @Audit(module = "订阅管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
-    @SentinelRateLimit(resource = "message.subscription.upsert", threshold = 50)
+    @RateLimit(resource = "message.subscription.upsert", threshold = 50)
     @PostMapping
     public BaseResponse<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
         return BaseResponse.success(subscriptionService.upsert(dto));
@@ -99,7 +99,7 @@ public class SubscriptionController {
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
     @Idempotent(key = "ydsz:message:SubscriptionController:unsubscribe:lock", ttlSeconds = 5)
     @Audit(module = "订阅管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'unsubscribe'")
-    @SentinelRateLimit(resource = "message.subscription.unsubscribe", threshold = 50)
+    @RateLimit(resource = "message.subscription.unsubscribe", threshold = 50)
     @PostMapping("/unsubscribe")
     public BaseResponse<Void> unsubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,

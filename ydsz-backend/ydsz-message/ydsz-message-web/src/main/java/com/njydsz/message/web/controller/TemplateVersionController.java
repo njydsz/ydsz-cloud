@@ -2,7 +2,7 @@ package com.njydsz.message.web.controller.template;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -75,7 +75,7 @@ public class TemplateVersionController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "ydsz:message:TemplateVersionController:rollback:lock", ttlSeconds = 5)
     @Audit(module = "模板版本管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'rollback'")
-    @SentinelRateLimit(resource = "message.templateversion.rollback", threshold = 50)
+    @RateLimit(resource = "message.templateversion.rollback", threshold = 50)
     @PostMapping("/rollback")
     public BaseResponse<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
         return BaseResponse.success(templateVersionService.rollbackToVersion(templateCode, version));
@@ -90,7 +90,7 @@ public class TemplateVersionController {
     @Operation(summary = "预览模板渲染结果")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-    @SentinelRateLimit(resource = "message.templateversion.preview", threshold = 50)
+    @RateLimit(resource = "message.templateversion.preview", threshold = 50)
     @Idempotent(key = "ydsz:message:TemplateVersionController:preview:lock", ttlSeconds = 5)
     @PostMapping("/preview")
     public BaseResponse<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
@@ -110,7 +110,7 @@ public class TemplateVersionController {
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "ydsz:message:TemplateVersionController:testSend:lock", ttlSeconds = 5)
     @Audit(module = "模板版本管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'testSend'")
-    @SentinelRateLimit(resource = "message.templateversion.testSend", threshold = 50)
+    @RateLimit(resource = "message.templateversion.testSend", threshold = 50)
     @PostMapping("/testSend")
     public BaseResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
         if (dto == null) {
