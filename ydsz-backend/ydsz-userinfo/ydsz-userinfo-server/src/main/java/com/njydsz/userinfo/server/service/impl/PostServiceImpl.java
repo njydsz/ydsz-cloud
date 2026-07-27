@@ -60,7 +60,6 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<PostVO> list() {
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Post::getDeleted, 0);
         wrapper.orderByDesc(Post::getSortOrder);
         return mapper.selectList(wrapper).stream()
                 .map(this::toVO)
@@ -79,7 +78,6 @@ public class PostServiceImpl implements PostService {
         // 编码唯一性校验
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Post::getPostCode, dto.getPostCode());
-        wrapper.eq(Post::getDeleted, 0);
         if (mapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.POST_CODE_DUPLICATE);
         }
@@ -138,7 +136,6 @@ public class PostServiceImpl implements PostService {
 
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(Post::getId, postIds);
-        wrapper.eq(Post::getDeleted, 0);
         wrapper.select(Post::getId, Post::getPostName);
 
         return mapper.selectList(wrapper).stream()

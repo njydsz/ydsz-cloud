@@ -152,9 +152,7 @@ public class SearchDomainService {
                 .tags(tagNames)
                 .build();
         index.setCreatedBy(node.getCreatedBy());
-        index.setCreatedAt(LocalDateTime.now());
         index.setUpdatedBy(userId);
-        index.setUpdatedAt(LocalDateTime.now());
         index.setRevision(0);
         index.setDeleted(0);
 

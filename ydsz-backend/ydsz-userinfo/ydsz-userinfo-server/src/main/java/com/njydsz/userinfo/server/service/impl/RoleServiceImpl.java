@@ -76,7 +76,6 @@ public class RoleServiceImpl implements RoleService {
     public Page<RoleVO> page(RolePageQueryDTO query) {
         Page<Role> page = new Page<>(query.getSafePageNum(), query.getSafePageSize());
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Role::getDeleted, 0);
         if (query.getRoleCode() != null && !query.getRoleCode().isBlank()) {
             wrapper.like(Role::getRoleCode, query.getRoleCode());
         }
@@ -105,7 +104,6 @@ public class RoleServiceImpl implements RoleService {
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<RoleVO> list() {
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Role::getDeleted, 0);
         wrapper.orderByAsc(Role::getSortOrder);
         return roleMapper.selectList(wrapper).stream()
                 .map(this::toVO)
@@ -123,7 +121,6 @@ public class RoleServiceImpl implements RoleService {
     public String create(RoleSaveDTO dto) {
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Role::getRoleCode, dto.getRoleCode());
-        wrapper.eq(Role::getDeleted, 0);
         if (roleMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.ROLE_CODE_DUPLICATE);
         }
@@ -177,14 +174,12 @@ public class RoleServiceImpl implements RoleService {
 
         LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
         urWrapper.eq(UserRole::getRoleId, id);
-        urWrapper.eq(UserRole::getDeleted, 0);
         if (userRoleMapper.selectCount(urWrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.ROLE_HAS_USERS);
         }
 
         LambdaQueryWrapper<RolePermission> rpWrapper = new LambdaQueryWrapper<>();
         rpWrapper.eq(RolePermission::getRoleId, id);
-        rpWrapper.eq(RolePermission::getDeleted, 0);
         rolePermissionMapper.delete(rpWrapper);
 
         return roleMapper.deleteById(id) > 0;
@@ -206,7 +201,6 @@ public class RoleServiceImpl implements RoleService {
 
         LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RolePermission::getRoleId, roleId);
-        wrapper.eq(RolePermission::getDeleted, 0);
         rolePermissionMapper.delete(wrapper);
 
         // 批量插入（替代 N+1 循环）
@@ -236,7 +230,6 @@ public class RoleServiceImpl implements RoleService {
     public List<String> getRolePermissionIds(String roleId) {
         LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RolePermission::getRoleId, roleId);
-        wrapper.eq(RolePermission::getDeleted, 0);
         return rolePermissionMapper.selectList(wrapper).stream()
                 .map(RolePermission::getPermissionId)
                 .collect(Collectors.toList());

@@ -104,8 +104,6 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
             auth.setAuthStatus("ENABLED");
         }
         auth.setProviderTraceId(TracerUtils.getOrCreateTraceId());
-        auth.setCreatedAt(LocalDateTime.now());
-        auth.setUpdatedAt(LocalDateTime.now());
 
         authMapper.insert(auth);
         log.info("[FlowDelegate] 创建授权: owner={} delegate={} scope={} flow={} node={} role={} time=[{},{}]",

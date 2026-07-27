@@ -181,9 +181,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
                 .build();
 
         root.setCreatedBy(userId);
-        root.setCreatedAt(LocalDateTime.now());
         root.setUpdatedBy(userId);
-        root.setUpdatedAt(LocalDateTime.now());
 
         fileNodeMapper.insert(root);
         log.info("[FileNodeRepositoryImpl] 创建用户根目录: userId={}, rootId={}", userId, root.getId());

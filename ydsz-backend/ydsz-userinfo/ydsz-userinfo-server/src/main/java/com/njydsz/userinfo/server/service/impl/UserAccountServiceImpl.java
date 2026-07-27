@@ -106,7 +106,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         Page<UserAccount> page = new Page<>(
                 query.getSafePageNum(), query.getSafePageSize());
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserAccount::getDeleted, 0);
 
         if (query.getUsername() != null && !query.getUsername().isBlank()) {
             wrapper.like(UserAccount::getUsername, query.getUsername());
@@ -149,7 +148,6 @@ public class UserAccountServiceImpl implements UserAccountService {
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     public List<UserAccountVO> list() {
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserAccount::getDeleted, 0);
         wrapper.orderByDesc(UserAccount::getCreatedAt);
         return userAccountMapper.selectList(wrapper).stream()
                 .map(this::toVO)
@@ -168,7 +166,6 @@ public class UserAccountServiceImpl implements UserAccountService {
     public String create(UserAccountCreateDTO dto) {
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccount::getUsername, dto.getUsername());
-        wrapper.eq(UserAccount::getDeleted, 0);
         if (userAccountMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.USERNAME_DUPLICATE);
         }
@@ -300,7 +297,6 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRole::getUserId, userId);
-        wrapper.eq(UserRole::getDeleted, 0);
         userRoleMapper.delete(wrapper);
 
         // 批量插入（替代 N+1 循环）
@@ -330,7 +326,6 @@ public class UserAccountServiceImpl implements UserAccountService {
     public List<String> getUserRoleIds(String userId) {
         LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserRole::getUserId, userId);
-        wrapper.eq(UserRole::getDeleted, 0);
         return userRoleMapper.selectList(wrapper).stream()
                 .map(UserRole::getRoleId)
                 .collect(Collectors.toList());
@@ -349,14 +344,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
         roleWrapper.eq(Role::getRoleCode, roleCode);
-        roleWrapper.eq(Role::getDeleted, 0);
         Role role = roleMapper.selectOne(roleWrapper);
         if (role == null) {
             return Collections.emptyList();
         }
         LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
         userRoleWrapper.eq(UserRole::getRoleId, role.getId());
-        userRoleWrapper.eq(UserRole::getDeleted, 0);
         return userRoleMapper.selectList(userRoleWrapper).stream()
                 .map(UserRole::getUserId)
                 .distinct()
@@ -375,7 +368,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
         userRoleWrapper.eq(UserRole::getUserId, userId);
-        userRoleWrapper.eq(UserRole::getDeleted, 0);
         List<String> roleIds = userRoleMapper.selectList(userRoleWrapper).stream()
                 .map(UserRole::getRoleId)
                 .distinct()
@@ -385,7 +377,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
         roleWrapper.in(Role::getId, roleIds);
-        roleWrapper.eq(Role::getDeleted, 0);
         return roleMapper.selectList(roleWrapper).stream()
                 .map(Role::getRoleCode)
                 .filter(c -> c != null && !c.isBlank())
@@ -403,7 +394,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserDept::getUserId, userId);
-        wrapper.eq(UserDept::getDeleted, 0);
         return userDeptMapper.selectList(wrapper).stream()
                 .map(UserDept::getDeptId)
                 .filter(d -> d != null && !d.isBlank())
@@ -440,7 +430,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccount::getPositionCode, positionCode);
-        wrapper.eq(UserAccount::getDeleted, 0);
         return userAccountMapper.selectList(wrapper).stream()
                 .map(UserAccount::getId)
                 .distinct()

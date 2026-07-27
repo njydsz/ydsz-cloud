@@ -92,8 +92,6 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         comment.setUseCount(0);
         comment.setIsSystem(0);
         comment.setTenantId(tenantId != null ? tenantId : TenantContext.getTenantId());
-        comment.setCreatedAt(LocalDateTime.now());
-        comment.setUpdatedAt(LocalDateTime.now());
         quickCommentMapper.insert(comment);
         log.info("[FlowQuickComment] 新增常用语: userId={} id={}", userId, comment.getId());
         return comment.getId();
@@ -125,7 +123,6 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         if (dto.getSortNum() != null) {
             existing.setSortNum(dto.getSortNum());
         }
-        existing.setUpdatedAt(LocalDateTime.now());
         quickCommentMapper.updateById(existing);
     }
 
@@ -150,7 +147,6 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
             throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_no_permission");
         }
         existing.setDeleted(1);
-        existing.setUpdatedAt(LocalDateTime.now());
         quickCommentMapper.updateById(existing);
     }
 
@@ -170,7 +166,6 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
             FlowQuickComment existing = quickCommentMapper.selectById(id);
             if (existing != null && existing.getDeleted() == 0) {
                 existing.setUseCount((existing.getUseCount() == null ? 0 : existing.getUseCount()) + 1);
-                existing.setUpdatedAt(LocalDateTime.now());
                 quickCommentMapper.updateById(existing);
             }
         } catch (Exception e) {

@@ -136,7 +136,6 @@ public class AuthServiceImpl implements AuthService {
 
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccount::getUsername, username);
-        wrapper.eq(UserAccount::getDeleted, 0);
         UserAccount user = userAccountMapper.selectOne(wrapper);
 
         if (user == null) {
@@ -274,7 +273,6 @@ public class AuthServiceImpl implements AuthService {
     private List<Role> loadUserRoles(String userId) {
         LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
         urWrapper.eq(UserRole::getUserId, userId);
-        urWrapper.eq(UserRole::getDeleted, 0);
         List<UserRole> userRoles = userRoleMapper.selectList(urWrapper);
 
         if (userRoles.isEmpty()) {
@@ -287,7 +285,6 @@ public class AuthServiceImpl implements AuthService {
 
         LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
         roleWrapper.in(Role::getId, roleIds);
-        roleWrapper.eq(Role::getDeleted, 0);
         roleWrapper.eq(Role::getStatus, "ENABLED");
         return roleMapper.selectList(roleWrapper);
     }

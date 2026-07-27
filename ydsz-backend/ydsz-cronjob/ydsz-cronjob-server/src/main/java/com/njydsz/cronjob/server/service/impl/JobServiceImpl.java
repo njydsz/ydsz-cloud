@@ -876,7 +876,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
         log0.setTraceId(TracerUtils.getTraceId());
-        log0.setCreatedAt(LocalDateTime.now());
         log0.setDeleted(0);
         jobLogMapper.insert(log0);
 

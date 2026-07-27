@@ -76,8 +76,6 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
         category.setIcon(dto.getIcon());
         category.setRemark(dto.getRemark());
         category.setTenantId(tid);
-        category.setCreatedAt(LocalDateTime.now());
-        category.setUpdatedAt(LocalDateTime.now());
         categoryMapper.insert(category);
         log.info("[FlowCategory] 新增分类: code={} name={} id={}",
                 category.getCategoryCode(), category.getCategoryName(), category.getId());
@@ -108,7 +106,6 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
         if (dto.getRemark() != null) {
             existing.setRemark(dto.getRemark());
         }
-        existing.setUpdatedAt(LocalDateTime.now());
         categoryMapper.updateById(existing);
     }
 
@@ -140,7 +137,6 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                     "error.workflow.msg_category_has_definitions");
         }
         existing.setDeleted(1);
-        existing.setUpdatedAt(LocalDateTime.now());
         categoryMapper.updateById(existing);
     }
 }

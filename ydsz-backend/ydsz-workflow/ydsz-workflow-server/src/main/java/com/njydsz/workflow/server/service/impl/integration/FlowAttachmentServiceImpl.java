@@ -90,8 +90,6 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
             entity.setUploaderName(uploaderName);
             entity.setTenantId(tenantId == null ? "1" : tenantId);
             entity.setProviderTraceId(traceId);
-            entity.setCreatedAt(LocalDateTime.now());
-            entity.setUpdatedAt(LocalDateTime.now());
             entities.add(entity);
         }
         if (!entities.isEmpty()) {

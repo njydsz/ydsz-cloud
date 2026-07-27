@@ -73,7 +73,6 @@ public class JobArtifactService {
             artifact.setContentType(contentType);
             artifact.setMetadata(metadata);
             artifact.setExpireAt(LocalDateTime.now().plusDays(retentionDays));
-            artifact.setCreatedAt(LocalDateTime.now());
             artifact.setDeleted(0);
             artifactMapper.insert(artifact);
 

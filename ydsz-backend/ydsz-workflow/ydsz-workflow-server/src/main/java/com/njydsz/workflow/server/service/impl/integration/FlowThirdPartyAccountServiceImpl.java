@@ -157,7 +157,6 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
                 account.setCreatedAt(now);
                 account.setUpdatedAt(now);
             } else {
-                account.setUpdatedAt(LocalDateTime.now());
             }
             account.setOpenId(openId);
             account.setUnionId(unionId);

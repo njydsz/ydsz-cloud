@@ -1,22 +1,26 @@
 package com.njydsz.common.tenant.feign;
 
+import java.util.List;
 import java.util.Map;
 
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.TenantDimension;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Feign 请求拦截器：跨服务透传租户上下文。
+ * Feign 请求拦截器：跨服务透传全部租户字段。
  *
- * <p>在所有 Feign 调用的请求头中注入 X-Tenant-Id，
- * 下游服务的 {@code TenantContextWebFilter} 从 header 恢复上下文。
+ * <p>将 {@link TenantContext} 中的所有字段透传为 HTTP header，
+ * 下游服务的 {@code TenantContextWebFilter} 从 header 恢复全部字段。
  *
- * <p>MULTI 模式下还会透传多级维度（X-Tenant-GROUP / X-Tenant-COMPANY）。
+ * <p>透传规则：
+ * <ul>
+ *   <li>单值字段 → header 值为 String</li>
+ *   <li>多值字段 → header 值为逗号分隔 String（如 "dept_001,dept_002"）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,8 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TenantContextFeignInterceptor implements RequestInterceptor {
 
+    private static final String HEADER_PREFIX = "X-Tenant-";
     private static final String HEADER_TENANT_ID = "X-Tenant-Id";
-    private static final String HEADER_TENANT_PREFIX = "X-Tenant-";
 
     @Override
     public void apply(RequestTemplate template) {
@@ -37,12 +41,33 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
         // 注入主租户 ID
         template.header(HEADER_TENANT_ID, context.getTenantId());
 
-        // MULTI 模式：透传多级维度
-        Map<TenantDimension, String> dimensions = context.getDimensions();
-        if (dimensions != null && !dimensions.isEmpty()) {
-            for (Map.Entry<TenantDimension, String> entry : dimensions.entrySet()) {
-                template.header(HEADER_TENANT_PREFIX + entry.getKey().name(),
-                        entry.getValue());
+        // 透传全部字段
+        Map<String, Object> fields = context.getFields();
+        if (fields != null && !fields.isEmpty()) {
+            for (Map.Entry<String, Object> entry : fields.entrySet()) {
+                String key = entry.getKey();
+                // 跳过 tenantId（已作为 X-Tenant-Id 透传）
+                if ("tenantId".equals(key)) {
+                    continue;
+                }
+                Object value = entry.getValue();
+                String headerName = HEADER_PREFIX + key;
+
+                if (value instanceof String s) {
+                    template.header(headerName, s);
+                } else if (value instanceof List<?> list) {
+                    // 多值 → 逗号分隔
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < list.size(); i++) {
+                        if (i > 0) {
+                            sb.append(",");
+                        }
+                        sb.append(list.get(i));
+                    }
+                    if (!sb.isEmpty()) {
+                        template.header(headerName, sb.toString());
+                    }
+                }
             }
         }
     }

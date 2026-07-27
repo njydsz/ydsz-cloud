@@ -105,13 +105,11 @@ public class QuotaDomainService {
                     .deleted(0)
                     .build();
             quota.setCreatedBy(userId);
-            quota.setCreatedAt(LocalDateTime.now());
         } else {
             quota.setQuotaLimit(limit);
             quota.setFileCountLimit(fileCountLimit);
         }
         quota.setUpdatedBy(userId);
-        quota.setUpdatedAt(LocalDateTime.now());
         return quotaRepository.save(quota);
     }
 
@@ -145,9 +143,7 @@ public class QuotaDomainService {
                     .deleted(0)
                     .build();
             quota.setCreatedBy(SystemConstants.SYSTEM_USER_ID);
-            quota.setCreatedAt(LocalDateTime.now());
             quota.setUpdatedBy(SystemConstants.SYSTEM_USER_ID);
-            quota.setUpdatedAt(LocalDateTime.now());
             quota = quotaRepository.save(quota);
         }
         return quota;

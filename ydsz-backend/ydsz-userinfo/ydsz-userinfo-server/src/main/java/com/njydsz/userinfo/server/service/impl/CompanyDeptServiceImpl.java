@@ -40,7 +40,6 @@ public class CompanyDeptServiceImpl implements CompanyDeptService {
     @Override
     public List<CompanyDept> list() {
         LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CompanyDept::getDeleted, 0);
         return mapper.selectList(wrapper);
     }
 

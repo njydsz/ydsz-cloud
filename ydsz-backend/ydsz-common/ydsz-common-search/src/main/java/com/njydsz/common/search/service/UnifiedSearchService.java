@@ -48,6 +48,7 @@ public class UnifiedSearchService {
     private final SearchAnalyticsService analyticsService;
     private final SearchTextProcessor textProcessor;
     private final ThreadPoolTaskExecutor searchExecutor;
+    private final BusinessRanker ranker;
 
     private enum CircuitState { CLOSED, OPEN, HALF_OPEN }
     private final AtomicReference<CircuitState> circuitState = new AtomicReference<>(CircuitState.CLOSED);
@@ -61,13 +62,15 @@ public class UnifiedSearchService {
                                 SearchProperties properties,
                                 SearchMetrics metrics,
                                 SearchAnalyticsService analyticsService,
-                                SearchTextProcessor textProcessor) {
+                                SearchTextProcessor textProcessor,
+                                BusinessRanker ranker) {
         this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
         this.properties = properties;
         this.metrics = metrics;
         this.analyticsService = analyticsService;
         this.textProcessor = textProcessor;
+        this.ranker = ranker;
         this.cacheService = new SearchCacheService(properties);
 
         this.searchExecutor = new ThreadPoolTaskExecutor();
@@ -129,6 +132,9 @@ public class UnifiedSearchService {
                 }
 
                 long took = response.getTookMs();
+                if (response.getHits() != null && !response.getHits().isEmpty()) {
+                    response.setHits(ranker.reRank(response.getHits(), request));
+                }
                 metrics.recordSearch(took, response.getTotal());
                 analyticsService.recordSearch(request.getKeyword(), response.getTotal());
                 closeCircuitIfHalfOpen();

@@ -78,9 +78,7 @@ public class FolderDomainService {
                 .build();
 
         folder.setCreatedBy(userId);
-        folder.setCreatedAt(LocalDateTime.now());
         folder.setUpdatedBy(userId);
-        folder.setUpdatedAt(LocalDateTime.now());
 
         FileNode saved = fileNodeRepository.save(folder);
 
@@ -126,7 +124,6 @@ public class FolderDomainService {
         node.setLevel(newLevel);
         node.setSort(getNextSort(targetParentId));
         node.setUpdatedBy(userId);
-        node.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(node);
 
         // 如果是目录，递归更新子节点路径
@@ -167,7 +164,6 @@ public class FolderDomainService {
         node.setName(newName);
         node.setPath(newPath);
         node.setUpdatedBy(userId);
-        node.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(node);
 
         // 如果是目录，递归更新子节点路径

@@ -174,7 +174,6 @@ public class FlowTaskPassService {
         task.setAssignorId(null);
         task.setAssignorName(null);
         task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-        task.setUpdatedAt(LocalDateTime.now());
         taskMapper.updateById(task);
         support.audit(task, "DELEGATE_RETURN", dto.getUserId(), null,
                 dto.getComment(), dto.getCommentType());

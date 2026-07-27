@@ -310,4 +310,53 @@ public class AuthInfoUtils {
         return auth != null && auth.getEditableColumnsByTable() != null
                 ? auth.getEditableColumnsByTable() : Collections.emptyMap();
     }
+
+    /**
+     * 按 claim 名从认证上下文获取值（动态字段提取）。
+     *
+     * <p>支持以下 claim 名：
+     * <ul>
+     *   <li>{@code tenantId} → {@link AuthInfo#getTenantId()}</li>
+     *   <li>{@code uniqueId} / {@code userId} → {@link AuthInfo#getUniqueId()}</li>
+     *   <li>{@code companyIds} → 逗号拼接的公司 ID 集合</li>
+     *   <li>{@code deptIds} → 逗号拼接的部门 ID 集合</li>
+     *   <li>{@code projectIds} → 逗号拼接的项目 ID 集合</li>
+     *   <li>{@code regionIds} → 逗号拼接的区域 ID 集合</li>
+     * </ul>
+     *
+     * <p>未匹配的 claim 名返回 null。
+     *
+     * @param claim claim 名
+     * @return 值，无上下文返回 null
+     */
+    public static String getClaim(String claim) {
+        if (claim == null || claim.isEmpty()) {
+            return null;
+        }
+        AuthInfo auth = getAuthInfo();
+        if (auth == null) {
+            return null;
+        }
+        switch (claim) {
+            case "tenantId":
+                return auth.getTenantId();
+            case "uniqueId":
+            case "userId":
+                return auth.getUniqueId();
+            case "companyIds":
+                Set<String> companyIds = getHasPermissionCompanyIds();
+                return companyIds.isEmpty() ? null : String.join(",", companyIds);
+            case "deptIds":
+                Set<String> deptIds = getHasPermissionDeptIds();
+                return deptIds.isEmpty() ? null : String.join(",", deptIds);
+            case "projectIds":
+                Set<String> projectIds = getHasPermissionProjectIds();
+                return projectIds.isEmpty() ? null : String.join(",", projectIds);
+            case "regionIds":
+                Set<String> regionIds = getHasPermissionRegionIds();
+                return regionIds.isEmpty() ? null : String.join(",", regionIds);
+            default:
+                return null;
+        }
+    }
 }

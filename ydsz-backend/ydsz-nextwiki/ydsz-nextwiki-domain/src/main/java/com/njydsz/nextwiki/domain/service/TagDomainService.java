@@ -62,9 +62,7 @@ public class TagDomainService {
                 .build();
 
         tag.setCreatedBy(userId);
-        tag.setCreatedAt(LocalDateTime.now());
         tag.setUpdatedBy(userId);
-        tag.setUpdatedAt(LocalDateTime.now());
 
         Tag saved = tagRepository.save(tag);
         log.info("[TagDomainService] 创建标签: name={}, userId={}", name, userId);

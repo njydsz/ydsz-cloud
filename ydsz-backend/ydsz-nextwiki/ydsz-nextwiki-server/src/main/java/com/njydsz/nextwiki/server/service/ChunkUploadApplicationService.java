@@ -258,9 +258,7 @@ public class ChunkUploadApplicationService {
                     .revision(0)
                     .build();
             fileNode.setCreatedBy(userId);
-            fileNode.setCreatedAt(LocalDateTime.now());
             fileNode.setUpdatedBy(userId);
-            fileNode.setUpdatedAt(LocalDateTime.now());
 
             FileNode saved = fileNodeRepository.save(fileNode);
 
@@ -467,9 +465,7 @@ public class ChunkUploadApplicationService {
                 .revision(0)
                 .build();
         node.setCreatedBy(userId);
-        node.setCreatedAt(LocalDateTime.now());
         node.setUpdatedBy(userId);
-        node.setUpdatedAt(LocalDateTime.now());
         return node;
     }
 

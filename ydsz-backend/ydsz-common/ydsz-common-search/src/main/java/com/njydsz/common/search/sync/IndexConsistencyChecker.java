@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.provider.ProviderTypeBridge;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 
@@ -103,14 +104,15 @@ public class IndexConsistencyChecker {
         for (Map.Entry<String, Long> entry : report.missingFromIndex().entrySet()) {
             String type = entry.getKey();
             log.info("[IndexConsistency] 自动修复丢失索引: type={}, missing={}", type, entry.getValue());
-            SearchProvider<?> provider = providerRegistry.getProvider(type);
-            if (provider != null) {
+            SearchProvider<?> rawProvider = providerRegistry.getProvider(type);
+            if (rawProvider != null) {
                 try {
+                    SearchProvider<Object> provider = ProviderTypeBridge.cast(rawProvider);
                     List<String> dbIds = provider.getAllDocumentIds(tenantId);
                     Set<String> indexedIds = new HashSet<>(indexStrategy.getAllDocumentIds(type));
                     for (String id : dbIds) {
                         if (!indexedIds.contains(id)) {
-                            T entity = provider.loadById(id);
+                            Object entity = provider.loadById(id);
                             if (entity != null) {
                                 indexStrategy.index(provider.toIndexDocument(entity));
                                 repaired++;
@@ -145,10 +147,6 @@ public class IndexConsistencyChecker {
 
         log.info("[IndexConsistency] 自动修复完成: repaired={}", repaired);
         return repaired;
-    }
-
-    public <T> void checkAndRepairProvider(SearchProvider<T> provider, String tenantId) {
-        // placeholder for generic per-provider check
     }
 
     /**

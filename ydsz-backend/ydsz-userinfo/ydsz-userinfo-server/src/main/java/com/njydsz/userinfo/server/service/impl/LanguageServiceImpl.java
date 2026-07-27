@@ -95,7 +95,6 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     public List<LanguageVO> list() {
         LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Language::getDeleted, 0);
         wrapper.orderByDesc(Language::getSortOrder);
         return mapper.selectList(wrapper).stream()
                 .map(this::toVO)

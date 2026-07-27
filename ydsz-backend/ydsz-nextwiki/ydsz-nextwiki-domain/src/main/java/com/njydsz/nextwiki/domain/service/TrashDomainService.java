@@ -90,7 +90,6 @@ public class TrashDomainService {
 
         trashItem.setStatus(TrashStatus.RESTORED.getCode());
         trashItem.setUpdatedBy(userId);
-        trashItem.setUpdatedAt(LocalDateTime.now());
         trashItemRepository.update(trashItem);
 
         FileNode restored = fileNodeRepository.findById(trashItem.getFileNodeId());
@@ -135,7 +134,6 @@ public class TrashDomainService {
 
         trashItem.setStatus(TrashStatus.PURGED.getCode());
         trashItem.setUpdatedBy(userId);
-        trashItem.setUpdatedAt(LocalDateTime.now());
         trashItemRepository.update(trashItem);
 
         log.info("[TrashDomainService] 永久删除: trashItemId={}, fileNodeId={}", trashItemId, trashItem.getFileNodeId());

@@ -85,9 +85,7 @@ public class FileVersionDomainService {
                 .build();
 
         version.setCreatedBy(userId);
-        version.setCreatedAt(LocalDateTime.now());
         version.setUpdatedBy(userId);
-        version.setUpdatedAt(LocalDateTime.now());
 
         FileVersion saved = versionRepository.save(version);
 
@@ -98,7 +96,6 @@ public class FileVersionDomainService {
         fileNode.setFileHash(fileHash);
         fileNode.setMimeType(mimeType);
         fileNode.setUpdatedBy(userId);
-        fileNode.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(fileNode);
 
         // 清理超限版本
@@ -149,9 +146,7 @@ public class FileVersionDomainService {
                 .build();
 
         rollbackVersion.setCreatedBy(userId);
-        rollbackVersion.setCreatedAt(LocalDateTime.now());
         rollbackVersion.setUpdatedBy(userId);
-        rollbackVersion.setUpdatedAt(LocalDateTime.now());
 
         FileVersion saved = versionRepository.save(rollbackVersion);
 
@@ -162,7 +157,6 @@ public class FileVersionDomainService {
         fileNode.setFileHash(target.getFileHash());
         fileNode.setMimeType(target.getMimeType());
         fileNode.setUpdatedBy(userId);
-        fileNode.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(fileNode);
 
         eventPublisher.publishEvent(FileOperatedEvent.builder()

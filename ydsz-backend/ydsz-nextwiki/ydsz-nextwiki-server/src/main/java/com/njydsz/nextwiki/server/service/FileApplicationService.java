@@ -419,9 +419,7 @@ public class FileApplicationService {
                 .build();
 
         copyNode.setCreatedBy(userId);
-        copyNode.setCreatedAt(LocalDateTime.now());
         copyNode.setUpdatedBy(userId);
-        copyNode.setUpdatedAt(LocalDateTime.now());
 
         FileNode saved = fileNodeRepository.save(copyNode);
 
@@ -478,7 +476,6 @@ public class FileApplicationService {
         }
         node.setStarred(node.getStarred() == null || !node.getStarred());
         node.setUpdatedBy(userId);
-        node.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(node);
         log.info("[FileApplicationService] 切换星标: nodeId={}, starred={}, userId={}",
                 nodeId, node.getStarred(), userId);
@@ -618,9 +615,7 @@ public class FileApplicationService {
                 .build();
 
         node.setCreatedBy(userId);
-        node.setCreatedAt(LocalDateTime.now());
         node.setUpdatedBy(userId);
-        node.setUpdatedAt(LocalDateTime.now());
 
         return node;
     }
@@ -656,9 +651,7 @@ public class FileApplicationService {
                 .build();
 
         node.setCreatedBy(userId);
-        node.setCreatedAt(LocalDateTime.now());
         node.setUpdatedBy(userId);
-        node.setUpdatedAt(LocalDateTime.now());
 
         return node;
     }

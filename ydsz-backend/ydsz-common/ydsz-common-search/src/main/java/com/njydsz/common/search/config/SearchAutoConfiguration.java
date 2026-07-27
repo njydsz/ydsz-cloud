@@ -31,13 +31,14 @@ import com.njydsz.common.search.health.SearchHealthIndicator;
 import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
-import com.njydsz.common.search.service.IndexRebuildService;
+import com.njydsz.common.search.service.BusinessRanker;
 import com.njydsz.common.search.service.IndexRebuildService;
 import com.njydsz.common.search.service.IndexSyncService;
 import com.njydsz.common.search.service.SearchCacheService;
 import com.njydsz.common.search.service.SearchTextProcessor;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
+import com.njydsz.common.search.sync.IndexConsistencyChecker;
 import com.njydsz.common.search.sync.IndexSyncListener;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 
@@ -180,14 +181,21 @@ public class SearchAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public BusinessRanker businessRanker(SearchProperties properties) {
+        return new BusinessRanker(properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public UnifiedSearchService unifiedSearchService(SearchEngineRegistry engineRegistry,
                                                       SearchProviderRegistry providerRegistry,
                                                       SearchProperties properties,
                                                       SearchMetrics searchMetrics,
                                                       SearchAnalyticsService searchAnalyticsService,
-                                                      SearchTextProcessor searchTextProcessor) {
+                                                      SearchTextProcessor searchTextProcessor,
+                                                      BusinessRanker businessRanker) {
         unifiedSearchServiceInstance = new UnifiedSearchService(engineRegistry, providerRegistry, properties,
-                searchMetrics, searchAnalyticsService, searchTextProcessor);
+                searchMetrics, searchAnalyticsService, searchTextProcessor, businessRanker);
         return unifiedSearchServiceInstance;
     }
 
@@ -229,6 +237,13 @@ public class SearchAutoConfiguration {
                                                           SearchEngineRegistry engineRegistry,
                                                           SearchMetrics searchMetrics) {
         return new SearchIndexEventBridge(indexSyncService, providerRegistry, engineRegistry, searchMetrics);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public IndexConsistencyChecker indexConsistencyChecker(SearchEngineRegistry engineRegistry,
+                                                             SearchProviderRegistry providerRegistry) {
+        return new IndexConsistencyChecker(engineRegistry, providerRegistry);
     }
 
     @Bean

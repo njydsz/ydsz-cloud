@@ -292,7 +292,6 @@ public class RuleApprovalService {
             record.getCurrentLevelApprovedApprovers().add(operator);
             // 委托状态审批后恢复 PENDING
             record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
-            record.setUpdatedAt(LocalDateTime.now());
             saveRecord(record);
             log.info("[Approval] 审批人通过但当前级别未完成: ruleCode={}, level={}, approver={}, type={}",
                     ruleCode, record.getCurrentLevel(), operator, step.getType());
@@ -337,7 +336,6 @@ public class RuleApprovalService {
             notifyWorkflowBridge(b -> b.onApprovalPassed(ruleCode, record.getCurrentLevel() - 1, operator, comment, false));
         }
 
-        record.setUpdatedAt(LocalDateTime.now());
         saveRecord(record);
         return record;
     }
@@ -411,7 +409,6 @@ public class RuleApprovalService {
                     ruleCode, currentLevel, previousLevel, operator);
         }
 
-        record.setUpdatedAt(LocalDateTime.now());
         saveRecord(record);
         // P1-5: 通知工作流引擎（驳回）
         int toLevel = currentLevel <= 1 ? 0 : currentLevel - 1;
@@ -462,7 +459,6 @@ public class RuleApprovalService {
                 .build());
         record.setCurrentStatus(ApprovalRecord.STATUS_DELEGATED);
 
-        record.setUpdatedAt(LocalDateTime.now());
         saveRecord(record);
         log.info("[Approval] 审批已委托: ruleCode={}, level={}, from={}, to={}",
                 ruleCode, record.getCurrentLevel(), operator, delegatedTo);
@@ -510,7 +506,6 @@ public class RuleApprovalService {
             updateRuleStatus(def, RuleStatus.DRAFT, operator, "撤回审核");
         }
 
-        record.setUpdatedAt(LocalDateTime.now());
         saveRecord(record);
         log.info("[Approval] 审核已撤回: ruleCode={}, operator={}", ruleCode, operator);
         return record;

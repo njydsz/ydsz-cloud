@@ -83,16 +83,13 @@ public class ShareDomainService {
                 .build();
 
         shareLink.setCreatedBy(userId);
-        shareLink.setCreatedAt(LocalDateTime.now());
         shareLink.setUpdatedBy(userId);
-        shareLink.setUpdatedAt(LocalDateTime.now());
 
         ShareLink saved = shareLinkRepository.save(shareLink);
 
         // 更新文件节点的共享状态
         fileNode.setShareStatus("shared");
         fileNode.setUpdatedBy(userId);
-        fileNode.setUpdatedAt(LocalDateTime.now());
         fileNodeRepository.update(fileNode);
 
         eventPublisher.publishEvent(FileOperatedEvent.builder()
@@ -214,9 +211,7 @@ public class ShareDomainService {
                 .build();
 
         acl.setCreatedBy(userId);
-        acl.setCreatedAt(LocalDateTime.now());
         acl.setUpdatedBy(userId);
-        acl.setUpdatedAt(LocalDateTime.now());
 
         FileAcl saved = fileAclRepository.save(acl);
         log.info("[ShareDomainService] 授予权限: fileNodeId={}, granteeType={}, granteeId={}, mask={}",

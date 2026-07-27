@@ -95,7 +95,6 @@ public class FlowTaskTimeoutService {
         }
         task.setTaskStatus(FlowTaskStatus.SUSPENDED.name());
         task.setComment(reason);
-        task.setUpdatedAt(LocalDateTime.now());
         taskMapper.updateById(task);
         support.audit(task, "SUSPEND", operatorId, null, reason);
         log.info("[Flow] 任务挂起: taskId={} operator={} reason={}", taskId, operatorId, reason);
@@ -118,7 +117,6 @@ public class FlowTaskTimeoutService {
         task.setAssigneeId(null);
         task.setAssigneeName(null);
         task.setClaimAt(null);
-        task.setUpdatedAt(LocalDateTime.now());
         taskMapper.updateById(task);
         support.audit(task, "ACTIVATE", operatorId, null, null);
         log.info("[Flow] 任务激活: taskId={} operator={}", taskId, operatorId);

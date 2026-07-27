@@ -95,7 +95,6 @@ public class FlowTaskOperateService {
         task.setAssignorId(originalAssignorId);
         task.setAssignorName(originalAssignorName);
         task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-        task.setUpdatedAt(LocalDateTime.now());
         taskMapper.updateById(task);
         support.audit(task, "TRANSFER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 转办任务: taskId={} → userId={}", task.getId(), dto.getTargetUserId());
@@ -130,7 +129,6 @@ public class FlowTaskOperateService {
         task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
         task.setAssigneeName(dto.getTargetUserName());
         task.setTaskStatus(FlowTaskStatus.DELEGATED.name());
-        task.setUpdatedAt(LocalDateTime.now());
         taskMapper.updateById(task);
         support.audit(task, "DELEGATE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 委派任务: taskId={} → 被委派人={} (处理完回到 {})",

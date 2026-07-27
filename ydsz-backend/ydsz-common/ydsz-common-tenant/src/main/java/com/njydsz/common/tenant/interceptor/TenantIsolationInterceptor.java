@@ -297,10 +297,18 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         List<TenantField> activeFields = properties.getActiveTenantFields();
         List<TenantFieldValue> result = new ArrayList<>(activeFields.size());
         for (TenantField field : activeFields) {
-            String value = resolveTenantValue(context, field.getSource());
-            if (value == null || value.isEmpty()) {
+            String claimName = field.getClaim() != null ? field.getClaim() : "tenantId";
+            Object value;
+            if (field.isMultiValue()) {
+                value = context.getFieldValues(claimName);
+            } else {
+                value = context.getFieldValue(claimName);
+            }
+            if (value == null || (value instanceof String s && s.isEmpty())
+                    || (value instanceof List<?> l && l.isEmpty())) {
+                if (metrics != null) metrics.recordFailClosed();
                 throw new TenantIsolationException(
-                    "无法获取租户字段 [" + field.getColumn() + "] 的值（source=" + field.getSource()
+                    "无法获取租户字段 [" + field.getColumn() + "] 的值（claim=" + claimName
                     + "），已拒绝执行 SQL。");
             }
             result.add(new TenantFieldValue(field.getColumn(), value));
@@ -309,37 +317,11 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         return result;
     }
 
-    /**
-     * 根据 {@link TenantSource} 从 {@link TenantContext} 获取租户字段值。
-     *
-     * @param context 租户上下文
-     * @param source  值来源标识
-     * @return 字段值；上下文未设置返回 null
-     */
-    private String resolveTenantValue(TenantContext context, TenantSource source) {
-        if (source == null || context == null) {
-            return null;
-        }
-        switch (source) {
-            case TENANT:
-                return context.getTenantId();
-            case GROUP:
-                return context.getDimension(TenantDimension.GROUP);
-            case COMPANY:
-                return context.getDimension(TenantDimension.COMPANY);
-            case USER:
-                // USER source 需要从认证上下文获取（暂时回退到 tenantId）
-                return context.getTenantId();
-            default:
-                return null;
-        }
-    }
-
     private static class TenantFieldValue {
         final String column;
-        final String value;
+        final Object value;
 
-        TenantFieldValue(String column, String value) {
+        TenantFieldValue(String column, Object value) {
             this.column = column;
             this.value = value;
         }

@@ -68,7 +68,6 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public List<DepartmentVO> list() {
         LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Department::getDeleted, 0);
         wrapper.orderByDesc(Department::getSortOrder);
         return departmentMapper.selectList(wrapper).stream()
                 .map(this::toVO)
@@ -86,7 +85,6 @@ public class DepartmentServiceImpl implements DepartmentService {
     public String create(DepartmentSaveDTO dto) {
         LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Department::getDeptCode, dto.getDeptCode());
-        wrapper.eq(Department::getDeleted, 0);
         if (departmentMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_CODE_DUPLICATE);
         }
@@ -136,14 +134,12 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         LambdaQueryWrapper<Department> childWrapper = new LambdaQueryWrapper<>();
         childWrapper.eq(Department::getParentId, id);
-        childWrapper.eq(Department::getDeleted, 0);
         if (departmentMapper.selectCount(childWrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_HAS_CHILDREN);
         }
 
         LambdaQueryWrapper<UserDept> udWrapper = new LambdaQueryWrapper<>();
         udWrapper.eq(UserDept::getDeptId, id);
-        udWrapper.eq(UserDept::getDeleted, 0);
         if (userDeptMapper.selectCount(udWrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_HAS_USERS);
         }
@@ -208,7 +204,6 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
         LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Department::getDeptCode, deptCode);
-        wrapper.eq(Department::getDeleted, 0);
         wrapper.last("LIMIT 1");
         Department entity = departmentMapper.selectOne(wrapper);
         if (entity == null) {

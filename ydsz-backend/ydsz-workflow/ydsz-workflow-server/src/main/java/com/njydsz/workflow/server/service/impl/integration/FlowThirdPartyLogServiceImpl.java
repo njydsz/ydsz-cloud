@@ -47,7 +47,6 @@ public class FlowThirdPartyLogServiceImpl implements FlowThirdPartyLogService {
             }
             logEntry.setHandleStatus(STATUS_PENDING);
             if (logEntry.getCreatedAt() == null) {
-                logEntry.setCreatedAt(LocalDateTime.now());
             }
             thirdPartyLogMapper.insert(logEntry);
             return logEntry.getId();

@@ -60,7 +60,6 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<MenuVO> list() {
         LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Menu::getDeleted, 0);
         wrapper.orderByDesc(Menu::getSortOrder);
         return mapper.selectList(wrapper).stream()
                 .map(this::toVO)
@@ -119,7 +118,6 @@ public class MenuServiceImpl implements MenuService {
         // 检查子菜单
         LambdaQueryWrapper<Menu> childWrapper = new LambdaQueryWrapper<>();
         childWrapper.eq(Menu::getParentId, id);
-        childWrapper.eq(Menu::getDeleted, 0);
         if (mapper.selectCount(childWrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.MENU_HAS_CHILDREN);
         }
