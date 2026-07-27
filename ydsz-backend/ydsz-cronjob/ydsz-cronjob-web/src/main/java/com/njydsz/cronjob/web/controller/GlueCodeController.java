@@ -20,7 +20,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.common.safe.annotation.RateLimit;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCodeDO;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
@@ -128,14 +128,14 @@ public class GlueCodeController {
      * 代码不持久化，仅在内存中编译执行并返回结果。
      *
      * <p>P0-5：该接口允许在服务端执行任意代码，属于高风险接口，独立分配 {@code CRONJOB_GLUE_TEST}
-     * 权限码，并加 {@code @RateLimit} 限流（60s 内最多 10 次），防止滥用导致 CPU/内存被打满。
+     * 权限码，并加 {@code @SentinelRateLimit} 限流（60s 内最多 10 次），防止滥用导致 CPU/内存被打满。
      *
      * @param request 测试请求体
      * @return 统一响应结果，包含执行结果或错误信息
      */
     @Operation(summary = "在线测试 GLUE 代码")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_TEST)
-    @RateLimit(key = "glue:test", qps = 10, windowSeconds = 60, message = "在线测试过于频繁，请稍后重试")
+    @SentinelRateLimit(resource = "cronjob.gluecode.test", threshold = 10, windowMillis = 60000, dimension = RateLimitDimension.IP, message = "在线测试过于频繁，请稍后重试")
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/test")
     public BaseResponse<Map<String, Object>> test(@Valid @RequestBody GlueTestRequest request) {

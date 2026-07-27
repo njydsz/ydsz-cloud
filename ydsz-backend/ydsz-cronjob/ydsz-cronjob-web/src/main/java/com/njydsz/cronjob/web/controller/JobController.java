@@ -17,7 +17,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.common.safe.annotation.RateLimit;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.cronjob.domain.dto.job.JobSaveDTO;
 import com.njydsz.cronjob.domain.entity.job.JobDO;
@@ -200,7 +200,7 @@ public class JobController {
      */
     @Operation(summary = "立即执行一次")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_TRIGGER)
-    @RateLimit(key = "job:trigger", qps = 3, windowSeconds = 60, message = "手动触发过于频繁，请稍后重试")
+    @SentinelRateLimit(resource = "cronjob.job.trigger", threshold = 3, windowMillis = 60000, dimension = RateLimitDimension.IP, message = "手动触发过于频繁，请稍后重试")
     @IdempotentExempt("定时触发接口，无需幂等")
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'trigger'")
     @PostMapping("/{id}/trigger")

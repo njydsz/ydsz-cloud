@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import com.njydsz.common.domain.entity.AggregateRoot;
 import com.njydsz.common.domain.exception.AggregateNotFoundException;
@@ -189,4 +188,195 @@ public abstract class AbstractCrudService<T extends AggregateRoot<ID>, DTO, VO, 
      *
      * <p>子类可覆写以执行存在性校验、版本校验、业务规则校验等。
      *
-     * @param dto
+     * @param dto    原始 DTO
+     * @param entity 转换后的实体
+     */
+    protected void doBeforeUpdate(DTO dto, T entity) {
+        // 默认空实现，子类按需覆写
+    }
+
+    /**
+     * 更新后钩子。
+     *
+     * @param saved     保存后的实体
+     * @param updated   是否实际更新成功
+     */
+    protected void doAfterUpdate(T saved, boolean updated) {
+        // 默认空实现，子类按需覆写
+    }
+
+    /**
+     * 删除前钩子。
+     *
+     * @param id 待删除主键
+     */
+    protected void doBeforeDelete(ID id) {
+        // 默认空实现，子类按需覆写
+    }
+
+    /**
+     * 删除后钩子。
+     *
+     * @param id      已删除主键
+     * @param removed 是否实际删除成功
+     */
+    protected void doAfterDelete(ID id, boolean removed) {
+        // 默认空实现，子类按需覆写
+    }
+
+    /**
+     * 批量新增前钩子。
+     *
+     * @param dtos 原始 DTO 集合
+     */
+    protected void doBeforeBatchSave(Iterable<DTO> dtos) {
+        // 默认空实现，子类按需覆写
+    }
+
+    /**
+     * 批量新增后钩子。
+     *
+     * @param saved 保存后的实体集合
+     */
+    protected void doAfterBatchSave(Iterable<T> saved) {
+        // 默认空实现，子类按需覆写
+    }
+
+    /**
+     * 批量删除前钩子。
+     *
+     * @param ids 待删除主键集合
+     */
+    protected void doBeforeBatchDelete(Collection<ID> ids) {
+        // 默认空实现，子类按需覆写
+    }
+
+    /**
+     * 批量删除后钩子。
+     *
+     * @param ids    已删除主键集合
+     * @param result 各 ID 删除结果（true 表示删除成功）
+     */
+    protected void doAfterBatchDelete(Collection<ID> ids, List<Boolean> result) {
+        // 默认空实现，子类按需覆写
+    }
+
+    // ============================== 接口实现（查询） ==============================
+
+    @Override
+    public PageResult<VO> page(PQ query) {
+        Specification<T> spec = getPageSpecification(query);
+        PageResult<T> entityPage = getRepository().findPage(query, spec);
+        if (entityPage == null) {
+            return PageResult.empty(query.getEffectivePageNum(), query.getEffectivePageSize());
+        }
+        return entityPage.convert(this::toVO);
+    }
+
+    @Override
+    public VO getById(ID id) {
+        T entity = getRepository().findById(id)
+                .orElseThrow(() -> new AggregateNotFoundException(getEntityTypeName(), id));
+        return toVO(entity);
+    }
+
+    @Override
+    public List<VO> list(PQ query) {
+        Specification<T> spec = getPageSpecification(query);
+        List<T> entities = getRepository().findAll(spec);
+        if (entities == null) {
+            return Collections.emptyList();
+        }
+        return entities.stream().map(this::toVO).collect(Collectors.toList());
+    }
+
+    // ============================== 接口实现（单条） ==============================
+
+    @Override
+    public ID save(DTO dto) {
+        T entity = toEntity(dto);
+        doBeforeSave(dto, entity);
+        T saved = getRepository().save(entity);
+        doAfterSave(saved, true);
+        return saved.getId();
+    }
+
+    @Override
+    public boolean updateById(DTO dto) {
+        T entity = toEntity(dto);
+        doBeforeUpdate(dto, entity);
+        T saved = getRepository().save(entity);
+        doAfterUpdate(saved, true);
+        return true;
+    }
+
+    @Override
+    public boolean removeById(ID id) {
+        doBeforeDelete(id);
+        getRepository().delete(id);
+        doAfterDelete(id, true);
+        return true;
+    }
+
+    // ============================== 接口实现（批量） ==============================
+
+    @Override
+    public List<ID> saveBatch(Collection<DTO> dtos) {
+        if (dtos == null || dtos.isEmpty()) {
+            return Collections.emptyList();
+        }
+        doBeforeBatchSave(dtos);
+        List<T> entities = dtos.stream()
+                .filter(Objects::nonNull)
+                .map(this::toEntity)
+                .collect(Collectors.toList());
+        for (T entity : entities) {
+            doBeforeSave(null, entity);
+        }
+        List<T> saved = getRepository().saveAll(entities);
+        for (T entity : saved) {
+            doAfterSave(entity, true);
+        }
+        doAfterBatchSave(saved);
+        return saved.stream().map(AggregateRoot::getId).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Boolean> updateBatch(Collection<DTO> dtos) {
+        if (dtos == null || dtos.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Boolean> result = dtos.stream()
+                .filter(Objects::nonNull)
+                .map(this::updateById)
+                .collect(Collectors.toList());
+        return result;
+    }
+
+    @Override
+    public List<Boolean> removeBatch(Collection<ID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        doBeforeBatchDelete(ids);
+        List<Boolean> result = ids.stream()
+                .filter(Objects::nonNull)
+                .map(this::removeById)
+                .collect(Collectors.toList());
+        doAfterBatchDelete(ids, result);
+        return result;
+    }
+
+    // ============================== 工具方法 ==============================
+
+    /**
+     * 获取实体类型名称（用于异常信息）。
+     *
+     * @return 实体类型简单名称
+     */
+    protected String getEntityTypeName() {
+        return this.getClass().getSimpleName()
+                .replace("ServiceImpl", "")
+                .replace("Service", "");
+    }
+}

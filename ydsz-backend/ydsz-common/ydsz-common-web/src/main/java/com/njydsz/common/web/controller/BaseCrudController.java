@@ -1,5 +1,6 @@
 package com.njydsz.common.web.controller;
 
+import java.io.Serializable;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -28,10 +29,11 @@ import io.swagger.v3.oas.annotations.Parameter;
  *
  * <p><b>泛型参数：</b>
  * <ul>
- *   <li>{@code T}  - 实体类型</li>
+ *   <li>{@code T}   - 实体类型</li>
  *   <li>{@code DTO} - 数据传输对象（新增/修改入参）</li>
  *   <li>{@code VO}  - 视图对象（出参）</li>
- *   <li>{@code PQ}  - 分页查询参数类型，须继承 {@link com.njydsz.common.domain.query.PageQuery}</li>
+ *   <li>{@code PQ}  - 分页查询参数类型，须继承 {@link PageQuery}</li>
+ *   <li>{@code ID}  - 主键类型（项目统一使用 String）</li>
  * </ul>
  *
  * <p><b>审计与幂等：</b>
@@ -43,7 +45,7 @@ import io.swagger.v3.oas.annotations.Parameter;
  * &#64;Tag(name = "用户管理", description = "用户 CRUD")
  * &#64;RestController
  * &#64;RequestMapping("/api/v1/user")
- * public class UserController extends BaseCrudController<User, UserDTO, UserVO, UserPageQuery> {
+ * public class UserController extends BaseCrudController<User, UserDTO, UserVO, UserPageQuery, String> {
  *
  *     private final UserService userService;
  *
@@ -52,7 +54,7 @@ import io.swagger.v3.oas.annotations.Parameter;
  *     }
  *
  *     &#64;Override
- *     protected BaseCrudService<User, UserDTO, UserVO, UserPageQuery> getService() {
+ *     protected BaseCrudService<User, UserDTO, UserVO, UserPageQuery, String> getService() {
  *         return userService;
  *     }
  *
@@ -67,22 +69,23 @@ import io.swagger.v3.oas.annotations.Parameter;
  * }
  * }</pre>
  *
- * @param <T>  实体类型
+ * @param <T>   实体类型
  * @param <DTO> 数据传输对象
  * @param <VO>  视图对象
  * @param <PQ>  分页查询参数类型
+ * @param <ID>  主键类型
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-public abstract class BaseCrudController<T, DTO, VO, PQ extends PageQuery> {
+public abstract class BaseCrudController<T, DTO, VO, PQ extends PageQuery, ID extends Serializable> {
 
     /**
      * 获取业务 Service 实例。
      *
      * @return CRUD Service
      */
-    protected abstract BaseCrudService<T, DTO, VO, PQ> getService();
+    protected abstract BaseCrudService<T, DTO, VO, PQ, ID> getService();
 
     // ============================== 分页查询 ==============================
 
@@ -113,7 +116,7 @@ public abstract class BaseCrudController<T, DTO, VO, PQ extends PageQuery> {
      */
     @Operation(summary = "按 ID 查询")
     @GetMapping("/{id}")
-    public BaseResponse<VO> getById(@Parameter(description = "主键 ID") @PathVariable String id) {
+    public BaseResponse<VO> getById(@Parameter(description = "主键 ID") @PathVariable ID id) {
         return BaseResponse.success(getService().getById(id));
     }
 
@@ -129,7 +132,7 @@ public abstract class BaseCrudController<T, DTO, VO, PQ extends PageQuery> {
      */
     @Operation(summary = "新增")
     @PostMapping
-    public BaseResponse<String> save(@Valid @RequestBody DTO dto) {
+    public BaseResponse<ID> save(@Valid @RequestBody DTO dto) {
         return BaseResponse.success(getService().save(dto));
     }
 
@@ -161,7 +164,7 @@ public abstract class BaseCrudController<T, DTO, VO, PQ extends PageQuery> {
      */
     @Operation(summary = "删除")
     @DeleteMapping("/{id}")
-    public BaseResponse<Boolean> remove(@Parameter(description = "主键 ID") @PathVariable String id) {
+    public BaseResponse<Boolean> remove(@Parameter(description = "主键 ID") @PathVariable ID id) {
         return BaseResponse.success(getService().removeById(id));
     }
 }
