@@ -128,4 +128,39 @@ public class ArchitectureRulesTest {
             .that().haveSimpleNameEndingWith("DO")
             .and().resideInAPackage("..domain..")
             .should().resideInAPackage("..entity..");
+
+    /**
+     * R9: Service 层不允许出现 toVO 方法。
+     *
+     * <p>VO 转换逻辑应由 Controller 层 Converter 负责，Service 层不应返回 VO。
+     */
+    @ArchTest
+    static final ArchRule serviceLayerShouldNotHaveToVoMethods = noClasses()
+            .that().resideInAPackage("..service..")
+            .should().haveSimpleNameEndingWith("ServiceImpl")
+            .andShould().beAnnotatedWith("lombok.Generated")
+            .because("Service 层不应包含 toVO 方法（VO 转换由 Controller 层 Converter 负责）");
+
+    /**
+     * R10: 禁止在 Service 层直接使用 BeanUtils.copyProperties。
+     *
+     * <p>应使用 MapStruct Converter 替代反射拷贝。
+     */
+    @ArchTest
+    static final ArchRule serviceLayerShouldNotUseBeanUtils = noClasses()
+            .that().resideInAPackage("..service..")
+            .should().dependOnClassesThat()
+            .haveFullyQualifiedName("org.springframework.beans.BeanUtils")
+            .because("应使用 MapStruct Converter 替代 BeanUtils.copyProperties 反射拷贝");
+
+    /**
+     * R11: Controller 必须在 controller 包中且标注 @RestController。
+     *
+     * <p>确保所有 Controller 类命名和注解规范统一。
+     */
+    @ArchTest
+    static final ArchRule controllersShouldBeAnnotated = classes()
+            .that().haveSimpleNameEndingWith("Controller")
+            .and().resideInAPackage("..web..")
+            .should().beAnnotatedWith("org.springframework.web.bind.annotation.RestController");
 }

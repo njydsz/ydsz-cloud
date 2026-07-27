@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.project.domain.converter.ProjectConverter;
-import com.njydsz.project.domain.vo.ProjectInitiationVOVO;
+import com.njydsz.project.domain.vo.ProjectInitiationVO;
 
 /**
  * 项目立项 Controller。
@@ -43,17 +43,17 @@ public class ProjectInitiationController {
     private final ProjectInitiationService projectInitiationService;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectInitiationVOVO> getById(@PathVariable String id) {
+    public BaseResponse<ProjectInitiationVO> getById(@PathVariable String id) {
         return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(projectInitiationService.getById(id)));
     }
 
     @GetMapping("/code/{projectCode}")
-    public BaseResponse<ProjectInitiationVOVO> getByCode(@PathVariable String projectCode) {
+    public BaseResponse<ProjectInitiationVO> getByCode(@PathVariable String projectCode) {
         return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(projectInitiationService.getByCode(projectCode)));
     }
 
     @GetMapping("/page")
-    public PageResponse<ProjectInitiationVOVO> page(@Valid ProjectInitiationPageQuery query) {
+    public PageResponse<ProjectInitiationVO> page(@Valid ProjectInitiationPageQuery query) {
         IPage<ProjectInitiationVO> result = projectInitiationService.page(query);
         return PageResponse.success(ProjectConverter.INSTANT.projectInitiationListToVO(result.getRecords()), result.getTotal(),
                 (int) result.getCurrent(), (int) result.getSize());
@@ -86,7 +86,7 @@ public class ProjectInitiationController {
     }
 
     @GetMapping("/pm/{pmId}")
-    public BaseResponse<List<ProjectInitiationVOVO>> listByPmId(@PathVariable String pmId) {
+    public BaseResponse<List<ProjectInitiationVO>> listByPmId(@PathVariable String pmId) {
         return BaseResponse.success(ProjectConverter.INSTANT.projectInitiationListToVO(projectInitiationService.listByPmId(pmId)));
     }
 }
