@@ -20,7 +20,7 @@
             <artifactId>ydsz-common-base</artifactId>
         </dependency>
 
-        <!-- 领域模型模块（BaseCrudController 使用 BaseCrudService / PageQuery / PageResult） -->
+        <!-- 领域模型模块 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>

@@ -1,10 +1,12 @@
 package com.njydsz.common.search.config;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import lombok.Data;
 
 /**
@@ -15,48 +17,52 @@ import lombok.Data;
  * <pre>
  * ydsz:
  *   search:
- *     engine: pg          # pg / memory / es
- *     highlight: true
- *     fuzzy: true
+ *     enabled: true
+ *     primary: pg                    # 主引擎
+ *     fallbacks: [memory]            # 降级链
  *     page-size: 20
- *     suggest-limit: 10
- *     search-timeout: 5    # 搜索超时（秒）
- *     max-page-size: 100   # 最大每页大小
- *     max-page-depth: 5000 # 最大翻页深度（page * pageSize）
+ *     search-timeout: 5
  *     cache:
  *       enabled: true
  *       ttl: 60
- *     index:
- *       sync-mode: event   # event / mq
- *       batch-size: 100
- *       rebuild-batch-size: 500
- *     circuit-breaker:
- *       enabled: true
- *       failure-threshold: 5
- *       wait-duration: 30
- *     synonym:
- *       enabled: false
- *       file: classpath:synonyms.txt
- *     pinyin:
- *       enabled: false
+ *     pg:                            # PG 引擎特定配置
+ *       search-config: search_zh
+ *       index-table: ydsz_search_index
+ *       field-weights: { title: 1.0, subtitle: 0.7, content: 0.4, tags: 0.2 }
+ *       time-decay-days: 0
+ *     es:                            # ES 引擎特定配置
+ *       host: localhost
+ *       port: 9200
+ *       index-name: ydsz_search
+ *     redis:                         # RediSearch 引擎特定配置
+ *       index-name: ydsz_search_idx
+ *     solr:                          # Solr 引擎特定配置
+ *       base-url: http://localhost:8983/solr
+ *       core: ydsz_search
+ *     opensearch:                    # OpenSearch 引擎特定配置
+ *       host: localhost
+ *       port: 9200
+ *       index-name: ydsz_search
  * </pre>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.3.0
  */
 @Data
 @Validated
 @ConfigurationProperties(prefix = "ydsz.search")
 public class SearchProperties {
 
-    /** 搜索引擎类型：pg / memory / es */
-    private String engine = "pg";
+    /** 是否启用搜索服务 */
+    private boolean enabled = true;
 
-    /** 是否启用高亮 */
-    private boolean highlight = true;
+    /** 主引擎名称（pg / memory / es / redis / solr / opensearch） */
+    private String primary = "pg";
 
-    /** 是否启用模糊匹配 */
-    private boolean fuzzy = true;
+    /** 降级引擎链（按顺序尝试） */
+    private List<String> fallbacks = List.of("memory");
+
+    // ==================== 通用配置 ====================
 
     /** 默认每页大小 */
     @Min(1)
@@ -67,6 +73,26 @@ public class SearchProperties {
     @Min(1)
     @Max(50)
     private int suggestLimit = 10;
+
+    /** 搜索超时时间（秒） */
+    @Min(1)
+    @Max(60)
+    private int searchTimeout = 5;
+
+    /** 最大每页大小（深分页保护） */
+    @Min(1)
+    @Max(500)
+    private int maxPageSize = 100;
+
+    /** 最大翻页深度（page * pageSize 上限） */
+    @Min(1)
+    private int maxPageDepth = 5000;
+
+    /** 是否启用高亮 */
+    private boolean highlight = true;
+
+    /** 是否启用模糊匹配 */
+    private boolean fuzzy = true;
 
     /** 高亮前置标签 */
     private String highlightPreTag = "<em>";
@@ -82,19 +108,7 @@ public class SearchProperties {
     /** 模糊匹配最小相似度 */
     private double fuzzyMinSimilarity = 0.3;
 
-    /** 搜索超时时间（秒） */
-    @Min(1)
-    @Max(60)
-    private int searchTimeout = 5;
-
-    /** 最大每页大小（深分页保护） */
-    @Min(1)
-    @Max(500)
-    private int maxPageSize = 100;
-
-    /** 最大翻页深度（page * pageSize 上限） */
-    @Min(1)
-    private int maxPageDepth = 5000;
+    // ==================== 通用子配置 ====================
 
     /** 缓存配置 */
     private CacheConfig cache = new CacheConfig();
@@ -114,44 +128,48 @@ public class SearchProperties {
     /** 拼音配置 */
     private PinyinConfig pinyin = new PinyinConfig();
 
-    /** P1-9+P1-11: 排序权重与时间衰减配置 */
-    private RankConfig rank = new RankConfig();
+    // ==================== 引擎特定配置 ====================
+
+    /** PG 引擎配置 */
+    private PgConfig pg = new PgConfig();
+
+    /** Elasticsearch 引擎配置 */
+    private EsConfig es = new EsConfig();
+
+    /** RediSearch 引擎配置 */
+    private RedisConfig redis = new RedisConfig();
+
+    /** Solr 引擎配置 */
+    private SolrConfig solr = new SolrConfig();
+
+    /** OpenSearch 引擎配置 */
+    private OpenSearchConfig opensearch = new OpenSearchConfig();
+
+    // ==================== 通用内部类 ====================
 
     @Data
     public static class CacheConfig {
-        /** 是否启用搜索结果缓存 */
         private boolean enabled = true;
-        /** 缓存 TTL（秒） */
         private long ttl = 60;
-        /** 最大缓存条数 */
         private long maxSize = 1000;
     }
 
     @Data
     public static class IndexConfig {
-        /** 索引同步模式：event / mq */
         private String syncMode = "event";
-        /** 批量索引大小 */
         private int batchSize = 100;
-        /** 全量重建批量大小 */
         private int rebuildBatchSize = 500;
-        /** 索引同步线程池大小 */
         private int threadPoolSize = 4;
-        /** 索引同步最大重试次数 */
         @Min(0)
         @Max(10)
         private int maxRetries = 3;
-        /** 索引同步重试间隔（毫秒） */
         private long retryIntervalMs = 1000;
     }
 
     @Data
     public static class DegradeConfig {
-        /** 是否启用降级 */
         private boolean enabled = true;
-        /** 降级到 LIKE 匹配 */
         private boolean fallbackToLike = true;
-        /** 降级探测间隔（秒） */
         @Min(5)
         @Max(300)
         private int probeInterval = 30;
@@ -159,49 +177,80 @@ public class SearchProperties {
 
     @Data
     public static class CircuitBreakerConfig {
-        /** 是否启用熔断 */
         private boolean enabled = true;
-        /** 失败阈值（连续失败次数） */
         @Min(1)
         private int failureThreshold = 5;
-        /** 熔断等待时间（秒） */
         @Min(1)
         private int waitDuration = 30;
-        /** 半开探测请求数 */
         @Min(1)
         private int halfOpenRequests = 3;
     }
 
     @Data
     public static class SynonymConfig {
-        /** 是否启用同义词 */
         private boolean enabled = false;
-        /** 同义词词典文件路径 */
         private String file = "classpath:synonyms.txt";
     }
 
     @Data
     public static class PinyinConfig {
-        /** 是否启用拼音搜索 */
         private boolean enabled = false;
-        /** P1-5: 拼音词典文件路径 */
         private String file = "classpath:pinyin.txt";
     }
 
-    /**
-     * P1-9+P1-11: 排序权重与时间衰减配置
-     */
+    /** 字段权重（各引擎通用） */
     @Data
-    public static class RankConfig {
-        /** P1-9: 标题字段权重（PG setweight A 对应 1.0） */
-        private double titleWeight = 1.0;
-        /** P1-9: 副标题字段权重（PG setweight B 对应 0.7） */
-        private double subtitleWeight = 0.7;
-        /** P1-9: 内容字段权重（PG setweight C 对应 0.4） */
-        private double contentWeight = 0.4;
-        /** P1-9: 标签字段权重（PG setweight D 对应 0.2） */
-        private double tagsWeight = 0.2;
-        /** P1-11: 时间衰减半衰期（天），0 表示不衰减 */
+    public static class FieldWeights {
+        private double title = 1.0;
+        private double subtitle = 0.7;
+        private double content = 0.4;
+        private double tags = 0.2;
+    }
+
+    // ==================== 引擎特定内部类 ====================
+
+    @Data
+    public static class PgConfig {
+        /** PG tsvector 搜索配置（search_zh / simple） */
+        private String searchConfig = "search_zh";
+        /** 索引表名 */
+        private String indexTable = "ydsz_search_index";
+        /** 字段权重 */
+        private FieldWeights fieldWeights = new FieldWeights();
+        /** 时间衰减半衰期（天），0 表示不衰减 */
         private double timeDecayDays = 0;
+    }
+
+    @Data
+    public static class EsConfig {
+        private String host = "localhost";
+        private int port = 9200;
+        private String scheme = "http";
+        private String indexName = "ydsz_search";
+        private FieldWeights fieldWeights = new FieldWeights();
+    }
+
+    @Data
+    public static class RedisConfig {
+        /** RediSearch 索引名称 */
+        private String indexName = "ydsz_search_idx";
+        /** Redis key 前缀（存储 Hash 数据） */
+        private String keyPrefix = "search:doc:";
+    }
+
+    @Data
+    public static class SolrConfig {
+        private String baseUrl = "http://localhost:8983/solr";
+        private String core = "ydsz_search";
+        private FieldWeights fieldWeights = new FieldWeights();
+    }
+
+    @Data
+    public static class OpenSearchConfig {
+        private String host = "localhost";
+        private int port = 9200;
+        private String scheme = "http";
+        private String indexName = "ydsz_search";
+        private FieldWeights fieldWeights = new FieldWeights();
     }
 }

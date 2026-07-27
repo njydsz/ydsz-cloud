@@ -11,13 +11,20 @@ import lombok.Builder;
 import lombok.Data;
 
 /**
- * 索引文档模型
+ * 索引文档模型（引擎无关）
  * <p>
  * 表示一个可被搜索引擎索引的文档，包含文档 ID、类型、标题、内容和扩展字段。
  * 各业务模块通过 {@code SearchProvider.toIndexDocument()} 将实体转换为此模型。
  *
+ * <p>各引擎实现自行决定如何处理字段：
+ * <ul>
+ *   <li>PG：将 title + subtitle + content + tags 拼接为 searchable_text</li>
+ *   <li>ES/Solr/OpenSearch：按字段独立建立 mapping</li>
+ *   <li>RediSearch：按字段定义 schema</li>
+ * </ul>
+ *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.3.0
  */
 @Data
 @Builder
@@ -71,40 +78,4 @@ public class IndexDocument implements Serializable {
     /** 扩展字段（参与搜索，但不一定高亮） */
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
-
-    /**
-     * 获取所有可搜索文本（拼接 title + subtitle + content + tags）
-     */
-    public String getSearchableText() {
-        StringBuilder sb = new StringBuilder();
-        if (title != null) {
-            sb.append(title);
-        }
-        if (subtitle != null) {
-            sb.append(' ').append(subtitle);
-        }
-        if (content != null) {
-            sb.append(' ').append(content);
-        }
-        if (tags != null) {
-            for (String tag : tags) {
-                sb.append(' ').append(tag);
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
-     * 获取仅标题可搜索文本（title + subtitle）
-     */
-    public String getTitleSearchableText() {
-        StringBuilder sb = new StringBuilder();
-        if (title != null) {
-            sb.append(title);
-        }
-        if (subtitle != null) {
-            sb.append(' ').append(subtitle);
-        }
-        return sb.toString();
-    }
 }
