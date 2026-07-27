@@ -22,6 +22,7 @@ import com.njydsz.system.server.service.VariableService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
  * 系统变量 Service 实现。
@@ -57,7 +58,7 @@ public class VariableServiceImpl implements VariableService {
     @Override
     public VariableVO getById(String id) {
         Variable entity = mapper.selectById(id);
-        return toVO(entity);
+        return SystemConverter.INSTANT.entityToVO(entity);
     }
 
     /**

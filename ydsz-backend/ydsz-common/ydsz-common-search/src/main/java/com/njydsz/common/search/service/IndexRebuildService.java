@@ -3,6 +3,8 @@ package com.njydsz.common.search.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
@@ -26,7 +28,7 @@ public class IndexRebuildService {
     private volatile int progress = 0;
     private volatile int total = 0;
 
-    private final ExecutorService rebuildExecutor;
+    private final ThreadPoolTaskExecutor rebuildExecutor;
 
     public IndexRebuildService(IndexSyncService indexSyncService,
                                 SearchEngineRegistry engineRegistry,
@@ -34,11 +36,15 @@ public class IndexRebuildService {
         this.indexSyncService = indexSyncService;
         this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
-        this.rebuildExecutor = Executors.newSingleThreadExecutor(r -> {
-            Thread t = new Thread(r, "index-rebuild");
-            t.setDaemon(true);
-            return t;
-        });
+
+        this.rebuildExecutor = new ThreadPoolTaskExecutor();
+        this.rebuildExecutor.setCorePoolSize(1);
+        this.rebuildExecutor.setMaxPoolSize(1);
+        this.rebuildExecutor.setQueueCapacity(1);
+        this.rebuildExecutor.setThreadNamePrefix("index-rebuild-");
+        this.rebuildExecutor.setDaemon(true);
+        this.rebuildExecutor.setWaitForTasksToCompleteOnShutdown(false);
+        this.rebuildExecutor.initialize();
     }
 
     public int rebuildAll(String type, String tenantId) {
@@ -74,15 +80,13 @@ public class IndexRebuildService {
     }
 
     public void rebuildAllAsync(String type, String tenantId) {
-        Thread t = new Thread(() -> {
+        rebuildExecutor.submit(() -> {
             try {
                 rebuildAll(type, tenantId);
             } catch (Exception e) {
                 log.error("[IndexRebuild] async rebuild failed", e);
             }
-        }, "index-rebuild");
-        t.setDaemon(true);
-        t.start();
+        });
     }
 
     public int rebuildWithBlueGreen(String type, String tenantId) {
@@ -114,5 +118,10 @@ public class IndexRebuildService {
 
     public List<String> getRegisteredTypes() {
         return providerRegistry.getAllTypes();
+    }
+
+    public void shutdown() {
+        rebuildExecutor.shutdown();
+        log.info("[IndexRebuild] 重建线程池已关闭");
     }
 }

@@ -24,6 +24,7 @@ import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 import com.njydsz.userinfo.server.service.CompanyService;
 
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
  * 公司 Service 实现。
@@ -56,9 +57,7 @@ public class CompanyServiceImpl
         if (entity == null) {
             return null;
         }
-        CompanyVO vo = new CompanyVO();
-        BeanUtils.copyProperties(entity, vo);
-        return vo;
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     @Override
@@ -66,8 +65,7 @@ public class CompanyServiceImpl
         if (dto == null) {
             return null;
         }
-        Company entity = new Company();
-        BeanUtils.copyProperties(dto, entity);
+        Company entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
         return entity;
     }
 

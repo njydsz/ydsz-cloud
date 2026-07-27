@@ -26,6 +26,7 @@ import com.njydsz.common.domain.tree.TreeBuilder;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
  * 部门 Service 实现。
@@ -90,8 +91,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_CODE_DUPLICATE);
         }
 
-        Department entity = new Department();
-        BeanUtils.copyProperties(dto, entity);
+        Department entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
@@ -105,7 +105,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     /**
      * {@inheritDoc}
-     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id。
+     * <p>使用 MapStruct 转换（更新操作暂保留 BeanUtils）
      *
      * @throws BusinessException 当部门不存在或已删除时抛出
      */
@@ -246,14 +246,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     /**
-     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
+     * 将 DO 转换为 VO，使用 MapStruct 转换器
      *
      * @param entity 数据库实体
      * @return 视图对象
      */
     private DepartmentVO toVO(Department entity) {
-        DepartmentVO vo = new DepartmentVO();
-        BeanUtils.copyProperties(entity, vo);
-        return vo;
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 }

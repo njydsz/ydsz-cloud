@@ -28,6 +28,7 @@ import com.njydsz.system.server.service.DictVersionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
  * 字典项 Service 实现。
@@ -74,7 +75,7 @@ public class DictItemServiceImpl implements DictItemService {
     @Override
     public DictItemVO getById(String id) {
         DictItem entity = mapper.selectById(id);
-        return toVO(entity);
+        return SystemConverter.INSTANT.entityToVO(entity);
     }
 
     /**
@@ -102,7 +103,7 @@ public class DictItemServiceImpl implements DictItemService {
             }
             metrics.recordDictCacheMiss();
             DictItem entity = mapper.selectByTypeAndCode(typeCode, itemCode);
-            DictItemVO vo = toVO(entity);
+            DictItemVO vo = SystemConverter.INSTANT.entityToVO(entity);
             Duration ttl = getCacheTtl();
             if (vo != null) {
                 redisService.set(cacheKey, YdszJson.toJson(vo), ttl);

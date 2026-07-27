@@ -22,6 +22,7 @@ import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 import com.njydsz.userinfo.server.service.LanguageService;
 
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
  * 语言 Service 实现。
@@ -122,14 +123,11 @@ public class LanguageServiceImpl implements LanguageService {
         if (entity == null) {
             return null;
         }
-        LanguageVO vo = new LanguageVO();
-        BeanUtils.copyProperties(entity, vo);
-        return vo;
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     private Language toEntity(LanguageSaveDTO dto) {
-        Language entity = new Language();
-        BeanUtils.copyProperties(dto, entity);
+        Language entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
         return entity;
     }
 }

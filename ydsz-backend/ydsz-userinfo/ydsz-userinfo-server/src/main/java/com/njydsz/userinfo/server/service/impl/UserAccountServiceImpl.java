@@ -42,6 +42,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
  * 用户账号 Service 实现。
@@ -175,8 +176,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         // 密码策略校验
         passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
 
-        UserAccount entity = new UserAccount();
-        BeanUtils.copyProperties(dto, entity);
+        UserAccount entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
         entity.setPassword(passwordEncoder.encode(dto.getPassword()));
         entity.setStatus("1");
         entity.setLoginFailCount(0);
@@ -191,7 +191,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     /**
      * {@inheritDoc}
-     * <p>使用 BeanUtils.copyProperties 更新字段，仅复制非 null 属性（避免覆盖已有值），
+     * <p>使用 MapStruct 转换（更新操作暂保留 BeanUtils）
      * status 字段从 Integer 转为 String 存储。
      *
      * @throws BusinessException 当用户不存在或已删除时抛出
@@ -499,8 +499,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @return 视图对象（不含密码等敏感字段）
      */
     private UserAccountVO toVO(UserAccount entity) {
-        UserAccountVO vo = new UserAccountVO();
-        BeanUtils.copyProperties(entity, vo);
+        UserAccountVO vo = UserInfoConverter.INSTANT.entityToVO(entity);
         if (entity.getStatus() != null) {
             try {
                 vo.setStatus(Integer.valueOf(entity.getStatus()));
@@ -512,7 +511,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     /**
-     * 获取对象中值为 null 的属性名数组，用于 BeanUtils.copyProperties 忽略 null 值。
+     * 获取对象中值为 null 的属性名数组（用于动态更新忽略 null 值）
      */
     private String[] getNullPropertyNames(Object source) {
         final BeanWrapper wrapper = new BeanWrapperImpl(source);

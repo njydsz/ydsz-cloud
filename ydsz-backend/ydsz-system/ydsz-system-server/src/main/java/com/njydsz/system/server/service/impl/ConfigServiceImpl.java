@@ -33,6 +33,7 @@ import com.njydsz.system.server.service.ConfigService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
  * 系统配置 Service 实现。
@@ -86,7 +87,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public ConfigVO getById(String id) {
         Config entity = configRepository.getConfigMapper().selectById(id);
-        return toVO(entity);
+        return SystemConverter.INSTANT.entityToVO(entity);
     }
 
     @Override

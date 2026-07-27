@@ -20,6 +20,7 @@ import com.njydsz.system.server.service.AppInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
  * 应用注册 Service 实现。
@@ -47,7 +48,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Override
     public AppInfoVO getById(String id) {
         AppInfo entity = mapper.selectById(id);
-        return toVO(entity);
+        return SystemConverter.INSTANT.entityToVO(entity);
     }
 
     /**

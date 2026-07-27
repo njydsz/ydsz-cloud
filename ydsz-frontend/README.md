@@ -65,7 +65,6 @@
 | **nextwiki-web** | 5607 | 9007 | ydsz-nextwiki | /ydsz-wiki | 文件/预览/搜索/分享/锁定 |
 | **literule-web** | 5608 | 9008 | ydsz-literule | /ydsz-rule | 规则/DSL/变量/CEP/断点 |
 | **agent-web** | 5610 | 9010 | ydsz-agent | /ydsz-ai | 对话/Agent/RAG/DAG/审批 |
-| **mock-api** | 5320 | — | — | — | Mock API 服务（Nitro） |
 
 ## 目录结构
 
@@ -93,7 +92,6 @@ ydsz-frontend/
 │   ├── nextwiki-web/                # 网盘知识库 → ydsz-nextwiki:9007
 │   ├── literule-web/                # 规则引擎 → ydsz-literule:9008
 │   ├── agent-web/                   # AI 助手 → ydsz-agent:9010
-│   └── mock-api/                    # Mock API 服务（Nitro）
 ├── comm/                              # 公共共享包
 │   ├── @core/                        # 核心 SDK（base/composables/preferences/ui-kit）
 │   ├── effects/                      # 副作用（access/common-ui/hooks/layouts/plugins/request）

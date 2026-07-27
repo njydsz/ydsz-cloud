@@ -19,7 +19,6 @@ const DEFAULT_CONFIG = {
   ],
   // 需要忽略的包
   ignorePackages: [
-    '@ydsz/mock-api',
     '@ydsz/commitlint-config',
     '@ydsz/eslint-config',
     '@ydsz/node-utils',

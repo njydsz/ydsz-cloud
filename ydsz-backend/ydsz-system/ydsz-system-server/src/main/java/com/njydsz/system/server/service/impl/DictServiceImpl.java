@@ -20,6 +20,7 @@ import com.njydsz.system.server.service.DictService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
  * 字典类型 Service 实现。
@@ -52,7 +53,7 @@ public class DictServiceImpl implements DictService {
     @Override
     public DictTypeVO getById(String id) {
         DictType entity = dictRepository.getDictTypeMapper().selectById(id);
-        return toVO(entity);
+        return SystemConverter.INSTANT.entityToVO(entity);
     }
 
     @Override

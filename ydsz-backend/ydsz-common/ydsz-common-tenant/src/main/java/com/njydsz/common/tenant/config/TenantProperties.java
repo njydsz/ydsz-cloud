@@ -9,7 +9,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -35,17 +38,27 @@ import lombok.Data;
  *     anon-urls: [/auth/login, /auth/register]
  * </pre>
  *
- * <h3>配置示例 — 多级租户（集团+公司）</h3>
+ * <h3>配置示例 — 多字段组合（集团+公司+部门+项目）</h3>
  * <pre>
  * ydsz:
  *   tenant:
  *     enabled: true
  *     mode: MULTI
  *     tenant-fields:
- *       - column: group_tenant_id
- *         source: GROUP
- *       - column: company_tenant_id
- *         source: COMPANY
+ *       - column: tenant_id
+ *         claim: tenantId
+ *         header: X-Tenant-Id
+ *       - column: company_id
+ *         claim: companyId
+ *         header: X-Company-Ids
+ *       - column: dept_id
+ *         claim: deptId
+ *         header: X-Dept-Ids
+ *         multi-value: true       # 多值 → WHERE dept_id IN (...)
+ *       - column: project_id
+ *         claim: projectId
+ *         header: X-Project-Ids
+ *         multi-value: true
  * </pre>
  *
  * <h3>配置示例 — per-table 列名覆盖</h3>
@@ -66,8 +79,6 @@ public class TenantProperties {
 
     /**
      * 是否启用多租户（默认 false，不启用）。
-     *
-     * <p>子应用不引入 common-tenant 依赖或设为 false 时，无任何租户逻辑。
      */
     private boolean enabled = false;
 
@@ -81,31 +92,47 @@ public class TenantProperties {
      * 默认租户列名（默认 tenant_id）。
      *
      * <p>当 {@link #tenantFields} 为空时使用此字段。
-     * 配置了 {@link #tenantFields} 后此字段被忽略。
      */
     @NotBlank
     private String tenantColumn = "tenant_id";
 
     /**
-     * 超级管理员租户 ID（默认 "0"）。
+     * 默认 JWT claim 名（默认 tenantId）。
      *
-     * <p>此租户 ID 的用户可跨租户操作，SQL 拦截器不注入租户条件。
+     * <p>当 {@link #tenantFields} 为空时，从此 claim 获取值。
+     */
+    private String defaultClaim = "tenantId";
+
+    /**
+     * 默认 HTTP header 名（默认 X-Tenant-Id）。
+     *
+     * <p>当 {@link #tenantFields} 为空时，从此 header 获取值。
+     */
+    private String defaultHeader = "X-Tenant-Id";
+
+    /**
+     * 超级管理员租户 ID（默认 "0"）。
      */
     @NotBlank
     private String superTenantId = "0";
 
     /**
      * 系统租户 ID（默认 "0"）。
-     *
-     * <p>定时任务、MQ Consumer、@Async 等无用户上下文的场景使用此租户 ID。
      */
     @NotBlank
     private String systemTenantId = "0";
 
     /**
-     * 租户字段配置列表（一次性配好，切换模式无需修改）。
+     * 租户字段配置列表（动态组合，任意字段任意组合）。
      *
-     * <p>为空时回退到 {@link #tenantColumn} + SINGLE 模式。
+     * <p>为空时回退到 {@link #tenantColumn} + {@link #defaultClaim} + {@link #defaultHeader} + SINGLE 模式。
+     * <p>非空时，每个字段定义：
+     * <ul>
+     *   <li>{@code column} — 数据库列名（必填）</li>
+     *   <li>{@code claim} — JWT claim 名（可选，不填则不从 JWT 取值）</li>
+     *   <li>{@code header} — HTTP header 名（可选，不填则不从 header 取值）</li>
+     *   <li>{@code multiValue} — 是否多值（默认 false，单值用 {@code = ?}，多值用 {@code IN (...)}）</li>
+     * </ul>
      */
     private List<TenantField> tenantFields = new ArrayList<>();
 
@@ -113,7 +140,8 @@ public class TenantProperties {
      * per-table 列名覆盖映射。
      *
      * <p>key=表名（小写），value=列名。
-     * 配置了此映射的表使用自定义列名，而非全局默认 {@link #tenantColumn}。
+     * <p><b>注意：</b>当配置了 {@code tenant-fields} 时，此映射覆盖的是
+     * <b>第一个字段</b>的列名（用于 per-table 不同列名场景）。
      */
     private Map<String, String> tableColumnMapping = new HashMap<>();
 
@@ -130,11 +158,17 @@ public class TenantProperties {
     /**
      * 获取生效的租户字段列表。
      *
+     * <p>SINGLE 模式只取第一个字段；MULTI 模式取全部字段。
+     *
      * @return 生效的租户字段列表（不可变）
      */
     public List<TenantField> getActiveTenantFields() {
         if (tenantFields == null || tenantFields.isEmpty()) {
-            return List.of(new TenantField(tenantColumn, TenantSource.TENANT));
+            TenantField defaultField = new TenantField();
+            defaultField.setColumn(tenantColumn);
+            defaultField.setClaim(defaultClaim);
+            defaultField.setHeader(defaultHeader);
+            return List.of(defaultField);
         }
         if (mode == TenantMode.SINGLE) {
             return List.of(tenantFields.get(0));
@@ -143,25 +177,20 @@ public class TenantProperties {
     }
 
     /**
-     * 解析表对应的租户列名。
-     *
-     * <p>优先级：per-table 映射 > 全局默认
+     * 解析表对应的租户列名（per-table 覆盖第一个字段）。
      *
      * @param tableName 表名
-     * @return 列名
+     * @return 列名，无映射返回 null
      */
     public String resolveColumn(String tableName) {
         if (tableName == null || tableColumnMapping == null || tableColumnMapping.isEmpty()) {
-            return tenantColumn;
+            return null;
         }
-        String mapped = tableColumnMapping.get(tableName.toLowerCase());
-        return mapped != null ? mapped : tenantColumn;
+        return tableColumnMapping.get(tableName.toLowerCase());
     }
 
     /**
      * 获取规范化后的忽略表集合（小写化）。
-     *
-     * @return 小写化的忽略表集合
      */
     public Set<String> getNormalizedIgnoreTables() {
         if (ignoreTables == null || ignoreTables.isEmpty()) {
@@ -178,8 +207,6 @@ public class TenantProperties {
 
     /**
      * 获取规范化后的白名单 URL 集合（去空白）。
-     *
-     * @return 规范化的白名单 URL 集合
      */
     public Set<String> getNormalizedAnonUrls() {
         if (anonUrls == null || anonUrls.isEmpty()) {
@@ -207,35 +234,65 @@ public class TenantProperties {
     }
 
     /**
-     * 租户字段值来源标识。
-     */
-    public enum TenantSource {
-        /** 租户 ID（TenantContextHolder） */
-        TENANT,
-        /** 集团租户 ID */
-        GROUP,
-        /** 公司租户 ID */
-        COMPANY,
-        /** 用户 ID */
-        USER
-    }
-
-    /**
-     * 租户字段配置。
+     * 租户字段配置（完全动态，不依赖固定枚举）。
+     *
+     * <p>每个字段定义：数据库列名 + 值来源（JWT claim / HTTP header）。
+     * <p>多个字段组合形成多维度租户隔离。
      */
     @Data
     public static class TenantField {
-        /** 数据库列名 */
+
+        /**
+         * 数据库列名（必填）。
+         *
+         * <p>例如：tenant_id / company_id / dept_id / project_id / region_id / 任意自定义列名。
+         */
+        @NotBlank
         private String column;
-        /** 值来源标识（默认 TENANT） */
-        private TenantSource source = TenantSource.TENANT;
+
+        /**
+         * JWT claim 名（可选）。
+         *
+         * <p>从 JWT Token 中获取此 claim 的值作为该字段的值。
+         * <p>例如：tenantId / companyId / deptId / projectId / regionId / 任意自定义 claim。
+         */
+        private String claim;
+
+        /**
+         * HTTP header 名（可选，Feign 跨服务恢复用）。
+         *
+         * <p>当 JWT 不可用时，从此 header 获取值。
+         * <p>例如：X-Tenant-Id / X-Company-Ids / X-Dept-Ids / X-Project-Ids。
+         */
+        private String header;
+
+        /**
+         * 是否多值（默认 false）。
+         *
+         * <p>false → SQL: {@code WHERE column = ?}
+         * <p>true → SQL: {@code WHERE column IN (?, ?, ...)}
+         * <p>多值时，header/claim 的值用逗号分隔，如 "dept_001,dept_002"。
+         */
+        private boolean multiValue = false;
 
         public TenantField() {
         }
 
-        public TenantField(String column, TenantSource source) {
+        public TenantField(String column) {
             this.column = column;
-            this.source = source;
+        }
+
+        public TenantField(String column, String claim, String header) {
+            this.column = column;
+            this.claim = claim;
+            this.header = header;
+        }
+
+        public TenantField(String column, String claim, String header, boolean multiValue) {
+            this.column = column;
+            this.claim = claim;
+            this.header = header;
+            this.multiValue = multiValue;
         }
     }
 }

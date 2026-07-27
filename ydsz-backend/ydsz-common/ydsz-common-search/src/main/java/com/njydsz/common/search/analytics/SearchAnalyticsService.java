@@ -10,13 +10,16 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.redis.core.StringRedisTemplate;
+
 /**
  * 搜索分析服务
  * <p>
  * 记录搜索日志、热门搜索词、零结果关键词，为搜索体验优化提供数据支撑。
  * <p>
- * P1-7: 当前为内存存储，多实例生产环境建议实现 Redis 持久化
- * （Sorted Set 存热门词、Hash 存每日量、Set+TTL 存零结果词）。
+ * Redis 持久化：热门词用 Sorted Set，零结果词用 Sorted Set，每日量用 Hash。
+ * Redis 不可用时自动降级到内存存储。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -24,65 +27,83 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SearchAnalyticsService {
 
-    /** 热门搜索词统计（keyword → count） */
-    private final Map<String, AtomicLong> hotKeywords = new ConcurrentHashMap<>();
-
-    /** 零结果关键词统计 */
-    private final Map<String, AtomicLong> zeroResultKeywords = new ConcurrentHashMap<>();
-
-    /** 每日搜索量统计（date → count） */
-    private final Map<LocalDate, AtomicLong> dailySearches = new ConcurrentHashMap<>();
-
-    /** 最大保留热门词数量 */
+    private static final String HOT_KEYWORDS_KEY = "search:analytics:hot";
+    private static final String ZERO_RESULT_KEY = "search:analytics:zero";
+    private static final String DAILY_SEARCHES_KEY = "search:analytics:daily";
     private static final int MAX_HOT_KEYWORDS = 1000;
 
-    /**
-     * 记录一次搜索
-     *
-     * @param keyword    搜索关键词
-     * @param resultCount 结果数
-     */
+    private final ObjectProvider<StringRedisTemplate> redisProvider;
+
+    private final Map<String, AtomicLong> hotKeywords = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> zeroResultKeywords = new ConcurrentHashMap<>();
+    private final Map<LocalDate, AtomicLong> dailySearches = new ConcurrentHashMap<>();
+
+    public SearchAnalyticsService(ObjectProvider<StringRedisTemplate> redisProvider) {
+        this.redisProvider = redisProvider;
+    }
+
     public void recordSearch(String keyword, long resultCount) {
         if (keyword == null || keyword.isBlank()) {
             return;
         }
-
         String normalized = keyword.trim().toLowerCase();
 
-        // 热门搜索词
-        hotKeywords.computeIfAbsent(normalized, k -> new AtomicLong(0)).incrementAndGet();
+        StringRedisTemplate redis = getRedis();
+        if (redis != null) {
+            recordToRedis(redis, normalized, resultCount);
+        } else {
+            recordToMemory(normalized, resultCount);
+        }
+    }
 
-        // P1-1: evict low-count entries when map exceeds max size
+    private void recordToRedis(StringRedisTemplate redis, String normalized, long resultCount) {
+        try {
+            redis.opsForZSet().incrementScore(HOT_KEYWORDS_KEY, normalized, 1.0);
+            if (resultCount == 0) {
+                redis.opsForZSet().incrementScore(ZERO_RESULT_KEY, normalized, 1.0);
+            }
+            String today = LocalDate.now().toString();
+            redis.opsForHash().increment(DAILY_SEARCHES_KEY, today, 1L);
+        } catch (Exception e) {
+            log.debug("[SearchAnalytics] Redis 写入失败，降级到内存", e);
+            recordToMemory(normalized, resultCount);
+        }
+    }
+
+    private void recordToMemory(String normalized, long resultCount) {
+        hotKeywords.computeIfAbsent(normalized, k -> new AtomicLong(0)).incrementAndGet();
         if (hotKeywords.size() > MAX_HOT_KEYWORDS) {
             evictLowCountEntries(hotKeywords);
         }
-
-        // 零结果关键词
         if (resultCount == 0) {
             zeroResultKeywords.computeIfAbsent(normalized, k -> new AtomicLong(0)).incrementAndGet();
-            // P1-1: evict low-count entries when map exceeds max size
             if (zeroResultKeywords.size() > MAX_HOT_KEYWORDS) {
                 evictLowCountEntries(zeroResultKeywords);
             }
         }
-
-        // 每日搜索量
         dailySearches.computeIfAbsent(LocalDate.now(), d -> new AtomicLong(0)).incrementAndGet();
-
-        // 清理过期的每日统计（只保留最近 30 天）
         if (dailySearches.size() > 30) {
             LocalDate threshold = LocalDate.now().minusDays(30);
             dailySearches.entrySet().removeIf(e -> e.getKey().isBefore(threshold));
         }
     }
 
-    /**
-     * 获取热门搜索词
-     *
-     * @param limit 最大返回数
-     * @return 热门搜索词列表（按搜索次数降序）
-     */
     public List<HotKeyword> getHotKeywords(int limit) {
+        StringRedisTemplate redis = getRedis();
+        if (redis != null) {
+            try {
+                var tuples = redis.opsForZSet().reverseRangeWithScores(HOT_KEYWORDS_KEY, 0, limit - 1);
+                if (tuples != null) {
+                    return tuples.stream()
+                            .map(t -> new HotKeyword(
+                                    t.getValue() != null ? t.getValue() : "",
+                                    t.getScore() != null ? t.getScore().longValue() : 0L))
+                            .collect(Collectors.toList());
+                }
+            } catch (Exception e) {
+                log.debug("[SearchAnalytics] Redis 读取热门词失败，降级到内存", e);
+            }
+        }
         return hotKeywords.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()))
                 .limit(limit)
@@ -90,13 +111,22 @@ public class SearchAnalyticsService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 获取零结果关键词
-     *
-     * @param limit 最大返回数
-     * @return 零结果关键词列表
-     */
     public List<HotKeyword> getZeroResultKeywords(int limit) {
+        StringRedisTemplate redis = getRedis();
+        if (redis != null) {
+            try {
+                var tuples = redis.opsForZSet().reverseRangeWithScores(ZERO_RESULT_KEY, 0, limit - 1);
+                if (tuples != null) {
+                    return tuples.stream()
+                            .map(t -> new HotKeyword(
+                                    t.getValue() != null ? t.getValue() : "",
+                                    t.getScore() != null ? t.getScore().longValue() : 0L))
+                            .collect(Collectors.toList());
+                }
+            } catch (Exception e) {
+                log.debug("[SearchAnalytics] Redis 读取零结果词失败，降级到内存", e);
+            }
+        }
         return zeroResultKeywords.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()))
                 .limit(limit)
@@ -104,13 +134,29 @@ public class SearchAnalyticsService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 获取每日搜索量统计
-     *
-     * @param days 最近天数
-     * @return 日期 → 搜索量
-     */
     public Map<LocalDate, Long> getDailySearches(int days) {
+        StringRedisTemplate redis = getRedis();
+        if (redis != null) {
+            try {
+                Map<Object, Object> entries = redis.opsForHash().entries(DAILY_SEARCHES_KEY);
+                if (entries != null && !entries.isEmpty()) {
+                    LocalDate threshold = LocalDate.now().minusDays(days);
+                    return entries.entrySet().stream()
+                            .filter(e -> {
+                                LocalDate date = LocalDate.parse(e.getKey().toString());
+                                return !date.isBefore(threshold);
+                            })
+                            .sorted((a, b) -> a.getKey().toString().compareTo(b.getKey().toString()))
+                            .collect(Collectors.toMap(
+                                    e -> LocalDate.parse(e.getKey().toString()),
+                                    e -> Long.parseLong(e.getValue().toString()),
+                                    (a, b) -> a,
+                                    LinkedHashMap::new));
+                }
+            } catch (Exception e) {
+                log.debug("[SearchAnalytics] Redis 读取每日量失败，降级到内存", e);
+            }
+        }
         LocalDate threshold = LocalDate.now().minusDays(days);
         return dailySearches.entrySet().stream()
                 .filter(e -> !e.getKey().isBefore(threshold))
@@ -122,24 +168,34 @@ public class SearchAnalyticsService {
                         LinkedHashMap::new));
     }
 
-    /**
-     * 获取搜索统计摘要
-     */
     public SearchAnalyticsSummary getSummary() {
         long totalSearches = hotKeywords.values().stream().mapToLong(AtomicLong::get).sum();
         long totalZeroResults = zeroResultKeywords.values().stream().mapToLong(AtomicLong::get).sum();
         double zeroResultRate = totalSearches > 0 ? (double) totalZeroResults / totalSearches : 0.0;
-
-        return new SearchAnalyticsSummary(
-                totalSearches,
-                totalZeroResults,
-                zeroResultRate,
-                hotKeywords.size(),
-                zeroResultKeywords.size()
-        );
+        return new SearchAnalyticsSummary(totalSearches, totalZeroResults, zeroResultRate,
+                hotKeywords.size(), zeroResultKeywords.size());
     }
 
-    // P1-1: evict entries with lowest counts to prevent unbounded growth
+    public void clear() {
+        StringRedisTemplate redis = getRedis();
+        if (redis != null) {
+            try {
+                redis.delete(HOT_KEYWORDS_KEY);
+                redis.delete(ZERO_RESULT_KEY);
+                redis.delete(DAILY_SEARCHES_KEY);
+            } catch (Exception e) {
+                log.debug("[SearchAnalytics] Redis 清除失败", e);
+            }
+        }
+        hotKeywords.clear();
+        zeroResultKeywords.clear();
+        dailySearches.clear();
+    }
+
+    private StringRedisTemplate getRedis() {
+        return redisProvider.getIfAvailable();
+    }
+
     private void evictLowCountEntries(Map<String, AtomicLong> map) {
         int target = MAX_HOT_KEYWORDS / 2;
         map.entrySet().stream()
@@ -148,24 +204,9 @@ public class SearchAnalyticsService {
                 .forEach(e -> map.remove(e.getKey()));
     }
 
-    /**
-     * 清空统计数据
-     */
-    public void clear() {
-        hotKeywords.clear();
-        zeroResultKeywords.clear();
-        dailySearches.clear();
-    }
-
-    /**
-     * 热门搜索词
-     */
     public record HotKeyword(String keyword, long count) {
     }
 
-    /**
-     * 搜索分析摘要
-     */
     public record SearchAnalyticsSummary(
             long totalSearches,
             long zeroResultSearches,

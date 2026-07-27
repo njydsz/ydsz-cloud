@@ -75,6 +75,28 @@ public final class TenantContextHolder {
     }
 
     /**
+     * 获取指定字段值（单值，便捷方法）。
+     *
+     * @param claim 字段名（JWT claim 名）
+     * @return 值，不存在返回 null
+     */
+    public static String getFieldValue(String claim) {
+        TenantContext context = HOLDER.get();
+        return context != null ? context.getFieldValue(claim) : null;
+    }
+
+    /**
+     * 获取指定字段值（多值，便捷方法）。
+     *
+     * @param claim 字段名
+     * @return 值列表，不存在返回空列表
+     */
+    public static java.util.List<String> getFieldValues(String claim) {
+        TenantContext context = HOLDER.get();
+        return context != null ? context.getFieldValues(claim) : java.util.Collections.emptyList();
+    }
+
+    /**
      * 是否为系统租户。
      *
      * @return true=系统租户，未设置返回 false

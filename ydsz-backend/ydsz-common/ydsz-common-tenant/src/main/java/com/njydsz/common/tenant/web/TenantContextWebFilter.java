@@ -1,6 +1,10 @@
 package com.njydsz.common.tenant.web;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.MDC;
@@ -8,6 +12,7 @@ import org.slf4j.MDC;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 
 import jakarta.servlet.Filter;
@@ -21,20 +26,18 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 租户上下文 Web 过滤器。
  *
- * <p>在请求入口从 JWT 认证信息解析租户 ID，设置到 {@link TenantContextHolder}
- * 和 MDC 日志上下文。
+ * <p>在请求入口从 JWT 认证信息和 HTTP Header 解析全部配置的租户字段，
+ * 设置到 {@link TenantContextHolder} 和 MDC 日志上下文。
  *
- * <p><b>解析优先级：</b>
+ * <p><b>解析逻辑（逐字段）：</b>
  * <ol>
- *   <li>JWT 认证上下文（AuthInfoUtils.getTenantId()，不可伪造）</li>
- *   <li>Feign 透传 Header（X-Tenant-Id，仅当上游为内部服务时可信）</li>
+ *   <li>从 JWT claim 取值（配置了 {@code claim} 且 JWT 可用时）</li>
+ *   <li>从 HTTP header 取值（配置了 {@code header}，用于 Feign 跨服务恢复）</li>
+ *   <li>多值字段（{@code multiValue=true}）→ 逗号分隔解析为 List</li>
  * </ol>
  *
- * <p><b>安全清洗：</b>外部请求的 X-Tenant-Id header 在网关层已被清洗，
- * 此处仅当 AuthInfoUtils 不可用时才从 header 恢复（Feign 内部调用场景）。
- *
- * <p>通过 {@code FilterRegistrationBean} 注册，order 设为
- * {@code Ordered.HIGHEST_PRECEDENCE + 100}（在认证 Filter 之后、业务 Filter 之前）。
+ * <p><b>安全清洗：</b>外部请求的 X-Tenant-* header 在网关层已被清洗，
+ * 此处 header 恢复仅在 JWT 不可用时触发（Feign 内部调用场景）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -43,14 +46,15 @@ import lombok.extern.slf4j.Slf4j;
 public class TenantContextWebFilter implements Filter {
 
     private static final String MDC_TENANT_ID = "tenantId";
-    private static final String HEADER_TENANT_ID = "X-Tenant-Id";
 
     private final TenantProperties properties;
     private final Set<String> anonUrls;
+    private final List<TenantField> activeFields;
 
     public TenantContextWebFilter(TenantProperties properties) {
         this.properties = properties;
         this.anonUrls = properties.getNormalizedAnonUrls();
+        this.activeFields = properties.getActiveTenantFields();
     }
 
     @Override
@@ -67,35 +71,85 @@ public class TenantContextWebFilter implements Filter {
                 return;
             }
 
-            // 2. 优先从 JWT 认证信息解析租户 ID（不可伪造）
-            String tenantId = AuthInfoUtils.getTenantId();
+            // 2. 逐字段解析值
+            Map<String, Object> fields = new HashMap<>();
+            String tenantId = null;
 
-            // 3. JWT 不可用时，从 Feign 透传 header 恢复（仅内部调用可信）
-            if (tenantId == null || tenantId.isEmpty()) {
-                String headerTenantId = request.getHeader(HEADER_TENANT_ID);
-                if (headerTenantId != null && !headerTenantId.isEmpty()) {
-                    tenantId = headerTenantId;
-                    log.debug("从 X-Tenant-Id header 恢复租户上下文: {}", tenantId);
+            for (TenantField field : activeFields) {
+                Object value = resolveFieldValue(request, field);
+                if (value != null) {
+                    fields.put(field.getClaim() != null ? field.getClaim() : field.getColumn(), value);
+
+                    // 第一个字段的值作为主 tenantId
+                    if (tenantId == null && value instanceof String s) {
+                        tenantId = s;
+                    }
                 }
             }
 
+            // 3. 设置上下文
             if (tenantId != null && !tenantId.isEmpty()) {
                 boolean isSuperAdmin = properties.getSuperTenantId().equals(tenantId);
-                TenantContext context = TenantContext.builder(tenantId)
-                        .superAdmin(isSuperAdmin)
-                        .build();
-                TenantContextHolder.set(context);
-                // 注入 MDC 日志上下文，确保所有日志/链路追踪携带租户维度
+                TenantContext.Builder builder = TenantContext.builder(tenantId)
+                        .superAdmin(isSuperAdmin);
+                for (Map.Entry<String, Object> entry : fields.entrySet()) {
+                    if (entry.getValue() instanceof String s) {
+                        builder.field(entry.getKey(), s);
+                    } else if (entry.getValue() instanceof List<?> list) {
+                        @SuppressWarnings("unchecked")
+                        List<String> strList = (List<String>) list;
+                        builder.fieldValues(entry.getKey(), strList);
+                    }
+                }
+                TenantContextHolder.set(builder.build());
                 MDC.put(MDC_TENANT_ID, tenantId);
             }
-            // 无认证无跳过 → 不设置上下文
-            // 后续 SQL 拦截器会 fail-closed 抛异常
+            // 无认证无跳过 → 不设置上下文，SQL 拦截器 fail-closed
 
             chain.doFilter(req, res);
         } finally {
             TenantContextHolder.clear();
             MDC.remove(MDC_TENANT_ID);
         }
+    }
+
+    /**
+     * 解析单个租户字段的值。
+     *
+     * <p>优先从 JWT claim 取值，回退到 HTTP header。
+     * <p>多值字段用逗号分隔解析为 List。
+     */
+    private Object resolveFieldValue(HttpServletRequest request, TenantField field) {
+        String value = null;
+
+        // 优先从 JWT 取值
+        if (field.getClaim() != null && !field.getClaim().isEmpty()) {
+            value = AuthInfoUtils.getClaim(field.getClaim());
+        }
+
+        // 回退到 HTTP header
+        if ((value == null || value.isEmpty()) && field.getHeader() != null && !field.getHeader().isEmpty()) {
+            value = request.getHeader(field.getHeader());
+        }
+
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+
+        // 多值字段 → 逗号分隔解析
+        if (field.isMultiValue()) {
+            String[] parts = value.split(",");
+            List<String> values = new ArrayList<>(parts.length);
+            for (String part : parts) {
+                String trimmed = part.trim();
+                if (!trimmed.isEmpty()) {
+                    values.add(trimmed);
+                }
+            }
+            return values.isEmpty() ? null : values;
+        }
+
+        return value;
     }
 
     private boolean isAnonUrl(String requestUri) {

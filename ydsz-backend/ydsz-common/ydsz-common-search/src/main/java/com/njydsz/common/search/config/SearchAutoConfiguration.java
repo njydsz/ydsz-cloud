@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
@@ -30,6 +31,7 @@ import com.njydsz.common.search.health.SearchHealthIndicator;
 import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
+import com.njydsz.common.search.service.IndexRebuildService;
 import com.njydsz.common.search.service.IndexRebuildService;
 import com.njydsz.common.search.service.IndexSyncService;
 import com.njydsz.common.search.service.SearchCacheService;
@@ -62,6 +64,8 @@ public class SearchAutoConfiguration {
     private IndexSyncService indexSyncServiceInstance;
     @Autowired
     private ObjectProvider<PgSearchStrategy> pgSearchStrategyProvider;
+    @Autowired
+    private ObjectProvider<IndexRebuildService> indexRebuildServiceProvider;
 
     // ==================== 引擎策略装配 ====================
 
@@ -170,8 +174,8 @@ public class SearchAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public SearchAnalyticsService searchAnalyticsService() {
-        return new SearchAnalyticsService();
+    public SearchAnalyticsService searchAnalyticsService(ObjectProvider<StringRedisTemplate> redisProvider) {
+        return new SearchAnalyticsService(redisProvider);
     }
 
     @Bean
@@ -247,6 +251,12 @@ public class SearchAutoConfiguration {
             PgSearchStrategy pgStrategy = pgSearchStrategyProvider.getIfAvailable();
             if (pgStrategy != null) {
                 pgStrategy.shutdown();
+            }
+        }
+        if (indexRebuildServiceProvider != null) {
+            IndexRebuildService rebuildService = indexRebuildServiceProvider.getIfAvailable();
+            if (rebuildService != null) {
+                rebuildService.shutdown();
             }
         }
     }

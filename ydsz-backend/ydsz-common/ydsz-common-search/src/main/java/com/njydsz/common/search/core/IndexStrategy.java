@@ -42,4 +42,24 @@ public interface IndexStrategy {
      * @param type 实体类型，null 表示全部
      */
     void deleteAllIndices(String type);
+
+    /**
+     * 获取指定类型的索引文档数
+     *
+     * @param type 实体类型，null 表示全部
+     * @return 文档数，不支持时返回 -1
+     */
+    default long count(String type) {
+        return -1;
+    }
+
+    /**
+     * 获取指定类型的全部文档 ID
+     *
+     * @param type 实体类型
+     * @return 文档 ID 列表
+     */
+    default List<String> getAllDocumentIds(String type) {
+        return List.of();
+    }
 }

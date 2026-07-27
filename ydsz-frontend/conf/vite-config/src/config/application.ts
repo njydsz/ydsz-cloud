@@ -40,8 +40,6 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       isBuild,
       license: true,
       mode,
-      nitroMock: !isBuild,
-      nitroMockOptions: {},
       print: !isBuild,
       printInfoMap: {
         'YDSZ Admin Docs': 'https://docs.njydsz.com.cn',
