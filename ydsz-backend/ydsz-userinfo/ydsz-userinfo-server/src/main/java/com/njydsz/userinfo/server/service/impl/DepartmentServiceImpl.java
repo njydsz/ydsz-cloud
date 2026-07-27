@@ -58,7 +58,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.DEPARTMENT_NOT_FOUND);
         }
-        return toVO(entity);
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     /**
@@ -243,7 +243,7 @@ public class DepartmentServiceImpl implements DepartmentService {
      * @param entity 数据库实体
      * @return 视图对象
      */
-    private DepartmentVO toVO(Department entity) {
+    private DepartmentVO UserInfoConverter.INSTANT.entityToVO(Department entity) {
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 }

@@ -152,23 +152,6 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
         return mapper.deleteById(id) > 0;
-    }
-
-    private AppInfoVO toVO(AppInfo entity) {
-        if (entity == null) {
-            return null;
-        }
-        AppInfoVO vo = new AppInfoVO();
-        vo.setId(entity.getId());
-        vo.setAppCode(entity.getAppCode());
-        vo.setAppName(entity.getAppName());
-        vo.setAppKey(entity.getAppKey());
-        vo.setRedirectUrl(entity.getRedirectUrl());
-        vo.setDescription(entity.getDescription());
-        vo.setStatus(entity.getStatus());
-        return vo;
-    }
-
     private AppInfo toEntity(AppInfoDTO dto) {
         AppInfo entity = new AppInfo();
         entity.setId(dto.getId());

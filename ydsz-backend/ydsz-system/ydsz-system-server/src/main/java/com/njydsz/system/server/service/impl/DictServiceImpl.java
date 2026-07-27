@@ -104,21 +104,6 @@ public class DictServiceImpl implements DictService {
         }
         wrapper.orderByDesc("created_at");
         return wrapper;
-    }
-
-    private DictTypeVO toVO(DictType entity) {
-        if (entity == null) {
-            return null;
-        }
-        DictTypeVO vo = new DictTypeVO();
-        vo.setId(entity.getId());
-        vo.setTypeCode(entity.getTypeCode());
-        vo.setTypeName(entity.getTypeName());
-        vo.setDescription(entity.getDescription());
-        vo.setStatus(entity.getStatus());
-        return vo;
-    }
-
     private DictType toEntity(DictTypeDTO dto) {
         if (dto == null) {
             return null;

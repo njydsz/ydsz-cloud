@@ -201,21 +201,6 @@ public class VariableServiceImpl implements VariableService {
      *
      * @param entity 数据库实体
      * @return 视图对象，entity 为 null 时返回 null
-     */
-    private VariableVO toVO(Variable entity) {
-        if (entity == null) {
-            return null;
-        }
-        VariableVO vo = new VariableVO();
-        vo.setId(entity.getId());
-        vo.setVariableKey(entity.getVariableKey());
-        vo.setVariableValue(entity.getVariableValue());
-        vo.setValueType(entity.getValueType());
-        vo.setDescription(entity.getDescription());
-        vo.setStatus(entity.getStatus());
-        return vo;
-    }
-
     /**
      * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
      *

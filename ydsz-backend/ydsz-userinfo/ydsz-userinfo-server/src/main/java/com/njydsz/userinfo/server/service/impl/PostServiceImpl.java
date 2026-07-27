@@ -50,7 +50,7 @@ public class PostServiceImpl implements PostService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
         }
-        return toVO(entity);
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     /**
@@ -154,7 +154,7 @@ public class PostServiceImpl implements PostService {
      * @param entity 数据库实体
      * @return 视图对象
      */
-    private PostVO toVO(Post entity) {
+    private PostVO UserInfoConverter.INSTANT.entityToVO(Post entity) {
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 }

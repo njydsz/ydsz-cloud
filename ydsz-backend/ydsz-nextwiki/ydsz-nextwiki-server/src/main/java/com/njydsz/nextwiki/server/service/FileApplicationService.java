@@ -128,7 +128,7 @@ public class FileApplicationService {
             switch (strategy) {
                 case "SKIP" -> {
                     log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
-                    return toVO(existingNodes.get(0));
+                    return NextwikiConverter.INSTANT.entityToVO(existingNodes.get(0));
                 }
                 case "OVERWRITE" -> {
                     FileNode existing = existingNodes.get(0);
@@ -178,7 +178,7 @@ public class FileApplicationService {
                         existing.getSize(), fileHash, existing.getMimeType(), "秒传", userId);
                 quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
                 publishUploadEvent(saved, fileName, userId);
-                return toVO(saved);
+                return NextwikiConverter.INSTANT.entityToVO(saved);
             }
         }
 
@@ -227,7 +227,7 @@ public class FileApplicationService {
         log.info("[FileApplicationService] 文件上传成功: name={}, size={}, userId={}",
                 fileName, file.getSize(), userId);
 
-        return toVO(saved);
+        return NextwikiConverter.INSTANT.entityToVO(saved);
     }
 
     /**
@@ -237,7 +237,7 @@ public class FileApplicationService {
     public FileNodeVO createFolder(String parentId, String name, String userId) {
         String sanitizedName = sanitizeFileName(name);
         FileNode folder = folderDomainService.createFolder(parentId, sanitizedName, userId);
-        return toVO(folder);
+        return NextwikiConverter.INSTANT.entityToVO(folder);
     }
 
     /**
@@ -279,7 +279,7 @@ public class FileApplicationService {
         String lockValue = acquireLock(locker, lockKey);
         try {
             FileNode node = folderDomainService.move(nodeId, targetParentId, userId);
-            return toVO(node);
+            return NextwikiConverter.INSTANT.entityToVO(node);
         } finally {
             locker.unlock(lockKey, lockValue);
         }
@@ -296,7 +296,7 @@ public class FileApplicationService {
         String lockValue = acquireLock(locker, lockKey);
         try {
             FileNode node = folderDomainService.rename(nodeId, newName, userId);
-            return toVO(node);
+            return NextwikiConverter.INSTANT.entityToVO(node);
         } finally {
             locker.unlock(lockKey, lockValue);
         }
@@ -434,7 +434,7 @@ public class FileApplicationService {
 
         publishUploadEvent(saved, newName, userId);
         log.info("[FileApplicationService] 复制文件: sourceId={}, targetId={}", nodeId, saved.getId());
-        return toVO(saved);
+        return NextwikiConverter.INSTANT.entityToVO(saved);
     }
 
     /**
@@ -444,7 +444,7 @@ public class FileApplicationService {
     public FileNodeVO rollbackVersion(String nodeId, Integer targetVersion, String userId) {
         versionDomainService.rollback(nodeId, targetVersion, userId);
         FileNode updated = fileNodeRepository.findById(nodeId);
-        return toVO(updated);
+        return NextwikiConverter.INSTANT.entityToVO(updated);
     }
 
     /**
@@ -462,7 +462,7 @@ public class FileApplicationService {
         if (node == null) {
             throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
         }
-        return toVO(node);
+        return NextwikiConverter.INSTANT.entityToVO(node);
     }
 
     /**
@@ -737,7 +737,7 @@ public class FileApplicationService {
         return sb.toString();
     }
 
-    private FileNodeVO toVO(FileNode node) {
+    private FileNodeVO NextwikiConverter.INSTANT.entityToVO(FileNode node) {
         return FileNodeVO.builder()
                 .id(node.getId())
                 .parentId(node.getParentId())

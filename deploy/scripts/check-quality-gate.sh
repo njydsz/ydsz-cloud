@@ -118,25 +118,26 @@ check_fqn() {
   fi
   # 严格模式下，子脚本 exit 1 即视为本项失败
   # 非严格模式下，子脚本 exit 0 即通过，exit 1 仅警告
-  local sub_output
+  local sub_output sub_exit
   if [[ "$STRICT" == "true" ]]; then
-    sub_output=$(bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" --strict 2>&1) || true
-    if bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" --strict > /dev/null 2>&1; then
+    sub_output=$(bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" --strict 2>&1)
+    sub_exit=$?
+    if [[ $sub_exit -eq 0 ]]; then
       echo -e "${GREEN}  ✓ PASS${NC}"
       return 0
     else
       echo "$sub_output" | sed 's/^/    /' | tail -30
-      echo -e "${RED}  ✗ FAIL${NC}"
+      echo -e "${RED}  ✗ FAIL${NC}（子脚本退出码 $sub_exit）"
       return 1
     fi
   else
-    if bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" > /dev/null 2>&1; then
+    sub_output=$(bash "${SCRIPT_DIR}/check-inline-fqn.sh" "${BACKEND_ROOT}" 2>&1)
+    sub_exit=$?
+    if [[ $sub_exit -eq 0 ]]; then
       echo -e "${GREEN}  ✓ PASS${NC}"
       return 0
     else
-      local count
-      count=$(echo "$sub_output" | grep -cE '^\s+[a-zA-Z]' 2>/dev/null || echo 0)
-      echo -e "${YELLOW}  ⚠ WARN${NC}（非严格模式，不阻断）：$count 处违规"
+      echo -e "${YELLOW}  ⚠ WARN${NC}（非严格模式，不阻断，退出码 $sub_exit）"
       return 0
     fi
   fi

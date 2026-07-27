@@ -224,26 +224,6 @@ public class ConfigServiceImpl implements ConfigService {
         }
         wrapper.orderByDesc("created_at");
         return wrapper;
-    }
-
-    private ConfigVO toVO(Config entity) {
-        if (entity == null) {
-            return null;
-        }
-        ConfigVO vo = new ConfigVO();
-        vo.setId(entity.getId());
-        vo.setConfigGroup(entity.getConfigGroup());
-        vo.setConfigKey(entity.getConfigKey());
-        vo.setConfigValue(entity.getConfigValue());
-        vo.setValueType(entity.getValueType());
-        vo.setDefaultValue(entity.getDefaultValue());
-        vo.setDescription(entity.getDescription());
-        vo.setIsPublic(entity.getIsPublic());
-        vo.setSortOrder(entity.getSortOrder());
-        vo.setStatus(entity.getStatus());
-        return vo;
-    }
-
     private Config toEntity(ConfigDTO dto) {
         if (dto == null) {
             return null;

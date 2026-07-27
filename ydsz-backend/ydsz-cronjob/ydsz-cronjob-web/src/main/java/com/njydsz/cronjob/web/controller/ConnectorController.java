@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.dto.post.ConnectorConfigPostDTO;
 import com.njydsz.cronjob.domain.vo.ConnectorExportResultVO;
 import com.njydsz.cronjob.domain.vo.ConnectorTaskInfoVO;
 import com.njydsz.cronjob.domain.vo.StringVO;
@@ -64,12 +65,13 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.testConnection", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:testConnection:lock", ttlSeconds = 5)
     @PostMapping("/test")
-    public BaseResponse<Boolean> testConnection(@RequestBody ConnectorConfig config,
+    public BaseResponse<Boolean> testConnection(@RequestBody ConnectorConfigPostDTO dto,
                                            @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
             return BaseResponse.error("不支持的连接器类型: " + type);
         }
+        ConnectorConfig config = toConnectorConfig(dto);
         return BaseResponse.success(connector.testConnection(config));
     }
 
@@ -81,12 +83,13 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.listRemoteTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:listRemoteTasks:lock", ttlSeconds = 5)
     @PostMapping("/remote-tasks")
-    public BaseResponse<List<ConnectorTaskInfoVO>> listRemoteTasks(@RequestBody ConnectorConfig config,
+    public BaseResponse<List<ConnectorTaskInfoVO>> listRemoteTasks(@RequestBody ConnectorConfigPostDTO dto,
                                                             @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
             return BaseResponse.error("不支持的连接器类型: " + type);
         }
+        ConnectorConfig config = toConnectorConfig(dto);
         return BaseResponse.success(connector.listRemoteTasks(config));
     }
 
@@ -98,12 +101,13 @@ public class ConnectorController {
     @RateLimit(resource = "cronjob.connector.importTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:importTasks:lock", ttlSeconds = 5)
     @PostMapping("/import")
-    public BaseResponse<List<ConnectorTaskInfoVO>> importTasks(@RequestBody ConnectorConfig config,
+    public BaseResponse<List<ConnectorTaskInfoVO>> importTasks(@RequestBody ConnectorConfigPostDTO dto,
                                                         @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
             return BaseResponse.error("不支持的连接器类型: " + type);
         }
+        ConnectorConfig config = toConnectorConfig(dto);
         return BaseResponse.success(connector.importTasks(config));
     }
 
@@ -120,7 +124,8 @@ public class ConnectorController {
         if (connector == null) {
             return BaseResponse.error("不支持的连接器类型: " + request.getType());
         }
-        return BaseResponse.success(connector.exportTasks(request.getTasks(), request.getConfig()));
+        ConnectorConfig config = toConnectorConfig(request.getConfig());
+        return BaseResponse.success(connector.exportTasks(request.getTasks(), config));
     }
 
     /**
@@ -131,8 +136,25 @@ public class ConnectorController {
         /** 连接器类型 */
         private String type;
         /** 连接配置 */
-        private ConnectorConfig config;
+        private ConnectorConfigPostDTO config;
         /** 要导出的任务列表 */
         private List<ConnectorTaskInfo> tasks;
+    }
+
+    /**
+     * 将 DTO 转换为 ConnectorConfig（server 层对象）。
+     */
+    private ConnectorConfig toConnectorConfig(ConnectorConfigPostDTO dto) {
+        ConnectorConfig config = new ConnectorConfig();
+        config.setEndpoint(dto.getEndpoint());
+        config.setAuthType(dto.getAuthType());
+        config.setUsername(dto.getUsername());
+        config.setPassword(dto.getPassword());
+        config.setAccessKey(dto.getAccessKey());
+        config.setSecretKey(dto.getSecretKey());
+        config.setExtraProps(dto.getExtraProps());
+        config.setConnectTimeoutSeconds(dto.getConnectTimeoutSeconds());
+        config.setReadTimeoutSeconds(dto.getReadTimeoutSeconds());
+        return config;
     }
 }

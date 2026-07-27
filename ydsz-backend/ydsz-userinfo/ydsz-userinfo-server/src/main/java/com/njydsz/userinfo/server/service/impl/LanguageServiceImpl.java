@@ -55,7 +55,7 @@ public class LanguageServiceImpl implements LanguageService {
 
     @Override
     public LanguageVO getById(String id) {
-        return toVO(mapper.selectById(id));
+        return UserInfoConverter.INSTANT.entityToVO(mapper.selectById(id));
     }
 
     @Override
@@ -118,7 +118,7 @@ public class LanguageServiceImpl implements LanguageService {
         return wrapper;
     }
 
-    private LanguageVO toVO(Language entity) {
+    private LanguageVO UserInfoConverter.INSTANT.entityToVO(Language entity) {
         if (entity == null) {
             return null;
         }

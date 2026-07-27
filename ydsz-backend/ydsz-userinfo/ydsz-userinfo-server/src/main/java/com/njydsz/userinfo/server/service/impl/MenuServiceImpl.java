@@ -50,7 +50,7 @@ public class MenuServiceImpl implements MenuService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
         }
-        return toVO(entity);
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     /**
@@ -158,7 +158,7 @@ public class MenuServiceImpl implements MenuService {
      * @param entity 数据库实体
      * @return 视图对象
      */
-    private MenuVO toVO(Menu entity) {
+    private MenuVO UserInfoConverter.INSTANT.entityToVO(Menu entity) {
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 }

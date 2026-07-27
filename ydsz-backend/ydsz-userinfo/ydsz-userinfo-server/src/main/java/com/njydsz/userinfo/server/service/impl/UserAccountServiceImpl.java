@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -87,7 +88,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (entity == null) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
-        return toVO(entity);
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     /**
@@ -170,7 +171,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         // 密码策略校验
         passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
 
-        UserAccount entity = UserInfoConverter.INSTANT.saveDtoToEntity(dto);
+        UserAccount entity = new UserAccount();
+        BeanUtils.copyProperties(dto, entity);
         entity.setPassword(passwordEncoder.encode(dto.getPassword()));
         entity.setStatus("1");
         entity.setLoginFailCount(0);
@@ -484,7 +486,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @param entity 数据库实体
      * @return 视图对象（不含密码等敏感字段）
      */
-    private UserAccountVO toVO(UserAccount entity) {
+    private UserAccountVO UserInfoConverter.INSTANT.entityToVO(UserAccount entity) {
         UserAccountVO vo = UserInfoConverter.INSTANT.entityToVO(entity);
         if (entity.getStatus() != null) {
             try {

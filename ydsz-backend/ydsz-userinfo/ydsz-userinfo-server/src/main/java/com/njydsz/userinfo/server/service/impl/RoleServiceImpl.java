@@ -65,7 +65,7 @@ public class RoleServiceImpl implements RoleService {
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
         }
-        return toVO(entity);
+        return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 
     /**
@@ -270,7 +270,7 @@ public class RoleServiceImpl implements RoleService {
      * @param entity 数据库实体
      * @return 视图对象
      */
-    private RoleVO toVO(Role entity) {
+    private RoleVO UserInfoConverter.INSTANT.entityToVO(Role entity) {
         return UserInfoConverter.INSTANT.entityToVO(entity);
     }
 }

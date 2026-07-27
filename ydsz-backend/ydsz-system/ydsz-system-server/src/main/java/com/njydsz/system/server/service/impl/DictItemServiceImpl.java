@@ -313,24 +313,6 @@ public class DictItemServiceImpl implements DictItemService {
      *
      * @param entity 数据库实体
      * @return 视图对象，entity 为 null 时返回 null
-     */
-    private DictItemVO toVO(DictItem entity) {
-        if (entity == null) {
-            return null;
-        }
-        DictItemVO vo = new DictItemVO();
-        vo.setId(entity.getId());
-        vo.setTypeCode(entity.getTypeCode());
-        vo.setItemCode(entity.getItemCode());
-        vo.setItemValue(entity.getItemValue());
-        vo.setSortOrder(entity.getSortOrder());
-        vo.setParentId(entity.getParentId());
-        vo.setDescription(entity.getDescription());
-        vo.setExtJson(entity.getExtJson());
-        vo.setStatus(entity.getStatus());
-        return vo;
-    }
-
     /**
      * 将 DTO 转换为 DO，status 为空时默认 ENABLED。
      *

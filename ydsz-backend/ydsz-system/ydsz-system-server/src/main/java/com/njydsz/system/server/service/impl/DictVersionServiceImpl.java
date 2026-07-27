@@ -46,20 +46,4 @@ public class DictVersionServiceImpl implements DictVersionService {
         entity.setEffectiveDate(LocalDateTime.now());
         mapper.insert(entity);
         return entity.getId();
-    }
-
-    private DictVersionVO toVO(DictVersion entity) {
-        if (entity == null) {
-            return null;
-        }
-        DictVersionVO vo = new DictVersionVO();
-        vo.setId(entity.getId());
-        vo.setTypeCode(entity.getTypeCode());
-        vo.setVersion(entity.getVersion());
-        vo.setChangeLog(entity.getChangeLog());
-        vo.setEffectiveDate(entity.getEffectiveDate());
-        vo.setSnapshotJson(entity.getSnapshotJson());
-        vo.setCreatedAt(entity.getCreatedAt());
-        return vo;
-    }
 }

@@ -53,14 +53,6 @@ public class CompanyServiceImpl
     }
 
     @Override
-    protected CompanyVO toVO(Company entity) {
-        if (entity == null) {
-            return null;
-        }
-        return UserInfoConverter.INSTANT.entityToVO(entity);
-    }
-
-    @Override
     protected Company toEntity(CompanySaveDTO dto) {
         if (dto == null) {
             return null;
