@@ -33,11 +33,16 @@ import com.njydsz.common.event.model.OutboxMessage;
  */
 public class RocketMqEventPublishGateway implements EventPublishGateway {
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(RocketMqEventPublishGateway.class);
 
+    /** 默认 Topic 名称 */
     private static final String DEFAULT_TOPIC = "ydsz-outbox-events";
 
+    /** RocketMQ 模板 */
     private final RocketMQTemplate rocketMQTemplate;
+
+    /** 目标 Topic */
     private final String topic;
 
     /**

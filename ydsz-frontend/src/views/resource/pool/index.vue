@@ -17,10 +17,15 @@ import type { ResourcePoolVO, ResourcePoolCreateDTO } from '@/api/resource/pool/
 
 const { t } = useI18n()
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 新增/编辑提交状态 */
 const submitting = ref(false)
+/** 删除提交状态 */
 const deleting = ref(false)
+/** 资源池列表数据 */
 const list = ref<ResourcePoolVO[]>([])
+/** 资源池列表总数 */
 const total = ref(0)
 // 分页查询条件：资源池类型 / 状态
 const query = reactive({ page: 1, size: 10, poolType: '', status: '' })

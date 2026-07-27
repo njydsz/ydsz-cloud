@@ -1,9 +1,17 @@
 <!--
   @fileoverview 快捷键帮助面板
-  @description 展示当前所有已注册的键盘快捷键，支持按作用域分组
+  @description 展示当前所有已注册的键盘快捷键，支持按作用域分组（全局/页面）
   @module components/common/ShortcutHelpDialog
+  @author ydsz-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
+/**
+ * 快捷键帮助面板
+ *
+ * 以弹窗形式展示所有已注册的键盘快捷键，
+ * 按作用域分为全局快捷键与页面快捷键两组。
+ */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
@@ -11,7 +19,10 @@ import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 const { t } = useI18n()
 const { shortcuts, helpVisible, toggleHelp } = useKeyboardShortcuts()
 
-/** 格式化快捷键为可读文本 */
+/**
+ * 将快捷键定义格式化为可读文本
+ * macOS 系统使用 ⌘⌥⇧ 符号，其他系统使用 Ctrl/Alt/Shift + 键名
+ */
 function formatKey(def: { key: string; ctrl?: boolean; shift?: boolean; alt?: boolean }): string {
   const isMac = navigator.platform.toLowerCase().includes('mac')
   const parts: string[] = []
@@ -35,12 +46,12 @@ function formatKey(def: { key: string; ctrl?: boolean; shift?: boolean; alt?: bo
   return parts.join(isMac ? '' : '+')
 }
 
-/** 全局快捷键列表 */
+/** 全局快捷键列表（非 page scope 且有描述） */
 const globalShortcuts = computed(() =>
   shortcuts.value.filter((s) => s.scope !== 'page' && s.description),
 )
 
-/** 页面快捷键列表 */
+/** 页面快捷键列表（page scope 且有描述） */
 const pageShortcuts = computed(() =>
   shortcuts.value.filter((s) => s.scope === 'page' && s.description),
 )

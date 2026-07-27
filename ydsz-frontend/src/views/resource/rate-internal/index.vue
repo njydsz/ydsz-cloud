@@ -29,9 +29,11 @@ import { useUserStore } from '@/store/modules/user'
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
-// 列表查询状态
+/** 列表加载状态 */
 const loading = ref(false)
+/** 内部费率列表数据 */
 const list = ref<RateInternalVO[]>([])
+/** 内部费率列表总数 */
 const total = ref(0)
 const query = reactive({
   page: 1,
@@ -40,9 +42,9 @@ const query = reactive({
   departmentId: undefined as number | undefined,
   status: '',
 })
-// 职级下拉数据
+/** 职级下拉数据 */
 const levels = ref<RankVO[]>([])
-// 部门树下拉数据
+/** 部门树下拉数据 */
 const depts = ref<DeptVO[]>([])
 
 /** 拉取职级下拉数据（用于表单与查询条件） */

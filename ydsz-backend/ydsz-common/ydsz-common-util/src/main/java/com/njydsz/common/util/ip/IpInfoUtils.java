@@ -81,6 +81,12 @@ public class IpInfoUtils {
         }
     }
 
+    /**
+     * 查询 IP 地址归属地信息
+     *
+     * @param ip IPv4 地址字符串
+     * @return IP 归属地信息，包含国家、省份、城市、运营商等
+     */
     public static IpInfo getInfo(String ip) {
         if (!IpAddrUtils.validIp(ip)) {
             log.warn("Invalid IP format detected: {}", ip);

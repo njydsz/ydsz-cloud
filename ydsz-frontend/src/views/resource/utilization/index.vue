@@ -39,9 +39,11 @@ import { useUserStore } from '@/store/modules/user'
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
-// 列表加载状态
+/** 列表加载状态 */
 const loading = ref(false)
+/** 快照加载状态 */
 const snapshotLoading = ref(false)
+/** 快照重算提交状态 */
 const recomputeLoading = ref(false)
 
 // 查询条件：日期区间 + 快照周期(yyyy-MM)

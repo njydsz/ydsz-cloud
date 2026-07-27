@@ -34,6 +34,10 @@ export function usePasswordExpiry() {
   /** 是否需要展示预警横幅 */
   const showWarning = ref(false)
 
+  /**
+   * 从后端拉取密码过期状态
+   * 静默请求，失败时不影响页面正常使用
+   */
   async function fetchPasswordStatus() {
     loading.value = true
     try {
