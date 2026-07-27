@@ -103,5 +103,15 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
+        <!-- P1-4: 缓存（任务配置缓存） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
+        </dependency>
+        <!-- P1-4: 搜索 Provider SPI（任务日志搜索） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-search</artifactId>
+        </dependency>
 </dependencies>
 </project>

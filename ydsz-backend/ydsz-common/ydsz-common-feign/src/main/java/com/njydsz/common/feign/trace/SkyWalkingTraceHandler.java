@@ -125,6 +125,11 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
         return TracerUtils.getSpanId();
     }
 
+    /**
+     * 记录 Feign 调用开始事件。
+     *
+     * @param context 追踪上下文
+     */
     @Override
     public void onRequestStart(TraceContext context) {
         context.setStartTime(System.currentTimeMillis());

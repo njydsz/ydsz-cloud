@@ -90,5 +90,26 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-file</artifactId>
         </dependency>
-</dependencies>
+        <!-- P0-3: 跨模块 Feign 客户端（Agent 调用项目服务、用户信息查询） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-project-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-userinfo-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- P1-2: 通知渠道（Agent 执行结果通知） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
+        </dependency>
+        <!-- P1-2: 搜索 Provider SPI（知识库搜索） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-search</artifactId>
+        </dependency>
+    </dependencies>
 </project>

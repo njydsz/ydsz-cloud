@@ -4,11 +4,12 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
+import com.njydsz.common.auth.annotation.EnableYdszAuth;
+import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -39,9 +40,10 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
         "com.njydsz.common"
 })
 @EnableDiscoveryClient
+@EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszAudit
-@EnableFeignClients(basePackages = {"com.njydsz.message.api", "com.njydsz.common.feign"})
+@EnableYdszFeign(basePackages = {"com.njydsz.message.api", "com.njydsz.common.feign"})
 @MapperScan("com.njydsz.message.infra.mapper")
 @EnableAsync
 @EnableScheduling

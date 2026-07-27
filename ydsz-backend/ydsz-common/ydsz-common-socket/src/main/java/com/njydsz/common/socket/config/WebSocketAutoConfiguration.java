@@ -148,6 +148,13 @@ public class WebSocketAutoConfiguration {
 
     // ==================== P2-2: 慢连接检测 ====================
 
+    /**
+     * 创建慢连接检测器 Bean。
+     *
+     * @param properties    WebSocket 配置属性
+     * @param webSocketMetrics 指标收集器
+     * @return 慢连接检测器实例
+     */
     @Bean
     @ConditionalOnMissingBean(SlowConnectionDetector.class)
     public SlowConnectionDetector slowConnectionDetector(

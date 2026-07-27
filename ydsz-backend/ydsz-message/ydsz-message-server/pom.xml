@@ -93,12 +93,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- P2-5: 显式声明 fastjson2 版本，解决 rocketmq 传递依赖的版本冲突 -->
-        <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2</artifactId>
-            <version>2.0.62</version>
-        </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot3</artifactId>
@@ -141,6 +135,16 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
+        </dependency>
+        <!-- P1-3: 缓存（消息模板缓存） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
+        </dependency>
+        <!-- P1-3: 搜索 Provider SPI（消息搜索） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-search</artifactId>
         </dependency>
 </dependencies>
 </project>

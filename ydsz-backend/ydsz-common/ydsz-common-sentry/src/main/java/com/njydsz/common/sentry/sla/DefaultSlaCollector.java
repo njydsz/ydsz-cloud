@@ -40,11 +40,21 @@ public class DefaultSlaCollector implements SlaCollector {
     private final MetricsCollector metricsCollector;
     private final Map<String, SlaDefinition> definitions = new ConcurrentHashMap<>();
 
+    /**
+     * 构造函数，初始化 SLA 指标采集器
+     *
+     * @param metricsCollector 指标采集器
+     */
     public DefaultSlaCollector(MetricsCollector metricsCollector) {
         this.metricsCollector = metricsCollector;
         log.info("[Sentry] DefaultSlaCollector 初始化完成");
     }
 
+    /**
+     * 注册 SLA 定义
+     *
+     * @param definition SLA 定义
+     */
     @Override
     public void register(SlaDefinition definition) {
         definitions.put(definition.getName(), definition);
@@ -52,6 +62,14 @@ public class DefaultSlaCollector implements SlaCollector {
                 definition.getName(), definition.getThresholdMillis(), definition.getTarget());
     }
 
+    /**
+     * 记录 SLA 步骤执行结果
+     *
+     * @param name       SLA 名称
+     * @param stepName   步骤名
+     * @param tookMillis 耗时（毫秒）
+     * @param success    是否成功
+     */
     @Override
     public void record(String name, String stepName, long tookMillis, boolean success) {
         if (metricsCollector == null || name == null) {

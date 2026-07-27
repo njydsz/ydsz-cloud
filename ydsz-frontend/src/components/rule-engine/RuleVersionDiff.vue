@@ -88,6 +88,7 @@ async function loadDiff() {
   }
 }
 
+/** 变更类型对应的 el-tag type */
 function getDiffTagType(type: string): string {
   switch (type) {
     case 'ADDED': return 'success'
