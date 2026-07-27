@@ -14,10 +14,10 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowHisTask;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -87,7 +87,7 @@ public class FlowTaskOperateService {
         if (dto.getTargetUserId() == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_6ddae4d1");
         }
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         String originalAssignorId = parseAssignorId(task.getAssigneeId());
         String originalAssignorName = task.getAssigneeName();
         task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
@@ -122,7 +122,7 @@ public class FlowTaskOperateService {
         if (dto.getTargetUserId() == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_d4faa79e");
         }
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         String originalAssigneeId = parseAssignorId(task.getAssigneeId());
         String originalAssigneeName = task.getAssigneeName();
         task.setAssignorId(originalAssigneeId);
@@ -155,7 +155,7 @@ public class FlowTaskOperateService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void jump(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_1efc5644", task.getTaskStatus());
@@ -163,13 +163,13 @@ public class FlowTaskOperateService {
         if (!StringUtils.hasText(dto.getTargetNodeCode())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_09c299d0");
         }
-        FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
+        FlowInstance instance = instanceMapper.selectById(task.getInstanceId());
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_fc4b1c16", task.getInstanceId());
         }
         // 校验目标节点存在
-        FlowNodeDO targetNode = nodeMapper.selectByCode(task.getDefinitionId(), dto.getTargetNodeCode());
+        FlowNode targetNode = nodeMapper.selectByCode(task.getDefinitionId(), dto.getTargetNodeCode());
         if (targetNode == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_a35217ba", dto.getTargetNodeCode());
@@ -213,7 +213,7 @@ public class FlowTaskOperateService {
     @Transactional(rollbackFor = Exception.class)
     public String retract(String hisTaskId, String operatorId, String comment) {
         // 1. 查历史任务
-        FlowHisTaskDO hisTask = hisTaskMapper.selectById(hisTaskId);
+        FlowHisTask hisTask = hisTaskMapper.selectById(hisTaskId);
         if (hisTask == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_f1a2b3c4", hisTaskId);
         }
@@ -227,7 +227,7 @@ public class FlowTaskOperateService {
             throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_b3c4d5e6");
         }
         // 4. 校验：实例存在且为 RUNNING
-        FlowInstanceDO instance = instanceMapper.selectById(hisTask.getInstanceId());
+        FlowInstance instance = instanceMapper.selectById(hisTask.getInstanceId());
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_fc4b1c16", hisTask.getInstanceId());
@@ -237,7 +237,7 @@ public class FlowTaskOperateService {
                     "error.workflow.msg_c4d5e6f7", instance.getFlowStatus());
         }
         // 5. 校验：下一节点待办必须全部为 PENDING
-        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instance.getId());
+        List<FlowRunTask> pendingTasks = taskMapper.selectPendingByInstance(instance.getId());
         boolean anyProcessed = pendingTasks.stream()
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
@@ -248,7 +248,7 @@ public class FlowTaskOperateService {
         taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
 
         // 7. 重新生成本节点的 PENDING 任务（复用历史任务的元数据）
-        FlowRunTaskDO newTask = new FlowRunTaskDO();
+        FlowRunTask newTask = new FlowRunTask();
         newTask.setInstanceId(instance.getId());
         newTask.setFlowCode(instance.getFlowCode());
         newTask.setDefinitionId(instance.getDefinitionId());
@@ -283,7 +283,7 @@ public class FlowTaskOperateService {
                 "取回审批" + (StringUtils.hasText(comment) ? "：" + comment : ""));
 
         // 10. 标记历史任务为 RETRACTED
-        FlowHisTaskDO update = new FlowHisTaskDO();
+        FlowHisTask update = new FlowHisTask();
         update.setId(hisTask.getId());
         update.setTaskStatus("RETRACTED");
         update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
@@ -314,7 +314,7 @@ public class FlowTaskOperateService {
     /**
      * GAP-P2-9: 判断目标节点是否开启自由跳转白名单。
      */
-    private boolean isFreeJumpEnabled(FlowNodeDO node) {
+    private boolean isFreeJumpEnabled(FlowNode node) {
         Map<String, Object> ext = parseExtConfig(node.getExt());
         Object val = ext.get("freeJump");
         if (val == null) {
@@ -329,7 +329,7 @@ public class FlowTaskOperateService {
     /**
      * 合并流程变量：实例已有变量 + dto 增量。
      */
-    private Map<String, Object> mergeVariables(FlowInstanceDO instance, Map<String, Object> extra) {
+    private Map<String, Object> mergeVariables(FlowInstance instance, Map<String, Object> extra) {
         if (instance == null || !StringUtils.hasText(instance.getVariable())) {
             return extra == null ? Collections.emptyMap() : extra;
         }

@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 
 /**
  * 三方审批账号映射 Mapper
@@ -16,7 +16,7 @@ import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAccountDO> {
+public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAccount> {
 
     /**
      * 按系统用户 ID + 平台查询
@@ -25,7 +25,7 @@ public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAc
      * @param platform 平台: DINGTALK/FEISHU/WECOM
      * @return 账号映射记录
      */
-    FlowThirdPartyAccountDO selectByUserIdAndPlatform(@Param("userId") String userId,
+    FlowThirdPartyAccount selectByUserIdAndPlatform(@Param("userId") String userId,
                                                       @Param("platform") String platform);
 
     /**
@@ -35,7 +35,7 @@ public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAc
      * @param openId   三方 openId
      * @return 账号映射记录
      */
-    FlowThirdPartyAccountDO selectByOpenId(@Param("platform") String platform,
+    FlowThirdPartyAccount selectByOpenId(@Param("platform") String platform,
                                            @Param("openId") String openId);
 
     /**
@@ -44,5 +44,5 @@ public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAc
     @Select(
             "SELECT * FROM ydsz_flow_third_party_account WHERE platform = #{platform} " +
             "AND status = 'ACTIVE' LIMIT 1")
-    FlowThirdPartyAccountDO selectActiveByPlatform(@Param("platform") String platform);
+    FlowThirdPartyAccount selectActiveByPlatform(@Param("platform") String platform);
 }

@@ -21,7 +21,7 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.domain.dto.FlowDefinitionSimulateDTO;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 
@@ -140,7 +140,7 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/code/{code}")
     @Operation(summary = "按编码查询已发布流程定义")
-    public BaseResponse<FlowDefinitionDO> getByCode(@PathVariable String code,
+    public BaseResponse<FlowDefinition> getByCode(@PathVariable String code,
                                           @RequestParam(required = false) String version,
                                           @RequestParam(required = false) String tenantId) {
         return BaseResponse.success(definitionService.getPublished(code, version, tenantId));
@@ -157,7 +157,7 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/page")
     @Operation(summary = "分页查询流程定义")
-    public BaseResponse<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
+    public BaseResponse<List<FlowDefinition>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
                                           @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
                                           @RequestParam(required = false) String category,
                                           @RequestParam(required = false) String flowCode) {

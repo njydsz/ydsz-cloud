@@ -9,8 +9,8 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
@@ -65,16 +65,16 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
         // 流程实例探针
         checkTableProbeWithValue(builder, "flowInstance", () -> {
             Long runningCount = instanceMapper.selectCount(
-                    new LambdaQueryWrapper<FlowInstanceDO>()
-                            .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
+                    new LambdaQueryWrapper<FlowInstance>()
+                            .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
             return "running: " + runningCount;
         });
 
         // 待办任务探针
         checkTableProbeWithValue(builder, "flowTask", () -> {
             Long pendingCount = runTaskMapper.selectCount(
-                    new LambdaQueryWrapper<FlowRunTaskDO>()
-                            .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name()));
+                    new LambdaQueryWrapper<FlowRunTask>()
+                            .eq(FlowRunTask::getTaskStatus, FlowTaskStatus.PENDING.name()));
             return "pending: " + pendingCount;
         });
 

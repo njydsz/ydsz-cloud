@@ -23,7 +23,7 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.util.Assert;
 
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.core.leader.PartitionLeaderManager;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>仅当 {@code ydsz.cronjob.leader.enabled=true} 且当前节点是 Leader 时启用。
  * 定时（默认 5s）扫描 {@code ydsz_job} 表中 {@code next_fire_time <= NOW()} 的任务，
  * 通过 {@code SELECT ... FOR UPDATE SKIP LOCKED} 抢占式行锁获取待派发任务，
- * 然后调用 {@link TaskDispatcher#dispatch(JobDO, String, String)} 派发到执行节点。
+ * 然后调用 {@link TaskDispatcher#dispatch(Job, String, String)} 派发到执行节点。
  *
  * <h3>执行流程</h3>
  * <ol>
@@ -224,7 +224,7 @@ public class JobScanner {
         LocalDateTime now = LocalDateTime.now();
         // P1-1: 支持自适应 batchSize（AdaptiveBatchScheduler 启用时动态调整）
         int batchSize = resolveBatchSize();
-        List<JobDO> dueJobs = jobTransactionService.acquireDueJobs(now, batchSize);
+        List<Job> dueJobs = jobTransactionService.acquireDueJobs(now, batchSize);
         // P6-2: 更新上次扫描到的待触发任务数指标
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
         if (metrics != null) {
@@ -254,12 +254,12 @@ public class JobScanner {
      * @param now     扫描时间
      * @param metrics 指标收集器（可空）
      */
-    private void doParallelDispatch(List<JobDO> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
+    private void doParallelDispatch(List<Job> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger skipCount = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
         List<CompletableFuture<Void>> futures = new ArrayList<>(dueJobs.size());
-        for (JobDO job : dueJobs) {
+        for (Job job : dueJobs) {
             CompletableFuture<Void> f = CompletableFuture.runAsync(
                     () -> dispatchSingleJob(job, now, metrics, successCount, skipCount, failCount),
                     dispatchPool);
@@ -274,8 +274,8 @@ public class JobScanner {
     /**
      * P0-2: 串行派发（兼容模式，parallelDispatchEnabled=false 时使用）。
      */
-    private void doSequentialDispatch(List<JobDO> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
-        for (JobDO job : dueJobs) {
+    private void doSequentialDispatch(List<Job> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
+        for (Job job : dueJobs) {
             dispatchSingleJob(job, now, metrics, null, null, null);
         }
     }
@@ -286,7 +286,7 @@ public class JobScanner {
      * <p>提取公共逻辑，串行/并行模式共用。每个任务独立生成 traceId，
      * 异常不传播到外层，仅记录日志并递增计数器。
      */
-    private void dispatchSingleJob(JobDO job, LocalDateTime now, CronjobMetrics metrics,
+    private void dispatchSingleJob(Job job, LocalDateTime now, CronjobMetrics metrics,
                                     AtomicInteger successCount, AtomicInteger skipCount,
                                     AtomicInteger failCount) {
         // P2-9: 分区调度过滤 — 非本节点分区的任务跳过
@@ -386,7 +386,7 @@ public class JobScanner {
      * @param now 当前时间
      * @return true 视为 Misfire
      */
-    private boolean isMisfired(JobDO job, LocalDateTime now) {
+    private boolean isMisfired(Job job, LocalDateTime now) {
         if (job.getNextFireTime() == null) {
             return false;
         }

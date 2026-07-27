@@ -2,7 +2,7 @@ package com.njydsz.project.server.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.project.domain.entity.evm.EvmMeasureDO;
+import com.njydsz.project.domain.entity.evm.EvmMeasure;
 import com.njydsz.project.domain.repository.evm.IEvmMeasureRepository;
 import com.njydsz.project.server.service.EvmMeasureService;
 
@@ -16,12 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvmMeasureServiceImpl implements EvmMeasureService {
     private final IEvmMeasureRepository repository;
 
-    public EvmMeasureDO getById(String id) { return repository.getById(id); }
-    public IPage<EvmMeasureDO> page(int p, int s) { return repository.page(new Page<>(p, s)); }
+    public EvmMeasure getById(String id) { return repository.getById(id); }
+    public IPage<EvmMeasure> page(int p, int s) { return repository.page(new Page<>(p, s)); }
     @Transactional(rollbackFor = Exception.class)
-    public boolean save(EvmMeasureDO e) { return repository.save(e); }
+    public boolean save(EvmMeasure e) { return repository.save(e); }
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(EvmMeasureDO e) { return repository.updateById(e); }
+    public boolean updateById(EvmMeasure e) { return repository.updateById(e); }
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) { return repository.removeById(id); }
 }

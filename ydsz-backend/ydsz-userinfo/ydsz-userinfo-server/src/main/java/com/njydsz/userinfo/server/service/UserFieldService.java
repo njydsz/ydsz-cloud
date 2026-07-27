@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.UserFieldDO;
+import com.njydsz.userinfo.domain.entity.UserField;
 
 /**
  * 用户字段 service interface.
@@ -12,9 +12,9 @@ import com.njydsz.userinfo.domain.entity.UserFieldDO;
  */
 public interface UserFieldService {
 
-    UserFieldDO getById(String id);
-    List<UserFieldDO> list();
-    String save(UserFieldDO entity);
-    boolean updateById(UserFieldDO entity);
+    UserField getById(String id);
+    List<UserField> list();
+    String save(UserField entity);
+    boolean updateById(UserField entity);
     boolean removeById(String id);
 }

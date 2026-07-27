@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.cronjob.domain.entity.job.JobTaskDO;
+import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +48,7 @@ public class JobTaskController {
      */
     @Operation(summary = "查询子任务列表")
     @GetMapping("/list")
-    public BaseResponse<List<JobTaskDO>> list(@RequestParam String logId) {
+    public BaseResponse<List<JobTask>> list(@RequestParam String logId) {
         return BaseResponse.success(jobTaskMapper.selectByLogId(logId));
     }
 
@@ -62,16 +62,16 @@ public class JobTaskController {
      */
     @Operation(summary = "分页查询子任务")
     @GetMapping("/page")
-    public BaseResponse<Page<JobTaskDO>> page(
+    public BaseResponse<Page<JobTask>> page(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size) {
-        Page<JobTaskDO> pageObj = new Page<>(page, size);
-        LambdaQueryWrapper<JobTaskDO> wrapper =
+        Page<JobTask> pageObj = new Page<>(page, size);
+        LambdaQueryWrapper<JobTask> wrapper =
                 new LambdaQueryWrapper<>();
-        wrapper.eq(JobTaskDO::getLogId, logId)
-                .eq(JobTaskDO::getDeleted, 0)
-                .orderByAsc(JobTaskDO::getCreatedAt);
+        wrapper.eq(JobTask::getLogId, logId)
+                .eq(JobTask::getDeleted, 0)
+                .orderByAsc(JobTask::getCreatedAt);
         return BaseResponse.success(jobTaskMapper.selectPage(pageObj, wrapper));
     }
 
@@ -87,11 +87,11 @@ public class JobTaskController {
     @Operation(summary = "查询子任务执行进度")
     @GetMapping("/progress")
     public BaseResponse<java.util.Map<String, Object>> progress(@RequestParam String logId) {
-        java.util.List<JobTaskDO> all = jobTaskMapper.selectByLogId(logId);
+        java.util.List<JobTask> all = jobTaskMapper.selectByLogId(logId);
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         int total = all.size();
         int pending = 0, running = 0, success = 0, failed = 0;
-        for (JobTaskDO task : all) {
+        for (JobTask task : all) {
             String status = task.getStatus();
             if ("PENDING".equals(status)) {
                 pending++;

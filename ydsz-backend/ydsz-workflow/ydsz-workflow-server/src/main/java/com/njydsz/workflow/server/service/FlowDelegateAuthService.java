@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 
 /**
  * 流程委派代理（长期授权）服务
@@ -29,7 +29,7 @@ public interface FlowDelegateAuthService {
      * @param auth 授权信息
      * @return 授权 ID
      */
-    String create(FlowDelegateAuthDO auth);
+    String create(FlowDelegateAuth auth);
 
     /**
      * 撤回授权
@@ -47,12 +47,12 @@ public interface FlowDelegateAuthService {
     /**
      * 查"我设置的"授权列表
      */
-    List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status);
+    List<FlowDelegateAuth> listMine(String ownerUserId, String tenantId, String status);
 
     /**
      * 查"代理给我的"授权列表
      */
-    List<FlowDelegateAuthDO> listAsDelegate(String delegateUserId, String tenantId, String status);
+    List<FlowDelegateAuth> listAsDelegate(String delegateUserId, String tenantId, String status);
 
     /**
      * 匹配代理规则 — 创建任务前调用
@@ -66,7 +66,7 @@ public interface FlowDelegateAuthService {
      * @param nodeCode  节点编码
      * @return 命中的代理规则（无则返回 null）
      */
-    FlowDelegateAuthDO matchAuth(String tenantId, String ownerUserId, String flowCode, String nodeCode);
+    FlowDelegateAuth matchAuth(String tenantId, String ownerUserId, String flowCode, String nodeCode);
 
     /**
      * 扫描并标记过期授权（每 5 分钟一次）

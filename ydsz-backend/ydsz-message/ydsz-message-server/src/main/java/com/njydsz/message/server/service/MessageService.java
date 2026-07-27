@@ -8,7 +8,7 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 
 /**
  * 消息发送服务
@@ -50,7 +50,7 @@ public interface MessageService {
      * @param query 查询参数
      * @return 分页结果
      */
-    Page<MsgLogDO> pageLog(MessageLogQueryDTO query);
+    Page<MsgLog> pageLog(MessageLogQueryDTO query);
 
     /**
      * P2-3: 事务消息发送（RocketMQ 半消息）。

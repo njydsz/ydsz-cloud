@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.domain.dto.PostSaveDTO;
-import com.njydsz.userinfo.domain.entity.PostDO;
+import com.njydsz.userinfo.domain.entity.Post;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.PostVO;
@@ -44,7 +44,7 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     public PostVO getById(String id) {
-        PostDO entity = mapper.selectById(id);
+        Post entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
         }
@@ -58,9 +58,9 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     public List<PostVO> list() {
-        LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PostDO::getDeleted, 0);
-        wrapper.orderByDesc(PostDO::getSortOrder);
+        LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Post::getDeleted, 0);
+        wrapper.orderByDesc(Post::getSortOrder);
         return mapper.selectList(wrapper).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
@@ -76,14 +76,14 @@ public class PostServiceImpl implements PostService {
     @Transactional(rollbackFor = Exception.class)
     public String create(PostSaveDTO dto) {
         // 编码唯一性校验
-        LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PostDO::getPostCode, dto.getPostCode());
-        wrapper.eq(PostDO::getDeleted, 0);
+        LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Post::getPostCode, dto.getPostCode());
+        wrapper.eq(Post::getDeleted, 0);
         if (mapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.POST_CODE_DUPLICATE);
         }
 
-        PostDO entity = new PostDO();
+        Post entity = new Post();
         BeanUtils.copyProperties(dto, entity);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
@@ -102,7 +102,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(PostSaveDTO dto) {
-        PostDO entity = mapper.selectById(dto.getId());
+        Post entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
         }
@@ -118,7 +118,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        PostDO entity = mapper.selectById(id);
+        Post entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.POST_NOT_FOUND);
         }
@@ -136,15 +136,15 @@ public class PostServiceImpl implements PostService {
             return Collections.emptyMap();
         }
 
-        LambdaQueryWrapper<PostDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(PostDO::getId, postIds);
-        wrapper.eq(PostDO::getDeleted, 0);
-        wrapper.select(PostDO::getId, PostDO::getPostName);
+        LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Post::getId, postIds);
+        wrapper.eq(Post::getDeleted, 0);
+        wrapper.select(Post::getId, Post::getPostName);
 
         return mapper.selectList(wrapper).stream()
                 .collect(Collectors.toMap(
-                        PostDO::getId,
-                        PostDO::getPostName,
+                        Post::getId,
+                        Post::getPostName,
                         (v1, v2) -> v1,
                         LinkedHashMap::new
                 ));
@@ -156,7 +156,7 @@ public class PostServiceImpl implements PostService {
      * @param entity 数据库实体
      * @return 视图对象
      */
-    private PostVO toVO(PostDO entity) {
+    private PostVO toVO(Post entity) {
         PostVO vo = new PostVO();
         BeanUtils.copyProperties(entity, vo);
         return vo;

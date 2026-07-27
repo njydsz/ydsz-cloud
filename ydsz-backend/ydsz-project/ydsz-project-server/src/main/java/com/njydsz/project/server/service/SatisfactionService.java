@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.satisfaction.SatisfactionDO;
+import com.njydsz.project.domain.entity.satisfaction.Satisfaction;
 
 public interface SatisfactionService {
-    SatisfactionDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<SatisfactionDO> page(int pageNum, int pageSize);
-    boolean save(SatisfactionDO entity);
-    boolean updateById(SatisfactionDO entity);
+    Satisfaction getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<Satisfaction> page(int pageNum, int pageSize);
+    boolean save(Satisfaction entity);
+    boolean updateById(Satisfaction entity);
     boolean removeById(String id);
 }

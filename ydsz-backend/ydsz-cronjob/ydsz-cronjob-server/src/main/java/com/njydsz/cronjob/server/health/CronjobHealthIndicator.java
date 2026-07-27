@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -117,18 +117,18 @@ public class CronjobHealthIndicator extends AbstractModuleHealthIndicator {
         JobMapper jobMapper = jobMapperProvider.getIfAvailable();
         if (jobMapper != null) {
             checkTableProbeWithValue(builder, "normalJobCount", () ->
-                    jobMapper.selectCount(new LambdaQueryWrapper<JobDO>()
-                            .eq(JobDO::getStatus, "NORMAL")
-                            .eq(JobDO::getDeleted, 0)));
+                    jobMapper.selectCount(new LambdaQueryWrapper<Job>()
+                            .eq(Job::getStatus, "NORMAL")
+                            .eq(Job::getDeleted, 0)));
         }
 
         // 4. DB 探针 — 运行中日志数
         JobLogMapper jobLogMapper = jobLogMapperProvider.getIfAvailable();
         if (jobLogMapper != null) {
             checkTableProbeWithValue(builder, "runningJobCount", () ->
-                    jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>()
-                            .eq(JobLogDO::getStatus, "RUNNING")
-                            .eq(JobLogDO::getDeleted, 0)));
+                    jobLogMapper.selectCount(new LambdaQueryWrapper<JobLog>()
+                            .eq(JobLog::getStatus, "RUNNING")
+                            .eq(JobLog::getDeleted, 0)));
         }
 
         // 5. 调度器配置摘要

@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.alert;
 
-import com.njydsz.project.domain.entity.alert.AlertDispatchDO;
+import com.njydsz.project.domain.entity.alert.AlertDispatch;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface AlertDispatchMapper extends BaseMapper<AlertDispatchDO> {
+public interface AlertDispatchMapper extends BaseMapper<AlertDispatch> {
 }

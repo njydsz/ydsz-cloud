@@ -20,7 +20,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.service.template.TemplateService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,7 +57,7 @@ public class TemplateController {
     @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @RateLimit(resource = "message.template.create", threshold = 50)
     @PostMapping
-    public BaseResponse<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
+    public BaseResponse<MsgTemplate> create(@Valid @RequestBody TemplateCreateDTO dto) {
         return BaseResponse.success(templateService.create(dto));
     }
 
@@ -74,7 +74,7 @@ public class TemplateController {
     @Audit(module = "模板管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @RateLimit(resource = "message.template.update", threshold = 50)
     @PutMapping("/{id}")
-    public BaseResponse<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
+    public BaseResponse<MsgTemplate> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
         return BaseResponse.success(templateService.update(id, dto));
     }
 
@@ -104,7 +104,7 @@ public class TemplateController {
     @Operation(summary = "模板详情")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
     @GetMapping("/{id}")
-    public BaseResponse<MsgTemplateDO> getById(@PathVariable String id) {
+    public BaseResponse<MsgTemplate> getById(@PathVariable String id) {
         return BaseResponse.success(templateService.getById(id));
     }
 
@@ -117,7 +117,7 @@ public class TemplateController {
     @Operation(summary = "模板分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgTemplateDO>> page(TemplateQueryDTO query) {
+    public BaseResponse<Page<MsgTemplate>> page(TemplateQueryDTO query) {
         return BaseResponse.success(templateService.page(query));
     }
 

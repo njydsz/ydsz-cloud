@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
-import com.njydsz.userinfo.domain.entity.DepartmentDO;
+import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -17,7 +17,7 @@ import com.njydsz.userinfo.domain.vo.DepartmentVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface DepartmentService extends BaseCrudService<DepartmentDO, DepartmentSaveDTO, DepartmentVO, DepartmentPageQuery, String> {
+public interface DepartmentService extends BaseCrudService<Department, DepartmentSaveDTO, DepartmentVO, DepartmentPageQuery, String> {
 
     /**
      * 查询全部部门列表。

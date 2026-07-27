@@ -37,8 +37,8 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -66,7 +66,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * <p>手动触发（{@link #trigger(String, boolean)}）始终走 {@link TaskDispatcher}（如果可用），
- * 否则回退到内部 {@link #executeJob(JobDO, boolean)} 旧路径。
+ * 否则回退到内部 {@link #executeJob(Job, boolean)} 旧路径。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -91,7 +91,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 任务派发器（P1-7 可选注入）。
      *
      * <p>Leader 模式启用时由 {@link DefaultTaskDispatcher} 提供；
-     * Leaderless 模式下若未注册 Dispatcher 则回退到内部 {@link #executeJob(JobDO, boolean)} 旧路径。
+     * Leaderless 模式下若未注册 Dispatcher 则回退到内部 {@link #executeJob(Job, boolean)} 旧路径。
      */
     private final ObjectProvider<TaskDispatcher> taskDispatcherProvider;
 
@@ -217,9 +217,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Override
     @Transactional(readOnly = true)
     public void loadOnStartup() {
-        List<JobDO> list = jobMapper.selectAllNormal();
+        List<Job> list = jobMapper.selectAllNormal();
         log.info("[Cronjob] 启动加载任务数量: {}", list.size());
-        for (JobDO j : list) {
+        for (Job j : list) {
             try {
                 register(j);
             } catch (Exception e) {
@@ -244,7 +244,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String create(JobDO job) {
+    public String create(Job job) {
         // P0-3: scheduleType 默认为 CRON（向后兼容）
         if (!StringUtils.hasText(job.getScheduleType())) {
             job.setScheduleType(ScheduleType.CRON.name());
@@ -303,11 +303,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(JobDO job) {
+    public void update(Job job) {
         if (job.getId() == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_ce91ca69");
         }
-        JobDO exists = jobMapper.selectById(job.getId());
+        Job exists = jobMapper.selectById(job.getId());
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
@@ -395,7 +395,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     public void delete(String id) {
-        JobDO j = jobMapper.selectById(id);
+        Job j = jobMapper.selectById(id);
         if (j == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
@@ -420,7 +420,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     public void pause(String id) {
-        JobDO j = getById(id);
+        Job j = getById(id);
         if (!"NORMAL".equals(j.getStatus())) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.cronjob.msg_job_status_invalid", j.getStatus());
@@ -441,7 +441,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     public void resume(String id) {
-        JobDO j = getById(id);
+        Job j = getById(id);
         if ("NORMAL".equals(j.getStatus())) {
             if (!scheduledMap.containsKey(j.getJobKey())) {
                 register(j);
@@ -484,7 +484,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     public String trigger(String id, boolean holdLock) {
-        JobDO j = getById(id);
+        Job j = getById(id);
         TaskDispatcher dispatcher = taskDispatcherProvider != null
                 ? taskDispatcherProvider.getIfAvailable() : null;
         if (dispatcher != null) {
@@ -611,7 +611,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @return 注册成功返回 true，否则返回 false
      */
     @Override
-    public boolean register(JobDO job) {
+    public boolean register(Job job) {
         if (!"NORMAL".equals(job.getStatus())) {
             return false;
         }
@@ -669,7 +669,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @param type 调度类型（FIXED_RATE / FIXED_DELAY）
      * @return 注册成功返回 true，否则返回 false
      */
-    private boolean registerFixedRateJob(JobDO job, ScheduleType type) {
+    private boolean registerFixedRateJob(Job job, ScheduleType type) {
         // Leader 模式：委托给 SecondLevelScheduler
         if (cronjobProperties.getLeader().isEnabled()) {
             SecondLevelScheduler scheduler = secondLevelSchedulerProvider != null
@@ -763,7 +763,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @return 重新注册成功返回 true，否则返回 false
      */
     @Override
-    public boolean reschedule(JobDO job) {
+    public boolean reschedule(Job job) {
         unregister(job.getJobKey());
         return register(job);
     }
@@ -777,8 +777,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     @Transactional(readOnly = true)
-    public JobDO getById(String id) {
-        JobDO j = jobMapper.selectById(id);
+    public Job getById(String id) {
+        Job j = jobMapper.selectById(id);
         if (j == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
@@ -797,21 +797,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<JobDO> page(int page, int size, String keyword, String status, String group) {
-        Page<JobDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<JobDO> w = new LambdaQueryWrapper<>();
+    public Page<Job> page(int page, int size, String keyword, String status, String group) {
+        Page<Job> p = new Page<>(page, size);
+        LambdaQueryWrapper<Job> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(JobDO::getJobName, keyword)
-                    .or().like(JobDO::getJobKey, keyword)
-                    .or().like(JobDO::getHandler, keyword));
+            w.and(qw -> qw.like(Job::getJobName, keyword)
+                    .or().like(Job::getJobKey, keyword)
+                    .or().like(Job::getHandler, keyword));
         }
         if (StringUtils.hasText(status)) {
-            w.eq(JobDO::getStatus, status);
+            w.eq(Job::getStatus, status);
         }
         if (StringUtils.hasText(group)) {
-            w.eq(JobDO::getJobGroup, group);
+            w.eq(Job::getJobGroup, group);
         }
-        w.orderByDesc(JobDO::getCreatedAt);
+        w.orderByDesc(Job::getCreatedAt);
         return jobMapper.selectPage(p, w);
     }
 
@@ -826,16 +826,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<JobLogDO> pageLog(int page, int size, String jobKey, String status) {
-        Page<JobLogDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<JobLogDO> w = new LambdaQueryWrapper<>();
+    public Page<JobLog> pageLog(int page, int size, String jobKey, String status) {
+        Page<JobLog> p = new Page<>(page, size);
+        LambdaQueryWrapper<JobLog> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(jobKey)) {
-            w.eq(JobLogDO::getJobKey, jobKey);
+            w.eq(JobLog::getJobKey, jobKey);
         }
         if (StringUtils.hasText(status)) {
-            w.eq(JobLogDO::getStatus, status);
+            w.eq(JobLog::getStatus, status);
         }
-        w.orderByDesc(JobLogDO::getStartTime);
+        w.orderByDesc(JobLog::getStartTime);
         return jobLogMapper.selectPage(p, w);
     }
 
@@ -851,7 +851,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @param manual 是否手动触发（手动触发不加分布式锁）
      * @return 执行日志 ID；定时触发且锁已被持有时返回 null
      */
-    private String executeJob(JobDO job, boolean manual) {
+    private String executeJob(Job job, boolean manual) {
         // 定时触发（非手动）时获取分布式锁，防止多实例重复执行
         // P0-4: TTL 支持任务级 override + 全局配置 + 上下限规整
         String lockKey = null;
@@ -869,7 +869,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
 
         // 写开始日志
-        JobLogDO log0 = new JobLogDO();
+        JobLog log0 = new JobLog();
         log0.setJobId(job.getId());
         log0.setJobKey(job.getJobKey());
         log0.setStartTime(LocalDateTime.now());
@@ -934,7 +934,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @param job 任务定义
      * @return 规整化后的锁 TTL
      */
-    private Duration resolveLockTtl(JobDO job) {
+    private Duration resolveLockTtl(Job job) {
         Duration taskLevel = null;
         if (job.getLockTtlMs() != null && job.getLockTtlMs() > 0) {
             taskLevel = Duration.ofMillis(job.getLockTtlMs());
@@ -956,7 +956,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @param job 任务定义
      * @throws SysException 当 jobKey/handler 为空或调度参数非法时抛出
      */
-    private void validate(JobDO job) {
+    private void validate(Job job) {
         if (!StringUtils.hasText(job.getJobKey())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_884214e7");
         }
@@ -1024,7 +1024,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @param job 任务定义（含 cron 表达式和时区）
      * @return CronTrigger 实例
      */
-    private CronTrigger buildTrigger(JobDO job) {
+    private CronTrigger buildTrigger(Job job) {
         String tz = StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : SCHEDULE_TIMEZONE.getID();
         return new CronTrigger(job.getCronExpression(), TimeZone.getTimeZone(tz));
     }
@@ -1033,13 +1033,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 计算下次触发时间（P2-8: 支持任务级时区）。
      *
      * <p>P0-5 修复: 仅调用一次 expr.next() 避免竞态条件。
-     * P2-8: 优先使用 {@link JobDO#getTimezone()} 指定的时区计算当前时间，
+     * P2-8: 优先使用 {@link Job#getTimezone()} 指定的时区计算当前时间，
      * 为空时回退到默认时区 Asia/Shanghai。
      *
      * @param job 任务定义（含 cron 表达式和时区）
      * @return 下次触发时间；表达式非法时返回 null
      */
-    private LocalDateTime nextFireTime(JobDO job) {
+    private LocalDateTime nextFireTime(Job job) {
         try {
             // P2-8: 任务级时区，null 使用默认 Asia/Shanghai
             String tz = StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : "Asia/Shanghai";

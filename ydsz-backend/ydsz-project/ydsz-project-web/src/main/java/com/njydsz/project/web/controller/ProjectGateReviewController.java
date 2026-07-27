@@ -5,7 +5,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.project.domain.entity.project.ProjectGateReviewDO;
+import com.njydsz.project.domain.entity.project.ProjectGateReview;
 import com.njydsz.project.server.service.ProjectGateReviewService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,21 +19,21 @@ public class ProjectGateReviewController {
     private final ProjectGateReviewService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectGateReviewDO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectGateReview> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ProjectGateReviewDO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
-        IPage<ProjectGateReviewDO> r = service.page(p, s);
+    public PageResponse<ProjectGateReview> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+        IPage<ProjectGateReview> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectGateReview")
-    public BaseResponse<Boolean> save(@RequestBody ProjectGateReviewDO e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectGateReview e) { return BaseResponse.success(service.save(e)); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectGateReview")
-    public BaseResponse<Boolean> update(@RequestBody ProjectGateReviewDO e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectGateReview e) { return BaseResponse.success(service.updateById(e)); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectGateReview")

@@ -11,7 +11,7 @@ import lombok.Data;
  * 表单 Schema 定义（P0-3 表单引擎 MVP）
  *
  * <p>一个流程节点可以有一个表单 Schema，定义该节点需要填写/展示的字段。
- * Schema 存储在 {@code FlowNodeDO.ext} JSON 的 {@code formSchema} 字段中。
+ * Schema 存储在 {@code FlowNode.ext} JSON 的 {@code formSchema} 字段中。
  *
  * <p>JSON 结构示例：
  * <pre>{@code

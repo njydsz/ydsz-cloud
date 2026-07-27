@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobTaskDO;
+import com.njydsz.cronjob.domain.entity.job.JobTask;
 
 /**
  * MapReduce 子任务 Mapper（P0-4）。
@@ -22,7 +22,7 @@ import com.njydsz.cronjob.domain.entity.job.JobTaskDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobTaskMapper extends BaseMapper<JobTaskDO> {
+public interface JobTaskMapper extends BaseMapper<JobTask> {
 
     /**
      * 按 logId 查询所有子任务（含 ROOT 和 SUB_TASK，按创建时间升序）。
@@ -35,7 +35,7 @@ public interface JobTaskMapper extends BaseMapper<JobTaskDO> {
             + "FROM ydsz_job_task "
             + "WHERE log_id = #{logId} AND deleted = 0 "
             + "ORDER BY created_at ASC")
-    List<JobTaskDO> selectByLogId(@Param("logId") String logId);
+    List<JobTask> selectByLogId(@Param("logId") String logId);
 
     /**
      * 按 logId 查询 PENDING 状态的子任务（待执行）。
@@ -48,7 +48,7 @@ public interface JobTaskMapper extends BaseMapper<JobTaskDO> {
             + "FROM ydsz_job_task "
             + "WHERE log_id = #{logId} AND status = 'PENDING' AND deleted = 0 "
             + "ORDER BY created_at ASC")
-    List<JobTaskDO> selectPendingByLogId(@Param("logId") String logId);
+    List<JobTask> selectPendingByLogId(@Param("logId") String logId);
 
     /**
      * 统计指定 logId 下指定状态的子任务数。

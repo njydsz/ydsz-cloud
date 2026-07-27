@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
@@ -72,7 +72,7 @@ public class SseLogController {
 
         // 推送历史日志（连接建立前的日志）
         try {
-            List<JobLogContentDO> history = jobLogContentService.listAfterLine(logId, 0);
+            List<JobLogContent> history = jobLogContentService.listAfterLine(logId, 0);
             if (history != null && !history.isEmpty()) {
                 logStreamManager.pushHistory(logId, history);
                 log.debug("[SseLog] 推送历史日志: logId={} lines={}", logId, history.size());

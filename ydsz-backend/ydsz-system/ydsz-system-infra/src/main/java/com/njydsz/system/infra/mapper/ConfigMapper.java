@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.system.domain.entity.ConfigDO;
+import com.njydsz.system.domain.entity.Config;
 
 /**
  * 系统配置 Mapper。
@@ -13,7 +13,7 @@ import com.njydsz.system.domain.entity.ConfigDO;
  * @author ydsz-team
  */
 @Mapper
-public interface ConfigMapper extends BaseMapper<ConfigDO> {
+public interface ConfigMapper extends BaseMapper<Config> {
 
     /**
      * 按配置键查询启用的配置项。
@@ -22,5 +22,5 @@ public interface ConfigMapper extends BaseMapper<ConfigDO> {
      * @return 配置 DO，不存在返回 null
      */
     @Select("SELECT * FROM ydsz_config WHERE config_key = #{configKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
-    ConfigDO selectByConfigKey(@Param("configKey") String configKey);
+    Config selectByConfigKey(@Param("configKey") String configKey);
 }

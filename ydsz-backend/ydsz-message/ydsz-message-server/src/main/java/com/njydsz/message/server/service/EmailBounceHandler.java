@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -42,12 +42,12 @@ public class EmailBounceHandler {
             return;
         }
         String fullReason = (StringUtils.hasText(bounceType) ? "[" + bounceType + "] " : "") + reason;
-        msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getId, logId)
-                .set(MsgLogDO::getStatus, "FAILED")
-                .set(MsgLogDO::getReceiptStatus, "FAILED")
-                .set(MsgLogDO::getReceiptAt, LocalDateTime.now())
-                .set(MsgLogDO::getErrorMessage, fullReason));
+        msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLog>()
+                .eq(MsgLog::getId, logId)
+                .set(MsgLog::getStatus, "FAILED")
+                .set(MsgLog::getReceiptStatus, "FAILED")
+                .set(MsgLog::getReceiptAt, LocalDateTime.now())
+                .set(MsgLog::getErrorMessage, fullReason));
         log.info("[EmailBounce] 退信处理: logId={} type={} recipient={} reason={}",
                 logId, bounceType, recipient, reason);
 

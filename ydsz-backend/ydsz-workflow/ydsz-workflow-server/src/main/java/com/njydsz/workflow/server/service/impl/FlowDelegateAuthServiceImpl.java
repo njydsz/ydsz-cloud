@@ -17,8 +17,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
+import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -50,7 +50,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String create(FlowDelegateAuthDO auth) {
+    public String create(FlowDelegateAuth auth) {
         if (auth == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_fdf18ac3");
         }
@@ -133,7 +133,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         if (authId == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_7804c8f2");
         }
-        FlowDelegateAuthDO auth = authMapper.selectById(authId);
+        FlowDelegateAuth auth = authMapper.selectById(authId);
         if (auth == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
         }
@@ -153,7 +153,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         if (!"ENABLED".equals(status) && !"DISABLED".equals(status)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_7678ad83");
         }
-        FlowDelegateAuthDO auth = authMapper.selectById(authId);
+        FlowDelegateAuth auth = authMapper.selectById(authId);
         if (auth == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
         }
@@ -168,7 +168,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status) {
+    public List<FlowDelegateAuth> listMine(String ownerUserId, String tenantId, String status) {
         if (ownerUserId == null) {
             return List.of();
         }
@@ -178,7 +178,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowDelegateAuthDO> listAsDelegate(String delegateUserId, String tenantId, String status) {
+    public List<FlowDelegateAuth> listAsDelegate(String delegateUserId, String tenantId, String status) {
         if (delegateUserId == null) {
             return List.of();
         }
@@ -188,7 +188,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public FlowDelegateAuthDO matchAuth(String tenantId, String ownerUserId,
+    public FlowDelegateAuth matchAuth(String tenantId, String ownerUserId,
                                         String flowCode, String nodeCode) {
         if (tenantId == null || ownerUserId == null) {
             return null;
@@ -240,12 +240,12 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
-        LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-                .eq(FlowAuditLogDO::getOperatorId, delegateUserId)
-                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+        LambdaQueryWrapper<FlowAuditLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FlowAuditLog::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
+                .eq(FlowAuditLog::getOperatorId, delegateUserId)
+                .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
-        List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
+        List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
         return (PageResponse) PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
@@ -257,12 +257,12 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
-        LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-                .eq(FlowAuditLogDO::getTargetId, ownerUserId)
-                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+        LambdaQueryWrapper<FlowAuditLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FlowAuditLog::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
+                .eq(FlowAuditLog::getTargetId, ownerUserId)
+                .orderByDesc(FlowAuditLog::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
-        List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
+        List<FlowAuditLog> list = auditLogMapper.selectList(wrapper);
         return (PageResponse) PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
@@ -284,7 +284,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         int depth = 0;
 
         while (depth < MAX_CHAIN_DEPTH) {
-            FlowDelegateAuthDO matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
+            FlowDelegateAuth matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
             if (matched == null) {
                 // 无进一步委派，当前用户即为最终代理人
                 break;

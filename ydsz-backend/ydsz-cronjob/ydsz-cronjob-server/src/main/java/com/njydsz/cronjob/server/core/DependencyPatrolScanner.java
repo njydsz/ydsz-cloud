@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
@@ -90,11 +90,11 @@ public class DependencyPatrolScanner {
      */
     private int patrolDagDependencies() {
         int issues = 0;
-        List<JobDagDO> enabledDags = jobDagMapper.selectEnabledDags();
+        List<JobDag> enabledDags = jobDagMapper.selectEnabledDags();
         if (enabledDags == null || enabledDags.isEmpty()) {
             return 0;
         }
-        for (JobDagDO dag : enabledDags) {
+        for (JobDag dag : enabledDags) {
             try {
                 DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
                 if (definition == null || definition.nodes() == null) {
@@ -106,7 +106,7 @@ public class DependencyPatrolScanner {
                         .collect(Collectors.toSet());
                 // 查询这些 jobKey 对应的任务是否存在且为 NORMAL
                 for (String jobKey : referencedJobKeys) {
-                    JobDO job = jobMapper.selectByJobKey(jobKey);
+                    Job job = jobMapper.selectByJobKey(jobKey);
                     if (job == null) {
                         log.warn("[DependencyPatrol] DAG 引用的任务不存在, 自动禁用: dagKey={} jobKey={}",
                                 dag.getDagKey(), jobKey);
@@ -141,11 +141,11 @@ public class DependencyPatrolScanner {
     private int patrolJobHandlers() {
         int issues = 0;
         try {
-            List<JobDO> normalJobs = jobMapper.selectAllNormal();
+            List<Job> normalJobs = jobMapper.selectAllNormal();
             if (normalJobs == null || normalJobs.isEmpty()) {
                 return 0;
             }
-            for (JobDO job : normalJobs) {
+            for (Job job : normalJobs) {
                 if (!StringUtils.hasText(job.getHandler())) {
                     log.warn("[DependencyPatrol] 任务 handler 为空, 自动暂停: jobKey={} jobId={}",
                             job.getJobKey(), job.getId());
@@ -165,7 +165,7 @@ public class DependencyPatrolScanner {
      * @param dag    DAG 定义
      * @param reason 禁用原因
      */
-    private void disableDag(JobDagDO dag, String reason) {
+    private void disableDag(JobDag dag, String reason) {
         try {
             dag.setStatus("DISABLED");
             dag.setNextFireTime(null);

@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.execution.ExecutionRiskDO;
+import com.njydsz.project.domain.entity.execution.ExecutionRisk;
 
 public interface ExecutionRiskService {
-    ExecutionRiskDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<ExecutionRiskDO> page(int pageNum, int pageSize);
-    boolean save(ExecutionRiskDO entity);
-    boolean updateById(ExecutionRiskDO entity);
+    ExecutionRisk getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<ExecutionRisk> page(int pageNum, int pageSize);
+    boolean save(ExecutionRisk entity);
+    boolean updateById(ExecutionRisk entity);
     boolean removeById(String id);
 }

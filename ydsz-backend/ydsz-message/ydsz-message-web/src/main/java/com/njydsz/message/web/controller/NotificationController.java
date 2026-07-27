@@ -24,7 +24,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.core.NotificationSendDTO;
-import com.njydsz.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.NotificationService;
 import com.njydsz.message.server.service.receipt.RecallService;
@@ -80,7 +80,7 @@ public class NotificationController {
     @Operation(summary = "收件箱分页")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
-    public BaseResponse<Page<MsgNotificationDO>> inbox(NotificationQueryDTO query) {
+    public BaseResponse<Page<MsgNotification>> inbox(NotificationQueryDTO query) {
         return BaseResponse.success(notificationService.inbox(AuthContext.getUserId(), query));
     }
 

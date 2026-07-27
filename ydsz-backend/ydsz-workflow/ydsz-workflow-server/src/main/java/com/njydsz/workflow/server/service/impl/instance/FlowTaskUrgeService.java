@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
@@ -56,9 +56,9 @@ public class FlowTaskUrgeService {
                 && !urgeLimiter.tryAcquire(operatorId, Long.parseLong(instanceId), "INSTANCE")) {
             throw new SysException(BaseResultCode.RATE_LIMIT, "error.workflow.msg_75474a57");
         }
-        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTask> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         List<String> urged = new ArrayList<>();
-        for (FlowRunTaskDO task : pendingTasks) {
+        for (FlowRunTask task : pendingTasks) {
             urged.add(task.getAssigneeId());
             support.audit(task, "URGE", operatorId, null, comment);
         }
@@ -83,9 +83,9 @@ public class FlowTaskUrgeService {
                 throw new SysException(BaseResultCode.RATE_LIMIT, "error.workflow.msg_75474a57");
             }
         }
-        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByNode(instanceId, nodeCode);
+        List<FlowRunTask> pendingTasks = taskMapper.selectPendingByNode(instanceId, nodeCode);
         List<String> urged = new ArrayList<>();
-        for (FlowRunTaskDO task : pendingTasks) {
+        for (FlowRunTask task : pendingTasks) {
             urged.add(task.getAssigneeId());
             support.audit(task, "URGE", operatorId, null, comment);
             // P2-3: 节点级催办事件
@@ -106,7 +106,7 @@ public class FlowTaskUrgeService {
             return;
         }
         try {
-            FlowInstanceDO ins = instanceMapper.selectById(instanceId);
+            FlowInstance ins = instanceMapper.selectById(instanceId);
             flowMetrics.incTaskUrged(ins != null ? ins.getFlowCode() : "unknown");
         } catch (Exception e) {
             flowMetrics.incTaskUrged("unknown");

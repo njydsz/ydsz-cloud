@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobArtifactDO;
+import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 
 /**
  * 执行产物 Mapper（P2-8）。
@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.entity.job.JobArtifactDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobArtifactMapper extends BaseMapper<JobArtifactDO> {
+public interface JobArtifactMapper extends BaseMapper<JobArtifact> {
 
     /**
      * 按日志 ID 查询产物列表。
@@ -28,7 +28,7 @@ public interface JobArtifactMapper extends BaseMapper<JobArtifactDO> {
             + "FROM ydsz_job_artifact "
             + "WHERE log_id = #{logId} AND deleted = 0 "
             + "ORDER BY created_at DESC")
-    List<JobArtifactDO> selectByLogId(@Param("logId") String logId);
+    List<JobArtifact> selectByLogId(@Param("logId") String logId);
 
     /**
      * 清理过期产物（硬删除）。

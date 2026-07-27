@@ -14,8 +14,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><b>幂等</b>：通过 {@code WHERE is_slow = 0} 过滤已标记的记录，
  *       并在 UPDATE 中二次检查 {@code is_slow = 0} 防止并发竞态</li>
  *   <li><b>时间窗口</b>：仅扫描最近 N 分钟（默认 60min）的日志，避免全表扫描</li>
- *   <li><b>批量查询</b>：通过 selectByIds 一次性获取所有相关 JobDO，避免 N+1 查询</li>
+ *   <li><b>批量查询</b>：通过 selectByIds 一次性获取所有相关 Job，避免 N+1 查询</li>
  *   <li><b>独立失败</b>：每条标记独立 try-catch，单条失败不影响其他</li>
  * </ul>
  *
@@ -110,21 +110,21 @@ public class SlowTaskDetector {
      */
     private void doScan() {
         LocalDateTime since = LocalDateTime.now().minusMinutes(LOOKBACK_MINUTES);
-        List<JobLogDO> slowLogs = jobLogMapper.selectSlowLogs(since, BATCH_SIZE);
+        List<JobLog> slowLogs = jobLogMapper.selectSlowLogs(since, BATCH_SIZE);
         if (slowLogs.isEmpty()) {
             return;
         }
         log.info("[SlowTaskDetector] 发现 {} 个待标记的慢任务: role={}", slowLogs.size(), leaderRole);
 
-        // 批量查询 JobDO（避免 N+1 查询），仅取需要的 slowThresholdMs
+        // 批量查询 Job（避免 N+1 查询），仅取需要的 slowThresholdMs
         Set<String> jobIds = slowLogs.stream()
-                .map(JobLogDO::getJobId)
+                .map(JobLog::getJobId)
                 .collect(Collectors.toSet());
-        Map<String, JobDO> jobMap = batchFetchJobs(jobIds);
+        Map<String, Job> jobMap = batchFetchJobs(jobIds);
 
         int marked = 0;
         int skipped = 0;
-        for (JobLogDO log0 : slowLogs) {
+        for (JobLog log0 : slowLogs) {
             try {
                 boolean done = markSlowLog(log0, jobMap);
                 if (done) {
@@ -142,18 +142,18 @@ public class SlowTaskDetector {
     }
 
     /**
-     * 批量查询 JobDO（容错：查询异常时返回空 Map，调用方逐条跳过）。
+     * 批量查询 Job（容错：查询异常时返回空 Map，调用方逐条跳过）。
      */
-    private Map<String, JobDO> batchFetchJobs(Set<String> jobIds) {
+    private Map<String, Job> batchFetchJobs(Set<String> jobIds) {
         if (jobIds.isEmpty()) {
             return Collections.emptyMap();
         }
         try {
-            List<JobDO> jobs = jobMapper.selectByIds(jobIds);
+            List<Job> jobs = jobMapper.selectByIds(jobIds);
             return jobs.stream()
-                    .collect(Collectors.toMap(JobDO::getId, Function.identity(), (a, b) -> a));
+                    .collect(Collectors.toMap(Job::getId, Function.identity(), (a, b) -> a));
         } catch (Exception e) {
-            log.warn("[SlowTaskDetector] 批量查询 JobDO 失败, 本批将全部跳过: reason={}", e.getMessage());
+            log.warn("[SlowTaskDetector] 批量查询 Job 失败, 本批将全部跳过: reason={}", e.getMessage());
             return Collections.emptyMap();
         }
     }
@@ -167,8 +167,8 @@ public class SlowTaskDetector {
      * @param jobMap  任务定义映射（key=jobId）
      * @return true=已标记; false=已跳过（任务不存在/阈值无效/已标记）
      */
-    boolean markSlowLog(JobLogDO log0, Map<String, JobDO> jobMap) {
-        JobDO job = jobMap.get(log0.getJobId());
+    boolean markSlowLog(JobLog log0, Map<String, Job> jobMap) {
+        Job job = jobMap.get(log0.getJobId());
         if (job == null) {
             log.debug("[SlowTaskDetector] 任务已被删除, 跳过: jobId={} logId={}",
                     log0.getJobId(), log0.getId());

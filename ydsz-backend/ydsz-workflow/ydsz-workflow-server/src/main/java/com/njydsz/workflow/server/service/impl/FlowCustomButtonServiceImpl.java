@@ -15,8 +15,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
@@ -47,7 +47,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
 
     @Override
     public List<Map<String, Object>> getCustomButtons(String definitionId, String nodeCode) {
-        FlowNodeDO node = definitionCacheService.getNodeByCode(definitionId, nodeCode);
+        FlowNode node = definitionCacheService.getNodeByCode(definitionId, nodeCode);
         if (node == null || !StringUtils.hasText(node.getExt())) {
             return List.of();
         }
@@ -57,7 +57,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveCustomButtons(String definitionId, String nodeCode, List<Map<String, Object>> buttons) {
-        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
         }
@@ -83,7 +83,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     public Map<String, Object> executeButton(String taskId, String buttonCode,
                                               String userId, String comment,
                                               Map<String, Object> variables) {
-        FlowRunTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTask task = taskMapper.selectById(taskId);
         if (task == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
         }

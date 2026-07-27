@@ -3,7 +3,7 @@ package com.njydsz.literule.infra.mapper;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.literule.domain.entity.RuleABRollbackDO;
+import com.njydsz.literule.domain.entity.RuleABRollback;
 
 /**
  * AB Test 回滚历史 Mapper（P1-10）。
@@ -15,5 +15,5 @@ import com.njydsz.literule.domain.entity.RuleABRollbackDO;
  * @since 1.0.0 (P1-10)
  */
 @Mapper
-public interface RuleABRollbackMapper extends BaseMapper<RuleABRollbackDO> {
+public interface RuleABRollbackMapper extends BaseMapper<RuleABRollback> {
 }

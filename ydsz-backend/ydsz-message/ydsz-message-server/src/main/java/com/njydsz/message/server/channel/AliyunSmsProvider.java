@@ -19,7 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.config.MessageProperties;
 
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +85,7 @@ public class AliyunSmsProvider implements SmsProvider {
     }
 
     @Override
-    public MessageResult send(MessageRequest request, MsgTemplateDO template) {
+    public MessageResult send(MessageRequest request, MsgTemplate template) {
         String phone = request.getReceiver();
         if (!StringUtils.hasText(phone)) {
             return MessageResult.fail("SMS", "手机号不能为空");
@@ -153,7 +153,7 @@ public class AliyunSmsProvider implements SmsProvider {
     private static final int BATCH_MAX_PHONES = 100;
 
     @Override
-    public List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplateDO template) {
+    public List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplate template) {
         List<MessageResult> results = new ArrayList<>(requests.size());
         // 按 BATCH_MAX_PHONES 分批调用阿里云 SendBatchSms
         for (int i = 0; i < requests.size(); i += BATCH_MAX_PHONES) {
@@ -170,7 +170,7 @@ public class AliyunSmsProvider implements SmsProvider {
      * <p>参数构造：PhoneNumberJson = ["phone1","phone2",...]，
      * SignNameJson = ["sign","sign",...]，TemplateParamJson = [{...},{...},...]。
      */
-    private List<MessageResult> doBatchSend(List<MessageRequest> requests, MsgTemplateDO template) {
+    private List<MessageResult> doBatchSend(List<MessageRequest> requests, MsgTemplate template) {
         List<MessageResult> results = new ArrayList<>(requests.size());
         if (!StringUtils.hasText(config.getAccessKeyId())
                 || !StringUtils.hasText(config.getAccessKeySecret())) {

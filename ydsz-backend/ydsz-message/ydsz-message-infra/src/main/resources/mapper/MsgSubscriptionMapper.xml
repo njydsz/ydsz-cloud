@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.message.infra.mapper.MsgSubscriptionMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.message.domain.entity.MsgSubscriptionDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.message.domain.entity.MsgSubscription">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="topic_code" property="topicCode"/>

@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.config;
 import java.util.List;
 
 import com.njydsz.message.domain.dto.config.SubscriptionUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscriptionDO;
+import com.njydsz.message.domain.entity.config.MsgSubscription;
 
 /**
  * 订阅关系服务
@@ -19,7 +19,7 @@ public interface SubscriptionService {
      * @param dto 订阅参数
      * @return 订阅实体
      */
-    MsgSubscriptionDO upsert(SubscriptionUpsertDTO dto);
+    MsgSubscription upsert(SubscriptionUpsertDTO dto);
 
     /**
      * 查询用户所有订阅
@@ -27,7 +27,7 @@ public interface SubscriptionService {
      * @param userId 用户 ID
      * @return 订阅列表
      */
-    List<MsgSubscriptionDO> listByUser(String userId);
+    List<MsgSubscription> listByUser(String userId);
 
     /**
      * 按主题 + 通道查询订阅列表
@@ -36,7 +36,7 @@ public interface SubscriptionService {
      * @param channel   通道
      * @return 订阅列表
      */
-    List<MsgSubscriptionDO> listByTopic(String topicCode, String channel);
+    List<MsgSubscription> listByTopic(String topicCode, String channel);
 
     /**
      * 判断用户是否已订阅指定主题 + 通道
@@ -70,5 +70,5 @@ public interface SubscriptionService {
      * @param channel   通道
      * @return 退订后的订阅实体
      */
-    MsgSubscriptionDO unsubscribe(String userId, String topicCode, String channel);
+    MsgSubscription unsubscribe(String userId, String topicCode, String channel);
 }

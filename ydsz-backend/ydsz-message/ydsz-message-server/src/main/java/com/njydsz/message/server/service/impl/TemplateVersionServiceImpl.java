@@ -14,8 +14,8 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.dto.template.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.template.TemplateTestSendDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
-import com.njydsz.message.domain.entity.template.MsgTemplateVersionDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
+import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
 import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
 import com.njydsz.message.infra.mapper.template.MsgTemplateVersionMapper;
 import com.njydsz.message.server.service.core.MessageService;
@@ -61,13 +61,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
      * @throws SysException templateCode 为空时抛出
      */
     @Override
-    public List<MsgTemplateVersionDO> listVersions(String templateCode) {
+    public List<MsgTemplateVersion> listVersions(String templateCode) {
         if (!StringUtils.hasText(templateCode)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码不能为空");
         }
-        return versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
-                .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
-                .orderByDesc(MsgTemplateVersionDO::getVersion));
+        return versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersion>()
+                .eq(MsgTemplateVersion::getTemplateCode, templateCode)
+                .orderByDesc(MsgTemplateVersion::getVersion));
     }
 
     /**
@@ -85,18 +85,18 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public MsgTemplateVersionDO recordVersion(String templateCode, String content, String variableDefs,
+    public MsgTemplateVersion recordVersion(String templateCode, String content, String variableDefs,
                                               String auditStatus, String auditor, String auditRemark) {
         // 查询当前最大版本号
-        Integer maxVersion = versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
-                        .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
-                        .orderByDesc(MsgTemplateVersionDO::getVersion)
+        Integer maxVersion = versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersion>()
+                        .eq(MsgTemplateVersion::getTemplateCode, templateCode)
+                        .orderByDesc(MsgTemplateVersion::getVersion)
                         .last("LIMIT 1"))
                 .stream()
                 .findFirst()
-                .map(MsgTemplateVersionDO::getVersion)
+                .map(MsgTemplateVersion::getVersion)
                 .orElse(0);
-        MsgTemplateVersionDO version = new MsgTemplateVersionDO();
+        MsgTemplateVersion version = new MsgTemplateVersion();
         version.setTemplateCode(templateCode);
         version.setVersion(maxVersion + 1);
         version.setContent(content);
@@ -121,15 +121,15 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String rollbackToVersion(String templateCode, int version) {
-        MsgTemplateVersionDO versionDO = versionMapper.selectOne(new LambdaQueryWrapper<MsgTemplateVersionDO>()
-                .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
-                .eq(MsgTemplateVersionDO::getVersion, version)
+        MsgTemplateVersion versionDO = versionMapper.selectOne(new LambdaQueryWrapper<MsgTemplateVersion>()
+                .eq(MsgTemplateVersion::getTemplateCode, templateCode)
+                .eq(MsgTemplateVersion::getVersion, version)
                 .last("LIMIT 1"));
         if (versionDO == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "版本不存在: " + version);
         }
-        MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                .eq(MsgTemplateDO::getTemplateCode, templateCode)
+        MsgTemplate template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
+                .eq(MsgTemplate::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
         if (template == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + templateCode);
@@ -160,8 +160,8 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
             if (!StringUtils.hasText(dto.getTemplateCode())) {
                 throw new SysException(BaseResultCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
             }
-            MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                    .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
+            MsgTemplate template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
+                    .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template == null) {
                 throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
@@ -194,8 +194,8 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
         if (StringUtils.hasText(dto.getTestChannel())) {
             request.setChannel(dto.getTestChannel());
         } else {
-            MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                    .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
+            MsgTemplate template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
+                    .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template != null) {
                 request.setChannel(template.getChannel());

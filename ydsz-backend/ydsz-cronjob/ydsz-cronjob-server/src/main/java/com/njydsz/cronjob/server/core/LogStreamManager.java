@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * P0-2: 日志流推送管理器（SSE 实时推送）。
  *
  * <p>管理按 logId 分组的 SSE 连接，当任务执行过程中产生新日志行时，
- * 通过 {@link #pushLogLine(String, JobLogContentDO)} 实时推送到所有订阅该 logId 的客户端。
+ * 通过 {@link #pushLogLine(String, JobLogContent)} 实时推送到所有订阅该 logId 的客户端。
  *
  * <h3>工作流程</h3>
  * <ol>
@@ -91,7 +91,7 @@ public class LogStreamManager {
      * @param logId 执行日志 ID
      * @param line  日志行
      */
-    public void pushLogLine(String logId, JobLogContentDO line) {
+    public void pushLogLine(String logId, JobLogContent line) {
         CopyOnWriteArrayList<SseEmitter> emitters = emittersMap.get(logId);
         if (emitters == null || emitters.isEmpty()) {
             return;
@@ -114,7 +114,7 @@ public class LogStreamManager {
      * @param logId 执行日志 ID
      * @param lines 日志行列表
      */
-    public void pushHistory(String logId, List<JobLogContentDO> lines) {
+    public void pushHistory(String logId, List<JobLogContent> lines) {
         if (lines == null || lines.isEmpty()) {
             return;
         }
@@ -122,7 +122,7 @@ public class LogStreamManager {
         if (emitters == null || emitters.isEmpty()) {
             return;
         }
-        for (JobLogContentDO line : lines) {
+        for (JobLogContent line : lines) {
             pushLogLine(logId, line);
         }
     }

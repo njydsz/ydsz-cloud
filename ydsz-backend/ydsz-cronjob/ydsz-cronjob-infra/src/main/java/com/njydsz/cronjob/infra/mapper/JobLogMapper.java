@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 /**
  * 任务日志 Mapper
@@ -22,7 +22,7 @@ import com.njydsz.cronjob.domain.entity.log.JobLogDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobLogMapper extends BaseMapper<JobLogDO> {
+public interface JobLogMapper extends BaseMapper<JobLog> {
 
     /**
      * 查询超时但未结束的 RUNNING 日志（P2-4）。
@@ -48,7 +48,7 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
             + "  AND l.start_time + (j.timeout_ms || ' milliseconds')::INTERVAL < #{now} "
             + "ORDER BY l.start_time ASC "
             + "LIMIT #{limit}")
-    List<JobLogDO> selectTimedOutLogs(@Param("now") LocalDateTime now,
+    List<JobLog> selectTimedOutLogs(@Param("now") LocalDateTime now,
                                       @Param("limit") int limit);
 
     /**
@@ -106,7 +106,7 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
             + "  AND l.is_slow = 0 "
             + "ORDER BY l.duration_ms DESC "
             + "LIMIT #{limit}")
-    List<JobLogDO> selectSlowLogs(@Param("since") LocalDateTime since,
+    List<JobLog> selectSlowLogs(@Param("since") LocalDateTime since,
                                     @Param("limit") int limit);
 
     /**
@@ -134,7 +134,7 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
             + "       created_at, deleted "
             + "FROM ydsz_job_log "
             + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")
-    List<JobLogDO> selectRunningByNode(@Param("nodeId") String nodeId);
+    List<JobLog> selectRunningByNode(@Param("nodeId") String nodeId);
 
     /**
      * P1-3: 标记指定节点上 RUNNING 日志为 FAILED（节点掉线故障转移）。
@@ -237,6 +237,6 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
             + "ORDER BY ts_rank(to_tsvector('english', coalesce(error_message,'') || ' ' || coalesce(result_json,'') || ' ' || coalesce(job_key,'')), "
             + "                  to_tsquery('english', #{query})) DESC "
             + "LIMIT #{limit}")
-    List<JobLogDO> fullTextSearch(@Param("query") String query,
+    List<JobLog> fullTextSearch(@Param("query") String query,
                                    @Param("limit") int limit);
 }

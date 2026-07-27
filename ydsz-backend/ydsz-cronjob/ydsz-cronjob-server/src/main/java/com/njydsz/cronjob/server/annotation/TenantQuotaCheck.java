@@ -15,12 +15,12 @@ import java.lang.annotation.Target;
  * <p>使用示例：
  * <pre>{@code
  * @TenantQuotaCheck(type = QuotaType.JOB)
- * public String create(JobDO job) {
+ * public String create(Job job) {
  *     // 创建任务前会自动检查任务数配额
  * }
  *
  * @TenantQuotaCheck(type = QuotaType.CONCURRENT)
- * public void execute(JobDO job) {
+ * public void execute(Job job) {
  *     // 执行前会自动检查并发配额
  * }
  * }</pre>

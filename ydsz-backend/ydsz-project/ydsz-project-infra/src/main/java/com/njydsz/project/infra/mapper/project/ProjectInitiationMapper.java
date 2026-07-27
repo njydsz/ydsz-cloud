@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.project;
 
-import com.njydsz.project.domain.entity.project.ProjectInitiationDO;
+import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface ProjectInitiationMapper extends BaseMapper<ProjectInitiationDO> {
+public interface ProjectInitiationMapper extends BaseMapper<ProjectInitiation> {
 }

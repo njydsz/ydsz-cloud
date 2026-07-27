@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.infra.mapper.log.JobLogContentMapper;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
@@ -34,23 +34,23 @@ public class JobLogContentServiceImpl implements JobLogContentService {
     private final JobLogContentMapper jobLogContentMapper;
 
     @Override
-    public void batchSave(List<JobLogContentDO> contents) {
+    public void batchSave(List<JobLogContent> contents) {
         if (contents == null || contents.isEmpty()) {
             return;
         }
-        for (JobLogContentDO content : contents) {
+        for (JobLogContent content : contents) {
             jobLogContentMapper.insert(content);
         }
     }
 
     @Override
-    public List<JobLogContentDO> pageByLogId(String logId, int page, int size) {
+    public List<JobLogContent> pageByLogId(String logId, int page, int size) {
         int offset = Math.max(0, (page - 1) * size);
         return jobLogContentMapper.selectByLogId(logId, offset, size);
     }
 
     @Override
-    public List<JobLogContentDO> listAfterLine(String logId, int fromLineNo) {
+    public List<JobLogContent> listAfterLine(String logId, int fromLineNo) {
         return jobLogContentMapper.selectAfterLine(logId, fromLineNo);
     }
 
@@ -60,7 +60,7 @@ public class JobLogContentServiceImpl implements JobLogContentService {
     }
 
     @Override
-    public List<JobLogContentDO> searchByKeyword(String logId, String keyword, int page, int size) {
+    public List<JobLogContent> searchByKeyword(String logId, String keyword, int page, int size) {
         if (logId == null || logId.isBlank() || keyword == null || keyword.isBlank()) {
             return java.util.Collections.emptyList();
         }

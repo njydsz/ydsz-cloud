@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobHistoryDO;
+import com.njydsz.cronjob.domain.entity.job.JobHistory;
 
 /**
  * 任务配置历史版本 Mapper（P1-6 任务版本管理）。
@@ -20,7 +20,7 @@ import com.njydsz.cronjob.domain.entity.job.JobHistoryDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobHistoryMapper extends BaseMapper<JobHistoryDO> {
+public interface JobHistoryMapper extends BaseMapper<JobHistory> {
 
     /**
      * 查询指定任务的所有历史版本（按版本号降序）。
@@ -34,7 +34,7 @@ public interface JobHistoryMapper extends BaseMapper<JobHistoryDO> {
             + "FROM ydsz_job_history "
             + "WHERE job_id = #{jobId} AND deleted = 0 "
             + "ORDER BY version DESC")
-    List<JobHistoryDO> selectByJobIdOrderByVersionDesc(@Param("jobId") String jobId);
+    List<JobHistory> selectByJobIdOrderByVersionDesc(@Param("jobId") String jobId);
 
     /**
      * 查询指定任务的指定历史版本。
@@ -48,7 +48,7 @@ public interface JobHistoryMapper extends BaseMapper<JobHistoryDO> {
             + "       changed_by, changed_at, deleted "
             + "FROM ydsz_job_history "
             + "WHERE job_id = #{jobId} AND version = #{version} AND deleted = 0")
-    JobHistoryDO selectByVersion(@Param("jobId") String jobId,
+    JobHistory selectByVersion(@Param("jobId") String jobId,
                                  @Param("version") Integer version);
 
     /**

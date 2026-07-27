@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
 
 /**
  * 流程审计日志 Mapper
@@ -17,25 +17,25 @@ import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
+public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLog> {
 
     /**
      * 查某实例的全部审计日志（按时间正序）
      */
-    List<FlowAuditLogDO> selectByInstanceId(@Param("instanceId") String instanceId);
+    List<FlowAuditLog> selectByInstanceId(@Param("instanceId") String instanceId);
 
     /**
      * 查某任务的操作记录
      */
-    List<FlowAuditLogDO> selectByTaskId(@Param("taskId") String taskId);
+    List<FlowAuditLog> selectByTaskId(@Param("taskId") String taskId);
 
     /**
      * 查某操作人的审计日志（P1-8: 加签历史查询）
      */
-    List<FlowAuditLogDO> selectByOperatorId(@Param("operatorId") String operatorId);
+    List<FlowAuditLog> selectByOperatorId(@Param("operatorId") String operatorId);
 
     /**
      * 查某目标人（转办/委派/加签目标）的审计日志（P1-8: 加签历史查询）
      */
-    List<FlowAuditLogDO> selectByTargetId(@Param("targetId") String targetId);
+    List<FlowAuditLog> selectByTargetId(@Param("targetId") String targetId);
 }

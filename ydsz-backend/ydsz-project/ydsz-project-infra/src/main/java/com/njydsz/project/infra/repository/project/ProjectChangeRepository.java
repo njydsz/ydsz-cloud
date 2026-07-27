@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectChangeDO;
+import com.njydsz.project.domain.entity.project.ProjectChange;
 import com.njydsz.project.domain.repository.project.IProjectChangeRepository;
 import com.njydsz.project.infra.mapper.project.ProjectChangeMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ProjectChangeRepository extends ServiceImpl<ProjectChangeMapper, ProjectChangeDO>
+public class ProjectChangeRepository extends ServiceImpl<ProjectChangeMapper, ProjectChange>
         implements IProjectChangeRepository {
 }

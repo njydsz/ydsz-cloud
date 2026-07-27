@@ -16,7 +16,7 @@ import com.njydsz.message.domain.dto.core.CostStatsVO;
 import com.njydsz.message.domain.dto.core.FunnelStatsVO;
 import com.njydsz.message.domain.dto.core.MessageStatsVO;
 import com.njydsz.message.domain.dto.receipt.ReceiptStatsVO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
@@ -139,10 +139,10 @@ public class MessageStatsServiceImpl implements MessageStatsService {
      * 按状态统计数量（带时间范围）。
      */
     private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
-        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getStatus, status.name())
-                .ge(MsgLogDO::getCreatedAt, start)
-                .le(MsgLogDO::getCreatedAt, end));
+        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getStatus, status.name())
+                .ge(MsgLog::getCreatedAt, start)
+                .le(MsgLog::getCreatedAt, end));
         return count == null ? 0L : count;
     }
 
@@ -151,11 +151,11 @@ public class MessageStatsServiceImpl implements MessageStatsService {
      */
     private long countByStatusAndChannel(MessageStatusEnum status, String channel,
                                          LocalDateTime start, LocalDateTime end) {
-        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getStatus, status.name())
-                .eq(MsgLogDO::getChannel, channel)
-                .ge(MsgLogDO::getCreatedAt, start)
-                .le(MsgLogDO::getCreatedAt, end));
+        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getStatus, status.name())
+                .eq(MsgLog::getChannel, channel)
+                .ge(MsgLog::getCreatedAt, start)
+                .le(MsgLog::getCreatedAt, end));
         return count == null ? 0L : count;
     }
 
@@ -163,10 +163,10 @@ public class MessageStatsServiceImpl implements MessageStatsService {
      * 按回执状态统计数量（带时间范围）。
      */
     private long countByReceiptStatus(ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
-        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getReceiptStatus, status.name())
-                .ge(MsgLogDO::getCreatedAt, start)
-                .le(MsgLogDO::getCreatedAt, end));
+        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getReceiptStatus, status.name())
+                .ge(MsgLog::getCreatedAt, start)
+                .le(MsgLog::getCreatedAt, end));
         return count == null ? 0L : count;
     }
 
@@ -229,11 +229,11 @@ public class MessageStatsServiceImpl implements MessageStatsService {
             String channel = entry.getKey();
             BigDecimal unitPrice = entry.getValue();
             // 统计该通道 SUCCESS 消息数
-            LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
-            w.eq(MsgLogDO::getChannel, channel);
-            w.eq(MsgLogDO::getStatus, MessageStatusEnum.SUCCESS.name());
-            w.ge(MsgLogDO::getCreatedAt, actualStart);
-            w.le(MsgLogDO::getCreatedAt, actualEnd);
+            LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
+            w.eq(MsgLog::getChannel, channel);
+            w.eq(MsgLog::getStatus, MessageStatusEnum.SUCCESS.name());
+            w.ge(MsgLog::getCreatedAt, actualStart);
+            w.le(MsgLog::getCreatedAt, actualEnd);
             Long count = msgLogMapper.selectCount(w);
             long msgCount = count == null ? 0L : count;
 
@@ -273,20 +273,20 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     private long countForFunnel(String status, List<String> receiptStatusList,
                                  String channel, String templateCode,
                                  LocalDateTime start, LocalDateTime end) {
-        LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
         if (status != null) {
-            w.eq(MsgLogDO::getStatus, status);
+            w.eq(MsgLog::getStatus, status);
         } else if (receiptStatusList != null && !receiptStatusList.isEmpty()) {
-            w.in(MsgLogDO::getReceiptStatus, receiptStatusList);
+            w.in(MsgLog::getReceiptStatus, receiptStatusList);
         }
         if (channel != null && !channel.isBlank()) {
-            w.eq(MsgLogDO::getChannel, channel);
+            w.eq(MsgLog::getChannel, channel);
         }
         if (templateCode != null && !templateCode.isBlank()) {
-            w.eq(MsgLogDO::getTemplateCode, templateCode);
+            w.eq(MsgLog::getTemplateCode, templateCode);
         }
-        w.ge(MsgLogDO::getCreatedAt, start);
-        w.le(MsgLogDO::getCreatedAt, end);
+        w.ge(MsgLog::getCreatedAt, start);
+        w.le(MsgLog::getCreatedAt, end);
         Long count = msgLogMapper.selectCount(w);
         return count == null ? 0L : count;
     }

@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowAttachmentDO;
+import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
  * 自建工作流引擎 - 审批附件 Mapper
@@ -18,7 +18,7 @@ import com.njydsz.workflow.domain.entity.FlowAttachmentDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowAttachmentMapper extends BaseMapper<FlowAttachmentDO> {
+public interface FlowAttachmentMapper extends BaseMapper<FlowAttachment> {
 
     /**
      * 查询某任务关联的未删除附件
@@ -27,7 +27,7 @@ public interface FlowAttachmentMapper extends BaseMapper<FlowAttachmentDO> {
      * @return 附件列表
      */
     @Select("SELECT * FROM ydsz_flow_attachment WHERE task_id = #{taskId} AND deleted = 0 ORDER BY created_at ASC")
-    List<FlowAttachmentDO> selectByTask(@Param("taskId") String taskId);
+    List<FlowAttachment> selectByTask(@Param("taskId") String taskId);
 
     /**
      * 查询某实例关联的未删除附件
@@ -36,5 +36,5 @@ public interface FlowAttachmentMapper extends BaseMapper<FlowAttachmentDO> {
      * @return 附件列表
      */
     @Select("SELECT * FROM ydsz_flow_attachment WHERE instance_id = #{instanceId} AND deleted = 0 ORDER BY created_at ASC")
-    List<FlowAttachmentDO> selectByInstance(@Param("instanceId") String instanceId);
+    List<FlowAttachment> selectByInstance(@Param("instanceId") String instanceId);
 }

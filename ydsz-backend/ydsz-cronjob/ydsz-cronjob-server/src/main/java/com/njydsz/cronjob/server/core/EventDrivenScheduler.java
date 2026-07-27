@@ -5,7 +5,7 @@ import java.time.Duration;
 import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.service.job.JobService;
 
@@ -57,7 +57,7 @@ public class EventDrivenScheduler {
         }
 
         try {
-            JobDO job = jobMapper.selectByJobKey(jobKey);
+            Job job = jobMapper.selectByJobKey(jobKey);
             if (job == null) {
                 log.warn("[EventScheduler] jobKey 不存在: {}", jobKey);
                 return false;

@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -48,14 +48,14 @@ public class FlowGraphValidator {
      * @param skips 跳转列表
      * @throws IllegalArgumentException 图结构不合法时抛出
      */
-    public void validate(List<FlowNodeDO> nodes, List<FlowSkipDO> skips) {
+    public void validate(List<FlowNode> nodes, List<FlowSkip> skips) {
         if (nodes == null || nodes.isEmpty()) {
             throw new IllegalArgumentException("流程定义节点列表为空");
         }
 
         // 1. 构建节点索引
-        Map<String, FlowNodeDO> nodeMap = new HashMap<>();
-        for (FlowNodeDO node : nodes) {
+        Map<String, FlowNode> nodeMap = new HashMap<>();
+        for (FlowNode node : nodes) {
             String code = node.getNodeCode();
             if (!StringUtils.hasText(code)) {
                 throw new IllegalArgumentException("存在 nodeCode 为空的节点");
@@ -67,7 +67,7 @@ public class FlowGraphValidator {
         }
 
         // 2. 检查 START / END 节点
-        List<FlowNodeDO> startNodes = nodes.stream()
+        List<FlowNode> startNodes = nodes.stream()
                 .filter(n -> FlowNodeType.START.getCode() == n.getNodeType())
                 .toList();
         if (startNodes.isEmpty()) {
@@ -95,7 +95,7 @@ public class FlowGraphValidator {
 
         Set<String> validSkips = new HashSet<>();
         if (skips != null) {
-            for (FlowSkipDO skip : skips) {
+            for (FlowSkip skip : skips) {
                 String source = extractSourceRef(skip);
                 String target = skip.getNextNodeCode();
 
@@ -127,7 +127,7 @@ public class FlowGraphValidator {
         // 4. 连通性检查：从 START 出发 BFS，所有节点应可达
         Set<String> reachable = bfs(startCode, outEdges);
         List<String> unreachable = nodes.stream()
-                .map(FlowNodeDO::getNodeCode)
+                .map(FlowNode::getNodeCode)
                 .filter(code -> !reachable.contains(code))
                 .toList();
         if (!unreachable.isEmpty()) {
@@ -138,7 +138,7 @@ public class FlowGraphValidator {
         // 5. 可达终止检查：每个非 END 节点都能到达 END（反向 BFS 从所有 END 出发）
         List<String> endNodes = nodes.stream()
                 .filter(n -> FlowNodeType.END.getCode() == n.getNodeType())
-                .map(FlowNodeDO::getNodeCode)
+                .map(FlowNode::getNodeCode)
                 .toList();
         Set<String> canReachEnd = new HashSet<>();
         for (String endCode : endNodes) {
@@ -146,7 +146,7 @@ public class FlowGraphValidator {
         }
         List<String> cannotReachEnd = nodes.stream()
                 .filter(n -> FlowNodeType.END.getCode() != n.getNodeType())
-                .map(FlowNodeDO::getNodeCode)
+                .map(FlowNode::getNodeCode)
                 .filter(code -> !canReachEnd.contains(code))
                 .toList();
         if (!cannotReachEnd.isEmpty()) {
@@ -155,7 +155,7 @@ public class FlowGraphValidator {
         }
 
         // 6. 孤立节点检查
-        for (FlowNodeDO node : nodes) {
+        for (FlowNode node : nodes) {
             String code = node.getNodeCode();
             int type = node.getNodeType();
             if (type != FlowNodeType.START.getCode() && inEdges.get(code).isEmpty()) {
@@ -197,9 +197,9 @@ public class FlowGraphValidator {
     }
 
     /**
-     * 从 FlowSkipDO.ext 中提取 sourceRef
+     * 从 FlowSkip.ext 中提取 sourceRef
      */
-    private String extractSourceRef(FlowSkipDO skip) {
+    private String extractSourceRef(FlowSkip skip) {
         // 优先从 ext JSON 的 sourceRef 字段获取
         if (StringUtils.hasText(skip.getExt())) {
             try {

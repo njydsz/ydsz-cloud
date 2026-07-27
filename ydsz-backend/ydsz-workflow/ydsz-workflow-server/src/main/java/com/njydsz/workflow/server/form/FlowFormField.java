@@ -11,7 +11,7 @@ import lombok.Data;
  * 表单字段定义（P0-3 表单引擎 MVP）
  *
  * <p>对标钉钉/飞书审批表单设计器中的单个字段配置。
- * 字段定义存储在 {@code FlowNodeDO.ext} JSON 的 {@code formSchema.fields} 数组中。
+ * 字段定义存储在 {@code FlowNode.ext} JSON 的 {@code formSchema.fields} 数组中。
  *
  * <p>支持的字段能力：
  * <ul>

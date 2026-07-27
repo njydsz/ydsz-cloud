@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.cost.CostPurchaseDO;
+import com.njydsz.project.domain.entity.cost.CostPurchase;
 
 public interface CostPurchaseService {
-    CostPurchaseDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<CostPurchaseDO> page(int pageNum, int pageSize);
-    boolean save(CostPurchaseDO entity);
-    boolean updateById(CostPurchaseDO entity);
+    CostPurchase getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<CostPurchase> page(int pageNum, int pageSize);
+    boolean save(CostPurchase entity);
+    boolean updateById(CostPurchase entity);
     boolean removeById(String id);
 }

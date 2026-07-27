@@ -11,8 +11,8 @@ import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 
@@ -90,7 +90,7 @@ public class PreemptiveScheduler {
         }
 
         // 查找可抢占的低优先级运行中任务
-        JobLogDO preemptable = findPreemptableTask(newJobPriority, localNodeId);
+        JobLog preemptable = findPreemptableTask(newJobPriority, localNodeId);
         if (preemptable == null) {
             return false;
         }
@@ -127,7 +127,7 @@ public class PreemptiveScheduler {
      * 查找可被抢占的低优先级运行中任务。
      *
      * <p>P0-3 修复：原实现将 runningPriority 硬编码为 5，导致抢占逻辑失效。
-     * 现在通过 jobId 批量关联查询 JobDO 获取实际优先级。
+     * 现在通过 jobId 批量关联查询 Job 获取实际优先级。
      *
      * <p>条件：
      * <ul>
@@ -142,34 +142,34 @@ public class PreemptiveScheduler {
      * @param localNodeId    当前节点 ID
      * @return 可被抢占的任务日志；无返回 null
      */
-    private JobLogDO findPreemptableTask(int newJobPriority, String localNodeId) {
+    private JobLog findPreemptableTask(int newJobPriority, String localNodeId) {
         try {
-            LambdaQueryWrapper<JobLogDO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(JobLogDO::getStatus, "RUNNING")
-                    .eq(JobLogDO::getDeleted, 0)
-                    .ne(JobLogDO::getTriggerType, "MANUAL")
-                    .eq(JobLogDO::getExecNodeId, localNodeId)  // P0-3: 仅抢占当前节点上的任务
-                    .orderByDesc(JobLogDO::getCreatedAt)
+            LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(JobLog::getStatus, "RUNNING")
+                    .eq(JobLog::getDeleted, 0)
+                    .ne(JobLog::getTriggerType, "MANUAL")
+                    .eq(JobLog::getExecNodeId, localNodeId)  // P0-3: 仅抢占当前节点上的任务
+                    .orderByDesc(JobLog::getCreatedAt)
                     .last("LIMIT 20");
-            List<JobLogDO> runningLogs = jobLogMapper.selectList(wrapper);
+            List<JobLog> runningLogs = jobLogMapper.selectList(wrapper);
             if (runningLogs.isEmpty()) {
                 return null;
             }
 
-            // P0-3: 批量查询 JobDO 获取实际优先级，避免 N+1 查询
+            // P0-3: 批量查询 Job 获取实际优先级，避免 N+1 查询
             List<String> jobIds = runningLogs.stream()
-                    .map(JobLogDO::getJobId)
+                    .map(JobLog::getJobId)
                     .distinct()
                     .collect(Collectors.toList());
-            List<JobDO> jobs = jobMapper.selectBatchIds(jobIds);
-            Map<String, JobDO> jobMap = jobs.stream()
-                    .collect(Collectors.toMap(JobDO::getId, Function.identity()));
+            List<Job> jobs = jobMapper.selectBatchIds(jobIds);
+            Map<String, Job> jobMap = jobs.stream()
+                    .collect(Collectors.toMap(Job::getId, Function.identity()));
 
             // 从运行中任务中找到优先级最低（数值最大）且差值足够的任务
-            JobLogDO bestCandidate = null;
+            JobLog bestCandidate = null;
             int bestPriority = -1;
-            for (JobLogDO logEntry : runningLogs) {
-                JobDO job = jobMap.get(logEntry.getJobId());
+            for (JobLog logEntry : runningLogs) {
+                Job job = jobMap.get(logEntry.getJobId());
                 if (job == null || job.getPriority() == null) {
                     continue;
                 }
@@ -196,7 +196,7 @@ public class PreemptiveScheduler {
      * @param log 任务日志
      * @return true 中断成功
      */
-    private boolean interruptTaskThread(JobLogDO log) {
+    private boolean interruptTaskThread(JobLog log) {
         Long threadId = log.getExecThreadId();
         if (threadId == null) {
             return false;
@@ -215,7 +215,7 @@ public class PreemptiveScheduler {
      *
      * @param log 任务日志
      */
-    private void markPreempted(JobLogDO logEntry) {
+    private void markPreempted(JobLog logEntry) {
         try {
             logEntry.setStatus("FAILED");
             logEntry.setErrorMessage("被高优先级任务抢占");

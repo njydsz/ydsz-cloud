@@ -9,7 +9,7 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
-import com.njydsz.userinfo.domain.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

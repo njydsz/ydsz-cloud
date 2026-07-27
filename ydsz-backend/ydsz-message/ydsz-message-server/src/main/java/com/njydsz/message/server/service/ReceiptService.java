@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.receipt;
 import java.util.List;
 
 import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
-import com.njydsz.message.domain.entity.receipt.MsgReceiptDO;
+import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 
 /**
  * 消息回执服务
@@ -26,5 +26,5 @@ public interface ReceiptService {
      * @param logId 日志 ID
      * @return 回执列表
      */
-    List<MsgReceiptDO> listByLogId(String logId);
+    List<MsgReceipt> listByLogId(String logId);
 }

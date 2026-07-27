@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.schedule.GlueCodeDO;
+import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 
 /**
  * GLUE 在线编码 Mapper（P1-2 GLUE 在线编码）。
@@ -16,7 +16,7 @@ import com.njydsz.cronjob.domain.entity.schedule.GlueCodeDO;
  * @since 1.0.0
  */
 @Mapper
-public interface GlueCodeMapper extends BaseMapper<GlueCodeDO> {
+public interface GlueCodeMapper extends BaseMapper<GlueCode> {
 
     /**
      * 查询指定任务的最新版本 GLUE 代码。
@@ -32,5 +32,5 @@ public interface GlueCodeMapper extends BaseMapper<GlueCodeDO> {
             + "WHERE job_id = #{jobId} AND deleted = 0 "
             + "ORDER BY version DESC "
             + "LIMIT 1")
-    GlueCodeDO selectLatestByJobId(@Param("jobId") String jobId);
+    GlueCode selectLatestByJobId(@Param("jobId") String jobId);
 }

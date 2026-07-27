@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowCcDO;
+import com.njydsz.workflow.domain.entity.FlowCc;
 
 /**
  * 流程抄送 Mapper
@@ -18,7 +18,7 @@ import com.njydsz.workflow.domain.entity.FlowCcDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
+public interface FlowCcMapper extends BaseMapper<FlowCc> {
 
     /**
      * 查"抄送我的"（分页）
@@ -30,7 +30,7 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
      * @param offset     分页偏移
      * @param limit      每页大小
      */
-    List<FlowCcDO> selectCcByUserPage(@Param("tenantId") String tenantId,
+    List<FlowCc> selectCcByUserPage(@Param("tenantId") String tenantId,
                                      @Param("ccUserId") String ccUserId,
                                      @Param("readStatus") String readStatus,
                                      @Param("flowCode") String flowCode,
@@ -75,6 +75,6 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
     /**
      * 查实例的抄送列表
      */
-    List<FlowCcDO> selectByInstanceId(@Param("tenantId") String tenantId,
+    List<FlowCc> selectByInstanceId(@Param("tenantId") String tenantId,
                                       @Param("instanceId") String instanceId);
 }

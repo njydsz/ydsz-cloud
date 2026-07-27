@@ -12,8 +12,8 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
@@ -67,7 +67,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         // 校验所有实例存在且类型相同
         Set<String> flowCodes = new LinkedHashSet<>();
         for (String instanceId : instanceIds) {
-            FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+            FlowInstance instance = instanceMapper.selectById(instanceId);
             if (instance == null) {
                 throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_9e8f0a1b", instanceId);
             }
@@ -123,8 +123,8 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         int successCount = 0;
         for (String instanceId : instanceIds) {
             try {
-                List<FlowRunTaskDO> tasks = taskService.listPendingByInstance(instanceId);
-                for (FlowRunTaskDO task : tasks) {
+                List<FlowRunTask> tasks = taskService.listPendingByInstance(instanceId);
+                for (FlowRunTask task : tasks) {
                     if (userId.equals(task.getAssigneeId())) {
                         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
                         dto.setTaskId(task.getId());
@@ -163,8 +163,8 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         int successCount = 0;
         for (String instanceId : instanceIds) {
             try {
-                List<FlowRunTaskDO> tasks = taskService.listPendingByInstance(instanceId);
-                for (FlowRunTaskDO task : tasks) {
+                List<FlowRunTask> tasks = taskService.listPendingByInstance(instanceId);
+                for (FlowRunTask task : tasks) {
                     if (userId.equals(task.getAssigneeId())) {
                         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
                         dto.setTaskId(task.getId());
@@ -207,7 +207,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         // 获取实例摘要
         List<Map<String, Object>> instanceDetails = new ArrayList<>();
         for (String instanceId : instanceIds) {
-            FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+            FlowInstance instance = instanceMapper.selectById(instanceId);
             if (instance != null) {
                 Map<String, Object> info = new LinkedHashMap<>();
                 info.put("instanceId", instance.getId());
@@ -235,25 +235,25 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         String tid = tenantId != null ? tenantId : "1";
 
         // 查询用户待办任务
-        List<FlowRunTaskDO> todoTasks = taskService.listTodoByUser(userId, null, null, tid);
+        List<FlowRunTask> todoTasks = taskService.listTodoByUser(userId, null, null, tid);
         if (todoTasks == null || todoTasks.isEmpty()) {
             return List.of();
         }
 
         // 按 flowCode 分组，筛选出有多个待办的流程类型
-        Map<String, List<FlowRunTaskDO>> grouped = todoTasks.stream()
+        Map<String, List<FlowRunTask>> grouped = todoTasks.stream()
                 .filter(t -> StringUtils.hasText(t.getFlowCode()))
-                .collect(Collectors.groupingBy(FlowRunTaskDO::getFlowCode));
+                .collect(Collectors.groupingBy(FlowRunTask::getFlowCode));
 
         List<Map<String, Object>> result = new ArrayList<>();
-        for (Map.Entry<String, List<FlowRunTaskDO>> entry : grouped.entrySet()) {
+        for (Map.Entry<String, List<FlowRunTask>> entry : grouped.entrySet()) {
             if (entry.getValue().size() >= 2) {
                 Map<String, Object> group = new LinkedHashMap<>();
                 group.put("flowCode", entry.getKey());
                 group.put("flowName", entry.getValue().get(0).getFlowName());
                 group.put("taskCount", entry.getValue().size());
                 List<String> taskIds = entry.getValue().stream()
-                        .map(FlowRunTaskDO::getId)
+                        .map(FlowRunTask::getId)
                         .collect(Collectors.toList());
                 group.put("taskIds", taskIds);
                 result.add(group);

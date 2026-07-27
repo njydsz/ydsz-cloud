@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.batch;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.message.domain.entity.batch.MsgAggregateDO;
+import com.njydsz.message.domain.entity.batch.MsgAggregate;
 
 /**
  * 聚合批次服务
@@ -21,7 +21,7 @@ public interface AggregateService {
      * @param tenantId 租户 ID
      * @return 聚合批次实体
      */
-    MsgAggregateDO appendOrStart(String group, String receiver, String channel, String tenantId);
+    MsgAggregate appendOrStart(String group, String receiver, String channel, String tenantId);
 
     /**
      * 刷新到期的聚合批次(发送摘要)
@@ -45,5 +45,5 @@ public interface AggregateService {
      * @param query 分页参数
      * @return 分页结果
      */
-    Page<MsgAggregateDO> page(PageQuery query);
+    Page<MsgAggregate> page(PageQuery query);
 }

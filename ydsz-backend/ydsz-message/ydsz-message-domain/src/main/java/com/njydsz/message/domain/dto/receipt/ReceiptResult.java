@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  *
  * <p>由 {@link com.njydsz.message.server.channel.MessageChannel#queryReceipt} 返回，
  * 描述从服务商侧查询到的最新回执状态。{@code ReceiptPuller} 拿到此结果后会联动更新
- * {@code MsgLogDO.receiptStatus} 与 {@code MsgLogDO.receiptAt}。
+ * {@code MsgLog.receiptStatus} 与 {@code MsgLog.receiptAt}。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -1,7 +1,7 @@
 package com.njydsz.workflow.server.service.impl;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 
 /**
@@ -18,10 +18,10 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
  *
  * <p>调用契约（顺序）：
  * <ol>
- *   <li>{@link #preCheck(FlowRunTaskDO, FlowTaskOperateDTO)} — 预检查（可选重写）</li>
- *   <li>{@link #onUserPassed(FlowRunTaskDO, FlowTaskOperateDTO)} — 累加计数/标记用户已处理</li>
- *   <li>{@link #shouldAdvance(FlowRunTaskDO)} — 决定是否满足推进条件</li>
- *   <li>{@link #onAdvance(FlowRunTaskDO, FlowTaskOperateDTO)} — 推进前的清理（skipByNode 等）</li>
+ *   <li>{@link #preCheck(FlowRunTask, FlowTaskOperateDTO)} — 预检查（可选重写）</li>
+ *   <li>{@link #onUserPassed(FlowRunTask, FlowTaskOperateDTO)} — 累加计数/标记用户已处理</li>
+ *   <li>{@link #shouldAdvance(FlowRunTask)} — 决定是否满足推进条件</li>
+ *   <li>{@link #onAdvance(FlowRunTask, FlowTaskOperateDTO)} — 推进前的清理（skipByNode 等）</li>
  *   <li>主流程推进 → 触发 onAdvanceAfter（事件/审计已在主流程统一处理）</li>
  * </ol>
  *
@@ -39,7 +39,7 @@ public interface CountersignStrategy {
      *
      * <p>默认无操作；SEQUENTIAL/FOREACH 等可能校验"当前用户是否本轮应处理的人"。
      */
-    default void preCheck(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    default void preCheck(FlowRunTask task, FlowTaskOperateDTO dto) {
         // 默认 no-op
     }
 
@@ -49,17 +49,17 @@ public interface CountersignStrategy {
      * <p>主流程在调用本方法前已完成"完成当前 task 并归档"动作；本方法负责
      * 更新会签维度的状态（如并行计数器）。
      */
-    void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto);
+    void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto);
 
     /**
      * 是否满足推进条件（达到完成阈值）。
      */
-    boolean shouldAdvance(FlowRunTaskDO task);
+    boolean shouldAdvance(FlowRunTask task);
 
     /**
      * 推进前的清理动作（如 PARALLEL 完成后 skip 同节点其他 PENDING 任务）。
      */
-    default void onAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    default void onAdvance(FlowRunTask task, FlowTaskOperateDTO dto) {
         // 默认 no-op
     }
 }

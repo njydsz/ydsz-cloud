@@ -21,7 +21,7 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgRouteRuleDO;
+import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.server.service.config.RouteRuleService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,7 +58,7 @@ public class RouteRuleController {
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'create'")
     @RateLimit(resource = "message.routerule.create", threshold = 50)
     @PostMapping
-    public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
+    public BaseResponse<MsgRouteRule> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
         return BaseResponse.success(routeRuleService.create(dto));
     }
 
@@ -75,7 +75,7 @@ public class RouteRuleController {
     @Audit(module = "路由规则", type = AuditType.CONFIG, action = AuditAction.UPDATE, content = "'update'")
     @RateLimit(resource = "message.routerule.update", threshold = 50)
     @PutMapping("/{id}")
-    public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
+    public BaseResponse<MsgRouteRule> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
         return BaseResponse.success(routeRuleService.update(id, dto));
     }
 
@@ -105,7 +105,7 @@ public class RouteRuleController {
     @Operation(summary = "路由规则详情")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
     @GetMapping("/{id}")
-    public BaseResponse<MsgRouteRuleDO> getById(@PathVariable String id) {
+    public BaseResponse<MsgRouteRule> getById(@PathVariable String id) {
         return BaseResponse.success(routeRuleService.getById(id));
     }
 
@@ -118,7 +118,7 @@ public class RouteRuleController {
     @Operation(summary = "路由规则分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgRouteRuleDO>> page(PageQuery query) {
+    public BaseResponse<Page<MsgRouteRule>> page(PageQuery query) {
         return BaseResponse.success(routeRuleService.page(query));
     }
 
@@ -130,7 +130,7 @@ public class RouteRuleController {
     @Operation(summary = "查询启用的路由规则")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/enabled")
-    public BaseResponse<List<MsgRouteRuleDO>> listEnabled() {
+    public BaseResponse<List<MsgRouteRule>> listEnabled() {
         return BaseResponse.success(routeRuleService.listEnabled());
     }
 }

@@ -10,7 +10,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscriptionDO;
+import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
 import com.njydsz.message.infra.mapper.config.MsgSubscriptionMapper;
 import com.njydsz.message.server.config.MessageProperties;
@@ -79,7 +79,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      * @throws SysException 退订中心关闭或 token 无效时抛出
      */
     @Override
-    public MsgSubscriptionDO unsubscribeByToken(String token) {
+    public MsgSubscription unsubscribeByToken(String token) {
         if (!messageProperties.getUnsubscribe().isEnabled()) {
             throw new SysException(BaseResultCode.BIZ_ERROR, "退订中心已关闭");
         }
@@ -96,21 +96,21 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      * @return 分页结果
      */
     @Override
-    public PageResponse<MsgSubscriptionDO> pageUnsubscribed(UnsubscribeQueryDTO query) {
+    public PageResponse<MsgSubscription> pageUnsubscribed(UnsubscribeQueryDTO query) {
         if (query == null) {
             query = new UnsubscribeQueryDTO();
         }
-        Page<MsgSubscriptionDO> page = new Page<>(
+        Page<MsgSubscription> page = new Page<>(
                 query.getPageNum(),
                 Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        LambdaQueryWrapper<MsgSubscriptionDO> w = new LambdaQueryWrapper<MsgSubscriptionDO>()
-                .eq(MsgSubscriptionDO::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name())
-                .eq(StringUtils.hasText(query.getUserId()), MsgSubscriptionDO::getUserId, query.getUserId())
-                .eq(StringUtils.hasText(query.getTopicCode()), MsgSubscriptionDO::getTopicCode, query.getTopicCode())
-                .eq(StringUtils.hasText(query.getChannel()), MsgSubscriptionDO::getChannel, query.getChannel())
-                .eq(StringUtils.hasText(query.getTenantId()), MsgSubscriptionDO::getTenantId, query.getTenantId())
-                .orderByDesc(MsgSubscriptionDO::getUnsubscribedAt);
-        Page<MsgSubscriptionDO> result = msgSubscriptionMapper.selectPage(page, w);
+        LambdaQueryWrapper<MsgSubscription> w = new LambdaQueryWrapper<MsgSubscription>()
+                .eq(MsgSubscription::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name())
+                .eq(StringUtils.hasText(query.getUserId()), MsgSubscription::getUserId, query.getUserId())
+                .eq(StringUtils.hasText(query.getTopicCode()), MsgSubscription::getTopicCode, query.getTopicCode())
+                .eq(StringUtils.hasText(query.getChannel()), MsgSubscription::getChannel, query.getChannel())
+                .eq(StringUtils.hasText(query.getTenantId()), MsgSubscription::getTenantId, query.getTenantId())
+                .orderByDesc(MsgSubscription::getUnsubscribedAt);
+        Page<MsgSubscription> result = msgSubscriptionMapper.selectPage(page, w);
         return PageResponse.ofPage(result);
     }
 
@@ -130,14 +130,14 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
-        MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
-                .eq(MsgSubscriptionDO::getUserId, userId)
-                .eq(MsgSubscriptionDO::getTopicCode, topicCode)
-                .eq(MsgSubscriptionDO::getChannel, channel)
+        MsgSubscription existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscription>()
+                .eq(MsgSubscription::getUserId, userId)
+                .eq(MsgSubscription::getTopicCode, topicCode)
+                .eq(MsgSubscription::getChannel, channel)
                 .last("LIMIT 1"));
         if (existing == null) {
             // 无记录时直接新建 SUBSCRIBED 记录
-            MsgSubscriptionDO entity = new MsgSubscriptionDO();
+            MsgSubscription entity = new MsgSubscription();
             entity.setUserId(userId);
             entity.setTopicCode(topicCode);
             entity.setChannel(channel);

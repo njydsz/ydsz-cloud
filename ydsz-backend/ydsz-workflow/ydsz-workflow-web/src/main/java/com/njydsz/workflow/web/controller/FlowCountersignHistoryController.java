@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -72,7 +72,7 @@ public class FlowCountersignHistoryController {
             @PathVariable String instanceId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
+        List<FlowAuditLog> logs = auditLogMapper.selectByInstanceId(instanceId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
                 logs.stream()
                         .filter(log -> COUNTERSIGN_ACTIONS.contains(log.getAction()))
@@ -99,7 +99,7 @@ public class FlowCountersignHistoryController {
             @PathVariable String taskId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        List<FlowAuditLogDO> logs = auditLogMapper.selectByTaskId(taskId);
+        List<FlowAuditLog> logs = auditLogMapper.selectByTaskId(taskId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
                 logs.stream()
                         .filter(log -> COUNTERSIGN_ACTIONS.contains(log.getAction()))
@@ -128,7 +128,7 @@ public class FlowCountersignHistoryController {
         if (currentUserId == null) {
             return BaseResponse.success(PageResponse.<List<Map<String, Object>>>empty());
         }
-        List<FlowAuditLogDO> logs = auditLogMapper.selectByOperatorId(currentUserId);
+        List<FlowAuditLog> logs = auditLogMapper.selectByOperatorId(currentUserId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
                 logs.stream()
                         .filter(log -> COUNTERSIGN_ACTIONS.contains(log.getAction()))
@@ -157,7 +157,7 @@ public class FlowCountersignHistoryController {
         if (currentUserId == null) {
             return BaseResponse.success(PageResponse.<List<Map<String, Object>>>empty());
         }
-        List<FlowAuditLogDO> logs = auditLogMapper.selectByTargetId(currentUserId);
+        List<FlowAuditLog> logs = auditLogMapper.selectByTargetId(currentUserId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
                 logs.stream()
                         .filter(log -> COUNTERSIGN_ACTIONS.contains(log.getAction()))
@@ -175,7 +175,7 @@ public class FlowCountersignHistoryController {
     /**
      * 将审计日志转换为加签视图 VO
      */
-    private Map<String, Object> toCountersignVO(FlowAuditLogDO log) {
+    private Map<String, Object> toCountersignVO(FlowAuditLog log) {
         Map<String, Object> vo = new LinkedHashMap<>();
         vo.put("id", log.getId());
         vo.put("instanceId", log.getInstanceId());

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.metrics.AbstractModuleMetrics;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -320,9 +320,9 @@ public class CronjobMetrics extends AbstractModuleMetrics {
             return cachedRunningCount;
         }
         Long count = jobLogMapper.selectCount(
-                new LambdaQueryWrapper<JobLogDO>()
-                        .eq(JobLogDO::getStatus, "RUNNING")
-                        .eq(JobLogDO::getDeleted, 0));
+                new LambdaQueryWrapper<JobLog>()
+                        .eq(JobLog::getStatus, "RUNNING")
+                        .eq(JobLog::getDeleted, 0));
         cachedRunningCount = count;
         cachedRunningCountExpireAt = now + RUNNING_COUNT_CACHE_TTL_MS;
         return count;

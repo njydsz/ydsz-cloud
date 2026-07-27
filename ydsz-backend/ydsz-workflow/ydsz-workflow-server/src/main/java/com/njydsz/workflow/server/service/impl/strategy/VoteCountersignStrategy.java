@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -50,7 +50,7 @@ public class VoteCountersignStrategy implements CountersignStrategy {
      * @throws SysException 乐观锁更新失败时抛出
      */
     @Override
-    public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         task.setApproveFinished(finished);
         int updated = taskMapper.updateById(task);
@@ -70,7 +70,7 @@ public class VoteCountersignStrategy implements CountersignStrategy {
      * @return true 表示已通过人数达到阈值
      */
     @Override
-    public boolean shouldAdvance(FlowRunTaskDO task) {
+    public boolean shouldAdvance(FlowRunTask task) {
         int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
         int threshold = (required / 2) + 1; // 默认过半数
@@ -95,7 +95,7 @@ public class VoteCountersignStrategy implements CountersignStrategy {
      * @param dto  任务操作 DTO
      */
     @Override
-    public void onAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onAdvance(FlowRunTask task, FlowTaskOperateDTO dto) {
         // 票签达到阈值后跳过同节点剩余 PENDING 任务
         taskMapper.skipByNode(task.getInstanceId(), task.getNodeCode(),
                 FlowTaskStatus.SKIPPED.name());

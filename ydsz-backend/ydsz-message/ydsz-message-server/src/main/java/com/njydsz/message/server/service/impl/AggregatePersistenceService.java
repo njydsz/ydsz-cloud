@@ -3,8 +3,8 @@ package com.njydsz.message.server.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.message.domain.entity.batch.MsgAggregateDO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.batch.MsgAggregate;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -45,7 +45,7 @@ public class AggregatePersistenceService {
      * @param tenantId  租户 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public void persistAggregated(MsgLogDO logDO, String bizType, String receiver,
+    public void persistAggregated(MsgLog logDO, String bizType, String receiver,
                                   String channel, String tenantId) {
         msgLogMapper.insert(logDO);
         aggregateService.appendOrStart(bizType, receiver, channel, tenantId);

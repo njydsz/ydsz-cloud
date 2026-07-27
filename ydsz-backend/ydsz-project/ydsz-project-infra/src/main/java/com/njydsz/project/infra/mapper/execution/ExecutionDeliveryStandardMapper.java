@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.execution;
 
-import com.njydsz.project.domain.entity.execution.ExecutionDeliveryStandardDO;
+import com.njydsz.project.domain.entity.execution.ExecutionDeliveryStandard;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface ExecutionDeliveryStandardMapper extends BaseMapper<ExecutionDeliveryStandardDO> {
+public interface ExecutionDeliveryStandardMapper extends BaseMapper<ExecutionDeliveryStandard> {
 }

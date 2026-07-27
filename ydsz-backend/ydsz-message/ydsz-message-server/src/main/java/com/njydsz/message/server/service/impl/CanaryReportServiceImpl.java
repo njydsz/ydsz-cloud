@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.canary.CanaryReportVO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
@@ -100,7 +100,7 @@ public class CanaryReportServiceImpl implements CanaryReportService {
      */
     private Map<String, Long> countGroupByStatus(boolean isTreatment, String canaryKey,
                                                   LocalDateTime start, LocalDateTime end) {
-        QueryWrapper<MsgLogDO> wrapper =
+        QueryWrapper<MsgLog> wrapper =
                 new QueryWrapper<>();
         wrapper.select("status, count(1) as cnt");
         wrapper.ge("created_at", start);
@@ -128,7 +128,7 @@ public class CanaryReportServiceImpl implements CanaryReportService {
      */
     private Map<String, Long> countGroupByReceipt(boolean isTreatment, String canaryKey,
                                                    LocalDateTime start, LocalDateTime end) {
-        QueryWrapper<MsgLogDO> wrapper =
+        QueryWrapper<MsgLog> wrapper =
                 new QueryWrapper<>();
         wrapper.select("receipt_status, count(1) as cnt");
         wrapper.ge("created_at", start);

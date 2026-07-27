@@ -12,8 +12,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -88,12 +88,12 @@ public class FlowAutoUrgeScheduler {
         log.info("[AutoUrge] 开始扫描: threshold={} batchSize={}", thresholdTime, batchSize);
 
         // 查询超时未处理的待办任务
-        LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<FlowRunTaskDO>()
-                .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
-                .le(FlowRunTaskDO::getCreatedAt, thresholdTime)
+        LambdaQueryWrapper<FlowRunTask> wrapper = new LambdaQueryWrapper<FlowRunTask>()
+                .eq(FlowRunTask::getDeleted, 0)
+                .in(FlowRunTask::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
+                .le(FlowRunTask::getCreatedAt, thresholdTime)
                 .last("LIMIT " + batchSize);
-        List<FlowRunTaskDO> overdueTasks = taskMapper.selectList(wrapper);
+        List<FlowRunTask> overdueTasks = taskMapper.selectList(wrapper);
 
         if (overdueTasks.isEmpty()) {
             log.debug("[AutoUrge] 无超时待办");
@@ -103,15 +103,15 @@ public class FlowAutoUrgeScheduler {
         log.info("[AutoUrge] 发现 {} 个超时待办，开始自动催办", overdueTasks.size());
 
         // 按实例分组，同实例只催办一次
-        Map<String, List<FlowRunTaskDO>> byInstance = new HashMap<>();
-        for (FlowRunTaskDO task : overdueTasks) {
+        Map<String, List<FlowRunTask>> byInstance = new HashMap<>();
+        for (FlowRunTask task : overdueTasks) {
             byInstance.computeIfAbsent(task.getInstanceId(), k -> new ArrayList<>()).add(task);
         }
 
         int urgedCount = 0;
-        for (Map.Entry<String, List<FlowRunTaskDO>> entry : byInstance.entrySet()) {
+        for (Map.Entry<String, List<FlowRunTask>> entry : byInstance.entrySet()) {
             String instanceId = entry.getKey();
-            List<FlowRunTaskDO> tasks = entry.getValue();
+            List<FlowRunTask> tasks = entry.getValue();
             try {
                 urgedCount += autoUrgeInstance(instanceId, tasks);
             } catch (Exception e) {
@@ -126,8 +126,8 @@ public class FlowAutoUrgeScheduler {
     /**
      * 自动催办单个实例的超时任务。
      */
-    private int autoUrgeInstance(String instanceId, List<FlowRunTaskDO> tasks) {
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    private int autoUrgeInstance(String instanceId, List<FlowRunTask> tasks) {
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             log.warn("[AutoUrge] 实例不存在: {}", instanceId);
             return 0;
@@ -135,7 +135,7 @@ public class FlowAutoUrgeScheduler {
 
         // 收集被催办人
         List<String> receiverIds = new ArrayList<>();
-        for (FlowRunTaskDO task : tasks) {
+        for (FlowRunTask task : tasks) {
             if (task.getAssigneeId() != null && !receiverIds.contains(task.getAssigneeId())) {
                 receiverIds.add(task.getAssigneeId());
             }

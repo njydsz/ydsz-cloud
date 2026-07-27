@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.security.TenantContext;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.TemplateVariableValidator;
@@ -46,7 +46,7 @@ public class TemplatePreviewController {
         if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
             return BaseResponse.error("模板编码不能为空");
         }
-        MsgTemplateDO template = templateService.loadByCodeAndChannel(
+        MsgTemplate template = templateService.loadByCodeAndChannel(
                 req.getTemplateCode(),
                 StringUtils.hasText(req.getChannel()) ? req.getChannel() : "INAPP",
                 StringUtils.hasText(req.getLocale()) ? req.getLocale() : "zh-CN",

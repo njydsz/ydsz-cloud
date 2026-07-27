@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.entity.FlowUserDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.domain.entity.FlowUser;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -43,7 +43,7 @@ public class WeightedVoteCountersignStrategy implements CountersignStrategy {
     }
 
     @Override
-    public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
         // 标记当前用户已处理
         if (dto.getUserId() != null) {
             userMapper.markProcessed(task.getId(), String.valueOf(dto.getUserId()),
@@ -61,9 +61,9 @@ public class WeightedVoteCountersignStrategy implements CountersignStrategy {
     }
 
     @Override
-    public boolean shouldAdvance(FlowRunTaskDO task) {
+    public boolean shouldAdvance(FlowRunTask task) {
         // 查询所有办理人含 weight
-        List<FlowUserDO> users = userMapper.selectByTaskId(task.getId());
+        List<FlowUser> users = userMapper.selectByTaskId(task.getId());
         if (users == null || users.isEmpty()) {
             // 无扩展数据：回退到简单票签
             int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();
@@ -89,7 +89,7 @@ public class WeightedVoteCountersignStrategy implements CountersignStrategy {
     }
 
     @Override
-    public void onAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onAdvance(FlowRunTask task, FlowTaskOperateDTO dto) {
         // 跳过同节点剩余 PENDING
         taskMapper.skipByNode(task.getInstanceId(), task.getNodeCode(),
                 FlowTaskStatus.SKIPPED.name());

@@ -18,9 +18,9 @@ import com.njydsz.common.core.dag.DagInstanceStatus;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagVersionDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagVersionMapper;
@@ -89,7 +89,7 @@ public class JobDagServiceImpl implements JobDagService {
         // 校验 CRON 触发类型必须提供 cronExpression
         validateCronExpression(dto.getTriggerType(), dto.getCronExpression());
 
-        JobDagDO dag = new JobDagDO();
+        JobDag dag = new JobDag();
         dag.setDagKey(dto.getDagKey());
         dag.setDagName(dto.getDagName());
         dag.setDagDefinition(dto.getDagDefinition());
@@ -121,13 +121,13 @@ public class JobDagServiceImpl implements JobDagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateDag(String dagId, JobDagSaveDTO dto) {
-        JobDagDO exists = jobDagMapper.selectById(dagId);
+        JobDag exists = jobDagMapper.selectById(dagId);
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagId);
         }
         // 校验 dagKey 唯一性（排除自身）
-        JobDagDO byKey = jobDagMapper.selectByDagKey(dto.getDagKey());
+        JobDag byKey = jobDagMapper.selectByDagKey(dto.getDagKey());
         if (byKey != null && !dagId.equals(byKey.getId())) {
             throw new SysException(BaseResultCode.DUPLICATE_KEY,
                     "error.cronjob.msg_dag_already_exists", dto.getDagKey());
@@ -173,7 +173,7 @@ public class JobDagServiceImpl implements JobDagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteDag(String dagId) {
-        JobDagDO exists = jobDagMapper.selectById(dagId);
+        JobDag exists = jobDagMapper.selectById(dagId);
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagId);
@@ -185,7 +185,7 @@ public class JobDagServiceImpl implements JobDagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void enableDag(String dagId) {
-        JobDagDO exists = jobDagMapper.selectById(dagId);
+        JobDag exists = jobDagMapper.selectById(dagId);
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagId);
@@ -208,7 +208,7 @@ public class JobDagServiceImpl implements JobDagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void disableDag(String dagId) {
-        JobDagDO exists = jobDagMapper.selectById(dagId);
+        JobDag exists = jobDagMapper.selectById(dagId);
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagId);
@@ -226,8 +226,8 @@ public class JobDagServiceImpl implements JobDagService {
 
     @Override
     @Transactional(readOnly = true)
-    public JobDagDO getDagById(String dagId) {
-        JobDagDO dag = jobDagMapper.selectById(dagId);
+    public JobDag getDagById(String dagId) {
+        JobDag dag = jobDagMapper.selectById(dagId);
         if (dag == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagId);
@@ -237,8 +237,8 @@ public class JobDagServiceImpl implements JobDagService {
 
     @Override
     @Transactional(readOnly = true)
-    public JobDagDO getDagByKey(String dagKey) {
-        JobDagDO dag = jobDagMapper.selectByDagKey(dagKey);
+    public JobDag getDagByKey(String dagKey) {
+        JobDag dag = jobDagMapper.selectByDagKey(dagKey);
         if (dag == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagKey);
@@ -248,20 +248,20 @@ public class JobDagServiceImpl implements JobDagService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobDagDO> listEnabledDags() {
+    public List<JobDag> listEnabledDags() {
         return jobDagMapper.selectEnabledDags();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobDagDO> listCronEnabledDags() {
+    public List<JobDag> listCronEnabledDags() {
         return jobDagMapper.selectCronEnabledDags();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String triggerDag(String dagKey, String triggerBy) {
-        JobDagDO dag = jobDagMapper.selectByDagKey(dagKey);
+        JobDag dag = jobDagMapper.selectByDagKey(dagKey);
         if (dag == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagKey);
@@ -280,7 +280,7 @@ public class JobDagServiceImpl implements JobDagService {
             }
         }
         // 创建 DAG 实例
-        JobDagInstanceDO instance = new JobDagInstanceDO();
+        JobDagInstance instance = new JobDagInstance();
         instance.setDagId(dag.getId());
         instance.setDagKey(dag.getDagKey());
         instance.setStatus(DagInstanceStatus.PENDING.name());
@@ -312,15 +312,15 @@ public class JobDagServiceImpl implements JobDagService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobDagVersionDO> listDagVersions(String dagId, int limit) {
+    public List<JobDagVersion> listDagVersions(String dagId, int limit) {
         int effectiveLimit = limit > 0 ? limit : 50;
         return jobDagVersionMapper.selectByVersionDesc(dagId, effectiveLimit);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public JobDagVersionDO getDagVersion(String dagId, int version) {
-        JobDagVersionDO versionDO = jobDagVersionMapper.selectByVersion(dagId, version);
+    public JobDagVersion getDagVersion(String dagId, int version) {
+        JobDagVersion versionDO = jobDagVersionMapper.selectByVersion(dagId, version);
         if (versionDO == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_version_not_found", dagId, version);
@@ -331,12 +331,12 @@ public class JobDagServiceImpl implements JobDagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int rollbackDagVersion(String dagId, int targetVersion, String changedBy) {
-        JobDagDO dag = jobDagMapper.selectById(dagId);
+        JobDag dag = jobDagMapper.selectById(dagId);
         if (dag == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", dagId);
         }
-        JobDagVersionDO targetVersionDO = jobDagVersionMapper.selectByVersion(dagId, targetVersion);
+        JobDagVersion targetVersionDO = jobDagVersionMapper.selectByVersion(dagId, targetVersion);
         if (targetVersionDO == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_version_not_found", dagId, targetVersion);
@@ -370,8 +370,8 @@ public class JobDagServiceImpl implements JobDagService {
      * @param dag    DAG 定义
      * @param remark 版本备注
      */
-    private void saveVersionSnapshot(JobDagDO dag, String remark) {
-        JobDagVersionDO versionDO = new JobDagVersionDO();
+    private void saveVersionSnapshot(JobDag dag, String remark) {
+        JobDagVersion versionDO = new JobDagVersion();
         versionDO.setDagId(dag.getId());
         versionDO.setDagKey(dag.getDagKey());
         versionDO.setVersion(dag.getVersion());

@@ -16,7 +16,7 @@ import lombok.Data;
 /**
  * 流程委派授权创建/更新 DTO
  *
- * <p>隔离 {@link com.njydsz.workflow.domain.entity.FlowDelegateAuthDO} 的
+ * <p>隔离 {@link com.njydsz.workflow.domain.entity.FlowDelegateAuth} 的
  * id/tenantId/authStatus/providerTraceId 及审计字段，避免越权写入。
  *
  * @author ydsz-team

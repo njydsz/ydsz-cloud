@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service.impl.strategy;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
@@ -35,13 +35,13 @@ public class ForeachCountersignStrategy implements CountersignStrategy {
     }
 
     @Override
-    public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
         // 完成当前 task（每条独立）
         archiveService.completeAndArchive(task, dto.getComment());
     }
 
     @Override
-    public boolean shouldAdvance(FlowRunTaskDO task) {
+    public boolean shouldAdvance(FlowRunTask task) {
         // 查询同 nodeCode 的 PENDING task 数
         int pendingCount = taskMapper.countPendingByNode(task.getInstanceId(), task.getNodeCode());
         return pendingCount == 0;

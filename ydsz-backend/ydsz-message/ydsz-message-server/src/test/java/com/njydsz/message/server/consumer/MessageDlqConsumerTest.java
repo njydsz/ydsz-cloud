@@ -24,7 +24,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.metric.MessageMetrics;
 
@@ -76,7 +76,7 @@ class MessageDlqConsumerTest {
 
             consumer.onMessage(msg);
 
-            verify(msgLogMapper, times(1)).insert(any(MsgLogDO.class));
+            verify(msgLogMapper, times(1)).insert(any(MsgLog.class));
             verify(messageMetrics, times(1)).recordDead(any());
         }
 
@@ -90,7 +90,7 @@ class MessageDlqConsumerTest {
             consumer.onMessage(msg);
 
             verify(msgLogMapper, never()).update(any(), any());
-            verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
+            verify(msgLogMapper, never()).insert(any(MsgLog.class));
             verify(messageMetrics, never()).recordDead(any());
         }
 
@@ -100,7 +100,7 @@ class MessageDlqConsumerTest {
             consumer.onMessage(null);
 
             verify(redisTemplate, never()).opsForValue();
-            verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
+            verify(msgLogMapper, never()).insert(any(MsgLog.class));
         }
     }
 
@@ -122,7 +122,7 @@ class MessageDlqConsumerTest {
 
             consumer.onMessage(msg);
 
-            verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
+            verify(msgLogMapper, never()).insert(any(MsgLog.class));
             verify(messageMetrics, times(1)).recordDead("SMS");
         }
 
@@ -140,7 +140,7 @@ class MessageDlqConsumerTest {
 
             consumer.onMessage(msg);
 
-            verify(msgLogMapper, times(1)).insert(any(MsgLogDO.class));
+            verify(msgLogMapper, times(1)).insert(any(MsgLog.class));
             verify(messageMetrics, times(1)).recordDead("EMAIL");
         }
 
@@ -155,7 +155,7 @@ class MessageDlqConsumerTest {
 
             consumer.onMessage(msg);
 
-            verify(msgLogMapper, times(1)).insert(any(MsgLogDO.class));
+            verify(msgLogMapper, times(1)).insert(any(MsgLog.class));
             verify(messageMetrics, times(1)).recordDead("UNKNOWN");
         }
     }

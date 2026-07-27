@@ -14,7 +14,7 @@ import com.njydsz.common.json.YdszJson;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +85,7 @@ public class RemoteTaskClient {
      * @param request 远程派发请求（job + triggerType + shardIndex + shardTotal + traceId）
      * @return 执行日志 ID；派发失败返回 null
      */
-    public String dispatch(JobNodeDO node, RemoteTaskRequest request) {
+    public String dispatch(JobNode node, RemoteTaskRequest request) {
         if (node == null || node.getHost() == null || node.getPort() == null) {
             log.warn("[RemoteClient] 节点地址不完整, 跳过远程派发: nodeId={}", 
                     node == null ? "null" : node.getNodeId());
@@ -135,7 +135,7 @@ public class RemoteTaskClient {
      * @param request 子任务派发请求（jobId/logId/jobKey/handler/taskName/taskParams/traceId）
      * @return 子任务执行结果 JSON（含 success/result/errorMessage）；派发失败返回 null
      */
-    public String dispatchSubTask(JobNodeDO node, RemoteSubTaskRequest request) {
+    public String dispatchSubTask(JobNode node, RemoteSubTaskRequest request) {
         if (node == null || node.getHost() == null || node.getPort() == null) {
             log.warn("[RemoteClient] 子任务节点地址不完整, 跳过远程派发: nodeId={}",
                     node == null ? "null" : node.getNodeId());

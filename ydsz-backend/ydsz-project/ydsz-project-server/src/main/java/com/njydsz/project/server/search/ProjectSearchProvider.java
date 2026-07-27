@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.project.domain.entity.project.ProjectInitiationDO;
+import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.njydsz.project.infra.mapper.project.ProjectInitiationMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProjectSearchProvider implements SearchProvider<ProjectInitiationDO> {
+public class ProjectSearchProvider implements SearchProvider<ProjectInitiation> {
 
     private final ProjectInitiationMapper projectInitiationMapper;
 
@@ -42,7 +42,7 @@ public class ProjectSearchProvider implements SearchProvider<ProjectInitiationDO
     }
 
     @Override
-    public IndexDocument toIndexDocument(ProjectInitiationDO entity) {
+    public IndexDocument toIndexDocument(ProjectInitiation entity) {
         if (entity == null || entity.getId() == null) {
             return null;
         }
@@ -75,23 +75,23 @@ public class ProjectSearchProvider implements SearchProvider<ProjectInitiationDO
 
     @Override
     public List<String> getAllDocumentIds(String tenantId) {
-        LambdaQueryWrapper<ProjectInitiationDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(ProjectInitiationDO::getId);
+        LambdaQueryWrapper<ProjectInitiation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(ProjectInitiation::getId);
         if (tenantId != null && !tenantId.isBlank()) {
-            wrapper.eq(ProjectInitiationDO::getTenantId, tenantId);
+            wrapper.eq(ProjectInitiation::getTenantId, tenantId);
         }
         return projectInitiationMapper.selectList(wrapper)
                 .stream()
-                .map(ProjectInitiationDO::getId)
+                .map(ProjectInitiation::getId)
                 .toList();
     }
 
     @Override
-    public ProjectInitiationDO loadById(String id) {
+    public ProjectInitiation loadById(String id) {
         return projectInitiationMapper.selectById(id);
     }
 
-    private String buildSearchableText(ProjectInitiationDO entity) {
+    private String buildSearchableText(ProjectInitiation entity) {
         StringBuilder sb = new StringBuilder();
         if (entity.getProjectName() != null) {
             sb.append(entity.getProjectName());

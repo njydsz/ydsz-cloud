@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 
 /**
  * 三方审批回调日志 Mapper
@@ -18,7 +18,7 @@ import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLogDO> {
+public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLog> {
 
     /**
      * 更新处理状态与错误信息
@@ -38,7 +38,7 @@ public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLogDO>
     @Select(
             "SELECT * FROM ydsz_flow_third_party_log WHERE business_id = #{businessId} " +
             "AND platform IS NOT NULL ORDER BY created_at DESC")
-    List<FlowThirdPartyLogDO> selectByBusinessId(@Param("businessId") String businessId);
+    List<FlowThirdPartyLog> selectByBusinessId(@Param("businessId") String businessId);
 
     /**
      * P2-6: 更新双向同步状态与消息
@@ -62,7 +62,7 @@ public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLogDO>
             "WHERE handle_status = 'FAIL' AND retry_count < #{maxRetries} " +
             "ORDER BY last_retried_at NULLS FIRST, created_at ASC " +
             "LIMIT #{batchSize}")
-    List<FlowThirdPartyLogDO> selectFailedForRetry(@Param("maxRetries") int maxRetries,
+    List<FlowThirdPartyLog> selectFailedForRetry(@Param("maxRetries") int maxRetries,
                                                     @Param("batchSize") int batchSize);
 
     /**

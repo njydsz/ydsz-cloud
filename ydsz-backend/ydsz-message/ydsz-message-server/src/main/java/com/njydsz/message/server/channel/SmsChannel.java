@@ -11,8 +11,8 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.dto.receipt.ReceiptResult;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.sms.SmsProvider;
@@ -64,7 +64,7 @@ public class SmsChannel implements MessageChannel {
             return MessageResult.fail(CHANNEL_TYPE, "接收人手机号不能为空");
         }
         SmsProvider provider = selectProvider();
-        MsgTemplateDO template = resolveTemplate(request);
+        MsgTemplate template = resolveTemplate(request);
         MessageResult result = provider.send(request, template);
         log.info("[SmsChannel] provider={} status={} phone={}",
                 provider.providerType(), result.getStatus(), request.getReceiver());
@@ -82,7 +82,7 @@ public class SmsChannel implements MessageChannel {
             return List.of();
         }
         SmsProvider provider = selectProvider();
-        MsgTemplateDO template = resolveTemplate(requests.get(0));
+        MsgTemplate template = resolveTemplate(requests.get(0));
         List<MessageResult> results = provider.batchSend(requests, template);
         log.info("[SmsChannel] 批量发送: provider={} count={} success={}",
                 provider.providerType(), requests.size(),
@@ -94,7 +94,7 @@ public class SmsChannel implements MessageChannel {
      * P0-4: 查询短信回执（委托给 provider）。
      */
     @Override
-    public Optional<ReceiptResult> queryReceipt(MsgLogDO logDO) {
+    public Optional<ReceiptResult> queryReceipt(MsgLog logDO) {
         SmsProvider provider = selectProvider();
         if (!"aliyun".equals(provider.providerType())) {
             return Optional.empty();
@@ -140,11 +140,11 @@ public class SmsChannel implements MessageChannel {
      * @param request 消息请求
      * @return 模板实体（含 signName / providerKey），均无时返回 null
      */
-    private MsgTemplateDO resolveTemplate(MessageRequest request) {
+    private MsgTemplate resolveTemplate(MessageRequest request) {
         Map<String, String> meta = request.getChannelMeta();
         if (meta != null && (StringUtils.hasText(meta.get("signName"))
                 || StringUtils.hasText(meta.get("providerKey")))) {
-            MsgTemplateDO t = new MsgTemplateDO();
+            MsgTemplate t = new MsgTemplate();
             if (StringUtils.hasText(meta.get("signName"))) {
                 t.setSignName(meta.get("signName"));
             }

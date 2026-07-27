@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.system.domain.entity.DictItemDO;
+import com.njydsz.system.domain.entity.DictItem;
 
 /**
  * 字典项 Mapper。
@@ -15,7 +15,7 @@ import com.njydsz.system.domain.entity.DictItemDO;
  * @author ydsz-team
  */
 @Mapper
-public interface DictItemMapper extends BaseMapper<DictItemDO> {
+public interface DictItemMapper extends BaseMapper<DictItem> {
 
     /**
      * 按类型编码和字典项编码查询启用的字典项。
@@ -26,7 +26,7 @@ public interface DictItemMapper extends BaseMapper<DictItemDO> {
      */
     @Select("SELECT * FROM ydsz_dict_item WHERE type_code = #{typeCode} AND item_code = #{itemCode} "
             + "AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
-    DictItemDO selectByTypeAndCode(@Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
+    DictItem selectByTypeAndCode(@Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
 
     /**
      * 按类型编码查询所有启用的字典项（按排序号升序）。
@@ -36,5 +36,5 @@ public interface DictItemMapper extends BaseMapper<DictItemDO> {
      */
     @Select("SELECT * FROM ydsz_dict_item WHERE type_code = #{typeCode} AND deleted = 0 AND status = 'ENABLED' "
             + "ORDER BY sort_order ASC")
-    List<DictItemDO> listEnabledByTypeCode(@Param("typeCode") String typeCode);
+    List<DictItem> listEnabledByTypeCode(@Param("typeCode") String typeCode);
 }

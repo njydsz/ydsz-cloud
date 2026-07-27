@@ -3,8 +3,8 @@ package com.njydsz.message.server.service.core;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.message.domain.entity.config.MsgTraceDO;
-import com.njydsz.message.domain.entity.config.MsgTraceDO.Node;
+import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.domain.entity.config.MsgTrace.Node;
 
 /**
  * P0-2: 消息端到端追踪服务。
@@ -47,7 +47,7 @@ public interface MessageTraceService {
      * @param msgId 消息 ID
      * @return 轨迹列表（时间正序）
      */
-    List<MsgTraceDO> getTraceByMsgId(String msgId);
+    List<MsgTrace> getTraceByMsgId(String msgId);
 
     /**
      * 按 traceId 查询关联的轨迹（跨消息）。
@@ -55,7 +55,7 @@ public interface MessageTraceService {
      * @param traceId 链路追踪 ID
      * @return 轨迹列表
      */
-    List<MsgTraceDO> getTraceByTraceId(String traceId);
+    List<MsgTrace> getTraceByTraceId(String traceId);
 
     /**
      * 按 bizType + bizId 查询关联的轨迹。
@@ -64,5 +64,5 @@ public interface MessageTraceService {
      * @param bizId   业务单据 ID
      * @return 轨迹列表
      */
-    List<MsgTraceDO> getTraceByBiz(String bizType, String bizId);
+    List<MsgTrace> getTraceByBiz(String bizType, String bizId);
 }

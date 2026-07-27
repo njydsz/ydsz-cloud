@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.project.ProjectCustomerCreditDO;
+import com.njydsz.project.domain.entity.project.ProjectCustomerCredit;
 
 public interface ProjectCustomerCreditService {
-    ProjectCustomerCreditDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<ProjectCustomerCreditDO> page(int pageNum, int pageSize);
-    boolean save(ProjectCustomerCreditDO entity);
-    boolean updateById(ProjectCustomerCreditDO entity);
+    ProjectCustomerCredit getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<ProjectCustomerCredit> page(int pageNum, int pageSize);
+    boolean save(ProjectCustomerCredit entity);
+    boolean updateById(ProjectCustomerCredit entity);
     boolean removeById(String id);
 }

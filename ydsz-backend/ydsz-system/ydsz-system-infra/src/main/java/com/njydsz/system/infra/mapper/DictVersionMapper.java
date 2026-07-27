@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.system.domain.entity.DictVersionDO;
+import com.njydsz.system.domain.entity.DictVersion;
 
 /**
  * 字典版本 Mapper。
@@ -15,7 +15,7 @@ import com.njydsz.system.domain.entity.DictVersionDO;
  * @author ydsz-team
  */
 @Mapper
-public interface DictVersionMapper extends BaseMapper<DictVersionDO> {
+public interface DictVersionMapper extends BaseMapper<DictVersion> {
 
     /**
      * 按类型编码查询版本历史（按生效时间倒序）。
@@ -25,5 +25,5 @@ public interface DictVersionMapper extends BaseMapper<DictVersionDO> {
      */
     @Select("SELECT * FROM ydsz_dict_version WHERE type_code = #{typeCode} AND deleted = 0 "
             + "ORDER BY effective_date DESC")
-    List<DictVersionDO> listByTypeCode(@Param("typeCode") String typeCode);
+    List<DictVersion> listByTypeCode(@Param("typeCode") String typeCode);
 }

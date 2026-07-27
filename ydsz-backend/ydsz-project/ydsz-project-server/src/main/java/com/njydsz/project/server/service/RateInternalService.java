@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.rate.RateInternalDO;
+import com.njydsz.project.domain.entity.rate.RateInternal;
 
 public interface RateInternalService {
-    RateInternalDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<RateInternalDO> page(int pageNum, int pageSize);
-    boolean save(RateInternalDO entity);
-    boolean updateById(RateInternalDO entity);
+    RateInternal getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<RateInternal> page(int pageNum, int pageSize);
+    boolean save(RateInternal entity);
+    boolean updateById(RateInternal entity);
     boolean removeById(String id);
 }

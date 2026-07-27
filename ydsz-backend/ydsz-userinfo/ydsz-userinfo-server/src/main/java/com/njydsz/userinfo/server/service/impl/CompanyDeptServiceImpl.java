@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.domain.entity.CompanyDeptDO;
+import com.njydsz.userinfo.domain.entity.CompanyDept;
 import com.njydsz.userinfo.infra.mapper.CompanyDeptMapper;
 import com.njydsz.userinfo.server.service.CompanyDeptService;
 
@@ -29,8 +29,8 @@ public class CompanyDeptServiceImpl implements CompanyDeptService {
     private final CompanyDeptMapper mapper;
 
     @Override
-    public CompanyDeptDO getById(String id) {
-        CompanyDeptDO entity = mapper.selectById(id);
+    public CompanyDept getById(String id) {
+        CompanyDept entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             return null;
         }
@@ -38,22 +38,22 @@ public class CompanyDeptServiceImpl implements CompanyDeptService {
     }
 
     @Override
-    public List<CompanyDeptDO> list() {
-        LambdaQueryWrapper<CompanyDeptDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CompanyDeptDO::getDeleted, 0);
+    public List<CompanyDept> list() {
+        LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CompanyDept::getDeleted, 0);
         return mapper.selectList(wrapper);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String save(CompanyDeptDO entity) {
+    public String save(CompanyDept entity) {
         mapper.insert(entity);
         return entity.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(CompanyDeptDO entity) {
+    public boolean updateById(CompanyDept entity) {
         return mapper.updateById(entity) > 0;
     }
 

@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.userinfo.domain.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserinfoSearchProvider implements SearchProvider<UserAccountDO> {
+public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
 
     private final UserAccountMapper userAccountMapper;
 
@@ -41,7 +41,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountDO> {
     }
 
     @Override
-    public IndexDocument toIndexDocument(UserAccountDO entity) {
+    public IndexDocument toIndexDocument(UserAccount entity) {
         if (entity == null || entity.getId() == null) {
             return null;
         }
@@ -75,23 +75,23 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountDO> {
 
     @Override
     public List<String> getAllDocumentIds(String tenantId) {
-        LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(UserAccountDO::getId);
+        LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(UserAccount::getId);
         if (tenantId != null && !tenantId.isBlank()) {
-            wrapper.eq(UserAccountDO::getTenantId, tenantId);
+            wrapper.eq(UserAccount::getTenantId, tenantId);
         }
         return userAccountMapper.selectList(wrapper)
                 .stream()
-                .map(UserAccountDO::getId)
+                .map(UserAccount::getId)
                 .toList();
     }
 
     @Override
-    public UserAccountDO loadById(String id) {
+    public UserAccount loadById(String id) {
         return userAccountMapper.selectById(id);
     }
 
-    private String buildSearchableText(UserAccountDO entity) {
+    private String buildSearchableText(UserAccount entity) {
         StringBuilder sb = new StringBuilder();
         if (entity.getRealName() != null) {
             sb.append(entity.getRealName());

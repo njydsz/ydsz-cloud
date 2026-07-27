@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.schedule.GlueCodeDO;
+import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.infra.mapper.schedule.GlueCodeMapper;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
@@ -57,7 +57,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public GlueCodeDO save(String jobId, String sourceCode, String language, String remark) {
+    public GlueCode save(String jobId, String sourceCode, String language, String remark) {
         if (!StringUtils.hasText(jobId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
         }
@@ -65,10 +65,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_source_required");
         }
         // 计算新版本号
-        GlueCodeDO latest = glueCodeMapper.selectLatestByJobId(jobId);
+        GlueCode latest = glueCodeMapper.selectLatestByJobId(jobId);
         int nextVersion = latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
-        GlueCodeDO entity = new GlueCodeDO();
+        GlueCode entity = new GlueCode();
         entity.setJobId(jobId);
         entity.setSourceCode(sourceCode);
         entity.setLanguage(StringUtils.hasText(language) ? language : "GROOVY");
@@ -86,7 +86,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
      * @return 最新版本的 GLUE 代码记录，jobId 为空或不存在时返回 null
      */
     @Override
-    public GlueCodeDO getLatest(String jobId) {
+    public GlueCode getLatest(String jobId) {
         if (!StringUtils.hasText(jobId)) {
             return null;
         }
@@ -101,13 +101,13 @@ public class GlueCodeServiceImpl implements GlueCodeService {
      * @return 版本列表（降序），jobId 为空时返回空列表
      */
     @Override
-    public List<GlueCodeDO> listVersions(String jobId) {
+    public List<GlueCode> listVersions(String jobId) {
         if (!StringUtils.hasText(jobId)) {
             return Collections.emptyList();
         }
-        LambdaQueryWrapper<GlueCodeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GlueCodeDO::getJobId, jobId)
-                .orderByDesc(GlueCodeDO::getVersion);
+        LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GlueCode::getJobId, jobId)
+                .orderByDesc(GlueCode::getVersion);
         return glueCodeMapper.selectList(wrapper);
     }
 
@@ -123,7 +123,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public GlueCodeDO rollback(String jobId, Integer version) {
+    public GlueCode rollback(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
         }
@@ -131,18 +131,18 @@ public class GlueCodeServiceImpl implements GlueCodeService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_version_invalid");
         }
         // 查询目标版本
-        LambdaQueryWrapper<GlueCodeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GlueCodeDO::getJobId, jobId)
-                .eq(GlueCodeDO::getVersion, version);
-        GlueCodeDO target = glueCodeMapper.selectOne(wrapper);
+        LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GlueCode::getJobId, jobId)
+                .eq(GlueCode::getVersion, version);
+        GlueCode target = glueCodeMapper.selectOne(wrapper);
         if (target == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
         }
         // 创建新版本（内容为目标版本代码）
-        GlueCodeDO latest = glueCodeMapper.selectLatestByJobId(jobId);
+        GlueCode latest = glueCodeMapper.selectLatestByJobId(jobId);
         int nextVersion = latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
-        GlueCodeDO entity = new GlueCodeDO();
+        GlueCode entity = new GlueCode();
         entity.setJobId(jobId);
         entity.setSourceCode(target.getSourceCode());
         entity.setLanguage(target.getLanguage());
@@ -287,8 +287,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_glue_diff_params_required");
         }
         // 查询两个版本
-        GlueCodeDO codeA = getVersion(jobId, versionA);
-        GlueCodeDO codeB = getVersion(jobId, versionB);
+        GlueCode codeA = getVersion(jobId, versionA);
+        GlueCode codeB = getVersion(jobId, versionB);
         if (codeA == null || codeB == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
         }
@@ -347,10 +347,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     /**
      * 查询指定版本。
      */
-    private GlueCodeDO getVersion(String jobId, Integer version) {
-        LambdaQueryWrapper<GlueCodeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GlueCodeDO::getJobId, jobId)
-                .eq(GlueCodeDO::getVersion, version);
+    private GlueCode getVersion(String jobId, Integer version) {
+        LambdaQueryWrapper<GlueCode> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GlueCode::getJobId, jobId)
+                .eq(GlueCode::getVersion, version);
         return glueCodeMapper.selectOne(wrapper);
     }
 

@@ -2,8 +2,8 @@ package com.njydsz.cronjob.server.vo;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 
 import lombok.Data;
@@ -20,9 +20,9 @@ import lombok.Data;
 @Data
 public class DagInstanceVisualizationVO {
     /** DAG 实例信息 */
-    private JobDagInstanceDO instance;
+    private JobDagInstance instance;
     /** DAG 定义（节点 + 边，含前端坐标 x/y） */
     private DagDefinition definition;
     /** 节点实例执行状态列表 */
-    private List<JobDagNodeInstanceDO> nodeInstances;
+    private List<JobDagNodeInstance> nodeInstances;
 }

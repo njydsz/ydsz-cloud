@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.cronjob.domain.entity.job.JobArtifactDO;
+import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 import com.njydsz.cronjob.infra.mapper.job.JobArtifactMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -62,7 +62,7 @@ public class JobArtifactService {
             Files.write(fullPath, content);
 
             // 记录元数据
-            JobArtifactDO artifact = new JobArtifactDO();
+            JobArtifact artifact = new JobArtifact();
             artifact.setJobId(jobId);
             artifact.setLogId(logId);
             artifact.setJobKey(jobKey);
@@ -88,7 +88,7 @@ public class JobArtifactService {
     /**
      * 查询任务执行产物列表。
      */
-    public List<JobArtifactDO> getArtifactsByLogId(String logId) {
+    public List<JobArtifact> getArtifactsByLogId(String logId) {
         return artifactMapper.selectByLogId(logId);
     }
 
@@ -96,7 +96,7 @@ public class JobArtifactService {
      * 读取产物内容。
      */
     public byte[] readArtifact(String artifactId) {
-        JobArtifactDO artifact = artifactMapper.selectById(artifactId);
+        JobArtifact artifact = artifactMapper.selectById(artifactId);
         if (artifact == null) {
             return null;
         }

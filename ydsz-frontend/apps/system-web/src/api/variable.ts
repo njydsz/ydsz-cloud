@@ -1,0 +1,63 @@
+import { requestClient } from '#/api/request';
+
+export namespace VariableApi {
+  export interface VariableVO {
+    id: string;
+    variableKey: string;
+    variableValue: string;
+    variableType: string;
+    remark: string;
+    status: number;
+    createTime: string;
+  }
+
+  export interface VariablePageQuery {
+    pageNum?: number;
+    pageSize?: number;
+    variableKey?: string;
+    status?: string;
+  }
+
+  export interface VariableDTO {
+    variableKey?: string;
+    variableValue?: string;
+    variableType?: string;
+    remark?: string;
+    status?: number;
+  }
+}
+
+/** 分页查询variable列表 */
+export function getVariablePageApi(params: VariableApi.VariablePageQuery) {
+  return requestClient.get<{
+    total: number;
+    current: number;
+    size: number;
+    items: VariableApi.VariableVO[];
+  }>(`/api/v1/variable/page`, { params });
+}
+
+/** 查询全部variable列表 */
+export function getVariableListApi() {
+  return requestClient.get<VariableApi.VariableVO[]>(`/api/v1/variable/list`);
+}
+
+/** 根据 ID 查询variable */
+export function getVariableByIdApi(id: string) {
+  return requestClient.get<VariableApi.VariableVO>(`/api/v1/variable/${id}`);
+}
+
+/** 创建variable */
+export function createVariableApi(data: VariableApi.VariableDTO) {
+  return requestClient.post<string>(`/api/v1/variable`, data);
+}
+
+/** 更新variable */
+export function updateVariableApi(data: VariableApi.VariableDTO) {
+  return requestClient.put<boolean>(`/api/v1/variable`, data);
+}
+
+/** 删除variable */
+export function deleteVariableApi(id: string) {
+  return requestClient.delete<boolean>(`/api/v1/variable/${id}`);
+}

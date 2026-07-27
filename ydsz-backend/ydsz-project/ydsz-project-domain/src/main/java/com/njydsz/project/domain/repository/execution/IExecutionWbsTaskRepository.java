@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.repository.execution;
 
-import com.njydsz.project.domain.entity.execution.ExecutionWbsTaskDO;
+import com.njydsz.project.domain.entity.execution.ExecutionWbsTask;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 1.0.0
  * @author ydsz-team
  */
-public interface IExecutionWbsTaskRepository extends IService<ExecutionWbsTaskDO> {
+public interface IExecutionWbsTaskRepository extends IService<ExecutionWbsTask> {
 }

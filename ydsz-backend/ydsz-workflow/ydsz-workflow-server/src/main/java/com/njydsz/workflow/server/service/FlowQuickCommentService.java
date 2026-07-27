@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
-import com.njydsz.workflow.domain.entity.FlowQuickCommentDO;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 
 /**
  * 审批常用语服务接口
@@ -21,7 +21,7 @@ public interface FlowQuickCommentService {
      * @param tenantId 租户 ID
      * @return 常用语列表（按 sortNum, useCount 排序）
      */
-    List<FlowQuickCommentDO> listByUser(String userId, String tenantId);
+    List<FlowQuickComment> listByUser(String userId, String tenantId);
 
     /**
      * 新增用户常用语

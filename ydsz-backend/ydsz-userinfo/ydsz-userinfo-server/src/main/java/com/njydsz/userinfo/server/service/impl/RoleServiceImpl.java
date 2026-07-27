@@ -14,9 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
-import com.njydsz.userinfo.domain.entity.RoleDO;
-import com.njydsz.userinfo.domain.entity.RolePermissionDO;
-import com.njydsz.userinfo.domain.entity.UserRoleDO;
+import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.userinfo.domain.entity.RolePermission;
+import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.RoleVO;
@@ -59,7 +59,7 @@ public class RoleServiceImpl implements RoleService {
      */
     @Override
     public RoleVO getById(String id) {
-        RoleDO entity = roleMapper.selectById(id);
+        Role entity = roleMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
         }
@@ -73,20 +73,20 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public Page<RoleVO> page(RolePageQueryDTO query) {
-        Page<RoleDO> page = new Page<>(query.getSafePageNum(), query.getSafePageSize());
-        LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RoleDO::getDeleted, 0);
+        Page<Role> page = new Page<>(query.getSafePageNum(), query.getSafePageSize());
+        LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Role::getDeleted, 0);
         if (query.getRoleCode() != null && !query.getRoleCode().isBlank()) {
-            wrapper.like(RoleDO::getRoleCode, query.getRoleCode());
+            wrapper.like(Role::getRoleCode, query.getRoleCode());
         }
         if (query.getRoleName() != null && !query.getRoleName().isBlank()) {
-            wrapper.like(RoleDO::getRoleName, query.getRoleName());
+            wrapper.like(Role::getRoleName, query.getRoleName());
         }
         if (query.getStatus() != null && !query.getStatus().isBlank()) {
-            wrapper.eq(RoleDO::getStatus, query.getStatus());
+            wrapper.eq(Role::getStatus, query.getStatus());
         }
-        wrapper.orderByAsc(RoleDO::getSortOrder);
-        Page<RoleDO> result = roleMapper.selectPage(page, wrapper);
+        wrapper.orderByAsc(Role::getSortOrder);
+        Page<Role> result = roleMapper.selectPage(page, wrapper);
         Page<RoleVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
         List<RoleVO> voList = result.getRecords().stream()
                 .map(this::toVO)
@@ -103,9 +103,9 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<RoleVO> list() {
-        LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RoleDO::getDeleted, 0);
-        wrapper.orderByAsc(RoleDO::getSortOrder);
+        LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Role::getDeleted, 0);
+        wrapper.orderByAsc(Role::getSortOrder);
         return roleMapper.selectList(wrapper).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
@@ -120,14 +120,14 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(RoleSaveDTO dto) {
-        LambdaQueryWrapper<RoleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RoleDO::getRoleCode, dto.getRoleCode());
-        wrapper.eq(RoleDO::getDeleted, 0);
+        LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Role::getRoleCode, dto.getRoleCode());
+        wrapper.eq(Role::getDeleted, 0);
         if (roleMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.ROLE_CODE_DUPLICATE);
         }
 
-        RoleDO entity = new RoleDO();
+        Role entity = new Role();
         BeanUtils.copyProperties(dto, entity);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
@@ -149,7 +149,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(RoleSaveDTO dto) {
-        RoleDO entity = roleMapper.selectById(dto.getId());
+        Role entity = roleMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
         }
@@ -167,7 +167,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        RoleDO entity = roleMapper.selectById(id);
+        Role entity = roleMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
         }
@@ -175,16 +175,16 @@ public class RoleServiceImpl implements RoleService {
             throw new BusinessException(UserInfoResultCode.ROLE_BUILTIN_CANNOT_DELETE);
         }
 
-        LambdaQueryWrapper<UserRoleDO> urWrapper = new LambdaQueryWrapper<>();
-        urWrapper.eq(UserRoleDO::getRoleId, id);
-        urWrapper.eq(UserRoleDO::getDeleted, 0);
+        LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
+        urWrapper.eq(UserRole::getRoleId, id);
+        urWrapper.eq(UserRole::getDeleted, 0);
         if (userRoleMapper.selectCount(urWrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.ROLE_HAS_USERS);
         }
 
-        LambdaQueryWrapper<RolePermissionDO> rpWrapper = new LambdaQueryWrapper<>();
-        rpWrapper.eq(RolePermissionDO::getRoleId, id);
-        rpWrapper.eq(RolePermissionDO::getDeleted, 0);
+        LambdaQueryWrapper<RolePermission> rpWrapper = new LambdaQueryWrapper<>();
+        rpWrapper.eq(RolePermission::getRoleId, id);
+        rpWrapper.eq(RolePermission::getDeleted, 0);
         rolePermissionMapper.delete(rpWrapper);
 
         return roleMapper.deleteById(id) > 0;
@@ -199,20 +199,20 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean assignPermissions(String roleId, List<String> permissionIds) {
-        RoleDO role = roleMapper.selectById(roleId);
+        Role role = roleMapper.selectById(roleId);
         if (role == null || role.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.ROLE_NOT_FOUND);
         }
 
-        LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RolePermissionDO::getRoleId, roleId);
-        wrapper.eq(RolePermissionDO::getDeleted, 0);
+        LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RolePermission::getRoleId, roleId);
+        wrapper.eq(RolePermission::getDeleted, 0);
         rolePermissionMapper.delete(wrapper);
 
         // 批量插入（替代 N+1 循环）
-        List<RolePermissionDO> list = new ArrayList<>(permissionIds.size());
+        List<RolePermission> list = new ArrayList<>(permissionIds.size());
         for (String permId : permissionIds) {
-            RolePermissionDO rp = new RolePermissionDO();
+            RolePermission rp = new RolePermission();
             rp.setId(IdWorker.getIdStr());
             rp.setRoleId(roleId);
             rp.setPermissionId(permId);
@@ -234,11 +234,11 @@ public class RoleServiceImpl implements RoleService {
      */
     @Override
     public List<String> getRolePermissionIds(String roleId) {
-        LambdaQueryWrapper<RolePermissionDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RolePermissionDO::getRoleId, roleId);
-        wrapper.eq(RolePermissionDO::getDeleted, 0);
+        LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RolePermission::getRoleId, roleId);
+        wrapper.eq(RolePermission::getDeleted, 0);
         return rolePermissionMapper.selectList(wrapper).stream()
-                .map(RolePermissionDO::getPermissionId)
+                .map(RolePermission::getPermissionId)
                 .collect(Collectors.toList());
     }
 
@@ -246,7 +246,7 @@ public class RoleServiceImpl implements RoleService {
      * 批量查询角色 ID → 角色名映射。
      *
      * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)}
-     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link RoleDO#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
+     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link Role#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
      */
     @Override
     public Map<String, String> batchNamesByIds(Collection<String> roleIds) {
@@ -260,9 +260,9 @@ public class RoleServiceImpl implements RoleService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        List<RoleDO> roles = roleMapper.selectBatchIds(distinctIds);
+        List<Role> roles = roleMapper.selectBatchIds(distinctIds);
         Map<String, String> result = new LinkedHashMap<>(roles.size());
-        for (RoleDO role : roles) {
+        for (Role role : roles) {
             if (role.getRoleName() != null && !role.getRoleName().isBlank()) {
                 result.put(role.getId(), role.getRoleName());
             }
@@ -276,7 +276,7 @@ public class RoleServiceImpl implements RoleService {
      * @param entity 数据库实体
      * @return 视图对象
      */
-    private RoleVO toVO(RoleDO entity) {
+    private RoleVO toVO(Role entity) {
         RoleVO vo = new RoleVO();
         BeanUtils.copyProperties(entity, vo);
         return vo;

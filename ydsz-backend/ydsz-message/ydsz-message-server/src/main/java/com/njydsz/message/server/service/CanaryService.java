@@ -4,7 +4,7 @@ package com.njydsz.message.server.service.canary;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.message.domain.dto.canary.CanaryUpsertDTO;
-import com.njydsz.message.domain.entity.canary.MsgCanaryDO;
+import com.njydsz.message.domain.entity.canary.MsgCanary;
 
 /**
  * 灰度桶服务
@@ -20,7 +20,7 @@ public interface CanaryService {
      * @param dto 灰度桶参数
      * @return 灰度桶实体
      */
-    MsgCanaryDO upsert(CanaryUpsertDTO dto);
+    MsgCanary upsert(CanaryUpsertDTO dto);
 
     /**
      * 判断桶值是否命中灰度(按 percentage 计算 hash(bucketValue)%100 < percentage)
@@ -39,7 +39,7 @@ public interface CanaryService {
      * @param bucketValue 桶值(如接收人 / 单据 ID)
      * @return 命中的灰度桶实体;未命中返回 null
      */
-    MsgCanaryDO matchConfig(String canaryKey, String bucketValue);
+    MsgCanary matchConfig(String canaryKey, String bucketValue);
 
     /**
      * 按灰度键查询灰度桶配置
@@ -47,7 +47,7 @@ public interface CanaryService {
      * @param canaryKey 灰度键
      * @return 灰度桶实体
      */
-    MsgCanaryDO getByKey(String canaryKey);
+    MsgCanary getByKey(String canaryKey);
 
     /**
      * 分页查询灰度桶
@@ -55,5 +55,5 @@ public interface CanaryService {
      * @param query 分页参数
      * @return 分页结果
      */
-    Page<MsgCanaryDO> page(PageQuery query);
+    Page<MsgCanary> page(PageQuery query);
 }

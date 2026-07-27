@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 
 import java.util.Map;
 
@@ -22,7 +22,7 @@ public interface TemplateService {
      * @param dto 模板创建参数
      * @return 已创建的模板
      */
-    MsgTemplateDO create(TemplateCreateDTO dto);
+    MsgTemplate create(TemplateCreateDTO dto);
 
     /**
      * 更新模板
@@ -31,7 +31,7 @@ public interface TemplateService {
      * @param dto 模板更新参数
      * @return 更新后的模板
      */
-    MsgTemplateDO update(String id, TemplateCreateDTO dto);
+    MsgTemplate update(String id, TemplateCreateDTO dto);
 
     /**
      * 删除模板(逻辑删除)
@@ -46,7 +46,7 @@ public interface TemplateService {
      * @param id 模板 ID
      * @return 模板实体
      */
-    MsgTemplateDO getById(String id);
+    MsgTemplate getById(String id);
 
     /**
      * 分页查询模板
@@ -54,7 +54,7 @@ public interface TemplateService {
      * @param query 查询参数
      * @return 分页结果
      */
-    Page<MsgTemplateDO> page(TemplateQueryDTO query);
+    Page<MsgTemplate> page(TemplateQueryDTO query);
 
     /**
      * 按编码 + 通道 + 语言加载模板(locale 为空时回退默认 zh-CN)
@@ -65,7 +65,7 @@ public interface TemplateService {
      * @param tenantId     租户 ID
      * @return 模板实体
      */
-    MsgTemplateDO loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId);
+    MsgTemplate loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId);
 
     /**
      * 审核模板

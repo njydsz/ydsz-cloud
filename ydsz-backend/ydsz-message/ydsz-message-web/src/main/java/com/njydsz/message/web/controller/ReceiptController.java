@@ -17,7 +17,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
-import com.njydsz.message.domain.entity.receipt.MsgReceiptDO;
+import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,7 +68,7 @@ public class ReceiptController {
     @Operation(summary = "按日志 ID 查询回执列表")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_VIEW)
     @GetMapping("/{logId}")
-    public BaseResponse<List<MsgReceiptDO>> listByLogId(@PathVariable String logId) {
+    public BaseResponse<List<MsgReceipt>> listByLogId(@PathVariable String logId) {
         return BaseResponse.success(receiptService.listByLogId(logId));
     }
 }

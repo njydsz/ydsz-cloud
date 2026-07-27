@@ -13,7 +13,7 @@ import lombok.Data;
 /**
  * DAG 工作流定义创建/更新 DTO（P2 DAG 增强）。
  *
- * <p>仅包含前端可控的业务字段，隔离 {@link com.njydsz.cronjob.domain.entity.JobDagDO} 的
+ * <p>仅包含前端可控的业务字段，隔离 {@link com.njydsz.cronjob.domain.entity.JobDag} 的
  * 审计字段、运行时统计与调度器字段，避免表结构泄露与越权写入。
  *
  * @author ydsz-team

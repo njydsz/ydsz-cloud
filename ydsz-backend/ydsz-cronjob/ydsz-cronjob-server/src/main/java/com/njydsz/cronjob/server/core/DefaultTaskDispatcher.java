@@ -50,9 +50,9 @@ import com.njydsz.common.core.job.ProcessResult;
 import com.njydsz.common.core.job.ShardingContext;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
@@ -237,7 +237,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @return 执行日志 ID；锁被持有或配额超限时返回 null
      */
     @Override
-    public String dispatch(JobDO job, String executorNode, String triggerType) {
+    public String dispatch(Job job, String executorNode, String triggerType) {
         // P3-12: 跨集群调度 — 任务指定了目标集群时，通过 CrossClusterDispatcher 派发
         if (job.getCluster() != null && !job.getCluster().isBlank()) {
             return dispatchToCluster(job, triggerType);
@@ -285,7 +285,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @return 执行日志 ID；锁被持有或执行失败返回 null
      */
     @Override
-    public String executeLocally(JobDO job, String triggerType, int shardIndex, int shardTotal) {
+    public String executeLocally(Job job, String triggerType, int shardIndex, int shardTotal) {
         boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
         if ("CONCURRENT".equals(job.getBlockStrategy())) {
             holdLock = false;
@@ -307,7 +307,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      *
      * @return null（异步执行，logId 在执行完成后写入日志）
      */
-    private String dispatchAsync(JobDO job, boolean holdLock, String triggerType, int retryCount) {
+    private String dispatchAsync(Job job, boolean holdLock, String triggerType, int retryCount) {
         try {
             // P2-5: 线程池租户隔离（isolation-strategy=none 时返回 null，使用全局池）
             TenantAwareExecutorPool pool = tenantAwareExecutorPoolProvider.getIfAvailable();
@@ -356,7 +356,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param executor 当前执行器
      * @param job      待派发任务
      */
-    private void tryPreemptIfPoolFull(ExecutorService executor, JobDO job) {
+    private void tryPreemptIfPoolFull(ExecutorService executor, Job job) {
         if (!(executor instanceof ThreadPoolExecutor tpe)) {
             return;
         }
@@ -388,7 +388,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * 配额超限时抛 {@link SysException}，任务不会被派发。
      * 配额服务不可用时降级放行（不影响任务执行）。
      */
-    private void checkExecutionQuota(JobDO job) {
+    private void checkExecutionQuota(Job job) {
         TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
         if (quotaService == null) {
             return;
@@ -418,7 +418,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * <p>需同时满足：shardTotal > 1 且 ShardingStrategy Bean 可用。
      * 否则 fallback 到非分片模式，保证向后兼容。
      */
-    private boolean isShardedJob(JobDO job) {
+    private boolean isShardedJob(Job job) {
         Integer total = job.getShardTotal();
         if (total == null || total <= 1) {
             return false;
@@ -440,7 +440,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      *
      * @return 第一个成功创建日志的分片 logId；全部被锁或无本地分片返回 null
      */
-    private String executeShardedJob(JobDO job, boolean holdLock, String triggerType) {
+    private String executeShardedJob(Job job, boolean holdLock, String triggerType) {
         int shardTotal = job.getShardTotal();
         ShardingStrategy strategy = shardingStrategyProvider.getIfAvailable();
         if (strategy == null) {
@@ -449,7 +449,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             return executeJob(job, holdLock, triggerType, 0);
         }
 
-        List<JobNodeDO> onlineNodes = getOnlineNodeList();
+        List<JobNode> onlineNodes = getOnlineNodeList();
         String localNodeId = resolveLocalNodeId();
 
         List<ShardAssignment> assignments;
@@ -458,13 +458,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             assignments = buildLocalOnlyAssignments(shardTotal, localNodeId);
         } else {
             List<String> nodeIds = onlineNodes.stream()
-                    .map(JobNodeDO::getNodeId).collect(Collectors.toList());
+                    .map(JobNode::getNodeId).collect(Collectors.toList());
             assignments = strategy.assign(shardTotal, nodeIds);
         }
 
-        // 构建 nodeId → JobNodeDO 映射，供远程派发查询节点地址
-        Map<String, JobNodeDO> nodeMap = onlineNodes.stream()
-                .collect(Collectors.toMap(JobNodeDO::getNodeId, n -> n, (a, b) -> a));
+        // 构建 nodeId → JobNode 映射，供远程派发查询节点地址
+        Map<String, JobNode> nodeMap = onlineNodes.stream()
+                .collect(Collectors.toMap(JobNode::getNodeId, n -> n, (a, b) -> a));
 
         log.info("[Dispatcher] 分片任务派发: key={} shardTotal={} assignments={} localNode={}",
                 job.getJobKey(), shardTotal, assignments.size(), localNodeId);
@@ -502,12 +502,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param shardTotal 分片总数
      * @param holdLock   是否需要抢占分布式锁（MANUAL 触发为 false，其他触发为 true）
      * @param triggerType 触发类型
-     * @param nodeMap    在线节点映射（nodeId → JobNodeDO）
+     * @param nodeMap    在线节点映射（nodeId → JobNode）
      * @return 执行日志 ID；派发失败且未降级返回 null
      */
-    private String dispatchShardRemotely(JobDO job, ShardAssignment assignment, int shardTotal,
+    private String dispatchShardRemotely(Job job, ShardAssignment assignment, int shardTotal,
                                           boolean holdLock, String triggerType,
-                                          Map<String, JobNodeDO> nodeMap) {
+                                          Map<String, JobNode> nodeMap) {
         CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
         if (!remoteConfig.isEnabled()) {
             // 远程派发未启用：本地执行该分片（兼容旧行为）
@@ -519,7 +519,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     job.getJobKey(), assignment.shardIndex());
             return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
         }
-        JobNodeDO node = nodeMap.get(assignment.nodeId());
+        JobNode node = nodeMap.get(assignment.nodeId());
         if (node == null || node.getHost() == null || node.getPort() == null) {
             log.warn("[Dispatcher] 节点信息缺失, 降级本地执行: key={} shard={} nodeId={}",
                     job.getJobKey(), assignment.shardIndex(), assignment.nodeId());
@@ -550,7 +550,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      *   <li>不推进 next_fire_time（由 JobScanner 统一推进）</li>
      * </ul>
      */
-    private String executeShard(JobDO job, int shardIndex, int shardTotal,
+    private String executeShard(Job job, int shardIndex, int shardTotal,
                                  boolean holdLock, String triggerType) {
         String lockKey = null;
         if (holdLock) {
@@ -567,7 +567,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
         notifyTaskStart();
 
-        JobLogDO log0 = new JobLogDO();
+        JobLog log0 = new JobLog();
         log0.setJobId(job.getId());
         log0.setJobKey(job.getJobKey());
         log0.setStartTime(LocalDateTime.now());
@@ -661,9 +661,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * 查询在线节点列表（按 nodeId 升序，保证分片分配确定性）。
      *
      * <p>P1-1: 优先使用 {@link NodeDiscoveryStrategy}（Nacos/DB），不可用时回退到 DB 查询。
-     * P1-4: 返回完整的 {@link JobNodeDO} 列表，供远程派发获取 host/port。
+     * P1-4: 返回完整的 {@link JobNode} 列表，供远程派发获取 host/port。
      */
-    private List<JobNodeDO> getOnlineNodeList() {
+    private List<JobNode> getOnlineNodeList() {
         // P1-1: 优先使用节点发现策略
         NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
         if (strategy != null) {
@@ -673,10 +673,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         try {
             long threshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
             LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
-            LambdaQueryWrapper<JobNodeDO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(JobNodeDO::getStatus, "ONLINE")
-                    .ge(JobNodeDO::getLastHeartbeat, cutoff)
-                    .orderByAsc(JobNodeDO::getNodeId);
+            LambdaQueryWrapper<JobNode> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(JobNode::getStatus, "ONLINE")
+                    .ge(JobNode::getLastHeartbeat, cutoff)
+                    .orderByAsc(JobNode::getNodeId);
             return jobNodeMapper.selectList(wrapper);
         } catch (Exception e) {
             log.warn("[Dispatcher] 查询在线节点失败, fallback 到本地执行全部分片: reason={}",
@@ -764,12 +764,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param triggerType 触发类型
      * @return 执行日志 ID；派发失败返回 null
      */
-    private String dispatchToWorker(JobDO job, String triggerType) {
+    private String dispatchToWorker(Job job, String triggerType) {
         WorkerNodeSelector selector = workerNodeSelectorProvider.getIfAvailable();
         if (selector == null) {
             return null;
         }
-        JobNodeDO worker = selector.selectWorker();
+        JobNode worker = selector.selectWorker();
         if (worker == null) {
             return null;
         }
@@ -809,7 +809,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @return 任务处理器
      * @throws NoSuchBeanDefinitionException BEAN 模式下找不到对应 Bean
      */
-    private JobHandler resolveHandler(JobDO job) {
+    private JobHandler resolveHandler(Job job) {
         String jobType = job.getJobType();
         if ("HTTP".equals(jobType)) {
             HttpJobHandler httpHandler =
@@ -853,7 +853,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param job 任务定义
      * @return 实际使用的 handler Bean 名称
      */
-    private String resolveCanaryHandler(JobDO job) {
+    private String resolveCanaryHandler(Job job) {
         if (job.getCanaryRatio() != null && job.getCanaryRatio() > 0
                 && job.getCanaryHandler() != null && !job.getCanaryHandler().isBlank()) {
             int ratio = Math.min(100, Math.max(0, job.getCanaryRatio()));
@@ -875,7 +875,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param retryCount  当前重试次数（0=首次执行）
      * @return 执行日志 ID；锁被持有时返回 null
      */
-    private String executeJob(JobDO job, boolean holdLock, String triggerType, int retryCount) {
+    private String executeJob(Job job, boolean holdLock, String triggerType, int retryCount) {
         String lockKey = null;
         if (holdLock) {
             lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
@@ -906,7 +906,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         notifyTaskStart();
 
         // 写开始日志
-        JobLogDO log0 = new JobLogDO();
+        JobLog log0 = new JobLog();
         log0.setJobId(job.getId());
         log0.setJobKey(job.getJobKey());
         log0.setStartTime(LocalDateTime.now());
@@ -1050,7 +1050,7 @@ try {
      * @param triggerType 触发类型
      * @return 执行日志 ID；降级本地执行时返回本地 logId
      */
-    private String dispatchToCluster(JobDO job, String triggerType) {
+    private String dispatchToCluster(Job job, String triggerType) {
         CrossClusterDispatcher clusterDispatcher = crossClusterDispatcherProvider.getIfAvailable();
         if (clusterDispatcher == null) {
             log.warn("[Dispatcher] CrossClusterDispatcher 未注册, 降级本地执行: key={} cluster={}",
@@ -1077,7 +1077,7 @@ try {
     /**
      * P3-12: 跨集群降级时的本地执行入口。
      */
-    private String dispatchLocalFallback(JobDO job, String triggerType) {
+    private String dispatchLocalFallback(Job job, String triggerType) {
         boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
         if ("CONCURRENT".equals(job.getBlockStrategy())) {
             holdLock = false;
@@ -1100,7 +1100,7 @@ try {
      * @param job       任务定义
      * @param log0      任务日志
      */
-    private void dispatchWebhookEvent(String eventType, JobDO job, JobLogDO log0) {
+    private void dispatchWebhookEvent(String eventType, Job job, JobLog log0) {
         WebhookEventDispatcher dispatcher = webhookEventDispatcherProvider.getIfAvailable();
         if (dispatcher == null) {
             return;
@@ -1128,7 +1128,7 @@ try {
      *
      * <p>使用 try-catch 包裹，确保事件发布失败不影响主流程。
      */
-    private void publishTaskCompleted(JobDO job, boolean success, String logId) {
+    private void publishTaskCompleted(Job job, boolean success, String logId) {
         try {
             TaskCompletedEvent event = new TaskCompletedEvent(
                     job.getId(), job.getJobKey(), success, logId);
@@ -1165,7 +1165,7 @@ try {
      * @param retryCount  重试次数
      * @return 执行日志 ID；中断失败时返回 null
      */
-    private String executeWithCoverStrategy(JobDO job, String lockKey, Duration ttl,
+    private String executeWithCoverStrategy(Job job, String lockKey, Duration ttl,
                                               String triggerType, int retryCount) {
         // 防递归保护：重新派发中如果锁仍被持有，直接降级 DISCARD
         if (Boolean.TRUE.equals(COVER_REDISPATCHING.get())) {
@@ -1175,7 +1175,7 @@ try {
         log.info("[Dispatcher] COVER 策略: 尝试中断当前执行: key={} triggerType={}",
                 job.getJobKey(), triggerType);
         // 1. 查询当前 RUNNING 的日志
-        JobLogDO runningLog = findRunningLog(job.getJobKey());
+        JobLog runningLog = findRunningLog(job.getJobKey());
         if (runningLog == null) {
             // 无 RUNNING 日志，可能锁是异常残留（如节点崩溃未释放），尝试释放并重新执行
             log.warn("[Dispatcher] COVER 策略未找到 RUNNING 日志, 尝试释放残留锁: key={}", job.getJobKey());
@@ -1227,13 +1227,13 @@ try {
      * @param jobKey 任务 KEY
      * @return RUNNING 日志；无记录时返回 null
      */
-    private JobLogDO findRunningLog(String jobKey) {
+    private JobLog findRunningLog(String jobKey) {
         try {
-            LambdaQueryWrapper<JobLogDO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(JobLogDO::getJobKey, jobKey)
-                    .eq(JobLogDO::getStatus, "RUNNING")
-                    .eq(JobLogDO::getDeleted, 0)
-                    .orderByDesc(JobLogDO::getCreatedAt)
+            LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(JobLog::getJobKey, jobKey)
+                    .eq(JobLog::getStatus, "RUNNING")
+                    .eq(JobLog::getDeleted, 0)
+                    .orderByDesc(JobLog::getCreatedAt)
                     .last("LIMIT 1");
             return jobLogMapper.selectOne(wrapper);
         } catch (Exception e) {
@@ -1329,7 +1329,7 @@ try {
      * @param success 是否执行成功
      * @param log0    任务日志（含耗时信息）
      */
-    private void triggerAlerts(JobDO job, boolean success, JobLogDO log0) {
+    private void triggerAlerts(Job job, boolean success, JobLog log0) {
         AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
         if (alertTrigger == null) {
             return;
@@ -1406,7 +1406,7 @@ try {
      * @param success     是否执行成功
      * @param log0        任务日志（含耗时信息）
      */
-    private void recordJobMetrics(JobDO job, String triggerType, boolean success, JobLogDO log0) {
+    private void recordJobMetrics(Job job, String triggerType, boolean success, JobLog log0) {
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
         if (metrics == null) {
             return;
@@ -1428,7 +1428,7 @@ try {
     /**
      * 解析任务实际使用的锁 TTL。
      */
-    private Duration resolveLockTtl(JobDO job) {
+    private Duration resolveLockTtl(Job job) {
         Duration taskLevel = null;
         if (job.getLockTtlMs() != null && job.getLockTtlMs() > 0) {
             taskLevel = Duration.ofMillis(job.getLockTtlMs());
@@ -1439,12 +1439,12 @@ try {
     /**
      * 计算下次触发时间（P2-8: 支持任务级时区）。
      *
-     * <p>优先使用 {@link JobDO#getTimezone()}，为空时回退到默认时区 Asia/Shanghai。
+     * <p>优先使用 {@link Job#getTimezone()}，为空时回退到默认时区 Asia/Shanghai。
      *
      * @param job 任务定义（含 cron 表达式和时区）
      * @return 下次触发时间；表达式非法时抛 SysException
      */
-    private LocalDateTime nextFireTime(JobDO job) {
+    private LocalDateTime nextFireTime(Job job) {
         try {
             // P2-8: 任务级时区，null 使用默认 Asia/Shanghai
             String tz = job.getTimezone() != null ? job.getTimezone() : "Asia/Shanghai";
@@ -1480,7 +1480,7 @@ try {
      * @param triggerType 原始触发类型
      * @param retryCount  当前重试次数
      */
-    private void scheduleRetryIfNeeded(JobDO job, boolean holdLock, String triggerType, int retryCount) {
+    private void scheduleRetryIfNeeded(Job job, boolean holdLock, String triggerType, int retryCount) {
         Integer maxRetries = job.getMaxRetries();
         if (maxRetries == null || maxRetries <= 0 || retryCount >= maxRetries) {
             return;
@@ -1508,7 +1508,7 @@ try {
     /**
      * P1-1: 计算重试延迟（毫秒）。
      */
-    private long calculateRetryDelayMs(JobDO job, int retryCount) {
+    private long calculateRetryDelayMs(Job job, int retryCount) {
         Long interval = job.getRetryIntervalMs();
         if (interval == null || interval <= 0) {
             return 0; // 立即重试
@@ -1529,7 +1529,7 @@ try {
      * @param job     任务定义
      * @param success 是否执行成功
      */
-    private void updateCircuitBreaker(JobDO job, boolean success) {
+    private void updateCircuitBreaker(Job job, boolean success) {
         try {
             if (success) {
                 jobMapper.resetConsecutiveFail(job.getId());

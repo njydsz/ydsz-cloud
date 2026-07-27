@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.constant.CacheConstants;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 import com.njydsz.workflow.infra.mapper.FlowThirdPartyAccountMapper;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;
 
@@ -46,7 +46,7 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE,
             key = "#userId + ':' + #platform", unless = "#result == null")
-    public FlowThirdPartyAccountDO getByUserIdAndPlatform(String userId, String platform) {
+    public FlowThirdPartyAccount getByUserIdAndPlatform(String userId, String platform) {
         try {
             if (userId == null || !StringUtils.hasText(platform)) {
                 return null;
@@ -63,7 +63,7 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
             key = "#platform + ':' + #openId", unless = "#result == null")
-    public FlowThirdPartyAccountDO getByOpenId(String platform, String openId) {
+    public FlowThirdPartyAccount getByOpenId(String platform, String openId) {
         try {
             if (!StringUtils.hasText(platform) || !StringUtils.hasText(openId)) {
                 return null;
@@ -77,7 +77,7 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
     }
 
     @Override
-    public FlowThirdPartyAccountDO getActiveByPlatform(String platform) {
+    public FlowThirdPartyAccount getActiveByPlatform(String platform) {
         try {
             if (!StringUtils.hasText(platform)) {
                 return null;
@@ -96,7 +96,7 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
             CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE}, allEntries = true)
-    public void saveOrUpdate(FlowThirdPartyAccountDO account) {
+    public void saveOrUpdate(FlowThirdPartyAccount account) {
         try {
             if (account == null) {
                 log.warn("[ThirdPartyAccount] saveOrUpdate 参数为空");
@@ -106,7 +106,7 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
             // 无 id 时按 userId+platform 命中已有记录转为更新
             if (account.getId() == null && account.getUserId() != null
                     && StringUtils.hasText(account.getPlatform())) {
-                FlowThirdPartyAccountDO existing = thirdPartyAccountMapper.selectByUserIdAndPlatform(
+                FlowThirdPartyAccount existing = thirdPartyAccountMapper.selectByUserIdAndPlatform(
                         account.getUserId(), account.getPlatform());
                 if (existing != null) {
                     account.setId(existing.getId());
@@ -146,10 +146,10 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
                         userId, platform, openId);
                 return;
             }
-            FlowThirdPartyAccountDO account = thirdPartyAccountMapper
+            FlowThirdPartyAccount account = thirdPartyAccountMapper
                     .selectByUserIdAndPlatform(userId, platform);
             if (account == null) {
-                account = new FlowThirdPartyAccountDO();
+                account = new FlowThirdPartyAccount();
                 account.setUserId(userId);
                 account.setPlatform(platform);
                 account.setStatus("ACTIVE");

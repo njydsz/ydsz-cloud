@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.job.TenantQuotaDO;
+import com.njydsz.cronjob.domain.entity.job.TenantQuota;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.job.TenantQuotaMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>实现要点：
  * <ul>
  *   <li><b>任务数配额（P7-2）</b>：通过 {@code COUNT(*) FROM ydsz_job WHERE tenant_id = ?} 统计当前任务数，
- *       与 {@link TenantQuotaDO#getMaxJobs()} 或全局默认比较。注意：MyBatis-Plus 的
+ *       与 {@link TenantQuota#getMaxJobs()} 或全局默认比较。注意：MyBatis-Plus 的
  *       {@code TenantLineInnerInterceptor} 会自动追加 {@code WHERE tenant_id = ?}，
  *       因此 {@code selectCount} 无需显式指定租户条件。</li>
  *   <li><b>并发配额（P7-3）</b>：通过 Redis 实时计数器 {@code ydsz:quota:concurrent:{tenantId}} 实现，
@@ -68,7 +68,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     @Override
-    public TenantQuotaDO getQuota(String tenantId) {
+    public TenantQuota getQuota(String tenantId) {
         if (tenantId == null || tenantId.isBlank()) {
             return null;
         }
@@ -203,7 +203,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
      * 解析任务数上限：优先 DB 记录，其次全局默认，最后 null（unlimited）。
      */
     private Integer resolveMaxJobs(String tenantId) {
-        TenantQuotaDO quota = getQuota(tenantId);
+        TenantQuota quota = getQuota(tenantId);
         if (quota != null && Boolean.FALSE.equals(isEnabled(quota))) {
             // 租户级禁用配额检查
             return null;
@@ -218,7 +218,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     }
 
     private Integer resolveMaxConcurrent(String tenantId) {
-        TenantQuotaDO quota = getQuota(tenantId);
+        TenantQuota quota = getQuota(tenantId);
         if (quota != null && Boolean.FALSE.equals(isEnabled(quota))) {
             return null;
         }
@@ -231,7 +231,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     }
 
     private Integer resolveMaxDailyExecutions(String tenantId) {
-        TenantQuotaDO quota = getQuota(tenantId);
+        TenantQuota quota = getQuota(tenantId);
         if (quota != null && Boolean.FALSE.equals(isEnabled(quota))) {
             return null;
         }
@@ -246,7 +246,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     /**
      * 判断租户配额记录是否启用检查。
      */
-    private Boolean isEnabled(TenantQuotaDO quota) {
+    private Boolean isEnabled(TenantQuota quota) {
         return quota.getEnabled() != null && quota.getEnabled() == 1;
     }
 

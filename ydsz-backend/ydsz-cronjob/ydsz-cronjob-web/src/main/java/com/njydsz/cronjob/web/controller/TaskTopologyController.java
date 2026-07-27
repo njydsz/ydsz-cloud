@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
@@ -77,19 +77,19 @@ public class TaskTopologyController {
     @Operation(summary = "查询DAG实例执行拓扑图")
     @GetMapping("/dagInstance/{dagInstanceId}")
     public BaseResponse<Map<String, Object>> getDagInstanceTopology(@PathVariable String dagInstanceId) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             return BaseResponse.success(null);
         }
 
         // 加载 DAG 定义
-        JobDagDO dag = dagMapper.selectById(instance.getDagId());
+        JobDag dag = dagMapper.selectById(instance.getDagId());
         DagDefinition definition = dag != null
                 ? dagDefinitionCodec.fromJson(dag.getDagDefinition())
                 : DagDefinition.empty();
 
         // 查询节点实例
-        List<JobDagNodeInstanceDO> nodeInstances = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        List<JobDagNodeInstance> nodeInstances = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
 
         // 构建拓扑数据
         Map<String, Object> topology = new LinkedHashMap<>();
@@ -108,11 +108,11 @@ public class TaskTopologyController {
      */
     @Operation(summary = "查询任务执行历史")
     @GetMapping("/jobHistory/{jobKey}")
-    public BaseResponse<List<JobLogDO>> getJobExecutionHistory(@PathVariable String jobKey) {
-        LambdaQueryWrapper<JobLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobLogDO::getJobKey, jobKey)
-                .eq(JobLogDO::getDeleted, 0)
-                .orderByDesc(JobLogDO::getCreatedAt)
+    public BaseResponse<List<JobLog>> getJobExecutionHistory(@PathVariable String jobKey) {
+        LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(JobLog::getJobKey, jobKey)
+                .eq(JobLog::getDeleted, 0)
+                .orderByDesc(JobLog::getCreatedAt)
                 .last("LIMIT 20");
         return BaseResponse.success(jobLogMapper.selectList(wrapper));
     }

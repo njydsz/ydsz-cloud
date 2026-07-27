@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 
 import lombok.RequiredArgsConstructor;
@@ -74,7 +74,7 @@ public class LoadAwareShardingStrategy implements ShardingStrategy {
             throw new IllegalArgumentException("onlineNodes 不能为空");
         }
 
-        List<JobNodeDO> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
+        List<JobNode> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
 
         // 计算每个节点的负载评分
         List<NodeScore> scores = new ArrayList<>(onlineNodes.size());
@@ -110,8 +110,8 @@ public class LoadAwareShardingStrategy implements ShardingStrategy {
      * @param allNodes 在线节点列表
      * @return 负载评分（0-100）
      */
-    private double calculateLoadScore(String nodeId, List<JobNodeDO> allNodes) {
-        JobNodeDO node = findNode(nodeId, allNodes);
+    private double calculateLoadScore(String nodeId, List<JobNode> allNodes) {
+        JobNode node = findNode(nodeId, allNodes);
         if (node == null) {
             // 节点不在列表中，给中等偏高的评分（保守分配）
             return 60.0;
@@ -167,8 +167,8 @@ public class LoadAwareShardingStrategy implements ShardingStrategy {
     /**
      * 在节点列表中查找指定节点。
      */
-    private JobNodeDO findNode(String nodeId, List<JobNodeDO> allNodes) {
-        for (JobNodeDO node : allNodes) {
+    private JobNode findNode(String nodeId, List<JobNode> allNodes) {
+        for (JobNode node : allNodes) {
             if (nodeId.equals(node.getNodeId())) {
                 return node;
             }

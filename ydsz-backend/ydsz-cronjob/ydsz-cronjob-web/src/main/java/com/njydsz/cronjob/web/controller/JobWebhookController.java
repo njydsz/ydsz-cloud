@@ -11,7 +11,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.cronjob.domain.entity.job.JobWebhookDO;
+import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,7 +50,7 @@ public class JobWebhookController {
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @RateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
     @PostMapping
-    public BaseResponse<String> create(@RequestBody JobWebhookDO webhook) {
+    public BaseResponse<String> create(@RequestBody JobWebhook webhook) {
         webhook.setStatus("ACTIVE");
         webhook.setCreatedAt(LocalDateTime.now());
         webhook.setUpdatedAt(LocalDateTime.now());
@@ -74,7 +74,7 @@ public class JobWebhookController {
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @RateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
     @PutMapping
-    public BaseResponse<Void> update(@RequestBody JobWebhookDO webhook) {
+    public BaseResponse<Void> update(@RequestBody JobWebhook webhook) {
         webhook.setUpdatedAt(LocalDateTime.now());
         webhookMapper.updateById(webhook);
         return BaseResponse.success();
@@ -93,7 +93,7 @@ public class JobWebhookController {
     @RateLimit(resource = "cronjob.jobwebhook.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
-        JobWebhookDO update = new JobWebhookDO();
+        JobWebhook update = new JobWebhook();
         update.setId(id);
         update.setDeleted(1);
         update.setUpdatedAt(LocalDateTime.now());
@@ -112,12 +112,12 @@ public class JobWebhookController {
      */
     @Operation(summary = "分页查询 WebHook 订阅")
     @GetMapping("/page")
-    public BaseResponse<Page<JobWebhookDO>> page(
+    public BaseResponse<Page<JobWebhook>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) String jobKey) {
-        LambdaQueryWrapper<JobWebhookDO> wrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<JobWebhook> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(w -> w.getDeleted(), 0)
                 .eq(eventType != null && !eventType.isBlank(),
                         w -> w.getEventType(), eventType)
@@ -135,7 +135,7 @@ public class JobWebhookController {
      */
     @Operation(summary = "查询 WebHook 详情")
     @GetMapping("/{id}")
-    public BaseResponse<JobWebhookDO> getById(@PathVariable String id) {
+    public BaseResponse<JobWebhook> getById(@PathVariable String id) {
         return BaseResponse.success(webhookMapper.selectById(id));
     }
 
@@ -152,7 +152,7 @@ public class JobWebhookController {
     @RateLimit(resource = "cronjob.jobwebhook.testWebhook", threshold = 50)
     @PostMapping("/{id}/test")
     public BaseResponse<Void> testWebhook(@PathVariable String id) {
-        JobWebhookDO webhook = webhookMapper.selectById(id);
+        JobWebhook webhook = webhookMapper.selectById(id);
         if (webhook == null) {
             return BaseResponse.error("WebHook not found");
         }

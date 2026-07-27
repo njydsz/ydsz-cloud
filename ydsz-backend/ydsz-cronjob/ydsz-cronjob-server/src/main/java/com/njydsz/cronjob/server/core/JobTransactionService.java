@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>{@link #acquireDueJobs(LocalDateTime, int)}：readOnly 事务，
  *       保护 {@code SELECT ... FOR UPDATE SKIP LOCKED} 抢占式扫描</li>
- *   <li>{@link #advanceNextFireTime(JobDO, LocalDateTime, LocalDateTime, LocalDateTime)}：
+ *   <li>{@link #advanceNextFireTime(Job, LocalDateTime, LocalDateTime, LocalDateTime)}：
  *       read-write 事务，保护 CAS 推进 next_fire_time 的原子性</li>
  * </ul>
  *
@@ -52,7 +52,7 @@ public class JobTransactionService {
      * @return 待触发任务列表
      */
     @Transactional(readOnly = true)
-    public List<JobDO> acquireDueJobs(LocalDateTime now, int batchSize) {
+    public List<Job> acquireDueJobs(LocalDateTime now, int batchSize) {
         return jobMapper.selectDueJobs(now, batchSize);
     }
 
@@ -69,7 +69,7 @@ public class JobTransactionService {
      * @return true CAS 成功（affected > 0）；false CAS 失败（已被其他节点推进）
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean advanceNextFireTime(JobDO job, LocalDateTime oldNext,
+    public boolean advanceNextFireTime(Job job, LocalDateTime oldNext,
                                        LocalDateTime newNext, LocalDateTime lastFire) {
         if (oldNext == null) {
             log.warn("[JobTx] next_fire_time 为 null, 跳过 CAS: key={}", job.getJobKey());

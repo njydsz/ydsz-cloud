@@ -16,7 +16,7 @@ package com.njydsz.common.core.constant;
  * <pre>{@code
  * @Cacheable(value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
  *            key = "#flowCode + ':' + #version", unless = "#result == null")
- * public FlowDefinitionDO getPublishedDefinition(String flowCode, String version) { ... }
+ * public FlowDefinition getPublishedDefinition(String flowCode, String version) { ... }
  * }</pre>
  *
  * @author ydsz-team

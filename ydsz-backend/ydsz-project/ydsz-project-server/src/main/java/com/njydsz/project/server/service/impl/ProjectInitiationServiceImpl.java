@@ -13,7 +13,7 @@ import com.njydsz.common.feign.assembler.NameType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.project.domain.dto.ProjectInitiationDTO;
 import com.njydsz.project.domain.dto.ProjectInitiationPageQuery;
-import com.njydsz.project.domain.entity.project.ProjectInitiationDO;
+import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.njydsz.project.domain.repository.project.IProjectInitiationRepository;
 import com.njydsz.project.domain.vo.ProjectInitiationVO;
 import com.njydsz.project.server.metrics.ProjectMetrics;
@@ -48,7 +48,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     public ProjectInitiationVO getById(String id) {
         long start = System.currentTimeMillis();
         try {
-            ProjectInitiationDO entity = repository.getById(id);
+            ProjectInitiation entity = repository.getById(id);
             if (entity == null) {
                 return null;
             }
@@ -62,9 +62,9 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     public ProjectInitiationVO getByCode(String projectCode) {
         long start = System.currentTimeMillis();
         try {
-            ProjectInitiationDO entity = repository.getOne(
-                    new LambdaQueryWrapper<ProjectInitiationDO>()
-                            .eq(ProjectInitiationDO::getProjectCode, projectCode));
+            ProjectInitiation entity = repository.getOne(
+                    new LambdaQueryWrapper<ProjectInitiation>()
+                            .eq(ProjectInitiation::getProjectCode, projectCode));
             if (entity == null) {
                 return null;
             }
@@ -78,23 +78,23 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     public IPage<ProjectInitiationVO> page(ProjectInitiationPageQuery query) {
         long start = System.currentTimeMillis();
         try {
-            LambdaQueryWrapper<ProjectInitiationDO> wrapper = new LambdaQueryWrapper<>();
+            LambdaQueryWrapper<ProjectInitiation> wrapper = new LambdaQueryWrapper<>();
             wrapper.like(StringUtils.hasText(query.getProjectCode()),
-                            ProjectInitiationDO::getProjectCode, query.getProjectCode())
+                            ProjectInitiation::getProjectCode, query.getProjectCode())
                    .like(StringUtils.hasText(query.getProjectName()),
-                            ProjectInitiationDO::getProjectName, query.getProjectName())
+                            ProjectInitiation::getProjectName, query.getProjectName())
                    .eq(StringUtils.hasText(query.getStage()),
-                            ProjectInitiationDO::getStage, query.getStage())
+                            ProjectInitiation::getStage, query.getStage())
                    .eq(StringUtils.hasText(query.getStatus()),
-                            ProjectInitiationDO::getStatus, query.getStatus())
+                            ProjectInitiation::getStatus, query.getStatus())
                    .eq(StringUtils.hasText(query.getPmId()),
-                            ProjectInitiationDO::getPmId, query.getPmId())
+                            ProjectInitiation::getPmId, query.getPmId())
                    .eq(StringUtils.hasText(query.getCustomerId()),
-                            ProjectInitiationDO::getCustomerId, query.getCustomerId())
-                   .orderByDesc(ProjectInitiationDO::getCreatedAt);
+                            ProjectInitiation::getCustomerId, query.getCustomerId())
+                   .orderByDesc(ProjectInitiation::getCreatedAt);
 
-            Page<ProjectInitiationDO> page = new Page<>(query.getPageNum(), query.getPageSize());
-            IPage<ProjectInitiationDO> result = repository.page(page, wrapper);
+            Page<ProjectInitiation> page = new Page<>(query.getPageNum(), query.getPageSize());
+            IPage<ProjectInitiation> result = repository.page(page, wrapper);
 
             List<ProjectInitiationVO> voList = result.getRecords().stream()
                     .map(this::convertToVO)
@@ -115,7 +115,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(ProjectInitiationDTO dto) {
-        ProjectInitiationDO entity = new ProjectInitiationDO();
+        ProjectInitiation entity = new ProjectInitiation();
         BeanUtils.copyProperties(dto, entity);
         entity.setStatus("DRAFT");
         entity.setStage("PRE_INITIATION");
@@ -131,7 +131,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(ProjectInitiationDTO dto) {
-        ProjectInitiationDO entity = new ProjectInitiationDO();
+        ProjectInitiation entity = new ProjectInitiation();
         BeanUtils.copyProperties(dto, entity);
         boolean result = repository.updateById(entity);
         if (result) {
@@ -153,7 +153,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean advanceStage(String id, String stage, String gate) {
-        ProjectInitiationDO entity = repository.getById(id);
+        ProjectInitiation entity = repository.getById(id);
         if (entity == null) {
             return false;
         }
@@ -173,17 +173,17 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     public List<ProjectInitiationVO> listByPmId(String pmId) {
         long start = System.currentTimeMillis();
         try {
-            List<ProjectInitiationDO> list = repository.list(
-                    new LambdaQueryWrapper<ProjectInitiationDO>()
-                            .eq(ProjectInitiationDO::getPmId, pmId)
-                            .orderByDesc(ProjectInitiationDO::getCreatedAt));
+            List<ProjectInitiation> list = repository.list(
+                    new LambdaQueryWrapper<ProjectInitiation>()
+                            .eq(ProjectInitiation::getPmId, pmId)
+                            .orderByDesc(ProjectInitiation::getCreatedAt));
             return list.stream().map(this::convertToVO).collect(Collectors.toList());
         } finally {
             projectMetrics.recordQueryDuration(System.currentTimeMillis() - start);
         }
     }
 
-    private ProjectInitiationVO convertToVO(ProjectInitiationDO entity) {
+    private ProjectInitiationVO convertToVO(ProjectInitiation entity) {
         ProjectInitiationVO vo = new ProjectInitiationVO();
         BeanUtils.copyProperties(entity, vo);
         return vo;

@@ -14,9 +14,9 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.domain.dto.FlowCcQueryDTO;
-import com.njydsz.workflow.domain.entity.FlowCcDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.entity.FlowCc;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
@@ -60,7 +60,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void handleCcNode(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public void handleCcNode(String instanceId, FlowNode node, Map<String, Object> variables) {
         try {
             if (instanceId == null || node == null) {
                 log.warn("[FlowCc] handleCcNode 参数为空: instanceId={} node={}", instanceId, node == null);
@@ -68,7 +68,7 @@ public class FlowCcServiceImpl implements FlowCcService {
             }
 
             // 1. 获取流程实例（取 flowCode/flowName/businessKey 等冗余字段）
-            FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+            FlowInstance instance = instanceMapper.selectById(instanceId);
             if (instance == null) {
                 log.warn("[FlowCc] 流程实例不存在: instanceId={}", instanceId);
                 return;
@@ -103,12 +103,12 @@ public class FlowCcServiceImpl implements FlowCcService {
                 return;
             }
 
-            // 4. 为每个 userId 写入 FlowCcDO
+            // 4. 为每个 userId 写入 FlowCc
             LocalDateTime now = LocalDateTime.now();
             String traceId = TracerUtils.getOrCreateTraceId();
             int insertCount = 0;
             for (String userId : userIds) {
-                FlowCcDO cc = buildCcDO(instance, node, userId, now, traceId);
+                FlowCc cc = buildCcDO(instance, node, userId, now, traceId);
                 ccMapper.insert(cc);
                 insertCount++;
             }
@@ -126,7 +126,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowCcDO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
+    public List<FlowCc> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
         try {
             if (userId == null || query == null) {
                 return List.of();
@@ -158,7 +158,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<List<FlowCcDO>> listCcByUser(String userId, String readStatus, String flowCode,
+    public PageResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
                                                    String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
@@ -168,7 +168,7 @@ public class FlowCcServiceImpl implements FlowCcService {
             int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
             int offset = (page - 1) * size;
 
-            List<FlowCcDO> list = ccMapper.selectCcByUserPage(tenantId, userId,
+            List<FlowCc> list = ccMapper.selectCcByUserPage(tenantId, userId,
                     readStatus, flowCode, offset, size);
             long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
             return PageResponse.success(total, (long) page, (long) size, list);
@@ -232,7 +232,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowCcDO> listByInstance(String instanceId, String tenantId) {
+    public List<FlowCc> listByInstance(String instanceId, String tenantId) {
         try {
             if (instanceId == null) {
                 return List.of();
@@ -295,11 +295,11 @@ public class FlowCcServiceImpl implements FlowCcService {
     }
 
     /**
-     * 构建 FlowCcDO 记录
+     * 构建 FlowCc 记录
      */
-    private FlowCcDO buildCcDO(FlowInstanceDO instance, FlowNodeDO node,
+    private FlowCc buildCcDO(FlowInstance instance, FlowNode node,
                                String userId, LocalDateTime now, String traceId) {
-        FlowCcDO cc = new FlowCcDO();
+        FlowCc cc = new FlowCc();
         cc.setTenantId(instance.getTenantId());
         cc.setInstanceId(instance.getId());
         cc.setNodeCode(node.getNodeCode());

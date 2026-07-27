@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 
 /**
  * 灰度发布服务
@@ -91,7 +91,7 @@ public interface FlowCanaryService {
      * @param initiatorId 发起人 ID
      * @return 实际生效的定义（含切流结果），无灰度时返回原稳定版
      */
-    FlowDefinitionDO resolveEffectiveDefinition(String flowCode, String version,
+    FlowDefinition resolveEffectiveDefinition(String flowCode, String version,
                                                 String tenantId, String initiatorId);
 
     /**

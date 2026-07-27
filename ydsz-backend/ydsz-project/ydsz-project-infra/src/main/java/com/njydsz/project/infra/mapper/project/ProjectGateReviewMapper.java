@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.project;
 
-import com.njydsz.project.domain.entity.project.ProjectGateReviewDO;
+import com.njydsz.project.domain.entity.project.ProjectGateReview;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface ProjectGateReviewMapper extends BaseMapper<ProjectGateReviewDO> {
+public interface ProjectGateReviewMapper extends BaseMapper<ProjectGateReview> {
 }

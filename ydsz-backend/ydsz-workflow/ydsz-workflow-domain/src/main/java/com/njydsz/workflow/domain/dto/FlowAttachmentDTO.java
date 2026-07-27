@@ -11,7 +11,7 @@ import lombok.Data;
  * 自建工作流引擎 - 审批附件 DTO
  *
  * <p>P1-6 (GAP-51): 审批时由前端提交的附件信息，序列化为 JSON 传入后端。
- * 字段与 {@link com.njydsz.workflow.domain.entity.FlowAttachmentDO} 对齐，
+ * 字段与 {@link com.njydsz.workflow.domain.entity.FlowAttachment} 对齐，
  * 仅保留业务可见字段，不暴露内部版本号/审计字段。
  *
  * @author ydsz-team

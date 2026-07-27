@@ -19,7 +19,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
-import com.njydsz.workflow.domain.entity.FlowCommentDO;
+import com.njydsz.workflow.domain.entity.FlowComment;
 import com.njydsz.workflow.server.service.FlowCommentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,7 +80,7 @@ public class FlowCommentController {
      */
     @GetMapping("/instance/{instanceId}")
     @Operation(summary = "查询实例全部评论（树结构）")
-    public BaseResponse<List<FlowCommentDO>> listByInstance(@PathVariable String instanceId) {
+    public BaseResponse<List<FlowComment>> listByInstance(@PathVariable String instanceId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.success(commentService.listByInstance(tenantId, instanceId));
     }
@@ -93,7 +93,7 @@ public class FlowCommentController {
      */
     @GetMapping("/root/{instanceId}")
     @Operation(summary = "查询实例一级评论")
-    public BaseResponse<List<FlowCommentDO>> listRootComments(@PathVariable String instanceId) {
+    public BaseResponse<List<FlowComment>> listRootComments(@PathVariable String instanceId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.success(commentService.listRootComments(tenantId, instanceId));
     }
@@ -106,7 +106,7 @@ public class FlowCommentController {
      */
     @GetMapping("/replies/{parentCommentId}")
     @Operation(summary = "查询父评论下的回复")
-    public BaseResponse<List<FlowCommentDO>> listReplies(@PathVariable String parentCommentId) {
+    public BaseResponse<List<FlowComment>> listReplies(@PathVariable String parentCommentId) {
         return BaseResponse.success(commentService.listReplies(parentCommentId));
     }
 

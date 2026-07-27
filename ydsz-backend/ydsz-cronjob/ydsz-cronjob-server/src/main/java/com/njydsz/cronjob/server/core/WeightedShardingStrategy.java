@@ -10,7 +10,7 @@ import java.util.TreeMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 
 import lombok.RequiredArgsConstructor;
@@ -49,10 +49,10 @@ public class WeightedShardingStrategy implements ShardingStrategy {
         }
 
         // 获取节点负载信息（一次性查询，构建 Map 避免 N+1 查找）
-        Map<String, JobNodeDO> nodeMap = new HashMap<>();
-        List<JobNodeDO> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
+        Map<String, JobNode> nodeMap = new HashMap<>();
+        List<JobNode> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
         if (allNodes != null) {
-            for (JobNodeDO node : allNodes) {
+            for (JobNode node : allNodes) {
                 nodeMap.put(node.getNodeId(), node);
             }
         }
@@ -89,8 +89,8 @@ public class WeightedShardingStrategy implements ShardingStrategy {
     /**
      * 计算节点权重（负载越低权重越高）。
      */
-    private double calculateNodeWeight(String nodeId, Map<String, JobNodeDO> nodeMap) {
-        JobNodeDO node = nodeMap.get(nodeId);
+    private double calculateNodeWeight(String nodeId, Map<String, JobNode> nodeMap) {
+        JobNode node = nodeMap.get(nodeId);
         if (node != null) {
             double cpuUsage = node.getCpuUsage() != null ? node.getCpuUsage().doubleValue() : 50.0;
             int runningCount = node.getRunningCount() != null ? node.getRunningCount() : 0;

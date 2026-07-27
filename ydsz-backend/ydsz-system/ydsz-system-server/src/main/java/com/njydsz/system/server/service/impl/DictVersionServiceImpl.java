@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.system.domain.entity.DictVersionDO;
+import com.njydsz.system.domain.entity.DictVersion;
 import com.njydsz.system.domain.vo.DictVersionVO;
 import com.njydsz.system.infra.mapper.DictVersionMapper;
 import com.njydsz.system.server.service.DictVersionService;
@@ -37,7 +37,7 @@ public class DictVersionServiceImpl implements DictVersionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String createVersion(String typeCode, String version, String changeLog, String snapshotJson) {
-        DictVersionDO entity = new DictVersionDO();
+        DictVersion entity = new DictVersion();
         entity.setTypeCode(typeCode);
         entity.setVersion(version);
         entity.setChangeLog(changeLog);
@@ -47,7 +47,7 @@ public class DictVersionServiceImpl implements DictVersionService {
         return entity.getId();
     }
 
-    private DictVersionVO toVO(DictVersionDO entity) {
+    private DictVersionVO toVO(DictVersion entity) {
         if (entity == null) {
             return null;
         }

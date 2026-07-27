@@ -18,7 +18,7 @@ import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.util.id.SnowflakeUtils;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
-import com.njydsz.message.domain.entity.batch.MsgBatchDO;
+import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
 import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.core.MessageService;
@@ -61,7 +61,7 @@ public class BatchServiceImpl implements BatchService {
     private final ParallelBatchSender parallelBatchSender;
 
     @Override
-    public MsgBatchDO submitBatch(BatchSendRequestDTO dto) {
+    public MsgBatch submitBatch(BatchSendRequestDTO dto) {
         if (dto == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "批量发送参数不能为空");
         }
@@ -77,7 +77,7 @@ public class BatchServiceImpl implements BatchService {
         // 创建批次记录
         String batchId = StringUtils.hasText(dto.getBatchId())
                 ? dto.getBatchId() : SnowflakeUtils.nextIdStr();
-        MsgBatchDO batch = new MsgBatchDO();
+        MsgBatch batch = new MsgBatch();
         batch.setBatchId(batchId);
         batch.setBatchName(dto.getBatchName());
         batch.setChannel(dto.getChannel());
@@ -108,8 +108,8 @@ public class BatchServiceImpl implements BatchService {
         if (!StringUtils.hasText(batchId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "批次 ID 不能为空");
         }
-        MsgBatchDO batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatchDO>()
-                .eq(MsgBatchDO::getBatchId, batchId)
+        MsgBatch batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatch>()
+                .eq(MsgBatch::getBatchId, batchId)
                 .last("LIMIT 1"));
         if (batch == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "批次不存在: " + batchId);
@@ -149,17 +149,17 @@ public class BatchServiceImpl implements BatchService {
 
     @Override
     public void executeBatch(String batchId) {
-        // D-4: 从 DB 恢复请求列表（需 MsgBatchDO 新增 payload 字段存储 JSON 序列化的 requests）
-        MsgBatchDO batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatchDO>()
-                .eq(MsgBatchDO::getBatchId, batchId)
+        // D-4: 从 DB 恢复请求列表（需 MsgBatch 新增 payload 字段存储 JSON 序列化的 requests）
+        MsgBatch batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatch>()
+                .eq(MsgBatch::getBatchId, batchId)
                 .last("LIMIT 1"));
         if (batch == null) {
             log.warn("[Batch] 批次不存在: {}", batchId);
             return;
         }
         // D-4: 从 batchName 字段反序列化请求列表（临时方案，后续应新增 payload 列）
-        // TODO: MsgBatchDO 新增 payload TEXT 列后，改为 batch.getPayload()
-        log.warn("[Batch] executeBatch(batchId) 需 MsgBatchDO.payload 列支持，当前版本请使用 executeBatchAsync(batchId, requests)");
+        // TODO: MsgBatch 新增 payload TEXT 列后，改为 batch.getPayload()
+        log.warn("[Batch] executeBatch(batchId) 需 MsgBatch.payload 列支持，当前版本请使用 executeBatchAsync(batchId, requests)");
     }
 
     /**
@@ -171,8 +171,8 @@ public class BatchServiceImpl implements BatchService {
      * @param requests 消息请求列表
      */
     private void doExecuteBatch(String batchId, List<MessageRequest> requests) {
-        MsgBatchDO batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatchDO>()
-                .eq(MsgBatchDO::getBatchId, batchId)
+        MsgBatch batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatch>()
+                .eq(MsgBatch::getBatchId, batchId)
                 .last("LIMIT 1"));
         if (batch == null) {
             log.warn("[Batch] 批次不存在: {}", batchId);

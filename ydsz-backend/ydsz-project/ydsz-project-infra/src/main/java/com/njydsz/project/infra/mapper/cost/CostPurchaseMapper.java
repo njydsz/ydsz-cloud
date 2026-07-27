@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.cost;
 
-import com.njydsz.project.domain.entity.cost.CostPurchaseDO;
+import com.njydsz.project.domain.entity.cost.CostPurchase;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface CostPurchaseMapper extends BaseMapper<CostPurchaseDO> {
+public interface CostPurchaseMapper extends BaseMapper<CostPurchase> {
 }

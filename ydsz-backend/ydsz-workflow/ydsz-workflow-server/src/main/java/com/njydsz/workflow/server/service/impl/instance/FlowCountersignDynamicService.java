@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -46,7 +46,7 @@ public class FlowCountersignDynamicService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_b8c9d0e1");
         }
 
-        FlowRunTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTask task = taskMapper.selectById(taskId);
         if (task == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
         }
@@ -78,7 +78,7 @@ public class FlowCountersignDynamicService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_e1f2a3b4");
         }
 
-        FlowRunTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTask task = taskMapper.selectById(taskId);
         if (task == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
         }

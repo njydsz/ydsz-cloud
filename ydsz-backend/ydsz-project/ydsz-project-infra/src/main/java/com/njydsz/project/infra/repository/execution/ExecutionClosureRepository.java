@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.execution;
 
-import com.njydsz.project.domain.entity.execution.ExecutionClosureDO;
+import com.njydsz.project.domain.entity.execution.ExecutionClosure;
 import com.njydsz.project.domain.repository.execution.IExecutionClosureRepository;
 import com.njydsz.project.infra.mapper.execution.ExecutionClosureMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ExecutionClosureRepository extends ServiceImpl<ExecutionClosureMapper, ExecutionClosureDO>
+public class ExecutionClosureRepository extends ServiceImpl<ExecutionClosureMapper, ExecutionClosure>
         implements IExecutionClosureRepository {
 }

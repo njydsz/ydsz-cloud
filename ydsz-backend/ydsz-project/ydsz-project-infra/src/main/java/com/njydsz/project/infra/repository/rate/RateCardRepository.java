@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.rate;
 
-import com.njydsz.project.domain.entity.rate.RateCardDO;
+import com.njydsz.project.domain.entity.rate.RateCard;
 import com.njydsz.project.domain.repository.rate.IRateCardRepository;
 import com.njydsz.project.infra.mapper.rate.RateCardMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class RateCardRepository extends ServiceImpl<RateCardMapper, RateCardDO>
+public class RateCardRepository extends ServiceImpl<RateCardMapper, RateCard>
         implements IRateCardRepository {
 }

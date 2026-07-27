@@ -32,12 +32,12 @@ import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
 import com.njydsz.message.domain.dto.core.RichMediaContent;
-import com.njydsz.message.domain.entity.canary.MsgCanaryDO;
-import com.njydsz.message.domain.entity.config.MsgPreferenceDO;
-import com.njydsz.message.domain.entity.config.MsgRouteRuleDO;
-import com.njydsz.message.domain.entity.config.MsgTraceDO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.canary.MsgCanary;
+import com.njydsz.message.domain.entity.config.MsgPreference;
+import com.njydsz.message.domain.entity.config.MsgRouteRule;
+import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
@@ -200,7 +200,7 @@ public class MessageServiceImpl implements MessageService {
         }
 
         // ③ 构造落库对象
-        MsgLogDO logDO = buildLogDO(request, ctx, rendered);
+        MsgLog logDO = buildLogDO(request, ctx, rendered);
 
         // ④ 定时/聚合早期 return 路径
         MessageResult earlyResult = handleEarlyReturns(request, ctx, logDO, rendered);
@@ -211,7 +211,7 @@ public class MessageServiceImpl implements MessageService {
         // ⑤ 常规落库 PENDING
         msgLogMapper.insert(logDO);
         messageTraceService.recordTrace(logDO.getMsgId(),
-                MsgTraceDO.Node.PERSISTED, "SUCCESS", ctx.channel,
+                MsgTrace.Node.PERSISTED, "SUCCESS", ctx.channel,
                 "消息已落库: status=" + logDO.getStatus());
 
         // ⑥ 通道分发 + 级联
@@ -247,11 +247,11 @@ public class MessageServiceImpl implements MessageService {
         messageTraceService.recordTrace(
                 StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                         : (StringUtils.hasText(request.getBizId()) ? request.getBizId() : "unknown"),
-                MsgTraceDO.Node.RECEIVED, "SUCCESS", channel,
+                MsgTrace.Node.RECEIVED, "SUCCESS", channel,
                 "消息已接收: channel=" + channel + " receiver=" + request.getReceiver());
 
         // ② 路由（命中则覆盖 channel）
-        MsgRouteRuleDO matchedRule = routeRuleService.match(request);
+        MsgRouteRule matchedRule = routeRuleService.match(request);
         if (matchedRule != null && StringUtils.hasText(matchedRule.getTargetChannel())) {
             channel = matchedRule.getTargetChannel();
             request.setChannel(channel);
@@ -275,7 +275,7 @@ public class MessageServiceImpl implements MessageService {
 
         // ③ 灰度命中差异化处理（P0-7）
         if (StringUtils.hasText(ctx.templateCode) && StringUtils.hasText(ctx.receiver)) {
-            MsgCanaryDO canary = canaryService.matchConfig(ctx.templateCode, ctx.receiver);
+            MsgCanary canary = canaryService.matchConfig(ctx.templateCode, ctx.receiver);
             if (canary != null) {
                 ctx.canaryFlag = 1;
                 ctx.canaryKeyForLog = ctx.templateCode;
@@ -406,7 +406,7 @@ public class MessageServiceImpl implements MessageService {
         String prefLocale = ctx.pref != null ? ctx.pref.getLocale() : null;
 
         if (StringUtils.hasText(ctx.templateCode)) {
-            MsgTemplateDO template = templateService.loadByCodeAndChannel(
+            MsgTemplate template = templateService.loadByCodeAndChannel(
                     ctx.templateCode, ctx.channel, prefLocale, TenantContext.getTenantId());
             if (template == null) {
                 return new RenderedContent(content, subject, true);
@@ -463,10 +463,10 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P1-3: 构造落库 MsgLogDO。
+     * P1-3: 构造落库 MsgLog。
      */
-    private MsgLogDO buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
-        MsgLogDO logDO = new MsgLogDO();
+    private MsgLog buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
+        MsgLog logDO = new MsgLog();
         logDO.setChannel(ctx.channel);
         logDO.setBizType(ctx.bizType);
         logDO.setBizId(request.getBizId());
@@ -508,7 +508,7 @@ public class MessageServiceImpl implements MessageService {
      * @param rendered 渲染结果(含 templateMissing 标志)
      * @return 非 null 表示已处理(调用方直接返回),null 表示继续走常规分发
      */
-    private MessageResult handleEarlyReturns(MessageRequest request, SendContext ctx, MsgLogDO logDO, RenderedContent rendered) {
+    private MessageResult handleEarlyReturns(MessageRequest request, SendContext ctx, MsgLog logDO, RenderedContent rendered) {
         // 模板缺失: renderContent 标记 templateMissing=true 时直接返回失败
         if (rendered.templateMissing()) {
             return MessageResult.fail(ctx.channel, "模板不存在: " + ctx.templateCode);
@@ -534,7 +534,7 @@ public class MessageServiceImpl implements MessageService {
                     logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
                     msgLogMapper.insert(logDO);
                     messageTraceService.recordTrace(logDO.getMsgId(),
-                            MsgTraceDO.Node.SCHEDULED,
+                            MsgTrace.Node.SCHEDULED,
                             "SUCCESS", ctx.channel, "智能定时: optimalAt=" + optimalTime);
                     log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
                             logDO.getMsgId(), ctx.receiver, optimalTime);
@@ -564,8 +564,8 @@ public class MessageServiceImpl implements MessageService {
         String receiver;
         String bizType;
         String templateCode;
-        MsgRouteRuleDO matchedRule;
-        MsgPreferenceDO pref;
+        MsgRouteRule matchedRule;
+        MsgPreference pref;
         int canaryFlag;
         String canaryKeyForLog;
         String dedupKey;
@@ -594,7 +594,7 @@ public class MessageServiceImpl implements MessageService {
      * @param parentLog 父消息落库记录(提供 msgId 作为子消息的 parentMsgId)
      * @param depth    父消息的级联深度
      */
-    private void triggerCascade(MessageRequest request, MsgLogDO parentLog, int depth) {
+    private void triggerCascade(MessageRequest request, MsgLog parentLog, int depth) {
         List<MessageRequest> cascadeTo = request.getCascadeTo();
         if (cascadeTo == null || cascadeTo.isEmpty()) {
             return;
@@ -621,7 +621,7 @@ public class MessageServiceImpl implements MessageService {
     /**
      * 执行通道分发,包含 P0-3 重试落库 与 P0-4 通道降级 / P1-8 多级降级链。
      */
-    private MessageResult doDispatch(MsgLogDO logDO, MsgRouteRuleDO matchedRule, String receiver) {
+    private MessageResult doDispatch(MsgLog logDO, MsgRouteRule matchedRule, String receiver) {
         String channel = logDO.getChannel();
         long start = System.currentTimeMillis();
         try {
@@ -644,7 +644,7 @@ public class MessageServiceImpl implements MessageService {
             msgLogMapper.updateById(logDO);
             // P0-2: 记录分发开始轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
-                    MsgTraceDO.Node.DISPATCH_START,
+                    MsgTrace.Node.DISPATCH_START,
                     "SUCCESS", channel, "通道分发开始");
             String providerTraceId = channelRouter.dispatch(logDO);
             long cost = System.currentTimeMillis() - start;
@@ -665,7 +665,7 @@ public class MessageServiceImpl implements MessageService {
             messageServiceMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
             // P0-2: 记录分发成功轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
-                    MsgTraceDO.Node.DISPATCH_SUCCESS,
+                    MsgTrace.Node.DISPATCH_SUCCESS,
                     "SUCCESS", channel, "发送成功: cost=" + cost + "ms");
             log.info("[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
                     logDO.getMsgId(), channel, receiver, cost);
@@ -694,15 +694,15 @@ public class MessageServiceImpl implements MessageService {
     /**
      * P1-8: 解析有序降级通道列表。
      *
-     * <p>优先使用 {@link MsgRouteRuleDO#getFallbackChain()}（逗号分隔多通道），
-     * 为空时回退到 {@link MsgRouteRuleDO#getFallbackChannel()}（单通道）。
+     * <p>优先使用 {@link MsgRouteRule#getFallbackChain()}（逗号分隔多通道），
+     * 为空时回退到 {@link MsgRouteRule#getFallbackChannel()}（单通道）。
      * 自动过滤空白项与当前通道(避免循环降级)。
      *
      * @param matchedRule    命中的路由规则
      * @param currentChannel 当前发送通道(排除自身)
      * @return 有序降级通道列表（大写），可能为空
      */
-    private List<String> resolveFallbackChannels(MsgRouteRuleDO matchedRule, String currentChannel) {
+    private List<String> resolveFallbackChannels(MsgRouteRule matchedRule, String currentChannel) {
         if (matchedRule == null) {
             return Collections.emptyList();
         }
@@ -738,7 +738,7 @@ public class MessageServiceImpl implements MessageService {
      * @param prevCost         前序累计耗时
      * @return 降级成功返回 MessageResult.ok;全部失败返回 null(继续走重试逻辑)
      */
-    private MessageResult tryFallbackChain(MsgLogDO logDO, List<String> fallbackChannels, long prevCost) {
+    private MessageResult tryFallbackChain(MsgLog logDO, List<String> fallbackChannels, long prevCost) {
         String origChannel = logDO.getChannel();
         long accumulatedCost = prevCost;
         List<String> tried = new ArrayList<>();
@@ -779,7 +779,7 @@ public class MessageServiceImpl implements MessageService {
      *
      * <p>P1-7: 重试次数与退避由 {@link RetryStrategyResolver} 按通道解析,替代硬编码常量。
      */
-    private MessageResult handleFailure(MsgLogDO logDO, Exception e, long cost) {
+    private MessageResult handleFailure(MsgLog logDO, Exception e, long cost) {
         int retryCount = logDO.getRetryCount() == null ? 0 : logDO.getRetryCount();
         if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
             logDO.setStatus(MessageStatusEnum.RETRY.name());
@@ -843,39 +843,39 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Page<MsgLogDO> pageLog(MessageLogQueryDTO query) {
-        Page<MsgLogDO> page = new Page<>(
+    public Page<MsgLog> pageLog(MessageLogQueryDTO query) {
+        Page<MsgLog> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
                 Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
         if (query != null) {
-            w.eq(StringUtils.hasText(query.getChannel()), MsgLogDO::getChannel, query.getChannel());
-            w.eq(StringUtils.hasText(query.getBizType()), MsgLogDO::getBizType, query.getBizType());
-            w.eq(StringUtils.hasText(query.getBizId()), MsgLogDO::getBizId, query.getBizId());
-            w.eq(StringUtils.hasText(query.getStatus()), MsgLogDO::getStatus, query.getStatus());
-            w.eq(StringUtils.hasText(query.getReceiver()), MsgLogDO::getReceiver, query.getReceiver());
-            w.eq(StringUtils.hasText(query.getPriority()), MsgLogDO::getPriority, query.getPriority());
-            w.eq(StringUtils.hasText(query.getRecallStatus()), MsgLogDO::getRecallStatus, query.getRecallStatus());
-            w.eq(StringUtils.hasText(query.getTenantId()), MsgLogDO::getTenantId, query.getTenantId());
+            w.eq(StringUtils.hasText(query.getChannel()), MsgLog::getChannel, query.getChannel());
+            w.eq(StringUtils.hasText(query.getBizType()), MsgLog::getBizType, query.getBizType());
+            w.eq(StringUtils.hasText(query.getBizId()), MsgLog::getBizId, query.getBizId());
+            w.eq(StringUtils.hasText(query.getStatus()), MsgLog::getStatus, query.getStatus());
+            w.eq(StringUtils.hasText(query.getReceiver()), MsgLog::getReceiver, query.getReceiver());
+            w.eq(StringUtils.hasText(query.getPriority()), MsgLog::getPriority, query.getPriority());
+            w.eq(StringUtils.hasText(query.getRecallStatus()), MsgLog::getRecallStatus, query.getRecallStatus());
+            w.eq(StringUtils.hasText(query.getTenantId()), MsgLog::getTenantId, query.getTenantId());
             // P2-13: 全文搜索（模糊匹配 content / receiver / templateCode）
             if (StringUtils.hasText(query.getKeyword())) {
                 String kw = query.getKeyword().trim();
                 w.and(wrapper -> wrapper
-                        .like(MsgLogDO::getContent, kw)
-                        .or().like(MsgLogDO::getReceiver, kw)
-                        .or().like(MsgLogDO::getTemplateCode, kw)
-                        .or().like(MsgLogDO::getMsgId, kw)
-                        .or().like(MsgLogDO::getBizId, kw));
+                        .like(MsgLog::getContent, kw)
+                        .or().like(MsgLog::getReceiver, kw)
+                        .or().like(MsgLog::getTemplateCode, kw)
+                        .or().like(MsgLog::getMsgId, kw)
+                        .or().like(MsgLog::getBizId, kw));
             }
             // P2-13: 时间范围
             if (StringUtils.hasText(query.getStartTime())) {
-                w.ge(MsgLogDO::getCreatedAt, LocalDateTime.parse(query.getStartTime()));
+                w.ge(MsgLog::getCreatedAt, LocalDateTime.parse(query.getStartTime()));
             }
             if (StringUtils.hasText(query.getEndTime())) {
-                w.le(MsgLogDO::getCreatedAt, LocalDateTime.parse(query.getEndTime()));
+                w.le(MsgLog::getCreatedAt, LocalDateTime.parse(query.getEndTime()));
             }
         }
-        w.orderByDesc(MsgLogDO::getCreatedAt);
+        w.orderByDesc(MsgLog::getCreatedAt);
         return msgLogMapper.selectPage(page, w);
     }
 
@@ -905,7 +905,7 @@ public class MessageServiceImpl implements MessageService {
      * 判断当前是否在 DND 免打扰时段（P0-6）。
      * 支持跨天时段(如 22:00-08:00)。
      */
-    private boolean isInDndPeriod(MsgPreferenceDO pref) {
+    private boolean isInDndPeriod(MsgPreference pref) {
         if (pref == null || !Integer.valueOf(1).equals(pref.getDndEnabled())) {
             return false;
         }
@@ -945,7 +945,7 @@ public class MessageServiceImpl implements MessageService {
      * @param pref 偏好配置（须已确认在 DND 时段内）
      * @return DND 结束时间 + buffer，解析失败返回 null
      */
-    private LocalDateTime calculateDndEndTime(MsgPreferenceDO pref) {
+    private LocalDateTime calculateDndEndTime(MsgPreference pref) {
         if (pref == null) {
             return null;
         }
@@ -1091,7 +1091,7 @@ public class MessageServiceImpl implements MessageService {
             request.setMessageId(SnowflakeUtils.nextIdStr());
         }
         // ① 先落库 PENDING（DB 是 Source of Truth）
-        MsgLogDO logDO = new MsgLogDO();
+        MsgLog logDO = new MsgLog();
         logDO.setMsgId(request.getMessageId());
         logDO.setChannel(request.getChannel());
         logDO.setBizType(request.getBizType());

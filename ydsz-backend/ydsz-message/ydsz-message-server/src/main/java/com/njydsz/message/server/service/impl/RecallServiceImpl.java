@@ -11,9 +11,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.domain.entity.config.MsgTraceDO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
-import com.njydsz.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
@@ -59,7 +59,7 @@ public class RecallServiceImpl implements RecallService {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(notificationId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 与通知 ID 不能为空");
         }
-        MsgNotificationDO n = msgNotificationMapper.selectById(notificationId);
+        MsgNotification n = msgNotificationMapper.selectById(notificationId);
         if (n == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "通知不存在: " + notificationId);
         }
@@ -82,13 +82,13 @@ public class RecallServiceImpl implements RecallService {
         }
         messageLogService.markRecalled(logId);
         // P0-4: 查找消息并通过 WebSocket 推送撤回事件
-        MsgLogDO logDO = msgLogMapper.selectById(logId);
+        MsgLog logDO = msgLogMapper.selectById(logId);
         if (logDO != null && StringUtils.hasText(logDO.getReceiver())) {
             // P2-19: 推送撤回事件（携带消息 ID/撤回原因/时间戳）
             messageRecallPushService.pushRecall(logDO.getReceiver(), logDO.getMsgId(), "消息撤回");
             // P0-2: 记录撤回轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
-                    MsgTraceDO.Node.RECALLED, "SUCCESS", logDO.getChannel(),
+                    MsgTrace.Node.RECALLED, "SUCCESS", logDO.getChannel(),
                     "消息已撤回: logId=" + logId);
         }
         log.info("[Recall] 撤回消息: logId={}", logId);
@@ -108,8 +108,8 @@ public class RecallServiceImpl implements RecallService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "消息 ID 不能为空");
         }
         // 按 msgId 查询消息日志
-        MsgLogDO logDO = msgLogMapper.selectOne(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getMsgId, msgId)
+        MsgLog logDO = msgLogMapper.selectOne(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getMsgId, msgId)
                 .last("LIMIT 1"));
         if (logDO == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "消息不存在: msgId=" + msgId);
@@ -136,7 +136,7 @@ public class RecallServiceImpl implements RecallService {
             messageRecallPushService.pushRecall(logDO.getReceiver(), msgId, "消息撤回");
         }
         // P0-2: 记录撤回轨迹
-        messageTraceService.recordTrace(msgId, MsgTraceDO.Node.RECALLED,
+        messageTraceService.recordTrace(msgId, MsgTrace.Node.RECALLED,
                 "SUCCESS", logDO.getChannel(), "消息已撤回: msgId=" + msgId);
         log.info("[Recall] 按 msgId 撤回成功: msgId={} channel={}", msgId, logDO.getChannel());
         return true;
@@ -149,19 +149,19 @@ public class RecallServiceImpl implements RecallService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "业务类型与单据 ID 不能为空");
         }
         // 通知批量撤回
-        int notifCount = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotificationDO>()
-                .eq(MsgNotificationDO::getBizType, bizType)
-                .eq(MsgNotificationDO::getBizId, bizId)
-                .eq(MsgNotificationDO::getRecallStatus, RecallStatusEnum.NONE.name())
-                .set(MsgNotificationDO::getRecallStatus, RecallStatusEnum.RECALLED.name())
-                .set(MsgNotificationDO::getRecallAt, LocalDateTime.now()));
+        int notifCount = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotification>()
+                .eq(MsgNotification::getBizType, bizType)
+                .eq(MsgNotification::getBizId, bizId)
+                .eq(MsgNotification::getRecallStatus, RecallStatusEnum.NONE.name())
+                .set(MsgNotification::getRecallStatus, RecallStatusEnum.RECALLED.name())
+                .set(MsgNotification::getRecallAt, LocalDateTime.now()));
         // 消息日志批量撤回（仅更新非终态）
-        int logCount = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getBizType, bizType)
-                .eq(MsgLogDO::getBizId, bizId)
-                .eq(MsgLogDO::getRecallStatus, RecallStatusEnum.NONE.name())
-                .set(MsgLogDO::getRecallStatus, RecallStatusEnum.RECALLED.name())
-                .set(MsgLogDO::getRecallAt, LocalDateTime.now()));
+        int logCount = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLog>()
+                .eq(MsgLog::getBizType, bizType)
+                .eq(MsgLog::getBizId, bizId)
+                .eq(MsgLog::getRecallStatus, RecallStatusEnum.NONE.name())
+                .set(MsgLog::getRecallStatus, RecallStatusEnum.RECALLED.name())
+                .set(MsgLog::getRecallAt, LocalDateTime.now()));
         log.info("[Recall] 批量撤回: bizType={} bizId={} notif={} log={}", bizType, bizId, notifCount, logCount);
         return notifCount + logCount;
     }

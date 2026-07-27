@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
-import com.njydsz.workflow.domain.entity.FlowAttachmentDO;
+import com.njydsz.workflow.domain.entity.FlowAttachment;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +49,7 @@ public class FlowAttachmentController {
      * @return 附件列表
      */
     @GetMapping("/attachment/task/{taskId}")
-    public BaseResponse<List<FlowAttachmentDO>> listByTask(@PathVariable String taskId) {
+    public BaseResponse<List<FlowAttachment>> listByTask(@PathVariable String taskId) {
         return BaseResponse.success(attachmentService.listByTask(taskId));
     }
 
@@ -60,7 +60,7 @@ public class FlowAttachmentController {
      * @return 附件列表
      */
     @GetMapping("/attachment/instance/{instanceId}")
-    public BaseResponse<List<FlowAttachmentDO>> listByInstance(@PathVariable String instanceId) {
+    public BaseResponse<List<FlowAttachment>> listByInstance(@PathVariable String instanceId) {
         return BaseResponse.success(attachmentService.listByInstance(instanceId));
     }
 

@@ -12,8 +12,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
-import com.njydsz.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
@@ -59,12 +59,12 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "消息 ID 和用户 ID 不能为空");
         }
         // 更新消息日志的 receipt_status
-        int updated = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getMsgId, msgId)
-                .eq(MsgLogDO::getReceiver, userId)
-                .ne(MsgLogDO::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLogDO::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLogDO::getReceiptAt, LocalDateTime.now()));
+        int updated = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLog>()
+                .eq(MsgLog::getMsgId, msgId)
+                .eq(MsgLog::getReceiver, userId)
+                .ne(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
+                .set(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
+                .set(MsgLog::getReceiptAt, LocalDateTime.now()));
 
         if (updated > 0) {
             // 推送已读状态变更到前端
@@ -83,12 +83,12 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         if (msgIds == null || msgIds.isEmpty() || !StringUtils.hasText(userId)) {
             return 0;
         }
-        int updated = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLogDO>()
-                .in(MsgLogDO::getMsgId, msgIds)
-                .eq(MsgLogDO::getReceiver, userId)
-                .ne(MsgLogDO::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLogDO::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                .set(MsgLogDO::getReceiptAt, LocalDateTime.now()));
+        int updated = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLog>()
+                .in(MsgLog::getMsgId, msgIds)
+                .eq(MsgLog::getReceiver, userId)
+                .ne(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
+                .set(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
+                .set(MsgLog::getReceiptAt, LocalDateTime.now()));
 
         if (updated > 0) {
             // 推送批量已读状态到前端
@@ -106,12 +106,12 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "通知 ID 和用户 ID 不能为空");
         }
-        int updated = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotificationDO>()
-                .eq(MsgNotificationDO::getId, notificationId)
-                .eq(MsgNotificationDO::getReceiverId, userId)
-                .eq(MsgNotificationDO::getReadStatus, 0)
-                .set(MsgNotificationDO::getReadStatus, 1)
-                .set(MsgNotificationDO::getReadTime, LocalDateTime.now()));
+        int updated = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotification>()
+                .eq(MsgNotification::getId, notificationId)
+                .eq(MsgNotification::getReceiverId, userId)
+                .eq(MsgNotification::getReadStatus, 0)
+                .set(MsgNotification::getReadStatus, 1)
+                .set(MsgNotification::getReadTime, LocalDateTime.now()));
 
         if (updated > 0) {
             realtimePushService.pushToUser(userId, "NOTIFICATION_READ",
@@ -128,14 +128,14 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         if (!StringUtils.hasText(userId)) {
             return 0;
         }
-        LambdaUpdateWrapper<MsgNotificationDO> wrapper = new LambdaUpdateWrapper<MsgNotificationDO>()
-                .eq(MsgNotificationDO::getReceiverId, userId)
-                .eq(MsgNotificationDO::getReadStatus, 0)
-                .eq(MsgNotificationDO::getRecallStatus, "NONE")
-                .set(MsgNotificationDO::getReadStatus, 1)
-                .set(MsgNotificationDO::getReadTime, LocalDateTime.now());
+        LambdaUpdateWrapper<MsgNotification> wrapper = new LambdaUpdateWrapper<MsgNotification>()
+                .eq(MsgNotification::getReceiverId, userId)
+                .eq(MsgNotification::getReadStatus, 0)
+                .eq(MsgNotification::getRecallStatus, "NONE")
+                .set(MsgNotification::getReadStatus, 1)
+                .set(MsgNotification::getReadTime, LocalDateTime.now());
         if (StringUtils.hasText(bizType)) {
-            wrapper.eq(MsgNotificationDO::getBizType, bizType);
+            wrapper.eq(MsgNotification::getBizType, bizType);
         }
         int updated = msgNotificationMapper.update(null, wrapper);
         if (updated > 0) {
@@ -154,10 +154,10 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         }
         // 站内通知未读数
         Long notifCount = msgNotificationMapper.selectCount(
-                new LambdaQueryWrapper<MsgNotificationDO>()
-                        .eq(MsgNotificationDO::getReceiverId, userId)
-                        .eq(MsgNotificationDO::getReadStatus, 0)
-                        .eq(MsgNotificationDO::getRecallStatus, "NONE"));
+                new LambdaQueryWrapper<MsgNotification>()
+                        .eq(MsgNotification::getReceiverId, userId)
+                        .eq(MsgNotification::getReadStatus, 0)
+                        .eq(MsgNotification::getRecallStatus, "NONE"));
         return notifCount == null ? 0 : notifCount;
     }
 
@@ -175,11 +175,11 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         }
         // 其他通道按消息日志查询 receipt_status != READ
         Long count = msgLogMapper.selectCount(
-                new LambdaQueryWrapper<MsgLogDO>()
-                        .eq(MsgLogDO::getReceiver, userId)
-                        .eq(MsgLogDO::getChannel, channel.toUpperCase())
-                        .ne(MsgLogDO::getReceiptStatus, ReceiptStatusEnum.READ.name())
-                        .ne(MsgLogDO::getStatus, "FAILED"));
+                new LambdaQueryWrapper<MsgLog>()
+                        .eq(MsgLog::getReceiver, userId)
+                        .eq(MsgLog::getChannel, channel.toUpperCase())
+                        .ne(MsgLog::getReceiptStatus, ReceiptStatusEnum.READ.name())
+                        .ne(MsgLog::getStatus, "FAILED"));
         return count == null ? 0 : count;
     }
 }

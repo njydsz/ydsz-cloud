@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.project.ProjectGateReviewDO;
+import com.njydsz.project.domain.entity.project.ProjectGateReview;
 
 public interface ProjectGateReviewService {
-    ProjectGateReviewDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<ProjectGateReviewDO> page(int pageNum, int pageSize);
-    boolean save(ProjectGateReviewDO entity);
-    boolean updateById(ProjectGateReviewDO entity);
+    ProjectGateReview getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<ProjectGateReview> page(int pageNum, int pageSize);
+    boolean save(ProjectGateReview entity);
+    boolean updateById(ProjectGateReview entity);
     boolean removeById(String id);
 }

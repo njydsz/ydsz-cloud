@@ -21,7 +21,7 @@ import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.entity.ConfigDO;
+import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
@@ -71,9 +71,9 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public PageResult<ConfigVO> page(ConfigPageQuery query) {
-        QueryWrapper<ConfigDO> wrapper = buildQueryWrapper(query);
-        Page<ConfigDO> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-        IPage<ConfigDO> result = configRepository.getConfigMapper().selectPage(mpPage, wrapper);
+        QueryWrapper<Config> wrapper = buildQueryWrapper(query);
+        Page<Config> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+        IPage<Config> result = configRepository.getConfigMapper().selectPage(mpPage, wrapper);
         List<ConfigVO> vos = result.getRecords().stream()
                 .map(this::toVO)
                 .filter(Objects::nonNull)
@@ -83,14 +83,14 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public ConfigVO getById(String id) {
-        ConfigDO entity = configRepository.getConfigMapper().selectById(id);
+        Config entity = configRepository.getConfigMapper().selectById(id);
         return toVO(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(ConfigDTO dto) {
-        ConfigDO entity = toEntity(dto);
+        Config entity = toEntity(dto);
         validateValueType(entity.getValueType());
         checkDuplicateKey(entity);
         configRepository.getConfigMapper().insert(entity);
@@ -101,7 +101,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(ConfigDTO dto) {
-        ConfigDO entity = toEntity(dto);
+        Config entity = toEntity(dto);
         validateValueType(entity.getValueType());
         boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
         if (updated) {
@@ -113,7 +113,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        ConfigDO entity = configRepository.getConfigMapper().selectById(id);
+        Config entity = configRepository.getConfigMapper().selectById(id);
         boolean removed = configRepository.getConfigMapper().deleteById(id) > 0;
         if (removed && entity != null) {
             evictCache(entity.getConfigKey(), entity.getConfigGroup());
@@ -138,7 +138,7 @@ public class ConfigServiceImpl implements ConfigService {
                 return cached;
             }
             metrics.recordConfigCacheMiss();
-            ConfigDO config = configRepository.getConfigMapper().selectByConfigKey(configKey);
+            Config config = configRepository.getConfigMapper().selectByConfigKey(configKey);
             if (config != null) {
                 redisService.set(cacheKey, config.getConfigValue(), getCacheTtl());
                 return config.getConfigValue();
@@ -160,7 +160,7 @@ public class ConfigServiceImpl implements ConfigService {
             return YdszJson.parseArray(cached, ConfigVO.class);
         }
         metrics.recordConfigCacheMiss();
-        QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
+        QueryWrapper<Config> wrapper = new QueryWrapper<>();
         wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
         List<ConfigVO> vos = configRepository.getConfigMapper().selectList(wrapper).stream()
                 .map(this::toVO)
@@ -179,7 +179,7 @@ public class ConfigServiceImpl implements ConfigService {
             return YdszJson.parseArray(cached, ConfigVO.class);
         }
         metrics.recordConfigCacheMiss();
-        QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
+        QueryWrapper<Config> wrapper = new QueryWrapper<>();
         wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
         List<ConfigVO> vos = configRepository.getConfigMapper().selectList(wrapper).stream()
                 .map(this::toVO)
@@ -191,8 +191,8 @@ public class ConfigServiceImpl implements ConfigService {
 
     // ============================== 私有方法 ==============================
 
-    private QueryWrapper<ConfigDO> buildQueryWrapper(ConfigPageQuery query) {
-        QueryWrapper<ConfigDO> wrapper = new QueryWrapper<>();
+    private QueryWrapper<Config> buildQueryWrapper(ConfigPageQuery query) {
+        QueryWrapper<Config> wrapper = new QueryWrapper<>();
         if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
             wrapper.eq("config_group", query.getConfigGroup());
         }
@@ -206,7 +206,7 @@ public class ConfigServiceImpl implements ConfigService {
         return wrapper;
     }
 
-    private ConfigVO toVO(ConfigDO entity) {
+    private ConfigVO toVO(Config entity) {
         if (entity == null) {
             return null;
         }
@@ -224,11 +224,11 @@ public class ConfigServiceImpl implements ConfigService {
         return vo;
     }
 
-    private ConfigDO toEntity(ConfigDTO dto) {
+    private Config toEntity(ConfigDTO dto) {
         if (dto == null) {
             return null;
         }
-        ConfigDO entity = new ConfigDO();
+        Config entity = new Config();
         entity.setId(dto.getId());
         entity.setConfigGroup(dto.getConfigGroup());
         entity.setConfigKey(dto.getConfigKey());
@@ -246,8 +246,8 @@ public class ConfigServiceImpl implements ConfigService {
         ConfigValueType.validate(valueType);
     }
 
-    private void checkDuplicateKey(ConfigDO entity) {
-        QueryWrapper<ConfigDO> checkWrapper = new QueryWrapper<>();
+    private void checkDuplicateKey(Config entity) {
+        QueryWrapper<Config> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("config_group", entity.getConfigGroup())
                 .eq("config_key", entity.getConfigKey());
         if (configRepository.getConfigMapper().selectCount(checkWrapper) > 0) {

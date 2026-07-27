@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -54,7 +54,7 @@ public class AlertTrigger {
             return;
         }
         try {
-            List<JobAlertRuleDO> rules = findMatchingRules(context);
+            List<JobAlertRule> rules = findMatchingRules(context);
             if (rules.isEmpty()) {
                 log.debug("[AlertTrigger] 无匹配规则, 跳过: alertType={} jobId={}",
                         context.alertType(), context.jobId());
@@ -62,7 +62,7 @@ public class AlertTrigger {
             }
             log.info("[AlertTrigger] 触发告警: alertType={} jobId={} matchedRules={}",
                     context.alertType(), context.jobId(), rules.size());
-            for (JobAlertRuleDO rule : rules) {
+            for (JobAlertRule rule : rules) {
                 if (!isRuleMatched(rule, context)) {
                     continue;
                 }
@@ -95,7 +95,7 @@ public class AlertTrigger {
             return;
         }
         try {
-            List<JobAlertRuleDO> rules = findMatchingRules(context);
+            List<JobAlertRule> rules = findMatchingRules(context);
             if (rules.isEmpty()) {
                 log.debug("[AlertTrigger] 无匹配规则, 跳过恢复通知: alertType={} jobId={}",
                         context.alertType(), context.jobId());
@@ -103,7 +103,7 @@ public class AlertTrigger {
             }
             log.info("[AlertTrigger] 触发恢复通知: alertType={} jobId={} matchedRules={}",
                     context.alertType(), context.jobId(), rules.size());
-            for (JobAlertRuleDO rule : rules) {
+            for (JobAlertRule rule : rules) {
                 if (!isRuleMatchedForRecovery(rule, context)) {
                     continue;
                 }
@@ -119,7 +119,7 @@ public class AlertTrigger {
     /**
      * 查询匹配的告警规则（含全局规则）。
      */
-    private List<JobAlertRuleDO> findMatchingRules(AlertContext context) {
+    private List<JobAlertRule> findMatchingRules(AlertContext context) {
         if (context.jobId() != null) {
             return jobAlertRuleMapper.selectByJobIdOrGlobal(context.jobId());
         }
@@ -136,7 +136,7 @@ public class AlertTrigger {
      *   <li>FAIL_RATE / DURATION_P95 类型不在单次触发中判定（需周期性扫描统计）</li>
      * </ul>
      */
-    private boolean isRuleMatched(JobAlertRuleDO rule, AlertContext context) {
+    private boolean isRuleMatched(JobAlertRule rule, AlertContext context) {
         AlertType ruleAlertType = AlertType.parse(rule.getAlertType());
         if (ruleAlertType != context.alertType()) {
             return false;
@@ -172,7 +172,7 @@ public class AlertTrigger {
      * @param context 恢复上下文
      * @return true 表示规则匹配（按 alert_type 维度）
      */
-    private boolean isRuleMatchedForRecovery(JobAlertRuleDO rule, AlertContext context) {
+    private boolean isRuleMatchedForRecovery(JobAlertRule rule, AlertContext context) {
         AlertType ruleAlertType = AlertType.parse(rule.getAlertType());
         return ruleAlertType == context.alertType();
     }

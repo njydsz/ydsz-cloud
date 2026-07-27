@@ -10,7 +10,7 @@ import java.util.Map;
  * 额外的操作按钮（如"退回修改"、"补充资料"、"发起沟通"），
  * 前端按节点渲染按钮，点击后回调后端执行对应操作。
  *
- * <p>按钮配置存储在 {@code FlowNodeDO.ext} JSON 的 {@code customButtons} 字段，
+ * <p>按钮配置存储在 {@code FlowNode.ext} JSON 的 {@code customButtons} 字段，
  * 格式为：
  * <pre>
  * "customButtons": [

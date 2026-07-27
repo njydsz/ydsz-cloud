@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.UserDeptDO;
+import com.njydsz.userinfo.domain.entity.UserDept;
 
 /**
  * 用户部门 service interface.
@@ -12,9 +12,9 @@ import com.njydsz.userinfo.domain.entity.UserDeptDO;
  */
 public interface UserDeptService {
 
-    UserDeptDO getById(String id);
-    List<UserDeptDO> list();
-    String save(UserDeptDO entity);
-    boolean updateById(UserDeptDO entity);
+    UserDept getById(String id);
+    List<UserDept> list();
+    String save(UserDept entity);
+    boolean updateById(UserDept entity);
     boolean removeById(String id);
 }

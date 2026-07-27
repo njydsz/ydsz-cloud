@@ -20,8 +20,8 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.cronjob.domain.dto.job.JobSaveDTO;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.server.service.job.JobService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,7 +62,7 @@ public class JobController {
     @RateLimit(resource = "cronjob.job.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSaveDTO dto) {
-        JobDO job = new JobDO();
+        Job job = new Job();
         BeanUtils.copyProperties(dto, job);
         return BaseResponse.success(jobService.create(job));
     }
@@ -80,7 +80,7 @@ public class JobController {
     @RateLimit(resource = "cronjob.job.update", threshold = 50)
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody JobSaveDTO dto) {
-        JobDO job = new JobDO();
+        Job job = new Job();
         BeanUtils.copyProperties(dto, job);
         jobService.update(job);
         return BaseResponse.success();
@@ -265,7 +265,7 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public BaseResponse<JobDO> getById(@PathVariable String id) {
+    public BaseResponse<Job> getById(@PathVariable String id) {
         return BaseResponse.success(jobService.getById(id));
     }
 
@@ -281,7 +281,7 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
-    public BaseResponse<Page<JobDO>> page(
+    public BaseResponse<Page<Job>> page(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -301,7 +301,7 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
-    public BaseResponse<Page<JobLogDO>> pageLog(
+    public BaseResponse<Page<JobLog>> pageLog(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,

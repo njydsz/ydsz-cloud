@@ -15,9 +15,9 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  *     <ul>
  *       <li>调用 {@code selectRunningByNode} 获取 RUNNING 日志</li>
  *       <li>调用 {@code markFailedByNodeOffline} 标记为 FAILED</li>
- *       <li>对每条失败日志，查询对应的 JobDO，若任务仍为 NORMAL 状态，
+ *       <li>对每条失败日志，查询对应的 Job，若任务仍为 NORMAL 状态，
  *           调用 {@code taskDispatcher.dispatch(job, null, FAILOVER)} 重新派发</li>
  *     </ul>
  *   </li>
@@ -155,7 +155,7 @@ public class FailoverScanner {
         }
 
         // 1. 获取在线节点列表（Nacos 模式查 Nacos 实例，DB 模式查 ydsz_job_node 心跳表）
-        List<JobNodeDO> onlineNodes;
+        List<JobNode> onlineNodes;
         try {
             onlineNodes = strategy.getOnlineNodes();
         } catch (Exception e) {
@@ -163,7 +163,7 @@ public class FailoverScanner {
             return;
         }
         Set<String> onlineNodeIds = onlineNodes.stream()
-                .map(JobNodeDO::getNodeId)
+                .map(JobNode::getNodeId)
                 .filter(nodeId -> nodeId != null && !nodeId.isBlank())
                 .collect(Collectors.toSet());
 
@@ -234,7 +234,7 @@ public class FailoverScanner {
      * <ol>
      *   <li>调用 {@link JobLogMapper#selectRunningByNode(String)} 获取 RUNNING 日志</li>
      *   <li>调用 {@link JobLogMapper#markFailedByNodeOffline(String, LocalDateTime)} 标记为 FAILED</li>
-     *   <li>对每条失败日志，查询对应的 JobDO</li>
+     *   <li>对每条失败日志，查询对应的 Job</li>
      *   <li>若任务仍为 NORMAL 状态，调用 {@link TaskDispatcher#dispatch} 重新派发（triggerType=FAILOVER）</li>
      * </ol>
      *
@@ -245,7 +245,7 @@ public class FailoverScanner {
      */
     private int failoverNode(String nodeId) {
         LocalDateTime now = LocalDateTime.now();
-        List<JobLogDO> runningLogs = jobLogMapper.selectRunningByNode(nodeId);
+        List<JobLog> runningLogs = jobLogMapper.selectRunningByNode(nodeId);
         if (runningLogs.isEmpty()) {
             return 0;
         }
@@ -258,7 +258,7 @@ public class FailoverScanner {
         //    否则新派发的任务会因旧锁未释放而 tryAcquire 失败，故障转移无效）
         //    使用 Lua 安全释放脚本：仅当 lockHolder 匹配时才 del，避免误删其他节点持有的锁
         int releasedLocks = 0;
-        for (JobLogDO logEntry : runningLogs) {
+        for (JobLog logEntry : runningLogs) {
             if (releaseLockSafe(logEntry)) {
                 releasedLocks++;
             }
@@ -281,14 +281,14 @@ public class FailoverScanner {
         // 3. 重新派发任务
         int redispatched = 0;
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
-        for (JobLogDO logEntry : runningLogs) {
+        for (JobLog logEntry : runningLogs) {
             if (redispatched >= taskLimit) {
                 log.warn("[FailoverScanner] 达到单节点转移上限 {}, 剩余任务不再派发: nodeId={} total={}",
                         taskLimit, nodeId, runningLogs.size());
                 break;
             }
             try {
-                JobDO job = jobMapper.selectById(logEntry.getJobId());
+                Job job = jobMapper.selectById(logEntry.getJobId());
                 if (job == null) {
                     log.debug("[FailoverScanner] 任务已删除, 跳过: jobId={} logId={}",
                             logEntry.getJobId(), logEntry.getId());
@@ -330,7 +330,7 @@ public class FailoverScanner {
      * @param logEntry 死节点上的 RUNNING 日志（含 jobKey / shardIndex / lockHolder）
      * @return true 表示锁释放成功；false 表示锁不存在、holder 不匹配或释放异常
      */
-    private boolean releaseLockSafe(JobLogDO logEntry) {
+    private boolean releaseLockSafe(JobLog logEntry) {
         String lockHolder = logEntry.getLockHolder();
         if (lockHolder == null || lockHolder.isBlank()) {
             return false;

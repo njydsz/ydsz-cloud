@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.repository.alert;
 
-import com.njydsz.project.domain.entity.alert.AlertDispatchDO;
+import com.njydsz.project.domain.entity.alert.AlertDispatch;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 1.0.0
  * @author ydsz-team
  */
-public interface IAlertDispatchRepository extends IService<AlertDispatchDO> {
+public interface IAlertDispatchRepository extends IService<AlertDispatch> {
 }

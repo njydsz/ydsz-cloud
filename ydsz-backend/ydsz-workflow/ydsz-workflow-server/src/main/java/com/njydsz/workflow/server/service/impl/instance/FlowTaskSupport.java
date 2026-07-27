@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowEventListener;
@@ -61,8 +61,8 @@ public class FlowTaskSupport {
      * @param id 任务 ID
      * @return 任务 DO
      */
-    public FlowRunTaskDO getTaskOrThrow(String id) {
-        FlowRunTaskDO task = taskMapper.selectById(id);
+    public FlowRunTask getTaskOrThrow(String id) {
+        FlowRunTask task = taskMapper.selectById(id);
         if (task == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
         }
@@ -74,7 +74,7 @@ public class FlowTaskSupport {
     /**
      * 写审计日志（无意见分类）。
      */
-    public void audit(FlowRunTaskDO task, String action, String operatorId,
+    public void audit(FlowRunTask task, String action, String operatorId,
                       String targetId, String comment) {
         audit(task, action, operatorId, targetId, comment, null);
     }
@@ -89,10 +89,10 @@ public class FlowTaskSupport {
      * @param comment     审批意见
      * @param commentType 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
      */
-    public void audit(FlowRunTaskDO task, String action, String operatorId,
+    public void audit(FlowRunTask task, String action, String operatorId,
                       String targetId, String comment, String commentType) {
         try {
-            FlowAuditLogDO log = new FlowAuditLogDO();
+            FlowAuditLog log = new FlowAuditLog();
             log.setInstanceId(task.getInstanceId());
             log.setTaskId(task.getId());
             log.setFlowCode(task.getFlowCode());

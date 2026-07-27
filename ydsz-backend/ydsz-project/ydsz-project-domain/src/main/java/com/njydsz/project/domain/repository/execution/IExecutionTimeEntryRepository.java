@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.repository.execution;
 
-import com.njydsz.project.domain.entity.execution.ExecutionTimeEntryDO;
+import com.njydsz.project.domain.entity.execution.ExecutionTimeEntry;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 1.0.0
  * @author ydsz-team
  */
-public interface IExecutionTimeEntryRepository extends IService<ExecutionTimeEntryDO> {
+public interface IExecutionTimeEntryRepository extends IService<ExecutionTimeEntry> {
 }

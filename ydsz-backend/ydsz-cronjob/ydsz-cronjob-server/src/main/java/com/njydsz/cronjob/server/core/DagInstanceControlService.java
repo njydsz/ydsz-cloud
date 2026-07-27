@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.dag.DagInstanceStatus;
 import com.njydsz.common.core.dag.DagNodeStatus;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
@@ -109,7 +109,7 @@ public class DagInstanceControlService {
      * @return true 取消成功；false 实例不存在或已终态
      */
     public boolean cancel(String dagInstanceId) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
             return false;
@@ -123,9 +123,9 @@ public class DagInstanceControlService {
             return false;
         }
         // 跳过所有 PENDING/RUNNING 状态的节点
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
         int skipped = 0;
-        for (JobDagNodeInstanceDO node : nodes) {
+        for (JobDagNodeInstance node : nodes) {
             if (DagNodeStatus.PENDING.name().equals(node.getNodeStatus())
                     || DagNodeStatus.RUNNING.name().equals(node.getNodeStatus())) {
                 dagNodeInstanceMapper.markSkipped(node.getId());
@@ -147,7 +147,7 @@ public class DagInstanceControlService {
      * @return true 重试成功；false 节点不存在或非 FAILED 状态
      */
     public boolean retryNode(String dagInstanceId, String jobKey) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
             return false;
@@ -160,9 +160,9 @@ public class DagInstanceControlService {
         }
 
         // 查找节点实例
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        JobDagNodeInstanceDO targetNode = null;
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        JobDagNodeInstance targetNode = null;
+        for (JobDagNodeInstance node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && DagNodeStatus.FAILED.name().equals(node.getNodeStatus())) {
                 targetNode = node;
@@ -178,7 +178,7 @@ public class DagInstanceControlService {
         // 重置节点状态为 PENDING
         dagNodeInstanceMapper.markSkipped(targetNode.getId()); // 先标记为 SKIPPED
         // 重新插入一条新的节点实例（避免状态冲突）
-        JobDagNodeInstanceDO retryNode = new JobDagNodeInstanceDO();
+        JobDagNodeInstance retryNode = new JobDagNodeInstance();
         retryNode.setDagInstanceId(dagInstanceId);
         retryNode.setDagId(instance.getDagId());
         retryNode.setJobId(targetNode.getJobId());
@@ -227,7 +227,7 @@ public class DagInstanceControlService {
      * @return true 跳过成功；false 节点不存在或已终态
      */
     public boolean skipNode(String dagInstanceId, String jobKey) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
             return false;
@@ -238,8 +238,8 @@ public class DagInstanceControlService {
                     dagInstanceId, instance.getStatus());
             return false;
         }
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstance node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && !DagNodeStatus.parse(node.getNodeStatus()).isTerminal()) {
                 dagNodeInstanceMapper.markSkipped(node.getId());
@@ -264,7 +264,7 @@ public class DagInstanceControlService {
      * @return true 强制成功；false 节点不存在或已终态
      */
     public boolean forceCompleteNode(String dagInstanceId, String jobKey) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
             return false;
@@ -275,8 +275,8 @@ public class DagInstanceControlService {
                     dagInstanceId, instance.getStatus());
             return false;
         }
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstance node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && !DagNodeStatus.parse(node.getNodeStatus()).isTerminal()) {
                 dagNodeInstanceMapper.markFinished(node.getId(),
@@ -304,13 +304,13 @@ public class DagInstanceControlService {
      * @return true 审批成功；false 节点不存在或非 WAITING_FOR_APPROVAL 状态
      */
     public boolean approveNode(String dagInstanceId, String jobKey, boolean approved, String comment) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
             return false;
         }
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstance node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && DagNodeStatus.WAITING_FOR_APPROVAL.name().equals(node.getNodeStatus())) {
                 DagNodeStatus newStatus = approved ? DagNodeStatus.SUCCESS : DagNodeStatus.APPROVAL_REJECTED;
@@ -334,7 +334,7 @@ public class DagInstanceControlService {
      * 恢复后重新派发所有 PENDING 状态的节点。
      */
     private void redeliverPendingNodes(String dagInstanceId) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             return;
         }
@@ -343,9 +343,9 @@ public class DagInstanceControlService {
             return;
         }
         DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
         int dispatched = 0;
-        for (JobDagNodeInstanceDO node : nodes) {
+        for (JobDagNodeInstance node : nodes) {
             if (!DagNodeStatus.PENDING.name().equals(node.getNodeStatus())) {
                 continue;
             }
@@ -373,8 +373,8 @@ public class DagInstanceControlService {
      * 派发重试节点。
      */
     private void dispatchRetryNode(String dagInstanceId, String dagId,
-                                    DagNode dagNode, JobDagNodeInstanceDO retryNode) {
-        JobDO job = jobMapper.selectById(dagNode.jobId());
+                                    DagNode dagNode, JobDagNodeInstance retryNode) {
+        Job job = jobMapper.selectById(dagNode.jobId());
         if (job == null) {
             log.warn("[DagControl] 重试节点任务不存在: jobKey={}", dagNode.jobKey());
             dagNodeInstanceMapper.markFinished(retryNode.getId(),
@@ -392,7 +392,7 @@ public class DagInstanceControlService {
      */
     private boolean areAllPredecessorsSuccessful(String dagInstanceId, String jobKey,
                                                   DagDefinition definition,
-                                                  List<JobDagNodeInstanceDO> nodes) {
+                                                  List<JobDagNodeInstance> nodes) {
         List<DagEdge> incoming = definition.incomingEdges(jobKey);
         if (incoming.isEmpty()) {
             return true;
@@ -404,7 +404,7 @@ public class DagInstanceControlService {
             }
             String lookupId = predNode.jobId() != null ? predNode.jobId() : predNode.jobKey();
             boolean found = false;
-            for (JobDagNodeInstanceDO node : nodes) {
+            for (JobDagNodeInstance node : nodes) {
                 if (lookupId.equals(node.getJobId()) || predNode.jobKey().equals(node.getJobKey())) {
                     if (!DagNodeStatus.SUCCESS.name().equals(node.getNodeStatus())) {
                         return false;

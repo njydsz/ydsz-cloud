@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
@@ -58,7 +58,7 @@ public class JobLogController {
      */
     @Operation(summary = "分页查询日志内容")
     @GetMapping("/content/page")
-    public BaseResponse<List<JobLogContentDO>> pageContent(
+    public BaseResponse<List<JobLogContent>> pageContent(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "100") int size) {
@@ -108,7 +108,7 @@ public class JobLogController {
      */
     @Operation(summary = "搜索日志内容")
     @GetMapping("/content/search")
-    public BaseResponse<List<JobLogContentDO>> searchContent(
+    public BaseResponse<List<JobLogContent>> searchContent(
             @RequestParam String logId,
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page,
@@ -129,9 +129,9 @@ public class JobLogController {
     @GetMapping("/content/download")
     public org.springframework.http.ResponseEntity<byte[]> downloadContent(
             @RequestParam String logId) {
-        List<JobLogContentDO> allLines = jobLogContentService.pageByLogId(logId, 1, 100000);
+        List<JobLogContent> allLines = jobLogContentService.pageByLogId(logId, 1, 100000);
         StringBuilder sb = new StringBuilder();
-        for (JobLogContentDO line : allLines) {
+        for (JobLogContent line : allLines) {
             sb.append(String.format("[%s] %s%n", line.getLogLevel(), line.getContent()));
         }
         byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
@@ -158,8 +158,8 @@ public class JobLogController {
     public BaseResponse<Map<String, Object>> compareExecutions(
             @RequestParam String logId1,
             @RequestParam String logId2) {
-        JobLogDO log1 = jobLogMapper.selectById(logId1);
-        JobLogDO log2 = jobLogMapper.selectById(logId2);
+        JobLog log1 = jobLogMapper.selectById(logId1);
+        JobLog log2 = jobLogMapper.selectById(logId2);
         Map<String, Object> result = new java.util.LinkedHashMap<>();
         if (log1 == null || log2 == null) {
             return BaseResponse.error("404", "执行日志不存在");
@@ -200,8 +200,8 @@ public class JobLogController {
      */
     @Operation(summary = "获取执行轨迹")
     @GetMapping("/trace")
-    public BaseResponse<JobLogDO> getExecutionTrace(@RequestParam String logId) {
-        JobLogDO log = jobLogMapper.selectById(logId);
+    public BaseResponse<JobLog> getExecutionTrace(@RequestParam String logId) {
+        JobLog log = jobLogMapper.selectById(logId);
         if (log == null) {
             return BaseResponse.error("404", "执行日志不存在: " + logId);
         }
@@ -218,9 +218,9 @@ public class JobLogController {
         try {
             while (true) {
                 // 查询增量日志行
-                List<JobLogContentDO> lines = jobLogContentService.listAfterLine(logId, lastLineNo);
+                List<JobLogContent> lines = jobLogContentService.listAfterLine(logId, lastLineNo);
                 if (lines != null && !lines.isEmpty()) {
-                    for (JobLogContentDO line : lines) {
+                    for (JobLogContent line : lines) {
                         emitter.send(SseEmitter.event().name("log").data(line));
                         if (line.getLineNo() != null && line.getLineNo() > lastLineNo) {
                             lastLineNo = line.getLineNo();
@@ -228,7 +228,7 @@ public class JobLogController {
                     }
                 }
                 // 检查任务是否已结束（终态时无新行则关闭连接）
-                JobLogDO log0 = jobLogMapper.selectById(logId);
+                JobLog log0 = jobLogMapper.selectById(logId);
                 if (log0 == null || isTerminalStatus(log0.getStatus())) {
                     // 推送结束事件并关闭
                     if (log0 != null) {

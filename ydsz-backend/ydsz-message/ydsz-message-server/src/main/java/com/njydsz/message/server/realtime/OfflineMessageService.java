@@ -17,7 +17,7 @@ import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.config.MsgOfflineDO;
+import com.njydsz.message.domain.entity.config.MsgOffline;
 import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -90,14 +90,14 @@ public class OfflineMessageService implements OfflineMessageStore {
 
         // 先从数据库拉取持久化的离线消息
         try {
-            List<MsgOfflineDO> dbMessages = msgOfflineMapper.selectList(
-                    new LambdaQueryWrapper<MsgOfflineDO>()
-                            .eq(MsgOfflineDO::getUserId, userId)
-                            .eq(MsgOfflineDO::getStatus, "PENDING")
-                            .le(MsgOfflineDO::getExpiredAt, LocalDateTime.now().plusDays(30))
-                            .ge(MsgOfflineDO::getExpiredAt, LocalDateTime.now())
-                            .orderByAsc(MsgOfflineDO::getMsgTimestamp));
-            for (MsgOfflineDO msg : dbMessages) {
+            List<MsgOffline> dbMessages = msgOfflineMapper.selectList(
+                    new LambdaQueryWrapper<MsgOffline>()
+                            .eq(MsgOffline::getUserId, userId)
+                            .eq(MsgOffline::getStatus, "PENDING")
+                            .le(MsgOffline::getExpiredAt, LocalDateTime.now().plusDays(30))
+                            .ge(MsgOffline::getExpiredAt, LocalDateTime.now())
+                            .orderByAsc(MsgOffline::getMsgTimestamp));
+            for (MsgOffline msg : dbMessages) {
                 result.add(msg.getPayload());
             }
             if (!dbMessages.isEmpty()) {
@@ -138,9 +138,9 @@ public class OfflineMessageService implements OfflineMessageStore {
         }
         try {
             Long dbSize = msgOfflineMapper.selectCount(
-                    new LambdaQueryWrapper<MsgOfflineDO>()
-                            .eq(MsgOfflineDO::getUserId, userId)
-                            .eq(MsgOfflineDO::getStatus, "PENDING"));
+                    new LambdaQueryWrapper<MsgOffline>()
+                            .eq(MsgOffline::getUserId, userId)
+                            .eq(MsgOffline::getStatus, "PENDING"));
             dbCount = dbSize == null ? 0L : dbSize;
         } catch (Exception e) {
             log.debug("[WS-Offline] DB 计数失败: {}", e.getMessage());
@@ -175,9 +175,9 @@ public class OfflineMessageService implements OfflineMessageStore {
             LocalDateTime now = LocalDateTime.now();
             String tenantId = TenantContext.getTenantId();
             // P3-6: 先构建全部实体（预生成 ID），再批量 insert
-            List<MsgOfflineDO> entities = new ArrayList<>(overflowMessages.size());
+            List<MsgOffline> entities = new ArrayList<>(overflowMessages.size());
             for (String json : overflowMessages) {
-                MsgOfflineDO offline = new MsgOfflineDO();
+                MsgOffline offline = new MsgOffline();
                 offline.setId(IdWorker.getIdStr());
                 offline.setUserId(userId);
                 offline.setMsgType("OFFLINE_OVERFLOW");

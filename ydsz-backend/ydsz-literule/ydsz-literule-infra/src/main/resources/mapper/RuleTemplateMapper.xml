@@ -9,17 +9,17 @@
         created_by, created_at
     </sql>
 
-    <select id="selectByCategory" resultType="com.njydsz.literule.domain.entity.RuleTemplateDO">
+    <select id="selectByCategory" resultType="com.njydsz.literule.domain.entity.RuleTemplate">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_rule_template WHERE category = #{category} ORDER BY priority ASC
     </select>
 
-    <select id="selectByIndustry" resultType="com.njydsz.literule.domain.entity.RuleTemplateDO">
+    <select id="selectByIndustry" resultType="com.njydsz.literule.domain.entity.RuleTemplate">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_rule_template WHERE industry = #{industry} ORDER BY priority ASC
     </select>
 
-    <select id="selectByCode" resultType="com.njydsz.literule.domain.entity.RuleTemplateDO">
+    <select id="selectByCode" resultType="com.njydsz.literule.domain.entity.RuleTemplate">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_rule_template WHERE template_code = #{templateCode}
     </select>

@@ -2,7 +2,7 @@ package com.njydsz.project.server.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.project.domain.entity.project.ProjectReconcileDailyDO;
+import com.njydsz.project.domain.entity.project.ProjectReconcileDaily;
 import com.njydsz.project.domain.repository.project.IProjectReconcileDailyRepository;
 import com.njydsz.project.server.service.ProjectReconcileDailyService;
 
@@ -16,12 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProjectReconcileDailyServiceImpl implements ProjectReconcileDailyService {
     private final IProjectReconcileDailyRepository repository;
 
-    public ProjectReconcileDailyDO getById(String id) { return repository.getById(id); }
-    public IPage<ProjectReconcileDailyDO> page(int p, int s) { return repository.page(new Page<>(p, s)); }
+    public ProjectReconcileDaily getById(String id) { return repository.getById(id); }
+    public IPage<ProjectReconcileDaily> page(int p, int s) { return repository.page(new Page<>(p, s)); }
     @Transactional(rollbackFor = Exception.class)
-    public boolean save(ProjectReconcileDailyDO e) { return repository.save(e); }
+    public boolean save(ProjectReconcileDaily e) { return repository.save(e); }
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(ProjectReconcileDailyDO e) { return repository.updateById(e); }
+    public boolean updateById(ProjectReconcileDaily e) { return repository.updateById(e); }
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) { return repository.removeById(id); }
 }

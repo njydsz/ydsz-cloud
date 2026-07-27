@@ -2,8 +2,8 @@ package com.njydsz.cronjob.server.core.dispatch;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 
 /**
  * 节点选择策略接口。
@@ -29,5 +29,5 @@ public interface NodeSelector {
      * @param candidates 在线节点列表（已过滤 OFFLINE/DRAINING）
      * @return 选中的节点；candidates 为空时返回 null
      */
-    JobNodeDO select(JobDO job, List<JobNodeDO> candidates);
+    JobNode select(Job job, List<JobNode> candidates);
 }

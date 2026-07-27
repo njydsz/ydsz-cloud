@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.domain.entity.batch.MsgBatchDO;
+import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.server.realtime.RealtimePushService;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class BatchProgressPusher {
      * @param batch   批次实体
      * @param senderId 发起人 ID
      */
-    public void pushProgress(MsgBatchDO batch, String senderId) {
+    public void pushProgress(MsgBatch batch, String senderId) {
         if (batch == null || senderId == null) {
             return;
         }

@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.project.ProjectOpportunityFollowDO;
+import com.njydsz.project.domain.entity.project.ProjectOpportunityFollow;
 
 public interface ProjectOpportunityFollowService {
-    ProjectOpportunityFollowDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<ProjectOpportunityFollowDO> page(int pageNum, int pageSize);
-    boolean save(ProjectOpportunityFollowDO entity);
-    boolean updateById(ProjectOpportunityFollowDO entity);
+    ProjectOpportunityFollow getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<ProjectOpportunityFollow> page(int pageNum, int pageSize);
+    boolean save(ProjectOpportunityFollow entity);
+    boolean updateById(ProjectOpportunityFollow entity);
     boolean removeById(String id);
 }

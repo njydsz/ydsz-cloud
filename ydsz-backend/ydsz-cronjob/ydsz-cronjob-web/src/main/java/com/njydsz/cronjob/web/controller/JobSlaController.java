@@ -20,7 +20,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.dto.alert.JobSlaSaveDTO;
-import com.njydsz.cronjob.domain.entity.alert.JobSlaDO;
+import com.njydsz.cronjob.domain.entity.alert.JobSla;
 import com.njydsz.cronjob.server.service.alert.JobSlaService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -107,7 +107,7 @@ public class JobSlaController {
     @Operation(summary = "查询 SLA 规则详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/{id}")
-    public BaseResponse<JobSlaDO> getById(@PathVariable String id) {
+    public BaseResponse<JobSla> getById(@PathVariable String id) {
         return BaseResponse.success(jobSlaService.getSlaById(id));
     }
 
@@ -119,7 +119,7 @@ public class JobSlaController {
     @Operation(summary = "查询全部 SLA 规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/list")
-    public BaseResponse<List<JobSlaDO>> list() {
+    public BaseResponse<List<JobSla>> list() {
         return BaseResponse.success(jobSlaService.listSla());
     }
 

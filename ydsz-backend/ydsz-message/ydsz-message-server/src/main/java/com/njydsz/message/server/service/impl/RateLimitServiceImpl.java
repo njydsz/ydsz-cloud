@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.constant.SystemConstants;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.entity.config.MsgPreferenceDO;
+import com.njydsz.message.domain.entity.config.MsgPreference;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.config.PreferenceService;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>令牌桶使用 {@link RedisRateLimiter#tryAcquireTokenBucket(String, int, int)}；
  * 每日 / 每小时频率使用 Redis INCR + EXPIRE，
- * 上限取自用户偏好 {@link MsgPreferenceDO#getDailyLimit()} / {@code hourlyLimit}。
+ * 上限取自用户偏好 {@link MsgPreference#getDailyLimit()} / {@code hourlyLimit}。
  *
  * <p>P2-5: {@link #checkSendLimit} 方法，按 receiver / templateCode / tenant
  * 三个维度分别做令牌桶限流，任一维度超限即拒绝发送。
@@ -108,7 +108,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         if (userId == null || userId.isBlank()) {
             return true;
         }
-        MsgPreferenceDO pref = preferenceService.getByUser(userId, channel, bizType);
+        MsgPreference pref = preferenceService.getByUser(userId, channel, bizType);
         if (pref == null || pref.getEnabled() == null) {
             return true;
         }

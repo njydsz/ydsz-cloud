@@ -17,8 +17,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -132,10 +132,10 @@ public class SelfHealingScanner {
         LocalDateTime threshold = LocalDateTime.now().minusSeconds(config.getStuckThresholdSeconds());
 
         // 查询卡死的 RUNNING 日志
-        List<JobLogDO> stuckLogs = jobLogMapper.selectList(
-                new LambdaQueryWrapper<JobLogDO>()
-                        .eq(JobLogDO::getStatus, "RUNNING")
-                        .lt(JobLogDO::getStartTime, threshold)
+        List<JobLog> stuckLogs = jobLogMapper.selectList(
+                new LambdaQueryWrapper<JobLog>()
+                        .eq(JobLog::getStatus, "RUNNING")
+                        .lt(JobLog::getStartTime, threshold)
                         .last("LIMIT " + config.getMaxHealPerScan()));
 
         if (stuckLogs.isEmpty()) {
@@ -145,7 +145,7 @@ public class SelfHealingScanner {
         log.warn("[SelfHealing] 发现 {} 个卡死任务, 开始修复", stuckLogs.size());
         int healed = 0;
         int failed = 0;
-        for (JobLogDO stuckLog : stuckLogs) {
+        for (JobLog stuckLog : stuckLogs) {
             try {
                 healSingleStuckTask(stuckLog);
                 healed++;
@@ -163,7 +163,7 @@ public class SelfHealingScanner {
      * 修复单个卡死任务。
      */
     @Transactional(rollbackFor = Exception.class)
-    protected void healSingleStuckTask(JobLogDO stuckLog) {
+    protected void healSingleStuckTask(JobLog stuckLog) {
         LocalDateTime now = LocalDateTime.now();
         long durationMs = Duration.between(stuckLog.getStartTime(), now).toMillis();
         String errorMsg = "Self-healing: task stuck (start=" + stuckLog.getStartTime()
@@ -206,7 +206,7 @@ public class SelfHealingScanner {
     /**
      * 尝试重新派发修复后的任务。
      */
-    private void tryRedispatch(JobLogDO stuckLog, CronjobProperties.SelfHealing config) {
+    private void tryRedispatch(JobLog stuckLog, CronjobProperties.SelfHealing config) {
         String retryKey = HEAL_RETRY_PREFIX + stuckLog.getJobKey();
         try {
             Long retryCount = redisService.incr(retryKey, 1);
@@ -227,7 +227,7 @@ public class SelfHealingScanner {
             }
 
             // 查询任务定义，确认仍为 NORMAL 状态
-            JobDO job = jobMapper.selectById(stuckLog.getJobId());
+            Job job = jobMapper.selectById(stuckLog.getJobId());
             if (job == null || !"NORMAL".equals(job.getStatus())) {
                 log.debug("[SelfHealing] 任务非 NORMAL 状态, 跳过重派: jobKey={} status={}",
                         stuckLog.getJobKey(), job != null ? job.getStatus() : "null");
@@ -252,10 +252,10 @@ public class SelfHealingScanner {
     private void healAutoPausedTasks() {
         // 查询 AUTO_PAUSED 状态且 lastFireTime 超过 1 小时的任务（给足够冷却时间）
         LocalDateTime threshold = LocalDateTime.now().minusHours(1);
-        List<JobDO> autoPausedJobs = jobMapper.selectList(
-                new LambdaQueryWrapper<JobDO>()
-                        .eq(JobDO::getStatus, "AUTO_PAUSED")
-                        .lt(JobDO::getLastFireTime, threshold)
+        List<Job> autoPausedJobs = jobMapper.selectList(
+                new LambdaQueryWrapper<Job>()
+                        .eq(Job::getStatus, "AUTO_PAUSED")
+                        .lt(Job::getLastFireTime, threshold)
                         .last("LIMIT " + cronjobProperties.getSelfHealing().getMaxHealPerScan()));
 
         if (autoPausedJobs.isEmpty()) {
@@ -263,7 +263,7 @@ public class SelfHealingScanner {
         }
 
         log.info("[SelfHealing] 发现 {} 个 AUTO_PAUSED 任务待恢复", autoPausedJobs.size());
-        for (JobDO job : autoPausedJobs) {
+        for (Job job : autoPausedJobs) {
             try {
                 // 清除重试计数
                 redisService.delete(HEAL_RETRY_PREFIX + job.getJobKey());
@@ -304,7 +304,7 @@ public class SelfHealingScanner {
     /**
      * 触发自愈告警。
      */
-    private void triggerHealAlert(JobLogDO stuckLog, long durationMs) {
+    private void triggerHealAlert(JobLog stuckLog, long durationMs) {
         AlertTrigger trigger = alertTriggerProvider.getIfAvailable();
         if (trigger == null) {
             return;

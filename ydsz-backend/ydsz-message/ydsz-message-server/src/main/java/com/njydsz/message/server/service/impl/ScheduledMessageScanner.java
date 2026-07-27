@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.channel.ChannelRouter;
@@ -87,9 +87,9 @@ public class ScheduledMessageScanner {
      */
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
-        List<MsgLogDO> due = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getStatus, MessageStatusEnum.SCHEDULED.name())
-                .le(MsgLogDO::getScheduledAt, now)
+        List<MsgLog> due = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getStatus, MessageStatusEnum.SCHEDULED.name())
+                .le(MsgLog::getScheduledAt, now)
                 .last("LIMIT " + BATCH_SIZE));
         if (due.isEmpty()) {
             return;
@@ -97,7 +97,7 @@ public class ScheduledMessageScanner {
         log.info("[ScheduledScanner] 到期定时消息 {} 条", due.size());
         int success = 0;
         int failed = 0;
-        for (MsgLogDO logDO : due) {
+        for (MsgLog logDO : due) {
             try {
                 sendScheduledMessage(logDO);
                 success++;
@@ -115,7 +115,7 @@ public class ScheduledMessageScanner {
      *
      * @param logDO 消息日志实体
      */
-    private void sendScheduledMessage(MsgLogDO logDO) {
+    private void sendScheduledMessage(MsgLog logDO) {
         try (MessageTraceContext ctx = MessageTraceContext.enter(logDO.getTraceId())) {
             logDO.setStatus(MessageStatusEnum.SENDING.name());
             msgLogMapper.updateById(logDO);

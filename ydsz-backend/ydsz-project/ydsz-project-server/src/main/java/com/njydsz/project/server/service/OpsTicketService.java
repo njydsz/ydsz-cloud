@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.ops.OpsTicketDO;
+import com.njydsz.project.domain.entity.ops.OpsTicket;
 
 public interface OpsTicketService {
-    OpsTicketDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<OpsTicketDO> page(int pageNum, int pageSize);
-    boolean save(OpsTicketDO entity);
-    boolean updateById(OpsTicketDO entity);
+    OpsTicket getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<OpsTicket> page(int pageNum, int pageSize);
+    boolean save(OpsTicket entity);
+    boolean updateById(OpsTicket entity);
     boolean removeById(String id);
 }

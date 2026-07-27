@@ -5,7 +5,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.project.domain.entity.execution.ExecutionRiskDO;
+import com.njydsz.project.domain.entity.execution.ExecutionRisk;
 import com.njydsz.project.server.service.ExecutionRiskService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,21 +19,21 @@ public class ExecutionRiskController {
     private final ExecutionRiskService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ExecutionRiskDO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ExecutionRisk> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ExecutionRiskDO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
-        IPage<ExecutionRiskDO> r = service.page(p, s);
+    public PageResponse<ExecutionRisk> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+        IPage<ExecutionRisk> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionRisk")
-    public BaseResponse<Boolean> save(@RequestBody ExecutionRiskDO e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ExecutionRisk e) { return BaseResponse.success(service.save(e)); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionRisk")
-    public BaseResponse<Boolean> update(@RequestBody ExecutionRiskDO e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ExecutionRisk e) { return BaseResponse.success(service.updateById(e)); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionRisk")

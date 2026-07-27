@@ -25,7 +25,7 @@ import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -294,7 +294,7 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/page")
-    public BaseResponse<PageResponse<FlowInstanceDO>> instancePage(
+    public BaseResponse<PageResponse<FlowInstance>> instancePage(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
@@ -328,7 +328,7 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/my")
-    public BaseResponse<PageResponse<FlowInstanceDO>> instanceMy(
+    public BaseResponse<PageResponse<FlowInstance>> instanceMy(
             @RequestParam(required = false) String flowCode,
             @RequestParam(required = false) String flowName,
             @RequestParam(required = false) String status,

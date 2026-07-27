@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.message.domain.entity.canary.MsgCanaryDO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.canary.MsgCanary;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.infra.mapper.canary.MsgCanaryMapper;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 
@@ -40,21 +40,21 @@ public class CanaryAutoWinnerService {
      *
      * @param canary 灰度配置
      */
-    public void checkAndPromote(MsgCanaryDO canary) {
+    public void checkAndPromote(MsgCanary canary) {
         if (canary == null || !StringUtils.hasText(canary.getCanaryKey())) {
             return;
         }
         // 查询灰度组消息日志
-        List<MsgLogDO> canaryLogs = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getCanary, 1)
-                .eq(MsgLogDO::getCanaryKey, canary.getCanaryKey())
-                .ge(MsgLogDO::getCreatedAt, LocalDateTime.now().minusDays(7)));
+        List<MsgLog> canaryLogs = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getCanary, 1)
+                .eq(MsgLog::getCanaryKey, canary.getCanaryKey())
+                .ge(MsgLog::getCreatedAt, LocalDateTime.now().minusDays(7)));
 
         // 查询对照组消息日志
-        List<MsgLogDO> controlLogs = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getCanary, 0)
-                .like(MsgLogDO::getTemplateCode, canary.getCanaryKey())
-                .ge(MsgLogDO::getCreatedAt, LocalDateTime.now().minusDays(7)));
+        List<MsgLog> controlLogs = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getCanary, 0)
+                .like(MsgLog::getTemplateCode, canary.getCanaryKey())
+                .ge(MsgLog::getCreatedAt, LocalDateTime.now().minusDays(7)));
 
         if (canaryLogs.size() < MIN_SAMPLE_SIZE || controlLogs.size() < MIN_SAMPLE_SIZE) {
             log.info("[CanaryAutoWinner] 样本量不足,跳过: canaryKey={} canary={} control={}",
@@ -80,7 +80,7 @@ public class CanaryAutoWinnerService {
         }
     }
 
-    private double calculateReadRate(List<MsgLogDO> logs) {
+    private double calculateReadRate(List<MsgLog> logs) {
         if (logs.isEmpty()) return 0;
         long read = logs.stream().filter(l -> "READ".equals(l.getReceiptStatus())
                 || "CLICKED".equals(l.getReceiptStatus())).count();

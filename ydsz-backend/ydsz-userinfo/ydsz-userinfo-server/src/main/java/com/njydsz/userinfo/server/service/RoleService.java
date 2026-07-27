@@ -7,7 +7,7 @@ import java.util.Map;
 import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
-import com.njydsz.userinfo.domain.entity.RoleDO;
+import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 
 /**
@@ -16,7 +16,7 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface RoleService extends BaseCrudService<RoleDO, RoleSaveDTO, RoleVO, RolePageQueryDTO, String> {
+public interface RoleService extends BaseCrudService<Role, RoleSaveDTO, RoleVO, RolePageQueryDTO, String> {
 
     /**
      * 查询全部角色列表（无分页，按 sortOrder 升序）。

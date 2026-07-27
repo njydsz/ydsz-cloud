@@ -18,9 +18,9 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
-import com.njydsz.userinfo.domain.entity.RoleDO;
-import com.njydsz.userinfo.domain.entity.UserAccountDO;
-import com.njydsz.userinfo.domain.entity.UserRoleDO;
+import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.LoginVO;
@@ -134,10 +134,10 @@ public class AuthServiceImpl implements AuthService {
         String username = loginDTO.getUsername();
         String password = loginDTO.getPassword();
 
-        LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserAccountDO::getUsername, username);
-        wrapper.eq(UserAccountDO::getDeleted, 0);
-        UserAccountDO user = userAccountMapper.selectOne(wrapper);
+        LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserAccount::getUsername, username);
+        wrapper.eq(UserAccount::getDeleted, 0);
+        UserAccount user = userAccountMapper.selectOne(wrapper);
 
         if (user == null) {
             userInfoMetrics.recordLoginFail();
@@ -178,10 +178,10 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(UserInfoResultCode.PASSWORD_INCORRECT);
         }
 
-        List<RoleDO> roles = loadUserRoles(user.getId());
-        String roleCodes = roles.stream().map(RoleDO::getRoleCode)
+        List<Role> roles = loadUserRoles(user.getId());
+        String roleCodes = roles.stream().map(Role::getRoleCode)
                 .collect(Collectors.joining(","));
-        String roleNames = roles.stream().map(RoleDO::getRoleName)
+        String roleNames = roles.stream().map(Role::getRoleName)
                 .collect(Collectors.joining(","));
 
         UserInfo userInfo = new UserInfo();
@@ -271,39 +271,39 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 按 user_role 关联表查询用户角色（修复 P0-1 Bug）。
      */
-    private List<RoleDO> loadUserRoles(String userId) {
-        LambdaQueryWrapper<UserRoleDO> urWrapper = new LambdaQueryWrapper<>();
-        urWrapper.eq(UserRoleDO::getUserId, userId);
-        urWrapper.eq(UserRoleDO::getDeleted, 0);
-        List<UserRoleDO> userRoles = userRoleMapper.selectList(urWrapper);
+    private List<Role> loadUserRoles(String userId) {
+        LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
+        urWrapper.eq(UserRole::getUserId, userId);
+        urWrapper.eq(UserRole::getDeleted, 0);
+        List<UserRole> userRoles = userRoleMapper.selectList(urWrapper);
 
         if (userRoles.isEmpty()) {
             return List.of();
         }
 
         List<String> roleIds = userRoles.stream()
-                .map(UserRoleDO::getRoleId)
+                .map(UserRole::getRoleId)
                 .collect(Collectors.toList());
 
-        LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
-        roleWrapper.in(RoleDO::getId, roleIds);
-        roleWrapper.eq(RoleDO::getDeleted, 0);
-        roleWrapper.eq(RoleDO::getStatus, "ENABLED");
+        LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.in(Role::getId, roleIds);
+        roleWrapper.eq(Role::getDeleted, 0);
+        roleWrapper.eq(Role::getStatus, "ENABLED");
         return roleMapper.selectList(roleWrapper);
     }
 
     /**
      * 记录登录失败：递增失败计数，达到阈值自动锁定。
      */
-    private void recordLoginFailure(UserAccountDO user) {
+    private void recordLoginFailure(UserAccount user) {
         int failCount = (user.getLoginFailCount() == null ? 0 : user.getLoginFailCount()) + 1;
 
-        LambdaUpdateWrapper<UserAccountDO> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(UserAccountDO::getId, user.getId());
-        updateWrapper.set(UserAccountDO::getLoginFailCount, failCount);
+        LambdaUpdateWrapper<UserAccount> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(UserAccount::getId, user.getId());
+        updateWrapper.set(UserAccount::getLoginFailCount, failCount);
 
         if (failCount >= properties.getMaxLoginFailCount()) {
-            updateWrapper.set(UserAccountDO::getLockedUntil,
+            updateWrapper.set(UserAccount::getLockedUntil,
                     LocalDateTime.now().plusMinutes(properties.getLockDurationMinutes()));
             log.warn("User {} locked after {} failed attempts", user.getUsername(), failCount);
         }
@@ -313,12 +313,12 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 更新登录成功信息：重置失败计数、记录最后登录时间。
      */
-    private void updateLoginSuccess(UserAccountDO user) {
-        LambdaUpdateWrapper<UserAccountDO> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(UserAccountDO::getId, user.getId());
-        updateWrapper.set(UserAccountDO::getLoginFailCount, 0);
-        updateWrapper.set(UserAccountDO::getLockedUntil, null);
-        updateWrapper.set(UserAccountDO::getLastLoginAt, LocalDateTime.now());
+    private void updateLoginSuccess(UserAccount user) {
+        LambdaUpdateWrapper<UserAccount> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(UserAccount::getId, user.getId());
+        updateWrapper.set(UserAccount::getLoginFailCount, 0);
+        updateWrapper.set(UserAccount::getLockedUntil, null);
+        updateWrapper.set(UserAccount::getLastLoginAt, LocalDateTime.now());
         userAccountMapper.update(null, updateWrapper);
     }
 }

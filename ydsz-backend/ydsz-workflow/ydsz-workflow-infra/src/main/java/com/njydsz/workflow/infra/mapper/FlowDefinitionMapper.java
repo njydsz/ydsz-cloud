@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 
 /**
  * 流程定义 Mapper
@@ -18,19 +18,19 @@ import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
+public interface FlowDefinitionMapper extends BaseMapper<FlowDefinition> {
 
     /**
      * 根据 flowCode + version 查最新已发布版本
      */
-    FlowDefinitionDO selectPublished(@Param("flowCode") String flowCode,
+    FlowDefinition selectPublished(@Param("flowCode") String flowCode,
                                      @Param("version") String version,
                                      @Param("tenantId") String tenantId);
 
     /**
      * 根据 flowCode 查最新版本（不区分发布状态）
      */
-    FlowDefinitionDO selectLatestByCode(@Param("flowCode") String flowCode,
+    FlowDefinition selectLatestByCode(@Param("flowCode") String flowCode,
                                         @Param("tenantId") String tenantId);
 
     /**
@@ -67,7 +67,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @param tenantId 租户 ID
      * @return 灰度中定义列表（按 version desc）
      */
-    List<FlowDefinitionDO> selectCanaryingByCode(@Param("flowCode") String flowCode,
+    List<FlowDefinition> selectCanaryingByCode(@Param("flowCode") String flowCode,
                                                            @Param("tenantId") String tenantId);
 
     /**
@@ -77,7 +77,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @param tenantId 租户 ID
      * @return 所有定义列表
      */
-    List<FlowDefinitionDO> selectByFlowCode(@Param("flowCode") String flowCode,
+    List<FlowDefinition> selectByFlowCode(@Param("flowCode") String flowCode,
                                                       @Param("tenantId") String tenantId);
 
     /**

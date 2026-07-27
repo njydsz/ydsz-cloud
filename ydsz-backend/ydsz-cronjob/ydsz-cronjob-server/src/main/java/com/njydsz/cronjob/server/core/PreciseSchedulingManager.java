@@ -21,7 +21,7 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
@@ -139,14 +139,14 @@ public class PreciseSchedulingManager {
             LocalDateTime windowEnd = now.plusSeconds(config.getPreLoadWindowSeconds());
 
             // 查询窗口内到期的 CRON 任务
-            List<JobDO> dueJobs = acquireJobsInWindow(now, windowEnd,
+            List<Job> dueJobs = acquireJobsInWindow(now, windowEnd,
                     cronjobProperties.getScanner().getBatchSize());
             if (dueJobs.isEmpty()) {
                 return;
             }
             log.debug("[PreciseScheduling] 扫描到 {} 个即将到期任务", dueJobs.size());
 
-            for (JobDO job : dueJobs) {
+            for (Job job : dueJobs) {
                 // 去重：已加载的任务不重复加载
                 if (preLoadedTasks.containsKey(job.getId())) {
                     continue;
@@ -177,7 +177,7 @@ public class PreciseSchedulingManager {
      * @param job     任务定义
      * @param delayMs 延迟毫秒数
      */
-    private void scheduleDispatch(JobDO job, long delayMs) {
+    private void scheduleDispatch(Job job, long delayMs) {
         Runnable task = () -> {
             try {
                 preLoadedTasks.remove(job.getId());
@@ -202,7 +202,7 @@ public class PreciseSchedulingManager {
      * 查询窗口内到期的 CRON 任务（事务内抢占）。
      */
     @Transactional(readOnly = true)
-    protected List<JobDO> acquireJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int limit) {
+    protected List<Job> acquireJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int limit) {
         return jobMapper.selectDueJobsInWindow(now, windowEnd, limit);
     }
 
@@ -210,7 +210,7 @@ public class PreciseSchedulingManager {
      * CAS 推进 next_fire_time。
      */
     @Transactional(rollbackFor = Exception.class)
-    protected boolean advanceNextFireTime(JobDO job, LocalDateTime oldNext,
+    protected boolean advanceNextFireTime(Job job, LocalDateTime oldNext,
                                           LocalDateTime newNext, LocalDateTime lastFire) {
         if (oldNext == null) {
             return false;

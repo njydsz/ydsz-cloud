@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.job.JobContextHolder;
 import com.njydsz.common.core.job.JobHandler;
 import com.njydsz.common.core.job.JobLoggerHolder;
-import com.njydsz.cronjob.domain.entity.schedule.GlueCodeDO;
+import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 
@@ -254,7 +254,7 @@ public class GlueJobHandler implements JobHandler {
         }
 
         // 获取最新版本代码
-        GlueCodeDO glueCode = glueCodeService.getLatest(jobId);
+        GlueCode glueCode = glueCodeService.getLatest(jobId);
         if (glueCode == null || glueCode.getSourceCode() == null || glueCode.getSourceCode().isBlank()) {
             throw new IllegalStateException("未找到 GLUE 代码或代码为空: jobId=" + jobId);
         }

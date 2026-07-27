@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.domain.entity.FlowCategoryDO;
+import com.njydsz.workflow.domain.entity.FlowCategory;
 
 /**
  * 流程分类服务接口
@@ -20,7 +20,7 @@ public interface FlowCategoryService {
      * @param tenantId 租户 ID
      * @return 分类列表（扁平结构，前端自行构建树）
      */
-    List<FlowCategoryDO> listAll(String tenantId);
+    List<FlowCategory> listAll(String tenantId);
 
     /**
      * 新增分类

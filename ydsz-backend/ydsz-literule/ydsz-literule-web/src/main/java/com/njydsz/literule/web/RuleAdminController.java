@@ -64,12 +64,12 @@ import com.njydsz.literule.api.dto.RuleRejectDTO;
 import com.njydsz.literule.api.dto.RuleStatusChangeDTO;
 import com.njydsz.literule.api.dto.RuleSubmitReviewDTO;
 import com.njydsz.literule.api.dto.TestCaseBatchRunDTO;
-import com.njydsz.literule.domain.entity.DecisionTableDO;
-import com.njydsz.literule.domain.entity.RuleABPolicyDO;
-import com.njydsz.literule.domain.entity.RuleABRollbackDO;
-import com.njydsz.literule.domain.entity.RuleDependencyDO;
+import com.njydsz.literule.domain.entity.DecisionTable;
+import com.njydsz.literule.domain.entity.RuleABPolicy;
+import com.njydsz.literule.domain.entity.RuleABRollback;
+import com.njydsz.literule.domain.entity.RuleDependency;
 import com.njydsz.literule.domain.entity.RuleExecutionTraceDO;
-import com.njydsz.literule.domain.entity.RuleTemplateDO;
+import com.njydsz.literule.domain.entity.RuleTemplate;
 import com.njydsz.literule.domain.entity.RuleTestCaseDO;
 import com.njydsz.literule.infra.mapper.DecisionTableMapper;
 import com.njydsz.literule.infra.mapper.RuleExecutionTraceMapper;
@@ -450,7 +450,7 @@ public class RuleAdminController {
      * @return 模板列表
      */
     @GetMapping("/templates")
-    public BaseResponse<List<RuleTemplateDO>> listTemplates() {
+    public BaseResponse<List<RuleTemplate>> listTemplates() {
         return BaseResponse.success(ruleTemplateProvider.listAll());
     }
 
@@ -461,7 +461,7 @@ public class RuleAdminController {
      * @return 模板列表
      */
     @GetMapping("/templates/category/{category}")
-    public BaseResponse<List<RuleTemplateDO>> listTemplatesByCategory(@PathVariable String category) {
+    public BaseResponse<List<RuleTemplate>> listTemplatesByCategory(@PathVariable String category) {
         return BaseResponse.success(ruleTemplateProvider.listByCategory(category));
     }
 
@@ -472,7 +472,7 @@ public class RuleAdminController {
      * @return 模板列表
      */
     @GetMapping("/templates/industry/{industry}")
-    public BaseResponse<List<RuleTemplateDO>> listTemplatesByIndustry(@PathVariable String industry) {
+    public BaseResponse<List<RuleTemplate>> listTemplatesByIndustry(@PathVariable String industry) {
         return BaseResponse.success(ruleTemplateProvider.listByIndustry(industry));
     }
 
@@ -1335,7 +1335,7 @@ public class RuleAdminController {
      * 查询全部决策表
      */
     @GetMapping("/decisionTables")
-    public BaseResponse<List<DecisionTableDO>> listDecisionTables() {
+    public BaseResponse<List<DecisionTable>> listDecisionTables() {
         return BaseResponse.success(decisionTableMapper.selectList(null));
     }
 
@@ -1343,9 +1343,9 @@ public class RuleAdminController {
      * 查询单条决策表
      */
     @GetMapping("/decisionTables/{tableCode}")
-    public BaseResponse<DecisionTableDO> getDecisionTable(@PathVariable String tableCode) {
-        DecisionTableDO dt = decisionTableMapper.selectOne(
-            new LambdaQueryWrapper<DecisionTableDO>().eq(DecisionTableDO::getTableCode, tableCode));
+    public BaseResponse<DecisionTable> getDecisionTable(@PathVariable String tableCode) {
+        DecisionTable dt = decisionTableMapper.selectOne(
+            new LambdaQueryWrapper<DecisionTable>().eq(DecisionTable::getTableCode, tableCode));
         return BaseResponse.success(dt);
     }
 
@@ -1355,7 +1355,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDecisionTable'")
     @PostMapping("/decisionTables")
-    public BaseResponse<DecisionTableDO> saveDecisionTable(@RequestBody DecisionTableDO decisionTable) {
+    public BaseResponse<DecisionTable> saveDecisionTable(@RequestBody DecisionTable decisionTable) {
         if (decisionTable.getId() != null) {
             decisionTableMapper.updateById(decisionTable);
         } else {
@@ -1934,7 +1934,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:addDependency", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'addDependency'")
     @PostMapping("/{ruleCode}/dependencies")
-    public BaseResponse<RuleDependencyDO> addDependency(
+    public BaseResponse<RuleDependency> addDependency(
             @PathVariable String ruleCode,
             @Valid @RequestBody RuleDependencyAddDTO dto,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -1962,7 +1962,7 @@ public class RuleAdminController {
      * 查询规则的依赖（正向：依赖了哪些）
      */
     @GetMapping("/{ruleCode}/dependencies")
-    public BaseResponse<List<RuleDependencyDO>> listDependencies(@PathVariable String ruleCode) {
+    public BaseResponse<List<RuleDependency>> listDependencies(@PathVariable String ruleCode) {
         return BaseResponse.success(ruleDependencyProvider.listDependencies(ruleCode));
     }
 
@@ -1970,7 +1970,7 @@ public class RuleAdminController {
      * 查询被依赖（反向：被哪些规则依赖）
      */
     @GetMapping("/{ruleCode}/dependents")
-    public BaseResponse<List<RuleDependencyDO>> listDependents(@PathVariable String ruleCode) {
+    public BaseResponse<List<RuleDependency>> listDependents(@PathVariable String ruleCode) {
         return BaseResponse.success(ruleDependencyProvider.listDependents(ruleCode));
     }
 
@@ -2048,8 +2048,8 @@ public class RuleAdminController {
      * 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
      */
     @GetMapping("/{ruleCode}/abPolicy")
-    public BaseResponse<RuleABPolicyDO> getABPolicy(@PathVariable String ruleCode) {
-        RuleABPolicyDO policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
+    public BaseResponse<RuleABPolicy> getABPolicy(@PathVariable String ruleCode) {
+        RuleABPolicy policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
         return BaseResponse.success(policy);
     }
 
@@ -2061,7 +2061,7 @@ public class RuleAdminController {
     @PutMapping("/{ruleCode}/abPolicy")
     public BaseResponse<Void> updateABPolicy(
             @PathVariable String ruleCode,
-            @Valid @RequestBody RuleABPolicyDO policy,
+            @Valid @RequestBody RuleABPolicy policy,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         policy.setRuleCode(ruleCode);
         abTestAutoRollbackProvider.savePolicy(policy, operator);
@@ -2072,7 +2072,7 @@ public class RuleAdminController {
      * 查询规则的回滚历史
      */
     @GetMapping("/{ruleCode}/abRollbacks")
-    public BaseResponse<List<RuleABRollbackDO>> listRollbackHistory(@PathVariable String ruleCode) {
+    public BaseResponse<List<RuleABRollback>> listRollbackHistory(@PathVariable String ruleCode) {
         return BaseResponse.success(abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
     }
 
@@ -2094,7 +2094,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'manualRollback'")
     @PostMapping("/{ruleCode}/abRollback")
-    public BaseResponse<RuleABRollbackDO> manualRollback(
+    public BaseResponse<RuleABRollback> manualRollback(
             @PathVariable String ruleCode,
             @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {

@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.CompanyDO;
+import com.njydsz.userinfo.domain.entity.Company;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -14,5 +14,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface CompanyMapper extends BaseMapper<CompanyDO> {
+public interface CompanyMapper extends BaseMapper<Company> {
 }

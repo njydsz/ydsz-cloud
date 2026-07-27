@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.core.alert;
 
 import java.io.Serializable;
 
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**
  * 告警事件（P5 告警 + 监控）。
@@ -27,7 +27,7 @@ import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public record AlertEvent(AlertContext context, JobAlertRuleDO rule, boolean recovery) implements Serializable {
+public record AlertEvent(AlertContext context, JobAlertRule rule, boolean recovery) implements Serializable {
 
     /**
      * 构造正常告警事件（recovery=false）。
@@ -36,7 +36,7 @@ public record AlertEvent(AlertContext context, JobAlertRuleDO rule, boolean reco
      * @param rule    匹配到的告警规则
      * @return 正常告警事件
      */
-    public static AlertEvent of(AlertContext context, JobAlertRuleDO rule) {
+    public static AlertEvent of(AlertContext context, JobAlertRule rule) {
         return new AlertEvent(context, rule, false);
     }
 
@@ -47,7 +47,7 @@ public record AlertEvent(AlertContext context, JobAlertRuleDO rule, boolean reco
      * @param rule    匹配到的告警规则
      * @return 恢复通知事件
      */
-    public static AlertEvent recovery(AlertContext context, JobAlertRuleDO rule) {
+    public static AlertEvent recovery(AlertContext context, JobAlertRule rule) {
         return new AlertEvent(context, rule, true);
     }
 }

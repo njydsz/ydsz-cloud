@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
-import com.njydsz.userinfo.domain.entity.LanguageDO;
+import com.njydsz.userinfo.domain.entity.Language;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
@@ -43,9 +43,9 @@ public class LanguageServiceImpl implements LanguageService {
 
     @Override
     public PageResult<LanguageVO> page(LanguagePageQuery query) {
-        QueryWrapper<LanguageDO> wrapper = buildQueryWrapper(query);
-        Page<LanguageDO> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-        IPage<LanguageDO> result = mapper.selectPage(mpPage, wrapper);
+        QueryWrapper<Language> wrapper = buildQueryWrapper(query);
+        Page<Language> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+        IPage<Language> result = mapper.selectPage(mpPage, wrapper);
         List<LanguageVO> vos = result.getRecords().stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
@@ -60,7 +60,7 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(LanguageSaveDTO dto) {
-        LanguageDO entity = toEntity(dto);
+        Language entity = toEntity(dto);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
@@ -71,7 +71,7 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(LanguageSaveDTO dto) {
-        LanguageDO entity = mapper.selectById(dto.getId());
+        Language entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
         }
@@ -82,7 +82,7 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        LanguageDO entity = mapper.selectById(id);
+        Language entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
         }
@@ -93,9 +93,9 @@ public class LanguageServiceImpl implements LanguageService {
 
     @Override
     public List<LanguageVO> list() {
-        LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(LanguageDO::getDeleted, 0);
-        wrapper.orderByDesc(LanguageDO::getSortOrder);
+        LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Language::getDeleted, 0);
+        wrapper.orderByDesc(Language::getSortOrder);
         return mapper.selectList(wrapper).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
@@ -103,8 +103,8 @@ public class LanguageServiceImpl implements LanguageService {
 
     // ============================== 私有方法 ==============================
 
-    private QueryWrapper<LanguageDO> buildQueryWrapper(LanguagePageQuery query) {
-        QueryWrapper<LanguageDO> wrapper = new QueryWrapper<>();
+    private QueryWrapper<Language> buildQueryWrapper(LanguagePageQuery query) {
+        QueryWrapper<Language> wrapper = new QueryWrapper<>();
         if (query.getLanguageCode() != null && !query.getLanguageCode().isBlank()) {
             wrapper.like("language_code", query.getLanguageCode());
         }
@@ -118,7 +118,7 @@ public class LanguageServiceImpl implements LanguageService {
         return wrapper;
     }
 
-    private LanguageVO toVO(LanguageDO entity) {
+    private LanguageVO toVO(Language entity) {
         if (entity == null) {
             return null;
         }
@@ -127,8 +127,8 @@ public class LanguageServiceImpl implements LanguageService {
         return vo;
     }
 
-    private LanguageDO toEntity(LanguageSaveDTO dto) {
-        LanguageDO entity = new LanguageDO();
+    private Language toEntity(LanguageSaveDTO dto) {
+        Language entity = new Language();
         BeanUtils.copyProperties(dto, entity);
         return entity;
     }

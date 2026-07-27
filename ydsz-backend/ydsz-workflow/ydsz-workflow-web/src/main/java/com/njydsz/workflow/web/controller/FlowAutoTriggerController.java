@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
-import com.njydsz.workflow.domain.entity.FlowAutoTriggerDO;
+import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +47,7 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "列出所有触发规则")
     @GetMapping("/list")
-    public BaseResponse<List<FlowAutoTriggerDO>> list() {
+    public BaseResponse<List<FlowAutoTrigger>> list() {
         return BaseResponse.success(autoTriggerService.listAll());
     }
 

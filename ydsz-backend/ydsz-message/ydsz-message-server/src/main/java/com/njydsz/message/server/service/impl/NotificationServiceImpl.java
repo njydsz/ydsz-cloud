@@ -20,7 +20,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.core.NotificationSendDTO;
-import com.njydsz.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
@@ -68,9 +68,9 @@ public class NotificationServiceImpl implements NotificationService {
         }
         List<String> receiverIds = resolveReceiverIds(dto);
         // P3-6: 先构建全部实体（预生成 ID），再批量 insert，避免逐条 INSERT 的数据库往返开销
-        List<MsgNotificationDO> entities = new ArrayList<>(receiverIds.size());
+        List<MsgNotification> entities = new ArrayList<>(receiverIds.size());
         for (String rid : receiverIds) {
-            MsgNotificationDO entity = buildEntity(dto, rid);
+            MsgNotification entity = buildEntity(dto, rid);
             entity.setId(IdWorker.getIdStr());
             entities.add(entity);
         }
@@ -81,7 +81,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
         // 批量 insert 完成后再循环做 index + push（entity.id 已有值）
         for (int i = 0; i < entities.size(); i++) {
-            MsgNotificationDO entity = entities.get(i);
+            MsgNotification entity = entities.get(i);
             String rid = receiverIds.get(i);
             // P2-18: 构建全文搜索索引
             notificationSearchService.index(rid, entity.getId(), dto.getTitle(), entity.getContent());
@@ -94,21 +94,21 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query) {
+    public Page<MsgNotification> inbox(String userId, NotificationQueryDTO query) {
         if (!StringUtils.hasText(userId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
-        Page<MsgNotificationDO> page = new Page<>(
+        Page<MsgNotification> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
                 Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        LambdaQueryWrapper<MsgNotificationDO> w = new LambdaQueryWrapper<MsgNotificationDO>()
-                .eq(MsgNotificationDO::getReceiverId, userId);
+        LambdaQueryWrapper<MsgNotification> w = new LambdaQueryWrapper<MsgNotification>()
+                .eq(MsgNotification::getReceiverId, userId);
         if (query != null) {
-            w.eq(StringUtils.hasText(query.getCategory()), MsgNotificationDO::getCategory, query.getCategory());
-            w.eq(StringUtils.hasText(query.getLevel()), MsgNotificationDO::getLevel, query.getLevel());
-            w.eq(query.getReadStatus() != null, MsgNotificationDO::getReadStatus, query.getReadStatus());
+            w.eq(StringUtils.hasText(query.getCategory()), MsgNotification::getCategory, query.getCategory());
+            w.eq(StringUtils.hasText(query.getLevel()), MsgNotification::getLevel, query.getLevel());
+            w.eq(query.getReadStatus() != null, MsgNotification::getReadStatus, query.getReadStatus());
         }
-        w.orderByDesc(MsgNotificationDO::getCreatedAt);
+        w.orderByDesc(MsgNotification::getCreatedAt);
         return msgNotificationMapper.selectPage(page, w);
     }
 
@@ -163,11 +163,11 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
         // P2-7: 批量查询替代逐条 selectById，减少 N 次 DB 往返
-        List<MsgNotificationDO> notifications = msgNotificationMapper.selectList(
-                new LambdaQueryWrapper<MsgNotificationDO>()
-                        .in(MsgNotificationDO::getId, ids)
-                        .eq(MsgNotificationDO::getReceiverId, userId));
-        for (MsgNotificationDO n : notifications) {
+        List<MsgNotification> notifications = msgNotificationMapper.selectList(
+                new LambdaQueryWrapper<MsgNotification>()
+                        .in(MsgNotification::getId, ids)
+                        .eq(MsgNotification::getReceiverId, userId));
+        for (MsgNotification n : notifications) {
             // P2-18: 移除全文搜索索引
             notificationSearchService.removeIndex(userId, n.getId(), n.getTitle(), n.getContent());
             msgNotificationMapper.deleteById(n.getId());
@@ -182,10 +182,10 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query) {
         // 查询用户全部通知（按时间倒序），按 message_group 折叠
-        Page<MsgNotificationDO> allPage = inbox(userId, query);
+        Page<MsgNotification> allPage = inbox(userId, query);
         Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>();
 
-        for (MsgNotificationDO n : allPage.getRecords()) {
+        for (MsgNotification n : allPage.getRecords()) {
             String groupKey = n.getMessageGroup();
             if (!StringUtils.hasText(groupKey)) {
                 // 无分组键的消息独立成组（用 id 作为 groupKey）
@@ -217,15 +217,15 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<MsgNotificationDO> listByGroup(String userId, String messageGroup) {
+    public List<MsgNotification> listByGroup(String userId, String messageGroup) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(messageGroup)) {
             return List.of();
         }
-        return msgNotificationMapper.selectList(new LambdaQueryWrapper<MsgNotificationDO>()
-                .eq(MsgNotificationDO::getReceiverId, userId)
-                .eq(MsgNotificationDO::getMessageGroup, messageGroup)
-                .eq(MsgNotificationDO::getTenantId, TenantContext.getTenantId())
-                .orderByDesc(MsgNotificationDO::getCreatedAt));
+        return msgNotificationMapper.selectList(new LambdaQueryWrapper<MsgNotification>()
+                .eq(MsgNotification::getReceiverId, userId)
+                .eq(MsgNotification::getMessageGroup, messageGroup)
+                .eq(MsgNotification::getTenantId, TenantContext.getTenantId())
+                .orderByDesc(MsgNotification::getCreatedAt));
     }
 
     private List<String> resolveReceiverIds(NotificationSendDTO dto) {
@@ -239,8 +239,8 @@ public class NotificationServiceImpl implements NotificationService {
         return receiverIds;
     }
 
-    private MsgNotificationDO buildEntity(NotificationSendDTO dto, String receiverId) {
-        MsgNotificationDO n = new MsgNotificationDO();
+    private MsgNotification buildEntity(NotificationSendDTO dto, String receiverId) {
+        MsgNotification n = new MsgNotification();
         n.setTitle(dto.getTitle());
         n.setContent(dto.getContent());
         n.setLevel(StringUtils.hasText(dto.getLevel()) ? dto.getLevel() : "INFO");

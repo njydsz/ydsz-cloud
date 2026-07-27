@@ -11,7 +11,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.dto.core.MessageFeedbackDTO;
-import com.njydsz.message.domain.entity.config.MsgFeedbackDO;
+import com.njydsz.message.domain.entity.config.MsgFeedback;
 import com.njydsz.message.infra.mapper.config.MsgFeedbackMapper;
 import com.njydsz.message.server.service.core.MessageFeedbackService;
 
@@ -58,7 +58,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "评分必须在 1-5 之间");
         }
 
-        MsgFeedbackDO feedback = new MsgFeedbackDO();
+        MsgFeedback feedback = new MsgFeedback();
         feedback.setMsgId(dto.getMsgId());
         feedback.setNotificationId(dto.getNotificationId());
         feedback.setUserId(dto.getUserId());
@@ -87,17 +87,17 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         if (!StringUtils.hasText(userId)) {
             return 0;
         }
-        List<MsgFeedbackDO> feedbacks = msgFeedbackMapper.selectList(
-                new LambdaQueryWrapper<MsgFeedbackDO>()
-                        .eq(MsgFeedbackDO::getUserId, userId)
-                        .orderByDesc(MsgFeedbackDO::getCreatedAt)
+        List<MsgFeedback> feedbacks = msgFeedbackMapper.selectList(
+                new LambdaQueryWrapper<MsgFeedback>()
+                        .eq(MsgFeedback::getUserId, userId)
+                        .orderByDesc(MsgFeedback::getCreatedAt)
                         .last("LIMIT 100"));
         if (feedbacks.isEmpty()) {
             return 0;
         }
         return feedbacks.stream()
                 .filter(f -> f.getRating() != null)
-                .mapToInt(MsgFeedbackDO::getRating)
+                .mapToInt(MsgFeedback::getRating)
                 .average()
                 .orElse(0);
     }
@@ -114,17 +114,17 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         if (!StringUtils.hasText(channel)) {
             return 0;
         }
-        List<MsgFeedbackDO> feedbacks = msgFeedbackMapper.selectList(
-                new LambdaQueryWrapper<MsgFeedbackDO>()
-                        .eq(MsgFeedbackDO::getChannel, channel)
-                        .orderByDesc(MsgFeedbackDO::getCreatedAt)
+        List<MsgFeedback> feedbacks = msgFeedbackMapper.selectList(
+                new LambdaQueryWrapper<MsgFeedback>()
+                        .eq(MsgFeedback::getChannel, channel)
+                        .orderByDesc(MsgFeedback::getCreatedAt)
                         .last("LIMIT 1000"));
         if (feedbacks.isEmpty()) {
             return 0;
         }
         return feedbacks.stream()
                 .filter(f -> f.getRating() != null)
-                .mapToInt(MsgFeedbackDO::getRating)
+                .mapToInt(MsgFeedback::getRating)
                 .average()
                 .orElse(0);
     }
@@ -134,16 +134,16 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
      * <p>支持按 channel 和 userId 过滤，按创建时间降序排列。
      */
     @Override
-    public Page<MsgFeedbackDO> pageFeedback(int page, int size, String channel, String userId) {
-        Page<MsgFeedbackDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<MsgFeedbackDO> wrapper = new LambdaQueryWrapper<>();
+    public Page<MsgFeedback> pageFeedback(int page, int size, String channel, String userId) {
+        Page<MsgFeedback> p = new Page<>(page, size);
+        LambdaQueryWrapper<MsgFeedback> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(channel)) {
-            wrapper.eq(MsgFeedbackDO::getChannel, channel);
+            wrapper.eq(MsgFeedback::getChannel, channel);
         }
         if (StringUtils.hasText(userId)) {
-            wrapper.eq(MsgFeedbackDO::getUserId, userId);
+            wrapper.eq(MsgFeedback::getUserId, userId);
         }
-        wrapper.orderByDesc(MsgFeedbackDO::getCreatedAt);
+        wrapper.orderByDesc(MsgFeedback::getCreatedAt);
         return msgFeedbackMapper.selectPage(p, wrapper);
     }
 
@@ -160,17 +160,17 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         if (!StringUtils.hasText(userId)) {
             return false;
         }
-        List<MsgFeedbackDO> recentFeedbacks = msgFeedbackMapper.selectList(
-                new LambdaQueryWrapper<MsgFeedbackDO>()
-                        .eq(MsgFeedbackDO::getUserId, userId)
-                        .orderByDesc(MsgFeedbackDO::getCreatedAt)
+        List<MsgFeedback> recentFeedbacks = msgFeedbackMapper.selectList(
+                new LambdaQueryWrapper<MsgFeedback>()
+                        .eq(MsgFeedback::getUserId, userId)
+                        .orderByDesc(MsgFeedback::getCreatedAt)
                         .last("LIMIT " + FREQ_CHECK_WINDOW));
         if (recentFeedbacks.size() < FREQ_CHECK_WINDOW) {
             return false; // 反馈不足，不降频
         }
         double avgRating = recentFeedbacks.stream()
                 .filter(f -> f.getRating() != null)
-                .mapToInt(MsgFeedbackDO::getRating)
+                .mapToInt(MsgFeedback::getRating)
                 .average()
                 .orElse(5.0);
         boolean shouldReduce = avgRating < FREQ_REDUCTION_THRESHOLD;

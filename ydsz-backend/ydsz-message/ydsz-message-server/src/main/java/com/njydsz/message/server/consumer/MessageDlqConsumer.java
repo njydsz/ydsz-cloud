@@ -15,7 +15,7 @@ import com.njydsz.common.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -94,11 +94,11 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
                 // 优先按 request.msgId 更新已有记录状态为 DEAD
                 String bizMsgId = request != null ? request.getMessageId() : null;
                 if (bizMsgId != null && !bizMsgId.isBlank()) {
-                    LambdaUpdateWrapper<MsgLogDO> updateWrapper = new LambdaUpdateWrapper<MsgLogDO>()
-                            .eq(MsgLogDO::getMsgId, bizMsgId)
-                            .set(MsgLogDO::getStatus, MessageStatusEnum.DEAD.name())
-                            .set(MsgLogDO::getErrorMessage, errorMessage)
-                            .set(MsgLogDO::getReconsumeTimes, reconsumeTimes);
+                    LambdaUpdateWrapper<MsgLog> updateWrapper = new LambdaUpdateWrapper<MsgLog>()
+                            .eq(MsgLog::getMsgId, bizMsgId)
+                            .set(MsgLog::getStatus, MessageStatusEnum.DEAD.name())
+                            .set(MsgLog::getErrorMessage, errorMessage)
+                            .set(MsgLog::getReconsumeTimes, reconsumeTimes);
                     int updated = msgLogMapper.update(null, updateWrapper);
                     if (updated > 0) {
                         log.info("[MessageDlqConsumer] 已更新现有记录为 DEAD: msgId={}", bizMsgId);
@@ -108,7 +108,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
                 }
 
                 // 未匹配到已有记录,insert 新的 DEAD 记录
-                MsgLogDO logDO = new MsgLogDO();
+                MsgLog logDO = new MsgLog();
                 if (request != null) {
                     logDO.setChannel(request.getChannel());
                     logDO.setBizType(request.getBizType());

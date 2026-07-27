@@ -13,7 +13,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
-import com.njydsz.workflow.domain.entity.FlowQuickCommentDO;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.infra.mapper.FlowQuickCommentMapper;
 import com.njydsz.workflow.server.service.FlowQuickCommentService;
 
@@ -45,30 +45,30 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
      * @return 常用语列表
      */
     @Override
-    public List<FlowQuickCommentDO> listByUser(String userId, String tenantId) {
+    public List<FlowQuickComment> listByUser(String userId, String tenantId) {
         if (!StringUtils.hasText(userId)) {
             return List.of();
         }
         String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
         // 查询：用户自定义 + 系统预设（isSystem=1）
-        List<FlowQuickCommentDO> list = quickCommentMapper.selectList(
-                new LambdaQueryWrapper<FlowQuickCommentDO>()
-                        .eq(FlowQuickCommentDO::getUserId, userId)
-                        .eq(FlowQuickCommentDO::getTenantId, tid)
-                        .eq(FlowQuickCommentDO::getDeleted, 0)
+        List<FlowQuickComment> list = quickCommentMapper.selectList(
+                new LambdaQueryWrapper<FlowQuickComment>()
+                        .eq(FlowQuickComment::getUserId, userId)
+                        .eq(FlowQuickComment::getTenantId, tid)
+                        .eq(FlowQuickComment::getDeleted, 0)
         );
         // 系统预设（全局）
-        List<FlowQuickCommentDO> systemList = quickCommentMapper.selectList(
-                new LambdaQueryWrapper<FlowQuickCommentDO>()
-                        .eq(FlowQuickCommentDO::getIsSystem, 1)
-                        .eq(FlowQuickCommentDO::getTenantId, tid)
-                        .eq(FlowQuickCommentDO::getDeleted, 0)
+        List<FlowQuickComment> systemList = quickCommentMapper.selectList(
+                new LambdaQueryWrapper<FlowQuickComment>()
+                        .eq(FlowQuickComment::getIsSystem, 1)
+                        .eq(FlowQuickComment::getTenantId, tid)
+                        .eq(FlowQuickComment::getDeleted, 0)
         );
         list.addAll(systemList);
         // 排序：sortNum 升序, useCount 降序
         list.sort(Comparator
-                .comparingInt(FlowQuickCommentDO::getSortNum)
-                .thenComparing(Comparator.comparingInt(FlowQuickCommentDO::getUseCount).reversed()));
+                .comparingInt(FlowQuickComment::getSortNum)
+                .thenComparing(Comparator.comparingInt(FlowQuickComment::getUseCount).reversed()));
         return list;
     }
 
@@ -84,7 +84,7 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         if (!StringUtils.hasText(userId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_user_required");
         }
-        FlowQuickCommentDO comment = new FlowQuickCommentDO();
+        FlowQuickComment comment = new FlowQuickComment();
         comment.setUserId(userId);
         comment.setContent(dto.getContent());
         comment.setCommentType(dto.getCommentType());
@@ -111,7 +111,7 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         if (!StringUtils.hasText(dto.getId())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
         }
-        FlowQuickCommentDO existing = quickCommentMapper.selectById(dto.getId());
+        FlowQuickComment existing = quickCommentMapper.selectById(dto.getId());
         if (existing == null || existing.getDeleted() == 1) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", dto.getId());
         }
@@ -138,7 +138,7 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id, String userId) {
-        FlowQuickCommentDO existing = quickCommentMapper.selectById(id);
+        FlowQuickComment existing = quickCommentMapper.selectById(id);
         if (existing == null || existing.getDeleted() == 1) {
             return;
         }
@@ -167,7 +167,7 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
             return;
         }
         try {
-            FlowQuickCommentDO existing = quickCommentMapper.selectById(id);
+            FlowQuickComment existing = quickCommentMapper.selectById(id);
             if (existing != null && existing.getDeleted() == 0) {
                 existing.setUseCount((existing.getUseCount() == null ? 0 : existing.getUseCount()) + 1);
                 existing.setUpdatedAt(LocalDateTime.now());

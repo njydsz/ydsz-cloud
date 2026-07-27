@@ -13,7 +13,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,17 +56,17 @@ public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
     }
 
     @Override
-    public List<JobNodeDO> getOnlineNodes() {
+    public List<JobNode> getOnlineNodes() {
         try {
             List<ServiceInstance> instances = discoveryClient.getInstances(SERVICE_ID);
             if (instances == null || instances.isEmpty()) {
                 log.debug("[NacosNodeDiscovery] 无在线节点实例");
                 return Collections.emptyList();
             }
-            List<JobNodeDO> nodes = new ArrayList<>(instances.size());
+            List<JobNode> nodes = new ArrayList<>(instances.size());
             LocalDateTime now = LocalDateTime.now();
             for (ServiceInstance instance : instances) {
-                JobNodeDO node = new JobNodeDO();
+                JobNode node = new JobNode();
                 node.setNodeId(instance.getHost() + ":" + instance.getPort());
                 node.setHost(instance.getHost());
                 node.setPort(instance.getPort());
@@ -77,7 +77,7 @@ public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
                 nodes.add(node);
             }
             // 按 nodeId 升序保证分片分配确定性
-            nodes.sort(Comparator.comparing(JobNodeDO::getNodeId));
+            nodes.sort(Comparator.comparing(JobNode::getNodeId));
             log.debug("[NacosNodeDiscovery] 获取在线节点: count={}", nodes.size());
             return nodes;
         } catch (Exception e) {

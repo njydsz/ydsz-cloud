@@ -18,7 +18,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.domain.dto.FlowDelegateAuthSaveDTO;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuthDO;
+import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -67,7 +67,7 @@ public class FlowDelegateController {
     @PostMapping("/delegateAuth/create")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
-        FlowDelegateAuthDO auth = new FlowDelegateAuthDO();
+        FlowDelegateAuth auth = new FlowDelegateAuth();
         BeanUtils.copyProperties(dto, auth);
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
@@ -118,7 +118,7 @@ public class FlowDelegateController {
      * @return 授权列表
      */
     @GetMapping("/delegateAuth/mine")
-    public BaseResponse<List<FlowDelegateAuthDO>> listMyDelegateAuths(
+    public BaseResponse<List<FlowDelegateAuth>> listMyDelegateAuths(
             @RequestParam(required = false) String status) {
         String ownerId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
@@ -132,7 +132,7 @@ public class FlowDelegateController {
      * @return 授权列表
      */
     @GetMapping("/delegateAuth/asDelegate")
-    public BaseResponse<List<FlowDelegateAuthDO>> listAsDelegate(
+    public BaseResponse<List<FlowDelegateAuth>> listAsDelegate(
             @RequestParam(required = false) String status) {
         String delegateUserId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");

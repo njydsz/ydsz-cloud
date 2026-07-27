@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.billable;
 
-import com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshotDO;
+import com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshot;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface BillableUtilizationSnapshotMapper extends BaseMapper<BillableUtilizationSnapshotDO> {
+public interface BillableUtilizationSnapshotMapper extends BaseMapper<BillableUtilizationSnapshot> {
 }

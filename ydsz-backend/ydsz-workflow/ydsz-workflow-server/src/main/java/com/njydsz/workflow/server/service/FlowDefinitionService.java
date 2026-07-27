@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 
 /**
  * 流程定义 Service
@@ -60,17 +60,17 @@ public interface FlowDefinitionService {
     /**
      * 查最新已发布版本
      */
-    FlowDefinitionDO getPublished(String flowCode, String version, String tenantId);
+    FlowDefinition getPublished(String flowCode, String version, String tenantId);
 
     /**
      * 按编码查最新
      */
-    FlowDefinitionDO getLatestByCode(String flowCode, String tenantId);
+    FlowDefinition getLatestByCode(String flowCode, String tenantId);
 
     /**
      * 分页查询
      */
-    List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode);
+    List<FlowDefinition> page(int pageNo, int pageSize, String category, String flowCode);
 
     /**
      * P2-21: 流程定义详情查询（含节点 + 跳转）

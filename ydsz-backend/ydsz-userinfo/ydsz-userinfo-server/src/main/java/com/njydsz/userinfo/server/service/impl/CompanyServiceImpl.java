@@ -16,7 +16,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.service.AbstractMpCrudService;
 import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
-import com.njydsz.userinfo.domain.entity.CompanyDO;
+import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class CompanyServiceImpl
-        extends AbstractMpCrudService<CompanyDO, CompanySaveDTO, CompanyVO, CompanyPageQuery, String>
+        extends AbstractMpCrudService<Company, CompanySaveDTO, CompanyVO, CompanyPageQuery, String>
         implements CompanyService {
 
     private final CompanyMapper companyMapper;
@@ -47,12 +47,12 @@ public class CompanyServiceImpl
     }
 
     @Override
-    protected BaseMapper<CompanyDO> getMapper() {
+    protected BaseMapper<Company> getMapper() {
         return companyMapper;
     }
 
     @Override
-    protected CompanyVO toVO(CompanyDO entity) {
+    protected CompanyVO toVO(Company entity) {
         if (entity == null) {
             return null;
         }
@@ -62,11 +62,11 @@ public class CompanyServiceImpl
     }
 
     @Override
-    protected CompanyDO toEntity(CompanySaveDTO dto) {
+    protected Company toEntity(CompanySaveDTO dto) {
         if (dto == null) {
             return null;
         }
-        CompanyDO entity = new CompanyDO();
+        Company entity = new Company();
         BeanUtils.copyProperties(dto, entity);
         return entity;
     }
@@ -77,8 +77,8 @@ public class CompanyServiceImpl
     }
 
     @Override
-    protected QueryWrapper<CompanyDO> buildQueryWrapper(CompanyPageQuery query) {
-        QueryWrapper<CompanyDO> wrapper = new QueryWrapper<>();
+    protected QueryWrapper<Company> buildQueryWrapper(CompanyPageQuery query) {
+        QueryWrapper<Company> wrapper = new QueryWrapper<>();
         if (query.getCompanyCode() != null && !query.getCompanyCode().isBlank()) {
             wrapper.like("company_code", query.getCompanyCode());
         }
@@ -93,10 +93,10 @@ public class CompanyServiceImpl
     }
 
     @Override
-    protected void doBeforeSave(CompanySaveDTO dto, CompanyDO entity) {
+    protected void doBeforeSave(CompanySaveDTO dto, Company entity) {
         // 编码唯一性校验
-        LambdaQueryWrapper<CompanyDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CompanyDO::getCompanyCode, entity.getCompanyCode());
+        LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Company::getCompanyCode, entity.getCompanyCode());
         if (companyMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.COMPANY_CODE_DUPLICATE);
         }
@@ -108,7 +108,7 @@ public class CompanyServiceImpl
 
     @Override
     public boolean updateById(CompanySaveDTO dto) {
-        CompanyDO entity = companyMapper.selectById(dto.getId());
+        Company entity = companyMapper.selectById(dto.getId());
         if (entity == null) {
             throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
         }
@@ -118,5 +118,5 @@ public class CompanyServiceImpl
 
     @Override
     public boolean removeById(String id) {
-        CompanyDO entity = companyMapper.selectById(id);
+        Company entity = companyMapper.selectById(id);
         if (entity == null) {

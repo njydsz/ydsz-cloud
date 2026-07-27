@@ -21,8 +21,8 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.entity.batch.MsgAggregateDO;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.batch.MsgAggregate;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.infra.mapper.batch.MsgAggregateMapper;
 import com.njydsz.message.server.service.batch.AggregateService;
@@ -68,7 +68,7 @@ public class AggregateServiceImpl implements AggregateService {
     private final DistributedLocker distributedLocker;
 
     @Override
-    public MsgAggregateDO appendOrStart(String group, String receiver, String channel, String tenantId) {
+    public MsgAggregate appendOrStart(String group, String receiver, String channel, String tenantId) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
         }
@@ -81,10 +81,10 @@ public class AggregateServiceImpl implements AggregateService {
                 throw new SysException(BaseResultCode.RESOURCE_LOCKED, "获取聚合锁失败: " + group);
             }
             // 查 PENDING 批次
-            MsgAggregateDO batch = msgAggregateMapper.selectOne(new LambdaQueryWrapper<MsgAggregateDO>()
-                    .eq(MsgAggregateDO::getAggregateGroup, group)
-                    .eq(MsgAggregateDO::getReceiver, receiver)
-                    .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+            MsgAggregate batch = msgAggregateMapper.selectOne(new LambdaQueryWrapper<MsgAggregate>()
+                    .eq(MsgAggregate::getAggregateGroup, group)
+                    .eq(MsgAggregate::getReceiver, receiver)
+                    .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
                     .last("LIMIT 1"));
             LocalDateTime now = LocalDateTime.now();
             if (batch != null) {
@@ -94,7 +94,7 @@ public class AggregateServiceImpl implements AggregateService {
                 return batch;
             }
             // 新建 PENDING 批次
-            MsgAggregateDO entity = new MsgAggregateDO();
+            MsgAggregate entity = new MsgAggregate();
             entity.setAggregateGroup(group);
             entity.setReceiver(receiver);
             entity.setChannel(channel);
@@ -120,11 +120,11 @@ public class AggregateServiceImpl implements AggregateService {
     @Override
     public int flushDue() {
         LocalDateTime now = LocalDateTime.now();
-        List<MsgAggregateDO> due = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
-                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name())
-                .le(MsgAggregateDO::getScheduledSendAt, now));
+        List<MsgAggregate> due = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregate>()
+                .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name())
+                .le(MsgAggregate::getScheduledSendAt, now));
         int sent = 0;
-        for (MsgAggregateDO batch : due) {
+        for (MsgAggregate batch : due) {
             if (sendBatch(batch)) {
                 sent++;
             }
@@ -141,17 +141,17 @@ public class AggregateServiceImpl implements AggregateService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
         }
         // 先把 PENDING 批次流转为 READY,统一由 sendBatch 的 CAS 占有发送
-        msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregateDO>()
-                .eq(MsgAggregateDO::getAggregateGroup, group)
-                .eq(MsgAggregateDO::getReceiver, receiver)
-                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
-                .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
-        List<MsgAggregateDO> batches = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
-                .eq(MsgAggregateDO::getAggregateGroup, group)
-                .eq(MsgAggregateDO::getReceiver, receiver)
-                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
+        msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregate>()
+                .eq(MsgAggregate::getAggregateGroup, group)
+                .eq(MsgAggregate::getReceiver, receiver)
+                .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+                .set(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
+        List<MsgAggregate> batches = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregate>()
+                .eq(MsgAggregate::getAggregateGroup, group)
+                .eq(MsgAggregate::getReceiver, receiver)
+                .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
         int sent = 0;
-        for (MsgAggregateDO batch : batches) {
+        for (MsgAggregate batch : batches) {
             if (sendBatch(batch)) {
                 sent++;
             }
@@ -161,12 +161,12 @@ public class AggregateServiceImpl implements AggregateService {
     }
 
     @Override
-    public Page<MsgAggregateDO> page(PageQuery query) {
-        Page<MsgAggregateDO> page = new Page<>(
+    public Page<MsgAggregate> page(PageQuery query) {
+        Page<MsgAggregate> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
                 Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        return msgAggregateMapper.selectPage(page, new LambdaQueryWrapper<MsgAggregateDO>()
-                .orderByDesc(MsgAggregateDO::getCreatedAt));
+        return msgAggregateMapper.selectPage(page, new LambdaQueryWrapper<MsgAggregate>()
+                .orderByDesc(MsgAggregate::getCreatedAt));
     }
 
     /**
@@ -178,12 +178,12 @@ public class AggregateServiceImpl implements AggregateService {
      * @param batch 聚合批次
      * @return true 表示发送成功
      */
-    private boolean sendBatch(MsgAggregateDO batch) {
+    private boolean sendBatch(MsgAggregate batch) {
         // CAS 占有: READY → SENDING,updated=0 表示已被其他实例占有
-        int claimed = msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregateDO>()
-                .eq(MsgAggregateDO::getId, batch.getId())
-                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name())
-                .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.SENDING.name()));
+        int claimed = msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregate>()
+                .eq(MsgAggregate::getId, batch.getId())
+                .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name())
+                .set(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.SENDING.name()));
         if (claimed == 0) {
             log.debug("[Aggregate] 批次已被其他实例占有,跳过: id={}", batch.getId());
             return false;
@@ -229,10 +229,10 @@ public class AggregateServiceImpl implements AggregateService {
      */
     private void revertToReady(String batchId) {
         try {
-            msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregateDO>()
-                    .eq(MsgAggregateDO::getId, batchId)
-                    .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.SENDING.name())
-                    .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
+            msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregate>()
+                    .eq(MsgAggregate::getId, batchId)
+                    .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.SENDING.name())
+                    .set(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
         } catch (Exception revertEx) {
             log.error("[Aggregate] 回退 READY 失败,批次滞留 SENDING: id={} err={}",
                     batchId, revertEx.getMessage());
@@ -243,13 +243,13 @@ public class AggregateServiceImpl implements AggregateService {
      * 加载摘要模板：按约定编码 DIGEST_{aggregateGroup} 查找,
      * 找到则用模板 content,否则回退默认摘要文案。
      */
-    private String loadDigestTemplate(MsgAggregateDO batch) {
+    private String loadDigestTemplate(MsgAggregate batch) {
         String group = batch.getAggregateGroup();
         if (!StringUtils.hasText(group)) {
             return DEFAULT_DIGEST_TEMPLATE;
         }
         try {
-            MsgTemplateDO tpl = templateService.loadByCodeAndChannel(
+            MsgTemplate tpl = templateService.loadByCodeAndChannel(
                     DIGEST_TEMPLATE_PREFIX + group, batch.getChannel(),
                     null, batch.getTenantId());
             if (tpl != null && StringUtils.hasText(tpl.getContent())) {

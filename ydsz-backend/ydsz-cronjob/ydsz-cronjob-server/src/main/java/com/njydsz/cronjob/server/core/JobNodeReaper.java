@@ -13,7 +13,7 @@ import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -144,7 +144,7 @@ public class JobNodeReaper {
      */
     private void failoverNode(String nodeId) {
         try {
-            List<JobLogDO> runningLogs = jobLogMapper.selectRunningByNode(nodeId);
+            List<JobLog> runningLogs = jobLogMapper.selectRunningByNode(nodeId);
             if (runningLogs.isEmpty()) {
                 return;
             }
@@ -152,7 +152,7 @@ public class JobNodeReaper {
                     nodeId, runningLogs.size());
 
             // 1. 释放 Redis 锁（best-effort，P1-4: 支持分片和非分片任务）
-            for (JobLogDO logEntry : runningLogs) {
+            for (JobLog logEntry : runningLogs) {
                 releaseLockSafe(logEntry);
             }
 
@@ -178,7 +178,7 @@ public class JobNodeReaper {
      *
      * @param logEntry 任务日志（含 jobKey、lockHolder、shardIndex）
      */
-    private void releaseLockSafe(JobLogDO logEntry) {
+    private void releaseLockSafe(JobLog logEntry) {
         String lockHolder = logEntry.getLockHolder();
         if (lockHolder == null || lockHolder.isBlank()) {
             return;

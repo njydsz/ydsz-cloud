@@ -15,7 +15,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -124,12 +124,12 @@ public class TimeoutMonitor {
      */
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
-        List<JobLogDO> timedOut = jobLogMapper.selectTimedOutLogs(now, BATCH_SIZE);
+        List<JobLog> timedOut = jobLogMapper.selectTimedOutLogs(now, BATCH_SIZE);
         if (timedOut.isEmpty()) {
             return;
         }
         log.warn("[TimeoutMonitor] 发现 {} 个超时任务: role={}", timedOut.size(), leaderRole);
-        for (JobLogDO log0 : timedOut) {
+        for (JobLog log0 : timedOut) {
             try {
                 handleTimeout(log0, now);
             } catch (Exception e) {
@@ -143,7 +143,7 @@ public class TimeoutMonitor {
      * 处理单个超时日志（事务内）。
      */
     @Transactional(rollbackFor = Exception.class)
-    protected void handleTimeout(JobLogDO log0, LocalDateTime now) {
+    protected void handleTimeout(JobLog log0, LocalDateTime now) {
         long durationMs = Duration.between(log0.getStartTime(), now).toMillis();
         String errorMsg = "Task timed out (start=" + log0.getStartTime()
                 + ", detected=" + now + ", duration=" + durationMs + "ms)";
@@ -199,7 +199,7 @@ public class TimeoutMonitor {
     /**
      * P5: 触发超时告警。
      */
-    private void triggerTimeoutAlert(JobLogDO log0, long durationMs) {
+    private void triggerTimeoutAlert(JobLog log0, long durationMs) {
         AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
         if (alertTrigger == null) {
             return;

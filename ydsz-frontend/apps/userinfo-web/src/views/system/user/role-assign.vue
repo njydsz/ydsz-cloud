@@ -2,8 +2,8 @@
 import type { RoleApi } from '#/api/role';
 
 import { useVbenModal } from '@ydsz/common-ui';
-import { ElCheckboxGroup, ElCheckbox, ElMessage, ElTransfer } from 'element-plus';
-import { ref } from 'vue';
+import { ElMessage, ElTransfer } from 'element-plus';
+import { ref, watch } from 'vue';
 
 import { assignUserRolesApi } from '#/api/user';
 
@@ -49,7 +49,6 @@ watch(roleList, (list) => {
   }));
 }, { immediate: true });
 
-import { watch } from 'vue';
 </script>
 
 <template>

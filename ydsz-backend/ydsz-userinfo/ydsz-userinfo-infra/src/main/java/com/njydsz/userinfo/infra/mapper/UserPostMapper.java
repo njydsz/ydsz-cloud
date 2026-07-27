@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.UserPostDO;
+import com.njydsz.userinfo.domain.entity.UserPost;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -14,5 +14,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface UserPostMapper extends BaseMapper<UserPostDO> {
+public interface UserPostMapper extends BaseMapper<UserPost> {
 }

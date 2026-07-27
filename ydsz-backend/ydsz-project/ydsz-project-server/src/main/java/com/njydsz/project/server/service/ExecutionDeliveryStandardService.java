@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.execution.ExecutionDeliveryStandardDO;
+import com.njydsz.project.domain.entity.execution.ExecutionDeliveryStandard;
 
 public interface ExecutionDeliveryStandardService {
-    ExecutionDeliveryStandardDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<ExecutionDeliveryStandardDO> page(int pageNum, int pageSize);
-    boolean save(ExecutionDeliveryStandardDO entity);
-    boolean updateById(ExecutionDeliveryStandardDO entity);
+    ExecutionDeliveryStandard getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<ExecutionDeliveryStandard> page(int pageNum, int pageSize);
+    boolean save(ExecutionDeliveryStandard entity);
+    boolean updateById(ExecutionDeliveryStandard entity);
     boolean removeById(String id);
 }

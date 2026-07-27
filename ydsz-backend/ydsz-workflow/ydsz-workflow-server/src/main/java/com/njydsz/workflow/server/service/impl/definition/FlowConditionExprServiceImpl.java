@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.googlecode.aviator.AviatorEvaluator;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.server.engine.JsonHelper;
 import com.njydsz.workflow.server.service.FlowConditionExprService;
@@ -357,9 +357,9 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
         // 2. 从流程定义的所有节点表单中提取变量
         try {
-            List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(definitionId);
+            List<FlowNode> nodes = nodeMapper.selectByDefinitionId(definitionId);
             if (nodes != null && !nodes.isEmpty()) {
-                for (FlowNodeDO node : nodes) {
+                for (FlowNode node : nodes) {
                     extractVariablesFromNode(node, result);
                 }
             }
@@ -449,7 +449,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
     // ==================== 内部辅助方法 ====================
 
-    private void extractVariablesFromNode(FlowNodeDO node, List<Map<String, String>> result) {
+    private void extractVariablesFromNode(FlowNode node, List<Map<String, String>> result) {
         if (node == null) {
             return;
         }

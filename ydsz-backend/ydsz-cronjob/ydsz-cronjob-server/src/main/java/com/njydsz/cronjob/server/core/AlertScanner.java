@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -103,12 +103,12 @@ public class AlertScanner {
      * 失败率 &gt;= threshold 时触发告警。
      */
     void scanFailRateRules() {
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectByAlertType(AlertType.FAIL_RATE.name());
+        List<JobAlertRule> rules = jobAlertRuleMapper.selectByAlertType(AlertType.FAIL_RATE.name());
         if (rules.isEmpty()) {
             return;
         }
         log.debug("[AlertScanner] 扫描 FAIL_RATE 规则: count={}", rules.size());
-        for (JobAlertRuleDO rule : rules) {
+        for (JobAlertRule rule : rules) {
             try {
                 evaluateFailRateRule(rule);
             } catch (Exception e) {
@@ -125,12 +125,12 @@ public class AlertScanner {
      * P95 &gt;= threshold（毫秒）时触发告警。
      */
     void scanDurationP95Rules() {
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectByAlertType(AlertType.DURATION_P95.name());
+        List<JobAlertRule> rules = jobAlertRuleMapper.selectByAlertType(AlertType.DURATION_P95.name());
         if (rules.isEmpty()) {
             return;
         }
         log.debug("[AlertScanner] 扫描 DURATION_P95 规则: count={}", rules.size());
-        for (JobAlertRuleDO rule : rules) {
+        for (JobAlertRule rule : rules) {
             try {
                 evaluateDurationP95Rule(rule);
             } catch (Exception e) {
@@ -143,7 +143,7 @@ public class AlertScanner {
     /**
      * 评估单条 FAIL_RATE 规则。
      */
-    private void evaluateFailRateRule(JobAlertRuleDO rule) {
+    private void evaluateFailRateRule(JobAlertRule rule) {
         if (rule.getThreshold() == null || rule.getThreshold() < 0) {
             log.warn("[AlertScanner] FAIL_RATE 规则阈值无效, 跳过: ruleId={} threshold={}",
                     rule.getId(), rule.getThreshold());
@@ -189,7 +189,7 @@ public class AlertScanner {
     /**
      * 评估单条 DURATION_P95 规则。
      */
-    private void evaluateDurationP95Rule(JobAlertRuleDO rule) {
+    private void evaluateDurationP95Rule(JobAlertRule rule) {
         if (rule.getThreshold() == null || rule.getThreshold() < 0) {
             log.warn("[AlertScanner] DURATION_P95 规则阈值无效, 跳过: ruleId={} threshold={}",
                     rule.getId(), rule.getThreshold());
@@ -228,7 +228,7 @@ public class AlertScanner {
     /**
      * 解析规则的时间窗口（分钟），缺省/无效时回退默认值 30 分钟。
      */
-    private int resolveWindowMinutes(JobAlertRuleDO rule) {
+    private int resolveWindowMinutes(JobAlertRule rule) {
         Integer window = rule.getTimeWindowMinutes();
         if (window != null && window > 0) {
             return window;

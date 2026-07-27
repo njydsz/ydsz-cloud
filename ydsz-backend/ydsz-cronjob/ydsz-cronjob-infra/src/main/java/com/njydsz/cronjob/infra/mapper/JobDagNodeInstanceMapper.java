@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 
 /**
  * DAG 节点实例 Mapper（P2 DAG 增强）。
@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstanceDO> {
+public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance> {
 
     /**
      * 根据 DAG 实例 ID 查询所有节点实例。
@@ -30,7 +30,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstanceD
             + "FROM ydsz_job_dag_node_instance "
             + "WHERE dag_instance_id = #{dagInstanceId} AND deleted = 0 "
             + "ORDER BY created_at ASC")
-    List<JobDagNodeInstanceDO> selectByDagInstanceId(@Param("dagInstanceId") String dagInstanceId);
+    List<JobDagNodeInstance> selectByDagInstanceId(@Param("dagInstanceId") String dagInstanceId);
 
     /**
      * 根据 DAG 实例 ID 和任务 ID 查询节点实例（唯一）。
@@ -45,7 +45,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstanceD
             + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM ydsz_job_dag_node_instance "
             + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND deleted = 0")
-    JobDagNodeInstanceDO selectByDagInstanceAndJob(@Param("dagInstanceId") String dagInstanceId,
+    JobDagNodeInstance selectByDagInstanceAndJob(@Param("dagInstanceId") String dagInstanceId,
                                                     @Param("jobId") String jobId);
 
     /**
@@ -65,7 +65,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstanceD
             + "FROM ydsz_job_dag_node_instance "
             + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND deleted = 0 "
             + "ORDER BY created_at ASC")
-    List<JobDagNodeInstanceDO> selectAllByDagInstanceAndJob(@Param("dagInstanceId") String dagInstanceId,
+    List<JobDagNodeInstance> selectAllByDagInstanceAndJob(@Param("dagInstanceId") String dagInstanceId,
                                                               @Param("jobId") String jobId);
 
     /**
@@ -113,11 +113,11 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstanceD
     /**
      * 批量插入节点实例。
      */
-    default void insertBatch(List<JobDagNodeInstanceDO> nodes) {
+    default void insertBatch(List<JobDagNodeInstance> nodes) {
         if (nodes == null || nodes.isEmpty()) {
             return;
         }
-        for (JobDagNodeInstanceDO node : nodes) {
+        for (JobDagNodeInstance node : nodes) {
             insert(node);
         }
     }

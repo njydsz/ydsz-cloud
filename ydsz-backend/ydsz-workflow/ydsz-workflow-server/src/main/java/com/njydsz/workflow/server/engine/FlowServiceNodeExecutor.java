@@ -19,7 +19,7 @@ import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,7 +91,7 @@ public class FlowServiceNodeExecutor {
      * @param variables 流程变量（HTTP 调用时作为请求体传递）
      * @return 执行结果（成功/失败 + 消息）
      */
-    public ServiceExecutionResult execute(FlowNodeDO node, Map<String, Object> variables) {
+    public ServiceExecutionResult execute(FlowNode node, Map<String, Object> variables) {
         Map<String, Object> config = parseExtConfig(node.getExt());
         String serviceType = String.valueOf(config.getOrDefault("serviceType", "AUTO_PASS")).toUpperCase();
 
@@ -138,7 +138,7 @@ public class FlowServiceNodeExecutor {
     /**
      * HTTP 类型：通过 RestTemplate 调用外部接口
      */
-    private ServiceExecutionResult executeHttp(FlowNodeDO node, Map<String, Object> config,
+    private ServiceExecutionResult executeHttp(FlowNode node, Map<String, Object> config,
                                                 Map<String, Object> variables) {
         String url = String.valueOf(config.getOrDefault("url", ""));
         if (!StringUtils.hasText(url) || "null".equals(url)) {
@@ -191,7 +191,7 @@ public class FlowServiceNodeExecutor {
      * @param config    ext 配置（包含 script 字段）
      * @param variables 流程变量（作为脚本执行环境）
      */
-    private ServiceExecutionResult executeScript(FlowNodeDO node, Map<String, Object> config,
+    private ServiceExecutionResult executeScript(FlowNode node, Map<String, Object> config,
                                                     Map<String, Object> variables) {
         String script = String.valueOf(config.getOrDefault("script", ""));
         if (!StringUtils.hasText(script) || "null".equals(script)) {

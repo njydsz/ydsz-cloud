@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 
 /**
  * DAG 工作流实例 Mapper（P2 DAG 增强）。
@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobDagInstanceMapper extends BaseMapper<JobDagInstanceDO> {
+public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
 
     /**
      * 根据 DAG 定义 ID 查询实例列表（按创建时间倒序）。
@@ -30,7 +30,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstanceDO> {
             + "FROM ydsz_job_dag_instance "
             + "WHERE dag_id = #{dagId} AND deleted = 0 "
             + "ORDER BY created_at DESC LIMIT #{limit}")
-    List<JobDagInstanceDO> selectByDagId(@Param("dagId") String dagId, @Param("limit") int limit);
+    List<JobDagInstance> selectByDagId(@Param("dagId") String dagId, @Param("limit") int limit);
 
     /**
      * 查询指定状态的 DAG 实例（如查询 RUNNING 状态用于超时检测）。
@@ -42,7 +42,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstanceDO> {
             + "FROM ydsz_job_dag_instance "
             + "WHERE status = #{status} AND deleted = 0 "
             + "ORDER BY created_at ASC")
-    List<JobDagInstanceDO> selectByStatus(@Param("status") String status);
+    List<JobDagInstance> selectByStatus(@Param("status") String status);
 
     /**
      * 原子更新 DAG 实例状态（CAS，避免并发覆盖）。

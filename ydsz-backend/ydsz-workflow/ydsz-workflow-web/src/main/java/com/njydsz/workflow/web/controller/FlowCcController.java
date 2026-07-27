@@ -16,7 +16,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.domain.dto.FlowCcQueryDTO;
-import com.njydsz.workflow.domain.entity.FlowCcDO;
+import com.njydsz.workflow.domain.entity.FlowCc;
 import com.njydsz.workflow.server.service.FlowCcService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,7 +53,7 @@ public class FlowCcController {
     @Idempotent(key = "ydsz:workflow:FlowCcController:pageCc:lock", ttlSeconds = 5)
     @PostMapping("/cc/page")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
-    public BaseResponse<PageResponse<List<FlowCcDO>>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
+    public BaseResponse<PageResponse<List<FlowCc>>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
         int pageNo = query.getPageNum();

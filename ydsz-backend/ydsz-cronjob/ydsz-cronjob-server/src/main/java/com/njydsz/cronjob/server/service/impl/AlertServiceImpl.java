@@ -10,8 +10,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 import com.njydsz.cronjob.server.core.alert.AlertType;
@@ -40,7 +40,7 @@ public class AlertServiceImpl implements AlertService {
     @Transactional(rollbackFor = Exception.class)
     public String createRule(AlertRuleSaveDTO dto) {
         validateRuleConstraints(dto);
-        JobAlertRuleDO rule = new JobAlertRuleDO();
+        JobAlertRule rule = new JobAlertRule();
         applyDtoToEntity(dto, rule);
         jobAlertRuleMapper.insert(rule);
         log.info("[Alert] 创建告警规则: ruleId={} ruleName={} alertType={}",
@@ -51,7 +51,7 @@ public class AlertServiceImpl implements AlertService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateRule(String id, AlertRuleSaveDTO dto) {
-        JobAlertRuleDO exists = jobAlertRuleMapper.selectById(id);
+        JobAlertRule exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
@@ -64,7 +64,7 @@ public class AlertServiceImpl implements AlertService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteRule(String id) {
-        JobAlertRuleDO exists = jobAlertRuleMapper.selectById(id);
+        JobAlertRule exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
@@ -73,8 +73,8 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public JobAlertRuleDO getRuleById(String id) {
-        JobAlertRuleDO rule = jobAlertRuleMapper.selectById(id);
+    public JobAlertRule getRuleById(String id) {
+        JobAlertRule rule = jobAlertRuleMapper.selectById(id);
         if (rule == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
@@ -82,7 +82,7 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<JobAlertRuleDO> listRules() {
+    public List<JobAlertRule> listRules() {
         return jobAlertRuleMapper.selectList(null);
     }
 
@@ -92,7 +92,7 @@ public class AlertServiceImpl implements AlertService {
         if (enabled == null || (enabled != 0 && enabled != 1)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_alert_invalid_enabled");
         }
-        JobAlertRuleDO exists = jobAlertRuleMapper.selectById(id);
+        JobAlertRule exists = jobAlertRuleMapper.selectById(id);
         if (exists == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_alert_not_found");
         }
@@ -102,7 +102,7 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<JobAlertLogDO> queryAlertLogs(String jobId, LocalDateTime since) {
+    public List<JobAlertLog> queryAlertLogs(String jobId, LocalDateTime since) {
         if (jobId == null || jobId.isBlank()) {
             return List.of();
         }
@@ -137,7 +137,7 @@ public class AlertServiceImpl implements AlertService {
     /**
      * 将 DTO 字段应用到实体（创建/更新共用）。
      */
-    private void applyDtoToEntity(AlertRuleSaveDTO dto, JobAlertRuleDO rule) {
+    private void applyDtoToEntity(AlertRuleSaveDTO dto, JobAlertRule rule) {
         rule.setRuleName(dto.getRuleName());
         rule.setJobId(StringUtils.hasText(dto.getJobId()) ? dto.getJobId() : null);
         rule.setJobKey(StringUtils.hasText(dto.getJobKey()) ? dto.getJobKey() : null);

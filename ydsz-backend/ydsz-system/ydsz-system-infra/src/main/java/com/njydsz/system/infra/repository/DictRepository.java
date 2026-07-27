@@ -2,7 +2,7 @@ package com.njydsz.system.infra.repository;
 
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.system.domain.entity.DictTypeDO;
+import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.infra.mapper.DictTypeMapper;
 
 import lombok.RequiredArgsConstructor;

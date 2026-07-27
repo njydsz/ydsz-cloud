@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectInitiationDO;
+import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.njydsz.project.domain.repository.project.IProjectInitiationRepository;
 import com.njydsz.project.infra.mapper.project.ProjectInitiationMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ProjectInitiationRepository extends ServiceImpl<ProjectInitiationMapper, ProjectInitiationDO>
+public class ProjectInitiationRepository extends ServiceImpl<ProjectInitiationMapper, ProjectInitiation>
         implements IProjectInitiationRepository {
 }

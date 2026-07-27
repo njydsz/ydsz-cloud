@@ -16,8 +16,8 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobHistoryDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>实现要点：
  * <ul>
- *   <li>{@code saveHistory}: 将 JobDO 序列化为 JSON 快照存入 ydsz_job_history，版本号取自 job.version</li>
+ *   <li>{@code saveHistory}: 将 Job 序列化为 JSON 快照存入 ydsz_job_history，版本号取自 job.version</li>
  *   <li>{@code recordVersionChange}: 统一版本变更入口，支持 CREATE/UPDATE/DELETE 三种类型，同时保存 before/after 快照</li>
  *   <li>{@code listVersions}: 透传 mapper 按版本号降序查询</li>
  *   <li>{@code getVersion}: 透传 mapper 查询指定版本</li>
@@ -65,11 +65,11 @@ public class JobHistoryServiceImpl implements JobHistoryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public JobHistoryDO saveHistory(JobDO job, String changedBy) {
+    public JobHistory saveHistory(Job job, String changedBy) {
         if (job == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_required");
         }
-        JobHistoryDO history = new JobHistoryDO();
+        JobHistory history = new JobHistory();
         history.setJobId(job.getId());
         history.setVersion(job.getVersion());
         history.setSnapshot(YdszJson.toJson(job));
@@ -89,14 +89,14 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     }
 
     @Override
-    public void recordVersionChange(JobDO beforeJob, JobDO afterJob,
+    public void recordVersionChange(Job beforeJob, Job afterJob,
                                       String changeType, String changedBy, String changeRemark) {
         try {
-            JobDO referenceJob = afterJob != null ? afterJob : beforeJob;
+            Job referenceJob = afterJob != null ? afterJob : beforeJob;
             if (referenceJob == null) {
                 return;
             }
-            JobHistoryDO history = new JobHistoryDO();
+            JobHistory history = new JobHistory();
             history.setJobId(referenceJob.getId());
             history.setVersion(referenceJob.getVersion() != null ? referenceJob.getVersion() : 1);
             history.setChangeType(changeType);
@@ -104,7 +104,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             history.setBeforeSnapshot(beforeJob != null ? YdszJson.toJson(beforeJob) : null);
             history.setChangeRemark(changeRemark);
             // 冗余字段从 afterJob 取（DELETE 时从 beforeJob 取；referenceJob 已保证非 null）
-            JobDO displayJob = referenceJob;
+            Job displayJob = referenceJob;
             history.setJobName(displayJob.getJobName());
             history.setJobKey(displayJob.getJobKey());
             history.setHandler(displayJob.getHandler());
@@ -126,7 +126,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     }
 
     @Override
-    public List<JobHistoryDO> listVersions(String jobId) {
+    public List<JobHistory> listVersions(String jobId) {
         if (!StringUtils.hasText(jobId)) {
             return Collections.emptyList();
         }
@@ -134,7 +134,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     }
 
     @Override
-    public JobHistoryDO getVersion(String jobId, Integer version) {
+    public JobHistory getVersion(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId) || version == null) {
             return null;
         }
@@ -143,7 +143,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public JobDO rollback(String jobId, Integer version) {
+    public Job rollback(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_job_id_required");
         }
@@ -151,14 +151,14 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_history_version_invalid");
         }
         // 查询目标历史版本
-        JobHistoryDO targetHistory = jobHistoryMapper.selectByVersion(jobId, version);
+        JobHistory targetHistory = jobHistoryMapper.selectByVersion(jobId, version);
         if (targetHistory == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
         }
-        // 反序列化快照为 JobDO
-        JobDO snapshotJob = YdszJson.toObject(targetHistory.getSnapshot(), JobDO.class);
+        // 反序列化快照为 Job
+        Job snapshotJob = YdszJson.toObject(targetHistory.getSnapshot(), Job.class);
         // 查询当前任务（用于保留统计字段等）
-        JobDO currentJob = jobMapper.selectById(jobId);
+        Job currentJob = jobMapper.selectById(jobId);
         if (currentJob == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
@@ -193,13 +193,13 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         if (version1 == null || version2 == null) {
             return Collections.emptyList();
         }
-        JobHistoryDO h1 = jobHistoryMapper.selectByVersion(jobId, version1);
-        JobHistoryDO h2 = jobHistoryMapper.selectByVersion(jobId, version2);
+        JobHistory h1 = jobHistoryMapper.selectByVersion(jobId, version1);
+        JobHistory h2 = jobHistoryMapper.selectByVersion(jobId, version2);
         if (h1 == null || h2 == null) {
             return Collections.emptyList();
         }
-        JobDO job1 = YdszJson.toObject(h1.getSnapshot(), JobDO.class);
-        JobDO job2 = YdszJson.toObject(h2.getSnapshot(), JobDO.class);
+        Job job1 = YdszJson.toObject(h1.getSnapshot(), Job.class);
+        Job job2 = YdszJson.toObject(h2.getSnapshot(), Job.class);
         return diffFields(job1, job2);
     }
 
@@ -210,7 +210,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
      * @return 下一个版本号；无历史记录时返回 1
      */
     private int getNextVersion(String jobId) {
-        List<JobHistoryDO> versions = jobHistoryMapper.selectByJobIdOrderByVersionDesc(jobId);
+        List<JobHistory> versions = jobHistoryMapper.selectByJobIdOrderByVersionDesc(jobId);
         if (versions == null || versions.isEmpty()) {
             return 1;
         }
@@ -219,13 +219,13 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     }
 
     /**
-     * 逐字段对比两个 JobDO 的配置字段，返回差异列表。
+     * 逐字段对比两个 Job 的配置字段，返回差异列表。
      *
      * @param job1 旧版本任务
      * @param job2 新版本任务
      * @return 差异字段列表，每个元素包含 field/oldValue/newValue
      */
-    private List<Map<String, Object>> diffFields(JobDO job1, JobDO job2) {
+    private List<Map<String, Object>> diffFields(Job job1, Job job2) {
         List<Map<String, Object>> diffs = new ArrayList<>();
         Map<String, Object> snapshot1 = YdszJson.parseMap(YdszJson.toJson(job1));
         Map<String, Object> snapshot2 = YdszJson.parseMap(YdszJson.toJson(job2));

@@ -15,7 +15,7 @@ import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
 import com.njydsz.message.server.service.template.TemplateService;
@@ -41,7 +41,7 @@ public class TemplateServiceImpl implements TemplateService {
     private final MsgTemplateMapper msgTemplateMapper;
 
     @Override
-    public MsgTemplateDO create(TemplateCreateDTO dto) {
+    public MsgTemplate create(TemplateCreateDTO dto) {
         if (dto == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板参数不能为空");
         }
@@ -51,16 +51,16 @@ public class TemplateServiceImpl implements TemplateService {
         String tenantId = TenantContext.getTenantId();
         String locale = StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
         // 唯一性校验 (templateCode, channel, locale, tenantId)
-        MsgTemplateDO existing = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
-                .eq(MsgTemplateDO::getChannel, dto.getChannel())
-                .eq(MsgTemplateDO::getLocale, locale)
-                .eq(MsgTemplateDO::getTenantId, tenantId)
+        MsgTemplate existing = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
+                .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
+                .eq(MsgTemplate::getChannel, dto.getChannel())
+                .eq(MsgTemplate::getLocale, locale)
+                .eq(MsgTemplate::getTenantId, tenantId)
                 .last("LIMIT 1"));
         if (existing != null) {
             throw new SysException(BaseResultCode.DUPLICATE_KEY, "模板已存在: " + dto.getTemplateCode() + "/" + locale);
         }
-        MsgTemplateDO entity = new MsgTemplateDO();
+        MsgTemplate entity = new MsgTemplate();
         entity.setTemplateCode(dto.getTemplateCode());
         entity.setChannel(dto.getChannel());
         entity.setLocale(locale);
@@ -82,11 +82,11 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
-    public MsgTemplateDO update(String id, TemplateCreateDTO dto) {
+    public MsgTemplate update(String id, TemplateCreateDTO dto) {
         if (!StringUtils.hasText(id)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
         }
-        MsgTemplateDO entity = getById(id);
+        MsgTemplate entity = getById(id);
         if (dto == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板参数不能为空");
         }
@@ -133,11 +133,11 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
-    public MsgTemplateDO getById(String id) {
+    public MsgTemplate getById(String id) {
         if (!StringUtils.hasText(id)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板 ID 不能为空");
         }
-        MsgTemplateDO entity = msgTemplateMapper.selectById(id);
+        MsgTemplate entity = msgTemplateMapper.selectById(id);
         if (entity == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "模板不存在: " + id);
         }
@@ -145,50 +145,50 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
-    public Page<MsgTemplateDO> page(TemplateQueryDTO query) {
-        Page<MsgTemplateDO> page = new Page<>(
+    public Page<MsgTemplate> page(TemplateQueryDTO query) {
+        Page<MsgTemplate> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
                 Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        LambdaQueryWrapper<MsgTemplateDO> w = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<MsgTemplate> w = new LambdaQueryWrapper<>();
         if (query != null) {
-            w.eq(StringUtils.hasText(query.getTemplateCode()), MsgTemplateDO::getTemplateCode, query.getTemplateCode());
-            w.eq(StringUtils.hasText(query.getChannel()), MsgTemplateDO::getChannel, query.getChannel());
-            w.eq(StringUtils.hasText(query.getLocale()), MsgTemplateDO::getLocale, query.getLocale());
-            w.eq(StringUtils.hasText(query.getStatus()), MsgTemplateDO::getStatus, query.getStatus());
-            w.eq(StringUtils.hasText(query.getAuditStatus()), MsgTemplateDO::getAuditStatus, query.getAuditStatus());
-            w.eq(StringUtils.hasText(query.getCategory()), MsgTemplateDO::getCategory, query.getCategory());
-            w.eq(StringUtils.hasText(query.getSceneCode()), MsgTemplateDO::getSceneCode, query.getSceneCode());
+            w.eq(StringUtils.hasText(query.getTemplateCode()), MsgTemplate::getTemplateCode, query.getTemplateCode());
+            w.eq(StringUtils.hasText(query.getChannel()), MsgTemplate::getChannel, query.getChannel());
+            w.eq(StringUtils.hasText(query.getLocale()), MsgTemplate::getLocale, query.getLocale());
+            w.eq(StringUtils.hasText(query.getStatus()), MsgTemplate::getStatus, query.getStatus());
+            w.eq(StringUtils.hasText(query.getAuditStatus()), MsgTemplate::getAuditStatus, query.getAuditStatus());
+            w.eq(StringUtils.hasText(query.getCategory()), MsgTemplate::getCategory, query.getCategory());
+            w.eq(StringUtils.hasText(query.getSceneCode()), MsgTemplate::getSceneCode, query.getSceneCode());
         }
-        w.orderByDesc(MsgTemplateDO::getCreatedAt);
+        w.orderByDesc(MsgTemplate::getCreatedAt);
         return msgTemplateMapper.selectPage(page, w);
     }
 
     @Override
-    public MsgTemplateDO loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId) {
+    public MsgTemplate loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "模板编码与通道不能为空");
         }
         String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
         String loc = StringUtils.hasText(locale) ? locale : MessageConstants.DEFAULT_LOCALE;
         // 精确 locale
-        MsgTemplateDO entity = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                .eq(MsgTemplateDO::getTemplateCode, templateCode)
-                .eq(MsgTemplateDO::getChannel, channel)
-                .eq(MsgTemplateDO::getLocale, loc)
-                .eq(MsgTemplateDO::getTenantId, tid)
-                .eq(MsgTemplateDO::getStatus, "ENABLED")
+        MsgTemplate entity = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
+                .eq(MsgTemplate::getTemplateCode, templateCode)
+                .eq(MsgTemplate::getChannel, channel)
+                .eq(MsgTemplate::getLocale, loc)
+                .eq(MsgTemplate::getTenantId, tid)
+                .eq(MsgTemplate::getStatus, "ENABLED")
                 .last("LIMIT 1"));
         if (entity != null) {
             return entity;
         }
         // 回退默认 zh-CN
         if (!MessageConstants.DEFAULT_LOCALE.equals(loc)) {
-            entity = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                    .eq(MsgTemplateDO::getTemplateCode, templateCode)
-                    .eq(MsgTemplateDO::getChannel, channel)
-                    .eq(MsgTemplateDO::getLocale, MessageConstants.DEFAULT_LOCALE)
-                    .eq(MsgTemplateDO::getTenantId, tid)
-                    .eq(MsgTemplateDO::getStatus, "ENABLED")
+            entity = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
+                    .eq(MsgTemplate::getTemplateCode, templateCode)
+                    .eq(MsgTemplate::getChannel, channel)
+                    .eq(MsgTemplate::getLocale, MessageConstants.DEFAULT_LOCALE)
+                    .eq(MsgTemplate::getTenantId, tid)
+                    .eq(MsgTemplate::getStatus, "ENABLED")
                     .last("LIMIT 1"));
         }
         return entity;
@@ -199,7 +199,7 @@ public class TemplateServiceImpl implements TemplateService {
         if (dto == null || !StringUtils.hasText(dto.getAuditStatus())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "审核状态不能为空");
         }
-        MsgTemplateDO entity = getById(id);
+        MsgTemplate entity = getById(id);
         TemplateAuditStatusEnum current = parseAuditStatus(entity.getAuditStatus());
         TemplateAuditStatusEnum target = parseAuditStatus(dto.getAuditStatus());
         if (!canTransitAudit(current, target)) {

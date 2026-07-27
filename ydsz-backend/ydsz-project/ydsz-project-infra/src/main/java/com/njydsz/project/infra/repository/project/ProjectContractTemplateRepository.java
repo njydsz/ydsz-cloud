@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectContractTemplateDO;
+import com.njydsz.project.domain.entity.project.ProjectContractTemplate;
 import com.njydsz.project.domain.repository.project.IProjectContractTemplateRepository;
 import com.njydsz.project.infra.mapper.project.ProjectContractTemplateMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ProjectContractTemplateRepository extends ServiceImpl<ProjectContractTemplateMapper, ProjectContractTemplateDO>
+public class ProjectContractTemplateRepository extends ServiceImpl<ProjectContractTemplateMapper, ProjectContractTemplate>
         implements IProjectContractTemplateRepository {
 }

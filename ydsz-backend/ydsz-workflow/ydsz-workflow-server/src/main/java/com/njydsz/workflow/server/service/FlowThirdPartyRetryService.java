@@ -1,6 +1,6 @@
 package com.njydsz.workflow.server.service;
 
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 
 /**
  * 三方审批回调重试服务
@@ -56,7 +56,7 @@ public interface FlowThirdPartyRetryService {
      * @param logEntry 日志记录
      * @return true 表示重试成功
      */
-    boolean retryOne(FlowThirdPartyLogDO logEntry);
+    boolean retryOne(FlowThirdPartyLog logEntry);
 
     /**
      * 重试结果摘要

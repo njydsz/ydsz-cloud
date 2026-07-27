@@ -9,7 +9,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 
 import lombok.Data;
@@ -41,13 +41,13 @@ public class ChannelAttributionService {
      * @param bizId 业务单据 ID
      * @return 发送日志列表（含多通道）
      */
-    public List<MsgLogDO> traceByBizId(String bizId) {
+    public List<MsgLog> traceByBizId(String bizId) {
         if (bizId == null || bizId.isBlank()) {
             return List.of();
         }
-        return msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getBizId, bizId)
-                .orderByAsc(MsgLogDO::getCreatedAt));
+        return msgLogMapper.selectList(new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getBizId, bizId)
+                .orderByAsc(MsgLog::getCreatedAt));
     }
 
     /**
@@ -58,12 +58,12 @@ public class ChannelAttributionService {
      * @return 通道转化统计列表
      */
     public List<ChannelFunnelStats> calculateFunnel(LocalDateTime startTime, LocalDateTime endTime) {
-        List<MsgLogDO> logs = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
-                .ge(startTime != null, MsgLogDO::getCreatedAt, startTime)
-                .le(endTime != null, MsgLogDO::getCreatedAt, endTime));
+        List<MsgLog> logs = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLog>()
+                .ge(startTime != null, MsgLog::getCreatedAt, startTime)
+                .le(endTime != null, MsgLog::getCreatedAt, endTime));
 
         Map<String, ChannelFunnelStats> statsMap = new LinkedHashMap<>();
-        for (MsgLogDO log : logs) {
+        for (MsgLog log : logs) {
             String channel = log.getChannel();
             if (channel == null) continue;
             ChannelFunnelStats stats = statsMap.computeIfAbsent(channel, k -> {

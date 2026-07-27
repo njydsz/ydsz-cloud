@@ -13,8 +13,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.entity.FlowHisTask;
+import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.service.FlowExportService;
@@ -42,8 +42,8 @@ public class FlowExportServiceImpl implements FlowExportService {
 
     @Override
     public String exportHtml(String instanceId, String userId, String userName) {
-        FlowInstanceDO instance = loadInstance(instanceId);
-        List<FlowHisTaskDO> history = loadHistory(instanceId);
+        FlowInstance instance = loadInstance(instanceId);
+        List<FlowHisTask> history = loadHistory(instanceId);
         Map<String, Object> formData = parseVariables(instance.getVariable());
         String watermark = buildWatermark(userName != null ? userName : userId);
 
@@ -110,7 +110,7 @@ public class FlowExportServiceImpl implements FlowExportService {
         if (history.isEmpty()) {
             html.append("<div class=\"timeline-item\" style=\"color:#999;\">暂无审批记录</div>");
         } else {
-            for (FlowHisTaskDO task : history) {
+            for (FlowHisTask task : history) {
                 html.append("<div class=\"timeline-item\">");
                 html.append("<span class=\"timeline-node\">")
                         .append(escapeHtml(task.getNodeName() != null ? task.getNodeName() : "-"))
@@ -158,16 +158,16 @@ public class FlowExportServiceImpl implements FlowExportService {
 
     // ============================== 辅助方法 ==============================
 
-    private FlowInstanceDO loadInstance(String instanceId) {
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+    private FlowInstance loadInstance(String instanceId) {
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
         return instance;
     }
 
-    private List<FlowHisTaskDO> loadHistory(String instanceId) {
-        List<FlowHisTaskDO> history = hisTaskMapper.selectByInstanceId(instanceId);
+    private List<FlowHisTask> loadHistory(String instanceId) {
+        List<FlowHisTask> history = hisTaskMapper.selectByInstanceId(instanceId);
         return history != null ? history : new ArrayList<>();
     }
 

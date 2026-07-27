@@ -1,6 +1,6 @@
 package com.njydsz.workflow.server.service;
 
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 
 /**
  * 三方审批账号映射服务
@@ -20,7 +20,7 @@ public interface FlowThirdPartyAccountService {
      * @param platform 平台: DINGTALK/FEISHU/WECOM
      * @return 账号映射记录，不存在返回 null
      */
-    FlowThirdPartyAccountDO getByUserIdAndPlatform(String userId, String platform);
+    FlowThirdPartyAccount getByUserIdAndPlatform(String userId, String platform);
 
     /**
      * 按平台 + openId 查询账号映射（回调反查系统用户）
@@ -29,7 +29,7 @@ public interface FlowThirdPartyAccountService {
      * @param openId   三方 openId
      * @return 账号映射记录，不存在返回 null
      */
-    FlowThirdPartyAccountDO getByOpenId(String platform, String openId);
+    FlowThirdPartyAccount getByOpenId(String platform, String openId);
 
     /**
      * 保存或更新账号映射
@@ -38,7 +38,7 @@ public interface FlowThirdPartyAccountService {
      *
      * @param account 账号映射记录
      */
-    void saveOrUpdate(FlowThirdPartyAccountDO account);
+    void saveOrUpdate(FlowThirdPartyAccount account);
 
     /**
      * 绑定三方账号
@@ -58,5 +58,5 @@ public interface FlowThirdPartyAccountService {
      * @param platform 平台: DINGTALK/FEISHU/WECOM
      * @return 激活账号记录，不存在返回 null
      */
-    FlowThirdPartyAccountDO getActiveByPlatform(String platform);
+    FlowThirdPartyAccount getActiveByPlatform(String platform);
 }

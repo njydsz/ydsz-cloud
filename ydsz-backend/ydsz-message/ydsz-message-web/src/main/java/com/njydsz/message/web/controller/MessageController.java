@@ -24,7 +24,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.server.service.core.MessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -122,7 +122,7 @@ public class MessageController {
     @Operation(summary = "发送日志分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
-    public BaseResponse<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
+    public BaseResponse<Page<MsgLog>> pageLog(MessageLogQueryDTO query) {
         return BaseResponse.success(messageService.pageLog(query));
     }
 
@@ -177,7 +177,7 @@ public class MessageController {
     @Operation(summary = "查询批次发送进度")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
-    public BaseResponse<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
+    public BaseResponse<Page<MsgLog>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") long page,
                                                 @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();

@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.entity.FlowUserDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.domain.entity.FlowUser;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.enums.FlowSignType;
@@ -58,14 +58,14 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignBefore(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
         // 前加签：在当前节点前插入临时审批人
         // 实现：为当前任务新增一个审批人记录到 ydsz_flow_user，approveCount+1
         if (dto.getTargetUserId() != null) {
-            FlowUserDO fu = new FlowUserDO();
+            FlowUser fu = new FlowUser();
             fu.setTaskId(task.getId());
             fu.setInstanceId(task.getInstanceId());
             fu.setNodeCode(task.getNodeCode());
@@ -97,7 +97,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignAfter(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
@@ -109,7 +109,7 @@ public class FlowTaskSignServiceImpl {
         // 这样当前审批人 pass 时，doSequentialPass 检测到 approveFinished < approveCount，
         // 会切换到加签人而非推进到下一节点；加签人 pass 后才真正推进
         if (dto.getTargetUserId() != null) {
-            FlowUserDO fu = new FlowUserDO();
+            FlowUser fu = new FlowUser();
             fu.setTaskId(task.getId());
             fu.setInstanceId(task.getInstanceId());
             fu.setNodeCode(task.getNodeCode());
@@ -151,14 +151,14 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignParallel(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
         if (dto.getTargetUserId() == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
         }
-        FlowUserDO fu = new FlowUserDO();
+        FlowUser fu = new FlowUser();
         fu.setTaskId(task.getId());
         fu.setInstanceId(task.getInstanceId());
         fu.setNodeCode(task.getNodeCode());
@@ -195,7 +195,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignRemove(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ff1454e4");
         }
@@ -234,7 +234,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void markRead(String taskId, String userId) {
-        FlowRunTaskDO task = support.getTaskOrThrow(taskId);
+        FlowRunTask task = support.getTaskOrThrow(taskId);
         support.audit(task, "READ", userId, null, null);
         log.info("[Flow] 已阅: taskId={} userId={}", taskId, userId);
     }
@@ -246,7 +246,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void communicate(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         support.audit(task, "COMMUNICATE", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 沟通: taskId={} userId={} comment={}",
                 dto.getTaskId(), dto.getUserId(), dto.getComment());
@@ -264,7 +264,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveDraft(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_8913103b");
         }
@@ -285,7 +285,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void addApprover(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_511d4aaa");
         }
@@ -293,7 +293,7 @@ public class FlowTaskSignServiceImpl {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
         }
         // 向 ydsz_flow_user 插入新审批人
-        FlowUserDO fu = new FlowUserDO();
+        FlowUser fu = new FlowUser();
         fu.setTaskId(task.getId());
         fu.setInstanceId(task.getInstanceId());
         fu.setNodeCode(task.getNodeCode());

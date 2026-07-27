@@ -11,7 +11,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgPreferenceDO;
+import com.njydsz.message.domain.entity.config.MsgPreference;
 import com.njydsz.message.infra.mapper.config.MsgPreferenceMapper;
 import com.njydsz.message.server.service.config.PreferenceService;
 
@@ -42,18 +42,18 @@ public class PreferenceServiceImpl implements PreferenceService {
      * @throws SysException 当 userId 或 channel 为空时抛出
      */
     @Override
-    public MsgPreferenceDO upsert(PreferenceUpsertDTO dto) {
+    public MsgPreference upsert(PreferenceUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannel())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 与通道不能为空");
         }
         String bizType = StringUtils.hasText(dto.getBizType()) ? dto.getBizType() : MessageConstants.DEFAULT_BIZ_TYPE;
-        MsgPreferenceDO existing = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreferenceDO>()
-                .eq(MsgPreferenceDO::getUserId, dto.getUserId())
-                .eq(MsgPreferenceDO::getChannel, dto.getChannel())
-                .eq(MsgPreferenceDO::getBizType, bizType)
+        MsgPreference existing = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreference>()
+                .eq(MsgPreference::getUserId, dto.getUserId())
+                .eq(MsgPreference::getChannel, dto.getChannel())
+                .eq(MsgPreference::getBizType, bizType)
                 .last("LIMIT 1"));
         if (existing == null) {
-            MsgPreferenceDO entity = new MsgPreferenceDO();
+            MsgPreference entity = new MsgPreference();
             entity.setUserId(dto.getUserId());
             entity.setChannel(dto.getChannel());
             entity.setBizType(bizType);
@@ -96,26 +96,26 @@ public class PreferenceServiceImpl implements PreferenceService {
      * @return 偏好记录，不存在时返回 null
      */
     @Override
-    public MsgPreferenceDO getByUser(String userId, String channel, String bizType) {
+    public MsgPreference getByUser(String userId, String channel, String bizType) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(channel)) {
             return null;
         }
         String bt = StringUtils.hasText(bizType) ? bizType : MessageConstants.DEFAULT_BIZ_TYPE;
         // 优先精确 bizType
-        MsgPreferenceDO entity = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreferenceDO>()
-                .eq(MsgPreferenceDO::getUserId, userId)
-                .eq(MsgPreferenceDO::getChannel, channel)
-                .eq(MsgPreferenceDO::getBizType, bt)
+        MsgPreference entity = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreference>()
+                .eq(MsgPreference::getUserId, userId)
+                .eq(MsgPreference::getChannel, channel)
+                .eq(MsgPreference::getBizType, bt)
                 .last("LIMIT 1"));
         if (entity != null) {
             return entity;
         }
         // 回退默认
         if (!MessageConstants.DEFAULT_BIZ_TYPE.equals(bt)) {
-            entity = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreferenceDO>()
-                    .eq(MsgPreferenceDO::getUserId, userId)
-                    .eq(MsgPreferenceDO::getChannel, channel)
-                    .eq(MsgPreferenceDO::getBizType, MessageConstants.DEFAULT_BIZ_TYPE)
+            entity = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreference>()
+                    .eq(MsgPreference::getUserId, userId)
+                    .eq(MsgPreference::getChannel, channel)
+                    .eq(MsgPreference::getBizType, MessageConstants.DEFAULT_BIZ_TYPE)
                     .last("LIMIT 1"));
         }
         return entity;
@@ -128,13 +128,13 @@ public class PreferenceServiceImpl implements PreferenceService {
      * @return 偏好列表，按 channel 升序排列
      */
     @Override
-    public List<MsgPreferenceDO> listByUser(String userId) {
+    public List<MsgPreference> listByUser(String userId) {
         if (!StringUtils.hasText(userId)) {
             return List.of();
         }
-        return msgPreferenceMapper.selectList(new LambdaQueryWrapper<MsgPreferenceDO>()
-                .eq(MsgPreferenceDO::getUserId, userId)
-                .orderByAsc(MsgPreferenceDO::getChannel));
+        return msgPreferenceMapper.selectList(new LambdaQueryWrapper<MsgPreference>()
+                .eq(MsgPreference::getUserId, userId)
+                .orderByAsc(MsgPreference::getChannel));
     }
 
     /**

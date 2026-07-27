@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.domain.entity.UserPostDO;
+import com.njydsz.userinfo.domain.entity.UserPost;
 import com.njydsz.userinfo.infra.mapper.UserPostMapper;
 import com.njydsz.userinfo.server.service.UserPostService;
 
@@ -29,8 +29,8 @@ public class UserPostServiceImpl implements UserPostService {
     private final UserPostMapper mapper;
 
     @Override
-    public UserPostDO getById(String id) {
-        UserPostDO entity = mapper.selectById(id);
+    public UserPost getById(String id) {
+        UserPost entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             return null;
         }
@@ -38,22 +38,22 @@ public class UserPostServiceImpl implements UserPostService {
     }
 
     @Override
-    public List<UserPostDO> list() {
-        LambdaQueryWrapper<UserPostDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserPostDO::getDeleted, 0);
+    public List<UserPost> list() {
+        LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserPost::getDeleted, 0);
         return mapper.selectList(wrapper);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String save(UserPostDO entity) {
+    public String save(UserPost entity) {
         mapper.insert(entity);
         return entity.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(UserPostDO entity) {
+    public boolean updateById(UserPost entity) {
         return mapper.updateById(entity) > 0;
     }
 

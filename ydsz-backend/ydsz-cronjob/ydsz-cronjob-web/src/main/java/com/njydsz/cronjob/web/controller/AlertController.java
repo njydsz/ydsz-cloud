@@ -14,8 +14,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.server.service.alert.AlertService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -102,7 +102,7 @@ public class AlertController {
     @Operation(summary = "查询告警规则详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rule/{id}")
-    public BaseResponse<JobAlertRuleDO> getRuleById(@PathVariable String id) {
+    public BaseResponse<JobAlertRule> getRuleById(@PathVariable String id) {
         return BaseResponse.success(alertService.getRuleById(id));
     }
 
@@ -114,7 +114,7 @@ public class AlertController {
     @Operation(summary = "查询全部告警规则")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rules")
-    public BaseResponse<List<JobAlertRuleDO>> listRules() {
+    public BaseResponse<List<JobAlertRule>> listRules() {
         return BaseResponse.success(alertService.listRules());
     }
 
@@ -146,7 +146,7 @@ public class AlertController {
     @Operation(summary = "查询任务告警历史")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/logs/{jobId}")
-    public BaseResponse<List<JobAlertLogDO>> queryAlertLogs(
+    public BaseResponse<List<JobAlertLog>> queryAlertLogs(
             @PathVariable String jobId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since) {

@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.workflow.domain.entity.FlowDmnDecisionDO;
-import com.njydsz.workflow.domain.entity.FlowDmnRuleDO;
+import com.njydsz.workflow.domain.entity.FlowDmnDecision;
+import com.njydsz.workflow.domain.entity.FlowDmnRule;
 import com.njydsz.workflow.server.service.FlowDmnDecisionService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,7 +83,7 @@ public class FlowDmnDecisionController {
 
     @GetMapping("/decisions")
     @Operation(summary = "分页查询决策表列表")
-    public BaseResponse<List<FlowDmnDecisionDO>> listDecisions(
+    public BaseResponse<List<FlowDmnDecision>> listDecisions(
             @RequestParam(required = false) String decisionCode) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.success(dmnDecisionService.listDecisions(decisionCode, tenantId));
@@ -110,8 +110,8 @@ public class FlowDmnDecisionController {
 
     @lombok.Data
     public static class CreateDecisionRequest {
-        private FlowDmnDecisionDO decision;
-        private List<FlowDmnRuleDO> rules;
+        private FlowDmnDecision decision;
+        private List<FlowDmnRule> rules;
     }
 
     @lombok.Data

@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.dag.JobDagVersionDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
 
 /**
  * DAG 工作流版本历史 Mapper（P1-8 工作流版本管理）。
@@ -16,7 +16,7 @@ import com.njydsz.cronjob.domain.entity.dag.JobDagVersionDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobDagVersionMapper extends BaseMapper<JobDagVersionDO> {
+public interface JobDagVersionMapper extends BaseMapper<JobDagVersion> {
 
     /**
      * 查询指定 DAG 的版本历史（按版本号倒序）。
@@ -31,7 +31,7 @@ public interface JobDagVersionMapper extends BaseMapper<JobDagVersionDO> {
             + "FROM ydsz_job_dag_version "
             + "WHERE dag_id = #{dagId} AND deleted = 0 "
             + "ORDER BY version DESC LIMIT #{limit}")
-    List<JobDagVersionDO> selectByVersionDesc(@Param("dagId") String dagId,
+    List<JobDagVersion> selectByVersionDesc(@Param("dagId") String dagId,
                                                 @Param("limit") int limit);
 
     /**
@@ -55,6 +55,6 @@ public interface JobDagVersionMapper extends BaseMapper<JobDagVersionDO> {
             + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM ydsz_job_dag_version "
             + "WHERE dag_id = #{dagId} AND version = #{version} AND deleted = 0")
-    JobDagVersionDO selectByVersion(@Param("dagId") String dagId,
+    JobDagVersion selectByVersion(@Param("dagId") String dagId,
                                      @Param("version") int version);
 }

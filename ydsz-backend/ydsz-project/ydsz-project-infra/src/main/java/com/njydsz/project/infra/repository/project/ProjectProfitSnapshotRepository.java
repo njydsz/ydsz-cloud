@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectProfitSnapshotDO;
+import com.njydsz.project.domain.entity.project.ProjectProfitSnapshot;
 import com.njydsz.project.domain.repository.project.IProjectProfitSnapshotRepository;
 import com.njydsz.project.infra.mapper.project.ProjectProfitSnapshotMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ProjectProfitSnapshotRepository extends ServiceImpl<ProjectProfitSnapshotMapper, ProjectProfitSnapshotDO>
+public class ProjectProfitSnapshotRepository extends ServiceImpl<ProjectProfitSnapshotMapper, ProjectProfitSnapshot>
         implements IProjectProfitSnapshotRepository {
 }

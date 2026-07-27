@@ -9,8 +9,8 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.metrics.AbstractModuleMetrics;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -245,7 +245,7 @@ public class FlowMetrics extends AbstractModuleMetrics {
     /**
      * 记录实例总耗时
      */
-    public void recordInstanceDuration(FlowInstanceDO instance, String result) {
+    public void recordInstanceDuration(FlowInstance instance, String result) {
         if (instance == null || instance.getStartAt() == null) {
             return;
         }
@@ -268,7 +268,7 @@ public class FlowMetrics extends AbstractModuleMetrics {
     /**
      * 记录任务处理耗时
      */
-    public void recordTaskDuration(FlowRunTaskDO task, String result) {
+    public void recordTaskDuration(FlowRunTask task, String result) {
         if (task == null || task.getCreatedAt() == null) {
             return;
         }
@@ -344,16 +344,16 @@ public class FlowMetrics extends AbstractModuleMetrics {
 
     private Long queryRunningInstanceCount() {
         return instanceMapper.selectCount(
-                new LambdaQueryWrapper<FlowInstanceDO>()
-                        .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
-                        .eq(FlowInstanceDO::getDeleted, 0));
+                new LambdaQueryWrapper<FlowInstance>()
+                        .eq(FlowInstance::getFlowStatus, "RUNNING")
+                        .eq(FlowInstance::getDeleted, 0));
     }
 
     private Long queryPendingTaskCount() {
         return taskMapper.selectCount(
-                new LambdaQueryWrapper<FlowRunTaskDO>()
-                        .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
-                        .eq(FlowRunTaskDO::getDeleted, 0));
+                new LambdaQueryWrapper<FlowRunTask>()
+                        .in(FlowRunTask::getTaskStatus, "PENDING", "CLAIMED")
+                        .eq(FlowRunTask::getDeleted, 0));
     }
 
     private Long queryOverdueTaskCount() {

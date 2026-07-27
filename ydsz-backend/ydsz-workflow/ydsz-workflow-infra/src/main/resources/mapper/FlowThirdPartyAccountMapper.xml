@@ -12,7 +12,7 @@
 
     <!-- 按系统用户 ID + 平台查询 -->
     <select id="selectByUserIdAndPlatform"
-            resultType="com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO">
+            resultType="com.njydsz.workflow.domain.entity.FlowThirdPartyAccount">
         SELECT
             <include refid="Base_Column"/>
         FROM ydsz_flow_third_party_account
@@ -24,7 +24,7 @@
 
     <!-- 按平台 + openId 查询（回调反查系统用户） -->
     <select id="selectByOpenId"
-            resultType="com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO">
+            resultType="com.njydsz.workflow.domain.entity.FlowThirdPartyAccount">
         SELECT
             <include refid="Base_Column"/>
         FROM ydsz_flow_third_party_account

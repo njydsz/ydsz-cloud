@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.RolePermissionLoader;
-import com.njydsz.userinfo.domain.entity.MenuDO;
-import com.njydsz.userinfo.domain.entity.RoleDO;
-import com.njydsz.userinfo.domain.entity.RolePermissionDO;
+import com.njydsz.userinfo.domain.entity.Menu;
+import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
@@ -49,10 +49,10 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
         }
         try {
             // 1. 按 roleCode 查询角色 ID
-            LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
-            roleWrapper.eq(RoleDO::getRoleCode, roleCode);
-            roleWrapper.eq(RoleDO::getDeleted, 0);
-            RoleDO role = roleMapper.selectOne(roleWrapper);
+            LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
+            roleWrapper.eq(Role::getRoleCode, roleCode);
+            roleWrapper.eq(Role::getDeleted, 0);
+            Role role = roleMapper.selectOne(roleWrapper);
 
             if (role == null) {
                 log.debug("Role not found for roleCode: {}", roleCode);
@@ -60,10 +60,10 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
             }
 
             // 2. 按 roleId 查询 role_permission 关联表
-            LambdaQueryWrapper<RolePermissionDO> rpWrapper = new LambdaQueryWrapper<>();
-            rpWrapper.eq(RolePermissionDO::getRoleId, role.getId());
-            rpWrapper.eq(RolePermissionDO::getDeleted, 0);
-            List<RolePermissionDO> rolePermissions = rolePermissionMapper.selectList(rpWrapper);
+            LambdaQueryWrapper<RolePermission> rpWrapper = new LambdaQueryWrapper<>();
+            rpWrapper.eq(RolePermission::getRoleId, role.getId());
+            rpWrapper.eq(RolePermission::getDeleted, 0);
+            List<RolePermission> rolePermissions = rolePermissionMapper.selectList(rpWrapper);
 
             if (rolePermissions.isEmpty()) {
                 return RolePermissions.empty();
@@ -71,22 +71,22 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
 
             // 3. 提取 permissionId 列表（即 menuId）
             List<String> permissionIds = rolePermissions.stream()
-                    .map(RolePermissionDO::getPermissionId)
+                    .map(RolePermission::getPermissionId)
                     .collect(Collectors.toList());
 
             // 4. 查询权限/菜单详情
-            LambdaQueryWrapper<MenuDO> menuWrapper = new LambdaQueryWrapper<>();
-            menuWrapper.in(MenuDO::getId, permissionIds);
-            menuWrapper.eq(MenuDO::getDeleted, 0);
-            menuWrapper.eq(MenuDO::getStatus, "ENABLED");
-            List<MenuDO> menus = menuMapper.selectList(menuWrapper);
+            LambdaQueryWrapper<Menu> menuWrapper = new LambdaQueryWrapper<>();
+            menuWrapper.in(Menu::getId, permissionIds);
+            menuWrapper.eq(Menu::getDeleted, 0);
+            menuWrapper.eq(Menu::getStatus, "ENABLED");
+            List<Menu> menus = menuMapper.selectList(menuWrapper);
 
             // 5. 按类型分类权限码
             Set<String> menuPerms = new HashSet<>();
             Set<String> buttonPerms = new HashSet<>();
             Set<String> apiPerms = new HashSet<>();
 
-            for (MenuDO menu : menus) {
+            for (Menu menu : menus) {
                 String permCode = menu.getPermissionCode();
                 if (permCode == null || permCode.isBlank()) {
                     continue;

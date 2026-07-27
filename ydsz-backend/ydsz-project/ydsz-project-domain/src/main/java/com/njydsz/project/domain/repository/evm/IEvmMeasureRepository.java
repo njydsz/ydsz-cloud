@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.repository.evm;
 
-import com.njydsz.project.domain.entity.evm.EvmMeasureDO;
+import com.njydsz.project.domain.entity.evm.EvmMeasure;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 1.0.0
  * @author ydsz-team
  */
-public interface IEvmMeasureRepository extends IService<EvmMeasureDO> {
+public interface IEvmMeasureRepository extends IService<EvmMeasure> {
 }

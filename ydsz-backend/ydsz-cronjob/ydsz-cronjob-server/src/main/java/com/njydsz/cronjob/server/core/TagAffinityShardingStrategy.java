@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 
 import lombok.RequiredArgsConstructor;
@@ -57,14 +57,14 @@ public class TagAffinityShardingStrategy implements ShardingStrategy {
         // 标签亲和策略在无标签信息时降级为平均分配
         // 标签匹配逻辑由调用方在选节点前过滤（通过 NodeSelector 实现）
         // 这里实现加权平均分配，优先分配到标签匹配的节点
-        List<JobNodeDO> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
+        List<JobNode> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
 
         // 将节点分为两组：有标签的和无标签的
         List<String> taggedNodes = new ArrayList<>();
         List<String> untaggedNodes = new ArrayList<>();
         for (String nodeId : onlineNodes) {
             boolean hasTags = false;
-            for (JobNodeDO node : allNodes) {
+            for (JobNode node : allNodes) {
                 if (nodeId.equals(node.getNodeId()) && node.getTags() != null
                         && !node.getTags().isBlank() && !"[]".equals(node.getTags())) {
                     hasTags = true;

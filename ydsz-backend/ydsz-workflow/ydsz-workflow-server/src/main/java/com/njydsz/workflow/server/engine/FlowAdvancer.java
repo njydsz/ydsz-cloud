@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowRoutingService;
 
@@ -34,7 +34,7 @@ public interface FlowAdvancer {
      * @param variables        流程变量（用于条件/办理人解析）
      * @return 推进后产生的下一节点列表（空表示流程结束）
      */
-    List<FlowNodeDO> advance(FlowInstanceDO currentInstance,
+    List<FlowNode> advance(FlowInstance currentInstance,
                               String currentNodeCode,
                               String skipType,
                               String targetNodeCode,
@@ -47,7 +47,7 @@ public interface FlowAdvancer {
      * 在所有指定节点同时创建待办任务，让多个前序节点重新审批。
      *
      * <p>注意：本方法特意命名为 {@code advanceMulti} 而非 {@code advance} 重载，
-     * 以避免调用方传 {@code null} 时与 {@link #advance(FlowInstanceDO, String, String, String, Map)}
+     * 以避免调用方传 {@code null} 时与 {@link #advance(FlowInstance, String, String, String, Map)}
      * 产生重载歧义（Java 规范下 {@code null} 同时匹配 String 与 List&lt;String&gt;）。
      *
      * @param currentInstance  当前实例
@@ -58,7 +58,7 @@ public interface FlowAdvancer {
      * @return 推进后产生的下一节点列表（空表示流程结束）
      * @since 1.0.0
      */
-    default List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
+    default List<FlowNode> advanceMulti(FlowInstance currentInstance,
                                            String currentNodeCode,
                                            String skipType,
                                            List<String> targetNodeCodes,
@@ -72,8 +72,8 @@ public interface FlowAdvancer {
     /**
      * 解析出所有满足条件的 PASS 跳转
      */
-    List<FlowSkipDO> resolvePassSkips(FlowInstanceDO instance,
-                                       FlowNodeDO currentNode,
+    List<FlowSkip> resolvePassSkips(FlowInstance instance,
+                                       FlowNode currentNode,
                                        Map<String, Object> variables);
 
     /**

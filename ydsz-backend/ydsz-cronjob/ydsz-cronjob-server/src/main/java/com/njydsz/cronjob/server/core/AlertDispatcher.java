@@ -21,8 +21,8 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 import com.njydsz.cronjob.server.notify.CronjobNotifyHelper;
@@ -108,7 +108,7 @@ public class AlertDispatcher {
      * @param context 告警上下文（recovery=true 表示恢复通知）
      * @param rule    匹配到的告警规则
      */
-    void dispatch(AlertContext context, JobAlertRuleDO rule) {
+    void dispatch(AlertContext context, JobAlertRule rule) {
         boolean recovery = context.recovery();
 
         // 1. 冷却窗口去重：CAS 更新 last_alert_at（恢复通知跳过冷却）
@@ -208,7 +208,7 @@ public class AlertDispatcher {
      * @param rule     告警规则
      * @param recovery 是否为恢复通知
      */
-    private void broadcastAlert(AlertContext context, JobAlertRuleDO rule, boolean recovery) {
+    private void broadcastAlert(AlertContext context, JobAlertRule rule, boolean recovery) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("alertCode", "CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
@@ -237,7 +237,7 @@ public class AlertDispatcher {
      * @param rule 告警规则
      * @return true 表示可以告警（更新成功）；false 表示在冷却期内（更新失败）
      */
-    private boolean acquireAlertSlot(JobAlertRuleDO rule) {
+    private boolean acquireAlertSlot(JobAlertRule rule) {
         int cooldownMinutes = rule.getCooldownMinutes() != null ? rule.getCooldownMinutes() : 0;
         if (cooldownMinutes <= 0) {
             // 无冷却时间，直接放行
@@ -310,7 +310,7 @@ public class AlertDispatcher {
      * message module routes to specific channel implementation.
      */
     private void sendViaMessageCenter(AlertChannel channel, AlertContext context,
-                                          JobAlertRuleDO rule, List<String> receivers) {
+                                          JobAlertRule rule, List<String> receivers) {
         String title = buildTitle(context, rule);
         String content = buildContent(context, rule);
         MessageRequest request = new MessageRequest();
@@ -381,7 +381,7 @@ public class AlertDispatcher {
                     context.jobKey(), e.getMessage());
         }
     }
-    private String buildTitle(AlertContext context, JobAlertRuleDO rule) {
+    private String buildTitle(AlertContext context, JobAlertRule rule) {
         String prefix = context.recovery() ? "[recovery] " : "";
         return String.format("%s[%s] %s - %s",
                 prefix,
@@ -390,7 +390,7 @@ public class AlertDispatcher {
                 context.jobName() != null ? context.jobName()
                         : (context.jobKey() != null ? context.jobKey() : "global"));
     }
-    private String buildContent(AlertContext context, JobAlertRuleDO rule) {
+    private String buildContent(AlertContext context, JobAlertRule rule) {
         StringBuilder sb = new StringBuilder();
         sb.append(context.recovery() ? "## Alert Recovery\n\n" : "## Alert Details\n\n");
         sb.append("| Field | Value |\n|------|----|\n");
@@ -475,10 +475,10 @@ public class AlertDispatcher {
     /**
      * 持久化告警日志（P3-1-merge: 写入 ydsz_alert_dispatch 表）。
      */
-    private void persistAlertLog(AlertContext context, JobAlertRuleDO rule,
+    private void persistAlertLog(AlertContext context, JobAlertRule rule,
                                   String status, String errorMessage) {
         try {
-            JobAlertLogDO alertLog = new JobAlertLogDO();
+            JobAlertLog alertLog = new JobAlertLog();
             // P3-1-merge: 生成唯一 alert_code
             alertLog.setAlertCode("CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
             // P3-1-merge: 标记来源为 CRONJOB

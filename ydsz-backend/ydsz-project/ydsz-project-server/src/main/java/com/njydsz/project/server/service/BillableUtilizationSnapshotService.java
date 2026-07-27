@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshotDO;
+import com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshot;
 
 public interface BillableUtilizationSnapshotService {
-    BillableUtilizationSnapshotDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<BillableUtilizationSnapshotDO> page(int pageNum, int pageSize);
-    boolean save(BillableUtilizationSnapshotDO entity);
-    boolean updateById(BillableUtilizationSnapshotDO entity);
+    BillableUtilizationSnapshot getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<BillableUtilizationSnapshot> page(int pageNum, int pageSize);
+    boolean save(BillableUtilizationSnapshot entity);
+    boolean updateById(BillableUtilizationSnapshot entity);
     boolean removeById(String id);
 }

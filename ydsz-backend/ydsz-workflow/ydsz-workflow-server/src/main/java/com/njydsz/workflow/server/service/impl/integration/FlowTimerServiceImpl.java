@@ -15,10 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.entity.FlowTimerDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.domain.entity.FlowTimer;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -70,15 +70,15 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         if (instanceId == null || nodeCode == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
         }
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
-        FlowNodeDO node = nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode);
+        FlowNode node = nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode);
         if (node == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "节点不存在: " + nodeCode);
         }
-        FlowTimerDO timer = new FlowTimerDO();
+        FlowTimer timer = new FlowTimer();
         timer.setTenantId(instance.getTenantId());
         timer.setInstanceId(instanceId);
         timer.setDefinitionId(instance.getDefinitionId());
@@ -101,13 +101,13 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         if (taskId == null || instanceId == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "taskId/instanceId 不能为空");
         }
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
-        FlowNodeDO node = nodeCode != null
+        FlowNode node = nodeCode != null
                 ? nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode) : null;
-        FlowTimerDO timer = new FlowTimerDO();
+        FlowTimer timer = new FlowTimer();
         timer.setTenantId(instance.getTenantId());
         timer.setInstanceId(instanceId);
         timer.setDefinitionId(instance.getDefinitionId());
@@ -127,7 +127,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean fire(FlowTimerDO timer) {
+    public boolean fire(FlowTimer timer) {
         if (timer == null) {
             return false;
         }
@@ -140,7 +140,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         try {
             if ("INTERMEDIATE".equalsIgnoreCase(timer.getTimerType())) {
                 // 中间定时器：推进流程
-                FlowInstanceDO instance = instanceMapper.selectById(timer.getInstanceId());
+                FlowInstance instance = instanceMapper.selectById(timer.getInstanceId());
                 if (instance == null) {
                     log.warn("[FlowTimer] 实例不存在: id={}", timer.getInstanceId());
                     return true;
@@ -152,7 +152,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
                     return true;
                 }
                 Map<String, Object> variables = parseVariables(instance.getVariable());
-                List<FlowNodeDO> nextNodes = advancer.advance(instance, timer.getNodeCode(),
+                List<FlowNode> nextNodes = advancer.advance(instance, timer.getNodeCode(),
                         "PASS", null, variables);
                 if (nextNodes.isEmpty()) {
                     log.info("[FlowTimer] 中间定时器触发后无下游节点: instanceId={}",
@@ -161,7 +161,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
                 }
                 ((FlowInstanceServiceImpl) instanceService()).generateTasksForNodes(
                         timer.getInstanceId(), nextNodes, variables);
-                FlowNodeDO first = nextNodes.get(0);
+                FlowNode first = nextNodes.get(0);
                 instanceMapper.updateStatus(timer.getInstanceId(), instance.getFlowStatus(),
                         first.getNodeCode(), first.getNodeName(), null, null);
                 log.info("[FlowTimer] 中间定时器触发: timerId={} instanceId={} → next={}",
@@ -182,8 +182,8 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     /**
      * 边界定时器触发：取消 userTask，触发"超时分支"（节点 ext 中标记的 boundarySkip）
      */
-    private void fireBoundary(FlowTimerDO timer) {
-        FlowRunTaskDO task = taskMapper.selectById(timer.getBoundaryTaskId());
+    private void fireBoundary(FlowTimer timer) {
+        FlowRunTask task = taskMapper.selectById(timer.getBoundaryTaskId());
         if (task == null) {
             log.info("[FlowTimer] 边界定时器对应 userTask 已删除: timerId={}", timer.getId());
             return;
@@ -197,7 +197,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
                     task.getId(), task.getTaskStatus());
             return;
         }
-        FlowInstanceDO instance = instanceMapper.selectById(timer.getInstanceId());
+        FlowInstance instance = instanceMapper.selectById(timer.getInstanceId());
         if (instance == null) {
             return;
         }
@@ -223,12 +223,12 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         }
         // 3. 推进到下一节点（按 PASS 流程走，但 task 已被标记为 TIMEOUT）
         Map<String, Object> variables = parseVariables(instance.getVariable());
-        List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
+        List<FlowNode> nextNodes = advancer.advance(instance, task.getNodeCode(),
                 "PASS", null, variables);
         if (!nextNodes.isEmpty()) {
             ((FlowInstanceServiceImpl) instanceService()).generateTasksForNodes(
                     timer.getInstanceId(), nextNodes, variables);
-            FlowNodeDO first = nextNodes.get(0);
+            FlowNode first = nextNodes.get(0);
             instanceMapper.updateStatus(timer.getInstanceId(), instance.getFlowStatus(),
                     first.getNodeCode(), first.getNodeName(), null, null);
         }
@@ -237,13 +237,13 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     @Override
     public int scanAndFire() {
         try {
-            List<FlowTimerDO> dueList = timerMapper.selectDueTimers(
+            List<FlowTimer> dueList = timerMapper.selectDueTimers(
                     LocalDateTime.now(), SCAN_BATCH_SIZE);
             if (dueList.isEmpty()) {
                 return 0;
             }
             int fired = 0;
-            for (FlowTimerDO t : dueList) {
+            for (FlowTimer t : dueList) {
                 try {
                     if (fire(t)) {
                         fired++;
@@ -282,8 +282,8 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowTimerDO> listByInstance(String instanceId) {
-        return timerMapper.selectList(new QueryWrapper<FlowTimerDO>()
+    public List<FlowTimer> listByInstance(String instanceId) {
+        return timerMapper.selectList(new QueryWrapper<FlowTimer>()
                 .eq("instance_id", instanceId)
                 .eq("deleted", 0)
                 .orderByDesc("created_at"));

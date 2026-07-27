@@ -7,8 +7,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 
 /**
@@ -123,17 +123,17 @@ class BpmnXmlParserTest {
 
         // 验证节点数量与类型
         assertThat(model.getNodes()).hasSize(3);
-        FlowNodeDO startNode = findNode(model, "start");
-        FlowNodeDO approveNode = findNode(model, "approve");
-        FlowNodeDO endNode = findNode(model, "end");
+        FlowNode startNode = findNode(model, "start");
+        FlowNode approveNode = findNode(model, "approve");
+        FlowNode endNode = findNode(model, "end");
         assertThat(startNode.getNodeType()).isEqualTo(FlowNodeType.START.getCode());
         assertThat(approveNode.getNodeType()).isEqualTo(FlowNodeType.APPROVAL.getCode());
         assertThat(endNode.getNodeType()).isEqualTo(FlowNodeType.END.getCode());
 
         // 验证边数量与跳转类型
         assertThat(model.getSkips()).hasSize(2);
-        FlowSkipDO skip1 = findSkipByTarget(model, "approve");
-        FlowSkipDO skip2 = findSkipByTarget(model, "end");
+        FlowSkip skip1 = findSkipByTarget(model, "approve");
+        FlowSkip skip2 = findSkipByTarget(model, "end");
         assertThat(skip1.getSkipType()).isEqualTo("PASS");
         assertThat(skip2.getSkipType()).isEqualTo("PASS");
 
@@ -166,11 +166,11 @@ class BpmnXmlParserTest {
         BpmnModel model = parser.parse(xml);
 
         // 验证排他网关映射为 CONDITION(3)
-        FlowNodeDO gwNode = findNode(model, "gw1");
+        FlowNode gwNode = findNode(model, "gw1");
         assertThat(gwNode.getNodeType()).isEqualTo(FlowNodeType.CONDITION.getCode());
 
         // 验证条件表达式解析
-        FlowSkipDO condSkip = findSkipByTarget(model, "end");
+        FlowSkip condSkip = findSkipByTarget(model, "end");
         assertThat(condSkip.getSkipCondition()).isEqualTo("${approved == true}");
     }
 
@@ -192,7 +192,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO forkNode = findNode(model, "fork");
+        FlowNode forkNode = findNode(model, "fork");
         assertThat(forkNode.getNodeType()).isEqualTo(FlowNodeType.PARALLEL.getCode());
     }
 
@@ -214,7 +214,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO gwNode = findNode(model, "gw1");
+        FlowNode gwNode = findNode(model, "gw1");
         assertThat(gwNode.getNodeType()).isEqualTo(FlowNodeType.INCLUSIVE.getCode());
     }
 
@@ -238,7 +238,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO approveNode = findNode(model, "approve");
+        FlowNode approveNode = findNode(model, "approve");
         assertThat(approveNode.getPermissionFlag()).isEqualTo("user:1001");
     }
 
@@ -260,7 +260,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO approveNode = findNode(model, "approve");
+        FlowNode approveNode = findNode(model, "approve");
         assertThat(approveNode.getPermissionFlag()).isEqualTo("${approver}");
     }
 
@@ -282,7 +282,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO approveNode = findNode(model, "approve");
+        FlowNode approveNode = findNode(model, "approve");
         assertThat(approveNode.getPermissionFlag()).contains("user:u1");
         assertThat(approveNode.getPermissionFlag()).contains("user:u2");
     }
@@ -305,7 +305,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO approveNode = findNode(model, "approve");
+        FlowNode approveNode = findNode(model, "approve");
         assertThat(approveNode.getPermissionFlag()).contains("role:g1");
         assertThat(approveNode.getPermissionFlag()).contains("role:g2");
     }
@@ -332,7 +332,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO approveNode = findNode(model, "approve");
+        FlowNode approveNode = findNode(model, "approve");
         // 验证 ext 中包含 multiInstance=PARALLEL
         assertThat(approveNode.getExt()).contains("\"multiInstance\":\"PARALLEL\"");
     }
@@ -360,7 +360,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowSkipDO skip = findSkipByTarget(model, "approve");
+        FlowSkip skip = findSkipByTarget(model, "approve");
         assertThat(skip.getSkipCondition()).isEqualTo("${amount > 1000}");
     }
 
@@ -506,7 +506,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO timerNode = findNode(model, "timer1");
+        FlowNode timerNode = findNode(model, "timer1");
         // 验证 ext 中包含 timer 字段及周期值
         assertThat(timerNode.getExt()).contains("\"timer\"");
         assertThat(timerNode.getExt()).contains("\"cycle\":\"R/PT1H\"");
@@ -532,7 +532,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO sigNode = findNode(model, "sig1");
+        FlowNode sigNode = findNode(model, "sig1");
         // 验证 ext 中包含 eventType=SIGNAL
         assertThat(sigNode.getExt()).contains("\"eventType\":\"SIGNAL\"");
     }
@@ -557,7 +557,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO svcNode = findNode(model, "svc1");
+        FlowNode svcNode = findNode(model, "svc1");
         assertThat(svcNode.getNodeType()).isEqualTo(FlowNodeType.SERVICE.getCode());
     }
 
@@ -579,7 +579,7 @@ class BpmnXmlParserTest {
                 """;
         BpmnModel model = parser.parse(xml);
 
-        FlowNodeDO subNode = findNode(model, "sub1");
+        FlowNode subNode = findNode(model, "sub1");
         assertThat(subNode.getNodeType()).isEqualTo(FlowNodeType.SUBPROCESS.getCode());
     }
 
@@ -614,7 +614,7 @@ class BpmnXmlParserTest {
      * @param nodeCode 节点编码
      * @return 匹配的节点
      */
-    private FlowNodeDO findNode(BpmnModel model, String nodeCode) {
+    private FlowNode findNode(BpmnModel model, String nodeCode) {
         return model.getNodes().stream()
                 .filter(n -> nodeCode.equals(n.getNodeCode()))
                 .findFirst()
@@ -628,7 +628,7 @@ class BpmnXmlParserTest {
      * @param targetNodeCode  目标节点编码
      * @return 匹配的跳转
      */
-    private FlowSkipDO findSkipByTarget(BpmnModel model, String targetNodeCode) {
+    private FlowSkip findSkipByTarget(BpmnModel model, String targetNodeCode) {
         return model.getSkips().stream()
                 .filter(s -> targetNodeCode.equals(s.getNextNodeCode()))
                 .findFirst()

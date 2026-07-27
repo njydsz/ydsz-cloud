@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 
@@ -75,7 +75,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskAssigned(FlowRunTaskDO task) {
+    public void pushTaskAssigned(FlowRunTask task) {
         if (task == null) {
             return;
         }
@@ -105,7 +105,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskCompleted(FlowRunTaskDO task, String operatorUserId) {
+    public void pushTaskCompleted(FlowRunTask task, String operatorUserId) {
         if (task == null) {
             return;
         }
@@ -131,7 +131,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskRejected(FlowRunTaskDO task, String operatorUserId, String reason) {
+    public void pushTaskRejected(FlowRunTask task, String operatorUserId, String reason) {
         if (task == null) {
             return;
         }

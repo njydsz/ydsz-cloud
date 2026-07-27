@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.rate;
 
-import com.njydsz.project.domain.entity.rate.RateCardDO;
+import com.njydsz.project.domain.entity.rate.RateCard;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface RateCardMapper extends BaseMapper<RateCardDO> {
+public interface RateCardMapper extends BaseMapper<RateCard> {
 }

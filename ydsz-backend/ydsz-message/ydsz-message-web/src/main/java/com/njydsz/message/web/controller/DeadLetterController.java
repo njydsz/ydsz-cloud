@@ -14,7 +14,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.server.service.core.MessageLogService;
 
@@ -59,7 +59,7 @@ public class DeadLetterController {
     @Operation(summary = "分页查询死信列表")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgLogDO>> page(MessageLogQueryDTO query) {
+    public BaseResponse<Page<MsgLog>> page(MessageLogQueryDTO query) {
         if (query == null) {
             query = new MessageLogQueryDTO();
         }

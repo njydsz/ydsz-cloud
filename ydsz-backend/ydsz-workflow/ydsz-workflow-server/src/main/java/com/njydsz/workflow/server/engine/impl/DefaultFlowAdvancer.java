@@ -13,9 +13,9 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -96,16 +96,16 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     @YdszDistributedLock(key = "'flow:instance:op:' + #{#instanceId}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public FlowInstanceViewDTO start(String instanceId) {
-        FlowInstanceDO instance = instanceService.getById(instanceId);
+        FlowInstance instance = instanceService.getById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
-        FlowNodeDO startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
+        FlowNode startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
         if (startNode == null) {
             throw new SysException(BaseResultCode.INTERNAL_ERROR,
                     "error.workflow.msg_560bf118", instance.getDefinitionId());
         }
-        List<FlowNodeDO> nextNodes = advance(instance, startNode.getNodeCode(),
+        List<FlowNode> nextNodes = advance(instance, startNode.getNodeCode(),
                 "PASS", null, parseVariable(instance.getVariable()));
         if (nextNodes.isEmpty()) {
             log.info("[Flow] 流程无下游节点，自动完成: instanceId={}", instanceId);
@@ -129,12 +129,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     @Override
     @YdszDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
-    public List<FlowNodeDO> advance(FlowInstanceDO currentInstance,
+    public List<FlowNode> advance(FlowInstance currentInstance,
                                      String currentNodeCode,
                                      String skipType,
                                      String targetNodeCode,
                                      Map<String, Object> variables) {
-        FlowNodeDO currentNode = flowDefinitionCacheService.getNodeByCode(
+        FlowNode currentNode = flowDefinitionCacheService.getNodeByCode(
                 currentInstance.getDefinitionId(), currentNodeCode);
         if (currentNode == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
@@ -149,7 +149,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             if (rejectTarget == null) {
                 throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
             }
-            FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
+            FlowNode target = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), rejectTarget);
             if (target == null) {
                 throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6e66716d", rejectTarget);
@@ -158,16 +158,16 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         }
 
         // PASS 推进
-        List<FlowSkipDO> skips = resolvePassSkips(currentInstance, currentNode, variables);
+        List<FlowSkip> skips = resolvePassSkips(currentInstance, currentNode, variables);
         if (skips.isEmpty()) {
             log.info("[Flow] 流程无下一节点，结束: instanceId={} nodeCode={}",
                     currentInstance.getId(), currentNodeCode);
             return Collections.emptyList();
         }
 
-        List<FlowNodeDO> nextNodes = new ArrayList<>();
-        for (FlowSkipDO skip : skips) {
-            FlowNodeDO next = flowDefinitionCacheService.getNodeByCode(
+        List<FlowNode> nextNodes = new ArrayList<>();
+        for (FlowSkip skip : skips) {
+            FlowNode next = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), skip.getNextNodeCode());
             if (next == null) {
                 log.warn("[Flow] 跳转目标节点不存在: skipId={} nextNode={}",
@@ -242,7 +242,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     @Override
     @YdszDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
-    public List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
+    public List<FlowNode> advanceMulti(FlowInstance currentInstance,
                                           String currentNodeCode,
                                           String skipType,
                                           List<String> targetNodeCodes,
@@ -264,12 +264,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         // GAP-P0-2: 多节点同退 — 校验所有目标节点存在，返回全部目标节点列表
         log.info("[Flow] 退回多节点同退: instanceId={} currentNode={} targets={}",
                 currentInstance.getId(), currentNodeCode, targetNodeCodes);
-        List<FlowNodeDO> targets = new ArrayList<>();
+        List<FlowNode> targets = new ArrayList<>();
         for (String nodeCode : targetNodeCodes) {
             if (nodeCode == null || nodeCode.isBlank()) {
                 continue;
             }
-            FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
+            FlowNode target = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), nodeCode);
             if (target == null) {
                 throw new SysException(BaseResultCode.NOT_FOUND,
@@ -287,11 +287,11 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
-    public List<FlowSkipDO> resolvePassSkips(FlowInstanceDO instance,
-                                              FlowNodeDO currentNode,
+    public List<FlowSkip> resolvePassSkips(FlowInstance instance,
+                                              FlowNode currentNode,
                                               Map<String, Object> variables) {
         // P1: 通过缓存获取当前节点的出发跳转，并在内存中按 skipType=PASS 过滤
-        List<FlowSkipDO> all = flowDefinitionCacheService.getSkipsByNodeCode(
+        List<FlowSkip> all = flowDefinitionCacheService.getSkipsByNodeCode(
                 instance.getDefinitionId(), currentNode.getNodeCode()).stream()
                 .filter(s -> "PASS".equalsIgnoreCase(s.getSkipType()))
                 .toList();
@@ -306,8 +306,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         boolean isInclusive = currentNode.getNodeType() != null
                 && currentNode.getNodeType() == FlowNodeType.INCLUSIVE.getCode();
 
-        List<FlowSkipDO> matched = new ArrayList<>();
-        for (FlowSkipDO skip : all) {
+        List<FlowSkip> matched = new ArrayList<>();
+        for (FlowSkip skip : all) {
             String cond = skip.getSkipCondition();
             if (evaluateSkipCondition(cond, variables)) {
                 matched.add(skip);
@@ -322,7 +322,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         // sequenceFlow，而非盲目取 all.get(0)，避免设计器边排序不确定导致走错分支。
         // 兜底链：default 属性 → 无条件出边 → 空列表（流程结束）
         if ((isExclusive || isInclusive) && matched.isEmpty()) {
-            FlowSkipDO defaultSkip = resolveDefaultSkip(currentNode, all);
+            FlowSkip defaultSkip = resolveDefaultSkip(currentNode, all);
             if (defaultSkip != null) {
                 log.info("[Flow] {}无匹配条件，取 BPMN default 出边: node={} defaultFlowId={}",
                         isExclusive ? "排他网关" : "包容网关",
@@ -330,7 +330,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 matched.add(defaultSkip);
             } else {
                 // 未配置 default 属性时，取无条件的出边（BPMN 规范：default 边本身不能有 conditionExpression）
-                FlowSkipDO fallback = all.stream()
+                FlowSkip fallback = all.stream()
                         .filter(s -> s.getSkipCondition() == null || s.getSkipCondition().isBlank())
                         .findFirst().orElse(null);
                 if (fallback != null) {
@@ -403,20 +403,20 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
     @Override
     public String resolveRejectTarget(String definitionId, String currentNodeCode) {
-        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, currentNodeCode);
+        List<FlowSkip> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, currentNodeCode);
         if (!incoming.isEmpty()) {
             return incoming.get(0).getSkipName() == null
                     ? currentNodeCode
                     : lookupNodeCodeByName(definitionId, incoming.get(0).getSkipName());
         }
-        FlowNodeDO start = flowDefinitionCacheService.getStartNode(definitionId);
+        FlowNode start = flowDefinitionCacheService.getStartNode(definitionId);
         return start == null ? null : start.getNodeCode();
     }
 
     // ============================== 私有 ==============================
 
     /** 判断是否为 join 节点（并行/包容网关） */
-    private boolean isJoinNode(FlowNodeDO node) {
+    private boolean isJoinNode(FlowNode node) {
         return node.getNodeType() != null
                 && (node.getNodeType() == FlowNodeType.PARALLEL.getCode()
                 || node.getNodeType() == FlowNodeType.INCLUSIVE.getCode());
@@ -432,7 +432,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * @param allSkips 网关的所有 PASS 出边
      * @return 默认出边，未配置或未找到时返回 null
      */
-    private FlowSkipDO resolveDefaultSkip(FlowNodeDO gatewayNode, List<FlowSkipDO> allSkips) {
+    private FlowSkip resolveDefaultSkip(FlowNode gatewayNode, List<FlowSkip> allSkips) {
         if (gatewayNode.getExt() == null || gatewayNode.getExt().isBlank()) {
             return null;
         }
@@ -446,7 +446,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 return null;
             }
             String defaultId = String.valueOf(defaultFlowId);
-            for (FlowSkipDO skip : allSkips) {
+            for (FlowSkip skip : allSkips) {
                 String seqFlowId = extractSequenceFlowId(skip);
                 if (defaultId.equals(seqFlowId)) {
                     return skip;
@@ -460,12 +460,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     /**
-     * P0-2: 从 FlowSkipDO.ext JSON 中提取 sequenceFlowId
+     * P0-2: 从 FlowSkip.ext JSON 中提取 sequenceFlowId
      *
      * @param skip 跳转边
      * @return sequenceFlowId，不存在时返回 null
      */
-    private String extractSequenceFlowId(FlowSkipDO skip) {
+    private String extractSequenceFlowId(FlowSkip skip) {
         if (skip.getExt() == null || skip.getExt().isBlank()) {
             return null;
         }
@@ -482,12 +482,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     /**
-     * P0-2: 从 FlowSkipDO.ext JSON 中提取 sourceRef（入边源节点编码）
+     * P0-2: 从 FlowSkip.ext JSON 中提取 sourceRef（入边源节点编码）
      *
      * @param skip 跳转边
      * @return 源节点编码，不存在时返回 null
      */
-    private String extractSourceNodeCode(FlowSkipDO skip) {
+    private String extractSourceNodeCode(FlowSkip skip) {
         if (skip.getExt() == null || skip.getExt().isBlank()) {
             return null;
         }
@@ -516,12 +516,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * @return 仍有活跃任务的入边源节点数量
      */
     private int countActiveIncomingTasks(String definitionId, String instanceId, String joinNodeCode) {
-        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, joinNodeCode);
+        List<FlowSkip> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, joinNodeCode);
         if (incoming == null || incoming.isEmpty()) {
             return 0;
         }
         int active = 0;
-        for (FlowSkipDO skip : incoming) {
+        for (FlowSkip skip : incoming) {
             String sourceNodeCode = extractSourceNodeCode(skip);
             if (sourceNodeCode == null || sourceNodeCode.isBlank()) {
                 continue;
@@ -534,7 +534,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
     /** 判断节点是否有多个入边 */
     private boolean hasMultipleIncoming(String definitionId, String nodeCode) {
-        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
+        List<FlowSkip> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
         return incoming != null && incoming.size() > 1;
     }
 
@@ -549,7 +549,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      *   <li>未配置 — 返回 incomingCount（默认全部到达）</li>
      * </ul>
      */
-    private int parseJoinRequired(FlowNodeDO node, int incomingCount) {
+    private int parseJoinRequired(FlowNode node, int incomingCount) {
         if (node.getExt() == null || node.getExt().isBlank()) {
             return incomingCount;
         }
@@ -584,10 +584,10 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     private String lookupNodeCodeByName(String definitionId, String skipName) {
-        List<FlowNodeDO> all = flowDefinitionCacheService.getAllNodes(definitionId);
+        List<FlowNode> all = flowDefinitionCacheService.getAllNodes(definitionId);
         return all.stream()
                 .filter(n -> skipName.equals(n.getNodeName()))
-                .map(FlowNodeDO::getNodeCode)
+                .map(FlowNode::getNodeCode)
                 .findFirst()
                 .orElse(null);
     }

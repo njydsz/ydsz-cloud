@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
@@ -82,10 +82,10 @@ public class JobNodeHeartbeat {
             return;
         }
         nodeId = initNodeId();
-        JobNodeDO node = buildNodeRecord();
+        JobNode node = buildNodeRecord();
         node.setStatus("ONLINE");
         // upsert：存在则更新，不存在则插入
-        JobNodeDO existing = jobNodeMapper.selectById(nodeId);
+        JobNode existing = jobNodeMapper.selectById(nodeId);
         if (existing == null) {
             jobNodeMapper.insert(node);
         } else {
@@ -108,13 +108,13 @@ public class JobNodeHeartbeat {
             return;
         }
         try {
-            LambdaUpdateWrapper<JobNodeDO> wrapper = new LambdaUpdateWrapper<>();
-            wrapper.eq(JobNodeDO::getNodeId, nodeId)
-                    .set(JobNodeDO::getLastHeartbeat, LocalDateTime.now())
-                    .set(JobNodeDO::getRunningCount, runningCount.get())
-                    .set(JobNodeDO::getCpuUsage, collectCpuUsage())
-                    .set(JobNodeDO::getMemUsagePct, collectMemUsagePct())
-                    .set(JobNodeDO::getStatus, "ONLINE");
+            LambdaUpdateWrapper<JobNode> wrapper = new LambdaUpdateWrapper<>();
+            wrapper.eq(JobNode::getNodeId, nodeId)
+                    .set(JobNode::getLastHeartbeat, LocalDateTime.now())
+                    .set(JobNode::getRunningCount, runningCount.get())
+                    .set(JobNode::getCpuUsage, collectCpuUsage())
+                    .set(JobNode::getMemUsagePct, collectMemUsagePct())
+                    .set(JobNode::getStatus, "ONLINE");
             jobNodeMapper.update(null, wrapper);
         } catch (Exception e) {
             log.warn("[JobNodeHeartbeat] 心跳上报失败: nodeId={} reason={}", nodeId, e.getMessage());
@@ -187,8 +187,8 @@ public class JobNodeHeartbeat {
         return getHostName() + ":" + serverPort;
     }
 
-    private JobNodeDO buildNodeRecord() {
-        JobNodeDO node = new JobNodeDO();
+    private JobNode buildNodeRecord() {
+        JobNode node = new JobNode();
         node.setNodeId(nodeId);
         node.setAppName("ydsz-cronjob");
         node.setHost(getHostName());
@@ -201,10 +201,10 @@ public class JobNodeHeartbeat {
     }
 
     private void markStatus(String status) {
-        LambdaUpdateWrapper<JobNodeDO> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(JobNodeDO::getNodeId, nodeId)
-                .set(JobNodeDO::getStatus, status)
-                .set(JobNodeDO::getLastHeartbeat, LocalDateTime.now());
+        LambdaUpdateWrapper<JobNode> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(JobNode::getNodeId, nodeId)
+                .set(JobNode::getStatus, status)
+                .set(JobNode::getLastHeartbeat, LocalDateTime.now());
         jobNodeMapper.update(null, wrapper);
     }
 

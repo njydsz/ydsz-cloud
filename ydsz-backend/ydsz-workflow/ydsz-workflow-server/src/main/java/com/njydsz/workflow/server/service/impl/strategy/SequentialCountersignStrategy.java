@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.entity.FlowUserDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.domain.entity.FlowUser;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -57,7 +57,7 @@ public class SequentialCountersignStrategy implements CountersignStrategy {
      * @throws SysException 乐观锁更新失败时抛出
      */
     @Override
-    public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
         task.setApproveFinished(finished);
@@ -68,11 +68,11 @@ public class SequentialCountersignStrategy implements CountersignStrategy {
         }
         if (finished < required) {
             // 切换下一个未处理的人
-            List<FlowUserDO> unprocessed =
+            List<FlowUser> unprocessed =
                     userMapper.selectUnprocessedByInstanceAndNode(
                             task.getInstanceId(), task.getNodeCode());
             if (!unprocessed.isEmpty()) {
-                FlowUserDO next = unprocessed.get(0);
+                FlowUser next = unprocessed.get(0);
                 taskMapper.updateAssignee(task.getId(), next.getUserId(), next.getUserName(),
                         FlowAssigneeType.USER.name());
             }
@@ -88,7 +88,7 @@ public class SequentialCountersignStrategy implements CountersignStrategy {
      * @return true 表示已通过人数达到要求总数
      */
     @Override
-    public boolean shouldAdvance(FlowRunTaskDO task) {
+    public boolean shouldAdvance(FlowRunTask task) {
         int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
         return finished >= required;

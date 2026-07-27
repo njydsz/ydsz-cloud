@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 
 /**
  * 调度节点心跳 Mapper。
@@ -19,7 +19,7 @@ import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobNodeMapper extends BaseMapper<JobNodeDO> {
+public interface JobNodeMapper extends BaseMapper<JobNode> {
 
     /**
      * P0-8: 将超时仍为 ONLINE 的节点标记为 OFFLINE（僵尸节点回收）。

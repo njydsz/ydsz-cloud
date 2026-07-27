@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service.impl.strategy;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
@@ -30,13 +30,13 @@ public class OrCountersignStrategy implements CountersignStrategy {
     }
 
     @Override
-    public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onUserPassed(FlowRunTask task, FlowTaskOperateDTO dto) {
         // 完成 + 归档
         archiveService.completeAndArchive(task, dto.getComment());
     }
 
     @Override
-    public boolean shouldAdvance(FlowRunTaskDO task) {
+    public boolean shouldAdvance(FlowRunTask task) {
         // OR 模式：一人通过即推进
         return true;
     }

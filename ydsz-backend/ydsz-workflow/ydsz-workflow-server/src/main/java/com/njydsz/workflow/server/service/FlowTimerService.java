@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.time.Duration;
 import java.util.List;
 
-import com.njydsz.workflow.domain.entity.FlowTimerDO;
+import com.njydsz.workflow.domain.entity.FlowTimer;
 
 /**
  * 工作流定时器服务
@@ -43,7 +43,7 @@ public interface FlowTimerService {
      * @param timer 定时器记录
      * @return true=触发成功 false=已被处理
      */
-    boolean fire(FlowTimerDO timer);
+    boolean fire(FlowTimer timer);
 
     /**
      * 扫描并触发所有到点的定时器（每 30s 一次）
@@ -72,7 +72,7 @@ public interface FlowTimerService {
     /**
      * 查询实例的所有定时器
      */
-    List<FlowTimerDO> listByInstance(String instanceId);
+    List<FlowTimer> listByInstance(String instanceId);
 
     /**
      * 统计实例的 PENDING 定时器数

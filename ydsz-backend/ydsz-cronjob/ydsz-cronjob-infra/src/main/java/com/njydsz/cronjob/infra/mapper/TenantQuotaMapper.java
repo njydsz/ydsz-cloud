@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.TenantQuotaDO;
+import com.njydsz.cronjob.domain.entity.job.TenantQuota;
 
 /**
  * 租户级配额 Mapper（P7-2）。
@@ -20,7 +20,7 @@ import com.njydsz.cronjob.domain.entity.job.TenantQuotaDO;
  * @since 1.0.0
  */
 @Mapper
-public interface TenantQuotaMapper extends BaseMapper<TenantQuotaDO> {
+public interface TenantQuotaMapper extends BaseMapper<TenantQuota> {
 
     /**
      * 按租户 ID 查询配额记录（用于配额检查）。
@@ -35,5 +35,5 @@ public interface TenantQuotaMapper extends BaseMapper<TenantQuotaDO> {
             + "       created_by, created_at, updated_by, updated_at, deleted "
             + "FROM ydsz_tenant_quota "
             + "WHERE tenant_id = #{tenantId} AND deleted = 0")
-    TenantQuotaDO selectByTenantId(@Param("tenantId") String tenantId);
+    TenantQuota selectByTenantId(@Param("tenantId") String tenantId);
 }

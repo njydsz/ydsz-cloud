@@ -15,7 +15,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.dto.canary.CanaryUpsertDTO;
-import com.njydsz.message.domain.entity.canary.MsgCanaryDO;
+import com.njydsz.message.domain.entity.canary.MsgCanary;
 import com.njydsz.message.infra.mapper.canary.MsgCanaryMapper;
 import com.njydsz.message.server.service.canary.CanaryService;
 
@@ -43,18 +43,18 @@ public class CanaryServiceImpl implements CanaryService {
     private final MsgCanaryMapper msgCanaryMapper;
 
     @Override
-    public MsgCanaryDO upsert(CanaryUpsertDTO dto) {
+    public MsgCanary upsert(CanaryUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getCanaryKey())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "灰度键不能为空");
         }
         int total = dto.getBucketTotal() == null || dto.getBucketTotal() <= 0 ? DEFAULT_BUCKET_TOTAL : dto.getBucketTotal();
         int percentage = dto.getPercentage() == null ? 0 : Math.max(0, Math.min(100, dto.getPercentage()));
-        MsgCanaryDO existing = msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanaryDO>()
-                .eq(MsgCanaryDO::getCanaryKey, dto.getCanaryKey())
+        MsgCanary existing = msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanary>()
+                .eq(MsgCanary::getCanaryKey, dto.getCanaryKey())
                 .last("LIMIT 1"));
         String bucketSelected = buildBucketSelected(total, percentage);
         if (existing == null) {
-            MsgCanaryDO entity = new MsgCanaryDO();
+            MsgCanary entity = new MsgCanary();
             entity.setCanaryKey(dto.getCanaryKey());
             entity.setBucketTotal(total);
             entity.setBucketSelected(bucketSelected);
@@ -90,13 +90,13 @@ public class CanaryServiceImpl implements CanaryService {
     }
 
     @Override
-    public MsgCanaryDO matchConfig(String canaryKey, String bucketValue) {
+    public MsgCanary matchConfig(String canaryKey, String bucketValue) {
         if (!StringUtils.hasText(canaryKey) || !StringUtils.hasText(bucketValue)) {
             return null;
         }
-        MsgCanaryDO config = msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanaryDO>()
-                .eq(MsgCanaryDO::getCanaryKey, canaryKey)
-                .eq(MsgCanaryDO::getStatus, "ENABLED")
+        MsgCanary config = msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanary>()
+                .eq(MsgCanary::getCanaryKey, canaryKey)
+                .eq(MsgCanary::getStatus, "ENABLED")
                 .last("LIMIT 1"));
         if (config == null || config.getPercentage() == null || config.getPercentage() <= 0) {
             return null;
@@ -106,22 +106,22 @@ public class CanaryServiceImpl implements CanaryService {
     }
 
     @Override
-    public MsgCanaryDO getByKey(String canaryKey) {
+    public MsgCanary getByKey(String canaryKey) {
         if (!StringUtils.hasText(canaryKey)) {
             return null;
         }
-        return msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanaryDO>()
-                .eq(MsgCanaryDO::getCanaryKey, canaryKey)
+        return msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanary>()
+                .eq(MsgCanary::getCanaryKey, canaryKey)
                 .last("LIMIT 1"));
     }
 
     @Override
-    public Page<MsgCanaryDO> page(PageQuery query) {
-        Page<MsgCanaryDO> page = new Page<>(
+    public Page<MsgCanary> page(PageQuery query) {
+        Page<MsgCanary> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
                 Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        return msgCanaryMapper.selectPage(page, new LambdaQueryWrapper<MsgCanaryDO>()
-                .orderByDesc(MsgCanaryDO::getCreatedAt));
+        return msgCanaryMapper.selectPage(page, new LambdaQueryWrapper<MsgCanary>()
+                .orderByDesc(MsgCanary::getCreatedAt));
     }
 
     /**

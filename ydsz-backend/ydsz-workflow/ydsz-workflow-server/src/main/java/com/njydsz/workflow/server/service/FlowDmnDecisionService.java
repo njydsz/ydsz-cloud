@@ -3,8 +3,8 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.workflow.domain.entity.FlowDmnDecisionDO;
-import com.njydsz.workflow.domain.entity.FlowDmnRuleDO;
+import com.njydsz.workflow.domain.entity.FlowDmnDecision;
+import com.njydsz.workflow.domain.entity.FlowDmnRule;
 
 /**
  * P0-1: DMN 决策表 Service
@@ -23,12 +23,12 @@ public interface FlowDmnDecisionService {
      * @param rules    规则行列表
      * @return 决策表 ID
      */
-    String createDecision(FlowDmnDecisionDO decision, List<FlowDmnRuleDO> rules);
+    String createDecision(FlowDmnDecision decision, List<FlowDmnRule> rules);
 
     /**
      * 更新决策表（仅草稿状态可编辑）
      */
-    void updateDecision(String decisionId, FlowDmnDecisionDO decision, List<FlowDmnRuleDO> rules);
+    void updateDecision(String decisionId, FlowDmnDecision decision, List<FlowDmnRule> rules);
 
     /**
      * 发布决策表（DRAFT → PUBLISHED，版本递增）
@@ -48,7 +48,7 @@ public interface FlowDmnDecisionService {
     /**
      * 分页查询决策表列表
      */
-    List<FlowDmnDecisionDO> listDecisions(String decisionCode, String tenantId);
+    List<FlowDmnDecision> listDecisions(String decisionCode, String tenantId);
 
     /**
      * 评估决策表

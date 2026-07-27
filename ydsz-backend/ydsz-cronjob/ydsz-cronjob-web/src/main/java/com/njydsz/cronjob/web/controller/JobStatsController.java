@@ -18,9 +18,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobDailyStatsDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobDailyStatsMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
@@ -64,7 +64,7 @@ public class JobStatsController {
     @Operation(summary = "查询每日执行统计趋势")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/daily")
-    public BaseResponse<List<JobDailyStatsDO>> daily(
+    public BaseResponse<List<JobDailyStats>> daily(
             @RequestParam String jobId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -88,14 +88,14 @@ public class JobStatsController {
             @RequestParam String jobId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        List<JobDailyStatsDO> list = jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate);
+        List<JobDailyStats> list = jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate);
         long fireCount = 0L;
         long successCount = 0L;
         long failCount = 0L;
         long timeoutCount = 0L;
         long totalDuration = 0L;
         long durationSamples = 0L;
-        for (JobDailyStatsDO s : list) {
+        for (JobDailyStats s : list) {
             if (s.getFireCount() != null) {
                 fireCount += s.getFireCount();
             }
@@ -149,19 +149,19 @@ public class JobStatsController {
         // 1. 任务状态分布
         Map<String, Object> taskStats = new HashMap<>();
         taskStats.put("total", jobMapper.selectCount(null));
-        taskStats.put("normal", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "NORMAL")));
-        taskStats.put("paused", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "PAUSED")));
-        taskStats.put("error", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "ERROR")));
-        taskStats.put("autoPaused", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "AUTO_PAUSED")));
+        taskStats.put("normal", jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "NORMAL")));
+        taskStats.put("paused", jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "PAUSED")));
+        taskStats.put("error", jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "ERROR")));
+        taskStats.put("autoPaused", jobMapper.selectCount(new LambdaQueryWrapper<Job>().eq(Job::getStatus, "AUTO_PAUSED")));
         dashboard.put("taskStats", taskStats);
 
         // 2. 今日执行统计
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         Map<String, Object> todayExec = new HashMap<>();
-        Long todayTotal = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart));
-        Long todaySuccess = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "SUCCESS"));
-        Long todayFailed = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "FAILED"));
-        Long todayRunning = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().eq(JobLogDO::getStatus, "RUNNING"));
+        Long todayTotal = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLog>().ge(JobLog::getStartTime, todayStart));
+        Long todaySuccess = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLog>().ge(JobLog::getStartTime, todayStart).eq(JobLog::getStatus, "SUCCESS"));
+        Long todayFailed = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLog>().ge(JobLog::getStartTime, todayStart).eq(JobLog::getStatus, "FAILED"));
+        Long todayRunning = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLog>().eq(JobLog::getStatus, "RUNNING"));
         todayExec.put("total", todayTotal);
         todayExec.put("success", todaySuccess);
         todayExec.put("failed", todayFailed);
@@ -189,11 +189,11 @@ public class JobStatsController {
     @Operation(summary = "最近失败任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/recent-failures")
-    public BaseResponse<List<JobLogDO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
+    public BaseResponse<List<JobLog>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
         return BaseResponse.success(jobLogMapper.selectList(
-                new LambdaQueryWrapper<JobLogDO>()
-                        .eq(JobLogDO::getStatus, "FAILED")
-                        .orderByDesc(JobLogDO::getStartTime)
+                new LambdaQueryWrapper<JobLog>()
+                        .eq(JobLog::getStatus, "FAILED")
+                        .orderByDesc(JobLog::getStartTime)
                         .last("LIMIT " + Math.min(limit, 100))));
     }
 
@@ -216,9 +216,9 @@ public class JobStatsController {
             LocalDateTime hourStart = queryDate.atTime(hour, 0);
             LocalDateTime hourEnd = queryDate.atTime(hour, 59, 59);
             Long count = jobLogMapper.selectCount(
-                    new LambdaQueryWrapper<JobLogDO>()
-                            .ge(JobLogDO::getStartTime, hourStart)
-                            .le(JobLogDO::getStartTime, hourEnd));
+                    new LambdaQueryWrapper<JobLog>()
+                            .ge(JobLog::getStartTime, hourStart)
+                            .le(JobLog::getStartTime, hourEnd));
             Map<String, Object> entry = new HashMap<>();
             entry.put("hour", hour);
             entry.put("count", count);

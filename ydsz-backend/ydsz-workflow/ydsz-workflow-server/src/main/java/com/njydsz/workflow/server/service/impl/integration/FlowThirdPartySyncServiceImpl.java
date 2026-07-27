@@ -12,8 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.infra.mapper.FlowThirdPartyLogMapper;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;
 import com.njydsz.workflow.server.service.FlowThirdPartySyncService;
@@ -59,7 +59,7 @@ public class FlowThirdPartySyncServiceImpl implements FlowThirdPartySyncService 
         if (instanceId == null) {
             return;
         }
-        List<FlowThirdPartyLogDO> logs;
+        List<FlowThirdPartyLog> logs;
         try {
             logs = logMapper.selectByBusinessId(instanceId);
         } catch (Exception e) {
@@ -69,8 +69,8 @@ public class FlowThirdPartySyncServiceImpl implements FlowThirdPartySyncService 
         if (logs == null || logs.isEmpty()) {
             return;
         }
-        for (FlowThirdPartyLogDO logDo : logs) {
-            FlowThirdPartyAccountDO account = null;
+        for (FlowThirdPartyLog logDo : logs) {
+            FlowThirdPartyAccount account = null;
             try {
                 account = accountService.getActiveByPlatform(logDo.getPlatform());
             } catch (Exception e) {

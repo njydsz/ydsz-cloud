@@ -15,7 +15,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.workflow.domain.dto.FlowAttachmentPreviewVO;
-import com.njydsz.workflow.domain.entity.FlowAttachmentDO;
+import com.njydsz.workflow.domain.entity.FlowAttachment;
 import com.njydsz.workflow.infra.mapper.FlowAttachmentMapper;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 
@@ -63,12 +63,12 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
         if (attachments == null || attachments.isEmpty()) {
             return;
         }
-        List<FlowAttachmentDO> entities = new ArrayList<>(attachments.size());
+        List<FlowAttachment> entities = new ArrayList<>(attachments.size());
         for (FlowAttachmentDTO dto : attachments) {
             if (dto == null || dto.getStorageKey() == null || dto.getStorageKey().isBlank()) {
                 continue;
             }
-            FlowAttachmentDO entity = new FlowAttachmentDO();
+            FlowAttachment entity = new FlowAttachment();
             entity.setInstanceId(instanceId);
             entity.setTaskId(taskId);
             entity.setNodeCode(nodeCode);
@@ -103,19 +103,19 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public List<FlowAttachmentDO> listByTask(String taskId) {
+    public List<FlowAttachment> listByTask(String taskId) {
         return attachmentMapper.selectByTask(taskId);
     }
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public List<FlowAttachmentDO> listByInstance(String instanceId) {
+    public List<FlowAttachment> listByInstance(String instanceId) {
         return attachmentMapper.selectByInstance(instanceId);
     }
 
     @Override
     public void delete(String attachmentId, String operatorId) {
-        FlowAttachmentDO entity = attachmentMapper.selectById(attachmentId);
+        FlowAttachment entity = attachmentMapper.selectById(attachmentId);
         if (entity != null && (entity.getDeleted() == null || entity.getDeleted() == 0)) {
             attachmentMapper.deleteById(attachmentId);
             log.info("[Flow] 附件删除: attachmentId={} operator={}", attachmentId, operatorId);
@@ -124,7 +124,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
     @Override
     public FlowAttachmentPreviewVO previewAttachment(String attachmentId) {
-        FlowAttachmentDO attachment = attachmentMapper.selectById(attachmentId);
+        FlowAttachment attachment = attachmentMapper.selectById(attachmentId);
         if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_c5d6e7f8", attachmentId);
         }

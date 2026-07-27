@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.ops;
 
-import com.njydsz.project.domain.entity.ops.OpsTicketDO;
+import com.njydsz.project.domain.entity.ops.OpsTicket;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
+public interface OpsTicketMapper extends BaseMapper<OpsTicket> {
 }

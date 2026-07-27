@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.repository.billable;
 
-import com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshotDO;
+import com.njydsz.project.domain.entity.billable.BillableUtilizationSnapshot;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 1.0.0
  * @author ydsz-team
  */
-public interface IBillableUtilizationSnapshotRepository extends IService<BillableUtilizationSnapshotDO> {
+public interface IBillableUtilizationSnapshotRepository extends IService<BillableUtilizationSnapshot> {
 }

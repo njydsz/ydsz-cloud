@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.project.ProjectContractTemplateDO;
+import com.njydsz.project.domain.entity.project.ProjectContractTemplate;
 
 public interface ProjectContractTemplateService {
-    ProjectContractTemplateDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<ProjectContractTemplateDO> page(int pageNum, int pageSize);
-    boolean save(ProjectContractTemplateDO entity);
-    boolean updateById(ProjectContractTemplateDO entity);
+    ProjectContractTemplate getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<ProjectContractTemplate> page(int pageNum, int pageSize);
+    boolean save(ProjectContractTemplate entity);
+    boolean updateById(ProjectContractTemplate entity);
     boolean removeById(String id);
 }

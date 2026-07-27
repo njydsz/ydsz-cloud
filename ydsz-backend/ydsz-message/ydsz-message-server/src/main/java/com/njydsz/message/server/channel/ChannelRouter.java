@@ -16,7 +16,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
 
@@ -193,7 +193,7 @@ public class ChannelRouter {
     }
 
     /**
-     * 基于 {@link MsgLogDO} 的分发重载：将日志实体转换为 {@link MessageRequest} 后委托
+     * 基于 {@link MsgLog} 的分发重载：将日志实体转换为 {@link MessageRequest} 后委托
      * {@link #dispatch(MessageRequest)} 执行，便于上层 service 直接传入日志实体。
      *
      * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时抛 {@link SysException}，
@@ -203,7 +203,7 @@ public class ChannelRouter {
      * @return 供应商侧追踪 ID
      * @throws SysException 发送失败
      */
-    public String dispatch(MsgLogDO logDO) {
+    public String dispatch(MsgLog logDO) {
         if (logDO == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "消息日志为空");
         }

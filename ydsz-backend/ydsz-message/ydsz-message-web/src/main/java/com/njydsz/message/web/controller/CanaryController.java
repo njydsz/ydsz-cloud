@@ -18,7 +18,7 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.canary.CanaryUpsertDTO;
-import com.njydsz.message.domain.entity.canary.MsgCanaryDO;
+import com.njydsz.message.domain.entity.canary.MsgCanary;
 import com.njydsz.message.server.service.canary.CanaryService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +55,7 @@ public class CanaryController {
     @Audit(module = "灰度管理", type = AuditType.CONFIG, action = AuditAction.CREATE, content = "'upsert'")
     @RateLimit(resource = "message.canary.upsert", threshold = 50)
     @PostMapping
-    public BaseResponse<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
+    public BaseResponse<MsgCanary> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
         return BaseResponse.success(canaryService.upsert(dto));
     }
 
@@ -68,7 +68,7 @@ public class CanaryController {
     @Operation(summary = "按灰度键查询灰度桶")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/{canaryKey}")
-    public BaseResponse<MsgCanaryDO> getByKey(@PathVariable String canaryKey) {
+    public BaseResponse<MsgCanary> getByKey(@PathVariable String canaryKey) {
         return BaseResponse.success(canaryService.getByKey(canaryKey));
     }
 
@@ -81,7 +81,7 @@ public class CanaryController {
     @Operation(summary = "灰度桶分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgCanaryDO>> page(PageQuery query) {
+    public BaseResponse<Page<MsgCanary>> page(PageQuery query) {
         return BaseResponse.success(canaryService.page(query));
     }
 

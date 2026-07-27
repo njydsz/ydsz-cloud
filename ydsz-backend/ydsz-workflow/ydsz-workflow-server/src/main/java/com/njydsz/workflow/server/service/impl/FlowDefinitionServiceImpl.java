@@ -34,9 +34,9 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowSkipType;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
@@ -132,7 +132,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 : AuthContext.getTenantIdOrDefault("1");
 
         // 1. 检查重名：同 flowCode + version + tenant 只能有一条
-        FlowDefinitionDO existing = definitionMapper.selectPublished(
+        FlowDefinition existing = definitionMapper.selectPublished(
                 dto.getFlowCode(), version, tenantId);
         if (existing != null) {
             throw new SysException(BaseResultCode.DUPLICATE_KEY,
@@ -146,8 +146,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "bpmnXml / nodes 至少二选一");
         }
 
-        List<FlowNodeDO> nodes = new ArrayList<>();
-        List<FlowSkipDO> skips = new ArrayList<>();
+        List<FlowNode> nodes = new ArrayList<>();
+        List<FlowSkip> skips = new ArrayList<>();
 
         if (hasBpmn) {
             // 模式 A：标准 BPMN 2.0 XML
@@ -168,7 +168,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             // P3-1: 自动注入 BPMNDI 坐标到节点 coordinate 字段（覆盖现有值）
             Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
             if (nodeCoords != null && !nodeCoords.isEmpty()) {
-                for (FlowNodeDO n : nodes) {
+                for (FlowNode n : nodes) {
                     BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
                     if (coord != null) {
                         n.setCoordinate(JsonHelper.toJson(Map.of(
@@ -184,7 +184,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         } else {
             // 模式 B：轻量 JSON
             for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
-                FlowNodeDO node = new FlowNodeDO();
+                FlowNode node = new FlowNode();
                 node.setNodeCode(n.getNodeCode());
                 node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
                 node.setNodeType(n.getNodeType() == null
@@ -201,7 +201,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             }
             // 节点编码唯一
             long uniqueCount = nodes.stream()
-                    .map(FlowNodeDO::getNodeCode)
+                    .map(FlowNode::getNodeCode)
                     .distinct()
                     .count();
             if (uniqueCount != nodes.size()) {
@@ -209,7 +209,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             }
             if (dto.getSkips() != null) {
                 for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
-                    FlowSkipDO skip = new FlowSkipDO();
+                    FlowSkip skip = new FlowSkip();
                     skip.setSkipName(s.getSkipName());
                     skip.setSkipType(StringUtils.hasText(s.getSkipType())
                             ? s.getSkipType() : FlowSkipType.PASS.name());
@@ -225,7 +225,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         graphValidator.validate(nodes, skips);
 
         // 3. 写入定义
-        FlowDefinitionDO def = new FlowDefinitionDO();
+        FlowDefinition def = new FlowDefinition();
         def.setFlowCode(dto.getFlowCode());
         def.setFlowName(dto.getFlowName());
         def.setCategory(dto.getCategory());
@@ -242,7 +242,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String definitionId = def.getId();
 
         // 4. 写入节点
-        for (FlowNodeDO node : nodes) {
+        for (FlowNode node : nodes) {
             node.setDefinitionId(definitionId);
             node.setFlowCode(dto.getFlowCode());
             node.setTenantId(tenantId);
@@ -251,7 +251,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 5. 写入跳转
-        for (FlowSkipDO skip : skips) {
+        for (FlowSkip skip : skips) {
             skip.setDefinitionId(definitionId);
             skip.setFlowCode(dto.getFlowCode());
             skip.setTenantId(tenantId);
@@ -279,7 +279,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public void publish(String definitionId, boolean force) {
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
@@ -310,12 +310,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
      * @param def  待发布的流程定义
      * @param force 是否强制发布（跳过 HIGH 风险阻断）
      */
-    private void checkPublishCompatibility(FlowDefinitionDO def, boolean force) {
+    private void checkPublishCompatibility(FlowDefinition def, boolean force) {
         String flowCode = def.getFlowCode();
         String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
 
         // 1. 查询同 flowCode 的当前激活版本（已发布且非当前定义）
-        FlowDefinitionDO activeDef = definitionMapper.selectPublished(flowCode, null, tenantId);
+        FlowDefinition activeDef = definitionMapper.selectPublished(flowCode, null, tenantId);
         if (activeDef == null || activeDef.getId().equals(def.getId())) {
             // 无激活版本或当前定义已是激活版本 → 首次发布或重复发布，无需校验
             log.debug("[Flow][P1-4] 无前序激活版本，跳过兼容性校验: flowCode={} defId={}",
@@ -427,7 +427,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             key = "#flowCode + ':' + #version + ':' + #tenantId", unless = "#result == null")
-    public FlowDefinitionDO getPublished(String flowCode, String version, String tenantId) {
+    public FlowDefinition getPublished(String flowCode, String version, String tenantId) {
         if (!StringUtils.hasText(version)) {
             version = "1.0";
         }
@@ -440,7 +440,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_DEF_LATEST_CACHE,
             key = "#flowCode + ':' + #tenantId", unless = "#result == null")
-    public FlowDefinitionDO getLatestByCode(String flowCode, String tenantId) {
+    public FlowDefinition getLatestByCode(String flowCode, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         return definitionMapper.selectLatestByCode(flowCode, tid);
@@ -448,14 +448,14 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode) {
-        Page<FlowDefinitionDO> page = new Page<>(pageNo, pageSize);
-        LambdaQueryWrapper<FlowDefinitionDO> w = new LambdaQueryWrapper<>();
-        w.eq(StringUtils.hasText(category), FlowDefinitionDO::getCategory, category)
-                .like(StringUtils.hasText(flowCode), FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(FlowDefinitionDO::getActivityStatus, 1)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getCreatedAt);
+    public List<FlowDefinition> page(int pageNo, int pageSize, String category, String flowCode) {
+        Page<FlowDefinition> page = new Page<>(pageNo, pageSize);
+        LambdaQueryWrapper<FlowDefinition> w = new LambdaQueryWrapper<>();
+        w.eq(StringUtils.hasText(category), FlowDefinition::getCategory, category)
+                .like(StringUtils.hasText(flowCode), FlowDefinition::getFlowCode, flowCode)
+                .eq(FlowDefinition::getActivityStatus, 1)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getCreatedAt);
         return definitionMapper.selectPage(page, w).getRecords();
     }
 
@@ -463,12 +463,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(readOnly = true)
     public Map<String, Object> getDetail(String definitionId) {
         // P2-21: 组装 definition + nodes + skips
-        FlowDefinitionDO definition = definitionMapper.selectById(definitionId);
+        FlowDefinition definition = definitionMapper.selectById(definitionId);
         if (definition == null) {
             return null;
         }
-        List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(definitionId);
-        List<FlowSkipDO> skips = skipMapper.selectByDefinitionId(definitionId);
+        List<FlowNode> nodes = nodeMapper.selectByDefinitionId(definitionId);
+        List<FlowSkip> skips = skipMapper.selectByDefinitionId(definitionId);
         Map<String, Object> result = new HashMap<>();
         result.put("definition", definition);
         result.put("nodes", nodes);
@@ -486,7 +486,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (!StringUtils.hasText(flowCode)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "flowCode 不能为空");
         }
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
@@ -532,7 +532,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (definitionId == null || !StringUtils.hasText(nodeCode)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "definitionId/nodeCode 不能为空");
         }
-        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
@@ -556,7 +556,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "definitionId/dto 不能为空");
         }
         // 1. 校验定义存在且未发布（只有未发布定义才能编辑）
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
@@ -589,8 +589,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             skipMapper.deleteByDefinitionId(definitionId);
             nodeMapper.deleteByDefinitionId(definitionId);
 
-            List<FlowNodeDO> nodes = new ArrayList<>();
-            List<FlowSkipDO> skips = new ArrayList<>();
+            List<FlowNode> nodes = new ArrayList<>();
+            List<FlowSkip> skips = new ArrayList<>();
 
             if (hasBpmn) {
                 // BPMN 模式：解析 XML
@@ -600,7 +600,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             } else {
                 // JSON 模式：从 DTO 构造节点
                 for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
-                    FlowNodeDO node = new FlowNodeDO();
+                    FlowNode node = new FlowNode();
                     node.setNodeCode(n.getNodeCode());
                     node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
                     node.setNodeType(n.getNodeType() == null
@@ -611,7 +611,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 }
                 if (dto.getSkips() != null) {
                     for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
-                        FlowSkipDO skip = new FlowSkipDO();
+                        FlowSkip skip = new FlowSkip();
                         skip.setSkipName(s.getSkipName());
                         skip.setSkipType(StringUtils.hasText(s.getSkipType())
                                 ? s.getSkipType() : FlowSkipType.PASS.name());
@@ -624,7 +624,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             }
 
             // 写入节点
-            for (FlowNodeDO node : nodes) {
+            for (FlowNode node : nodes) {
                 node.setDefinitionId(definitionId);
                 node.setFlowCode(def.getFlowCode());
                 node.setTenantId(def.getTenantId());
@@ -632,7 +632,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 nodeMapper.insert(node);
             }
             // 写入跳转
-            for (FlowSkipDO skip : skips) {
+            for (FlowSkip skip : skips) {
                 skip.setDefinitionId(definitionId);
                 skip.setFlowCode(def.getFlowCode());
                 skip.setTenantId(def.getTenantId());
@@ -760,10 +760,10 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         // 在 getDetail 基础上增加 edges 格式（供前端 VueFlow/LogicFlow 直接使用）
         Map<String, Object> result = new LinkedHashMap<>(detail);
-        List<FlowSkipDO> skips = JsonHelper.safeCastList(detail.get("skips"), FlowSkipDO.class);
+        List<FlowSkip> skips = JsonHelper.safeCastList(detail.get("skips"), FlowSkip.class);
         if (skips != null) {
             List<Map<String, Object>> edges = new ArrayList<>();
-            for (FlowSkipDO skip : skips) {
+            for (FlowSkip skip : skips) {
                 Map<String, Object> edge = new LinkedHashMap<>();
                 edge.put("id", skip.getId());
                 // sourceRef 存储在 ext JSON 中
@@ -789,7 +789,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveDesignerData(String definitionId, Map<String, Object> designerData) {
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
@@ -810,7 +810,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 if (coord != null) {
                     String coordStr = coord instanceof String
                             ? (String) coord : YdszJson.toJson(coord);
-                    FlowNodeDO nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
+                    FlowNode nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
                     if (nodeForCoord != null) {
                         nodeForCoord.setCoordinate(coordStr);
                         nodeMapper.updateById(nodeForCoord);
@@ -819,7 +819,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 // 更新节点名称（如前端修改了）
                 Object nodeName = nodeData.get("nodeName");
                 if (nodeName != null) {
-                    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+                    FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
                     if (node != null) {
                         node.setNodeName((String) nodeName);
                         Object permFlag = nodeData.get("permissionFlag");
@@ -849,7 +849,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @Transactional(readOnly = true)
     public String getFormConfig(String definitionId, String nodeCode) {
-        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
@@ -860,7 +860,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveFormConfig(String definitionId, String nodeCode, String formFieldsConfig) {
-        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
@@ -878,7 +878,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @Transactional(readOnly = true)
     public String getSlaConfig(String definitionId, String nodeCode) {
-        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
@@ -889,7 +889,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveSlaConfig(String definitionId, String nodeCode, String slaConfig) {
-        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        FlowNode node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
@@ -907,14 +907,14 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listVersions(String definitionId) {
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
         String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
-        List<FlowDefinitionDO> versions = definitionMapper.selectByFlowCode(def.getFlowCode(), tenantId);
+        List<FlowDefinition> versions = definitionMapper.selectByFlowCode(def.getFlowCode(), tenantId);
         List<Map<String, Object>> result = new ArrayList<>();
-        for (FlowDefinitionDO v : versions) {
+        for (FlowDefinition v : versions) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", v.getId());
             map.put("version", v.getFlowVersion());
@@ -936,21 +936,21 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(readOnly = true)
     public Map<String, Object> diffVersions(String definitionId, Integer version1, Integer version2) {
         // 1. 获取基础定义，找到 flowCode
-        FlowDefinitionDO baseDef = definitionMapper.selectById(definitionId);
+        FlowDefinition baseDef = definitionMapper.selectById(definitionId);
         if (baseDef == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
         String tenantId = baseDef.getTenantId() != null ? baseDef.getTenantId() : "1";
 
         // 2. 查找两个版本的定义
-        List<FlowDefinitionDO> allVersions = definitionMapper.selectByFlowCode(
+        List<FlowDefinition> allVersions = definitionMapper.selectByFlowCode(
                 baseDef.getFlowCode(), tenantId);
         String v1Str = String.valueOf(version1);
         String v2Str = String.valueOf(version2);
-        FlowDefinitionDO defV1 = allVersions.stream()
+        FlowDefinition defV1 = allVersions.stream()
                 .filter(d -> v1Str.equals(d.getFlowVersion()))
                 .findFirst().orElse(null);
-        FlowDefinitionDO defV2 = allVersions.stream()
+        FlowDefinition defV2 = allVersions.stream()
                 .filter(d -> v2Str.equals(d.getFlowVersion()))
                 .findFirst().orElse(null);
 
@@ -964,16 +964,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 3. 获取两个版本的节点和跳转
-        List<FlowNodeDO> nodesV1 = nodeMapper.selectByDefinitionId(defV1.getId());
-        List<FlowNodeDO> nodesV2 = nodeMapper.selectByDefinitionId(defV2.getId());
-        List<FlowSkipDO> skipsV1 = skipMapper.selectByDefinitionId(defV1.getId());
-        List<FlowSkipDO> skipsV2 = skipMapper.selectByDefinitionId(defV2.getId());
+        List<FlowNode> nodesV1 = nodeMapper.selectByDefinitionId(defV1.getId());
+        List<FlowNode> nodesV2 = nodeMapper.selectByDefinitionId(defV2.getId());
+        List<FlowSkip> skipsV1 = skipMapper.selectByDefinitionId(defV1.getId());
+        List<FlowSkip> skipsV2 = skipMapper.selectByDefinitionId(defV2.getId());
 
-        // 4. 构建节点 nodeCode -> FlowNodeDO 映射
-        Map<String, FlowNodeDO> nodeMapV1 = nodesV1.stream()
-                .collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
-        Map<String, FlowNodeDO> nodeMapV2 = nodesV2.stream()
-                .collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
+        // 4. 构建节点 nodeCode -> FlowNode 映射
+        Map<String, FlowNode> nodeMapV1 = nodesV1.stream()
+                .collect(Collectors.toMap(FlowNode::getNodeCode, n -> n, (a, b) -> a));
+        Map<String, FlowNode> nodeMapV2 = nodesV2.stream()
+                .collect(Collectors.toMap(FlowNode::getNodeCode, n -> n, (a, b) -> a));
 
         // 5. 对比节点差异
         List<Map<String, Object>> addedNodes = new ArrayList<>();
@@ -981,27 +981,27 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         List<Map<String, Object>> modifiedNodes = new ArrayList<>();
 
         // v2 有而 v1 没有 -> 新增
-        for (Map.Entry<String, FlowNodeDO> entry : nodeMapV2.entrySet()) {
+        for (Map.Entry<String, FlowNode> entry : nodeMapV2.entrySet()) {
             if (!nodeMapV1.containsKey(entry.getKey())) {
-                FlowNodeDO n = entry.getValue();
+                FlowNode n = entry.getValue();
                 addedNodes.add(Map.of("nodeCode", n.getNodeCode(),
                         "nodeName", n.getNodeName() != null ? n.getNodeName() : ""));
             }
         }
         // v1 有而 v2 没有 -> 删除
-        for (Map.Entry<String, FlowNodeDO> entry : nodeMapV1.entrySet()) {
+        for (Map.Entry<String, FlowNode> entry : nodeMapV1.entrySet()) {
             if (!nodeMapV2.containsKey(entry.getKey())) {
-                FlowNodeDO n = entry.getValue();
+                FlowNode n = entry.getValue();
                 removedNodes.add(Map.of("nodeCode", n.getNodeCode(),
                         "nodeName", n.getNodeName() != null ? n.getNodeName() : ""));
             }
         }
         // 两者都有 -> 检查修改
-        for (Map.Entry<String, FlowNodeDO> entry : nodeMapV1.entrySet()) {
+        for (Map.Entry<String, FlowNode> entry : nodeMapV1.entrySet()) {
             String code = entry.getKey();
             if (nodeMapV2.containsKey(code)) {
-                FlowNodeDO n1 = entry.getValue();
-                FlowNodeDO n2 = nodeMapV2.get(code);
+                FlowNode n1 = entry.getValue();
+                FlowNode n2 = nodeMapV2.get(code);
                 Map<String, Map<String, Object>> changes = new LinkedHashMap<>();
                 if (!Objects.equals(n1.getNodeName(), n2.getNodeName())) {
                     changes.put("nodeName", Map.of("old",
@@ -1053,22 +1053,22 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
         // 6. 构建连线 key 映射（sourceRef -> targetNodeCode）
         // sourceRef 存储在 ext JSON 的 sourceRef 字段中
-        Map<String, FlowSkipDO> skipMapV1 = buildSkipKeyMap(skipsV1);
-        Map<String, FlowSkipDO> skipMapV2 = buildSkipKeyMap(skipsV2);
+        Map<String, FlowSkip> skipMapV1 = buildSkipKeyMap(skipsV1);
+        Map<String, FlowSkip> skipMapV2 = buildSkipKeyMap(skipsV2);
 
         // 7. 对比连线差异
         List<Map<String, Object>> addedSkips = new ArrayList<>();
         List<Map<String, Object>> removedSkips = new ArrayList<>();
 
-        for (Map.Entry<String, FlowSkipDO> entry : skipMapV2.entrySet()) {
+        for (Map.Entry<String, FlowSkip> entry : skipMapV2.entrySet()) {
             if (!skipMapV1.containsKey(entry.getKey())) {
-                FlowSkipDO s = entry.getValue();
+                FlowSkip s = entry.getValue();
                 addedSkips.add(skipToMap(s));
             }
         }
-        for (Map.Entry<String, FlowSkipDO> entry : skipMapV1.entrySet()) {
+        for (Map.Entry<String, FlowSkip> entry : skipMapV1.entrySet()) {
             if (!skipMapV2.containsKey(entry.getKey())) {
-                FlowSkipDO s = entry.getValue();
+                FlowSkip s = entry.getValue();
                 removedSkips.add(skipToMap(s));
             }
         }
@@ -1108,9 +1108,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     /**
      * 构建连线 key 映射：sourceRef + "->" + nextNodeCode
      */
-    private Map<String, FlowSkipDO> buildSkipKeyMap(List<FlowSkipDO> skips) {
-        Map<String, FlowSkipDO> map = new LinkedHashMap<>();
-        for (FlowSkipDO skip : skips) {
+    private Map<String, FlowSkip> buildSkipKeyMap(List<FlowSkip> skips) {
+        Map<String, FlowSkip> map = new LinkedHashMap<>();
+        for (FlowSkip skip : skips) {
             String key = buildSkipKey(skip);
             if (key != null) {
                 map.put(key, skip);
@@ -1122,7 +1122,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     /**
      * 从 ext JSON 中提取 sourceRef，拼接 key
      */
-    private String buildSkipKey(FlowSkipDO skip) {
+    private String buildSkipKey(FlowSkip skip) {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
@@ -1141,7 +1141,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     /**
      * 将连线转为 Map 表示
      */
-    private Map<String, Object> skipToMap(FlowSkipDO skip) {
+    private Map<String, Object> skipToMap(FlowSkip skip) {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
@@ -1290,7 +1290,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_d6e7f8a9");
         }
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_e7f8a9b0", definitionId);
@@ -1313,7 +1313,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // CAS 失败：要么 version 不匹配（并发更新），要么锁被他人持有且未超时
-        FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+        FlowDefinition latest = definitionMapper.selectById(definitionId);
         if (latest == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_e7f8a9b0", definitionId);
@@ -1356,7 +1356,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_d6e7f8a9");
         }
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_e7f8a9b0", definitionId);
@@ -1376,7 +1376,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // CAS 失败：要么非持锁人，要么 version 变化
-        FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+        FlowDefinition latest = definitionMapper.selectById(definitionId);
         if (latest == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_e7f8a9b0", definitionId);
@@ -1401,7 +1401,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_d6e7f8a9");
         }
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
             return null;
         }
@@ -1443,12 +1443,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 1. 校验两个定义存在
-        FlowDefinitionDO oldDef = definitionMapper.selectById(oldDefinitionId);
+        FlowDefinition oldDef = definitionMapper.selectById(oldDefinitionId);
         if (oldDef == null || (oldDef.getDeleted() != null && oldDef.getDeleted() == 1)) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_e7f8a9b0", oldDefinitionId);
         }
-        FlowDefinitionDO newDef = definitionMapper.selectById(newDefinitionId);
+        FlowDefinition newDef = definitionMapper.selectById(newDefinitionId);
         if (newDef == null || (newDef.getDeleted() != null && newDef.getDeleted() == 1)) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_e7f8a9b0", newDefinitionId);
@@ -1647,22 +1647,22 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
 
         // 1. 查询当前激活版本
-        FlowDefinitionDO currentDef = definitionMapper.selectPublished(flowCode, null, tid);
+        FlowDefinition currentDef = definitionMapper.selectPublished(flowCode, null, tid);
         if (currentDef == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "未找到当前激活的流程定义: flowCode=" + flowCode);
         }
 
         // 2. 查询上一个已发布版本（排除当前版本，按版本号降序取第一条）
-        LambdaQueryWrapper<FlowDefinitionDO> qw = new LambdaQueryWrapper<>();
-        qw.eq(FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(FlowDefinitionDO::getTenantId, tid)
-                .ne(FlowDefinitionDO::getId, currentDef.getId())
-                .eq(FlowDefinitionDO::getIsPublish, 1)
-                .eq(FlowDefinitionDO::getDeleted, 0)
-                .orderByDesc(FlowDefinitionDO::getFlowVersion)
+        LambdaQueryWrapper<FlowDefinition> qw = new LambdaQueryWrapper<>();
+        qw.eq(FlowDefinition::getFlowCode, flowCode)
+                .eq(FlowDefinition::getTenantId, tid)
+                .ne(FlowDefinition::getId, currentDef.getId())
+                .eq(FlowDefinition::getIsPublish, 1)
+                .eq(FlowDefinition::getDeleted, 0)
+                .orderByDesc(FlowDefinition::getFlowVersion)
                 .last("LIMIT 1");
-        FlowDefinitionDO previousDef = definitionMapper.selectOne(qw);
+        FlowDefinition previousDef = definitionMapper.selectOne(qw);
         if (previousDef == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "无可回滚的历史版本: flowCode=" + flowCode);
@@ -1693,12 +1693,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             migrateDto.setTenantId(tid);
             // 自动映射节点（编码相同的自动配对）
             Map<String, String> nodeMapping = new HashMap<>();
-            List<FlowNodeDO> oldNodes = nodeMapper.selectByDefinitionId(currentDef.getId());
-            List<FlowNodeDO> newNodes = nodeMapper.selectByDefinitionId(previousDef.getId());
+            List<FlowNode> oldNodes = nodeMapper.selectByDefinitionId(currentDef.getId());
+            List<FlowNode> newNodes = nodeMapper.selectByDefinitionId(previousDef.getId());
             Set<String> newNodeCodes = newNodes.stream()
-                    .map(FlowNodeDO::getNodeCode)
+                    .map(FlowNode::getNodeCode)
                     .collect(Collectors.toSet());
-            for (FlowNodeDO oldNode : oldNodes) {
+            for (FlowNode oldNode : oldNodes) {
                 if (newNodeCodes.contains(oldNode.getNodeCode())) {
                     nodeMapping.put(oldNode.getNodeCode(), oldNode.getNodeCode());
                 }

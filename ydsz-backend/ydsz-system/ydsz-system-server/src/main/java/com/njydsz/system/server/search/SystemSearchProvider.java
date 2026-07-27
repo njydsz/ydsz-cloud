@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.system.domain.entity.ConfigDO;
+import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SystemSearchProvider implements SearchProvider<ConfigDO> {
+public class SystemSearchProvider implements SearchProvider<Config> {
 
     private final ConfigMapper configMapper;
 
@@ -41,7 +41,7 @@ public class SystemSearchProvider implements SearchProvider<ConfigDO> {
     }
 
     @Override
-    public IndexDocument toIndexDocument(ConfigDO entity) {
+    public IndexDocument toIndexDocument(Config entity) {
         if (entity == null || entity.getId() == null) {
             return null;
         }
@@ -74,23 +74,23 @@ public class SystemSearchProvider implements SearchProvider<ConfigDO> {
 
     @Override
     public List<String> getAllDocumentIds(String tenantId) {
-        LambdaQueryWrapper<ConfigDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(ConfigDO::getId);
+        LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(Config::getId);
         if (tenantId != null && !tenantId.isBlank()) {
-            wrapper.eq(ConfigDO::getTenantId, tenantId);
+            wrapper.eq(Config::getTenantId, tenantId);
         }
         return configMapper.selectList(wrapper)
                 .stream()
-                .map(ConfigDO::getId)
+                .map(Config::getId)
                 .toList();
     }
 
     @Override
-    public ConfigDO loadById(String id) {
+    public Config loadById(String id) {
         return configMapper.selectById(id);
     }
 
-    private String buildSearchableText(ConfigDO entity) {
+    private String buildSearchableText(Config entity) {
         StringBuilder sb = new StringBuilder();
         if (entity.getConfigKey() != null) {
             sb.append(entity.getConfigKey());

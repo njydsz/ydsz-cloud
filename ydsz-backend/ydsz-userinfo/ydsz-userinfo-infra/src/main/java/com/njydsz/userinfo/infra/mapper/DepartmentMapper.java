@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.DepartmentDO;
+import com.njydsz.userinfo.domain.entity.Department;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -14,5 +14,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface DepartmentMapper extends BaseMapper<DepartmentDO> {
+public interface DepartmentMapper extends BaseMapper<Department> {
 }

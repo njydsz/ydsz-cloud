@@ -5,7 +5,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.project.domain.entity.project.ProjectRevenueDO;
+import com.njydsz.project.domain.entity.project.ProjectRevenue;
 import com.njydsz.project.server.service.ProjectRevenueService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,21 +19,21 @@ public class ProjectRevenueController {
     private final ProjectRevenueService service;
 
     @GetMapping("/{id}")
-    public BaseResponse<ProjectRevenueDO> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
+    public BaseResponse<ProjectRevenue> getById(@PathVariable String id) { return BaseResponse.success(service.getById(id)); }
 
     @GetMapping("/page")
-    public PageResponse<ProjectRevenueDO> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
-        IPage<ProjectRevenueDO> r = service.page(p, s);
+    public PageResponse<ProjectRevenue> page(@RequestParam(defaultValue="1") int p, @RequestParam(defaultValue="10") int s) {
+        IPage<ProjectRevenue> r = service.page(p, s);
         return PageResponse.success(r.getRecords(), r.getTotal(), (int)r.getCurrent(), (int)r.getSize());
     }
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectRevenue")
-    public BaseResponse<Boolean> save(@RequestBody ProjectRevenueDO e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectRevenue e) { return BaseResponse.success(service.save(e)); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectRevenue")
-    public BaseResponse<Boolean> update(@RequestBody ProjectRevenueDO e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectRevenue e) { return BaseResponse.success(service.updateById(e)); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectRevenue")

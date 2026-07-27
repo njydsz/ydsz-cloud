@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -36,10 +36,10 @@ public class MessageExpiryCleaner {
         LocalDateTime now = LocalDateTime.now();
         try {
             int rows = msgNotificationMapper.update(null,
-                    new LambdaUpdateWrapper<MsgNotificationDO>()
-                            .lt(MsgNotificationDO::getExpiredAt, now)
-                            .eq(MsgNotificationDO::getDeleted, 0)
-                            .set(MsgNotificationDO::getDeleted, 1));
+                    new LambdaUpdateWrapper<MsgNotification>()
+                            .lt(MsgNotification::getExpiredAt, now)
+                            .eq(MsgNotification::getDeleted, 0)
+                            .set(MsgNotification::getDeleted, 1));
             log.info("[ExpiryCleaner] 清理过期通知: count={} threshold={}", rows, now);
         } catch (Exception e) {
             log.error("[ExpiryCleaner] 清理过期通知失败: {}", e.getMessage(), e);

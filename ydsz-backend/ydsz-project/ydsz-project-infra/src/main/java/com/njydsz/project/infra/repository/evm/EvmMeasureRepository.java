@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.evm;
 
-import com.njydsz.project.domain.entity.evm.EvmMeasureDO;
+import com.njydsz.project.domain.entity.evm.EvmMeasure;
 import com.njydsz.project.domain.repository.evm.IEvmMeasureRepository;
 import com.njydsz.project.infra.mapper.evm.EvmMeasureMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class EvmMeasureRepository extends ServiceImpl<EvmMeasureMapper, EvmMeasureDO>
+public class EvmMeasureRepository extends ServiceImpl<EvmMeasureMapper, EvmMeasure>
         implements IEvmMeasureRepository {
 }

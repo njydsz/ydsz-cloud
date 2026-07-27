@@ -2,8 +2,8 @@ package com.njydsz.workflow.server.service;
 
 import java.util.Map;
 
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 
 /**
  * 流程 SLA（Service Level Agreement）超时自动策略服务
@@ -34,7 +34,7 @@ public interface FlowSlaService {
      * @param task 当前任务（必须已 setAssigneeId + dueAt）
      * @return true=已处理或无需处理；false=处理异常
      */
-    boolean processOverdue(FlowRunTaskDO task);
+    boolean processOverdue(FlowRunTask task);
 
     /**
      * 应用 SLA 配置到任务（创建任务时调用，解析 node.slaConfig 设置 dueAt）
@@ -42,7 +42,7 @@ public interface FlowSlaService {
      * @param task 待设置 dueAt 的任务
      * @param node 当前节点（slaConfig 字段从 ext 中读取）
      */
-    void applySlaConfig(FlowRunTaskDO task, FlowNodeDO node);
+    void applySlaConfig(FlowRunTask task, FlowNode node);
 
     /**
      * 解析 SLA 配置（同时支持 slaConfig JSON 和 ext.slaConfig 嵌套）

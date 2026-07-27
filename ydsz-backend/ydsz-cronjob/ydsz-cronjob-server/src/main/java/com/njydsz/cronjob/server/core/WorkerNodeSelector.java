@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * <h3>选择策略</h3>
  * <ul>
  *   <li>{@code round_robin}（默认）：轮询在线节点列表，均匀分配任务</li>
- *   <li>{@code least_load}：选择当前运行任务数最少的节点（基于 JobNodeDO.runningCount）</li>
+ *   <li>{@code least_load}：选择当前运行任务数最少的节点（基于 JobNode.runningCount）</li>
  * </ul>
  *
  * <h3>容错</h3>
@@ -62,8 +62,8 @@ public class WorkerNodeSelector {
      *
      * @return 选中的 Worker 节点；无可用 Worker 时返回 null
      */
-    public JobNodeDO selectWorker() {
-        List<JobNodeDO> onlineNodes = getOnlineNodes();
+    public JobNode selectWorker() {
+        List<JobNode> onlineNodes = getOnlineNodes();
         if (onlineNodes.isEmpty()) {
             log.debug("[WorkerSelector] 无在线节点");
             return null;
@@ -71,7 +71,7 @@ public class WorkerNodeSelector {
 
         String localNodeId = resolveLocalNodeId();
         // 排除 Leader 节点
-        List<JobNodeDO> workers = onlineNodes.stream()
+        List<JobNode> workers = onlineNodes.stream()
                 .filter(n -> !n.getNodeId().equals(localNodeId))
                 .toList();
 
@@ -94,7 +94,7 @@ public class WorkerNodeSelector {
      * @param workers 可用 Worker 列表
      * @return 选中的 Worker 节点
      */
-    private JobNodeDO selectRoundRobin(List<JobNodeDO> workers) {
+    private JobNode selectRoundRobin(List<JobNode> workers) {
         int idx = Math.abs(roundRobinCounter.getAndIncrement()) % workers.size();
         return workers.get(idx);
     }
@@ -107,7 +107,7 @@ public class WorkerNodeSelector {
      * @param workers 可用 Worker 列表
      * @return 选中的 Worker 节点
      */
-    private JobNodeDO selectLeastLoad(List<JobNodeDO> workers) {
+    private JobNode selectLeastLoad(List<JobNode> workers) {
         return workers.stream()
                 .min((a, b) -> {
                     int loadA = a.getRunningCount() != null ? a.getRunningCount() : 0;
@@ -121,7 +121,7 @@ public class WorkerNodeSelector {
     /**
      * 获取在线节点列表。
      */
-    private List<JobNodeDO> getOnlineNodes() {
+    private List<JobNode> getOnlineNodes() {
         NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
         if (strategy != null) {
             return strategy.getOnlineNodes();

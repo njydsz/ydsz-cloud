@@ -9,8 +9,8 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.server.service.dag.JobDagInstanceService;
 import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 
@@ -44,7 +44,7 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 实例详情")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}")
-    public BaseResponse<JobDagInstanceDO> getInstanceById(@PathVariable String instanceId) {
+    public BaseResponse<JobDagInstance> getInstanceById(@PathVariable String instanceId) {
         return BaseResponse.success(jobDagInstanceService.getInstanceById(instanceId));
     }
 
@@ -58,7 +58,7 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 的实例列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/dag/{dagId}")
-    public BaseResponse<List<JobDagInstanceDO>> listByDagId(@PathVariable String dagId,
+    public BaseResponse<List<JobDagInstance>> listByDagId(@PathVariable String dagId,
                                                        @RequestParam(defaultValue = "20") int limit) {
         return BaseResponse.success(jobDagInstanceService.listByDagId(dagId, limit));
     }
@@ -72,7 +72,7 @@ public class JobDagInstanceController {
     @Operation(summary = "按状态查询 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/status/{status}")
-    public BaseResponse<List<JobDagInstanceDO>> listByStatus(@PathVariable String status) {
+    public BaseResponse<List<JobDagInstance>> listByStatus(@PathVariable String status) {
         return BaseResponse.success(jobDagInstanceService.listByStatus(status));
     }
 
@@ -85,7 +85,7 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 实例的节点列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/nodes")
-    public BaseResponse<List<JobDagNodeInstanceDO>> listNodes(@PathVariable String instanceId) {
+    public BaseResponse<List<JobDagNodeInstance>> listNodes(@PathVariable String instanceId) {
         return BaseResponse.success(jobDagInstanceService.listNodes(instanceId));
     }
 

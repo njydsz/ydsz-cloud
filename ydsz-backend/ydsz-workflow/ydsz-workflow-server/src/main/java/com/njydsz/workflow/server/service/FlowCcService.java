@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowCcQueryDTO;
-import com.njydsz.workflow.domain.entity.FlowCcDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.entity.FlowCc;
+import com.njydsz.workflow.domain.entity.FlowNode;
 
 /**
  * GAP-P1: 流程抄送服务
@@ -39,14 +39,14 @@ public interface FlowCcService {
      *       <li>role:/dept: 前缀 → 通过 assigneeResolver.expandUsers() 展开为用户列表</li>
      *     </ul>
      *   </li>
-     *   <li>为每个 userId 写入一条 FlowCcDO（ccType=CC_NODE, readStatus=UNREAD）</li>
+     *   <li>为每个 userId 写入一条 FlowCc（ccType=CC_NODE, readStatus=UNREAD）</li>
      * </ol>
      *
      * @param instanceId 流程实例 ID
      * @param node       抄送节点定义
      * @param variables  流程变量（用于 SpEL 解析）
      */
-    void handleCcNode(String instanceId, FlowNodeDO node, Map<String, Object> variables);
+    void handleCcNode(String instanceId, FlowNode node, Map<String, Object> variables);
 
     /**
      * 查"抄送我的"分页（便捷方法，使用 DTO 参数）
@@ -56,7 +56,7 @@ public interface FlowCcService {
      * @param query    查询条件 DTO
      * @return 抄送记录列表
      */
-    List<FlowCcDO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query);
+    List<FlowCc> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query);
 
     /**
      * 查"抄送我的"总数（便捷方法，使用 DTO 参数）
@@ -79,7 +79,7 @@ public interface FlowCcService {
      * @param pageSize   每页大小
      * @return 抄送记录分页
      */
-    PageResponse<List<FlowCcDO>> listCcByUser(String userId, String readStatus, String flowCode,
+    PageResponse<List<FlowCc>> listCcByUser(String userId, String readStatus, String flowCode,
                                             String tenantId, int pageNo, int pageSize);
 
     /**
@@ -116,5 +116,5 @@ public interface FlowCcService {
      * @param tenantId   租户 ID
      * @return 抄送记录列表
      */
-    List<FlowCcDO> listByInstance(String instanceId, String tenantId);
+    List<FlowCc> listByInstance(String instanceId, String tenantId);
 }

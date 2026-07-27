@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.infra.mapper.FlowThirdPartyLogMapper;
 import com.njydsz.workflow.server.service.FlowThirdPartyLogService;
 
@@ -40,7 +40,7 @@ public class FlowThirdPartyLogServiceImpl implements FlowThirdPartyLogService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
-    public String savePending(FlowThirdPartyLogDO logEntry) {
+    public String savePending(FlowThirdPartyLog logEntry) {
         try {
             if (logEntry == null) {
                 return null;

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.service.job.JobService;
 
@@ -56,15 +56,15 @@ public class JobGroupController {
      */
     @Operation(summary = "按分组分页查询任务")
     @GetMapping("/{jobGroup}/page")
-    public BaseResponse<Page<JobDO>> pageByGroup(
+    public BaseResponse<Page<Job>> pageByGroup(
             @PathVariable String jobGroup,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<JobDO> pageObj = new Page<>(page, size);
-        LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobDO::getJobGroup, jobGroup)
-                .eq(JobDO::getDeleted, 0)
-                .orderByDesc(JobDO::getCreatedAt);
+        Page<Job> pageObj = new Page<>(page, size);
+        LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Job::getJobGroup, jobGroup)
+                .eq(Job::getDeleted, 0)
+                .orderByDesc(Job::getCreatedAt);
         return BaseResponse.success(jobMapper.selectPage(pageObj, wrapper));
     }
 
@@ -80,12 +80,12 @@ public class JobGroupController {
     @Idempotent(key = "ydsz:cronjob:JobGroupController:pauseByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/pause")
     public BaseResponse<Integer> pauseByGroup(@PathVariable String jobGroup) {
-        LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobDO::getJobGroup, jobGroup)
-                .eq(JobDO::getStatus, "NORMAL")
-                .eq(JobDO::getDeleted, 0);
-        List<JobDO> jobs = jobMapper.selectList(wrapper);
-        List<String> jobIds = jobs.stream().map(JobDO::getId).toList();
+        LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Job::getJobGroup, jobGroup)
+                .eq(Job::getStatus, "NORMAL")
+                .eq(Job::getDeleted, 0);
+        List<Job> jobs = jobMapper.selectList(wrapper);
+        List<String> jobIds = jobs.stream().map(Job::getId).toList();
         if (jobIds.isEmpty()) {
             return BaseResponse.success(0);
         }
@@ -104,12 +104,12 @@ public class JobGroupController {
     @Idempotent(key = "ydsz:cronjob:JobGroupController:resumeByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/resume")
     public BaseResponse<Integer> resumeByGroup(@PathVariable String jobGroup) {
-        LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobDO::getJobGroup, jobGroup)
-                .eq(JobDO::getStatus, "PAUSED")
-                .eq(JobDO::getDeleted, 0);
-        List<JobDO> jobs = jobMapper.selectList(wrapper);
-        List<String> jobIds = jobs.stream().map(JobDO::getId).toList();
+        LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Job::getJobGroup, jobGroup)
+                .eq(Job::getStatus, "PAUSED")
+                .eq(Job::getDeleted, 0);
+        List<Job> jobs = jobMapper.selectList(wrapper);
+        List<String> jobIds = jobs.stream().map(Job::getId).toList();
         if (jobIds.isEmpty()) {
             return BaseResponse.success(0);
         }
@@ -128,12 +128,12 @@ public class JobGroupController {
     @Idempotent(key = "ydsz:cronjob:JobGroupController:triggerByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/trigger")
     public BaseResponse<Integer> triggerByGroup(@PathVariable String jobGroup) {
-        LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobDO::getJobGroup, jobGroup)
-                .eq(JobDO::getStatus, "NORMAL")
-                .eq(JobDO::getDeleted, 0);
-        List<JobDO> jobs = jobMapper.selectList(wrapper);
-        List<String> jobIds = jobs.stream().map(JobDO::getId).toList();
+        LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Job::getJobGroup, jobGroup)
+                .eq(Job::getStatus, "NORMAL")
+                .eq(Job::getDeleted, 0);
+        List<Job> jobs = jobMapper.selectList(wrapper);
+        List<String> jobIds = jobs.stream().map(Job::getId).toList();
         if (jobIds.isEmpty()) {
             return BaseResponse.success(0);
         }
@@ -148,11 +148,11 @@ public class JobGroupController {
     @Operation(summary = "查询所有任务分组统计")
     @GetMapping("/stats")
     public BaseResponse<List<Map<String, Object>>> groupStats() {
-        LambdaQueryWrapper<JobDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobDO::getDeleted, 0).select(JobDO::getJobGroup);
-        List<JobDO> all = jobMapper.selectList(wrapper);
+        LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Job::getDeleted, 0).select(Job::getJobGroup);
+        List<Job> all = jobMapper.selectList(wrapper);
         Map<String, Integer> counts = new java.util.LinkedHashMap<>();
-        for (JobDO job : all) {
+        for (Job job : all) {
             String group = job.getJobGroup() != null ? job.getJobGroup() : "default";
             counts.merge(group, 1, Integer::sum);
         }

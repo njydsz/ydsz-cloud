@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.domain.dto.MenuSaveDTO;
-import com.njydsz.userinfo.domain.entity.MenuDO;
+import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
@@ -44,7 +44,7 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     public MenuVO getById(String id) {
-        MenuDO entity = mapper.selectById(id);
+        Menu entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
         }
@@ -58,9 +58,9 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     public List<MenuVO> list() {
-        LambdaQueryWrapper<MenuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MenuDO::getDeleted, 0);
-        wrapper.orderByDesc(MenuDO::getSortOrder);
+        LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Menu::getDeleted, 0);
+        wrapper.orderByDesc(Menu::getSortOrder);
         return mapper.selectList(wrapper).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
@@ -73,7 +73,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(MenuSaveDTO dto) {
-        MenuDO entity = new MenuDO();
+        Menu entity = new Menu();
         BeanUtils.copyProperties(dto, entity);
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
@@ -95,7 +95,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(MenuSaveDTO dto) {
-        MenuDO entity = mapper.selectById(dto.getId());
+        Menu entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
         }
@@ -112,14 +112,14 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        MenuDO entity = mapper.selectById(id);
+        Menu entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.MENU_NOT_FOUND);
         }
         // 检查子菜单
-        LambdaQueryWrapper<MenuDO> childWrapper = new LambdaQueryWrapper<>();
-        childWrapper.eq(MenuDO::getParentId, id);
-        childWrapper.eq(MenuDO::getDeleted, 0);
+        LambdaQueryWrapper<Menu> childWrapper = new LambdaQueryWrapper<>();
+        childWrapper.eq(Menu::getParentId, id);
+        childWrapper.eq(Menu::getDeleted, 0);
         if (mapper.selectCount(childWrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.MENU_HAS_CHILDREN);
         }
@@ -134,9 +134,9 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     public List<MenuTreeVO> tree() {
-        List<MenuDO> all = mapper.selectList(
-                new LambdaQueryWrapper<MenuDO>()
-                        .eq(MenuDO::getDeleted, 0));
+        List<Menu> all = mapper.selectList(
+                new LambdaQueryWrapper<Menu>()
+                        .eq(Menu::getDeleted, 0));
         if (all.isEmpty()) {
             return List.of();
         }
@@ -160,7 +160,7 @@ public class MenuServiceImpl implements MenuService {
      * @param entity 数据库实体
      * @return 视图对象
      */
-    private MenuVO toVO(MenuDO entity) {
+    private MenuVO toVO(Menu entity) {
         MenuVO vo = new MenuVO();
         BeanUtils.copyProperties(entity, vo);
         return vo;

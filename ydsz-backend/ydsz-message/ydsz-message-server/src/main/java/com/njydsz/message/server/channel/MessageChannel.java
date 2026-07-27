@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.receipt.ReceiptResult;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 
 /**
  * 消息通道 SPI 接口。
@@ -46,7 +46,7 @@ public interface MessageChannel {
      * @param logDO 消息日志实体（含 providerTraceId 用于查询）
      * @return 回执结果；空表示渠道不支持或暂无回执
      */
-    default Optional<ReceiptResult> queryReceipt(MsgLogDO logDO) {
+    default Optional<ReceiptResult> queryReceipt(MsgLog logDO) {
         return Optional.empty();
     }
 }

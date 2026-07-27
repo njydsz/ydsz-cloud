@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.config.MsgVariableSourceDO;
+import com.njydsz.message.domain.entity.config.MsgVariableSource;
 import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 消息变量数据源解析器（P0-4）。
  *
- * <p>在模板渲染前，根据 {@link MsgVariableSourceDO} 配置自动从数据源拉取变量值：
+ * <p>在模板渲染前，根据 {@link MsgVariableSource} 配置自动从数据源拉取变量值：
  * <ul>
  *   <li>BEAN: 调用 Spring Bean 方法，表达式 {@code beanName.method(#bizId)}</li>
  *   <li>SQL: 执行 SQL 查询，表达式 {@code SELECT name FROM xxx WHERE id = :bizId}</li>
@@ -56,13 +56,13 @@ public class VariableSourceResolver {
      * @param templateCode 模板编码
      * @return 数据源列表
      */
-    public List<MsgVariableSourceDO> loadByTemplate(String templateCode) {
+    public List<MsgVariableSource> loadByTemplate(String templateCode) {
         if (!StringUtils.hasText(templateCode)) {
             return List.of();
         }
-        return variableSourceMapper.selectList(new LambdaQueryWrapper<MsgVariableSourceDO>()
-                .eq(MsgVariableSourceDO::getTemplateCode, templateCode)
-                .eq(MsgVariableSourceDO::getTenantId, TenantContext.getTenantId()));
+        return variableSourceMapper.selectList(new LambdaQueryWrapper<MsgVariableSource>()
+                .eq(MsgVariableSource::getTemplateCode, templateCode)
+                .eq(MsgVariableSource::getTenantId, TenantContext.getTenantId()));
     }
 
     /**
@@ -77,12 +77,12 @@ public class VariableSourceResolver {
         if (params == null || !StringUtils.hasText(templateCode)) {
             return;
         }
-        List<MsgVariableSourceDO> sources = loadByTemplate(templateCode);
+        List<MsgVariableSource> sources = loadByTemplate(templateCode);
         if (sources.isEmpty()) {
             return;
         }
 
-        for (MsgVariableSourceDO source : sources) {
+        for (MsgVariableSource source : sources) {
             String varName = source.getVariableName();
             // params 中已有值则不覆盖
             if (params.containsKey(varName) && params.get(varName) != null) {
@@ -105,7 +105,7 @@ public class VariableSourceResolver {
     /**
      * 解析单个变量。
      */
-    private Object resolveOne(MsgVariableSourceDO source, Map<String, Object> context) {
+    private Object resolveOne(MsgVariableSource source, Map<String, Object> context) {
         String type = source.getSourceType();
         String expr = source.getSourceExpr();
         String cacheKey = null;

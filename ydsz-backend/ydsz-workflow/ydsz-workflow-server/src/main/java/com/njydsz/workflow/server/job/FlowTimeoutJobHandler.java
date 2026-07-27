@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.job.JobHandler;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
@@ -71,7 +71,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         String tenantId = parseTenantId(paramsJson);
 
         // selectOverdue 已内置 deleted=0、task_status IN ('PENDING','CLAIMED')、due_at < now 过滤
-        List<FlowRunTaskDO> overdueTasks;
+        List<FlowRunTask> overdueTasks;
         try {
             overdueTasks = taskMapper.selectOverdue(null, tenantId);
         } catch (Exception e) {
@@ -86,7 +86,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         int processed = 0;
         int errors = 0;
         if (overdueTasks != null && !overdueTasks.isEmpty()) {
-            for (FlowRunTaskDO task : overdueTasks) {
+            for (FlowRunTask task : overdueTasks) {
                 try {
                     handleOverdueTask(task);
                     processed++;
@@ -132,7 +132,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * doAutoPass/doAutoReject/markTimeout），与 FlowSlaServiceImpl 存在两套实现，行为不一致。
      * 尤其 markTimeout 会将任务标记为 TIMEOUT 终态（流程卡死），违反 SLA 闭环原则。
      *
-     * <p>现统一委托给 {@link FlowSlaService#processOverdue(FlowRunTaskDO)}，由 FlowSlaServiceImpl
+     * <p>现统一委托给 {@link FlowSlaService#processOverdue(FlowRunTask)}，由 FlowSlaServiceImpl
      * 负责完整的 SLA 闭环处理（NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT），包括：
      * <ul>
      *   <li>提醒计数与间隔控制（reminderCount / lastRemindedAt / maxReminders）</li>
@@ -142,7 +142,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      *
      * @param task 超期任务
      */
-    private void handleOverdueTask(FlowRunTaskDO task) {
+    private void handleOverdueTask(FlowRunTask task) {
         boolean processed = slaService.processOverdue(task);
         if (processed) {
             log.debug("[FlowTimeout] SLA 处理完成: taskId={} instanceId={}",
@@ -162,7 +162,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * @return 处理计数
      */
     private Map<String, Object> handleSubProcessTimeout(String tenantId) {
-        List<FlowInstanceDO> overdueInstances = instanceMapper.selectOverdueInstances(tenantId);
+        List<FlowInstance> overdueInstances = instanceMapper.selectOverdueInstances(tenantId);
         int processed = 0;
         int errors = 0;
         if (overdueInstances == null || overdueInstances.isEmpty()) {
@@ -172,7 +172,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
             result.put("errors", 0);
             return result;
         }
-        for (FlowInstanceDO instance : overdueInstances) {
+        for (FlowInstance instance : overdueInstances) {
             try {
                 handleOverdueSubProcess(instance);
                 processed++;
@@ -194,11 +194,11 @@ public class FlowTimeoutJobHandler implements JobHandler {
      *
      * @param instance 超期子流程实例
      */
-    private void handleOverdueSubProcess(FlowInstanceDO instance) {
+    private void handleOverdueSubProcess(FlowInstance instance) {
         String instanceId = instance.getId();
         LocalDateTime now = LocalDateTime.now();
         // 二次校验：避免并发的状态变更
-        FlowInstanceDO latest = instanceMapper.selectById(instanceId);
+        FlowInstance latest = instanceMapper.selectById(instanceId);
         if (latest == null || !FlowInstanceStatus.RUNNING.name().equals(latest.getFlowStatus())) {
             log.info("[FlowTimeout] 子流程实例状态已变更，跳过: instanceId={} status={}",
                     instanceId, latest == null ? "null" : latest.getFlowStatus());
@@ -219,7 +219,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         // 如果存在父流程，同步终止父流程
         String parentId = latest.getParentInstanceId();
         if (parentId != null) {
-            FlowInstanceDO parent = instanceMapper.selectById(parentId);
+            FlowInstance parent = instanceMapper.selectById(parentId);
             if (parent != null && FlowInstanceStatus.RUNNING.name().equals(parent.getFlowStatus())) {
                 long parentDurationMs = parent.getStartAt() == null
                         ? 0L : Duration.between(parent.getStartAt(), now).toMillis();

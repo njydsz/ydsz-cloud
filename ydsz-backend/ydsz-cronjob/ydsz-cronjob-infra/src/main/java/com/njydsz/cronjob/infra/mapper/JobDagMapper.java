@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
 
 /**
  * DAG 工作流定义 Mapper（P2 DAG 增强）。
@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobDagMapper extends BaseMapper<JobDagDO> {
+public interface JobDagMapper extends BaseMapper<JobDag> {
 
     /**
      * 根据 dag_key 查询 DAG 定义。
@@ -28,7 +28,7 @@ public interface JobDagMapper extends BaseMapper<JobDagDO> {
             + "       fire_count, success_count, fail_count, version, "
             + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM ydsz_job_dag WHERE dag_key = #{dagKey} AND deleted = 0")
-    JobDagDO selectByDagKey(@Param("dagKey") String dagKey);
+    JobDag selectByDagKey(@Param("dagKey") String dagKey);
 
     /**
      * 查询所有启用状态（ENABLED）且触发类型为 CRON 的 DAG（调度器扫描用）。
@@ -39,7 +39,7 @@ public interface JobDagMapper extends BaseMapper<JobDagDO> {
             + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM ydsz_job_dag "
             + "WHERE status = 'ENABLED' AND trigger_type = 'CRON' AND deleted = 0")
-    List<JobDagDO> selectCronEnabledDags();
+    List<JobDag> selectCronEnabledDags();
 
     /**
      * 查询所有 ENABLED 状态的 DAG。
@@ -49,7 +49,7 @@ public interface JobDagMapper extends BaseMapper<JobDagDO> {
             + "       fire_count, success_count, fail_count, version, "
             + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM ydsz_job_dag WHERE status = 'ENABLED' AND deleted = 0")
-    List<JobDagDO> selectEnabledDags();
+    List<JobDag> selectEnabledDags();
 
     /**
      * 更新 DAG 触发统计（fire_count +1，last_fire_time 更新）。

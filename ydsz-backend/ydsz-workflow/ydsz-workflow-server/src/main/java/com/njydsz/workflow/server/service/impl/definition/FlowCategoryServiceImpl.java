@@ -13,8 +13,8 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.domain.entity.FlowCategoryDO;
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.workflow.domain.entity.FlowCategory;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 import com.njydsz.workflow.server.service.FlowCategoryService;
@@ -40,12 +40,12 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     private final FlowDefinitionMapper definitionMapper;
 
     @Override
-    public List<FlowCategoryDO> listAll(String tenantId) {
+    public List<FlowCategory> listAll(String tenantId) {
         String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
-        List<FlowCategoryDO> list = categoryMapper.selectList(
-                new LambdaQueryWrapper<FlowCategoryDO>()
-                        .eq(FlowCategoryDO::getTenantId, tid)
-                        .eq(FlowCategoryDO::getDeleted, 0)
+        List<FlowCategory> list = categoryMapper.selectList(
+                new LambdaQueryWrapper<FlowCategory>()
+                        .eq(FlowCategory::getTenantId, tid)
+                        .eq(FlowCategory::getDeleted, 0)
         );
         list.sort(Comparator.comparingInt(c ->
                 c.getSortNum() == null ? 0 : c.getSortNum()));
@@ -58,17 +58,17 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
         // 校验编码唯一
         String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
         Long count = categoryMapper.selectCount(
-                new LambdaQueryWrapper<FlowCategoryDO>()
-                        .eq(FlowCategoryDO::getCategoryCode, dto.getCategoryCode())
-                        .eq(FlowCategoryDO::getTenantId, tid)
-                        .eq(FlowCategoryDO::getDeleted, 0)
+                new LambdaQueryWrapper<FlowCategory>()
+                        .eq(FlowCategory::getCategoryCode, dto.getCategoryCode())
+                        .eq(FlowCategory::getTenantId, tid)
+                        .eq(FlowCategory::getDeleted, 0)
         );
         if (count != null && count > 0) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_category_code_exists", dto.getCategoryCode());
         }
 
-        FlowCategoryDO category = new FlowCategoryDO();
+        FlowCategory category = new FlowCategory();
         category.setCategoryCode(dto.getCategoryCode());
         category.setCategoryName(dto.getCategoryName());
         category.setParentId(dto.getParentId());
@@ -90,7 +90,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
         if (!StringUtils.hasText(dto.getId())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
         }
-        FlowCategoryDO existing = categoryMapper.selectById(dto.getId());
+        FlowCategory existing = categoryMapper.selectById(dto.getId());
         if (existing == null || existing.getDeleted() == 1) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_6541ab08", dto.getId());
@@ -115,15 +115,15 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
-        FlowCategoryDO existing = categoryMapper.selectById(id);
+        FlowCategory existing = categoryMapper.selectById(id);
         if (existing == null || existing.getDeleted() == 1) {
             return;
         }
         // 校验是否有子分类
         Long childCount = categoryMapper.selectCount(
-                new LambdaQueryWrapper<FlowCategoryDO>()
-                        .eq(FlowCategoryDO::getParentId, id)
-                        .eq(FlowCategoryDO::getDeleted, 0)
+                new LambdaQueryWrapper<FlowCategory>()
+                        .eq(FlowCategory::getParentId, id)
+                        .eq(FlowCategory::getDeleted, 0)
         );
         if (childCount != null && childCount > 0) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
@@ -131,9 +131,9 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
         }
         // 校验是否有关联的流程定义
         Long defCount = definitionMapper.selectCount(
-                new LambdaQueryWrapper<FlowDefinitionDO>()
-                        .eq(FlowDefinitionDO::getCategory, id)
-                        .eq(FlowDefinitionDO::getDeleted, 0)
+                new LambdaQueryWrapper<FlowDefinition>()
+                        .eq(FlowDefinition::getCategory, id)
+                        .eq(FlowDefinition::getDeleted, 0)
         );
         if (defCount != null && defCount > 0) {
             throw new SysException(BaseResultCode.BAD_REQUEST,

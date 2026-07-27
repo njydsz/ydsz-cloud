@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
+import com.njydsz.workflow.domain.entity.FlowHisTask;
 
 /**
  * 历史任务 Mapper
@@ -19,12 +19,12 @@ import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
+public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
 
     /**
      * 查用户已办（历史）
      */
-    List<FlowHisTaskDO> selectDoneByAssignee(@Param("assigneeId") String assigneeId,
+    List<FlowHisTask> selectDoneByAssignee(@Param("assigneeId") String assigneeId,
                                              @Param("tenantId") String tenantId);
 
     /**
@@ -35,7 +35,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @param offset     偏移量（从 0 开始）
      * @param limit      每页大小
      */
-    List<FlowHisTaskDO> selectDoneByAssigneePage(@Param("assigneeId") String assigneeId,
+    List<FlowHisTask> selectDoneByAssigneePage(@Param("assigneeId") String assigneeId,
                                                  @Param("tenantId") String tenantId,
                                                  @Param("offset") int offset,
                                                  @Param("limit") int limit);
@@ -49,7 +49,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
     /**
      * 查某实例的所有历史
      */
-    List<FlowHisTaskDO> selectByInstanceId(@Param("instanceId") String instanceId);
+    List<FlowHisTask> selectByInstanceId(@Param("instanceId") String instanceId);
 
     /**
      * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
@@ -73,7 +73,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @param offset       偏移量（从 0 开始）
      * @param limit        每页大小
      */
-    List<FlowHisTaskDO> selectDonePage(@Param("assigneeId") String assigneeId,
+    List<FlowHisTask> selectDonePage(@Param("assigneeId") String assigneeId,
                                        @Param("businessType") String businessType,
                                        @Param("flowCode") String flowCode,
                                        @Param("startTime") LocalDateTime startTime,

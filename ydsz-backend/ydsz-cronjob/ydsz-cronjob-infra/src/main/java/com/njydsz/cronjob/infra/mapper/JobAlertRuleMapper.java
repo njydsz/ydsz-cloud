@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**
  * 任务告警规则 Mapper（P5 告警 + 监控）。
@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
+public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {
 
     /**
      * 查询所有启用的告警规则（启动时加载到内存）。
@@ -31,7 +31,7 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
             + "created_by, created_at, updated_by, updated_at, deleted "
             + "FROM ydsz_job_alert_rule "
             + "WHERE deleted = 0 AND enabled = 1")
-    List<JobAlertRuleDO> selectAllEnabled();
+    List<JobAlertRule> selectAllEnabled();
 
     /**
      * 查询指定任务绑定的告警规则（含全局规则）。
@@ -48,7 +48,7 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
             + "FROM ydsz_job_alert_rule "
             + "WHERE deleted = 0 AND enabled = 1 "
             + "AND (job_id = #{jobId} OR job_id IS NULL)")
-    List<JobAlertRuleDO> selectByJobIdOrGlobal(@Param("jobId") String jobId);
+    List<JobAlertRule> selectByJobIdOrGlobal(@Param("jobId") String jobId);
 
     /**
      * P3-2: 按告警类型查询启用的规则（周期性扫描使用）。
@@ -65,7 +65,7 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
             + "created_by, created_at, updated_by, updated_at, deleted "
             + "FROM ydsz_job_alert_rule "
             + "WHERE alert_type = #{alertType} AND enabled = 1 AND deleted = 0")
-    List<JobAlertRuleDO> selectByAlertType(@Param("alertType") String alertType);
+    List<JobAlertRule> selectByAlertType(@Param("alertType") String alertType);
 
     /**
      * P2-2-merge: 查询指定任务的 SLA 来源告警规则（source_type='SLA'）。
@@ -82,7 +82,7 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
             + "created_by, created_at, updated_by, updated_at, deleted "
             + "FROM ydsz_job_alert_rule "
             + "WHERE job_id = #{jobId} AND source_type = 'SLA' AND deleted = 0")
-    List<JobAlertRuleDO> selectSlaRulesByJobId(@Param("jobId") String jobId);
+    List<JobAlertRule> selectSlaRulesByJobId(@Param("jobId") String jobId);
 
     /**
      * 原子更新最后告警时间（CAS 语义，避免并发重复告警）。

@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
 import com.njydsz.workflow.domain.enums.CanaryStatus;
 import com.njydsz.workflow.domain.enums.CanaryStrategy;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
@@ -47,7 +47,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     public void publishCanary(String definitionId, int initialPercent, String strategy,
                                String operatorId, String operatorName, String note) {
         validatePercent(initialPercent);
-        FlowDefinitionDO def = mustGetDef(definitionId);
+        FlowDefinition def = mustGetDef(definitionId);
         if (def.getIsPublish() == null || def.getIsPublish() != 1) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
         }
@@ -73,7 +73,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     public void adjustCanaryPercent(String definitionId, int newPercent,
                                     String operatorId, String operatorName, String note) {
         validatePercent(newPercent);
-        FlowDefinitionDO def = mustGetDef(definitionId);
+        FlowDefinition def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (!CanaryStatus.CANARYING.name().equals(curStatus)) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
@@ -95,7 +95,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void promoteCanary(String definitionId, String operatorId, String operatorName, String note) {
-        FlowDefinitionDO def = mustGetDef(definitionId);
+        FlowDefinition def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
             log.info("[Flow][Canary] 定义已全量发布，跳过: defId={}", definitionId);
@@ -122,7 +122,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rollbackCanary(String definitionId, String operatorId, String operatorName, String note) {
-        FlowDefinitionDO def = mustGetDef(definitionId);
+        FlowDefinition def = mustGetDef(definitionId);
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
         def.setCanaryPercent(0);
         def.setCanaryStatus(CanaryStatus.ROLLED_BACK.name());
@@ -138,10 +138,10 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(readOnly = true)
-    public FlowDefinitionDO resolveEffectiveDefinition(String flowCode, String version,
+    public FlowDefinition resolveEffectiveDefinition(String flowCode, String version,
                                                        String tenantId, String initiatorId) {
         // 1) 先查稳定版（isPublish=1 且 canaryStatus != CANARYING 的最新已发布）
-        FlowDefinitionDO stable = definitionMapper.selectPublished(
+        FlowDefinition stable = definitionMapper.selectPublished(
                 flowCode,
                 StringUtils.hasText(version) ? version : "1.0",
                 tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
@@ -150,13 +150,13 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         }
 
         // 2) 查同 flowCode + tenant 的所有 CANARYING 灰度版（按 version desc 取最新）
-        List<FlowDefinitionDO> canaries = definitionMapper.selectCanaryingByCode(
+        List<FlowDefinition> canaries = definitionMapper.selectCanaryingByCode(
                 flowCode,
                 tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
         if (canaries == null || canaries.isEmpty()) {
             return stable;
         }
-        FlowDefinitionDO canary = canaries.get(0);
+        FlowDefinition canary = canaries.get(0);
         int percent = canary.getCanaryPercent() == null ? 0 : canary.getCanaryPercent();
         if (percent <= 0 || percent >= 100) {
             return stable;
@@ -178,12 +178,12 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
             return Collections.emptyList();
         }
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        List<FlowDefinitionDO> defs = definitionMapper.selectByFlowCode(flowCode, tid);
+        List<FlowDefinition> defs = definitionMapper.selectByFlowCode(flowCode, tid);
         if (defs == null || defs.isEmpty()) {
             return Collections.emptyList();
         }
         List<Map<String, Object>> out = new ArrayList<>();
-        for (FlowDefinitionDO d : defs) {
+        for (FlowDefinition d : defs) {
             if (!StringUtils.hasText(d.getCanaryRolloutLog())) {
                 continue;
             }
@@ -235,11 +235,11 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      * @param definitionId 流程定义 ID
      * @return 非空的流程定义实体
      */
-    private FlowDefinitionDO mustGetDef(String definitionId) {
+    private FlowDefinition mustGetDef(String definitionId) {
         if (definitionId == null) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_375a4677");
         }
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinition def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
         }
@@ -247,7 +247,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     }
 
     /** 追加一条 rollout log 记录 */
-    private void appendRolloutLog(FlowDefinitionDO def, String operatorId, String operatorName,
+    private void appendRolloutLog(FlowDefinition def, String operatorId, String operatorName,
                                    int fromPercent, int toPercent, String note) {
         List<Object> arr;
         if (StringUtils.hasText(def.getCanaryRolloutLog())) {
@@ -278,7 +278,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      * <br>RANDOM：ThreadLocalRandom.nextInt(100) < percent
      * <br>WHITELIST：始终走灰度（白名单在调用方过滤，这里简化认为配置了白名单就走灰度）
      */
-    private boolean shouldUseCanary(FlowDefinitionDO canary, int percent, String initiatorId) {
+    private boolean shouldUseCanary(FlowDefinition canary, int percent, String initiatorId) {
         String strategy = canary.getCanaryStrategy();
         if (strategy == null) {
             strategy = CanaryStrategy.USER_HASH.name();

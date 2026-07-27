@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -45,7 +45,7 @@ public class FlowTaskClaimService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void claim(String taskId, String userId) {
-        FlowRunTaskDO task = support.getTaskOrThrow(taskId);
+        FlowRunTask task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
             throw new SysException(BaseResultCode.BAD_REQUEST,
                     "error.workflow.msg_5873f2ae", task.getTaskStatus());
@@ -65,7 +65,7 @@ public class FlowTaskClaimService {
     /**
      * 将任务设置为已签收状态（不持久化）。
      */
-    private FlowRunTaskDO applyClaim(FlowRunTaskDO src, String userId) {
+    private FlowRunTask applyClaim(FlowRunTask src, String userId) {
         src.setAssigneeId(String.valueOf(userId));
         src.setTaskStatus(FlowTaskStatus.CLAIMED.name());
         src.setClaimAt(LocalDateTime.now());

@@ -3,7 +3,7 @@ package com.njydsz.cronjob.server.service.alert;
 import java.util.List;
 
 import com.njydsz.cronjob.domain.dto.alert.JobSlaSaveDTO;
-import com.njydsz.cronjob.domain.entity.alert.JobSlaDO;
+import com.njydsz.cronjob.domain.entity.alert.JobSla;
 
 /**
  * 任务 SLA 服务接口（P2-7 SLA 管理）。
@@ -44,14 +44,14 @@ public interface JobSlaService {
      * @param id SLA 规则 ID
      * @return SLA 规则详情
      */
-    JobSlaDO getSlaById(String id);
+    JobSla getSlaById(String id);
 
     /**
      * 查询全部 SLA 规则。
      *
      * @return SLA 规则列表
      */
-    List<JobSlaDO> listSla();
+    List<JobSla> listSla();
 
     /**
      * 启用/禁用 SLA 规则。

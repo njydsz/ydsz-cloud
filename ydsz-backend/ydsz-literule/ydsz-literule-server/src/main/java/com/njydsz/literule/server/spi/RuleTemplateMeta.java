@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>规则模板市场（{@code ydsz_rule_template}）中预置模板的只读视图，
  * 供 literule 模块通过 {@link RuleTemplateProvider} 暴露给消费方。
  *
- * <p>与持久层 {@code RuleTemplateDO} 解耦：
+ * <p>与持久层 {@code RuleTemplate} 解耦：
  * <ul>
  *   <li>剥离 {@code id} / {@code createdBy} / {@code createdAt} 等审计字段</li>
  *   <li>剥离 {@code priority} / {@code scope} / {@code titleTemplate} / {@code descriptionTemplate} 等运行时字段</li>

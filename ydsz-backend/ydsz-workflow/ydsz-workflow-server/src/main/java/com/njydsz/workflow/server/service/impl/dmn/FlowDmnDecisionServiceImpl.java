@@ -15,8 +15,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowDmnDecisionDO;
-import com.njydsz.workflow.domain.entity.FlowDmnRuleDO;
+import com.njydsz.workflow.domain.entity.FlowDmnDecision;
+import com.njydsz.workflow.domain.entity.FlowDmnRule;
 import com.njydsz.workflow.infra.mapper.FlowDmnDecisionMapper;
 import com.njydsz.workflow.infra.mapper.FlowDmnRuleMapper;
 import com.njydsz.workflow.server.engine.JsonHelper;
@@ -51,7 +51,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String createDecision(FlowDmnDecisionDO decision, List<FlowDmnRuleDO> rules) {
+    public String createDecision(FlowDmnDecision decision, List<FlowDmnRule> rules) {
         validateDecision(decision);
         if (decision.getHitPolicy() == null) {
             decision.setHitPolicy("FIRST");
@@ -64,7 +64,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         decisionMapper.insert(decision);
         if (rules != null) {
             int order = 1;
-            for (FlowDmnRuleDO rule : rules) {
+            for (FlowDmnRule rule : rules) {
                 rule.setDecisionId(decision.getId());
                 rule.setRuleOrder(order++);
                 rule.setEnabled(rule.getEnabled() == null ? 1 : rule.getEnabled());
@@ -82,8 +82,8 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateDecision(String decisionId, FlowDmnDecisionDO decision, List<FlowDmnRuleDO> rules) {
-        FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
+    public void updateDecision(String decisionId, FlowDmnDecision decision, List<FlowDmnRule> rules) {
+        FlowDmnDecision existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
@@ -99,7 +99,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         ruleMapper.deleteByDecisionId(decisionId);
         if (rules != null) {
             int order = 1;
-            for (FlowDmnRuleDO rule : rules) {
+            for (FlowDmnRule rule : rules) {
                 rule.setDecisionId(decisionId);
                 rule.setRuleOrder(order++);
                 rule.setEnabled(rule.getEnabled() == null ? 1 : rule.getEnabled());
@@ -116,7 +116,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publish(String decisionId) {
-        FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
+        FlowDmnDecision existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
@@ -133,7 +133,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     @Override
     public void deprecate(String decisionId) {
-        FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
+        FlowDmnDecision existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
@@ -148,11 +148,11 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     @Override
     public Map<String, Object> getDetail(String decisionId) {
-        FlowDmnDecisionDO decision = decisionMapper.selectById(decisionId);
+        FlowDmnDecision decision = decisionMapper.selectById(decisionId);
         if (decision == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
-        List<FlowDmnRuleDO> rules = ruleMapper.selectEnabledByDecisionId(decisionId);
+        List<FlowDmnRule> rules = ruleMapper.selectEnabledByDecisionId(decisionId);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("decision", decision);
         result.put("rules", rules);
@@ -160,7 +160,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     }
 
     @Override
-    public List<FlowDmnDecisionDO> listDecisions(String decisionCode, String tenantId) {
+    public List<FlowDmnDecision> listDecisions(String decisionCode, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
         return decisionMapper.selectPublishedList(tid, decisionCode);
     }
@@ -168,7 +168,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     @Override
     public Map<String, Object> evaluate(String decisionCode, Map<String, Object> variables, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
-        FlowDmnDecisionDO decision = decisionMapper.selectPublishedByCode(decisionCode, tid);
+        FlowDmnDecision decision = decisionMapper.selectPublishedByCode(decisionCode, tid);
         if (decision == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "已发布决策表不存在: " + decisionCode);
@@ -180,7 +180,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public Map<String, Object> evaluateByNode(String flowCode, String nodeCode,
                                                 Map<String, Object> variables, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
-        FlowDmnDecisionDO decision = decisionMapper.selectByNode(flowCode, nodeCode, tid);
+        FlowDmnDecision decision = decisionMapper.selectByNode(flowCode, nodeCode, tid);
         if (decision == null) {
             return null;
         }
@@ -189,8 +189,8 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     // ============================== 核心评估逻辑 ==============================
 
-    private Map<String, Object> doEvaluate(FlowDmnDecisionDO decision, Map<String, Object> variables) {
-        List<FlowDmnRuleDO> rules = ruleMapper.selectEnabledByDecisionId(decision.getId());
+    private Map<String, Object> doEvaluate(FlowDmnDecision decision, Map<String, Object> variables) {
+        List<FlowDmnRule> rules = ruleMapper.selectEnabledByDecisionId(decision.getId());
         if (rules == null || rules.isEmpty()) {
             log.warn("[DMN] 决策表无启用规则: code={}", decision.getDecisionCode());
             return Collections.emptyMap();
@@ -204,7 +204,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         String hitPolicy = decision.getHitPolicy() != null ? decision.getHitPolicy() : "FIRST";
         List<Map<String, Object>> matchedOutputs = new ArrayList<>();
 
-        for (FlowDmnRuleDO rule : rules) {
+        for (FlowDmnRule rule : rules) {
             List<String> inputEntries = parseStringList(rule.getInputEntries());
             if (matchRule(inputDefs, inputEntries, variables)) {
                 List<String> outputEntries = parseStringList(rule.getOutputEntries());
@@ -375,7 +375,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     // ============================== 辅助方法 ==============================
 
-    private void validateDecision(FlowDmnDecisionDO decision) {
+    private void validateDecision(FlowDmnDecision decision) {
         if (!StringUtils.hasText(decision.getDecisionCode())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "决策表编码不能为空");
         }

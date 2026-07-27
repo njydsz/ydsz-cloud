@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.project.ProjectChangeDO;
+import com.njydsz.project.domain.entity.project.ProjectChange;
 
 public interface ProjectChangeService {
-    ProjectChangeDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<ProjectChangeDO> page(int pageNum, int pageSize);
-    boolean save(ProjectChangeDO entity);
-    boolean updateById(ProjectChangeDO entity);
+    ProjectChange getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<ProjectChange> page(int pageNum, int pageSize);
+    boolean save(ProjectChange entity);
+    boolean updateById(ProjectChange entity);
     boolean removeById(String id);
 }

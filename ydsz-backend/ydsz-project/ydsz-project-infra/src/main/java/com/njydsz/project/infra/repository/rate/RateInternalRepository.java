@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.rate;
 
-import com.njydsz.project.domain.entity.rate.RateInternalDO;
+import com.njydsz.project.domain.entity.rate.RateInternal;
 import com.njydsz.project.domain.repository.rate.IRateInternalRepository;
 import com.njydsz.project.infra.mapper.rate.RateInternalMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class RateInternalRepository extends ServiceImpl<RateInternalMapper, RateInternalDO>
+public class RateInternalRepository extends ServiceImpl<RateInternalMapper, RateInternal>
         implements IRateInternalRepository {
 }

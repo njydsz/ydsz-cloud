@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectRevenueDO;
+import com.njydsz.project.domain.entity.project.ProjectRevenue;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 1.0.0
  * @author ydsz-team
  */
-public interface IProjectRevenueRepository extends IService<ProjectRevenueDO> {
+public interface IProjectRevenueRepository extends IService<ProjectRevenue> {
 }

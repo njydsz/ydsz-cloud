@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.system.domain.dto.AppInfoDTO;
-import com.njydsz.system.domain.entity.AppInfoDO;
+import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 import com.njydsz.system.server.metrics.SystemMetrics;
@@ -46,7 +46,7 @@ public class AppInfoServiceImpl implements AppInfoService {
      */
     @Override
     public AppInfoVO getById(String id) {
-        AppInfoDO entity = mapper.selectById(id);
+        AppInfo entity = mapper.selectById(id);
         return toVO(entity);
     }
 
@@ -61,7 +61,7 @@ public class AppInfoServiceImpl implements AppInfoService {
      */
     @Override
     public boolean validateClient(String appKey, String appSecret) {
-        AppInfoDO app = mapper.selectEnabledByAppKey(appKey);
+        AppInfo app = mapper.selectEnabledByAppKey(appKey);
         if (app == null) {
             metrics.recordAppValidateFail();
             log.warn("应用校验失败: appKey={} 不存在或未启用", appKey);
@@ -85,7 +85,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public IPage<AppInfoVO> page(int pageNum, int pageSize, String appName, String status) {
-        QueryWrapper<AppInfoDO> wrapper = new QueryWrapper<>();
+        QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
         if (appName != null && !appName.isBlank()) {
             wrapper.like("app_name", appName);
         }
@@ -93,7 +93,7 @@ public class AppInfoServiceImpl implements AppInfoService {
             wrapper.eq("status", status);
         }
         wrapper.orderByDesc("created_at");
-        IPage<AppInfoDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        IPage<AppInfo> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<AppInfoVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
         Page<AppInfoVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
@@ -116,12 +116,12 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Transactional(rollbackFor = Exception.class)
     public String save(AppInfoDTO dto) {
         // 唯一性校验：appKey 不能重复
-        QueryWrapper<AppInfoDO> checkWrapper = new QueryWrapper<>();
+        QueryWrapper<AppInfo> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("app_key", dto.getAppKey());
         if (mapper.selectCount(checkWrapper) > 0) {
             throw new IllegalArgumentException("应用 Key 已存在: " + dto.getAppKey());
         }
-        AppInfoDO entity = toEntity(dto);
+        AppInfo entity = toEntity(dto);
         if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
             entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
         }
@@ -137,7 +137,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(AppInfoDTO dto) {
-        AppInfoDO entity = toEntity(dto);
+        AppInfo entity = toEntity(dto);
         if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
             entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
         } else {
@@ -153,7 +153,7 @@ public class AppInfoServiceImpl implements AppInfoService {
         return mapper.deleteById(id) > 0;
     }
 
-    private AppInfoVO toVO(AppInfoDO entity) {
+    private AppInfoVO toVO(AppInfo entity) {
         if (entity == null) {
             return null;
         }
@@ -168,8 +168,8 @@ public class AppInfoServiceImpl implements AppInfoService {
         return vo;
     }
 
-    private AppInfoDO toEntity(AppInfoDTO dto) {
-        AppInfoDO entity = new AppInfoDO();
+    private AppInfo toEntity(AppInfoDTO dto) {
+        AppInfo entity = new AppInfo();
         entity.setId(dto.getId());
         entity.setAppCode(dto.getAppCode());
         entity.setAppName(dto.getAppName());

@@ -19,10 +19,10 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -93,7 +93,7 @@ public class FlowTaskRejectService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void reject(FlowTaskOperateDTO dto) {
-        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTask task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
         }
@@ -110,7 +110,7 @@ public class FlowTaskRejectService {
                 "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
                 task.getTenantId(), task.getProviderTraceId());
 
-        FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
+        FlowInstance instance = instanceMapper.selectById(task.getInstanceId());
         Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
 
         // P1-2: 退回到发起人 — 解析 startNode 下游第一个节点作为退回目标
@@ -126,7 +126,7 @@ public class FlowTaskRejectService {
         }
 
         // GAP-P0-2: 优先使用多节点同退；为空时降级到单节点（向后兼容）
-        List<FlowNodeDO> rejectTargets;
+        List<FlowNode> rejectTargets;
         boolean multiReject = dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1;
         if (multiReject) {
             rejectTargets = advancer.advanceMulti(instance, task.getNodeCode(),
@@ -164,7 +164,7 @@ public class FlowTaskRejectService {
                 null, null);
         support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 退回任务: taskId={} targets={} multi={}", task.getId(),
-                rejectTargets.stream().map(FlowNodeDO::getNodeCode).toList(), multiReject);
+                rejectTargets.stream().map(FlowNode::getNodeCode).toList(), multiReject);
         // P1-7: WebSocket 推送任务驳回
         if (todoCountPushService != null) {
             todoCountPushService.pushTaskRejected(task, dto.getUserId(), dto.getComment());
@@ -189,7 +189,7 @@ public class FlowTaskRejectService {
             return null;
         }
         try {
-            FlowNodeDO startNode = definitionCacheService.getStartNode(definitionId);
+            FlowNode startNode = definitionCacheService.getStartNode(definitionId);
             if (startNode == null) {
                 return null;
             }
@@ -218,14 +218,14 @@ public class FlowTaskRejectService {
         visited.add(startNodeCode);
         while (!queue.isEmpty()) {
             String currentCode = queue.poll();
-            List<FlowSkipDO> skips = definitionCacheService.getSkipsByNodeCode(definitionId, currentCode);
-            for (FlowSkipDO skip : skips) {
+            List<FlowSkip> skips = definitionCacheService.getSkipsByNodeCode(definitionId, currentCode);
+            for (FlowSkip skip : skips) {
                 String nextCode = skip.getNextNodeCode();
                 if (nextCode == null || visited.contains(nextCode)) {
                     continue;
                 }
                 visited.add(nextCode);
-                FlowNodeDO nextNode = definitionCacheService.getNodeByCode(definitionId, nextCode);
+                FlowNode nextNode = definitionCacheService.getNodeByCode(definitionId, nextCode);
                 if (nextNode != null
                         && nextNode.getNodeType() == FlowNodeType.APPROVAL.getCode()) {
                     return nextCode;
@@ -243,7 +243,7 @@ public class FlowTaskRejectService {
     /**
      * 合并流程变量：实例已有变量 + dto 增量。
      */
-    private Map<String, Object> mergeVariables(FlowInstanceDO instance, Map<String, Object> extra) {
+    private Map<String, Object> mergeVariables(FlowInstance instance, Map<String, Object> extra) {
         if (instance == null || !StringUtils.hasText(instance.getVariable())) {
             return extra == null ? Collections.emptyMap() : extra;
         }

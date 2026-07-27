@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.batch;
 
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
-import com.njydsz.message.domain.entity.batch.MsgBatchDO;
+import com.njydsz.message.domain.entity.batch.MsgBatch;
 
 /**
  * 消息批次服务。
@@ -21,7 +21,7 @@ public interface BatchService {
      * @param dto 批量发送请求
      * @return 批次实体（含 batchId 与初始状态）
      */
-    MsgBatchDO submitBatch(BatchSendRequestDTO dto);
+    MsgBatch submitBatch(BatchSendRequestDTO dto);
 
     /**
      * 查询批次进度。

@@ -1,11 +1,11 @@
 package com.njydsz.project.server.service;
 
-import com.njydsz.project.domain.entity.alert.AlertDispatchDO;
+import com.njydsz.project.domain.entity.alert.AlertDispatch;
 
 public interface AlertDispatchService {
-    AlertDispatchDO getById(String id);
-    com.baomidou.mybatisplus.core.metadata.IPage<AlertDispatchDO> page(int pageNum, int pageSize);
-    boolean save(AlertDispatchDO entity);
-    boolean updateById(AlertDispatchDO entity);
+    AlertDispatch getById(String id);
+    com.baomidou.mybatisplus.core.metadata.IPage<AlertDispatch> page(int pageNum, int pageSize);
+    boolean save(AlertDispatch entity);
+    boolean updateById(AlertDispatch entity);
     boolean removeById(String id);
 }

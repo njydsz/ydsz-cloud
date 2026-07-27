@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 /**
  * 任务调度服务
@@ -24,7 +24,7 @@ public interface JobService {
      * @return 新增任务 ID
      * @throws SysException 当 jobKey 已存在或参数非法时抛出
      */
-    String create(JobDO job);
+    String create(Job job);
 
     /**
      * 更新任务
@@ -32,7 +32,7 @@ public interface JobService {
      * @param job 任务定义
      * @throws SysException 当任务不存在或 cron 表达式非法时抛出
      */
-    void update(JobDO job);
+    void update(Job job);
 
     /**
      * 删除任务
@@ -129,7 +129,7 @@ public interface JobService {
      * @param job 任务定义
      * @return 注册成功返回 true，否则返回 false
      */
-    boolean register(JobDO job);
+    boolean register(Job job);
 
     /**
      * 取消注册
@@ -145,7 +145,7 @@ public interface JobService {
      * @param job 任务定义
      * @return 重新注册成功返回 true，否则返回 false
      */
-    boolean reschedule(JobDO job);
+    boolean reschedule(Job job);
 
     /**
      * 详情
@@ -154,7 +154,7 @@ public interface JobService {
      * @return 任务定义
      * @throws SysException 当任务不存在时抛出
      */
-    JobDO getById(String id);
+    Job getById(String id);
 
     /**
      * 分页查询任务
@@ -166,7 +166,7 @@ public interface JobService {
      * @param group   分组过滤（可选）
      * @return 任务分页数据
      */
-    Page<JobDO> page(int page, int size, String keyword, String status, String group);
+    Page<Job> page(int page, int size, String keyword, String status, String group);
 
     /**
      * 分页查询执行日志
@@ -177,7 +177,7 @@ public interface JobService {
      * @param status 状态过滤（可选）
      * @return 执行日志分页数据
      */
-    Page<JobLogDO> pageLog(int page, int size, String jobKey, String status);
+    Page<JobLog> pageLog(int page, int size, String jobKey, String status);
 
     /**
      * 应用启动时加载所有 NORMAL 任务

@@ -3,15 +3,15 @@ package com.njydsz.cronjob.server.service.job;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobHistoryDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobHistory;
 
 /**
  * 任务配置历史版本服务（P1-6 任务版本管理）。
  *
  * <p>提供任务配置的版本管理能力：保存历史快照、查询版本列表、查询指定版本、
  * 一键回滚到指定版本、对比两个版本的差异。每次任务更新前自动调用
- * {@link #saveHistory(JobDO, String)} 保存当前配置的完整 JSON 快照，
+ * {@link #saveHistory(Job, String)} 保存当前配置的完整 JSON 快照，
  * 便于审计与回滚。
  *
  * <p>回滚操作会基于历史快照恢复配置字段，同时保留当前任务的统计字段
@@ -23,7 +23,7 @@ import com.njydsz.cronjob.domain.entity.job.JobHistoryDO;
 public interface JobHistoryService {
 
     /**
-     * 保存历史版本（将 JobDO 序列化为 JSON 存入 snapshot）。
+     * 保存历史版本（将 Job 序列化为 JSON 存入 snapshot）。
      *
      * <p>版本号取自 {@code job.version}，冗余字段（jobName/jobKey/handler 等）
      * 便于版本列表快速展示而无需反序列化 snapshot。
@@ -32,7 +32,7 @@ public interface JobHistoryService {
      * @param changedBy 修改人 ID
      * @return 新创建的历史版本记录
      */
-    JobHistoryDO saveHistory(JobDO job, String changedBy);
+    JobHistory saveHistory(Job job, String changedBy);
 
     /**
      * 获取指定任务的版本列表（按版本号降序）。
@@ -40,7 +40,7 @@ public interface JobHistoryService {
      * @param jobId 任务 ID
      * @return 历史版本列表；无记录时返回空列表
      */
-    List<JobHistoryDO> listVersions(String jobId);
+    List<JobHistory> listVersions(String jobId);
 
     /**
      * 获取指定任务的指定历史版本详情。
@@ -49,7 +49,7 @@ public interface JobHistoryService {
      * @param version 版本号
      * @return 历史版本记录；不存在时返回 null
      */
-    JobHistoryDO getVersion(String jobId, Integer version);
+    JobHistory getVersion(String jobId, Integer version);
 
     /**
      * 回滚到指定版本。
@@ -60,9 +60,9 @@ public interface JobHistoryService {
      *
      * @param jobId   任务 ID
      * @param version 目标版本号
-     * @return 回滚后的 JobDO
+     * @return 回滚后的 Job
      */
-    JobDO rollback(String jobId, Integer version);
+    Job rollback(String jobId, Integer version);
 
     /**
      * 对比两个版本的差异。
@@ -86,6 +86,6 @@ public interface JobHistoryService {
      * @param changedBy    变更人
      * @param changeRemark 变更说明
      */
-    void recordVersionChange(JobDO beforeJob, JobDO afterJob,
+    void recordVersionChange(Job beforeJob, Job afterJob,
                               String changeType, String changedBy, String changeRemark);
 }

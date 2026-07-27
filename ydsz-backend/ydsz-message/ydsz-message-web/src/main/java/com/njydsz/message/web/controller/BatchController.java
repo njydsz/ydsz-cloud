@@ -17,7 +17,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
-import com.njydsz.message.domain.entity.batch.MsgBatchDO;
+import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.server.service.batch.BatchService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,7 +63,7 @@ public class BatchController {
     @Audit(module = "批量发送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'submitBatch'")
     @RateLimit(resource = "message.batch.submitBatch", threshold = 50)
     @PostMapping("/send")
-    public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
+    public BaseResponse<MsgBatch> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {
             return BaseResponse.error(BaseResultCode.BAD_REQUEST, "批量发送参数为空");
         }

@@ -21,10 +21,10 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
-import com.njydsz.userinfo.domain.entity.RoleDO;
-import com.njydsz.userinfo.domain.entity.UserAccountDO;
-import com.njydsz.userinfo.domain.entity.UserDeptDO;
-import com.njydsz.userinfo.domain.entity.UserRoleDO;
+import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.entity.UserDept;
+import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -83,7 +83,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      */
     @Override
     public UserAccountVO getById(String id) {
-        UserAccountDO entity = userAccountMapper.selectById(id);
+        UserAccount entity = userAccountMapper.selectById(id);
         if (entity == null) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
@@ -100,35 +100,35 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     public Page<UserAccountVO> page(UserAccountPageQueryDTO query) {
-        Page<UserAccountDO> page = new Page<>(
+        Page<UserAccount> page = new Page<>(
                 query.getSafePageNum(), query.getSafePageSize());
-        LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserAccountDO::getDeleted, 0);
+        LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserAccount::getDeleted, 0);
 
         if (query.getUsername() != null && !query.getUsername().isBlank()) {
-            wrapper.like(UserAccountDO::getUsername, query.getUsername());
+            wrapper.like(UserAccount::getUsername, query.getUsername());
         }
         if (query.getRealName() != null && !query.getRealName().isBlank()) {
-            wrapper.like(UserAccountDO::getRealName, query.getRealName());
+            wrapper.like(UserAccount::getRealName, query.getRealName());
         }
         if (query.getPhone() != null && !query.getPhone().isBlank()) {
-            wrapper.like(UserAccountDO::getPhone, query.getPhone());
+            wrapper.like(UserAccount::getPhone, query.getPhone());
         }
         if (query.getEmail() != null && !query.getEmail().isBlank()) {
-            wrapper.like(UserAccountDO::getEmail, query.getEmail());
+            wrapper.like(UserAccount::getEmail, query.getEmail());
         }
         if (query.getStatus() != null) {
-            wrapper.eq(UserAccountDO::getStatus, String.valueOf(query.getStatus()));
+            wrapper.eq(UserAccount::getStatus, String.valueOf(query.getStatus()));
         }
         if (query.getUserType() != null && !query.getUserType().isBlank()) {
-            wrapper.eq(UserAccountDO::getUserType, query.getUserType());
+            wrapper.eq(UserAccount::getUserType, query.getUserType());
         }
         if (query.getCompanyId() != null && !query.getCompanyId().isBlank()) {
-            wrapper.eq(UserAccountDO::getCompanyId, query.getCompanyId());
+            wrapper.eq(UserAccount::getCompanyId, query.getCompanyId());
         }
-        wrapper.orderByDesc(UserAccountDO::getCreatedAt);
+        wrapper.orderByDesc(UserAccount::getCreatedAt);
 
-        Page<UserAccountDO> result = userAccountMapper.selectPage(page, wrapper);
+        Page<UserAccount> result = userAccountMapper.selectPage(page, wrapper);
         Page<UserAccountVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
         List<UserAccountVO> voList = result.getRecords().stream()
                 .map(this::toVO)
@@ -145,9 +145,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     public List<UserAccountVO> list() {
-        LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserAccountDO::getDeleted, 0);
-        wrapper.orderByDesc(UserAccountDO::getCreatedAt);
+        LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserAccount::getDeleted, 0);
+        wrapper.orderByDesc(UserAccount::getCreatedAt);
         return userAccountMapper.selectList(wrapper).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
@@ -163,9 +163,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(UserAccountCreateDTO dto) {
-        LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserAccountDO::getUsername, dto.getUsername());
-        wrapper.eq(UserAccountDO::getDeleted, 0);
+        LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserAccount::getUsername, dto.getUsername());
+        wrapper.eq(UserAccount::getDeleted, 0);
         if (userAccountMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(UserInfoResultCode.USERNAME_DUPLICATE);
         }
@@ -173,7 +173,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         // 密码策略校验
         passwordPolicyValidator.validate(dto.getPassword(), dto.getUsername());
 
-        UserAccountDO entity = new UserAccountDO();
+        UserAccount entity = new UserAccount();
         BeanUtils.copyProperties(dto, entity);
         entity.setPassword(passwordEncoder.encode(dto.getPassword()));
         entity.setStatus("1");
@@ -196,7 +196,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(UserAccountUpdateDTO dto) {
-        UserAccountDO entity = userAccountMapper.selectById(dto.getId());
+        UserAccount entity = userAccountMapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
@@ -216,7 +216,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        UserAccountDO entity = userAccountMapper.selectById(id);
+        UserAccount entity = userAccountMapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
@@ -232,7 +232,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean changePassword(ChangePasswordDTO dto) {
-        UserAccountDO entity = userAccountMapper.selectById(dto.getUserId());
+        UserAccount entity = userAccountMapper.selectById(dto.getUserId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
@@ -259,7 +259,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean resetPassword(ResetPasswordDTO dto) {
-        UserAccountDO entity = userAccountMapper.selectById(dto.getUserId());
+        UserAccount entity = userAccountMapper.selectById(dto.getUserId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
@@ -282,20 +282,20 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean assignRoles(String userId, List<String> roleIds) {
-        UserAccountDO entity = userAccountMapper.selectById(userId);
+        UserAccount entity = userAccountMapper.selectById(userId);
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.USER_NOT_FOUND);
         }
 
-        LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserRoleDO::getUserId, userId);
-        wrapper.eq(UserRoleDO::getDeleted, 0);
+        LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserRole::getUserId, userId);
+        wrapper.eq(UserRole::getDeleted, 0);
         userRoleMapper.delete(wrapper);
 
         // 批量插入（替代 N+1 循环）
-        List<UserRoleDO> list = new ArrayList<>(roleIds.size());
+        List<UserRole> list = new ArrayList<>(roleIds.size());
         for (String roleId : roleIds) {
-            UserRoleDO ur = new UserRoleDO();
+            UserRole ur = new UserRole();
             ur.setId(IdWorker.getIdStr());
             ur.setUserId(userId);
             ur.setRoleId(roleId);
@@ -317,11 +317,11 @@ public class UserAccountServiceImpl implements UserAccountService {
      */
     @Override
     public List<String> getUserRoleIds(String userId) {
-        LambdaQueryWrapper<UserRoleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserRoleDO::getUserId, userId);
-        wrapper.eq(UserRoleDO::getDeleted, 0);
+        LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserRole::getUserId, userId);
+        wrapper.eq(UserRole::getDeleted, 0);
         return userRoleMapper.selectList(wrapper).stream()
-                .map(UserRoleDO::getRoleId)
+                .map(UserRole::getRoleId)
                 .collect(Collectors.toList());
     }
 
@@ -336,18 +336,18 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (roleCode == null || roleCode.isBlank()) {
             return Collections.emptyList();
         }
-        LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
-        roleWrapper.eq(RoleDO::getRoleCode, roleCode);
-        roleWrapper.eq(RoleDO::getDeleted, 0);
-        RoleDO role = roleMapper.selectOne(roleWrapper);
+        LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.eq(Role::getRoleCode, roleCode);
+        roleWrapper.eq(Role::getDeleted, 0);
+        Role role = roleMapper.selectOne(roleWrapper);
         if (role == null) {
             return Collections.emptyList();
         }
-        LambdaQueryWrapper<UserRoleDO> userRoleWrapper = new LambdaQueryWrapper<>();
-        userRoleWrapper.eq(UserRoleDO::getRoleId, role.getId());
-        userRoleWrapper.eq(UserRoleDO::getDeleted, 0);
+        LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
+        userRoleWrapper.eq(UserRole::getRoleId, role.getId());
+        userRoleWrapper.eq(UserRole::getDeleted, 0);
         return userRoleMapper.selectList(userRoleWrapper).stream()
-                .map(UserRoleDO::getUserId)
+                .map(UserRole::getUserId)
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -362,21 +362,21 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (userId == null || userId.isBlank()) {
             return Collections.emptyList();
         }
-        LambdaQueryWrapper<UserRoleDO> userRoleWrapper = new LambdaQueryWrapper<>();
-        userRoleWrapper.eq(UserRoleDO::getUserId, userId);
-        userRoleWrapper.eq(UserRoleDO::getDeleted, 0);
+        LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
+        userRoleWrapper.eq(UserRole::getUserId, userId);
+        userRoleWrapper.eq(UserRole::getDeleted, 0);
         List<String> roleIds = userRoleMapper.selectList(userRoleWrapper).stream()
-                .map(UserRoleDO::getRoleId)
+                .map(UserRole::getRoleId)
                 .distinct()
                 .collect(Collectors.toList());
         if (roleIds.isEmpty()) {
             return Collections.emptyList();
         }
-        LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
-        roleWrapper.in(RoleDO::getId, roleIds);
-        roleWrapper.eq(RoleDO::getDeleted, 0);
+        LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.in(Role::getId, roleIds);
+        roleWrapper.eq(Role::getDeleted, 0);
         return roleMapper.selectList(roleWrapper).stream()
-                .map(RoleDO::getRoleCode)
+                .map(Role::getRoleCode)
                 .filter(c -> c != null && !c.isBlank())
                 .distinct()
                 .collect(Collectors.toList());
@@ -390,11 +390,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (userId == null || userId.isBlank()) {
             return Collections.emptyList();
         }
-        LambdaQueryWrapper<UserDeptDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserDeptDO::getUserId, userId);
-        wrapper.eq(UserDeptDO::getDeleted, 0);
+        LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserDept::getUserId, userId);
+        wrapper.eq(UserDept::getDeleted, 0);
         return userDeptMapper.selectList(wrapper).stream()
-                .map(UserDeptDO::getDeptId)
+                .map(UserDept::getDeptId)
                 .filter(d -> d != null && !d.isBlank())
                 .distinct()
                 .collect(Collectors.toList());
@@ -410,7 +410,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (userId == null || userId.isBlank()) {
             return null;
         }
-        UserAccountDO entity = userAccountMapper.selectById(userId);
+        UserAccount entity = userAccountMapper.selectById(userId);
         if (entity == null || entity.getDeleted() == 1) {
             return null;
         }
@@ -427,11 +427,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (positionCode == null || positionCode.isBlank()) {
             return Collections.emptyList();
         }
-        LambdaQueryWrapper<UserAccountDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserAccountDO::getPositionCode, positionCode);
-        wrapper.eq(UserAccountDO::getDeleted, 0);
+        LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserAccount::getPositionCode, positionCode);
+        wrapper.eq(UserAccount::getDeleted, 0);
         return userAccountMapper.selectList(wrapper).stream()
-                .map(UserAccountDO::getId)
+                .map(UserAccount::getId)
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -440,7 +440,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * 批量查询用户 ID → 用户真实姓名映射。
      *
      * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)}
-     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link UserAccountDO#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
+     * 单条 SQL 完成（已自动追加 {@code deleted = 0} 条件，因 {@link UserAccount#getDeleted()} 标注了 {@link com.baomidou.mybatisplus.annotation.TableLogic}）。
      *
      * <p>返回 realName（而非 username）：富化场景需要展示给人看的是真实姓名。
      * 若 realName 为空则该 userId 不出现在结果中（让 NameAssembler 兜底用 userId 顶替）。
@@ -457,9 +457,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (distinctIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        List<UserAccountDO> users = userAccountMapper.selectBatchIds(distinctIds);
+        List<UserAccount> users = userAccountMapper.selectBatchIds(distinctIds);
         Map<String, String> result = new LinkedHashMap<>(users.size());
-        for (UserAccountDO user : users) {
+        for (UserAccount user : users) {
             if (user.getRealName() != null && !user.getRealName().isBlank()) {
                 result.put(user.getId(), user.getRealName());
             }
@@ -473,7 +473,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @param entity 数据库实体
      * @return 视图对象（不含密码等敏感字段）
      */
-    private UserAccountVO toVO(UserAccountDO entity) {
+    private UserAccountVO toVO(UserAccount entity) {
         UserAccountVO vo = new UserAccountVO();
         BeanUtils.copyProperties(entity, vo);
         if (entity.getStatus() != null) {

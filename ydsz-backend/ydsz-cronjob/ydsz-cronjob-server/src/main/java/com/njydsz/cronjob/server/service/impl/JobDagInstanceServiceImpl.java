@@ -9,9 +9,9 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.dag.DagInstanceStatus;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
@@ -48,8 +48,8 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public JobDagInstanceDO getInstanceById(String instanceId) {
-        JobDagInstanceDO instance = jobDagInstanceMapper.selectById(instanceId);
+    public JobDagInstance getInstanceById(String instanceId) {
+        JobDagInstance instance = jobDagInstanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_instance_not_found", instanceId);
@@ -59,14 +59,14 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobDagInstanceDO> listByDagId(String dagId, int limit) {
+    public List<JobDagInstance> listByDagId(String dagId, int limit) {
         int safeLimit = limit > 0 ? limit : 20;
         return jobDagInstanceMapper.selectByDagId(dagId, safeLimit);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobDagInstanceDO> listByStatus(String status) {
+    public List<JobDagInstance> listByStatus(String status) {
         if (!StringUtils.hasText(status)) {
             return List.of();
         }
@@ -75,7 +75,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobDagNodeInstanceDO> listNodes(String dagInstanceId) {
+    public List<JobDagNodeInstance> listNodes(String dagInstanceId) {
         return jobDagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
     }
 
@@ -136,10 +136,10 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     @Transactional(readOnly = true)
     public DagInstanceVisualizationVO getVisualization(String instanceId) {
         // 1. 查询 DAG 实例（不存在时抛 SysException）
-        JobDagInstanceDO instance = getInstanceById(instanceId);
+        JobDagInstance instance = getInstanceById(instanceId);
 
         // 2. 查询 DAG 定义（通过实例.dagId 关联）
-        JobDagDO dag = jobDagMapper.selectById(instance.getDagId());
+        JobDag dag = jobDagMapper.selectById(instance.getDagId());
         if (dag == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", instance.getDagId());
@@ -149,7 +149,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
 
         // 4. 查询节点实例执行状态
-        List<JobDagNodeInstanceDO> nodeInstances = listNodes(instanceId);
+        List<JobDagNodeInstance> nodeInstances = listNodes(instanceId);
 
         // 5. 组装可视化数据 VO
         DagInstanceVisualizationVO vo = new DagInstanceVisualizationVO();

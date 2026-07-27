@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobHistoryDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +45,7 @@ public class JobHistoryController {
      */
     @Operation(summary = "获取任务版本列表")
     @GetMapping("/versions")
-    public BaseResponse<List<JobHistoryDO>> versions(@RequestParam String jobId) {
+    public BaseResponse<List<JobHistory>> versions(@RequestParam String jobId) {
         return BaseResponse.success(jobHistoryService.listVersions(jobId));
     }
 
@@ -58,7 +58,7 @@ public class JobHistoryController {
      */
     @Operation(summary = "获取指定版本详情")
     @GetMapping("/detail")
-    public BaseResponse<JobHistoryDO> detail(@RequestParam String jobId,
+    public BaseResponse<JobHistory> detail(@RequestParam String jobId,
                                         @RequestParam Integer version) {
         return BaseResponse.success(jobHistoryService.getVersion(jobId, version));
     }
@@ -74,7 +74,7 @@ public class JobHistoryController {
     @Idempotent(key = "ydsz:cronjob:JobHistoryController:rollback:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
     @PostMapping("/rollback")
-    public BaseResponse<JobDO> rollback(@RequestParam String jobId,
+    public BaseResponse<Job> rollback(@RequestParam String jobId,
                                    @RequestParam Integer version) {
         return BaseResponse.success(jobHistoryService.rollback(jobId, version));
     }

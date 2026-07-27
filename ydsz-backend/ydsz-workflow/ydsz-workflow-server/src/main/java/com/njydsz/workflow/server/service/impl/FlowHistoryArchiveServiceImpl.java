@@ -13,10 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.workflow.domain.entity.FlowHisInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowHisInstance;
+import com.njydsz.workflow.domain.entity.FlowHisTask;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -79,16 +79,16 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
         // 查询候选实例：已结束 + 结束时间超过阈值
         LocalDateTime threshold = LocalDateTime.now().minusDays(days);
-        LambdaQueryWrapper<FlowInstanceDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(FlowInstanceDO::getFlowStatus,
+        LambdaQueryWrapper<FlowInstance> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(FlowInstance::getFlowStatus,
                         FlowInstanceStatus.COMPLETED.name(),
                         FlowInstanceStatus.TERMINATED.name(),
                         FlowInstanceStatus.REJECTED.name())
-                .lt(FlowInstanceDO::getEndAt, threshold)
-                .orderByAsc(FlowInstanceDO::getEndAt)
+                .lt(FlowInstance::getEndAt, threshold)
+                .orderByAsc(FlowInstance::getEndAt)
                 .last("LIMIT " + batch);
 
-        List<FlowInstanceDO> candidates;
+        List<FlowInstance> candidates;
         try {
             candidates = instanceMapper.selectList(wrapper);
         } catch (Exception e) {
@@ -114,7 +114,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         int errors = 0;
         List<String> archivedIds = new ArrayList<>();
 
-        for (FlowInstanceDO instance : candidates) {
+        for (FlowInstance instance : candidates) {
             if (System.currentTimeMillis() - start > maxMs) {
                 log.warn("[FlowHistoryArchive] 达到耗时上限，剩余 {} 个待下次处理",
                         candidates.size() - archived - missing - errors);
@@ -180,7 +180,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         LocalDateTime threshold = LocalDateTime.now().minusDays(days);
 
         // 1. 查询待清理的归档实例
-        List<FlowHisInstanceDO> candidates;
+        List<FlowHisInstance> candidates;
         try {
             // 每批最多 500 条，避免单次事务过大
             candidates = hisInstanceMapper.selectByArchivedAtBefore(threshold, 500);
@@ -201,11 +201,11 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         }
 
         // 2. 批量删除 his_instance
-        List<String> instanceIds = candidates.stream().map(FlowHisInstanceDO::getId).toList();
+        List<String> instanceIds = candidates.stream().map(FlowHisInstance::getId).toList();
         int purgedInstances = 0;
         try {
-            LambdaQueryWrapper<FlowHisInstanceDO> insWrapper = new LambdaQueryWrapper<>();
-            insWrapper.in(FlowHisInstanceDO::getId, instanceIds);
+            LambdaQueryWrapper<FlowHisInstance> insWrapper = new LambdaQueryWrapper<>();
+            insWrapper.in(FlowHisInstance::getId, instanceIds);
             purgedInstances = hisInstanceMapper.delete(insWrapper);
         } catch (Exception e) {
             log.error("[FlowHistoryPurge] 清理 his_instance 失败: {}", e.getMessage(), e);
@@ -242,22 +242,22 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
      * @return true=归档成功；false=任务未全部归档（不安全迁移）
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean archiveOne(FlowInstanceDO instance) {
+    public boolean archiveOne(FlowInstance instance) {
         String instanceId = instance.getId();
 
         // 1. 校验所有任务都已归档到 his_task
-        List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
-        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instanceId);
+        List<FlowRunTask> tasks = taskMapper.selectByInstanceId(instanceId);
+        List<FlowHisTask> hisTasks = hisTaskMapper.selectByInstanceId(instanceId);
         Set<String> archivedTaskIds = new HashSet<>();
         if (hisTasks != null) {
-            for (FlowHisTaskDO his : hisTasks) {
+            for (FlowHisTask his : hisTasks) {
                 if (his.getTaskId() != null) {
                     archivedTaskIds.add(his.getTaskId());
                 }
             }
         }
         if (tasks != null) {
-            for (FlowRunTaskDO task : tasks) {
+            for (FlowRunTask task : tasks) {
                 if (task.getId() != null
                         && !archivedTaskIds.contains(task.getId())
                         && !isTerminalTaskStatus(task.getTaskStatus())) {
@@ -269,7 +269,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         }
 
         // 2. 写入归档表（his_instance，variable 以 JSON blob 存储）
-        FlowHisInstanceDO hisInstance = toHisInstance(instance);
+        FlowHisInstance hisInstance = toHisInstance(instance);
         hisInstanceMapper.insert(hisInstance);
 
         log.info("[FlowHistoryArchive] 归档实例 instanceId={} status={} endAt={} taskCount={} hisCount={}",
@@ -281,8 +281,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     /**
      * 主表 DO → 归档表 DO
      */
-    private FlowHisInstanceDO toHisInstance(FlowInstanceDO ins) {
-        FlowHisInstanceDO his = new FlowHisInstanceDO();
+    private FlowHisInstance toHisInstance(FlowInstance ins) {
+        FlowHisInstance his = new FlowHisInstance();
         his.setId(ins.getId()); // 保留原 ID，方便按业务 ID 反查
         his.setFlowCode(ins.getFlowCode());
         his.setFlowName(ins.getFlowName());

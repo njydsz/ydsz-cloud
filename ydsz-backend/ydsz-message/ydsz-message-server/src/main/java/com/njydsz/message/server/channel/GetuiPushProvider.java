@@ -17,7 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.config.MessageProperties;
 
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ public class GetuiPushProvider implements PushProvider {
     }
 
     @Override
-    public MessageResult send(MessageRequest request, MsgTemplateDO template) {
+    public MessageResult send(MessageRequest request, MsgTemplate template) {
         String cid = extractClientId(request);
         if (!StringUtils.hasText(cid)) {
             return MessageResult.fail("PUSH", "推送目标 clientId/deviceToken 不能为空");

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.security.TenantContext;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -51,17 +51,17 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
         // 待办数 + 超期数（run_task 表，无法与 his_task 合并查询）
         long pendingCount = runTaskMapper.selectCount(
-                new LambdaQueryWrapper<FlowRunTaskDO>()
-                        .eq(FlowRunTaskDO::getTenantId, tid)
-                        .eq(FlowRunTaskDO::getDeleted, 0)
-                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
+                new LambdaQueryWrapper<FlowRunTask>()
+                        .eq(FlowRunTask::getTenantId, tid)
+                        .eq(FlowRunTask::getDeleted, 0)
+                        .in(FlowRunTask::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
         );
         long overdueCount = runTaskMapper.selectCount(
-                new LambdaQueryWrapper<FlowRunTaskDO>()
-                        .eq(FlowRunTaskDO::getTenantId, tid)
-                        .eq(FlowRunTaskDO::getDeleted, 0)
-                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
-                        .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now())
+                new LambdaQueryWrapper<FlowRunTask>()
+                        .eq(FlowRunTask::getTenantId, tid)
+                        .eq(FlowRunTask::getDeleted, 0)
+                        .in(FlowRunTask::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
+                        .lt(FlowRunTask::getDueAt, LocalDateTime.now())
         );
 
         Map<String, Object> result = new LinkedHashMap<>();

@@ -9,7 +9,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
@@ -63,7 +63,7 @@ public class FlowSlaController {
     @PostMapping("/sla/process/{taskId}")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
-        FlowRunTaskDO task = taskService.getById(taskId);
+        FlowRunTask task = taskService.getById(taskId);
         if (task == null) {
             return BaseResponse.error(BaseResultCode.NOT_FOUND, "任务不存在: " + taskId);
         }

@@ -4,10 +4,10 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuthDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
+import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -55,7 +55,7 @@ public class FlowTaskAuditService {
      * @param action 动作类型（CLAIM/PASS/DELEGATE_RETURN/...）
      * @param opType 操作类型：ACT=办理 / VIEW=查看（已废弃，保留参数兼容）
      */
-    public void logDelegateOperation(FlowRunTaskDO task, String action, String opType) {
+    public void logDelegateOperation(FlowRunTask task, String action, String opType) {
         if (task == null || auditLogMapper == null) {
             return;
         }
@@ -65,7 +65,7 @@ public class FlowTaskAuditService {
             if (ownerId == null || delegateId == null) {
                 return; // 非代理场景
             }
-            FlowAuditLogDO logEntry = new FlowAuditLogDO();
+            FlowAuditLog logEntry = new FlowAuditLog();
             logEntry.setTenantId(task.getTenantId());
             logEntry.setInstanceId(task.getInstanceId());
             logEntry.setTaskId(task.getId());

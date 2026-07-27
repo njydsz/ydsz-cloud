@@ -11,9 +11,9 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.workflow.domain.entity.FlowAutoTriggerDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
+import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
+import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowAutoTriggerMapper;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
@@ -58,7 +58,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
         }
 
         // 1. 获取已完成的实例
-        FlowInstanceDO instance = instanceService.getById(instanceId);
+        FlowInstance instance = instanceService.getById(instanceId);
         if (instance == null) {
             log.warn("[FlowAutoTrigger] 实例不存在，跳过自动触发: instanceId={}", instanceId);
             return;
@@ -70,7 +70,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
         }
 
         // 2. 查询 sourceFlowCode 对应的所有 enabled 触发规则
-        List<FlowAutoTriggerDO> triggers = autoTriggerMapper.selectEnabledBySourceFlowCode(sourceFlowCode);
+        List<FlowAutoTrigger> triggers = autoTriggerMapper.selectEnabledBySourceFlowCode(sourceFlowCode);
         if (triggers == null || triggers.isEmpty()) {
             log.debug("[FlowAutoTrigger] 无触发规则: sourceFlowCode={} instanceId={}",
                     sourceFlowCode, instanceId);
@@ -84,7 +84,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
                 triggers.size(), sourceFlowCode, instanceId);
 
         // 4. 逐条评估并触发
-        for (FlowAutoTriggerDO trigger : triggers) {
+        for (FlowAutoTrigger trigger : triggers) {
             try {
                 processTrigger(trigger, instance, variables);
             } catch (Exception e) {
@@ -98,7 +98,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     /**
      * 处理单条触发规则
      */
-    private void processTrigger(FlowAutoTriggerDO trigger, FlowInstanceDO instance,
+    private void processTrigger(FlowAutoTrigger trigger, FlowInstance instance,
                                  Map<String, Object> variables) {
         String conditionExpression = trigger.getConditionExpression();
 
@@ -150,7 +150,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     /**
      * 构建自动触发流程的标题
      */
-    private String buildTriggerTitle(FlowAutoTriggerDO trigger, FlowInstanceDO instance) {
+    private String buildTriggerTitle(FlowAutoTrigger trigger, FlowInstance instance) {
         String base = trigger.getTargetFlowCode();
         if (StringUtils.hasText(trigger.getDescription())) {
             base = trigger.getDescription();
@@ -161,10 +161,10 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     /**
      * 写入审计日志
      */
-    private void writeAuditLog(FlowInstanceDO instance, FlowAutoTriggerDO trigger,
+    private void writeAuditLog(FlowInstance instance, FlowAutoTrigger trigger,
                                 boolean success, String comment) {
         try {
-            FlowAuditLogDO logEntry = new FlowAuditLogDO();
+            FlowAuditLog logEntry = new FlowAuditLog();
             logEntry.setInstanceId(instance.getId());
             logEntry.setTaskId(null);
             logEntry.setFlowCode(instance.getFlowCode());
@@ -194,7 +194,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     @Transactional(rollbackFor = Exception.class)
     public void registerTrigger(String sourceFlowCode, String targetFlowCode,
                                  String conditionExpression) {
-        FlowAutoTriggerDO trigger = new FlowAutoTriggerDO();
+        FlowAutoTrigger trigger = new FlowAutoTrigger();
         trigger.setSourceFlowCode(sourceFlowCode);
         trigger.setTargetFlowCode(targetFlowCode);
         trigger.setConditionExpression(conditionExpression);
@@ -208,18 +208,18 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeTrigger(String sourceFlowCode) {
-        LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode);
+        LambdaQueryWrapper<FlowAutoTrigger> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FlowAutoTrigger::getSourceFlowCode, sourceFlowCode);
         autoTriggerMapper.delete(wrapper);
         log.info("[FlowAutoTrigger] 移除触发规则: sourceFlowCode={}", sourceFlowCode);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowAutoTriggerDO> listAll() {
-        LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByAsc(FlowAutoTriggerDO::getSortOrder)
-                .orderByAsc(FlowAutoTriggerDO::getId);
+    public List<FlowAutoTrigger> listAll() {
+        LambdaQueryWrapper<FlowAutoTrigger> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByAsc(FlowAutoTrigger::getSortOrder)
+                .orderByAsc(FlowAutoTrigger::getId);
         return autoTriggerMapper.selectList(wrapper);
     }
 
@@ -233,7 +233,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean toggleEnabled(String id) {
-        FlowAutoTriggerDO trigger = autoTriggerMapper.selectById(id);
+        FlowAutoTrigger trigger = autoTriggerMapper.selectById(id);
         if (trigger == null) {
             log.warn("[FlowAutoTrigger] 触发规则不存在: id={}", id);
             return false;

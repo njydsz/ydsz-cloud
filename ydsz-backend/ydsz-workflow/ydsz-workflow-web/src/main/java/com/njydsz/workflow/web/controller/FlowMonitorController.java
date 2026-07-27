@@ -19,7 +19,7 @@ import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -296,7 +296,7 @@ public class FlowMonitorController {
         // 补实例详情字段（若有 instanceId）
         if (instanceId instanceof Number n) {
             try {
-                FlowInstanceDO inst = instanceService.getById(String.valueOf(n.longValue()));
+                FlowInstance inst = instanceService.getById(String.valueOf(n.longValue()));
                 if (inst != null) {
                     item.put("flowCode", inst.getFlowCode());
                     item.put("flowName", inst.getFlowName());

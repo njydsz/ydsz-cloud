@@ -18,7 +18,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgPreferenceDO;
+import com.njydsz.message.domain.entity.config.MsgPreference;
 import com.njydsz.message.server.service.config.PreferenceService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +55,7 @@ public class PreferenceController {
     @Audit(module = "偏好设置", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'upsert'")
     @RateLimit(resource = "message.preference.upsert", threshold = 50)
     @PostMapping
-    public BaseResponse<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
+    public BaseResponse<MsgPreference> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
         return BaseResponse.success(preferenceService.upsert(dto));
     }
 
@@ -68,7 +68,7 @@ public class PreferenceController {
     @Operation(summary = "查询用户所有偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}")
-    public BaseResponse<List<MsgPreferenceDO>> listByUser(@PathVariable String userId) {
+    public BaseResponse<List<MsgPreference>> listByUser(@PathVariable String userId) {
         return BaseResponse.success(preferenceService.listByUser(userId));
     }
 
@@ -83,7 +83,7 @@ public class PreferenceController {
     @Operation(summary = "按用户+通道+业务类型查询偏好")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}/{channel}/{bizType}")
-    public BaseResponse<MsgPreferenceDO> getByUser(@PathVariable String userId,
+    public BaseResponse<MsgPreference> getByUser(@PathVariable String userId,
                                              @PathVariable String channel,
                                              @PathVariable String bizType) {
         return BaseResponse.success(preferenceService.getByUser(userId, channel, bizType));

@@ -10,8 +10,8 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
 import lombok.RequiredArgsConstructor;
@@ -54,14 +54,14 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 创建任务 ==============================
 
     @Override
-    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
         return completeService.createTask(instanceId, node, variables);
     }
 
     // ============================== 详情查询 ==============================
 
     @Override
-    public FlowRunTaskDO getById(String taskId) {
+    public FlowRunTask getById(String taskId) {
         return queryService.getById(taskId);
     }
 
@@ -137,37 +137,37 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 待办 / 已办 / 实例列表 ==============================
 
     @Override
-    public List<FlowRunTaskDO> listPendingByInstance(String instanceId) {
+    public List<FlowRunTask> listPendingByInstance(String instanceId) {
         return queryService.listPendingByInstance(instanceId);
     }
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-    public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
+    public List<FlowRunTask> listTodoByAssignee(String assigneeId, String tenantId) {
         return queryService.listTodoByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResponse<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<FlowRunTask> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-    public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
+    public List<FlowRunTask> listDoneByAssignee(String assigneeId, String tenantId) {
         return queryService.listDoneByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResponse<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<FlowRunTask> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
-    public List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
+    public List<FlowRunTask> listTodoByUser(String userId, List<String> roleCodes,
                                             List<String> deptIds, String tenantId) {
         return queryService.listTodoByUser(userId, roleCodes, deptIds, tenantId);
     }
@@ -277,7 +277,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 视图转换 / 统计 ==============================
 
     @Override
-    public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
+    public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTask task) {
         return queryService.toView(task);
     }
 
@@ -287,7 +287,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
+    public List<FlowRunTask> listOverdue(String assigneeId, String tenantId) {
         return queryService.listOverdue(assigneeId, tenantId);
     }
 
@@ -302,7 +302,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResponse<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    public PageResponse<FlowRunTask> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {

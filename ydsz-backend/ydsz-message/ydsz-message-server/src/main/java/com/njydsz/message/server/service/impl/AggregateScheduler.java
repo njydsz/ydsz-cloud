@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.entity.batch.MsgAggregateDO;
+import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.infra.mapper.batch.MsgAggregateMapper;
 import com.njydsz.message.server.service.batch.AggregateService;
@@ -76,17 +76,17 @@ public class AggregateScheduler {
      */
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
-        List<MsgAggregateDO> due = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
-                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
-                .le(MsgAggregateDO::getScheduledSendAt, now));
+        List<MsgAggregate> due = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregate>()
+                .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+                .le(MsgAggregate::getScheduledSendAt, now));
         if (due.isEmpty()) {
             return;
         }
-        for (MsgAggregateDO batch : due) {
-            msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregateDO>()
-                    .eq(MsgAggregateDO::getId, batch.getId())
-                    .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
-                    .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
+        for (MsgAggregate batch : due) {
+            msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregate>()
+                    .eq(MsgAggregate::getId, batch.getId())
+                    .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+                    .set(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
         }
         int sent = aggregateService.flushDue();
         log.debug("[AggregateScheduler] 流转 {} 个到期批次,发送 {} 个", due.size(), sent);

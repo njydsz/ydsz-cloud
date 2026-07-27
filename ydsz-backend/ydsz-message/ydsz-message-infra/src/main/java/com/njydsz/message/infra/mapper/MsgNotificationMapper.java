@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.message.domain.entity.core.MsgNotification;
 
 /**
  * 站内通知 Mapper
@@ -18,7 +18,7 @@ import com.njydsz.message.domain.entity.core.MsgNotificationDO;
  * @since 1.0.0
  */
 @Mapper
-public interface MsgNotificationMapper extends BaseMapper<MsgNotificationDO> {
+public interface MsgNotificationMapper extends BaseMapper<MsgNotification> {
 
     /**
      * P3-6: 批量插入站内通知（XML foreach 单条 INSERT VALUES (...), (...)）。
@@ -29,7 +29,7 @@ public interface MsgNotificationMapper extends BaseMapper<MsgNotificationDO> {
      * @param list 通知实体列表
      * @return 影响行数
      */
-    int insertBatch(@Param("list") List<MsgNotificationDO> list);
+    int insertBatch(@Param("list") List<MsgNotification> list);
 
     /**
      * 标记单条通知为已读(XML 定义)

@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.MenuSaveDTO;
-import com.njydsz.userinfo.domain.entity.MenuDO;
+import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
@@ -15,7 +15,7 @@ import com.njydsz.userinfo.domain.vo.MenuVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface MenuService extends BaseCrudService<MenuDO, MenuSaveDTO, MenuVO, MenuPageQuery, String> {
+public interface MenuService extends BaseCrudService<Menu, MenuSaveDTO, MenuVO, MenuPageQuery, String> {
 
     /**
      * 查询全部菜单列表。

@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.service.log;
 
 import java.util.List;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 /**
  * 任务日志内容 Service（P0-2 在线日志白屏化）。
@@ -17,7 +17,7 @@ public interface JobLogContentService {
      *
      * @param contents 日志行列表
      */
-    void batchSave(List<JobLogContentDO> contents);
+    void batchSave(List<JobLogContent> contents);
 
     /**
      * 分页查询指定执行日志的明细内容。
@@ -27,7 +27,7 @@ public interface JobLogContentService {
      * @param size   每页条数
      * @return 日志行列表
      */
-    List<JobLogContentDO> pageByLogId(String logId, int page, int size);
+    List<JobLogContent> pageByLogId(String logId, int page, int size);
 
     /**
      * 查询指定行号之后的日志行（SSE 增量推送用）。
@@ -36,7 +36,7 @@ public interface JobLogContentService {
      * @param fromLineNo 起始行号（不含）
      * @return 日志行列表
      */
-    List<JobLogContentDO> listAfterLine(String logId, int fromLineNo);
+    List<JobLogContent> listAfterLine(String logId, int fromLineNo);
 
     /**
      * 统计指定执行日志的总行数。
@@ -58,5 +58,5 @@ public interface JobLogContentService {
      * @param size    每页条数
      * @return 匹配的日志行列表
      */
-    List<JobLogContentDO> searchByKeyword(String logId, String keyword, int page, int size);
+    List<JobLogContent> searchByKeyword(String logId, String keyword, int page, int size);
 }

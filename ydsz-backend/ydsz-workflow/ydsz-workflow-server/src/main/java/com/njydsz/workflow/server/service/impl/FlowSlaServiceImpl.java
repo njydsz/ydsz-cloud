@@ -16,8 +16,8 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -88,7 +88,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     }
 
     @Override
-    public void applySlaConfig(FlowRunTaskDO task, FlowNodeDO node) {
+    public void applySlaConfig(FlowRunTask task, FlowNode node) {
         if (task == null || node == null) {
             return;
         }
@@ -128,12 +128,12 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             int iterations = 0;
             // P1-6: 游标分页 — 循环处理多批，直到无候选或达到最大迭代次数
             while (iterations < MAX_SCAN_ITERATIONS) {
-                List<FlowRunTaskDO> candidates = taskMapper.selectSlaCandidates(SCAN_BATCH_SIZE);
+                List<FlowRunTask> candidates = taskMapper.selectSlaCandidates(SCAN_BATCH_SIZE);
                 if (candidates == null || candidates.isEmpty()) {
                     break;
                 }
                 int batchProcessed = 0;
-                for (FlowRunTaskDO task : candidates) {
+                for (FlowRunTask task : candidates) {
                     try {
                         if (processOverdue(task, now)) {
                             batchProcessed++;
@@ -162,7 +162,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public boolean processOverdue(FlowRunTaskDO task) {
+    public boolean processOverdue(FlowRunTask task) {
         return processOverdue(task, LocalDateTime.now());
     }
 
@@ -170,12 +170,12 @@ public class FlowSlaServiceImpl implements FlowSlaService {
      * 内部方法：传入 now 以便测试和复用
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public boolean processOverdue(FlowRunTaskDO task, LocalDateTime now) {
+    public boolean processOverdue(FlowRunTask task, LocalDateTime now) {
         if (task == null || task.getId() == null) {
             return false;
         }
         // 1. 重新查一遍任务，避免读到陈旧数据
-        FlowRunTaskDO fresh = taskMapper.selectById(task.getId());
+        FlowRunTask fresh = taskMapper.selectById(task.getId());
         if (fresh == null) {
             return false;
         }
@@ -191,7 +191,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             return false;
         }
         // 3. 解析节点 SLA 配置
-        FlowNodeDO node = nodeMapper.selectByCode(fresh.getDefinitionId(), fresh.getNodeCode());
+        FlowNode node = nodeMapper.selectByCode(fresh.getDefinitionId(), fresh.getNodeCode());
         Map<String, Object> config = node == null
                 ? Collections.emptyMap()
                 : parseSlaConfig(node.getSlaConfig());
@@ -236,7 +236,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
      *
      * @return true=已发送，false=跳过（无 assignee 等）
      */
-    private boolean sendReminder(FlowRunTaskDO task, FlowSlaAction action, int newReminderCount,
+    private boolean sendReminder(FlowRunTask task, FlowSlaAction action, int newReminderCount,
                                   int maxReminders, LocalDateTime now) {
         try {
             String title = "审批任务即将超时";
@@ -274,7 +274,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
      *   <li>REMIND     — 兼容旧配置，等同于 NOTIFY（不再标记 TIMEOUT）</li>
      * </ul>
      */
-    private boolean executeFinalAction(FlowRunTaskDO task, FlowNodeDO node,
+    private boolean executeFinalAction(FlowRunTask task, FlowNode node,
                                         FlowSlaAction action, Map<String, Object> config,
                                         LocalDateTime now) {
         log.info("[FlowSla] 触发最终动作: taskId={} action={}", task.getId(), action);
@@ -300,7 +300,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     /**
      * 自动通过：以系统身份调用 pass()
      */
-    private boolean doAutoPass(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
+    private boolean doAutoPass(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
         try {
             String comment = (String) config.getOrDefault("autoComment",
                     "系统自动通过：超过 SLA 时限未处理");
@@ -327,7 +327,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     /**
      * 自动驳回：以系统身份调用 reject()
      */
-    private boolean doAutoReject(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
+    private boolean doAutoReject(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
         try {
             String comment = (String) config.getOrDefault("autoComment",
                     "系统自动驳回：超过 SLA 时限未处理");
@@ -354,7 +354,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     /**
      * 升级：转办给 escalateUserId（默认管理员）
      */
-    private boolean doEscalate(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
+    private boolean doEscalate(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
         try {
             if (task.getSlaEscalated() != null && task.getSlaEscalated() == 1) {
                 log.info("[FlowSla] 任务已升级，跳过重复升级: taskId={}", task.getId());
@@ -378,7 +378,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                 taskService.transfer(dto);
                 taskMapper.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
                 // 转办后：升级后的任务重新计 SLA
-                FlowRunTaskDO afterTransfer = taskMapper.selectById(task.getId());
+                FlowRunTask afterTransfer = taskMapper.selectById(task.getId());
                 if (afterTransfer != null) {
                     afterTransfer.setSlaEscalated(1);
                     afterTransfer.setReminderCount(0);
@@ -430,7 +430,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
      * @param now    当前时间
      * @return true=通知已发送；false=发送异常
      */
-    private boolean doNotify(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
+    private boolean doNotify(FlowRunTask task, Map<String, Object> config, LocalDateTime now) {
         try {
             List<String> targets = resolveNotifyTargets(config);
             String title = "审批任务 SLA 超时需人工介入";

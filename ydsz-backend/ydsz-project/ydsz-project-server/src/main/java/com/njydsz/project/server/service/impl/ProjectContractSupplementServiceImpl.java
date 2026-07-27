@@ -2,7 +2,7 @@ package com.njydsz.project.server.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.project.domain.entity.project.ProjectContractSupplementDO;
+import com.njydsz.project.domain.entity.project.ProjectContractSupplement;
 import com.njydsz.project.domain.repository.project.IProjectContractSupplementRepository;
 import com.njydsz.project.server.service.ProjectContractSupplementService;
 
@@ -16,12 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProjectContractSupplementServiceImpl implements ProjectContractSupplementService {
     private final IProjectContractSupplementRepository repository;
 
-    public ProjectContractSupplementDO getById(String id) { return repository.getById(id); }
-    public IPage<ProjectContractSupplementDO> page(int p, int s) { return repository.page(new Page<>(p, s)); }
+    public ProjectContractSupplement getById(String id) { return repository.getById(id); }
+    public IPage<ProjectContractSupplement> page(int p, int s) { return repository.page(new Page<>(p, s)); }
     @Transactional(rollbackFor = Exception.class)
-    public boolean save(ProjectContractSupplementDO e) { return repository.save(e); }
+    public boolean save(ProjectContractSupplement e) { return repository.save(e); }
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(ProjectContractSupplementDO e) { return repository.updateById(e); }
+    public boolean updateById(ProjectContractSupplement e) { return repository.updateById(e); }
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) { return repository.removeById(id); }
 }

@@ -18,7 +18,7 @@ import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
-import com.njydsz.message.domain.entity.config.MsgUserChannelDO;
+import com.njydsz.message.domain.entity.config.MsgUserChannel;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,21 +49,21 @@ public class UserChannelBindingController {
     @RateLimit(resource = "message.userchannelbinding.upsert", threshold = 50)
     @Idempotent(key = "ydsz:message:UserChannelBindingController:upsert:lock", ttlSeconds = 5)
     @PostMapping
-    public BaseResponse<MsgUserChannelDO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
+    public BaseResponse<MsgUserChannel> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
         return BaseResponse.success(userChannelBindingService.upsert(dto));
     }
 
     @Operation(summary = "查询当前用户所有通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/mine")
-    public BaseResponse<List<MsgUserChannelDO>> listMine() {
+    public BaseResponse<List<MsgUserChannel>> listMine() {
         return BaseResponse.success(userChannelBindingService.listByUser(AuthContext.getUserId()));
     }
 
     @Operation(summary = "按用户ID查询通道绑定")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/user/{userId}")
-    public BaseResponse<List<MsgUserChannelDO>> listByUser(@PathVariable String userId) {
+    public BaseResponse<List<MsgUserChannel>> listByUser(@PathVariable String userId) {
         return BaseResponse.success(userChannelBindingService.listByUser(userId));
     }
 

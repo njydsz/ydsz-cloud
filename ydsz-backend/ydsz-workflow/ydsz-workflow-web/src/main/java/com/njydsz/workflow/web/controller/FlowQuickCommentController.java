@@ -13,7 +13,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
-import com.njydsz.workflow.domain.entity.FlowQuickCommentDO;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.server.service.FlowQuickCommentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +47,7 @@ public class FlowQuickCommentController {
      */
     @GetMapping
     @Operation(summary = "查询当前用户的常用语列表")
-    public BaseResponse<List<FlowQuickCommentDO>> list() {
+    public BaseResponse<List<FlowQuickComment>> list() {
         String userId = AuthContext.getUserId();
         String tenantId = TenantContext.getTenantId();
         return BaseResponse.success(quickCommentService.listByUser(userId, tenantId));

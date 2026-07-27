@@ -18,7 +18,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
-import com.njydsz.system.domain.entity.DictItemDO;
+import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.server.config.SystemProperties;
@@ -73,7 +73,7 @@ public class DictItemServiceImpl implements DictItemService {
      */
     @Override
     public DictItemVO getById(String id) {
-        DictItemDO entity = mapper.selectById(id);
+        DictItem entity = mapper.selectById(id);
         return toVO(entity);
     }
 
@@ -101,7 +101,7 @@ public class DictItemServiceImpl implements DictItemService {
                 return YdszJson.toObject(cached, DictItemVO.class);
             }
             metrics.recordDictCacheMiss();
-            DictItemDO entity = mapper.selectByTypeAndCode(typeCode, itemCode);
+            DictItem entity = mapper.selectByTypeAndCode(typeCode, itemCode);
             DictItemVO vo = toVO(entity);
             Duration ttl = getCacheTtl();
             if (vo != null) {
@@ -134,7 +134,7 @@ public class DictItemServiceImpl implements DictItemService {
                 return YdszJson.parseArray(cached, DictItemVO.class);
             }
             metrics.recordDictCacheMiss();
-            List<DictItemDO> entities = mapper.listEnabledByTypeCode(typeCode);
+            List<DictItem> entities = mapper.listEnabledByTypeCode(typeCode);
             List<DictItemVO> vos = entities.stream().map(this::toVO).collect(Collectors.toList());
             redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
             return vos;
@@ -151,7 +151,7 @@ public class DictItemServiceImpl implements DictItemService {
      */
     @Override
     public List<DictItemVO> listChildren(String parentId) {
-        QueryWrapper<DictItemDO> wrapper = new QueryWrapper<>();
+        QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
         wrapper.eq("parent_id", parentId).orderByAsc("sort_order");
         return mapper.selectList(wrapper).stream().map(this::toVO).collect(Collectors.toList());
     }
@@ -169,7 +169,7 @@ public class DictItemServiceImpl implements DictItemService {
      */
     @Override
     public IPage<DictItemVO> page(int pageNum, int pageSize, String typeCode, String itemCode, String status) {
-        QueryWrapper<DictItemDO> wrapper = new QueryWrapper<>();
+        QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
         if (typeCode != null && !typeCode.isBlank()) {
             wrapper.eq("type_code", typeCode);
         }
@@ -180,7 +180,7 @@ public class DictItemServiceImpl implements DictItemService {
             wrapper.eq("status", status);
         }
         wrapper.orderByDesc("created_at");
-        IPage<DictItemDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        IPage<DictItem> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<DictItemVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
         Page<DictItemVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
@@ -209,14 +209,14 @@ public class DictItemServiceImpl implements DictItemService {
     @Transactional(rollbackFor = Exception.class)
     public String save(DictItemDTO dto) {
         // 唯一性校验：(typeCode, itemCode) 组合不能重复
-        QueryWrapper<DictItemDO> checkWrapper = new QueryWrapper<>();
+        QueryWrapper<DictItem> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("type_code", dto.getTypeCode())
                 .eq("item_code", dto.getItemCode());
         if (mapper.selectCount(checkWrapper) > 0) {
             throw new IllegalArgumentException(
                     "字典项编码已存在: " + dto.getTypeCode() + "/" + dto.getItemCode());
         }
-        DictItemDO entity = toEntity(dto);
+        DictItem entity = toEntity(dto);
         mapper.insert(entity);
         evictCache(entity.getTypeCode());
         createSnapshotVersion(entity.getTypeCode(), "新增字典项: " + entity.getItemCode());
@@ -233,7 +233,7 @@ public class DictItemServiceImpl implements DictItemService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(DictItemDTO dto) {
-        DictItemDO entity = toEntity(dto);
+        DictItem entity = toEntity(dto);
         boolean result = mapper.updateById(entity) > 0;
         if (result) {
             evictCache(entity.getTypeCode());
@@ -252,7 +252,7 @@ public class DictItemServiceImpl implements DictItemService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        DictItemDO entity = mapper.selectById(id);
+        DictItem entity = mapper.selectById(id);
         boolean result = mapper.deleteById(id) > 0;
         if (result && entity != null) {
             evictCache(entity.getTypeCode());
@@ -271,7 +271,7 @@ public class DictItemServiceImpl implements DictItemService {
         if (typeCode == null) {
             return;
         }
-        List<DictItemDO> snapshot = mapper.listEnabledByTypeCode(typeCode);
+        List<DictItem> snapshot = mapper.listEnabledByTypeCode(typeCode);
         String snapshotJson = YdszJson.toJson(snapshot);
         dictVersionService.createVersion(typeCode,
                 "v" + System.currentTimeMillis(), changeLog, snapshotJson);
@@ -313,7 +313,7 @@ public class DictItemServiceImpl implements DictItemService {
      * @param entity 数据库实体
      * @return 视图对象，entity 为 null 时返回 null
      */
-    private DictItemVO toVO(DictItemDO entity) {
+    private DictItemVO toVO(DictItem entity) {
         if (entity == null) {
             return null;
         }
@@ -336,8 +336,8 @@ public class DictItemServiceImpl implements DictItemService {
      * @param dto 数据传输对象
      * @return 数据库实体
      */
-    private DictItemDO toEntity(DictItemDTO dto) {
-        DictItemDO entity = new DictItemDO();
+    private DictItem toEntity(DictItemDTO dto) {
+        DictItem entity = new DictItem();
         entity.setId(dto.getId());
         entity.setTypeCode(dto.getTypeCode());
         entity.setItemCode(dto.getItemCode());

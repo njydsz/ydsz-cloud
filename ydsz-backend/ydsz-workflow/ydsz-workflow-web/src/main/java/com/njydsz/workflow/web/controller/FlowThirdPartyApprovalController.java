@@ -16,8 +16,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.domain.enums.ThirdPartyPlatform;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;
@@ -177,7 +177,7 @@ public class FlowThirdPartyApprovalController {
         String logId = savePendingLog(platform, eventType, processInstanceId, businessType, businessId, body);
 
         // 2. 通过 openId 反查系统用户
-        FlowThirdPartyAccountDO account = null;
+        FlowThirdPartyAccount account = null;
         if (openId != null) {
             account = thirdPartyAccountService.getByOpenId(platform, openId);
         }
@@ -223,7 +223,7 @@ public class FlowThirdPartyApprovalController {
      * @param body      回调原始数据
      */
     private void dispatchApprovalAction(String platform, String eventType,
-                                        FlowThirdPartyAccountDO account, Map<String, Object> body) {
+                                        FlowThirdPartyAccount account, Map<String, Object> body) {
         // 1. 解析三方事件 → 工作流动作
         ThirdPartyApprovalActionResolver.FlowAction action =
                 ThirdPartyApprovalActionResolver.resolve(platform, eventType, body);
@@ -273,7 +273,7 @@ public class FlowThirdPartyApprovalController {
      */
     private String savePendingLog(String platform, String eventType, String processInstanceId,
                                 String businessType, String businessId, Map<String, Object> body) {
-        FlowThirdPartyLogDO logEntry = new FlowThirdPartyLogDO();
+        FlowThirdPartyLog logEntry = new FlowThirdPartyLog();
         logEntry.setPlatform(platform);
         logEntry.setEventType(eventType);
         logEntry.setProcessInstanceId(processInstanceId);

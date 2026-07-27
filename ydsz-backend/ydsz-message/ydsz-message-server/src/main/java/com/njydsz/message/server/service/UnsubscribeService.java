@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.config;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscriptionDO;
+import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 
 /**
@@ -44,7 +44,7 @@ public interface UnsubscribeService {
      * @param token token 字符串
      * @return 退订后的订阅记录
      */
-    MsgSubscriptionDO unsubscribeByToken(String token);
+    MsgSubscription unsubscribeByToken(String token);
 
     /**
      * 分页查询已退订记录（管理后台）。
@@ -52,7 +52,7 @@ public interface UnsubscribeService {
      * @param query 查询参数
      * @return 分页结果，仅包含 status=UNSUBSCRIBED 的记录
      */
-    PageResponse<MsgSubscriptionDO> pageUnsubscribed(UnsubscribeQueryDTO query);
+    PageResponse<MsgSubscription> pageUnsubscribed(UnsubscribeQueryDTO query);
 
     /**
      * 恢复订阅（管理后台 / 用户自助）。

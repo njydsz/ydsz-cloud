@@ -36,12 +36,12 @@ import com.njydsz.common.security.LoginUser;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.workflow.domain.entity.FlowDefinitionDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
+import com.njydsz.workflow.domain.entity.FlowDefinition;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -148,7 +148,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     /**
      * P0-4: 跨服务名称解析门面，用于在 getById / page 读路径兜底富化 initiatorName。
      *
-     * <p>当 FlowInstanceDO.initiatorName 在写时未持久化（历史数据或某些路径遗漏）时，
+     * <p>当 FlowInstance.initiatorName 在写时未持久化（历史数据或某些路径遗漏）时，
      * 通过 NameAssembler 调用 ydsz-userinfo 服务的 batch-names 端点，
      * 用 initiatorId 实时解析 realName 并回填到返回对象。Feign 失败时降级为用 ID 顶替。
      */
@@ -172,7 +172,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
                 : AuthContext.getTenantIdOrDefault("1");
-        FlowInstanceDO existing = instanceMapper.selectByBusiness(
+        FlowInstance existing = instanceMapper.selectByBusiness(
                 tenantId, dto.getBusinessType(), dto.getBusinessId());
         if (existing != null) {
             log.info("[Flow] 实例已存在: businessType={} businessId={} id={} status={}",
@@ -183,7 +183,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
         // 1. 查定义
         // P3-1: 灰度发布 - 启动时按 canary 配置切流到稳定版或灰度版
-        FlowDefinitionDO def = canaryService.resolveEffectiveDefinition(
+        FlowDefinition def = canaryService.resolveEffectiveDefinition(
                 dto.getFlowCode(),
                 StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0",
                 tenantId,
@@ -194,7 +194,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
 
         // 2. 创建实例
-        FlowInstanceDO instance = new FlowInstanceDO();
+        FlowInstance instance = new FlowInstance();
         instance.setFlowCode(def.getFlowCode());
         instance.setFlowName(def.getFlowName());
         instance.setDefinitionId(def.getId());
@@ -278,8 +278,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public FlowInstanceDO getById(String id) {
-        FlowInstanceDO instance = instanceMapper.selectById(id);
+    public FlowInstance getById(String id) {
+        FlowInstance instance = instanceMapper.selectById(id);
         if (instance == null) {
             return null;
         }
@@ -287,8 +287,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (!StringUtils.hasText(instance.getInitiatorName())
                 && StringUtils.hasText(instance.getInitiatorId())) {
             nameAssembler.enrichOne(instance,
-                    FlowInstanceDO::getInitiatorId,
-                    FlowInstanceDO::setInitiatorName,
+                    FlowInstance::getInitiatorId,
+                    FlowInstance::setInitiatorName,
                     NameType.USER);
         }
         return instance;
@@ -296,7 +296,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public FlowInstanceDO getByBusiness(String businessType, String businessId) {
+    public FlowInstance getByBusiness(String businessType, String businessId) {
         // P1-2: 增加 tenantId 过滤，防止跨租户串号；仅返回活跃实例（RUNNING/SUSPENDED）
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         return instanceMapper.selectByBusiness(tenantId, businessType, businessId);
@@ -306,7 +306,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(rollbackFor = Exception.class)
     @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void terminate(String instanceId, String reason) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_2246960b");
         }
@@ -369,11 +369,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 terminate(instanceId, reason);
                 count++;
                 // 级联终止子流程实例
-                List<FlowInstanceDO> children = instanceMapper.selectList(
-                        new LambdaQueryWrapper<FlowInstanceDO>()
-                                .eq(FlowInstanceDO::getParentInstanceId, instanceId)
-                                .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
-                for (FlowInstanceDO child : children) {
+                List<FlowInstance> children = instanceMapper.selectList(
+                        new LambdaQueryWrapper<FlowInstance>()
+                                .eq(FlowInstance::getParentInstanceId, instanceId)
+                                .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
+                for (FlowInstance child : children) {
                     try {
                         terminate(child.getId(), "级联终止: " + reason);
                         count++;
@@ -394,7 +394,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(rollbackFor = Exception.class)
     @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void suspend(String instanceId) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_543fc92f");
         }
@@ -418,7 +418,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(rollbackFor = Exception.class)
     @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void activate(String instanceId) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_ab594c75");
         }
@@ -442,7 +442,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(rollbackFor = Exception.class)
     @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void complete(String instanceId, String endNodeCode) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
             return;
         }
@@ -473,7 +473,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     @Override
-    public FlowInstanceViewDTO toView(FlowInstanceDO instance,
+    public FlowInstanceViewDTO toView(FlowInstance instance,
                                        List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks) {
         if (instance == null) {
             return null;
@@ -503,7 +503,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus) {
+    public List<FlowInstance> listByInitiator(String initiatorId, String flowStatus) {
         return instanceMapper.selectByInitiator(initiatorId, flowStatus);
     }
 
@@ -513,7 +513,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(rollbackFor = Exception.class)
     @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public boolean recall(String instanceId, String initiatorId) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可撤回
         if (!instance.getInitiatorId().equals(initiatorId)) {
             throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
@@ -523,7 +523,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
         }
         // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTask> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         boolean anyProcessed = pendingTasks.stream()
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
@@ -564,7 +564,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可查询
         if (!instance.getInitiatorId().equals(initiatorId)) {
             throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
@@ -599,7 +599,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return recall(instanceId, initiatorId);
         }
 
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可撤回
         if (!instance.getInitiatorId().equals(initiatorId)) {
             throw new SysException(BaseResultCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
@@ -609,7 +609,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_3095a676");
         }
         // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTask> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         boolean anyProcessed = pendingTasks.stream()
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
@@ -680,7 +680,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(rollbackFor = Exception.class)
     @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public boolean rollback(String instanceId, String operatorId, String reason, int maxRollbackDays) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
 
         // 1. 校验：仅 COMPLETED 状态可回滚
         if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
@@ -761,7 +761,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     @Transactional(readOnly = true)
     @DataScope(deptAlias = "", userAlias = "", userColumn = "initiator_id")
-    public PageResponse<FlowInstanceDO> page(String businessType, String initiatorId, String flowStatus,
+    public PageResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
                                            LocalDateTime startTime, LocalDateTime endTime,
                                            String tenantId, int pageNo, int pageSize) {
         // P2-23: 真分页（SQL LIMIT/OFFSET），支持多维度过滤
@@ -776,7 +776,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         } catch (Exception e) {
             log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());
         }
-        List<FlowInstanceDO> list = instanceMapper.selectPage(
+        List<FlowInstance> list = instanceMapper.selectPage(
                 businessType, initiatorId, flowStatus, startTime, endTime, tenantId,
                 dataScopeFilter, offset, safeSize);
         long total = instanceMapper.countPage(
@@ -790,7 +790,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(readOnly = true)
     public Map<String, Object> getVariables(String instanceId) {
         // P2-24: 读取实例 variable JSON 并解析为 Map
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null || !StringUtils.hasText(instance.getVariable())) {
             return Collections.emptyMap();
         }
@@ -811,7 +811,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (!StringUtils.hasText(key)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_fae06125");
         }
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
@@ -828,7 +828,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (variables == null || variables.isEmpty()) {
             return;
         }
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
@@ -864,8 +864,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     // ============================== 内部方法 ==============================
 
-    private FlowInstanceDO getByIdOrThrow(String id) {
-        FlowInstanceDO instance = instanceMapper.selectById(id);
+    private FlowInstance getByIdOrThrow(String id) {
+        FlowInstance instance = instanceMapper.selectById(id);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_67a10717", id);
         }
@@ -873,17 +873,17 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     /** 内部方法：创建第一个待办任务（供 FlowAdvancer 调用） */
-    public String createFirstTask(String instanceId, FlowNodeDO startNode,
+    public String createFirstTask(String instanceId, FlowNode startNode,
                                  Map<String, Object> variables) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
-        List<FlowNodeDO> nextNodes = advancer.advance(instance, startNode.getNodeCode(),
+        FlowInstance instance = getByIdOrThrow(instanceId);
+        List<FlowNode> nextNodes = advancer.advance(instance, startNode.getNodeCode(),
                 "PASS", null, variables);
         if (nextNodes.isEmpty()) {
             log.warn("[Flow] 流程无下游节点: instanceId={}", instanceId);
             complete(instanceId, startNode.getNodeCode());
             return null;
         }
-        for (FlowNodeDO node : nextNodes) {
+        for (FlowNode node : nextNodes) {
             taskService.createTask(instanceId, node, variables);
         }
         instanceMapper.updateStatus(instanceId, instance.getFlowStatus(),
@@ -894,12 +894,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     /** 内部方法：推进后批量生成任务（供 FlowAdvancer 调用） */
-    public void generateTasksForNodes(String instanceId, List<FlowNodeDO> nextNodes,
+    public void generateTasksForNodes(String instanceId, List<FlowNode> nextNodes,
                                        Map<String, Object> variables) {
         if (nextNodes == null || nextNodes.isEmpty()) {
             return;
         }
-        for (FlowNodeDO node : nextNodes) {
+        for (FlowNode node : nextNodes) {
             // P0-2: 优先判断事件捕获节点（boundaryEvent / intermediateCatchEvent）
             // 历史问题：boundaryEvent 在 mapNodeType 中被映射为 CC 类型，会被下方 CC 分支误处理为抄送
             // 修复：先判断 isEventCatchNode（基于 ext.eventCatch=true），命中则走事件订阅逻辑
@@ -925,9 +925,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                             instanceId, node.getNodeCode(), e.getMessage());
                 }
                 // 抄送节点是穿透节点：自动推进到下游
-                FlowInstanceDO ccInstance = instanceMapper.selectById(instanceId);
+                FlowInstance ccInstance = instanceMapper.selectById(instanceId);
                 if (ccInstance != null) {
-                    List<FlowNodeDO> ccNext = advancer.advance(ccInstance, node.getNodeCode(),
+                    List<FlowNode> ccNext = advancer.advance(ccInstance, node.getNodeCode(),
                             "PASS", null, variables);
                     if (!ccNext.isEmpty()) {
                         generateTasksForNodes(instanceId, ccNext, variables);
@@ -942,7 +942,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             // P1-3 / fix-1: SUBPROCESS 节点或 ext 中含 callActivityFlowCode 的节点触发子流程
             if (node.getNodeType().equals(FlowNodeType.SUBPROCESS.getCode()) || isCallActivity(node)) {
                 try {
-                    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+                    FlowInstance instance = instanceMapper.selectById(instanceId);
                     subProcessService.startSubProcess(instance, node, variables);
                     // 子流程启动后，父流程"停在" callActivity 节点，更新 currentNodeCode
                     instanceMapper.updateStatus(instanceId, instance.getFlowStatus(),
@@ -973,7 +973,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      *
      * <p>解析失败时不抛异常，仅记录 warn 日志，避免阻塞流程实例创建。
      */
-    private void scheduleBoundaryTimerIfPresent(FlowNodeDO node, String instanceId, String boundaryTaskId) {
+    private void scheduleBoundaryTimerIfPresent(FlowNode node, String instanceId, String boundaryTaskId) {
         if (timerService == null || boundaryTaskId == null) {
             return;
         }
@@ -1044,7 +1044,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     /**
      * P0-2: 解析节点 ext JSON 为 Map（容错）
      */
-    private Map<String, Object> parseExtMap(FlowNodeDO node) {
+    private Map<String, Object> parseExtMap(FlowNode node) {
         if (node == null || !StringUtils.hasText(node.getExt())) {
             return null;
         }
@@ -1064,7 +1064,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * 查找该节点的当前 PENDING 任务作为 boundaryTaskId。
      * intermediateCatchEvent 无 attachedToRef，返回 null。
      */
-    private String resolveBoundaryTaskId(FlowNodeDO node, String instanceId) {
+    private String resolveBoundaryTaskId(FlowNode node, String instanceId) {
         if (node == null || !StringUtils.hasText(node.getExt())) {
             return null;
         }
@@ -1076,7 +1076,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 return null;
             }
             // 查找被附着节点的当前 PENDING 任务
-            List<FlowRunTaskDO> tasks = taskMapper.selectPendingByNode(instanceId, attachedToRef);
+            List<FlowRunTask> tasks = taskMapper.selectPendingByNode(instanceId, attachedToRef);
             return tasks.isEmpty() ? null : tasks.get(0).getId();
         } catch (Exception e) {
             log.warn("[Flow] 解析 boundaryTaskId 失败: nodeCode={} err={}",
@@ -1089,7 +1089,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * P1-3: 判断节点是否为 callActivity（子流程）
      * <p>识别条件：节点 ext JSON 中包含 callActivityFlowCode 字段
      */
-    private boolean isCallActivity(FlowNodeDO node) {
+    private boolean isCallActivity(FlowNode node) {
         if (node == null || !StringUtils.hasText(node.getExt())) {
             return false;
         }
@@ -1116,24 +1116,24 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 解析租户
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         // 查询已发布流程定义
-        FlowDefinitionDO def = definitionService.getPublished(flowCode, version, tid);
+        FlowDefinition def = definitionService.getPublished(flowCode, version, tid);
         if (def == null) {
             throw new SysException(BaseResultCode.NOT_FOUND,
                     "error.workflow.msg_add8d012" + flowCode + " version=" + version);
         }
         // 查询节点 + 跳转
-        List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(def.getId());
-        List<FlowSkipDO> skips = skipMapper.selectByDefinitionId(def.getId());
+        List<FlowNode> nodes = nodeMapper.selectByDefinitionId(def.getId());
+        List<FlowSkip> skips = skipMapper.selectByDefinitionId(def.getId());
 
         // 构建节点查找 Map
-        Map<String, FlowNodeDO> nodeMap = new HashMap<>();
-        for (FlowNodeDO node : nodes) {
+        Map<String, FlowNode> nodeMap = new HashMap<>();
+        for (FlowNode node : nodes) {
             nodeMap.put(node.getNodeCode(), node);
         }
 
-        // 构建跳转查找 Map: fromNodeCode -> List<FlowSkipDO>
-        Map<String, List<FlowSkipDO>> skipMap = new HashMap<>();
-        for (FlowSkipDO skip : skips) {
+        // 构建跳转查找 Map: fromNodeCode -> List<FlowSkip>
+        Map<String, List<FlowSkip>> skipMap = new HashMap<>();
+        for (FlowSkip skip : skips) {
             String fromNodeCode = extractFromNodeCode(skip);
             if (fromNodeCode != null) {
                 skipMap.computeIfAbsent(fromNodeCode, k -> new ArrayList<>()).add(skip);
@@ -1141,8 +1141,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
 
         // 查找开始节点
-        FlowNodeDO startNode = null;
-        for (FlowNodeDO node : nodes) {
+        FlowNode startNode = null;
+        for (FlowNode node : nodes) {
             if (node.getNodeType() != null && node.getNodeType() == FlowNodeType.START.getCode()) {
                 startNode = node;
                 break;
@@ -1155,7 +1155,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 模拟遍历
         List<Map<String, Object>> result = new ArrayList<>();
         Set<String> visited = new HashSet<>();
-        FlowNodeDO currentNode = startNode;
+        FlowNode currentNode = startNode;
         int step = 0;
         final int MAX_STEPS = 50;
 
@@ -1198,10 +1198,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             }
 
             // 查找当前节点的出边（PASS 类型）
-            List<FlowSkipDO> outgoingSkips = skipMap.getOrDefault(
+            List<FlowSkip> outgoingSkips = skipMap.getOrDefault(
                     currentNode.getNodeCode(), Collections.emptyList());
-            List<FlowSkipDO> passSkips = new ArrayList<>();
-            for (FlowSkipDO skip : outgoingSkips) {
+            List<FlowSkip> passSkips = new ArrayList<>();
+            for (FlowSkip skip : outgoingSkips) {
                 if (skip.getSkipType() == null || "PASS".equalsIgnoreCase(skip.getSkipType())) {
                     passSkips.add(skip);
                 }
@@ -1218,8 +1218,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             boolean isInclusive = currentNode.getNodeType() != null
                     && currentNode.getNodeType() == FlowNodeType.INCLUSIVE.getCode();
 
-            FlowSkipDO matchedSkip = null;
-            for (FlowSkipDO skip : passSkips) {
+            FlowSkip matchedSkip = null;
+            for (FlowSkip skip : passSkips) {
                 String cond = skip.getSkipCondition();
                 if (cond == null || cond.isBlank()
                         || variableStrategy.evaluate(cond, variables)) {
@@ -1271,12 +1271,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     /**
-     * GAP-V2-08: 从 FlowSkipDO.ext 字段中提取源节点编码（sourceRef）
+     * GAP-V2-08: 从 FlowSkip.ext 字段中提取源节点编码（sourceRef）
      *
      * @param skip 跳转 DO
      * @return 源节点编码，解析失败返回 null
      */
-    private String extractFromNodeCode(FlowSkipDO skip) {
+    private String extractFromNodeCode(FlowSkip skip) {
         if (skip.getExt() == null || skip.getExt().isBlank()) {
             return null;
         }
@@ -1354,7 +1354,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * @return 事件上下文
      */
     private FlowEventContext buildContext(String instanceId, String taskId, String operatorId,
-                                          String action, FlowInstanceDO instance) {
+                                          String action, FlowInstance instance) {
         FlowEventContext ctx = new FlowEventContext();
         ctx.setInstanceId(instanceId);
         ctx.setTaskId(taskId);
@@ -1380,7 +1380,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> getFormRenderData(String instanceId, String taskId) {
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        FlowInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
         }
@@ -1391,7 +1391,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         Map<String, Object> commentConfig = null;
         if (taskId != null) {
             // 优先从任务获取节点信息
-            FlowRunTaskDO task = taskMapper.selectById(taskId);
+            FlowRunTask task = taskMapper.selectById(taskId);
             if (task == null) {
                 throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
             }
@@ -1404,7 +1404,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         // 查节点表获取 formFieldsConfig 和 ext 中的字段权限
         if (nodeCode != null) {
-            FlowNodeDO node = nodeMapper.selectByCode(
+            FlowNode node = nodeMapper.selectByCode(
                     instance.getDefinitionId(), nodeCode);
             if (node != null) {
                 formFieldsConfig = node.getFormFieldsConfig();
@@ -1466,7 +1466,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @YdszDistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public String resubmit(String instanceId, String initiatorId,
                            Map<String, Object> variables, String comment) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         // 1. 状态校验：仅 REJECTED 可重审
         FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
         if (status != FlowInstanceStatus.REJECTED) {
@@ -1498,7 +1498,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
         instanceMapper.updateById(instance);
         // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
-        FlowAuditLogDO audit = new FlowAuditLogDO();
+        FlowAuditLog audit = new FlowAuditLog();
         audit.setInstanceId(instanceId);
         audit.setFlowCode(instance.getFlowCode());
         audit.setBusinessType(instance.getBusinessType());
@@ -1543,7 +1543,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      */
     private String resubmitAsNewInstance(String instanceId, String initiatorId,
                                           Map<String, Object> variables, String comment) {
-        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        FlowInstance instance = getByIdOrThrow(instanceId);
         // 1. 状态校验：仅非运行态可重做（RUNNING / SUSPENDED 不可）
         FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
         if (status == FlowInstanceStatus.RUNNING || status == FlowInstanceStatus.SUSPENDED) {
@@ -1580,7 +1580,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 5. 启动新实例
         String newInstanceId = start(dto);
         // 6. 在原实例上追加 REDO 审计日志（保留原轨迹，仅追加）
-        FlowAuditLogDO audit = new FlowAuditLogDO();
+        FlowAuditLog audit = new FlowAuditLog();
         audit.setInstanceId(instanceId);
         audit.setFlowCode(instance.getFlowCode());
         audit.setBusinessType(instance.getBusinessType());

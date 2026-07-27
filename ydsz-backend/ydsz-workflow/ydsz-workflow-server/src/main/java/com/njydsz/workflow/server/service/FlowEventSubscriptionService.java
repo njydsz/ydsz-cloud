@@ -3,8 +3,8 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.workflow.domain.entity.FlowEventSubscriptionDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.entity.FlowEventSubscription;
+import com.njydsz.workflow.domain.entity.FlowNode;
 
 /**
  * 工作流事件订阅服务
@@ -24,7 +24,7 @@ public interface FlowEventSubscriptionService {
      * @param boundaryTaskId  边界事件关联的 userTask ID（中间事件传 null）
      * @return 订阅 ID
      */
-    String createSubscription(String instanceId, FlowNodeDO node,
+    String createSubscription(String instanceId, FlowNode node,
                              Map<String, Object> variables, String boundaryTaskId);
 
     /**
@@ -63,10 +63,10 @@ public interface FlowEventSubscriptionService {
     /**
      * 查询实例的事件订阅列表
      */
-    List<FlowEventSubscriptionDO> listByInstance(String instanceId);
+    List<FlowEventSubscription> listByInstance(String instanceId);
 
     /**
      * 判断节点是否为事件捕获节点（ext JSON 中包含 eventCatch: true）
      */
-    boolean isEventCatchNode(FlowNodeDO node);
+    boolean isEventCatchNode(FlowNode node);
 }

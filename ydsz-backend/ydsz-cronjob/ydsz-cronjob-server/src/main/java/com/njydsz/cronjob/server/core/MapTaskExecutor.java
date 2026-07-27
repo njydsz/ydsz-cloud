@@ -24,10 +24,10 @@ import com.njydsz.common.core.job.MapProcessor;
 import com.njydsz.common.core.job.MapReduceProcessor;
 import com.njydsz.common.core.job.MapTask;
 import com.njydsz.common.core.job.ProcessResult;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
-import com.njydsz.cronjob.domain.entity.job.JobTaskDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.domain.entity.job.JobTask;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
@@ -146,14 +146,14 @@ public class MapTaskExecutor {
      * 执行 MapReduce 任务。
      *
      * <p>由 {@code DefaultTaskDispatcher} 在 jobType=MAP/MAP_REDUCE 时调用，
-     * 此时已获取分布式锁并写入 JobLogDO（status=RUNNING），在线日志器已绑定到 ThreadLocal。
+     * 此时已获取分布式锁并写入 JobLog（status=RUNNING），在线日志器已绑定到 ThreadLocal。
      *
      * @param job         任务定义
      * @param log0        执行日志（已插入 ydsz_job_log，status=RUNNING）
      * @param triggerType 触发类型
      * @return 整体处理结果（含 reduce 结果或 root 结果）
      */
-    public ProcessResult executeMapJob(JobDO job, JobLogDO log0, String triggerType) {
+    public ProcessResult executeMapJob(Job job, JobLog log0, String triggerType) {
         String jobId = job.getId();
         String logId = log0.getId();
         String jobKey = job.getJobKey();
@@ -171,7 +171,7 @@ public class MapTaskExecutor {
         }
 
         // 2. 创建 ROOT TaskDO 记录，status=PENDING
-        JobTaskDO rootTaskDO = createTaskDO(jobId, logId, jobKey, ROOT_TASK_NAME,
+        JobTask rootTaskDO = createTaskDO(jobId, logId, jobKey, ROOT_TASK_NAME,
                 job.getParamsJson(), TASK_TYPE_ROOT, STATUS_PENDING);
         jobTaskMapper.insert(rootTaskDO);
 
@@ -257,11 +257,11 @@ public class MapTaskExecutor {
      * @param jobKey    任务 KEY
      * @return 子任务结果列表（顺序与 subTasks 一致）
      */
-    private List<ProcessResult> executeSubTasksDistributed(JobDO job, MapProcessor processor,
+    private List<ProcessResult> executeSubTasksDistributed(Job job, MapProcessor processor,
                                                             List<MapTask> subTasks,
                                                             String jobId, String logId, String jobKey) {
         // 获取在线节点列表
-        List<JobNodeDO> onlineNodes = nodeDiscoveryStrategy.getOnlineNodes();
+        List<JobNode> onlineNodes = nodeDiscoveryStrategy.getOnlineNodes();
         String localNodeId = nodeDiscoveryStrategy.getLocalNodeId();
 
         if (onlineNodes.isEmpty()) {
@@ -282,12 +282,12 @@ public class MapTaskExecutor {
 
         for (MapTask subTask : subTasks) {
             // 创建 TaskDO
-            JobTaskDO subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
+            JobTask subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
                     subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
             jobTaskMapper.insert(subTaskDO);
 
             // 选择目标节点（round-robin）
-            JobNodeDO targetNode = onlineNodes.get(
+            JobNode targetNode = onlineNodes.get(
                     nodeIndex.getAndIncrement() % onlineNodes.size());
             boolean isLocal = targetNode.getNodeId().equals(localNodeId);
 
@@ -359,7 +359,7 @@ public class MapTaskExecutor {
                                                              String jobId, String logId, String jobKey) {
         List<ProcessResult> results = new ArrayList<>(subTasks.size());
         for (MapTask subTask : subTasks) {
-            JobTaskDO subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
+            JobTask subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
                     subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
             jobTaskMapper.insert(subTaskDO);
 
@@ -381,8 +381,8 @@ public class MapTaskExecutor {
      * @param traceId    链路追踪 ID
      * @return 处理结果
      */
-    private ProcessResult dispatchSubTaskToNode(JobNodeDO targetNode, JobDO job,
-                                                 MapTask subTask, JobTaskDO subTaskDO,
+    private ProcessResult dispatchSubTaskToNode(JobNode targetNode, Job job,
+                                                 MapTask subTask, JobTask subTaskDO,
                                                  String traceId) {
         // 更新状态为 RUNNING
         jobTaskMapper.updateStatus(subTaskDO.getId(), STATUS_RUNNING, null, null, LocalDateTime.now());
@@ -431,7 +431,7 @@ public class MapTaskExecutor {
      * @return 处理结果
      */
     private ProcessResult executeTaskRemotely(MapProcessor processor, MapTask subTask,
-                                               JobTaskDO subTaskDO,
+                                               JobTask subTaskDO,
                                                String jobId, String logId, String jobKey) {
         MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
                 subTask.getTaskParams(), false);
@@ -444,7 +444,7 @@ public class MapTaskExecutor {
      * @param taskDO 子任务 DO
      * @param result 处理结果
      */
-    private void updateTaskStatus(JobTaskDO taskDO, ProcessResult result) {
+    private void updateTaskStatus(JobTask taskDO, ProcessResult result) {
         LocalDateTime now = LocalDateTime.now();
         String status = result.isSuccess() ? STATUS_SUCCESS : STATUS_FAILED;
         jobTaskMapper.updateStatus(taskDO.getId(), status, result.getResult(),
@@ -473,7 +473,7 @@ public class MapTaskExecutor {
      * @return 处理结果
      */
     private ProcessResult executeTask(MapProcessor processor, MapContext context,
-                                       JobTaskDO taskDO, String jobKey, String logId) {
+                                       JobTask taskDO, String jobKey, String logId) {
         LocalDateTime now = LocalDateTime.now();
         // 更新状态为 RUNNING
         jobTaskMapper.updateStatus(taskDO.getId(), STATUS_RUNNING, null, null, now);
@@ -554,9 +554,9 @@ public class MapTaskExecutor {
      * @param status     初始状态（PENDING）
      * @return TaskDO 实体
      */
-    private JobTaskDO createTaskDO(String jobId, String logId, String jobKey, String taskName,
+    private JobTask createTaskDO(String jobId, String logId, String jobKey, String taskName,
                                     String taskParams, String taskType, String status) {
-        JobTaskDO taskDO = new JobTaskDO();
+        JobTask taskDO = new JobTask();
         taskDO.setJobId(jobId);
         taskDO.setLogId(logId);
         taskDO.setJobKey(jobKey);
@@ -581,8 +581,8 @@ public class MapTaskExecutor {
      * @param logId  日志 ID
      * @return 重试结果（true=重试成功，false=重试失败或超过限制）
      */
-    public boolean retryFailedSubTask(String taskId, JobDO jobDO, String logId) {
-        JobTaskDO taskDO = jobTaskMapper.selectById(taskId);
+    public boolean retryFailedSubTask(String taskId, Job jobDO, String logId) {
+        JobTask taskDO = jobTaskMapper.selectById(taskId);
         if (taskDO == null) {
             log.warn("[MapTaskRetry] 子任务不存在: taskId={}", taskId);
             return false;

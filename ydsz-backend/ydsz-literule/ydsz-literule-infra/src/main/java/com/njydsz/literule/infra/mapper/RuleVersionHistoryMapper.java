@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.literule.domain.entity.RuleVersionHistoryDO;
+import com.njydsz.literule.domain.entity.RuleVersionHistory;
 
 /**
  * 规则版本历史 Mapper
@@ -15,7 +15,7 @@ import com.njydsz.literule.domain.entity.RuleVersionHistoryDO;
  * @since 1.0.0
  */
 @Mapper
-public interface RuleVersionHistoryMapper extends BaseMapper<RuleVersionHistoryDO> {
+public interface RuleVersionHistoryMapper extends BaseMapper<RuleVersionHistory> {
 
     /**
      * 根据规则编码查询版本历史（倒序）
@@ -23,5 +23,5 @@ public interface RuleVersionHistoryMapper extends BaseMapper<RuleVersionHistoryD
      * @param ruleCode 规则编码
      * @return 版本历史列表
      */
-    List<RuleVersionHistoryDO> listByCode(@Param("ruleCode") String ruleCode);
+    List<RuleVersionHistory> listByCode(@Param("ruleCode") String ruleCode);
 }

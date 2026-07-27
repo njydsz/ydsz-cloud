@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.webhook.WebhookDispatcher;
 import com.njydsz.common.webhook.WebhookSubscription;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public class OutboundWebhookService {
      * @param event 事件类型
      * @param logDO 消息日志
      */
-    public void fireEvent(String event, MsgLogDO logDO) {
+    public void fireEvent(String event, MsgLog logDO) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("event", event);
         payload.put("timestamp", System.currentTimeMillis());

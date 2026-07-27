@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.RolePermissionDO;
+import com.njydsz.userinfo.domain.entity.RolePermission;
 
 /**
  * 角色-权限关联表 Mapper 接口。
@@ -19,7 +19,7 @@ import com.njydsz.userinfo.domain.entity.RolePermissionDO;
  * @since 1.0.0
  */
 @Mapper
-public interface RolePermissionMapper extends BaseMapper<RolePermissionDO> {
+public interface RolePermissionMapper extends BaseMapper<RolePermission> {
 
     /**
      * 批量插入角色-权限关联。
@@ -33,5 +33,5 @@ public interface RolePermissionMapper extends BaseMapper<RolePermissionDO> {
             + "(#{item.id}, #{item.roleId}, #{item.permissionId}, #{item.tenantId}, 0)"
             + "</foreach>"
             + "</script>")
-    int batchInsert(@Param("list") List<RolePermissionDO> list);
+    int batchInsert(@Param("list") List<RolePermission> list);
 }

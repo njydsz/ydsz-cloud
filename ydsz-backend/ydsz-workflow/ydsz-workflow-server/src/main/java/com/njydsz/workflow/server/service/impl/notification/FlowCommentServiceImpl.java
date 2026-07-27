@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
-import com.njydsz.workflow.domain.entity.FlowCommentDO;
+import com.njydsz.workflow.domain.entity.FlowComment;
 import com.njydsz.workflow.infra.mapper.FlowCommentMapper;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowCommentService;
@@ -57,7 +57,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
         }
         // 回复场景：校验父评论存在且属于同一实例
         if (StringUtils.hasText(dto.getParentCommentId())) {
-            FlowCommentDO parent = commentMapper.selectById(dto.getParentCommentId());
+            FlowComment parent = commentMapper.selectById(dto.getParentCommentId());
             if (parent == null || parent.getDeleted() == 1) {
                 throw new SysException(BaseResultCode.NOT_FOUND,
                         "error.workflow.msg_f2a3b4c5", dto.getParentCommentId());
@@ -68,7 +68,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
             }
         }
 
-        FlowCommentDO comment = new FlowCommentDO();
+        FlowComment comment = new FlowComment();
         comment.setTenantId(tenantId != null ? tenantId : "1");
         comment.setInstanceId(dto.getInstanceId());
         comment.setTaskId(dto.getTaskId());
@@ -131,24 +131,24 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     }
 
     @Override
-    public List<FlowCommentDO> listByInstance(String tenantId, String instanceId) {
+    public List<FlowComment> listByInstance(String tenantId, String instanceId) {
         return commentMapper.listByInstance(tenantId, instanceId);
     }
 
     @Override
-    public List<FlowCommentDO> listRootComments(String tenantId, String instanceId) {
+    public List<FlowComment> listRootComments(String tenantId, String instanceId) {
         return commentMapper.listRootComments(tenantId, instanceId);
     }
 
     @Override
-    public List<FlowCommentDO> listReplies(String parentCommentId) {
+    public List<FlowComment> listReplies(String parentCommentId) {
         return commentMapper.listReplies(parentCommentId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteComment(String commentId, String userId) {
-        FlowCommentDO comment = commentMapper.selectById(commentId);
+        FlowComment comment = commentMapper.selectById(commentId);
         if (comment == null || comment.getDeleted() == 1) {
             return false;
         }

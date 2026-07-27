@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.cost;
 
-import com.njydsz.project.domain.entity.cost.CostAllocationDO;
+import com.njydsz.project.domain.entity.cost.CostAllocation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
+public interface CostAllocationMapper extends BaseMapper<CostAllocation> {
 }

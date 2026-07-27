@@ -3,7 +3,7 @@ package com.njydsz.cronjob.server.service.schedule;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.cronjob.domain.entity.schedule.GlueCodeDO;
+import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 
 /**
  * GLUE 在线编码服务（P1-2 GLUE 在线编码）。
@@ -28,7 +28,7 @@ public interface GlueCodeService {
      * @param remark     版本备注（可空）
      * @return 新创建的 GLUE 代码版本
      */
-    GlueCodeDO save(String jobId, String sourceCode, String language, String remark);
+    GlueCode save(String jobId, String sourceCode, String language, String remark);
 
     /**
      * 获取指定任务的最新版本 GLUE 代码。
@@ -36,7 +36,7 @@ public interface GlueCodeService {
      * @param jobId 任务 ID
      * @return 最新版本 GLUE 代码；不存在时返回 null
      */
-    GlueCodeDO getLatest(String jobId);
+    GlueCode getLatest(String jobId);
 
     /**
      * 获取指定任务的全部版本列表（按版本号降序）。
@@ -44,7 +44,7 @@ public interface GlueCodeService {
      * @param jobId 任务 ID
      * @return 版本列表；无记录时返回空列表
      */
-    List<GlueCodeDO> listVersions(String jobId);
+    List<GlueCode> listVersions(String jobId);
 
     /**
      * 回滚到指定版本。
@@ -56,7 +56,7 @@ public interface GlueCodeService {
      * @param version 目标版本号
      * @return 新创建的回滚版本
      */
-    GlueCodeDO rollback(String jobId, Integer version);
+    GlueCode rollback(String jobId, Integer version);
 
     /**
      * P1-1: 在线测试 GLUE 代码（不保存版本，直接执行）。

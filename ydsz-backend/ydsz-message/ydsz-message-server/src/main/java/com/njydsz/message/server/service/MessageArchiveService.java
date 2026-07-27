@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 
 /**
  * 消息归档全文搜索服务（P0-5）。
@@ -29,14 +29,14 @@ public interface MessageArchiveService {
      *
      * @param logDO 消息日志
      */
-    void index(MsgLogDO logDO);
+    void index(MsgLog logDO);
 
     /**
      * 批量索引消息日志到 ES。
      *
      * @param logList 日志列表
      */
-    void batchIndex(List<MsgLogDO> logList);
+    void batchIndex(List<MsgLog> logList);
 
     /**
      * 全文搜索消息日志。
@@ -52,7 +52,7 @@ public interface MessageArchiveService {
      * @param pageSize   每页条数
      * @return 分页结果
      */
-    Page<MsgLogDO> search(String keyword, String channel, String status, String bizType,
+    Page<MsgLog> search(String keyword, String channel, String status, String bizType,
                           LocalDateTime startTime, LocalDateTime endTime,
                           String tenantId, int pageNum, int pageSize);
 

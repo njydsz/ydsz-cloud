@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.common.core.job.JobLogger;
-import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * <h3>实现要点</h3>
  * <ul>
  *   <li>行号自增：{@link AtomicInteger} 从 1 递增，保证单任务内行号唯一有序</li>
- *   <li>缓冲区：内部维护 {@code List<JobLogContentDO>}，达 {@link #FLUSH_THRESHOLD} 行自动 flush</li>
+ *   <li>缓冲区：内部维护 {@code List<JobLogContent>}，达 {@link #FLUSH_THRESHOLD} 行自动 flush</li>
  *   <li>占位符替换：自行实现 SLF4J 风格 {@code {}} 替换（逐个替换第一个匹配）</li>
  *   <li>内容截断：单行超过 {@link #MAX_CONTENT_LENGTH} 字符截断并追加 {@code "...[truncated]"}</li>
  *   <li>异常堆栈：{@link #error(String, Throwable)} 将堆栈转为字符串追加到消息后</li>
@@ -61,7 +61,7 @@ public class JobLoggerImpl implements JobLogger {
     private final AtomicInteger lineNo = new AtomicInteger(0);
 
     /** 日志行缓冲区（达 FLUSH_THRESHOLD 行自动 flush） */
-    private final List<JobLogContentDO> buffer = new ArrayList<>(FLUSH_THRESHOLD);
+    private final List<JobLogContent> buffer = new ArrayList<>(FLUSH_THRESHOLD);
 
     /**
      * 构造任务日志器。
@@ -144,7 +144,7 @@ public class JobLoggerImpl implements JobLogger {
 
     @Override
     public void flush() {
-        List<JobLogContentDO> snapshot;
+        List<JobLogContent> snapshot;
         synchronized (buffer) {
             if (buffer.isEmpty()) {
                 return;
@@ -174,7 +174,7 @@ public class JobLoggerImpl implements JobLogger {
      * @param content 日志内容（截断前）
      */
     private void append(String level, String content) {
-        JobLogContentDO line = buildLine(level, content);
+        JobLogContent line = buildLine(level, content);
         boolean needFlush;
         synchronized (buffer) {
             buffer.add(line);
@@ -197,8 +197,8 @@ public class JobLoggerImpl implements JobLogger {
     /**
      * 构建日志行实体。
      */
-    private JobLogContentDO buildLine(String level, String content) {
-        JobLogContentDO line = new JobLogContentDO();
+    private JobLogContent buildLine(String level, String content) {
+        JobLogContent line = new JobLogContent();
         line.setLogId(logId);
         line.setJobKey(jobKey);
         line.setLineNo(lineNo.incrementAndGet());

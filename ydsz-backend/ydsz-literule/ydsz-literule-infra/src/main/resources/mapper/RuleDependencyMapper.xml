@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.literule.infra.mapper.RuleDependencyMapper">
 
-    <select id="selectByRuleCode" resultType="com.njydsz.literule.domain.entity.RuleDependencyDO">
+    <select id="selectByRuleCode" resultType="com.njydsz.literule.domain.entity.RuleDependency">
         SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
                description, tenant_id, created_by, created_at
         FROM ydsz_rule_dependency
@@ -10,7 +10,7 @@
         ORDER BY id ASC
     </select>
 
-    <select id="selectByDependsOn" resultType="com.njydsz.literule.domain.entity.RuleDependencyDO">
+    <select id="selectByDependsOn" resultType="com.njydsz.literule.domain.entity.RuleDependency">
         SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
                description, tenant_id, created_by, created_at
         FROM ydsz_rule_dependency
@@ -18,7 +18,7 @@
         ORDER BY id ASC
     </select>
 
-    <select id="selectCascadingByDependsOn" resultType="com.njydsz.literule.domain.entity.RuleDependencyDO">
+    <select id="selectCascadingByDependsOn" resultType="com.njydsz.literule.domain.entity.RuleDependency">
         SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
                description, tenant_id, created_by, created_at
         FROM ydsz_rule_dependency

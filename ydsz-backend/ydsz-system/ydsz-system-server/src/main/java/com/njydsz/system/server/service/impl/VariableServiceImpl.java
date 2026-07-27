@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.system.domain.dto.VariableDTO;
-import com.njydsz.system.domain.entity.VariableDO;
+import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.mapper.VariableMapper;
 import com.njydsz.system.server.config.SystemProperties;
@@ -56,7 +56,7 @@ public class VariableServiceImpl implements VariableService {
      */
     @Override
     public VariableVO getById(String id) {
-        VariableDO entity = mapper.selectById(id);
+        Variable entity = mapper.selectById(id);
         return toVO(entity);
     }
 
@@ -83,9 +83,9 @@ public class VariableServiceImpl implements VariableService {
                 return cached;
             }
             metrics.recordVariableCacheMiss();
-            QueryWrapper<VariableDO> wrapper = new QueryWrapper<>();
+            QueryWrapper<Variable> wrapper = new QueryWrapper<>();
             wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
-            VariableDO entity = mapper.selectOne(wrapper);
+            Variable entity = mapper.selectOne(wrapper);
             if (entity != null) {
                 redisService.set(cacheKey, entity.getVariableValue(), getCacheTtl());
                 return entity.getVariableValue();
@@ -104,7 +104,7 @@ public class VariableServiceImpl implements VariableService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public IPage<VariableVO> page(int pageNum, int pageSize, String variableKey, String status) {
-        QueryWrapper<VariableDO> wrapper = new QueryWrapper<>();
+        QueryWrapper<Variable> wrapper = new QueryWrapper<>();
         if (variableKey != null && !variableKey.isBlank()) {
             wrapper.like("variable_key", variableKey);
         }
@@ -112,7 +112,7 @@ public class VariableServiceImpl implements VariableService {
             wrapper.eq("status", status);
         }
         wrapper.orderByDesc("created_at");
-        IPage<VariableDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
         List<VariableVO> vos = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
         Page<VariableVO> result = new Page<>(pageNum, pageSize, page.getTotal());
         result.setRecords(vos);
@@ -137,7 +137,7 @@ public class VariableServiceImpl implements VariableService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(VariableDTO dto) {
-        VariableDO entity = toEntity(dto);
+        Variable entity = toEntity(dto);
         mapper.insert(entity);
         evictCache(entity.getVariableKey());
         return entity.getId();
@@ -150,7 +150,7 @@ public class VariableServiceImpl implements VariableService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(VariableDTO dto) {
-        VariableDO entity = toEntity(dto);
+        Variable entity = toEntity(dto);
         boolean result = mapper.updateById(entity) > 0;
         if (result && entity.getVariableKey() != null) {
             evictCache(entity.getVariableKey());
@@ -165,7 +165,7 @@ public class VariableServiceImpl implements VariableService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
-        VariableDO entity = mapper.selectById(id);
+        Variable entity = mapper.selectById(id);
         boolean result = mapper.deleteById(id) > 0;
         if (result && entity != null && entity.getVariableKey() != null) {
             evictCache(entity.getVariableKey());
@@ -201,7 +201,7 @@ public class VariableServiceImpl implements VariableService {
      * @param entity 数据库实体
      * @return 视图对象，entity 为 null 时返回 null
      */
-    private VariableVO toVO(VariableDO entity) {
+    private VariableVO toVO(Variable entity) {
         if (entity == null) {
             return null;
         }
@@ -221,8 +221,8 @@ public class VariableServiceImpl implements VariableService {
      * @param dto 数据传输对象
      * @return 数据库实体
      */
-    private VariableDO toEntity(VariableDTO dto) {
-        VariableDO entity = new VariableDO();
+    private Variable toEntity(VariableDTO dto) {
+        Variable entity = new Variable();
         entity.setId(dto.getId());
         entity.setVariableKey(dto.getVariableKey());
         entity.setVariableValue(dto.getVariableValue());

@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccountDO;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.infra.mapper.FlowThirdPartyLogMapper;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;
@@ -75,7 +75,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
             return result;
         }
 
-        List<FlowThirdPartyLogDO> failedList;
+        List<FlowThirdPartyLog> failedList;
         try {
             failedList = thirdPartyLogMapper.selectFailedForRetry(maxRetries, batchSize);
         } catch (Exception e) {
@@ -90,7 +90,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
         }
 
         result.scanned = failedList.size();
-        for (FlowThirdPartyLogDO logEntry : failedList) {
+        for (FlowThirdPartyLog logEntry : failedList) {
             int newRetryCount = nextRetryCount(logEntry);
             try {
                 RetryOutcome outcome = retryOneInternal(logEntry);
@@ -135,7 +135,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
         if (logId == null || logId.isBlank()) {
             return false;
         }
-        FlowThirdPartyLogDO logEntry;
+        FlowThirdPartyLog logEntry;
         try {
             logEntry = thirdPartyLogMapper.selectById(logId);
         } catch (Exception e) {
@@ -150,7 +150,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
     }
 
     @Override
-    public boolean retryOne(FlowThirdPartyLogDO logEntry) {
+    public boolean retryOne(FlowThirdPartyLog logEntry) {
         if (logEntry == null) {
             return false;
         }
@@ -196,7 +196,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
      * @throws Exception 系统异常（DB/网络等），由上层捕获并标记 FAIL
      */
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
-    protected RetryOutcome retryOneInternal(FlowThirdPartyLogDO logEntry) {
+    protected RetryOutcome retryOneInternal(FlowThirdPartyLog logEntry) {
         // 1. 反序列化 callbackData
         Map<String, Object> body = parseCallbackData(logEntry.getCallbackData());
         if (body == null) {
@@ -223,7 +223,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
 
         // 4. 通过 openId 反查系统用户
         String openId = mapStr(body, "openId");
-        FlowThirdPartyAccountDO account = null;
+        FlowThirdPartyAccount account = null;
         if (openId != null) {
             account = thirdPartyAccountService.getByOpenId(platform, openId);
         }
@@ -260,7 +260,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
     /**
      * 计算下一次重试次数
      */
-    private int nextRetryCount(FlowThirdPartyLogDO logEntry) {
+    private int nextRetryCount(FlowThirdPartyLog logEntry) {
         Integer current = logEntry.getRetryCount();
         return (current == null ? 0 : current) + 1;
     }
@@ -268,7 +268,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
     /**
      * 安全地更新重试结果（不抛异常，避免状态更新失败拖垮主流程）
      */
-    private void updateRetryResultSafely(FlowThirdPartyLogDO logEntry, String status,
+    private void updateRetryResultSafely(FlowThirdPartyLog logEntry, String status,
                                          String errorMsg, int retryCount) {
         try {
             thirdPartyLogMapper.updateRetryResult(logEntry.getId(), status, errorMsg, retryCount);
@@ -311,7 +311,7 @@ public class FlowThirdPartyRetryServiceImpl implements FlowThirdPartyRetryServic
     /**
      * 从日志的 callbackData 中提取 openId（用于日志输出）
      */
-    private String extractOpenId(FlowThirdPartyLogDO logEntry) {
+    private String extractOpenId(FlowThirdPartyLog logEntry) {
         Map<String, Object> body = parseCallbackData(logEntry.getCallbackData());
         return body == null ? null : mapStr(body, "openId");
     }

@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 /**
  * 任务日志内容 Mapper（P0-2 在线日志白屏化）。
@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.entity.log.JobLogContentDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobLogContentMapper extends BaseMapper<JobLogContentDO> {
+public interface JobLogContentMapper extends BaseMapper<JobLogContent> {
 
     /**
      * 按日志 ID 分页查询日志内容（按行号升序）。
@@ -33,7 +33,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContentDO> {
             + "WHERE log_id = #{logId} AND deleted = 0 "
             + "ORDER BY line_no ASC "
             + "LIMIT #{limit} OFFSET #{offset}")
-    List<JobLogContentDO> selectByLogId(@Param("logId") String logId,
+    List<JobLogContent> selectByLogId(@Param("logId") String logId,
                                          @Param("offset") int offset,
                                          @Param("limit") int limit);
 
@@ -49,7 +49,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContentDO> {
             + "WHERE log_id = #{logId} AND deleted = 0 AND line_no > #{fromLineNo} "
             + "ORDER BY line_no ASC "
             + "LIMIT 500")
-    List<JobLogContentDO> selectAfterLine(@Param("logId") String logId,
+    List<JobLogContent> selectAfterLine(@Param("logId") String logId,
                                            @Param("fromLineNo") int fromLineNo);
 
     /**
@@ -75,7 +75,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContentDO> {
             + "WHERE log_id = #{logId} AND deleted = 0 AND content ILIKE '%' || #{keyword} || '%' "
             + "ORDER BY line_no ASC "
             + "LIMIT #{limit} OFFSET #{offset}")
-    List<JobLogContentDO> selectByLogIdAndKeyword(@Param("logId") String logId,
+    List<JobLogContent> selectByLogIdAndKeyword(@Param("logId") String logId,
                                                     @Param("keyword") String keyword,
                                                     @Param("offset") int offset,
                                                     @Param("limit") int limit);

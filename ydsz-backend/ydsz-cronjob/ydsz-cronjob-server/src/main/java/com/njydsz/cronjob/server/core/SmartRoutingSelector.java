@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
 
@@ -60,13 +60,13 @@ public class SmartRoutingSelector {
      * @param maxConcurrentPerWorker 每个 Worker 的最大并发数（用于计算负载比）
      * @return 最优 Worker 节点；无可用节点返回 null
      */
-    public JobNodeDO selectBestWorker(int maxConcurrentPerWorker) {
+    public JobNode selectBestWorker(int maxConcurrentPerWorker) {
         NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
         if (strategy == null) {
             return null;
         }
 
-        List<JobNodeDO> onlineNodes = strategy.getOnlineNodes();
+        List<JobNode> onlineNodes = strategy.getOnlineNodes();
         if (onlineNodes.isEmpty()) {
             return null;
         }
@@ -75,7 +75,7 @@ public class SmartRoutingSelector {
         String localRack = getLocalRack();
 
         // 排除 Leader 节点
-        List<JobNodeDO> workers = onlineNodes.stream()
+        List<JobNode> workers = onlineNodes.stream()
                 .filter(n -> !n.getNodeId().equals(localNodeId))
                 .toList();
 
@@ -84,10 +84,10 @@ public class SmartRoutingSelector {
         }
 
         // 综合评分选择最优节点
-        JobNodeDO bestNode = null;
+        JobNode bestNode = null;
         double bestScore = -1;
 
-        for (JobNodeDO worker : workers) {
+        for (JobNode worker : workers) {
             double score = calculateScore(worker, maxConcurrentPerWorker, localRack);
             if (score > bestScore) {
                 bestScore = score;
@@ -110,7 +110,7 @@ public class SmartRoutingSelector {
      * @param localRack              本地机房标识
      * @return 评分（0.0 ~ 1.0，越高越优）
      */
-    private double calculateScore(JobNodeDO node, int maxConcurrentPerWorker, String localRack) {
+    private double calculateScore(JobNode node, int maxConcurrentPerWorker, String localRack) {
         // 1. CPU 负载评分（0.4 权重）
         double cpuUsage = getCpuUsage();
         double cpuScore = (1.0 - cpuUsage) * 0.4;
@@ -170,7 +170,7 @@ public class SmartRoutingSelector {
     /**
      * 判断节点是否与本地同机房。
      */
-    private boolean isSameRack(JobNodeDO node, String localRack) {
+    private boolean isSameRack(JobNode node, String localRack) {
         if (node.getHost() == null) {
             return false;
         }

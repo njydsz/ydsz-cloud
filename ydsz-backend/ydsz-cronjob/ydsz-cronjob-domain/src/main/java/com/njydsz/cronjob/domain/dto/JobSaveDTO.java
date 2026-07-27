@@ -13,7 +13,7 @@ import lombok.Data;
 /**
  * 定时任务创建/更新 DTO
  *
- * <p>仅包含前端可控的业务字段，隔离 {@link com.njydsz.cronjob.domain.entity.JobDO} 的
+ * <p>仅包含前端可控的业务字段，隔离 {@link com.njydsz.cronjob.domain.entity.Job} 的
  * 审计字段（createdAt/updatedAt/createdBy 等）、运行时统计（fireCount/successCount 等）、
  * 调度器字段（nextFireTime/lastFireTime）及租户字段（tenantId），避免表结构泄露与越权写入。
  *

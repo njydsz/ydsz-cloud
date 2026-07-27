@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.warranty;
 
-import com.njydsz.project.domain.entity.warranty.WarrantyDO;
+import com.njydsz.project.domain.entity.warranty.Warranty;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface WarrantyMapper extends BaseMapper<WarrantyDO> {
+public interface WarrantyMapper extends BaseMapper<Warranty> {
 }

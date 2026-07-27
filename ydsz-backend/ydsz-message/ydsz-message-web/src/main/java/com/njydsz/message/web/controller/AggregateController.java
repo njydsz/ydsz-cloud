@@ -13,7 +13,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.message.domain.entity.batch.MsgAggregateDO;
+import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +47,7 @@ public class AggregateController {
     @Operation(summary = "聚合批次分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
-    public BaseResponse<Page<MsgAggregateDO>> page(PageQuery query) {
+    public BaseResponse<Page<MsgAggregate>> page(PageQuery query) {
         return BaseResponse.success(aggregateService.page(query));
     }
 

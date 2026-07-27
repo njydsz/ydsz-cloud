@@ -1,7 +1,7 @@
 package com.njydsz.system.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.system.domain.entity.VariableDO;
+import com.njydsz.system.domain.entity.Variable;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -13,5 +13,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface VariableMapper extends BaseMapper<VariableDO> {
+public interface VariableMapper extends BaseMapper<Variable> {
 }

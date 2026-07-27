@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 
 /**
  * 任务告警日志 Mapper（P5 告警 + 监控, P3-1-merge 重构）。
@@ -21,7 +21,7 @@ import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobAlertLogMapper extends BaseMapper<JobAlertLogDO> {
+public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
 
     /**
      * 查询指定规则在时间窗口内已发送的告警日志（用于去重判断）。
@@ -38,7 +38,7 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLogDO> {
             + "FROM ydsz_alert_dispatch "
             + "WHERE rule_id = #{ruleId} AND source_type = 'CRONJOB' "
             + "  AND created_at >= #{since} AND deleted = 0")
-    List<JobAlertLogDO> selectByRuleIdSince(@Param("ruleId") String ruleId,
+    List<JobAlertLog> selectByRuleIdSince(@Param("ruleId") String ruleId,
                                              @Param("since") LocalDateTime since);
 
     /**
@@ -57,7 +57,7 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLogDO> {
             + "WHERE source_id = #{jobId} AND source_type = 'CRONJOB' "
             + "  AND created_at >= #{since} AND deleted = 0 "
             + "ORDER BY created_at DESC")
-    List<JobAlertLogDO> selectByJobIdSince(@Param("jobId") String jobId,
+    List<JobAlertLog> selectByJobIdSince(@Param("jobId") String jobId,
                                             @Param("since") LocalDateTime since);
 
     /**

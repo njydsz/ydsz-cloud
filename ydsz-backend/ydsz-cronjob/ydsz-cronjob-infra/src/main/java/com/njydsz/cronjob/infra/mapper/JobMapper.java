@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 
 /**
  * 任务定义 Mapper
@@ -20,7 +20,7 @@ import com.njydsz.cronjob.domain.entity.job.JobDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobMapper extends BaseMapper<JobDO> {
+public interface JobMapper extends BaseMapper<Job> {
 
     /**
      * 根据 jobKey 查询
@@ -28,14 +28,14 @@ public interface JobMapper extends BaseMapper<JobDO> {
      * @param jobKey 任务 KEY
      * @return 任务定义，不存在时返回 null
      */
-    JobDO selectByJobKey(@Param("jobKey") String jobKey);
+    Job selectByJobKey(@Param("jobKey") String jobKey);
 
     /**
      * 查询所有 NORMAL 状态任务（启动时加载）
      *
      * @return NORMAL 状态任务列表
      */
-    List<JobDO> selectAllNormal();
+    List<Job> selectAllNormal();
 
     /**
      * 扫描已到触发时间的 NORMAL 任务（P1-7 Leader 模式专用）。
@@ -48,7 +48,7 @@ public interface JobMapper extends BaseMapper<JobDO> {
      * @param limit  单批最多扫描任务数
      * @return 待触发任务列表（已按 next_fire_time 升序排序）
      */
-    List<JobDO> selectDueJobs(@Param("now") LocalDateTime now,
+    List<Job> selectDueJobs(@Param("now") LocalDateTime now,
                               @Param("limit") int limit);
 
     /**
@@ -62,7 +62,7 @@ public interface JobMapper extends BaseMapper<JobDO> {
      * @param limit     单批最多扫描任务数
      * @return 窗口内到期的任务列表
      */
-    List<JobDO> selectDueJobsInWindow(@Param("now") LocalDateTime now,
+    List<Job> selectDueJobsInWindow(@Param("now") LocalDateTime now,
                                       @Param("windowEnd") LocalDateTime windowEnd,
                                       @Param("limit") int limit);
 
@@ -150,7 +150,7 @@ public interface JobMapper extends BaseMapper<JobDO> {
             + "  AND auto_resume_after_minutes > 0 "
             + "  AND deleted = 0 "
             + "  AND updated_at + (auto_resume_after_minutes || ' minutes')::interval <= #{now}")
-    List<JobDO> selectAutoResumeCandidates(@Param("now") LocalDateTime now);
+    List<Job> selectAutoResumeCandidates(@Param("now") LocalDateTime now);
 
     /**
      * P1-5: 恢复 AUTO_PAUSED 任务为 NORMAL（重置连续失败计数）。

@@ -9,8 +9,8 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowDelegateAuthDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -80,11 +80,11 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
         }
 
         // 2. 查询待办任务
-        LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<FlowRunTaskDO>()
-                .eq(FlowRunTaskDO::getAssigneeId, userId)
-                .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name());
-        List<FlowRunTaskDO> tasks = taskMapper.selectList(wrapper);
+        LambdaQueryWrapper<FlowRunTask> wrapper = new LambdaQueryWrapper<FlowRunTask>()
+                .eq(FlowRunTask::getAssigneeId, userId)
+                .eq(FlowRunTask::getDeleted, 0)
+                .in(FlowRunTask::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name());
+        List<FlowRunTask> tasks = taskMapper.selectList(wrapper);
 
         if (tasks.isEmpty()) {
             log.info("[LeaveHandler] 无待办需要转交: userId={}", userId);
@@ -94,7 +94,7 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
         // 3. 逐个转交
         int successCount = 0;
         String reason = "RESIGN".equals(leaveType) ? "审批人离职自动转交" : "审批人调岗自动转交";
-        for (FlowRunTaskDO task : tasks) {
+        for (FlowRunTask task : tasks) {
             try {
                 FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
                 dto.setTaskId(task.getId());
@@ -146,14 +146,14 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
      */
     private String findActiveDelegate(String userId) {
         LocalDateTime now = LocalDateTime.now();
-        LambdaQueryWrapper<FlowDelegateAuthDO> wrapper = new LambdaQueryWrapper<FlowDelegateAuthDO>()
-                .eq(FlowDelegateAuthDO::getOwnerUserId, userId)
-                .eq(FlowDelegateAuthDO::getAuthStatus, "ACTIVE")
-                .le(FlowDelegateAuthDO::getStartTime, now)
-                .and(w -> w.isNull(FlowDelegateAuthDO::getEndTime)
-                        .or().ge(FlowDelegateAuthDO::getEndTime, now))
+        LambdaQueryWrapper<FlowDelegateAuth> wrapper = new LambdaQueryWrapper<FlowDelegateAuth>()
+                .eq(FlowDelegateAuth::getOwnerUserId, userId)
+                .eq(FlowDelegateAuth::getAuthStatus, "ACTIVE")
+                .le(FlowDelegateAuth::getStartTime, now)
+                .and(w -> w.isNull(FlowDelegateAuth::getEndTime)
+                        .or().ge(FlowDelegateAuth::getEndTime, now))
                 .last("LIMIT 1");
-        FlowDelegateAuthDO auth = delegateAuthMapper.selectOne(wrapper);
+        FlowDelegateAuth auth = delegateAuthMapper.selectOne(wrapper);
         return auth != null ? auth.getDelegateUserId() : null;
     }
 }

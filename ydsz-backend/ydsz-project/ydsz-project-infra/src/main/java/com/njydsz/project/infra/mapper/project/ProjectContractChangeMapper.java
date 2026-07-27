@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.mapper.project;
 
-import com.njydsz.project.domain.entity.project.ProjectContractChangeDO;
+import com.njydsz.project.domain.entity.project.ProjectContractChange;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ydsz-team
  */
 @Mapper
-public interface ProjectContractChangeMapper extends BaseMapper<ProjectContractChangeDO> {
+public interface ProjectContractChangeMapper extends BaseMapper<ProjectContractChange> {
 }

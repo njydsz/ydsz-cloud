@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.execution;
 
-import com.njydsz.project.domain.entity.execution.ExecutionWbsTaskDO;
+import com.njydsz.project.domain.entity.execution.ExecutionWbsTask;
 import com.njydsz.project.domain.repository.execution.IExecutionWbsTaskRepository;
 import com.njydsz.project.infra.mapper.execution.ExecutionWbsTaskMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ExecutionWbsTaskRepository extends ServiceImpl<ExecutionWbsTaskMapper, ExecutionWbsTaskDO>
+public class ExecutionWbsTaskRepository extends ServiceImpl<ExecutionWbsTaskMapper, ExecutionWbsTask>
         implements IExecutionWbsTaskRepository {
 }

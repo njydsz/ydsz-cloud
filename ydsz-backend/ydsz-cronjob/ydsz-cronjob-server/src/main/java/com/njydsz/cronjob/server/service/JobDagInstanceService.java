@@ -3,8 +3,8 @@ package com.njydsz.cronjob.server.service.dag;
 import java.util.List;
 
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 
 /**
@@ -24,7 +24,7 @@ public interface JobDagInstanceService {
      * @return DAG 实例
      * @throws SysException 当实例不存在时抛出
      */
-    JobDagInstanceDO getInstanceById(String instanceId);
+    JobDagInstance getInstanceById(String instanceId);
 
     /**
      * 查询指定 DAG 的实例列表（按创建时间倒序）。
@@ -33,7 +33,7 @@ public interface JobDagInstanceService {
      * @param limit 最多返回条数
      * @return DAG 实例列表
      */
-    List<JobDagInstanceDO> listByDagId(String dagId, int limit);
+    List<JobDagInstance> listByDagId(String dagId, int limit);
 
     /**
      * 按状态查询 DAG 实例。
@@ -41,7 +41,7 @@ public interface JobDagInstanceService {
      * @param status 实例状态
      * @return DAG 实例列表
      */
-    List<JobDagInstanceDO> listByStatus(String status);
+    List<JobDagInstance> listByStatus(String status);
 
     /**
      * 查询 DAG 实例的节点列表。
@@ -49,7 +49,7 @@ public interface JobDagInstanceService {
      * @param dagInstanceId DAG 实例 ID
      * @return 节点实例列表
      */
-    List<JobDagNodeInstanceDO> listNodes(String dagInstanceId);
+    List<JobDagNodeInstance> listNodes(String dagInstanceId);
 
     /**
      * 暂停 DAG 实例（RUNNING → PAUSED）。

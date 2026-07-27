@@ -2,14 +2,14 @@ package com.njydsz.cronjob.server.core;
 
 import java.time.LocalDateTime;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-1: 任务执行记录器（从 DefaultTaskDispatcher 提取）。
  *
- * <p>封装任务执行日志（JobLogDO）的创建、状态更新、执行轨迹记录等逻辑，
+ * <p>封装任务执行日志（JobLog）的创建、状态更新、执行轨迹记录等逻辑，
  * 消除 DefaultTaskDispatcher 中分散的日志记录代码。
  *
  * <h3>核心能力</h3>
@@ -37,10 +37,10 @@ public class JobExecutionRecorder {
      * @param jobId       任务 ID
      * @param jobKey      任务 KEY
      * @param triggerType 触发类型
-     * @return 初始化的 JobLogDO（status=PENDING，待持久化）
+     * @return 初始化的 JobLog（status=PENDING，待持久化）
      */
-    public JobLogDO createLog(String jobId, String jobKey, String triggerType) {
-        JobLogDO logDO = new JobLogDO();
+    public JobLog createLog(String jobId, String jobKey, String triggerType) {
+        JobLog logDO = new JobLog();
         logDO.setJobId(jobId);
         logDO.setJobKey(jobKey);
         logDO.setStatus("PENDING");
@@ -58,7 +58,7 @@ public class JobExecutionRecorder {
      * @param execNodeId    执行节点 ID
      * @param execThreadId  执行线程 ID
      */
-    public void markRunning(JobLogDO logDO, String lockHolder, String execNodeId, Long execThreadId) {
+    public void markRunning(JobLog logDO, String lockHolder, String execNodeId, Long execThreadId) {
         LocalDateTime now = LocalDateTime.now();
         logDO.setStatus("RUNNING");
         logDO.setStartTime(now);
@@ -77,7 +77,7 @@ public class JobExecutionRecorder {
      * @param resultJson  执行结果 JSON
      * @param handlerEndTime Handler 结束时间（P1-2 执行轨迹）
      */
-    public void markSuccess(JobLogDO logDO, String resultJson, LocalDateTime handlerEndTime) {
+    public void markSuccess(JobLog logDO, String resultJson, LocalDateTime handlerEndTime) {
         LocalDateTime now = LocalDateTime.now();
         logDO.setStatus("SUCCESS");
         logDO.setEndTime(now);
@@ -97,7 +97,7 @@ public class JobExecutionRecorder {
      * @param errorMessage 错误信息
      * @param handlerEndTime Handler 结束时间（P1-2 执行轨迹）
      */
-    public void markFailed(JobLogDO logDO, String errorMessage, LocalDateTime handlerEndTime) {
+    public void markFailed(JobLog logDO, String errorMessage, LocalDateTime handlerEndTime) {
         LocalDateTime now = LocalDateTime.now();
         logDO.setStatus("FAILED");
         logDO.setEndTime(now);
@@ -114,7 +114,7 @@ public class JobExecutionRecorder {
      *
      * @param logDO 执行日志
      */
-    public void markTimeout(JobLogDO logDO) {
+    public void markTimeout(JobLog logDO) {
         LocalDateTime now = LocalDateTime.now();
         logDO.setStatus("TIMEOUT");
         logDO.setEndTime(now);

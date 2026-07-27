@@ -15,8 +15,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.alert.JobSlaSaveDTO;
-import com.njydsz.cronjob.domain.entity.alert.JobSlaDO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.alert.JobSla;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.core.alert.AlertType;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  * 由 {@code AlertScanner} 统一扫描并触发告警，{@code SlaScanner} 已移除。
  *
- * <p>对外 API 保持不变：Controller 仍然操作 {@link JobSlaDO}，
+ * <p>对外 API 保持不变：Controller 仍然操作 {@link JobSla}，
  * 内部由本 Service 完成与 alert_rule 的映射转换。
  *
  * @author ydsz-team
@@ -117,8 +117,8 @@ public class JobSlaServiceImpl implements JobSlaService {
     }
 
     @Override
-    public JobSlaDO getSlaById(String id) {
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
+    public JobSla getSlaById(String id) {
+        List<JobAlertRule> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
         if (rules.isEmpty()) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
         }
@@ -126,15 +126,15 @@ public class JobSlaServiceImpl implements JobSlaService {
     }
 
     @Override
-    public List<JobSlaDO> listSla() {
+    public List<JobSla> listSla() {
         // 查询所有 source_type='SLA' 的规则，按 jobId 分组聚合
-        List<JobAlertRuleDO> allRules = jobAlertRuleMapper.selectList(
-                new LambdaQueryWrapper<JobAlertRuleDO>()
-                        .eq(JobAlertRuleDO::getSourceType, "SLA")
-                        .eq(JobAlertRuleDO::getDeleted, 0));
-        Map<String, List<JobAlertRuleDO>> grouped = allRules.stream()
-                .collect(Collectors.groupingBy(JobAlertRuleDO::getJobId));
-        List<JobSlaDO> result = new ArrayList<>();
+        List<JobAlertRule> allRules = jobAlertRuleMapper.selectList(
+                new LambdaQueryWrapper<JobAlertRule>()
+                        .eq(JobAlertRule::getSourceType, "SLA")
+                        .eq(JobAlertRule::getDeleted, 0));
+        Map<String, List<JobAlertRule>> grouped = allRules.stream()
+                .collect(Collectors.groupingBy(JobAlertRule::getJobId));
+        List<JobSla> result = new ArrayList<>();
         for (var entry : grouped.entrySet()) {
             result.add(aggregateSlaFromRules(entry.getKey(), entry.getValue()));
         }
@@ -147,11 +147,11 @@ public class JobSlaServiceImpl implements JobSlaService {
         if (enabled == null || (enabled != 0 && enabled != 1)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_enabled");
         }
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
+        List<JobAlertRule> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
         if (rules.isEmpty()) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
         }
-        for (JobAlertRuleDO rule : rules) {
+        for (JobAlertRule rule : rules) {
             rule.setEnabled(enabled);
             jobAlertRuleMapper.updateById(rule);
         }
@@ -164,7 +164,7 @@ public class JobSlaServiceImpl implements JobSlaService {
         if (jobId == null || jobId.isBlank()) {
             return violations;
         }
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(jobId);
+        List<JobAlertRule> rules = jobAlertRuleMapper.selectSlaRulesByJobId(jobId);
         if (rules.isEmpty()) {
             return violations;
         }
@@ -191,7 +191,7 @@ public class JobSlaServiceImpl implements JobSlaService {
         double failRate = (failed * 100.0) / total;
         double successRate = (success * 100.0) / total;
 
-        for (JobAlertRuleDO rule : rules) {
+        for (JobAlertRule rule : rules) {
             String alertType = rule.getAlertType();
             Long threshold = rule.getThreshold();
             if (threshold == null) {
@@ -236,7 +236,7 @@ public class JobSlaServiceImpl implements JobSlaService {
     private void createSlaAlertRule(JobSlaSaveDTO dto, AlertType alertType,
                                       long threshold, String alertLevel,
                                       int enabled, String ruleNameSuffix) {
-        JobAlertRuleDO rule = new JobAlertRuleDO();
+        JobAlertRule rule = new JobAlertRule();
         rule.setRuleName(ruleNameSuffix + "-" + dto.getJobKey());
         rule.setJobId(dto.getJobId());
         rule.setJobKey(dto.getJobKey());
@@ -257,17 +257,17 @@ public class JobSlaServiceImpl implements JobSlaService {
      * 删除指定任务的所有 SLA 来源 alert_rule（逻辑删除）。
      */
     private void deleteExistingSlaRules(String jobId) {
-        List<JobAlertRuleDO> existing = jobAlertRuleMapper.selectSlaRulesByJobId(jobId);
-        for (JobAlertRuleDO rule : existing) {
+        List<JobAlertRule> existing = jobAlertRuleMapper.selectSlaRulesByJobId(jobId);
+        for (JobAlertRule rule : existing) {
             jobAlertRuleMapper.deleteById(rule.getId());
         }
     }
 
     /**
-     * 将多条 SLA 来源的 alert_rule 聚合为 JobSlaDO。
+     * 将多条 SLA 来源的 alert_rule 聚合为 JobSla。
      */
-    private JobSlaDO aggregateSlaFromRules(String jobId, List<JobAlertRuleDO> rules) {
-        JobSlaDO sla = new JobSlaDO();
+    private JobSla aggregateSlaFromRules(String jobId, List<JobAlertRule> rules) {
+        JobSla sla = new JobSla();
         sla.setId(jobId); // P2-2-merge: id 即 jobId
         sla.setJobId(jobId);
         if (!rules.isEmpty()) {
@@ -275,7 +275,7 @@ public class JobSlaServiceImpl implements JobSlaService {
             sla.setAlertLevel(rules.get(0).getAlertLevel());
             sla.setEnabled(rules.get(0).getEnabled());
         }
-        for (JobAlertRuleDO rule : rules) {
+        for (JobAlertRule rule : rules) {
             if (AlertType.DURATION_P95.name().equals(rule.getAlertType())) {
                 sla.setMaxDurationMs(rule.getThreshold());
             } else if (AlertType.FAIL_RATE.name().equals(rule.getAlertType())) {

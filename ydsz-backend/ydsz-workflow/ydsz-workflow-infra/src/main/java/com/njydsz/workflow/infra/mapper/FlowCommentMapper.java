@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowCommentDO;
+import com.njydsz.workflow.domain.entity.FlowComment;
 
 /**
  * P2-2: 流程评论 Mapper
@@ -19,7 +19,7 @@ import com.njydsz.workflow.domain.entity.FlowCommentDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
+public interface FlowCommentMapper extends BaseMapper<FlowComment> {
 
     /**
      * 查询实例下全部一级评论（按创建时间正序）。
@@ -32,7 +32,7 @@ public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
             "WHERE tenant_id = #{tenantId} AND instance_id = #{instanceId} " +
             "AND parent_comment_id IS NULL AND deleted = 0 " +
             "ORDER BY created_at ASC")
-    List<FlowCommentDO> listRootComments(@Param("tenantId") String tenantId,
+    List<FlowComment> listRootComments(@Param("tenantId") String tenantId,
                                           @Param("instanceId") String instanceId);
 
     /**
@@ -46,7 +46,7 @@ public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
     @Select("SELECT * FROM ydsz_flow_comment " +
             "WHERE parent_comment_id = #{parentCommentId} AND deleted = 0 " +
             "ORDER BY created_at ASC")
-    List<FlowCommentDO> listReplies(@Param("parentCommentId") String parentCommentId);
+    List<FlowComment> listReplies(@Param("parentCommentId") String parentCommentId);
 
     /**
      * 查询实例下全部评论（一级 + 回复，按创建时间正序）。
@@ -60,6 +60,6 @@ public interface FlowCommentMapper extends BaseMapper<FlowCommentDO> {
     @Select("SELECT * FROM ydsz_flow_comment " +
             "WHERE tenant_id = #{tenantId} AND instance_id = #{instanceId} " +
             "AND deleted = 0 ORDER BY created_at ASC")
-    List<FlowCommentDO> listByInstance(@Param("tenantId") String tenantId,
+    List<FlowComment> listByInstance(@Param("tenantId") String tenantId,
                                         @Param("instanceId") String instanceId);
 }

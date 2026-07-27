@@ -7,8 +7,8 @@ import java.util.Map;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
 
 /**
  * 流程实例 Service
@@ -51,12 +51,12 @@ public interface FlowInstanceService {
     /**
      * 按 ID 查
      */
-    FlowInstanceDO getById(String id);
+    FlowInstance getById(String id);
 
     /**
      * 业务关联查询
      */
-    FlowInstanceDO getByBusiness(String businessType, String businessId);
+    FlowInstance getByBusiness(String businessType, String businessId);
 
     /**
      * 终止流程
@@ -92,12 +92,12 @@ public interface FlowInstanceService {
     /**
      * 转化为视图对象
      */
-    FlowInstanceViewDTO toView(FlowInstanceDO instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks);
+    FlowInstanceViewDTO toView(FlowInstance instance, List<FlowInstanceViewDTO.FlowTaskViewDTO> currentTasks);
 
     /**
      * 发起人维度查询
      */
-    List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus);
+    List<FlowInstance> listByInitiator(String initiatorId, String flowStatus);
 
     /**
      * P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回，下一节点未被处理才可撤回）
@@ -185,7 +185,7 @@ public interface FlowInstanceService {
      * @param pageSize     每页大小
      * @return 分页结果
      */
-    PageResponse<FlowInstanceDO> page(String businessType, String initiatorId, String flowStatus,
+    PageResponse<FlowInstance> page(String businessType, String initiatorId, String flowStatus,
                                     LocalDateTime startTime, LocalDateTime endTime,
                                     String tenantId, int pageNo, int pageSize);
 
@@ -221,7 +221,7 @@ public interface FlowInstanceService {
      * @param nextNodes  推进后的下一节点列表
      * @param variables  流程变量
      */
-    void generateTasksForNodes(String instanceId, List<FlowNodeDO> nextNodes,
+    void generateTasksForNodes(String instanceId, List<FlowNode> nextNodes,
                                 Map<String, Object> variables);
 
     /**

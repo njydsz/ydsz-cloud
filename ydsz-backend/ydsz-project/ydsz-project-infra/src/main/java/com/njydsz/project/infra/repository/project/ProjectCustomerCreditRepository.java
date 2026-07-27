@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectCustomerCreditDO;
+import com.njydsz.project.domain.entity.project.ProjectCustomerCredit;
 import com.njydsz.project.domain.repository.project.IProjectCustomerCreditRepository;
 import com.njydsz.project.infra.mapper.project.ProjectCustomerCreditMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ProjectCustomerCreditRepository extends ServiceImpl<ProjectCustomerCreditMapper, ProjectCustomerCreditDO>
+public class ProjectCustomerCreditRepository extends ServiceImpl<ProjectCustomerCreditMapper, ProjectCustomerCredit>
         implements IProjectCustomerCreditRepository {
 }

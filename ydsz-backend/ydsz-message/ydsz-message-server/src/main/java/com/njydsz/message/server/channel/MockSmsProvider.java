@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.util.id.SnowflakeUtils;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +28,7 @@ public class MockSmsProvider implements SmsProvider {
     }
 
     @Override
-    public MessageResult send(MessageRequest request, MsgTemplateDO template) {
+    public MessageResult send(MessageRequest request, MsgTemplate template) {
         String traceId = "MOCK-SMS-" + SnowflakeUtils.nextIdStr();
         log.info("[SMS-MOCK] 发送短信 receiver={} template={} content={}",
                 request.getReceiver(), request.getTemplateCode(), request.getContent());

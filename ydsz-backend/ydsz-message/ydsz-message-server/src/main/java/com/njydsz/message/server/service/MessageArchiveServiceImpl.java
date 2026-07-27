@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
@@ -36,7 +36,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     private boolean esEnabled;
 
     @Override
-    public void index(MsgLogDO logDO) {
+    public void index(MsgLog logDO) {
         if (!esEnabled || logDO == null) {
             return;
         }
@@ -47,18 +47,18 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     }
 
     @Override
-    public void batchIndex(List<MsgLogDO> logList) {
+    public void batchIndex(List<MsgLog> logList) {
         if (!esEnabled || logList == null || logList.isEmpty()) {
             return;
         }
         log.debug("[Archive] 批量索引: count={}", logList.size());
-        for (MsgLogDO logDO : logList) {
+        for (MsgLog logDO : logList) {
             index(logDO);
         }
     }
 
     @Override
-    public Page<MsgLogDO> search(String keyword, String channel, String status, String bizType,
+    public Page<MsgLog> search(String keyword, String channel, String status, String bizType,
                                  LocalDateTime startTime, LocalDateTime endTime,
                                  String tenantId, int pageNum, int pageSize) {
         if (esEnabled) {
@@ -81,23 +81,23 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     /**
      * 数据库 LIKE 降级搜索。
      */
-    private Page<MsgLogDO> searchByDatabase(String keyword, String channel, String status, String bizType,
+    private Page<MsgLog> searchByDatabase(String keyword, String channel, String status, String bizType,
                                             LocalDateTime startTime, LocalDateTime endTime,
                                             String tenantId, int pageNum, int pageSize) {
-        Page<MsgLogDO> page = new Page<>(pageNum, pageSize);
-        LambdaQueryWrapper<MsgLogDO> wrapper = new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getTenantId, tenantId)
-                .eq(StringUtils.hasText(channel), MsgLogDO::getChannel, channel)
-                .eq(StringUtils.hasText(status), MsgLogDO::getStatus, status)
-                .eq(StringUtils.hasText(bizType), MsgLogDO::getBizType, bizType)
-                .ge(startTime != null, MsgLogDO::getCreatedAt, startTime)
-                .le(endTime != null, MsgLogDO::getCreatedAt, endTime)
+        Page<MsgLog> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<MsgLog> wrapper = new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getTenantId, tenantId)
+                .eq(StringUtils.hasText(channel), MsgLog::getChannel, channel)
+                .eq(StringUtils.hasText(status), MsgLog::getStatus, status)
+                .eq(StringUtils.hasText(bizType), MsgLog::getBizType, bizType)
+                .ge(startTime != null, MsgLog::getCreatedAt, startTime)
+                .le(endTime != null, MsgLog::getCreatedAt, endTime)
                 .and(StringUtils.hasText(keyword), w -> w
-                        .like(MsgLogDO::getContent, keyword)
-                        .or().like(MsgLogDO::getReceiver, keyword)
-                        .or().like(MsgLogDO::getTemplateCode, keyword)
-                        .or().like(MsgLogDO::getBizId, keyword))
-                .orderByDesc(MsgLogDO::getCreatedAt);
+                        .like(MsgLog::getContent, keyword)
+                        .or().like(MsgLog::getReceiver, keyword)
+                        .or().like(MsgLog::getTemplateCode, keyword)
+                        .or().like(MsgLog::getBizId, keyword))
+                .orderByDesc(MsgLog::getCreatedAt);
 
         return msgLogMapper.selectPage(page, wrapper);
     }

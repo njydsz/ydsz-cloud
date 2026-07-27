@@ -9,8 +9,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.common.redis.service.RedisService;
-import com.njydsz.userinfo.domain.entity.RoleDO;
-import com.njydsz.userinfo.domain.entity.UserAccountDO;
+import com.njydsz.userinfo.domain.entity.Role;
+import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 
@@ -54,13 +54,13 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
         }
 
         // 用户表探针
-        LambdaQueryWrapper<UserAccountDO> userWrapper = new LambdaQueryWrapper<>();
-        userWrapper.eq(UserAccountDO::getDeleted, 0);
+        LambdaQueryWrapper<UserAccount> userWrapper = new LambdaQueryWrapper<>();
+        userWrapper.eq(UserAccount::getDeleted, 0);
         checkTableProbeWithValue(builder, "userCount", () -> userAccountMapper.selectCount(userWrapper));
 
         // 角色表探针
-        LambdaQueryWrapper<RoleDO> roleWrapper = new LambdaQueryWrapper<>();
-        roleWrapper.eq(RoleDO::getDeleted, 0);
+        LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.eq(Role::getDeleted, 0);
         checkTableProbeWithValue(builder, "roleCount", () -> roleMapper.selectCount(roleWrapper));
     }
 }

@@ -17,7 +17,7 @@ import com.njydsz.common.exception.custom.SysException;
  *   <li>{@code REQUIRED} — 必填（必须填写）</li>
  * </ul>
  *
- * <p>权限数据来源：{@code FlowNodeDO.formFieldsConfig} JSON 字段，
+ * <p>权限数据来源：{@code FlowNode.formFieldsConfig} JSON 字段，
  * 格式为 {@code {"fieldKey":"EDIT|READONLY|HIDDEN|REQUIRED",...}}。
  *
  * @since 1.0.0

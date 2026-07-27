@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectInvoiceDO;
+import com.njydsz.project.domain.entity.project.ProjectInvoice;
 import com.njydsz.project.domain.repository.project.IProjectInvoiceRepository;
 import com.njydsz.project.infra.mapper.project.ProjectInvoiceMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ProjectInvoiceRepository extends ServiceImpl<ProjectInvoiceMapper, ProjectInvoiceDO>
+public class ProjectInvoiceRepository extends ServiceImpl<ProjectInvoiceMapper, ProjectInvoice>
         implements IProjectInvoiceRepository {
 }

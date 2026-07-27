@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobWebhookDO;
+import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -75,7 +75,7 @@ public class WebhookEventDispatcher {
     @Async
     public void dispatchEvent(String eventType, String jobKey, Map<String, Object> payload) {
         try {
-            List<JobWebhookDO> webhooks = webhookMapper.selectActiveByEventAndJob(eventType, jobKey);
+            List<JobWebhook> webhooks = webhookMapper.selectActiveByEventAndJob(eventType, jobKey);
             if (webhooks.isEmpty()) {
                 return;
             }
@@ -85,7 +85,7 @@ public class WebhookEventDispatcher {
             eventBody.put("timestamp", LocalDateTime.now().toString());
             eventBody.put("data", payload);
 
-            for (JobWebhookDO webhook : webhooks) {
+            for (JobWebhook webhook : webhooks) {
                 sendWebhook(webhook, eventBody);
             }
         } catch (Exception e) {
@@ -97,7 +97,7 @@ public class WebhookEventDispatcher {
     /**
      * 发送 WebHook 通知。
      */
-    private void sendWebhook(JobWebhookDO webhook, YdszJsonObject body) {
+    private void sendWebhook(JobWebhook webhook, YdszJsonObject body) {
         try {
             String method = webhook.getHttpMethod() != null ? webhook.getHttpMethod() : "POST";
             HttpRequest.Builder builder = HttpRequest.newBuilder()

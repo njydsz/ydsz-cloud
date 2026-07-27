@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <h3>与 JobScanner 的协作</h3>
  * <ul>
- *   <li>JobScanner 扫描到任务后，通过 {@link #isMyPartition(JobDO)} 判断是否属于本节点分区</li>
+ *   <li>JobScanner 扫描到任务后，通过 {@link #isMyPartition(Job)} 判断是否属于本节点分区</li>
  *   <li>不属于本节点分区的任务跳过，由对应分区 Leader 负责扫描派发</li>
  * </ul>
  *
@@ -103,7 +103,7 @@ public class PartitionLeaderManager {
      * @param job 任务定义
      * @return true 属于本节点分区（应扫描派发）；false 不属于（跳过）
      */
-    public boolean isMyPartition(JobDO job) {
+    public boolean isMyPartition(Job job) {
         int partition = computePartition(job);
         return heldPartitions.contains(partition);
     }
@@ -114,7 +114,7 @@ public class PartitionLeaderManager {
      * @param job 任务定义
      * @return 分区索引 [0, totalPartitions)
      */
-    public int computePartition(JobDO job) {
+    public int computePartition(Job job) {
         String hashStrategy = cronjobProperties.getLeader().getPartition().getHashStrategy();
         String hashKey;
         if ("job_group".equalsIgnoreCase(hashStrategy)) {

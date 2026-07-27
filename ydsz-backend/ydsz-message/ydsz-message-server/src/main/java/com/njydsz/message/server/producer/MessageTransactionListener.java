@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.service.template.TemplateService;
 
@@ -144,7 +144,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         if (!channelRouter.isChannelEnabled(req.getChannel())) {
             return "通道未启用: " + req.getChannel();
         }
-        MsgTemplateDO tpl = templateService.loadByCodeAndChannel(
+        MsgTemplate tpl = templateService.loadByCodeAndChannel(
                 req.getTemplateCode(), req.getChannel(), null, TenantContext.getTenantId());
         if (tpl == null) {
             return "模板不存在: " + req.getTemplateCode();

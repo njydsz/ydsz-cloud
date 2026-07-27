@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.userinfo.domain.entity.UserFieldDO;
+import com.njydsz.userinfo.domain.entity.UserField;
 import com.njydsz.userinfo.infra.mapper.UserFieldMapper;
 import com.njydsz.userinfo.server.service.UserFieldService;
 
@@ -29,8 +29,8 @@ public class UserFieldServiceImpl implements UserFieldService {
     private final UserFieldMapper mapper;
 
     @Override
-    public UserFieldDO getById(String id) {
-        UserFieldDO entity = mapper.selectById(id);
+    public UserField getById(String id) {
+        UserField entity = mapper.selectById(id);
         if (entity == null || entity.getDeleted() == 1) {
             return null;
         }
@@ -38,22 +38,22 @@ public class UserFieldServiceImpl implements UserFieldService {
     }
 
     @Override
-    public List<UserFieldDO> list() {
-        LambdaQueryWrapper<UserFieldDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserFieldDO::getDeleted, 0);
+    public List<UserField> list() {
+        LambdaQueryWrapper<UserField> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserField::getDeleted, 0);
         return mapper.selectList(wrapper);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String save(UserFieldDO entity) {
+    public String save(UserField entity) {
         mapper.insert(entity);
         return entity.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(UserFieldDO entity) {
+    public boolean updateById(UserField entity) {
         return mapper.updateById(entity) > 0;
     }
 

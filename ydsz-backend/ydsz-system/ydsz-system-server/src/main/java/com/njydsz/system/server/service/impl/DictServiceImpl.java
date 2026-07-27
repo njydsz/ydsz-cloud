@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.system.domain.dto.DictTypeDTO;
-import com.njydsz.system.domain.entity.DictTypeDO;
+import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.infra.repository.DictRepository;
@@ -39,9 +39,9 @@ public class DictServiceImpl implements DictService {
 
     @Override
     public PageResult<DictTypeVO> page(DictPageQuery query) {
-        QueryWrapper<DictTypeDO> wrapper = buildQueryWrapper(query);
-        Page<DictTypeDO> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-        IPage<DictTypeDO> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);
+        QueryWrapper<DictType> wrapper = buildQueryWrapper(query);
+        Page<DictType> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+        IPage<DictType> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);
         List<DictTypeVO> vos = result.getRecords().stream()
                 .map(this::toVO)
                 .filter(Objects::nonNull)
@@ -51,14 +51,14 @@ public class DictServiceImpl implements DictService {
 
     @Override
     public DictTypeVO getById(String id) {
-        DictTypeDO entity = dictRepository.getDictTypeMapper().selectById(id);
+        DictType entity = dictRepository.getDictTypeMapper().selectById(id);
         return toVO(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(DictTypeDTO dto) {
-        DictTypeDO entity = toEntity(dto);
+        DictType entity = toEntity(dto);
         checkDuplicateTypeCode(entity);
         dictRepository.getDictTypeMapper().insert(entity);
         return entity.getId();
@@ -67,7 +67,7 @@ public class DictServiceImpl implements DictService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(DictTypeDTO dto) {
-        DictTypeDO entity = toEntity(dto);
+        DictType entity = toEntity(dto);
         checkDuplicateTypeCode(entity);
         return dictRepository.getDictTypeMapper().updateById(entity) > 0;
     }
@@ -90,8 +90,8 @@ public class DictServiceImpl implements DictService {
 
     // ============================== 私有方法 ==============================
 
-    private QueryWrapper<DictTypeDO> buildQueryWrapper(DictPageQuery query) {
-        QueryWrapper<DictTypeDO> wrapper = new QueryWrapper<>();
+    private QueryWrapper<DictType> buildQueryWrapper(DictPageQuery query) {
+        QueryWrapper<DictType> wrapper = new QueryWrapper<>();
         if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
             wrapper.eq("type_code", query.getTypeCode());
         }
@@ -105,7 +105,7 @@ public class DictServiceImpl implements DictService {
         return wrapper;
     }
 
-    private DictTypeVO toVO(DictTypeDO entity) {
+    private DictTypeVO toVO(DictType entity) {
         if (entity == null) {
             return null;
         }
@@ -118,11 +118,11 @@ public class DictServiceImpl implements DictService {
         return vo;
     }
 
-    private DictTypeDO toEntity(DictTypeDTO dto) {
+    private DictType toEntity(DictTypeDTO dto) {
         if (dto == null) {
             return null;
         }
-        DictTypeDO entity = new DictTypeDO();
+        DictType entity = new DictType();
         entity.setId(dto.getId());
         entity.setTypeCode(dto.getTypeCode());
         entity.setTypeName(dto.getTypeName());
@@ -131,8 +131,8 @@ public class DictServiceImpl implements DictService {
         return entity;
     }
 
-    private void checkDuplicateTypeCode(DictTypeDO entity) {
-        QueryWrapper<DictTypeDO> checkWrapper = new QueryWrapper<>();
+    private void checkDuplicateTypeCode(DictType entity) {
+        QueryWrapper<DictType> checkWrapper = new QueryWrapper<>();
         checkWrapper.eq("type_code", entity.getTypeCode());
         if (entity.getId() != null) {
             checkWrapper.ne("id", entity.getId());

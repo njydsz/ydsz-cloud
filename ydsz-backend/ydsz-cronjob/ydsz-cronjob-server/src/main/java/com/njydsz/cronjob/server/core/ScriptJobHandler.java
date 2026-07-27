@@ -26,7 +26,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.job.JobHandler;
 import com.njydsz.common.core.job.JobLogger;
 import com.njydsz.common.core.job.JobLoggerHolder;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
 
@@ -133,16 +133,16 @@ public class ScriptJobHandler implements JobHandler {
     }
 
     /**
-     * 执行脚本（支持从 JobDO 解析超时）。
+     * 执行脚本（支持从 Job 解析超时）。
      *
-     * <p>当 dispatcher 持有 JobDO 时可通过本方法传入任务级 timeoutMs。
+     * <p>当 dispatcher 持有 Job 时可通过本方法传入任务级 timeoutMs。
      *
      * @param job        任务定义（用于读取 timeoutMs）
      * @param paramsJson 参数 JSON
      * @return 执行结果（含退出码、stdout、stderr）
      * @throws Exception 执行失败时抛出
      */
-    public Object execute(JobDO job, String paramsJson) throws Exception {
+    public Object execute(Job job, String paramsJson) throws Exception {
         ScriptResult result = (ScriptResult) execute(paramsJson);
         // 任务级 timeoutMs 覆盖（仅当 paramsJson 中未指定时）
         if (job != null && job.getTimeoutMs() != null && job.getTimeoutMs() > 0) {

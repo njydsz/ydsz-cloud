@@ -5,7 +5,7 @@ import java.util.List;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.template.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.template.TemplateTestSendDTO;
-import com.njydsz.message.domain.entity.template.MsgTemplateVersionDO;
+import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
 
 /**
  * 模板版本管理与可视化服务。
@@ -23,7 +23,7 @@ public interface TemplateVersionService {
      * @param templateCode 模板编码
      * @return 版本列表（按版本号降序）
      */
-    List<MsgTemplateVersionDO> listVersions(String templateCode);
+    List<MsgTemplateVersion> listVersions(String templateCode);
 
     /**
      * 记录模板版本快照（审核通过/拒绝时调用）。
@@ -36,7 +36,7 @@ public interface TemplateVersionService {
      * @param auditRemark  审核意见
      * @return 版本记录
      */
-    MsgTemplateVersionDO recordVersion(String templateCode, String content, String variableDefs,
+    MsgTemplateVersion recordVersion(String templateCode, String content, String variableDefs,
                                        String auditStatus, String auditor, String auditRemark);
 
     /**

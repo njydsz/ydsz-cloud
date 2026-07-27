@@ -12,8 +12,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.config.MsgTraceDO;
-import com.njydsz.message.domain.entity.config.MsgTraceDO.Node;
+import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.domain.entity.config.MsgTrace.Node;
 import com.njydsz.message.infra.mapper.config.MsgTraceMapper;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
@@ -45,7 +45,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
             return;
         }
         try {
-            MsgTraceDO trace = new MsgTraceDO();
+            MsgTrace trace = new MsgTrace();
             trace.setMsgId(msgId);
             trace.setTraceId(TracerUtils.getOrCreateTraceId());
             trace.setNode(node.name());
@@ -72,36 +72,36 @@ public class MessageTraceServiceImpl implements MessageTraceService {
     }
 
     @Override
-    public List<MsgTraceDO> getTraceByMsgId(String msgId) {
+    public List<MsgTrace> getTraceByMsgId(String msgId) {
         if (!StringUtils.hasText(msgId)) {
             return List.of();
         }
-        LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MsgTraceDO::getMsgId, msgId)
-                .orderByAsc(MsgTraceDO::getEventAt);
+        LambdaQueryWrapper<MsgTrace> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MsgTrace::getMsgId, msgId)
+                .orderByAsc(MsgTrace::getEventAt);
         return msgTraceMapper.selectList(wrapper);
     }
 
     @Override
-    public List<MsgTraceDO> getTraceByTraceId(String traceId) {
+    public List<MsgTrace> getTraceByTraceId(String traceId) {
         if (!StringUtils.hasText(traceId)) {
             return List.of();
         }
-        LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MsgTraceDO::getTraceId, traceId)
-                .orderByAsc(MsgTraceDO::getEventAt);
+        LambdaQueryWrapper<MsgTrace> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MsgTrace::getTraceId, traceId)
+                .orderByAsc(MsgTrace::getEventAt);
         return msgTraceMapper.selectList(wrapper);
     }
 
     @Override
-    public List<MsgTraceDO> getTraceByBiz(String bizType, String bizId) {
+    public List<MsgTrace> getTraceByBiz(String bizType, String bizId) {
         if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {
             return List.of();
         }
-        LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MsgTraceDO::getBizType, bizType)
-                .eq(MsgTraceDO::getBizId, bizId)
-                .orderByAsc(MsgTraceDO::getEventAt);
+        LambdaQueryWrapper<MsgTrace> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MsgTrace::getBizType, bizType)
+                .eq(MsgTrace::getBizId, bizId)
+                .orderByAsc(MsgTrace::getEventAt);
         return msgTraceMapper.selectList(wrapper);
     }
 }

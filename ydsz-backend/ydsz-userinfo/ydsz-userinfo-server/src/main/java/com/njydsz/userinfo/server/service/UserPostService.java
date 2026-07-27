@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
-import com.njydsz.userinfo.domain.entity.UserPostDO;
+import com.njydsz.userinfo.domain.entity.UserPost;
 
 /**
  * 用户岗位 service interface.
@@ -12,9 +12,9 @@ import com.njydsz.userinfo.domain.entity.UserPostDO;
  */
 public interface UserPostService {
 
-    UserPostDO getById(String id);
-    List<UserPostDO> list();
-    String save(UserPostDO entity);
-    boolean updateById(UserPostDO entity);
+    UserPost getById(String id);
+    List<UserPost> list();
+    String save(UserPost entity);
+    boolean updateById(UserPost entity);
     boolean removeById(String id);
 }

@@ -1,6 +1,6 @@
 package com.njydsz.workflow.server.service;
 
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 
 /**
  * 三方审批回调日志服务
@@ -29,7 +29,7 @@ public interface FlowThirdPartyLogService {
      * @param log 回调日志（platform/eventType/callbackData 必填）
      * @return 日志 ID，落库失败返回 null
      */
-    String savePending(FlowThirdPartyLogDO log);
+    String savePending(FlowThirdPartyLog log);
 
     /**
      * 更新为 SUCCESS 状态

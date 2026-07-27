@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.workflow.domain.entity.FlowNode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +72,7 @@ public class FlowTaskCompleteServiceImpl {
      * 创建任务（向后兼容重载）
      */
     @Transactional(rollbackFor = Exception.class)
-    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
         return createService.createTask(instanceId, node, variables);
     }
 
@@ -80,7 +80,7 @@ public class FlowTaskCompleteServiceImpl {
      * 创建任务（支持显式指定办理人）
      */
     @Transactional(rollbackFor = Exception.class)
-    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables,
+    public String createTask(String instanceId, FlowNode node, Map<String, Object> variables,
                              List<String> explicitAssignees) {
         return createService.createTask(instanceId, node, variables, explicitAssignees);
     }

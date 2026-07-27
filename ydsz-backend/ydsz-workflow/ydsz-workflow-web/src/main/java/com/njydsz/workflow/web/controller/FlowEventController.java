@@ -10,7 +10,7 @@ import com.njydsz.common.auth.context.AuthContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.workflow.WorkflowFacade;
-import com.njydsz.workflow.domain.entity.FlowEventSubscriptionDO;
+import com.njydsz.workflow.domain.entity.FlowEventSubscription;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -113,7 +113,7 @@ public class FlowEventController {
      * @return 订阅列表（含 WAITING / COMPLETED / CANCELLED 状态）
      */
     @GetMapping("/instance/{instanceId}/eventSubscriptions")
-    public BaseResponse<List<FlowEventSubscriptionDO>> listEventSubscriptions(
+    public BaseResponse<List<FlowEventSubscription>> listEventSubscriptions(
             @PathVariable String instanceId) {
         return BaseResponse.success(eventSubscriptionService.listByInstance(instanceId));
     }

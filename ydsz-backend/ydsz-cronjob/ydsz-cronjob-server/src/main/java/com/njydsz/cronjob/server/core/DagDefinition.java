@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * DAG 定义模型（P2 DAG 增强）。
  *
- * <p>对应 {@code JobDagDO.dagDefinition} JSON 字段，包含节点列表和边列表。
+ * <p>对应 {@code JobDag.dagDefinition} JSON 字段，包含节点列表和边列表。
  * 由 {@link DagDefinitionCodec} 负责序列化/反序列化。
  *
  * <p>JSON 格式示例：

@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowTimerDO;
+import com.njydsz.workflow.domain.entity.FlowTimer;
 
 /**
  * 工作流定时器 Mapper
@@ -16,7 +16,7 @@ import com.njydsz.workflow.domain.entity.FlowTimerDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowTimerMapper extends BaseMapper<FlowTimerDO> {
+public interface FlowTimerMapper extends BaseMapper<FlowTimer> {
 
     /**
      * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at <= now AND deleted = 0）
@@ -24,7 +24,7 @@ public interface FlowTimerMapper extends BaseMapper<FlowTimerDO> {
      * @param now 当前时间
      * @param limit 单次扫描上限
      */
-    List<FlowTimerDO> selectDueTimers(@Param("now") LocalDateTime now,
+    List<FlowTimer> selectDueTimers(@Param("now") LocalDateTime now,
                                       @Param("limit") int limit);
 
     /**

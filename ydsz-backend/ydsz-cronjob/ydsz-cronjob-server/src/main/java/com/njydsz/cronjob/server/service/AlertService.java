@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLogDO;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**
  * 告警规则服务接口（P5 告警 + 监控）。
@@ -44,14 +44,14 @@ public interface AlertService {
      * @param id 规则 ID
      * @return 规则详情
      */
-    JobAlertRuleDO getRuleById(String id);
+    JobAlertRule getRuleById(String id);
 
     /**
      * 查询全部告警规则。
      *
      * @return 规则列表
      */
-    List<JobAlertRuleDO> listRules();
+    List<JobAlertRule> listRules();
 
     /**
      * 启用/禁用规则。
@@ -68,5 +68,5 @@ public interface AlertService {
      * @param since 时间窗口起点（NULL 表示查询全部）
      * @return 告警日志列表
      */
-    List<JobAlertLogDO> queryAlertLogs(String jobId, LocalDateTime since);
+    List<JobAlertLog> queryAlertLogs(String jobId, LocalDateTime since);
 }

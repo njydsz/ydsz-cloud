@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 
 /**
  * 消息发送日志服务
@@ -20,7 +20,7 @@ public interface MessageLogService {
      * @param id 日志 ID
      * @return 日志实体
      */
-    MsgLogDO getById(String id);
+    MsgLog getById(String id);
 
     /**
      * 分页查询日志
@@ -28,7 +28,7 @@ public interface MessageLogService {
      * @param query 查询参数
      * @return 分页结果
      */
-    Page<MsgLogDO> page(MessageLogQueryDTO query);
+    Page<MsgLog> page(MessageLogQueryDTO query);
 
     /**
      * 标记日志为重试中,并设置下次重试时间

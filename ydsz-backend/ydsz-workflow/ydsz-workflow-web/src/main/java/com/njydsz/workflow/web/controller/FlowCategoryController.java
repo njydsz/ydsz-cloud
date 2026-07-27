@@ -12,7 +12,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
-import com.njydsz.workflow.domain.entity.FlowCategoryDO;
+import com.njydsz.workflow.domain.entity.FlowCategory;
 import com.njydsz.workflow.server.service.FlowCategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +46,7 @@ public class FlowCategoryController {
      */
     @GetMapping
     @Operation(summary = "查询全部分类")
-    public BaseResponse<List<FlowCategoryDO>> list() {
+    public BaseResponse<List<FlowCategory>> list() {
         return BaseResponse.success(categoryService.listAll(TenantContext.getTenantId()));
     }
 

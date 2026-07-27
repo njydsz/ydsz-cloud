@@ -42,7 +42,7 @@ public enum FlowNodeType {
      * <p>对标 BPMN 2.0 multiInstance + 钉钉/飞书"审批人动态集合"能力。
      * 与 {@link #APPROVAL} + performType=PARALLEL（会签）的区别：
      * <ul>
-     *   <li>会签：1 条 task + N 个 FlowUserDO（共享审批意见）</li>
+     *   <li>会签：1 条 task + N 个 FlowUser（共享审批意见）</li>
      *   <li>FOREACH：N 条独立 task（每条有自己的 assigneeId / iterVar）</li>
      * </ul>
      *

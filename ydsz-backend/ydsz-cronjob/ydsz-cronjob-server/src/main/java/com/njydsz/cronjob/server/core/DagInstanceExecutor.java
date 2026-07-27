@@ -18,11 +18,11 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.dag.DagInstanceStatus;
 import com.njydsz.common.core.dag.DagNodeStatus;
 import com.njydsz.common.core.dag.SpELConditionEvaluator;
-import com.njydsz.cronjob.domain.entity.dag.JobDagDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
-import com.njydsz.cronjob.domain.entity.job.JobDO;
-import com.njydsz.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.cronjob.domain.entity.dag.JobDag;
+import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
+import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
@@ -113,12 +113,12 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     // ==================== 核心执行逻辑 ====================
 
     private void doExecute(String dagInstanceId) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             log.warn("[DagInstance] 实例不存在: instanceId={}", dagInstanceId);
             return;
         }
-        JobDagDO dag = dagMapper.selectById(instance.getDagId());
+        JobDag dag = dagMapper.selectById(instance.getDagId());
         if (dag == null) {
             markInstanceFailed(dagInstanceId, "DAG 定义不存在");
             return;
@@ -149,7 +149,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         // 创建节点实例
         List<DagNode> nodes = definition.nodes();
         for (DagNode node : nodes) {
-            JobDagNodeInstanceDO nodeInstance = new JobDagNodeInstanceDO();
+            JobDagNodeInstance nodeInstance = new JobDagNodeInstance();
             nodeInstance.setDagInstanceId(dagInstanceId);
             nodeInstance.setDagId(instance.getDagId());
             // P2-1: 控制节点（CONDITION/LOOP/PARALLEL_GATEWAY）jobId 可能为 null，
@@ -159,14 +159,14 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             nodeInstance.setJobKey(node.jobKey());
             nodeInstance.setNodeStatus(DagNodeStatus.PENDING.name());
             nodeInstance.setRetryCount(0);
-            // P2-6: 从 JobDO 读取 maxRetries，支持 RETRY 失败策略
+            // P2-6: 从 Job 读取 maxRetries，支持 RETRY 失败策略
             nodeInstance.setMaxRetries(resolveNodeMaxRetries(node.jobId()));
             nodeInstance.setTenantId(instance.getTenantId());
             dagNodeInstanceMapper.insert(nodeInstance);
         }
 
         // 更新总节点数
-        JobDagInstanceDO update = new JobDagInstanceDO();
+        JobDagInstance update = new JobDagInstance();
         update.setId(dagInstanceId);
         update.setTotalNodes(nodes.size());
         update.setSuccessNodes(0);
@@ -211,7 +211,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * 派发 TASK 类型节点（现有逻辑：调用 handler 执行）。
      */
     private void dispatchTaskNode(String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
-        JobDO job = jobMapper.selectById(node.jobId());
+        Job job = jobMapper.selectById(node.jobId());
         if (job == null) {
             log.warn("[DagInstance] 节点任务不存在, 标记 FAILED: instanceId={} jobKey={}",
                     dagInstanceId, node.jobKey());
@@ -226,7 +226,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         }
 
         // 标记节点 RUNNING
-        JobDagNodeInstanceDO nodeInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, node.jobId());
+        JobDagNodeInstance nodeInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, node.jobId());
         if (nodeInstance == null) {
             log.warn("[DagInstance] 节点实例不存在: instanceId={} jobId={}", dagInstanceId, node.jobId());
             return;
@@ -242,7 +242,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         // 节点状态可能已经通过事件更新，这里不重复处理
         if (logId != null) {
             // 更新节点实例的 logId
-            JobDagNodeInstanceDO update = new JobDagNodeInstanceDO();
+            JobDagNodeInstance update = new JobDagNodeInstance();
             update.setId(nodeInstance.getId());
             update.setLogId(logId);
             dagNodeInstanceMapper.updateById(update);
@@ -263,7 +263,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      */
     private void dispatchConditionNode(String dagInstanceId, String dagId,
                                         DagNode node, DagDefinition definition) {
-        JobDagNodeInstanceDO nodeInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+        JobDagNodeInstance nodeInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
                 dagInstanceId, effectiveJobId(node));
         if (nodeInstance == null) {
             log.warn("[DagInstance] CONDITION 节点实例不存在: instanceId={} jobKey={}",
@@ -306,7 +306,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      */
     private void dispatchLoopNode(String dagInstanceId, String dagId,
                                    DagNode node, DagDefinition definition) {
-        JobDagNodeInstanceDO loopInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+        JobDagNodeInstance loopInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
                 dagInstanceId, effectiveJobId(node));
         if (loopInstance == null) {
             log.warn("[DagInstance] LOOP 节点实例不存在: instanceId={} jobKey={}",
@@ -334,7 +334,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
                     continue;
                 }
                 // 为每次迭代创建新的节点实例（jobKey 加迭代后缀以区分）
-                JobDagNodeInstanceDO iterInstance = new JobDagNodeInstanceDO();
+                JobDagNodeInstance iterInstance = new JobDagNodeInstance();
                 iterInstance.setDagInstanceId(dagInstanceId);
                 iterInstance.setDagId(dagId);
                 iterInstance.setJobId(bodyNode.jobId());
@@ -358,8 +358,8 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * 直接使用传入的实例进行派发，支持 LOOP 场景下每次迭代使用独立实例。
      */
     private void dispatchTaskNodeWithInstance(String dagInstanceId, DagNode node,
-                                               JobDagNodeInstanceDO instance) {
-        JobDO job = jobMapper.selectById(node.jobId());
+                                               JobDagNodeInstance instance) {
+        Job job = jobMapper.selectById(node.jobId());
         if (job == null) {
             log.warn("[DagInstance] 循环体任务不存在, 标记 FAILED: instanceId={} jobKey={}",
                     dagInstanceId, node.jobKey());
@@ -383,7 +383,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
                 dagInstanceId, instance.getJobKey(), logId);
 
         if (logId != null) {
-            JobDagNodeInstanceDO update = new JobDagNodeInstanceDO();
+            JobDagNodeInstance update = new JobDagNodeInstance();
             update.setId(instance.getId());
             update.setLogId(logId);
             dagNodeInstanceMapper.updateById(update);
@@ -399,7 +399,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      */
     private void dispatchParallelGatewayNode(String dagInstanceId, String dagId,
                                               DagNode node, DagDefinition definition) {
-        JobDagNodeInstanceDO gatewayInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+        JobDagNodeInstance gatewayInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
                 dagInstanceId, effectiveJobId(node));
         if (gatewayInstance == null) {
             log.warn("[DagInstance] PARALLEL_GATEWAY 节点实例不存在: instanceId={} jobKey={}",
@@ -459,8 +459,8 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             context.put(key, dagContext.get(key));
         }
         // 2. 补充节点状态（status 字段）
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstance node : nodes) {
             if (node.getJobKey() == null) {
                 continue;
             }
@@ -523,12 +523,12 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         // 查询是否有 PENDING/RUNNING 状态的节点实例匹配此 jobId
         // 注意：一个 jobId 可能同时属于多个 DAG 实例（不同 DAG 定义包含同一任务）
         // 这里只处理最先匹配的一个（PENDING/RUNNING 状态）
-        List<JobDagNodeInstanceDO> candidates = findRunningNodesByJobId(event.jobId());
+        List<JobDagNodeInstance> candidates = findRunningNodesByJobId(event.jobId());
         if (candidates.isEmpty()) {
             return; // 非 DAG 节点，跳过
         }
 
-        for (JobDagNodeInstanceDO nodeInstance : candidates) {
+        for (JobDagNodeInstance nodeInstance : candidates) {
             processNodeCompletion(nodeInstance, event);
         }
     }
@@ -540,8 +540,8 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * 返回 ALL 匹配实例（含 LOOP iter 实例），避免 LOOP 场景下同一 jobId 的多个实例
      * 仅返回一条导致部分 iter 完成事件丢失。
      */
-    private List<JobDagNodeInstanceDO> findRunningNodesByJobId(String jobId) {
-        List<JobDagInstanceDO> runningInstances = dagInstanceMapper.selectByStatus(
+    private List<JobDagNodeInstance> findRunningNodesByJobId(String jobId) {
+        List<JobDagInstance> runningInstances = dagInstanceMapper.selectByStatus(
                 DagInstanceStatus.RUNNING.name());
         if (runningInstances.isEmpty()) {
             return List.of();
@@ -553,7 +553,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
                 .toList();
     }
 
-    private void processNodeCompletion(JobDagNodeInstanceDO nodeInstance, TaskCompletedEvent event) {
+    private void processNodeCompletion(JobDagNodeInstance nodeInstance, TaskCompletedEvent event) {
         String dagInstanceId = nodeInstance.getDagInstanceId();
         DagNodeStatus finalStatus = event.success() ? DagNodeStatus.SUCCESS : DagNodeStatus.FAILED;
         LocalDateTime now = LocalDateTime.now();
@@ -564,7 +564,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         String nodeResultJson = null;
         if (event.success() && event.logId() != null) {
             try {
-                JobLogDO jobLog = jobLogMapper.selectById(event.logId());
+                JobLog jobLog = jobLogMapper.selectById(event.logId());
                 if (jobLog != null) {
                     nodeResultJson = jobLog.getResultJson();
                 }
@@ -605,14 +605,14 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         }
 
         // 加载 DAG 实例和定义
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null || !DagInstanceStatus.RUNNING.name().equals(instance.getStatus())) {
             // P1-4: 实例非 RUNNING 状态（如 PAUSED/CANCELED），不触发后继
             log.info("[DagInstance] 实例非 RUNNING 状态, 不触发后继: instanceId={} status={}",
                     dagInstanceId, instance == null ? "null" : instance.getStatus());
             return;
         }
-        JobDagDO dag = dagMapper.selectById(instance.getDagId());
+        JobDag dag = dagMapper.selectById(instance.getDagId());
         if (dag == null) {
             return;
         }
@@ -649,18 +649,18 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * @param iterInstance   完成的 iter 实例（jobKey 含 {@code #loop} 后缀）
      * @param iterFinalStatus iter 实例的终态（SUCCESS/FAILED）
      */
-    private void handleLoopIterCompletion(JobDagNodeInstanceDO iterInstance, DagNodeStatus iterFinalStatus) {
+    private void handleLoopIterCompletion(JobDagNodeInstance iterInstance, DagNodeStatus iterFinalStatus) {
         String dagInstanceId = iterInstance.getDagInstanceId();
         String originalJobKey = stripLoopSuffix(iterInstance.getJobKey());
 
         // 查询同一 jobId 的所有实例（原始 body + 所有 iter）
-        List<JobDagNodeInstanceDO> allInstances = dagNodeInstanceMapper.selectAllByDagInstanceAndJob(
+        List<JobDagNodeInstance> allInstances = dagNodeInstanceMapper.selectAllByDagInstanceAndJob(
                 dagInstanceId, iterInstance.getJobId());
 
         // 分离原始 body 节点实例和 iter 实例
-        JobDagNodeInstanceDO originalBody = null;
-        List<JobDagNodeInstanceDO> iterInstances = new ArrayList<>();
-        for (JobDagNodeInstanceDO inst : allInstances) {
+        JobDagNodeInstance originalBody = null;
+        List<JobDagNodeInstance> iterInstances = new ArrayList<>();
+        for (JobDagNodeInstance inst : allInstances) {
             if (isLoopIterJobKey(inst.getJobKey())) {
                 iterInstances.add(inst);
             } else {
@@ -708,11 +708,11 @@ private final SpELConditionEvaluator spELConditionEvaluator;
                 dagInstanceId, originalJobKey, iterInstances.size(), bodyFinalStatus);
 
         // 加载 DAG 实例和定义，触发后继或处理失败
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null || !DagInstanceStatus.RUNNING.name().equals(instance.getStatus())) {
             return;
         }
-        JobDagDO dag = dagMapper.selectById(instance.getDagId());
+        JobDag dag = dagMapper.selectById(instance.getDagId());
         if (dag == null) {
             return;
         }
@@ -759,7 +759,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * </ul>
      */
     private void handleNodeFailure(String dagInstanceId, String dagId,
-                                    JobDagNodeInstanceDO nodeInstance, DagDefinition definition,
+                                    JobDagNodeInstance nodeInstance, DagDefinition definition,
                                     DagFailureStrategy dagStrategy) {
         String jobKey = nodeInstance.getJobKey();
         // P2-6: RETRY 策略优先处理
@@ -801,13 +801,13 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      *
      * @return true 表示重试已触发；false 表示重试次数用尽
      */
-    private boolean tryRetryNode(JobDagNodeInstanceDO nodeInstance, DagDefinition definition) {
+    private boolean tryRetryNode(JobDagNodeInstance nodeInstance, DagDefinition definition) {
         int updated = dagNodeInstanceMapper.markRetry(nodeInstance.getId());
         if (updated == 0) {
             return false; // 重试次数用尽或状态非 FAILED
         }
         // 重新查询节点实例获取最新状态（retryCount 已递增）
-        JobDagNodeInstanceDO refreshed = dagNodeInstanceMapper.selectById(nodeInstance.getId());
+        JobDagNodeInstance refreshed = dagNodeInstanceMapper.selectById(nodeInstance.getId());
         if (refreshed == null) {
             return false;
         }
@@ -854,7 +854,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         }
         // P2-1: 控制节点 jobId 可能为 null，使用 jobKey 兜底
         String lookupId = node.jobId() != null ? node.jobId() : node.jobKey();
-        JobDagNodeInstanceDO nodeInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+        JobDagNodeInstance nodeInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
                 dagInstanceId, lookupId);
         if (nodeInstance != null && DagNodeStatus.PENDING.name().equals(nodeInstance.getNodeStatus())) {
             dagNodeInstanceMapper.markSkipped(nodeInstance.getId());
@@ -868,13 +868,13 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     }
 
     /**
-     * P2-6: 从 JobDO 读取 maxRetries（节点级重试上限）。
+     * P2-6: 从 Job 读取 maxRetries（节点级重试上限）。
      *
-     * @return JobDO.maxRetries；任务不存在或为 null 返回 0
+     * @return Job.maxRetries；任务不存在或为 null 返回 0
      */
     private int resolveNodeMaxRetries(String jobId) {
         try {
-            JobDO job = jobMapper.selectById(jobId);
+            Job job = jobMapper.selectById(jobId);
             if (job != null && job.getMaxRetries() != null) {
                 return job.getMaxRetries();
             }
@@ -941,7 +941,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             DagNode predDagNode = definition.findNode(edge.from());
             // P2-1: 控制节点 jobId 可能为 null，使用 jobKey 兜底
             String lookupId = predDagNode.jobId() != null ? predDagNode.jobId() : predDagNode.jobKey();
-            JobDagNodeInstanceDO predNode = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+            JobDagNodeInstance predNode = dagNodeInstanceMapper.selectByDagInstanceAndJob(
                     dagInstanceId, lookupId);
             if (predNode == null || !DagNodeStatus.SUCCESS.name().equals(predNode.getNodeStatus())) {
                 return false; // 前置未成功完成
@@ -954,8 +954,8 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * 将所有 PENDING 状态的节点标记为 SKIPPED。
      */
     private void skipPendingNodes(String dagInstanceId) {
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstance node : nodes) {
             if (DagNodeStatus.PENDING.name().equals(node.getNodeStatus())) {
                 dagNodeInstanceMapper.markSkipped(node.getId());
             }
@@ -968,13 +968,13 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * 检查 DAG 实例是否所有节点都已完成，如是则更新终态。
      */
     private void finalizeInstance(String dagInstanceId) {
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
         if (nodes.isEmpty()) {
             return;
         }
         int total = nodes.size();
         int success = 0, failed = 0, skipped = 0, pending = 0, running = 0;
-        for (JobDagNodeInstanceDO node : nodes) {
+        for (JobDagNodeInstance node : nodes) {
             DagNodeStatus st = DagNodeStatus.parse(node.getNodeStatus());
             if (st == null) continue;
             switch (st) {
@@ -1005,7 +1005,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         }
 
         LocalDateTime now = LocalDateTime.now();
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         long durationMs = instance != null && instance.getStartedAt() != null
                 ? ChronoUnit.MILLIS.between(instance.getStartedAt(), now) : 0;
 
@@ -1023,7 +1023,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
 
     private void markInstanceFailed(String dagInstanceId, String errorMessage) {
         try {
-            JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+            JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
             if (instance == null) return;
             LocalDateTime now = LocalDateTime.now();
             long durationMs = instance.getStartedAt() != null
@@ -1036,7 +1036,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     }
 
     private void markNodeFailed(String dagInstanceId, String jobKey, String errorMessage) {
-        JobDagNodeInstanceDO node = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+        JobDagNodeInstance node = dagNodeInstanceMapper.selectByDagInstanceAndJob(
                 dagInstanceId, jobKey);
         if (node == null) return;
         LocalDateTime now = LocalDateTime.now();
@@ -1047,7 +1047,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     }
 
     private void markNodeSkipped(String dagInstanceId, String jobKey) {
-        JobDagNodeInstanceDO node = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+        JobDagNodeInstance node = dagNodeInstanceMapper.selectByDagInstanceAndJob(
                 dagInstanceId, jobKey);
         if (node == null) return;
         dagNodeInstanceMapper.markSkipped(node.getId());
@@ -1124,7 +1124,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      * @return 上下文 JSON 对象（不可变副本）；实例不存在或无上下文返回空对象
      */
     public Map<String, Object> getDagContext(String dagInstanceId) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
             return new YdszJsonObject();
         }

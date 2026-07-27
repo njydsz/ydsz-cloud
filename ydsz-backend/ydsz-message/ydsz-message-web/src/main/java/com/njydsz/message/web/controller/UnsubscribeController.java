@@ -14,7 +14,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
-import com.njydsz.message.domain.entity.config.MsgSubscriptionDO;
+import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.server.service.config.UnsubscribeService;
 import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 
@@ -68,7 +68,7 @@ public class UnsubscribeController {
     @Audit(module = "退订管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'oneClick'")
     @RateLimit(resource = "message.unsubscribe.oneClick", threshold = 50)
     @PostMapping("/oneClick")
-    public BaseResponse<MsgSubscriptionDO> oneClick(@RequestParam String token) {
+    public BaseResponse<MsgSubscription> oneClick(@RequestParam String token) {
         if (token == null || token.isBlank()) {
             return BaseResponse.error(BaseResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
@@ -103,7 +103,7 @@ public class UnsubscribeController {
     @Operation(summary = "分页查询已退订记录")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
-    public BaseResponse<PageResponse<MsgSubscriptionDO>> page(UnsubscribeQueryDTO query) {
+    public BaseResponse<PageResponse<MsgSubscription>> page(UnsubscribeQueryDTO query) {
         return BaseResponse.success(unsubscribeService.pageUnsubscribed(query));
     }
 

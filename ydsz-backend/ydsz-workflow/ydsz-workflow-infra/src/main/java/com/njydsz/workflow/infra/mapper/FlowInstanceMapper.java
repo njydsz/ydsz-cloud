@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.workflow.domain.entity.FlowInstance;
 
 /**
  * 流程实例 Mapper
@@ -19,12 +19,12 @@ import com.njydsz.workflow.domain.entity.FlowInstanceDO;
  * @since 1.0.0
  */
 @Mapper
-public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
+public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
 
     /**
      * 根据业务关联查实例（P1-2: 含 tenant_id 过滤 + 仅活跃状态）
      */
-    FlowInstanceDO selectByBusiness(@Param("tenantId") String tenantId,
+    FlowInstance selectByBusiness(@Param("tenantId") String tenantId,
                                     @Param("businessType") String businessType,
                                     @Param("businessId") String businessId);
 
@@ -50,7 +50,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
     /**
      * 发起人维度查询
      */
-    List<FlowInstanceDO> selectByInitiator(@Param("initiatorId") String initiatorId,
+    List<FlowInstance> selectByInitiator(@Param("initiatorId") String initiatorId,
                                            @Param("flowStatus") String flowStatus);
 
     /**
@@ -69,7 +69,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param limit           每页大小
      * @return 实例列表
      */
-    List<FlowInstanceDO> selectPage(@Param("businessType") String businessType,
+    List<FlowInstance> selectPage(@Param("businessType") String businessType,
                                     @Param("initiatorId") String initiatorId,
                                     @Param("flowStatus") String flowStatus,
                                     @Param("startTime") LocalDateTime startTime,
@@ -113,7 +113,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param tenantId 租户 ID（可空）
      * @return 超期子流程实例列表
      */
-    List<FlowInstanceDO> selectOverdueInstances(@Param("tenantId") String tenantId);
+    List<FlowInstance> selectOverdueInstances(@Param("tenantId") String tenantId);
 
     /**
      * P2-4: 按 flow_status 分组计数（监控概览用，避免多次 count 查询）

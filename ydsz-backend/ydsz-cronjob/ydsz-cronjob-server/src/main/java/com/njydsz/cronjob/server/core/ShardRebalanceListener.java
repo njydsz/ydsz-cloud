@@ -11,7 +11,7 @@ import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 
 import lombok.RequiredArgsConstructor;
@@ -97,9 +97,9 @@ public class ShardRebalanceListener {
         }
 
         try {
-            List<JobNodeDO> onlineNodes = strategy.getOnlineNodes();
+            List<JobNode> onlineNodes = strategy.getOnlineNodes();
             List<String> currentIds = onlineNodes.stream()
-                    .map(JobNodeDO::getNodeId)
+                    .map(JobNode::getNodeId)
                     .sorted()
                     .collect(Collectors.toList());
 

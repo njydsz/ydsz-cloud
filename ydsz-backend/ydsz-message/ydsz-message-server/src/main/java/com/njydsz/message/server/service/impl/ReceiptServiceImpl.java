@@ -11,7 +11,7 @@ import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
-import com.njydsz.message.domain.entity.receipt.MsgReceiptDO;
+import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 import com.njydsz.message.infra.mapper.receipt.MsgReceiptMapper;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.receipt.ReceiptService;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 消息回执服务实现。
  *
- * <p>回调落库 {@code MsgReceiptDO}，并联动 {@link MessageLogService#updateReceipt} 更新日志回执状态。
+ * <p>回调落库 {@code MsgReceipt}，并联动 {@link MessageLogService#updateReceipt} 更新日志回执状态。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -45,7 +45,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
         // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
         try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
-            MsgReceiptDO entity = new MsgReceiptDO();
+            MsgReceipt entity = new MsgReceipt();
             entity.setLogId(dto.getLogId());
             entity.setProviderTraceId(dto.getProviderTraceId());
             entity.setReceiptType(dto.getReceiptType());
@@ -67,12 +67,12 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
-    public List<MsgReceiptDO> listByLogId(String logId) {
+    public List<MsgReceipt> listByLogId(String logId) {
         if (!StringUtils.hasText(logId)) {
             return List.of();
         }
-        return msgReceiptMapper.selectList(new LambdaQueryWrapper<MsgReceiptDO>()
-                .eq(MsgReceiptDO::getLogId, logId)
-                .orderByDesc(MsgReceiptDO::getReceiptTime));
+        return msgReceiptMapper.selectList(new LambdaQueryWrapper<MsgReceipt>()
+                .eq(MsgReceipt::getLogId, logId)
+                .orderByDesc(MsgReceipt::getReceiptTime));
     }
 }

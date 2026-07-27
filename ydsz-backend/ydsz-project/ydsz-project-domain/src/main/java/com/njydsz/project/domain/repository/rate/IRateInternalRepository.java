@@ -1,6 +1,6 @@
 package com.njydsz.project.domain.repository.rate;
 
-import com.njydsz.project.domain.entity.rate.RateInternalDO;
+import com.njydsz.project.domain.entity.rate.RateInternal;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 1.0.0
  * @author ydsz-team
  */
-public interface IRateInternalRepository extends IService<RateInternalDO> {
+public interface IRateInternalRepository extends IService<RateInternal> {
 }

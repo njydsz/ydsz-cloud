@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.log.JobDailyStatsDO;
+import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
 
 /**
  * 任务每日统计 Mapper（P2-3 执行历史趋势可视化）。
@@ -27,7 +27,7 @@ import com.njydsz.cronjob.domain.entity.log.JobDailyStatsDO;
  * @since 1.0.0
  */
 @Mapper
-public interface JobDailyStatsMapper extends BaseMapper<JobDailyStatsDO> {
+public interface JobDailyStatsMapper extends BaseMapper<JobDailyStats> {
 
     /**
      * 查询指定任务在日期范围内的每日统计（按日期升序）。
@@ -44,7 +44,7 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStatsDO> {
             + "WHERE job_id = #{jobId} AND deleted = 0 "
             + "AND stats_date >= #{startDate} AND stats_date <= #{endDate} "
             + "ORDER BY stats_date ASC")
-    List<JobDailyStatsDO> selectByJobIdAndDateRange(@Param("jobId") String jobId,
+    List<JobDailyStats> selectByJobIdAndDateRange(@Param("jobId") String jobId,
                                                      @Param("startDate") LocalDate startDate,
                                                      @Param("endDate") LocalDate endDate);
 
@@ -65,7 +65,7 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStatsDO> {
             + "WHERE job_key = #{jobKey} AND deleted = 0 "
             + "AND stats_date >= #{startDate} AND stats_date <= #{endDate} "
             + "ORDER BY stats_date ASC")
-    List<JobDailyStatsDO> selectByJobKeyAndDateRange(@Param("jobKey") String jobKey,
+    List<JobDailyStats> selectByJobKeyAndDateRange(@Param("jobKey") String jobKey,
                                                       @Param("startDate") LocalDate startDate,
                                                       @Param("endDate") LocalDate endDate);
 
@@ -125,5 +125,5 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStatsDO> {
             + "max_duration_ms = EXCLUDED.max_duration_ms, "
             + "min_duration_ms = EXCLUDED.min_duration_ms, "
             + "p95_duration_ms = EXCLUDED.p95_duration_ms")
-    int upsert(@Param("stats") JobDailyStatsDO stats);
+    int upsert(@Param("stats") JobDailyStats stats);
 }

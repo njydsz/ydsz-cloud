@@ -27,7 +27,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.security.TenantContext;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.config.MessageProperties;
@@ -149,9 +149,9 @@ public class MessageConsumer implements RocketMQListener<String> {
             // GAP-1: DB二级幂等检查——Redis宕机恢复后TTL可能已过期，用msg_log表兜底
             if (StringUtils.hasText(request.getMessageId())) {
                 Long dbCount = msgLogMapper.selectCount(
-                        new LambdaQueryWrapper<MsgLogDO>()
-                                .eq(MsgLogDO::getMsgId, request.getMessageId())
-                                .in(MsgLogDO::getStatus,
+                        new LambdaQueryWrapper<MsgLog>()
+                                .eq(MsgLog::getMsgId, request.getMessageId())
+                                .in(MsgLog::getStatus,
                                         MessageStatusEnum.SUCCESS.name(),
                                         MessageStatusEnum.SENDING.name())
                                 .last("LIMIT 1"));
@@ -200,10 +200,10 @@ public class MessageConsumer implements RocketMQListener<String> {
             // 先尝试按 msgId 更新已有记录状态为 FAILED
             String msgId = request.getMessageId();
             if (msgId != null && !msgId.isBlank()) {
-                LambdaUpdateWrapper<MsgLogDO> updateWrapper = new LambdaUpdateWrapper<MsgLogDO>()
-                        .eq(MsgLogDO::getMsgId, msgId)
-                        .set(MsgLogDO::getStatus, MessageStatusEnum.FAILED.name())
-                        .set(MsgLogDO::getErrorMessage, errorMessage);
+                LambdaUpdateWrapper<MsgLog> updateWrapper = new LambdaUpdateWrapper<MsgLog>()
+                        .eq(MsgLog::getMsgId, msgId)
+                        .set(MsgLog::getStatus, MessageStatusEnum.FAILED.name())
+                        .set(MsgLog::getErrorMessage, errorMessage);
                 int updated = msgLogMapper.update(null, updateWrapper);
                 if (updated > 0) {
                     log.info("[MessageConsumer] 已更新现有记录为 FAILED: messageId={}", msgId);
@@ -211,7 +211,7 @@ public class MessageConsumer implements RocketMQListener<String> {
                 }
             }
             // 未匹配到已有记录,insert 新的 FAILED 记录
-            MsgLogDO logDO = new MsgLogDO();
+            MsgLog logDO = new MsgLog();
             logDO.setChannel(request.getChannel());
             logDO.setBizType(request.getBizType());
             logDO.setBizId(request.getBizId());

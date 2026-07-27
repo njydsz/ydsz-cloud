@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
@@ -86,14 +86,14 @@ public class AutoResumeScanner {
 
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
-        List<JobDO> candidates = jobMapper.selectAutoResumeCandidates(now);
+        List<Job> candidates = jobMapper.selectAutoResumeCandidates(now);
         if (candidates.isEmpty()) {
             return;
         }
         log.info("[AutoResumeScanner] 发现 {} 个可恢复的 AUTO_PAUSED 任务", candidates.size());
 
         int resumed = 0;
-        for (JobDO job : candidates) {
+        for (Job job : candidates) {
             try {
                 int affected = jobMapper.resumeAutoPaused(job.getId());
                 if (affected > 0) {
@@ -118,7 +118,7 @@ public class AutoResumeScanner {
     /**
      * 恢复后重新计算 next_fire_time。
      */
-    private void recomputeNextFireTime(JobDO job) {
+    private void recomputeNextFireTime(Job job) {
         if (job.getCronExpression() == null || job.getCronExpression().isBlank()) {
             return;
         }
@@ -137,7 +137,7 @@ public class AutoResumeScanner {
     /**
      * 如果任务是 FIXED_RATE/FIXED_DELAY 类型，注册到 SecondLevelScheduler。
      */
-    private void registerToSchedulerIfNeeded(JobDO job) {
+    private void registerToSchedulerIfNeeded(Job job) {
         SecondLevelScheduler scheduler = secondLevelSchedulerProvider.getIfAvailable();
         if (scheduler == null) {
             return;

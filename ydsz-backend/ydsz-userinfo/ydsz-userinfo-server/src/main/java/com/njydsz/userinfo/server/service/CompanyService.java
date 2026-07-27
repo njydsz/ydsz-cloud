@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.CompanySaveDTO;
-import com.njydsz.userinfo.domain.entity.CompanyDO;
+import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.query.CompanyPageQuery;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 
@@ -18,7 +18,7 @@ import com.njydsz.userinfo.domain.vo.CompanyVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface CompanyService extends BaseCrudService<CompanyDO, CompanySaveDTO, CompanyVO, CompanyPageQuery, String> {
+public interface CompanyService extends BaseCrudService<Company, CompanySaveDTO, CompanyVO, CompanyPageQuery, String> {
 
     /**
      * 查询全部未删除公司列表（按创建时间降序）。

@@ -1,6 +1,6 @@
 package com.njydsz.project.infra.repository.project;
 
-import com.njydsz.project.domain.entity.project.ProjectOpportunityFollowDO;
+import com.njydsz.project.domain.entity.project.ProjectOpportunityFollow;
 import com.njydsz.project.domain.repository.project.IProjectOpportunityFollowRepository;
 import com.njydsz.project.infra.mapper.project.ProjectOpportunityFollowMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  * @author ydsz-team
  */
 @Repository
-public class ProjectOpportunityFollowRepository extends ServiceImpl<ProjectOpportunityFollowMapper, ProjectOpportunityFollowDO>
+public class ProjectOpportunityFollowRepository extends ServiceImpl<ProjectOpportunityFollowMapper, ProjectOpportunityFollow>
         implements IProjectOpportunityFollowRepository {
 }

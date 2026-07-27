@@ -5,7 +5,7 @@ import java.util.List;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.core.NotificationSendDTO;
-import com.njydsz.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
 
 /**
@@ -31,7 +31,7 @@ public interface NotificationService {
      * @param query  查询参数
      * @return 分页结果
      */
-    Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query);
+    Page<MsgNotification> inbox(String userId, NotificationQueryDTO query);
 
     /**
      * 统计用户未读通知数
@@ -91,5 +91,5 @@ public interface NotificationService {
      * @param messageGroup 分组键
      * @return 通知列表
      */
-    List<MsgNotificationDO> listByGroup(String userId, String messageGroup);
+    List<MsgNotification> listByGroup(String userId, String messageGroup);
 }

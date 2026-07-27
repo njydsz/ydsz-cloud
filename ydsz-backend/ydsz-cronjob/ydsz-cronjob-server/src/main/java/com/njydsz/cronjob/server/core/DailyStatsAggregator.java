@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.njydsz.cronjob.domain.entity.log.JobDailyStatsDO;
+import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
 import com.njydsz.cronjob.infra.mapper.log.JobDailyStatsMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
@@ -107,7 +107,7 @@ public class DailyStatsAggregator {
         int failed = 0;
         for (Map<String, Object> row : rows) {
             try {
-                JobDailyStatsDO stats = toStats(row, statsDate);
+                JobDailyStats stats = toStats(row, statsDate);
                 jobDailyStatsMapper.upsert(stats);
                 success++;
             } catch (Exception e) {
@@ -121,14 +121,14 @@ public class DailyStatsAggregator {
     }
 
     /**
-     * 将聚合查询的 Map 行转换为 {@link JobDailyStatsDO} 实体。
+     * 将聚合查询的 Map 行转换为 {@link JobDailyStats} 实体。
      *
      * @param row       聚合行
      * @param statsDate 统计日期
      * @return 统计实体
      */
-    private JobDailyStatsDO toStats(Map<String, Object> row, LocalDate statsDate) {
-        JobDailyStatsDO stats = new JobDailyStatsDO();
+    private JobDailyStats toStats(Map<String, Object> row, LocalDate statsDate) {
+        JobDailyStats stats = new JobDailyStats();
         stats.setId(IdWorker.getIdStr());
         stats.setJobId((String) row.get("job_id"));
         stats.setJobKey((String) row.get("job_key"));

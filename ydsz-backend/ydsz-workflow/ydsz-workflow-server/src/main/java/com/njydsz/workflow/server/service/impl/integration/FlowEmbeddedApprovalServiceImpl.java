@@ -15,9 +15,9 @@ import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowHisTask;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -65,7 +65,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         }
 
         // 1. 查流程实例
-        FlowInstanceDO instance = instanceService.getByBusiness(businessType, businessId);
+        FlowInstance instance = instanceService.getByBusiness(businessType, businessId);
         if (instance == null) {
             // 未发起流程，返回空面板（前端可点击"发起审批"按钮）
             return EmbeddedApprovalViewDTO.builder()
@@ -84,7 +84,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         }
 
         // 2. 查当前待办
-        List<FlowRunTaskDO> pending = taskService.listPendingByInstance(instance.getId());
+        List<FlowRunTask> pending = taskService.listPendingByInstance(instance.getId());
 
         // 3. 计算 myRole / mine / actions
         String myRole = computeMyRole(instance, pending, userId);
@@ -138,7 +138,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             throw new SysException(BaseResultCode.BAD_REQUEST, "error.workflow.msg_afb63fa5");
         }
         String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
-        FlowInstanceDO instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
+        FlowInstance instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
         if (instance == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.workflow.msg_b72e8598");
         }
@@ -151,7 +151,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "REJECT":
             case "TRANSFER":
             case "DELEGATE": {
-                FlowRunTaskDO mine = findMyTask(instance.getId(), dto.getUserId());
+                FlowRunTask mine = findMyTask(instance.getId(), dto.getUserId());
                 if (mine == null) {
                     throw new SysException(BaseResultCode.FORBIDDEN,
                             "error.workflow.msg_1440b2f2");
@@ -210,7 +210,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 计算当前用户在流程中的角色
      */
-    private String computeMyRole(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+    private String computeMyRole(FlowInstance instance, List<FlowRunTask> pending, String userId) {
         if (userId == null) {
             return ROLE_OBSERVER;
         }
@@ -218,7 +218,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             return ROLE_INITIATOR;
         }
         if (pending != null) {
-            for (FlowRunTaskDO t : pending) {
+            for (FlowRunTask t : pending) {
                 if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
                     return ROLE_APPROVER;
                 }
@@ -230,7 +230,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 计算当前用户可执行的操作
      */
-    private List<String> computeActions(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+    private List<String> computeActions(FlowInstance instance, List<FlowRunTask> pending, String userId) {
         List<String> actions = new ArrayList<>();
         if (userId == null) {
             return actions;
@@ -239,7 +239,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         boolean isFinished = FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished();
         boolean canActAsApprover = false;
         if (pending != null) {
-            for (FlowRunTaskDO t : pending) {
+            for (FlowRunTask t : pending) {
                 if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
                     canActAsApprover = true;
                     break;
@@ -283,7 +283,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      *   <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回</li>
      * </ol>
      */
-    private boolean canRecall(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+    private boolean canRecall(FlowInstance instance, List<FlowRunTask> pending, String userId) {
         if (userId == null) {
             return false;
         }
@@ -298,13 +298,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         if (pending == null) {
             return false;
         }
-        for (FlowRunTaskDO t : pending) {
+        for (FlowRunTask t : pending) {
             if (FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())) {
                 return false;
             }
         }
         // P0-4: 检查是否有已完成的历史任务（排除 START 节点）— 有则说明审批人已处理过，流程已推进，不可撤回
-        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instance.getId());
+        List<FlowHisTask> hisTasks = hisTaskMapper.selectByInstanceId(instance.getId());
         if (hisTasks != null) {
             // 排除 START(0) 节点归档记录（发起人提交产生的），只检查是否有真实审批人处理过
             boolean hasApprovalHistory = hisTasks.stream()
@@ -320,7 +320,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多种 assigneeType 均纳入判断）
      */
-    private boolean isMine(FlowRunTaskDO t, String userId) {
+    private boolean isMine(FlowRunTask t, String userId) {
         if (t == null || userId == null) {
             return false;
         }
@@ -344,12 +344,12 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 找到当前用户 mine 的第一个未完成任务
      */
-    private FlowRunTaskDO findMyTask(String instanceId, String userId) {
+    private FlowRunTask findMyTask(String instanceId, String userId) {
         if (userId == null) {
             return null;
         }
-        List<FlowRunTaskDO> pending = taskService.listPendingByInstance(instanceId);
-        for (FlowRunTaskDO t : pending) {
+        List<FlowRunTask> pending = taskService.listPendingByInstance(instanceId);
+        for (FlowRunTask t : pending) {
             if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
                 return t;
             }
@@ -361,12 +361,12 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      * 构造当前待办视图
      */
     private List<EmbeddedApprovalViewDTO.CurrentTaskView> buildCurrentTaskViews(
-            List<FlowRunTaskDO> pending, String userId) {
+            List<FlowRunTask> pending, String userId) {
         if (pending == null || pending.isEmpty()) {
             return Collections.emptyList();
         }
         List<EmbeddedApprovalViewDTO.CurrentTaskView> out = new ArrayList<>(pending.size());
-        for (FlowRunTaskDO t : pending) {
+        for (FlowRunTask t : pending) {
             out.add(EmbeddedApprovalViewDTO.CurrentTaskView.builder()
                     .taskId(t.getId())
                     .nodeCode(t.getNodeCode())
@@ -390,12 +390,12 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      */
     private List<Map<String, Object>> loadHistory(String instanceId) {
         try {
-            List<FlowHisTaskDO> his = hisTaskMapper.selectByInstanceId(instanceId);
+            List<FlowHisTask> his = hisTaskMapper.selectByInstanceId(instanceId);
             if (his == null || his.isEmpty()) {
                 return Collections.emptyList();
             }
             List<Map<String, Object>> out = new ArrayList<>(his.size());
-            for (FlowHisTaskDO t : his) {
+            for (FlowHisTask t : his) {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("type", "TASK");
                 m.put("taskId", t.getId());
@@ -423,7 +423,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      * GET /workflow/engine/instance/{id}/diagram 单独拉取，本接口不返回以保持轻量。
      * 仅返回最简的节点信息用于高亮当前节点。
      */
-    private Map<String, Object> loadDiagram(FlowInstanceDO instance) {
+    private Map<String, Object> loadDiagram(FlowInstance instance) {
         Map<String, Object> light = new LinkedHashMap<>();
         light.put("currentNodeCode", instance.getCurrentNodeCode());
         light.put("currentNodeName", instance.getCurrentNodeName());

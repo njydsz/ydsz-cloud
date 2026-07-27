@@ -4,7 +4,7 @@
 <mapper namespace="com.njydsz.workflow.infra.mapper.FlowAutoTriggerMapper">
 
     <!-- 按源流程编码查询所有启用的触发规则 -->
-    <select id="selectEnabledBySourceFlowCode" resultType="com.njydsz.workflow.domain.entity.FlowAutoTriggerDO">
+    <select id="selectEnabledBySourceFlowCode" resultType="com.njydsz.workflow.domain.entity.FlowAutoTrigger">
         SELECT id, source_flow_code, target_flow_code, condition_expression,
                description, enabled, sort_order,
                created_by, created_at, updated_by, updated_at, deleted

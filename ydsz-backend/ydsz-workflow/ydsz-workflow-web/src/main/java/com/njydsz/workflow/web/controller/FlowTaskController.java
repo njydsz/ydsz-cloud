@@ -20,7 +20,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.server.service.FlowTaskService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
@@ -133,7 +133,7 @@ public class FlowTaskController {
      */
     @GetMapping("/task/{taskId}/rejectableNodes")
     public BaseResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
-        FlowRunTaskDO task = taskService.getById(taskId);
+        FlowRunTask task = taskService.getById(taskId);
         if (task == null) {
             return BaseResponse.success(List.of());
         }
@@ -394,7 +394,7 @@ public class FlowTaskController {
      * @return 统一响应结果，包含超期任务列表
      */
     @GetMapping("/task/overdue")
-    public BaseResponse<List<FlowRunTaskDO>> overdue(@RequestParam(required = false) String assigneeId,
+    public BaseResponse<List<FlowRunTask>> overdue(@RequestParam(required = false) String assigneeId,
                                          @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.success(taskService.listOverdue(assigneeId, tid));
@@ -429,7 +429,7 @@ public class FlowTaskController {
      * @return 统一响应结果，包含分页已办列表
      */
     @GetMapping("/task/done/search")
-    public BaseResponse<PageResponse<FlowRunTaskDO>> doneSearch(
+    public BaseResponse<PageResponse<FlowRunTask>> doneSearch(
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowCode,
@@ -644,7 +644,7 @@ public class FlowTaskController {
      * @return 超期任务列表
      */
     @GetMapping("/stats/overdue")
-    public BaseResponse<List<FlowRunTaskDO>> statsOverdue(
+    public BaseResponse<List<FlowRunTask>> statsOverdue(
             @RequestParam(required = false) String assigneeId) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.success(taskService.listOverdue(assigneeId, tenantId));

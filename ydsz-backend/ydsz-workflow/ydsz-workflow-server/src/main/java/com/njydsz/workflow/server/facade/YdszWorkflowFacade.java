@@ -15,11 +15,11 @@ import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.workflow.domain.entity.FlowHisTaskDO;
-import com.njydsz.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.workflow.domain.entity.FlowAuditLog;
+import com.njydsz.workflow.domain.entity.FlowHisTask;
+import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.server.engine.JsonHelper;
@@ -60,11 +60,11 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
     @Override
     public FlowInstanceViewDTO getByBusiness(String businessType, String businessId) {
-        FlowInstanceDO instance = instanceService.getByBusiness(businessType, businessId);
+        FlowInstance instance = instanceService.getByBusiness(businessType, businessId);
         if (instance == null) {
             return null;
         }
-        List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(instance.getId());
+        List<FlowRunTask> currentTasks = taskService.listPendingByInstance(instance.getId());
         return instanceService.toView(instance, currentTasks.stream()
                 .map(taskService::toView).toList());
     }
@@ -112,9 +112,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     @Override
     public List<Map<String, Object>> listTodoTasks(String userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
+        PageResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTaskDO> list = JsonHelper.safeCastList(pageResult.getData(), FlowRunTaskDO.class);
+        List<FlowRunTask> list = JsonHelper.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
     }
 
@@ -122,9 +122,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResponse<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
+        PageResponse<FlowRunTask> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTaskDO> list = JsonHelper.safeCastList(pageResult.getData(), FlowRunTaskDO.class);
+        List<FlowRunTask> list = JsonHelper.safeCastList(pageResult.getData(), FlowRunTask.class);
         return list.stream().map(this::toMap).toList();
     }
 
@@ -142,10 +142,10 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     public PageResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
                                                             LocalDateTime startTime, LocalDateTime endTime,
                                                             int page, int size) {
-        PageResponse<FlowInstanceDO> pageResult = instanceService.page(
+        PageResponse<FlowInstance> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowInstanceDO> dataList = JsonHelper.safeCastList(pageResult.getData(), FlowInstanceDO.class);
+        List<FlowInstance> dataList = JsonHelper.safeCastList(pageResult.getData(), FlowInstance.class);
         List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
         return (PageResponse<Map<String, Object>>) (PageResponse<?>) PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
@@ -184,7 +184,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     @Override
     public List<Map<String, Object>> listAuditTrail(String processInstanceId) {
         String instanceId = processInstanceId;
-        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
+        List<FlowAuditLog> logs = auditLogMapper.selectByInstanceId(instanceId);
         return logs.stream().map(this::auditToMap).toList();
     }
 
@@ -198,7 +198,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     @Override
     public Map<String, Object> getTaskDetail(String taskId) {
         // P2-20: 调用 taskService.getById 获取任务，再用 toView 转换为视图
-        FlowRunTaskDO task = taskService.getById(taskId);
+        FlowRunTask task = taskService.getById(taskId);
         if (task == null) {
             return null;
         }
@@ -222,13 +222,13 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     @Override
     public int passAllTodoTasks(String userId, String comment) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
-        PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
+        PageResponse<FlowRunTask> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        List<FlowRunTaskDO> todos = JsonHelper.safeCastList(pageResult.getData(), FlowRunTaskDO.class);
+        List<FlowRunTask> todos = JsonHelper.safeCastList(pageResult.getData(), FlowRunTask.class);
         if (todos.isEmpty()) {
             return 0;
         }
-        List<String> taskIds = todos.stream().map(FlowRunTaskDO::getId).toList();
+        List<String> taskIds = todos.stream().map(FlowRunTask::getId).toList();
         taskService.batchPass(taskIds, userId, comment);
         log.info("[Flow] 一键通过所有待办: userId={} count={}", userId, taskIds.size());
         return taskIds.size();
@@ -244,7 +244,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
      */
     public Map<String, Object> getDiagram(String instanceId) {
         String id = instanceId;
-        FlowInstanceDO instance = instanceService.getById(id);
+        FlowInstance instance = instanceService.getById(id);
         if (instance == null) {
             return null;
         }
@@ -294,7 +294,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     public List<Map<String, Object>> getTimeline(String instanceId) {
         String id = instanceId;
         // 1. 获取实例信息
-        FlowInstanceDO instance = instanceService.getById(id);
+        FlowInstance instance = instanceService.getById(id);
         if (instance == null) {
             return Collections.emptyList();
         }
@@ -302,8 +302,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         List<Map<String, Object>> timeline = new ArrayList<>();
 
         // 2. 获取历史任务列表
-        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
-        for (FlowHisTaskDO his : hisTasks) {
+        List<FlowHisTask> hisTasks = hisTaskMapper.selectByInstanceId(id);
+        for (FlowHisTask his : hisTasks) {
             Map<String, Object> entry = new HashMap<>();
             entry.put("type", "HIS_TASK");
             entry.put("timestamp", his.getFinishAt());
@@ -318,8 +318,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         }
 
         // 3. 获取审计日志列表
-        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
-        for (FlowAuditLogDO log : logs) {
+        List<FlowAuditLog> logs = auditLogMapper.selectByInstanceId(id);
+        for (FlowAuditLog log : logs) {
             Map<String, Object> entry = new HashMap<>();
             entry.put("type", "AUDIT_LOG");
             entry.put("timestamp", log.getOperatedAt());
@@ -335,8 +335,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         }
 
         // 4. 获取当前待办任务
-        List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(id);
-        for (FlowRunTaskDO task : currentTasks) {
+        List<FlowRunTask> currentTasks = taskService.listPendingByInstance(id);
+        for (FlowRunTask task : currentTasks) {
             Map<String, Object> entry = new HashMap<>();
             entry.put("type", "CURRENT_TASK");
             entry.put("timestamp", task.getCreatedAt());
@@ -392,7 +392,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         return m;
     }
 
-    private Map<String, Object> toMap(FlowRunTaskDO t) {
+    private Map<String, Object> toMap(FlowRunTask t) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", t.getId());
         m.put("instanceId", t.getInstanceId());
@@ -412,8 +412,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         return m;
     }
 
-    /** GAP-P0-1: 将 FlowInstanceDO 转换为 Map（管理员"全部"视图） */
-    private Map<String, Object> instanceToMap(FlowInstanceDO i) {
+    /** GAP-P0-1: 将 FlowInstance 转换为 Map（管理员"全部"视图） */
+    private Map<String, Object> instanceToMap(FlowInstance i) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", i.getId());
         m.put("flowCode", i.getFlowCode());
@@ -437,7 +437,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         return m;
     }
 
-    private Map<String, Object> auditToMap(FlowAuditLogDO log) {
+    private Map<String, Object> auditToMap(FlowAuditLog log) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", log.getId());
         m.put("instanceId", log.getInstanceId());
@@ -480,7 +480,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
      */
     public List<Map<String, Object>> getReplaySteps(String instanceId) {
         String id = instanceId;
-        FlowInstanceDO instance = instanceService.getById(id);
+        FlowInstance instance = instanceService.getById(id);
         if (instance == null) {
             return Collections.emptyList();
         }
@@ -507,8 +507,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         steps.add(startStep);
 
         // 2. 历史任务步骤
-        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
-        for (FlowHisTaskDO his : hisTasks) {
+        List<FlowHisTask> hisTasks = hisTaskMapper.selectByInstanceId(id);
+        for (FlowHisTask his : hisTasks) {
             Map<String, Object> step = new HashMap<>();
             step.put("type", "HIS_TASK");
             step.put("timestamp", his.getFinishAt());
@@ -526,8 +526,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         }
 
         // 3. 审计日志步骤（URGE/TRANSFER/DELEGATE/JUMP/RECALL 等任务外操作）
-        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
-        for (FlowAuditLogDO log : logs) {
+        List<FlowAuditLog> logs = auditLogMapper.selectByInstanceId(id);
+        for (FlowAuditLog log : logs) {
             String action = log.getAction();
             if (action == null) continue;
             // 只回放任务外操作（任务自身操作已在 HIS_TASK 中体现）
@@ -555,8 +555,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         // 4. 当前待办（RUNNING 实例的最后状态）
         if ("RUNNING".equals(instance.getFlowStatus())
                 || "SUSPENDED".equals(instance.getFlowStatus())) {
-            List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(id);
-            for (FlowRunTaskDO task : currentTasks) {
+            List<FlowRunTask> currentTasks = taskService.listPendingByInstance(id);
+            for (FlowRunTask task : currentTasks) {
                 Map<String, Object> step = new HashMap<>();
                 step.put("type", "CURRENT_TASK");
                 step.put("timestamp", task.getCreatedAt());
@@ -660,13 +660,13 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         if (detail == null) {
             return Collections.emptyMap();
         }
-        List<FlowNodeDO> nodes =
-                JsonHelper.safeCastList(detail.get("nodes"), FlowNodeDO.class);
+        List<FlowNode> nodes =
+                JsonHelper.safeCastList(detail.get("nodes"), FlowNode.class);
         if (nodes == null || nodes.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<String, Map<String, Object>> result = new HashMap<>();
-        for (FlowNodeDO n : nodes) {
+        for (FlowNode n : nodes) {
             String coord = n.getCoordinate();
             if (coord == null || coord.isBlank()) {
                 continue;

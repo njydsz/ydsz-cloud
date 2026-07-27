@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * DAG 定义 JSON 编解码器（P2 DAG 增强）。
  *
  * <p>负责 {@link DagDefinition} 与 JSON 字符串之间的转换，
- * 存储/读取 {@code JobDagDO.dagDefinition} 字段。
+ * 存储/读取 {@code JobDag.dagDefinition} 字段。
  *
  * <p>使用 YdszJson 手动解析，避免 record 反序列化兼容性问题，
  * 并提供校验（节点 jobKey 唯一、边的 from/to 必须存在于节点列表）。

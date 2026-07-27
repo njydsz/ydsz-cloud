@@ -13,7 +13,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
@@ -59,11 +59,11 @@ public class MessageLogServiceImpl implements MessageLogService {
     private final ConcurrentHashMap<String, Long> lastAlertTimeMap = new ConcurrentHashMap<>();
 
     @Override
-    public MsgLogDO getById(String id) {
+    public MsgLog getById(String id) {
         if (!StringUtils.hasText(id)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "日志 ID 不能为空");
         }
-        MsgLogDO entity = msgLogMapper.selectById(id);
+        MsgLog entity = msgLogMapper.selectById(id);
         if (entity == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "日志不存在: " + id);
         }
@@ -71,28 +71,28 @@ public class MessageLogServiceImpl implements MessageLogService {
     }
 
     @Override
-    public Page<MsgLogDO> page(MessageLogQueryDTO query) {
-        Page<MsgLogDO> page = new Page<>(
+    public Page<MsgLog> page(MessageLogQueryDTO query) {
+        Page<MsgLog> page = new Page<>(
                 query == null ? 1 : query.getPageNum(),
                 Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
         if (query != null) {
-            w.eq(StringUtils.hasText(query.getChannel()), MsgLogDO::getChannel, query.getChannel());
-            w.eq(StringUtils.hasText(query.getBizType()), MsgLogDO::getBizType, query.getBizType());
-            w.eq(StringUtils.hasText(query.getBizId()), MsgLogDO::getBizId, query.getBizId());
-            w.eq(StringUtils.hasText(query.getStatus()), MsgLogDO::getStatus, query.getStatus());
-            w.eq(StringUtils.hasText(query.getReceiver()), MsgLogDO::getReceiver, query.getReceiver());
-            w.eq(StringUtils.hasText(query.getPriority()), MsgLogDO::getPriority, query.getPriority());
-            w.eq(StringUtils.hasText(query.getRecallStatus()), MsgLogDO::getRecallStatus, query.getRecallStatus());
-            w.eq(StringUtils.hasText(query.getTenantId()), MsgLogDO::getTenantId, query.getTenantId());
+            w.eq(StringUtils.hasText(query.getChannel()), MsgLog::getChannel, query.getChannel());
+            w.eq(StringUtils.hasText(query.getBizType()), MsgLog::getBizType, query.getBizType());
+            w.eq(StringUtils.hasText(query.getBizId()), MsgLog::getBizId, query.getBizId());
+            w.eq(StringUtils.hasText(query.getStatus()), MsgLog::getStatus, query.getStatus());
+            w.eq(StringUtils.hasText(query.getReceiver()), MsgLog::getReceiver, query.getReceiver());
+            w.eq(StringUtils.hasText(query.getPriority()), MsgLog::getPriority, query.getPriority());
+            w.eq(StringUtils.hasText(query.getRecallStatus()), MsgLog::getRecallStatus, query.getRecallStatus());
+            w.eq(StringUtils.hasText(query.getTenantId()), MsgLog::getTenantId, query.getTenantId());
         }
-        w.orderByDesc(MsgLogDO::getCreatedAt);
+        w.orderByDesc(MsgLog::getCreatedAt);
         return msgLogMapper.selectPage(page, w);
     }
 
     @Override
     public void markRetry(String id, LocalDateTime nextRetryAt) {
-        MsgLogDO entity = getById(id);
+        MsgLog entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RETRY)) {
             throw new SysException(BaseResultCode.BIZ_ERROR,
@@ -107,7 +107,7 @@ public class MessageLogServiceImpl implements MessageLogService {
 
     @Override
     public void markDead(String id, String errorMessage) {
-        MsgLogDO entity = getById(id);
+        MsgLog entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.DEAD)) {
             // 仅 RETRY 可流转到 DEAD；其他状态强制记录但仍校验，非法抛异常
@@ -124,7 +124,7 @@ public class MessageLogServiceImpl implements MessageLogService {
 
     @Override
     public void updateReceipt(String id, String receiptStatus, LocalDateTime receiptAt) {
-        MsgLogDO entity = getById(id);
+        MsgLog entity = getById(id);
         entity.setReceiptStatus(receiptStatus);
         entity.setReceiptAt(receiptAt);
         msgLogMapper.updateById(entity);
@@ -132,7 +132,7 @@ public class MessageLogServiceImpl implements MessageLogService {
 
     @Override
     public void markRecalled(String id) {
-        MsgLogDO entity = getById(id);
+        MsgLog entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RECALLED)) {
             throw new SysException(BaseResultCode.BIZ_ERROR,
@@ -148,12 +148,12 @@ public class MessageLogServiceImpl implements MessageLogService {
      * P1-4: 手动重发死信。
      *
      * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt，
-     * 流转为 SENDING 后立即通过 {@link ChannelRouter#dispatch(MsgLogDO)} 重新投递。
+     * 流转为 SENDING 后立即通过 {@link ChannelRouter#dispatch(MsgLog)} 重新投递。
      * 投递失败则进入 RETRY 状态（retryCount=1）走正常重试调度，而非立即再次死信。
      */
     @Override
     public void resendDead(String logId) {
-        MsgLogDO entity = getById(logId);
+        MsgLog entity = getById(logId);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (current != MessageStatusEnum.DEAD) {
             throw new SysException(BaseResultCode.BIZ_ERROR,
@@ -221,10 +221,10 @@ public class MessageLogServiceImpl implements MessageLogService {
             }
             // 统计窗口内死信数量
             LocalDateTime windowStart = LocalDateTime.now().minusMinutes(cfg.getWindowMinutes());
-            Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
-                    .eq(MsgLogDO::getStatus, MessageStatusEnum.DEAD.name())
-                    .eq(MsgLogDO::getChannel, channel)
-                    .ge(MsgLogDO::getCreatedAt, windowStart));
+            Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLog>()
+                    .eq(MsgLog::getStatus, MessageStatusEnum.DEAD.name())
+                    .eq(MsgLog::getChannel, channel)
+                    .ge(MsgLog::getCreatedAt, windowStart));
             long currentCount = count == null ? 0L : count;
             if (currentCount >= cfg.getThreshold()) {
                 lastAlertTimeMap.put(channel, now);

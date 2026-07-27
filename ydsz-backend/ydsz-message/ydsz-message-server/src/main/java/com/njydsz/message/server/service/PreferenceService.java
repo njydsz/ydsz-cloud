@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.config;
 import java.util.List;
 
 import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
-import com.njydsz.message.domain.entity.config.MsgPreferenceDO;
+import com.njydsz.message.domain.entity.config.MsgPreference;
 
 /**
  * 用户消息偏好服务
@@ -19,7 +19,7 @@ public interface PreferenceService {
      * @param dto 偏好参数
      * @return 偏好实体
      */
-    MsgPreferenceDO upsert(PreferenceUpsertDTO dto);
+    MsgPreference upsert(PreferenceUpsertDTO dto);
 
     /**
      * 按用户 + 通道 + 业务类型查询偏好
@@ -29,7 +29,7 @@ public interface PreferenceService {
      * @param bizType 业务类型
      * @return 偏好实体
      */
-    MsgPreferenceDO getByUser(String userId, String channel, String bizType);
+    MsgPreference getByUser(String userId, String channel, String bizType);
 
     /**
      * 查询用户所有偏好
@@ -37,7 +37,7 @@ public interface PreferenceService {
      * @param userId 用户 ID
      * @return 偏好列表
      */
-    List<MsgPreferenceDO> listByUser(String userId);
+    List<MsgPreference> listByUser(String userId);
 
     /**
      * 删除偏好(逻辑删除)

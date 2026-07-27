@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.cronjob.domain.entity.job.JobDO;
+import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
@@ -136,9 +136,9 @@ public class SecondLevelScheduler {
             }
         });
         scheduledMap.clear();
-        List<JobDO> allNormal = jobMapper.selectAllNormal();
+        List<Job> allNormal = jobMapper.selectAllNormal();
         int count = 0;
-        for (JobDO job : allNormal) {
+        for (Job job : allNormal) {
             ScheduleType type = ScheduleType.parse(job.getScheduleType());
             if (type == ScheduleType.FIXED_RATE || type == ScheduleType.FIXED_DELAY) {
                 try {
@@ -174,7 +174,7 @@ public class SecondLevelScheduler {
      * @param job 任务定义
      * @return 注册成功返回 true；非 FIXED_RATE/FIXED_DELAY 类型或参数非法返回 false
      */
-    public boolean register(JobDO job) {
+    public boolean register(Job job) {
         if (job == null || job.getId() == null) {
             return false;
         }
@@ -232,7 +232,7 @@ public class SecondLevelScheduler {
      * @param type       调度类型（FIXED_RATE / FIXED_DELAY）
      * @param intervalMs 调度间隔（毫秒，已校验 > 0）
      */
-    private void registerInternal(JobDO job, ScheduleType type, long intervalMs) {
+    private void registerInternal(Job job, ScheduleType type, long intervalMs) {
         // 先注销已有调度（避免重复注册）
         unregister(job.getId());
         Runnable task = buildTask(job);
@@ -275,7 +275,7 @@ public class SecondLevelScheduler {
      * @param job 任务定义
      * @return Runnable 任务执行体
      */
-    private Runnable buildTask(JobDO job) {
+    private Runnable buildTask(Job job) {
         return () -> {
             try {
                 // 仅 Leader 节点派发任务（Follower 跳过，避免重复执行）

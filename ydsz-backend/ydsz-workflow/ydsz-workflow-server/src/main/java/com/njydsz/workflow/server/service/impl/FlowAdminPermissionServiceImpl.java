@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.TenantContext;
-import com.njydsz.workflow.domain.entity.FlowAdminRoleDO;
+import com.njydsz.workflow.domain.entity.FlowAdminRole;
 import com.njydsz.workflow.infra.mapper.FlowAdminRoleMapper;
 import com.njydsz.workflow.server.service.FlowAdminPermissionService;
 
@@ -57,7 +57,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
             return false;
         }
         String tenantId = TenantContext.getTenantId();
-        FlowAdminRoleDO role = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
+        FlowAdminRole role = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
         return role != null && isRoleValid(role);
     }
 
@@ -93,10 +93,10 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
             return List.of();
         }
         String tenantId = TenantContext.getTenantId();
-        List<FlowAdminRoleDO> roles = adminRoleMapper.selectByUserId(userId, tenantId);
+        List<FlowAdminRole> roles = adminRoleMapper.selectByUserId(userId, tenantId);
         return roles.stream()
                 .filter(this::isRoleValid)
-                .map(FlowAdminRoleDO::getRoleCode)
+                .map(FlowAdminRole::getRoleCode)
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -108,7 +108,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
             throw new SysException(BaseResultCode.BAD_REQUEST, "用户 ID 和角色编码不能为空");
         }
         // 检查是否已存在
-        FlowAdminRoleDO existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
+        FlowAdminRole existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
         if (existing != null) {
             if (isRoleValid(existing)) {
                 log.info("[FlowAdmin] 用户已有该角色，跳过: userId={} role={}", userId, roleCode);
@@ -122,7 +122,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
             log.info("[FlowAdmin] 重新启用角色: userId={} role={}", userId, roleCode);
             return;
         }
-        FlowAdminRoleDO role = new FlowAdminRoleDO();
+        FlowAdminRole role = new FlowAdminRole();
         role.setUserId(userId);
         role.setRoleCode(roleCode);
         role.setTenantId(tenantId);
@@ -139,7 +139,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
             return;
         }
         String tenantId = TenantContext.getTenantId();
-        FlowAdminRoleDO existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
+        FlowAdminRole existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
         if (existing == null) {
             return;
         }
@@ -151,7 +151,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     /**
      * 检查角色是否有效（启用 + 未过期）。
      */
-    private boolean isRoleValid(FlowAdminRoleDO role) {
+    private boolean isRoleValid(FlowAdminRole role) {
         if (role == null) {
             return false;
         }

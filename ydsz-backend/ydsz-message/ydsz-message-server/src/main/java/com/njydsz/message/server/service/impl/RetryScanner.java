@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.message.domain.constant.MessageConstants;
-import com.njydsz.message.domain.entity.core.MsgLogDO;
+import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.channel.ChannelRouter;
@@ -87,11 +87,11 @@ public class RetryScanner {
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
         // P2-3: 使用 MyBatis-Plus 分页替代 .last("LIMIT ...")
-        Page<MsgLogDO> page = new Page<>(1, MessageConstants.RETRY_SCAN_BATCH_SIZE);
-        Page<MsgLogDO> duePage = msgLogMapper.selectPage(page, new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getStatus, MessageStatusEnum.RETRY.name())
-                .le(MsgLogDO::getNextRetryAt, now));
-        List<MsgLogDO> due = duePage.getRecords();
+        Page<MsgLog> page = new Page<>(1, MessageConstants.RETRY_SCAN_BATCH_SIZE);
+        Page<MsgLog> duePage = msgLogMapper.selectPage(page, new LambdaQueryWrapper<MsgLog>()
+                .eq(MsgLog::getStatus, MessageStatusEnum.RETRY.name())
+                .le(MsgLog::getNextRetryAt, now));
+        List<MsgLog> due = duePage.getRecords();
         if (due.isEmpty()) {
             return;
         }
@@ -99,7 +99,7 @@ public class RetryScanner {
         int success = 0;
         int dead = 0;
         int retryAgain = 0;
-        for (MsgLogDO logDO : due) {
+        for (MsgLog logDO : due) {
             try {
                 MessageStatusEnum result = retryOnce(logDO);
                 if (result == MessageStatusEnum.SUCCESS) {
@@ -124,7 +124,7 @@ public class RetryScanner {
      * @param logDO 日志实体
      * @return 重试后的状态
      */
-    private MessageStatusEnum retryOnce(MsgLogDO logDO) {
+    private MessageStatusEnum retryOnce(MsgLog logDO) {
         // P1-3: 进入追踪上下文，将 logDO.traceId 写入 MDC，确保重试日志可追溯
         try (MessageTraceContext ctx = MessageTraceContext.enter(logDO.getTraceId())) {
             // ① 流转到 SENDING
