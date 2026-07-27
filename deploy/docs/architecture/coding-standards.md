@@ -249,16 +249,54 @@ public interface MsgTemplateConverter {
 
 ### 6.5 Controller 层使用规范
 
-Controller 层通过 `Converter.INSTANT` 调用 MapStruct 生成的转换方法：
+**核心原则**：Controller 层负责 DTO ↔ Entity ↔ VO 的转换，**禁止将 Entity 直接作为 @RequestBody 入参**，**禁止在 Service 层封装 toVO 等对象转换方法**。
+
+#### 6.5.1 入参规范
+
+| HTTP 方法 | 入参类型 | 命名规则 | 说明 |
+|-----------|---------|----------|------|
+| `@PostMapping` | `@RequestBody XxxPostDTO` | `XxxPostDTO` | 新增请求，**不含 `id` 字段** |
+| `@PutMapping` | `@RequestBody XxxPutDTO` | `XxxPutDTO` | 修改请求，**包含 `id` 字段** |
+| `@GetMapping` | `@PathVariable` / `XxxQuery` | `XxxQuery` | 查询请求 |
+| `@DeleteMapping` | `@PathVariable` / `@RequestParam` | — | 删除请求 |
+
+#### 6.5.2 PostDTO vs PutDTO 规范
+
+```java
+// ===== PostDTO（新增）— 不含 id =====
+@Data
+@Schema(description = "消息模板新增请求")
+public class MsgTemplatePostDTO implements Serializable {
+    private String templateCode;    // 业务字段
+    private String channel;
+    private String content;
+    // ... 其他业务字段
+    // ❌ 不包含 id（由数据库生成）
+    // ❌ 不包含 deleted/revision/tenantId/createdBy/createdAt 等自动填充字段
+}
+
+// ===== PutDTO（修改）— 包含 id =====
+@Data
+@Schema(description = "消息模板修改请求")
+public class MsgTemplatePutDTO implements Serializable {
+    private String id;              // ✅ 包含 id（指定修改哪条记录）
+    private String templateCode;    // 业务字段
+    private String channel;
+    private String content;
+    // ... 其他业务字段
+}
+```
+
+#### 6.5.3 Controller 完整示例
 
 ```java
 @RestController
-@RequestMapping("/message/template")
+@RequestMapping("/api/v1/message/template")
 public class TemplateController {
 
     private final TemplateService templateService;
 
-    // 查询详情 → 返回 VO
+    // 查询详情 → Service 返回 Entity，Controller 转换为 VO
     @GetMapping("/{id}")
     public BaseResponse<MsgTemplateVO> getById(@PathVariable String id) {
         MsgTemplate entity = templateService.getById(id);
@@ -269,23 +307,19 @@ public class TemplateController {
     @GetMapping("/page")
     public BaseResponse<Page<MsgTemplateVO>> page(MsgTemplateQuery query) {
         Page<MsgTemplate> page = templateService.page(query);
-        // 列表转换
-        List<MsgTemplateVO> voList = page.getRecords().stream()
-                .map(MsgTemplateConverter.INSTANT::entityToVO)
-                .collect(Collectors.toList());
         Page<MsgTemplateVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        voPage.setRecords(voList);
+        voPage.setRecords(MsgTemplateConverter.INSTANT.templateListToVO(page.getRecords()));
         return BaseResponse.success(voPage);
     }
 
-    // 新增 → DTO 转 Entity 后调用 Service
+    // 新增 → PostDTO 转 Entity 后调用 Service
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody MsgTemplatePostDTO dto) {
         MsgTemplate entity = MsgTemplateConverter.INSTANT.postDtoToEntity(dto);
         return BaseResponse.success(templateService.save(entity));
     }
 
-    // 修改 → DTO 转 Entity 后调用 Service
+    // 修改 → PutDTO 转 Entity 后调用 Service
     @PutMapping("/{id}")
     public BaseResponse<Boolean> update(@PathVariable String id, @Valid @RequestBody MsgTemplatePutDTO dto) {
         MsgTemplate entity = MsgTemplateConverter.INSTANT.putDtoToEntity(dto);
@@ -295,13 +329,44 @@ public class TemplateController {
 }
 ```
 
-### 6.6 已遵循规范的模块（参考标杆）
+#### 6.5.4 禁止事项
 
-- `ydsz-userinfo`：`domain/vo/` 下 10 个 VO，所有 Controller 返回 VO（待补 MapStruct Converter）
-- `ydsz-system`：`domain/vo/` 下 6 个 VO，所有 Controller 返回 VO（待补 MapStruct Converter）
-- `scm-tm/sdt-mps`：完整的 MapStruct Converter 模式（`RoleConverter`、`MenuConverter` 等）
+| ❌ 禁止 | ✅ 正确 |
+|---------|--------|
+| `@RequestBody Job job`（直接用 Entity） | `@RequestBody JobPostDTO dto` + `Converter.INSTANT.postDtoToEntity(dto)` |
+| Service 层 `private XxxVO toVO(Xxx entity)` | Controller 层 `Converter.INSTANT.entityToVO(entity)` |
+| `BeanUtils.copyProperties(dto, entity)` | `Converter.INSTANT.postDtoToEntity(dto)` |
+| 所有方法共用一个 `XxxSaveDTO` | 新增用 `XxxPostDTO`，修改用 `XxxPutDTO` |
 
-### 6.7 POM 依赖配置
+### 6.6 Service 层规范
+
+**Service 层只处理 Entity 对象**，不感知 VO/DTO 的存在：
+
+```java
+// ✅ 正确：Service 接口只接收和返回 Entity
+public interface TemplateService {
+    MsgTemplate getById(String id);
+    Page<MsgTemplate> page(TemplateQuery query);
+    String save(MsgTemplate entity);      // 接收 Entity
+    boolean updateById(MsgTemplate entity);
+}
+
+// ❌ 错误：Service 不应返回 VO 或接收 DTO
+public interface TemplateService {
+    MsgTemplateVO getById(String id);      // 禁止返回 VO
+    String save(TemplatePostDTO dto);      // 禁止接收 DTO
+    private MsgTemplateVO toVO(MsgTemplate e) { ... }  // 禁止在 Service 中做转换
+}
+```
+
+### 6.7 已遵循规范的模块（参考标杆）
+
+- `scm-tm/sdt-mps`：完整的 PostDTO/PutDTO + MapStruct Converter 模式（`RoleConverter`、`MenuConverter` 等）
+- `ydsz-message`：已创建 11 个 VO + MessageConverter，Controller 返回 VO（待补 PostDTO/PutDTO + DTO→Entity 转换）
+- `ydsz-userinfo`：已有 10 个 VO + UserInfoConverter（待补 PostDTO/PutDTO 分包 + 清理 Service toVO）
+- `ydsz-system`：已有 6 个 VO + SystemConverter（待清理 Service toVO 死代码）
+
+### 6.8 POM 依赖配置
 
 项目已在根 POM 全局配置 MapStruct 注解处理器（`ydsz-backend/pom.xml`）：
 
@@ -332,7 +397,7 @@ public class TemplateController {
 </dependency>
 ```
 
-### 6.8 检测方式
+### 6.9 检测方式
 
 ```bash
 # 1. 检测 Controller 中直接返回 Entity 的方法
@@ -340,4 +405,13 @@ grep -rn "BaseResponse<.*>" --include="*Controller.java" | grep -v "VO\|DTO\|Map
 
 # 2. 检测 BeanUtils.copyProperties 残留（应迁移到 MapStruct）
 grep -rn "BeanUtils.copyProperties\|BeanUtil.copyProperties" --include="*.java"
+
+# 3. 检测 Controller 中直接使用 Entity 作为 @RequestBody（应使用 PostDTO/PutDTO）
+grep -rn "@RequestBody.*Entity\b\|@RequestBody.*\bJob\b\|@RequestBody.*\bFlow" --include="*Controller.java"
+
+# 4. 检测 Service 层 toVO 方法残留（应迁移到 Controller 层 Converter 调用）
+grep -rn "private.*VO toVO\|public.*VO toVO" --include="*ServiceImpl.java"
+
+# 5. 检测 DTO 目录结构（应有 post/ 和 put/ 子目录）
+find . -path "*/domain/dto" -type d -exec sh -c 'ls -d "$1/post" "$1/put" 2>/dev/null || echo "MISSING: $1"' _ {} \;
 ```

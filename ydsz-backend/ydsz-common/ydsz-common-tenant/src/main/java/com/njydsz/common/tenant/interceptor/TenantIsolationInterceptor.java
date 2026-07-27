@@ -19,7 +19,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.TenantDimension;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
-import com.njydsz.common.tenant.config.TenantProperties.TenantSource;
+import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.jdbc.exception.TenantIsolationException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +27,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -72,15 +73,16 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
     private final TenantProperties properties;
     private final Set<String> ignoreTables;
+    private final com.njydsz.common.tenant.metrics.TenantMetrics metrics;
 
-    /**
-     * 构造租户隔离拦截器。
-     *
-     * @param properties 租户配置
-     */
-    public TenantIsolationInterceptor(TenantProperties properties) {
+    public TenantIsolationInterceptor(TenantProperties properties, com.njydsz.common.tenant.metrics.TenantMetrics metrics) {
         this.properties = properties;
         this.ignoreTables = properties.getNormalizedIgnoreTables();
+        this.metrics = metrics;
+    }
+
+    public TenantIsolationInterceptor(TenantProperties properties) {
+        this(properties, null);
     }
 
     @Override
@@ -182,7 +184,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                         && insert.getSelect().getPlainSelect() != null
                         && insert.getSelect().getPlainSelect().getSelectItems() != null) {
                         insert.getSelect().getPlainSelect().getSelectItems()
-                            .add(new SelectItem<>(new StringValue(tfv.value)));
+                            .add(new SelectItem<>(new StringValue(String.valueOf(tfv.value))));
                     } else {
                         log.warn("INSERT 语句结构不支持自动注入 {}，table={}, sql={}",
                             resolvedColumn, table.getName(), sql);
@@ -231,7 +233,19 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         for (TenantFieldValue tfv : values) {
             String columnName = resolveColumn(table.getName(), tfv.column);
             Column column = buildAliasedColumn(table, columnName);
-            Expression condition = new EqualsTo(column, new StringValue(tfv.value));
+            Expression condition;
+            if (tfv.value instanceof List<?> list) {
+                List<Expression> inValues = new ArrayList<>();
+                for (Object v : list) {
+                    inValues.add(new StringValue(String.valueOf(v)));
+                }
+                InExpression inExpr = new InExpression();
+                inExpr.setLeftExpression(column);
+                inExpr.setRightItemsList(new net.sf.jsqlparser.expression.operators.relational.ParenthesedExpressionList<>(inValues));
+                condition = inExpr;
+            } else {
+                condition = new EqualsTo(column, new StringValue(String.valueOf(tfv.value)));
+            }
             result = mergeWhere(result, condition);
         }
         return result;

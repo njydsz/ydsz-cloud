@@ -198,9 +198,11 @@ public class SearchTextProcessor {
     private String expandSynonyms(String text) {
         StringBuilder result = new StringBuilder(text);
         String lowerText = text.toLowerCase();
-        for (Map.Entry<String, List<String>> entry : synonymMap.entrySet()) {
-            if (lowerText.contains(entry.getKey())) {
-                for (String synonym : entry.getValue()) {
+        Set<String> matchedKeys = synonymTrie.matchAll(lowerText);
+        for (String key : matchedKeys) {
+            List<String> synonyms = synonymMap.get(key);
+            if (synonyms != null) {
+                for (String synonym : synonyms) {
                     if (!synonym.equalsIgnoreCase(text)) {
                         result.append(" ").append(synonym);
                     }

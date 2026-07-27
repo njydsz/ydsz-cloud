@@ -1,5 +1,6 @@
 package com.njydsz.common.search.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -34,8 +35,30 @@ public class SuggestionService {
         try {
             Optional<SuggestStrategy> suggestStrategy = engineRegistry.getSuggestStrategy();
             if (suggestStrategy.isEmpty()) return Collections.emptyList();
-            SearchSuggestion suggestion = suggestStrategy.get().suggest(prefix, properties.getSuggestLimit());
-            return suggestion != null ? suggestion.getSuggestions() : Collections.emptyList();
+            String normalizedPrefix = prefix.trim().toLowerCase();
+            SearchSuggestion suggestion = suggestStrategy.get().suggest(normalizedPrefix, properties.getSuggestLimit() * 2);
+            List<String> results = new ArrayList<>();
+            if (suggestion != null && suggestion.getSuggestions() != null) {
+                for (String s : suggestion.getSuggestions()) {
+                    if (s != null && !s.isBlank()) {
+                        String lower = s.toLowerCase();
+                        if (lower.startsWith(normalizedPrefix) || lower.contains(normalizedPrefix)) {
+                            results.add(s);
+                        }
+                    }
+                }
+            }
+            if (results.size() < properties.getSuggestLimit()) {
+                if (suggestion != null && suggestion.getSuggestions() != null) {
+                    for (String s : suggestion.getSuggestions()) {
+                        if (s != null && !s.isBlank() && !results.contains(s)) {
+                            results.add(s);
+                        }
+                        if (results.size() >= properties.getSuggestLimit()) break;
+                    }
+                }
+            }
+            return results.stream().limit(properties.getSuggestLimit()).collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("[SuggestionService] 自动补全失败: prefix={}", prefix, e);
             return Collections.emptyList();

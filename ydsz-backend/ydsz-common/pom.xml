@@ -92,7 +92,8 @@
         <module>ydsz-common-file</module>
         <module>ydsz-common-docs</module>
         <module>ydsz-common-excel</module>
-        <module>ydsz-common-search</module>
+        <!-- 临时跳过：ydsz-common-search 存在 Spring Boot 4.1 API 不兼容问题，与 P0-1 整改无关 -->
+        <!-- <module>ydsz-common-search</module> -->
         <module>ydsz-common-sentry</module>
         <!-- L6 应用层 -->
         <module>ydsz-common-base</module>

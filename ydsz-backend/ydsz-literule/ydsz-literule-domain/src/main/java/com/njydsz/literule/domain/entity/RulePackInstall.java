@@ -10,6 +10,19 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * 规则包安装记录实体。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_rule_pack_install")
+public class RulePackInstall extends MpBaseEntity<String> {
+
     /** 安装操作人 ID */
     private String installedBy;
 

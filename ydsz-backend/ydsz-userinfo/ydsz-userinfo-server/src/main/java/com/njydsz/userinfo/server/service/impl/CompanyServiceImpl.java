@@ -118,3 +118,8 @@ public class CompanyServiceImpl
     public boolean removeById(String id) {
         Company entity = companyMapper.selectById(id);
         if (entity == null) {
+            throw new BusinessException(UserInfoResultCode.COMPANY_NOT_FOUND);
+        }
+        return companyMapper.deleteById(id) > 0;
+    }
+}
