@@ -1,4 +1,4 @@
-"""修复 @SentinelRateLimit 后 @PostMapping/@PutMapping/@DeleteMapping 缩进丢失"""
+"""修复 @RateLimit 后 @PostMapping/@PutMapping/@DeleteMapping 缩进丢失"""
 import pathlib
 import re
 

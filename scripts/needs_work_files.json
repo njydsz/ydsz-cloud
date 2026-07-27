@@ -3463,7 +3463,7 @@
     "has_class_javadoc": false,
     "needs_work": true,
     "priority": "high",
-    "file": "ydsz-common/ydsz-common-safe/src/main/java/com/njydsz/common/safe/ratelimit/annotation/SentinelRateLimit.java",
+    "file": "ydsz-common/ydsz-common-safe/src/main/java/com/njydsz/common/safe/ratelimit/annotation/RateLimit.java",
     "module": "ydsz-common",
     "submodule": "ydsz-common-safe"
   },

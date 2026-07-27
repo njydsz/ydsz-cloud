@@ -1,6 +1,6 @@
 """
 批量添加 @Idempotent 注解到所有缺少的 Controller 文件。
-针对已有 @SentinelRateLimit 但缺少 @Idempotent 的 POST/PUT/DELETE 方法。
+针对已有 @RateLimit 但缺少 @Idempotent 的 POST/PUT/DELETE 方法。
 """
 import pathlib
 import re
@@ -54,10 +54,10 @@ def process_file(file_path: pathlib.Path) -> bool:
 
     modified = False
 
-    # 匹配模式：@SentinelRateLimit(...) 后紧跟 @PostMapping/@PutMapping/@DeleteMapping 的方法
+    # 匹配模式：@RateLimit(...) 后紧跟 @PostMapping/@PutMapping/@DeleteMapping 的方法
     # 这些方法缺少 @Idempotent
     pattern = re.compile(
-        r'((    )@SentinelRateLimit\([^)]+\)\n'
+        r'((    )@RateLimit\([^)]+\)\n'
         r'\2@(?:Post|Put|Delete)Mapping[^\n]*\n'
         r'(?:\2@\w+[^\n]*\n)*'
         r'\2public\s+\S+\s+(\w+)\s*\()',
@@ -73,7 +73,7 @@ def process_file(file_path: pathlib.Path) -> bool:
         key = f"{key_prefix}:{controller_name}:{method_name}:lock"
         idempotent_annotation = f'{indent}@Idempotent(key = "{key}", ttlSeconds = 5)\n'
 
-        # 插入在 @SentinelRateLimit 之前
+        # 插入在 @RateLimit 之前
         return idempotent_annotation + full_match
 
     new_content = pattern.sub(replacement, content)

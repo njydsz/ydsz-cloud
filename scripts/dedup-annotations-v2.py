@@ -41,7 +41,7 @@ def dedup_in_annotation_block(content: str) -> str:
 
 
 def dedup_block(block: str) -> str:
-    """在单个注解块中去重 @SentinelRateLimit 和 @Idempotent"""
+    """在单个注解块中去重 @RateLimit 和 @Idempotent"""
     lines = block.split("\n")
     result = []
     seen_sentinel = set()

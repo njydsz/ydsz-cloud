@@ -1,4 +1,4 @@
-"""修复 @SentinelRateLimit 和 @PostMapping/@PutMapping/@DeleteMapping 之间的空白行"""
+"""修复 @RateLimit 和 @PostMapping/@PutMapping/@DeleteMapping 之间的空白行"""
 import pathlib
 import re
 
@@ -6,7 +6,7 @@ PROJECT_ROOT = pathlib.Path(r"d:\Code\ydsz\ydsz-pmis")
 BACKEND = PROJECT_ROOT / "ydsz-backend"
 
 pattern = re.compile(
-    r'(@SentinelRateLimit\([^)]+\))\n\n(\s+@(?:Post|Put|Delete)Mapping)',
+    r'(@RateLimit\([^)]+\))\n\n(\s+@(?:Post|Put|Delete)Mapping)',
     re.MULTILINE
 )
 
