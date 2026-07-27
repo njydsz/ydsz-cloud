@@ -2,7 +2,7 @@ package com.njydsz.agent.web.controller;
 
 import java.util.Map;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class DagController {
      */
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
     @Idempotent(key = "ydsz:agent:DagController:execute:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.dag.execute", threshold = 50)
+    @RateLimit(resource = "agent.dag.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
             @Valid @RequestBody DagExecutionDTO request) {

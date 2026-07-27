@@ -19,8 +19,8 @@ for md in sorted(BACKEND.iterdir()):
         if re.search(r"\(@Idempotent", content):
             issues.append(f"  BAD_PARAM: {rel}")
 
-        # Check 2: Duplicate @SentinelRateLimit
-        sl_matches = list(re.finditer(r"@SentinelRateLimit\(([^)]+)\)", content))
+        # Check 2: Duplicate @RateLimit
+        sl_matches = list(re.finditer(r"@RateLimit\(([^)]+)\)", content))
         sl_keys = [m.group(1) for m in sl_matches]
         if len(sl_keys) != len(set(sl_keys)):
             issues.append(f"  DUP_SENTINEL: {rel}")

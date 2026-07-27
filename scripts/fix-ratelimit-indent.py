@@ -6,7 +6,7 @@ PROJECT_ROOT = pathlib.Path(r"d:\Code\ydsz\ydsz-pmis")
 BACKEND = PROJECT_ROOT / "ydsz-backend"
 
 pattern = re.compile(
-    r'(@SentinelRateLimit\([^)]+\)\n)(@(?:Post|Put|Delete)Mapping)',
+    r'(@RateLimit\([^)]+\)\n)(@(?:Post|Put|Delete)Mapping)',
     re.MULTILINE
 )
 

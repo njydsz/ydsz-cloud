@@ -2,7 +2,7 @@ package com.njydsz.agent.web.controller;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -75,14 +75,14 @@ public class AgentDefinitionController {
 
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:create:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.agentdefinition.create", threshold = 50)
+    @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
     @PostMapping
     public BaseResponse<AgentDefinitionDO> create(@Valid @RequestBody AgentDefinitionDO entity) {
         return BaseResponse.success(agentDefinitionService.create(entity));
     }
 
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "agent.agentdefinition.update", threshold = 50)
+    @RateLimit(resource = "agent.agentdefinition.update", threshold = 50)
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<AgentDefinitionDO> update(@Valid @RequestBody AgentDefinitionDO entity) {
@@ -91,7 +91,7 @@ public class AgentDefinitionController {
 
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:delete:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.agentdefinition.delete", threshold = 50)
+    @RateLimit(resource = "agent.agentdefinition.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> delete(@PathVariable String id) {
         return BaseResponse.success(agentDefinitionService.removeById(id));

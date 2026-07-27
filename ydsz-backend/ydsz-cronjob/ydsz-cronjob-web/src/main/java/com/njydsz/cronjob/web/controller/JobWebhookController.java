@@ -2,7 +2,7 @@ package com.njydsz.cronjob.web.controller.job;
 
 import java.time.LocalDateTime;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -48,7 +48,7 @@ public class JobWebhookController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobWebhookController:create:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
+    @RateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@RequestBody JobWebhookDO webhook) {
         webhook.setStatus("ACTIVE");
@@ -72,7 +72,7 @@ public class JobWebhookController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobWebhookController:update:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
+    @RateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
     @PutMapping
     public BaseResponse<Void> update(@RequestBody JobWebhookDO webhook) {
         webhook.setUpdatedAt(LocalDateTime.now());
@@ -90,7 +90,7 @@ public class JobWebhookController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobWebhookController:delete:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.delete", threshold = 50)
+    @RateLimit(resource = "cronjob.jobwebhook.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         JobWebhookDO update = new JobWebhookDO();
@@ -149,7 +149,7 @@ public class JobWebhookController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobWebhookController:testWebhook:lock", ttlSeconds = 5)
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'testWebhook'")
-    @SentinelRateLimit(resource = "cronjob.jobwebhook.testWebhook", threshold = 50)
+    @RateLimit(resource = "cronjob.jobwebhook.testWebhook", threshold = 50)
     @PostMapping("/{id}/test")
     public BaseResponse<Void> testWebhook(@PathVariable String id) {
         JobWebhookDO webhook = webhookMapper.selectById(id);

@@ -38,7 +38,7 @@ for filepath in TARGETS:
     class_name = filepath.stem.replace("Controller", "").lower()
     modified = [False]  # 使用 list 避免 nonlocal 问题
 
-    # 匹配: @SentinelRateLimit(...)\n    @PostMapping\n    public ... methodName(
+    # 匹配: @RateLimit(...)\n    @PostMapping\n    public ... methodName(
     def replace_with_ratelimit(match):
         indent = match.group(2)
         method_name = match.group(3)
@@ -48,7 +48,7 @@ for filepath in TARGETS:
         return idempotent_line + match.group(1)
 
     pattern = re.compile(
-        r'((\s+)@SentinelRateLimit\([^)]+\)\n'
+        r'((\s+)@RateLimit\([^)]+\)\n'
         r'\2@(?:Post|Put|Delete)Mapping[^\n]*\n'
         r'\2public\s+\S+\s+(\w+)\s*\([^)]*\)\s*\{)',
         re.MULTILINE
@@ -56,7 +56,7 @@ for filepath in TARGETS:
 
     new_content = pattern.sub(replace_with_ratelimit, content)
 
-    # 如果没有 @SentinelRateLimit，匹配纯 @PostMapping
+    # 如果没有 @RateLimit，匹配纯 @PostMapping
     if not modified[0]:
         def replace_no_ratelimit(match):
             indent = match.group(2)

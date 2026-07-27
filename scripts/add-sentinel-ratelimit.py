@@ -1,5 +1,5 @@
 """
-批量添加 @SentinelRateLimit 注解到所有业务模块的 Controller 方法
+批量添加 @RateLimit 注解到所有业务模块的 Controller 方法
 目标：POST/PUT/DELETE 方法添加限流保护
 """
 import pathlib
@@ -56,7 +56,7 @@ def has_annotation(content: str, annotation: str) -> bool:
 
 
 def add_ratelimit_to_file(filepath: pathlib.Path) -> bool:
-    """为单个 Controller 文件添加 @SentinelRateLimit 注解"""
+    """为单个 Controller 文件添加 @RateLimit 注解"""
     content = filepath.read_text(encoding="utf-8")
     original = content
 
@@ -77,8 +77,8 @@ def add_ratelimit_to_file(filepath: pathlib.Path) -> bool:
     # 获取类名
     class_name = filepath.stem  # 去掉 .java
 
-    # 检查是否已有 @SentinelRateLimit import
-    has_import = "import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;" in content
+    # 检查是否已有 @RateLimit import
+    has_import = "import com.njydsz.common.safe.ratelimit.annotation.RateLimit;" in content
 
     # 匹配 @PostMapping / @PutMapping / @DeleteMapping 方法
     # 匹配方法签名模式：@XxxMapping(...) 后跟 public ... methodName(...)
@@ -91,7 +91,7 @@ def add_ratelimit_to_file(filepath: pathlib.Path) -> bool:
     modified = False
     new_content = content
 
-    # 为每个 POST/PUT/DELETE 方法添加 @SentinelRateLimit
+    # 为每个 POST/PUT/DELETE 方法添加 @RateLimit
     def replace_method(match):
         nonlocal modified
         indent = match.group(1)
@@ -99,16 +99,16 @@ def add_ratelimit_to_file(filepath: pathlib.Path) -> bool:
         method_sig = match.group(3)
         method_name = match.group(4)
 
-        # 检查是否已有 @SentinelRateLimit
-        if "@SentinelRateLimit" in mapping_annotations:
+        # 检查是否已有 @RateLimit
+        if "@RateLimit" in mapping_annotations:
             return match.group(0)
 
         # 构造资源名
         resource = f"{clean_module}.{class_name.replace('Controller', '').lower()}.{method_name}"
 
-        # 构造 @SentinelRateLimit 注解
+        # 构造 @RateLimit 注解
         ratelimit_anno = (
-            f'{indent}@SentinelRateLimit(resource = "{resource}", threshold = 50)\n'
+            f'{indent}@RateLimit(resource = "{resource}", threshold = 50)\n'
         )
 
         modified = True
@@ -128,7 +128,7 @@ def add_ratelimit_to_file(filepath: pathlib.Path) -> bool:
             insert_pos = first_import.end()
             new_content = (
                 new_content[:insert_pos]
-                + "import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;\n"
+                + "import com.njydsz.common.safe.ratelimit.annotation.RateLimit;\n"
                 + new_content[insert_pos:]
             )
 
@@ -139,7 +139,7 @@ def add_ratelimit_to_file(filepath: pathlib.Path) -> bool:
 
 def main():
     print("=" * 60)
-    print("批量添加 @SentinelRateLimit 限流注解")
+    print("批量添加 @RateLimit 限流注解")
     print("=" * 60)
 
     for module in BUSINESS_MODULES:

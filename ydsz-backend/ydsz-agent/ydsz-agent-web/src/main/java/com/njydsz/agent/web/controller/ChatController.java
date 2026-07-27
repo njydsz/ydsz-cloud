@@ -1,7 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.io.IOException;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +80,7 @@ public class ChatController {
      */
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'chat'")
     @Idempotent(key = "ydsz:agent:ChatController:chat:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.chat.chat", threshold = 50)
+    @RateLimit(resource = "agent.chat.chat", threshold = 50)
     @PostMapping("/chat")
     public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 同步对话请求: convId={}, msgLen={}",
@@ -107,7 +107,7 @@ public class ChatController {
      */
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'chatStream'")
     @Idempotent(key = "ydsz:agent:ChatController:chatStream:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.chat.chatStream", threshold = 50)
+    @RateLimit(resource = "agent.chat.chatStream", threshold = 50)
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
@@ -203,7 +203,7 @@ public class ChatController {
      */
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'clearHistory'")
     @Idempotent(key = "ydsz:agent:ChatController:clearHistory:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.chat.clearHistory", threshold = 50)
+    @RateLimit(resource = "agent.chat.clearHistory", threshold = 50)
     @DeleteMapping("/history")
     public BaseResponse<Void> clearHistory(@RequestParam String conversationId) {
         chatService.clearHistory(conversationId);

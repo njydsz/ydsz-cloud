@@ -12,7 +12,7 @@
 
 已构建的**公共基础能力清单**（但未被充分利用）：
 
-- **后端**: `BaseCrudController`, `BaseCrudService`/`AbstractCrudService`, `createCrudApi` 工厂, `BaseResponse` 体系, `@Audit`, `@Idempotent`, `@SentinelRateLimit`, `RequestContext`, `TenantContextHolder`, 异常处理体系, Seata 分布式事务
+- **后端**: `BaseCrudController`, `BaseCrudService`/`AbstractCrudService`, `createCrudApi` 工厂, `BaseResponse` 体系, `@Audit`, `@Idempotent`, `@RateLimit`, `RequestContext`, `TenantContextHolder`, 异常处理体系, Seata 分布式事务
 - **前端**: `ProTable`, `PageLayout`, `FormDialog`, `useTable`, `useECharts`, `useFormDraft`, `useWebSocket`, `useWatermark`, `useFeatureFlag`, `useOptimisticUpdate`, `useKeyboardShortcuts`, `useResponsive`, `sentry.ts`, `request.ts` (Axios 拦截器链), `crudApi.ts`, `error.ts`, `format.ts`
 
 ---
@@ -35,7 +35,7 @@
 | 5 | `PageLayout` 仅 42/62 视图使用，20+ 视图手写布局 | 前端视图层 | 布局代码重复 ~50 次，样式/行为不一致 |
 | 6 | `FormDialog` 仅 1 处使用，65+ 页面手写弹窗+表单 | 前端视图层 | 弹窗模式重复 ~65 次，代码量冗余 30%+ |
 | 7 | `handleDelete` 函数重复 32 次 | 前端视图层 | 确认弹窗+异常处理逻辑完全一致 |
-| 8 | 控制器注解栈 (`@Audit`+`@Idempotent`+`@SentinelRateLimit`) 手写在每个方法上 | 后端控制器层 | 缺少元注解/AOP 统一注入，遗漏风险高 |
+| 8 | 控制器注解栈 (`@Audit`+`@Idempotent`+`@RateLimit`) 手写在每个方法上 | 后端控制器层 | 缺少元注解/AOP 统一注入，遗漏风险高 |
 
 ### P2 - 代码治理（月度持续）
 
@@ -115,7 +115,7 @@ public abstract class BaseCrudController<S extends BaseCrudService<D, V, Q>, D, 
 // 不再在每个方法上手写三个注解
 @Audit(module = "...", type = AuditType.OPERATION, ...)
 @Idempotent(...)
-@SentinelRateLimit(...)
+@RateLimit(...)
 public BaseResponse<V> save(D dto) { ... }
 
 // 改为统一的 @CrudAudit + AOP

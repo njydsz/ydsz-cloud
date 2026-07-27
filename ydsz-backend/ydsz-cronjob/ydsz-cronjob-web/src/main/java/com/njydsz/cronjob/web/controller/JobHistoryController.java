@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.web.controller.job;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -72,7 +72,7 @@ public class JobHistoryController {
      */
     @Operation(summary = "回滚到指定版本")
     @Idempotent(key = "ydsz:cronjob:JobHistoryController:rollback:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
+    @RateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
     @PostMapping("/rollback")
     public BaseResponse<JobDO> rollback(@RequestParam String jobId,
                                    @RequestParam Integer version) {

@@ -45,7 +45,7 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 | L4 | [common-lock](ydsz-common-lock/README.md) | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszDistributedLock、WatchDog、读写锁、信号量 |
 | L4 | [common-cache](ydsz-common-cache/README.md) | 高性能多策略本地缓存框架（Window-TinyLFU/LRU/LFU/TTL/MultiLevel）、三防、熔断降级 |
 | L5 | [common-auth](ydsz-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限、TOTP 2FA、权限缓存热更新 |
-| L5 | [common-safe](ydsz-common-safe/README.md) | @Sensitive 7 种脱敏、@Xss、@SentinelRateLimit、CSRF、SQL 注入防护、验证码、安全事件告警 |
+| L5 | [common-safe](ydsz-common-safe/README.md) | @Sensitive 7 种脱敏、@Xss、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件告警 |
 | L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断、动态客户端 |
 | L5 | [common-audit](ydsz-common-audit/README.md) | @OperationLog + @Audit、事件驱动异步落库、Disruptor 高性能批写、4 种分片策略 |
 | L5 | [common-file](ydsz-common-file/README.md) | 7 种存储平台、分片上传、断点续传、文件去重（秒传）、文件类型安全检测 |

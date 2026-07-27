@@ -1,7 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -105,7 +105,7 @@ public class DebugController {
     @Audit(module = "调试管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'replayTrace: ' + #traceId")
     @Idempotent(key = "ydsz:agent:DebugController:replayTrace:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.debug.replayTrace", threshold = 50)
+    @RateLimit(resource = "agent.debug.replayTrace", threshold = 50)
     @PostMapping("/trace/{traceId}/replay")
     public BaseResponse<String> replayTrace(@PathVariable String traceId) {
         log.info("[Debug-API] 重放链路: traceId={}", traceId);

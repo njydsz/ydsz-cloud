@@ -2,7 +2,7 @@ package com.njydsz.cronjob.web.controller.connector;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -57,7 +57,7 @@ public class ConnectorController {
      */
     @Operation(summary = "测试连接")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
-    @SentinelRateLimit(resource = "cronjob.connector.testConnection", threshold = 50)
+    @RateLimit(resource = "cronjob.connector.testConnection", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:testConnection:lock", ttlSeconds = 5)
     @PostMapping("/test")
     public BaseResponse<Boolean> testConnection(@RequestBody ConnectorConfig config,
@@ -74,7 +74,7 @@ public class ConnectorController {
      */
     @Operation(summary = "查询远程任务列表")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
-    @SentinelRateLimit(resource = "cronjob.connector.listRemoteTasks", threshold = 50)
+    @RateLimit(resource = "cronjob.connector.listRemoteTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:listRemoteTasks:lock", ttlSeconds = 5)
     @PostMapping("/remote-tasks")
     public BaseResponse<List<ConnectorTaskInfo>> listRemoteTasks(@RequestBody ConnectorConfig config,
@@ -91,7 +91,7 @@ public class ConnectorController {
      */
     @Operation(summary = "导入任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_CREATE)
-    @SentinelRateLimit(resource = "cronjob.connector.importTasks", threshold = 50)
+    @RateLimit(resource = "cronjob.connector.importTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:importTasks:lock", ttlSeconds = 5)
     @PostMapping("/import")
     public BaseResponse<List<ConnectorTaskInfo>> importTasks(@RequestBody ConnectorConfig config,
@@ -108,7 +108,7 @@ public class ConnectorController {
      */
     @Operation(summary = "导出任务")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
-    @SentinelRateLimit(resource = "cronjob.connector.exportTasks", threshold = 50)
+    @RateLimit(resource = "cronjob.connector.exportTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:exportTasks:lock", ttlSeconds = 5)
     @PostMapping("/export")
     public BaseResponse<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {

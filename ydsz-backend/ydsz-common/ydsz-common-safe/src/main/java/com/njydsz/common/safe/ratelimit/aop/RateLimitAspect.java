@@ -45,7 +45,7 @@ public class RateLimitAspect {
     private final ConcurrentHashMap<Method, RateLimitRule> ruleCache = new ConcurrentHashMap<>();
 
     /**
-     * 拦截 {@link SentinelRateLimit} 注解
+     * 拦截 {@link RateLimit} 注解
      */
     @Around("@annotation(com.njydsz.common.safe.ratelimit.annotation.RateLimit)")
     public Object aroundSentinel(ProceedingJoinPoint pjp) throws Throwable {

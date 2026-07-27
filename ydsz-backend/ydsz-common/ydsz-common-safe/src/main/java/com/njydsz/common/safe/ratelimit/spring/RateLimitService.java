@@ -1,6 +1,6 @@
 package com.njydsz.common.safe.ratelimit.spring;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.core.RateLimitManager;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
@@ -54,7 +54,7 @@ public class RateLimitService {
     /**
      * 检查限流（带注解 + 参数）
      */
-    public RateLimitDecision check(SentinelRateLimit annotation, Object... args) {
+    public RateLimitDecision check(RateLimit annotation, Object... args) {
         StringBuilder keyBuilder = new StringBuilder(annotation.resource());
         if (annotation.keyParam() >= 0 && annotation.keyParam() < args.length
                 && args[annotation.keyParam()] != null) {

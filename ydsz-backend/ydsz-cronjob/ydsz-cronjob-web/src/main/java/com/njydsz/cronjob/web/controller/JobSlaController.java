@@ -2,7 +2,7 @@ package com.njydsz.cronjob.web.controller.alert;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -57,7 +57,7 @@ public class JobSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_CREATE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:create:lock", ttlSeconds = 5)
     @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
-    @SentinelRateLimit(resource = "cronjob.jobsla.create", threshold = 50)
+    @RateLimit(resource = "cronjob.jobsla.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSlaSaveDTO dto) {
         return BaseResponse.success(jobSlaService.createSla(dto));
@@ -74,7 +74,7 @@ public class JobSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:update:lock", ttlSeconds = 5)
     @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "cronjob.jobsla.update", threshold = 50)
+    @RateLimit(resource = "cronjob.jobsla.update", threshold = 50)
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
         jobSlaService.updateSla(id, dto);
@@ -91,7 +91,7 @@ public class JobSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_DELETE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:delete:lock", ttlSeconds = 5)
     @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "cronjob.jobsla.delete", threshold = 50)
+    @RateLimit(resource = "cronjob.jobsla.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         jobSlaService.deleteSla(id);
@@ -134,7 +134,7 @@ public class JobSlaController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobSlaController:toggle:lock", ttlSeconds = 5)
     @Audit(module = "SLA管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'toggle'")
-    @SentinelRateLimit(resource = "cronjob.jobsla.toggle", threshold = 50)
+    @RateLimit(resource = "cronjob.jobsla.toggle", threshold = 50)
     @PutMapping("/{id}/toggle")
     public BaseResponse<Void> toggle(@PathVariable String id, @RequestParam Integer enabled) {
         jobSlaService.toggleSla(id, enabled);

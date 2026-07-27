@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.web.controller.schedule;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -69,7 +69,7 @@ public class GlueCodeController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
     @Idempotent(key = "ydsz:cronjob:GlueCodeController:save:lock", ttlSeconds = 5)
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'save'")
-    @SentinelRateLimit(resource = "cronjob.gluecode.save", threshold = 50)
+    @RateLimit(resource = "cronjob.gluecode.save", threshold = 50)
     @PostMapping("/save")
     public BaseResponse<GlueCodeDO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
         return BaseResponse.success(glueCodeService.save(
@@ -115,7 +115,7 @@ public class GlueCodeController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
     @Idempotent(key = "ydsz:cronjob:GlueCodeController:rollback:lock", ttlSeconds = 5)
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollback'")
-    @SentinelRateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
+    @RateLimit(resource = "cronjob.gluecode.rollback", threshold = 50)
     @PostMapping("/rollback")
     public BaseResponse<GlueCodeDO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
         return BaseResponse.success(glueCodeService.rollback(request.getJobId(), request.getVersion()));
@@ -128,14 +128,14 @@ public class GlueCodeController {
      * 代码不持久化，仅在内存中编译执行并返回结果。
      *
      * <p>P0-5：该接口允许在服务端执行任意代码，属于高风险接口，独立分配 {@code CRONJOB_GLUE_TEST}
-     * 权限码，并加 {@code @SentinelRateLimit} 限流（60s 内最多 10 次），防止滥用导致 CPU/内存被打满。
+     * 权限码，并加 {@code @RateLimit} 限流（60s 内最多 10 次），防止滥用导致 CPU/内存被打满。
      *
      * @param request 测试请求体
      * @return 统一响应结果，包含执行结果或错误信息
      */
     @Operation(summary = "在线测试 GLUE 代码")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_TEST)
-    @SentinelRateLimit(resource = "cronjob.gluecode.test", threshold = 10, windowMillis = 60000, dimension = RateLimitDimension.IP, message = "在线测试过于频繁，请稍后重试")
+    @RateLimit(resource = "cronjob.gluecode.test", threshold = 10, windowMillis = 60000, dimension = RateLimitDimension.IP, message = "在线测试过于频繁，请稍后重试")
     @Audit(module = "Glue代码", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/test")
     public BaseResponse<Map<String, Object>> test(@Valid @RequestBody GlueTestRequest request) {

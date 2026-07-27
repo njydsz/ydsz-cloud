@@ -1,7 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -101,7 +101,7 @@ public class RagController {
      */
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDocument'")
     @Idempotent(key = "ydsz:agent:RagController:deleteDocument:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
+    @RateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
     @DeleteMapping("/documents/{documentId}")
     public BaseResponse<Void> deleteDocument(@PathVariable String documentId) {
         ingestionService.delete(documentId);

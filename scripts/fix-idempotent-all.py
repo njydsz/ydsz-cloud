@@ -1,8 +1,8 @@
 """
 综合修复脚本：
-1. 移除重复的 @SentinelRateLimit 注解
+1. 移除重复的 @RateLimit 注解
 2. 统一 @Idempotent key 格式为 ydsz:{module}:{Controller}:{method}:lock
-3. 为有 @SentinelRateLimit 但缺少 @Idempotent 的 POST/PUT/DELETE 方法添加 @Idempotent
+3. 为有 @RateLimit 但缺少 @Idempotent 的 POST/PUT/DELETE 方法添加 @Idempotent
 """
 import pathlib
 import re
@@ -41,9 +41,9 @@ def get_module_key_prefix(module_name: str) -> str:
 
 
 def fix_duplicate_sentinel(content: str) -> str:
-    """移除重复的 @SentinelRateLimit 注解（连续两行相同）"""
+    """移除重复的 @RateLimit 注解（连续两行相同）"""
     pattern = re.compile(
-        r'(@SentinelRateLimit\([^)]+\))\n(\s+)\1\n',
+        r'(@RateLimit\([^)]+\))\n(\s+)\1\n',
         re.MULTILINE
     )
     # 不断替换直到没有重复
@@ -84,16 +84,16 @@ def fix_idempotent_key(content: str, file_path: pathlib.Path) -> str:
 
 
 def add_missing_idempotent(content: str, file_path: pathlib.Path) -> str:
-    """为有 @SentinelRateLimit 但缺少 @Idempotent 的 POST/PUT/DELETE 方法添加 @Idempotent"""
+    """为有 @RateLimit 但缺少 @Idempotent 的 POST/PUT/DELETE 方法添加 @Idempotent"""
     module_name = extract_module_name(file_path)
     controller_name = get_controller_name(file_path)
     key_prefix = get_module_key_prefix(module_name)
 
-    # 匹配模式：@SentinelRateLimit(...) 后出现 @PostMapping/@PutMapping/@DeleteMapping
+    # 匹配模式：@RateLimit(...) 后出现 @PostMapping/@PutMapping/@DeleteMapping
     # 中间可能有其他注解（@Audit 等），但不能有 @Idempotent
     # 方法体以 public ... methodName( 开头
     pattern = re.compile(
-        r'((    )@SentinelRateLimit\([^)]+\)\n)'
+        r'((    )@RateLimit\([^)]+\)\n)'
         r'((?:\2@(?!Idempotent)\w+[^\n]*\n)*)'
         r'(\2@(?:Post|Put|Delete)Mapping[^\n]*\n)'
         r'((?:\2@\w+[^\n]*\n)*)'
@@ -102,8 +102,8 @@ def add_missing_idempotent(content: str, file_path: pathlib.Path) -> str:
     )
 
     def replacement(match):
-        sentinel_line = match.group(1)  # includes the @SentinelRateLimit line
-        mid_annotations = match.group(3)  # annotations between SentinelRateLimit and the mapping
+        sentinel_line = match.group(1)  # includes the @RateLimit line
+        mid_annotations = match.group(3)  # annotations between RateLimit and the mapping
         mapping_line = match.group(4)  # @PostMapping/@PutMapping/@DeleteMapping
         post_annotations = match.group(5)  # annotations after mapping but before public
         method_sig = match.group(6)  # public ... methodName(
@@ -152,7 +152,7 @@ def process_file(file_path: pathlib.Path) -> tuple:
     content = file_path.read_text(encoding="utf-8")
     original = content
 
-    # Step 1: 移除重复的 @SentinelRateLimit
+    # Step 1: 移除重复的 @RateLimit
     content = fix_duplicate_sentinel(content)
 
     # Step 2: 统一 @Idempotent key 格式

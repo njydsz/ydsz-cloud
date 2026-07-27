@@ -2,7 +2,7 @@ package com.njydsz.cronjob.web.controller.job;
 
 import java.util.Map;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -59,7 +59,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_CREATE)
     @Idempotent(key = "ydsz:cronjob:JobController:create:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
-    @SentinelRateLimit(resource = "cronjob.job.create", threshold = 50)
+    @RateLimit(resource = "cronjob.job.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
@@ -77,7 +77,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobController:update:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
-    @SentinelRateLimit(resource = "cronjob.job.update", threshold = 50)
+    @RateLimit(resource = "cronjob.job.update", threshold = 50)
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
@@ -133,7 +133,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
     @Idempotent(key = "ydsz:cronjob:JobController:batchDelete:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchDelete'")
-    @SentinelRateLimit(resource = "cronjob.job.batchDelete", threshold = 50)
+    @RateLimit(resource = "cronjob.job.batchDelete", threshold = 50)
     @PostMapping("/batch/delete")
     public BaseResponse<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
         return BaseResponse.success(jobService.batchDelete(dto.getJobIds()));
@@ -149,7 +149,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
     @Idempotent(key = "ydsz:cronjob:JobController:delete:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
-    @SentinelRateLimit(resource = "cronjob.job.delete", threshold = 50)
+    @RateLimit(resource = "cronjob.job.delete", threshold = 50)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         jobService.delete(id);
@@ -166,7 +166,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_PAUSE)
     @Idempotent(key = "ydsz:cronjob:JobController:pause:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pause'")
-    @SentinelRateLimit(resource = "cronjob.job.pause", threshold = 50)
+    @RateLimit(resource = "cronjob.job.pause", threshold = 50)
     @PostMapping("/{id}/pause")
     public BaseResponse<Void> pause(@PathVariable String id) {
         jobService.pause(id);
@@ -183,7 +183,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_PAUSE)
     @Idempotent(key = "ydsz:cronjob:JobController:resume:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resume'")
-    @SentinelRateLimit(resource = "cronjob.job.resume", threshold = 50)
+    @RateLimit(resource = "cronjob.job.resume", threshold = 50)
     @PostMapping("/{id}/resume")
     public BaseResponse<Void> resume(@PathVariable String id) {
         jobService.resume(id);
@@ -200,7 +200,7 @@ public class JobController {
      */
     @Operation(summary = "立即执行一次")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_TRIGGER)
-    @SentinelRateLimit(resource = "cronjob.job.trigger", threshold = 3, windowMillis = 60000, dimension = RateLimitDimension.IP, message = "手动触发过于频繁，请稍后重试")
+    @RateLimit(resource = "cronjob.job.trigger", threshold = 3, windowMillis = 60000, dimension = RateLimitDimension.IP, message = "手动触发过于频繁，请稍后重试")
     @IdempotentExempt("定时触发接口，无需幂等")
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'trigger'")
     @PostMapping("/{id}/trigger")
@@ -219,7 +219,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobController:batchPause:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchPause'")
-    @SentinelRateLimit(resource = "cronjob.job.batchPause", threshold = 50)
+    @RateLimit(resource = "cronjob.job.batchPause", threshold = 50)
     @PostMapping("/batch/pause")
     public BaseResponse<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
         return BaseResponse.success(jobService.batchPause(dto.getJobIds()));
@@ -235,7 +235,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobController:batchResume:lock", ttlSeconds = 5)
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchResume'")
-    @SentinelRateLimit(resource = "cronjob.job.batchResume", threshold = 50)
+    @RateLimit(resource = "cronjob.job.batchResume", threshold = 50)
     @PostMapping("/batch/resume")
     public BaseResponse<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
         return BaseResponse.success(jobService.batchResume(dto.getJobIds()));
@@ -251,7 +251,7 @@ public class JobController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_TRIGGER)
     @IdempotentExempt("定时触发接口，无需幂等")
     @Audit(module = "任务管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchTrigger'")
-    @SentinelRateLimit(resource = "cronjob.job.batchTrigger", threshold = 50)
+    @RateLimit(resource = "cronjob.job.batchTrigger", threshold = 50)
     @PostMapping("/batch/trigger")
     public BaseResponse<Integer> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
         return BaseResponse.success(jobService.batchTrigger(dto.getJobIds()));

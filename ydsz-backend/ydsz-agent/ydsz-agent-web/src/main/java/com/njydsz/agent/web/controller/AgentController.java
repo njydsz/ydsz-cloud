@@ -1,7 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.io.IOException;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +102,7 @@ public class AgentController {
      */
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
     @Idempotent(key = "ydsz:agent:AgentController:execute:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.agent.execute", threshold = 50)
+    @RateLimit(resource = "agent.agent.execute", threshold = 50)
     @PostMapping("/execute")
     public BaseResponse<ChatResponseDTO> execute(
             @Valid @RequestBody AgentExecutionRequestDTO request) {
@@ -127,7 +127,7 @@ public class AgentController {
      */
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'executeStream'")
     @Idempotent(key = "ydsz:agent:AgentController:executeStream:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "agent.agent.executeStream", threshold = 50)
+    @RateLimit(resource = "agent.agent.executeStream", threshold = 50)
     @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());

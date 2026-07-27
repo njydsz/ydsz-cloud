@@ -2,7 +2,7 @@ package com.njydsz.cronjob.web.controller.dag;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.*;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
@@ -111,7 +111,7 @@ public class JobDagInstanceController {
     @Operation(summary = "暂停 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:pauseInstance:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.pauseInstance", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdaginstance.pauseInstance", threshold = 50)
     @PutMapping("/{instanceId}/pause")
     public BaseResponse<Void> pauseInstance(@PathVariable String instanceId) {
         jobDagInstanceService.pauseInstance(instanceId);
@@ -127,7 +127,7 @@ public class JobDagInstanceController {
     @Operation(summary = "恢复 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:resumeInstance:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.resumeInstance", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdaginstance.resumeInstance", threshold = 50)
     @PutMapping("/{instanceId}/resume")
     public BaseResponse<Void> resumeInstance(@PathVariable String instanceId) {
         jobDagInstanceService.resumeInstance(instanceId);
@@ -143,7 +143,7 @@ public class JobDagInstanceController {
     @Operation(summary = "取消 DAG 实例")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:cancelInstance:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.cancelInstance", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdaginstance.cancelInstance", threshold = 50)
     @PutMapping("/{instanceId}/cancel")
     public BaseResponse<Void> cancelInstance(@PathVariable String instanceId) {
         jobDagInstanceService.cancelInstance(instanceId);
@@ -160,7 +160,7 @@ public class JobDagInstanceController {
     @Operation(summary = "更新 DAG 实例上下文")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagInstanceController:updateContext:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.jobdaginstance.updateContext", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdaginstance.updateContext", threshold = 50)
     @PutMapping("/{instanceId}/context")
     public BaseResponse<Void> updateContext(@PathVariable String instanceId, @RequestBody String contextJson) {
         jobDagInstanceService.updateContext(instanceId, contextJson);

@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.web.controller.alert;
 
 import java.time.LocalDateTime;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -52,7 +52,7 @@ public class AlertController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_CREATE)
     @Idempotent(key = "ydsz:cronjob:AlertController:createRule:lock", ttlSeconds = 5)
     @Audit(module = "告警管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createRule'")
-    @SentinelRateLimit(resource = "cronjob.alert.createRule", threshold = 50)
+    @RateLimit(resource = "cronjob.alert.createRule", threshold = 50)
     @PostMapping("/rule")
     public BaseResponse<String> createRule(@Valid @RequestBody AlertRuleSaveDTO dto) {
         return BaseResponse.success(alertService.createRule(dto));
@@ -69,7 +69,7 @@ public class AlertController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_UPDATE)
     @Idempotent(key = "ydsz:cronjob:AlertController:updateRule:lock", ttlSeconds = 5)
     @Audit(module = "告警管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateRule'")
-    @SentinelRateLimit(resource = "cronjob.alert.updateRule", threshold = 50)
+    @RateLimit(resource = "cronjob.alert.updateRule", threshold = 50)
     @PutMapping("/rule/{id}")
     public BaseResponse<Void> updateRule(@PathVariable String id, @Valid @RequestBody AlertRuleSaveDTO dto) {
         alertService.updateRule(id, dto);
@@ -86,7 +86,7 @@ public class AlertController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_DELETE)
     @Idempotent(key = "ydsz:cronjob:AlertController:deleteRule:lock", ttlSeconds = 5)
     @Audit(module = "告警管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteRule'")
-    @SentinelRateLimit(resource = "cronjob.alert.deleteRule", threshold = 50)
+    @RateLimit(resource = "cronjob.alert.deleteRule", threshold = 50)
     @DeleteMapping("/rule/{id}")
     public BaseResponse<Void> deleteRule(@PathVariable String id) {
         alertService.deleteRule(id);
@@ -129,7 +129,7 @@ public class AlertController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_UPDATE)
     @Idempotent(key = "ydsz:cronjob:AlertController:toggleRule:lock", ttlSeconds = 5)
     @Audit(module = "告警管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'toggleRule'")
-    @SentinelRateLimit(resource = "cronjob.alert.toggleRule", threshold = 50)
+    @RateLimit(resource = "cronjob.alert.toggleRule", threshold = 50)
     @PutMapping("/rule/{id}/toggle")
     public BaseResponse<Void> toggleRule(@PathVariable String id, @RequestParam Integer enabled) {
         alertService.toggleRule(id, enabled);

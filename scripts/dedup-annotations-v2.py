@@ -1,5 +1,5 @@
 """
-精确去重：在每段注解块（两个 public 方法签名之间）内，移除重复的 @SentinelRateLimit 和 @Idempotent。
+精确去重：在每段注解块（两个 public 方法签名之间）内，移除重复的 @RateLimit 和 @Idempotent。
 处理跨多行的注解（如 @Audit 分两行）。
 """
 import pathlib
@@ -50,7 +50,7 @@ def dedup_block(block: str) -> str:
     for line in lines:
         stripped = line.strip()
 
-        if stripped.startswith("@SentinelRateLimit"):
+        if stripped.startswith("@RateLimit"):
             if stripped in seen_sentinel:
                 continue
             seen_sentinel.add(stripped)

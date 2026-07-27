@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.web.controller.dag;
 
 import org.springframework.web.bind.annotation.PathVariable;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,7 +48,7 @@ public class DagInstanceControlController {
      */
     @Operation(summary = "暂停 DAG 实例")
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:pause:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.pause", threshold = 50)
+    @RateLimit(resource = "cronjob.daginstancecontrol.pause", threshold = 50)
     @PostMapping("/{instanceId}/pause")
     public BaseResponse<Boolean> pause(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.pause(instanceId);
@@ -63,7 +63,7 @@ public class DagInstanceControlController {
      */
     @Operation(summary = "恢复 DAG 实例")
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:resume:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.resume", threshold = 50)
+    @RateLimit(resource = "cronjob.daginstancecontrol.resume", threshold = 50)
     @PostMapping("/{instanceId}/resume")
     public BaseResponse<Boolean> resume(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.resume(instanceId);
@@ -78,7 +78,7 @@ public class DagInstanceControlController {
      */
     @Operation(summary = "取消 DAG 实例")
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:cancel:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.cancel", threshold = 50)
+    @RateLimit(resource = "cronjob.daginstancecontrol.cancel", threshold = 50)
     @PostMapping("/{instanceId}/cancel")
     public BaseResponse<Boolean> cancel(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.cancel(instanceId);
@@ -94,7 +94,7 @@ public class DagInstanceControlController {
      */
     @Operation(summary = "手动重试指定失败节点")
     @Idempotent(key = "ydsz:cronjob:DagInstanceControlController:retryNode:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "cronjob.daginstancecontrol.retryNode", threshold = 50)
+    @RateLimit(resource = "cronjob.daginstancecontrol.retryNode", threshold = 50)
     @PostMapping("/{instanceId}/retryNode")
     public BaseResponse<Boolean> retryNode(@PathVariable String instanceId,
                                       @RequestParam String jobKey) {

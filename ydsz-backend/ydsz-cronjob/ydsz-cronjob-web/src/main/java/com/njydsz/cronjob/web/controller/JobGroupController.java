@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.web.controller.job;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -76,7 +76,7 @@ public class JobGroupController {
      */
     @Operation(summary = "按分组批量暂停任务")
     @Audit(module = "任务分组", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pauseByGroup'")
-    @SentinelRateLimit(resource = "cronjob.jobgroup.pauseByGroup", threshold = 50)
+    @RateLimit(resource = "cronjob.jobgroup.pauseByGroup", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:JobGroupController:pauseByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/pause")
     public BaseResponse<Integer> pauseByGroup(@PathVariable String jobGroup) {
@@ -100,7 +100,7 @@ public class JobGroupController {
      */
     @Operation(summary = "按分组批量恢复任务")
     @Audit(module = "任务分组", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'resumeByGroup'")
-    @SentinelRateLimit(resource = "cronjob.jobgroup.resumeByGroup", threshold = 50)
+    @RateLimit(resource = "cronjob.jobgroup.resumeByGroup", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:JobGroupController:resumeByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/resume")
     public BaseResponse<Integer> resumeByGroup(@PathVariable String jobGroup) {
@@ -124,7 +124,7 @@ public class JobGroupController {
      */
     @Operation(summary = "按分组批量触发任务")
     @Audit(module = "任务分组", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'triggerByGroup'")
-    @SentinelRateLimit(resource = "cronjob.jobgroup.triggerByGroup", threshold = 50)
+    @RateLimit(resource = "cronjob.jobgroup.triggerByGroup", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:JobGroupController:triggerByGroup:lock", ttlSeconds = 5)
     @PostMapping("/{jobGroup}/trigger")
     public BaseResponse<Integer> triggerByGroup(@PathVariable String jobGroup) {

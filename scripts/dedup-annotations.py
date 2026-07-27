@@ -1,5 +1,5 @@
 """
-移除重复的 @SentinelRateLimit 和 @Idempotent 注解。
+移除重复的 @RateLimit 和 @Idempotent 注解。
 同一条注解在一个方法上只保留第一次出现。
 """
 import pathlib
@@ -14,7 +14,7 @@ MODULE_KEY_MAP = {
 
 
 def remove_duplicate_annotations(content: str) -> str:
-    """移除方法级别重复的 @SentinelRateLimit 和 @Idempotent 注解"""
+    """移除方法级别重复的 @RateLimit 和 @Idempotent 注解"""
     lines = content.split("\n")
     result = []
     seen_sentinel = set()
@@ -25,7 +25,7 @@ def remove_duplicate_annotations(content: str) -> str:
         stripped = line.strip()
 
         # 检测方法开始
-        if stripped.startswith("@SentinelRateLimit") or stripped.startswith("@Idempotent"):
+        if stripped.startswith("@RateLimit") or stripped.startswith("@Idempotent"):
             in_method = True
 
         # 检测方法结束 / 新方法开始标记
@@ -44,7 +44,7 @@ def remove_duplicate_annotations(content: str) -> str:
                 in_method = False
 
         # 跳过重复的注解
-        if stripped.startswith("@SentinelRateLimit"):
+        if stripped.startswith("@RateLimit"):
             key = stripped
             if key in seen_sentinel:
                 continue  # 跳过重复

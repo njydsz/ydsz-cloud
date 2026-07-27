@@ -2,7 +2,7 @@ package com.njydsz.cronjob.web.controller.dag;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.*;
@@ -59,7 +59,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_CREATE)
     @Idempotent(key = "ydsz:cronjob:JobDagController:createDag:lock", ttlSeconds = 5)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.createDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.createDag", threshold = 50)
     @PostMapping("/")
     public BaseResponse<String> createDag(@Valid @RequestBody JobDagSaveDTO dto) {
         return BaseResponse.success(jobDagService.createDag(dto));
@@ -76,7 +76,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagController:updateDag:lock", ttlSeconds = 5)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.updateDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.updateDag", threshold = 50)
     @PutMapping("/{dagId}")
     public BaseResponse<Void> updateDag(@PathVariable String dagId, @Valid @RequestBody JobDagSaveDTO dto) {
         jobDagService.updateDag(dagId, dto);
@@ -93,7 +93,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_DELETE)
     @Idempotent(key = "ydsz:cronjob:JobDagController:deleteDag:lock", ttlSeconds = 5)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.deleteDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.deleteDag", threshold = 50)
     @DeleteMapping("/{dagId}")
     public BaseResponse<Void> deleteDag(@PathVariable String dagId) {
         jobDagService.deleteDag(dagId);
@@ -110,7 +110,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagController:enableDag:lock", ttlSeconds = 5)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'enableDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.enableDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.enableDag", threshold = 50)
     @PutMapping("/{dagId}/enable")
     public BaseResponse<Void> enableDag(@PathVariable String dagId) {
         jobDagService.enableDag(dagId);
@@ -127,7 +127,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagController:disableDag:lock", ttlSeconds = 5)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'disableDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.disableDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.disableDag", threshold = 50)
     @PutMapping("/{dagId}/disable")
     public BaseResponse<Void> disableDag(@PathVariable String dagId) {
         jobDagService.disableDag(dagId);
@@ -182,7 +182,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_TRIGGER)
     @IdempotentExempt("定时触发接口，无需幂等")
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'triggerDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.triggerDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.triggerDag", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:JobDagController:triggerDag:lock", ttlSeconds = 5)
     @PostMapping("/trigger")
     public BaseResponse<String> triggerDag(@Valid @RequestBody JobDagTriggerDTO dto) {
@@ -202,7 +202,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @Idempotent(key = "ydsz:cronjob:JobDagController:validateDag:lock", ttlSeconds = 5)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'validateDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.validateDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.validateDag", threshold = 50)
     @PostMapping("/validate")
     public BaseResponse<Boolean> validateDag(@RequestBody String dagDefinitionJson) {
         DagDefinition definition = dagDefinitionCodec.fromJson(dagDefinitionJson);
@@ -236,7 +236,7 @@ public class JobDagController {
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "ydsz:cronjob:JobDagController:rollbackDag:lock", ttlSeconds = 5)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rollbackDag'")
-    @SentinelRateLimit(resource = "cronjob.jobdag.rollbackDag", threshold = 50)
+    @RateLimit(resource = "cronjob.jobdag.rollbackDag", threshold = 50)
     @PostMapping("/{dagId}/rollback")
     public BaseResponse<JobDagDO> rollbackDag(@PathVariable String dagId,
                                                 @RequestParam Integer version) {
