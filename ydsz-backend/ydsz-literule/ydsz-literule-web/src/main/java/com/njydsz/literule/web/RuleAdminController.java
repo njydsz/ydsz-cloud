@@ -115,7 +115,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.dto.post.RuleTestCaseDOPostDTO;
+import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
 import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.vo.ApprovalFlowVO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
@@ -135,11 +135,11 @@ import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
-import com.njydsz.literule.domain.vo.RuleExecutionTraceDOVO;
+import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
-import com.njydsz.literule.domain.vo.RuleTestCaseDOVO;
+import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVersionDiffVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.domain.vo.StringVO;
@@ -542,13 +542,13 @@ public class RuleAdminController {
      * @return 测试用例列表
      */
     @GetMapping("/testCases")
-    public BaseResponse<List<RuleTestCaseDOVO>> listTestCases(@RequestParam(required = false) String ruleCode) {
+    public BaseResponse<List<RuleTestCaseVO>> listTestCases(@RequestParam(required = false) String ruleCode) {
         LambdaQueryWrapper<RuleTestCaseDO> wrapper = new LambdaQueryWrapper<>();
         if (ruleCode != null && !ruleCode.isBlank()) {
             wrapper.eq(RuleTestCaseDO::getRuleCode, ruleCode);
         }
         wrapper.orderByDesc(RuleTestCaseDO::getUpdatedAt);
-        return BaseResponse.success(ruleTestCaseMapper.selectList(wrapper));
+        return BaseResponse.success(LiteruleConverter.INSTANT.ruleTestCaseListToVO(ruleTestCaseMapper.selectList(wrapper)));
     }
 
     /**
@@ -560,14 +560,14 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveTestCase'")
     @PostMapping("/testCases")
-    public BaseResponse<RuleTestCaseDOVO> saveTestCase(@RequestBody RuleTestCaseDOPostDTO dto) {
+    public BaseResponse<RuleTestCaseVO> saveTestCase(@RequestBody RuleTestCasePostDTO dto) {
         RuleTestCaseDO testCase = LiteruleConverter.INSTANT.postDtoToEntity(dto);
         if (testCase.getId() != null) {
             ruleTestCaseMapper.updateById(testCase);
         } else {
             ruleTestCaseMapper.insert(testCase);
         }
-        return BaseResponse.success(testCase);
+        return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(testCase));
     }
 
     /**
@@ -978,24 +978,24 @@ public class RuleAdminController {
      * 按 traceId 查询执行链路
      */
     @GetMapping("/traces/{traceId}")
-    public BaseResponse<List<RuleExecutionTraceDOVO>> getTrace(@PathVariable String traceId) {
-        return BaseResponse.success(ruleExecutionTraceMapper.selectList(
+    public BaseResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
+        return BaseResponse.success(LiteruleConverter.INSTANT.ruleExecutionTraceListToVO(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                .orderByAsc(RuleExecutionTraceDO::getCreatedAt)));
+                .orderByAsc(RuleExecutionTraceDO::getCreatedAt))));
     }
 
     /**
      * 按规则编码查询最近链路
      */
     @GetMapping("/traces/rule/{ruleCode}")
-    public BaseResponse<List<RuleExecutionTraceDOVO>> getTracesByRule(@PathVariable String ruleCode,
+    public BaseResponse<List<RuleExecutionTraceVO>> getTracesByRule(@PathVariable String ruleCode,
                                                                @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
-        return BaseResponse.success(ruleExecutionTraceMapper.selectList(
+        return BaseResponse.success(LiteruleConverter.INSTANT.ruleExecutionTraceListToVO(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
                 .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
-                .last("LIMIT " + limit)));
+                .last("LIMIT " + limit))));
     }
 
     /**
@@ -1353,11 +1353,11 @@ public class RuleAdminController {
      * @return 最近的执行链路列表
      */
     @GetMapping("/traces")
-    public BaseResponse<List<RuleExecutionTraceDOVO>> listRecentTraces(@RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return BaseResponse.success(ruleExecutionTraceMapper.selectList(
+    public BaseResponse<List<RuleExecutionTraceVO>> listRecentTraces(@RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
+        return BaseResponse.success(LiteruleConverter.INSTANT.ruleExecutionTraceListToVO(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
-                .last("LIMIT " + limit)));
+                .last("LIMIT " + limit))));
     }
 
     // ==================== 决策表管理 ====================

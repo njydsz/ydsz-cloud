@@ -15,35 +15,55 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * LocalDateTime 工具类
- * <p>
- * 提供全面的日期时间操作，包括：
- * 1. 格式化与解析
- * 2. 时间计算与调整
- * 3. 时间比较与判断
- * 4. 时间转换
- * 5. 业务场景支持（工作日、季度、年龄等）
- * </p>
+ * LocalDateTime 工具类。
+ *
+ * <p>提供全面的日期时间操作能力，基于 Java 8+ java.time API，所有方法 null 安全。
+ *
+ * <h2>核心能力</h2>
+ * <ul>
+ *   <li>格式化与解析：支持多种常用格式 + 自定义格式 + 中文日期格式</li>
+ *   <li>时间计算与调整：加减天数/小时/分钟/秒、获取月初/月末/周一/周日</li>
+ *   <li>时间比较与判断：是否同天/同月/同周、是否在时间区间内</li>
+ *   <li>时间转换：LocalDateTime ↔ Date ↔ Instant ↔ 时间戳</li>
+ *   <li>业务场景：工作日计算、季度获取、年龄计算、时效性判断</li>
+ * </ul>
+ *
+ * <h2>线程安全</h2>
+ * <p>{@link DateTimeFormatter} 是线程安全的，所有格式化器常量可直接在多线程环境中使用。
+ * 自定义格式的解析通过 {@link ConcurrentHashMap} 缓存 Formatter 实例，避免重复创建。
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class LocalDateTimeUtils {
 
     // ==================== 常用格式化字符串 ====================
+
+    /** 标准日期时间格式：{@code yyyy-MM-dd HH:mm:ss} */
     public static final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
+    /** 标准日期格式：{@code yyyy-MM-dd} */
     public static final String YYYY_MM_DD = "yyyy-MM-dd";
+    /** 标准时间格式：{@code HH:mm:ss} */
     public static final String HH_MM_SS = "HH:mm:ss";
+    /** 紧凑日期时间格式：{@code yyyyMMddHHmmss} */
     public static final String YYYYMMDDHHMMSS = "yyyyMMddHHmmss";
+    /** 紧凑日期格式：{@code yyyyMMdd} */
     public static final String YYYYMMDD = "yyyyMMdd";
+    /** 精确到分钟的格式：{@code yyyy-MM-dd HH:mm} */
     public static final String YYYY_MM_DD_HH_MM = "yyyy-MM-dd HH:mm";
+    /** 精确到小时的格式：{@code yyyy-MM-dd HH} */
     public static final String YYYY_MM_DD_HH = "yyyy-MM-dd HH";
+    /** 年月格式：{@code yyyy-MM} */
     public static final String YYYY_MM = "yyyy-MM";
+    /** 月日格式：{@code MM-dd} */
     public static final String MM_DD = "MM-dd";
+    /** 时分格式：{@code HH:mm} */
     public static final String HH_MM = "HH:mm";
+    /** 中文日期格式：{@code yyyy 年 MM 月 dd 日} */
     public static final String CHINESE_DATE = "yyyy 年 MM 月 dd 日";
+    /** 中文日期时间格式：{@code yyyy 年 MM 月 dd 日 HH 时 mm 分} */
     public static final String CHINESE_DATETIME = "yyyy 年 MM 月 dd 日 HH 时 mm 分";
+    /** 中文完整日期时间格式：{@code yyyy 年 MM 月 dd 日 HH 时 mm 分 ss 秒} */
     public static final String CHINESE_FULL_DATETIME = "yyyy 年 MM 月 dd 日 HH 时 mm 分 ss 秒";
 
     // ==================== 线程安全的格式化器 ====================

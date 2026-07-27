@@ -16,10 +16,37 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * 异常抽象基类
  *
  * <p>封装所有异常的公共字段和逻辑，消除子类代码重复。
- * 子类只需通过构造函数传入各自的默认值即可。
+ * 子类只需通过构造函数传入各自的默认值（如错误码、HTTP 状态码、级别、分类）即可。
+ *
+ * <p><b>核心职责：</b>
+ * <ul>
+ *   <li><b>公共字段管理</b>：code / subCode / key / params / httpStatus / level / category / path / extData / timestamp</li>
+ *   <li><b>国际化消息解析</b>：懒加载 + 缓存，调用 {@link #getMessage()} 时才解析 i18n 文案</li>
+ *   <li><b>用户消息与开发者消息分离</b>：{@link #getUserMessage()} 返回给终端用户，{@link #getMessage()} 返回给开发/日志</li>
+ *   <li><b>链路追踪</b>：自动写入 path、timestamp，便于分布式追踪</li>
+ * </ul>
+ *
+ * <p><b>消息解析器注入：</b>由 {@code I18nConfiguration} 通过
+ * {@link #setMessageResolver(BiFunction)} 注入国际化函数，避免硬依赖 Spring MessageSource。
+ * 使用 {@link AtomicReference} 而非 volatile，提供更优的并发性能。
+ *
+ * <p><b>继承关系：</b>
+ * <pre>
+ *   AbstractYdszException
+ *     ├── BusinessException       业务异常（HTTP 4xx）
+ *     ├── SysException            系统异常（HTTP 500）
+ *     ├── ValidationException     参数校验异常
+ *     ├── ExternalException       外部服务异常
+ *     ├── RateLimitException      限流异常
+ *     └── ... 其它业务自定义异常
+ * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
+ * @see ExceptionCode
+ * @see ExceptionCategory
+ * @see ExceptionLevel
  */
 public abstract class AbstractYdszException extends RuntimeException {
 

@@ -32,9 +32,33 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 应用注册 Controller。
+ * 应用注册 Controller
+ *
+ * <p>提供 OAuth2 第三方应用（client_credentials 模式）的注册与管理能力。
+ * 接入方通过应用注册获取 {@code clientId} / {@code clientSecret}，换取访问令牌调用开放 API。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/app}
+ *
+ * <p><b>核心字段：</b>
+ * <ul>
+ *   <li>{@code clientId}：应用唯一标识，颁发时生成，全局不可变</li>
+ *   <li>{@code clientSecret}：应用密钥，仅在「创建/重置」时返回明文，其余接口返回脱敏值</li>
+ *   <li>{@code scopes}：授权范围（CSV），如 {@code "user.read,order.write"}</li>
+ *   <li>{@code redirectUri}：授权码模式回调地址，需精确匹配</li>
+ *   <li>{@code status}：应用状态（ENABLED / DISABLED / REVOKED）</li>
+ * </ul>
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 防重复提交（Redis SET NX EX）</li>
+ *   <li>写接口启用 {@link RateLimit} 接口级限流</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>密钥字段在响应中使用 {@code SensitiveType.PASSWORD} 脱敏</li>
+ * </ul>
  *
  * @author ydsz-team
+ * @since 1.0.0
+ * @see AppInfoService 应用注册业务逻辑
  */
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
 @RestController
@@ -44,6 +68,17 @@ public class AppInfoController {
 
     private final AppInfoService service;
 
+    /**
+     * 分页查询应用列表
+     *
+     * <p>支持按应用名称模糊搜索和状态精确过滤。
+     *
+     * @param pageNum  页码（默认 1）
+     * @param pageSize 每页条数（默认 10）
+     * @param appName  应用名称模糊搜索关键字（可选）
+     * @param status   状态过滤（ENABLED/DISABLED/REVOKED，可选）
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询应用列表（支持搜索过滤）")
     @GetMapping("/page")
     public PageResponse<List<AppInfoVO>> page(
@@ -55,12 +90,30 @@ public class AppInfoController {
         return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
     }
 
+    /**
+     * 按 ID 查询应用详情
+     *
+     * <p>注意：返回的 {@code clientSecret} 字段为脱敏值（{@code SensitiveType.PASSWORD}），
+     * 如需重置密钥请调用「重置密钥」专用接口。
+     *
+     * @param id 应用 ID（雪花算法字符串）
+     * @return 应用详情
+     */
     @Operation(summary = "按 ID 查询应用")
     @GetMapping("/{id}")
     public BaseResponse<AppInfoVO> getById(@PathVariable String id) {
         return BaseResponse.success(service.getById(id));
     }
 
+    /**
+     * 创建应用
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志（密钥字段已排除）。
+     * 创建成功后会返回明文 {@code clientSecret}，业务方需妥善保管。
+     *
+     * @param dto 应用 DTO（appCode/appName/scopes/redirectUri 等）
+     * @return 新创建的应用 ID
+     */
     @Audit(module = "应用注册", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建应用: ' + #dto.appCode", excludeParams = {"appSecret"})
     @Operation(summary = "创建应用")
@@ -71,6 +124,15 @@ public class AppInfoController {
         return BaseResponse.success(service.save(dto));
     }
 
+    /**
+     * 更新应用
+     *
+     * <p>幂等保护 5 秒；限流 50 QPS；写审计日志（密钥字段已排除）。
+     * 更新不会改变 {@code clientSecret}，如需重置密钥请调用专用接口。
+     *
+     * @param dto 应用 DTO（必须包含 ID）
+     * @return 是否成功
+     */
     @Audit(module = "应用注册", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新应用: ' + #dto.appCode", excludeParams = {"appSecret"})
     @Operation(summary = "更新应用")
@@ -81,6 +143,14 @@ public class AppInfoController {
         return BaseResponse.success(service.updateById(dto));
     }
 
+    /**
+     * 按 ID 删除应用
+     *
+     * <p>删除后该应用的所有访问令牌立即失效。幂等保护 5 秒；限流 50 QPS；写审计日志。
+     *
+     * @param id 应用 ID
+     * @return 是否成功
+     */
     @Audit(module = "应用注册", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除应用: ' + #id")
     @Operation(summary = "删除应用")

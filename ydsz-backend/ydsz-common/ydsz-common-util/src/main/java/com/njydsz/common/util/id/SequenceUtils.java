@@ -30,12 +30,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class SequenceUtils {
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private SequenceUtils() {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
+
+    /** 默认节点号 */
     private static final String DEFAULT_NODE = "01";
+    /** 回退节点号（MAC 地址获取失败时使用） */
     private static final String FALLBACK_NODE = "--";
+    /** 最大序列号（4 位数字） */
     private static final int MAX_SEQ = 9999;
+    /** 日期时间格式化器（精确到秒） */
     private static final DateTimeFormatter DT_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private static final AtomicLong lastTimestamp = new AtomicLong(0);

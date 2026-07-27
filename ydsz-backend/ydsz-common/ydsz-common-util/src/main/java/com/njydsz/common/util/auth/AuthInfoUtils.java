@@ -36,13 +36,15 @@ import com.njydsz.common.core.enums.IdentityType;
  * @see AuthInfo
  * @see YdszAuthInfo
  * @see RequestHolder
-  *
+ *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
 public class AuthInfoUtils {
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private AuthInfoUtils() {
     }
 
@@ -51,11 +53,7 @@ public class AuthInfoUtils {
      *
      * @return AuthInfo 实例；若未写入则返回 null
      * @see RequestHolder#getAuthInfo()
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static AuthInfo getAuthInfo() {
         return RequestHolder.getAuthInfo();
     }
@@ -64,11 +62,7 @@ public class AuthInfoUtils {
      * 获取当前用户语言。
      *
      * @return 语言码；无上下文时返回 null
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static String getUserLanguage() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getUserLanguage() : null;
@@ -78,11 +72,7 @@ public class AuthInfoUtils {
      * 获取访问令牌。
      *
      * @return AccessToken；无上下文时返回 null
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static String getAccessToken() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getAccessToken() : null;
@@ -92,11 +82,7 @@ public class AuthInfoUtils {
      * 获取当前登录用户唯一标识。
      *
      * @return 用户ID；无上下文时返回 null
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static String getUniqueId() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getUniqueId() : null;
@@ -107,11 +93,7 @@ public class AuthInfoUtils {
      *
      * @return IdentityType；无上下文时返回 null
      * @see IdentityType
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static IdentityType getIdentityTypeEnum() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getIdentityTypeEnum() : null;
@@ -121,11 +103,7 @@ public class AuthInfoUtils {
      * 获取服务类型编码。
      *
      * @return 服务类型码；无上下文时返回 null
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static String getServiceTypeCode() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getServiceTypeCode() : null;
@@ -138,11 +116,7 @@ public class AuthInfoUtils {
      *
      * @return DataScopeType；无上下文时返回 null
      * @see DataScopeType
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static DataScopeType getDataScopeEnum() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getDataScope() : null;
@@ -154,11 +128,7 @@ public class AuthInfoUtils {
      * <p>用于 TENANT 范围类型的行级权限过滤。
      *
      * @return 租户ID；无上下文时返回 null
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static String getTenantId() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getTenantId() : null;
@@ -168,11 +138,7 @@ public class AuthInfoUtils {
      * 获取设备唯一标识。
      *
      * @return 设备ID；无上下文时返回 null
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static String getDistinctId() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getDistinctId() : null;
@@ -182,11 +148,7 @@ public class AuthInfoUtils {
      * 获取请求来源标识。
      *
      * @return 请求来源；无上下文时返回 null
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static String getRequestSource() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getRequestSource() : null;
@@ -280,11 +242,7 @@ public class AuthInfoUtils {
      *
      * @return 表名到可见列集合的映射；无上下文时返回空 Map
      * @see AuthInfo#getVisibleColumnsByTable()
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static Map<String, Set<String>> getVisibleColumnsByTable() {
         AuthInfo auth = getAuthInfo();
         return auth != null && auth.getVisibleColumnsByTable() != null
@@ -300,11 +258,7 @@ public class AuthInfoUtils {
      *
      * @return 表名到可编辑列集合的映射；无上下文时返回空 Map
      * @see AuthInfo#getEditableColumnsByTable()
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     public static Map<String, Set<String>> getEditableColumnsByTable() {
         AuthInfo auth = getAuthInfo();
         return auth != null && auth.getEditableColumnsByTable() != null

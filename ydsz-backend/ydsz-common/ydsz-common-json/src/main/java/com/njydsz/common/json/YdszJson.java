@@ -36,7 +36,7 @@ import com.njydsz.common.json.writer.JSONWriter;
 
 import java.util.Set;
 /**
- * YdszJson v3.5.0 - 超高性能 JSON 工具类（深度优化版）
+ * YdszJson - 超高性能 JSON 工具类（深度优化版）
  *
  * <p>提供高性能、功能丰富的 JSON 序列化和反序列化功能，纯 Java 实现，无需额外依赖。</p>
  * 

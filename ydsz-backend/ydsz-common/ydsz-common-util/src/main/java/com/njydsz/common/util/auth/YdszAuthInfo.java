@@ -48,10 +48,9 @@ import lombok.Data;
  * @see {@link AppAuthInfo}
  * @see RequestHolder
  * @see AuthInfoUtils
-  *
+ *
  * @author ydsz-team
  * @since 1.0.0
- * 
  */
 @Data
 public abstract class YdszAuthInfo implements AuthInfo {
@@ -61,33 +60,21 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>格式示例：{@code zh-CN}、{@code en-US}。
      * 用于前端国际化展示与后端返回数据格式适配。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private String userLanguage;
 
     /**
      * 用户唯一标识。
      *
      * <p>对应平台用户体系中的主键 ID，非 Token。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private String uniqueId;
 
     /**
      * 用户鉴权 Token。
      *
      * <p>每次登录后由认证服务签发，用于下游服务实时验证。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private String accessToken;
 
     /**
@@ -96,11 +83,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * <p>用于标识当前请求的数据权限粒度（如：全部、本人、本部门等）。
      *
      * @see DataScopeType
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private DataScopeType dataScope;
 
     /**
@@ -108,11 +91,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>多值时以 CSV 格式存储（{@code id1,id2,id3}）。
      * 用于 SQL 拦截器自动改写 WHERE 条件。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private Set<String> hasPermissionCompanyIds;
 
     /**
@@ -120,11 +99,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>多值时以 CSV 格式存储。
      * 与 companyIds 共同构成组织维度权限过滤条件。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private Set<String> hasPermissionDeptIds;
 
     /**
@@ -132,11 +107,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>多值时以 CSV 格式存储。
      * 项目级数据隔离场景使用。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private Set<String> hasPermissionProjectIds;
 
     /**
@@ -144,44 +115,28 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>多值时以 CSV 格式存储。
      * 区域级数据隔离场景使用。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private Set<String> hasPermissionRegionIds;
 
     /**
      * 租户唯一标识。
      *
      * <p>用于多租户场景下的数据隔离。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private String tenantId;
 
     /**
      * 设备唯一标识。
      *
      * <p>用于设备追踪、埋点分析等场景。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private String distinctId;
 
     /**
      * 请求来源标识。
      *
      * <p>记录发起请求的来源系统或模块。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private String requestSource;
 
     /**
@@ -194,11 +149,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * </ul>
      *
      * @see <a href="https://confluence.njydsz.ydsz.com.cn/pages/viewpage.action?pageId=123456">列权限设计文档</a>
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private Map<String, Set<String>> visibleColumnsByTable = Collections.emptyMap();
 
     /**
@@ -206,22 +157,14 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>格式同 {@link #visibleColumnsByTable}。
      * 仅控制列是否可编辑，与可见性独立。
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     private Map<String, Set<String>> editableColumnsByTable = Collections.emptyMap();
 
     /**
      * 返回身份类型为公司用户。
      *
      * @return {@link IdentityType#COMPANY}
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     @Override
     public IdentityType getIdentityTypeEnum() {
         return IdentityType.COMPANY;
@@ -237,11 +180,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * </ul>
      *
      * @return 服务类型码，非空字符串
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     @Override
     public abstract String getServiceTypeCode();
 
@@ -249,11 +188,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * 获取表级列可见规则。
      *
      * @return 表名→列集合的映射，若无规则返回空 Map
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     @Override
     public Map<String, Set<String>> getVisibleColumnsByTable() {
         return visibleColumnsByTable;
@@ -263,11 +198,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * 获取表级列可编辑规则。
      *
      * @return 表名→列集合的映射，若无规则返回空 Map
-      *
- * @author ydsz-team
- * @since 1.0.0
- * 
- */
+      */
     @Override
     public Map<String, Set<String>> getEditableColumnsByTable() {
         return editableColumnsByTable;

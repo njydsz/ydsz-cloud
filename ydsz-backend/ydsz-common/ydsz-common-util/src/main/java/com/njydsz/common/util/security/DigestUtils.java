@@ -26,6 +26,9 @@ import com.njydsz.common.util.bytes.HexUtils;
  */
 public class DigestUtils {
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private DigestUtils() {
         throw new UnsupportedOperationException("DigestUtils is a utility class and cannot be instantiated");
     }
@@ -39,8 +42,8 @@ public class DigestUtils {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
-     * 流处理缓冲区大小（8KB）
- */
+     * 流处理缓冲区大小（8KB）。
+     */
     private static final int STREAM_BUFFER_SIZE = 8 * 1024;
 
     /**

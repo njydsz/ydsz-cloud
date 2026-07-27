@@ -29,11 +29,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 系统配置 Controller。
+ * 系统配置 Controller
  *
- * <p>提供配置 CRUD、按 key 查询、按 group 批量查询、公开配置查询等业务端点。
+ * <p>提供系统参数的完整 CRUD 接口以及多种业务查询能力（按 ID、按 key、按 group 批量、公开配置）。
+ * 系统配置用于集中管理运行时可调参数（如功能开关、限流阈值、第三方服务地址、密钥等），
+ * 配合 Nacos 实现动态配置下发，业务模块通过 {@code @NacosValue} 或 {@code ConfigClient} 监听变更。
+ *
+ * <p><b>接口路径：</b>{@code /api/v1/config}
+ *
+ * <p><b>安全特性：</b>
+ * <ul>
+ *   <li>写接口（save/update/remove）启用 {@link Idempotent} 防重复提交（Redis SET NX EX）</li>
+ *   <li>写接口启用 {@link RateLimit} 接口级限流（50 QPS）</li>
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）</li>
+ *   <li>公开配置查询（{@code /public}）无需鉴权，用于前端获取客户端可读参数</li>
+ * </ul>
+ *
+ * <p><b>配置分组：</b>通过 {@code group} 字段对配置进行逻辑分组（如
+ * {@code rate-limit}、{@code third-party}、{@code feature-flag}），便于批量查询与管理。
  *
  * @author ydsz-team
+ * @since 1.0.0
+ * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询")
 @RestController

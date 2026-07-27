@@ -37,6 +37,9 @@ public class PwdUtils {
         STRONG
     }
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private PwdUtils() {
         throw new UnsupportedOperationException("PwdUtils is a utility class and cannot be instantiated");
     }

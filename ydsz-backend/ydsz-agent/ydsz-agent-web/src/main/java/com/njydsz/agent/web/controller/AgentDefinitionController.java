@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.entity.AgentDefinitionDO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;
 import com.njydsz.common.core.response.BaseResponse;
@@ -26,9 +25,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.agent.domain.converter.AgentConverter;
-import com.njydsz.agent.domain.dto.post.AgentDefinitionDOPostDTO;
-import com.njydsz.agent.domain.dto.put.AgentDefinitionDOPutDTO;
-import com.njydsz.agent.domain.vo.AgentDefinitionDOVO;
+import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
+import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
 /**
@@ -57,17 +55,17 @@ public class AgentDefinitionController {
     private final AgentDefinitionService agentDefinitionService;
 
     @GetMapping
-    public BaseResponse<List<AgentDefinitionDOVO>> list() {
+    public BaseResponse<List<AgentDefinitionVO>> list() {
         return BaseResponse.success(AgentConverter.INSTANT.agentDefinitionListToVO(agentDefinitionService.listActive()));
     }
 
     @GetMapping("/{id}")
-    public BaseResponse<AgentDefinitionDOVO> getById(@PathVariable String id) {
+    public BaseResponse<AgentDefinitionVO> getById(@PathVariable String id) {
         AgentDefinitionDO entity = agentDefinitionService.getById(id);
         if (entity == null) {
             return BaseResponse.error("Agent not found: " + id);
         }
-        return BaseResponse.success(entity);
+        return BaseResponse.success(AgentConverter.INSTANT.entityToVO(entity));
     }
 
     @GetMapping("/code/{code}")
@@ -76,14 +74,14 @@ public class AgentDefinitionController {
         if (entity == null) {
             return BaseResponse.error("Agent not found: " + code);
         }
-        return BaseResponse.success(agentDefinitionService.toDomain(entity));
+        return BaseResponse.success(AgentConverter.INSTANT.entityToVO(entity));
     }
 
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:create:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
     @PostMapping
-    public BaseResponse<AgentDefinitionDOVO> create(@Valid @RequestBody AgentDefinitionDOPostDTO dto) {
+    public BaseResponse<AgentDefinitionVO> create(@Valid @RequestBody AgentDefinitionPostDTO dto) {
         AgentDefinitionDO entity = AgentConverter.INSTANT.postDtoToEntity(dto);
         return BaseResponse.success(AgentConverter.INSTANT.entityToVO(agentDefinitionService.create(entity)));
     }
@@ -92,7 +90,7 @@ public class AgentDefinitionController {
     @RateLimit(resource = "agent.agentdefinition.update", threshold = 50)
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
     @PutMapping
-    public BaseResponse<AgentDefinitionDOVO> update(@Valid @RequestBody AgentDefinitionDOPutDTO dto) {
+    public BaseResponse<AgentDefinitionVO> update(@Valid @RequestBody AgentDefinitionPutDTO dto) {
         AgentDefinitionDO entity = AgentConverter.INSTANT.putDtoToEntity(dto);
         return BaseResponse.success(AgentConverter.INSTANT.entityToVO(agentDefinitionService.update(entity)));
     }

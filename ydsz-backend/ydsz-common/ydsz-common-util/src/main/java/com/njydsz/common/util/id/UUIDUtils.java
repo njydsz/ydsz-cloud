@@ -27,15 +27,21 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class UUIDUtils {
 
+    /** Hex 数字字符表，用于 UUID 十六进制编码。 */
     private static final char[] HEX_DIGITS = {
             '0', '1', '2', '3', '4', '5', '6', '7',
             '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
     };
 
+    /** 加密级安全随机数生成器，用于 UUID v4 安全版本。 */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    /** Crockford Base32 字符集，用于 ULID 编码（去除易混淆字符 I/L/O/U）。 */
     private static final String BASE32_CHARS = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private UUIDUtils() {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }

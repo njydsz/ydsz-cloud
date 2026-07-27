@@ -20,15 +20,34 @@ import javax.crypto.Cipher;
 
 import lombok.extern.slf4j.Slf4j;
 /**
+ * RSA2 非对称加密/签名工具类。
+ *
+ * <p>基于 RSA + SHA-256 提供非对称加密、解密、数字签名与验签能力，纯 JDK 实现。
+ *
+ * <h2>核心能力</h2>
+ * <ul>
+ *   <li>密钥对生成：生成 2048/4096 位 RSA 密钥对</li>
+ *   <li>公钥加密/私钥解密：使用 OAEP 填充方案，安全等级高于 PKCS1Padding</li>
+ *   <li>私钥签名/公钥验签：SHA256withRSA 签名算法（RSA2）</li>
+ *   <li>分段加解密：支持超长文本加解密，自动分块处理</li>
+ * </ul>
+ *
+ * <h2>安全说明</h2>
+ * <ul>
+ *   <li>填充模式使用 OAEPWithSHA-256AndMGF1Padding，防止填充攻击</li>
+ *   <li>建议密钥长度 ≥ 2048 位</li>
+ *   <li>私钥应安全存储，切勿硬编码或明文传输</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
- * 
- *
  */
 @Slf4j
 public class Rsa2Utils {
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private Rsa2Utils() {
         throw new UnsupportedOperationException("Rsa2Utils is a utility class and cannot be instantiated");
     }

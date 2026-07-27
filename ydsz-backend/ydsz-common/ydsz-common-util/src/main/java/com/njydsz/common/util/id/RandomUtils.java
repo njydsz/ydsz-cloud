@@ -24,14 +24,23 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class RandomUtils {
 
+    /** 全部字符集：数字 + 小写字母 + 大写字母 */
     private static final String ALL_CHAR = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    /** 字母字符集：小写 + 大写 */
     private static final String LETTER_CHAR = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    /** 小写字母字符集 */
     private static final String LOWER_CHAR = "abcdefghijklmnopqrstuvwxyz";
+    /** 大写字母字符集 */
     private static final String UPPER_CHAR = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    /** 数字字符集 */
     private static final String NUMBER_CHAR = "0123456789";
 
+    /** 加密级安全随机数生成器 ThreadLocal，用于 generateSecure 系列方法。 */
     private static final ThreadLocal<SecureRandom> SECURE_RANDOM = ThreadLocal.withInitial(SecureRandom::new);
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private RandomUtils() {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }

@@ -11,23 +11,27 @@ import com.alibaba.ttl.TransmittableThreadLocal;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * 请求上下文持有器（ThreadLocal）。
  *
- * @author ydsz-team
- * @since 1.0.0
- * 
+ * <p>基于 {@link TransmittableThreadLocal}（TTL）实现，在请求线程及其线程池子线程中安全传递
+ * 认证信息（{@link AuthInfo}）、HTTP 请求对象（{@link HttpServletRequest}）及额外虚拟请求头。
  *
+ * <h2>核心职责</h2>
+ * <ul>
+ *   <li>认证上下文：存储当前请求的 {@link AuthInfo}，供 {@link AuthInfoUtils} 快捷读取</li>
+ *   <li>HTTP 请求对象：存储原始 {@link HttpServletRequest}，供非 Controller 层获取请求信息</li>
+ *   <li>虚拟请求头（extra headers）：异步线程或 AOP 场景下补充数据权限 header，供 SQL 拦截器/Feign 透传读取</li>
+ *   <li>线程复用检测：add() 时检测上一个请求是否已正确 remove()，防止上下文泄露</li>
+ * </ul>
  *
- * <p>除 AuthInfo 与 HttpServletRequest 外，还支持维护"额外请求头（virtual headers）"：
- * 当业务代码并不处于真实 HTTP 请求线程（如异步线程、AOP 注入的数据范围等）时，
- * 可以将数据权限相关 header 写入此处，供下游链路（如 SQL 拦截器、Feign 透传）读取。
+ * <h2>线程池透传</h2>
+ * <p>使用阿里 TTL 替代 {@link InheritableThreadLocal}，解决线程池复用时子线程无法继承父线程上下文的问题。
+ * 需配合 TTL Agent 或 {@code TtlRunnable.get(runnable)} 使用。
  *
- * <p><b>线程池场景说明：</b>
- * 本类使用阿里的 {@link TransmittableThreadLocal}（TTL），可安全支持线程池场景下的上下文透传，
- * 解决了 {@link InheritableThreadLocal} 在线程池复用时上下文泄露的问题。
+ * <h2>强制约定</h2>
+ * <p>所有 Filter / Interceptor <b>必须</b>在 {@code finally} 块中调用 {@link #remove()}，否则会导致内存泄漏。
  *
- * <p><b>强制约定：</b>所有 Filter / Interceptor 必须在 finally 块中调用 {@link #remove()}。
- *
- * <p><b>正确用法：</b>
+ * <h2>正确用法</h2>
  * <pre>{@code
  * try {
  *     RequestHolder.add(authInfo);
@@ -37,14 +41,23 @@ import lombok.extern.slf4j.Slf4j;
  *     RequestHolder.remove();
  * }
  * }</pre>
+ *
+ * @see AuthInfo
+ * @see AuthInfoUtils
+ * @author ydsz-team
+ * @since 1.0.0
  */
 @Slf4j
 public class RequestHolder {
 
     /**
-     * 使用 TransmittableThreadLocal 以安全支持线程池场景下的上下文透传
+     * 认证信息 ThreadLocal，使用 TTL 支持线程池场景下安全透传。
      */
     private static final ThreadLocal<AuthInfo> authInfoHolder = new TransmittableThreadLocal<>();
+
+    /**
+     * HTTP 请求对象 ThreadLocal，存储原始 HttpServletRequest 供非 Controller 层使用。
+     */
     private static final ThreadLocal<HttpServletRequest> requestHolder = new TransmittableThreadLocal<>();
     /**
      * 额外 header（虚拟请求头）。
@@ -61,7 +74,12 @@ public class RequestHolder {
     private static final ThreadLocal<Boolean> initialized = new TransmittableThreadLocal<>();
 
     /**
-     * 添加认证信息
+     * 写入认证信息到当前线程上下文。
+     *
+     * <p>写入前检测线程复用：若上一个请求未调用 {@link #remove()} 清理，
+     * 将打印告警日志并强制清理，防止上下文串号。
+     *
+     * @param authInfo 认证信息，不允许为 null
      */
     public static void add(AuthInfo authInfo) {
         if (initialized.get() != null && initialized.get()) {
@@ -73,14 +91,20 @@ public class RequestHolder {
     }
 
     /**
-     * 添加请求对象
+     * 写入 HTTP 请求对象到当前线程上下文。
+     *
+     * @param request HTTP 请求对象
      */
     public static void add(HttpServletRequest request) {
         requestHolder.set(request);
     }
 
     /**
-     * 获取认证信息
+     * 获取当前线程的认证信息。
+     *
+     * <p>若未写入则打印告警日志并返回 null，调用方应做空值判断。
+     *
+     * @return 认证信息；未写入时返回 null
      */
     public static AuthInfo getAuthInfo() {
         AuthInfo authInfo = authInfoHolder.get();
@@ -91,7 +115,13 @@ public class RequestHolder {
     }
 
     /**
-     * 获取指定类型的认证信息 (泛型增强)
+     * 获取指定类型的认证信息（泛型增强）。
+     *
+     * <p>当项目使用自定义 {@link AuthInfo} 实现类时，可通过此方法安全转型。
+     *
+     * @param clazz 目标认证信息类型
+     * @param <T>   认证信息泛型
+     * @return 类型匹配的认证信息；不匹配或未写入时返回 null
      */
     public static <T extends AuthInfo> T getAuthInfo(Class<T> clazz) {
         AuthInfo authInfo = getAuthInfo();
@@ -102,19 +132,30 @@ public class RequestHolder {
     }
 
     /**
-     * 获取ydsz统一认证上下文信息。
+     * 获取 ydsz 统一认证上下文信息。
+     *
+     * <p>快捷方法，等价于 {@code getAuthInfo(YdszAuthInfo.class)}。
+     *
+     * @return YdszAuthInfo 实例；非该类型或未写入时返回 null
      */
     public static YdszAuthInfo getYdszAuthInfo() {
         return getAuthInfo(YdszAuthInfo.class);
     }
 
     /**
-     * 获取当前请求对象
+     * 获取当前线程的 HTTP 请求对象。
+     *
+     * @return HttpServletRequest；未写入时返回 null
      */
     public static HttpServletRequest getCurrentRequest() {
         return requestHolder.get();
     }
 
+    /**
+     * 获取全部额外请求头的不可变视图。
+     *
+     * @return header 名到值的映射；无数据时返回空 Map
+     */
     public static Map<String, String> getExtraHeaders() {
         Map<String, String> map = extraHeadersHolder.get();
         if (map == null || map.isEmpty()) {
@@ -123,6 +164,12 @@ public class RequestHolder {
         return Collections.unmodifiableMap(map);
     }
 
+    /**
+     * 按名称获取单个额外请求头值。
+     *
+     * @param name header 名称
+     * @return header 值；不存在时返回 null
+     */
     public static String getExtraHeader(String name) {
         if (name == null) {
             return null;
@@ -134,6 +181,14 @@ public class RequestHolder {
         return map.get(name);
     }
 
+    /**
+     * 写入单个额外请求头。
+     *
+     * <p>value 为 null 时移除该 header。
+     *
+     * @param name  header 名称，null 时忽略
+     * @param value header 值，null 时移除
+     */
     public static void putExtraHeader(String name, String value) {
         if (name == null) {
             return;
@@ -150,6 +205,11 @@ public class RequestHolder {
         map.put(name, value);
     }
 
+    /**
+     * 移除单个额外请求头。
+     *
+     * @param name header 名称，null 时忽略
+     */
     public static void removeExtraHeader(String name) {
         if (name == null) {
             return;
@@ -161,6 +221,13 @@ public class RequestHolder {
         map.remove(name);
     }
 
+    /**
+     * 对额外请求头创建可变快照副本。
+     *
+     * <p>用于跨线程传递上下文：在父线程快照，在子线程通过 {@link #restoreExtraHeaders} 恢复。
+     *
+     * @return 可变 Map 副本；无数据时返回空 Map
+     */
     public static Map<String, String> snapshotExtraHeaders() {
         Map<String, String> map = extraHeadersHolder.get();
         if (map == null || map.isEmpty()) {

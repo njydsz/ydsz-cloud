@@ -43,7 +43,7 @@ public interface AgentConverter {
      * @param entities 实体列表
      * @return VO 列表
      */
-    List<AgentDefinitionVO> agentDefinitionDOListToVO(List<AgentDefinitionDO> entities);
+    List<AgentDefinitionVO> agentDefinitionListToVO(List<AgentDefinitionDO> entities);
 
 
     // ===== AgentDefinition PostDTO → Entity =====

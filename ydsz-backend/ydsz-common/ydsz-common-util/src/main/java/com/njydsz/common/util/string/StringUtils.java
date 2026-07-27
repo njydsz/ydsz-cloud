@@ -112,6 +112,9 @@ final class PatternCache {
  */
 public class StringUtils {
 
+    /**
+     * 私有构造器，工具类不允许实例化。
+     */
     private StringUtils() {
         throw new UnsupportedOperationException("StringUtils is a utility class and cannot be instantiated");
     }
@@ -126,10 +129,29 @@ public class StringUtils {
      */
     private static final char SEPARATOR = '_';
 
+    /**
+     * 邮箱地址正则表达式。
+     */
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$");
+
+    /**
+     * 中国大陆手机号正则表达式（1[3-9] 开头 + 9 位数字）。
+     */
     private static final Pattern MOBILE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
+
+    /**
+     * 18 位身份证号正则表达式（含校验位 X）。
+     */
     private static final Pattern ID_CARD_PATTERN = Pattern.compile("^[1-9]\\d{5}(18|19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]$");
+
+    /**
+     * HTTP/HTTPS/FTP URL 正则表达式。
+     */
     private static final Pattern URL_PATTERN = Pattern.compile("^(https?|ftp)://[^\\s/$.?#].[^\\s]*$");
+
+    /**
+     * IPv4 地址正则表达式。
+     */
     private static final Pattern IPV4_PATTERN = Pattern.compile("^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$");
 
     // ==================== 判空方法 ====================

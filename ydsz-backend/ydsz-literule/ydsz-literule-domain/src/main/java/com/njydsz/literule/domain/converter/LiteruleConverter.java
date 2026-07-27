@@ -71,7 +71,7 @@ public interface LiteruleConverter {
 
     // ===== RuleChainGraphDO =====
     RuleChainGraphVO entityToVO(RuleChainGraphDO entity);
-    List<RuleChainGraphVO> ruleChainGraphDOListToVO(List<RuleChainGraphDO> entities);
+    List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities);
 
     // ===== RuleDecisionTree =====
     RuleDecisionTreeVO entityToVO(RuleDecisionTree entity);
@@ -79,7 +79,7 @@ public interface LiteruleConverter {
 
     // ===== RuleDefinitionDO =====
     RuleDefinitionVO entityToVO(RuleDefinitionDO entity);
-    List<RuleDefinitionVO> ruleDefinitionDOListToVO(List<RuleDefinitionDO> entities);
+    List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDO> entities);
 
     // ===== RuleDependency =====
     RuleDependencyVO entityToVO(RuleDependency entity);
@@ -87,11 +87,11 @@ public interface LiteruleConverter {
 
     // ===== RuleExecutionTraceDO =====
     RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity);
-    List<RuleExecutionTraceVO> ruleExecutionTraceDOListToVO(List<RuleExecutionTraceDO> entities);
+    List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities);
 
     // ===== RulePackDO =====
     RulePackVO entityToVO(RulePackDO entity);
-    List<RulePackVO> rulePackDOListToVO(List<RulePackDO> entities);
+    List<RulePackVO> rulePackListToVO(List<RulePackDO> entities);
 
     // ===== RuleScorecard =====
     RuleScorecardVO entityToVO(RuleScorecard entity);
@@ -107,7 +107,7 @@ public interface LiteruleConverter {
 
     // ===== RuleTestCaseDO =====
     RuleTestCaseVO entityToVO(RuleTestCaseDO entity);
-    List<RuleTestCaseVO> ruleTestCaseDOListToVO(List<RuleTestCaseDO> entities);
+    List<RuleTestCaseVO> ruleTestCaseListToVO(List<RuleTestCaseDO> entities);
 
     // ===== RuleVariableDef =====
     RuleVariableDefVO entityToVO(RuleVariableDef entity);

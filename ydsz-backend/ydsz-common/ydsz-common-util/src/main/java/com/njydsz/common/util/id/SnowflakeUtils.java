@@ -41,35 +41,55 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class SnowflakeUtils {
 
+    /** 起始纪元时间戳（2020-01-01 00:00:00 UTC），减少 ID 中时间位长度 */
     private static final long EPOCH = 1577836800000L;
 
+    /** 工作节点 ID 占用位数 */
     private static final long WORKER_ID_BITS = 5L;
+    /** 数据中心 ID 占用位数 */
     private static final long DATACENTER_ID_BITS = 5L;
+    /** 序列号占用位数 */
     private static final long SEQUENCE_BITS = 12L;
 
+    /** 最大工作节点 ID（31） */
     private static final long MAX_WORKER_ID = -1L ^ (-1L << WORKER_ID_BITS);
+    /** 最大数据中心 ID（31） */
     private static final long MAX_DATACENTER_ID = -1L ^ (-1L << DATACENTER_ID_BITS);
 
+    /** 工作节点 ID 左移位数 */
     private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
+    /** 数据中心 ID 左移位数 */
     private static final long DATACENTER_ID_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
+    /** 时间戳左移位数 */
     private static final long TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
 
+    /** 序列号掩码（4095） */
     private static final long SEQUENCE_MASK = -1L ^ (-1L << SEQUENCE_BITS);
+    /** 最大分片数（4096） */
     private static final long MAX_SHARD_COUNT = SEQUENCE_MASK + 1;
 
+    /** 时钟回拨容忍阈值（毫秒），5ms 以内直接等待 */
     private static final long CLOCK_BACKWARD_TOLERANCE_MILLIS = 5L;
+    /** 时钟回拨最大等待时间（毫秒），超过则抛出异常 */
     private static final long CLOCK_BACKWARD_MAX_WAIT_MILLIS = 5000L;
 
+    /** 工作节点 ID */
     private final long workerId;
+    /** 数据中心 ID */
     private final long datacenterId;
+    /** 分片数量（用于高并发优化） */
     private final int shardCount;
+    /** 分片掩码 */
     private final int shardMask;
+    /** 分片状态数组（每个分片独立维护序列号和时间戳，减少竞争） */
     private final AtomicLong[] shardStates;
 
+    /** 单例实例（volatile 保证可见性） */
     private static volatile SnowflakeUtils INSTANCE;
 
-    // Exposed constants for external use
+    /** 对外暴露的最大工作节点 ID */
     public static final long MAX_WORKER_ID_PUBLIC = MAX_WORKER_ID;
+    /** 对外暴露的最大数据中心 ID */
     public static final long MAX_DATACENTER_ID_PUBLIC = MAX_DATACENTER_ID;
 
     /**
