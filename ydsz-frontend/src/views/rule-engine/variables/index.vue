@@ -12,13 +12,20 @@ import PageLayout from '@/components/common/PageLayout.vue'
 
 const { t } = useI18n()
 
+/** 变量列表加载状态 */
 const loading = ref(false)
+/** 变量列表数据 */
 const list = ref<any[]>([])
+/** 变量列表总数 */
 const total = ref(0)
+/** 分页查询参数 */
 const query = reactive({ page: 1, size: 10, keyword: '', varType: '' })
 
+/** 新增/编辑弹窗显隐 */
 const dialogVisible = ref(false)
+/** 变量表单引用 */
 const formRef = ref<FormInstance>()
+/** 变量表单数据 */
 const form = reactive({
   varCode: '',
   varName: '',
@@ -36,6 +43,7 @@ const varTypeMap: Record<string, string> = {
   JSON: 'JSON',
 }
 
+/** 拉取变量列表数据 */
 async function loadData() {
   loading.value = true
   try {
@@ -46,10 +54,12 @@ async function loadData() {
   }
 }
 
+/** 打开新增变量弹窗 */
 function handleAdd() {
   dialogVisible.value = true
 }
 
+/** 提交变量表单 */
 async function handleSubmit() {
   if (!formRef.value) return
   await formRef.value.validate()
@@ -58,6 +68,7 @@ async function handleSubmit() {
   loadData()
 }
 
+/** 删除变量 */
 async function handleDelete(row: any) {
   await ElMessageBox.confirm('确认删除该变量？', '提示', { type: 'warning' })
   ElMessage.success('已删除')

@@ -162,7 +162,7 @@ if (typeof document !== 'undefined') {
 
 // ==================== 上报通道 ====================
 
-/** 已上报的指标集合，避免重复上报 */
+/** 已上报的指标名称集合，确保每个指标在页面生命周期内仅上报一次 */
 const reportedMetrics = new Set<WebVitalName>()
 
 /**

@@ -132,6 +132,7 @@ onMounted(() => {
       <el-table-column prop="description" label="说明" min-width="200" show-overflow-tooltip />
     </el-table>
 
+    <!-- 分页控件 -->
     <div class="mt-4 flex justify-end">
       <el-pagination
         v-model:current-page="query.page"
@@ -142,6 +143,7 @@ onMounted(() => {
       />
     </div>
 
+    <!-- 新增收入确认弹窗 -->
     <el-dialog v-model="dialogVisible" title="新增收入确认" width="520px">
       <el-form ref="formRef" :model="form" label-width="100px">
         <el-form-item label="合同ID" prop="contractId" :rules="{ required: true, message: '请输入合同ID' }">

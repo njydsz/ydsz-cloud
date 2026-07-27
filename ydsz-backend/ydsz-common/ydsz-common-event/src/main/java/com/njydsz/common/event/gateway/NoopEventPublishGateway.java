@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NoopEventPublishGateway implements EventPublishGateway {
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(NoopEventPublishGateway.class);
 
     /**

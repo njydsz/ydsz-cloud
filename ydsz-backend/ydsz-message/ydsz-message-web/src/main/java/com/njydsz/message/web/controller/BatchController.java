@@ -24,6 +24,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 批量发送 Controller。
@@ -57,6 +60,7 @@ public class BatchController {
     @Operation(summary = "异步批量发送消息")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "ydsz:message:BatchController:submitBatch:lock", ttlSeconds = 5)
+    @Audit(module = "批量发送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'submitBatch'")
     @SentinelRateLimit(resource = "message.batch.submitBatch", threshold = 50)
     @PostMapping("/send")
     public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {

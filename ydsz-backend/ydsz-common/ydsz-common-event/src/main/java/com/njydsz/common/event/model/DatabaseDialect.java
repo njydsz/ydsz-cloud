@@ -20,18 +20,19 @@ import org.slf4j.LoggerFactory;
  */
 public enum DatabaseDialect {
 
-    /** PostgreSQL */
+    /** PostgreSQL 数据库 */
     POSTGRESQL,
 
-    /** MySQL 8.x+ */
+    /** MySQL 8.x+ 数据库 */
     MYSQL,
 
-    /** Oracle 19c+ */
+    /** Oracle 19c+ 数据库 */
     ORACLE,
 
     /** 未知方言，使用通用 SQL */
     UNKNOWN;
 
+    /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(DatabaseDialect.class);
 
     /**

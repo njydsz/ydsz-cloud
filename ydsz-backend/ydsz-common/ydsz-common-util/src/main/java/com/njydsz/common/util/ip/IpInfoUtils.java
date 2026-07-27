@@ -122,6 +122,12 @@ public class IpInfoUtils {
         return ipInfo;
     }
 
+    /**
+     * 批量查询 IP 地址归属地信息
+     *
+     * @param ips IP 地址列表
+     * @return IP 归属地信息列表，与入参顺序一致
+     */
     public static List<IpInfo> batchGetInfo(List<String> ips) {
         if (ips == null || ips.isEmpty()) {
             return new ArrayList<>();
@@ -134,6 +140,14 @@ public class IpInfoUtils {
         return results;
     }
 
+    /**
+     * 批量查询 IP 地址归属地信息（支持自定义转换）
+     *
+     * @param ips    IP 地址列表
+     * @param mapper 转换函数，将 IpInfo 转换为目标类型
+     * @param <T>    目标类型
+     * @return 转换后的结果列表
+     */
     public static <T> List<T> batchGetInfo(List<String> ips, Function<IpInfo, T> mapper) {
         if (ips == null || ips.isEmpty()) {
             return new ArrayList<>();
@@ -146,6 +160,9 @@ public class IpInfoUtils {
         return results;
     }
 
+    /**
+     * 清空 IP 信息缓存并重置统计计数器
+     */
     public static void clearCache() {
         CACHE.clear();
         cacheHits.set(0);

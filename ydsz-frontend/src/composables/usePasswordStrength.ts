@@ -20,6 +20,7 @@
 
 import i18n from '@/locales'
 
+/** 密码强度检查规则（大写 / 小写 / 数字 / 特殊字符） */
 const STRENGTH_RULES = [
   { re: /[A-Z]/, labelKey: 'common.password.rule.uppercase' },
   { re: /[a-z]/, labelKey: 'common.password.rule.lowercase' },
@@ -51,6 +52,16 @@ export interface StrengthResult {
 
 /**
  * 计算密码强度
+ *
+ * 评分规则（0-4）：
+ *   - 长度 >= 8 加 1
+ *   - 长度 >= 12 加 1
+ *   - 同时包含大小写字母 加 1
+ *   - 包含数字 加 1
+ *   - 包含特殊字符 加 1
+ *
+ * @param password 密码原文（null/undefined 按空串处理）
+ * @returns 强度评分结果（含 0-4 分、等级、百分比、颜色、触发的规则明细、改进建议）
  */
 export function calcPasswordStrength(password: string | null | undefined): StrengthResult {
   const pwd = password ?? ''
@@ -97,7 +108,12 @@ export function calcPasswordStrength(password: string | null | undefined): Stren
 }
 
 /**
- * Vue 组合式：响应式密码强度
+ * 响应式密码强度 composable
+ *
+ * 将 calcPasswordStrength 包装为 computed，随 password ref 自动更新。
+ *
+ * @param password 密码 ref
+ * @returns `{ result }` - 响应式强度结果
  */
 import { computed, type Ref } from 'vue'
 

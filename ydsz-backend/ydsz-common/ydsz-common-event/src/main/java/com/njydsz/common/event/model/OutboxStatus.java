@@ -17,7 +17,7 @@ package com.njydsz.common.event.model;
  */
 public enum OutboxStatus {
 
-    /** 待投递 */
+    /** 待投递（初始状态） */
     PENDING,
 
     /** 处理中（已被某个实例 claim，正在投递） */
@@ -26,6 +26,6 @@ public enum OutboxStatus {
     /** 已投递成功 */
     SENT,
 
-    /** 死信（超过最大重试次数，需人工介入） */
+    /** 死信（超过最大重试次数，需人工介入处理） */
     DEAD_LETTER
 }

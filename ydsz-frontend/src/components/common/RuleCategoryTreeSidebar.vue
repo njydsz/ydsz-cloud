@@ -21,20 +21,23 @@ import { Folder, FolderOpened, User } from '@element-plus/icons-vue'
 import * as ruleApi from '@/api/rule-engine'
 import type { CategoryNode } from '@/api/rule-engine'
 
-/** 选中的分类路径（空字符串 = 全部） */
+/** 选中的分类路径（空字符串 = 全部），支持 v-model */
 const selectedPath = defineModel<string>('selectedPath', { default: '' })
 
-/** emit：节点点击（用于上层联动规则列表） */
+/** 节点点击事件：用于上层联动规则列表 */
 const emit = defineEmits<{
   (e: 'select', path: string): void
 }>()
 
-/** 目录树根节点 */
+/** 目录树根节点数据 */
 const treeData = ref<CategoryNode[]>([])
 /** 加载状态 */
 const loading = ref(false)
 
-/** 拉取目录树 */
+/**
+ * 拉取目录树
+ * 调用 ruleApi.getCategoryTree，移除虚拟根节点后仅展示一级 children。
+ */
 async function loadTree() {
   loading.value = true
   try {
@@ -48,7 +51,10 @@ async function loadTree() {
   }
 }
 
-/** 节点点击：选中并 emit */
+/**
+ * 节点点击处理：选中节点并 emit select 事件
+ * 路径 '/' 时转换为空字符串（表示全部）
+ */
 function handleNodeClick(node: CategoryNode) {
   const path = node.path === '/' ? '' : node.path
   selectedPath.value = path
@@ -68,6 +74,7 @@ onMounted(() => {
       <el-icon><Folder /></el-icon>
       <span>规则目录</span>
     </div>
+    <!-- 当前选中分类路径展示 -->
     <el-input
       v-model="selectedPath"
       placeholder="当前分类路径"

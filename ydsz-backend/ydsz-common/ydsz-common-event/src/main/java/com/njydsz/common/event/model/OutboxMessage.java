@@ -43,22 +43,22 @@ public class OutboxMessage {
     /** 默认优先级 */
     public static final int DEFAULT_PRIORITY = 5;
 
-    /** 主键 ID */
+    /** 主键 ID（UUID） */
     private final String id;
 
-    /** 聚合根 ID */
+    /** 聚合根 ID（如订单号） */
     private final String aggregateId;
 
-    /** 聚合根类型 */
+    /** 聚合根类型（如 "Order"） */
     private final String aggregateType;
 
-    /** 事件类型 */
+    /** 事件类型（如 "OrderCreated"） */
     private final String eventType;
 
-    /** 事件负载（JSON） */
+    /** 事件负载（JSON 字符串） */
     private final String payload;
 
-    /** 扩展头 */
+    /** 扩展头（可选，用于路由/追踪） */
     private final Map<String, String> headers;
 
     /** 投递状态 */
@@ -70,7 +70,7 @@ public class OutboxMessage {
     /** 最大重试次数 */
     private final int maxRetries;
 
-    /** 下次重试时间 */
+    /** 下次重试时间（指数退避） */
     private Instant nextRetryAt;
 
     /** 创建时间 */

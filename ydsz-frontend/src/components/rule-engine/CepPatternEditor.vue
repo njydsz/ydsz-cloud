@@ -49,16 +49,20 @@ const emit = defineEmits<{
   (e: 'update:modelValue', val: CepPattern): void
 }>()
 
+/** 内部维护的 pattern 副本（避免直接修改 prop） */
 const localPattern = ref<CepPattern>({ ...props.modelValue })
 
+/** 外部 modelValue 变化时同步至 localPattern */
 watch(() => props.modelValue, (val) => {
   localPattern.value = { ...val }
 }, { deep: true })
 
+/** 将当前 localPattern 同步到父组件 */
 function update() {
   emit('update:modelValue', { ...localPattern.value })
 }
 
+/** 添加一个新的事件流定义 */
 function addEvent() {
   localPattern.value.events.push({
     name: `Event${localPattern.value.events.length + 1}`,
@@ -68,6 +72,7 @@ function addEvent() {
   update()
 }
 
+/** 移除指定索引的事件流定义 */
 function removeEvent(idx: number) {
   localPattern.value.events.splice(idx, 1)
   update()
