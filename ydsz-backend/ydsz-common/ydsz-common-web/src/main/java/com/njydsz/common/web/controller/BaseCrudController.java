@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.domain.query.PageResult;
 import com.njydsz.common.domain.service.BaseCrudService;
 
@@ -74,7 +75,7 @@ import io.swagger.v3.oas.annotations.Parameter;
  * @author ydsz-team
  * @since 1.0.0
  */
-public abstract class BaseCrudController<T, DTO, VO, PQ extends com.njydsz.common.domain.query.PageQuery> {
+public abstract class BaseCrudController<T, DTO, VO, PQ extends PageQuery> {
 
     /**
      * 获取业务 Service 实例。

@@ -97,6 +97,8 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      * <p>聚合根在业务操作中可注册领域事件，由仓储层在持久化后统一发布。
      * 默认实现为空列表；无事件时避免空指针。
      */
+    @lombok.Getter(lombok.AccessLevel.NONE)
+    @lombok.Setter(lombok.AccessLevel.NONE)
     private transient List<DomainEvent> domainEvents;
 
     /**
@@ -166,4 +168,27 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      * <p><b>字段映射：</b> status -> status
      */
     private String status;
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>懒加载领域事件列表，确保调用方始终拿到非空列表。
+     */
+    @Override
+    public List<DomainEvent> getDomainEvents() {
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        return domainEvents;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clearDomainEvents() {
+        if (domainEvents != null) {
+            domainEvents.clear();
+        }
+    }
 }

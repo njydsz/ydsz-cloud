@@ -21,7 +21,6 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.common.safe.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
@@ -62,7 +61,6 @@ public class FlowInstanceController {
      * @param dto 流程启动参数
      * @return 统一响应结果，包含流程实例 ID
      */
-    @RateLimit(key = "flowInstance:start", qps = 5, windowSeconds = 60, message = "流程启动过于频繁，请稍后重试")
     @Idempotent(key = "ydsz:workflow:FlowInstanceController:startProcess:lock", ttlSeconds = 5)
     @Audit(module = "流程实例", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'启动流程:' + #dto.flowCode")

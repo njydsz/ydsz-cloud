@@ -747,6 +747,31 @@ public class FileApplicationService {
     }
 
     /**
+     * 获取分布式锁（阻塞式，获取不到则抛异常）。
+     *
+     * <p>委托 {@link LockStrategy} 获取可重入锁，等待 {@value #LOCK_WAIT_MS}ms，
+     * 锁自动过期时间 {@value #LOCK_LEASE_MS}ms。
+     *
+     * @param locker  分布式锁实例
+     * @param lockKey 锁键
+     * @return lockValue（用于释放锁时校验持有者）
+     * @throws BusinessException 获取锁失败时抛出
+     */
+    private String acquireLock(DistributedLocker locker, String lockKey) {
+        String lockValue;
+        try {
+            lockValue = locker.tryLock(lockKey, LOCK_WAIT_MS, LOCK_LEASE_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw BusinessException.of(NextwikiExceptionCode.LOCK_BUSY).data("lockKey", lockKey);
+        }
+        if (lockValue == null) {
+            throw BusinessException.of(NextwikiExceptionCode.LOCK_BUSY).data("lockKey", lockKey);
+        }
+        return lockValue;
+    }
+
+    /**
      * 批量操作结果
      */
     public record BatchResult(int successCount, List<FailedItem> failedItems) {
