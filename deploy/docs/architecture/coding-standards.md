@@ -91,3 +91,75 @@ YDSZ 项目全局禁用 JaCoCo 单元测试覆盖率采集和阈值检查。项�
 - **配置**：`ydsz-backend/pom.xml` 中 `<skipJacoco>true</skipJacoco>`
 - **临时启用**：`mvn verify -DskipJacoco=false -DskipTests=false`
 - **CI 影响**：CI 流水线仅执行 `mvn compile -DskipTests`，不涉及 verify 阶段
+
+---
+
+## Section 6: Controller 层 VO/DTO 返回规范
+
+### 6.1 核心原则
+
+Controller 层（Web 层）**禁止直接返回数据库实体类（Entity）**，必须通过 VO（View Object）或 DTO 对外暴露数据。
+
+**参考架构**：`D:\Code\ydsz\scm-tm`（sdt-app 模块）的 domain 分层架构设计。
+
+### 6.2 分层职责
+
+| 层次 | 包路径 | 职责 | 示例 |
+|------|--------|------|------|
+| Entity | `domain/entity/` | 数据库实体，仅用于持久层 | `MsgLog`、`Job`、`FlowDefinition` |
+| VO | `domain/vo/` | 视图对象，Controller 返回 | `MsgLogVO`、`JobVO`、`FlowDefinitionVO` |
+| DTO | `domain/dto/` | 数据传输对象，Controller 入参 | `TemplateCreateDTO`、`JobSaveDTO` |
+| Query | `domain/query/` | 查询参数对象 | `PageQuery`、`TemplateQueryDTO` |
+
+### 6.3 VO 编写规范
+
+1. **命名**：`XxxVO`，与对应 Entity 同名加 `VO` 后缀
+2. **位置**：`domain/vo/` 包下
+3. **继承**：VO **不继承** `MpBaseEntity`，为独立 POJO
+4. **字段**：
+   - 包含 Entity 中的业务字段
+   - 包含 `id`、`createdBy`、`createdAt`、`updatedBy`、`updatedAt`、`status`（按需）
+   - **不包含** `revision`（乐观锁）、`deleted`（逻辑删除标识）、`tenantId`（租户ID）
+5. **注解**：仅 `@Data`，不使用 `@TableName`、`@TableField` 等 MyBatis-Plus 注解
+6. **敏感字段**：如需脱敏，使用 `@SensitiveData` 注解
+
+### 6.4 Controller 返回类型规范
+
+```java
+// 正确：返回 VO
+@GetMapping("{id}")
+public BaseResponse<MsgLogVO> getById(@PathVariable String id) { ... }
+
+@GetMapping("/page")
+public BaseResponse<Page<MsgLogVO>> page(PageQuery query) { ... }
+
+@GetMapping("/list")
+public BaseResponse<List<MsgLogVO>> list() { ... }
+
+// 错误：直接返回 Entity
+@GetMapping("{id}")
+public BaseResponse<MsgLog> getById(@PathVariable String id) { ... }  // 禁止
+
+@GetMapping("/page")
+public BaseResponse<Page<MsgLog>> page(PageQuery query) { ... }  // 禁止
+```
+
+### 6.5 Entity → VO 转换
+
+在 Service 层或 Controller 层完成 Entity → VO 转换，推荐方式：
+
+1. **BeanUtil.copyProperties**（简单场景）：`BeanUtil.copyProperties(entity, MsgLogVO.class)`
+2. **手动构建**（复杂场景）：在 Service 中手动构建 VO，可添加额外字段或格式化
+3. **MapStruct**（大量字段映射）：定义 Converter 接口，编译期生成转换代码
+
+### 6.6 已遵循规范的模块（参考标杆）
+
+- `ydsz-userinfo`：`domain/vo/` 下 10 个 VO，所有 Controller 返回 VO
+- `ydsz-system`：`domain/vo/` 下 6 个 VO，所有 Controller 返回 VO
+
+### 6.7 检测方式
+
+```bash
+# 检测 Controller 中直接返回 Entity 的方法
+grep -rn "BaseResponse<.*>" --include="*Controller.java" | grep -v "VO\|DTO\|Map\|String\|Integer\|Boolean\|List\|Page<.*VO\|void"
+```
