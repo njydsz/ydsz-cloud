@@ -1,0 +1,54 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.tenant.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用多租户隔离（默认 false）。子应用不引入 common-tenant 依赖或设为 false 时，无任何租户逻辑。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.tenant.mode",
+      "type": "com.njydsz.common.tenant.config.TenantProperties$TenantMode",
+      "description": "租户隔离模式：SINGLE(单租户) / MULTI(多级租户) / ISOLATE_DB(独立数据库)",
+      "defaultValue": "SINGLE"
+    },
+    {
+      "name": "ydsz.tenant.tenant-column",
+      "type": "java.lang.String",
+      "description": "默认租户列名（当 tenant-fields 为空时使用）",
+      "defaultValue": "tenant_id"
+    },
+    {
+      "name": "ydsz.tenant.super-tenant-id",
+      "type": "java.lang.String",
+      "description": "超级管理员租户 ID，此租户可跨租户操作",
+      "defaultValue": "0"
+    },
+    {
+      "name": "ydsz.tenant.system-tenant-id",
+      "type": "java.lang.String",
+      "description": "系统租户 ID，定时任务/MQ Consumer/异步线程使用",
+      "defaultValue": "0"
+    },
+    {
+      "name": "ydsz.tenant.tenant-fields",
+      "type": "java.util.List<com.njydsz.common.tenant.config.TenantProperties$TenantField>",
+      "description": "租户字段配置列表，一次性配好所有字段，切换模式只需改 mode 值"
+    },
+    {
+      "name": "ydsz.tenant.table-column-mapping",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "description": "per-table 列名覆盖映射。key=表名（小写），value=列名"
+    },
+    {
+      "name": "ydsz.tenant.ignore-tables",
+      "type": "java.util.Set<java.lang.String>",
+      "description": "忽略租户隔离的表列表（忽略大小写）"
+    },
+    {
+      "name": "ydsz.tenant.anon-urls",
+      "type": "java.util.Set<java.lang.String>",
+      "description": "URL 级白名单，跳过租户隔离的请求路径"
+    }
+  ]
+}

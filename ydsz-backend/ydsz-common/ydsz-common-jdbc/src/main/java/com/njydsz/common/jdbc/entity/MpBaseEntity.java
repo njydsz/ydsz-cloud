@@ -118,4 +118,20 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
     @TableField("status")
     private String status;
 
+    /**
+     * 租户 ID
+     *
+     * <p>多租户隔离字段，由 SQL 拦截器自动注入 WHERE 条件和 INSERT 填充。
+     * <p>单租户模式下默认值 "1"，多租户模式由 TenantContextHolder 注入。
+     * <p>业务 DO 无需再单独声明此字段。
+     * <p>对外 API 不暴露租户 ID。
+     *
+     * <p><b>注意：</b>此字段始终存在于 MpBaseEntity 中。当未引入
+     * {@code common-tenant} 模块或未启用多租户时，此字段被忽略
+     * （DDL 默认值 '1'），不会影响业务逻辑。
+     */
+    @TableField("tenant_id")
+    @YdszJsonField(ignore = true)
+    private String tenantId;
+
 }

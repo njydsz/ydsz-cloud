@@ -56,15 +56,15 @@
 | 应用 | 前端端口 | 后端端口 | 后端服务 | 路由前缀 | 职责 |
 | --- | --- | --- | --- | --- | --- |
 | **main-web** | 5600 | 9000 | ydsz-gateway | / | 微前端宿主，认证/布局/全局状态/路由分发 |
-| **user-center-web** | 5601 | 9001 | ydsz-userinfo | /ydsz-user | 用户/部门/角色/菜单/岗位/OAuth2 |
-| **system-admin-web** | 5602 | 9002 | ydsz-system | /ydsz-sys | 系统配置/字典/变量/应用注册 |
-| **project-mgmt-web** | 5603 | 9003 | ydsz-project | /ydsz-proj | 商机/合同/预算/执行/EVM/成本/利润 |
-| **message-center-web** | 5604 | 9004 | ydsz-message | /ydsz-msg | 消息/模板/通知/路由/灰度/追踪 |
-| **cronjob-admin-web** | 5605 | 9005 | ydsz-cronjob | /ydsz-cron | 任务/DAG/日志/告警/拓扑 |
-| **workflow-designer-web** | 5606 | 9006 | ydsz-workflow | /ydsz-flow | 流程模板/设计器/实例/待办/SLA |
-| **wiki-drive-web** | 5607 | 9007 | ydsz-nextwiki | /ydsz-wiki | 文件/预览/搜索/分享/锁定 |
-| **rule-engine-web** | 5608 | 9008 | ydsz-literule | /ydsz-rule | 规则/DSL/变量/CEP/断点 |
-| **ai-assistant-web** | 5610 | 9010 | ydsz-agent | /ydsz-ai | 对话/Agent/RAG/DAG/审批 |
+| **userinfo-web** | 5601 | 9001 | ydsz-userinfo | /ydsz-user | 用户/部门/角色/菜单/岗位/OAuth2 |
+| **system-web** | 5602 | 9002 | ydsz-system | /ydsz-sys | 系统配置/字典/变量/应用注册 |
+| **project-web** | 5603 | 9003 | ydsz-project | /ydsz-proj | 商机/合同/预算/执行/EVM/成本/利润 |
+| **message-web** | 5604 | 9004 | ydsz-message | /ydsz-msg | 消息/模板/通知/路由/灰度/追踪 |
+| **cronjob-web** | 5605 | 9005 | ydsz-cronjob | /ydsz-cron | 任务/DAG/日志/告警/拓扑 |
+| **workflow-web** | 5606 | 9006 | ydsz-workflow | /ydsz-flow | 流程模板/设计器/实例/待办/SLA |
+| **nextwiki-web** | 5607 | 9007 | ydsz-nextwiki | /ydsz-wiki | 文件/预览/搜索/分享/锁定 |
+| **literule-web** | 5608 | 9008 | ydsz-literule | /ydsz-rule | 规则/DSL/变量/CEP/断点 |
+| **agent-web** | 5610 | 9010 | ydsz-agent | /ydsz-ai | 对话/Agent/RAG/DAG/审批 |
 | **mock-api** | 5320 | — | — | — | Mock API 服务（Nitro） |
 
 ## 目录结构
@@ -84,15 +84,15 @@ ydsz-frontend/
 │   │   └── preferences.ts            # 偏好覆盖
 │   └── ...
 ├── apps/                              # 9 个业务子应用
-│   ├── user-center-web/              # 用户中心 → ydsz-userinfo:9001
-│   ├── system-admin-web/            # 系统管理 → ydsz-system:9002
-│   ├── project-mgmt-web/            # 项目管理 → ydsz-project:9003
-│   ├── message-center-web/          # 消息中心 → ydsz-message:9004
-│   ├── cronjob-admin-web/           # 定时任务 → ydsz-cronjob:9005
-│   ├── workflow-designer-web/       # 工作流引擎 → ydsz-workflow:9006
-│   ├── wiki-drive-web/              # 网盘知识库 → ydsz-nextwiki:9007
-│   ├── rule-engine-web/             # 规则引擎 → ydsz-literule:9008
-│   ├── ai-assistant-web/            # AI 助手 → ydsz-agent:9010
+│   ├── userinfo-web/                # 用户中心 → ydsz-userinfo:9001
+│   ├── system-web/                  # 系统管理 → ydsz-system:9002
+│   ├── project-web/                 # 项目管理 → ydsz-project:9003
+│   ├── message-web/                 # 消息中心 → ydsz-message:9004
+│   ├── cronjob-web/                 # 定时任务 → ydsz-cronjob:9005
+│   ├── workflow-web/                # 工作流引擎 → ydsz-workflow:9006
+│   ├── nextwiki-web/                # 网盘知识库 → ydsz-nextwiki:9007
+│   ├── literule-web/                # 规则引擎 → ydsz-literule:9008
+│   ├── agent-web/                   # AI 助手 → ydsz-agent:9010
 │   └── mock-api/                    # Mock API 服务（Nitro）
 ├── comm/                              # 公共共享包
 │   ├── @core/                        # 核心 SDK（base/composables/preferences/ui-kit）
@@ -138,29 +138,29 @@ pnpm dev
 
 # 启动单个应用
 pnpm dev:main       # 主应用（端口 5600）
-pnpm dev:user       # 用户中心（端口 5601）
+pnpm dev:userinfo   # 用户中心（端口 5601）
 pnpm dev:system     # 系统管理（端口 5602）
 pnpm dev:project    # 项目管理（端口 5603）
 pnpm dev:message    # 消息中心（端口 5604）
 pnpm dev:cronjob    # 定时任务（端口 5605）
 pnpm dev:workflow   # 工作流引擎（端口 5606）
-pnpm dev:wiki       # 网盘知识库（端口 5607）
-pnpm dev:rule       # 规则引擎（端口 5608）
+pnpm dev:nextwiki   # 网盘知识库（端口 5607）
+pnpm dev:literule   # 规则引擎（端口 5608）
 pnpm dev:agent      # AI 助手（端口 5610）
 pnpm dev:mock       # Mock API（端口 5320）
 
 # 打包
 pnpm build                   # 打包所有应用
 pnpm build:main              # 主应用
-pnpm build:user              # 用户中心
-pnpm build:system            # 系统管理
-pnpm build:project           # 项目管理
-pnpm build:message           # 消息中心
-pnpm build:cronjob           # 定时任务
-pnpm build:workflow          # 工作流引擎
-pnpm build:wiki              # 网盘知识库
-pnpm build:rule              # 规则引擎
-pnpm build:agent             # AI 助手
+pnpm build:userinfo  # 用户中心
+pnpm build:system    # 系统管理
+pnpm build:project   # 项目管理
+pnpm build:message   # 消息中心
+pnpm build:cronjob   # 定时任务
+pnpm build:workflow  # 工作流引擎
+pnpm build:nextwiki  # 网盘知识库
+pnpm build:literule  # 规则引擎
+pnpm build:agent     # AI 助手
 
 # 代码检查
 pnpm lint                    # ESLint + Stylelint
@@ -179,15 +179,15 @@ pnpm test:e2e                # E2E 测试
 
 | 路径前缀 | 子应用 |
 | --- | --- |
-| `/ydsz-user/*` | user-center-web |
-| `/ydsz-sys/*` | system-admin-web |
-| `/ydsz-proj/*` | project-mgmt-web |
-| `/ydsz-msg/*` | message-center-web |
-| `/ydsz-cron/*` | cronjob-admin-web |
-| `/ydsz-flow/*` | workflow-designer-web |
-| `/ydsz-wiki/*` | wiki-drive-web |
-| `/ydsz-rule/*` | rule-engine-web |
-| `/ydsz-ai/*` | ai-assistant-web |
+| `/ydsz-user/*` | userinfo-web |
+| `/ydsz-sys/*` | system-web |
+| `/ydsz-proj/*` | project-web |
+| `/ydsz-msg/*` | message-web |
+| `/ydsz-cron/*` | cronjob-web |
+| `/ydsz-flow/*` | workflow-web |
+| `/ydsz-wiki/*` | nextwiki-web |
+| `/ydsz-rule/*` | literule-web |
+| `/ydsz-ai/*` | agent-web |
 
 ## API 代理
 

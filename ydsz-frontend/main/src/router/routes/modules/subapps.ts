@@ -14,12 +14,12 @@ const routes: RouteRecordRaw[] = [
       order: 100,
       title: '用户中心',
     },
-    name: 'UserCenterApp',
+    name: 'UserinfoApp',
     path: '/ydsz-user',
     redirect: '/ydsz-user/users',
     children: [
       {
-        name: 'UserCenterCatch',
+        name: 'UserinfoCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -38,12 +38,12 @@ const routes: RouteRecordRaw[] = [
       order: 101,
       title: '系统管理',
     },
-    name: 'SystemAdminApp',
+    name: 'SystemApp',
     path: '/ydsz-sys',
     redirect: '/ydsz-sys/configs',
     children: [
       {
-        name: 'SystemAdminCatch',
+        name: 'SystemCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -62,12 +62,12 @@ const routes: RouteRecordRaw[] = [
       order: 102,
       title: '项目管理',
     },
-    name: 'ProjectMgmtApp',
+    name: 'ProjectApp',
     path: '/ydsz-proj',
     redirect: '/ydsz-proj/opportunities',
     children: [
       {
-        name: 'ProjectMgmtCatch',
+        name: 'ProjectCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -86,12 +86,12 @@ const routes: RouteRecordRaw[] = [
       order: 103,
       title: '消息中心',
     },
-    name: 'MessageCenterApp',
+    name: 'MessageApp',
     path: '/ydsz-msg',
     redirect: '/ydsz-msg/messages',
     children: [
       {
-        name: 'MessageCenterCatch',
+        name: 'MessageCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -110,12 +110,12 @@ const routes: RouteRecordRaw[] = [
       order: 104,
       title: '定时任务',
     },
-    name: 'CronjobAdminApp',
+    name: 'CronjobApp',
     path: '/ydsz-cron',
     redirect: '/ydsz-cron/jobs',
     children: [
       {
-        name: 'CronjobAdminCatch',
+        name: 'CronjobCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -134,12 +134,12 @@ const routes: RouteRecordRaw[] = [
       order: 105,
       title: '工作流引擎',
     },
-    name: 'WorkflowDesignerApp',
+    name: 'WorkflowApp',
     path: '/ydsz-flow',
     redirect: '/ydsz-flow/templates',
     children: [
       {
-        name: 'WorkflowDesignerCatch',
+        name: 'WorkflowCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -158,12 +158,12 @@ const routes: RouteRecordRaw[] = [
       order: 106,
       title: '网盘知识库',
     },
-    name: 'WikiDriveApp',
+    name: 'NextwikiApp',
     path: '/ydsz-wiki',
     redirect: '/ydsz-wiki/files',
     children: [
       {
-        name: 'WikiDriveCatch',
+        name: 'NextwikiCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -182,12 +182,12 @@ const routes: RouteRecordRaw[] = [
       order: 107,
       title: '规则引擎',
     },
-    name: 'RuleEngineApp',
+    name: 'LiteruleApp',
     path: '/ydsz-rule',
     redirect: '/ydsz-rule/rules',
     children: [
       {
-        name: 'RuleEngineCatch',
+        name: 'LiteruleCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
@@ -206,12 +206,12 @@ const routes: RouteRecordRaw[] = [
       order: 108,
       title: 'AI 助手',
     },
-    name: 'AiAssistantApp',
+    name: 'AgentApp',
     path: '/ydsz-ai',
     redirect: '/ydsz-ai/chat',
     children: [
       {
-        name: 'AiAssistantCatch',
+        name: 'AgentCatch',
         path: ':path(.*)*',
         component: SubAppContainer,
         meta: {
