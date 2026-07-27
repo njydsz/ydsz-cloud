@@ -2,7 +2,10 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
+import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
+import com.njydsz.userinfo.domain.entity.LanguageDO;
+import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 
 /**
@@ -11,10 +14,12 @@ import com.njydsz.userinfo.domain.vo.LanguageVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface LanguageService {
-    LanguageVO getById(String id);
+public interface LanguageService extends BaseCrudService<LanguageDO, LanguageSaveDTO, LanguageVO, LanguagePageQuery, String> {
+
+    /**
+     * 查询全部未删除语言列表。
+     *
+     * @return 语言视图对象列表
+     */
     List<LanguageVO> list();
-    String create(LanguageSaveDTO dto);
-    boolean update(LanguageSaveDTO dto);
-    boolean removeById(String id);
 }

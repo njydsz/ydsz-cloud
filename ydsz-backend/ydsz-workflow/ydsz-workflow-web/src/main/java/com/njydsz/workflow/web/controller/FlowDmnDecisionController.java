@@ -1,7 +1,7 @@
 package com.njydsz.workflow.web.controller.dmn;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +35,7 @@ public class FlowDmnDecisionController {
 
     private final FlowDmnDecisionService dmnDecisionService;
 
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.createDecision", threshold = 50)
+    @RateLimit(resource = "workflow.flowdmndecision.createDecision", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:createDecision:lock", ttlSeconds = 5)
     @PostMapping("/decision")
     @Operation(summary = "创建决策表")
@@ -46,7 +46,7 @@ public class FlowDmnDecisionController {
         return BaseResponse.success(id);
     }
 
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.updateDecision", threshold = 50)
+    @RateLimit(resource = "workflow.flowdmndecision.updateDecision", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:updateDecision:lock", ttlSeconds = 5)
     @PutMapping("/decision/{decisionId}")
     @Operation(summary = "更新决策表（仅草稿状态）")
@@ -57,7 +57,7 @@ public class FlowDmnDecisionController {
         return BaseResponse.success();
     }
 
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.publish", threshold = 50)
+    @RateLimit(resource = "workflow.flowdmndecision.publish", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:publish:lock", ttlSeconds = 5)
     @PostMapping("/decision/{decisionId}/publish")
     @Operation(summary = "发布决策表")
@@ -66,7 +66,7 @@ public class FlowDmnDecisionController {
         return BaseResponse.success();
     }
 
-    @SentinelRateLimit(resource = "workflow.flowdmndecision.deprecate", threshold = 50)
+    @RateLimit(resource = "workflow.flowdmndecision.deprecate", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:deprecate:lock", ttlSeconds = 5)
     @PostMapping("/decision/{decisionId}/deprecate")
     @Operation(summary = "停用决策表")

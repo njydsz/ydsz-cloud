@@ -3,7 +3,7 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -70,7 +70,7 @@ public class VariableController {
     @Audit(module = "系统变量", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建变量: ' + #dto.variableKey")
     @Operation(summary = "创建系统变量")
-    @SentinelRateLimit(resource = "system.variable.save", threshold = 50)
+    @RateLimit(resource = "system.variable.save", threshold = 50)
     @Idempotent(key = "ydsz:system:VariableController:save:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody VariableDTO dto) {
@@ -80,7 +80,7 @@ public class VariableController {
     @Audit(module = "系统变量", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新变量: ' + #dto.variableKey")
     @Operation(summary = "更新系统变量")
-    @SentinelRateLimit(resource = "system.variable.update", threshold = 50)
+    @RateLimit(resource = "system.variable.update", threshold = 50)
     @Idempotent(key = "ydsz:system:VariableController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody VariableDTO dto) {
@@ -90,7 +90,7 @@ public class VariableController {
     @Audit(module = "系统变量", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除变量: ' + #id")
     @Operation(summary = "删除系统变量")
-    @SentinelRateLimit(resource = "system.variable.remove", threshold = 50)
+    @RateLimit(resource = "system.variable.remove", threshold = 50)
     @Idempotent(key = "ydsz:system:VariableController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

@@ -10,7 +10,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.core.RateLimitManager;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
@@ -28,7 +28,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 /**
  * 限流 AOP 切面
  *
- * <p>拦截 {@link SentinelRateLimit} 注解，执行限流决策。
+ * <p>拦截 {@link RateLimit} 注解，执行限流决策。
  * 限流被拒绝时抛出 {@link BusinessException}。
  *
  * @author ydsz-team
@@ -47,11 +47,11 @@ public class RateLimitAspect {
     /**
      * 拦截 {@link SentinelRateLimit} 注解
      */
-    @Around("@annotation(com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit)")
+    @Around("@annotation(com.njydsz.common.safe.ratelimit.annotation.RateLimit)")
     public Object aroundSentinel(ProceedingJoinPoint pjp) throws Throwable {
         MethodSignature signature = (MethodSignature) pjp.getSignature();
         Method method = signature.getMethod();
-        SentinelRateLimit annotation = method.getAnnotation(SentinelRateLimit.class);
+        RateLimit annotation = method.getAnnotation(RateLimit.class);
         if (annotation == null) {
             return pjp.proceed();
         }
@@ -87,7 +87,7 @@ public class RateLimitAspect {
         }
     }
 
-    private RateLimitRule buildRule(SentinelRateLimit annotation) {
+    private RateLimitRule buildRule(RateLimit annotation) {
         return RateLimitRule.builder()
                 .resource(annotation.resource())
                 .algorithm(annotation.algorithm())
@@ -104,7 +104,7 @@ public class RateLimitAspect {
                 .build();
     }
 
-    private RateLimitContext buildContext(ProceedingJoinPoint pjp, SentinelRateLimit annotation, RateLimitRule rule) {
+    private RateLimitContext buildContext(ProceedingJoinPoint pjp, RateLimit annotation, RateLimitRule rule) {
         Object[] args = pjp.getArgs();
         StringBuilder keyBuilder = new StringBuilder(rule.getResource());
 

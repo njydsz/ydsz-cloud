@@ -3,7 +3,7 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +19,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.common.web.controller.BaseCrudController;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.entity.ConfigDO;
@@ -45,8 +46,12 @@ public class ConfigController extends BaseCrudController<ConfigDO, ConfigDTO, Co
     private final ConfigService configService;
 
     public ConfigController(ConfigService configService) {
-        super(configService);
         this.configService = configService;
+    }
+
+    @Override
+    protected BaseCrudService<ConfigDO, ConfigDTO, ConfigVO, ConfigPageQuery, String> getService() {
+        return configService;
     }
 
     // ============================== 覆写基类方法（添加审计 + 幂等 + 限流注解） ==============================
@@ -55,7 +60,7 @@ public class ConfigController extends BaseCrudController<ConfigDO, ConfigDTO, Co
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建配置: ' + #dto.configKey")
     @Operation(summary = "创建配置")
-    @SentinelRateLimit(resource = "system.config.save", threshold = 50)
+    @RateLimit(resource = "system.config.save", threshold = 50)
     @Idempotent(key = "ydsz:system:ConfigController:save:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
@@ -66,7 +71,7 @@ public class ConfigController extends BaseCrudController<ConfigDO, ConfigDTO, Co
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新配置: ' + #dto.configKey")
     @Operation(summary = "更新配置")
-    @SentinelRateLimit(resource = "system.config.update", threshold = 50)
+    @RateLimit(resource = "system.config.update", threshold = 50)
     @Idempotent(key = "ydsz:system:ConfigController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
@@ -77,7 +82,7 @@ public class ConfigController extends BaseCrudController<ConfigDO, ConfigDTO, Co
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除配置: ' + #id")
     @Operation(summary = "删除配置")
-    @SentinelRateLimit(resource = "system.config.remove", threshold = 50)
+    @RateLimit(resource = "system.config.remove", threshold = 50)
     @Idempotent(key = "ydsz:system:ConfigController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {

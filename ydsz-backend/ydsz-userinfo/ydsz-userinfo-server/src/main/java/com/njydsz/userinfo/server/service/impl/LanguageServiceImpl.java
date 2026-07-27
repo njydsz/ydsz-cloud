@@ -7,16 +7,19 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.jdbc.service.AbstractMpCrudService;
 import com.njydsz.userinfo.domain.dto.LanguageSaveDTO;
 import com.njydsz.userinfo.domain.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoResultCode;
-import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
 import com.njydsz.userinfo.infra.mapper.LanguageMapper;
 import com.njydsz.userinfo.server.service.LanguageService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,67 +30,68 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class LanguageServiceImpl implements LanguageService {
+public class LanguageServiceImpl extends AbstractMpCrudService<LanguageDO, LanguageSaveDTO, LanguageVO, LanguagePageQuery, String>
+        implements LanguageService {
 
-    /** 语言 Mapper */
     private final LanguageMapper mapper;
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws BusinessException 当语言不存在或已删除时抛出
-     */
+    public LanguageServiceImpl(LanguageMapper mapper) {
+        this.mapper = mapper;
+    }
+
     @Override
-    public LanguageVO getById(String id) {
-        LanguageDO entity = mapper.selectById(id);
-        if (entity == null || entity.getDeleted() == 1) {
-            throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
+    protected BaseMapper<LanguageDO> getMapper() {
+        return mapper;
+    }
+
+    @Override
+    protected LanguageVO toVO(LanguageDO entity) {
+        if (entity == null) {
+            return null;
         }
-        return toVO(entity);
+        LanguageVO vo = new LanguageVO();
+        BeanUtils.copyProperties(entity, vo);
+        return vo;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return 全部未删除语言列表（按 sortOrder 降序）
-     */
     @Override
-    public List<LanguageVO> list() {
-        LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(LanguageDO::getDeleted, 0);
-        wrapper.orderByDesc(LanguageDO::getSortOrder);
-        return mapper.selectList(wrapper).stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>status 默认 ENABLED。
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(LanguageSaveDTO dto) {
+    protected LanguageDO toEntity(LanguageSaveDTO dto) {
         LanguageDO entity = new LanguageDO();
         BeanUtils.copyProperties(dto, entity);
+        return entity;
+    }
+
+    @Override
+    protected String getId(LanguageSaveDTO dto) {
+        return dto.getId();
+    }
+
+    @Override
+    protected QueryWrapper<LanguageDO> buildQueryWrapper(LanguagePageQuery query) {
+        QueryWrapper<LanguageDO> wrapper = new QueryWrapper<>();
+        if (query.getLanguageCode() != null && !query.getLanguageCode().isBlank()) {
+            wrapper.like("language_code", query.getLanguageCode());
+        }
+        if (query.getLanguageName() != null && !query.getLanguageName().isBlank()) {
+            wrapper.like("language_name", query.getLanguageName());
+        }
+        if (query.getStatus() != null && !query.getStatus().isBlank()) {
+            wrapper.eq("status", query.getStatus());
+        }
+        wrapper.orderByDesc("sort_order");
+        return wrapper;
+    }
+
+    @Override
+    protected void doBeforeSave(LanguageSaveDTO dto, LanguageDO entity) {
         if (entity.getStatus() == null) {
             entity.setStatus("ENABLED");
         }
-        mapper.insert(entity);
-        log.info("Language created: code={}, id={}", entity.getLanguageCode(), entity.getId());
-        return entity.getId();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>使用 BeanUtils.copyProperties 更新字段，排除 id。
-     *
-     * @throws BusinessException 当语言不存在或已删除时抛出
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean update(LanguageSaveDTO dto) {
+    public boolean updateById(LanguageSaveDTO dto) {
         LanguageDO entity = mapper.selectById(dto.getId());
         if (entity == null || entity.getDeleted() == 1) {
             throw new BusinessException(UserInfoResultCode.LANGUAGE_NOT_FOUND);
@@ -96,11 +100,6 @@ public class LanguageServiceImpl implements LanguageService {
         return mapper.updateById(entity) > 0;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws BusinessException 当语言不存在或已删除时抛出
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
@@ -111,15 +110,13 @@ public class LanguageServiceImpl implements LanguageService {
         return mapper.deleteById(id) > 0;
     }
 
-    /**
-     * 将 DO 转换为 VO，使用 BeanUtils.copyProperties 进行属性拷贝。
-     *
-     * @param entity 数据库实体
-     * @return 视图对象
-     */
-    private LanguageVO toVO(LanguageDO entity) {
-        LanguageVO vo = new LanguageVO();
-        BeanUtils.copyProperties(entity, vo);
-        return vo;
+    @Override
+    public List<LanguageVO> list() {
+        LambdaQueryWrapper<LanguageDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(LanguageDO::getDeleted, 0);
+        wrapper.orderByDesc(LanguageDO::getSortOrder);
+        return mapper.selectList(wrapper).stream()
+                .map(this::toVO)
+                .collect(Collectors.toList());
     }
 }

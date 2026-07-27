@@ -17,22 +17,22 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
  * <p><b>使用示例：</b>
  * <pre>{@code
  * // 全局限流：每秒 100 个
- * @SentinelRateLimit(resource = "order.create", threshold = 100)
+ * @RateLimit(resource = "order.create", threshold = 100)
  *
  * // 用户级限流：每个用户每秒 5 次
- * @SentinelRateLimit(resource = "user.login",
+ * @RateLimit(resource = "user.login",
  *            threshold = 5,
  *            dimension = RateLimitDimension.USER,
  *            keyParam = 0)
  *
  * // 热点参数限流：按商品 ID 限流
- * @SentinelRateLimit(resource = "seckill",
+ * @RateLimit(resource = "seckill",
  *            threshold = 10,
  *            dimension = RateLimitDimension.HOT_PARAM,
  *            keyParam = 0)
  *
  * // 集群限流
- * @SentinelRateLimit(resource = "payment.create",
+ * @RateLimit(resource = "payment.create",
  *            threshold = 1000,
  *            mode = RateLimitMode.CLUSTER,
  *            algorithm = RateLimitAlgorithm.SLIDING_WINDOW)
@@ -43,7 +43,7 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SentinelRateLimit {
+public @interface RateLimit {
 
     /**
      * 资源名（必填，限流 key 基础）

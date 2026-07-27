@@ -3,7 +3,7 @@ package com.njydsz.system.web.controller;
 import java.util.Map;
 
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +47,7 @@ public class InternalApiController {
      * @param request 包含 key 的请求体
      * @return 配置值，不存在返回 null
      */
-    @SentinelRateLimit(resource = "system.internalapi.getConfig", threshold = 50)
+    @RateLimit(resource = "system.internalapi.getConfig", threshold = 50)
     @Idempotent(key = "ydsz:system:InternalApiController:getConfig:lock", ttlSeconds = 5)
     @PostMapping("/config/get")
     public String getConfig(@RequestBody Map<String, String> request) {
@@ -60,7 +60,7 @@ public class InternalApiController {
      * @param request 包含 typeCode 和 itemCode 的请求体
      * @return 字典项 VO
      */
-    @SentinelRateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
+    @RateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
     @Idempotent(key = "ydsz:system:InternalApiController:getDictItem:lock", ttlSeconds = 5)
     @PostMapping("/dict/item")
     public DictItemVO getDictItem(@RequestBody Map<String, String> request) {
@@ -73,7 +73,7 @@ public class InternalApiController {
      * @param request 包含 appKey 和 appSecret 的请求体
      * @return 校验通过返回 true
      */
-    @SentinelRateLimit(resource = "system.internalapi.validateClient", threshold = 50)
+    @RateLimit(resource = "system.internalapi.validateClient", threshold = 50)
     @Idempotent(key = "ydsz:system:InternalApiController:validateClient:lock", ttlSeconds = 5)
     @PostMapping("/app/validate")
     public boolean validateClient(@RequestBody Map<String, String> request) {

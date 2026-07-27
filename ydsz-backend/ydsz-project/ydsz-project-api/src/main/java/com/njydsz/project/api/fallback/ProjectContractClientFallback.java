@@ -1,4 +1,7 @@
-package com.njydsz.project.api.fallback;
+package com.njydsz.project.api.client;
+
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -9,7 +12,7 @@ import com.njydsz.project.api.client.ProjectContractClient;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * ProjectContractClient 降级工厂
+ * ProjectContractClient 降级工厂。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -23,21 +26,12 @@ public class ProjectContractClientFallback implements FallbackFactory<ProjectCon
         log.warn("[ProjectContractClient] 降级触发：{}", cause.getMessage());
         return new ProjectContractClient() {
             @Override
-            public BaseResponse<?> getById(String id) {
-                log.warn("[ProjectContractClient] getById 降级：id={}, reason=project 服务不可用", id);
+            public BaseResponse<Map<String, Object>> getById(String id) {
                 return BaseResponse.error("合同服务不可用");
             }
 
             @Override
-            public BaseResponse<?> page(Object query) {
-                log.warn("[ProjectContractClient] page 降级：reason=project 服务不可用");
-                return BaseResponse.error("合同服务不可用");
-            }
-
-            @Override
-            public BaseResponse<?> listByInitiationId(String initiationId) {
-                log.warn("[ProjectContractClient] listByInitiationId 降级：initiationId={}, reason=project 服务不可用",
-                        initiationId);
+            public BaseResponse<List<Map<String, Object>>> listByInitiationId(String initiationId) {
                 return BaseResponse.error("合同服务不可用");
             }
         };

@@ -1,7 +1,7 @@
 package com.njydsz.workflow.web.controller.instance;
 
 import java.time.LocalDateTime;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +81,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:claim:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.claim", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.claim", threshold = 50)
     @PostMapping("/task/claim")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> claim(@RequestParam String taskId) {
@@ -96,7 +96,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:pass:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.pass", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.pass", threshold = 50)
     @PostMapping("/task/pass")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -113,7 +113,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:reject:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.reject", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.reject", threshold = 50)
     @PostMapping("/task/reject")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -148,7 +148,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:transfer:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.transfer", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.transfer", threshold = 50)
     @PostMapping("/task/transfer")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -165,7 +165,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:delegate:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.delegate", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.delegate", threshold = 50)
     @PostMapping("/task/delegate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -182,7 +182,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignBefore:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.countersignBefore", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.countersignBefore", threshold = 50)
     @PostMapping("/task/countersignBefore")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -199,7 +199,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignAfter:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.countersignAfter", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.countersignAfter", threshold = 50)
     @PostMapping("/task/countersignAfter")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -216,7 +216,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignParallel:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.countersignParallel", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.countersignParallel", threshold = 50)
     @PostMapping("/task/countersignParallel")
     @Operation(summary = "并加签（与原审批人并行审批）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -234,7 +234,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:jump:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.jump", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.jump", threshold = 50)
     @PostMapping("/task/jump")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -258,7 +258,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:freeJump:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.freeJump", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.freeJump", threshold = 50)
     @PostMapping("/task/freeJump")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
     public BaseResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -452,7 +452,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:countersignRemove:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.countersignRemove", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.countersignRemove", threshold = 50)
     @PostMapping("/task/countersignRemove")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -469,7 +469,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:markRead:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.markRead", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.markRead", threshold = 50)
     @PostMapping("/task/{taskId}/read")
     public BaseResponse<Void> markRead(@PathVariable String taskId) {
         String userId = AuthContext.getUserId();
@@ -484,7 +484,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:communicate:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.communicate", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.communicate", threshold = 50)
     @PostMapping("/task/communicate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -501,7 +501,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:saveDraft:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.saveDraft", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.saveDraft", threshold = 50)
     @PostMapping("/task/saveDraft")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -518,7 +518,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:addApprover:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.addApprover", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.addApprover", threshold = 50)
     @PostMapping("/task/addApprover")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -571,7 +571,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:activateTask:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.activateTask", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.activateTask", threshold = 50)
     @PostMapping("/task/{taskId}/activate")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> activateTask(@PathVariable String taskId) {
@@ -609,7 +609,7 @@ public class FlowTaskController {
      * @return 是否成功
      */
     @Idempotent(key = "ydsz:workflow:FlowTaskController:pushMyTodoCount:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtask.pushMyTodoCount", threshold = 50)
+    @RateLimit(resource = "workflow.flowtask.pushMyTodoCount", threshold = 50)
     @PostMapping("/todo/pushMine")
     public BaseResponse<Boolean> pushMyTodoCount() {
         String userId = AuthContext.getUserId();

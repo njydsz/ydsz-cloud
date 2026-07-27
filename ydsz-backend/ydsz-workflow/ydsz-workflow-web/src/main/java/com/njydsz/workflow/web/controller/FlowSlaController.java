@@ -1,7 +1,7 @@
 package com.njydsz.workflow.web.controller.analytics;
 
 import org.springframework.validation.annotation.Validated;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.*;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
@@ -44,7 +44,7 @@ public class FlowSlaController {
      * @return 本轮扫描处理的任务数
      */
     @Idempotent(key = "ydsz:workflow:FlowSlaController:slaScan:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowsla.slaScan", threshold = 50)
+    @RateLimit(resource = "workflow.flowsla.slaScan", threshold = 50)
     @PostMapping("/sla/scan")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Integer> slaScan() {
@@ -59,7 +59,7 @@ public class FlowSlaController {
      * @return 是否处理成功
      */
     @Idempotent(key = "ydsz:workflow:FlowSlaController:slaProcess:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowsla.slaProcess", threshold = 50)
+    @RateLimit(resource = "workflow.flowsla.slaProcess", threshold = 50)
     @PostMapping("/sla/process/{taskId}")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {

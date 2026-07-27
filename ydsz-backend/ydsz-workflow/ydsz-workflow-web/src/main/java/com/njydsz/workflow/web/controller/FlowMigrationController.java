@@ -2,7 +2,7 @@ package com.njydsz.workflow.web.controller.instance;
 
 import java.util.Map;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +51,7 @@ public class FlowMigrationController {
      * @return 统一响应结果，包含迁移结果报告
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-    @SentinelRateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
+    @RateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:migrateInstances:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate")
     public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
@@ -65,7 +65,7 @@ public class FlowMigrationController {
      * @return 统一响应结果，包含迁移结果报告
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-    @SentinelRateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
+    @RateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:previewMigration:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate/preview")
     public BaseResponse<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {

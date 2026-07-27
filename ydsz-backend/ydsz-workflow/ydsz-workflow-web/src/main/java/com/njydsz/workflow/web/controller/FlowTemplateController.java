@@ -1,7 +1,7 @@
 package com.njydsz.workflow.web.controller.definition;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import org.springframework.validation.annotation.Validated;
@@ -240,7 +240,7 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-9: 子模板同步父模板最新版本")
     @Idempotent(key = "ydsz:workflow:FlowTemplateController:syncFromParent:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowtemplate.syncFromParent", threshold = 50)
+    @RateLimit(resource = "workflow.flowtemplate.syncFromParent", threshold = 50)
     @PostMapping("/{childTemplateCode}/sync")
     public BaseResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {
         return BaseResponse.success(templateService.syncFromParent(childTemplateCode));

@@ -1,6 +1,6 @@
 # ydsz-common-safe
 
-YDSZ 统一安全框架 — XSS 防护、SQL 注入防护、CSRF Token（Synchronizer + Double Submit）、敏感数据脱敏（18 种类型）、验证码（图形/算术/滑块）、限流（@RateLimit AOP + Filter + 多维度）、AES-256-GCM 加密、API 签名验证、IP 黑白名单、密码强度校验、安全事件自动响应、Micrometer 指标、安全审计日志。
+YDSZ 统一安全框架 — XSS 防护、SQL 注入防护、CSRF Token（Synchronizer + Double Submit）、敏感数据脱敏（18 种类型）、验证码（图形/算术/滑块）、限流（@SentinelRateLimit AOP + Filter + 多维度）、AES-256-GCM 加密、API 签名验证、IP 黑白名单、密码强度校验、安全事件自动响应、Micrometer 指标、安全审计日志。
 
 ## 模块定位
 
@@ -53,8 +53,8 @@ YDSZ 统一安全框架 — XSS 防护、SQL 注入防护、CSRF Token（Synchro
 
 | 注解 / 类 | 说明 |
 |---|---|
-| `@RateLimit` | 方法级限流注解（SPEL Key + 多维度 + 突发容量） |
-| `RateLimitAspect` | 方法级限流 AOP 切面（SPEL Key 解析 + 滑动窗口） |
+| `@SentinelRateLimit` | 方法级限流注解（多维度 + 多算法 + 突发容量） |
+| `RateLimitAspect` | 方法级限流 AOP 切面（多维度 + 令牌桶/滑动窗口） |
 | `RateLimitFilter` | 全局限流过滤器（Redis 降级到本地限流） |
 | `LocalRateLimiter` | 本地限流降级方案（Semaphore + 时间窗口） |
 | `MultiDimensionRateLimiter` | 多维度限流器（IP / USER / API / GLOBAL 组合） |

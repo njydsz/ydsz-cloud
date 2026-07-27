@@ -4,11 +4,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.RoleSaveDTO;
+import com.njydsz.userinfo.domain.entity.RoleDO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
-
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
  * 角色 Service 接口。
@@ -16,15 +16,30 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface RoleService {
+public interface RoleService extends BaseCrudService<RoleDO, RoleSaveDTO, RoleVO, RolePageQueryDTO, String> {
 
-    RoleVO getById(String id);
-    Page<RoleVO> page(RolePageQueryDTO query);
+    /**
+     * 查询全部角色列表（无分页，按 sortOrder 升序）。
+     *
+     * @return 角色 VO 列表
+     */
     List<RoleVO> list();
-    String create(RoleSaveDTO dto);
-    boolean update(RoleSaveDTO dto);
-    boolean removeById(String id);
+
+    /**
+     * 为角色分配权限（全量覆盖模式）。
+     *
+     * @param roleId        角色 ID
+     * @param permissionIds 权限 ID 列表
+     * @return 是否成功
+     */
     boolean assignPermissions(String roleId, List<String> permissionIds);
+
+    /**
+     * 查询角色的权限 ID 列表。
+     *
+     * @param roleId 角色 ID
+     * @return 权限 ID 列表
+     */
     List<String> getRolePermissionIds(String roleId);
 
     /**

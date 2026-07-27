@@ -2,7 +2,7 @@ package com.njydsz.workflow.web.controller.notification;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.validation.annotation.Validated;
@@ -60,7 +60,7 @@ public class FlowQuickCommentController {
      * @return 新建常用语 ID
      */
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:create:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.create", threshold = 50)
+    @RateLimit(resource = "workflow.flowquickcomment.create", threshold = 50)
     @PostMapping
     @Operation(summary = "新增常用语")
     public BaseResponse<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
@@ -76,7 +76,7 @@ public class FlowQuickCommentController {
      * @return 空响应
      */
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:update:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.update", threshold = 50)
+    @RateLimit(resource = "workflow.flowquickcomment.update", threshold = 50)
     @PutMapping
     @Operation(summary = "编辑常用语")
     public BaseResponse<Void> update(@Valid @RequestBody FlowQuickCommentDTO dto) {
@@ -92,7 +92,7 @@ public class FlowQuickCommentController {
      * @return 空响应
      */
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:delete:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.delete", threshold = 50)
+    @RateLimit(resource = "workflow.flowquickcomment.delete", threshold = 50)
     @DeleteMapping("/{id}")
     @Operation(summary = "删除常用语")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -108,7 +108,7 @@ public class FlowQuickCommentController {
      * @return 空响应
      */
     @Idempotent(key = "ydsz:workflow:FlowQuickCommentController:incrementUseCount:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowquickcomment.incrementUseCount", threshold = 50)
+    @RateLimit(resource = "workflow.flowquickcomment.incrementUseCount", threshold = 50)
     @PostMapping("/{id}/use")
     @Operation(summary = "增加使用次数（审批时调用）")
     public BaseResponse<Void> incrementUseCount(@PathVariable String id) {

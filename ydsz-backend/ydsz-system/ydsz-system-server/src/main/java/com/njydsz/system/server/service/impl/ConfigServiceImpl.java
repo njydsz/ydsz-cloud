@@ -1,6 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,17 +121,25 @@ public class ConfigServiceImpl
 
     @Override
     protected Specification<ConfigDO> getPageSpecification(ConfigPageQuery query) {
-        return (MyBatisSpecification<ConfigDO>) wrapper -> {
-            if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
-                wrapper.eq("config_group", query.getConfigGroup());
+        return new MyBatisSpecification<ConfigDO>() {
+            @Override
+            public void apply(QueryWrapper<ConfigDO> wrapper) {
+                if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
+                    wrapper.eq("config_group", query.getConfigGroup());
+                }
+                if (query.getConfigKey() != null && !query.getConfigKey().isBlank()) {
+                    wrapper.like("config_key", query.getConfigKey());
+                }
+                if (query.getStatus() != null && !query.getStatus().isBlank()) {
+                    wrapper.eq("status", query.getStatus());
+                }
+                wrapper.orderByDesc("created_at");
             }
-            if (query.getConfigKey() != null && !query.getConfigKey().isBlank()) {
-                wrapper.like("config_key", query.getConfigKey());
+
+            @Override
+            public boolean isSatisfiedBy(ConfigDO candidate) {
+                return true;
             }
-            if (query.getStatus() != null && !query.getStatus().isBlank()) {
-                wrapper.eq("status", query.getStatus());
-            }
-            wrapper.orderByDesc("created_at");
         };
     }
 
@@ -169,7 +178,7 @@ public class ConfigServiceImpl
     }
 
     @Override
-    protected void doAfterBatchDelete(Iterable<String> ids, List<Boolean> result) {
+    protected void doAfterBatchDelete(Collection<String> ids, List<Boolean> result) {
         if (ids == null) {
             return;
         }

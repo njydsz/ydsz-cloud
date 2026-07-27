@@ -2,7 +2,7 @@ package com.njydsz.workflow.web.controller.notification;
 
 import java.util.List;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -61,7 +61,7 @@ public class FlowCommentController {
      * @return 统一响应结果，包含新评论 ID
      */
     @Idempotent(key = "ydsz:workflow:FlowCommentController:addComment:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowcomment.addComment", threshold = 50)
+    @RateLimit(resource = "workflow.flowcomment.addComment", threshold = 50)
     @PostMapping
     @Operation(summary = "发表评论/回复")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -117,7 +117,7 @@ public class FlowCommentController {
      * @return 统一响应结果，包含是否删除成功
      */
     @Idempotent(key = "ydsz:workflow:FlowCommentController:deleteComment:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowcomment.deleteComment", threshold = 50)
+    @RateLimit(resource = "workflow.flowcomment.deleteComment", threshold = 50)
     @DeleteMapping("/{commentId}")
     @Operation(summary = "删除评论（仅本人）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)

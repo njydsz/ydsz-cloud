@@ -1,7 +1,7 @@
 package com.njydsz.workflow.web.controller.definition;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +56,7 @@ public class FlowCustomButtonController {
      * @return 空响应
      */
     @Idempotent(key = "ydsz:workflow:FlowCustomButtonController:save:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowcustombutton.save", threshold = 50)
+    @RateLimit(resource = "workflow.flowcustombutton.save", threshold = 50)
     @PostMapping
     @Operation(summary = "保存节点的自定义按钮配置")
     public BaseResponse<Void> save(

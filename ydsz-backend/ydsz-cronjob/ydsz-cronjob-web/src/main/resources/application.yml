@@ -27,6 +27,13 @@ ydsz:
         thread-name-prefix: ydsz-job-mapreduce-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
+      cronjobDispatch:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydsz-job-dispatch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
 
 # Actuator
 management:

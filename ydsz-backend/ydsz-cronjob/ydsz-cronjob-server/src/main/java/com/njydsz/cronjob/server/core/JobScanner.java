@@ -83,6 +83,8 @@ public class JobScanner {
     /** P0-7b: 日历调度过滤器（可选注入，启用时按工作日/节假日过滤派发） */
     private final ObjectProvider<CalendarScheduleFilter> calendarScheduleFilterProvider;
 
+    private final org.springframework.context.ApplicationContext applicationContext;
+
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
 
@@ -98,21 +100,37 @@ public class JobScanner {
     /** P0-2: 并行派发线程池 */
     private ExecutorService dispatchPool;
 
+    /** P1-8: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
+    private boolean useExternalDispatchPool = false;
+
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();
         if (cronjobProperties.getLeader().isEnabled()) {
-            // P0-2: 初始化并行派发线程池
+            // P1-8: 优先使用 common-thread 统一管理的 cronjobDispatchExecutor 线程池
             if (cronjobProperties.getScanner().isParallelDispatchEnabled()) {
-                int poolSize = cronjobProperties.getScanner().getParallelDispatchPoolSize();
-                this.dispatchPool = Executors.newFixedThreadPool(poolSize, r -> {
-                    Thread t = new Thread(r, "job-scanner-dispatch");
-                    t.setDaemon(true);
-                    return t;
-                });
-                log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={}",
-                        leaderRole, cronjobProperties.getScanner().getIntervalMs(),
-                        cronjobProperties.getScanner().getBatchSize(), poolSize);
+                try {
+                    org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor threadPool =
+                            applicationContext.getBean(
+                                    "cronjobDispatchExecutor",
+                                    org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.class);
+                    this.dispatchPool = threadPool.getThreadPoolExecutor();
+                    this.useExternalDispatchPool = true;
+                    log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true pool=common-thread(cronjobDispatchExecutor)",
+                            leaderRole, cronjobProperties.getScanner().getIntervalMs(),
+                            cronjobProperties.getScanner().getBatchSize());
+                } catch (Exception e) {
+                    int poolSize = cronjobProperties.getScanner().getParallelDispatchPoolSize();
+                    this.dispatchPool = Executors.newFixedThreadPool(poolSize, r -> {
+                        Thread t = new Thread(r, "job-scanner-dispatch");
+                        t.setDaemon(true);
+                        return t;
+                    });
+                    this.useExternalDispatchPool = false;
+                    log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={} (manual fallback)",
+                            leaderRole, cronjobProperties.getScanner().getIntervalMs(),
+                            cronjobProperties.getScanner().getBatchSize(), poolSize);
+                }
             } else {
                 log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=false",
                         leaderRole, cronjobProperties.getScanner().getIntervalMs(),
@@ -120,6 +138,21 @@ public class JobScanner {
             }
         } else {
             log.info("[JobScanner] leader.enabled=false, 扫描器不启用（Leaderless 模式）");
+        }
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (!useExternalDispatchPool && dispatchPool != null) {
+            dispatchPool.shutdown();
+            try {
+                if (!dispatchPool.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                    dispatchPool.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                dispatchPool.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 package com.njydsz.userinfo.domain.dto;
 
-import com.njydsz.common.core.request.PageRequest;
+import com.njydsz.common.domain.query.PageQuery;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class RolePageQueryDTO extends PageRequest {
+public class RolePageQueryDTO extends PageQuery {
 
     private String roleCode;
     private String roleName;

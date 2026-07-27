@@ -4,7 +4,7 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
-import com.njydsz.common.safe.ratelimit.annotation.SentinelRateLimit;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,7 +49,7 @@ public class FlowCcController {
      * @return 抄送分页结果
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-    @SentinelRateLimit(resource = "workflow.flowcc.pageCc", threshold = 50)
+    @RateLimit(resource = "workflow.flowcc.pageCc", threshold = 50)
     @Idempotent(key = "ydsz:workflow:FlowCcController:pageCc:lock", ttlSeconds = 5)
     @PostMapping("/cc/page")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
@@ -81,7 +81,7 @@ public class FlowCcController {
      * @return 操作结果
      */
     @Idempotent(key = "ydsz:workflow:FlowCcController:ccMarkRead:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowcc.ccMarkRead", threshold = 50)
+    @RateLimit(resource = "workflow.flowcc.ccMarkRead", threshold = 50)
     @PostMapping("/cc/{id}/read")
     public BaseResponse<Boolean> ccMarkRead(@PathVariable String id) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
@@ -96,7 +96,7 @@ public class FlowCcController {
      * @return 已标记已读的记录数
      */
     @Idempotent(key = "ydsz:workflow:FlowCcController:ccMarkAllRead:lock", ttlSeconds = 5)
-    @SentinelRateLimit(resource = "workflow.flowcc.ccMarkAllRead", threshold = 50)
+    @RateLimit(resource = "workflow.flowcc.ccMarkAllRead", threshold = 50)
     @PostMapping("/cc/readAll")
     public BaseResponse<Integer> ccMarkAllRead() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");

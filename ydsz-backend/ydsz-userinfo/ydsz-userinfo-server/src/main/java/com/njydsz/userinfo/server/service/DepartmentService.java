@@ -4,7 +4,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.domain.service.BaseCrudService;
 import com.njydsz.userinfo.domain.dto.DepartmentSaveDTO;
+import com.njydsz.userinfo.domain.entity.DepartmentDO;
+import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 
@@ -14,13 +17,20 @@ import com.njydsz.userinfo.domain.vo.DepartmentVO;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface DepartmentService {
+public interface DepartmentService extends BaseCrudService<DepartmentDO, DepartmentSaveDTO, DepartmentVO, DepartmentPageQuery, String> {
 
-    DepartmentVO getById(String id);
+    /**
+     * 查询全部部门列表。
+     *
+     * @return 部门视图对象列表
+     */
     List<DepartmentVO> list();
-    String create(DepartmentSaveDTO dto);
-    boolean update(DepartmentSaveDTO dto);
-    boolean removeById(String id);
+
+    /**
+     * 查询部门树形结构。
+     *
+     * @return 部门树形结构列表
+     */
     List<DepartmentTreeVO> tree();
 
     /**
