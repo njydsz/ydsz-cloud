@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.BillableUtilizationSnapshotVO;
+import com.njydsz.project.domain.dto.post.BillableUtilizationSnapshotPostDTO;
+import com.njydsz.project.domain.dto.put.BillableUtilizationSnapshotPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/billable/utilization/snapshot")
@@ -31,11 +33,11 @@ public class BillableUtilizationSnapshotController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create BillableUtilizationSnapshot")
-    public BaseResponse<Boolean> save(@RequestBody BillableUtilizationSnapshot e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody BillableUtilizationSnapshotPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update BillableUtilizationSnapshot")
-    public BaseResponse<Boolean> update(@RequestBody BillableUtilizationSnapshot e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody BillableUtilizationSnapshotPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete BillableUtilizationSnapshot")

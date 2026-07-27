@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.AlertDispatchVO;
+import com.njydsz.project.domain.dto.put.AlertDispatchPutDTO;
+import com.njydsz.project.domain.dto.post.AlertDispatchPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/alert/dispatch")
@@ -31,11 +33,11 @@ public class AlertDispatchController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create AlertDispatch")
-    public BaseResponse<Boolean> save(@RequestBody AlertDispatch e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody AlertDispatchPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update AlertDispatch")
-    public BaseResponse<Boolean> update(@RequestBody AlertDispatch e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody AlertDispatchPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete AlertDispatch")

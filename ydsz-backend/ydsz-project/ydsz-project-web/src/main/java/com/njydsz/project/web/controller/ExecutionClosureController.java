@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionClosureVO;
+import com.njydsz.project.domain.dto.post.ExecutionClosurePostDTO;
+import com.njydsz.project.domain.dto.put.ExecutionClosurePutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/execution/closure")
@@ -31,11 +33,11 @@ public class ExecutionClosureController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionClosure")
-    public BaseResponse<Boolean> save(@RequestBody ExecutionClosure e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ExecutionClosurePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionClosure")
-    public BaseResponse<Boolean> update(@RequestBody ExecutionClosure e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ExecutionClosurePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionClosure")

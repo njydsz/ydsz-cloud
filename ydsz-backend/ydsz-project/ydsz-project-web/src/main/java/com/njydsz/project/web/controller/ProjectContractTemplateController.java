@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectContractTemplateVO;
+import com.njydsz.project.domain.dto.post.ProjectContractTemplatePostDTO;
+import com.njydsz.project.domain.dto.put.ProjectContractTemplatePutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/contract/template")
@@ -31,11 +33,11 @@ public class ProjectContractTemplateController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectContractTemplate")
-    public BaseResponse<Boolean> save(@RequestBody ProjectContractTemplate e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectContractTemplatePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectContractTemplate")
-    public BaseResponse<Boolean> update(@RequestBody ProjectContractTemplate e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectContractTemplatePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectContractTemplate")

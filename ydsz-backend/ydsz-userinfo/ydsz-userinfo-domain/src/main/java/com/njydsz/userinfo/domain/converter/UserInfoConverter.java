@@ -24,6 +24,7 @@ import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
+import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.domain.vo.PostVO;
@@ -145,4 +146,24 @@ public interface UserInfoConverter {
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     UserAccount createDtoToEntity(UserAccountCreateDTO dto);
+
+    // ===== UserAccount → LoginVO.UserInfoVO =====
+    /**
+     * 用户实体 → 登录响应中的用户基本信息 VO。
+     *
+     * <p>仅映射实体上可直接对应的字段：
+     * <ul>
+     *   <li>{@code id} → {@code userId}</li>
+     *   <li>{@code username} / {@code realName} / {@code tenantId} / {@code avatar} 同名映射</li>
+     * </ul>
+     * 派生字段 {@code roleCode} / {@code roleName} 由调用方从角色列表拼接后设置，
+     * 此处通过 {@code @Mapping(ignore = true)} 隔离，避免 MapStruct 报未映射属性告警。
+     *
+     * @param entity 用户账号实体
+     * @return 登录响应中的用户基本信息 VO（roleCode/roleName 为 null，需调用方填充）
+     */
+    @Mapping(target = "userId", source = "id")
+    @Mapping(target = "roleCode", ignore = true)
+    @Mapping(target = "roleName", ignore = true)
+    LoginVO.UserInfoVO entityToUserInfoVO(UserAccount entity);
 }

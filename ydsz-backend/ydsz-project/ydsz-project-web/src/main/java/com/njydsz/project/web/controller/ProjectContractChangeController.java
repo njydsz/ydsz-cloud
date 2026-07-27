@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectContractChangeVO;
+import com.njydsz.project.domain.dto.put.ProjectContractChangePutDTO;
+import com.njydsz.project.domain.dto.post.ProjectContractChangePostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/contract/change")
@@ -31,11 +33,11 @@ public class ProjectContractChangeController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectContractChange")
-    public BaseResponse<Boolean> save(@RequestBody ProjectContractChange e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectContractChangePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectContractChange")
-    public BaseResponse<Boolean> update(@RequestBody ProjectContractChange e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectContractChangePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectContractChange")

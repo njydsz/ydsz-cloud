@@ -11,6 +11,7 @@ import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.dto.ProjectInitiationDTO;
 import com.njydsz.project.domain.dto.ProjectInitiationPageQuery;
 import com.njydsz.project.domain.entity.project.ProjectInitiation;
@@ -23,7 +24,6 @@ import com.njydsz.project.server.service.ProjectInitiationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -117,8 +117,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(ProjectInitiationDTO dto) {
-        ProjectInitiation entity = new ProjectInitiation();
-        BeanUtils.copyProperties(dto, entity);
+        ProjectInitiation entity = ProjectConverter.INSTANT.dtoToEntity(dto);
         entity.setStatus("DRAFT");
         entity.setStage("PRE_INITIATION");
         if (entity.getProjectLevel() == null) {
@@ -134,8 +133,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(ProjectInitiationDTO dto) {
-        ProjectInitiation entity = new ProjectInitiation();
-        BeanUtils.copyProperties(dto, entity);
+        ProjectInitiation entity = ProjectConverter.INSTANT.dtoToEntity(dto);
         boolean result = repository.updateById(entity);
         if (result) {
             projectMetrics.incInitiationUpdated();
@@ -189,9 +187,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     }
 
     private ProjectInitiationVO convertToVO(ProjectInitiation entity) {
-        ProjectInitiationVO vo = new ProjectInitiationVO();
-        BeanUtils.copyProperties(entity, vo);
-        return vo;
+        return ProjectConverter.INSTANT.entityToVO(entity);
     }
 
     /**

@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectOpportunityVO;
+import com.njydsz.project.domain.dto.put.ProjectOpportunityPutDTO;
+import com.njydsz.project.domain.dto.post.ProjectOpportunityPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/opportunity")
@@ -31,11 +33,11 @@ public class ProjectOpportunityController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectOpportunity")
-    public BaseResponse<Boolean> save(@RequestBody ProjectOpportunity e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectOpportunityPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectOpportunity")
-    public BaseResponse<Boolean> update(@RequestBody ProjectOpportunity e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectOpportunityPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectOpportunity")

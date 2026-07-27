@@ -19,6 +19,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
+import com.njydsz.common.search.analytics.SearchQualityTracker;
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.core.SearchStrategy;
 import com.njydsz.common.search.engine.es.ElasticsearchSearchStrategy;
@@ -34,6 +35,7 @@ import com.njydsz.common.search.provider.SearchProviderRegistry;
 import com.njydsz.common.search.service.BusinessRanker;
 import com.njydsz.common.search.service.IndexRebuildService;
 import com.njydsz.common.search.service.IndexSyncService;
+import com.njydsz.common.search.service.QueryParser;
 import com.njydsz.common.search.service.SearchCacheService;
 import com.njydsz.common.search.service.SearchTextProcessor;
 import com.njydsz.common.search.service.SuggestionService;
@@ -183,6 +185,18 @@ public class SearchAutoConfiguration {
     @ConditionalOnMissingBean
     public BusinessRanker businessRanker(SearchProperties properties) {
         return new BusinessRanker(properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public QueryParser queryParser() {
+        return new QueryParser();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchQualityTracker searchQualityTracker(ObjectProvider<StringRedisTemplate> redisProvider) {
+        return new SearchQualityTracker(redisProvider);
     }
 
     @Bean

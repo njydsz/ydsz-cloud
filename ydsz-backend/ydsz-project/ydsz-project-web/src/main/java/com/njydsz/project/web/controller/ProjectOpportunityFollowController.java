@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectOpportunityFollowVO;
+import com.njydsz.project.domain.dto.put.ProjectOpportunityFollowPutDTO;
+import com.njydsz.project.domain.dto.post.ProjectOpportunityFollowPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/opportunity/follow")
@@ -31,11 +33,11 @@ public class ProjectOpportunityFollowController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectOpportunityFollow")
-    public BaseResponse<Boolean> save(@RequestBody ProjectOpportunityFollow e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectOpportunityFollowPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectOpportunityFollow")
-    public BaseResponse<Boolean> update(@RequestBody ProjectOpportunityFollow e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectOpportunityFollowPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectOpportunityFollow")

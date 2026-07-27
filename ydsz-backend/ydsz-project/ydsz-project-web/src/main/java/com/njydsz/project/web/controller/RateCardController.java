@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.RateCardVO;
+import com.njydsz.project.domain.dto.put.RateCardPutDTO;
+import com.njydsz.project.domain.dto.post.RateCardPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/rate/card")
@@ -31,11 +33,11 @@ public class RateCardController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create RateCard")
-    public BaseResponse<Boolean> save(@RequestBody RateCard e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody RateCardPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update RateCard")
-    public BaseResponse<Boolean> update(@RequestBody RateCard e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody RateCardPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete RateCard")

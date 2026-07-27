@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.CostPurchaseVO;
+import com.njydsz.project.domain.dto.post.CostPurchasePostDTO;
+import com.njydsz.project.domain.dto.put.CostPurchasePutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/cost/purchase")
@@ -31,11 +33,11 @@ public class CostPurchaseController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create CostPurchase")
-    public BaseResponse<Boolean> save(@RequestBody CostPurchase e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody CostPurchasePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update CostPurchase")
-    public BaseResponse<Boolean> update(@RequestBody CostPurchase e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody CostPurchasePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete CostPurchase")

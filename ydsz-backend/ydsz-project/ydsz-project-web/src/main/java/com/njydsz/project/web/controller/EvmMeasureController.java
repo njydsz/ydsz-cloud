@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.EvmMeasureVO;
+import com.njydsz.project.domain.dto.post.EvmMeasurePostDTO;
+import com.njydsz.project.domain.dto.put.EvmMeasurePutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/evm/measure")
@@ -31,11 +33,11 @@ public class EvmMeasureController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create EvmMeasure")
-    public BaseResponse<Boolean> save(@RequestBody EvmMeasure e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody EvmMeasurePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update EvmMeasure")
-    public BaseResponse<Boolean> update(@RequestBody EvmMeasure e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody EvmMeasurePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete EvmMeasure")

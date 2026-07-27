@@ -36,6 +36,10 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
             <!-- MapStruct -->
         <dependency>
             <groupId>org.mapstruct</groupId>

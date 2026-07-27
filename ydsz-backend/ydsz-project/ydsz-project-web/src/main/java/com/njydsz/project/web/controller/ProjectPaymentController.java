@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectPaymentVO;
+import com.njydsz.project.domain.dto.post.ProjectPaymentPostDTO;
+import com.njydsz.project.domain.dto.put.ProjectPaymentPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/payment")
@@ -31,11 +33,11 @@ public class ProjectPaymentController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectPayment")
-    public BaseResponse<Boolean> save(@RequestBody ProjectPayment e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectPaymentPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectPayment")
-    public BaseResponse<Boolean> update(@RequestBody ProjectPayment e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectPaymentPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectPayment")

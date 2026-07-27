@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionDeliveryItemVO;
+import com.njydsz.project.domain.dto.put.ExecutionDeliveryItemPutDTO;
+import com.njydsz.project.domain.dto.post.ExecutionDeliveryItemPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/execution/delivery/item")
@@ -31,11 +33,11 @@ public class ExecutionDeliveryItemController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionDeliveryItem")
-    public BaseResponse<Boolean> save(@RequestBody ExecutionDeliveryItem e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ExecutionDeliveryItemPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionDeliveryItem")
-    public BaseResponse<Boolean> update(@RequestBody ExecutionDeliveryItem e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ExecutionDeliveryItemPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionDeliveryItem")

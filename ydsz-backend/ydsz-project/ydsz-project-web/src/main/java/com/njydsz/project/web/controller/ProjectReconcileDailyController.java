@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectReconcileDailyVO;
+import com.njydsz.project.domain.dto.put.ProjectReconcileDailyPutDTO;
+import com.njydsz.project.domain.dto.post.ProjectReconcileDailyPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/reconcile/daily")
@@ -31,11 +33,11 @@ public class ProjectReconcileDailyController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectReconcileDaily")
-    public BaseResponse<Boolean> save(@RequestBody ProjectReconcileDaily e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectReconcileDailyPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectReconcileDaily")
-    public BaseResponse<Boolean> update(@RequestBody ProjectReconcileDaily e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectReconcileDailyPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectReconcileDaily")

@@ -17,6 +17,7 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.BaseResultCode;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
@@ -214,14 +215,9 @@ public class AuthServiceImpl implements AuthService {
         result.setExpiresIn(properties.getTokenTtlSeconds());
         result.setScope("read write");
 
-        LoginVO.UserInfoVO userInfoVO = new LoginVO.UserInfoVO();
-        userInfoVO.setUserId(user.getId());
-        userInfoVO.setUsername(user.getUsername());
-        userInfoVO.setRealName(user.getRealName());
+        LoginVO.UserInfoVO userInfoVO = UserInfoConverter.INSTANT.entityToUserInfoVO(user);
         userInfoVO.setRoleCode(roleCodes);
         userInfoVO.setRoleName(roleNames);
-        userInfoVO.setTenantId(user.getTenantId());
-        userInfoVO.setAvatar(user.getAvatar());
         result.setUserInfo(userInfoVO);
 
         return result;

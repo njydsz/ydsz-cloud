@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.RateInternalVO;
+import com.njydsz.project.domain.dto.post.RateInternalPostDTO;
+import com.njydsz.project.domain.dto.put.RateInternalPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/rate/internal")
@@ -31,11 +33,11 @@ public class RateInternalController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create RateInternal")
-    public BaseResponse<Boolean> save(@RequestBody RateInternal e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody RateInternalPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update RateInternal")
-    public BaseResponse<Boolean> update(@RequestBody RateInternal e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody RateInternalPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete RateInternal")

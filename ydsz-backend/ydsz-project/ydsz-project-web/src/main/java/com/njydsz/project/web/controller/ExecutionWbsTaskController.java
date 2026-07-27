@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionWbsTaskVO;
+import com.njydsz.project.domain.dto.put.ExecutionWbsTaskPutDTO;
+import com.njydsz.project.domain.dto.post.ExecutionWbsTaskPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/execution/wbs/task")
@@ -31,11 +33,11 @@ public class ExecutionWbsTaskController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionWbsTask")
-    public BaseResponse<Boolean> save(@RequestBody ExecutionWbsTask e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ExecutionWbsTaskPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionWbsTask")
-    public BaseResponse<Boolean> update(@RequestBody ExecutionWbsTask e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ExecutionWbsTaskPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionWbsTask")

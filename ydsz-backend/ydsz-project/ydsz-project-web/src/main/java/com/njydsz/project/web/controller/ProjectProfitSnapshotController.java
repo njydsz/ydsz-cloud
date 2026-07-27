@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectProfitSnapshotVO;
+import com.njydsz.project.domain.dto.put.ProjectProfitSnapshotPutDTO;
+import com.njydsz.project.domain.dto.post.ProjectProfitSnapshotPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/profit/snapshot")
@@ -31,11 +33,11 @@ public class ProjectProfitSnapshotController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectProfitSnapshot")
-    public BaseResponse<Boolean> save(@RequestBody ProjectProfitSnapshot e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectProfitSnapshotPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectProfitSnapshot")
-    public BaseResponse<Boolean> update(@RequestBody ProjectProfitSnapshot e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectProfitSnapshotPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectProfitSnapshot")

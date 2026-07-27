@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectContractSupplementVO;
+import com.njydsz.project.domain.dto.post.ProjectContractSupplementPostDTO;
+import com.njydsz.project.domain.dto.put.ProjectContractSupplementPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/contract/supplement")
@@ -31,11 +33,11 @@ public class ProjectContractSupplementController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectContractSupplement")
-    public BaseResponse<Boolean> save(@RequestBody ProjectContractSupplement e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectContractSupplementPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectContractSupplement")
-    public BaseResponse<Boolean> update(@RequestBody ProjectContractSupplement e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectContractSupplementPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectContractSupplement")

@@ -3,7 +3,11 @@ package com.njydsz.userinfo.web.controller;
 import java.util.Arrays;
 import java.util.List;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.service.UnifiedSearchService;
@@ -39,6 +43,8 @@ public class UserinfoSearchController {
 
     @GetMapping
     @Operation(summary = "搜索用户")
+    @Audit(action = AuditAction.QUERY, module = "USERINFO", content = "搜索用户")
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_SEARCH)
     public BaseResponse<SearchResponse> search(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page,
@@ -68,6 +74,7 @@ public class UserinfoSearchController {
 
     @PostMapping("/rebuild")
     @Operation(summary = "重建用户索引")
+    @Audit(action = AuditAction.UPDATE, module = "USERINFO", content = "重建用户搜索索引")
     public BaseResponse<Void> rebuildIndex(
             @RequestHeader(value = "X-User-Id", required = false) String userId) {
 

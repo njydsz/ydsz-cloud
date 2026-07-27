@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,8 +64,7 @@ public class JobController {
     @RateLimit(resource = "cronjob.job.create", threshold = 50)
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody JobSaveDTO dto) {
-        Job job = new Job();
-        BeanUtils.copyProperties(dto, job);
+        Job job = CronjobConverter.INSTANT.saveDtoToEntity(dto);
         return BaseResponse.success(jobService.create(job));
     }
 
@@ -83,8 +81,7 @@ public class JobController {
     @RateLimit(resource = "cronjob.job.update", threshold = 50)
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody JobSaveDTO dto) {
-        Job job = new Job();
-        BeanUtils.copyProperties(dto, job);
+        Job job = CronjobConverter.INSTANT.saveDtoToEntity(dto);
         jobService.update(job);
         return BaseResponse.success();
     }

@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,8 +68,7 @@ public class FlowDelegateController {
     @PostMapping("/delegateAuth/create")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
-        FlowDelegateAuth auth = new FlowDelegateAuth();
-        BeanUtils.copyProperties(dto, auth);
+        FlowDelegateAuth auth = WorkflowConverter.INSTANT.saveDtoToEntity(dto);
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
             auth.setOwnerUserId(AuthContext.getUserId());

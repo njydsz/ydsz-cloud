@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectExpenseVO;
+import com.njydsz.project.domain.dto.put.ProjectExpensePutDTO;
+import com.njydsz.project.domain.dto.post.ProjectExpensePostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/expense")
@@ -31,11 +33,11 @@ public class ProjectExpenseController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectExpense")
-    public BaseResponse<Boolean> save(@RequestBody ProjectExpense e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectExpensePostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectExpense")
-    public BaseResponse<Boolean> update(@RequestBody ProjectExpense e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectExpensePutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectExpense")

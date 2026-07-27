@@ -3,7 +3,11 @@ package com.njydsz.project.web.controller;
 import java.util.Arrays;
 import java.util.List;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.service.UnifiedSearchService;
@@ -19,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.njydsz.project.domain.converter.ProjectConverter;
-import com.njydsz.project.domain.vo.SearchResponseVO;
 
 /**
  * 项目搜索 Controller
@@ -41,7 +43,9 @@ public class ProjectSearchController {
 
     @GetMapping
     @Operation(summary = "搜索项目")
-    public BaseResponse<SearchResponseVO> search(
+    @Audit(action = AuditAction.QUERY, module = "PROJECT", content = "搜索项目")
+    @AuthApiPermission(apiCodes = PermissionCodes.PROJECT_SEARCH)
+    public BaseResponse<SearchResponse> search(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize,
@@ -65,11 +69,13 @@ public class ProjectSearchController {
                 .fuzzy(true)
                 .build();
 
-        return BaseResponse.success(ProjectConverter.INSTANT.entityToVO(unifiedSearchService.search(request)));
+        return BaseResponse.success(unifiedSearchService.search(request));
     }
 
     @PostMapping("/rebuild")
     @Operation(summary = "重建项目索引")
+    @Audit(action = AuditAction.UPDATE, module = "PROJECT", content = "重建项目搜索索引")
+    @AuthApiPermission(apiCodes = PermissionCodes.PROJECT_SEARCH_REBUILD)
     public BaseResponse<Void> rebuildIndex(
             @RequestHeader(value = "X-User-Id", required = false) String userId) {
 

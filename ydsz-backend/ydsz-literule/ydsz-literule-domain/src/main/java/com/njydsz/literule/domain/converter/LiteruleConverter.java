@@ -3,6 +3,7 @@ package com.njydsz.literule.domain.converter;
 import java.util.List;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.entity.DecisionTable;
@@ -37,6 +38,12 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
+import com.njydsz.literule.domain.dto.post.RuleDefinitionDOPostDTO;
+import com.njydsz.literule.domain.dto.post.RuleTestCaseDOPostDTO;
+import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.post.RuleChainGraphDOPostDTO;
+import com.njydsz.literule.domain.dto.post.RulePackDOPostDTO;
+import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 
 /**
  * literule 模块统一 MapStruct 转换器。
@@ -112,5 +119,71 @@ public interface LiteruleConverter {
     // ===== RuleVersionHistory =====
     RuleVersionHistoryVO entityToVO(RuleVersionHistory entity);
     List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities);
+
+
+    // ===== RuleDefinitionDO PostDTO → Entity =====
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    RuleDefinitionDO postDtoToEntity(RuleDefinitionDOPostDTO dto);
+
+    // ===== RuleTestCaseDO PostDTO → Entity =====
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    RuleTestCaseDO postDtoToEntity(RuleTestCaseDOPostDTO dto);
+
+    // ===== DecisionTable PostDTO → Entity =====
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    DecisionTable postDtoToEntity(DecisionTablePostDTO dto);
+
+    // ===== RuleChainGraphDO PostDTO → Entity =====
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    RuleChainGraphDO postDtoToEntity(RuleChainGraphDOPostDTO dto);
+
+    // ===== RulePackDO PostDTO → Entity =====
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    RulePackDO postDtoToEntity(RulePackDOPostDTO dto);
+
+    // ===== RuleABPolicy PutDTO → Entity =====
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "revision", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto);
 
 }

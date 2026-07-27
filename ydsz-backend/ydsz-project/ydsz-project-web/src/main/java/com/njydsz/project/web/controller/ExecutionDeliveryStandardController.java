@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ExecutionDeliveryStandardVO;
+import com.njydsz.project.domain.dto.post.ExecutionDeliveryStandardPostDTO;
+import com.njydsz.project.domain.dto.put.ExecutionDeliveryStandardPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/execution/delivery/standard")
@@ -31,11 +33,11 @@ public class ExecutionDeliveryStandardController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ExecutionDeliveryStandard")
-    public BaseResponse<Boolean> save(@RequestBody ExecutionDeliveryStandard e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ExecutionDeliveryStandardPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ExecutionDeliveryStandard")
-    public BaseResponse<Boolean> update(@RequestBody ExecutionDeliveryStandard e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ExecutionDeliveryStandardPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ExecutionDeliveryStandard")

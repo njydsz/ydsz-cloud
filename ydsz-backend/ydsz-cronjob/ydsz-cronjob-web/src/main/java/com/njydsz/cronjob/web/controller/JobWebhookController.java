@@ -21,6 +21,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
+import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 
 /**
@@ -52,7 +54,8 @@ public class JobWebhookController {
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @RateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
     @PostMapping
-    public BaseResponse<String> create(@RequestBody JobWebhook webhook) {
+    public BaseResponse<String> create(@RequestBody JobWebhookPostDTO dto) {
+        JobWebhook webhook = CronjobConverter.INSTANT.postDtoToEntity(dto);
         webhook.setStatus("ACTIVE");
         webhook.setCreatedAt(LocalDateTime.now());
         webhook.setUpdatedAt(LocalDateTime.now());
@@ -76,7 +79,8 @@ public class JobWebhookController {
     @Audit(module = "WebHook", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @RateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
     @PutMapping
-    public BaseResponse<Void> update(@RequestBody JobWebhook webhook) {
+    public BaseResponse<Void> update(@RequestBody JobWebhookPutDTO dto) {
+        JobWebhook webhook = CronjobConverter.INSTANT.putDtoToEntity(dto);
         webhook.setUpdatedAt(LocalDateTime.now());
         webhookMapper.updateById(webhook);
         return BaseResponse.success();

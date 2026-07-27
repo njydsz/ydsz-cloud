@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectGateReviewVO;
+import com.njydsz.project.domain.dto.put.ProjectGateReviewPutDTO;
+import com.njydsz.project.domain.dto.post.ProjectGateReviewPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/gate/review")
@@ -31,11 +33,11 @@ public class ProjectGateReviewController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectGateReview")
-    public BaseResponse<Boolean> save(@RequestBody ProjectGateReview e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectGateReviewPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectGateReview")
-    public BaseResponse<Boolean> update(@RequestBody ProjectGateReview e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectGateReviewPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectGateReview")

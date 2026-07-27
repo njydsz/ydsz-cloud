@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.SatisfactionVO;
+import com.njydsz.project.domain.dto.put.SatisfactionPutDTO;
+import com.njydsz.project.domain.dto.post.SatisfactionPostDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/satisfaction")
@@ -31,11 +33,11 @@ public class SatisfactionController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create Satisfaction")
-    public BaseResponse<Boolean> save(@RequestBody Satisfaction e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody SatisfactionPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update Satisfaction")
-    public BaseResponse<Boolean> update(@RequestBody Satisfaction e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody SatisfactionPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete Satisfaction")

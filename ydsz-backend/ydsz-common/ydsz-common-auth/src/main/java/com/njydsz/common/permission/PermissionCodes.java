@@ -354,4 +354,16 @@ public final class PermissionCodes {
     /** WORKFLOW_TEMPLATE_IMPORT */
     public static final String WORKFLOW_TEMPLATE_IMPORT = "workflow:template:import";
 
+    /** PROJECT_SEARCH */
+    public static final String PROJECT_SEARCH = "project:search";
+
+    /** PROJECT_SEARCH_REBUILD */
+    public static final String PROJECT_SEARCH_REBUILD = "project:search:rebuild";
+
+    /** USERINFO_SEARCH */
+    public static final String USERINFO_SEARCH = "userinfo:search";
+
+    /** SYSTEM_SEARCH */
+    public static final String SYSTEM_SEARCH = "system:search";
+
 }

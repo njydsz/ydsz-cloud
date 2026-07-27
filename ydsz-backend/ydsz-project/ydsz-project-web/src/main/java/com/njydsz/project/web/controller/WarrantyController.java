@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.WarrantyVO;
+import com.njydsz.project.domain.dto.post.WarrantyPostDTO;
+import com.njydsz.project.domain.dto.put.WarrantyPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/warranty")
@@ -31,11 +33,11 @@ public class WarrantyController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create Warranty")
-    public BaseResponse<Boolean> save(@RequestBody Warranty e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody WarrantyPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update Warranty")
-    public BaseResponse<Boolean> update(@RequestBody Warranty e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody WarrantyPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete Warranty")

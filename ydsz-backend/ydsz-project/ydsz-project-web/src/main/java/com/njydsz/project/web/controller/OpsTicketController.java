@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.OpsTicketVO;
+import com.njydsz.project.domain.dto.post.OpsTicketPostDTO;
+import com.njydsz.project.domain.dto.put.OpsTicketPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/ops/ticket")
@@ -31,11 +33,11 @@ public class OpsTicketController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create OpsTicket")
-    public BaseResponse<Boolean> save(@RequestBody OpsTicket e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody OpsTicketPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update OpsTicket")
-    public BaseResponse<Boolean> update(@RequestBody OpsTicket e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody OpsTicketPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete OpsTicket")

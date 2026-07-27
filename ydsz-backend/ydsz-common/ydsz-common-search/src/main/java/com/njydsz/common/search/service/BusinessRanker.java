@@ -46,7 +46,7 @@ public class BusinessRanker {
 
         String keyword = request.getKeyword() != null ? request.getKeyword().trim().toLowerCase() : "";
 
-        hits.forEach(hit -> hit.setScore(calculateScore(hit, keyword)));
+        hits.forEach(hit -> hit.setScore((float) calculateScore(hit, keyword)));
 
         hits.sort(Comparator.comparingDouble(SearchHit::getScore).reversed());
         return hits;

@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.njydsz.project.domain.converter.ProjectConverter;
 import com.njydsz.project.domain.vo.ProjectProfitSimulationVO;
+import com.njydsz.project.domain.dto.post.ProjectProfitSimulationPostDTO;
+import com.njydsz.project.domain.dto.put.ProjectProfitSimulationPutDTO;
 
 @RestController
 @RequestMapping("/api/v1/project/project/profit/simulation")
@@ -31,11 +33,11 @@ public class ProjectProfitSimulationController {
 
     @PostMapping
     @Audit(action=AuditAction.CREATE, module="PROJECT", description="Create ProjectProfitSimulation")
-    public BaseResponse<Boolean> save(@RequestBody ProjectProfitSimulation e) { return BaseResponse.success(service.save(e)); }
+    public BaseResponse<Boolean> save(@RequestBody ProjectProfitSimulationPostDTO dto) { return BaseResponse.success(service.save(ProjectConverter.INSTANT.postDtoToEntity(dto))); }
 
     @PutMapping
     @Audit(action=AuditAction.UPDATE, module="PROJECT", description="Update ProjectProfitSimulation")
-    public BaseResponse<Boolean> update(@RequestBody ProjectProfitSimulation e) { return BaseResponse.success(service.updateById(e)); }
+    public BaseResponse<Boolean> update(@RequestBody ProjectProfitSimulationPutDTO dto) { return BaseResponse.success(service.updateById(ProjectConverter.INSTANT.putDtoToEntity(dto))); }
 
     @DeleteMapping("/{id}")
     @Audit(action=AuditAction.DELETE, module="PROJECT", description="Delete ProjectProfitSimulation")

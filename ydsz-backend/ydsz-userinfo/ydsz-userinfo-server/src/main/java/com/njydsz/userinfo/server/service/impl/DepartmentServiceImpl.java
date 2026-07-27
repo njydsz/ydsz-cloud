@@ -162,11 +162,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             return List.of();
         }
 
-        List<DepartmentTreeVO> voList = all.stream().map(dept -> {
-            DepartmentTreeVO vo = new DepartmentTreeVO();
-            BeanUtils.copyProperties(dept, vo);
-            return vo;
-        }).collect(Collectors.toList());
+        List<DepartmentTreeVO> voList = UserInfoConverter.INSTANT.departmentTreeListToVO(all);
 
         return TreeBuilder.buildSimple(voList,
                 DepartmentTreeVO::getId,

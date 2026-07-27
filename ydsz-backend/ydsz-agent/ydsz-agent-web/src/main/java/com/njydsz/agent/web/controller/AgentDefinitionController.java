@@ -26,6 +26,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.agent.domain.converter.AgentConverter;
+import com.njydsz.agent.domain.dto.post.AgentDefinitionDOPostDTO;
+import com.njydsz.agent.domain.dto.put.AgentDefinitionDOPutDTO;
 import com.njydsz.agent.domain.vo.AgentDefinitionDOVO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
@@ -80,7 +82,8 @@ public class AgentDefinitionController {
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:create:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
     @PostMapping
-    public BaseResponse<AgentDefinitionDOVO> create(@Valid @RequestBody AgentDefinitionDO entity) {
+    public BaseResponse<AgentDefinitionDOVO> create(@Valid @RequestBody AgentDefinitionDOPostDTO dto) {
+        AgentDefinitionDO entity = AgentConverter.INSTANT.postDtoToEntity(dto);
         return BaseResponse.success(AgentConverter.INSTANT.entityToVO(agentDefinitionService.create(entity)));
     }
 
@@ -88,7 +91,8 @@ public class AgentDefinitionController {
     @RateLimit(resource = "agent.agentdefinition.update", threshold = 50)
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
     @PutMapping
-    public BaseResponse<AgentDefinitionDOVO> update(@Valid @RequestBody AgentDefinitionDO entity) {
+    public BaseResponse<AgentDefinitionDOVO> update(@Valid @RequestBody AgentDefinitionDOPutDTO dto) {
+        AgentDefinitionDO entity = AgentConverter.INSTANT.putDtoToEntity(dto);
         return BaseResponse.success(AgentConverter.INSTANT.entityToVO(agentDefinitionService.update(entity)));
     }
 
