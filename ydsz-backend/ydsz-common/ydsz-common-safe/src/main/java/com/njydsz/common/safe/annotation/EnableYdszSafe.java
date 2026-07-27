@@ -20,7 +20,7 @@ import com.njydsz.common.safe.config.SafeConfiguration;
  *   <li>安全响应头配置（CSP / HSTS / X-Frame-Options 等）</li>
  *   <li>敏感数据脱敏（基于 YdszJson 序列化器 + 角色白名单）</li>
  *   <li>SQL 注入防护（基于过滤器正则拦截 + 运行时热更新）</li>
- *   <li>限流防护（令牌桶 / 滑动窗口 + @RateLimit AOP + 多维度）</li>
+ *   <li>限流防护（令牌桶 / 滑动窗口 + @SentinelRateLimit AOP + 多维度）</li>
  *   <li>IP 黑白名单访问控制（CIDR 网段 + 自动封禁）</li>
  *   <li>API 签名验证（timestamp + nonce + HMAC-SHA256）</li>
  *   <li>密码强度校验 + 滑块验证码</li>

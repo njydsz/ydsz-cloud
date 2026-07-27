@@ -107,7 +107,7 @@ public class SafeConfiguration {
         log.info("  SQL Injection:      Regex-based detection + runtime hot-reload");
         log.info("  CSRF:               Synchronizer Token / Double Submit Cookie (dual mode)");
         log.info("  Security Headers:   CSP / HSTS / X-Frame-Options / X-Content-Type-Options");
-        log.info("  Rate Limit:         Redis sliding window + @RateLimit AOP + local fallback");
+        log.info("  Rate Limit:         Redis sliding window + @SentinelRateLimit AOP + local fallback");
         log.info("  IP Access Control:  CIDR blacklist/whitelist + auto-block");
         log.info("  API Signature:       timestamp + nonce + HMAC-SHA256");
         log.info("  Auto Block:         Sliding window event aggregation + auto IP ban");

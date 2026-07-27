@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.common.domain.entity.AggregateRoot;
 import com.njydsz.common.domain.exception.AggregateNotFoundException;
 import com.njydsz.common.domain.query.PageQuery;
@@ -293,6 +295,7 @@ public abstract class AbstractCrudService<T extends AggregateRoot<ID>, DTO, VO, 
     // ============================== 接口实现（单条） ==============================
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ID save(DTO dto) {
         T entity = toEntity(dto);
         doBeforeSave(dto, entity);
@@ -302,6 +305,7 @@ public abstract class AbstractCrudService<T extends AggregateRoot<ID>, DTO, VO, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateById(DTO dto) {
         T entity = toEntity(dto);
         doBeforeUpdate(dto, entity);
@@ -311,6 +315,7 @@ public abstract class AbstractCrudService<T extends AggregateRoot<ID>, DTO, VO, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean removeById(ID id) {
         doBeforeDelete(id);
         getRepository().delete(id);
@@ -321,6 +326,7 @@ public abstract class AbstractCrudService<T extends AggregateRoot<ID>, DTO, VO, 
     // ============================== 接口实现（批量） ==============================
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public List<ID> saveBatch(Collection<DTO> dtos) {
         if (dtos == null || dtos.isEmpty()) {
             return Collections.emptyList();
@@ -342,6 +348,7 @@ public abstract class AbstractCrudService<T extends AggregateRoot<ID>, DTO, VO, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public List<Boolean> updateBatch(Collection<DTO> dtos) {
         if (dtos == null || dtos.isEmpty()) {
             return Collections.emptyList();
@@ -354,6 +361,7 @@ public abstract class AbstractCrudService<T extends AggregateRoot<ID>, DTO, VO, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public List<Boolean> removeBatch(Collection<ID> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();

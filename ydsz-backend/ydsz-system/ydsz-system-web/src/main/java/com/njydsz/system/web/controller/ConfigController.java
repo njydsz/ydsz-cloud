@@ -13,73 +13,45 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.web.controller.BaseCrudController;
 import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.entity.ConfigDO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.service.ConfigService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 
 /**
  * 系统配置 Controller。
+ *
+ * <p>继承 {@link BaseCrudController} 获得标准 CRUD 端点，
+ * 额外提供按 key 查询、按 group 批量查询、公开配置查询等业务端点。
  *
  * @author ydsz-team
  */
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询")
 @RestController
 @RequestMapping("/api/v1/config")
-@RequiredArgsConstructor
-public class ConfigController {
+public class ConfigController extends BaseCrudController<ConfigDO, ConfigDTO, ConfigVO, ConfigPageQuery, String> {
 
-    private final ConfigService service;
+    private final ConfigService configService;
 
-    @Operation(summary = "分页查询配置列表（支持搜索过滤）")
-    @GetMapping("/page")
-    public PageResponse<List<ConfigVO>> page(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int pageNum,
-            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
-            @Parameter(description = "配置分组") @RequestParam(required = false) String configGroup,
-            @Parameter(description = "配置键模糊搜索") @RequestParam(required = false) String configKey,
-            @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        IPage<ConfigVO> page = service.page(pageNum, pageSize, configGroup, configKey, status);
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, page.getRecords());
+    public ConfigController(ConfigService configService) {
+        super(configService);
+        this.configService = configService;
     }
 
-    @Operation(summary = "按 ID 查询配置")
-    @GetMapping("/{id}")
-    public BaseResponse<ConfigVO> getById(@PathVariable String id) {
-        return BaseResponse.success(service.getById(id));
-    }
+    // ============================== 覆写基类方法（添加审计 + 幂等 + 限流注解） ==============================
 
-    @Operation(summary = "按配置键查询配置值")
-    @GetMapping("/key/{configKey}")
-    public BaseResponse<String> getByKey(@PathVariable String configKey) {
-        return BaseResponse.success(service.getConfigValue(configKey));
-    }
-
-    @Operation(summary = "按配置分组批量查询启用的配置项")
-    @GetMapping("/group/{configGroup}")
-    public BaseResponse<List<ConfigVO>> getByGroup(@PathVariable String configGroup) {
-        return BaseResponse.success(service.getConfigsByGroup(configGroup));
-    }
-
-    @Operation(summary = "查询所有公开配置")
-    @GetMapping("/public")
-    public BaseResponse<List<ConfigVO>> listPublic() {
-        return BaseResponse.success(service.listPublicConfigs());
-    }
-
+    @Override
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'创建配置: ' + #dto.configKey")
     @Operation(summary = "创建配置")
@@ -87,9 +59,10 @@ public class ConfigController {
     @Idempotent(key = "ydsz:system:ConfigController:save:lock", ttlSeconds = 5)
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
-        return BaseResponse.success(service.save(dto));
+        return super.save(dto);
     }
 
+    @Override
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.UPDATE,
             content = "'更新配置: ' + #dto.configKey")
     @Operation(summary = "更新配置")
@@ -97,9 +70,10 @@ public class ConfigController {
     @Idempotent(key = "ydsz:system:ConfigController:update:lock", ttlSeconds = 5)
     @PutMapping
     public BaseResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
-        return BaseResponse.success(service.updateById(dto));
+        return super.update(dto);
     }
 
+    @Override
     @Audit(module = "系统配置", type = AuditType.OPERATION, action = AuditAction.DELETE,
             content = "'删除配置: ' + #id")
     @Operation(summary = "删除配置")
@@ -107,6 +81,26 @@ public class ConfigController {
     @Idempotent(key = "ydsz:system:ConfigController:remove:lock", ttlSeconds = 5)
     @DeleteMapping("/{id}")
     public BaseResponse<Boolean> remove(@PathVariable String id) {
-        return BaseResponse.success(service.removeById(id));
+        return super.remove(id);
+    }
+
+    // ============================== 业务扩展端点 ==============================
+
+    @Operation(summary = "按配置键查询配置值")
+    @GetMapping("/key/{configKey}")
+    public BaseResponse<String> getByKey(@PathVariable String configKey) {
+        return BaseResponse.success(configService.getConfigValue(configKey));
+    }
+
+    @Operation(summary = "按配置分组批量查询启用的配置项")
+    @GetMapping("/group/{configGroup}")
+    public BaseResponse<List<ConfigVO>> getByGroup(@PathVariable String configGroup) {
+        return BaseResponse.success(configService.getConfigsByGroup(configGroup));
+    }
+
+    @Operation(summary = "查询所有公开配置")
+    @GetMapping("/public")
+    public BaseResponse<List<ConfigVO>> listPublic() {
+        return BaseResponse.success(configService.listPublicConfigs());
     }
 }
