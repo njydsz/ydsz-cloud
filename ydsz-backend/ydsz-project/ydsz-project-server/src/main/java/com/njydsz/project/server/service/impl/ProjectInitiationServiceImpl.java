@@ -16,6 +16,7 @@ import com.njydsz.project.domain.dto.ProjectInitiationPageQuery;
 import com.njydsz.project.domain.entity.project.ProjectInitiation;
 import com.njydsz.project.domain.repository.project.IProjectInitiationRepository;
 import com.njydsz.project.domain.vo.ProjectInitiationVO;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.project.server.metrics.ProjectMetrics;
 import com.njydsz.project.server.service.ProjectInitiationService;
 
@@ -43,6 +44,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
     private final NameAssembler nameAssembler;
     private final ProjectMetrics projectMetrics;
     private final ObjectProvider<OutboxService> outboxServiceProvider;
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
     @Override
     public ProjectInitiationVO getById(String id) {
@@ -125,6 +127,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
         repository.save(entity);
         projectMetrics.incInitiationCreated();
         publishEvent(StandardEventTypes.PROJECT_INITIATION_CREATED, entity.getId(), entity);
+        indexUpsert(entity);
         return entity.getId();
     }
 
@@ -136,6 +139,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
         boolean result = repository.updateById(entity);
         if (result) {
             projectMetrics.incInitiationUpdated();
+            indexUpsert(entity);
         }
         return result;
     }
@@ -146,6 +150,7 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
         boolean result = repository.removeById(id);
         if (result) {
             projectMetrics.incInitiationDeleted();
+            indexDelete(id);
         }
         return result;
     }
@@ -196,6 +201,20 @@ public class ProjectInitiationServiceImpl implements ProjectInitiationService {
      * @param aggregateId 聚合根 ID
      * @param payload     事件负载对象
      */
+    private void indexUpsert(ProjectInitiation entity) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexUpsert("project", entity);
+        }
+    }
+
+    private void indexDelete(String id) {
+        SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexDelete("project", id);
+        }
+    }
+
     private void publishEvent(String eventType, String aggregateId, Object payload) {
         OutboxService outboxService = outboxServiceProvider.getIfAvailable();
         if (outboxService == null) {

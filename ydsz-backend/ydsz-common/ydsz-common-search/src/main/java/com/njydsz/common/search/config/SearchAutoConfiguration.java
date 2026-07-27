@@ -37,6 +37,7 @@ import com.njydsz.common.search.service.SearchTextProcessor;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.common.search.sync.IndexSyncListener;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -215,6 +216,15 @@ public class SearchAutoConfiguration {
     @ConditionalOnMissingBean
     public IndexSyncListener indexSyncListener(IndexSyncService indexSyncService) {
         return new IndexSyncListener(indexSyncService);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchIndexEventBridge searchIndexEventBridge(IndexSyncService indexSyncService,
+                                                          SearchProviderRegistry providerRegistry,
+                                                          SearchEngineRegistry engineRegistry,
+                                                          SearchMetrics searchMetrics) {
+        return new SearchIndexEventBridge(indexSyncService, providerRegistry, engineRegistry, searchMetrics);
     }
 
     @Bean

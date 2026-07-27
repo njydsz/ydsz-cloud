@@ -126,6 +126,53 @@ public class TenantAutoConfiguration {
     }
 
     /**
+     * 租户级 Redis Key 前缀器（可选，common-redis 在 classpath 时）。
+     *
+     * <p>为所有 Redis key 自动添加租户前缀，实现租户级数据隔离。
+     *
+     * @return Redis Key 前缀器
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.data.redis.serializer.RedisSerializer")
+    @ConditionalOnMissingBean
+    public com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer tenantRedisKeyPrefixer() {
+        log.info("多租户 Redis Key 隔离已启用");
+        return new com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer(true);
+    }
+
+    /**
+     * 租户级限流门面（可选，common-redis 在 classpath 时）。
+     *
+     * <p>按租户维度限流，自动在限流 Key 前添加租户前缀。
+     *
+     * @param rateLimiter Redis 限流器
+     * @return 租户限流门面
+     */
+    @Bean
+    @ConditionalOnClass(name = "com.njydsz.common.redis.service.RedisRateLimiter")
+    @ConditionalOnMissingBean
+    public com.njydsz.common.tenant.ratelimit.TenantRateLimiter tenantRateLimiter(
+            ObjectProvider<com.njydsz.common.redis.service.RedisRateLimiter> rateLimiterProvider) {
+        log.info("多租户限流已启用");
+        return new com.njydsz.common.tenant.ratelimit.TenantRateLimiter(rateLimiterProvider.getIfAvailable());
+    }
+
+    /**
+     * 租户级配置隔离提供者。
+     *
+     * <p>允许不同租户有差异化的配置覆盖。
+     *
+     * @param properties 租户配置
+     * @return 配置提供者
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public TenantConfigProvider tenantConfigProvider(TenantProperties properties) {
+        log.info("多租户配置隔离已启用");
+        return new TenantConfigProvider(properties);
+    }
+
+    /**
      * 多租户 Micrometer 指标（可选，Micrometer 在 classpath 时）。
      *
      * @param meterRegistry Micrometer 注册中心

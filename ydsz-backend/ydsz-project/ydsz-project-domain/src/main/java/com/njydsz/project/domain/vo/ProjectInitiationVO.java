@@ -2,18 +2,22 @@ package com.njydsz.project.domain.vo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
+import java.io.Serial;
+import java.io.Serializable;
 import lombok.Data;
 
 /**
- * 项目立项 VO。
+ * ProjectInitiation 视图对象。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-public class ProjectInitiationVO {
+public class ProjectInitiationVO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private String id;
     private String projectCode;
@@ -36,6 +40,8 @@ public class ProjectInitiationVO {
     private String stage;
     private String currentGate;
     private String description;
+    private String businessCase;
+    private String riskAssessment;
     private String status;
     private LocalDate actualStartDate;
     private LocalDate actualEndDate;
