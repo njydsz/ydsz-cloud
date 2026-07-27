@@ -1,6 +1,5 @@
 package com.njydsz.userinfo.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -23,9 +22,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_company")
 public class CompanyDO extends MpBaseEntity<String> {
-
-    @TableLogic
-    private Integer deleted;
 
     private String tenantId;
 

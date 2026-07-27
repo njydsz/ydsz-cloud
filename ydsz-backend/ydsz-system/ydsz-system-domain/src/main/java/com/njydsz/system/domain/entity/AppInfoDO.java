@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -39,7 +38,4 @@ public class AppInfoDO extends MpBaseEntity<String> {
     /** 应用描述 */
     private String description;
 
-    /** 逻辑删除标识（0=未删除，1=已删除） */
-    @TableLogic
-    private Integer deleted;
 }

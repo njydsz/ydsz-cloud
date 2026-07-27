@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
@@ -30,9 +29,6 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_user_account")
 public class UserAccountDO extends MpBaseEntity<String> {
-
-    @TableLogic
-    private Integer deleted;
 
     private String tenantId;
 

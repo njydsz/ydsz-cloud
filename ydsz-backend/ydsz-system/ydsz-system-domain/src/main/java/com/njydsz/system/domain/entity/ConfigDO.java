@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -44,7 +43,4 @@ public class ConfigDO extends MpBaseEntity<String> {
     /** 排序序号 */
     private Integer sortOrder;
 
-    /** 逻辑删除标识（0=未删除，1=已删除） */
-    @TableLogic
-    private Integer deleted;
 }

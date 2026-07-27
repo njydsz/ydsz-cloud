@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -52,6 +51,4 @@ public class TenantDO extends MpBaseEntity<String> {
     /** 备注 */
     private String remark;
 
-    @TableLogic
-    private Integer deleted;
 }

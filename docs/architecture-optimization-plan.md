@@ -23,8 +23,8 @@
 
 | # | 问题 | 涉及范围 | 影响 |
 |---|------|----------|------|
-| 1 | `BaseCrudController` 零使用，20+ 控制器手写 CRUD | 后端全业务模块 | 每新增模块 ≈ 150 行样板代码；接口规范不统一 |
-| 2 | `BaseCrudService`/`AbstractCrudService` 零使用 | 后端全业务模块 | 业务逻辑层缺乏统一拦截能力（审计/幂等/限流只能散落在 Controller） |
+| 1 | ~~`BaseCrudController` 零使用~~ 已删除通用 CRUD 抽象，每个 Controller 显式声明端点 | 后端全业务模块 | 符合 DDD 原则，每个操作有明确的业务语义 |
+| 2 | ~~`BaseCrudService`/`AbstractCrudService` 零使用~~ 已删除通用 CRUD 抽象，Service 接口显式声明领域特定方法 | 后端全业务模块 | 避免“贫血模型”，强制设计业务操作（如 activateUser、publishConfig） |
 | 3 | `createCrudApi` 仅 1/50 模块使用，其余手写 | 前端 API 层 | 接口定义散乱，难以统一拦截/缓存/降级 |
 | 4 | `ydsz-pmis-backend` 独立存在，模块与主项目重叠 | 部署架构 | 公共模块双份维护，版本易分裂 |
 
@@ -51,8 +51,7 @@
 ## 三、整改目标
 
 ```
-后端：100% 控制器继承 BaseCrudController  →  消除 >90% Controller 样板代码
-后端：100% Service 继承 AbstractCrudService  →  统一审计/幂等/限流注入
+后端：禁止继承通用 CRUD 基类  →  Service 接口显式声明领域特定方法（如 activateUser、publishConfig）
 前端：100% API 模块使用 createCrudApi 工厂  →  统一接口治理
 前端：100% 标准列表页使用 PageLayout + FormDialog + useTable  →  布局与交互一致
 跨层：单一权限码数据源 → Nacos/Dict 动态下放
@@ -63,53 +62,38 @@
 
 ## 四、分阶段整改方案
 
-### 第一阶段：架构加固（第 1-5 天）
+### 第一阶段：架构原则落实（第 1-5 天）
 
-#### 1.1 后端 —— 基础设施就位（2 天）
+**说明**：`BaseCrudController`、`BaseCrudService`、`AbstractCrudService`、`Repository`、`Specification` 等通用 CRUD 抽象已删除，取而代之的是“显式声明领域特定方法”的架构原则。
 
-**目标**：让 `BaseCrudController` 和 `AbstractCrudService` 真正可用、可扩、可测。
+#### 1.1 后端 —— 架构原则落实与规范约束（2 天）
 
-**Action 1.1.1** 重构 `AbstractCrudService`
+**原则 1：Service 接口显式声明领域特定方法**
+
+- 禁止继承通用 CRUD 基类。
+- 每个方法命名体现业务语义（如 `activateUser`、`publishConfig`、`createDictVersion`），而非泛型 `save`/`update`/`delete`。
+- 参考示例：`DictItemService`（已在项目内作为标杆）。
+
+**Action 1.1.1** 在 `common-domain`/`common-web` 添加架构守护规则（ArchUnit + Checkstyle）
+
+- 禁止在公共模块定义泛型 CRUD Controller/Service/Repository 基类。
+- 强制所有 Service 接口方法命名必须体现业务语义（不使用 `save`/`update`/`delete` 作为方法名，仅限过渡期内对已存在的模块保留）。
+
+**Action 1.1.2** 在 `ArchitectureRulesTest` 新增规则
 
 ```java
-// 当前：抽象类有默认实现但缺少必要的扩展点
-// 整改后：增加 doXxx 模板方法
-public abstract class AbstractCrudService<D, V, Q> implements BaseCrudService<D, V, Q> {
-    // 固定流程
-    public final BaseResponse<PageData<V>> page(Q query) {
-        BaseResponse.verify(query);          // 统一参数校验
-        // ... 分页逻辑
-        V vo = doConvert(entity, doAfterQuery(entity));
-        return BaseResponse.success(pageData);
-    }
-
-    // 子类按需重写
-    protected V doAfterQuery(D entity) { return null; }
-    protected void doBeforeSave(D dto) {}
-    protected void doAfterSave(D dto) {}
-    // ...
+@Test
+void common_modules_should_not_define_generic_crud_bases() {
+    noClasses()
+            .that().resideInAPackage("com.njydsz.common..")
+            .should().haveSimpleNameMatching("BaseCrud.*")
+            .orShould().haveSimpleNameMatching("AbstractCrud.*")
+            .orShould().haveSimpleNameMatching("AbstractRepository")
+            .check(importedClasses);
 }
 ```
 
-**Action 1.1.2** 重构 `BaseCrudController`
-
-```java
-// 自动注入所有 CRUD 端点 + 指标采集
-public abstract class BaseCrudController<S extends BaseCrudService<D, V, Q>, D, V, Q> {
-    @Autowired
-    protected S service;
-
-    @GetMapping("/page")
-    @Operation(summary = "分页查询")
-    public BaseResponse<PageData<V>> page(Q query) {
-        return service.page(query);  // 自动经过统一审计 + 限流 + 幂等
-    }
-
-    // getById / save / update / remove / batchRemove 同理
-}
-```
-
-**Action 1.1.3** 元注解抽取
+**Action 1.1.3** 元注解抽取（保留原计划）
 
 ```java
 // 不再在每个方法上手写三个注解
@@ -123,12 +107,9 @@ public BaseResponse<V> save(D dto) { ... }
 public BaseResponse<V> save(D dto) { ... }
 ```
 
-**Action 1.1.4** 首个试点模块：以 `ydsz-system` 为试点，完成全量 Controller+Service 改造
+**Action 1.1.4** 更新编码规范文档
 
-**验收标准**：
-- `UserController` 继承 `BaseCrudController`，消除 ~100 行样板
-- `UserServiceImpl` 继承 `AbstractCrudService`，审计/幂等/限流自动生效
-- 单元测试覆盖改造前后的行为一致性
+- 在 `deploy/docs/architecture/coding-standards.md` 明确：禁止在公共模块创建泛型 CRUD 基类；Service 接口应显式声明领域特定方法。
 
 ---
 
