@@ -1,55 +1,31 @@
 #!/bin/bash
+set -e
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-LOG_FILE=${SCRIPT_DIR}/build-local-docker-image.log
-ERROR=""
-IMAGE_NAME="remi-admin-local"
+# ==================== Build & Deploy Frontend Docker Image ====================
+# Usage: ./build-local-docker-image.sh [tag]
+# Default tag: latest
 
-function stop_and_remove_container() {
-    # Stop and remove the existing container
-    docker stop ${IMAGE_NAME} >/dev/null 2>&1
-    docker rm ${IMAGE_NAME} >/dev/null 2>&1
-}
+TAG=${1:-latest}
+IMAGE_NAME="ydsz-pmis/frontend"
+CONTEXT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
-function remove_image() {
-    # Remove the existing image
-    docker rmi remi-admin-pro >/dev/null 2>&1
-}
+echo "============================================"
+echo "  Building ${IMAGE_NAME}:${TAG}"
+echo "  Context: ${CONTEXT_DIR}"
+echo "============================================"
 
-function install_dependencies() {
-    # Install all dependencies
-    cd ${SCRIPT_DIR}
-    pnpm install || ERROR="install_dependencies failed"
-}
+# Step 1: Build Docker image
+docker build \
+  -f "${CONTEXT_DIR}/bash/deploy/Dockerfile" \
+  -t "${IMAGE_NAME}:${TAG}" \
+  "${CONTEXT_DIR}"
 
-function build_image() {
-    # build docker
-    docker build ../../ -f Dockerfile -t ${IMAGE_NAME} || ERROR="build_image failed"
-}
+echo ""
+echo "✅ Docker image built: ${IMAGE_NAME}:${TAG}"
 
-function log_message() {
-    if [[ ${ERROR} != "" ]];
-    then
-        >&2 echo "build failed, Please check build-local-docker-image.log for more details"
-        >&2 echo "ERROR: ${ERROR}"
-        exit 1
-    else
-        echo "docker image with tag '${IMAGE_NAME}' built sussessfully. Use below sample command to run the container"
-        echo ""
-        echo "docker run -d -p 8010:8080 --name ${IMAGE_NAME} ${IMAGE_NAME}"
-    fi
-}
+# Step 2: Show image info
+docker images "${IMAGE_NAME}:${TAG}"
 
-echo "Info: Stopping and removing existing container and image" | tee ${LOG_FILE}
-stop_and_remove_container
-remove_image
-
-echo "Info: Installing dependencies" | tee -a ${LOG_FILE}
-install_dependencies 1>> ${LOG_FILE} 2>> ${LOG_FILE}
-
-if [[ ${ERROR} == "" ]]; then
-    echo "Info: Building docker image" | tee -a ${LOG_FILE}
-    build_image 1>> ${LOG_FILE} 2>> ${LOG_FILE}
-fi
-
-log_message | tee -a ${LOG_FILE}
+echo ""
+echo "To run: docker run -p 5600:8080 ${IMAGE_NAME}:${TAG}"
+echo "To compose: docker compose -f docker-compose.yml up -d"

@@ -1,5 +1,7 @@
 package com.njydsz.common.tenant.config;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -9,6 +11,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
+import org.springframework.core.task.TaskDecorator;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.tenant.SystemTenantContextRunner;
@@ -16,7 +20,9 @@ import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
+import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
+import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.tenant.web.TenantContextWebFilter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -115,6 +121,66 @@ public class TenantAutoConfiguration {
     public TenantContextTaskDecorator tenantContextTaskDecorator(TenantProperties properties) {
         log.info("多租户异步上下文传播已启用");
         return new TenantContextTaskDecorator(properties);
+    }
+
+    /**
+     * 多租户 Micrometer 指标（可选，Micrometer 在 classpath 时）。
+     *
+     * @param meterRegistry Micrometer 注册中心
+     * @return 指标实例
+     */
+    @Bean
+    @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+    @ConditionalOnMissingBean
+    public TenantMetrics tenantMetrics(ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
+        return new TenantMetrics(meterRegistryProvider.getIfAvailable());
+    }
+
+    /**
+     * 多租户健康检查指标。
+     *
+     * @param properties            租户配置
+     * @param metricsProvider       指标（可选）
+     * @param dataSourceRouterProvider 数据源路由器（可选）
+     * @return 健康检查
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    @ConditionalOnMissingBean
+    public TenantHealthIndicator tenantHealthIndicator(
+            TenantProperties properties,
+            ObjectProvider<TenantMetrics> metricsProvider,
+            ObjectProvider<TenantDataSourceRouter> dataSourceRouterProvider) {
+        return new TenantHealthIndicator(properties, metricsProvider, dataSourceRouterProvider);
+    }
+
+    /**
+     * 自动将 TenantContextTaskDecorator 注入到所有 ThreadPoolTaskExecutor。
+     *
+     * <p>通过 BeanPostProcessor 在 Bean 初始化后自动设置 TaskDecorator，
+     * 无需业务模块手动配置。
+     *
+     * @param taskDecoratorProvider TaskDecorator 提供者
+     * @return BeanPostProcessor
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor")
+    @ConditionalOnMissingBean(name = "tenantTaskDecoratorPostProcessor")
+    public BeanPostProcessor tenantTaskDecoratorPostProcessor(
+            ObjectProvider<TenantContextTaskDecorator> taskDecoratorProvider) {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) {
+                if (bean instanceof ThreadPoolTaskExecutor executor) {
+                    TenantContextTaskDecorator decorator = taskDecoratorProvider.getIfAvailable();
+                    if (decorator != null && executor.getTaskDecorator() == null) {
+                        executor.setTaskDecorator(decorator);
+                        log.info("多租户 TaskDecorator 自动注入到线程池: {}", beanName);
+                    }
+                }
+                return bean;
+            }
+        };
     }
 
     /**

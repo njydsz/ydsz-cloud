@@ -1,0 +1,195 @@
+# ==================== PMIS Frontend CI/CD Pipeline ====================
+# Triggers: push to main/develop, PR to main
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'ydsz-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ydsz-frontend/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - sit
+          - uat
+          - prod
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
+  REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  IMAGE_NAME: ydsz-pmis/frontend
+
+jobs:
+  # ==================== Lint & Type Check ====================
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ydsz-frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        working-directory: ydsz-frontend
+        run: pnpm run typecheck
+
+      - name: Lint
+        working-directory: ydsz-frontend
+        run: pnpm run lint
+
+  # ==================== Build ====================
+  build:
+    name: Build
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ydsz-frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all apps
+        working-directory: ydsz-frontend
+        run: pnpm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: |
+            ydsz-frontend/main/dist
+            ydsz-frontend/apps/*/dist
+          retention-days: 7
+
+  # ==================== Docker Build & Push ====================
+  docker:
+    name: Docker Build & Push
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ydsz-frontend
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Aliyun Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "tags=latest" >> $GITHUB_OUTPUT
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ydsz-frontend
+          file: ydsz-frontend/bash/deploy/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.date }}-${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ==================== Deploy to K8s ====================
+  deploy:
+    name: Deploy (${{ github.event.inputs.environment || 'dev' }})
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set deploy target
+        id: target
+        run: |
+          ENV="${{ github.event.inputs.environment || 'dev' }}"
+          echo "namespace=ydsz-${ENV}" >> $GITHUB_OUTPUT
+          echo "overlay=${ENV}" >> $GITHUB_OUTPUT
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: cn-hangzhou
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ydsz-pmis --region cn-hangzhou
+
+      - name: Rollout restart
+        run: |
+          kubectl rollout restart deployment/ydsz-frontend \
+            -n ${{ steps.target.outputs.namespace }}
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/ydsz-frontend \
+            -n ${{ steps.target.outputs.namespace }} \
+            --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          DEPLOYMENT_URL=$(kubectl get svc ydsz-frontend \
+            -n ${{ steps.target.outputs.namespace }} \
+            -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Deployment URL: http://${DEPLOYMENT_URL}:8080"
+          echo "::notice title=Deploy Success::Frontend deployed to ${{ steps.target.outputs.namespace }} at http://${DEPLOYMENT_URL}:8080"

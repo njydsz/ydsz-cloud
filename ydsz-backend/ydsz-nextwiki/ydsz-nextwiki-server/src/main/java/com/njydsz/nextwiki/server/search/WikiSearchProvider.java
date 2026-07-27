@@ -138,7 +138,8 @@ public class WikiSearchProvider implements SearchProvider<FileNode> {
     @Override
     public List<String> getAllDocumentIds(String tenantId) {
         log.info("[WikiSearchProvider] 获取全部文件 ID: tenantId={}", tenantId);
-        return searchIndexRepository.findAllFileNodeIds(tenantId);
+        // SearchIndexRepository.findAllFileNodeIds 参数为 createdBy，传 null 查询全部
+        return searchIndexRepository.findAllFileNodeIds(null);
     }
 
     @Override
